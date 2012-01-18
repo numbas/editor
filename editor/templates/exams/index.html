@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+
+{% block content %}
+{% if exam_list %}
+    <ul>
+    {% for exam in exam_list %}
+        <li><a href="{% url exam_details exam.id %}">{{ exam.name }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No exams are available.</p>
+{% endif %}
+{% endblock content %}

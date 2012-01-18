@@ -1,0 +1,498 @@
+/*
+Design by Free CSS Templates
+http://www.freecsstemplates.org
+Released for free under a Creative Commons Attribution 2.5 License
+*/
+
+body {
+	margin: 0;
+	padding: 0;
+	background: #1B3266;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	color: #474747;
+}
+
+h1, h2, h3, h4, h5 {
+	margin: 0;
+	padding: 0;
+	font-family: Georgia, "Times New Roman", Times, serif;
+	font-weight: normal;
+}
+
+h1 {
+	color: #FFFFFF;
+	font-size: 2em;
+}
+
+h2 {
+	color: #1757AB;
+	font-size: 1.8em;
+}
+
+h3 {
+	color: #1757AB;
+	font-size: 1.6em;
+}
+
+h4 {
+	color: #1757AB;
+	font-size: 1.4em;
+}
+
+h5 {
+	color: #1757AB;
+	font-size: 1.2em;
+}
+
+p, ul, ol {
+	margin-top: 0;
+	line-height: 180%;
+}
+
+ul, ol {
+}
+
+a {
+  outline: none;
+  text-decoration: none;
+  color: #1757AB;
+}
+
+a:hover {
+}
+
+table {
+  text-align: left;
+  width: 100%;
+  /*table-layout: fixed;*/
+  /*word-wrap: break-word;*/
+  overflow: auto;
+}
+
+th {
+  /*height: 2em;*/
+  text-align: left;
+  background: #CBDCE8;
+  cursor: default;
+}
+
+tr {
+  background: #EFEFEF;
+}
+
+td {
+  text-align: left;
+  /*background: #EFEFEF;*/
+  overflow: auto;
+}
+
+.photoboard tr {
+  background: none;
+}
+
+.photoboard td {
+  background: none;
+}
+
+.sortable th {
+  cursor: pointer;
+}
+
+.sortable th:hover {
+  color: black;
+}
+
+.warn {
+  color: red;
+}
+
+.success {
+  color: green;
+}
+
+form {
+  margin: 0;
+}
+
+#wrapper {
+	margin: 0 auto;
+	padding: 0;
+}
+
+/* Header */
+
+#header {
+	width: 1000px;
+	height: 100px;
+	margin: 0 auto;
+}
+
+/* Logo */
+
+#logo {
+	float: left;
+	height: 50px;
+	margin: 0;
+	padding: 50px 0px 0px 20px;
+	color: #FFFFFF;
+}
+
+#logo h1, #logo p {
+	margin: 0;
+	padding: 0;
+}
+
+#logo h1 {
+	float: left;
+	padding-left: 25px;
+	letter-spacing: -1px;
+	text-transform: lowercase;
+	font-size: 2.6em;
+}
+
+#logo p {
+	float: left;
+	margin: 0;
+	padding: 12px 0 0 10px;
+	font: normal 14px Georgia, "Times New Roman", Times, serif;
+	font-style: italic;
+} 
+
+#logo a {
+	border: none;
+	background: none;
+	text-decoration: none;
+	color: #FFFFFF;
+}
+
+/* Search */
+
+#search {
+  position: relative;
+  float: right;
+  width: 279px;
+  height: 90px;
+  padding: 0;
+  z-index: 100;
+}
+
+#search form {
+	height: 41px;
+	margin: 0;
+	padding: 40px 0 0 30px;
+}
+
+#search fieldset {
+	margin: 0;
+	padding: 0;
+	border: none;
+}
+
+#search-text {
+	width: 195px;
+	padding: 6px 10px;
+	border: 1px #0E689A solid;
+        background: #EFEFEF;
+	/*text-transform: lowercase;*/
+	font: normal 13px Arial, Helvetica, sans-serif;
+	color: #1B3266;
+}
+
+#livesearch {
+  width: 350px;
+  background: #EFEFEF;
+  font: normal 13px Arial, Helvetica, sans-serif;
+  color: #1B3266;
+}
+
+#livesearch a:hover {
+  text-decoration: underline;
+}
+
+#search-submit {
+	/*display: none;*/
+}
+
+/* Menu */
+
+#menu {
+	width: 1000px;
+	height: 54px;
+	margin: 0 auto;
+	padding: 0;
+	background: url(../images/img01.jpg) no-repeat left top;
+}
+
+#menu ul {
+	margin: 0;
+	padding: 0px 0px 0px 48px;
+	list-style: none;
+	line-height: normal;
+}
+
+#menu li {
+	float: left;
+}
+
+#menu a {
+	display: block;
+	height: 28px;
+	margin-right: 3px;
+	padding: 26px 30px 0px 0px;
+	text-decoration: none;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	font-weight: normal;
+	color: #FFFFFF;
+	border: none;
+}
+
+#menu a:hover, #menu .current_page_item a {
+}
+
+#menu .current_page_item a {
+	padding-left: 0;
+}
+
+#menu a:hover {
+	text-decoration: underline;
+}
+
+/* Page */
+
+#page {
+	width: 1000px;
+	margin: 0 auto;
+	padding: 0;
+	background: url(../images/img02.jpg) repeat-y left top;
+}
+
+#page-bgbtm {
+	margin: 0px;
+	padding: 30px;
+	background: url(../images/img03.jpg) no-repeat left bottom;
+}
+
+/* Content */
+
+#content {
+	float: left;
+	width: 600px;
+	padding: 0px 20px;
+}
+
+#content h2, h3, h4, h5 {
+	color: #1757AB;
+}
+
+#content a:hover {
+	text-decoration: underline;
+}
+
+.figure {
+  padding: 2px 5px;
+  width: auto;
+  border: thin silver solid;
+  text-align: center;
+}
+
+.figure p {
+  font-style: italic;
+  text-align: justify;
+}
+
+.post {
+}
+
+.post .title {
+	height: 38px;
+	letter-spacing: -.5px;
+	color: #1757AB;
+}
+
+.post .title a {
+	color: #1757AB;
+	border: none;
+}
+
+.post .meta {
+	margin-top: -10px;
+	padding-bottom: 5px;
+	border-bottom: 1px solid #C9D9E8;
+	text-align: left;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-style: italic;
+}
+
+.post .meta a {
+}
+
+.entry {
+	text-align: justify;
+	margin-bottom: 25px;
+	padding: 10px 20px 0px 0px;
+}
+
+.links {
+	display: block;
+	width: 96px;
+	height: 30px;
+	padding: 2px 0px 0px 0px;
+	text-align: center;
+	text-transform: uppercase;
+	font-size: 10px;
+	color: #FFFFFF;
+}
+
+/* Sidebar */
+
+#sidebar {
+	float: right;
+	width: 270px;
+	padding: 10px 0px 0px 0px;
+	color: #57ACF7;
+}
+
+#sidebar ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+#sidebar li {
+	margin: 0;
+	padding: 0;
+}
+
+#sidebar li ul {
+	margin: 0px 15px;
+	padding-bottom: 30px;
+}
+
+#sidebar li li {
+	line-height: 35px;
+	border-bottom: 1px solid #0E689A;
+}
+
+#sidebar li li span {
+	display: block;
+	margin-top: -20px;
+	padding: 0;
+	font-size: 11px;
+	font-style: italic;
+}
+
+#sidebar h2 {
+	height: 38px;
+	padding: 12px 0 0 15px;
+	letter-spacing: -.5px;
+	color: #FFFFFF;
+}
+
+#sidebar p {
+	margin: 0 0px;
+	padding: 0px 20px 20px 20px;
+	text-align: justify;
+}
+
+#sidebar a {
+	border: none;
+	color: #57ACF7;
+}
+
+#sidebar a:hover {
+	text-decoration: underline;
+}
+
+/* Calendar */
+
+#calendar {
+}
+
+#calendar_wrap {
+	padding: 20px;
+}
+
+#calendar table {
+	width: 100%;
+}
+
+#calendar tbody td {
+	text-align: center;
+}
+
+#calendar #next {
+	text-align: right;
+}
+
+/* Footer */
+
+#footer-wrapper {
+	width: 100%;
+	background: #231202;
+}
+
+#footer {
+	width: 1000px;
+	height: 100px;
+	margin: 0 auto;
+	padding: 0px 0 15px 0;
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+#footer p {
+	margin: 0;
+	padding-top: 40px;
+	line-height: normal;
+	font-size: 9px;
+	text-transform: uppercase;
+	text-align: center;
+	color: #70AEFF;
+}
+
+#footer a {
+	color: #1F84FF;
+}
+
+.category {
+  cursor: pointer;
+}
+
+.assignment-property-header {
+  cursor: pointer;
+}
+
+[disabled].sel-parttype {
+  color: gray;
+  font-style: italic;
+}
+
+.content-toggle {
+  cursor: pointer;
+  color: blue;
+}
+
+.gap-refresh-list {
+  visibility: hidden;
+}
+
+#part-list, .steps-list {
+    margin: 0px 10px 0px 75px;
+}
+
+.part-container {
+  background: #FFFFDD;
+  border: 1px solid silver;
+  margin-bottom: 10px;
+}
+
+.step-container {
+    background: #FFDDDD;
+}
+
+#question-container {
+    background: #CCEEEE;
+    border: 1px solid silver;
+}

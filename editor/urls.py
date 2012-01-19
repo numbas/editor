@@ -13,5 +13,5 @@ urlpatterns = patterns('',
 #            model=Exam,
 #            template_name='exams/detail.html'),
 #            name='exam_details'),
-    url(r'^exams/(?P<exam_id>\d+)/$', 'editor.views.exams.detail', name='exam_details'),
+    url(r'^exams/(?P<exam_id>\d+)/$', 'editor.views.exams.edit', name='exam_edit'),
 )

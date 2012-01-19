@@ -20,4 +20,12 @@ def edit(request, exam_id):
     return render(request, 'exam/edit.html', {'exam': e, 'form': form})
 
 def new(request):
-    return None
+    if request.method == "POST":
+        form = ExamForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('exam_index'))
+    else:
+        form = ExamForm()
+    
+    return render(request, 'exam/new.html', {'form': form})

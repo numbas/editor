@@ -17,4 +17,7 @@ def edit(request, exam_id):
     else:
         form = ExamForm(instance=e)
         
-    return render(request, 'exams/edit.html', {'exam': e, 'form': form})
+    return render(request, 'exam/edit.html', {'exam': e, 'form': form})
+
+def new(request):
+    return None

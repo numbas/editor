@@ -15,6 +15,13 @@ def edit(request, exam_id):
 #            return HttpResponseRedirect(reverse('exam_edit', args=(exam_id,)))
             return HttpResponseRedirect(reverse('exam_index'))
     else:
+        try:
+            examfile = open('/space/najy2/tmp/exam.txt', 'r')
+            e.content = examfile.read()
+            examfile.close()
+        except IOError:
+            e.content = "Could not read from exam file."
+            
         form = ExamForm(instance=e)
         
     return render(request, 'exam/edit.html', {'exam': e, 'form': form})
@@ -23,8 +30,16 @@ def new(request):
     if request.method == "POST":
         form = ExamForm(request.POST)
         if form.is_valid():
-            form.save()
-            return HttpResponseRedirect(reverse('exam_index'))
+            try:
+                examfile = open('/space/najy2/tmp/exam.txt', 'w')
+                examfile.write(form.cleaned_data["content"])
+                examfile.close()
+                e = form.save()
+            except IOError:
+                save_error = "Could not save exam file."
+                return render(request, 'exam/new.html', {'form': form, 'save_error': save_error})
+#            return HttpResponseRedirect(reverse('exam_index'))
+            return HttpResponseRedirect(reverse('exam_edit', args=(e.pk,)))
     else:
         form = ExamForm()
     

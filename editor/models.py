@@ -12,10 +12,11 @@ class Question(models.Model):
         return self.name
 
 class Exam(models.Model):
-    questions = models.ManyToManyField(Question)
+    questions = models.ManyToManyField(Question, blank=True)
     name = models.CharField(max_length=200)
     author = models.CharField(max_length=200)
     filename = models.CharField(max_length=200)
+    content = models.TextField(blank=True)
     metadata = models.TextField()
     
     def __unicode(self):

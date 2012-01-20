@@ -1,9 +1,13 @@
 from django.shortcuts import render
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.views.generic import CreateView, UpdateView
 from editor.models import Exam
 
+def ajaxtest(request):
+    if request.is_ajax():
+        return HttpResponse('Hello')
+    
 def save_content_to_file(request, form, **kwargs):
     try:
         examfile = open('/space/najy2/tmp/exam.txt', 'w')

@@ -4,20 +4,26 @@ from django.core.urlresolvers import reverse
 from django.views.generic import CreateView, UpdateView
 from editor.models import Exam
 
+def save_content_to_file(request, form, **kwargs):
+    try:
+        examfile = open('/space/najy2/tmp/exam.txt', 'w')
+        examfile.write(form.cleaned_data["content"])
+        examfile.close()
+        exam = form.save()
+    except IOError:
+        save_error = "Could not save exam file."
+        if exam in kwargs:
+            return render(request, 'exam/edit.html', {'form': form, 'save_error': save_error, 'exam': kwargs[exam]})
+        else:
+            return render(request, 'exam/new.html', {'form': form, 'save_error': save_error})
+    return HttpResponseRedirect(reverse('exam_edit', args=(exam.pk,)))
+
 class ExamCreateView(CreateView):
     model = Exam
     template_name = 'exam/new.html'
     
     def form_valid(self, form):
-        try:
-            examfile = open('/space/najy2/tm/exam.txt', 'w')
-            examfile.write(form.cleaned_data["content"])
-            examfile.close()
-            exam = form.save()
-        except IOError:
-            save_error = "Could not save exam file."
-            return render(self.request, 'exam/new.html', {'form': form, 'save_error': save_error})
-        return HttpResponseRedirect(reverse('exam_edit', args=(exam.pk,)))
+        return save_content_to_file(self.request, form)
 
 
 class ExamUpdateView(UpdateView):
@@ -25,15 +31,7 @@ class ExamUpdateView(UpdateView):
     template_name = 'exam/edit.html'
     
     def form_valid(self, form):
-        try:
-            examfile = open('/space/najy2/tmp/exam.txt', 'w')
-            examfile.write(form.cleaned_data["content"])
-            examfile.close()
-            exam = form.save()
-        except IOError:
-            save_error = "Could not save exam file."
-            return render(self.request, 'exam/edit.html', {'form': form, 'save_error': save_error, 'exam': self.get_object()})
-        return HttpResponseRedirect(reverse('exam_edit', args=(exam.pk,)))
+        return save_content_to_file(self.request, form, exam=self.get_object())
     
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()

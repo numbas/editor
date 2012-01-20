@@ -16,7 +16,7 @@ def save_content_to_file(request, form, **kwargs):
             return render(request, 'exam/edit.html', {'form': form, 'save_error': save_error, 'exam': kwargs[exam]})
         else:
             return render(request, 'exam/new.html', {'form': form, 'save_error': save_error})
-    return HttpResponseRedirect(reverse('exam_edit', args=(exam.pk,)))
+    return HttpResponseRedirect(reverse('exam_edit', args=(exam.slug,)))
 
 class ExamCreateView(CreateView):
     model = Exam

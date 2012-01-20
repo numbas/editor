@@ -3,6 +3,8 @@
 {% block content %}
 <h2>{{ exam.name }}</h2>
 
+{% if save_error %}<p><strong>{{ save_error }}</strong></p>{% endif %}
+
 <form action="{% url exam_edit exam.id %}" method="post">
 {% csrf_token %}
 {{ form.as_p }}

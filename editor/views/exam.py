@@ -1,46 +1,53 @@
-from django.shortcuts import render, get_object_or_404
-from django.views.decorators.http import require_http_methods
+from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
-from editor.models import Exam, ExamForm
+from django.views.generic import CreateView, UpdateView
+from editor.models import Exam
 
-@require_http_methods(["GET", "POST"])
-def edit(request, exam_id):
-    e = get_object_or_404(Exam, pk=exam_id)
-    if request.method == "POST":
-        form = ExamForm(request.POST)
-        if form.is_valid():
-            form = ExamForm(request.POST, instance=e)
-            form.save()
-#            return HttpResponseRedirect(reverse('exam_edit', args=(exam_id,)))
-            return HttpResponseRedirect(reverse('exam_index'))
-    else:
+class ExamCreateView(CreateView):
+    model = Exam
+    template_name = 'exam/new.html'
+    
+    def form_valid(self, form):
+        try:
+            examfile = open('/space/najy2/tm/exam.txt', 'w')
+            examfile.write(form.cleaned_data["content"])
+            examfile.close()
+            exam = form.save()
+        except IOError:
+            save_error = "Could not save exam file."
+            return render(self.request, 'exam/new.html', {'form': form, 'save_error': save_error})
+        return HttpResponseRedirect(reverse('exam_edit', args=(exam.pk,)))
+
+
+class ExamUpdateView(UpdateView):
+    model = Exam
+    template_name = 'exam/edit.html'
+    
+    def form_valid(self, form):
+        try:
+            examfile = open('/space/najy2/tmp/exam.txt', 'w')
+            examfile.write(form.cleaned_data["content"])
+            examfile.close()
+            exam = form.save()
+        except IOError:
+            save_error = "Could not save exam file."
+            return render(self.request, 'exam/edit.html', {'form': form, 'save_error': save_error, 'exam': self.get_object()})
+        return HttpResponseRedirect(reverse('exam_edit', args=(exam.pk,)))
+    
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
         try:
             examfile = open('/space/najy2/tmp/exam.txt', 'r')
-            e.content = examfile.read()
+            self.object.content = examfile.read()
+#            self.object.content = examfile.read()
             examfile.close()
         except IOError:
-            e.content = "Could not read from exam file."
+            self.object.content = "Could not read from exam file."
             
-        form = ExamForm(instance=e)
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        return self.render_to_response(self.get_context_data(form=form))
         
-    return render(request, 'exam/edit.html', {'exam': e, 'form': form})
-
-def new(request):
-    if request.method == "POST":
-        form = ExamForm(request.POST)
-        if form.is_valid():
-            try:
-                examfile = open('/space/najy2/tmp/exam.txt', 'w')
-                examfile.write(form.cleaned_data["content"])
-                examfile.close()
-                e = form.save()
-            except IOError:
-                save_error = "Could not save exam file."
-                return render(request, 'exam/new.html', {'form': form, 'save_error': save_error})
-#            return HttpResponseRedirect(reverse('exam_index'))
-            return HttpResponseRedirect(reverse('exam_edit', args=(e.pk,)))
-    else:
-        form = ExamForm()
-    
-    return render(request, 'exam/new.html', {'form': form})
+    def get_success_url(self):
+        return reverse('exam_index')

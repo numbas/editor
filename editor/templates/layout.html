@@ -2,9 +2,9 @@
 
 {% block stylesheets %}
     <link href="{{ STATIC_URL }}css/main.css" type="text/css" rel="stylesheet" />
-{% endblock %}
+{% endblock stylesheets %}
 
-{% block title %}Numbas{% endblock %}
+{% block title %}Numbas{% endblock title %}
 
 {% block body %}
     <div id="wrapper">
@@ -19,14 +19,14 @@
                 <ul>
                     <li><a href="{% url exam_index %}">Home</a></li>
                 </ul>
-            {% endblock %}
+            {% endblock menu %}
         </div>
         <!-- end #menu -->
         <div id="page">
             <div id="page-bgbtm">
                 <div id="content">
                     {% block content %}
-                    {% endblock %}
+                    {% endblock content %}
                     <div style="clear:both;">&nbsp;</div>
                 </div>
                 <!-- end #content -->
@@ -34,7 +34,7 @@
                     <ul>
                         <li>
                             {% block sidebar %}
-                            {% endblock %}
+                            {% endblock sidebar %}
                         </li>
                     </ul>
                 </div>
@@ -49,18 +49,10 @@
         </p>
     </div>
     <!-- end #footer -->
-{% endblock %}
+{% endblock body %}
 
 {% block javascripts %}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js" type="text/javascript"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.13/jquery-ui.min.js" type="text/javascript"></script>
-    <script type="text/javascript">
-	    (function() {
-	   	  if (!window.Editor) {
-    	    window.Editor = {hello: 1, goodbye: 2, ajaxurl: '{% url exam_ajaxtest %}'};
-    	  }
-    	})();
-    </script>
-    <script src="{{ STATIC_URL }}js/editor.js" type="text/javascript"></script>
-{% endblock %}
+{% endblock javascripts %}
                     

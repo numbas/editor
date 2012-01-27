@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>New question</h2>
+
+{% if save_error %}<p><strong>{{ save_error }}</strong></p>{% endif %}
+
+<form action="{% url question_new %}" method="post">
+{% csrf_token %}
+{{ form.as_p }}
+<input type="submit" value="Submit" />
+</form>
+
+{% endblock content %}

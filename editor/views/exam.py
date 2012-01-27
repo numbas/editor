@@ -2,8 +2,15 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseServerError, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.views.generic import CreateView, UpdateView
+from django.forms.models import inlineformset_factory
 import subprocess
-from editor.models import Exam
+from editor.models import Exam, Question
+
+def create_exam_with_question(request):
+    ExamFormSet = inlineformset_factory(Exam, Question)
+#    author = Author.objects.get(name=u'Mike Royko')
+    formset = ExamFormSet()
+    return render(request, 'exam/new2.html', {'formset': formset})
 
 def ajaxtest(request):
     if request.is_ajax():
@@ -19,7 +26,6 @@ def ajaxtest(request):
             status = subprocess.Popen(['/home/najy2/numbas/bin/numbas.py', '-p/home/najy2/numbas', '-c', '-o/srv/www/countach.ncl.ac.uk80/numbas-previews/exam', tmp_exam_file], stdout = subprocess.PIPE)
             output = status.communicate()[0]
             message = 'Exam preview loaded in new window.'
-            print output
         return HttpResponse(message + "\n" + output)
     
 def save_content_to_file(request, form, **kwargs):

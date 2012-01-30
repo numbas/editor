@@ -3,9 +3,10 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseServerError, HttpResponseRedirect
 from django.shortcuts import render
 from django.views.generic import CreateView, UpdateView
-from editor.models import Exam
+from editor.models import Exam, ExamForm
 import git
 import subprocess
+import uuid
 
 def preview(request):
     if request.is_ajax():
@@ -24,14 +25,19 @@ def preview(request):
     
     
 def save_content_to_file(request, form, **kwargs):
+    exam = form.save(commit=False)
+    if not exam.filename:
+        exam.filename = str(uuid.uuid4())
     try:
         repo = git.Repo(settings.GLOBAL_SETTINGS['REPO_PATH'])
-        path_to_examfile = settings.GLOBAL_SETTINGS['REPO_PATH'] + 'exams/' + form.cleaned_data["filename"]
+#        path_to_examfile = settings.GLOBAL_SETTINGS['REPO_PATH'] + 'exams/' + form.cleaned_data["filename"]
+        path_to_examfile = settings.GLOBAL_SETTINGS['REPO_PATH'] + 'exams/' + exam.filename
         fh = open(path_to_examfile, 'w')
-        fh.write(form.cleaned_data["content"])
+        fh.write(exam.content)
         fh.close()
-        repo.index.add(['exams/' + form.cleaned_data["filename"]])
-        repo.index.commit('Made some changes to exam: %s' % form.cleaned_data["name"])
+#        repo.index.add(['exams/' + form.cleaned_data["filename"]])
+        repo.index.add(['exams/' + exam.filename])
+        repo.index.commit('Made some changes to exam: %s' % exam.name)
         exam = form.save()
     except IOError:
         save_error = "Could not save exam file."
@@ -49,6 +55,11 @@ class ExamCreateView(CreateView):
     def form_valid(self, form):
         return save_content_to_file(self.request, form)
 
+#    def get_initial(self):
+#        initial = super(ExamCreateView, self).get_initial()
+##        initial = initial.copy()
+#        initial['filename'] = str(uuid.uuid4())
+#        return initial
 
 class ExamUpdateView(UpdateView):
     model = Exam

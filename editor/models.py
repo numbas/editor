@@ -1,12 +1,13 @@
 from django.db import models
 from django.forms import ModelForm
 from django.template.defaultfilters import slugify
+import uuid
 
 class Question(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(editable=False)
     author = models.CharField(max_length=200)
-    filename = models.CharField(max_length=200)
+    filename = models.CharField(max_length=200, editable=False)
     content = models.TextField(blank=True)
     metadata = models.TextField(blank=True)
     tags = models.TextField(blank=True)
@@ -26,7 +27,7 @@ class Exam(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(editable=False)
     author = models.CharField(max_length=200)
-    filename = models.CharField(max_length=200)
+    filename = models.CharField(max_length=200, editable=False)
     content = models.TextField(blank=True)
     metadata = models.TextField(blank=True)
     

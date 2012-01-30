@@ -5,16 +5,20 @@ from django.shortcuts import render
 from django.views.generic import CreateView, UpdateView
 from editor.models import Question
 import git
+import uuid
 
 def save_content_to_file(request, form, **kwargs):
+    question = form.save(commit=False)
+    if not question.filename:
+        question.filename = str(uuid.uuid4())
     try:
         repo = git.Repo(settings.GLOBAL_SETTINGS['REPO_PATH'])
-        path_to_questionfile = settings.GLOBAL_SETTINGS['REPO_PATH'] + 'questions/' + form.cleaned_data["filename"]
+        path_to_questionfile = settings.GLOBAL_SETTINGS['REPO_PATH'] + 'questions/' + question.filename
         fh = open(path_to_questionfile, 'w')
-        fh.write(form.cleaned_data["content"])
+        fh.write(question.content)
         fh.close()
-        repo.index.add(['questions/' + form.cleaned_data["filename"]])
-        repo.index.commit('Made some changes to question: %s' % form.cleaned_data["name"])
+        repo.index.add(['questions/' + question.filename])
+        repo.index.commit('Made some changes to question: %s' % question.name)
         question = form.save()
     except IOError:
         save_error = "Could not save question file."

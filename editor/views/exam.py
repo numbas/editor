@@ -1,11 +1,13 @@
-from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseServerError, HttpResponseRedirect
+from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.views.generic import CreateView, UpdateView
 from django.forms.models import inlineformset_factory
-import subprocess
+from django.http import HttpResponse, HttpResponseServerError, HttpResponseRedirect
+from django.shortcuts import render
+from django.views.generic import CreateView, UpdateView
 from editor.models import Exam, Question
 from editor.views.generic import EditorCreateView
+import git
+import subprocess
 
 #def create_exam_with_question(request):
 #    ExamQuestionFormSet = inlineformset_factory(Exam, ExamQuestion)
@@ -31,9 +33,13 @@ def preview(request):
     
 def save_content_to_file(request, form, **kwargs):
     try:
-        examfile = open(form.cleaned_data["filename"], 'w')
-        examfile.write(form.cleaned_data["content"])
-        examfile.close()
+        repo = git.Repo(settings.GLOBAL_SETTINGS['REPO_PATH'])
+        path_to_examfile = settings.GLOBAL_SETTINGS['REPO_PATH'] + 'exams/' + form.cleaned_data["filename"]
+        fh = open(path_to_examfile, 'w')
+        fh.write(form.cleaned_data["content"])
+        fh.close()
+        repo.index.add(['exams/' + form.cleaned_data["filename"]])
+        repo.index.commit('Made some changes to exam')
         exam = form.save()
     except IOError:
         save_error = "Could not save exam file."
@@ -62,7 +68,7 @@ class ExamUpdateView(UpdateView):
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         try:
-            examfile = open(self.object.filename, 'r')
+            examfile = open(settings.GLOBAL_SETTINGS['REPO_PATH'] + 'exams/' + self.object.filename, 'r')
             self.object.content = examfile.read()
 #            self.object.content = examfile.read()
             examfile.close()

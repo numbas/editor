@@ -144,3 +144,7 @@ LOGGING = {
         },
     }
 }
+
+GLOBAL_SETTINGS = {
+    'REPO_PATH': '/space/najy2/numbas-questiondb/',
+}

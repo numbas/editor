@@ -5,14 +5,15 @@ from django.views.generic import CreateView, UpdateView
 from django.forms.models import inlineformset_factory
 import subprocess
 from editor.models import Exam, Question
+from editor.views.generic import EditorCreateView
 
-def create_exam_with_question(request):
-    ExamFormSet = inlineformset_factory(Exam, Question)
-#    author = Author.objects.get(name=u'Mike Royko')
-    formset = ExamFormSet()
-    return render(request, 'exam/new2.html', {'formset': formset})
+#def create_exam_with_question(request):
+#    ExamQuestionFormSet = inlineformset_factory(Exam, ExamQuestion)
+#    exam = Exam.objects.get(pk=1)
+#    formset = ExamQuestionFormSet(instance=exam)
+#    return render(request, 'exam/new2.html', {'formset': formset})
 
-def ajaxtest(request):
+def preview(request):
     if request.is_ajax():
         try:
             tmp_exam_file = '/tmp/exam.tmp'
@@ -38,6 +39,7 @@ def save_content_to_file(request, form, **kwargs):
         save_error = "Could not save exam file."
         if 'exam' in kwargs:
             return render(request, 'exam/edit.html', {'form': form, 'save_error': save_error, 'exam': kwargs['exam']})
+#            return render(request, 'exam/edit.html', {'form': form, 'save_error': save_error, 'exam': form})
         else:
             return render(request, 'exam/new.html', {'form': form, 'save_error': save_error})
     return HttpResponseRedirect(reverse('exam_edit', args=(exam.slug,)))
@@ -73,3 +75,7 @@ class ExamUpdateView(UpdateView):
         
     def get_success_url(self):
         return reverse('exam_index')
+    
+class NewExamCreateView(EditorCreateView):
+    model = Exam
+    template_name = 'exam/new.html'

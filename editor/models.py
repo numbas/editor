@@ -30,6 +30,10 @@ class Exam(models.Model):
         self.slug = slugify(self.name)
             
         super(Exam, self).save(*args, **kwargs)
+        
+#class ExamQuestion(models.Model):
+#    exam = models.ForeignKey(Exam)
+#    question = models.ForeignKey(Question)
     
 class QuestionForm(ModelForm):
     class Meta:

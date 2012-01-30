@@ -17,7 +17,9 @@
         <div id="menu">
             {% block menu %}
                 <ul>
-                    <li><a href="{% url exam_index %}">Home</a></li>
+                    <li><a href="{% url editor_index %}">Home</a></li>
+                    <li><a href="{% url exam_index %}">Exams</a></li>
+                    <li><a href="{% url question_index %}">Questions</a></li>
                 </ul>
             {% endblock menu %}
         </div>

@@ -15,7 +15,7 @@
 
 {% block sidebar %}
 <button id="exam-preview" type="button">Exam preview</button>
-<div id="some-stuff"></div>
+<div id="exam-preview-message"></div>
 {% endblock sidebar %}
 
 {% block javascripts %}
@@ -23,7 +23,7 @@
     <script type="text/javascript">
 	    (function() {
 	   	  if (!window.Editor) {
-    	    window.Editor = {ajaxurl: '{% url exam_ajaxtest %}'};
+    	    window.Editor = {exam_preview_url: '{% url exam_preview %}'};
     	  }
     	})();
     </script>

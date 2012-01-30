@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block content %}
+{% if list %}
+    <ul>
+    {% for question in list %}
+        {#<li><a href="{% url question_edit question.slug %}">{{ question.name }}</a></li>#}
+        <li>{{ question.name }}</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No questions are available.</p>
+{% endif %}
+<a href="{% url question_new %}">New question</a>
+{% endblock content %}

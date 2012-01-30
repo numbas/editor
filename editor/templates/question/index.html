@@ -1,11 +1,10 @@
 {% extends "layout.html" %}
 
 {% block content %}
-{% if list %}
+{% if question_list %}
     <ul>
-    {% for question in list %}
-        {#<li><a href="{% url question_edit question.slug %}">{{ question.name }}</a></li>#}
-        <li>{{ question.name }}</li>
+    {% for question in question_list %}
+        <li><a href="{% url question_edit question.slug %}">{{ question.name }}</a></li>
     {% endfor %}
     </ul>
 {% else %}

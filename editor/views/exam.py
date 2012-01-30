@@ -1,35 +1,27 @@
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.forms.models import inlineformset_factory
 from django.http import HttpResponse, HttpResponseServerError, HttpResponseRedirect
 from django.shortcuts import render
 from django.views.generic import CreateView, UpdateView
-from editor.models import Exam, Question
-from editor.views.generic import EditorCreateView
+from editor.models import Exam
 import git
 import subprocess
-
-#def create_exam_with_question(request):
-#    ExamQuestionFormSet = inlineformset_factory(Exam, ExamQuestion)
-#    exam = Exam.objects.get(pk=1)
-#    formset = ExamQuestionFormSet(instance=exam)
-#    return render(request, 'exam/new2.html', {'formset': formset})
 
 def preview(request):
     if request.is_ajax():
         try:
-            tmp_exam_file = '/tmp/exam.tmp'
-            fh = open(tmp_exam_file, 'w')
+            fh = open(settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE'], 'w')
             fh.write(request.POST['content'])
             fh.close()
         except IOError:
             message = 'Could not save exam to temporary file.'
             return HttpResponseServerError(message)
         else:
-            status = subprocess.Popen(['/home/najy2/numbas/bin/numbas.py', '-p/home/najy2/numbas', '-c', '-o/srv/www/countach.ncl.ac.uk80/numbas-previews/exam', tmp_exam_file], stdout = subprocess.PIPE)
+            status = subprocess.Popen(['/home/najy2/numbas/bin/numbas.py', '-p/home/najy2/numbas', '-c', '-o/srv/www/countach.ncl.ac.uk80/numbas-previews/exam', settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE']], stdout = subprocess.PIPE)
             output = status.communicate()[0]
             message = 'Exam preview loaded in new window.'
         return HttpResponse(message + "\n" + output)
+    
     
 def save_content_to_file(request, form, **kwargs):
     try:
@@ -39,16 +31,16 @@ def save_content_to_file(request, form, **kwargs):
         fh.write(form.cleaned_data["content"])
         fh.close()
         repo.index.add(['exams/' + form.cleaned_data["filename"]])
-        repo.index.commit('Made some changes to exam')
+        repo.index.commit('Made some changes to exam: %s' % form.cleaned_data["name"])
         exam = form.save()
     except IOError:
         save_error = "Could not save exam file."
         if 'exam' in kwargs:
             return render(request, 'exam/edit.html', {'form': form, 'save_error': save_error, 'exam': kwargs['exam']})
-#            return render(request, 'exam/edit.html', {'form': form, 'save_error': save_error, 'exam': form})
         else:
             return render(request, 'exam/new.html', {'form': form, 'save_error': save_error})
     return HttpResponseRedirect(reverse('exam_edit', args=(exam.slug,)))
+
 
 class ExamCreateView(CreateView):
     model = Exam
@@ -81,7 +73,3 @@ class ExamUpdateView(UpdateView):
         
     def get_success_url(self):
         return reverse('exam_index')
-    
-class NewExamCreateView(EditorCreateView):
-    model = Exam
-    template_name = 'exam/new.html'

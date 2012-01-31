@@ -4,6 +4,7 @@ from django.http import HttpResponse, HttpResponseServerError
 from django.views.generic import CreateView, UpdateView
 from editor.models import Exam
 from editor.views.generic import SaveContent
+import os
 import subprocess
 import uuid
 
@@ -47,7 +48,8 @@ class ExamUpdateView(UpdateView, SaveContent):
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         try:
-            examfile = open(settings.GLOBAL_SETTINGS['REPO_PATH'] + settings.GLOBAL_SETTINGS['EXAM_SUBDIR'] + self.object.filename, 'r')
+            examfile = open(os.path.join(settings.GLOBAL_SETTINGS['REPO_PATH'], settings.GLOBAL_SETTINGS['EXAM_SUBDIR'], self.object.filename), 'r')
+            print examfile
             self.object.content = examfile.read()
 #            self.object.content = examfile.read()
             examfile.close()

@@ -3,6 +3,7 @@ from django.core.urlresolvers import reverse
 from django.views.generic import CreateView, UpdateView
 from editor.models import Question
 from editor.views.generic import SaveContent
+import os
 import uuid
 
 class QuestionCreateView(CreateView, SaveContent):
@@ -29,7 +30,7 @@ class QuestionUpdateView(UpdateView, SaveContent):
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         try:
-            questionfile = open(settings.GLOBAL_SETTINGS['REPO_PATH'] + settings.GLOBAL_SETTINGS['QUESTION_SUBDIR'] + self.object.filename, 'r')
+            questionfile = open(os.path.join(settings.GLOBAL_SETTINGS['REPO_PATH'], settings.GLOBAL_SETTINGS['QUESTION_SUBDIR'], self.object.filename), 'r')
             self.object.content = questionfile.read()
             questionfile.close()
         except IOError:

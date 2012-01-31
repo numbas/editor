@@ -2,11 +2,15 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.views.generic import CreateView, UpdateView
 from editor.models import Question
-from editor.views.generic import SaveContent
+from editor.views.generic import SaveContentMixin
 import os
 import uuid
 
-class QuestionCreateView(CreateView, SaveContent):
+class QuestionCreateView(CreateView, SaveContentMixin):
+    """
+    Create a question.
+    """
+    
     model = Question
     template_name = 'question/new.html'
     
@@ -19,7 +23,11 @@ class QuestionCreateView(CreateView, SaveContent):
         return reverse('question_edit', args=(self.object.slug,))
 
 
-class QuestionUpdateView(UpdateView, SaveContent):
+class QuestionUpdateView(UpdateView, SaveContentMixin):
+    """
+    Edit a question.
+    """
+    
     model = Question
     template_name = 'question/edit.html'
     

@@ -4,7 +4,11 @@ from django.http import HttpResponseRedirect
 import git
 import os
 
-class SaveContent():
+class SaveContentMixin():
+    """
+    Save exam or question content to a git repository and to a database.
+    """
+    
 #    object = None
 #    request = None
 #    template_name = None
@@ -20,8 +24,6 @@ class SaveContent():
             repo.index.commit('Made some changes to %s' % self.object.name)
         except IOError:
             save_error = "Could not save file."
-            print "here"
             return render(self.request, self.template_name, {'form': form, 'save_error': save_error, 'object': self.object})
-        print "there"
         self.object = form.save()
         return HttpResponseRedirect(self.get_success_url())

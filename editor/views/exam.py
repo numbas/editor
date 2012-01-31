@@ -3,12 +3,16 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseServerError
 from django.views.generic import CreateView, UpdateView
 from editor.models import Exam
-from editor.views.generic import SaveContent
+from editor.views.generic import SaveContentMixin
 import os
 import subprocess
 import uuid
 
 def preview(request):
+    """
+    Retrieve the contents of an exam and compile it.  If this is successful, the exam will be shown in a new window by virtue of some JS.
+    """
+    
     if request.is_ajax():
         try:
             fh = open(settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE'], 'w')
@@ -32,7 +36,11 @@ def preview(request):
         return HttpResponse(message + "\n" + output)
     
 
-class ExamCreateView(CreateView, SaveContent):
+class ExamCreateView(CreateView, SaveContentMixin):
+    """
+    Create an exam.
+    """
+    
     model = Exam
     template_name = 'exam/new.html'
     
@@ -45,7 +53,11 @@ class ExamCreateView(CreateView, SaveContent):
         return reverse('exam_edit', args=(self.object.slug,))
 
 
-class ExamUpdateView(UpdateView, SaveContent):
+class ExamUpdateView(UpdateView, SaveContentMixin):
+    """
+    Edit an exam.
+    """
+    
     model = Exam
     template_name = 'exam/edit.html'
     

@@ -30,7 +30,7 @@ class Exam(models.Model):
     content = models.TextField(blank=True)
     metadata = models.TextField(blank=True)
     
-    def __unicode(self):
+    def __unicode__(self):
         return self.name
     
     def save(self, *args, **kwargs):

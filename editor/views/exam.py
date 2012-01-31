@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseServerError
+from django.shortcuts import render
 from django.views.generic import CreateView, UpdateView
 from editor.models import Exam
 from editor.views.generic import SaveContentMixin
@@ -12,7 +13,6 @@ def preview(request):
     """
     Retrieve the contents of an exam and compile it.  If this is successful, the exam will be shown in a new window by virtue of some JS.
     """
-    
     if request.is_ajax():
         try:
             fh = open(settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE'], 'w')
@@ -40,7 +40,6 @@ class ExamCreateView(CreateView, SaveContentMixin):
     """
     Create an exam.
     """
-    
     model = Exam
     template_name = 'exam/new.html'
     
@@ -57,7 +56,6 @@ class ExamUpdateView(UpdateView, SaveContentMixin):
     """
     Edit an exam.
     """
-    
     model = Exam
     template_name = 'exam/edit.html'
     
@@ -67,17 +65,17 @@ class ExamUpdateView(UpdateView, SaveContentMixin):
     
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
         try:
             examfile = open(os.path.join(settings.GLOBAL_SETTINGS['REPO_PATH'], settings.GLOBAL_SETTINGS['EXAM_SUBDIR'], self.object.filename), 'r')
             self.object.content = examfile.read()
-#            self.object.content = examfile.read()
             examfile.close()
         except IOError:
-            self.object.content = "Could not read from exam file."
-            
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
+            error = "Could not read from exam file."
+            return render(self.request, self.template_name, {'form': form, 'error': error, 'object': self.object})
         return self.render_to_response(self.get_context_data(form=form))
+
         
     def get_success_url(self):
         return reverse('exam_edit', args=(self.object.slug,))

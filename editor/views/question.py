@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core.urlresolvers import reverse
+from django.shortcuts import render
 from django.views.generic import CreateView, UpdateView
 from editor.models import Question
 from editor.views.generic import SaveContentMixin
@@ -10,7 +11,6 @@ class QuestionCreateView(CreateView, SaveContentMixin):
     """
     Create a question.
     """
-    
     model = Question
     template_name = 'question/new.html'
     
@@ -27,7 +27,6 @@ class QuestionUpdateView(UpdateView, SaveContentMixin):
     """
     Edit a question.
     """
-    
     model = Question
     template_name = 'question/edit.html'
     
@@ -37,15 +36,15 @@ class QuestionUpdateView(UpdateView, SaveContentMixin):
     
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
         try:
             questionfile = open(os.path.join(settings.GLOBAL_SETTINGS['REPO_PATH'], settings.GLOBAL_SETTINGS['QUESTION_SUBDIR'], self.object.filename), 'r')
             self.object.content = questionfile.read()
             questionfile.close()
         except IOError:
-            self.object.content = "Could not read from question file."
-            
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
+            error = "Could not read from exam file."
+            return render(self.request, self.template_name, {'form': form, 'error': error, 'object': self.object})
         return self.render_to_response(self.get_context_data(form=form))
         
     def get_success_url(self):

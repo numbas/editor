@@ -7,7 +7,7 @@ from editor.models import Question
 import git
 import uuid
 
-def save_content_to_file(request, form, **kwargs):
+def save_content_to_file(request, form, template_name, **kwargs):
     question = form.save(commit=False)
     if not question.filename:
         question.filename = str(uuid.uuid4())
@@ -22,10 +22,7 @@ def save_content_to_file(request, form, **kwargs):
         question = form.save()
     except IOError:
         save_error = "Could not save question file."
-        if 'question' in kwargs:
-            return render(request, 'question/edit.html', {'form': form, 'save_error': save_error, 'question': kwargs['question']})
-        else:
-            return render(request, 'question/new.html', {'form': form, 'save_error': save_error})
+        return render(request, template_name, {'form': form, 'save_error': save_error, 'question': question})
     return HttpResponseRedirect(reverse('question_edit', args=(question.slug,)))
 
 
@@ -34,7 +31,7 @@ class QuestionCreateView(CreateView):
     template_name = 'question/new.html'
     
     def form_valid(self, form):
-        return save_content_to_file(self.request, form)
+        return save_content_to_file(self.request, form, self.template_name)
 
 
 class QuestionUpdateView(UpdateView):
@@ -42,7 +39,8 @@ class QuestionUpdateView(UpdateView):
     template_name = 'question/edit.html'
     
     def form_valid(self, form):
-        return save_content_to_file(self.request, form, question=self.get_object())
+#        return save_content_to_file(self.request, form, question=self.get_object())
+        return save_content_to_file(self.request, form, self.template_name)
     
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()

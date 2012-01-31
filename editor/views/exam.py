@@ -24,27 +24,22 @@ def preview(request):
         return HttpResponse(message + "\n" + output)
     
     
-def save_content_to_file(request, form, **kwargs):
+def save_content_to_file(request, form, template_name, **kwargs):
     exam = form.save(commit=False)
     if not exam.filename:
         exam.filename = str(uuid.uuid4())
     try:
         repo = git.Repo(settings.GLOBAL_SETTINGS['REPO_PATH'])
-#        path_to_examfile = settings.GLOBAL_SETTINGS['REPO_PATH'] + 'exams/' + form.cleaned_data["filename"]
         path_to_examfile = settings.GLOBAL_SETTINGS['REPO_PATH'] + 'exams/' + exam.filename
         fh = open(path_to_examfile, 'w')
         fh.write(exam.content)
         fh.close()
-#        repo.index.add(['exams/' + form.cleaned_data["filename"]])
         repo.index.add(['exams/' + exam.filename])
         repo.index.commit('Made some changes to exam: %s' % exam.name)
         exam = form.save()
     except IOError:
         save_error = "Could not save exam file."
-        if 'exam' in kwargs:
-            return render(request, 'exam/edit.html', {'form': form, 'save_error': save_error, 'exam': kwargs['exam']})
-        else:
-            return render(request, 'exam/new.html', {'form': form, 'save_error': save_error})
+        return render(request, template_name, {'form': form, 'save_error': save_error, 'exam': exam})
     return HttpResponseRedirect(reverse('exam_edit', args=(exam.slug,)))
 
 
@@ -53,7 +48,7 @@ class ExamCreateView(CreateView):
     template_name = 'exam/new.html'
     
     def form_valid(self, form):
-        return save_content_to_file(self.request, form)
+        return save_content_to_file(self.request, form, self.template_name)
 
 #    def get_initial(self):
 #        initial = super(ExamCreateView, self).get_initial()
@@ -66,7 +61,7 @@ class ExamUpdateView(UpdateView):
     template_name = 'exam/edit.html'
     
     def form_valid(self, form):
-        return save_content_to_file(self.request, form, exam=self.get_object())
+        return save_content_to_file(self.request, form, self.template_name)
     
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()

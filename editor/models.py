@@ -1,11 +1,10 @@
 from django.db import models
 from django.forms import ModelForm
 from django.template.defaultfilters import slugify
-import uuid
 
 class Question(models.Model):
-    name = models.CharField(max_length=200)
-    slug = models.SlugField(editable=False)
+    name = models.CharField(max_length=200, unique=True)
+    slug = models.SlugField(editable=False, unique=True)
     author = models.CharField(max_length=200)
     filename = models.CharField(max_length=200, editable=False)
     content = models.TextField(blank=True)
@@ -24,8 +23,8 @@ class Question(models.Model):
 
 class Exam(models.Model):
     questions = models.ManyToManyField(Question, blank=True)
-    name = models.CharField(max_length=200)
-    slug = models.SlugField(editable=False)
+    name = models.CharField(max_length=200, unique=True)
+    slug = models.SlugField(editable=False, unique=True)
     author = models.CharField(max_length=200)
     filename = models.CharField(max_length=200, editable=False)
     content = models.TextField(blank=True)

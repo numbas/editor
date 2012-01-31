@@ -1,11 +1,11 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<h2>{{ question.name }}</h2>
+<h2>{{ object.name }}</h2>
 
 {% if save_error %}<p><strong>{{ save_error }}</strong></p>{% endif %}
 
-<form action="{% url question_edit question.slug %}" method="post">
+<form action="{% url question_edit object.slug %}" method="post">
 {% csrf_token %}
 {{ form.as_p }}
 <input type="submit" value="Submit" />

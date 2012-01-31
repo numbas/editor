@@ -1,10 +1,9 @@
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseServerError, HttpResponseRedirect
-from django.shortcuts import render
+from django.http import HttpResponse, HttpResponseServerError
 from django.views.generic import CreateView, UpdateView
-from editor.models import Exam, ExamForm
-import git
+from editor.models import Exam
+from editor.views.generic import SaveContent
 import subprocess
 import uuid
 
@@ -23,50 +22,32 @@ def preview(request):
             message = 'Exam preview loaded in new window.'
         return HttpResponse(message + "\n" + output)
     
-    
-def save_content_to_file(request, form, template_name, **kwargs):
-    exam = form.save(commit=False)
-    if not exam.filename:
-        exam.filename = str(uuid.uuid4())
-    try:
-        repo = git.Repo(settings.GLOBAL_SETTINGS['REPO_PATH'])
-        path_to_examfile = settings.GLOBAL_SETTINGS['REPO_PATH'] + 'exams/' + exam.filename
-        fh = open(path_to_examfile, 'w')
-        fh.write(exam.content)
-        fh.close()
-        repo.index.add(['exams/' + exam.filename])
-        repo.index.commit('Made some changes to exam: %s' % exam.name)
-        exam = form.save()
-    except IOError:
-        save_error = "Could not save exam file."
-        return render(request, template_name, {'form': form, 'save_error': save_error, 'exam': exam})
-    return HttpResponseRedirect(reverse('exam_edit', args=(exam.slug,)))
 
-
-class ExamCreateView(CreateView):
+class ExamCreateView(CreateView, SaveContent):
     model = Exam
     template_name = 'exam/new.html'
     
     def form_valid(self, form):
-        return save_content_to_file(self.request, form, self.template_name)
+        self.object = form.save(commit=False)
+        self.object.filename = str(uuid.uuid4())
+        return self.write_content(form, settings.GLOBAL_SETTINGS['EXAM_SUBDIR'])
+    
+    def get_success_url(self):
+        return reverse('exam_edit', args=(self.object.slug,))
 
-#    def get_initial(self):
-#        initial = super(ExamCreateView, self).get_initial()
-##        initial = initial.copy()
-#        initial['filename'] = str(uuid.uuid4())
-#        return initial
 
-class ExamUpdateView(UpdateView):
+class ExamUpdateView(UpdateView, SaveContent):
     model = Exam
     template_name = 'exam/edit.html'
     
     def form_valid(self, form):
-        return save_content_to_file(self.request, form, self.template_name)
+        self.object = form.save(commit=False)
+        return self.write_content(form, settings.GLOBAL_SETTINGS['EXAM_SUBDIR'])
     
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         try:
-            examfile = open(settings.GLOBAL_SETTINGS['REPO_PATH'] + 'exams/' + self.object.filename, 'r')
+            examfile = open(settings.GLOBAL_SETTINGS['REPO_PATH'] + settings.GLOBAL_SETTINGS['EXAM_SUBDIR'] + self.object.filename, 'r')
             self.object.content = examfile.read()
 #            self.object.content = examfile.read()
             examfile.close()
@@ -78,4 +59,4 @@ class ExamUpdateView(UpdateView):
         return self.render_to_response(self.get_context_data(form=form))
         
     def get_success_url(self):
-        return reverse('exam_index')
+        return reverse('exam_edit', args=(self.object.slug,))

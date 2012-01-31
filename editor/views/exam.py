@@ -18,7 +18,15 @@ def preview(request):
             message = 'Could not save exam to temporary file.'
             return HttpResponseServerError(message)
         else:
-            status = subprocess.Popen(['/home/najy2/numbas/bin/numbas.py', '-p/home/najy2/numbas', '-c', '-o/srv/www/countach.ncl.ac.uk80/numbas-previews/exam', settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE']], stdout = subprocess.PIPE)
+            status = subprocess.Popen(
+                [
+                    os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'], os.path.normpath('bin/numbas.py')),
+                    '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
+                    '-c',
+                    '-o'+os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'], 'exam'),
+                    settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE']
+                ], stdout = subprocess.PIPE
+            )
             output = status.communicate()[0]
             message = 'Exam preview loaded in new window.'
         return HttpResponse(message + "\n" + output)
@@ -49,7 +57,6 @@ class ExamUpdateView(UpdateView, SaveContent):
         self.object = self.get_object()
         try:
             examfile = open(os.path.join(settings.GLOBAL_SETTINGS['REPO_PATH'], settings.GLOBAL_SETTINGS['EXAM_SUBDIR'], self.object.filename), 'r')
-            print examfile
             self.object.content = examfile.read()
 #            self.object.content = examfile.read()
             examfile.close()

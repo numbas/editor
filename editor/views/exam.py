@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseServerError
 from django.shortcuts import render
-from django.views.generic import CreateView, UpdateView
+from django.views.generic import CreateView, DeleteView, UpdateView
 from editor.models import Exam
 from editor.views.generic import SaveContentMixin
 import os
@@ -51,6 +51,17 @@ class ExamCreateView(CreateView, SaveContentMixin):
     def get_success_url(self):
         return reverse('exam_edit', args=(self.object.slug,))
 
+
+class ExamDeleteView(DeleteView):
+    """
+    Delete an exam
+    """
+    model = Exam
+    template_name = 'exam/delete.html'
+    
+    def get_success_url(self):
+        return reverse('exam_index')
+    
 
 class ExamUpdateView(UpdateView, SaveContentMixin):
     """

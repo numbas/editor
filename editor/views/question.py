@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.shortcuts import render
-from django.views.generic import CreateView, UpdateView
+from django.views.generic import CreateView, DeleteView, UpdateView
 from editor.models import Question
 from editor.views.generic import SaveContentMixin
 import os
@@ -21,6 +21,16 @@ class QuestionCreateView(CreateView, SaveContentMixin):
     
     def get_success_url(self):
         return reverse('question_edit', args=(self.object.slug,))
+    
+class QuestionDeleteView(DeleteView):
+    """
+    Delete a question
+    """
+    model = Question
+    template_name = 'question/delete.html'
+    
+    def get_success_url(self):
+        return reverse('question_index')
 
 
 class QuestionUpdateView(UpdateView, SaveContentMixin):

@@ -7,7 +7,8 @@
 				Editor.exam_preview_url,
 				{
 					'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val(),
-					'content': $('#id_content').val()
+					'content': $('#id_content').val(),
+					'exam-edit-form': $('#exam-edit-form').serializeArray()
 				}
 			)
 			.success(function(response, status, xhr) {

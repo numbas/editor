@@ -9,12 +9,14 @@ import os
 import subprocess
 import uuid
 
-def preview(request):
+def preview(request, **kwargs):
     """
     Retrieve the contents of an exam and compile it.  If this is successful, the exam will be shown in a new window by virtue of some JS.
     """
     if request.is_ajax():
         try:
+            e = Exam.objects.get(slug=kwargs['slug'])
+            print e.questions.count()
             fh = open(settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE'], 'w')
             fh.write(request.POST['content'])
             fh.close()

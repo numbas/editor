@@ -5,7 +5,7 @@
 
 {% if error %}<p><strong>{{ error }}</strong></p>{% endif %}
 
-<form action="{% url exam_edit object.slug %}" method="post">
+<form action="{% url exam_edit object.slug %}" method="post" id="exam-edit-form">
 {% csrf_token %}
 {{ form.as_p }}
 <input type="submit" value="Submit" />
@@ -23,7 +23,7 @@
     <script type="text/javascript">
 	    (function() {
 	   	  if (!window.Editor) {
-    	    window.Editor = {exam_preview_url: '{% url exam_preview %}'};
+    	    window.Editor = {exam_preview_url: '{% url exam_preview object.slug %}'};
     	  }
     	})();
     </script>

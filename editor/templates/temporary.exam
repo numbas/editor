@@ -1,0 +1,12 @@
+{% autoescape off %}
+{
+	{{ exam.content }}
+	questions: [
+	{% for question in exam.questions.all %}
+		{
+			{{ question.content }}
+		}
+	{% endfor %}
+	]
+}
+{% endautoescape %}

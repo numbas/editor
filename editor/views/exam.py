@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseServerError
 from django.shortcuts import render
+from django.template import loader, Context
 from django.views.generic import CreateView, DeleteView, UpdateView
 from editor.models import Exam
 from editor.views.generic import SaveContentMixin
@@ -16,9 +17,12 @@ def preview(request, **kwargs):
     if request.is_ajax():
         try:
             e = Exam.objects.get(slug=kwargs['slug'])
-            print e.questions.count()
+            t = loader.get_template('temporary.exam')
+            c = Context({
+                'exam': e
+            })
             fh = open(settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE'], 'w')
-            fh.write(request.POST['content'])
+            fh.write(t.render(c))
             fh.close()
         except IOError:
             message = 'Could not save exam to temporary file.'

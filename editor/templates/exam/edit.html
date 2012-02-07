@@ -8,6 +8,9 @@
 <form action="{% url exam_edit object.slug %}" method="post" id="exam-edit-form">
 {% csrf_token %}
 {{ form.as_p }}
+{% for formset in inlines %}
+	{{ formset.as_p }}
+{% endfor %}
 <input type="submit" value="Submit" />
 </form>
 

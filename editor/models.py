@@ -1,5 +1,4 @@
 from django.db import models
-from django.forms import ModelForm
 from django.template.defaultfilters import slugify
 
 class Question(models.Model):
@@ -22,7 +21,7 @@ class Question(models.Model):
 
 
 class Exam(models.Model):
-    questions = models.ManyToManyField(Question, blank=True)
+    questions = models.ManyToManyField(Question, through='ExamQuestion', blank=True, editable=False)
     name = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(editable=False, unique=True)
     author = models.CharField(max_length=200)
@@ -39,14 +38,13 @@ class Exam(models.Model):
             
         super(Exam, self).save(*args, **kwargs)
         
-#class ExamQuestion(models.Model):
-#    exam = models.ForeignKey(Exam)
-#    question = models.ForeignKey(Question)
-    
-class QuestionForm(ModelForm):
-    class Meta:
-        model = Question
         
-class ExamForm(ModelForm):
+class ExamQuestion(models.Model):
     class Meta:
-        model = Exam
+        unique_together = (('exam', 'question'), ('exam', '_order'))
+        ordering = ['_order']
+#        order_with_respect_to = 'exam'
+         
+    exam = models.ForeignKey(Exam)
+    question = models.ForeignKey(Question)
+    _order = models.PositiveIntegerField()

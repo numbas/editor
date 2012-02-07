@@ -17,10 +17,11 @@ class QuestionCreateView(CreateView, SaveContentMixin):
     def form_valid(self, form):
         self.object = form.save(commit=False)
         self.object.filename = str(uuid.uuid4())
-        return self.write_content(form, settings.GLOBAL_SETTINGS['QUESTION_SUBDIR'])
+        return self.write_content(settings.GLOBAL_SETTINGS['QUESTION_SUBDIR'], form)
     
     def get_success_url(self):
         return reverse('question_edit', args=(self.object.slug,))
+    
     
 class QuestionDeleteView(DeleteView):
     """
@@ -42,7 +43,7 @@ class QuestionUpdateView(UpdateView, SaveContentMixin):
     
     def form_valid(self, form):
         self.object = form.save(commit=False)
-        return self.write_content(form, settings.GLOBAL_SETTINGS['QUESTION_SUBDIR'])
+        return self.write_content(settings.GLOBAL_SETTINGS['QUESTION_SUBDIR'], form)
     
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()

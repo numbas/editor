@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.template import loader, Context
 from django.views.generic import DeleteView
 from editor.forms import ExamForm, ExamQuestionFormSet
-from editor.models import Exam, ExamQuestion
+from editor.models import Exam, ExamQuestion, Question
 from editor.views.generic import SaveContentMixin
 from extra_views import InlineFormSet, CreateWithInlinesView, UpdateWithInlinesView
 import os
@@ -23,6 +23,18 @@ def preview(request, **kwargs):
             c = Context({
                 'exam': e
             })
+        except Exam.DoesNotExist:
+            try:
+                q = Question.objects.get(slug=kwargs['slug'])
+                q.content = request.POST['content']
+                t = loader.get_template('temporary.question')
+                c = Context({
+                    'question': q
+                })
+            except Question.DoesNotExist:
+                message = 'No such exam or question exists'
+                return HttpResponseServerError(message)
+        try:
             fh = open(settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE'], 'w')
             fh.write(t.render(c))
             fh.close()

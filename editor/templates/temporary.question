@@ -1,0 +1,9 @@
+{% autoescape off %}
+{
+	questions: [
+		{
+			{{ question.content }}
+		}
+	]
+}
+{% endautoescape %}

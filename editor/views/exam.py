@@ -86,13 +86,11 @@ class ExamCreateView(CreateWithInlinesView, SaveContentMixin):
     def forms_valid(self, form, inlines):
         self.object = form.save(commit=False)
         self.object.filename = str(uuid.uuid4())
-#        return self.write_content(form, inlines, settings.GLOBAL_SETTINGS['EXAM_SUBDIR'])
         return self.write_content(settings.GLOBAL_SETTINGS['EXAM_SUBDIR'], form, inlines=inlines)
     
-    def get_context_data(self, **kwargs):
-        context = super(ExamCreateView, self).get_context_data(**kwargs)
-        print context['inlines'][0].errors
-        return context
+#    def get_context_data(self, **kwargs):
+#        context = super(ExamCreateView, self).get_context_data(**kwargs)
+#        return context
     
     def get_success_url(self):
         return reverse('exam_edit', args=(self.object.slug,))
@@ -121,19 +119,19 @@ class ExamUpdateView(UpdateWithInlinesView, SaveContentMixin):
         self.object = form.save(commit=False)
         return self.write_content(settings.GLOBAL_SETTINGS['EXAM_SUBDIR'], form, inlines=inlines)
     
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        inlines = self.construct_inlines()
-        try:
-            examfile = open(os.path.join(settings.GLOBAL_SETTINGS['REPO_PATH'], settings.GLOBAL_SETTINGS['EXAM_SUBDIR'], self.object.filename), 'r')
-            self.object.content = examfile.read()
-            examfile.close()
-        except IOError:
-            error = "Could not read from exam file."
-            return render(self.request, self.template_name, {'form': form, 'inlines': inlines, 'error': error, 'object': self.object})
-        return self.render_to_response(self.get_context_data(form=form, inlines=inlines))
+#    def get(self, request, *args, **kwargs):
+#        self.object = self.get_object()
+#        form_class = self.get_form_class()
+#        form = self.get_form(form_class)
+#        inlines = self.construct_inlines()
+#        try:
+#            examfile = open(os.path.join(settings.GLOBAL_SETTINGS['REPO_PATH'], settings.GLOBAL_SETTINGS['EXAM_SUBDIR'], self.object.filename), 'r')
+#            self.object.content = examfile.read()
+#            examfile.close()
+#        except IOError:
+#            error = "Could not read from exam file."
+#            return render(self.request, self.template_name, {'form': form, 'inlines': inlines, 'error': error, 'object': self.object})
+#        return self.render_to_response(self.get_context_data(form=form, inlines=inlines))
         
     def get_success_url(self):
         return reverse('exam_edit', args=(self.object.slug,))

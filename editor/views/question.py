@@ -45,18 +45,18 @@ class QuestionUpdateView(UpdateView, SaveContentMixin):
         self.object = form.save(commit=False)
         return self.write_content(settings.GLOBAL_SETTINGS['QUESTION_SUBDIR'], form)
     
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        try:
-            questionfile = open(os.path.join(settings.GLOBAL_SETTINGS['REPO_PATH'], settings.GLOBAL_SETTINGS['QUESTION_SUBDIR'], self.object.filename), 'r')
-            self.object.content = questionfile.read()
-            questionfile.close()
-        except IOError:
-            error = "Could not read from exam file."
-            return render(self.request, self.template_name, {'form': form, 'error': error, 'object': self.object})
-        return self.render_to_response(self.get_context_data(form=form))
+#    def get(self, request, *args, **kwargs):
+#        self.object = self.get_object()
+#        form_class = self.get_form_class()
+#        form = self.get_form(form_class)
+#        try:
+#            questionfile = open(os.path.join(settings.GLOBAL_SETTINGS['REPO_PATH'], settings.GLOBAL_SETTINGS['QUESTION_SUBDIR'], self.object.filename), 'r')
+#            self.object.content = questionfile.read()
+#            questionfile.close()
+#        except IOError:
+#            error = "Could not read from exam file."
+#            return render(self.request, self.template_name, {'form': form, 'error': error, 'object': self.object})
+#        return self.render_to_response(self.get_context_data(form=form))
         
     def get_success_url(self):
         return reverse('question_edit', args=(self.object.slug,))

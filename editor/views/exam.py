@@ -52,6 +52,9 @@ def preview(request, **kwargs):
                 ], stdout = subprocess.PIPE
             )
             output = status.communicate()[0]
+            if status.returncode != 0:
+                message = 'Something went wrong.'
+                return HttpResponseServerError(message + "\n" + output)
             message = 'Exam preview loaded in new window.'
         return HttpResponse(message + "\n" + output)
     

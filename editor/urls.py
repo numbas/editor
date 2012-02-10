@@ -2,7 +2,7 @@ from django.conf.urls.defaults import *
 from django.views.generic import ListView, TemplateView
 
 from editor.models import Exam, Question
-from editor.views.exam import ExamCreateView, ExamDeleteView, ExamUpdateView
+from editor.views.exam import ExamCreateView, ExamListView, ExamDeleteView, ExamUpdateView, ExamSearchView
 from editor.views.question import QuestionCreateView, QuestionDeleteView, QuestionUpdateView
 
 urlpatterns = patterns('',
@@ -10,10 +10,15 @@ urlpatterns = patterns('',
         name='editor_index'),
                        
     url(r'^exam/$',
-        ListView.as_view(model=Exam,template_name='exam/index.html'),
-        name='exam_index',),
+        ExamListView.as_view(), name='exam_index',),
                        
     url(r'^exam/new/$', ExamCreateView.as_view(), name='exam_new'),
+    
+    url(r'^exam/search/$', ExamSearchView.as_view(), name='exam_search'),
+    
+    url(r'^exam/search/results/$',
+        TemplateView.as_view(template_name='exam/search-results.html'),
+        name='exam_search_results'),
     
 #    url(r'^exam/new/$', 'editor.views.exam.testview', name='exam_new'),
 

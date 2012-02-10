@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>Exam search</h2>
+
+{% if error %}<p><strong>{{ error }}</strong></p>{% endif %}
+
+<form action="{% url exam_search %}" method="post">
+{% csrf_token %}
+{{ form.as_p }}
+<input type="submit" value="Submit" />
+</form>
+
+{% endblock content %}

@@ -4,12 +4,12 @@ import uuid
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.shortcuts import render
 from django.template import loader, Context
-from django.views.generic import DeleteView
+from django.views.generic import DeleteView, FormView, ListView
 
-from editor.forms import ExamForm, ExamQuestionFormSet
+from editor.forms import ExamForm, ExamQuestionFormSet, ExamSearchForm
 from editor.models import Exam, ExamQuestion, Question
 from editor.views.generic import SaveContentMixin
 from extra_views import InlineFormSet, CreateWithInlinesView, UpdateWithInlinesView
@@ -145,3 +145,29 @@ class ExamUpdateView(UpdateWithInlinesView, SaveContentMixin):
         
     def get_success_url(self):
         return reverse('exam_edit', args=(self.object.slug,))
+    
+    
+class ExamSearchView(FormView):
+    
+    """Search for an exam."""
+    
+    form_class = ExamSearchForm
+    template_name = 'exam/search.html'
+    
+    def form_valid(self, form):
+#        exam = form.cleaned_data['name']
+        exam_list = Exam.objects.filter(name__icontains=form.cleaned_data['name'])
+        return render(self.request, 'exam/index.html', {'exam_list': exam_list})
+    
+#    def get_success_url(self):
+#        return reverse('exam_search_results')
+    
+    
+class ExamListView(ListView):
+    model=Exam
+    template_name='exam/index.html'
+
+#    def get_queryset(self):
+#        if 'exam' in self.kwargs:
+#            print "hello"
+#        return Exam.objects.all()

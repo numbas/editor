@@ -12,5 +12,8 @@
 {% endif %}
 <a href="{% url exam_new %}">New exam</a>
 <br />
-{#<a href="{% url exam_new2 %}">New exam with question</a>#}
 {% endblock content %}
+
+{% block sidebar %}
+<a href="{% url exam_search %}">Search exams</a>
+{% endblock sidebar %}

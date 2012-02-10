@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>Exam search results</h2>
+
+{% if error %}<p><strong>{{ error }}</strong></p>{% endif %}
+
+{{ exam }}
+
+{% endblock content %}

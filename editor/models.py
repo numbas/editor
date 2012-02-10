@@ -2,6 +2,13 @@ from django.db import models
 from django.template.defaultfilters import slugify
 
 class Question(models.Model):
+    
+    """Model class for a question.
+    
+    Many-to-many relation with Exam through ExamQuestion.
+    
+    """
+    
     name = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(editable=False, unique=True)
     author = models.CharField(max_length=200)
@@ -21,7 +28,15 @@ class Question(models.Model):
 
 
 class Exam(models.Model):
-    questions = models.ManyToManyField(Question, through='ExamQuestion', blank=True, editable=False)
+    
+    """Model class for an Exam.
+    
+    Many-to-many relation with Question through ExamQuestion.
+    
+    """
+    
+    questions = models.ManyToManyField(Question, through='ExamQuestion',
+                                       blank=True, editable=False)
     name = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(editable=False, unique=True)
     author = models.CharField(max_length=200)
@@ -40,6 +55,9 @@ class Exam(models.Model):
         
         
 class ExamQuestion(models.Model):
+    
+    """Model class linking exams and questions."""
+    
     class Meta:
         unique_together = (('exam', 'question'), ('exam', '_order'))
         ordering = ['_order']

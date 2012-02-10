@@ -1,20 +1,25 @@
+import os
+import subprocess
+import uuid
+
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseServerError
 from django.shortcuts import render
 from django.template import loader, Context
 from django.views.generic import DeleteView
+
 from editor.forms import ExamForm, ExamQuestionFormSet
 from editor.models import Exam, ExamQuestion, Question
 from editor.views.generic import SaveContentMixin
 from extra_views import InlineFormSet, CreateWithInlinesView, UpdateWithInlinesView
-import os
-import subprocess
-import uuid
 
 def preview(request, **kwargs):
-    """
-    Retrieve the contents of an exam and compile it.  If this is successful, the exam will be shown in a new window by virtue of some JS.
+    """Retrieve the contents of an exam and compile it.
+    
+    If this is successful, the exam will be shown in a new window by virtue of
+    some JS.
+    
     """
     if request.is_ajax():
         try:
@@ -44,10 +49,12 @@ def preview(request, **kwargs):
         else:
             status = subprocess.Popen(
                 [
-                    os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'], os.path.normpath('bin/numbas.py')),
+                    os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
+                                 os.path.normpath('bin/numbas.py')),
                     '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
                     '-c',
-                    '-o'+os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'], 'exam'),
+                    '-o'+os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'],
+                                      'exam'),
                     settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE']
                 ], stdout = subprocess.PIPE
             )
@@ -60,6 +67,7 @@ def preview(request, **kwargs):
     
     
 def testview(request):
+    """For testing."""
     if request.method == 'POST':
         form = ExamForm(request.POST)
         formset = ExamQuestionFormSet(request.POST)
@@ -76,9 +84,9 @@ class ExamQuestionInline(InlineFormSet):
     
 
 class ExamCreateView(CreateWithInlinesView, SaveContentMixin):
-    """
-    Create an exam.
-    """
+    
+    """Create an exam."""
+    
     model = Exam
     template_name = 'exam/new.html'
     inlines = [ExamQuestionInline]
@@ -86,7 +94,8 @@ class ExamCreateView(CreateWithInlinesView, SaveContentMixin):
     def forms_valid(self, form, inlines):
         self.object = form.save(commit=False)
         self.object.filename = str(uuid.uuid4())
-        return self.write_content(settings.GLOBAL_SETTINGS['EXAM_SUBDIR'], form, inlines=inlines)
+        return self.write_content(settings.GLOBAL_SETTINGS['EXAM_SUBDIR'],
+                                  form, inlines=inlines)
     
 #    def get_context_data(self, **kwargs):
 #        context = super(ExamCreateView, self).get_context_data(**kwargs)
@@ -97,9 +106,9 @@ class ExamCreateView(CreateWithInlinesView, SaveContentMixin):
     
         
 class ExamDeleteView(DeleteView):
-    """
-    Delete an exam
-    """
+    
+    """Delete an exam."""
+    
     model = Exam
     template_name = 'exam/delete.html'
     
@@ -108,16 +117,17 @@ class ExamDeleteView(DeleteView):
     
     
 class ExamUpdateView(UpdateWithInlinesView, SaveContentMixin):
-    """
-    Edit an exam.
-    """
+    
+    """Edit an exam."""
+    
     model = Exam
     template_name = 'exam/edit.html'
     inlines = [ExamQuestionInline]
     
     def forms_valid(self, form, inlines):
         self.object = form.save(commit=False)
-        return self.write_content(settings.GLOBAL_SETTINGS['EXAM_SUBDIR'], form, inlines=inlines)
+        return self.write_content(settings.GLOBAL_SETTINGS['EXAM_SUBDIR'],
+                                  form, inlines=inlines)
     
 #    def get(self, request, *args, **kwargs):
 #        self.object = self.get_object()

@@ -1,32 +1,35 @@
+import os
+import uuid
+
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.shortcuts import render
 from django.views.generic import CreateView, DeleteView, UpdateView
+
 from editor.models import Question
 from editor.views.generic import SaveContentMixin
-import os
-import uuid
 
 class QuestionCreateView(CreateView, SaveContentMixin):
-    """
-    Create a question.
-    """
+    
+    """Create a question."""
+    
     model = Question
     template_name = 'question/new.html'
     
     def form_valid(self, form):
         self.object = form.save(commit=False)
         self.object.filename = str(uuid.uuid4())
-        return self.write_content(settings.GLOBAL_SETTINGS['QUESTION_SUBDIR'], form)
+        return self.write_content(settings.GLOBAL_SETTINGS['QUESTION_SUBDIR'],
+                                  form)
     
     def get_success_url(self):
         return reverse('question_edit', args=(self.object.slug,))
     
     
 class QuestionDeleteView(DeleteView):
-    """
-    Delete a question
-    """
+    
+    """Delete a question."""
+    
     model = Question
     template_name = 'question/delete.html'
     
@@ -35,15 +38,16 @@ class QuestionDeleteView(DeleteView):
 
 
 class QuestionUpdateView(UpdateView, SaveContentMixin):
-    """
-    Edit a question.
-    """
+    
+    """Edit a question."""
+    
     model = Question
     template_name = 'question/edit.html'
     
     def form_valid(self, form):
         self.object = form.save(commit=False)
-        return self.write_content(settings.GLOBAL_SETTINGS['QUESTION_SUBDIR'], form)
+        return self.write_content(settings.GLOBAL_SETTINGS['QUESTION_SUBDIR'],
+                                  form)
     
 #    def get(self, request, *args, **kwargs):
 #        self.object = self.get_object()

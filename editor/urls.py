@@ -16,10 +16,6 @@ urlpatterns = patterns('',
     
     url(r'^exam/search/$', ExamSearchView.as_view(), name='exam_search'),
     
-    url(r'^exam/search/results/$',
-        TemplateView.as_view(template_name='exam/search-results.html'),
-        name='exam_search_results'),
-    
 #    url(r'^exam/new/$', 'editor.views.exam.testview', name='exam_new'),
 
     url(r'^exam/(?P<slug>[\w-]+)/$', ExamUpdateView.as_view(),

@@ -7,7 +7,7 @@
 
 <form action="{% url exam_delete exam.slug %}" method="post">
 {% csrf_token %}
-<p>Are you sure?<input type="submit" value="Delete" /></p>
+<p>Are you sure? <input type="submit" value="Delete" /></p>
 <a href="{% url exam_index %}"/>Cancel</a>
 </form>
 

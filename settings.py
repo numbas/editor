@@ -146,7 +146,7 @@ LOGGING = {
 }
 
 GLOBAL_SETTINGS = {
-    'REPO_PATH': '/space/najy2/numbas-questiondb',
+    'REPO_PATH': '/srv/numbas-questiondb',
     'QUESTION_SUBDIR': 'questions',
     'EXAM_SUBDIR': 'exams',
     'TEMP_EXAM_FILE': '/tmp/exam.tmp',

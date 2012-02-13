@@ -19,6 +19,13 @@ class ExamForm(forms.ModelForm):
         model = Exam
         
         
+class ExamQuestionForm(forms.ModelForm):
+    
+    """Form linking exams and questions."""
+    
+    qn_order = forms.IntegerField(label='Order')
+    
+    
 class ExamSearchForm(forms.Form):
     
     """Search form for an exam."""

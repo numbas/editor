@@ -9,7 +9,7 @@ from django.shortcuts import render
 from django.template import loader, Context
 from django.views.generic import DeleteView, FormView, ListView
 
-from editor.forms import ExamForm, ExamQuestionFormSet, ExamSearchForm
+from editor.forms import ExamForm, ExamQuestionForm, ExamQuestionFormSet, ExamSearchForm
 from editor.models import Exam, ExamQuestion, Question
 from editor.views.generic import SaveContentMixin
 from extra_views import InlineFormSet, CreateWithInlinesView, UpdateWithInlinesView
@@ -81,6 +81,7 @@ def testview(request):
 
 class ExamQuestionInline(InlineFormSet):
     model = ExamQuestion
+    form_class = ExamQuestionForm
     
 
 class ExamCreateView(CreateWithInlinesView, SaveContentMixin):

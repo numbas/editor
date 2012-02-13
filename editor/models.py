@@ -59,10 +59,9 @@ class ExamQuestion(models.Model):
     """Model class linking exams and questions."""
     
     class Meta:
-        unique_together = (('exam', 'question'), ('exam', '_order'))
-        ordering = ['_order']
-#        order_with_respect_to = 'exam'
+        unique_together = (('exam', 'question'), ('exam', 'qn_order'))
+        ordering = ['qn_order']
          
     exam = models.ForeignKey(Exam)
     question = models.ForeignKey(Question)
-    _order = models.PositiveIntegerField()
+    qn_order = models.PositiveIntegerField()

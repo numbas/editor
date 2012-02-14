@@ -140,6 +140,6 @@ GLOBAL_SETTINGS = {
     'QUESTION_SUBDIR': 'questions',
     'EXAM_SUBDIR': 'exams',
     'TEMP_EXAM_FILE': '/tmp/exam.tmp',
-    'NUMBAS_PATH': '/home/najy2/numbas',
+    'NUMBAS_PATH': '/srv/numbas',
     'PREVIEW_PATH': '/srv/www/countach.ncl.ac.uk80/numbas-previews'
 }

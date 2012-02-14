@@ -1,5 +1,6 @@
 (function() {
 	$(document).ready(function() {
+		var preview;
 		$('#preview').click(function() {
 			$.post(
 				Editor.exam_preview_url,
@@ -12,7 +13,9 @@
 			)
 			.success(function(response, status, xhr) {
 				$('#preview-message').html(response);
-				window.open("http://numbas.mas.ncl.ac.uk/numbas-previews/exam/");
+				if (preview)
+					preview.close();
+				preview = window.open("http://numbas.mas.ncl.ac.uk/numbas-previews/exam/");
 			})
 			.error(function(response, status, xhr) {
 				$('#preview-message').html(response.responseText);

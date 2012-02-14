@@ -1,4 +1,5 @@
 # Django settings for numbas project.
+from database import DATABASES
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -8,17 +9,6 @@ ADMINS = (
 )
 
 MANAGERS = ADMINS
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'numbas',                      # Or path to database file if using sqlite3.
-        'USER': 'numbas',                      # Not used with sqlite3.
-        'PASSWORD': 'numb4s',                  # Not used with sqlite3.
-        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
-    }
-}
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name

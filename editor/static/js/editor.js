@@ -13,7 +13,7 @@
 			)
 			.success(function(response, status, xhr) {
 				$('#exam-preview-message').html(response);
-				window.open("http://countach.ncl.ac.uk/numbas-previews/exam/");
+				window.open("http://numbas.mas.ncl.ac.uk/numbas-previews/exam/");
 			})
 			.error(function(response, status, xhr) {
 				$('#exam-preview-message').html(response.responseText);

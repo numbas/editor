@@ -49,7 +49,7 @@ def preview(request, **kwargs):
         else:
             status = subprocess.Popen(
                 [
-                    'python3',
+                    settings.GLOBAL_SETTINGS['PYTHON_EXEC'],
                     os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
                                  os.path.normpath('bin/numbas.py')),
                     '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],

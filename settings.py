@@ -141,5 +141,6 @@ GLOBAL_SETTINGS = {
     'EXAM_SUBDIR': 'exams',
     'TEMP_EXAM_FILE': '/tmp/exam.tmp',
     'NUMBAS_PATH': '/srv/numbas',
-    'PREVIEW_PATH': '/srv/www/countach.ncl.ac.uk80/numbas-previews'
+    'PREVIEW_PATH': '/srv/www/countach.ncl.ac.uk80/numbas-previews',
+    'PYTHON_EXEC': '/usr/bin/python3.1'
 }

@@ -31,6 +31,7 @@ def preview(request, **kwargs):
         except Exam.DoesNotExist:
             try:
                 q = Question.objects.get(slug=kwargs['slug'])
+                q.name = request.POST['name']
                 q.content = request.POST['content']
                 t = loader.get_template('temporary.question')
                 c = Context({

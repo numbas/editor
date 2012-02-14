@@ -5,7 +5,7 @@
 
 {% if error %}<p><strong>{{ error }}</strong></p>{% endif %}
 
-<form action="{% url question_edit object.slug %}" method="post">
+<form action="{% url question_edit object.slug %}" method="post" id="edit-form">
 {% csrf_token %}
 {{ form.as_p }}
 <input type="submit" value="Submit" />
@@ -14,8 +14,8 @@
 {% endblock content %}
 
 {% block sidebar %}
-<button id="exam-preview" type="button">Question preview</button>
-<div id="exam-preview-message"></div>
+<button id="preview" type="button">Question preview</button>
+<div id="preview-message"></div>
 {% endblock sidebar %}
 
 {% block javascripts %}

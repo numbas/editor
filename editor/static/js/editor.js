@@ -1,8 +1,6 @@
 (function() {
 	$(document).ready(function() {
 		$('#exam-preview').click(function() {
-//			$('#some-stuff').load('{% url exam_ajaxtest %}');
-//			$('#some-stuff').load(
 			$.post(
 				Editor.exam_preview_url,
 				{
@@ -17,7 +15,6 @@
 			})
 			.error(function(response, status, xhr) {
 				$('#exam-preview-message').html(response.responseText);
-				console.log(response.responseText);
 			});
 		});
 	});

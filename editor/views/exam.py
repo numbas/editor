@@ -4,7 +4,7 @@ import uuid
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseServerError
 from django.shortcuts import render
 from django.template import loader, Context
 from django.views.generic import DeleteView, FormView, ListView

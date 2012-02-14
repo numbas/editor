@@ -81,6 +81,9 @@ def testview(request):
 
 
 class ExamQuestionInline(InlineFormSet):
+    
+    """Inline ExamQuestion view, to be used in Exam views."""
+    
     model = ExamQuestion
     form_class = ExamQuestionForm
     

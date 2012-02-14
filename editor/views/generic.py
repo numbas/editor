@@ -25,7 +25,7 @@ class SaveContentMixin():
             fh.close()
             repo.index.add([os.path.join(directory, self.object.filename)])
             repo.index.commit('Made some changes to %s' % self.object.name)
-        except IOError:
+        except (IOError, OSError):
             error = "Could not save file."
             return render(self.request, self.template_name,
                           {'form': form, 'inlines': inlines, 'error': error,

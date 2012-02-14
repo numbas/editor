@@ -16,6 +16,8 @@ class SaveContentMixin():
     def write_content(self, directory, form, inlines=None):
         try:
             repo = git.Repo(settings.GLOBAL_SETTINGS['REPO_PATH'])
+            os.environ['GIT_AUTHOR_NAME'] = 'Numbas'
+            os.environ['GIT_AUTHOR_EMAIL'] = 'numbas@ncl.ac.uk'
             path_to_file = os.path.join(settings.GLOBAL_SETTINGS['REPO_PATH'],
                                         directory, self.object.filename)
             fh = open(path_to_file, 'w')

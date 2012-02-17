@@ -10,7 +10,6 @@
 {{ form.as_p }}
 <input type="submit" value="Submit" />
 </form>
-
 {% endblock content %}
 
 {% block sidebar %}
@@ -20,12 +19,15 @@
 
 {% block javascripts %}
 {{ block.super }}
-    <script type="text/javascript">
-	    (function() {
-	   	  if (!window.Editor) {
-    	    window.Editor = {exam_preview_url: '{% url exam_preview object.slug %}'};
-    	  }
-    	})();
-    </script>
-    <script src="{{ STATIC_URL }}js/editor.js" type="text/javascript"></script>
+<script type="text/javascript">
+{% autoescape off %}
+var question = {{ question_JSON }};
+{% endautoescape %}
+(function() {
+	if (!window.Editor) {
+		window.Editor = {exam_preview_url: '{% url exam_preview object.slug %}'};
+	}
+})();
+</script>
+<script src="{{ STATIC_URL }}js/editor.js" type="text/javascript"></script>
 {% endblock javascripts %}

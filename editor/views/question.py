@@ -1,8 +1,10 @@
+import json
 import os
 import uuid
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
+from django.forms.models import model_to_dict
 from django.shortcuts import render
 from django.views.generic import CreateView, DeleteView, UpdateView
 
@@ -21,6 +23,7 @@ class QuestionCreateView(CreateView, SaveContentMixin):
         self.object.filename = str(uuid.uuid4())
         return self.write_content(settings.GLOBAL_SETTINGS['QUESTION_SUBDIR'],
                                   form)
+        
     
     def get_success_url(self):
         return reverse('question_edit', args=(self.object.slug,))
@@ -48,6 +51,11 @@ class QuestionUpdateView(UpdateView, SaveContentMixin):
         self.object = form.save(commit=False)
         return self.write_content(settings.GLOBAL_SETTINGS['QUESTION_SUBDIR'],
                                   form)
+    
+    def get_context_data(self, **kwargs):
+        context = super(QuestionUpdateView, self).get_context_data(**kwargs)
+        context['question_JSON'] = json.dumps(model_to_dict(self.object))
+        return context
     
 #    def get(self, request, *args, **kwargs):
 #        self.object = self.get_object()

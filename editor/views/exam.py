@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 import uuid
@@ -5,6 +6,7 @@ import uuid
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseServerError
+from django.forms.models import model_to_dict
 from django.shortcuts import render
 from django.template import loader, Context
 from django.views.generic import DeleteView, FormView, ListView
@@ -134,6 +136,11 @@ class ExamUpdateView(UpdateWithInlinesView, SaveContentMixin):
         self.object = form.save(commit=False)
         return self.write_content(settings.GLOBAL_SETTINGS['EXAM_SUBDIR'],
                                   form, inlines=inlines)
+        
+    def get_context_data(self, **kwargs):
+        context = super(ExamUpdateView, self).get_context_data(**kwargs)
+        context['exam_JSON'] = json.dumps(model_to_dict(self.object))
+        return context
     
 #    def get(self, request, *args, **kwargs):
 #        self.object = self.get_object()

@@ -105,10 +105,6 @@ class ExamCreateView(CreateWithInlinesView, SaveContentMixin):
         return self.write_content(settings.GLOBAL_SETTINGS['EXAM_SUBDIR'],
                                   form, inlines=inlines)
     
-#    def get_context_data(self, **kwargs):
-#        context = super(ExamCreateView, self).get_context_data(**kwargs)
-#        return context
-    
     def get_success_url(self):
         return reverse('exam_edit', args=(self.object.slug,))
     
@@ -142,20 +138,6 @@ class ExamUpdateView(UpdateWithInlinesView, SaveContentMixin):
         context['exam_JSON'] = json.dumps(model_to_dict(self.object))
         return context
     
-#    def get(self, request, *args, **kwargs):
-#        self.object = self.get_object()
-#        form_class = self.get_form_class()
-#        form = self.get_form(form_class)
-#        inlines = self.construct_inlines()
-#        try:
-#            examfile = open(os.path.join(settings.GLOBAL_SETTINGS['REPO_PATH'], settings.GLOBAL_SETTINGS['EXAM_SUBDIR'], self.object.filename), 'r')
-#            self.object.content = examfile.read()
-#            examfile.close()
-#        except IOError:
-#            error = "Could not read from exam file."
-#            return render(self.request, self.template_name, {'form': form, 'inlines': inlines, 'error': error, 'object': self.object})
-#        return self.render_to_response(self.get_context_data(form=form, inlines=inlines))
-        
     def get_success_url(self):
         return reverse('exam_edit', args=(self.object.slug,))
     
@@ -171,10 +153,6 @@ class ExamSearchView(FormView):
 #        exam = form.cleaned_data['name']
         exam_list = Exam.objects.filter(name__icontains=form.cleaned_data['name'])
         return render(self.request, 'exam/index.html', {'exam_list': exam_list})
-    
-#    def get_success_url(self):
-#        return reverse('exam_search_results')
-    
     
 class ExamListView(ListView):
     model=Exam

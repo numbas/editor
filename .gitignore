@@ -2,3 +2,4 @@
 *.swp
 numbas.db
 database.py
+settings.py

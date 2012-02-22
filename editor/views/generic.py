@@ -5,7 +5,7 @@ from django.conf import settings
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 
-from examparser import ExamParser
+from examparser import ExamParser, ParseError
 
 class SaveContentMixin():
     
@@ -30,7 +30,7 @@ class SaveContentMixin():
             fh.close()
             repo.index.add([os.path.join(directory, self.object.filename)])
             repo.index.commit('Made some changes to %s' % self.object.name)
-        except (IOError, OSError, IndexError) as err:
+        except (IOError, OSError, IndexError, ParseError) as err:
             error = 'Error: ' + str(err)
             return render(self.request, self.template_name,
                           {'form': form, 'inlines': inlines, 'error': error,

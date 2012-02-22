@@ -26,6 +26,8 @@ def preview(request, **kwargs):
     if request.is_ajax():
         try:
             e = Exam.objects.get(slug=kwargs['slug'])
+            # Strip off the final brace.  The template adds it back in.
+            e.content = e.content.rstrip()[:-1]
             t = loader.get_template('temporary.exam')
             c = Context({
                 'exam': e
@@ -33,7 +35,6 @@ def preview(request, **kwargs):
         except Exam.DoesNotExist:
             try:
                 q = Question.objects.get(slug=kwargs['slug'])
-                q.name = request.POST['name']
                 q.content = request.POST['content']
                 t = loader.get_template('temporary.question')
                 c = Context({

@@ -8,10 +8,7 @@
 		browse: true
     }
 	questions: [
-		{
-			name: {{ question.name }}
-			{{ question.content }}
-		}
+		{{ question.content }}
 	]
 }
 {% endautoescape %}

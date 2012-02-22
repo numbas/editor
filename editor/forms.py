@@ -17,6 +17,18 @@ class ExamForm(forms.ModelForm):
     
     class Meta:
         model = Exam
+
+
+class ExamPreviewForm(ExamForm):
+    
+    """Form for an exam preview.
+    
+    Used in exam previews, so that the form data are always taken to be
+    valid
+    """
+    
+    def clean(self):
+        return self.cleaned_data
         
         
 class ExamQuestionForm(forms.ModelForm):
@@ -25,6 +37,21 @@ class ExamQuestionForm(forms.ModelForm):
     
     qn_order = forms.IntegerField(label='Order')
     
+    class Meta:
+        model = ExamQuestion
+
+
+class ExamQuestionPreviewForm(ExamQuestionForm):    
+    
+    """Form for an exam question preview.
+    
+    Used in exam previews, so that the form data are always taken to be
+    valid.
+    """
+    
+    def clean(self):
+        return self.cleaned_data
+        
     
 class ExamSearchForm(forms.Form):
     
@@ -33,4 +60,4 @@ class ExamSearchForm(forms.Form):
     name = forms.CharField()
         
         
-ExamQuestionFormSet = inlineformset_factory(Exam, ExamQuestion)
+ExamQuestionFormSet = inlineformset_factory(Exam, ExamQuestion, form=ExamQuestionForm)

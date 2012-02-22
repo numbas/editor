@@ -11,7 +11,7 @@ from django.shortcuts import render
 from django.template import loader, Context
 from django.views.generic import DeleteView, FormView, ListView
 
-from editor.forms import ExamForm, ExamQuestionForm, ExamQuestionFormSet, ExamSearchForm
+from editor.forms import ExamForm, ExamPreviewForm, ExamQuestionForm, ExamQuestionPreviewForm, ExamQuestionFormSet, ExamSearchForm
 from editor.models import Exam, ExamQuestion, Question
 from editor.views.generic import SaveContentMixin
 from extra_views import InlineFormSet, CreateWithInlinesView, UpdateWithInlinesView
@@ -25,6 +25,25 @@ def preview(request, **kwargs):
     """
     if request.is_ajax():
         try:
+#            ecv = ExamCreateView()
+#            ecv.request = request
+#            ecv.object = None
+#            ecv.post(request)
+#            print ecv.get_form(ecv.get_form_class())
+#            ecv.get(request)
+#            ecv.construct_inlines()
+#            exam = Exam()
+#            exam_form = ExamPreviewForm(request.POST, instance=exam)
+#            exam_form.save(commit=False)
+#            print exam.author
+#            print request.POST
+#            
+#            exam_question = ExamQuestion()
+#            exam_question_form = ExamQuestionFormSet(request.POST, instance=exam_question)
+###            print exam_question_form
+#            exam_question_form.save(commit=False)
+#            exam_question.author
+#            print exam_question_form
             e = Exam.objects.get(slug=kwargs['slug'])
             t = loader.get_template('temporary.exam')
             c = Context({
@@ -74,13 +93,16 @@ def testview(request):
     """For testing."""
     if request.method == 'POST':
         form = ExamForm(request.POST)
-        formset = ExamQuestionFormSet(request.POST)
-        if form.is_valid() and formset.is_valid():
-            print "valid"
+        print ExamQuestionFormSet(request.POST)
+        inlines = [ExamQuestionFormSet(request.POST)]
+        if form.is_valid():
+            for formset in inlines:
+                if formset.is_valid():
+                    print "valid"
     else:
         form = ExamForm()
-        formset = ExamQuestionFormSet()
-    return render(request, 'exam/new.html', {'form': form, 'formset': formset})
+        inlines = [ExamQuestionFormSet()]
+    return render(request, 'exam/new.html', {'form': form, 'inlines': inlines})
 
 
 class ExamQuestionInline(InlineFormSet):
@@ -88,7 +110,8 @@ class ExamQuestionInline(InlineFormSet):
     """Inline ExamQuestion view, to be used in Exam views."""
     
     model = ExamQuestion
-    form_class = ExamQuestionForm
+#    form_class = ExamQuestionForm
+#    extra = 0
     
 
 class ExamCreateView(CreateWithInlinesView, SaveContentMixin):

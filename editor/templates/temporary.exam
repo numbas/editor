@@ -1,13 +1,8 @@
 {% autoescape off %}
-{
-	name: {{ exam.name }}
 	{{ exam.content }}
 	questions: [
 	{% for question in exam.questions.all %}
-		{
-			name: {{ question.name }}
-			{{ question.content }}
-		}
+		{{ question.content }}
 	{% endfor %}
 	]
 }

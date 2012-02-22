@@ -1,0 +1,237 @@
+﻿#editor {
+	max-width:90%;
+	min-width: 50em;
+	border:2px solid #ccc;
+	padding:1em;
+	background: #fff5f5;
+}
+
+.questions {
+	background: #eef;
+	padding-right:1em;
+}
+
+.question > * > .fold {
+	background: #f5f5ff;
+	padding-right:1em;
+}
+
+.part > * > .fold {
+	background: #f5fff5;
+	padding-right:1em;
+}
+
+.steps .part > * > .fold {
+	background: #e5e5ee;
+}
+
+.variable .def {
+	width:20em;
+}
+
+table.multiplechoice {
+	width:auto;
+	border: 1px solid;
+	margin-left:2em;
+}
+
+.matrix {
+	overflow:auto;
+}
+
+table.multiplechoice th {
+	background: #c3d9ff;
+}
+
+table.multiplechoice thead tr th:not(:last-child) {
+	border-bottom: 1px solid;
+}
+
+table.multiplechoice tbody tr:not(:last-child) th{
+	border-right: 1px solid;
+}
+
+ul.choices {
+	list-style:none;
+}
+
+.properties {
+	display:inline-block;
+}
+
+.properties > div {
+	margin-bottom: 0.5em;
+	min-height:1.5em;
+}
+
+.properties input,.properties select {
+	font-size:100%;
+	text-align:right;
+}
+
+.properties div {
+	clear:both;
+}
+.properties label {
+	float:left;
+	margin-right: 5em;
+}
+.properties input,.properties select, .properties .display {
+	float:right;
+}
+.properties input[type=text] {
+	padding-right:0.2em;
+}
+
+.dict input:last-child {
+	text-align:right;
+}
+
+.writemaths { 
+	margin-left: 1em;
+	width: 90%;
+	border: 1px solid #aaa;
+}
+
+.writemaths input, .writemaths .line {
+	padding: 0;
+	text-align:left;
+}
+
+input[type=number] {
+	width: 5em;
+}
+
+ol.editlist > button {
+	margin-left:-1em;
+}
+
+.editlist > li {
+	clear: both;
+	margin-bottom:0.5em;
+}
+
+.editlist > li.closed {
+	overflow-y:hidden;
+}
+
+.editlist > li > * > .fold > #header {
+	padding-left:1em;
+	min-width:5em;
+	min-height:1em;
+}
+
+ul.editlist {
+	list-style:none;
+}
+
+.editlist .add {
+	list-style: none;
+	margin-left:-1.5em;
+	border: none;
+}
+
+.fold {
+	padding-bottom: 0.8em;
+	border-top:2px solid #ccc;
+	border-left:2px solid #ccc;
+}
+
+.fold > #header {
+	display:inline-block;
+	font-weight:bold;
+	background-color: #eee;
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+}
+.fold > #header:hover {
+	cursor:default;
+}
+
+.fold > #folder {
+	padding-left: 1em;
+	padding-top: 0.5em;
+}
+.fold.folded > #folder {
+	display: none;
+}
+.fold.folded > #header {
+	background:#ddd;
+}
+
+button.remove {
+	background: transparent url(cross.png);
+	width:16px;
+	height:16px;
+	border:none;
+}
+
+button.remove:hover {
+	cursor:default;
+	background-color: #ccc;
+}
+
+.listbox {
+	display:inline-block;
+	border: 1px solid #aaa;
+	padding:0;
+}
+
+.listbox input {
+	border: none;
+	float:initial;
+}
+.listbox input:focus {
+	border:none;
+}
+
+.listbox ul {
+	display:inline-block;
+	padding: 0;
+}
+
+.listbox li {
+	display:inline-block;
+	margin-right:.2em;
+	background: #eee;
+	padding:0 .3em;
+	font-family:monospace;
+}
+.listbox li:hover {
+	background: #bbb;
+	cursor:default;
+}
+
+.question > * > button.remove, .part > * > button.remove {
+	position:relative;
+	display:run-in;
+	left:-2em;
+	top:3em;
+}
+
+#menu > * {
+	position:fixed;
+	top:0;
+	right:0;
+}
+
+#menubar > div {
+	background:#ccc;
+	z-index:1;
+	display:inline-block;
+	width:auto;
+	font-family:sans-serif;
+	padding: 0.2em 3em;
+}
+#menubar > div:hover {
+	cursor:default;
+}
+#menu #preview {
+	display:none;
+	height:90%;
+	min-width:30%;
+	border: 1px solid black;
+	background: white;
+	padding: 1.5em;
+	overflow:auto;
+}

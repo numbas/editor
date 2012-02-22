@@ -169,7 +169,7 @@ WriteMaths.prototype = {
 			var i=0;
 			var inMath=false;
 			var startMath = 0;
-			var mathDelimit;
+			var mathLimit,mathDelimit;
 			while(i<this.selectionStart)
 			{
 				if(inMath)
@@ -183,13 +183,15 @@ WriteMaths.prototype = {
 				else if(txt[i]=='$')
 				{
 					inMath = true;
-					startMath = i;
+					startMath = i+1;
+					mathLimit = '$';
 					mathDelimit = '$';
 				}
 				else if(txt.slice(i,i+2)=='\\[')
 				{
 					inMath = true;
-					startMath = i;
+					startMath = i+2;
+					mathLimit = '\\[';
 					mathDelimit = '\\]';
 				}
 				i+=1;
@@ -207,18 +209,22 @@ WriteMaths.prototype = {
 					inMath = false;
 				i+=1;
 			}
-			if(i==val.length)
+			if(inMath && i==val.length)
 			{
+				//try to make a guess at how much of the remaining string is meant to be maths
 				var words = val.slice(startMath).split(' ');
 				var j = 0;
-				while(j<words.length && !words[j].match(/^\w\w+$/))
+				while(j<words.length && !words[j].match(/^[a-zA-Z]{2,}$/))
 				{
 					j+=1;
 				}
 				i = startMath + words.slice(0,j).join(' ').length;
-				i = Math.max(this.selectionStart,i);
+				i = Math.max(this.selectionStart,i)+1;
 			}
-			var math = val.slice(startMath,i+mathDelimit.length-1);
+			var math = val.slice(startMath,i-1);
+			if(!math.length)
+				return;
+			math = mathLimit + math + mathDelimit;
 
 			var dr = $('<p>'+txt.slice(0,startMath)+'</p>');
 			e.append(dr);
@@ -529,9 +535,8 @@ function makeParagraph(val,notypeset)
 {
 	if(val.length)
 	{
-		var d = $('<p></p>');
 		var dval = cleanJME(val);
-		d = $(dval);
+		var d = $(textile(dval));
 		if(d.is('div'))
 		{
 			var p=$('<p></p>');
@@ -552,7 +557,6 @@ function makeParagraph(val,notypeset)
 function cleanJME(val)
 {
 	var dval = $.trim(val);
-	dval = textile(dval);
 	var bits = Numbas.util.contentsplitbrackets(dval);
 	dval='';
 	for(var i=0;i<bits.length;i++)
@@ -606,20 +610,34 @@ function finishParagraph(p) {
 			var id = $(this).attr('id');
 			var src = $(this).attr('source');
 			$(this).css('width','400px').css('height','300px');
-			JXG.JSXGraph
-				.initBoard(id,{
-					showCopyright:false,
-					originX: 200,
-					originY: 150,
-					unitX: 50,
-					unitY: 50,
-					axis:true
-				})
-				.construct(src)
-			;
+			urlexp.lastIndex = 0;
+			if(src.match(/^geonext /))
+			{
+				src = src.slice(8);
+				if(urlexp.test(src))
+					JXG.JSXGraph.loadBoardFromFile(id,src,'Geonext');
+				else
+					JXG.JSXGraph.loadBoardFromString(id,src,'Geonext');
+			}
+			else
+			{
+				JXG.JSXGraph
+					.initBoard(id,{
+						showCopyright:false,
+						originX: 200,
+						originY: 150,
+						unitX: 50,
+						unitY: 50,
+						axis:true
+					})
+					.construct(src)
+				;
+			}
 		});
 	}
-	catch(e) {}
+	catch(e) {
+		console.log(e);
+	}
 	p.linkURLs().find('a').oembed()
 	p.find('a').attr('target','_blank');
 }

@@ -27,6 +27,7 @@
 
 .variable .def {
 	width:20em;
+    font-family: monospace;
 }
 
 table.multiplechoice {
@@ -64,7 +65,8 @@ ul.choices {
 	min-height:1.5em;
 }
 
-.properties input,.properties select {
+.properties input,
+.properties select {
 	font-size:100%;
 	text-align:right;
 }
@@ -106,16 +108,18 @@ ol.editlist > button {
 	margin-left:-1em;
 }
 
-.editlist > li {
+#editor .editlist > li {
 	clear: both;
 	margin-bottom:0.5em;
+    list-style-image:none;
+    list-style-type:none;
 }
 
 .editlist > li.closed {
 	overflow-y:hidden;
 }
 
-.editlist > li > * > .fold > #header {
+.editlist > li > * > .fold > #folder-header {
 	padding-left:1em;
 	min-width:5em;
 	min-height:1em;
@@ -137,14 +141,14 @@ ul.editlist {
 	border-left:2px solid #ccc;
 }
 
-.fold > #header {
+.fold > #folder-header {
 	display:inline-block;
 	font-weight:bold;
 	background-color: #eee;
 	padding-left: 0.5em;
 	padding-right: 0.5em;
 }
-.fold > #header:hover {
+.fold > #folder-header:hover {
 	cursor:default;
 }
 
@@ -155,12 +159,12 @@ ul.editlist {
 .fold.folded > #folder {
 	display: none;
 }
-.fold.folded > #header {
+.fold.folded > #folder-header {
 	background:#ddd;
 }
 
 button.remove {
-	background: transparent url(cross.png);
+	background: transparent url(../images/cross.png);
 	width:16px;
 	height:16px;
 	border:none;
@@ -209,29 +213,3 @@ button.remove:hover {
 	top:3em;
 }
 
-#menu > * {
-	position:fixed;
-	top:0;
-	right:0;
-}
-
-#menubar > div {
-	background:#ccc;
-	z-index:1;
-	display:inline-block;
-	width:auto;
-	font-family:sans-serif;
-	padding: 0.2em 3em;
-}
-#menubar > div:hover {
-	cursor:default;
-}
-#menu #preview {
-	display:none;
-	height:90%;
-	min-width:30%;
-	border: 1px solid black;
-	background: white;
-	padding: 1.5em;
-	overflow:auto;
-}

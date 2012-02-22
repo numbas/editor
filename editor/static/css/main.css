@@ -216,16 +216,6 @@ ul#menu li a:hover
   width: 613px;
   padding: 0;}
 
-#content ul
-{ margin: 2px 0 22px 0px;}
-
-#content ul li
-{ list-style-type: none;
-  background: url(../images/bullet.png) no-repeat;
-  margin: 0 0 6px 0; 
-  padding: 0 0 4px 25px;
-  line-height: 1.5em;}
-
 #footer
 { width: 916px;
   font: normal 90% arial, sans-serif;

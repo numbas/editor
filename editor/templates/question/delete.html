@@ -5,7 +5,7 @@
 
 {% if error %}<p><strong>{{ error }}</strong></p>{% endif %}
 
-<form action="{% url question_delete question.slug %}" method="post">
+<form action="{% url question_delete question.pk,question.slug %}" method="post">
 {% csrf_token %}
 <p>Are you sure?<input type="submit" value="Delete" /></p>
 <a href="{% url question_index %}"/>Cancel</a>

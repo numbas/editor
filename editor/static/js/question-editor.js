@@ -35,7 +35,7 @@ $(document).ready(function() {
     {
         var q = this;
 
-        this.name = ko.observable('A Question');
+        this.name = ko.observable(questionJSON.name);
         this.statement = ko.observable('');
         this.advice = ko.observable('');
 
@@ -53,9 +53,18 @@ $(document).ready(function() {
                 data[o.name] = o.value;
             });
             data.content = q.output();
-           // $.post($('#edit-form').attr('action'),data);
+
+            $.post($('#edit-form').attr('action'),data)
+                .success(function(data){
+                    var address = location.protocol+'//'+location.host+'/question/'+questionJSON.id+'/'+slugify(q.name())+'/';
+                    history.replaceState({},q.name(),address);
+                })
+                .error(function(data) {
+                    $('#preview-message').html(data);
+                })
+            ;
             return data;
-        });
+        }).extend({throttle:1000});
 
 
         if(data)

@@ -23,7 +23,7 @@ class QuestionCreateView(CreateView, SaveContentMixin):
                                   form)
     
     def get_success_url(self):
-        return reverse('question_edit', args=(self.object.slug,))
+        return reverse('question_edit', args=(self.object.pk,self.object.slug,))
     
     
 class QuestionDeleteView(DeleteView):
@@ -55,4 +55,4 @@ class QuestionUpdateView(UpdateView, SaveContentMixin):
         return context
     
     def get_success_url(self):
-        return reverse('question_edit', args=(self.object.slug,))
+        return reverse('question_edit', args=(self.object.pk,self.object.slug))

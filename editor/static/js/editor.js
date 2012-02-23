@@ -1,8 +1,12 @@
-var prettyData,mapLoad;
+var prettyData,mapLoad,slugify;
 if(!window.Editor)
     window.Editor = {};
 
 $(document).ready(function() {
+
+    slugify = function(s) {
+        return s.trim().replace(/[^\w\s]/g,'').toLowerCase().replace(/\s/g,'-');
+    };
 
     mapLoad = function(data) {
         return function(n) {                    

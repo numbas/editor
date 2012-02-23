@@ -107,7 +107,7 @@ class ExamCreateView(CreateWithInlinesView, SaveContentMixin):
                                   form, inlines=inlines)
     
     def get_success_url(self):
-        return reverse('exam_edit', args=(self.object.slug,))
+        return reverse('exam_edit', args=(self.object.pk,self.object.slug,))
     
         
 class ExamDeleteView(DeleteView):
@@ -140,7 +140,7 @@ class ExamUpdateView(UpdateWithInlinesView, SaveContentMixin):
         return context
     
     def get_success_url(self):
-        return reverse('exam_edit', args=(self.object.slug,))
+        return reverse('exam_edit', args=(self.object.pk,self.object.slug,))
     
     
 class ExamSearchView(FormView):

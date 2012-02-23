@@ -4,7 +4,7 @@
 {% if exam_list %}
     <ul>
     {% for exam in exam_list %}
-        <li><a href="{% url exam_edit exam.slug %}">{{ exam.name }}</a>&nbsp;<a href="{% url exam_delete exam.slug %}">Delete</a></li>
+        <li><a href="{% url exam_edit exam.pk,exam.slug %}">{{ exam.name }}</a>&nbsp;<a href="{% url exam_delete exam.pk,exam.slug %}">Delete</a></li>
     {% endfor %}
     </ul>
 {% else %}

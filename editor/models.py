@@ -9,8 +9,8 @@ class Question(models.Model):
     
     """
     
-    name = models.CharField(max_length=200, unique=True, editable=False)
-    slug = models.SlugField(editable=False, unique=True)
+    name = models.CharField(max_length=200, editable=False)
+    slug = models.SlugField(editable=False)
     author = models.CharField(max_length=200)
     filename = models.CharField(max_length=200, editable=False)
     content = models.TextField(blank=True)
@@ -37,8 +37,8 @@ class Exam(models.Model):
     
     questions = models.ManyToManyField(Question, through='ExamQuestion',
                                        blank=True, editable=False)
-    name = models.CharField(max_length=200, unique=True, editable=False)
-    slug = models.SlugField(editable=False, unique=True)
+    name = models.CharField(max_length=200, editable=False)
+    slug = models.SlugField(editable=False)
     author = models.CharField(max_length=200)
     filename = models.CharField(max_length=200, editable=False)
     content = models.TextField(blank=True)

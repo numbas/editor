@@ -4,7 +4,7 @@
 {% if question_list %}
     <ul>
     {% for question in question_list %}
-        <li><a href="{% url question_edit question.slug %}">{{ question.name }}</a>&nbsp;<a href="{% url question_delete question.slug %}">Delete</a></li>
+        <li><a href="{% url question_edit question.pk,question.slug %}">{{ question.name }}</a>&nbsp;<a href="{% url question_delete question.pk,question.slug %}">Delete</a></li>
     {% endfor %}
     </ul>
 {% else %}

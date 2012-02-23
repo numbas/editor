@@ -5,7 +5,9 @@ WriteMaths = function(e,options)
 	if(!options)
 		options = {};
 	e=$(e);
-	e.addClass('writemaths');
+	e.addClass('writemaths')
+     .attr('tabindex','0')
+    ;
 	this.e = e;
 	this.d = options.display;
 	this.saveName = options.saveName;
@@ -44,6 +46,11 @@ WriteMaths.prototype = {
 	bindEvents: function() {
 		var wm = this;
 		var e = this.e;
+
+        //when widget receives focus, select first line
+        e.focus(function() {
+            $(this).find('.line:first').click();
+        });
 
 		//trigger a 'setstate' event to set the state of the writemaths area
 		e.bind('setstate',function(ev,state) {

@@ -1,6 +1,9 @@
-﻿#editor {
-	max-width:90%;
-	min-width: 50em;
+﻿#fallback-form {
+    display: none;
+}
+
+#editor {
+    width: 35em;
 	border:2px solid #ccc;
 	padding:1em;
 	background: #fff5f5;
@@ -25,8 +28,12 @@
 	background: #e5e5ee;
 }
 
+.variable .name {
+    width: 8em;
+}
+
 .variable .def {
-	width:20em;
+	width: 20em;
     font-family: monospace;
 }
 

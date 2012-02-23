@@ -18,7 +18,8 @@ $(document).ready(function() {
             $('#preview-message').html(response);
             if (preview)
                 preview.close();
-            preview = window.open("http://numbas.mas.ncl.ac.uk/numbas-previews/exam/");
+            var origin = location.protocol+'//'+location.host;
+            preview = window.open(origin+"/numbas-previews/exam/");
         })
         .error(function(response, status, xhr) {
             $('#preview-message').html(response.responseText);
@@ -32,6 +33,8 @@ $(document).ready(function() {
 
     function Question(data)
     {
+        var q = this;
+
         this.name = ko.observable('A Question');
         this.statement = ko.observable('');
         this.advice = ko.observable('');
@@ -43,6 +46,16 @@ $(document).ready(function() {
         this.output = ko.computed(function() {
             return prettyData(this.export());
         },this);
+
+        this.save = ko.computed(function() {
+            var data = {};
+            $('#edit-form').serializeArray().map(function(o){
+                data[o.name] = o.value;
+            });
+            data.content = q.output();
+           // $.post($('#edit-form').attr('action'),data);
+            return data;
+        });
 
 
         if(data)
@@ -541,9 +554,7 @@ $(document).ready(function() {
     //create an exam object
     var data = $('#id_content').val();
     data = parseExam(data);
-    console.log(data);
     viewModel = new Question(data);
     ko.applyBindings(viewModel);
 
-    $('#fallback-form').hide();
 });

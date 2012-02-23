@@ -196,7 +196,6 @@ $(document).ready(function() {
                 switch(e.which)
                 {
                 case 13:
-                case 9:
                     var val = $(this).val().slice(0,this.selectionStart);
                     if(val.length)
                         value.push(val);

@@ -20,6 +20,9 @@ urlpatterns = patterns('',
 
     url(r'^exam/(?P<slug>[\w-]+)/$', ExamUpdateView.as_view(),
         name='exam_edit'),
+                       
+    url(r'^exam/id/(?P<pk>\d+)/$', ExamUpdateView.as_view(),
+        name='exam_edit_by_pk'),
     
     url(r'^exam/(?P<slug>[\w-]+)/delete/$', ExamDeleteView.as_view(),
         name='exam_delete'),
@@ -35,6 +38,9 @@ urlpatterns = patterns('',
     
     url(r'^question/(?P<slug>[\w-]+)/$', QuestionUpdateView.as_view(),
         name='question_edit'),
+                       
+    url(r'^question/id/(?P<pk>\d+)/$', QuestionUpdateView.as_view(),
+        name='question_edit_by_pk'),
                        
     url(r'^question/(?P<slug>[\w-]+)/delete/$', QuestionDeleteView.as_view(),
         name='question_delete'),

@@ -8,8 +8,6 @@ $(document).ready(function() {
 
     function Question(data)
     {
-        var q = this;
-
         this.name = ko.observable(questionJSON.name);
         this.statement = ko.observable('');
         this.advice = ko.observable('');
@@ -27,19 +25,19 @@ $(document).ready(function() {
             $('#edit-form').serializeArray().map(function(o){
                 data[o.name] = o.value;
             });
-            data.content = q.output();
+            data.content = this.output();
 
             $.post($('#edit-form').attr('action'),data)
                 .success(function(data){
-                    var address = location.protocol+'//'+location.host+'/question/'+questionJSON.id+'/'+slugify(q.name())+'/';
-                    history.replaceState({},q.name(),address);
+                    var address = location.protocol+'//'+location.host+'/question/'+questionJSON.id+'/'+slugify(this.name())+'/';
+                    history.replaceState({},this.name(),address);
                 })
                 .error(function(data) {
                     $('#preview-message').html(data);
                 })
             ;
             return data;
-        }).extend({throttle:1000});
+        },this).extend({throttle:1000});
 
 
         if(data)

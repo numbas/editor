@@ -83,8 +83,24 @@ $(document).ready(function() {
         },this);
 
         this.save = ko.computed(function() {
-            var data = this.export();
-        },this);
+            var data = {};
+            $('#edit-form').serializeArray().map(function(o){
+                data[o.name] = o.value;
+            });
+            data.content = this.output();
+            var e = this;
+
+            $.post($('#edit-form').attr('action'),data)
+                .success(function(data){
+                    var address = location.protocol+'//'+location.host+'/exam/'+examJSON.id+'/'+slugify(e.name())+'/';
+                    history.replaceState({},e.name(),address);
+                })
+                .error(function(data) {
+                    $('#preview-message').html(data);
+                })
+            ;
+            return data;
+        },this).extend({throttle:1000});
 
         if(data)
             this.load(data);

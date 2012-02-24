@@ -26,11 +26,12 @@ $(document).ready(function() {
                 data[o.name] = o.value;
             });
             data.content = this.output();
+            var q = this;
 
             $.post($('#edit-form').attr('action'),data)
                 .success(function(data){
-                    var address = location.protocol+'//'+location.host+'/question/'+questionJSON.id+'/'+slugify(this.name())+'/';
-                    history.replaceState({},this.name(),address);
+                    var address = location.protocol+'//'+location.host+'/question/'+questionJSON.id+'/'+slugify(q.name())+'/';
+                    history.replaceState({},q.name(),address);
                 })
                 .error(function(data) {
                     $('#preview-message').html(data);

@@ -1,0 +1,102 @@
+{% extends "layout.html" %}
+{% load verbatim %}
+
+{% block javascripts %}
+    {{ block.super }}
+
+    <!-- MathJax -->
+    <script src="https://d3eoax9i5htok0.cloudfront.net/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+          MathJax.Hub.Config({
+            extensions: ['tex2jax.js',"TeX/AMSmath.js","TeX/AMSsymbols.js"],
+            tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]},
+            jax: ["input/TeX","output/HTML-CSS"],
+            displayAlign: "center",
+            displayIndent: "0.1em",
+            showProcessingMessages: false
+          });
+    </script>
+
+    <!-- jQuery -->
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.oembed.js"></script>
+
+    <!-- knockout -->
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tmpl.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/knockout.js"></script>
+
+    <!-- jstextile -->
+    <script type="text/javascript" src="{{ STATIC_URL }}js/textile.js"></script>
+
+    <!-- write maths, see maths -->
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jme.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/writemaths.js"></script>
+
+    <!-- exam parser -->
+    <script type="text/javascript" src="{{ STATIC_URL }}js/examparser.js"></script>
+
+    <!-- editor -->
+    <script src="{{ STATIC_URL }}js/editor.js" type="text/javascript"></script>
+    
+{% endblock javascripts %}
+
+{% block stylesheets %}
+    {{ block.super }}
+
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/writemaths.css">
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery-ui.css">
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/editor.css">
+
+{% endblock stylesheets %}
+
+{% block content %}
+    {{block.super }}
+    {% verbatim %}
+		<script type="text/x-jquery-tmpl" id="variable">
+			<li class="variable dict">
+				<input type="text" class="name" data-bind="value:name, valueUpdate: 'input'"/> = <input class="def" type="text" data-bind="value:definition, valueUpdate: 'input'"/>
+				<button class="remove" data-bind="click:remove"></button>
+			</li>
+		</script>
+
+		<!-- Property Inputs -->
+
+		<script type="text/x-jquery-tmpl" id="percentproperty">
+			<label>${$item.label}</label>
+			<span class="display" data-bind="text: $item.property()+'%'"></span>
+			<input data-bind="
+					value: $item.property, 
+					valueUpdate: 'input'" 
+				type="range"
+				step="5"
+				min="0"
+				max="100"
+			/>
+		</script>
+
+		<script type="text/x-jquery-tmpl" id="booleanproperty">
+			<label>${$item.label}</label>
+			<input data-bind="checked: $item.property" type="checkbox"/>
+		</script>
+
+		<script type="text/x-jquery-tmpl" id="property">
+			<label>${$item.label}</label>
+			{{if $item.type=='checkbox'}}
+				<input data-bind="checked: $item.property" type="checkbox"/>
+			{{else}}
+				<input data-bind="
+						value: $item.property, 
+						valueUpdate: 'input'" 
+					type="${$item.type || 'text'}" 
+					{{if $item.min!==undefined}} min="${$item.min}" {{/if}}
+					{{if $item.max!==undefined}} max="${$item.max}" {{/if}}
+				/>
+			{{/if}}
+		</script>
+
+		<script type="text/x-jquery-tmpl" id="folder">
+			<div class="fold {{if !$item.show}}folded{{/if}}">
+				<div id="folder-header">${$item.label}</div>
+				<div id="folder">{{html $item.html}}</div>
+			</div>
+        </script>
+    {% endverbatim %}
+{% endblock content %}

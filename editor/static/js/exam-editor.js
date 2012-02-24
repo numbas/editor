@@ -26,10 +26,8 @@ $(document).ready(function() {
 
         var rulesets = this.rulesets = ko.observableArray([]);
         this.allsets = ko.computed(function() {
-            return builtinRulesets.concat(rulesets().map(function(r){return r.name()})).sort();
+            return Editor.builtinRulesets.concat(rulesets().map(function(r){return r.name()})).sort();
         });
-
-        this.questions = ko.observableArray([]);
 
         this.onadvance = new Event(
             'onadvance',
@@ -96,10 +94,6 @@ $(document).ready(function() {
             this.rulesets.push(new Ruleset(this));
         },
 
-        addQuestion: function() {
-            this.questions.push(new Question(this));
-        },
-
         //returns a JSON-y object representing the exam
         export: function() {
             var rulesets = {};
@@ -131,7 +125,6 @@ $(document).ready(function() {
                   advicethreshold: this.advicethreshold()
                 },
                 rulesets: rulesets,
-                questions: this.questions().map(function(q){return q.export();})
             };
         },
 
@@ -170,13 +163,6 @@ $(document).ready(function() {
                     this.rulesets.push(new Ruleset(this,{name: x, sets:data.rulesets[x]}));
                 }
             }
-
-            if('questions' in data)
-            {
-                data.questions.map(function(qd) {
-                    this.questions.push(new Question(this,qd));
-                },this);
-            }
         }
     };
 
@@ -209,4 +195,11 @@ $(document).ready(function() {
             this.message(data.message);
         }
     };
+
+    //create a question object
+    var data = examJSON.content;
+    data = parseExam(data);
+    viewModel = new Exam(data);
+    ko.applyBindings(viewModel);
+
 });

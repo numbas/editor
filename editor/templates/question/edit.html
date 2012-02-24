@@ -1,47 +1,28 @@
-{% extends "layout.html" %}
+{% extends "editor.html" %}
 {% load verbatim %}
 
-{% block head %}
+{% block javascripts %}
     {{ block.super }}
 
-    <!-- MathJax -->
-    <script src="https://d3eoax9i5htok0.cloudfront.net/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-          MathJax.Hub.Config({
-            extensions: ['tex2jax.js',"TeX/AMSmath.js","TeX/AMSsymbols.js"],
-            tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]},
-            jax: ["input/TeX","output/HTML-CSS"],
-            displayAlign: "center",
-            displayIndent: "0.1em",
-            showProcessingMessages: false
-          });
-    </script>
-
-    <!-- jQuery -->
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery-ui.css">
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.oembed.js"></script>
-
-    <!-- knockout -->
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tmpl.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/knockout.js"></script>
-
-    <!-- jstextile -->
-    <script type="text/javascript" src="{{ STATIC_URL }}js/textile.js"></script>
-
-    <!-- write maths, see maths -->
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/writemaths.css">
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jme.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/writemaths.js"></script>
-
-    <!-- exam parser -->
-    <script type="text/javascript" src="{{ STATIC_URL }}js/examparser.js"></script>
-
-    <!-- editor -->
-    <script src="{{ STATIC_URL }}js/editor.js" type="text/javascript"></script>
+    <!-- question editor -->
     <script src="{{ STATIC_URL }}js/question-editor.js" type="text/javascript"></script>
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/editor.css">
-{% endblock head %}
+
+    <script type="text/javascript">
+        {% autoescape off %}
+        var questionJSON = {{ question_JSON }};
+        {% endautoescape %}
+        (function() {
+            if (!window.Editor) {
+                window.Editor = {};
+            }
+            window.Editor['exam_preview_url'] = '{% url exam_preview object.pk,object.slug %}';
+        })();
+    </script>
+{% endblock javascripts %}
 
 {% block content %}
+    {{ block.super }}
+
     <div id="fallback-form">
         <h2>{{ object.name }}</h2>
 
@@ -55,145 +36,6 @@
     </div>
 
     {% verbatim %}
-		<script type="text/x-jquery-tmpl" id="examTemplate">
-			<div class="properties">
-				<div data-bind="template: {
-					name: 'property',
-					templateOptions: {label:'Exam name:',property:name}
-				}"></div>
-				<div data-bind="template: {
-					name: 'property',
-					templateOptions: {label:'Duration (minutes):',property:duration, type:'number',min:0}
-				}"></div>
-				<div data-bind="template: {
-					name: 'percentproperty',
-					templateOptions: {label:'Pass threshold (percent):',property:percentPass}
-				}"></div>
-				<div data-bind="template: {
-					name: 'booleanproperty',
-					templateOptions: {label: 'Shuffle questions?',property:shuffleQuestions}
-				}"></div>
-			</div>
-			{{wrap(this,{label:"Navigation"}) folder}}
-				<div>
-					<div class="properties">
-						<div data-bind="template: {
-							name: 'booleanproperty',
-							templateOptions: {label:'Allow user to regenerate questions?', property:allowregen}
-						}"></div>
-						<div data-bind="template: {
-							name: 'booleanproperty',
-							templateOptions: {label:'Allow move to previous question?', property:reverse}
-						}"></div>
-						<div data-bind="template: {
-							name: 'booleanproperty',
-							templateOptions: {label:'Allow jump to any question?', property:browse}
-						}"></div>
-						<div data-bind="template: {
-							name: 'booleanproperty',
-							templateOptions: {label: 'Show front page?',property:showfrontpage}
-						}"></div>
-					</div>
-					<div data-bind="template: {
-						name: 'event',
-						data: onadvance
-					}"></div>
-					<div data-bind="template: {
-						name: 'event',
-						data: onreverse
-					}"></div>
-					<div data-bind="template: {
-						name: 'event',
-						data: onmove
-					}"></div>
-				</div>
-			{{/wrap}}
-			{{wrap(this,{label:"Timing"}) folder}}
-				<div>
-					<div data-bind="template: {
-						name: 'event',
-						data: timeout
-					}"></div>
-					<div data-bind="template: {
-						name: 'event',
-						data: timedwarning
-					}"></div>
-				</div>
-			{{/wrap}}
-			{{wrap(this,{label:"Feedback"}) folder}}
-				<div class="properties">
-					<div data-bind="template: {
-						name: 'booleanproperty',
-						templateOptions: { label:'Show actual mark?', property:showactualmark}
-					}"></div>
-					<div data-bind="template: {
-						name: 'booleanproperty',
-						templateOptions: { label:'Show total mark?', property:showtotalmark}
-					}"></div>
-					<div data-bind="template: {
-						name: 'booleanproperty',
-						templateOptions: { label:'Show answer state?', property:showanswerstate}
-					}"></div>
-					<div data-bind="template: {
-						name: 'booleanproperty',
-						templateOptions: { label:'Allow reveal answer?', property:allowreavealanswer}
-					}"></div>
-					<div data-bind="template: {
-						name: 'percentproperty',
-						templateOptions: { label:'Advice threshold (percent)', property:advicethreshold}
-					}"></div>
-				</div>
-			{{/wrap}}
-			{{wrap(this,{label:"Rulesets"}) folder}}
-			<div class="rulesets">
-				<ul class="editlist" data-bind="template:{
-					name:'ruleset',
-					foreach: rulesets,
-					beforeRemove: function(elem) { $(elem).slideUp(150) },
-					afterAdd: function(elem) { $(elem).hide().slideDown(150) }
-				}"></ul>
-				<button data-bind="click:addRuleset, text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></button>
-			</div>
-			{{/wrap}}
-			<div class="questions fold">
-				<div id="folder-header">Questions</div>
-				<div id="folder">
-					<div>
-						<ol class="editlist" data-bind="template: {
-							name: 'question',
-							foreach: questions,
-							beforeRemove: function(elem) { console.log($(elem).parents());$(elem).slideUp(150) },
-							afterAdd: function(elem) { console.log('add');console.log(elem);$(elem).hide().slideDown(150) }
-						}"></ol>
-						<button data-bind="click:addQuestion,text:questions().length ? 'Add another question' : 'Add a question'"></button>
-					</div>
-				</div>
-			</div>
-		</script>
-
-		<script type="text/x-jquery-tmpl" id="event">
-			{{wrap(this,{label:niceName}) "#folder"}}
-				<div>
-				<div class="properties">
-					<div>
-						<label>Action: </label>
-						<select data-bind="options: actions, value: action, optionsText: 'niceName'"></select>
-					</div>
-				</div>
-				<div data-bind="fadeVisible:action().value!='none'">
-					Message: 
-					<div data-bind="writemaths: message"/>
-				</div>
-				</div>
-			{{/wrap}}
-		</script>
-
-		<script type="text/x-jquery-tmpl" id="ruleset">
-			<li class="ruleset">
-				<input type="text" data-bind="value:name, valueUpdate: 'input'"/>: <div data-bind="listbox:sets, rulesetcomplete: allsets"></div>
-				<button class="remove" data-bind="click:remove"></button>
-			</li>
-		</script>
 
 		<script type="text/x-jquery-tmpl" id="questionTemplate">
 				<div class="properties">
@@ -231,13 +73,6 @@
 						<button data-bind="click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
 					</div>
 				{{/wrap}}
-		</script>
-
-		<script type="text/x-jquery-tmpl" id="variable">
-			<li class="variable dict">
-				<input type="text" class="name" data-bind="value:name, valueUpdate: 'input'"/> = <input class="def" type="text" data-bind="value:definition, valueUpdate: 'input'"/>
-				<button class="remove" data-bind="click:remove"></button>
-			</li>
 		</script>
 
 		<script type="text/x-jquery-tmpl" id="part">
@@ -604,49 +439,6 @@
 			</tr>
 		</script>
 
-		<!-- Property Inputs -->
-
-		<script type="text/x-jquery-tmpl" id="percentproperty">
-			<label>${$item.label}</label>
-			<span class="display" data-bind="text: $item.property()+'%'"></span>
-			<input data-bind="
-					value: $item.property, 
-					valueUpdate: 'input'" 
-				type="range"
-				step="5"
-				min="0"
-				max="100"
-			/>
-		</script>
-
-		<script type="text/x-jquery-tmpl" id="booleanproperty">
-			<label>${$item.label}</label>
-			<input data-bind="checked: $item.property" type="checkbox"/>
-		</script>
-
-		<script type="text/x-jquery-tmpl" id="property">
-			<label>${$item.label}</label>
-			{{if $item.type=='checkbox'}}
-				<input data-bind="checked: $item.property" type="checkbox"/>
-			{{else}}
-				<input data-bind="
-						value: $item.property, 
-						valueUpdate: 'input'" 
-					type="${$item.type || 'text'}" 
-					{{if $item.min!==undefined}} min="${$item.min}" {{/if}}
-					{{if $item.max!==undefined}} max="${$item.max}" {{/if}}
-				/>
-			{{/if}}
-		</script>
-
-		<script type="text/x-jquery-tmpl" id="folder">
-			<div class="fold {{if !$item.show}}folded{{/if}}">
-				<div id="folder-header">${$item.label}</div>
-				<div id="folder">{{html $item.html}}</div>
-			</div>
-		</script>
-
-
 		<div id="editor" data-bind="template: 'questionTemplate'">
 		</div>
     {% endverbatim %}
@@ -657,18 +449,3 @@
     <button id="preview" type="button">Question preview</button>
     <div id="preview-message"></div>
 {% endblock sidebar %}
-
-{% block javascripts %}
-    {{ block.super }}
-    <script type="text/javascript">
-    {% autoescape off %}
-    var questionJSON = {{ question_JSON }};
-    {% endautoescape %}
-    (function() {
-        if (!window.Editor) {
-            window.Editor = {};
-        }
-        window.Editor['exam_preview_url'] = '{% url exam_preview object.slug %}';
-    })();
-    </script>
-{% endblock javascripts %}

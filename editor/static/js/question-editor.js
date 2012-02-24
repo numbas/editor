@@ -3,31 +3,6 @@ var viewModel;
 $(document).ready(function() {
 //indent every line in given string with n tab characters
 
-    var preview;
-    $('#preview').click(function() {
-        $.post(
-            Editor.exam_preview_url,
-//                {
-//                    'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val(),
-//                    'content': $('#id_content').val(),
-//                    'exam-edit-form': $('#exam-edit-form').serializeArray()
-//                }
-            $('#edit-form').serializeArray()
-        )
-        .success(function(response, status, xhr) {
-            $('#preview-message').html(response);
-            if (preview)
-                preview.close();
-            var origin = location.protocol+'//'+location.host;
-            preview = window.open(origin+"/numbas-previews/exam/");
-        })
-        .error(function(response, status, xhr) {
-            $('#preview-message').html(response.responseText);
-        });
-    });
-
-    var builtinRulesets = ['basic','unitFactor','unitPower','unitDenominator','zeroFactor','zeroTerm','zeroPower','noLeadingMinus','collectNumbers','simplifyFractions','zeroBase','constantsFirst','sqrtProduct','sqrtDivision','sqrtSquare','trig','otherNumbers']
-
     var Variable = Editor.Variable,
         Ruleset = Editor.Ruleset;
 
@@ -560,8 +535,8 @@ $(document).ready(function() {
     };
 
 
-    //create an exam object
-    var data = $('#id_content').val();
+    //create a question object
+    var data = questionJSON.content;
     data = parseExam(data);
     viewModel = new Question(data);
     ko.applyBindings(viewModel);

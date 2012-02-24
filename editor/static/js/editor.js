@@ -91,6 +91,8 @@ $(document).ready(function() {
         }
     };
 
+    Editor.builtinRulesets = ['basic','unitFactor','unitPower','unitDenominator','zeroFactor','zeroTerm','zeroPower','noLeadingMinus','collectNumbers','simplifyFractions','zeroBase','constantsFirst','sqrtProduct','sqrtDivision','sqrtSquare','trig','otherNumbers']
+
     Editor.Ruleset = function(exam,data)
     {
         this.name = ko.observable('ruleset'+exam.rulesets().length);
@@ -126,6 +128,24 @@ $(document).ready(function() {
             this.definition(data.definition);
         }
     }
+
+    var preview;
+    $('#preview').click(function() {
+        $.post(
+            Editor.exam_preview_url,
+            $('#edit-form').serializeArray()
+        )
+        .success(function(response, status, xhr) {
+            $('#preview-message').html(response);
+            if (preview)
+                preview.close();
+            var origin = location.protocol+'//'+location.host;
+            preview = window.open(origin+"/numbas-previews/exam/");
+        })
+        .error(function(response, status, xhr) {
+            $('#preview-message').html(response.responseText);
+        });
+    });
 
 
     //make folders work

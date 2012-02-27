@@ -62,9 +62,6 @@ class ExamQuestion(models.Model):
         unique_together = (('exam', 'question'), ('exam', 'qn_order'))
         ordering = ['qn_order']
         
-    def __unicode__(self):
-        return "hello"
-         
     exam = models.ForeignKey(Exam)
     question = models.ForeignKey(Question)
     qn_order = models.PositiveIntegerField()

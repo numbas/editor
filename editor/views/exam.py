@@ -25,31 +25,48 @@ def preview(request, **kwargs):
     """
     if request.is_ajax():
         try:
-#            ecv = ExamCreateView()
-#            ecv.request = request
-#            ecv.object = None
-#            ecv.post(request)
-#            print ecv.get_form(ecv.get_form_class())
-#            ecv.get(request)
-#            ecv.construct_inlines()
-#            exam = Exam()
-#            exam_form = ExamPreviewForm(request.POST, instance=exam)
+            e = Exam.objects.get(slug=kwargs['slug'])
+#            exam_form = ExamForm(request.POST, instance=e)
+#            if not exam_form.is_valid():
+#                message = 'Error in exam form'
+#                return HttpResponseServerError(message)
 #            exam_form.save(commit=False)
-#            print exam.author
-#            print request.POST
-#            
+            e.content = request.POST['content']
+            print(e.author)
+#            eq = ExamQuestion.objects.get(exam=e)
+            exam_question_form = ExamQuestionFormSet(request.POST, instance=e)
+            if not exam_question_form.is_valid():
+                message = 'Error in examquestion form'
+                return HttpResponseServerError(message)
+#            print(exam_question_form)
+            exam_question_form.save(commit=False)
+#            exam_question_form.save_m2m()
+#            for question in eq:
+#                print question.question
+#            print(eq)
+#            print(exam_question_form.cleaned_data)
+            questions = []
+            for eq in exam_question_form.cleaned_data:
+                if eq:
+                    questions.append(eq['question'])
+#                print(question['question'])
+#            print(exam_question_form.cleaned_data)
+#            exam_question_form.save_m2m()
+#            print(questions)
+#            print(exam_question_form.cleaned_data)
+#            print(eq.question)
 #            exam_question = ExamQuestion()
 #            exam_question_form = ExamQuestionFormSet(request.POST, instance=exam_question)
 ###            print exam_question_form
 #            exam_question_form.save(commit=False)
 #            exam_question.author
 #            print exam_question_form
-            e = Exam.objects.get(slug=kwargs['slug'])
             # Strip off the final brace.  The template adds it back in.
             e.content = e.content.rstrip()[:-1]
             t = loader.get_template('temporary.exam')
             c = Context({
-                'exam': e
+                'exam': e,
+                'questions': questions
             })
         except Exam.DoesNotExist:
             try:

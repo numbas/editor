@@ -1,7 +1,7 @@
 {% autoescape off %}
 	{{ exam.content }}
 	questions: [
-	{% for question in exam.questions.all %}
+	{% for question in questions %}
 		{{ question.content }}
 	{% endfor %}
 	]

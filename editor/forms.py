@@ -17,7 +17,7 @@ class ExamForm(forms.ModelForm):
     
     class Meta:
         model = Exam
-        
+
         
 class ExamQuestionForm(forms.ModelForm):
     
@@ -25,7 +25,10 @@ class ExamQuestionForm(forms.ModelForm):
     
     qn_order = forms.IntegerField(label='Order')
     
-    
+    class Meta:
+        model = ExamQuestion
+
+
 class ExamSearchForm(forms.Form):
     
     """Search form for an exam."""
@@ -33,4 +36,4 @@ class ExamSearchForm(forms.Form):
     name = forms.CharField()
         
         
-ExamQuestionFormSet = inlineformset_factory(Exam, ExamQuestion)
+ExamQuestionFormSet = inlineformset_factory(Exam, ExamQuestion, form=ExamQuestionForm)

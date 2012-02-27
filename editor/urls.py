@@ -16,7 +16,7 @@ urlpatterns = patterns('',
     
     url(r'^exam/search/$', ExamSearchView.as_view(), name='exam_search'),
     
-#    url(r'^exam/new/$', 'editor.views.exam.testview', name='exam_new'),
+#    url(r'^exam/test/$', 'editor.views.exam.testview', name='exam_new'),
 
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)?/$', ExamUpdateView.as_view(),
         name='exam_edit'),

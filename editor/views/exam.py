@@ -11,7 +11,7 @@ from django.shortcuts import render
 from django.template import loader, Context
 from django.views.generic import DeleteView, FormView, ListView
 
-from editor.forms import ExamForm, ExamQuestionForm, ExamQuestionFormSet, ExamSearchForm
+from editor.forms import ExamForm, ExamQuestionFormSet, ExamSearchForm
 from editor.models import Exam, ExamQuestion, Question
 from editor.views.generic import SaveContentMixin
 from extra_views import InlineFormSet, CreateWithInlinesView, UpdateWithInlinesView
@@ -26,11 +26,47 @@ def preview(request, **kwargs):
     if request.is_ajax():
         try:
             e = Exam.objects.get(slug=kwargs['slug'])
+#            exam_form = ExamForm(request.POST, instance=e)
+#            if not exam_form.is_valid():
+#                message = 'Error in exam form'
+#                return HttpResponseServerError(message)
+#            exam_form.save(commit=False)
+            e.content = request.POST['content']
+            print(e.author)
+#            eq = ExamQuestion.objects.get(exam=e)
+            exam_question_form = ExamQuestionFormSet(request.POST, instance=e)
+            if not exam_question_form.is_valid():
+                message = 'Error in examquestion form'
+                return HttpResponseServerError(message)
+#            print(exam_question_form)
+            exam_question_form.save(commit=False)
+#            exam_question_form.save_m2m()
+#            for question in eq:
+#                print question.question
+#            print(eq)
+#            print(exam_question_form.cleaned_data)
+            questions = []
+            for eq in exam_question_form.cleaned_data:
+                if eq:
+                    questions.append(eq['question'])
+#                print(question['question'])
+#            print(exam_question_form.cleaned_data)
+#            exam_question_form.save_m2m()
+#            print(questions)
+#            print(exam_question_form.cleaned_data)
+#            print(eq.question)
+#            exam_question = ExamQuestion()
+#            exam_question_form = ExamQuestionFormSet(request.POST, instance=exam_question)
+###            print exam_question_form
+#            exam_question_form.save(commit=False)
+#            exam_question.author
+#            print exam_question_form
             # Strip off the final brace.  The template adds it back in.
             e.content = e.content.rstrip()[:-1]
             t = loader.get_template('temporary.exam')
             c = Context({
-                'exam': e
+                'exam': e,
+                'questions': questions
             })
         except Exam.DoesNotExist:
             try:
@@ -75,13 +111,16 @@ def testview(request):
     """For testing."""
     if request.method == 'POST':
         form = ExamForm(request.POST)
-        formset = ExamQuestionFormSet(request.POST)
-        if form.is_valid() and formset.is_valid():
-            print "valid"
+        print ExamQuestionFormSet(request.POST)
+        inlines = [ExamQuestionFormSet(request.POST)]
+        if form.is_valid():
+            for formset in inlines:
+                if formset.is_valid():
+                    print "valid"
     else:
         form = ExamForm()
-        formset = ExamQuestionFormSet()
-    return render(request, 'exam/new.html', {'form': form, 'formset': formset})
+        inlines = [ExamQuestionFormSet()]
+    return render(request, 'exam/new.html', {'form': form, 'inlines': inlines})
 
 
 class ExamQuestionInline(InlineFormSet):
@@ -89,7 +128,8 @@ class ExamQuestionInline(InlineFormSet):
     """Inline ExamQuestion view, to be used in Exam views."""
     
     model = ExamQuestion
-    form_class = ExamQuestionForm
+#    form_class = ExamQuestionForm
+#    extra = 0
     
 
 class ExamCreateView(CreateWithInlinesView, SaveContentMixin):

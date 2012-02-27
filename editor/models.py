@@ -61,7 +61,7 @@ class ExamQuestion(models.Model):
     class Meta:
         unique_together = (('exam', 'question'), ('exam', 'qn_order'))
         ordering = ['qn_order']
-         
+        
     exam = models.ForeignKey(Exam)
     question = models.ForeignKey(Question)
     qn_order = models.PositiveIntegerField()

@@ -35,44 +35,43 @@
         </form>
     </div>
 
-    {% verbatim %}
-
+	{% verbatim %}
 		<script type="text/x-jquery-tmpl" id="questionTemplate">
-				<div class="properties">
-					<div data-bind="template: {
-						name: 'property',
-						templateOptions: {property:name,label:'Question name:'}
-					}"></div>
-				</div>
+			<div class="properties">
+				<div data-bind="template: {
+					name: 'property',
+					templateOptions: {property:name,label:'Question name:'}
+				}"></div>
+			</div>
 
-				<div style="margin-bottom:1em;" data-bind="writemaths:statement">
-					Statement:
+			<div style="margin-bottom:1em;" data-bind="writemaths:statement">
+				Statement:
+			</div>
+			<div style="margin-bottom:1em;" data-bind="writemaths:advice">
+				Advice:
+			</div>
+			{{wrap(this,{label:"Variables",show:true}) '#folder'}}
+				<div>
+					<ul class="editlist" data-bind="template:{
+						name:'variable',
+						foreach: variables,
+						beforeRemove: function(elem) { $(elem).slideUp(150) },
+						afterAdd: function(elem) { $(elem).hide().slideDown(150) }
+					}"></ul>
+					<button data-bind="click:addVariable, text: variables().length ? 'Add another variable' : 'Add a variable'"></button>
 				</div>
-				<div style="margin-bottom:1em;" data-bind="writemaths:advice">
-					Advice:
+			{{/wrap}}
+			{{wrap(this,{label:"Parts",show:true}) '#folder'}}
+				<div>
+					<ol class="editlist" data-bind="template:{
+						name: 'part',
+						foreach: parts,
+						beforeRemove: function(elem) { $(elem).slideUp(150) },
+						afterAdd: function(elem) { $(elem).hide().slideDown(150) }
+					}"></ol>
+					<button data-bind="click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
 				</div>
-				{{wrap(this,{label:"Variables",show:true}) '#folder'}}
-					<div>
-						<ul class="editlist" data-bind="template:{
-							name:'variable',
-							foreach: variables,
-							beforeRemove: function(elem) { $(elem).slideUp(150) },
-							afterAdd: function(elem) { $(elem).hide().slideDown(150) }
-						}"></ul>
-						<button data-bind="click:addVariable, text: variables().length ? 'Add another variable' : 'Add a variable'"></button>
-					</div>
-				{{/wrap}}
-				{{wrap(this,{label:"Parts",show:true}) '#folder'}}
-					<div>
-						<ol class="editlist" data-bind="template:{
-							name: 'part',
-							foreach: parts,
-							beforeRemove: function(elem) { $(elem).slideUp(150) },
-							afterAdd: function(elem) { $(elem).hide().slideDown(150) }
-						}"></ol>
-						<button data-bind="click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
-					</div>
-				{{/wrap}}
+			{{/wrap}}
 		</script>
 
 		<script type="text/x-jquery-tmpl" id="part">
@@ -439,13 +438,13 @@
 			</tr>
 		</script>
 
-		<div id="editor" data-bind="template: 'questionTemplate'">
+		<div>
+			<button id="preview" type="button" data-bind="click: showPreview">
+				Preview Question
+			</button>
+			<div id="editor" data-bind="template: 'questionTemplate'">
 		</div>
     {% endverbatim %}
 
 {% endblock content %}
 
-{% block sidebar %}
-    <button id="preview" type="button">Question preview</button>
-    <div id="preview-message"></div>
-{% endblock sidebar %}

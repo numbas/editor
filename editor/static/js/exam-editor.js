@@ -179,7 +179,35 @@ $(document).ready(function() {
                     this.rulesets.push(new Ruleset(this,{name: x, sets:data.rulesets[x]}));
                 }
             }
-        }
+        },
+
+		showPreview: function() {
+			var e = this;
+			if(e.preview)
+				e.preview.close();
+			$.post(
+				Editor.exam_preview_url,
+				e.save()
+			)
+			.success(function(response, status, xhr) {
+				$('#preview-message').html(response);
+				var origin = location.protocol+'//'+location.host;
+				e.preview = window.open(origin+"/numbas-previews/exam/");
+			})
+			.error(function(response, status, xhr) {
+				noty({
+					text: 'Error making the preview.',
+					layout: "center",
+					type: "error",
+					animateOpen: {"height":"toggle"},
+					animateClose: {"height":"toggle"},
+				timeout: false,
+					speed: "500",
+					closable: true,
+					closeOnSelfClick: true,
+				});
+			});
+		}
     };
 
     function Event(name,niceName,actions)

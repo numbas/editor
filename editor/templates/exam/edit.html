@@ -165,13 +165,13 @@
 			</li>
 		</script>
 
-		<div id="editor" data-bind="template: 'examTemplate'">
+		<div>
+		    <button id="preview" type="button" data-bind="click: showPreview">Test Run</button>
+			<div id="editor" data-bind="template: 'examTemplate'">
 		</div>
     {% endverbatim %}
 {% endblock content %}
 
 {% block sidebar %}
-    <button id="preview" type="button">Exam preview</button>
-    <div id="preview-message"></div>
 {% endblock sidebar %}
 

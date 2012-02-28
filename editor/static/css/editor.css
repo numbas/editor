@@ -3,10 +3,14 @@
 }
 
 #editor {
-    width: 35em;
 	border:2px solid #ccc;
 	padding:1em;
 	background: #fff5f5;
+}
+
+#preview-error {
+	max-height: 15em;
+	overflow-y:scroll;
 }
 
 .questions {
@@ -116,7 +120,6 @@ ol.editlist > button {
 }
 
 #editor .editlist > li {
-	clear: both;
 	margin-bottom:0.5em;
     list-style-image:none;
     list-style-type:none;

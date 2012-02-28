@@ -88,7 +88,35 @@ $(document).ready(function() {
                     this.parts.push(new Part(this,null,vd));
                 },this);
             }
-        }
+        },
+
+		showPreview: function() {
+			var q = this;
+			if(q.preview)
+				q.preview.close();
+			$.post(
+				Editor.exam_preview_url,
+				q.save()
+			)
+			.success(function(response, status, xhr) {
+				$('#preview-message').html(response);
+				var origin = location.protocol+'//'+location.host;
+				q.preview = window.open(origin+"/numbas-previews/exam/");
+			})
+			.error(function(response, status, xhr) {
+				noty({
+					text: 'Error making the preview.',
+					layout: "center",
+					type: "error",
+					animateOpen: {"height":"toggle"},
+					animateClose: {"height":"toggle"},
+				timeout: false,
+					speed: "500",
+					closable: true,
+					closeOnSelfClick: true,
+				});
+			});
+		}
     };
 
     var Part = function(q,parent,data) {
@@ -540,4 +568,7 @@ $(document).ready(function() {
     viewModel = new Question(data);
     ko.applyBindings(viewModel);
 
+    var preview;
+    $('#preview').click(function() {
+    });
 });

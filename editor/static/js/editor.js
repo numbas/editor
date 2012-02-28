@@ -129,23 +129,6 @@ $(document).ready(function() {
         }
     }
 
-    var preview;
-    $('#preview').click(function() {
-        $.post(
-            Editor.exam_preview_url,
-            $('#edit-form').serializeArray()
-        )
-        .success(function(response, status, xhr) {
-            $('#preview-message').html(response);
-            if (preview)
-                preview.close();
-            var origin = location.protocol+'//'+location.host;
-            preview = window.open(origin+"/numbas-previews/exam/");
-        })
-        .error(function(response, status, xhr) {
-            $('#preview-message').html(response.responseText);
-        });
-    });
 
 
     //make folders work

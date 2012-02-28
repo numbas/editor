@@ -40,7 +40,7 @@ ExamParser.prototype = {
 	},
 
 	stripSpace: function() {
-		this.working = this.working.replace(/^( \t\r\x0b\x0c)*/,'');
+		this.working = this.working.replace(/^[ \t\r\x0b\x0c]*/,'');
 		this.cursor = this.source.length - this.working.length;
 	},
 

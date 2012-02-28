@@ -13,7 +13,7 @@
         {% endautoescape %}
         (function() {
             if (!window.Editor) {
-                window.Editor = {exam_preview_url: '{% url exam_preview object.pk,object.slug %}'};
+                window.Editor = {exam_preview_url: '{% url exam_preview object.pk object.slug %}'};
             }
         })();
     </script>
@@ -27,7 +27,7 @@
 
         {% if error %}<p><strong>{{ error }}</strong></p>{% endif %}
 
-        <form action="{% url exam_edit object.pk %}" method="post" id="edit-form">
+        <form action="{% url exam_edit object.pk object.slug %}" method="post" id="edit-form">
             {% csrf_token %}
             {{ form.as_p }}
             {% for formset in inlines %}

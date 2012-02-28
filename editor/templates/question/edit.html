@@ -15,7 +15,7 @@
             if (!window.Editor) {
                 window.Editor = {};
             }
-            window.Editor['exam_preview_url'] = '{% url exam_preview object.pk,object.slug %}';
+            window.Editor['exam_preview_url'] = '{% url exam_preview object.pk object.slug %}';
         })();
     </script>
 {% endblock javascripts %}
@@ -28,7 +28,7 @@
 
         {% if error %}<p><strong>{{ error }}</strong></p>{% endif %}
 
-        <form action="{% url question_edit object.pk %}" method="post" id="edit-form">
+        <form action="{% url question_edit object.pk object.slug %}" method="post" id="edit-form">
             {% csrf_token %}
             {{ form.as_p }}
             <input type="submit" value="Submit" />

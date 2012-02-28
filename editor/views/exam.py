@@ -9,12 +9,12 @@ from django.http import HttpResponse, HttpResponseServerError
 from django.forms.models import model_to_dict
 from django.shortcuts import render
 from django.template import loader, Context
-from django.views.generic import DeleteView, FormView, ListView
+from django.views.generic import CreateView, DeleteView, FormView, ListView
 
-from editor.forms import ExamForm, ExamQuestionFormSet, ExamSearchForm
+from editor.forms import ExamForm, NewExamForm, ExamQuestionFormSet, ExamSearchForm
 from editor.models import Exam, ExamQuestion, Question
 from editor.views.generic import SaveContentMixin
-from extra_views import InlineFormSet, CreateWithInlinesView, UpdateWithInlinesView
+from extra_views import InlineFormSet, UpdateWithInlinesView
 
 def preview(request, **kwargs):
     """Retrieve the contents of an exam and compile it.
@@ -109,19 +109,20 @@ class ExamQuestionInline(InlineFormSet):
 #    extra = 0
     
 
-class ExamCreateView(CreateWithInlinesView, SaveContentMixin):
+class ExamCreateView(CreateView, SaveContentMixin):
     
     """Create an exam."""
     
     model = Exam
+    form_class = NewExamForm
     template_name = 'exam/new.html'
-    inlines = [ExamQuestionInline]
     
-    def forms_valid(self, form, inlines):
+    def form_valid(self, form):
         self.object = form.save(commit=False)
+        self.object.content = "{name: %s}" % self.object.name
         self.object.filename = str(uuid.uuid4())
         return self.write_content(settings.GLOBAL_SETTINGS['EXAM_SUBDIR'],
-                                  form, inlines=inlines)
+                                  form)
     
     def get_success_url(self):
         return reverse('exam_edit', args=(self.object.pk,self.object.slug,))

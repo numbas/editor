@@ -6,6 +6,7 @@ from django.core.urlresolvers import reverse
 from django.forms.models import model_to_dict
 from django.views.generic import CreateView, DeleteView, UpdateView
 
+from editor.forms import NewQuestionForm
 from editor.models import Question
 from editor.views.generic import SaveContentMixin
 
@@ -14,10 +15,12 @@ class QuestionCreateView(CreateView, SaveContentMixin):
     """Create a question."""
     
     model = Question
+    form_class = NewQuestionForm
     template_name = 'question/new.html'
     
     def form_valid(self, form):
         self.object = form.save(commit=False)
+        self.object.content = "{name: %s}" % self.object.name
         self.object.filename = str(uuid.uuid4())
         return self.write_content(settings.GLOBAL_SETTINGS['QUESTION_SUBDIR'],
                                   form)

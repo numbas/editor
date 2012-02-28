@@ -9,6 +9,16 @@ class QuestionForm(forms.ModelForm):
     
     class Meta:
         model = Question
+        exclude = ('name')
+        
+        
+class NewQuestionForm(forms.ModelForm):
+    
+    """Form for a new question only, not including some fields."""
+    
+    class Meta:
+        model = Question
+        fields = ('author', 'name')
         
         
 class ExamForm(forms.ModelForm):
@@ -17,6 +27,16 @@ class ExamForm(forms.ModelForm):
     
     class Meta:
         model = Exam
+        exclude = ('name')
+        
+        
+class NewExamForm(forms.ModelForm):
+    
+    """Form for a new exam only, not including some fields."""
+    
+    class Meta:
+        model = Exam
+        fields = ('author', 'name')
 
         
 class ExamQuestionForm(forms.ModelForm):

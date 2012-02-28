@@ -1,5 +1,6 @@
+from django.conf import settings
 from django.conf.urls.defaults import *
-from django.views.generic import ListView, TemplateView
+from django.views.generic import ListView, RedirectView, TemplateView
 
 from editor.models import Exam, Question
 from editor.views.exam import ExamCreateView, ExamListView, ExamDeleteView, ExamUpdateView, ExamSearchView
@@ -21,11 +22,11 @@ urlpatterns = patterns('',
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)?/$', ExamUpdateView.as_view(),
         name='exam_edit'),
                        
-    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)?/delete/$', ExamDeleteView.as_view(),
-        name='exam_delete'),
+    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)?/delete/$',
+        ExamDeleteView.as_view(), name='exam_delete'),
     
-    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)?/preview/$', 'editor.views.exam.preview',
-        name='exam_preview'),
+    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)?/preview/$',
+        'editor.views.exam.preview', name='exam_preview'),
                        
     url(r'^question/$',
         ListView.as_view(model=Question, template_name='question/index.html',),
@@ -33,9 +34,12 @@ urlpatterns = patterns('',
                        
     url(r'^question/new/$', QuestionCreateView.as_view(), name='question_new'),
     
-    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)?/$', QuestionUpdateView.as_view(),
-        name='question_edit'),
+    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)?/$',
+        QuestionUpdateView.as_view(), name='question_edit'),
                        
-    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)?/delete/$', QuestionDeleteView.as_view(),
-        name='question_delete'),
+    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)?/delete/$',
+        QuestionDeleteView.as_view(), name='question_delete'),
+                       
+    url(r'^numbas-previews/exam/$',
+        RedirectView.as_view(url=settings.GLOBAL_SETTINGS['PREVIEW_URL']))
 )

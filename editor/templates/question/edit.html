@@ -15,7 +15,7 @@
             if (!window.Editor) {
                 window.Editor = {};
             }
-            window.Editor['exam_preview_url'] = '{% url exam_preview object.pk object.slug %}';
+            window.Editor['exam_preview_url'] = '{% url question_preview object.pk object.slug %}';
         })();
     </script>
 {% endblock javascripts %}

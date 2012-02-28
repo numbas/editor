@@ -1,8 +1,9 @@
 import git
 import os
+import subprocess
 
 from django.conf import settings
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.shortcuts import render
 
 from examparser import ExamParser, ParseError
@@ -40,3 +41,33 @@ class SaveContentMixin():
             for formset in inlines:
                 formset.save()
         return HttpResponseRedirect(self.get_success_url())
+    
+    
+def preview_compile(template, context):
+    """Compile an exam or question preview."""
+    try:
+        fh = open(settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE'], 'w')
+        fh.write(template.render(context))
+        fh.close()
+    except IOError:
+        message = 'Could not save exam to temporary file.'
+        return HttpResponseServerError(message)
+    else:
+        status = subprocess.Popen(
+            [
+                settings.GLOBAL_SETTINGS['PYTHON_EXEC'],
+                os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
+                             os.path.normpath('bin/numbas.py')),
+                '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
+                '-c',
+                '-o'+os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'],
+                                  'exam'),
+                settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE']
+            ], stdout = subprocess.PIPE
+        )
+        output = status.communicate()[0]
+        if status.returncode != 0:
+            message = 'Something went wrong.'
+            return HttpResponseServerError(message + "\n" + output)
+        message = 'Preview loaded in new window.'
+    return HttpResponse(message + "\n" + output)

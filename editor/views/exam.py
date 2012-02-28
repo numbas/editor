@@ -1,19 +1,17 @@
 import json
-import os
-import subprocess
 import uuid
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseServerError
+from django.http import HttpResponseServerError
 from django.forms.models import model_to_dict
 from django.shortcuts import render
 from django.template import loader, Context
 from django.views.generic import CreateView, DeleteView, FormView, ListView
 
 from editor.forms import ExamForm, NewExamForm, ExamQuestionFormSet, ExamSearchForm
-from editor.models import Exam, ExamQuestion, Question
-from editor.views.generic import SaveContentMixin
+from editor.models import Exam, ExamQuestion
+from editor.views.generic import SaveContentMixin, preview_compile
 from extra_views import InlineFormSet, UpdateWithInlinesView
 
 def preview(request, **kwargs):
@@ -46,42 +44,9 @@ def preview(request, **kwargs):
                 'questions': questions
             })
         except Exam.DoesNotExist:
-            try:
-                q = Question.objects.get(pk=kwargs['pk'])
-                q.content = request.POST['content']
-                t = loader.get_template('temporary.question')
-                c = Context({
-                    'question': q
-                })
-            except Question.DoesNotExist:
-                message = 'No such exam or question exists'
-                return HttpResponseServerError(message)
-        try:
-            fh = open(settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE'], 'w')
-            fh.write(t.render(c))
-            fh.close()
-        except IOError:
-            message = 'Could not save exam to temporary file.'
+            message = 'No such exam exists in the database.'
             return HttpResponseServerError(message)
-        else:
-            status = subprocess.Popen(
-                [
-                    settings.GLOBAL_SETTINGS['PYTHON_EXEC'],
-                    os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
-                                 os.path.normpath('bin/numbas.py')),
-                    '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
-                    '-c',
-                    '-o'+os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'],
-                                      'exam'),
-                    settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE']
-                ], stdout = subprocess.PIPE
-            )
-            output = status.communicate()[0]
-            if status.returncode != 0:
-                message = 'Something went wrong.'
-                return HttpResponseServerError(message + "\n" + output)
-            message = 'Exam preview loaded in new window.'
-        return HttpResponse(message + "\n" + output)
+        return preview_compile(t, c)
     
     
 def testview(request):

@@ -4,11 +4,34 @@ import uuid
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.forms.models import model_to_dict
+from django.http import HttpResponseServerError
+from django.template import loader, Context
 from django.views.generic import CreateView, DeleteView, UpdateView
 
 from editor.forms import NewQuestionForm
 from editor.models import Question
-from editor.views.generic import SaveContentMixin
+from editor.views.generic import SaveContentMixin, preview_compile
+
+def preview(request, **kwargs):
+    """Retrieve the contents of a question and compile it.
+    
+    If this is successful, the exam will be shown in a new window by virtue of
+    some JS.
+    
+    """
+    if request.is_ajax():
+        try:
+            q = Question.objects.get(pk=kwargs['pk'])
+            q.content = request.POST['content']
+            t = loader.get_template('temporary.question')
+            c = Context({
+                'question': q
+            })
+        except Question.DoesNotExist:
+            message = 'No such question exists in the database.'
+            return HttpResponseServerError(message)
+        return preview_compile(t, c)
+    
 
 class QuestionCreateView(CreateView, SaveContentMixin):
     

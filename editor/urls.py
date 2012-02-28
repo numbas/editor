@@ -40,6 +40,9 @@ urlpatterns = patterns('',
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)?/delete/$',
         QuestionDeleteView.as_view(), name='question_delete'),
                        
+    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)?/preview/$',
+        'editor.views.question.preview', name='question_preview'),
+                       
     url(r'^numbas-previews/exam/$',
         RedirectView.as_view(url=settings.GLOBAL_SETTINGS['PREVIEW_URL']))
 )

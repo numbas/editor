@@ -13,8 +13,9 @@
         {% endautoescape %}
         (function() {
             if (!window.Editor) {
-                window.Editor = {exam_preview_url: '{% url exam_preview object.pk object.slug %}'};
+            	window.Editor = {};
             }
+            window.Editor['exam_preview_url'] = '{% url exam_preview object.pk object.slug %}';
         })();
     </script>
 {% endblock javascripts %}

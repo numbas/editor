@@ -247,4 +247,26 @@ $(document).ready(function() {
         }
     }
 
+	//connect items with observableArrays
+	ko.bindingHandlers.sortableList = {
+		init: function(element, valueAccessor, allBindingsAccessor, context) {
+			var list = valueAccessor();
+			var startPos = 0;
+			$(element).sortable({
+				handle: '.handle',
+				placeholder: 'sort-placeholder',
+				start: function(e, ui) {
+					startPos = ui.item.prev().length;
+				},
+				update: function(e, ui) {
+					var newPos = ui.item.prev().length;
+					console.log(startPos,newPos);
+					var item = list()[startPos];
+					list.remove(item);
+					list.splice(newPos,0,item);
+					return;
+				}
+			});
+		}
+	};
 });

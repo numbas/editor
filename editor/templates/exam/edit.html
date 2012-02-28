@@ -140,6 +140,17 @@
 				<button data-bind="click:addRuleset, text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></button>
 			</div>
 			{{/wrap}}
+			{{wrap(this,{label:"Questions"}) folder}}
+			<div class="questions">
+				<ul class="editlist" data-bind="
+					template:{
+						name:'question',
+						foreach: questions
+					},
+					sortableList: questions
+				"></ul>
+			</div>
+			{{/wrap}}
 		</script>
 
 		<script type="text/x-jquery-tmpl" id="event">
@@ -166,9 +177,15 @@
 			</li>
 		</script>
 
+		<script type="text/x-jquery-tmpl" id="question">
+			<li class="question">
+				<span class="handle">!!</span> ${name}
+			</li>
+		</script>
+
 		<div>
 		    <button id="preview" type="button" data-bind="click: showPreview">Test Run</button>
-			<div id="editor" data-bind="template: 'examTemplate'">
+			<div id="editor" data-bind="template: 'examTemplate'"></div>
 		</div>
     {% endverbatim %}
 {% endblock content %}

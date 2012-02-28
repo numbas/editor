@@ -29,6 +29,8 @@ $(document).ready(function() {
             return Editor.builtinRulesets.concat(rulesets().map(function(r){return r.name()})).sort();
         });
 
+		this.questions = ko.observableArray([new Question(1,'q1'), new Question(2,'q2')]);
+
         this.onadvance = new Event(
             'onadvance',
             'On advance',
@@ -195,6 +197,7 @@ $(document).ready(function() {
 				e.preview = window.open(origin+"/numbas-previews/exam/");
 			})
 			.error(function(response, status, xhr) {
+				console.log(response.responseText);
 				noty({
 					text: 'Error making the preview.',
 					layout: "center",
@@ -239,6 +242,12 @@ $(document).ready(function() {
             this.message(data.message);
         }
     };
+
+	function Question(id,name)
+	{
+		this.id = id;
+		this.name = name;
+	}
 
     //create a question object
     var data = examJSON.content;

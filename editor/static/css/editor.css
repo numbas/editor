@@ -23,6 +23,13 @@
 	padding-right:1em;
 }
 
+.question > * > button.remove, .part > * > button.remove {
+	position:relative;
+	display:run-in;
+	left:-2em;
+	top:3em;
+}
+
 .part > * > .fold {
 	background: #f5fff5;
 	padding-right:1em;
@@ -216,10 +223,11 @@ button.remove:hover {
 	cursor:default;
 }
 
-.question > * > button.remove, .part > * > button.remove {
-	position:relative;
-	display:run-in;
-	left:-2em;
-	top:3em;
+.handle {
+	cursor: move;
 }
 
+.sort-placeholder {
+	border: 1px dashed;
+	height: 1em;
+}

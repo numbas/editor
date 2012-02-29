@@ -104,11 +104,10 @@ $(document).ready(function() {
 				q.preview = window.open(origin+"/numbas-previews/"+response.url);
 			})
 			.error(function(response, status, xhr) {
-				// Hmmm...is this right?
 				var responseObj = $.parseJSON(response.responseText);
-//				console.log(responseObj);
+				var message = textile('h3. Error making the preview:\n\n'+responseObj.message+'\n\n'+responseObj.traceback);
 				noty({
-					text: 'Error making the preview.',
+					text: message,
 					layout: "center",
 					type: "error",
 					animateOpen: {"height":"toggle"},

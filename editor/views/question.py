@@ -107,8 +107,9 @@ class QuestionSearchView(ListView):
     
     def get_queryset(self):
 #        if self.request.is_ajax():
-        question_objects = Question.objects.filter(name__icontains=self.kwargs['search_term'])
-#        return questions
+        search_term = self.request.GET['q']
+        question_objects = Question.objects.filter(name__icontains=search_term)
+#        print(question_objects)
         questions = {}
         for question in question_objects:
             questions[question.id] = question.name

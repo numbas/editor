@@ -31,7 +31,7 @@ urlpatterns = patterns('',
     
     url(r'^question/new/$', QuestionCreateView.as_view(), name='question_new'),
                        
-    url(r'^question/search/(?P<search_term>.*)/$', QuestionSearchView.as_view(), name='question_search',),
+    url(r'^question/search/$', QuestionSearchView.as_view(), name='question_search',),
     
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)?/$',
         QuestionUpdateView.as_view(), name='question_edit'),

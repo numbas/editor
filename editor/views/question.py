@@ -110,8 +110,5 @@ class QuestionSearchView(ListView):
         search_term = self.request.GET['q']
         question_objects = Question.objects.filter(name__icontains=search_term)
 #        print(question_objects)
-        questions = {}
-        for question in question_objects:
-            questions[question.id] = question.name
-        return questions
+        return [{'id':q.id, 'name':q.name} for q in question_objects]
     

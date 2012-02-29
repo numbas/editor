@@ -256,17 +256,33 @@ $(document).ready(function() {
 				handle: '.handle',
 				placeholder: 'sort-placeholder',
 				start: function(e, ui) {
-					startPos = ui.item.prev().length;
+					startPos = ui.item.prevAll().length;
 				},
 				update: function(e, ui) {
-					var newPos = ui.item.prev().length;
+					var newPos = ui.item.prevAll().length;
 					console.log(startPos,newPos);
 					var item = list()[startPos];
 					list.remove(item);
 					list.splice(newPos,0,item);
+					ui.item.remove();
 					return;
 				}
 			});
 		}
 	};
+
+	ko.bindingHandlers.searchClick = {
+		init: function(element, valueAccessor, allBindingsAccessor, context) {
+			var obj = valueAccessor();
+			var show = $('<span></span>');
+			var input = $('<input type="text"></input>');
+			$(element).addClass('searchClick').append(show,input);
+
+			show.html(obj.value());
+			input.val(obj.value());
+		},
+		update: function(element, valueAccessor, allBindingsAccessor) {
+			var obj = valueAccessor();
+		}
+	}
 });

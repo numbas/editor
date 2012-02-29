@@ -17,7 +17,7 @@ $(document).ready(function() {
         this.parts = ko.observableArray([]);
 
         this.output = ko.computed(function() {
-            return prettyData(this.export());
+            return prettyData(this.toJSON());
         },this);
 
         this.save = ko.computed(function() {
@@ -57,7 +57,7 @@ $(document).ready(function() {
             this.parts.remove(p);
         },
 
-        export: function() {
+        toJSON: function() {
             var variables = {};
             this.variables().map(function(v) {
                 variables[v.name()] = v.definition();
@@ -67,7 +67,7 @@ $(document).ready(function() {
                 statement: this.statement(),
                 advice: this.advice(),
                 variables: variables,
-                parts: this.parts().map(function(p){return p.export();})
+                parts: this.parts().map(function(p){return p.toJSON();})
             }
         },
 
@@ -303,7 +303,7 @@ $(document).ready(function() {
             this.multiplechoice.answers.remove(answer);
         },
 
-        export: function() {
+        toJSON: function() {
             var o = {
                 type: this.type().name,
                 marks: this.marks(),
@@ -313,7 +313,7 @@ $(document).ready(function() {
             if(this.steps().length)
             {
                 o.stepsPenalty = this.stepsPenalty(),
-                o.steps = this.steps().map(function(s){return s.export();});
+                o.steps = this.steps().map(function(s){return s.toJSON();});
             }
 
             switch(this.type().name)
@@ -322,7 +322,7 @@ $(document).ready(function() {
                 if(this.gapfill.gaps().length)
                 {
                     o.gaps = this.gapfill.gaps().map(function(g) {
-                        return g.export();
+                        return g.toJSON();
                     },this);
                 }
                 break;

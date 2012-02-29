@@ -1,4 +1,5 @@
 $(document).ready(function() {
+	var Ruleset = Editor.Ruleset;
     function Exam()
     {
         this.name = ko.observable('An Exam');
@@ -29,7 +30,8 @@ $(document).ready(function() {
             return Editor.builtinRulesets.concat(rulesets().map(function(r){return r.name()})).sort();
         });
 
-		this.questions = ko.observableArray([new Question(1,'q1'), new Question(2,'q2')]);
+		this.allQuestions = ko.observableArray([]);
+		this.questions = ko.observableArray([]);
 
         this.onadvance = new Event(
             'onadvance',
@@ -81,7 +83,7 @@ $(document).ready(function() {
         },this);
         
         this.output = ko.computed(function() {
-            return prettyData(this.export());
+            return prettyData(this.toJSON());
         },this);
 
         this.save = ko.computed(function() {
@@ -112,8 +114,12 @@ $(document).ready(function() {
             this.rulesets.push(new Ruleset(this));
         },
 
+		addQuestion: function() {
+			this.questions.push(new Question(1,'question',this));
+		},
+
         //returns a JSON-y object representing the exam
-        export: function() {
+        toJSON: function() {
             var rulesets = {};
             this.rulesets().map(function(r){
                 rulesets[r.name()] = r.sets();
@@ -127,13 +133,13 @@ $(document).ready(function() {
                     reverse: this.reverse(),
                     browse: this.browse(),
                     showfrontpage: this.showfrontpage(),
-                    onadvance: this.onadvance.export(),
-                    onreverse: this.onreverse.export(),
-                    onmove: this.onmove.export()
+                    onadvance: this.onadvance.toJSON(),
+                    onreverse: this.onreverse.toJSON(),
+                    onmove: this.onmove.toJSON()
                 },
                 timing: {
-                    timeout: this.timeout.export(),
-                    timedwarning: this.timedwarning.export()
+                    timeout: this.timeout.toJSON(),
+                    timedwarning: this.timedwarning.toJSON()
                 },
                 feedback: {
                   showactualmark: this.showactualmark(),
@@ -227,7 +233,7 @@ $(document).ready(function() {
         this.message = ko.observable('')
     }
     Event.prototype = {
-        export: function() {
+        toJSON: function() {
             return {
                 action:this.actionName(),
                 message: this.message()
@@ -244,10 +250,26 @@ $(document).ready(function() {
         }
     };
 
-	function Question(id,name)
+	function Question(id,name,exam)
 	{
-		this.id = id;
-		this.name = name;
+		this.id = ko.observable(0);
+		this.name = ko.observable('question');
+		this.exam = exam;
+		
+		this.selected = ko.observable(true);
+	}
+	Question.prototype = {
+		remove: function() {
+			this.exam.questions.remove(this);
+		},
+
+		select: function() {
+			this.selected(true);
+		},
+
+		deselect: function() {
+			this.selected(false);
+		}
 	}
 
     //create an exam object

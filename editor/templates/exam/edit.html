@@ -145,10 +145,13 @@
 				<ul class="editlist" data-bind="
 					template:{
 						name:'question',
-						foreach: questions
+						foreach: questions,
+						beforeRemove: function(elem) { $(elem).slideUp(150) },
+						afterAdd: function(elem) { $(elem).hide().slideDown(150) }
 					},
 					sortableList: questions
 				"></ul>
+				<button data-bind="click: addQuestion, text: questions().length ? 'Add another question' : 'Add a question'"></button>
 			</div>
 			{{/wrap}}
 		</script>
@@ -179,7 +182,9 @@
 
 		<script type="text/x-jquery-tmpl" id="question">
 			<li class="question">
-				<span class="handle">!!</span> ${name}
+				<span class="handle"></span>
+				<div data-bind="searchClick: {value: name, options: exam.allQuestions}"></div>
+				<button class="remove" data-bind="click:remove"></button>
 			</li>
 		</script>
 

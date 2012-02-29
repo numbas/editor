@@ -225,9 +225,17 @@ button.remove:hover {
 
 .handle {
 	cursor: move;
+	width: 6px;
+	height: 16px;
+	display: inline-block;
+	background: transparent url(../images/move_vertical_6x16.png);
 }
 
 .sort-placeholder {
 	border: 1px dashed;
 	height: 1em;
+}
+
+.searchClick {
+	display: inline-block;
 }

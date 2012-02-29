@@ -260,7 +260,6 @@ $(document).ready(function() {
 				},
 				update: function(e, ui) {
 					var newPos = ui.item.prevAll().length;
-					console.log(startPos,newPos);
 					var item = list()[startPos];
 					list.remove(item);
 					list.splice(newPos,0,item);
@@ -299,7 +298,6 @@ $(document).ready(function() {
 				.autocomplete({
 					minLength: 0,
 					source: function(request,response) {
-						console.log(request.term);
 						$.getJSON('/question/search/', {q:request.term})
 							.success(function(data) {
 								var results = data.object_list;
@@ -331,7 +329,7 @@ $(document).ready(function() {
 				})
 			;
 
-			showInput();
+			showName();
 		},
 		update: function(element, valueAccessor, allBindingsAccessor) {
 			var obj = valueAccessor();

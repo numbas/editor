@@ -59,7 +59,7 @@
 					templateOptions: {label: 'Shuffle questions?',property:shuffleQuestions}
 				}"></div>
 			</div>
-			{{wrap(this,{label:"Navigation"}) folder}}
+			{{wrap(this,{label:"Navigation"}) "#folder"}}
 				<div>
 					<div class="properties">
 						<div data-bind="template: {
@@ -93,7 +93,7 @@
 					}"></div>
 				</div>
 			{{/wrap}}
-			{{wrap(this,{label:"Timing"}) folder}}
+			{{wrap(this,{label:"Timing"}) "#folder"}}
 				<div>
 					<div data-bind="template: {
 						name: 'event',
@@ -105,7 +105,7 @@
 					}"></div>
 				</div>
 			{{/wrap}}
-			{{wrap(this,{label:"Feedback"}) folder}}
+			{{wrap(this,{label:"Feedback"}) "#folder"}}
 				<div class="properties">
 					<div data-bind="template: {
 						name: 'booleanproperty',
@@ -129,7 +129,7 @@
 					}"></div>
 				</div>
 			{{/wrap}}
-			{{wrap(this,{label:"Rulesets"}) folder}}
+			{{wrap(this,{label:"Rulesets"}) "#folder"}}
 			<div class="rulesets">
 				<ul class="editlist" data-bind="template:{
 					name:'ruleset',
@@ -140,7 +140,7 @@
 				<button data-bind="click:addRuleset, text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></button>
 			</div>
 			{{/wrap}}
-			{{wrap(this,{label:"Questions"}) folder}}
+			{{wrap(this,{label:"Questions"}) "#folder"}}
 			<div class="questions">
 				<ul class="editlist" data-bind="
 					template:{

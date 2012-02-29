@@ -20,6 +20,10 @@ $(document).ready(function() {
             return prettyData(this.toJSON());
         },this);
 
+        ko.computed(function() {
+            $('title').text(this.name() ? this.name()+' - Numbas Editor' : 'Numbas Editor');
+        },this);
+
         this.save = ko.computed(function() {
             var data = {};
             $('#edit-form').serializeArray().map(function(o){

@@ -76,7 +76,7 @@
 
 		<script type="text/x-jquery-tmpl" id="part">
 			<li class="part">
-				<div data-bind="foldlist: this, label: type().niceName, show:true">
+				<div data-bind="foldlist: $data, label: type().niceName, show:true">
 					<div class="properties">
 						<div>
 							<label>Part type: </label>
@@ -440,7 +440,7 @@
 
 		<div>
 			<button id="preview" type="button" data-bind="click: showPreview">
-				Preview Question
+				Test Run
 			</button>
 			<div id="editor" data-bind="template: 'questionTemplate'"></div>
 		</div>

@@ -250,10 +250,20 @@ $(document).ready(function() {
 		this.name = name;
 	}
 
-    //create a question object
+    //create an exam object
     var data = examJSON.content;
     data = parseExam(data);
     viewModel = new Exam(data);
     ko.applyBindings(viewModel);
+
+
+	//test question search
+	$.getJSON(
+		'/question/search/',
+		{q: 'multiply'}
+	)
+	.success(function(things) {
+		console.log('Returned questions: ',things.object_list);
+	});
 
 });

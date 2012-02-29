@@ -144,7 +144,7 @@ GLOBAL_SETTINGS = {
     'TEMP_EXAM_FILE': '/tmp/exam.tmp',
     'NUMBAS_PATH': '/srv/numbas',
     'PREVIEW_PATH': '/srv/numbas-previews',
-    'PREVIEW_URL': 'http://numbas.mas.ncl.ac.uk/numbas-previews/exam/',
+    'PREVIEW_URL': 'http://numbas.mas.ncl.ac.uk/numbas-previews/',
     'PYTHON_EXEC': '/usr/bin/python3.1',
 }
 examparser = imp.load_source(

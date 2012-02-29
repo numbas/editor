@@ -1,6 +1,8 @@
 import git
+import json
 import os
 import subprocess
+import traceback
 
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
@@ -43,15 +45,19 @@ class SaveContentMixin():
         return HttpResponseRedirect(self.get_success_url())
     
     
-def preview_compile(template, context):
+def preview_compile(template, context, uuid):
     """Compile an exam or question preview."""
     try:
         fh = open(settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE'], 'w')
         fh.write(template.render(context))
         fh.close()
     except IOError:
-        message = 'Could not save exam to temporary file.'
-        return HttpResponseServerError(message)
+        status = {
+            "result": "error",
+            "message": "Could not save exam to temporary file.",
+            "traceback": traceback.format_exc(),}
+        return HttpResponseServerError(json.dumps(status),
+                                       content_type='application/json')
     else:
         status = subprocess.Popen(
             [
@@ -61,13 +67,18 @@ def preview_compile(template, context):
                 '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
                 '-c',
                 '-o'+os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'],
-                                  'exam'),
+                                  uuid),
                 settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE']
             ], stdout = subprocess.PIPE
         )
         output = status.communicate()[0]
         if status.returncode != 0:
-            message = 'Something went wrong.'
-            return HttpResponseServerError(message + "\n" + output)
-        message = 'Preview loaded in new window.'
-    return HttpResponse(message + "\n" + output)
+            status = {
+                "result": "error",
+                "message": "Something went wrong.",
+                "traceback": output,}
+            return HttpResponseServerError(json.dumps(status),
+                                           content_type='application/json')
+#        message = 'Preview loaded in new window.'
+    status = {"result": "success", "url": uuid}
+    return HttpResponse(json.dumps(status), content_type='application/json')

@@ -4,9 +4,9 @@ import uuid
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.forms.models import model_to_dict
-from django.http import HttpResponseServerError
+from django.http import HttpResponse, HttpResponseServerError
 from django.template import loader, Context
-from django.views.generic import CreateView, DeleteView, UpdateView
+from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
 from editor.forms import NewQuestionForm
 from editor.models import Question
@@ -82,3 +82,35 @@ class QuestionUpdateView(UpdateView, SaveContentMixin):
     
     def get_success_url(self):
         return reverse('question_edit', args=(self.object.pk,self.object.slug))
+    
+    
+class QuestionListView(ListView):
+    
+    """List of questions."""
+    
+    model=Question
+    template_name='question/index.html'
+    
+    
+class QuestionSearchView(ListView):
+    
+    """Search questions."""
+    
+    model=Question
+    
+    def render_to_response(self, context, **response_kwargs):
+#        return super(QuestionSearchView, self).render_to_response(context, **response_kwargs)
+#        print(context)
+        return HttpResponse(json.dumps(context),
+                            content_type='application/json',
+                            **response_kwargs)
+    
+    def get_queryset(self):
+#        if self.request.is_ajax():
+        question_objects = Question.objects.filter(name__icontains=self.kwargs['search_term'])
+#        return questions
+        questions = {}
+        for question in question_objects:
+            questions[question.id] = question.name
+        return questions
+    

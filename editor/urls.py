@@ -1,10 +1,9 @@
 from django.conf import settings
 from django.conf.urls.defaults import *
-from django.views.generic import ListView, RedirectView, TemplateView
+from django.views.generic import RedirectView, TemplateView
 
-from editor.models import Exam, Question
-from editor.views.exam import ExamCreateView, ExamListView, ExamDeleteView, ExamUpdateView, ExamSearchView
-from editor.views.question import QuestionCreateView, QuestionDeleteView, QuestionUpdateView
+from editor.views.exam import ExamCreateView, ExamDeleteView, ExamListView, ExamSearchView, ExamUpdateView
+from editor.views.question import QuestionCreateView, QuestionDeleteView, QuestionListView, QuestionSearchView, QuestionUpdateView
 
 urlpatterns = patterns('',
     url(r'^$', TemplateView.as_view(template_name='index.html'),
@@ -28,11 +27,11 @@ urlpatterns = patterns('',
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)?/preview/$',
         'editor.views.exam.preview', name='exam_preview'),
                        
-    url(r'^question/$',
-        ListView.as_view(model=Question, template_name='question/index.html',),
-        name='question_index',),
-                       
+    url(r'^question/$', QuestionListView.as_view(), name='question_index',),
+    
     url(r'^question/new/$', QuestionCreateView.as_view(), name='question_new'),
+                       
+    url(r'^question/search/(?P<search_term>.*)/$', QuestionSearchView.as_view(), name='question_search',),
     
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)?/$',
         QuestionUpdateView.as_view(), name='question_edit'),

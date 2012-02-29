@@ -138,6 +138,7 @@ class ExamSearchView(FormView):
         exam_list = Exam.objects.filter(name__icontains=form.cleaned_data['name'])
         return render(self.request, 'exam/index.html', {'exam_list': exam_list})
     
+    
 class ExamListView(ListView):
     model=Exam
     template_name='exam/index.html'

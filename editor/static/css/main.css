@@ -11,105 +11,28 @@ body {
 
 }
 
-h1, h2, h3 {
-    font: normal 175% 'century gothic', arial, sans-serif;
-    color: #43423F;
-    margin: 0 0 15px 0;
-    padding: 15px 0 5px 0;
-
-}
-
-h2 { 
-    color: #B60000;
-
-}
-
-h3 {
-    font-size: 165%;
-
-}
-
-h4, h5, h6 {
-    margin: 0;
-    padding: 0 0 5px 0;
-    font: normal 120% arial, sans-serif;
-    color: #B60000;
-
-}
-
-h5, h6 {
-    font: italic 95% arial, sans-serif;
-    color: #888;
-
-}
-
-h6 {
-    color: #362C20;
-
-}
-
-a, a:hover {
-    outline: none;
-    text-decoration: underline;
-    color: #A4AA04;
-
-}
-
-a:hover {
-    text-decoration: none;
-    color: #5D5D5D;
-
-}
 
 .left {
     float: left;
     width: auto;
-    margin-right: 10px;
 
 }
 
 .right { 
     float: right; 
     width: auto;
-    margin-left: 10px;
 
 }
 
 .center {
     display: block;
     text-align: center;
-    margin: 20px auto;
+    margin: 0 auto;
 
 }
 
-blockquote {
-    margin: 20px 0; 
-    padding: 10px 20px 0 20px;
-    border: 1px solid #E5E5DB;
-    background: #FFF;
-
-}
-
-ul { 
-    margin: 2px 0 22px 17px;
-
-}
-
-ul li {
-    list-style-type: circle;
-    margin: 0 0 6px 0; 
-    padding: 0 0 4px 5px;
-
-}
-
-ol { 
-    margin: 8px 0 22px 20px;
-
-}
-
-ol li {
-    margin: 0 0 11px 0;
-
+#menu { 
+    margin: 11px 0 22px 17px;
 }
 
 #main, #logo, #menubar, #content_header, #site_content, #content_footer, #footer {
@@ -118,58 +41,29 @@ ol li {
 
 }
 
-#main {
-    padding-bottom: 20px;
-
-}
-
 #header {
     background: #3A332D;
-    height: 170px;
-    margin-bottom: 30px;
-
+    margin-bottom: 0.5em;
 }
 
-#logo { width: 878px;
+#logo { 
+	width: 878px;
     position: relative;
-    height: 134px;
-    background: #3A332D url(../images/logo.png) no-repeat;
 }
 
-#logo #logo_text  {
-    position: absolute; 
-    top: 10px;
-    left: 0;
-}
 
 #logo h1, #logo h2 {
-    font: normal 300% 'century gothic', arial, sans-serif;
-    border-bottom: 0;
-    text-transform: none;
     margin: 0 0 0 9px;
 }
 
 #logo_text h1, #logo_text h1 a, #logo_text h1 a:hover  {
-    padding: 22px 0 0 0;
     color: #FFF;
-    letter-spacing: 0.1em;
-    text-decoration: none;
-}
-
-#logo_text h1 a .logo_colour {
-    color: #ECEF01;
-}
-
-#logo_text h2 {
-    font-size: 120%;
-    padding: 4px 0 0 0;
-    color: #A8AA94;
 }
 
 #menubar {
     height: 44px;
     width: 940px;
-    margin: 1px auto 0 auto;} 
+}
 
 ul#menu {
     float: right;
@@ -260,21 +154,16 @@ ul#menu li a:hover {
 
 #content {
     text-align: left;
-    width: 613px;
     padding: 0;
 }
 
 #footer {
     width: 916px;
-    font: normal 90% arial, sans-serif;
-    height: 28px;
-    margin-top: 20px;
-    padding: 20px 0 5px 0;
+    font: normal 90% sans-serif;
     text-align: center; 
     background: transparent;
     color: #333;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
 }
 
 #footer a, #footer a:hover {
@@ -286,87 +175,3 @@ ul#menu li a:hover {
     color: #333;
 }
 
-.search {
-    color: #5D5D5D; 
-    border: 1px solid #BBB; 
-    width: 134px; 
-    padding: 4px; 
-    font: 100% arial, sans-serif;
-}
-
-.form_settings {
-    margin: 15px 0 0 0;
-}
-
-.form_settings p {
-    padding: 0 0 4px 0;
-}
-
-.form_settings span {
-    float: left; 
-    width: 200px; 
-    text-align: left;
-}
-    
-.form_settings input, .form_settings textarea {
-    padding: 2px; 
-    width: 299px; 
-    font: 100% arial; 
-    border: 1px solid #E5E5DB; 
-    background: #FFF; 
-    color: #47433F;
-}
-    
-.form_settings .submit {
-    font: 100% arial; 
-    border: 1px solid; 
-    width: 99px; 
-    margin: 0 0 0 206px; 
-    height: 26px;
-    padding: 2px 0 3px 0;
-    cursor: pointer; 
-    background: #3B3B3B; 
-    color: #FFF;
-}
-
-.form_settings textarea, .form_settings select {
-    font: 100% arial; 
-    width: 299px;
-}
-
-.form_settings select {
-    width: 304px;
-}
-
-.form_settings .checkbox {
-    margin: 4px 0; 
-    padding: 0; 
-    width: 14px;
-    border: 0;
-    background: none;
-}
-
-.separator {
-    width: 100%;
-    height: 0;
-    border-top: 1px solid #D9D5CF;
-    border-bottom: 1px solid #FFF;
-    margin: 0 0 20px 0;
-}
-    
-table {
-    margin: 10px 0 30px 0;
-}
-
-table tr th, table tr td {
-    background: #3B3B3B;
-    color: #FFF;
-    padding: 7px 4px;
-    text-align: left;
-}
-    
-table tr td {
-    background: #CCCCCC;
-    color: #47433F;
-    border-top: 1px solid #FFF;
-}

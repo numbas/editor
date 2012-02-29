@@ -274,15 +274,72 @@ $(document).ready(function() {
 	ko.bindingHandlers.searchClick = {
 		init: function(element, valueAccessor, allBindingsAccessor, context) {
 			var obj = valueAccessor();
-			var show = $('<span></span>');
+			var show = $('<span></span>').addClass('name');
 			var input = $('<input type="text"></input>');
 			$(element).addClass('searchClick').append(show,input);
 
-			show.html(obj.value());
-			input.val(obj.value());
+			var value = obj.value();
+			show.html(value);
+			input.val(value);
+
+			function showName() {
+				show.show();
+				input.hide();
+			}
+			function showInput() {
+				show.hide();
+				input.show().select();
+			}
+
+			show.click(function() {
+				showInput();
+			});
+
+			input
+				.autocomplete({
+					minLength: 0,
+					source: function(request,response) {
+						console.log(request.term);
+						$.getJSON('/question/search/', {q:request.term})
+							.success(function(data) {
+								var results = data.object_list;
+								response( results.map(function(q){
+									return {
+										label: q.name,
+										value: q
+									}
+								}));
+							})
+						;
+					},
+					select: function(e, ui) {
+						var q = ui.item.value;
+						context.name(q.name);
+						context.id(q.id);
+						showName();
+
+						e.preventDefault();
+					},
+					change: function(e, ui) {
+						input.val(obj.value());
+						showName();
+					}
+				})
+				.blur(function() {
+					input.val(obj.value());
+					showName();
+				})
+			;
+
+			showInput();
 		},
 		update: function(element, valueAccessor, allBindingsAccessor) {
 			var obj = valueAccessor();
+			var value = obj.value();
+			$(element)
+				.find('.name').html(value ? value : 'No question selected!')
+				.end()
+				.find('input').val(value);
 		}
 	}
 });

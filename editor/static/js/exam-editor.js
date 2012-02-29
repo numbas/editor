@@ -30,7 +30,7 @@ $(document).ready(function() {
             return Editor.builtinRulesets.concat(rulesets().map(function(r){return r.name()})).sort();
         });
 
-		this.allQuestions = ko.observableArray([]);
+		this.allQuestions = ko.observableArray([new Question(1,'q1', this), new Question(2, 'q2', this)]);
 		this.questions = ko.observableArray([]);
 
         this.onadvance = new Event(
@@ -115,7 +115,7 @@ $(document).ready(function() {
         },
 
 		addQuestion: function() {
-			this.questions.push(new Question(1,'question',this));
+			this.questions.push(new Question(0,'',this));
 		},
 
         //returns a JSON-y object representing the exam
@@ -252,8 +252,8 @@ $(document).ready(function() {
 
 	function Question(id,name,exam)
 	{
-		this.id = ko.observable(0);
-		this.name = ko.observable('question');
+		this.id = ko.observable(id);
+		this.name = ko.observable(name);
 		this.exam = exam;
 		
 		this.selected = ko.observable(true);

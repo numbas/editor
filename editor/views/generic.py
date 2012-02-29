@@ -88,7 +88,7 @@ def preview_compile(template, context, uuid):
             [
                 settings.GLOBAL_SETTINGS['PYTHON_EXEC'],
                 os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
-                             os.path.normpath('bin/numbasa.py')),
+                             os.path.normpath('bin/numbas.py')),
                 '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
                 '-c',
                 '-o'+os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'],

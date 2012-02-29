@@ -194,10 +194,12 @@ $(document).ready(function() {
 			.success(function(response, status, xhr) {
 				$('#preview-message').html(response);
 				var origin = location.protocol+'//'+location.host;
-				e.preview = window.open(origin+"/numbas-previews/exam/");
+				e.preview = window.open(origin+"/numbas-previews/"+response.url);
 			})
 			.error(function(response, status, xhr) {
-				console.log(response.responseText);
+				// Hmmm...is this right?
+				var responseObj = $.parseJSON(response.responseText);
+//				console.log(responseObj);
 				noty({
 					text: 'Error making the preview.',
 					layout: "center",

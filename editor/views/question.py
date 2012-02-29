@@ -30,7 +30,7 @@ def preview(request, **kwargs):
         except Question.DoesNotExist:
             message = 'No such question exists in the database.'
             return HttpResponseServerError(message)
-        return preview_compile(t, c)
+        return preview_compile(t, c, q.filename)
     
 
 class QuestionCreateView(CreateView, SaveContentMixin):

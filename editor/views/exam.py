@@ -46,7 +46,7 @@ def preview(request, **kwargs):
         except Exam.DoesNotExist:
             message = 'No such exam exists in the database.'
             return HttpResponseServerError(message)
-        return preview_compile(t, c)
+        return preview_compile(t, c, e.filename)
     
     
 def testview(request):

@@ -304,14 +304,15 @@ $(document).ready(function() {
 								response( results.map(function(q){
 									return {
 										label: q.name,
-										value: q
+										value: q.name,
+										q: q
 									}
 								}));
 							})
 						;
 					},
 					select: function(e, ui) {
-						var q = ui.item.value;
+						var q = ui.item.q;
 						context.name(q.name);
 						context.id(q.id);
 						showName();

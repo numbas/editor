@@ -1,6 +1,6 @@
 $(document).ready(function() {
 	var Ruleset = Editor.Ruleset;
-    function Exam()
+    function Exam(data)
     {
         this.name = ko.observable('An Exam');
         this.duration = ko.observable(0);
@@ -30,7 +30,6 @@ $(document).ready(function() {
             return Editor.builtinRulesets.concat(rulesets().map(function(r){return r.name()})).sort();
         });
 
-		this.allQuestions = ko.observableArray([new Question(1,'q1', this), new Question(2, 'q2', this)]);
 		this.questions = ko.observableArray([]);
 
         this.onadvance = new Event(
@@ -86,15 +85,27 @@ $(document).ready(function() {
             return prettyData(this.toJSON());
         },this);
 
+        if(data)
+		{
+			this.id = data.id;
+            this.load(parseExam(data.content));
+			if('questions' in data)
+			{
+				this.questions(data.questions.map(function(q) {
+					return new Question(q.id,q.name,this)
+				}));
+			}
+		}
+
         this.save = ko.computed(function() {
-            var data = {};
-            $('#edit-form').serializeArray().map(function(o){
-                data[o.name] = o.value;
-            });
-            data.content = this.output();
+            var data = {
+				content: this.output(),
+				questions: this.questions().map(function(q){ return q.toJSON(); })
+			};
+			console.log(data);
             var e = this;
 
-            $.post($('#edit-form').attr('action'),data)
+            $.post('/exam/'+this.id+'/'+slugify(this.name()),data)
                 .success(function(data){
                     var address = location.protocol+'//'+location.host+'/exam/'+examJSON.id+'/'+slugify(e.name())+'/';
                     history.replaceState({},e.name(),address);
@@ -106,8 +117,6 @@ $(document).ready(function() {
             return data;
         },this).extend({throttle:1000});
 
-        if(data)
-            this.load(data);
     }
     Exam.prototype = {
         addRuleset: function() {
@@ -235,7 +244,7 @@ $(document).ready(function() {
     Event.prototype = {
         toJSON: function() {
             return {
-                action:this.actionName(),
+                action: this.actionName(),
                 message: this.message()
             };
         },
@@ -269,12 +278,17 @@ $(document).ready(function() {
 
 		deselect: function() {
 			this.selected(false);
+		},
+
+		toJSON: function() {
+			return {
+				id: this.id(),
+				name: this.name()
+			};
 		}
 	}
 
     //create an exam object
-    var data = examJSON.content;
-    data = parseExam(data);
-    viewModel = new Exam(data);
+    viewModel = new Exam(examJSON);
     ko.applyBindings(viewModel);
 });

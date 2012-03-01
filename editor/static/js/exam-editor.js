@@ -113,7 +113,7 @@ $(document).ready(function() {
 
 		this.autoSave = ko.computed(function() {
             var e = this;
-            $.post('/exam/'+this.id+'/'+slugify(this.name()),this.save())
+            $.post('/exam/'+this.id+'/'+slugify(this.name())+'/',this.save())
                 .success(function(data){
                     var address = location.protocol+'//'+location.host+'/exam/'+examJSON.id+'/'+slugify(e.name())+'/';
                     history.replaceState({},e.name(),address);

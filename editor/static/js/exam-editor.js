@@ -26,7 +26,7 @@ $(document).ready(function() {
         this.showactualmark = ko.observable(true);
         this.showtotalmark = ko.observable(true);
         this.showanswerstate = ko.observable(true);
-        this.allowreavealanswer = ko.observable(true);
+        this.allowrevealanswer = ko.observable(true);
         this.advicethreshold = ko.observable(0);
 
         var rulesets = this.rulesets = ko.observableArray([]);
@@ -175,7 +175,7 @@ $(document).ready(function() {
                   showactualmark: this.showactualmark(),
                   showtotalmark: this.showtotalmark(),
                   showanswerstate: this.showanswerstate(),
-                  allowreavealanswer: this.allowreavealanswer(),
+                  allowrevealanswer: this.allowrevealanswer(),
                   advicethreshold: this.advicethreshold()
                 },
                 rulesets: rulesets,
@@ -205,7 +205,7 @@ $(document).ready(function() {
 
             if('feedback' in data)
             {
-                ['showactualmark','showtotalmark','showanswerstate','allowreavealanswer','advicethreshold'].map(function(n){
+                ['showactualmark','showtotalmark','showanswerstate','allowrevealanswer','advicethreshold'].map(function(n){
                     this[n](data.feedback[n]);
                 },this);
             }

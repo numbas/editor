@@ -10,6 +10,7 @@ from django.shortcuts import render
 from django.template import loader, Context
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
 from django.views.generic import View
+from django.utils import simplejson
 
 from editor.forms import ExamForm, NewExamForm, ExamQuestionFormSet, ExamSearchForm, QuestionForm
 from editor.models import Exam, ExamQuestion
@@ -120,7 +121,8 @@ class ExamUpdateView(UpdateView, SaveContentMixin):
     inlines = [ExamQuestionInline]
     
     def post(self, request, *args, **kwargs):
-        print(request.raw_post_data)
+		json = simplejson.loads(request.POST['json'])
+		print(json['questions'])
         
 #    def get(self, request, *args, **kwargs):
 #        self.object = self.get_object()

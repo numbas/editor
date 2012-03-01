@@ -107,13 +107,15 @@ $(document).ready(function() {
 				tags: this.tags(),
 				metadata: this.metadata(),
 				questions: this.questions().map(function(q){ return q.toJSON(); }),
-                csrfmiddlewaretoken: Editor.getCookie('csrftoken')
 			};
 		},this);
 
 		this.autoSave = ko.computed(function() {
             var e = this;
-            $.post('/exam/'+this.id+'/'+slugify(this.name())+'/',this.save())
+            $.post(
+                '/exam/'+this.id+'/'+slugify(this.name())+'/',
+                {json: JSON.stringify(this.save()), csrfmiddlewaretoken: Editor.getCookie('csrftoken')}
+            )
                 .success(function(data){
                     var address = location.protocol+'//'+location.host+'/exam/'+examJSON.id+'/'+slugify(e.name())+'/';
                     if(history.replaceState)
@@ -223,7 +225,7 @@ $(document).ready(function() {
 				e.preview.close();
 			$.post(
 				Editor.exam_preview_url,
-				e.save()
+                {json: JSON.stringify(e.save()), csrfmiddlewaretoken: Editor.getCookie('csrftoken')}
 			)
 			.success(function(response, status, xhr) {
 				$('#preview-message').html(response);

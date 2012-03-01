@@ -2,14 +2,16 @@ import json
 import uuid
 
 from django.conf import settings
+from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponseServerError
 from django.forms.models import model_to_dict
 from django.shortcuts import render
 from django.template import loader, Context
-from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView
+from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
+from django.views.generic import View
 
-from editor.forms import ExamForm, NewExamForm, ExamQuestionFormSet, ExamSearchForm
+from editor.forms import ExamForm, NewExamForm, ExamQuestionFormSet, ExamSearchForm, QuestionForm
 from editor.models import Exam, ExamQuestion
 from editor.views.generic import SaveContentMixin, Preview
 from extra_views import InlineFormSet, UpdateWithInlinesView
@@ -23,7 +25,6 @@ class ExamPreviewView(DetailView, Preview):
     def post(self, request, *args, **kwargs):
         if request.is_ajax():
             try:
-                e = Exam.objects.get(pk=kwargs['pk'])
                 e = self.get_object()
                 e.content = request.POST['content']
                 exam_question_form = ExamQuestionFormSet(
@@ -110,7 +111,7 @@ class ExamDeleteView(DeleteView):
         return reverse('exam_index')
     
     
-class ExamUpdateView(UpdateWithInlinesView, SaveContentMixin):
+class ExamUpdateView(UpdateView, SaveContentMixin):
     
     """Edit an exam."""
     
@@ -118,16 +119,25 @@ class ExamUpdateView(UpdateWithInlinesView, SaveContentMixin):
     template_name = 'exam/edit.html'
     inlines = [ExamQuestionInline]
     
-    def forms_valid(self, form, inlines):
-        self.object = form.save(commit=False)
-        return self.write_content(settings.GLOBAL_SETTINGS['EXAM_SUBDIR'],
-                                  form, inlines=inlines)
+    def post(self, request, *args, **kwargs):
+        print(request.raw_post_data)
         
+#    def get(self, request, *args, **kwargs):
+#        self.object = self.get_object()
+#        print(self.object)
+    
+#    def forms_valid(self, form, inlines):
+#        self.object = form.save(commit=False)
+#        return self.write_content(settings.GLOBAL_SETTINGS['EXAM_SUBDIR'],
+#                                  form, inlines=inlines)
+#        
     def get_context_data(self, **kwargs):
         context = super(ExamUpdateView, self).get_context_data(**kwargs)
         context['exam_JSON'] = json.dumps(model_to_dict(self.object))
+#        context['exam_JSON'] = serializers.serialize('json', [self.object])
+#        print(context['exam_JSON'])
         return context
-    
+#    
     def get_success_url(self):
         return reverse('exam_edit', args=(self.object.pk,self.object.slug,))
     

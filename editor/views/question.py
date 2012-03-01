@@ -4,7 +4,7 @@ import uuid
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.forms.models import model_to_dict
-from django.http import HttpResponse, HttpResponseServerError
+from django.http import Http404, HttpResponse, HttpResponseServerError
 from django.template import loader, Context
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
@@ -31,6 +31,7 @@ def preview(request, **kwargs):
             message = 'No such question exists in the database.'
             return HttpResponseServerError(message)
         return preview_compile(t, c, q.filename)
+    raise Http404
     
 
 class QuestionCreateView(CreateView, SaveContentMixin):
@@ -99,16 +100,14 @@ class QuestionSearchView(ListView):
     model=Question
     
     def render_to_response(self, context, **response_kwargs):
-#        return super(QuestionSearchView, self).render_to_response(context, **response_kwargs)
-#        print(context)
-        return HttpResponse(json.dumps(context),
-                            content_type='application/json',
-                            **response_kwargs)
+        if self.request.is_ajax():
+            return HttpResponse(json.dumps(context),
+                                content_type='application/json',
+                                **response_kwargs)
+        raise Http404
     
     def get_queryset(self):
-#        if self.request.is_ajax():
         search_term = self.request.GET['q']
         question_objects = Question.objects.filter(name__icontains=search_term)
-#        print(question_objects)
         return [{'id':q.id, 'name':q.name} for q in question_objects]
     

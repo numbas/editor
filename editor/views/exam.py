@@ -3,7 +3,7 @@ import uuid
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseServerError
+from django.http import Http404, HttpResponseServerError
 from django.forms.models import model_to_dict
 from django.shortcuts import render
 from django.template import loader, Context
@@ -47,6 +47,7 @@ def preview(request, **kwargs):
             message = 'No such exam exists in the database.'
             return HttpResponseServerError(message)
         return preview_compile(t, c, e.filename)
+    raise Http404
     
     
 def testview(request):

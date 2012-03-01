@@ -3,6 +3,10 @@ $(document).ready(function() {
     function Exam(data)
     {
         this.name = ko.observable('An Exam');
+
+		this.tags = ko.observableArray([]);
+		this.metadata = ko.observable('');
+
         this.duration = ko.observable(0);
         this.percentPass = ko.observable(50);
         this.shuffleQuestions = ko.observable(false);
@@ -98,23 +102,36 @@ $(document).ready(function() {
 		}
 
         this.save = ko.computed(function() {
-            var data = {
+            return {
 				content: this.output(),
+				tags: this.tags(),
+				metadata: this.metadata(),
 				questions: this.questions().map(function(q){ return q.toJSON(); })
 			};
-			console.log(data);
-            var e = this;
+		},this);
 
-            $.post('/exam/'+this.id+'/'+slugify(this.name()),data)
+		this.autoSave = ko.computed(function() {
+            var e = this;
+            $.post('/exam/'+this.id+'/'+slugify(this.name()),this.save())
                 .success(function(data){
                     var address = location.protocol+'//'+location.host+'/exam/'+examJSON.id+'/'+slugify(e.name())+'/';
                     history.replaceState({},e.name(),address);
                 })
-                .error(function(data) {
-                    $('#preview-message').html(data);
+                .error(function(xhr,type,message) {
+					noty({
+						text: textile('Error saving exam:\n\n'+message),
+						layout: "topLeft",
+						type: "error",
+						textAlign: "center",
+						animateOpen: {"height":"toggle"},
+						animateClose: {"height":"toggle"},
+						speed: 200,
+						timeout: 5000,
+						closable:true,
+						closeOnSelfClick: true
+					});
                 })
             ;
-            return data;
         },this).extend({throttle:1000});
 
     }

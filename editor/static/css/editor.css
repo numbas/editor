@@ -84,7 +84,8 @@ ul.choices {
 }
 
 .properties input,
-.properties select {
+.properties select,
+.properties .listbox {
 	font-size:100%;
 	text-align:right;
 }
@@ -96,11 +97,15 @@ ul.choices {
 	float:left;
 	margin-right: 5em;
 }
-.properties input,.properties select, .properties .display {
+.properties input,.properties select, .properties .display, .properties .listbox {
 	float:right;
 }
 .properties input[type=text] {
 	padding-right:0.2em;
+}
+
+.properties .listbox {
+	clear:none;
 }
 
 .dict input:last-child {
@@ -209,6 +214,7 @@ button.remove:hover {
 .listbox ul {
 	display:inline-block;
 	padding: 0;
+	margin: 0;
 }
 
 .listbox li {

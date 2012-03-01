@@ -6,32 +6,35 @@ from django.core.urlresolvers import reverse
 from django.forms.models import model_to_dict
 from django.http import Http404, HttpResponse, HttpResponseServerError
 from django.template import loader, Context
-from django.views.generic import CreateView, DeleteView, ListView, UpdateView
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from editor.forms import NewQuestionForm
 from editor.models import Question
-from editor.views.generic import SaveContentMixin, preview_compile
+from editor.views.generic import SaveContentMixin, Preview
 
-def preview(request, **kwargs):
-    """Retrieve the contents of a question and compile it.
+class QuestionPreviewView(DetailView, Preview):
     
-    If this is successful, the exam will be shown in a new window by virtue of
-    some JS.
+    """Question preview."""
     
-    """
-    if request.is_ajax():
-        try:
-            q = Question.objects.get(pk=kwargs['pk'])
-            q.content = request.POST['content']
-            t = loader.get_template('temporary.question')
-            c = Context({
-                'question': q
-            })
-        except Question.DoesNotExist:
-            message = 'No such question exists in the database.'
-            return HttpResponseServerError(message)
-        return preview_compile(t, c, q.filename)
-    raise Http404
+    model = Question
+    
+    def post(self, request, *args, **kwargs):
+        if request.is_ajax():
+            try:
+                q = self.get_object()
+                q.content = request.POST['content']
+                t = loader.get_template('temporary.question')
+                c = Context({
+                    'question': q
+                })
+            except Question.DoesNotExist:
+                message = 'No such question exists in the database.'
+                return HttpResponseServerError(message)
+            return self.preview_compile(t, c, q.filename)
+        raise Http404
+    
+    def get(self, request, *args, **kwargs):
+        raise Http404
     
 
 class QuestionCreateView(CreateView, SaveContentMixin):

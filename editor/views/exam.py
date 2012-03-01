@@ -7,47 +7,52 @@ from django.http import Http404, HttpResponseServerError
 from django.forms.models import model_to_dict
 from django.shortcuts import render
 from django.template import loader, Context
-from django.views.generic import CreateView, DeleteView, FormView, ListView
+from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView
 
 from editor.forms import ExamForm, NewExamForm, ExamQuestionFormSet, ExamSearchForm
 from editor.models import Exam, ExamQuestion
-from editor.views.generic import SaveContentMixin, preview_compile
+from editor.views.generic import SaveContentMixin, Preview
 from extra_views import InlineFormSet, UpdateWithInlinesView
 
-def preview(request, **kwargs):
-    """Retrieve the contents of an exam and compile it.
+class ExamPreviewView(DetailView, Preview):
     
-    If this is successful, the exam will be shown in a new window by virtue of
-    some JS.
+    """Exam preview."""
     
-    """
-    if request.is_ajax():
-        try:
-            e = Exam.objects.get(pk=kwargs['pk'])
-            e.content = request.POST['content']
-            exam_question_form = ExamQuestionFormSet(request.POST, instance=e)
-            # Don't like this...
-            if not exam_question_form.is_valid():
-                message = 'Error in examquestion form'
+    model = Exam
+    
+    def post(self, request, *args, **kwargs):
+        if request.is_ajax():
+            try:
+                e = Exam.objects.get(pk=kwargs['pk'])
+                e = self.get_object()
+                e.content = request.POST['content']
+                exam_question_form = ExamQuestionFormSet(
+                    request.POST, instance=e)
+                # Don't like this...
+                if not exam_question_form.is_valid():
+                    message = 'Error in examquestion form'
+                    return HttpResponseServerError(message)
+                exam_question_form.save(commit=False)
+                questions = []
+                for eq in exam_question_form.cleaned_data:
+                    if eq:
+                        questions.append(eq['question'])
+                        
+                # Strip off the final brace.  The template adds it back in.
+                e.content = e.content.rstrip()[:-1]
+                t = loader.get_template('temporary.exam')
+                c = Context({
+                    'exam': e,
+                    'questions': questions
+                })
+            except Exam.DoesNotExist:
+                message = 'No such exam exists in the database.'
                 return HttpResponseServerError(message)
-            exam_question_form.save(commit=False)
-            questions = []
-            for eq in exam_question_form.cleaned_data:
-                if eq:
-                    questions.append(eq['question'])
-                    
-            # Strip off the final brace.  The template adds it back in.
-            e.content = e.content.rstrip()[:-1]
-            t = loader.get_template('temporary.exam')
-            c = Context({
-                'exam': e,
-                'questions': questions
-            })
-        except Exam.DoesNotExist:
-            message = 'No such exam exists in the database.'
-            return HttpResponseServerError(message)
-        return preview_compile(t, c, e.filename)
-    raise Http404
+            return self.preview_compile(t, c, e.filename)
+        raise Http404
+    
+    def get(self, request, *args, **kwargs):
+        raise Http404
     
     
 def testview(request):
@@ -136,7 +141,8 @@ class ExamSearchView(FormView):
     
     def form_valid(self, form):
 #        exam = form.cleaned_data['name']
-        exam_list = Exam.objects.filter(name__icontains=form.cleaned_data['name'])
+        exam_list = Exam.objects.filter(
+            name__icontains=form.cleaned_data['name'])
         return render(self.request, 'exam/index.html', {'exam_list': exam_list})
     
     

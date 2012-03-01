@@ -7,7 +7,7 @@ import traceback
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.shortcuts import render
-from django.views.generic.list import BaseListView
+#from django.views.generic.list import BaseListView
 
 from examparser import ExamParser, ParseError
 
@@ -69,41 +69,43 @@ class SaveContentMixin():
 #class JSONListView(JSONResponseMixin, BaseListView):
 #    pass
     
+class Preview():
     
-def preview_compile(template, context, uuid):
-    """Compile an exam or question preview."""
-    try:
-        fh = open(settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE'], 'w')
-        fh.write(template.render(context))
-        fh.close()
-    except IOError:
-        status = {
-            "result": "error",
-            "message": "Could not save exam to temporary file.",
-            "traceback": traceback.format_exc(),}
-        return HttpResponseServerError(json.dumps(status),
-                                       content_type='application/json')
-    else:
-        status = subprocess.Popen(
-            [
-                settings.GLOBAL_SETTINGS['PYTHON_EXEC'],
-                os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
-                             os.path.normpath('bin/numbas.py')),
-                '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
-                '-c',
-                '-o'+os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'],
-                                  uuid),
-                settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE']
-            ], stdout = subprocess.PIPE
-        )
-        output = status.communicate()[0]
-        if status.returncode != 0:
+    """Exam or question preview."""
+        
+    def preview_compile(self, template, context, uuid):
+        """Compile an exam or question preview."""
+        try:
+            fh = open(settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE'], 'w')
+            fh.write(template.render(context))
+            fh.close()
+        except IOError:
             status = {
                 "result": "error",
-                "message": "Something went wrong.",
-                "traceback": output,}
+                "message": "Could not save exam to temporary file.",
+                "traceback": traceback.format_exc(),}
             return HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
-#        message = 'Preview loaded in new window.'
-    status = {"result": "success", "url": uuid}
-    return HttpResponse(json.dumps(status), content_type='application/json')
+        else:
+            status = subprocess.Popen(
+                [
+                    settings.GLOBAL_SETTINGS['PYTHON_EXEC'],
+                    os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
+                                 os.path.normpath('bin/numbas.py')),
+                    '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
+                    '-c',
+                    '-o'+os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'],
+                                      uuid),
+                    settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE']
+                ], stdout = subprocess.PIPE
+            )
+            output = status.communicate()[0]
+            if status.returncode != 0:
+                status = {
+                    "result": "error",
+                    "message": "Something went wrong.",
+                    "traceback": output,}
+                return HttpResponseServerError(json.dumps(status),
+                                               content_type='application/json')
+        status = {"result": "success", "url": uuid}
+        return HttpResponse(json.dumps(status), content_type='application/json')

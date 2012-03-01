@@ -5,7 +5,7 @@
     {{ block.super }}
 
     <!-- MathJax -->
-    <script src="https://d3eoax9i5htok0.cloudfront.net/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    <script type="text/x-mathjax-config">
           MathJax.Hub.Config({
             extensions: ['tex2jax.js',"TeX/AMSmath.js","TeX/AMSsymbols.js"],
             tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]},
@@ -13,8 +13,9 @@
             displayAlign: "center",
             displayIndent: "0.1em",
             showProcessingMessages: false
-          });
+        });
     </script>
+    <script src="https://d3eoax9i5htok0.cloudfront.net/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
     <!-- jQuery -->
     <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.oembed.js"></script>

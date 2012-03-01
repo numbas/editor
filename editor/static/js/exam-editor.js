@@ -82,7 +82,7 @@ $(document).ready(function() {
         );
 
         ko.computed(function() {
-            $('title').text(this.name() ? this.name()+' - Numbas Editor' : 'Numbas Editor');
+            document.title = this.name() ? this.name()+' - Numbas Editor' : 'Numbas Editor';
         },this);
         
         this.output = ko.computed(function() {

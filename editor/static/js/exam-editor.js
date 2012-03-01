@@ -106,7 +106,8 @@ $(document).ready(function() {
 				content: this.output(),
 				tags: this.tags(),
 				metadata: this.metadata(),
-				questions: this.questions().map(function(q){ return q.toJSON(); })
+				questions: this.questions().map(function(q){ return q.toJSON(); }),
+                csrfmiddlewaretoken: Editor.getCookie('csrftoken')
 			};
 		},this);
 

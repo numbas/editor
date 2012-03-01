@@ -116,7 +116,8 @@ $(document).ready(function() {
             $.post('/exam/'+this.id+'/'+slugify(this.name())+'/',this.save())
                 .success(function(data){
                     var address = location.protocol+'//'+location.host+'/exam/'+examJSON.id+'/'+slugify(e.name())+'/';
-                    history.replaceState({},e.name(),address);
+                    if(history.replaceState)
+                        history.replaceState({},e.name(),address);
                 })
                 .error(function(xhr,type,message) {
 					noty({

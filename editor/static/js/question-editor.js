@@ -21,7 +21,7 @@ $(document).ready(function() {
         },this);
 
         ko.computed(function() {
-            $('title').text(this.name() ? this.name()+' - Numbas Editor' : 'Numbas Editor');
+            document.title = this.name() ? this.name()+' - Numbas Editor' : 'Numbas Editor';
         },this);
 
         this.save = ko.computed(function() {
@@ -35,7 +35,8 @@ $(document).ready(function() {
             $.post($('#edit-form').attr('action'),data)
                 .success(function(data){
                     var address = location.protocol+'//'+location.host+'/question/'+questionJSON.id+'/'+slugify(q.name())+'/';
-                    history.replaceState({},q.name(),address);
+                    if(history.replaceState)
+                        history.replaceState({},q.name(),address);
                 })
                 .error(function(data) {
                     $('#preview-message').html(data);

@@ -4,16 +4,15 @@ import uuid
 from django.conf import settings
 from django.core import serializers
 from django.core.urlresolvers import reverse
-from django.http import Http404, HttpResponseServerError
+from django.http import Http404, HttpResponse, HttpResponseServerError
 from django.forms.models import model_to_dict
 from django.shortcuts import render
 from django.template import loader, Context
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
 from django.views.generic import View
-from django.utils import simplejson
 
 from editor.forms import ExamForm, NewExamForm, ExamQuestionFormSet, ExamSearchForm, QuestionForm
-from editor.models import Exam, ExamQuestion
+from editor.models import Exam, ExamQuestion, Question
 from editor.views.generic import SaveContentMixin, Preview
 from extra_views import InlineFormSet, UpdateWithInlinesView
 
@@ -118,11 +117,22 @@ class ExamUpdateView(UpdateView, SaveContentMixin):
     
     model = Exam
     template_name = 'exam/edit.html'
-    inlines = [ExamQuestionInline]
     
     def post(self, request, *args, **kwargs):
-		json = simplejson.loads(request.POST['json'])
-		print(json['questions'])
+        request.JSON = json.loads(request.POST['json'])
+#        print(json.loads(request.POST['json']))
+        exam = self.get_object()
+#        print(exam)
+        exam.content = request.JSON['content']
+        exam.save()
+        questions = request.JSON['questions']
+        exam.questions.clear() 
+        for q in questions:
+            print(q)
+            question = Question.objects.get(pk=q['id'])
+            exam_question = ExamQuestion(exam=exam, question=question, qn_order=1)
+            exam_question.save()
+        return HttpResponse('success')
         
 #    def get(self, request, *args, **kwargs):
 #        self.object = self.get_object()

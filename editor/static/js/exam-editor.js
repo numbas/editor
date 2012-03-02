@@ -106,7 +106,7 @@ $(document).ready(function() {
 				content: this.output(),
 				tags: this.tags(),
 				metadata: this.metadata(),
-				questions: this.questions().map(function(q){ return q.toJSON(); }),
+				questions: this.questions().filter(function(q){return q.id()>0}).map(function(q){ return q.toJSON(); }),
 			};
 		},this);
 
@@ -228,11 +228,11 @@ $(document).ready(function() {
                 {json: JSON.stringify(e.save()), csrfmiddlewaretoken: Editor.getCookie('csrftoken')}
 			)
 			.success(function(response, status, xhr) {
-				$('#preview-message').html(response);
 				var origin = location.protocol+'//'+location.host;
 				e.preview = window.open(origin+"/numbas-previews/"+response.url);
 			})
 			.error(function(response, status, xhr) {
+				noty({text:response.responseText,timeout:0});
 				var responseObj = $.parseJSON(response.responseText);
 				var message = textile('h3. Error making the preview:\n\n'+responseObj.message+'\n\n'+responseObj.traceback);
 				noty({

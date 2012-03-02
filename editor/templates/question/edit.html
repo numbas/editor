@@ -23,18 +23,6 @@
 {% block content %}
     {{ block.super }}
 
-    <div id="fallback-form">
-        <h2>{{ object.name }}</h2>
-
-        {% if error %}<p><strong>{{ error }}</strong></p>{% endif %}
-
-        <form action="{% url question_edit object.pk object.slug %}" method="post" id="edit-form">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <input type="submit" value="Submit" />
-        </form>
-    </div>
-
 	{% verbatim %}
 		<script type="text/x-jquery-tmpl" id="questionTemplate">
 			<div class="properties">

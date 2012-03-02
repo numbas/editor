@@ -1,8 +1,4 @@
-﻿#fallback-form {
-    display: none;
-}
-
-#editor {
+﻿#editor {
 	border:2px solid #ccc;
 	padding:1em;
 	background: #f4f4ee;

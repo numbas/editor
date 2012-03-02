@@ -47,6 +47,9 @@ class Exam(models.Model):
     def __unicode__(self):
         return self.name
     
+    def get_questions(self):
+        return self.questions.order_by('examquestion')
+    
     def save(self, *args, **kwargs):
 #        if not self.pk:
         self.slug = slugify(self.name)

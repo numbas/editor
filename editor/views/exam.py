@@ -11,7 +11,7 @@ from django.template import loader, Context
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
 
 from editor.forms import ExamForm, NewExamForm, ExamQuestionFormSet, ExamSearchForm
-from editor.models import Exam
+from editor.models import Exam, Question
 from editor.views.generic import SaveContentMixin, Preview
 
 class ExamPreviewView(DetailView, Preview):
@@ -25,21 +25,9 @@ class ExamPreviewView(DetailView, Preview):
             try:
                 e = self.get_object()
                 request.JSON = json.loads(request.POST['json'])
-                e.content = request.JSON['content']
-                exam_question_form = ExamQuestionFormSet(
-                    request.JSON, instance=e)
-                # Don't like this...
-                if not exam_question_form.is_valid():
-                    message = 'Error in examquestion form'
-                    return HttpResponseServerError(message)
-                exam_question_form.save(commit=False)
-                questions = []
-                for eq in exam_question_form.cleaned_data:
-                    if eq:
-                        questions.append(eq['question'])
-                        
-                # Strip off the final brace.  The template adds it back in.
-                e.content = e.content.rstrip()[:-1]
+                questions = [Question.objects.get(pk=q['id']) for q in request.JSON['questions']]
+                e.content = request.JSON['content'].rstrip()[:-1]
+#                e.content = e.content.rstrip()[:-1]
                 t = loader.get_template('temporary.exam')
                 c = Context({
                     'exam': e,

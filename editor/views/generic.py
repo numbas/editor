@@ -7,8 +7,8 @@ import traceback
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.shortcuts import render
-#from django.views.generic.list import BaseListView
 
+from editor.models import Exam, ExamQuestion, Question
 from examparser import ExamParser, ParseError
 
 class SaveContentMixin():
@@ -44,6 +44,47 @@ class SaveContentMixin():
             for formset in inlines:
                 formset.save()
         return HttpResponseRedirect(self.get_success_url())
+    
+    def write_content2(self, directory, form):
+        parser = ExamParser()
+        try:
+            content = parser.parse(self.object.content)
+            self.object.name = content['name']
+            repo = git.Repo(settings.GLOBAL_SETTINGS['REPO_PATH'])
+            os.environ['GIT_AUTHOR_NAME'] = 'Numbas'
+            os.environ['GIT_AUTHOR_EMAIL'] = 'numbas@ncl.ac.uk'
+            path_to_file = os.path.join(settings.GLOBAL_SETTINGS['REPO_PATH'],
+                                        directory, self.object.filename)
+            fh = open(path_to_file, 'w')
+            fh.write(self.object.content)
+            fh.close()
+            repo.index.add([os.path.join(directory, self.object.filename)])
+            repo.index.commit('Made some changes to %s' % self.object.name)
+        except (IOError, OSError, IndexError, ParseError) as err:
+            status = {
+                "result": "error",
+                "message": str(err),
+                "traceback": traceback.format_exc(),}
+            return HttpResponseServerError(json.dumps(status),
+                                           content_type='application/json')
+        self.object = form.save()
+        if isinstance(self.object, Exam):
+            try:
+                self.object.questions.clear()
+                for i,q in enumerate(self.questions):
+                    question = Question.objects.get(pk=q['id'])
+                    exam_question = ExamQuestion(exam=self.object,
+                                                 question=question, qn_order=i)
+                    exam_question.save()
+            except:
+                status = {
+                    "result": "error",
+                    "message": "Something went wrong saving questions for exam",
+                    "traceback": traceback.format_exc(),}
+                return HttpResponseServerError(json.dumps(status),
+                                               content_type='application/json')
+        status = {"result": "success"}
+        return HttpResponse(json.dumps(status), content_type='application/json')
     
     
 #class JSONResponseMixin(object):

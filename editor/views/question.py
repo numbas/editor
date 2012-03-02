@@ -12,6 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 import json
+import traceback
 import uuid
 
 from django.conf import settings
@@ -21,7 +22,7 @@ from django.http import Http404, HttpResponse, HttpResponseServerError
 from django.template import loader, Context
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from editor.forms import NewQuestionForm
+from editor.forms import NewQuestionForm, QuestionForm
 from editor.models import Question
 from editor.views.generic import SaveContentMixin, Preview
 
@@ -35,7 +36,8 @@ class QuestionPreviewView(DetailView, Preview):
         if request.is_ajax():
             try:
                 q = self.get_object()
-                q.content = request.POST['content']
+                request.JSON = json.loads(request.POST['json'])
+                q.content = request.JSON['content']
                 t = loader.get_template('temporary.question')
                 c = Context({
                     'question': q
@@ -87,10 +89,27 @@ class QuestionUpdateView(UpdateView, SaveContentMixin):
     model = Question
     template_name = 'question/edit.html'
     
+    def post(self, request, *args, **kwargs):
+        request.JSON = json.loads(request.POST['json'])
+        self.object = self.get_object()
+        question_form = QuestionForm(request.JSON, instance=self.object)
+        if question_form.is_valid():
+            return self.form_valid(question_form)
+        else:
+            return self.form_invalid(question_form)
+        
     def form_valid(self, form):
         self.object = form.save(commit=False)
         return self.write_content(settings.GLOBAL_SETTINGS['QUESTION_SUBDIR'],
                                   form)
+        
+    def form_invalid(self, form):
+        status = {
+            "result": "error",
+            "message": "Something went wrong...",
+            "traceback": traceback.format_exc(),}
+        return HttpResponseServerError(json.dumps(status),
+                                       content_type='application/json')
     
     def get_context_data(self, **kwargs):
         context = super(QuestionUpdateView, self).get_context_data(**kwargs)

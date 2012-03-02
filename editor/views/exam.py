@@ -23,7 +23,7 @@ from django.shortcuts import render
 from django.template import loader, Context
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
 
-from editor.forms import ExamForm, NewExamForm, ExamQuestionFormSet, ExamSearchForm
+from editor.forms import ExamForm, NewExamForm, ExamSearchForm
 from editor.models import Exam, Question
 from editor.views.generic import SaveContentMixin, Preview
 
@@ -42,7 +42,6 @@ class ExamPreviewView(DetailView, Preview):
                     Question.objects.get(
                     pk=q['id']) for q in request.JSON['questions']]
                 e.content = request.JSON['content'].rstrip()[:-1]
-#                e.content = e.content.rstrip()[:-1]
                 t = loader.get_template('temporary.exam')
                 c = Context({
                     'exam': e,
@@ -58,22 +57,6 @@ class ExamPreviewView(DetailView, Preview):
         raise Http404
     
     
-def testview(request):
-    """For testing."""
-    if request.method == 'POST':
-        form = ExamForm(request.POST)
-        print ExamQuestionFormSet(request.POST)
-        inlines = [ExamQuestionFormSet(request.POST)]
-        if form.is_valid():
-            for formset in inlines:
-                if formset.is_valid():
-                    print "valid"
-    else:
-        form = ExamForm()
-        inlines = [ExamQuestionFormSet()]
-    return render(request, 'exam/new.html', {'form': form, 'inlines': inlines})
-
-
 class ExamCreateView(CreateView, SaveContentMixin):
     
     """Create an exam."""
@@ -124,7 +107,7 @@ class ExamUpdateView(UpdateView, SaveContentMixin):
     
     def form_valid(self, form):
         self.object = form.save(commit=False)
-        return self.write_content2(settings.GLOBAL_SETTINGS['EXAM_SUBDIR'],
+        return self.write_content(settings.GLOBAL_SETTINGS['EXAM_SUBDIR'],
                                    form)
         
     def form_invalid(self, form):

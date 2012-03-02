@@ -138,14 +138,14 @@ $(document).ready(function() {
 				q.preview.close();
 			$.post(
 				Editor.exam_preview_url,
-				q.save()
+				{json: JSON.stringify(q.save()), csrfmiddlewaretoken: Editor.getCookie('csrftoken')}
 			)
 			.success(function(response, status, xhr) {
-				$('#preview-message').html(response);
 				var origin = location.protocol+'//'+location.host;
 				q.preview = window.open(origin+"/numbas-previews/"+response.url);
 			})
 			.error(function(response, status, xhr) {
+				noty({text:response.responseText,timeout:0});
 				var responseObj = $.parseJSON(response.responseText);
 				var message = textile('h3. Error making the preview:\n\n'+responseObj.message+'\n\n'+responseObj.traceback);
 				noty({

@@ -42,7 +42,12 @@
 					name: 'property',
 					templateOptions: {property:name,label:'Question name:'}
 				}"></div>
+				<div>
+					<label>Tags:</label>
+					<div data-bind="listbox: tags"></div>
+				</div>
 			</div>
+
 
 			<div style="margin-bottom:1em;" data-bind="writemaths:statement">
 				Statement:

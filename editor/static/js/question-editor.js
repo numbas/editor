@@ -9,6 +9,10 @@ $(document).ready(function() {
     function Question(data)
     {
         this.name = ko.observable(questionJSON.name);
+
+		this.tags = ko.observableArray([]);
+		this.metadata = ko.observable('');
+
         this.statement = ko.observable('');
         this.advice = ko.observable('');
 
@@ -24,30 +28,48 @@ $(document).ready(function() {
             document.title = this.name() ? this.name()+' - Numbas Editor' : 'Numbas Editor';
         },this);
 
+        if(data)
+		{
+			this.id = data.id;
+			this.load(parseExam(data.content));
+		}
+
         this.save = ko.computed(function() {
-            var data = {};
-            $('#edit-form').serializeArray().map(function(o){
-                data[o.name] = o.value;
-            });
-            data.content = this.output();
+			return {
+				content: this.output(),
+				tags: this.tags(),
+				metadata: this.metadata()
+			};
+		},this);
+
+		this.autoSave = ko.computed(function() {
             var q = this;
 
-            $.post($('#edit-form').attr('action'),data)
+            $.post(
+				'/question/'+this.id+'/'+slugify(this.name())+'/',
+				{json: JSON.stringify(this.save()), csrfmiddlewaretoken: Editor.getCookie('csrftoken')}
+			)
                 .success(function(data){
                     var address = location.protocol+'//'+location.host+'/question/'+questionJSON.id+'/'+slugify(q.name())+'/';
                     if(history.replaceState)
                         history.replaceState({},q.name(),address);
                 })
                 .error(function(data) {
-                    $('#preview-message').html(data);
+					noty({
+						text: textile('Error saving question:\n\n'+message),
+						layout: "topLeft",
+						type: "error",
+						textAlign: "center",
+						animateOpen: {"height":"toggle"},
+						animateClose: {"height":"toggle"},
+						speed: 200,
+						timeout: 5000,
+						closable:true,
+						closeOnSelfClick: true
+					});
                 })
             ;
-            return data;
         },this).extend({throttle:1000});
-
-
-        if(data)
-            this.load(data);
     }
     Question.prototype = {
         addVariable: function() {
@@ -570,12 +592,6 @@ $(document).ready(function() {
 
 
     //create a question object
-    var data = questionJSON.content;
-    data = parseExam(data);
-    viewModel = new Question(data);
+    viewModel = new Question(questionJSON);
     ko.applyBindings(viewModel);
-
-    var preview;
-    $('#preview').click(function() {
-    });
 });

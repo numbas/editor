@@ -127,10 +127,10 @@ class ExamUpdateView(UpdateView, SaveContentMixin):
         exam.save()
         questions = request.JSON['questions']
         exam.questions.clear() 
-        for q in questions:
-            print(q)
+        for i,q in enumerate(questions):
+            print(i,q)
             question = Question.objects.get(pk=q['id'])
-            exam_question = ExamQuestion(exam=exam, question=question, qn_order=1)
+            exam_question = ExamQuestion(exam=exam, question=question, qn_order=i)
             exam_question.save()
         return HttpResponse('success')
         

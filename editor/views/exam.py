@@ -1,3 +1,16 @@
+#Copyright 2012 Newcastle University
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
 import json
 import traceback
 import uuid
@@ -25,7 +38,9 @@ class ExamPreviewView(DetailView, Preview):
             try:
                 e = self.get_object()
                 request.JSON = json.loads(request.POST['json'])
-                questions = [Question.objects.get(pk=q['id']) for q in request.JSON['questions']]
+                questions = [
+                    Question.objects.get(
+                    pk=q['id']) for q in request.JSON['questions']]
                 e.content = request.JSON['content'].rstrip()[:-1]
 #                e.content = e.content.rstrip()[:-1]
                 t = loader.get_template('temporary.exam')

@@ -69,6 +69,7 @@ class ExamCreateView(CreateView, SaveContentMixin):
         self.object = form.save(commit=False)
         self.object.content = "{name: %s}" % self.object.name
         self.object.filename = str(uuid.uuid4())
+        self.questions = []
         return self.write_content(settings.GLOBAL_SETTINGS['EXAM_SUBDIR'],
                                   form)
     

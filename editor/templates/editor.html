@@ -31,7 +31,6 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/textile.js"></script>
 
     <!-- write maths, see maths -->
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jme.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/writemaths.js"></script>
 
     <!-- exam parser -->
@@ -56,10 +55,12 @@
     {{block.super }}
     {% verbatim %}
 		<script type="text/x-jquery-tmpl" id="variable">
-			<li class="variable dict">
-				<input type="text" class="name" data-bind="value:name, valueUpdate: 'input'"/> = <input class="def" type="text" data-bind="value:definition, valueUpdate: 'input'"/>
-				<button class="remove" data-bind="click:remove"></button>
-			</li>
+			<tr class="variable dict">
+				<td><div><input type="text" class="name" data-bind="value:name, valueUpdate: 'input'"/> = </div></td>
+				<td><div><input class="def" type="text" data-bind="value:definition, valueUpdate: 'input'"/></div></td>
+				<td class="value"><div><span class="value" data-bind="css: {error: error().length>0}, text: display, mathjax: value"></span></div></td>
+				<td><div><button class="remove" data-bind="click:remove"></button></div></td>
+			</tr>
 		</script>
 
 		<!-- Property Inputs -->

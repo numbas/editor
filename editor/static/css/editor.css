@@ -35,6 +35,10 @@
 	background: #e5e5ee;
 }
 
+.variables th {
+	text-align: center;
+}
+
 .variable .name {
     width: 8em;
 }
@@ -42,7 +46,18 @@
 .variable .def {
 	width: 20em;
     font-family: monospace;
+	text-align: right;
 }
+.variable td {
+	padding-right: 0.5em;
+	text-align: center;
+}
+
+.variable td.value {
+	max-width: 20em;
+	overflow-x: auto;
+}
+
 
 table.multiplechoice {
 	width:auto;
@@ -102,10 +117,6 @@ ul.choices {
 
 .properties .listbox {
 	clear:none;
-}
-
-.dict input:last-child {
-	text-align:right;
 }
 
 .writemaths { 

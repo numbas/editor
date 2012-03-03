@@ -18,6 +18,7 @@ if(!window.Editor)
     window.Editor = {};
 
 $(document).ready(function() {
+
     Editor.getCookie = function(name) {
         var cookieValue = null;
         if (document.cookie && document.cookie != '') {
@@ -146,6 +147,25 @@ $(document).ready(function() {
     Editor.Variable = function(q,data) {
         this.name = ko.observable('');
         this.definition = ko.observable('');
+		this.value = ko.observable('');
+		this.error = ko.observable('');
+		this.display = ko.computed(function() {
+			var v;
+			if(this.error())
+				return this.error();
+			else if(v = this.value())
+			{
+				switch(v.type)
+				{
+				case 'string':
+					return v.value;
+				default:
+					return '$'+Numbas.jme.display.texify({tok:this.value()})+'$';
+				}
+			}
+			else
+				return '';
+		},this);
         this.remove = function() {
             q.variables.remove(this);
         };
@@ -372,4 +392,10 @@ $(document).ready(function() {
 				.find('input').val(value);
 		}
 	}
+
+	ko.bindingHandlers.mathjax = {
+		update: function(element) {
+			$(element).mathjax();
+		}
+	};
 });

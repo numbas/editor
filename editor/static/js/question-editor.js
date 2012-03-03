@@ -16,7 +16,12 @@ Copyright 2012 Newcastle University
 var viewModel;
 
 $(document).ready(function() {
-//indent every line in given string with n tab characters
+	Numbas.loadScript('scripts/jme-display.js');
+	Numbas.loadScript('scripts/jme.js');
+	Numbas.startOK = true;
+	Numbas.init = function() {
+	};
+	Numbas.tryInit();
 
     var Variable = Editor.Variable,
         Ruleset = Editor.Ruleset;
@@ -42,6 +47,15 @@ $(document).ready(function() {
         ko.computed(function() {
             document.title = this.name() ? this.name()+' - Numbas Editor' : 'Numbas Editor';
         },this);
+
+		ko.computed(function() {
+			//the ko dependency checker seems not to pay attention to what happens in the computeVariables method, so access the variable bits here to give it a prompt
+			this.variables().map(function(v) {
+				v.name();
+				v.definition();
+			});
+			this.computeVariables();
+		},this).extend({throttle:300});
 
         if(data)
 		{
@@ -95,6 +109,80 @@ $(document).ready(function() {
             this.parts.push(new Part(this));
         },
 
+		computeVariables: function() {
+			if(!Numbas.jme)
+			{
+				var q = this;
+				Numbas.init = function() {
+					q.computeVariables();
+				};
+				return;
+			}
+			var todo = {}
+			this.variables().map(function(v) {
+				if(!v.name() || !v.definition())
+					return;
+				try {
+					var tree = Numbas.jme.compile(v.definition());
+					var vars = Numbas.jme.findvars(tree);
+				}
+				catch(e) {
+					v.error(e.message);
+					return;
+				}
+				v.value('');
+				todo[v.name()] = {
+					v: v,
+					tree: tree,
+					vars: vars
+				}
+			});
+			function compute(name,todo,variables,path)
+			{
+				if(variables[name]!==undefined)
+					return;
+
+				if(path===undefined)
+					path=[];
+
+				if(path.contains(name))
+				{
+					throw(new Numbas.Error('jme.variables.circular reference',name,path));
+				}
+
+				var v = todo[name];
+
+				if(v===undefined)
+					throw(new Numbas.Error('jme.variables.variable not defined',name));
+
+				//work out dependencies
+				for(var i=0;i<v.vars.length;i++)
+				{
+					var x=v.vars[i];
+					if(variables[x]===undefined)
+					{
+						var newpath = path.slice(0);
+						newpath.splice(0,0,name);
+						compute(x,todo,variables,newpath);
+					}
+				}
+
+				variables[name] = Numbas.jme.evaluate(v.tree,variables,Numbas.jme.builtins);
+				v.v.value(variables[name]);
+			}
+			var variables = {};
+			for(var x in todo)
+			{
+				try {
+					compute(x,todo,variables);
+					todo[x].v.error('');
+				}
+				catch(e) {
+					todo[x].v.error(e.message);
+				}
+			}
+		},
+
         removePart: function(p) {
             this.parts.remove(p);
         },
@@ -142,7 +230,6 @@ $(document).ready(function() {
 			)
 			.success(function(response, status, xhr) {
 				var origin = location.protocol+'//'+location.host;
-				console.log(response);
 				q.preview = window.open(origin+"/numbas-previews/"+response.url);
 			})
 			.error(function(response, status, xhr) {

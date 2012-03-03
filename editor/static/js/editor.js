@@ -182,7 +182,7 @@ $(document).ready(function() {
         },
         update: function(element, valueAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor());
-            $(element).trigger('setstate',value);
+            $(element).find('.writemaths').trigger('setstate',value);
         }
     };
     

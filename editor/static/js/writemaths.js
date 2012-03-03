@@ -254,7 +254,7 @@ WriteMaths.prototype = {
 			dr.remove();
 			e.find('.preview')
 				.show()
-				.html(cleanJME(math))
+				.html(math)
 				.position({my: 'left bottom', at: 'left top', of: this, offset: w+' 0', collision: 'fit'})
 			;
 			var inp = this;
@@ -533,23 +533,6 @@ var htmlToTeX;
 	}
 })();
 
-function texMaths(s) {
-	var bits = Numbas.jme.splitbrackets(s,'{','}');
-	var out = '';
-	for(var i=0;i<bits.length;i++)
-	{
-		if(i%2)	//JME
-			out += bits[i];
-		else	//raw LaTeX
-			try{
-				out += Numbas.jme.display.exprToLaTeX(bits[i]);
-			}catch(e){
-				out+=bits[i];
-			}
-	}
-	return out;
-};
-
 function input() {
 	return $('<input rows="1"></input>');
 }
@@ -557,8 +540,7 @@ function makeParagraph(val,notypeset)
 {
 	if(val.length)
 	{
-		var dval = cleanJME(val);
-		var d = $(textile(dval));
+		var d = $(textile(val.trim()));
 		if(d.is('div'))
 		{
 			var p=$('<p></p>');
@@ -576,90 +558,8 @@ function makeParagraph(val,notypeset)
 	d.addClass('line');
 	return d.first();
 }
-function cleanJME(val)
-{
-	var dval = $.trim(val);
-	var bits = Numbas.util.contentsplitbrackets(dval);
-	dval='';
-	for(var i=0;i<bits.length;i++)
-	{
-		switch(i % 2)
-		{
-		case 0:	//text
-			dval += bits[i];
-			break;
-		case 1: //delimiter
-			switch(bits[i])
-			{
-			case '$':
-				if(i<bits.length-1)
-				{
-					dval += '$'+texMaths(bits[i+1])+'$';
-					i+=2;
-				}
-				else
-					dval += bits[i];
-				break;
-			case '\\[':
-				if(i<bits.length-1)
-				{
-					dval += '\\['+texMaths(bits[i+1])+'\\]';
-					i+=2;
-				}
-				else
-					dval += bits[i];
-				break;
-			case '%%':
-				if(i<bits.length-1)
-				{
-					WriteMaths.numGraphs += 1;
-					dval += '<div id="jsxgraph-'+WriteMaths.numGraphs+'" class="graph" source="'+bits[i+1]+'"/>';
-					i+=2;
-				}
-				else
-					dval += bits[i];
-				break;
-			}
-		}
-	}
-	return dval;
-}
 
 function finishParagraph(p) {
-	try{
-
-		p.find('.graph').each(function() {
-			var id = $(this).attr('id');
-			var src = $(this).attr('source');
-			$(this).css('width','400px').css('height','300px');
-			urlexp.lastIndex = 0;
-			if(src.match(/^geonext /))
-			{
-				src = src.slice(8);
-				if(urlexp.test(src))
-					JXG.JSXGraph.loadBoardFromFile(id,src,'Geonext');
-				else
-					JXG.JSXGraph.loadBoardFromString(id,src,'Geonext');
-			}
-			else
-			{
-				JXG.JSXGraph
-					.initBoard(id,{
-						showCopyright:false,
-						originX: 200,
-						originY: 150,
-						unitX: 50,
-						unitY: 50,
-						axis:true
-					})
-					.construct(src)
-				;
-			}
-		});
-	}
-	catch(e) {
-		console.log(e);
-	}
 	p.linkURLs().find('a').oembed()
 	p.find('a').attr('target','_blank');
 }

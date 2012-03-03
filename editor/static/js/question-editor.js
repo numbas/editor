@@ -142,6 +142,7 @@ $(document).ready(function() {
 			)
 			.success(function(response, status, xhr) {
 				var origin = location.protocol+'//'+location.host;
+				console.log(response);
 				q.preview = window.open(origin+"/numbas-previews/"+response.url);
 			})
 			.error(function(response, status, xhr) {

@@ -20,9 +20,7 @@ WriteMaths = function(e,options)
 	if(!options)
 		options = {};
 	e=$(e);
-	e.addClass('writemaths')
-     .attr('tabindex','0')
-    ;
+	e.addClass('writemaths');
 	this.e = e;
 	this.d = options.display;
 	this.saveName = options.saveName;
@@ -62,9 +60,9 @@ WriteMaths.prototype = {
 		var wm = this;
 		var e = this.e;
 
-        //when widget receives focus, select first line
-        e.focus(function() {
-            $(this).find('.line:first').click();
+        //when a linereceives focus, select first line
+        e.delegate('.line','focus',function(ev) {
+			$(this).click();
         });
 
 		//trigger a 'setstate' event to set the state of the writemaths area
@@ -76,11 +74,14 @@ WriteMaths.prototype = {
 		//clicking on a paragraph makes it editable
 		e.delegate('.line','click',function(e) {
 			if(wm.locked) { return }
+			console.log(this);
 			var d = input();
 			d.val(($(this).attr('source') || '').trim());
 			$(this).replaceWith(d);
 			d.focus();
 			positionPreview.apply(d[0]);
+			e.stopPropagation();
+			e.preventDefault();
 		});
 		
 
@@ -314,6 +315,7 @@ WriteMaths.prototype = {
 		var i = lines.length;
 		while(i--)
 		{
+			lines[i] = lines[i].trim();
 			var p = makeParagraph(lines[i]);
 			if(p.is('ol,ul'))
 			{
@@ -555,7 +557,7 @@ function makeParagraph(val,notypeset)
 	{
 		d = $('<p><br/></p>');
 	}
-	d.addClass('line');
+	d.addClass('line').attr('tabindex',0);
 	return d.first();
 }
 

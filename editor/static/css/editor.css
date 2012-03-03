@@ -131,6 +131,11 @@ ul.choices {
 	text-align:left;
 }
 
+.writemaths .MathJax_Display {
+	margin: 0;
+	padding: 1em 0em;
+}
+
 input[type=number] {
 	width: 5em;
 }

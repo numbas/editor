@@ -446,9 +446,10 @@
 		</script>
 
 		<div>
-			<button id="preview" type="button" data-bind="click: showPreview">
-				Test Run
-			</button>
+			<div id="buttons">
+				<button id="preview" data-bind="click: showPreview">Test Run</button>
+				<button id="download" data-bind="click: download">Download .zip</button>
+			</div>
 			<div id="editor" data-bind="template: 'questionTemplate'"></div>
 		</div>
     {% endverbatim %}

@@ -197,11 +197,12 @@ $(document).ready(function() {
             var wm = new WriteMaths(d);
             wm.setState(value);
             $(element).bind('input',function() {
-                valueAccessor()(d.attr('value'));
+                valueAccessor()(wm.getState().join('\n\n'));
             });
         },
         update: function(element, valueAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor());
+			value = value.split('\n\n').join('\n');
             $(element).find('.writemaths').trigger('setstate',value);
         }
     };

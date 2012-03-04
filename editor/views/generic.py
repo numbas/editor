@@ -111,8 +111,8 @@ class Preview():
             return HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
         else:
-            status = subprocess.Popen(
-                [
+            try:
+                status = subprocess.Popen([
                     settings.GLOBAL_SETTINGS['PYTHON_EXEC'],
                     os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
                                  os.path.normpath('bin/numbas.py')),
@@ -120,15 +120,16 @@ class Preview():
                     '-c',
                     '-o'+os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'],
                                       uuid),
-                    settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE']
-                ], stdout = subprocess.PIPE
-            )
-            output = status.communicate()[0]
-            if status.returncode != 0:
+                    settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE']],
+                    stdout = subprocess.PIPE)
+                stat = status.communicate()
+                if status.returncode != 0:
+                    raise OSError("numbas.py execution failed.")
+            except (NameError, OSError) as err:
                 status = {
                     "result": "error",
-                    "message": "Something went wrong.",
-                    "traceback": output,}
+                    "message": str(err),
+                    "traceback": traceback.format_exc(),}
                 return HttpResponseServerError(json.dumps(status),
                                                content_type='application/json')
         status = {"result": "success", "url": uuid}

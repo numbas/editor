@@ -233,7 +233,6 @@ $(document).ready(function() {
 				q.preview = window.open(origin+"/numbas-previews/"+response.url);
 			})
 			.error(function(response, status, xhr) {
-				noty({text:response.responseText,timeout:0});
 				var responseObj = $.parseJSON(response.responseText);
 				var message = textile('h3. Error making the preview:\n\n'+responseObj.message+'\n\n'+responseObj.traceback);
 				noty({

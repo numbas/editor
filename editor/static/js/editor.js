@@ -192,6 +192,7 @@ $(document).ready(function() {
     ko.bindingHandlers.writemaths = {
         init: function(element,valueAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor()) || '';
+			value = value.split(/\n[ \t]*\n/).join('\n');
             var d = $('<div/>');
             $(element).append(d);
             var wm = new WriteMaths(d);
@@ -202,7 +203,7 @@ $(document).ready(function() {
         },
         update: function(element, valueAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor()) || '';
-			value = value.split('\n\n').join('\n');
+			value = value.split(/\n[ \t]*\n/).join('\n');
             $(element).find('.writemaths').trigger('setstate',value);
         }
     };

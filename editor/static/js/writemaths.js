@@ -74,7 +74,6 @@ WriteMaths.prototype = {
 		//clicking on a paragraph makes it editable
 		e.delegate('.line','click',function(e) {
 			if(wm.locked) { return }
-			console.log(this);
 			var d = input();
 			d.val(($(this).attr('source') || '').trim());
 			$(this).replaceWith(d);
@@ -551,7 +550,7 @@ function makeParagraph(val,notypeset)
 		}
 		d.attr('source',val);
 		if(!notypeset)
-			MathJax.Hub.Queue(['Typeset',MathJax.Hub,d[0]]);
+			d.mathjax();
 	}
 	else
 	{

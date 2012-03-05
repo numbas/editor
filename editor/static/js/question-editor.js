@@ -101,8 +101,12 @@ $(document).ready(function() {
         },this).extend({throttle:1000});
     }
     Question.prototype = {
-        addVariable: function() {
-            this.variables.push(new Variable(this));
+        addVariable: function(n) {
+			var v = new Variable(this);
+			if(n!=undefined)
+				this.variables.splice(n,0,v);
+			else
+	            this.variables.push(v);
         },
 
         addPart: function() {
@@ -215,7 +219,7 @@ $(document).ready(function() {
             if('parts' in data)
             {
                 data.parts.map(function(vd) {
-                    this.parts.push(new Part(this,null,vd));
+                    this.parts.push(new Part(this,null,null,vd));
                 },this);
             }
         },
@@ -250,7 +254,7 @@ $(document).ready(function() {
 		}
     };
 
-    var Part = function(q,parent,data) {
+    var Part = function(q,parent,parentList,data) {
         this.type = ko.observable('information');
         this.prompt = ko.observable('');
         this.parent = parent;
@@ -301,7 +305,8 @@ $(document).ready(function() {
         this.jme.checkingType = ko.observable(this.jme.checkingTypes[0]);
 
         this.numberentry = {
-            answer:ko.observable(''),
+            minValue: ko.observable(''),
+			maxValue: ko.observable(''),
             integerAnswer:ko.observable(false),
             partialCredit:ko.observable(0)
         };
@@ -349,8 +354,8 @@ $(document).ready(function() {
         this.remove = function() {
             if(confirm("Remove this part?"))
             {
-                if(parent)
-                    parent.steps.remove(this);
+                if(parentList)
+                    parentList.remove(this);
                 else
                     q.removePart(this);
             }
@@ -372,11 +377,11 @@ $(document).ready(function() {
         ],
 
         addStep: function() {
-            this.steps.push(new Part(null,this));
+            this.steps.push(new Part(null,this,this.steps));
         },
 
         addGap: function() {
-            this.gapfill.gaps.push(new Part(null,this));
+            this.gapfill.gaps.push(new Part(null,this,this.gapfill.gaps));
         },
 
         addChoice: function() {
@@ -499,7 +504,8 @@ $(document).ready(function() {
                 }
                 break;
             case 'numberentry':
-                o.answer = this.numberentry.answer();
+                o.minValue = this.numberentry.minValue();
+                o.maxValue = this.numberentry.maxValue();
                 if(this.numberentry.integerAnswer())
                 {
                     o.integerAnswer = this.numberentry.integerAnswer();
@@ -573,7 +579,7 @@ $(document).ready(function() {
             if(data.steps)
             {
                 data.steps.map(function(s) {
-                    this.steps.push(new Part(null,this,s));
+                    this.steps.push(new Part(null,this,this.steps,s));
                 },this);
             }
 
@@ -583,7 +589,7 @@ $(document).ready(function() {
                 if(data.gaps)
                 {
                     data.gaps.map(function(g) {
-                        this.gapfill.gaps.push(new Part(null,this,g));
+                        this.gapfill.gaps.push(new Part(null,this,this.gapfill.gaps,g));
                     },this);
                 }
                 break;
@@ -628,7 +634,8 @@ $(document).ready(function() {
                 }
                 break;
             case 'numberentry':
-                this.numberentry.answer(data.answer);
+                this.numberentry.minValue(data.minValue);
+                this.numberentry.maxValue(data.maxValue);
                 this.numberentry.integerAnswer(data.integerAnswer || false);
                 this.numberentry.partialCredit(data.partialCredit || 0);
                 break;

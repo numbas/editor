@@ -50,6 +50,7 @@
 				<div>
 					<table class="variables editlist">
 						<thead data-bind="visible: variables().length>0">
+							<th/>
 							<th>Name</th>
 							<th>Definition</th>
 							<th>Computed value</th>
@@ -58,9 +59,10 @@
 							name:'variable',
 							foreach: variables,
 							beforeRemove: function(elem) { $(elem).find('td>div').slideUp(150,function() {$(this).parent().parent().remove()}) },
-							afterAdd: function(elem) { $(elem).find('td>div').hide().slideDown(150) }
-						}"></tbody>
+							afterAdd: function(elem) { $(elem).find('td>div').hide().slideDown(150).end().find('.name').focus(); },
+						}, sortableList: variables"></tbody>
 						<tr>
+							<td/>
 							<td><button data-bind="click:addVariable, text: variables().length ? 'Add another variable' : 'Add a variable'"></button></td>
 							<td></td>
 							<td><button data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button></td>
@@ -263,7 +265,11 @@
 			<div class="properties">
 				<div data-bind="template: {
 					name: 'property',
-					templateOptions: {label:'Correct answer:',property:numberentry.answer}
+					templateOptions: {label:'Minimum value:',property:numberentry.minValue}
+				}"></div>
+				<div data-bind="template: {
+					name: 'property',
+					templateOptions: {label:'Maximum value:',property:numberentry.maxValue}
 				}"></div>
 				<div data-bind="template: {
 					name: 'booleanproperty',

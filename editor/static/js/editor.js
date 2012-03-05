@@ -201,7 +201,7 @@ $(document).ready(function() {
             });
         },
         update: function(element, valueAccessor) {
-            var value = ko.utils.unwrapObservable(valueAccessor());
+            var value = ko.utils.unwrapObservable(valueAccessor()) || '';
 			value = value.split('\n\n').join('\n');
             $(element).find('.writemaths').trigger('setstate',value);
         }

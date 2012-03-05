@@ -248,7 +248,8 @@ button.remove:hover {
 	width: 6px;
 	height: 16px;
 	display: inline-block;
-	background: transparent url(../images/move_vertical_6x16.png);
+	background: transparent url(../images/move_vertical_6x16.png) no-repeat;
+	padding: 2px 8px;
 }
 
 .sort-placeholder {

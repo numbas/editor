@@ -18,8 +18,7 @@ import subprocess
 import traceback
 
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
-from django.shortcuts import render
+from django.http import HttpResponse, HttpResponseServerError
 
 from editor.models import Exam, ExamQuestion, Question
 from examparser import ExamParser, ParseError
@@ -124,7 +123,8 @@ class Preview():
                     stdout = subprocess.PIPE)
                 stat = status.communicate()
                 if status.returncode != 0:
-                    raise OSError("numbas.py execution failed.")
+                    raise OSError("numbas.py execution failed. %s %s" %
+                                  tuple(stat))
             except (NameError, OSError) as err:
                 status = {
                     "result": "error",

@@ -24,7 +24,7 @@ class Question(models.Model):
     
     name = models.CharField(max_length=200)
     slug = models.SlugField(editable=False)
-    author = models.CharField(max_length=200)
+    author = models.CharField(max_length=200, blank=True, editable=False)
     filename = models.CharField(max_length=200, editable=False)
     content = models.TextField(blank=True)
     metadata = models.TextField(blank=True)
@@ -52,7 +52,7 @@ class Exam(models.Model):
                                        blank=True, editable=False)
     name = models.CharField(max_length=200)
     slug = models.SlugField(editable=False)
-    author = models.CharField(max_length=200)
+    author = models.CharField(max_length=200, blank=True, editable=False)
     filename = models.CharField(max_length=200, editable=False)
     content = models.TextField(blank=True)
     metadata = models.TextField(blank=True)

@@ -22,7 +22,7 @@ class QuestionForm(forms.ModelForm):
     
     class Meta:
         model = Question
-        exclude = ('author', 'name')
+        exclude = ('name',)
         
         
 class NewQuestionForm(forms.ModelForm):
@@ -31,7 +31,7 @@ class NewQuestionForm(forms.ModelForm):
     
     class Meta:
         model = Question
-        fields = ('author', 'name')
+        fields = ('name',)
         
         
 class ExamForm(forms.ModelForm):
@@ -40,7 +40,7 @@ class ExamForm(forms.ModelForm):
     
     class Meta:
         model = Exam
-        exclude = ('author', 'name')
+        exclude = ('name',)
         
         
 class NewExamForm(forms.ModelForm):
@@ -49,7 +49,7 @@ class NewExamForm(forms.ModelForm):
     
     class Meta:
         model = Exam
-        fields = ('author', 'name')
+        fields = ('name',)
 
         
 class ExamQuestionForm(forms.ModelForm):

@@ -52,7 +52,4 @@ urlpatterns = patterns('',
                        
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)?/preview/$',
         QuestionPreviewView.as_view(), name='question_preview'),
-                       
-    url(r'^numbas-previews/(?P<uuid>[\w-]+)/$',
-        RedirectView.as_view(url=settings.GLOBAL_SETTINGS['PREVIEW_URL']+'%(uuid)s'))
 )

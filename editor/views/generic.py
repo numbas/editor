@@ -132,5 +132,5 @@ class Preview():
                     "traceback": traceback.format_exc(),}
                 return HttpResponseServerError(json.dumps(status),
                                                content_type='application/json')
-        status = {"result": "success", "url": uuid}
+        status = {"result": "success", "url": settings.GLOBAL_SETTINGS['PREVIEW_URL'] + uuid + '/index.html'}
         return HttpResponse(json.dumps(status), content_type='application/json')

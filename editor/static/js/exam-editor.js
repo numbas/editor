@@ -243,8 +243,7 @@ $(document).ready(function() {
                 {json: JSON.stringify(e.save()), csrfmiddlewaretoken: Editor.getCookie('csrftoken')}
 			)
 			.success(function(response, status, xhr) {
-				var origin = location.protocol+'//'+location.host;
-				e.preview = window.open(origin+"/numbas-previews/"+response.url);
+				e.preview = window.open(response.url);
 			})
 			.error(function(response, status, xhr) {
 				noty({text:response.responseText,timeout:0});

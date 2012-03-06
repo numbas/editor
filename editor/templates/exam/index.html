@@ -14,7 +14,6 @@
 			<form action="{% url exam_new %}" method="post" id="newExamForm">
 				{% csrf_token %}
 				Name: <input type="text" name="name" maxlength="200" />
-				<input type="text" name="author" value="Author" style="display:none;"/>
 				<input type="submit" value="Create" />
 			</form>
 		</li>
@@ -45,12 +44,22 @@
 						.focus()
 				;
 			});
+
 			function cancelCreate() {
 				$('a#newExam').show();
 				$('#newExamForm').hide();
 			}
+
 			$('#newExamForm')
 				.hide()
+				.submit(function(e) {
+					var name = $(this).find('input[name="name"]').val();
+					if(!name.trim().length)
+					{
+						e.preventDefault();
+						e.stopPropagation();
+					}
+				})
 				.find('input[name="name"]')
 					.keyup(function(e) {
 						if(e.which==27)

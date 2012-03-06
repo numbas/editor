@@ -6,9 +6,64 @@
     {% for question in question_list %}
         <li><a href="{% url question_edit question.pk question.slug %}">{{ question.name }}</a>&nbsp;<a href="{% url question_delete question.pk question.slug %}">Delete</a></li>
     {% endfor %}
+		<li>
+			<a id="newQuestion" href="{% url question_new %}">New question</a>
+			<form action="{% url question_new %}" method="post" id="newQuestionForm">
+				{% csrf_token %}
+				Name: <input type="text" name="name" maxlength="200" />
+				<input type="submit" value="Create" />
+			</form>
+		</li>
     </ul>
 {% else %}
     <p>No questions are available.</p>
 {% endif %}
 <a href="{% url question_new %}">New question</a>
 {% endblock content %}
+
+{% block javascripts %}
+	{{block.super}}
+	<script language="javascript" type="text/javascript">
+		$(document).ready(function() {
+			$('a#newQuestion').click(function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+
+				$('a#newQuestion').hide();
+				$('#newQuestionForm')
+					.show()
+					.css('display','inline-block')
+					.find('input[name="name"]')
+						.focus()
+				;
+			});
+
+			function cancelCreate() {
+				$('a#newQuestion').show();
+				$('#newQuestionForm').hide();
+			}
+
+			$('#newQuestionForm')
+				.hide()
+				.submit(function(e) {
+					var name = $(this).find('input[name="name"]').val();
+					if(!name.trim().length)
+					{
+						e.preventDefault();
+						e.stopPropagation();
+					}
+				})
+				.find('input[name="name"]')
+					.keyup(function(e) {
+						if(e.which==27)
+							cancelCreate();
+					})
+			;
+		});
+	</script>
+{% endblock javascripts %}
+
+{% block stylesheets %}
+	{{ block.super }}
+    <link href="{{ STATIC_URL }}css/index.css" type="text/css" rel="stylesheet" />
+{% endblock stylesheets %}

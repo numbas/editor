@@ -119,9 +119,26 @@ ul.choices {
 	clear:none;
 }
 
-.writemaths { 
-	margin-left: 1em;
+.writemathsContainer {
 	width: 90%;
+	margin-left: 1em;
+}
+
+.wmToggle .ticko {
+	width: 14px;
+	height: 14px;
+	display: inline-block;
+	background: url(../images/x_14x14.png);
+}
+
+.wmToggle.on .ticko {
+	width: 16px;
+	height: 13px;
+	background: url(../images/check_16x13.png);
+}
+
+.writemaths, .plaintext { 
+	width: 100%;
 	border: 1px solid #aaa;
 	background: white;
 }
@@ -199,9 +216,9 @@ ul.editlist {
 }
 
 button.remove {
-	background: transparent url(../images/cross.png);
-	width:16px;
-	height:16px;
+	background: transparent url(../images/x_14x14.png);
+	width:14px;
+	height:14px;
 	border:none;
 }
 

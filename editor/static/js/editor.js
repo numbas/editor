@@ -194,15 +194,40 @@ $(document).ready(function() {
             var value = ko.utils.unwrapObservable(valueAccessor()) || '';
 			value = value.split(/\n[ \t]*\n/).join('\n');
             var d = $('<div/>');
-            $(element).append(d);
+			var bd = $('<div/>').addClass('writemathsContainer').attr('style','position:relative;');
+			var swap = $('<div class="wmToggle on">Rich editor: <span class="ticko"></span></div>').attr('style','position:absolute;top:-1.2em;right:0;');
+			var ta = $('<textarea class="plaintext"/>')
+				.hide()
+				.bind('input',function() {
+					var value = $(this).val();
+					console.log('input',value);
+					valueAccessor()($(this).val());
+				})
+			;
+			bd.append(d,swap,ta)
+            $(element).append(bd);
+
+			var toggle = true;
+			swap.click(function() {
+				toggle = !toggle;
+				swap.toggleClass('on',toggle);
+				ta.toggle(!toggle);
+				d.toggle(toggle);
+			});
+
             var wm = new WriteMaths(d);
             wm.setState(value);
-            $(element).bind('input',function() {
+            d.bind('input',function() {
                 valueAccessor()(wm.getState().join('\n\n'));
             });
         },
         update: function(element, valueAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor()) || '';
+            $(element).find('.plaintext')
+				.val(value)
+				.attr('rows',value.split('\n').length)
+			;
+			console.log('update',value);
 			value = value.split(/\n[ \t]*\n/).join('\n');
             $(element).find('.writemaths').trigger('setstate',value);
         }

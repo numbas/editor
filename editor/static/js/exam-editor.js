@@ -17,6 +17,7 @@ $(document).ready(function() {
 	var Ruleset = Editor.Ruleset;
     function Exam(data)
     {
+		var e = this;
         this.name = ko.observable('An Exam');
 
 		this.tags = ko.observableArray([]);
@@ -111,7 +112,7 @@ $(document).ready(function() {
 			if('questions' in data)
 			{
 				this.questions(data.questions.map(function(q) {
-					return new Question(q.id,q.name,this)
+					return new Question(q.id,q.name,e)
 				}));
 			}
 		}

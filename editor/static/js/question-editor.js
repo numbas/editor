@@ -101,7 +101,7 @@ $(document).ready(function() {
         },this).extend({throttle:1000});
     }
     Question.prototype = {
-        addVariable: function(n) {
+        addVariable: function(q,e,n) {
 			var v = new Variable(this);
 			if(n!=undefined)
 				this.variables.splice(n,0,v);

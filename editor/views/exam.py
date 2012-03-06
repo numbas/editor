@@ -17,7 +17,7 @@ import uuid
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.http import Http404, HttpResponseServerError
+from django.http import Http404, HttpResponseRedirect, HttpResponseServerError
 from django.forms.models import model_to_dict
 from django.shortcuts import render
 from django.template import loader, Context
@@ -57,7 +57,7 @@ class ExamPreviewView(DetailView, Preview):
         raise Http404
     
     
-class ExamCreateView(CreateView, SaveContentMixin):
+class ExamCreateView(CreateView):
     
     """Create an exam."""
     
@@ -70,11 +70,12 @@ class ExamCreateView(CreateView, SaveContentMixin):
         self.object.content = "{name: %s}" % self.object.name
         self.object.filename = str(uuid.uuid4())
         self.questions = []
-        return self.write_content(settings.GLOBAL_SETTINGS['EXAM_SUBDIR'],
-                                  form)
+        form.save()
+        return HttpResponseRedirect(self.get_success_url())
     
     def get_success_url(self):
-        return reverse('exam_edit', args=(self.object.pk,self.object.slug,))
+        return reverse('exam_edit', args=(self.object.pk,
+                                          self.object.slug,))
     
         
 class ExamDeleteView(DeleteView):

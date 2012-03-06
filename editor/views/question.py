@@ -18,7 +18,7 @@ import uuid
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.forms.models import model_to_dict
-from django.http import Http404, HttpResponse, HttpResponseServerError
+from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.template import loader, Context
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
@@ -52,7 +52,7 @@ class QuestionPreviewView(DetailView, Preview):
         raise Http404
     
 
-class QuestionCreateView(CreateView, SaveContentMixin):
+class QuestionCreateView(CreateView):
     
     """Create a question."""
     
@@ -64,11 +64,12 @@ class QuestionCreateView(CreateView, SaveContentMixin):
         self.object = form.save(commit=False)
         self.object.content = "{name: %s}" % self.object.name
         self.object.filename = str(uuid.uuid4())
-        return self.write_content(settings.GLOBAL_SETTINGS['QUESTION_SUBDIR'],
-                                  form)
+        form.save()
+        return HttpResponseRedirect(self.get_success_url())
     
     def get_success_url(self):
-        return reverse('question_edit', args=(self.object.pk,self.object.slug,))
+        return reverse('question_edit', args=(self.object.pk,
+                                              self.object.slug,))
     
     
 class QuestionDeleteView(DeleteView):

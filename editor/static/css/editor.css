@@ -9,10 +9,6 @@
 	overflow-y:scroll;
 }
 
-.questions {
-	background: #eef;
-	padding-right:1em;
-}
 
 .question > * > .fold {
 	background: #f5f5ff;

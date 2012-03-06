@@ -277,3 +277,7 @@ button.remove:hover {
 .searchClick {
 	display: inline-block;
 }
+
+.searchClick input.loading {
+	background: white url(../images/busy.gif) no-repeat right;
+}

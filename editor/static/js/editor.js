@@ -200,7 +200,6 @@ $(document).ready(function() {
 				.hide()
 				.bind('input',function() {
 					var value = $(this).val();
-					console.log('input',value);
 					valueAccessor()($(this).val());
 				})
 			;
@@ -227,7 +226,6 @@ $(document).ready(function() {
 				.val(value)
 				.attr('rows',value.split('\n').length)
 			;
-			console.log('update',value);
 			value = value.split(/\n[ \t]*\n/).join('\n');
             $(element).find('.writemaths').trigger('setstate',value);
         }
@@ -375,7 +373,9 @@ $(document).ready(function() {
 			input
 				.autocomplete({
 					minLength: 0,
+					delay: 100,
 					source: function(request,response) {
+						input.addClass('loading');
 						$.getJSON('/question/search/', {q:request.term})
 							.success(function(data) {
 								var results = data.object_list;
@@ -387,6 +387,9 @@ $(document).ready(function() {
 									}
 								}));
 							})
+							.complete(function() {
+								input.removeClass('loading');
+							});
 						;
 					},
 					select: function(e, ui) {

@@ -75,7 +75,7 @@
 					<ol class="editlist" data-bind="template:{
 						name: 'part',
 						foreach: parts,
-						beforeRemove: function(elem) { $(elem).slideUp(150) },
+						beforeRemove: function(elem) { $(elem).slideUp(150,function(){$(this).remove()}) },
 						afterAdd: function(elem) { $(elem).hide().slideDown(150) }
 					}"></ol>
 					<button data-bind="click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
@@ -113,7 +113,7 @@
 							<ol class="editlist" data-bind="template:{
 								name: 'part',
 								foreach: steps,
-								beforeRemove: function(elem) { $(elem).slideUp(150) },
+								beforeRemove: function(elem) { $(elem).slideUp(150,function(){$(this).remove()}) },
 								afterAdd: function(elem) { $(elem).hide().slideDown(150) }
 							}"></ol>
 							<button data-bind="click:addStep, text: steps().length ? 'Add another step' : 'Add a step'"></button>
@@ -134,7 +134,7 @@
 					<ol class="editlist" data-bind="template:{
 						name: 'part',
 						foreach: gapfill.gaps,
-						beforeRemove: function(elem) { $(elem).slideUp(150) },
+						beforeRemove: function(elem) { $(elem).slideUp(150,function(){$(this).remove()}) },
 						afterAdd: function(elem) { $(elem).hide().slideDown(150) }
 					}"></ol>
 					<button data-bind="click:addGap, text: gapfill.gaps().length ? 'Add another gap' : 'Add a gap'"></button>

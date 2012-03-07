@@ -9,18 +9,16 @@
 			<a href="{% url exam_delete exam.pk exam.slug %}">Delete</a>
 		</li>
 	{% endfor %}
-		<li>
-			<a id="newExam" href="{% url exam_new %}">New exam</a>
-			<form action="{% url exam_new %}" method="post" id="newExamForm">
-				{% csrf_token %}
-				Name: <input type="text" name="name" maxlength="200" />
-				<input type="submit" value="Create" />
-			</form>
-		</li>
     </ul>
 {% else %}
     <p>No exams are available.</p>
 {% endif %}
+<a id="newExam" href="{% url exam_new %}">New exam</a>
+<form action="{% url exam_new %}" method="post" id="newExamForm">
+	{% csrf_token %}
+	Name: <input type="text" name="name" maxlength="200" />
+	<input type="submit" value="Create" />
+</form>
 <br />
 {% endblock content %}
 

@@ -6,19 +6,16 @@
     {% for question in question_list %}
         <li><a href="{% url question_edit question.pk question.slug %}">{{ question.name }}</a>&nbsp;<a href="{% url question_delete question.pk question.slug %}">Delete</a></li>
     {% endfor %}
-		<li>
-			<a id="newQuestion" href="{% url question_new %}">New question</a>
-			<form action="{% url question_new %}" method="post" id="newQuestionForm">
-				{% csrf_token %}
-				Name: <input type="text" name="name" maxlength="200" />
-				<input type="submit" value="Create" />
-			</form>
-		</li>
     </ul>
 {% else %}
     <p>No questions are available.</p>
 {% endif %}
-<a href="{% url question_new %}">New question</a>
+<a id="newQuestion" href="{% url question_new %}">New question</a>
+<form action="{% url question_new %}" method="post" id="newQuestionForm">
+	{% csrf_token %}
+	Name: <input type="text" name="name" maxlength="200" />
+	<input type="submit" value="Create" />
+</form>
 {% endblock content %}
 
 {% block javascripts %}

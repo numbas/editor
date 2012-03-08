@@ -25,13 +25,14 @@ from django.views.generic import CreateView, DeleteView, DetailView, FormView, L
 
 from editor.forms import ExamForm, NewExamForm, ExamSearchForm
 from editor.models import Exam, Question
-from editor.views.generic import SaveContentMixin, Preview
+from editor.views.generic import CompileObject, SaveContentMixin
 
-class ExamPreviewView(DetailView, Preview):
+class ExamCompileView(DetailView, CompileObject):
     
-    """Exam preview."""
+    """Compile question as a preview or for download."""
     
     model = Exam
+    operation = None
     
     def post(self, request, *args, **kwargs):
         if request.is_ajax():
@@ -47,10 +48,14 @@ class ExamPreviewView(DetailView, Preview):
                     'exam': e,
                     'questions': questions
                 })
-            except Exam.DoesNotExist:
-                message = 'No such exam exists in the database.'
-                return HttpResponseServerError(message)
-            return self.preview_compile(t, c, e.filename)
+                return getattr(self, self.operation)(t, c, e.filename)
+            except (Exam.DoesNotExist, TypeError) as err:
+                status = {
+                    "result": "error",
+                    "message": str(err),
+                    "traceback": traceback.format_exc(),}
+                return HttpResponseServerError(json.dumps(status),
+                                               content_type='application/json')
         raise Http404
     
     def get(self, request, *args, **kwargs):

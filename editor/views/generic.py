@@ -18,6 +18,7 @@ import subprocess
 import traceback
 
 from django.conf import settings
+from django.core.servers.basehttp import FileWrapper
 from django.http import HttpResponse, HttpResponseServerError
 
 from editor.models import Exam, ExamQuestion, Question
@@ -92,35 +93,33 @@ class SaveContentMixin():
 #class JSONListView(JSONResponseMixin, BaseListView):
 #    pass
     
-class Preview():
+
+class CompileError(Exception):
+    def __init__(self, status):
+        self.status = status
+    def __str__(self):
+        return repr(self.status)
     
-    """Exam or question preview."""
+    
+class CompileObject():
+    
+    """Compile an exam or question."""
         
-    def preview_compile(self, template, context, uuid):
-        """Compile an exam or question preview."""
+    def compile_it(self):
+        """Construct a temporary exam/question file and compile it."""
         try:
             fh = open(settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE'], 'w')
-            fh.write(template.render(context))
+            fh.write(self.template.render(self.context))
             fh.close()
         except IOError:
             status = {
                 "result": "error",
                 "message": "Could not save exam to temporary file.",
                 "traceback": traceback.format_exc(),}
-            return HttpResponseServerError(json.dumps(status),
-                                           content_type='application/json')
+            raise CompileError(status)
         else:
             try:
-                status = subprocess.Popen([
-                    settings.GLOBAL_SETTINGS['PYTHON_EXEC'],
-                    os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
-                                 os.path.normpath('bin/numbas.py')),
-                    '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
-                    '-c',
-                    '-o'+os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'],
-                                      uuid),
-                    settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE']],
-                    stdout = subprocess.PIPE)
+                status = subprocess.Popen(self.numbas_command, stdout = subprocess.PIPE)
                 stat = status.communicate()
                 if status.returncode != 0:
                     raise OSError("numbas.py execution failed. %s %s" %
@@ -130,10 +129,61 @@ class Preview():
                     "result": "error",
                     "message": str(err),
                     "traceback": traceback.format_exc(),}
-                return HttpResponseServerError(json.dumps(status),
-                                               content_type='application/json')
-        status = {
-            "result": "success",
-            "url": settings.GLOBAL_SETTINGS['PREVIEW_URL'] +
-                   uuid + '/index.html'}
-        return HttpResponse(json.dumps(status), content_type='application/json')
+                raise CompileError(status)
+        return True
+    
+    def preview(self, template, context, uuid):
+        """Compile a preview."""
+        self.template = template
+        self.context = context
+        self.uuid = uuid
+        self.numbas_command = [
+            settings.GLOBAL_SETTINGS['PYTHON_EXEC'],
+            os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
+                         os.path.normpath('bin/numbas.py')),
+            '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
+            '-c',
+            '-o'+os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'],
+                              uuid),
+            settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE']]
+        try:
+            self.compile_it()
+        except CompileError as err:
+            return HttpResponseServerError(json.dumps(err.status),
+                                           content_type='application/json')
+        else:
+            status = {
+                "result": "success",
+                "url": settings.GLOBAL_SETTINGS['PREVIEW_URL'] +
+                       uuid + '/index.html'}
+            return HttpResponse(json.dumps(status),
+                                content_type='application/json')
+        
+    def download(self, template, context, uuid):
+        """Compile for download."""
+        self.template = template
+        self.context = context
+        self.uuid = uuid
+        self.numbas_command = [
+            settings.GLOBAL_SETTINGS['PYTHON_EXEC'],
+            os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
+                         os.path.normpath('bin/numbas.py')),
+            '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
+            '-c',
+            '-sz',
+            '-o'+os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'],
+                              uuid, 'exam.zip'),
+            settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE']]
+        try:
+            self.compile_it()
+        except CompileError as err:
+            return HttpResponseServerError(json.dumps(err.status),
+                                           content_type='application/json')
+        else:
+            zipped = os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'],
+                                  uuid, 'exam.zip')
+            wrapper = FileWrapper(file(zipped))
+            response = HttpResponse(wrapper, content_type='application/zip')
+            response['Content-Disposition'] = 'attachment; filename=test.zip'
+            response['Content-Length'] = os.path.getsize(zipped)
+            return response

@@ -24,13 +24,14 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 
 from editor.forms import NewQuestionForm, QuestionForm
 from editor.models import Question
-from editor.views.generic import SaveContentMixin, Preview
+from editor.views.generic import CompileObject, SaveContentMixin
 
-class QuestionPreviewView(DetailView, Preview):
+class QuestionCompileView(DetailView, CompileObject):
     
-    """Question preview."""
+    """Compile question as a preview or for download."""
     
     model = Question
+    operation = None
     
     def post(self, request, *args, **kwargs):
         if request.is_ajax():
@@ -42,10 +43,14 @@ class QuestionPreviewView(DetailView, Preview):
                 c = Context({
                     'question': q
                 })
-            except Question.DoesNotExist:
-                message = 'No such question exists in the database.'
-                return HttpResponseServerError(message)
-            return self.preview_compile(t, c, q.filename)
+                return getattr(self, self.operation)(t, c, q.filename)
+            except (Question.DoesNotExist, TypeError) as err:
+                status = {
+                    "result": "error",
+                    "message": str(err),
+                    "traceback": traceback.format_exc(),}
+                return HttpResponseServerError(json.dumps(status),
+                                               content_type='application/json')
         raise Http404
     
     def get(self, request, *args, **kwargs):

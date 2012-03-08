@@ -16,6 +16,7 @@
             	window.Editor = {};
             }
             window.Editor['exam_preview_url'] = '{% url exam_preview object.pk object.slug %}';
+            window.Editor['exam_download_url'] = '{% url exam_download object.pk object.slug %}';
         })();
     </script>
 {% endblock javascripts %}

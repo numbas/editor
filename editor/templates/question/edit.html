@@ -19,6 +19,7 @@
                 window.Editor = {};
             }
             window.Editor['exam_preview_url'] = '{% url question_preview object.pk object.slug %}';
+            window.Editor['exam_download_url'] = '{% url question_download object.pk object.slug %}';
         })();
     </script>
 {% endblock javascripts %}

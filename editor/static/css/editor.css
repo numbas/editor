@@ -196,9 +196,6 @@ ul.editlist {
 	padding-left: 0.5em;
 	padding-right: 0.5em;
 }
-.fold > #folder-header:hover {
-	cursor:default;
-}
 
 .fold > #folder {
 	padding-left: 1em;
@@ -209,6 +206,11 @@ ul.editlist {
 }
 .fold.folded > #folder-header {
 	background:#ddd;
+}
+
+.fold > #folder-header:hover {
+	cursor: pointer;
+	background-color: #ec8;
 }
 
 button.remove {

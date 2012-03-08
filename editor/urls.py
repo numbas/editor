@@ -22,8 +22,7 @@ urlpatterns = patterns('',
     url(r'^$', TemplateView.as_view(template_name='index.html'),
         name='editor_index'),
                        
-    url(r'^exam/$',
-        ExamListView.as_view(), name='exam_index',),
+    url(r'^exams/$',ExamListView.as_view(), name='exam_index',),
                        
     url(r'^exam/new/$', ExamCreateView.as_view(), name='exam_new'),
     
@@ -41,7 +40,7 @@ urlpatterns = patterns('',
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+).zip$',
         ExamDownloadView.as_view(), name='exam_download'),
                        
-    url(r'^question/$', QuestionListView.as_view(), name='question_index',),
+    url(r'^questions/$', QuestionListView.as_view(), name='question_index',),
     
     url(r'^question/new/$', QuestionCreateView.as_view(), name='question_new'),
                        

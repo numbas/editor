@@ -1,8 +1,18 @@
 {% extends "base.html" %}
 
 {% block javascripts %}
+
+	<!-- jQuery -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.13/jquery-ui.min.js" type="text/javascript"></script>
+
+    <!-- knockout -->
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tmpl.min.js"></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}js/knockout.js"></script>
+	
+	<!-- noty -->
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.noty.js"></script>
+
 
     <!-- MathJax -->
     <script type="text/x-mathjax-config">
@@ -22,6 +32,8 @@
 {% endblock javascripts %}
 
 {% block stylesheets %}
+    <link href="{{ STATIC_URL }}css/jquery.noty.css" rel="stylesheet" type="text/css" />
+    <link href="{{ STATIC_URL }}css/jquery-ui.css" rel="stylesheet" type="text/css" />
     <link href="{{ STATIC_URL }}css/normalize.css" type="text/css" rel="stylesheet" />
     <link href="{{ STATIC_URL }}css/main.css" type="text/css" rel="stylesheet" />
 {% endblock stylesheets %}

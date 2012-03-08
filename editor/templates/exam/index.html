@@ -1,25 +1,24 @@
 {% extends "layout.html" %}
 
 {% block content %}
-{% if exam_list %}
-    <ul id="examList">
-    {% for exam in exam_list %}
-		<li>
-			<a href="{% url exam_edit exam.pk exam.slug %}">{{ exam.name }}</a>
-			<a href="{% url exam_delete exam.pk exam.slug %}">Delete</a>
-		</li>
-	{% endfor %}
-    </ul>
-{% else %}
-    <p>No exams are available.</p>
-{% endif %}
-<a id="newExam" href="{% url exam_new %}">New exam</a>
-<form action="{% url exam_new %}" method="post" id="newExamForm">
-	{% csrf_token %}
-	Name: <input type="text" name="name" maxlength="200" />
-	<input type="submit" value="Create" />
-</form>
-<br />
+	{% if exam_list %}
+		<ul id="examList">
+		{% for exam in exam_list %}
+			<li class="exam">
+				<a href="{% url exam_edit exam.pk exam.slug %}">{{ exam.name }}</a>
+				<a class="delete" href="{% url exam_delete exam.pk exam.slug %}"></a>
+			</li>
+		{% endfor %}
+		</ul>
+	{% else %}
+		<p>No exams are available.</p>
+	{% endif %}
+	<a id="newExam" href="{% url exam_new %}">New exam</a>
+	<form action="{% url exam_new %}" method="post" id="newExamForm">
+		{% csrf_token %}
+		Name: <input type="text" name="name" maxlength="200" />
+		<input type="submit" value="Create" />
+	</form>
 {% endblock content %}
 
 {% block sidebar %}
@@ -64,6 +63,23 @@
 							cancelCreate();
 					})
 			;
+	
+			$('.exam .delete').on('click',function(e) {
+				e.stopPropagation();
+				e.preventDefault();
+				if(window.confirm('Delete this exam?')) {
+					var url = $(this).attr('href');
+					var item = $(this).parents('.exam');
+					$.post(url,{csrfmiddlewaretoken: getCookie('csrftoken')})
+						.success(function() {
+							item.slideUp(200,function() {item.remove()})
+						})
+						.error(function(response) {
+							noty({text: 'Error deleting exam:\n\n'+response.responseText, layout: 'center', type: 'error'});
+						})
+					;
+				}
+			});
 		});
 	</script>
 {% endblock javascripts %}

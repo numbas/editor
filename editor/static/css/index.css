@@ -1,3 +1,11 @@
 #newExamForm, #newQuestionForm {
 	display: none;
 }
+
+.delete {
+	display: inline-block;
+	background: transparent url(../images/x_14x14.png);
+	width:14px;
+	height:14px;
+	border:none;
+}

@@ -130,7 +130,7 @@ $(document).ready(function() {
             var e = this;
             $.post(
                 '/exam/'+this.id+'/'+slugify(this.name())+'/',
-                {json: JSON.stringify(this.save()), csrfmiddlewaretoken: Editor.getCookie('csrftoken')}
+                {json: JSON.stringify(this.save()), csrfmiddlewaretoken: getCookie('csrftoken')}
             )
                 .success(function(data){
                     var address = location.protocol+'//'+location.host+'/exam/'+examJSON.id+'/'+slugify(e.name())+'/';

@@ -4,20 +4,11 @@
 {% block javascripts %}
     {{ block.super }}
 
-    <!-- jQuery -->
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.oembed.js"></script>
-
-    <!-- knockout -->
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tmpl.min.js"></script>
-	<script type="text/javascript" src="{{ STATIC_URL }}js/knockout.js"></script>
-	
-	<!-- noty -->
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.noty.js"></script>
-
     <!-- jstextile -->
     <script type="text/javascript" src="{{ STATIC_URL }}js/textile.js"></script>
 
     <!-- write maths, see maths -->
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.oembed.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/writemaths.js"></script>
 
     <!-- exam parser -->
@@ -32,8 +23,6 @@
     {{ block.super }}
 
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/writemaths.css">
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery-ui.css">
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.noty.css">
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/editor.css">
 
 {% endblock stylesheets %}

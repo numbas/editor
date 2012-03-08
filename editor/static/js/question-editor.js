@@ -76,7 +76,7 @@ $(document).ready(function() {
 
             $.post(
 				'/question/'+this.id+'/'+slugify(this.name())+'/',
-				{json: JSON.stringify(this.save()), csrfmiddlewaretoken: Editor.getCookie('csrftoken')}
+				{json: JSON.stringify(this.save()), csrfmiddlewaretoken: getCookie('csrftoken')}
 			)
                 .success(function(data){
                     var address = location.protocol+'//'+location.host+'/question/'+questionJSON.id+'/'+slugify(q.name())+'/';

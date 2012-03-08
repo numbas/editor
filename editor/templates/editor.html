@@ -88,7 +88,7 @@
 
 		<script type="text/x-jquery-tmpl" id="folder">
 			<div class="fold {{if !$item.show}}folded{{/if}}">
-				<div id="folder-header">${$item.label}</div>
+				<div id="folder-header" data-bind="unselectable: true">${$item.label}</div>
 				<div id="folder">{{html $item.html}}</div>
 			</div>
         </script>

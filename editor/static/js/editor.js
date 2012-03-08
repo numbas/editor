@@ -428,4 +428,10 @@ $(document).ready(function() {
 			$(element).mathjax();
 		}
 	};
+
+	ko.bindingHandlers.unselectable = {
+		init: function(element) {
+			$(element).on('mousedown',function(e){ e.preventDefault(); });
+		}
+	};
 });

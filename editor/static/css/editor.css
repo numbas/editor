@@ -190,11 +190,12 @@ ul.editlist {
 }
 
 .fold > #folder-header {
-	display:inline-block;
-	font-weight:bold;
+	display: block;
+	font-weight: bold;
+	background: no-repeat 0.4em 50%;
 	background-color: #eee;
-	padding-left: 0.5em;
-	padding-right: 0.5em;
+	background-image: url(../images/accordion-down.png);
+	padding-left: 1em;
 }
 
 .fold > #folder {
@@ -205,7 +206,8 @@ ul.editlist {
 	display: none;
 }
 .fold.folded > #folder-header {
-	background:#ddd;
+	background-color: #ddd;
+	background-image: url(../images/accordion-right.png);
 }
 
 .fold > #folder-header:hover {

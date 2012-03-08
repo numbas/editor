@@ -132,7 +132,7 @@
 				<button data-bind="click:addRuleset, text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></button>
 			</div>
 			{{/wrap}}
-			{{wrap(this,{label:"Questions"}) "#folder"}}
+			{{wrap(this,{label:"Questions", show: true}) "#folder"}}
 			<div class="questions">
 				<ul class="editlist" data-bind="
 					template:{

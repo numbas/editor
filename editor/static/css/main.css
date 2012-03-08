@@ -6,11 +6,8 @@ html {
 body { 
     font: normal 1em 'trebuchet ms', arial, sans-serif;
     background: #F4F4EE;
-    color: #5D5D5D;
     margin: 0;
-
 }
-
 
 .left {
     float: left;

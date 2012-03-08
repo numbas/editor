@@ -241,7 +241,7 @@ $(document).ready(function() {
 
 			var e = this;
 
-			$.get(Editor.exam_preview_url)
+			$.get(Editor.preview_url)
 			.success(function(response, status, xhr) {
 				e.preview = window.open(response.url);
 			})

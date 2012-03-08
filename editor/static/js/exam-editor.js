@@ -236,13 +236,12 @@ $(document).ready(function() {
         },
 
 		showPreview: function() {
+			if(this.preview)
+				this.preview.close();
+
 			var e = this;
-			if(e.preview)
-				e.preview.close();
-			$.post(
-				Editor.exam_preview_url,
-                {json: JSON.stringify(e.save()), csrfmiddlewaretoken: Editor.getCookie('csrftoken')}
-			)
+
+			$.get(Editor.exam_preview_url)
 			.success(function(response, status, xhr) {
 				e.preview = window.open(response.url);
 			})
@@ -262,7 +261,11 @@ $(document).ready(function() {
 					closeOnSelfClick: true,
 				});
 			});
-		}
+		},
+
+        download: function() {
+            window.location = Editor.download_url;
+        }
     };
 
     function Event(name,niceName,actions)

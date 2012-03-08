@@ -24,38 +24,45 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 
 from editor.forms import NewQuestionForm, QuestionForm
 from editor.models import Question
-from editor.views.generic import CompileObject, SaveContentMixin
+from editor.views.generic import CompileObject, SaveContentMixin, PreviewView, DownloadView
 
-class QuestionCompileView(DetailView, CompileObject):
+class QuestionPreviewView(PreviewView):
     
-    """Compile question as a preview or for download."""
+    """Compile question as a preview and return its URL."""
     
     model = Question
-    operation = None
-    
-    def post(self, request, *args, **kwargs):
-        if request.is_ajax():
-            try:
-                q = self.get_object()
-                request.JSON = json.loads(request.POST['json'])
-                q.content = request.JSON['content']
-                t = loader.get_template('temporary.question')
-                c = Context({
-                    'question': q
-                })
-                return getattr(self, self.operation)(t, c, q.filename)
-            except (Question.DoesNotExist, TypeError) as err:
-                status = {
-                    "result": "error",
-                    "message": str(err),
-                    "traceback": traceback.format_exc(),}
-                return HttpResponseServerError(json.dumps(status),
-                                               content_type='application/json')
-        raise Http404
     
     def get(self, request, *args, **kwargs):
-        raise Http404
-    
+        try:
+            q = self.get_object()
+        except (Question.DoesNotExist, TypeError) as err:
+            status = {
+                "result": "error",
+                "message": str(err),
+                "traceback": traceback.format_exc(),}
+            return HttpResponseServerError(json.dumps(status),
+                                           content_type='application/json')
+        else:
+            return self.preview(q)
+
+class QuestionDownloadView(DownloadView):
+
+    """Compile a question as a SCORM package and return the .zip file"""
+
+    model = Question
+
+    def get(self, request, *args, **kwargs):
+        try:
+            q = self.get_object()
+        except (Question.DoesNotExist, TypeError) as err:
+            status = {
+                "result": "error",
+                "message": str(err),
+                "traceback": traceback.format_exc(),}
+            return HttpResponseServerError(json.dumps(status),
+                                           content_type='application/json')
+        else:
+            return self.download(q)
 
 class QuestionCreateView(CreateView):
     

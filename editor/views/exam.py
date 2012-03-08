@@ -25,41 +25,47 @@ from django.views.generic import CreateView, DeleteView, DetailView, FormView, L
 
 from editor.forms import ExamForm, NewExamForm, ExamSearchForm
 from editor.models import Exam, Question
-from editor.views.generic import CompileObject, SaveContentMixin
+from editor.views.generic import CompileObject, SaveContentMixin, PreviewView, DownloadView
 
-class ExamCompileView(DetailView, CompileObject):
+class ExamPreviewView(PreviewView):
     
-    """Compile question as a preview or for download."""
+    """Compile an exam as a preview and return its URL."""
     
     model = Exam
     operation = None
     
-    def post(self, request, *args, **kwargs):
-        if request.is_ajax():
-            try:
-                e = self.get_object()
-                request.JSON = json.loads(request.POST['json'])
-                questions = [
-                    Question.objects.get(
-                    pk=q['id']) for q in request.JSON['questions']]
-                e.content = request.JSON['content'].rstrip()[:-1]
-                t = loader.get_template('temporary.exam')
-                c = Context({
-                    'exam': e,
-                    'questions': questions
-                })
-                return getattr(self, self.operation)(t, c, e.filename)
-            except (Exam.DoesNotExist, TypeError) as err:
-                status = {
-                    "result": "error",
-                    "message": str(err),
-                    "traceback": traceback.format_exc(),}
-                return HttpResponseServerError(json.dumps(status),
-                                               content_type='application/json')
-        raise Http404
-    
     def get(self, request, *args, **kwargs):
-        raise Http404
+        try:
+            e = self.get_object()
+        except (Exam.DoesNotExist, TypeError) as err:
+            status = {
+                "result": "error",
+                "message": str(err),
+                "traceback": traceback.format_exc(),}
+            return HttpResponseServerError(json.dumps(status),
+                                           content_type='application/json')
+        else:
+            return self.preview(e)
+
+class ExamDownloadView(DownloadView):
+
+    """Compile an exam as a SCORM package and return the .zip file"""
+
+    model = Exam
+    operation = None
+
+    def get(self, request, *args, **kwargs):
+        try:
+            e = self.get_object()
+        except (Exam.DoesNotExist, TypeError) as err:
+            status = {
+                "result": "error",
+                "message": str(err),
+                "traceback": traceback.format_exc(),}
+            return HttpResponseServerError(json.dumps(status),
+                                           content_type='application/json')
+        else:
+            return self.download(e)
     
     
 class ExamCreateView(CreateView):

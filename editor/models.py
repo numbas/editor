@@ -13,6 +13,7 @@
 #   limitations under the License.
 from django.db import models
 from django.template.defaultfilters import slugify
+from django.template import loader, Context
 
 class Question(models.Model):
     
@@ -39,6 +40,9 @@ class Question(models.Model):
             
         super(Question, self).save(*args, **kwargs)
 
+    def as_source(self):
+        t = loader.get_template('temporary.question')
+        return t.render(Context({'question': self}))
 
 class Exam(models.Model):
     
@@ -69,6 +73,13 @@ class Exam(models.Model):
             
         super(Exam, self).save(*args, **kwargs)
         
+    def as_source(self):
+        t = loader.get_template('temporary.exam')
+        c = Context({
+            'examContent': self.content.rstrip()[:-1],
+            'questions': self.get_questions()
+        })
+        return t.render(c)
         
 class ExamQuestion(models.Model):
     

@@ -15,8 +15,8 @@ from django.conf import settings
 from django.conf.urls.defaults import *
 from django.views.generic import RedirectView, TemplateView
 
-from editor.views.exam import ExamCompileView, ExamCreateView, ExamDeleteView, ExamListView, ExamSearchView, ExamUpdateView
-from editor.views.question import QuestionCompileView, QuestionCreateView, QuestionDeleteView, QuestionListView, QuestionSearchView, QuestionUpdateView
+from editor.views.exam import ExamPreviewView, ExamDownloadView, ExamCreateView, ExamDeleteView, ExamListView, ExamSearchView, ExamUpdateView
+from editor.views.question import QuestionPreviewView, QuestionDownloadView, QuestionCreateView, QuestionDeleteView, QuestionListView, QuestionSearchView, QuestionUpdateView
 
 urlpatterns = patterns('',
     url(r'^$', TemplateView.as_view(template_name='index.html'),
@@ -36,10 +36,10 @@ urlpatterns = patterns('',
         ExamDeleteView.as_view(), name='exam_delete'),
     
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/preview/$',
-        ExamCompileView.as_view(operation='preview'), name='exam_preview'),
+        ExamPreviewView.as_view(), name='exam_preview'),
                        
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+).zip$',
-        ExamCompileView.as_view(operation='download'), name='exam_download'),
+        ExamDownloadView.as_view(), name='exam_download'),
                        
     url(r'^question/$', QuestionListView.as_view(), name='question_index',),
     
@@ -54,8 +54,8 @@ urlpatterns = patterns('',
         QuestionDeleteView.as_view(), name='question_delete'),
                        
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/preview/$',
-        QuestionCompileView.as_view(operation='preview'), name='question_preview'),
+        QuestionPreviewView.as_view(), name='question_preview'),
                        
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+).zip$',
-        QuestionCompileView.as_view(operation='download'), name='question_download'),
+        QuestionDownloadView.as_view(), name='question_download'),
 )

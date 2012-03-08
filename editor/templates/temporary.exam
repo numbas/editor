@@ -1,5 +1,5 @@
 {% autoescape off %}
-	{{ exam.content }}
+	{{ examContent }}
 	questions: [
 	{% for question in questions %}
 		{{ question.content }}

@@ -225,13 +225,11 @@ $(document).ready(function() {
         },
 
 		showPreview: function() {
+			if(this.preview)
+				this.preview.close();
+
 			var q = this;
-			if(q.preview)
-				q.preview.close();
-			$.post(
-				Editor.exam_preview_url,
-				{json: JSON.stringify(q.save()), csrfmiddlewaretoken: Editor.getCookie('csrftoken')}
-			)
+			$.get(Editor.preview_url)
 			.success(function(response, status, xhr) {
 				q.preview = window.open(response.url);
 			})
@@ -250,6 +248,10 @@ $(document).ready(function() {
 					closeOnSelfClick: true,
 				});
 			});
+		},
+
+		download: function() {
+			window.location = Editor.download_url;
 		}
     };
 

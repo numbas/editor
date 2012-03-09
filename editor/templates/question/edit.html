@@ -41,12 +41,12 @@
 			</div>
 
 
-			<div style="margin-bottom:1em;" data-bind="writemaths:statement">
-				Statement:
-			</div>
-			<div style="margin-bottom:1em;" data-bind="writemaths:advice">
-				Advice:
-			</div>
+			{{wrap(this,{label:"Statement",show:true}) '#folder'}}
+				<div style="padding-top:0.7em;">
+					<div data-bind="writemaths:statement"></div>
+				</div>
+			{{/wrap}}
+
 			{{wrap(this,{label:"Variables",show:true}) '#folder'}}
 				<div>
 					<table class="variables editlist">
@@ -82,11 +82,17 @@
 					<button data-bind="click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
 				</div>
 			{{/wrap}}
+
+			{{wrap(this,{label:"Advice"}) '#folder'}}
+				<div style="padding-top:0.7em;">
+					<div data-bind="writemaths:advice"></div>
+				</div>
+			{{/wrap}}
 		</script>
 
 		<script type="text/x-jquery-tmpl" id="part">
 			<li class="part">
-				<div data-bind="foldlist: $data, label: type().niceName, show:true">
+				<div data-bind="foldlist: $data, label: type().niceName, show:false">
 					<div class="properties">
 						<div>
 							<label>Part type: </label>

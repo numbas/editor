@@ -224,8 +224,7 @@ $(document).ready(function() {
             element=$(element);
             var f=$('<div class="fold"><div id="folder-header"></div><div id="folder"></div></div>');
             f.find('#folder-header').html(ko.utils.unwrapObservable(allBindings.label));
-            if(show)
-                f.find('#folder').css('display','block');
+            f.toggleClass('folded',!show)
             element.contents().appendTo(f.find('#folder'));
             var b = $('<button class="remove" data-bind="click:remove"></button>');
             b.click(function(){viewModel.remove()});

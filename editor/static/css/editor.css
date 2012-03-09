@@ -18,13 +18,12 @@
 .question > * > button.remove, .part > * > button.remove {
 	position:relative;
 	display:run-in;
-	left:-2em;
-	top:3em;
+	left: -2em;
+	top: 1em;
 }
 
 .part > * > .fold {
 	background: #f5fff5;
-	padding-right:1em;
 }
 
 .steps .part > * > .fold {
@@ -153,6 +152,10 @@ input[type=number] {
 	width: 5em;
 }
 
+ol.editlist {
+	margin-top: 0;
+}
+
 ol.editlist > button {
 	margin-left:-1em;
 }
@@ -220,6 +223,7 @@ button.remove {
 	width:14px;
 	height:14px;
 	border:none;
+	margin-left: .3em;
 }
 
 button.remove:hover {

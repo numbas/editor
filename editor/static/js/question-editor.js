@@ -390,8 +390,8 @@ $(document).ready(function() {
             {name: 'information', niceName: 'Information only'},
             {name: 'gapfill', niceName: 'Gap-fill'},
             {name:'jme', niceName: 'Mathematical expression', has_marks: true},
-            {name:'numberentry', niceName: 'Number', has_marks: true},
-            {name:'patternmatch', niceName: 'Text pattern', has_marks: true},
+            {name:'numberentry', niceName: 'Number entry', has_marks: true},
+            {name:'patternmatch', niceName: 'Match text pattern', has_marks: true},
             {name:'1_n_2', niceName: 'Choose one from a list'},
             {name:'m_n_2', niceName: 'Choose several from a list'},
             {name:'m_n_x', niceName: 'Match choices with answers'}

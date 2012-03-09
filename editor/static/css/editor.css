@@ -278,6 +278,10 @@ button.remove:hover {
 	display: inline-block;
 }
 
+.searchClick input {
+	background: white url(../images/search.png) no-repeat right;
+}
+
 .searchClick input.loading {
-	background: white url(../images/busy.gif) no-repeat right;
+	background-image: url(../images/busy.gif);
 }

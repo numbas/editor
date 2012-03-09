@@ -78,6 +78,9 @@ $(document).ready(function() {
 		}
 
         this.save = ko.computed(function() {
+			window.onbeforeunload = function() {
+				return 'There are still unsaved changes.';
+			}
 			return {
 				content: this.output(),
 				tags: this.tags(),
@@ -111,6 +114,9 @@ $(document).ready(function() {
 						closeOnSelfClick: true
 					});
                 })
+				.complete(function() {
+					window.onbeforeunload = null;
+				})
             ;
         },this).extend({throttle:1000});
     }

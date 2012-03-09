@@ -69,6 +69,12 @@ $(document).ready(function() {
 		{
 			this.id = data.id;
 			this.load(parseExam(data.content));
+			try{
+				this.tags(JSON.parse(data.tags));
+			}
+			catch(e) {
+				this.tags([]);
+			}
 		}
 
         this.save = ko.computed(function() {
@@ -91,7 +97,7 @@ $(document).ready(function() {
                     if(history.replaceState)
                         history.replaceState({},q.name(),address);
                 })
-                .error(function(data) {
+                .error(function(response,type,message) {
 					noty({
 						text: textile('Error saving question:\n\n'+message),
 						layout: "topLeft",

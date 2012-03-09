@@ -111,6 +111,7 @@ class ExamUpdateView(UpdateView, SaveContentMixin):
         request.JSON = json.loads(request.POST['json'])
         self.questions = request.JSON['questions']
         del request.JSON['questions']
+
         self.object = self.get_object()
         exam_form = ExamForm(request.JSON, instance=self.object)
         if exam_form.is_valid():

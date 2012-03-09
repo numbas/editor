@@ -28,7 +28,6 @@ $(document).ready(function() {
 			owner: this
 		});
 
-		this.tags = ko.observableArray([]);
 		this.metadata = ko.observable('');
 
         this.duration = ko.observable(0);
@@ -128,7 +127,6 @@ $(document).ready(function() {
         this.save = ko.computed(function() {
             return {
 				content: this.output(),
-				tags: this.tags(),
 				metadata: this.metadata(),
 				questions: this.questions().filter(function(q){return q.id()>0}).map(function(q){ return q.toJSON(); }),
 			};
@@ -145,7 +143,7 @@ $(document).ready(function() {
                     if(history.replaceState)
                         history.replaceState({},e.name(),address);
                 })
-                .error(function(xhr,type,message) {
+                .error(function(response,type,message) {
 					noty({
 						text: textile('Error saving exam:\n\n'+message),
 						layout: "topLeft",

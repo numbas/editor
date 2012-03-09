@@ -104,6 +104,8 @@ class QuestionUpdateView(UpdateView, SaveContentMixin):
     
     def post(self, request, *args, **kwargs):
         request.JSON = json.loads(request.POST['json'])
+        request.JSON['tags'] = json.dumps(request.JSON['tags'])
+
         self.object = self.get_object()
         question_form = QuestionForm(request.JSON, instance=self.object)
         if question_form.is_valid():

@@ -18,7 +18,15 @@ $(document).ready(function() {
     function Exam(data)
     {
 		var e = this;
-        this.name = ko.observable('An Exam');
+        this.realName = ko.observable('An Exam');
+		this.name = ko.computed({
+			read: this.realName,
+			write: function(value) {
+				if(value.length)
+						this.realName(value);
+			},
+			owner: this
+		});
 
 		this.tags = ko.observableArray([]);
 		this.metadata = ko.observable('');

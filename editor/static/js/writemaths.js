@@ -1093,7 +1093,7 @@ function style_html(html_source, indent_size, indent_character, max_char, brace_
    width: 'auto'
   });
 
-  $(div).html($(el).html());
+  $(div).html($(el).html() || $(el).val());
   var styles = ['font-size','font-style', 'font-weight', 'font-family','line-height', 'text-transform', 'letter-spacing'];
   $(styles).each(function() {
    var s = this.toString();

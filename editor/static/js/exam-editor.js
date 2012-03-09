@@ -173,7 +173,9 @@ $(document).ready(function() {
         },
 
 		addQuestion: function() {
-			this.questions.push(new Question(0,'',this));
+			var q = new Question(0,'',this);
+			q.isNew(true);
+			this.questions.push(q);
 		},
 
         //returns a JSON-y object representing the exam
@@ -315,6 +317,8 @@ $(document).ready(function() {
 		this.id = ko.observable(id);
 		this.name = ko.observable(name);
 		this.exam = exam;
+		
+		this.isNew = ko.observable(false);
 		
 		this.selected = ko.observable(true);
 	}

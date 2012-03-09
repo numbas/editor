@@ -334,11 +334,6 @@ $(document).ready(function() {
 			var obj = valueAccessor();
 			var show = $('<span></span>').addClass('name');
 			var input = $('<input type="text"></input>');
-			$(element).addClass('searchClick').append(show,input);
-
-			var value = obj.value();
-			show.html(value);
-			input.val(value);
 
 			function showName() {
 				show.show();
@@ -348,10 +343,19 @@ $(document).ready(function() {
 				show.hide();
 				input.show().select();
 			}
+			
+			$(element)
+				.addClass('searchClick')
+				.attr('tabindex',0)
+				.append(show,input)
+				.focus(showInput)
+			;
 
-			show.click(function() {
-				showInput();
-			});
+			var value = obj.value();
+			show.html(value);
+			input.val(value);
+
+
 
 			input
 				.autocomplete({
@@ -394,13 +398,16 @@ $(document).ready(function() {
 				})
 			;
 
-			showName();
+			if(obj.hasfocus())
+				showInput();
+			else
+				showName();
 		},
 		update: function(element, valueAccessor, allBindingsAccessor) {
 			var obj = valueAccessor();
 			var value = obj.value();
 			$(element)
-				.find('.name').html(value ? value : 'No question selected!')
+				.find('.name').toggleClass('nothing',!value).html(value ? value : 'No question selected!')
 				.end()
 				.find('input').val(value);
 		}

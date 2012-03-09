@@ -282,6 +282,10 @@ button.remove:hover {
 	display: inline-block;
 }
 
+.searchClick .nothing {
+	color: red;
+}
+
 .searchClick input {
 	background: white url(../images/search.png) no-repeat right;
 }

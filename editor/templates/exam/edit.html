@@ -170,7 +170,7 @@
 		<script type="text/x-jquery-tmpl" id="question">
 			<li class="question">
 				<span class="handle"></span>
-				<div data-bind="searchClick: {value: name, options: exam.allQuestions}"></div>
+				<div data-bind="searchClick: {value: name, options: exam.allQuestions, hasfocus: isNew}"></div>
 				<button class="remove" data-bind="click:remove"></button>
 			</li>
 		</script>

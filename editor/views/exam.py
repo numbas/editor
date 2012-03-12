@@ -25,7 +25,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, FormView, L
 
 from editor.forms import ExamForm, NewExamForm, ExamSearchForm
 from editor.models import Exam, Question
-from editor.views.generic import CompileObject, SaveContentMixin, PreviewView, DownloadView
+from editor.views.generic import CompileObject, SaveContentMixin, PreviewView, ZipView, SourceView
 
 class ExamPreviewView(PreviewView):
     
@@ -47,7 +47,7 @@ class ExamPreviewView(PreviewView):
         else:
             return self.preview(e)
 
-class ExamDownloadView(DownloadView):
+class ExamZipView(ZipView):
 
     """Compile an exam as a SCORM package and return the .zip file"""
 
@@ -66,6 +66,26 @@ class ExamDownloadView(DownloadView):
                                            content_type='application/json')
         else:
             return self.download(e)
+
+class ExamSourceView(SourceView):
+
+    """Return the .exam version of an exam"""
+
+    model = Exam
+    operation = None
+
+    def get(self, request, *args, **kwargs):
+        try:
+            e = self.get_object()
+        except (Exam.DoesNotExist, TypeError) as err:
+            status = {
+                "result": "error",
+                "message": str(err),
+                "traceback": traceback.format_exc(),}
+            return HttpResponseServerError(json.dumps(status),
+                                           content_type='application/json')
+        else:
+            return self.source(e)
     
     
 class ExamCreateView(CreateView):

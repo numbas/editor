@@ -169,7 +169,7 @@ class PreviewView(DetailView,CompileObject):
             return HttpResponse(json.dumps(status),
                                 content_type='application/json')
         
-class DownloadView(DetailView,CompileObject):
+class ZipView(DetailView,CompileObject):
     def download(self,obj):
         source = obj.as_source()    #need to catch errors
         switches = ['-c','-sz']
@@ -185,3 +185,10 @@ class DownloadView(DetailView,CompileObject):
             response['Content-Disposition'] = 'attachment; filename=%s.zip' % obj.slug
             response['Content-Length'] = os.path.getsize(fsLocation)
             return response
+
+class SourceView(DetailView):
+	def source(self,obj):
+		source = obj.as_source()
+		response = HttpResponse(source, 'text/plain')
+		response['Content-Disposition'] = 'attachment; filename=%s.exam' % obj.slug
+		return response

@@ -457,15 +457,16 @@
 				{{/each}}
 			</tr>
 		</script>
+    {% endverbatim %}
 
 		<div>
 			<div id="buttons">
 				<button id="preview" data-bind="click: showPreview">Test Run</button>
-				<button id="download" data-bind="click: download">Download .zip</button>
+				<a href="{% url question_download object.pk object.slug %}">Download .zip</a>
+				<a href="{% url question_source object.pk object.slug %}">Download source</a>
 			</div>
 			<div id="editor" data-bind="template: 'questionTemplate'"></div>
 		</div>
-    {% endverbatim %}
 
 {% endblock content %}
 

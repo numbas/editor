@@ -15,8 +15,8 @@ from django.conf import settings
 from django.conf.urls.defaults import *
 from django.views.generic import RedirectView, TemplateView
 
-from editor.views.exam import ExamPreviewView, ExamDownloadView, ExamCreateView, ExamDeleteView, ExamListView, ExamSearchView, ExamUpdateView
-from editor.views.question import QuestionPreviewView, QuestionDownloadView, QuestionCreateView, QuestionDeleteView, QuestionListView, QuestionSearchView, QuestionUpdateView
+from editor.views.exam import ExamPreviewView, ExamZipView, ExamSourceView, ExamCreateView, ExamDeleteView, ExamListView, ExamSearchView, ExamUpdateView
+from editor.views.question import QuestionPreviewView, QuestionZipView, QuestionSourceView, QuestionCreateView, QuestionDeleteView, QuestionListView, QuestionSearchView, QuestionUpdateView
 
 urlpatterns = patterns('',
     url(r'^$', TemplateView.as_view(template_name='index.html'),
@@ -38,7 +38,10 @@ urlpatterns = patterns('',
         ExamPreviewView.as_view(), name='exam_preview'),
                        
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+).zip$',
-        ExamDownloadView.as_view(), name='exam_download'),
+        ExamZipView.as_view(), name='exam_download'),
+
+    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+).exam$',
+        ExamSourceView.as_view(), name='exam_source'),
                        
     url(r'^questions/$', QuestionListView.as_view(), name='question_index',),
     
@@ -56,5 +59,8 @@ urlpatterns = patterns('',
         QuestionPreviewView.as_view(), name='question_preview'),
                        
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+).zip$',
-        QuestionDownloadView.as_view(), name='question_download'),
+        QuestionZipView.as_view(), name='question_download'),
+
+    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+).exam$',
+        QuestionSourceView.as_view(), name='question_source'),
 )

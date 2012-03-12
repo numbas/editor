@@ -24,7 +24,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 
 from editor.forms import NewQuestionForm, QuestionForm
 from editor.models import Question
-from editor.views.generic import CompileObject, SaveContentMixin, PreviewView, DownloadView
+from editor.views.generic import CompileObject, SaveContentMixin, PreviewView, ZipView, SourceView
 
 class QuestionPreviewView(PreviewView):
     
@@ -45,7 +45,7 @@ class QuestionPreviewView(PreviewView):
         else:
             return self.preview(q)
 
-class QuestionDownloadView(DownloadView):
+class QuestionZipView(ZipView):
 
     """Compile a question as a SCORM package and return the .zip file"""
 
@@ -63,6 +63,25 @@ class QuestionDownloadView(DownloadView):
                                            content_type='application/json')
         else:
             return self.download(q)
+
+class QuestionSourceView(SourceView):
+
+    """Compile a question as a SCORM package and return the .zip file"""
+
+    model = Question
+
+    def get(self, request, *args, **kwargs):
+        try:
+            q = self.get_object()
+        except (Question.DoesNotExist, TypeError) as err:
+            status = {
+                "result": "error",
+                "message": str(err),
+                "traceback": traceback.format_exc(),}
+            return HttpResponseServerError(json.dumps(status),
+                                           content_type='application/json')
+        else:
+            return self.source(q)
 
 class QuestionCreateView(CreateView):
     

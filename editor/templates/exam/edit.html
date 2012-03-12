@@ -174,15 +174,16 @@
 				<button class="remove" data-bind="click:remove"></button>
 			</li>
 		</script>
+    {% endverbatim %}
 
 		<div>
 			<div id="buttons">
 				<button id="preview" data-bind="click: showPreview">Test Run</button>
-				<button id="download" data-bind="click: download">Download .zip</button>
+				<a href="{% url exam_download object.pk object.slug %}">Download .zip</a>
+				<a href="{% url exam_source object.pk object.slug %}">Download source</a>
 			</div>
 			<div id="editor" data-bind="template: 'examTemplate'"></div>
 		</div>
-    {% endverbatim %}
 {% endblock content %}
 
 {% block sidebar %}

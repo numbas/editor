@@ -601,7 +601,7 @@ function texMaths(s) {
 			var expr = '';
 			for(var j=0;j<sbits.length;j+=1)
 			{
-				expr += j%2 ? '('+sbits[j]+')' : sbits[j];
+				expr += j%2 ? 'subvar('+sbits[j]+',"red")' : sbits[j];
 			}
 			expr = Numbas.jme.display.exprToLaTeX(expr);
 		} catch(e) {

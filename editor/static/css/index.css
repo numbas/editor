@@ -4,8 +4,8 @@
 
 .delete {
 	display: inline-block;
-	background: transparent url(../images/x_14x14.png);
-	width:14px;
-	height:14px;
-	border:none;
+	background: transparent url(../images/delete.png);
+	width: 14px;
+	height: 14px;
+	border: none;
 }

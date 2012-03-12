@@ -219,9 +219,9 @@ ul.editlist {
 }
 
 button.remove {
-	background: transparent url(../images/x_14x14.png);
-	width:14px;
-	height:14px;
+	background: transparent url(../images/delete.png);
+	width: 14px;
+	height: 14px;
 	border:none;
 	margin-left: .3em;
 }

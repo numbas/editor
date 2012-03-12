@@ -29,7 +29,6 @@ jme.display = {
 	{
 		if(!ruleset)
 			ruleset = simplificationRules.basic;
-		ruleset = collectRuleset(ruleset,Numbas.exam.rulesets);
 
 		expr+='';	//make sure expr is a string
 
@@ -56,7 +55,6 @@ jme.display = {
 
 		if(!ruleset)
 			ruleset = simplificationRules.basic;
-		ruleset = collectRuleset(ruleset,Numbas.exam.rulesets);		//collect the ruleset - replace set names with the appropriate Rule objects
 
 		try 
 		{

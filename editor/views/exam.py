@@ -57,6 +57,7 @@ class ExamZipView(ZipView):
     def get(self, request, *args, **kwargs):
         try:
             e = self.get_object()
+            scorm = 'scorm' in request.GET
         except (Exam.DoesNotExist, TypeError) as err:
             status = {
                 "result": "error",
@@ -65,7 +66,7 @@ class ExamZipView(ZipView):
             return HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
         else:
-            return self.download(e)
+            return self.download(e,scorm)
 
 class ExamSourceView(SourceView):
 

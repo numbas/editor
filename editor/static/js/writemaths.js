@@ -1,18 +1,3 @@
-/*
-Copyright 2012 Newcastle University
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-*/
 var WriteMaths;
 (function() {
 WriteMaths = function(e,options)
@@ -60,8 +45,8 @@ WriteMaths.prototype = {
 		var wm = this;
 		var e = this.e;
 
-        //when a linereceives focus, select first line
-        e.delegate('.line','focus',function(ev) {
+        //when a line receives focus, select it
+        e.delegate('.line','focus',function() {
 			$(this).click();
         });
 
@@ -254,7 +239,7 @@ WriteMaths.prototype = {
 			dr.remove();
 			e.find('.preview')
 				.show()
-				.html(math)
+				.html(cleanJME(math))
 				.position({my: 'left bottom', at: 'left top', of: this, offset: w+' 0', collision: 'fit'})
 			;
 			var inp = this;
@@ -533,6 +518,109 @@ var htmlToTeX;
 	}
 })();
 
+function texsplit(s)
+{
+	var cmdre = /((?:.|\n)*?)\\((?:var)|(?:simplify))/m;
+	var out = [];
+	while( m = s.match(cmdre) )
+	{
+		out.push(m[1]);
+		var cmd = m[2];
+		out.push(cmd);
+
+		var i = m[0].length;
+
+		var args = '';
+		var argbrackets = false;
+		if( s.charAt(i) == '[' )
+		{
+			argbrackets = true;
+			var si = i+1;
+			while(i<s.length && s.charAt(i)!=']')
+				i++;
+			if(i==s.length)
+			{
+				out = out.slice(0,-2);
+				out.push(s);
+				return out;
+			}
+			else
+			{
+				args = s.slice(si,i);
+				i++;
+			}
+		}
+		if(!argbrackets)
+			args='all';
+		out.push(args);
+
+		if(s.charAt(i)!='{')
+		{
+			out = out.slice(0,-3);
+			out.push(s);
+			return out;
+		}
+
+		var brackets=1;
+		var si = i+1;
+		while(i<s.length-1 && brackets>0)
+		{
+			i++;
+			if(s.charAt(i)=='{')
+				brackets++;
+			else if(s.charAt(i)=='}')
+				brackets--;
+		}
+		if(i == s.length-1 && brackets>0)
+		{
+			out = out.slice(0,-3);
+			out.push(s);
+			return out;
+		}
+
+		var expr = s.slice(si,i);
+		s = s.slice(i+1);
+		out.push(expr);
+	}
+	out.push(s);
+	return out;
+}
+
+function texMaths(s) {
+
+	var bits = texsplit(s);
+	var out = '';
+	for(var i=0;i<bits.length-3;i+=4)
+	{
+		out+=bits[i];
+		var cmd = bits[i+1],
+			args = bits[i+2],
+			expr = bits[i+3];
+		try{
+			var sbits = Numbas.util.splitbrackets(expr,'{','}');
+			var expr = '';
+			for(var j=0;j<sbits.length;j+=1)
+			{
+				expr += j%2 ? '('+sbits[j]+')' : sbits[j];
+			}
+			expr = Numbas.jme.display.exprToLaTeX(expr);
+		} catch(e) {
+			expr = '\\color{red}{'+expr+'}';
+		}
+
+		switch(cmd)
+		{
+		case 'var':	//substitute a variable
+			out += ' \\color{olive}{\\boxed{'+expr+'}} ';
+			break;
+		case 'simplify': //a JME expression to be simplified
+			out += ' \\color{#ff1493}{\\boxed{'+expr+'}} ';
+			break;
+		}
+	}
+	return out+bits[bits.length-1];
+};
+
 function input() {
 	return $('<input rows="1"></input>');
 }
@@ -540,7 +628,8 @@ function makeParagraph(val,notypeset)
 {
 	if(val.length)
 	{
-		var d = $(textile(val.trim()));
+		var dval = cleanJME(val).trim();
+		var d = $(textile(dval));
 		if(d.is('div'))
 		{
 			var p=$('<p></p>');
@@ -558,8 +647,90 @@ function makeParagraph(val,notypeset)
 	d.addClass('line').attr('tabindex',0);
 	return d.first();
 }
+function cleanJME(val)
+{
+	var dval = $.trim(val);
+	var bits = Numbas.util.contentsplitbrackets(dval);
+	dval='';
+	for(var i=0;i<bits.length;i++)
+	{
+		switch(i % 2)
+		{
+		case 0:	//text
+			dval += bits[i];
+			break;
+		case 1: //delimiter
+			switch(bits[i])
+			{
+			case '$':
+				if(i<bits.length-1)
+				{
+					dval += '$'+texMaths(bits[i+1])+'$';
+					i+=2;
+				}
+				else
+					dval += bits[i];
+				break;
+			case '\\[':
+				if(i<bits.length-1)
+				{
+					dval += '\\['+texMaths(bits[i+1])+'\\]';
+					i+=2;
+				}
+				else
+					dval += bits[i];
+				break;
+			case '%%':
+				if(i<bits.length-1)
+				{
+					WriteMaths.numGraphs += 1;
+					dval += '<div id="jsxgraph-'+WriteMaths.numGraphs+'" class="graph" source="'+bits[i+1]+'"/>';
+					i+=2;
+				}
+				else
+					dval += bits[i];
+				break;
+			}
+		}
+	}
+	return dval;
+}
 
 function finishParagraph(p) {
+	try{
+
+		p.find('.graph').each(function() {
+			var id = $(this).attr('id');
+			var src = $(this).attr('source');
+			$(this).css('width','400px').css('height','300px');
+			urlexp.lastIndex = 0;
+			if(src.match(/^geonext /))
+			{
+				src = src.slice(8);
+				if(urlexp.test(src))
+					JXG.JSXGraph.loadBoardFromFile(id,src,'Geonext');
+				else
+					JXG.JSXGraph.loadBoardFromString(id,src,'Geonext');
+			}
+			else
+			{
+				JXG.JSXGraph
+					.initBoard(id,{
+						showCopyright:false,
+						originX: 200,
+						originY: 150,
+						unitX: 50,
+						unitY: 50,
+						axis:true
+					})
+					.construct(src)
+				;
+			}
+		});
+	}
+	catch(e) {
+		console.log(e);
+	}
 	p.linkURLs().find('a').oembed()
 	p.find('a').attr('target','_blank');
 }

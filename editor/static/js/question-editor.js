@@ -20,6 +20,9 @@ $(document).ready(function() {
 	Numbas.loadScript('scripts/jme.js');
 	Numbas.startOK = true;
 	Numbas.init = function() {
+		//create a question object
+		viewModel = new Question(questionJSON);
+		ko.applyBindings(viewModel);
 	};
 	Numbas.tryInit();
 
@@ -721,7 +724,4 @@ $(document).ready(function() {
     };
 
 
-    //create a question object
-    viewModel = new Question(questionJSON);
-    ko.applyBindings(viewModel);
 });

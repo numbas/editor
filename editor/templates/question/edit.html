@@ -463,7 +463,7 @@
 			<div id="buttons">
 				<button id="preview" data-bind="click: showPreview">Test Run</button>
                 Download: 
-                <a href="{% url question_download object.pk object.slug %}">.zip</a>,
+                <a href="{% url question_download object.pk object.slug %}">standalone .zip</a>,
                 <a href="{% url question_download object.pk object.slug %}?scorm">SCORM package</a>,
                 <a href="{% url question_source object.pk object.slug %}">source</a>
 			</div>

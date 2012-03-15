@@ -32,6 +32,12 @@ function ParseError(parser,error,hint)
 ParseError.prototype = new Error();
 ParseError.prototype.constructor = ParseError;
 
+function cleanString(s) {
+	return s.split('\n').map(function(line) {
+		return line.replace(/^( {4}|\t)*/,'');
+	}).join('\n');
+};
+
 function ExamParser()
 {
 }
@@ -164,7 +170,7 @@ ExamParser.prototype = {
 					throw(new ParseError(this,'Expected """ to end string literal'));
 				var str = this.working.slice(0,i);
 				this.consume(i+3);
-				return str;
+				return cleanString(str);
 			}
 			else
 			{
@@ -174,7 +180,7 @@ ExamParser.prototype = {
 					throw(new ParseError(this,'Expected " to end string literal'));
 				var str = this.working.slice(0,i);
 				this.consume(i+1);
-				return str;
+				return cleanString(str);
 			}
 
 		//string literal delimited by single quotes
@@ -187,7 +193,7 @@ ExamParser.prototype = {
 					throw(new ParseError(this,"Expected '''to end string literal"));
 				var str = this.working.slice(0,i);
 				this.consume(i+3);
-				return str;
+				return cleanString(str);
 			}
 			else
 			{
@@ -197,7 +203,7 @@ ExamParser.prototype = {
 					throw(new ParseError(this,"Expected ' to end string literal"));
 				var str = this.working.slice(0,i);
 				this.consume(i+1);
-				return str;
+				return cleanString(str);
 			}
 
 		//undelimited literal

@@ -170,9 +170,11 @@ class PreviewView(DetailView,CompileObject):
                                 content_type='application/json')
         
 class ZipView(DetailView,CompileObject):
-    def download(self,obj):
+    def download(self,obj,scorm=False):
         source = obj.as_source()    #need to catch errors
-        switches = ['-c','-sz']
+        switches = ['-cz']
+        if scorm:
+            switches.append('-s')
         location = obj.filename + '.zip'
         try:
             fsLocation = self.compile(source, switches, location)
@@ -187,8 +189,8 @@ class ZipView(DetailView,CompileObject):
             return response
 
 class SourceView(DetailView):
-	def source(self,obj):
-		source = obj.as_source()
-		response = HttpResponse(source, 'text/plain')
-		response['Content-Disposition'] = 'attachment; filename=%s.exam' % obj.slug
-		return response
+    def source(self,obj):
+        source = obj.as_source()
+        response = HttpResponse(source, 'text/plain')
+        response['Content-Disposition'] = 'attachment; filename=%s.exam' % obj.slug
+        return response

@@ -54,6 +54,7 @@ class QuestionZipView(ZipView):
     def get(self, request, *args, **kwargs):
         try:
             q = self.get_object()
+            scorm = 'scorm' in request.GET
         except (Question.DoesNotExist, TypeError) as err:
             status = {
                 "result": "error",
@@ -62,7 +63,7 @@ class QuestionZipView(ZipView):
             return HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
         else:
-            return self.download(q)
+            return self.download(q,scorm)
 
 class QuestionSourceView(SourceView):
 

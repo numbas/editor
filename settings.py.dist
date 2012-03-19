@@ -139,9 +139,6 @@ LOGGING = {
 
 GLOBAL_SETTINGS = {
     'REPO_PATH': '/srv/numbas-questiondb',
-    'QUESTION_SUBDIR': 'questions',
-    'EXAM_SUBDIR': 'exams',
-    'TEMP_EXAM_FILE': '/tmp/exam.tmp',
     'NUMBAS_PATH': '/srv/numbas',
     'PREVIEW_PATH': '/srv/numbas-previews',
     'PREVIEW_URL': 'http://numbas.mas.ncl.ac.uk/numbas-previews/',

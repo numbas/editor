@@ -40,43 +40,33 @@ class CompileObject():
             Returns the path to the output produced
         """
 
-        try:
-            fh = open(settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE'], 'w')
-            fh.write(source)
-            fh.close()
+        output_location = os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'], location)
+        numbas_command = [
+            settings.GLOBAL_SETTINGS['PYTHON_EXEC'],
+            os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'],'bin','numbas.py'),
+            '--pipein',
+            '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
+            '-o'+output_location
+        ] + switches
 
-        except IOError:
+        try:
+            process = subprocess.Popen(numbas_command, stdout = subprocess.PIPE, stdin=subprocess.PIPE)
+            print(source)
+            process.communicate(source)
+            status = process.communicate()
+            code = process.poll()
+            if code != 0:
+                raise OSError("Compilation failed. %s %s" %
+                              tuple(stat))
+
+        except (NameError, OSError) as err:
             status = {
                 "result": "error",
-                "message": "Could not save exam to temporary file.",
+                "message": str(err),
                 "traceback": traceback.format_exc(),}
             raise CompileError(status)
-
         else:
-            location = os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'], location)
-            numbas_command = [
-                settings.GLOBAL_SETTINGS['PYTHON_EXEC'],
-                os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
-                             os.path.normpath('bin/numbas.py')),
-                settings.GLOBAL_SETTINGS['TEMP_EXAM_FILE'],
-                '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
-                '-o'+location
-            ] + switches
-
-            try:
-                status = subprocess.Popen(numbas_command, stdout = subprocess.PIPE)
-                stat = status.communicate()
-                if status.returncode != 0:
-                    raise OSError("numbas.py execution failed. %s %s" %
-                                  tuple(stat))
-            except (NameError, OSError) as err:
-                status = {
-                    "result": "error",
-                    "message": str(err),
-                    "traceback": traceback.format_exc(),}
-                raise CompileError(status)
-            else:
-                return location
+            return location
     
 
 class PreviewView(DetailView,CompileObject):

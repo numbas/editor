@@ -9,3 +9,10 @@
 	height: 14px;
 	border: none;
 }
+
+.upload {
+	display: none;
+}
+#uploadQuestionForm.over {
+	background-color: red;
+}

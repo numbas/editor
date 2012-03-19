@@ -11,11 +11,81 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+import uuid
+import git
+import os
+
+from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.template import loader, Context
+from django.core.exceptions import ValidationError
 
-class Question(models.Model):
+from examparser import ExamParser, ParseError
+
+class NumbasObject:
+    def save(self):
+        if self.content:
+            parser = ExamParser()
+            data = parser.parse(self.content)
+            self.name = data['name']
+        elif self.name:
+            self.content = '{name: %s}' % self.name
+
+
+class GitObject:
+    def repo(self):
+        repo = git.Repo(settings.GLOBAL_SETTINGS['REPO_PATH'])
+
+        os.environ['GIT_AUTHOR_NAME'] = 'Numbas'
+        os.environ['GIT_AUTHOR_EMAIL'] = 'numbas@ncl.ac.uk'
+
+        return repo
+
+    def abs_path_to_file(self):
+        return os.path.join(self.repo().working_dir,self.path_to_file())
+    
+    def path_to_file(self):
+        return os.path.join(self.git_directory, self.filename)
+
+    def save(self):
+        """ if content has changed, save to git repo """
+
+        if not self.filename:
+            self.filename = str(uuid.uuid4())
+
+        if self.pk is not None:
+            original = self.__class__.objects.get(pk=self.pk)
+            if original.content == self.content:    #if content has not changed, do nothing
+                return
+
+        repo = self.repo()
+        fh = open(self.abs_path_to_file(), 'w')
+        fh.write(self.content)
+        fh.close()
+        repo.index.add([self.path_to_file()])
+        repo.index.commit('Made some changes to %s' % self.name)
+        
+    def delete(self):
+        """ Remove file from repository """
+
+        repo = self.repo()
+        print(self.path_to_file())
+        repo.index.remove([self.path_to_file()])
+        os.remove(self.abs_path_to_file())
+        repo.index.commit('Deleted %s' % self.name)
+
+
+#check that the .exam file for an object is valid and defines at the very least a name
+def validate_content(content):
+    try:
+        data = ExamParser().parse(content)
+        if not 'name' in data:
+            raise ValidationError('No "name" property in content.')
+    except ParseError as err:
+        raise ValidationError(err)
+
+class Question(models.Model,NumbasObject,GitObject):
     
     """Model class for a question.
     
@@ -24,27 +94,36 @@ class Question(models.Model):
     """
     
     name = models.CharField(max_length=200)
-    slug = models.SlugField(editable=False)
+    slug = models.SlugField(editable=False,unique=False)
     author = models.CharField(max_length=200, blank=True, editable=False)
     filename = models.CharField(max_length=200, editable=False)
-    content = models.TextField(blank=True)
+    content = models.TextField(blank=True,validators=[validate_content])
     metadata = models.TextField(blank=True)
     tags = models.TextField(blank=True)
+
+    git_directory = 'questions'
     
     def __unicode__(self):
         return self.name
     
     def save(self, *args, **kwargs):
-#        if not self.pk:
+        NumbasObject.save(self)
+
         self.slug = slugify(self.name)
             
+        GitObject.save(self)
+
         super(Question, self).save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        GitObject.delete(self)
+        super(Question,self).delete(*args, **kwargs)
 
     def as_source(self):
         t = loader.get_template('temporary.question')
         return t.render(Context({'question': self}))
 
-class Exam(models.Model):
+class Exam(models.Model,NumbasObject,GitObject):
     
     """Model class for an Exam.
     
@@ -55,22 +134,41 @@ class Exam(models.Model):
     questions = models.ManyToManyField(Question, through='ExamQuestion',
                                        blank=True, editable=False)
     name = models.CharField(max_length=200)
-    slug = models.SlugField(editable=False)
+    slug = models.SlugField(editable=False,unique=False)
     author = models.CharField(max_length=200, blank=True, editable=False)
     filename = models.CharField(max_length=200, editable=False)
-    content = models.TextField(blank=True)
+    content = models.TextField(blank=True, validators=[validate_content])
     metadata = models.TextField(blank=True)
+
+    git_directory = 'exams'
     
     def __unicode__(self):
         return self.name
     
     def get_questions(self):
         return self.questions.order_by('examquestion')
+
+    def set_questions(self,question_list):
+        """ 
+            Set the list of questions for this exam. 
+            question_list is an ordered list of question IDs
+        """
+
+        self.questions.clear()
+        for order,pk in enumerate(question_list):
+            print(question_list)
+            question = Question.objects.get(pk=pk)
+            exam_question = ExamQuestion(exam=self,question=question, qn_order=order)
+            exam_question.save()
+
     
     def save(self, *args, **kwargs):
-#        if not self.pk:
+        NumbasObject.save(self)
+
         self.slug = slugify(self.name)
             
+        GitObject.save(self)
+
         super(Exam, self).save(*args, **kwargs)
         
     def as_source(self):
@@ -86,7 +184,6 @@ class ExamQuestion(models.Model):
     """Model class linking exams and questions."""
     
     class Meta:
-#        unique_together = (('exam', 'question'), ('exam', 'qn_order'))
         ordering = ['qn_order']
         
     exam = models.ForeignKey(Exam)

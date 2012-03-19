@@ -13,7 +13,6 @@
 #   limitations under the License.
 import json
 import traceback
-import uuid
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
@@ -24,7 +23,9 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 
 from editor.forms import NewQuestionForm, QuestionForm
 from editor.models import Question
-from editor.views.generic import CompileObject, SaveContentMixin, PreviewView, ZipView, SourceView
+from editor.views.generic import CompileObject, PreviewView, ZipView, SourceView
+
+from examparser import ExamParser, ParseError
 
 class QuestionPreviewView(PreviewView):
     
@@ -93,17 +94,28 @@ class QuestionCreateView(CreateView):
     template_name = 'question/new.html'
     
     def form_valid(self, form):
-        self.object = form.save(commit=False)
-        self.object.content = "{name: %s}" % self.object.name
-        self.object.filename = str(uuid.uuid4())
-        form.save()
+        self.object = form.save()
         return HttpResponseRedirect(self.get_success_url())
     
     def get_success_url(self):
         return reverse('question_edit', args=(self.object.pk,
                                               self.object.slug,))
     
+class QuestionUploadView(CreateView):
     
+    """Upload a .exam file representing a question"""
+
+    model = Question
+
+    def post(self, request, *args, **kwargs):
+        self.object = Question(content=request.POST['content'])
+        self.object.save()
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse('question_edit', args=(self.object.pk, self.object.slug) )
+
 class QuestionDeleteView(DeleteView):
     
     """Delete a question."""
@@ -115,7 +127,7 @@ class QuestionDeleteView(DeleteView):
         return reverse('question_index')
 
 
-class QuestionUpdateView(UpdateView, SaveContentMixin):
+class QuestionUpdateView(UpdateView):
     
     """Edit a question."""
     
@@ -123,20 +135,20 @@ class QuestionUpdateView(UpdateView, SaveContentMixin):
     template_name = 'question/edit.html'
     
     def post(self, request, *args, **kwargs):
-        request.JSON = json.loads(request.POST['json'])
-        request.JSON['tags'] = json.dumps(request.JSON['tags'])
+        data = json.loads(request.POST['json'])
+        data['tags'] = json.dumps(data['tags'])
 
         self.object = self.get_object()
-        question_form = QuestionForm(request.JSON, instance=self.object)
+        question_form = QuestionForm(data, instance=self.object)
         if question_form.is_valid():
             return self.form_valid(question_form)
         else:
             return self.form_invalid(question_form)
         
     def form_valid(self, form):
-        self.object = form.save(commit=False)
-        return self.write_content(settings.GLOBAL_SETTINGS['QUESTION_SUBDIR'],
-                                  form)
+        self.object = form.save()
+        status = {"result": "success"}
+        return HttpResponse(json.dumps(status), content_type='application/json')
         
     def form_invalid(self, form):
         status = {

@@ -47,6 +47,7 @@ ExamParser.prototype = {
 	data: undefined,
 
 	parse: function(source) {
+        source = source.replace(/\r/g,'\n');
 		this.source = this.working = source;
 		this.cursor = 0;
 		this.data = this.getThing();
@@ -56,7 +57,7 @@ ExamParser.prototype = {
 	},
 
 	lStripComments: function() {
-		this.working = this.working.replace(/^(\s*\/\/.*(\n|$)\s*)*\s*/,'');
+		this.working = this.working.replace(/^(\s|\n|\/\/.*(\n|$))*/,'');
 		this.cursor = this.source.length - this.working.length;
 	},
 

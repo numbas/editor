@@ -131,7 +131,7 @@ $(document).ready(function() {
             return {
 				content: this.output(),
 				metadata: this.metadata(),
-				questions: this.questions().filter(function(q){return q.id()>0}).map(function(q){ return q.toJSON(); }),
+				questions: this.questions().filter(function(q){return q.id()>0}).map(function(q){ return q.id(); }),
 			};
 		},this);
 

@@ -13,11 +13,10 @@
 #   limitations under the License.
 import json
 import traceback
-import uuid
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.http import Http404, HttpResponseRedirect, HttpResponseServerError
+from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.forms.models import model_to_dict
 from django.shortcuts import render
 from django.template import loader, Context
@@ -25,7 +24,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, FormView, L
 
 from editor.forms import ExamForm, NewExamForm, ExamSearchForm
 from editor.models import Exam, Question
-from editor.views.generic import CompileObject, SaveContentMixin, PreviewView, ZipView, SourceView
+from editor.views.generic import CompileObject, PreviewView, ZipView, SourceView
 
 class ExamPreviewView(PreviewView):
     
@@ -98,11 +97,7 @@ class ExamCreateView(CreateView):
     template_name = 'exam/new.html'
     
     def form_valid(self, form):
-        self.object = form.save(commit=False)
-        self.object.content = "{name: %s}" % self.object.name
-        self.object.filename = str(uuid.uuid4())
-        self.questions = []
-        form.save()
+        self.object = form.save()
         return HttpResponseRedirect(self.get_success_url())
     
     def get_success_url(self):
@@ -121,7 +116,7 @@ class ExamDeleteView(DeleteView):
         return reverse('exam_index')
     
     
-class ExamUpdateView(UpdateView, SaveContentMixin):
+class ExamUpdateView(UpdateView):
     
     """Edit an exam."""
     
@@ -129,21 +124,22 @@ class ExamUpdateView(UpdateView, SaveContentMixin):
     template_name = 'exam/edit.html'
     
     def post(self, request, *args, **kwargs):
-        request.JSON = json.loads(request.POST['json'])
-        self.questions = request.JSON['questions']
-        del request.JSON['questions']
+        data = json.loads(request.POST['json'])
+        self.questions = data['questions']
+        del data['questions']
 
         self.object = self.get_object()
-        exam_form = ExamForm(request.JSON, instance=self.object)
+        exam_form = ExamForm(data, instance=self.object)
         if exam_form.is_valid():
             return self.form_valid(exam_form)
         else:
             return self.form_invalid(exam_form)
     
     def form_valid(self, form):
-        self.object = form.save(commit=False)
-        return self.write_content(settings.GLOBAL_SETTINGS['EXAM_SUBDIR'],
-                                   form)
+        self.object = form.save()
+        self.object.set_questions(self.questions)
+        status = {"result": "success"}
+        return HttpResponse(json.dumps(status), content_type='application/json')
         
     def form_invalid(self, form):
         status = {
@@ -159,9 +155,8 @@ class ExamUpdateView(UpdateView, SaveContentMixin):
         exam_dict['questions'] = [
             {'id': q.id, 'name':q.name} for q in self.object.get_questions()]
         context['exam_JSON'] = json.dumps(exam_dict)
-#        context['exam_JSON'] = serializers.serialize('json', [self.object])
         return context
-#    
+
     def get_success_url(self):
         return reverse('exam_edit', args=(self.object.pk,self.object.slug,))
     

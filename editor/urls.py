@@ -17,7 +17,7 @@ from django.views.generic import RedirectView, TemplateView
 from django.contrib import admin
 
 from editor.views.exam import ExamPreviewView, ExamZipView, ExamSourceView, ExamCreateView, ExamDeleteView, ExamListView, ExamSearchView, ExamUpdateView
-from editor.views.question import QuestionPreviewView, QuestionZipView, QuestionSourceView, QuestionCreateView, QuestionDeleteView, QuestionListView, QuestionSearchView, QuestionUpdateView
+from editor.views.question import QuestionPreviewView, QuestionZipView, QuestionSourceView, QuestionCreateView, QuestionUploadView, QuestionDeleteView, QuestionListView, QuestionSearchView, QuestionUpdateView
 
 admin.autodiscover()
 
@@ -25,7 +25,7 @@ urlpatterns = patterns('',
     url(r'^$', TemplateView.as_view(template_name='index.html'),
         name='editor_index'),
 
-	url(r'^admin/',include(admin.site.urls)),
+    url(r'^admin/',include(admin.site.urls)),
                        
     url(r'^exams/$',ExamListView.as_view(), name='exam_index',),
                        
@@ -51,6 +51,8 @@ urlpatterns = patterns('',
     url(r'^questions/$', QuestionListView.as_view(), name='question_index',),
     
     url(r'^question/new/$', QuestionCreateView.as_view(), name='question_new'),
+
+    url(r'^question/upload/$', QuestionUploadView.as_view(), name='question_upload'),
                        
     url(r'^question/search/$', QuestionSearchView.as_view(), name='question_search',),
     

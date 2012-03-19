@@ -19,6 +19,14 @@
 	Name: <input type="text" name="name" maxlength="200" />
 	<input type="submit" value="Create" />
 </form>
+<form action="{% url question_upload %}" method="post" id="uploadQuestionForm">
+	{% csrf_token %}
+	Upload a question
+	<div class="upload">
+		<input type="file"/>
+		<textarea name="content"></textarea>
+	</div>
+</form>
 {% endblock content %}
 
 {% block javascripts %}
@@ -74,6 +82,36 @@
 							noty({text: 'Error deleting question:\n\n'+response.responseText, layout: 'center', type: 'error'});
 						})
 					;
+				}
+			});
+
+			$.event.props.push('dataTransfer');
+			$('#uploadQuestionForm').on({
+				dragenter: function(e) {
+					e.stopPropagation();
+					e.preventDefault();
+					$(this).addClass('over')
+				},
+				dragover: function(e) {
+					e.stopPropagation();
+					e.preventDefault();
+				},
+				dragleave: function(e) {
+					$(this).removeClass('over');
+				},
+				drop: function(e) {
+					$(this).removeClass('over');
+					var file = e.dataTransfer.files[0];
+					var fr = new FileReader();
+					var form = $(this);
+					var contentInput = $(this).find('[name=content]')
+					fr.onload = function(e) {
+						var content = e.target.result;
+						contentInput.text(content);
+						console.log(content);
+						form.submit();
+					}
+					fr.readAsText(file);
 				}
 			});
 		});

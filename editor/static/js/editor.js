@@ -13,7 +13,7 @@ Copyright 2012 Newcastle University
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-var prettyData,mapLoad,slugify;
+var prettyData,tryLoad,slugify;
 if(!window.Editor)
     window.Editor = {};
 
@@ -23,12 +23,27 @@ $(document).ready(function() {
         return s.trim().replace(/[^\w\s]/g,'').toLowerCase().replace(/\s/g,'-');
     };
 
-    mapLoad = function(data) {
-        return function(n) {                    
-            if(n in data)
-                this[n](data[n]);
-        };
-    };
+    tryLoad = function(data,attr,obj,altname) {
+        if(!data)
+            return;
+
+        if(attr instanceof Array)
+        {
+            if(!altname)
+                altname=[];
+            for(var i=0;i<attr.length;i++)
+            {
+                tryLoad(data,attr[i],obj,altname[i] || attr[i]);
+            }
+            return;
+        }
+        altname = altname || attr;
+
+        if(attr in data)
+            obj[altname](data[attr]);
+        else if(attr.toLowerCase() in data)
+            obj[altname](data[attr.toLowerCase]);
+    }
 
     function indent(s,n)
     {

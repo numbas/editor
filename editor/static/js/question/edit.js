@@ -229,7 +229,7 @@ $(document).ready(function() {
         },
 
         load: function(data) {
-            ['name','statement','advice'].map(mapLoad(data),this);
+            tryLoad(data,['name','statement','advice'],this);
 
             if('variables' in data)
             {
@@ -593,12 +593,10 @@ $(document).ready(function() {
         load: function(data) {
             for(var i=0;i<this.types.length;i++)
             {
-                if(this.types[i].name == data.type)
+                if(this.types[i].name == data.type.toLowerCase())
                     this.type(this.types[i]);
             }
-            this.marks(data.marks);
-            this.prompt(data.prompt);
-            this.stepsPenalty(data.stepsPenalty || 0);
+            tryLoad(data,['marks','prompt','stepsPenalty'],this);
 
             if(data.steps)
             {
@@ -618,64 +616,28 @@ $(document).ready(function() {
                 }
                 break;
             case 'jme':
-                this.jme.answer(data.answer);
-                this.jme.answerSimplification(data.answersimplification);
+                tryLoad(data,['answer','answerSimplification'],this.jme);
                 for(var i=0;i<this.jme.checkingTypes.length;i++)
                 {
                     if(this.jme.checkingTypes[i].name == data.checkingtype)
                         this.jme.checkingType(this.jme.checkingTypes[i]);
                 }
-                this.jme.checkingType().accuracy(data.checkingaccuracy);
+                tryLoad(data,'checkingaccuracy',this.jme.checkingType(),'accuracy');
 
-                if(data.maxlength)
-                {
-                    this.jme.maxlength.length(data.maxlength.length);
-                    this.jme.maxlength.partialCredit(data.maxlength.partialCredit);
-                    this.jme.maxlength.message(data.maxlength.message);
-                }
+                tryLoad(data.maxlength,['length','partialCredit','message'],this.jme.maxlength);
+                tryLoad(data.minlength,['length','partialCredit','message'],this.jme.minlength);
+                tryLoad(data.musthave,['strings','showStrings','partialCredit','message'],this.jme.musthave);
+                tryLoad(data.notallowed,['strings','showStrings','partialCredt','message'],this.jme.notallowed);
 
-                if(data.minlength)
-                {
-                    this.jme.minlength.length(data.minlength.length);
-                    this.jme.minlength.partialCredit(data.minlength.partialCredit);
-                    this.jme.minlength.message(data.minlength.message);
-                }
-
-                if(data.musthave)
-                {
-                    this.jme.musthave.strings(data.musthave.strings);
-                    this.jme.musthave.showStrings(data.musthave.showStrings);
-                    this.jme.musthave.partialCredit(data.musthave.partialCredit);
-                    this.jme.musthave.message(data.musthave.message);
-                }
-
-                if(data.notallowed)
-                {
-                    this.jme.notallowed.strings(data.notallowed.strings);
-                    this.jme.notallowed.showStrings(data.notallowed.showStrings);
-                    this.jme.notallowed.partialCredit(data.notallowed.partialCredit);
-                    this.jme.notallowed.message(data.notallowed.message);
-                }
                 break;
             case 'numberentry':
-                this.numberentry.minValue(data.minValue);
-                this.numberentry.maxValue(data.maxValue);
-                this.numberentry.integerAnswer(data.integerAnswer || false);
-                this.numberentry.partialCredit(data.partialCredit || 0);
+                tryLoad(data,['minValue','maxValue','integerAnswer','partialCredit'],this.numberentry);
                 break;
             case 'patternmatch':
-                this.patternmatch.answer(data.answer);
-                this.patternmatch.displayAnswer(data.displayAnswer);
-                this.patternmatch.caseSensitive(data.caseSensitive || false);
-                this.patternmatch.partialCredit(data.partialCredit || 0);
+                tryLoad(data,['answer','displayAnswer','caseSensitive','partialCredit'],this.patternmatch);
                 break;
             case 'm_n_x':
-                this.multiplechoice.minMarks(data.minMarks);
-                this.multiplechoice.maxMarks(data.maxMarks);
-                this.multiplechoice.minAnswers(data.minAnswers);
-                this.multiplechoice.maxAnswers(data.maxAnswers);
-                this.multiplechoice.shuffleChoices(data.shuffleChoices);
-                this.multiplechoice.shuffleAnswers(data.shuffleAnswers);
+                tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','shuffleAnswers'],this.multiplechoice);
                 for(var i=0;i<this.multiplechoice.displayTypes.m_n_x.length;i++)
                 {
                     if(this.multiplechoice.displayTypes.m_n_x[i].name==data.displayType)
@@ -699,23 +661,21 @@ $(document).ready(function() {
                 break;
             case '1_n_2':
             case 'm_n_2':
-                this.multiplechoice.minMarks(data.minMarks);
-                this.multiplechoice.maxMarks(data.maxMarks);
-                this.multiplechoice.shuffleChoices(data.shuffleChoices);
+                tryLoad(data,['minMarks','maxMarks','shuffleChoices','displayColumns'],this.multiplechoice);
+
                 var displayTypes = this.multiplechoice.displayTypes[this.type().name];
                 for(var i=0;i<displayTypes.length;i++)
                 {
                     if(displayTypes[i].name==data.displayType)
                         this.multiplechoice.displayType(displayTypes[i]);
                 }
-                this.multiplechoice.displayColumns(data.displayColumns);
 
                 for(var i=0;i<data.choices.length;i++)
                 {
                     var c = this.addChoice(data.choices[i]);
-                    c.content(data.choices[i]);
-                    c.marks(data.matrix[i]);
-                    c.distractor(data.distractors[i]);
+                    c.content(data.choices[i] || '');
+                    c.marks(data.matrix[i] || 0);
+                    c.distractor(data.distractors[i] || '');
                 }
                 break;
 

@@ -11,8 +11,15 @@
 }
 
 .upload {
-	display: none;
+	visibility: hidden;
+	position: absolute;
+	top: 0;
 }
-#uploadQuestionForm.over {
-	background-color: red;
+
+#uploadQuestionForm {
+	display: inline-block;
+}
+
+#uploadQuestionForm.over button {
+	border: red;
 }

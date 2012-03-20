@@ -1,32 +1,35 @@
 {% extends "layout.html" %}
 
 {% block content %}
-{% if question_list %}
-    <ul>
-    {% for question in question_list %}
-		<li class="question">
-			<a href="{% url question_edit question.pk question.slug %}">{{ question.name }}</a>
-			<a class="delete" href="{% url question_delete question.pk question.slug %}"></a>
-		</li>
-    {% endfor %}
-    </ul>
-{% else %}
-    <p>No questions are available.</p>
-{% endif %}
-<a id="newQuestion" href="{% url question_new %}">New question</a>
-<form action="{% url question_new %}" method="post" id="newQuestionForm">
-	{% csrf_token %}
-	Name: <input type="text" name="name" maxlength="200" />
-	<input type="submit" value="Create" />
-</form>
-<form action="{% url question_upload %}" method="post" id="uploadQuestionForm">
-	{% csrf_token %}
-	Upload a question
-	<div class="upload">
-		<input type="file"/>
-		<textarea name="content"></textarea>
-	</div>
-</form>
+	{% if question_list %}
+		<ul>
+		{% for question in question_list %}
+			<li class="question">
+				<a href="{% url question_edit question.pk question.slug %}">{{ question.name }}</a>
+				<a class="delete" href="{% url question_delete question.pk question.slug %}"></a>
+			</li>
+		{% endfor %}
+		</ul>
+	{% else %}
+		<p>No questions are available.</p>
+	{% endif %}
+
+	<button id="newQuestion" href="{% url question_new %}">New question</button>
+
+	<form action="{% url question_new %}" method="post" id="newQuestionForm">
+		{% csrf_token %}
+		Name: <input type="text" name="name" maxlength="200" />
+		<input type="submit" value="Create" />
+	</form>
+
+	<form action="{% url question_upload %}" method="post" id="uploadQuestionForm">
+		{% csrf_token %}
+		<button>Upload a question</button>
+		<div class="upload">
+			<input type="file" name="file" value="yo"/>
+			<textarea name="content"></textarea>
+		</div>
+	</form>
 {% endblock content %}
 
 {% block javascripts %}

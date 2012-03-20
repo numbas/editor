@@ -13,11 +13,19 @@
 	{% else %}
 		<p>No exams are available.</p>
 	{% endif %}
-	<a id="newExam" href="{% url exam_new %}">New exam</a>
+	<button id="newExam">New exam</button>
 	<form action="{% url exam_new %}" method="post" id="newExamForm">
 		{% csrf_token %}
 		Name: <input type="text" name="name" maxlength="200" />
 		<input type="submit" value="Create" />
+	</form>
+	<form action="{% url exam_upload %}" method="post" id="uploadForm">
+		{% csrf_token %}
+		<button>Upload an exam</button>
+		<div class="upload">
+			<input type="file" name="file" value="yo"/>
+			<textarea name="content"></textarea>
+		</div>
 	</form>
 {% endblock content %}
 
@@ -27,61 +35,7 @@
 
 {% block javascripts %}
 	{{block.super}}
-	<script language="javascript" type="text/javascript">
-		$(document).ready(function() {
-			$('a#newExam').click(function(e) {
-				e.preventDefault();
-				e.stopPropagation();
-
-				$('a#newExam').hide();
-				$('#newExamForm')
-					.show()
-					.css('display','inline-block')
-					.find('input[name="name"]')
-						.focus()
-				;
-			});
-
-			function cancelCreate() {
-				$('a#newExam').show();
-				$('#newExamForm').hide();
-			}
-
-			$('#newExamForm')
-				.hide()
-				.submit(function(e) {
-					var name = $(this).find('input[name="name"]').val();
-					if(!name.trim().length)
-					{
-						e.preventDefault();
-						e.stopPropagation();
-					}
-				})
-				.find('input[name="name"]')
-					.keyup(function(e) {
-						if(e.which==27)
-							cancelCreate();
-					})
-			;
-	
-			$('.exam .delete').on('click',function(e) {
-				e.stopPropagation();
-				e.preventDefault();
-				if(window.confirm('Delete this exam?')) {
-					var url = $(this).attr('href');
-					var item = $(this).parents('.exam');
-					$.post(url,{csrfmiddlewaretoken: getCookie('csrftoken')})
-						.success(function() {
-							item.slideUp(200,function() {item.remove()})
-						})
-						.error(function(response) {
-							noty({text: 'Error deleting exam:\n\n'+response.responseText, layout: 'center', type: 'error'});
-						})
-					;
-				}
-			});
-		});
-	</script>
+	<script type="text/javascript" src="{{ STATIC_URL }}js/exam/index.js"></script>
 {% endblock javascripts %}
 
 {% block stylesheets %}

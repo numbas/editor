@@ -16,10 +16,10 @@
 	top: 0;
 }
 
-#uploadQuestionForm {
+#uploadForm {
 	display: inline-block;
 }
 
-#uploadQuestionForm.over button {
+#uploadForm.over button {
 	border: red;
 }

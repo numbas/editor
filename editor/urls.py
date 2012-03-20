@@ -16,7 +16,7 @@ from django.conf.urls.defaults import *
 from django.views.generic import RedirectView, TemplateView
 from django.contrib import admin
 
-from editor.views.exam import ExamPreviewView, ExamZipView, ExamSourceView, ExamCreateView, ExamDeleteView, ExamListView, ExamSearchView, ExamUpdateView
+from editor.views.exam import ExamPreviewView, ExamZipView, ExamSourceView, ExamCreateView, ExamUploadView, ExamDeleteView, ExamListView, ExamSearchView, ExamUpdateView
 from editor.views.question import QuestionPreviewView, QuestionZipView, QuestionSourceView, QuestionCreateView, QuestionUploadView, QuestionDeleteView, QuestionListView, QuestionSearchView, QuestionUpdateView
 
 admin.autodiscover()
@@ -31,6 +31,8 @@ urlpatterns = patterns('',
                        
     url(r'^exam/new/$', ExamCreateView.as_view(), name='exam_new'),
     
+    url(r'^exam/upload/$', ExamUploadView.as_view(), name='exam_upload'),
+                       
     url(r'^exam/search/$', ExamSearchView.as_view(), name='exam_search'),
     
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/$', ExamUpdateView.as_view(),

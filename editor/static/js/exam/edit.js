@@ -213,15 +213,12 @@ $(document).ready(function() {
         },
 
         load: function(data) {
-            ['name','percentPass','shuffleQuestions'].map(mapLoad(data),this);
+            tryLoad(data,['name','percentPass','shuffleQuestions'],this);
             this.duration((data.duration||0)/60);
 
             if('navigation' in data)
             {
-                ['reverse','browse','showfrontpage'].map(function(n){
-                    if(n in data)
-                        this[n](data.navigation[n]);
-                },this);
+				tryLoad(data.navigation,['reverse','browse','showfrontpage'],this);
                 this.onadvance.load(data.navigation.onadvance);
                 this.onreverse.load(data.navigation.onreverse);
                 this.onmove.load(data.navigation.onmove);

@@ -22,7 +22,7 @@
 		<input type="submit" value="Create" />
 	</form>
 
-	<form action="{% url question_upload %}" method="post" id="uploadQuestionForm">
+	<form action="{% url question_upload %}" method="post" id="uploadForm">
 		{% csrf_token %}
 		<button>Upload a question</button>
 		<div class="upload">

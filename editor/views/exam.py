@@ -104,7 +104,21 @@ class ExamCreateView(CreateView):
         return reverse('exam_edit', args=(self.object.pk,
                                           self.object.slug,))
     
-        
+class ExamUploadView(CreateView):
+    
+    """Upload a .exam file representing an exam"""
+
+    model = Exam
+
+    def post(self, request, *args, **kwargs):
+        self.object = Exam(content=request.POST['content'])
+        self.object.save()
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse('exam_edit', args=(self.object.pk, self.object.slug) )
+
 class ExamDeleteView(DeleteView):
     
     """Delete an exam."""

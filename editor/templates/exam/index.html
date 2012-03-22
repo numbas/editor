@@ -12,21 +12,25 @@
 		</ul>
 	{% else %}
 		<p>No exams are available.</p>
-	{% endif %}
-	<button id="newExam">New exam</button>
-	<form action="{% url exam_new %}" method="post" id="newExamForm">
-		{% csrf_token %}
-		Name: <input type="text" name="name" maxlength="200" />
-		<input type="submit" value="Create" />
-	</form>
-	<form action="{% url exam_upload %}" method="post" id="uploadForm">
-		{% csrf_token %}
-		<button>Upload an exam</button>
-		<div class="upload">
-			<input type="file" name="file" value="yo"/>
-			<textarea name="content"></textarea>
-		</div>
-	</form>
+    {% endif %}
+    
+    {% if user.is_authenticated %}
+        <button id="newExam">New exam</button>
+        <form action="{% url exam_new %}" method="post" id="newExamForm">
+            {% csrf_token %}
+            Name: <input type="text" name="name" maxlength="200" />
+            <input type="submit" value="Create" />
+            <input type="hidden" name="author" value="{{user.id}}"/>
+        </form>
+        <form action="{% url exam_upload %}" method="post" id="uploadForm">
+            {% csrf_token %}
+            <button>Upload an exam</button>
+            <div class="upload">
+                <input type="file" name="file" value="yo"/>
+                <textarea name="content"></textarea>
+            </div>
+        </form>
+    {% endif %}
 {% endblock content %}
 
 {% block sidebar %}

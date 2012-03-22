@@ -14,7 +14,9 @@
 from django.conf import settings
 from django.conf.urls.defaults import *
 from django.views.generic import RedirectView, TemplateView
-from django.contrib import admin
+from django.contrib import admin,auth
+
+from django.contrib.auth.decorators import login_required
 
 from editor.views.exam import ExamPreviewView, ExamZipView, ExamSourceView, ExamCreateView, ExamUploadView, ExamDeleteView, ExamListView, ExamSearchView, ExamUpdateView
 from editor.views.question import QuestionPreviewView, QuestionZipView, QuestionSourceView, QuestionCreateView, QuestionUploadView, QuestionDeleteView, QuestionListView, QuestionSearchView, QuestionUpdateView
@@ -26,10 +28,13 @@ urlpatterns = patterns('',
         name='editor_index'),
 
     url(r'^admin/',include(admin.site.urls)),
+
+	url(r'^login/','django.contrib.auth.views.login',{'template_name':'auth/login.html'},name='login'),
+	url(r'^logout/','django.contrib.auth.views.logout',{'next_page':'/'},name='logout'),
                        
     url(r'^exams/$',ExamListView.as_view(), name='exam_index',),
                        
-    url(r'^exam/new/$', ExamCreateView.as_view(), name='exam_new'),
+    url(r'^exam/new/$', login_required(ExamCreateView.as_view()), name='exam_new'),
     
     url(r'^exam/upload/$', ExamUploadView.as_view(), name='exam_upload'),
                        
@@ -52,7 +57,7 @@ urlpatterns = patterns('',
                        
     url(r'^questions/$', QuestionListView.as_view(), name='question_index',),
     
-    url(r'^question/new/$', QuestionCreateView.as_view(), name='question_new'),
+    url(r'^question/new/$', login_required(QuestionCreateView.as_view()), name='question_new'),
 
     url(r'^question/upload/$', QuestionUploadView.as_view(), name='question_upload'),
                        

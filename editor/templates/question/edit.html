@@ -459,7 +459,10 @@
 		</script>
     {% endverbatim %}
 
-		<div>
+        <div>
+            <div id="author">
+                Author: {{object.author.username}}
+            </div>
 			<div id="buttons">
 				<button id="preview" data-bind="click: showPreview">Test Run</button>
                 Download: 

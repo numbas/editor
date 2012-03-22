@@ -20,6 +20,7 @@ from django.db import models
 from django.template.defaultfilters import slugify
 from django.template import loader, Context
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
 
 from examparser import ExamParser, ParseError
 
@@ -95,7 +96,7 @@ class Question(models.Model,NumbasObject,GitObject):
     
     name = models.CharField(max_length=200)
     slug = models.SlugField(editable=False,unique=False)
-    author = models.CharField(max_length=200, blank=True, editable=False)
+    author = models.ForeignKey(User)
     filename = models.CharField(max_length=200, editable=False)
     content = models.TextField(blank=True,validators=[validate_content])
     metadata = models.TextField(blank=True)
@@ -135,7 +136,7 @@ class Exam(models.Model,NumbasObject,GitObject):
                                        blank=True, editable=False)
     name = models.CharField(max_length=200)
     slug = models.SlugField(editable=False,unique=False)
-    author = models.CharField(max_length=200, blank=True, editable=False)
+    author = models.ForeignKey(User)
     filename = models.CharField(max_length=200, editable=False)
     content = models.TextField(blank=True, validators=[validate_content])
     metadata = models.TextField(blank=True)

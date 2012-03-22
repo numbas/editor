@@ -176,16 +176,19 @@
 		</script>
     {% endverbatim %}
 
-		<div>
-			<div id="buttons">
-                <button id="preview" data-bind="click: showPreview">Test Run</button>
-                Download: 
-				<a href="{% url exam_download object.pk object.slug %}">standalone .zip</a>,
-                <a href="{% url exam_download object.pk object.slug %}?scorm">SCORM package</a>,
-				<a href="{% url exam_source object.pk object.slug %}">source</a>
-			</div>
-			<div id="editor" data-bind="template: 'examTemplate'"></div>
-		</div>
+    <div>
+        <div id="author">
+            Author: {{object.author.username}}
+        </div>
+        <div id="buttons">
+            <button id="preview" data-bind="click: showPreview">Test Run</button>
+            Download: 
+            <a href="{% url exam_download object.pk object.slug %}">standalone .zip</a>,
+            <a href="{% url exam_download object.pk object.slug %}?scorm">SCORM package</a>,
+            <a href="{% url exam_source object.pk object.slug %}">source</a>
+        </div>
+        <div id="editor" data-bind="template: 'examTemplate'"></div>
+    </div>
 {% endblock content %}
 
 {% block sidebar %}

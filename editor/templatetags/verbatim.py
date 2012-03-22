@@ -44,4 +44,3 @@ def verbatim(parser, token):
         elif token.token_type == template.TOKEN_BLOCK:
             text.append('%}')
     return VerbatimNode(''.join(text))
-

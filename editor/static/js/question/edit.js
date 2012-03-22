@@ -21,7 +21,7 @@ $(document).ready(function() {
 	Numbas.startOK = true;
 	Numbas.init = function() {
 		//create a question object
-		viewModel = new Question(questionJSON);
+		viewModel = new Question(Editor.questionJSON);
 		ko.applyBindings(viewModel);
 	};
 	Numbas.tryInit();
@@ -99,7 +99,7 @@ $(document).ready(function() {
 				{json: JSON.stringify(this.save()), csrfmiddlewaretoken: getCookie('csrftoken')}
 			)
                 .success(function(data){
-                    var address = location.protocol+'//'+location.host+'/question/'+questionJSON.id+'/'+slugify(q.name())+'/';
+                    var address = location.protocol+'//'+location.host+'/question/'+Editor.questionJSON.id+'/'+slugify(q.name())+'/';
                     if(history.replaceState)
                         history.replaceState({},q.name(),address);
                 })

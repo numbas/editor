@@ -22,7 +22,7 @@ class QuestionForm(forms.ModelForm):
     
     class Meta:
         model = Question
-        exclude = ('name','author')
+        exclude = ('name','author','tags')
         
         
 class NewQuestionForm(forms.ModelForm):

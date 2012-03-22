@@ -135,11 +135,10 @@ class QuestionUpdateView(UpdateView):
     template_name = 'question/edit.html'
     
     def post(self, request, *args, **kwargs):
-        data = json.loads(request.POST['json'])
-        data['tags'] = json.dumps(data['tags'])
+        self.data = json.loads(request.POST['json'])
 
         self.object = self.get_object()
-        question_form = QuestionForm(data, instance=self.object)
+        question_form = QuestionForm(self.data, instance=self.object)
         if question_form.is_valid():
             return self.form_valid(question_form)
         else:
@@ -147,6 +146,8 @@ class QuestionUpdateView(UpdateView):
         
     def form_valid(self, form):
         self.object = form.save()
+        self.object.tags.set(*self.data['tags'])
+        self.object.save()
         status = {"result": "success"}
         return HttpResponse(json.dumps(status), content_type='application/json')
         
@@ -160,7 +161,6 @@ class QuestionUpdateView(UpdateView):
     
     def get_context_data(self, **kwargs):
         context = super(QuestionUpdateView, self).get_context_data(**kwargs)
-        context['question_JSON'] = json.dumps(model_to_dict(self.object))
         return context
     
     def get_success_url(self):

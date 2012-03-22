@@ -106,6 +106,12 @@ ul.choices {
 .properties input,.properties select, .properties .display, .properties .listbox {
 	float:right;
 }
+
+.percentproperty.display {
+    width: 3em;
+    text-align: right;
+}
+
 .properties input[type=text] {
 	padding-right:0.2em;
 }
@@ -232,14 +238,17 @@ button.remove:hover {
 }
 
 .listbox {
+    background: white;
 	display:inline-block;
 	border: 1px solid #aaa;
-	padding:0;
+	padding: 0;
+    max-width: 20em;
 }
 
 .listbox input {
 	border: none;
 	float:initial;
+    width: 100%;
 }
 .listbox input:focus {
 	border:none;
@@ -250,6 +259,8 @@ button.remove:hover {
 	padding: 0;
 	margin: 0;
 	background: white;
+    float: left;
+    text-align: left;
 }
 
 .listbox li {
@@ -258,6 +269,7 @@ button.remove:hover {
 	background: #eee;
 	padding:0 .3em;
 	font-family:monospace;
+    float: left
 }
 .listbox li:hover {
 	background: #bbb;

@@ -288,7 +288,7 @@ $(document).ready(function() {
                     if(this.selectionStart==0 && this.selectionEnd==0)
                     {
                         var oval = $(this).val();
-                        var val = (value.pop() || '').slice(0,-1);
+                        var val = (value.pop() || '');
                         $(this).val(val+oval);
                         this.setSelectionRange(val.length,val.length);
                         e.preventDefault();
@@ -305,10 +305,27 @@ $(document).ready(function() {
             });
             $(element).append('<ul/>');
             $(element).append(i);
-            $(element).delegate('li','click',function(){
+            function selectItem() {
                 var n = $(this).index();
                 i.val(value()[n]).focus();
                 value.splice(n,1);
+            };
+
+            $(element).on('click',function() {
+                i.focus();
+            });
+
+
+            $(element).delegate('li',{
+                click: selectItem,
+                keypress: function(e) {
+                    if($(this).is(':focus') && e.which==32)
+                    {
+                        selectItem.call(this);
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                }
             });
         },
         update: function(element,valueAccessor) {
@@ -316,7 +333,7 @@ $(document).ready(function() {
             $(element).find('ul li').remove();
             for(var i=0;i<value.length;i++)
             {
-                $(element).find('ul').append($('<li/>').html(value[i]));
+                $(element).find('ul').append($('<li tabindex="0"/>').html(value[i]));
             }
         }
     }

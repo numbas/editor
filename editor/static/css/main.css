@@ -55,12 +55,18 @@ body {
 
 #logo h1, #logo h2 {
     margin: 0;
+	display: inline;
 }
 
 #session {
 	position: absolute;
 	bottom: 0;
 	float: left;
+}
+
+#session #logout {
+	font-size: 0.8em;
+	margin-left: 2em;
 }
 
 #menubar {
@@ -77,12 +83,12 @@ ul#menu li {
     padding: 0 0 0 6px;
     list-style: none;
     margin: 0 0.2em 0 0;
+	font-size: 1.2em;
 }
 
 ul#menu li a {
     display: block; 
     float: left; 
-    height: 20px;
     margin-left: 0.8em;
 } 
 

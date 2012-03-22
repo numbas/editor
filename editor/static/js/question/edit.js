@@ -41,7 +41,29 @@ $(document).ready(function() {
 			owner: this
 		});
 
-		this.tags = ko.observableArray([]);
+		var realtags = this.realtags = ko.observableArray([]);
+        this.tags = ko.computed({
+            read: this.realtags,
+            write: function(newtags) {
+                for(var i=newtags.length-1;i>=0;i--)
+                {
+                    if(newtags.indexOf(newtags[i])<i)
+                        newtags.splice(i,1);
+                }
+                this.realtags(newtags);
+            },
+        },this);
+        this.tags.push = function(thing) {
+            if(realtags().indexOf(thing)==-1)
+                realtags.push(thing);
+        }
+        this.tags.pop = function(thing) {
+            return realtags.pop();
+        }
+        this.tags.splice = function(i,n) {
+            return realtags.splice(i,n);
+        }
+
 		this.metadata = ko.observable('');
 
         this.statement = ko.observable('');

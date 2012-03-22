@@ -73,7 +73,7 @@ $(document).ready(function() {
 			this.id = data.id;
 			this.load(parseExam(data.content));
 			try{
-				this.tags(JSON.parse(data.tags));
+				this.tags(data.tags);
 			}
 			catch(e) {
 				this.tags([]);

@@ -42,8 +42,10 @@ class GitObject:
     def repo(self):
         repo = git.Repo(settings.GLOBAL_SETTINGS['REPO_PATH'])
 
-        os.environ['GIT_AUTHOR_NAME'] = 'Numbas'
-        os.environ['GIT_AUTHOR_EMAIL'] = 'numbas@ncl.ac.uk'
+        repo.head.reset(working_tree=True)
+
+        os.environ['GIT_AUTHOR_NAME'] = self.author.username
+        os.environ['GIT_AUTHOR_EMAIL'] = self.author.email
 
         return repo
 
@@ -75,10 +77,12 @@ class GitObject:
         """ Remove file from repository """
 
         repo = self.repo()
-        print(self.path_to_file())
-        repo.index.remove([self.path_to_file()])
-        os.remove(self.abs_path_to_file())
-        repo.index.commit('Deleted %s' % self.name)
+        try:
+            repo.index.remove([self.path_to_file()])
+            os.remove(self.abs_path_to_file())
+            repo.index.commit('Deleted %s' % self.name)
+        except Exception as err:
+            print(err)
 
 
 #check that the .exam file for an object is valid and defines at the very least a name

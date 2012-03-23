@@ -807,7 +807,7 @@ var textile;
 				return inlineTags.indexOf(m[1])==-1;
 		},
 		run: function() {
-			var html = re_html.exec(this.src)[0];
+			var html = re_html.exec(this.src)[0].trim();
 			this.src = this.src.slice(html.length);
 			this.out += html;
 		}

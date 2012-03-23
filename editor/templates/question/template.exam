@@ -1,0 +1,12 @@
+{% autoescape off %}
+{
+    name: {{ name }}
+    navigation: {
+        allowregen: true
+        showfrontpage: false
+    }
+    questions: [
+        {{ content }}
+    ]
+}
+{% endautoescape %}

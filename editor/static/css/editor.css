@@ -1,4 +1,16 @@
-﻿#editor {
+﻿#controls {
+    margin-bottom: 0.5em;
+}
+
+.controlbox {
+    margin-top: 0.5em;
+}
+
+.controlbox:first-child {
+    margin-top: 0;
+}
+
+#editor {
 	border:2px solid #ccc;
 	padding:1em;
 	background: #f4f4ee;

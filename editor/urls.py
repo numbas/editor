@@ -18,8 +18,8 @@ from django.contrib import admin,auth
 
 from django.contrib.auth.decorators import login_required
 
-from editor.views.exam import ExamPreviewView, ExamZipView, ExamSourceView, ExamCreateView, ExamUploadView, ExamDeleteView, ExamListView, ExamSearchView, ExamUpdateView
-from editor.views.question import QuestionPreviewView, QuestionZipView, QuestionSourceView, QuestionCreateView, QuestionUploadView, QuestionDeleteView, QuestionListView, QuestionSearchView, QuestionUpdateView
+from editor.views.exam import ExamPreviewView, ExamZipView, ExamSourceView, ExamCreateView, ExamCopyView, ExamUploadView, ExamDeleteView, ExamListView, ExamSearchView, ExamUpdateView
+from editor.views.question import QuestionPreviewView, QuestionZipView, QuestionSourceView, QuestionCreateView, QuestionCopyView, QuestionUploadView, QuestionDeleteView, QuestionListView, QuestionSearchView, QuestionUpdateView
 
 admin.autodiscover()
 
@@ -43,6 +43,8 @@ urlpatterns = patterns('',
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/$', ExamUpdateView.as_view(),
         name='exam_edit'),
                        
+    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/copy/$',ExamCopyView.as_view(), name='exam_copy',),
+                       
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/delete/$',
         ExamDeleteView.as_view(), name='exam_delete'),
     
@@ -60,11 +62,13 @@ urlpatterns = patterns('',
     url(r'^question/new/$', login_required(QuestionCreateView.as_view()), name='question_new'),
 
     url(r'^question/upload/$', QuestionUploadView.as_view(), name='question_upload'),
-                       
+
     url(r'^question/search/$', QuestionSearchView.as_view(), name='question_search',),
     
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/$',
         QuestionUpdateView.as_view(), name='question_edit'),
+                       
+    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/copy/$',QuestionCopyView.as_view(), name='question_copy',),
                        
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/delete/$',
         QuestionDeleteView.as_view(), name='question_delete'),

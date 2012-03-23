@@ -13,10 +13,12 @@
 #   limitations under the License.
 import json
 import traceback
+from copy import deepcopy
 
 from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError
-from django.views.generic import CreateView, DeleteView, ListView, UpdateView
+from django.views.generic import CreateView, DeleteView, ListView, UpdateView, View
+from django.views.generic.detail import SingleObjectMixin
 
 from editor.forms import NewQuestionForm, QuestionForm
 from editor.models import Question
@@ -97,7 +99,7 @@ class QuestionCreateView(CreateView):
     def get_success_url(self):
         return reverse('question_edit', args=(self.object.pk,
                                               self.object.slug,))
-    
+ 
 class QuestionUploadView(CreateView):
     
     """Upload a .exam file representing a question"""
@@ -112,6 +114,32 @@ class QuestionUploadView(CreateView):
 
     def get_success_url(self):
         return reverse('question_edit', args=(self.object.pk, self.object.slug) )
+
+class QuestionCopyView(View, SingleObjectMixin):
+
+    """ Copy a question and redirect to its edit page. """
+
+    model = Question
+
+    def get(self, request, *args, **kwargs):
+        try:
+            q = self.get_object()
+            q2 = deepcopy(q)
+            q2.id = None
+            q2.filename = None
+            q2.author = request.user
+            q2.save()
+            q2.tags.set(*[tag.name for tag in q.tags.all()])
+            q2.set_name("%s's copy of %s" % (q2.author.first_name,q.name))
+        except (Question.DoesNotExist, TypeError) as err:
+            status = {
+                "result": "error",
+                "message": str(err),
+                "traceback": traceback.format_exc(),}
+            return HttpResponseServerError(json.dumps(status),
+                                           content_type='application/json')
+        else:
+            return HttpResponseRedirect(reverse('question_edit', args=(q2.pk,q2.slug)))
 
 class QuestionDeleteView(DeleteView):
     

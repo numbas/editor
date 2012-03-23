@@ -1,9 +1,0 @@
-{% autoescape off %}
-	{{ examContent }}
-	questions: [
-	{% for question in questions %}
-		{{ question.content }}
-	{% endfor %}
-	]
-}
-{% endautoescape %}

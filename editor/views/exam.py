@@ -13,6 +13,7 @@
 #   limitations under the License.
 import json
 import traceback
+from copy import deepcopy
 
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
@@ -20,7 +21,8 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerEr
 from django.forms.models import model_to_dict
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
-from django.views.generic import CreateView, DeleteView, FormView, ListView, UpdateView
+from django.views.generic import CreateView, DeleteView, FormView, ListView, UpdateView, View
+from django.views.generic.detail import SingleObjectMixin
 
 from editor.forms import ExamForm, NewExamForm, ExamSearchForm
 from editor.models import Exam
@@ -119,6 +121,32 @@ class ExamUploadView(CreateView):
     def get_success_url(self):
         return reverse('exam_edit', args=(self.object.pk, self.object.slug) )
 
+class ExamCopyView(View, SingleObjectMixin):
+
+    """ Copy an exam and redirect to to the copy's edit page. """
+
+    model = Exam
+
+    def get(self, request, *args, **kwargs):
+        try:
+            e = self.get_object()
+            e2 = deepcopy(e)
+            e2.id = None
+            e2.filename = None
+            e2.author = request.user
+            e2.save()
+            e2.set_questions(e.questions.all())
+            e2.set_name("%s's copy of %s" % (e2.author.first_name,e.name))
+        except (Exam.DoesNotExist, TypeError) as err:
+            status = {
+                "result": "error",
+                "message": str(err),
+                "traceback": traceback.format_exc(),}
+            return HttpResponseServerError(json.dumps(status),
+                                           content_type='application/json')
+        else:
+            return HttpResponseRedirect(reverse('exam_edit', args=(e2.pk,e2.slug)))
+
 class ExamDeleteView(DeleteView):
     
     """Delete an exam."""
@@ -160,7 +188,7 @@ class ExamUpdateView(UpdateView):
     def form_valid(self, form):
         self.object = form.save(commit=False)
 
-        self.object.set_questions(self.questions)
+        self.object.set_questions(question_ids=self.questions)
         self.object.edit_user = self.user
 
         self.object.save()

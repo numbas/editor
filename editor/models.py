@@ -26,7 +26,7 @@ from django.forms import model_to_dict
 
 from taggit.managers import TaggableManager
 
-from examparser import ExamParser, ParseError
+from examparser import ExamParser, ParseError, printdata
 
 class NumbasObject:
     def save(self):
@@ -37,6 +37,13 @@ class NumbasObject:
         elif self.name:
             self.content = '{name: %s}' % self.name
 
+    def set_name(self,name):
+        self.name = name
+        if self.content:
+            data = ExamParser().parse(self.content)
+            data['name'] = name
+            self.content = printdata(data)
+        self.save()
 
 class GitObject:
 
@@ -138,8 +145,12 @@ class Question(models.Model,NumbasObject,GitObject):
         super(Question,self).delete(*args, **kwargs)
 
     def as_source(self):
-        t = loader.get_template('temporary.question')
-        return t.render(Context({'question': self}))
+        t = loader.get_template('question/template.exam')
+        return t.render(Context({
+            'name': self.name,
+            'content': self.content,
+            'question': self
+        }))
 
     def as_json(self):
         d = model_to_dict(self)
@@ -171,15 +182,17 @@ class Exam(models.Model,NumbasObject,GitObject):
     def get_questions(self):
         return self.questions.order_by('examquestion')
 
-    def set_questions(self,question_list):
+    def set_questions(self,question_list=None,**kwargs):
         """ 
             Set the list of questions for this exam. 
             question_list is an ordered list of question IDs
         """
 
+        if 'question_ids' in kwargs:
+            question_list = [Question.objects.get(pk=pk) for pk in kwargs['question_ids']]
+
         self.questions.clear()
-        for order,pk in enumerate(question_list):
-            question = Question.objects.get(pk=pk)
+        for order,question in enumerate(question_list):
             exam_question = ExamQuestion(exam=self,question=question, qn_order=order)
             exam_question.save()
 
@@ -194,12 +207,11 @@ class Exam(models.Model,NumbasObject,GitObject):
         super(Exam, self).save(*args, **kwargs)
         
     def as_source(self):
-        t = loader.get_template('temporary.exam')
-        c = Context({
-            'examContent': self.content.rstrip()[:-1],
-            'questions': self.get_questions()
-        })
-        return t.render(c)
+        parser = ExamParser()
+        data = parser.parse(self.content)
+        data['name'] = self.name
+        data['questions'] = [q.content for q in self.get_questions()]
+        return printdata(data)
         
 class ExamQuestion(models.Model):
     

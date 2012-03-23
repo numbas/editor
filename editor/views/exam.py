@@ -14,10 +14,12 @@
 import json
 import traceback
 
+from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.forms.models import model_to_dict
 from django.shortcuts import render
+from django.utils.decorators import method_decorator
 from django.views.generic import CreateView, DeleteView, FormView, ListView, UpdateView
 
 from editor.forms import ExamForm, NewExamForm, ExamSearchForm
@@ -134,6 +136,10 @@ class ExamUpdateView(UpdateView):
     
     model = Exam
     template_name = 'exam/edit.html'
+    
+#    @method_decorator(login_required)
+#    def dispatch(self, *args, **kwargs):
+#        return super(ExamUpdateView, self).dispatch(*args, **kwargs)
     
     def post(self, request, *args, **kwargs):
         data = json.loads(request.POST['json'])

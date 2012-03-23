@@ -50,9 +50,7 @@ class CompileObject():
 
         try:
             process = subprocess.Popen(numbas_command, stdout = subprocess.PIPE, stdin=subprocess.PIPE)
-            print(source)
-            process.communicate(source)
-            status = process.communicate()
+            status = process.communicate(source)
             code = process.poll()
             if code != 0:
                 raise OSError("Compilation failed. %s %s" %
@@ -65,7 +63,7 @@ class CompileObject():
                 "traceback": traceback.format_exc(),}
             raise CompileError(status)
         else:
-            return location
+            return output_location
     
 
 class PreviewView(DetailView,CompileObject):

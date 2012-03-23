@@ -21,7 +21,6 @@ from django.core.servers.basehttp import FileWrapper
 from django.http import HttpResponse, HttpResponseServerError
 from django.views.generic import DetailView
 
-from editor.models import Exam, ExamQuestion, Question
 from examparser import ExamParser, ParseError
 
 class CompileError(Exception):
@@ -57,7 +56,7 @@ class CompileObject():
             code = process.poll()
             if code != 0:
                 raise OSError("Compilation failed. %s %s" %
-                              tuple(stat))
+                              tuple(status))
 
         except (NameError, OSError) as err:
             status = {

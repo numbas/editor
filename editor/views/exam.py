@@ -143,19 +143,28 @@ class ExamUpdateView(UpdateView):
     
     def post(self, request, *args, **kwargs):
         data = json.loads(request.POST['json'])
+
         self.questions = data['questions']
         del data['questions']
 
+        self.user = request.user
+
         self.object = self.get_object()
         exam_form = ExamForm(data, instance=self.object)
+
         if exam_form.is_valid():
             return self.form_valid(exam_form)
         else:
             return self.form_invalid(exam_form)
     
     def form_valid(self, form):
-        self.object = form.save()
+        self.object = form.save(commit=False)
+
         self.object.set_questions(self.questions)
+        self.object.edit_user = self.user
+
+        self.object.save()
+
         status = {"result": "success"}
         return HttpResponse(json.dumps(status), content_type='application/json')
         

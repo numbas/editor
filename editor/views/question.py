@@ -133,18 +133,24 @@ class QuestionUpdateView(UpdateView):
     
     def post(self, request, *args, **kwargs):
         self.data = json.loads(request.POST['json'])
+        self.user = request.user
 
         self.object = self.get_object()
         question_form = QuestionForm(self.data, instance=self.object)
+
         if question_form.is_valid():
             return self.form_valid(question_form)
         else:
             return self.form_invalid(question_form)
         
     def form_valid(self, form):
-        self.object = form.save()
+        self.object = form.save(commit=False)
+
         self.object.tags.set(*self.data['tags'])
+        self.object.edit_user = self.user
+
         self.object.save()
+
         status = {"result": "success"}
         return HttpResponse(json.dumps(status), content_type='application/json')
         

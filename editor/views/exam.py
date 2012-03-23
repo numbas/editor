@@ -14,17 +14,15 @@
 import json
 import traceback
 
-from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.forms.models import model_to_dict
 from django.shortcuts import render
-from django.template import loader, Context
-from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
+from django.views.generic import CreateView, DeleteView, FormView, ListView, UpdateView
 
 from editor.forms import ExamForm, NewExamForm, ExamSearchForm
-from editor.models import Exam, Question
-from editor.views.generic import CompileObject, PreviewView, ZipView, SourceView
+from editor.models import Exam
+from editor.views.generic import PreviewView, ZipView, SourceView
 
 class ExamPreviewView(PreviewView):
     

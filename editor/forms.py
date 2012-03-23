@@ -15,11 +15,12 @@ from django import forms
 from django.forms.models import inlineformset_factory
 
 from editor.models import Exam, Question, ExamQuestion
+from django.contrib.auth.models import User
 
 class QuestionForm(forms.ModelForm):
     
     """Form for a question."""
-    
+
     class Meta:
         model = Question
         exclude = ('name','author','tags')

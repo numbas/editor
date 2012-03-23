@@ -39,13 +39,19 @@ class NumbasObject:
 
 
 class GitObject:
+
+    message = ''
+
     def repo(self):
         repo = git.Repo(settings.GLOBAL_SETTINGS['REPO_PATH'])
 
         repo.head.reset(working_tree=True)
 
-        os.environ['GIT_AUTHOR_NAME'] = self.author.username
-        os.environ['GIT_AUTHOR_EMAIL'] = self.author.email
+        author = getattr(self,'edit_user',self.author)
+
+        os.environ['GIT_AUTHOR_NAME'] = author.get_full_name()
+        os.environ['GIT_AUTHOR_EMAIL'] = author.email
+
 
         return repo
 
@@ -65,13 +71,16 @@ class GitObject:
             original = self.__class__.objects.get(pk=self.pk)
             if original.content == self.content:    #if content has not changed, do nothing
                 return
+            if original.name != self.name:
+                self.message += 'Renamed %s to %s.\n' % (original.name,self.name)
 
         repo = self.repo()
         fh = open(self.abs_path_to_file(), 'w')
         fh.write(self.content)
         fh.close()
         repo.index.add([self.path_to_file()])
-        repo.index.commit('Made some changes to %s' % self.name)
+        self.message += 'Made some changes to %s.\n' % str(self)
+        repo.index.commit(self.message)
         
     def delete(self):
         """ Remove file from repository """
@@ -80,7 +89,7 @@ class GitObject:
         try:
             repo.index.remove([self.path_to_file()])
             os.remove(self.abs_path_to_file())
-            repo.index.commit('Deleted %s' % self.name)
+            repo.index.commit('Deleted %s' % str(self))
         except Exception as err:
             print(err)
 
@@ -113,13 +122,13 @@ class Question(models.Model,NumbasObject,GitObject):
     git_directory = 'questions'
     
     def __unicode__(self):
-        return self.name
+        return 'Question "%s"' % self.name
     
     def save(self, *args, **kwargs):
         NumbasObject.save(self)
 
         self.slug = slugify(self.name)
-            
+
         GitObject.save(self)
 
         super(Question, self).save(*args, **kwargs)
@@ -157,7 +166,7 @@ class Exam(models.Model,NumbasObject,GitObject):
     git_directory = 'exams'
     
     def __unicode__(self):
-        return self.name
+        return 'Exam "%s"' %self.name
     
     def get_questions(self):
         return self.questions.order_by('examquestion')
@@ -170,7 +179,6 @@ class Exam(models.Model,NumbasObject,GitObject):
 
         self.questions.clear()
         for order,pk in enumerate(question_list):
-            print(question_list)
             question = Question.objects.get(pk=pk)
             exam_question = ExamQuestion(exam=self,question=question, qn_order=order)
             exam_question.save()

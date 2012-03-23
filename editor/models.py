@@ -210,7 +210,7 @@ class Exam(models.Model,NumbasObject,GitObject):
         parser = ExamParser()
         data = parser.parse(self.content)
         data['name'] = self.name
-        data['questions'] = [q.content for q in self.get_questions()]
+        data['questions'] = [parser.parse(q.content) for q in self.get_questions()]
         return printdata(data)
         
 class ExamQuestion(models.Model):

@@ -50,9 +50,7 @@ class CompileObject():
 
         try:
             process = subprocess.Popen(numbas_command, stdout = subprocess.PIPE, stdin=subprocess.PIPE)
-            print(source)
-            process.communicate(source)
-            status = process.communicate()
+            status = process.communicate(source)
             code = process.poll()
             if code != 0:
                 raise OSError("Compilation failed. %s %s" %

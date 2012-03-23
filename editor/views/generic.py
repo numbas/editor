@@ -63,7 +63,7 @@ class CompileObject():
                 "traceback": traceback.format_exc(),}
             raise CompileError(status)
         else:
-            return location
+            return output_location
     
 
 class PreviewView(DetailView,CompileObject):

@@ -1,57 +1,4 @@
-.writemaths {
-	font-size:125%;
-	font-family: serif;
-}
-
-.writemaths h1 {
-	text-align: center;
-}
-
-.writemaths .line {
-	background: #fefefe;
-	min-height: 1em;
-}
-
-.writemaths:not(.locked) .line:hover {
-	background: #fafafa;
-}
-
-.writemaths p {
-	text-indent: 1em
-}
-
-.writemaths code {
-	font-size: 80%;
-	background: #f3f3f3;
-}
-
-.writemaths ol, .writemaths ul {
-	margin-left: 1em;
-}
-
-.writemaths ol input, .writemaths ul input {
-	margin-left: -1em;
-}
-
-.writemaths textarea, .writemaths input, .writemaths .line {
-	width: 100%;
-	margin: 0.1em 0;
-	padding: 0.1em 0.2em;
-}
-.writemaths textarea, .writemaths input {
-	width: 99%;
-	font-size: 100%;
-	font-family: serif;
-}
-.writemaths .graph {
-	border: 1px solid;
-	margin: 0 auto;
-}
-.writemaths .graph {
-	text-indent: initial;
-}
-
-.writemaths .preview {
+.writemathsContainer .preview {
 	z-index: 1;
 	position: absolute;
 	display: none;
@@ -63,3 +10,7 @@
 	display: none;
 }
 
+
+.writemaths .wm_maths {
+	color: blue;
+}

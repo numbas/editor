@@ -192,17 +192,32 @@ $(document).ready(function() {
         init: function(element,valueAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor()) || '';
 			value = value.split(/\n[ \t]*\n/).join('\n');
-            var d = $('<div/>');
+
+			//a container for both the rich and plain editing areas
 			var bd = $('<div/>').addClass('writemathsContainer').attr('style','position:relative;');
 			var swap = $('<div class="wmToggle on">Rich editor: <span class="ticko"></span></div>').attr('style','position:absolute;top:-1.2em;right:0;');
-			var ta = $('<textarea class="plaintext"/>')
-				.hide()
-				.bind('input',function() {
-					var value = $(this).val();
-					valueAccessor()($(this).val());
+
+			var ta = $('<textarea class="plaintext"/>')	//the plain text area
+	        var d = $('<div/>')	//the rich editing aea
+			bd.append(d,swap,ta);
+
+			d
+				.writemaths()
+				.on('input',function() {
+					var value = $(this).html();
+					valueAccessor()(value);
 				})
 			;
-			bd.append(d,swap,ta)
+
+			ta
+				.hide()
+				.on('input',function() {
+					var value = $(this).val();
+					valueAccessor()(value);
+				})
+			;
+
+
             $(element).append(bd);
 
 			var toggle = true;
@@ -212,21 +227,19 @@ $(document).ready(function() {
 				ta.toggle(!toggle);
 				d.toggle(toggle);
 			});
-
-            var wm = new WriteMaths(d);
-            wm.setState(value);
-            d.bind('input',function() {
-                valueAccessor()(wm.getState().join('\n\n'));
-            });
         },
         update: function(element, valueAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor()) || '';
-            $(element).find('.plaintext')
+			var pt = $(element).find('.plaintext');
+			if(!pt.is(':focus')) {
+				pt
 				.val(value)
 				.attr('rows',value.split('\n').length)
-			;
-			value = value.split(/\n[ \t]*\n/).join('\n');
-            $(element).find('.writemaths').trigger('setstate',value);
+				;
+			}
+			var wm = $(element).find('.writemaths');
+			if(!wm.is(':focus'))
+          	  $(element).find('.writemaths').html(value);
         }
     };
     

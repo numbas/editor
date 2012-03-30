@@ -3,3 +3,4 @@
 numbas.db
 database.py
 settings.py
+web/django.wsgi

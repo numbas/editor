@@ -52,7 +52,8 @@ class GitObject:
     def repo(self):
         repo = git.Repo(settings.GLOBAL_SETTINGS['REPO_PATH'])
 
-        repo.head.reset(working_tree=True)
+        if repo.heads:
+            repo.head.reset(working_tree=True)
 
         author = getattr(self,'edit_user',self.author)
 

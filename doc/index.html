@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Numbas editor</title>
+  </head>
+  <body>
+    <h1>Installation</h1>
+    <p>
+      Outline instructions on setting up the Numbas editor with a backend MySQL
+      database.  The following is for a Debian Squeeze (6.0.2) Linux server.
+      If each step is followed exactly, it should result in a working setup.
+      More detailed instructions at some point soon.
+    </p>
+    <ul>
+      <li><code>aptitude install apache2 git-core libapache2-mod-wsgi
+        mysql-server mysql-common python3.1 python-mysqldb</code></li>
+      <li>Create database <code>numbas_editor</code></li>
+      <li>Create database user and grant privileges on
+      <code>numbas_editor</code> database:
+        <ul>
+          <li><code>grant all privileges on numbas_editor.* to
+            'numbas'@'localhost' identified by 'password';</code></li>
+        </ul>
+      </li>
+      <li>Create Numbas directories outside the webroot:
+        <ul>
+          <li><code>mkdir /srv/numbas</code></li>
+          <li><code>mkdir /srv/numbas/dist</code></li>
+          <li><code>mkdir /srv/numbas/previews</code></li>
+          <li><code>mkdir /srv/numbas/questiondb</code></li>
+        </ul>
+      </li>
+      <li>Set the correct ownership and permissions (need file system ACLs
+      enabled on <code>/srv</code>):
+        <ul>
+          <li><code>chmod 2770 previews questiondb</code></li>
+          <li><code>chmod 2750 dist</code></li>
+          <li><code>chgrp www-data dist previews questiondb</code></li>
+          <li><code>setfacl -R -m g:www-data:rwX previews questiondb</code></li>
+          <li><code>setfacl -dR -m g:www-data:rwX previews questiondb</code></li>
+          <li><code>setfacl -R -m g:www-data:rX dist</code></li>
+          <li><code>setfacl -dR -m g:www-data:rX dist</code></li>
+        </ul>
+      </li>
+      <li>Clone the Numbas repository: <code>git clone
+        git://github.com/numbas/Numbas /srv/numbas/dist</code></li>
+      <li>Create the question/exam database:
+        <ul>
+          <li><code>cd /srv/numbas/questiondb</code></li>
+          <li><code>mkdir exams questions</code></li>
+          <li><code>git init</code></li>
+        </ul>
+      </li>
+      <li>Install Django (need version 1.3, not in Squeeze): <code>aptitude
+        install python-django/squeeze-backports</code></li>
+      <li>Install Pip: <code>aptitude install python-pip</code></li>
+      <li><code>pip install GitPython</code></li>
+      <li><code>pip install django-taggit</code></li>
+      <li>Bug in GitPython.  Change <code>util.py</code> by adding <code>import
+        pwd</code> to the top, and edit <code>def get_user_id()</code>
+      replacing <code>username = os.getlogin()</code> with <code>username =
+        pwd.getpwuid(os.getuid()).pw_name</code></li>
+      <li>Create the editor directory and clone the editor under webroot:
+        <ul>
+          <li><code>mkdir /srv/www/numbas_editor</code></li>
+          <li><code>cd /srv/www/numbas_editor</code></li>
+          <li><code>git clone git://github.com/numbas/editor numbas</code></li>
+        </ul>
+      </li>
+      <li>Copy the editor distribution database and settings files:
+        <ul>
+          <li><code>cd /srv/www/numbas_editor/numbas</code></li>
+          <li><code>cp database.py.dist database.py</code></li>
+          <li><code>cp settings.py.dist settings.py</code></li>
+        </ul>
+      </li>
+      <li>Edit <code>database.py</code>:
+        <ul>
+          <li>Set <code>ENGINE</code> to
+          <code>django.db.backends.mysql</code></li>
+          <li>Set <code>NAME</code> to the database name
+          (<code>numbas_editor</code>)</li>
+          <li>Set <code>USER</code> to the database user
+          (<code>numbas</code>)</li>
+          <li>Set <code>PASSWORD</code> to the database password
+          (<code>password</code>)</li>
+        </ul>
+      </li>
+      <li>Edit <code>settings.py</code>:
+        <ul>
+          <li>Make sure settings in <code>GLOBAL_SETTINGS</code> match those
+          above</li>
+          <li><code>PREVIEW_URL</code> should be set to the URL at which
+          preview exams can be viewed (see below).</li>
+          <li><code>PYTHON_EXEC</code> is the path to the Python 3
+          executable.</li>
+        </ul>
+      </li>
+      <li>Sync the database:
+        <ul>
+          <li><code>python manage.py syncdb</code></li>
+          <li>Create a superuser (answer <code>yes</code>)</li>
+          <li>Enter username, e-mail address, and password</li>
+        </ul>
+      </li>
+      <li>Copy <code>web/django.wsgi.dist</code> to
+      <code>web/django.wsgi</code> and edit:
+        <ul>
+          <li>Make sure the two <code>sys.path.append</code> lines match the
+          paths on the file system.</li>
+          <li><code>DJANGO_SETTINGS_MODULE</code> should be set to
+          <code>numbas.settings</code> (if following above naming scheme).</li>
+        </ul>
+      </li>
+      <li>Create apache config file and enable the site.
+        <ul>
+          <li>Edit <code>/etc/apache2/sites-available/numbas_editor</code> with
+<pre>
+&lt;VirtualHost *:80&gt;
+  ServerName server.domain:80
+  ServerAdmin a.b@c.com
+  
+  DocumentRoot /srv/www/numbas_editor/numbas/web
+
+  WSGIDaemonProcess server.domain processes=5 threads=10 display-name=wsgi-numbas
+  WSGIProcessGroup server.domain
+  WSGIScriptAlias / /srv/www/numbas_editor/numbas/web/django.wsgi
+
+  Alias /static/admin/ /usr/share/pyshared/django/contrib/admin/media/
+  &lt;Directory /usr/share/pyshared/django/contrib/admin/media/&gt;
+    AllowOverride All
+    Order allow,deny
+    Allow from all
+  &lt;/Directory&gt;
+
+  Alias /static/ /srv/www/numbas_editor/numbas/editor/static/
+  &lt;Directory /srv/www/numbas_editor/numbas/editor/static&gt;
+    AllowOverride All
+    Order allow,deny
+    Allow from all
+  &lt;/Directory&gt;
+
+  Alias /numbas-previews/ /srv/numbas/previews/
+  &lt;Directory /srv/numbas/previews&gt;
+    AllowOverride All
+    Order allow,deny
+    Allow from all
+  &lt;/Directory&gt;
+
+  ErrorLog /var/log/apache2/numbas_editor.error.log
+
+  # Possible values include: debug, info, notice, warn, error, crit,
+  # alert, emerg.
+  LogLevel warn
+
+  CustomLog /var/log/apache2/numbas_editor.access.log combined
+  ServerSignature On
+
+&lt;/VirtualHost&gt;
+</pre>
+          </li>
+          <li><code>a2ensite numbas_editor &amp;&amp; service apache2 restart</code></li>
+        </ul>
+      </li>
+      <li>Point a web browser at <code>http://server.domain/</code></li>
+    </ul>
+  </body>
+</html>

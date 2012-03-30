@@ -116,50 +116,12 @@
       <li>Create apache config file and enable the site.
         <ul>
           <li>Edit <code>/etc/apache2/sites-available/numbas_editor</code> with
-<pre>
-&lt;VirtualHost *:80&gt;
-  ServerName server.domain:80
-  ServerAdmin a.b@c.com
-  
-  DocumentRoot /srv/www/numbas_editor/numbas/web
-
-  WSGIDaemonProcess server.domain processes=5 threads=10 display-name=wsgi-numbas
-  WSGIProcessGroup server.domain
-  WSGIScriptAlias / /srv/www/numbas_editor/numbas/web/django.wsgi
-
-  Alias /static/admin/ /usr/share/pyshared/django/contrib/admin/media/
-  &lt;Directory /usr/share/pyshared/django/contrib/admin/media/&gt;
-    AllowOverride All
-    Order allow,deny
-    Allow from all
-  &lt;/Directory&gt;
-
-  Alias /static/ /srv/www/numbas_editor/numbas/editor/static/
-  &lt;Directory /srv/www/numbas_editor/numbas/editor/static&gt;
-    AllowOverride All
-    Order allow,deny
-    Allow from all
-  &lt;/Directory&gt;
-
-  Alias /numbas-previews/ /srv/numbas/previews/
-  &lt;Directory /srv/numbas/previews&gt;
-    AllowOverride All
-    Order allow,deny
-    Allow from all
-  &lt;/Directory&gt;
-
-  ErrorLog /var/log/apache2/numbas_editor.error.log
-
-  # Possible values include: debug, info, notice, warn, error, crit,
-  # alert, emerg.
-  LogLevel warn
-
-  CustomLog /var/log/apache2/numbas_editor.access.log combined
-  ServerSignature On
-
-&lt;/VirtualHost&gt;
-</pre>
-          </li>
+            contents similar to that in <code>editor_apache2.conf</code> (this
+            is in the same directory as this file).  If following these
+            instructions exactly, then all that needs changing are the lines
+            <code>ServerName</code>, <code>ServerAdmin</code>,
+            <code>WSGIDaemonProcess</code>, and
+            <code>WSGIProcessGroup</code>.</li>
           <li><code>a2ensite numbas_editor &amp;&amp; service apache2 restart</code></li>
         </ul>
       </li>

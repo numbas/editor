@@ -71,6 +71,7 @@ body {
 
 #menubar {
 	position: relative;
+	height: 3ex;
 }
 
 ul#menu {

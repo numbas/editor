@@ -92,7 +92,10 @@
           <li>Make sure settings in <code>GLOBAL_SETTINGS</code> match those
           above</li>
           <li><code>PREVIEW_URL</code> should be set to the URL at which
-          preview exams can be viewed (see below).</li>
+          preview exams can be viewed (see Apache 2 config file).</li>
+          <li><code>HELP_URL</code> should be set to the URL at which the
+            Numbas web documentation can be viewed (see Apache 2 config
+            file).</li>
           <li><code>PYTHON_EXEC</code> is the path to the Python 3
           executable.</li>
         </ul>
@@ -122,10 +125,11 @@
             <code>ServerName</code>, <code>ServerAdmin</code>,
             <code>WSGIDaemonProcess</code>, and
             <code>WSGIProcessGroup</code>.</li>
-          <li><code>a2ensite numbas_editor &amp;&amp; service apache2 restart</code></li>
+          <li><code>a2ensite numbas_editor &amp;&amp; service apache2
+              restart</code></li>
         </ul>
       </li>
-      <li>Point a web browser at <code>http://server.domain/</code></li>
+      <li>Point a web browser at the server hosting the editor.</li>
     </ul>
   </body>
 </html>

@@ -25,7 +25,7 @@
     {{ block.super }}
 
 
-	{% if user.username == object.author.username %}
+	{% if user.username == object.author.username or user.is_superuser %}
 	    {% verbatim %}
 	
 			<script type="text/x-jquery-tmpl" id="examTemplate">

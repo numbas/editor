@@ -6,7 +6,7 @@
 		{% for question in question_list %}
 			<li class="question">
 				<a href="{% url question_edit question.pk question.slug %}">{{ question.name }}</a>
-				{% if user.username == question.author.username %}
+				{% if user.username == question.author.username or user.is_superuser %}
 					<a class="delete" href="{% url question_delete question.pk question.slug %}"></a>
 				{% endif %}
 			</li>

@@ -142,6 +142,7 @@ ul.choices {
 	height: 14px;
 	display: inline-block;
 	background: url(../images/x_14x14.png);
+    cursor: pointer;
 }
 
 .wmToggle.on .ticko {

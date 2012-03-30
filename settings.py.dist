@@ -140,7 +140,8 @@ GLOBAL_SETTINGS = {
     'REPO_PATH': '/srv/numbas-questiondb',
     'NUMBAS_PATH': '/srv/numbas',
     'PREVIEW_PATH': '/srv/numbas-previews',
-    'PREVIEW_URL': 'http://numbas.mas.ncl.ac.uk/numbas-previews/',
+    'PREVIEW_URL': '',	#a URL which serves files from PREVIEW_PATH
+	'HELP_URL': '',		#the URL of the Numbas webdocs
     'PYTHON_EXEC': '/usr/bin/python3.1',
 }
 

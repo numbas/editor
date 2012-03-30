@@ -92,6 +92,14 @@ ul#menu li a {
     margin-left: 0.8em;
 } 
 
+#helpbox {
+	position: absolute;
+	top: 0;
+	right: 0;
+	padding-right: 1em;
+	padding-top: 0.2em;
+}
+
 #content_header, #content_footer {
     width: 940px;
     background: url(../images/content_header.png) no-repeat;

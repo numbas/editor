@@ -25,9 +25,10 @@
 
 {% block content %}
     {{ block.super }}
-
-	{% verbatim %}
-		<script type="text/x-jquery-tmpl" id="questionTemplate">
+    
+    {% if user.username == object.author.username %}
+		{% verbatim %}
+			<script type="text/x-jquery-tmpl" id="questionTemplate">
 			<div class="properties">
 				<div data-bind="template: {
 					name: 'property',
@@ -88,8 +89,8 @@
 				</div>
 			{{/wrap}}
 		</script>
-
-		<script type="text/x-jquery-tmpl" id="part">
+	
+			<script type="text/x-jquery-tmpl" id="part">
 			<li class="part">
 				<div data-bind="foldlist: $data, label: type().niceName, show:true">
 					<div class="properties">
@@ -128,12 +129,12 @@
 				</div>
 			</li>
 		</script>
-		
-		<script type="text/x-jquery-tmpl" id="information">
+			
+			<script type="text/x-jquery-tmpl" id="information">
 			
 		</script>
-
-		<script type="text/x-jquery-tmpl" id="gapfill">
+	
+			<script type="text/x-jquery-tmpl" id="gapfill">
 			<div class="gaps fold">
 				<div id="folder-header">Gaps</div>
 				<div id="folder">
@@ -147,8 +148,8 @@
 				</div>
 			</div>
 		</script>
-
-		<script type="text/x-jquery-tmpl" id="jme">
+	
+			<script type="text/x-jquery-tmpl" id="jme">
 			<div class="properties">
 				<div data-bind="template: {
 					name: 'property',
@@ -266,8 +267,8 @@
 			</div>
 			{{/wrap}}
 		</script>
-
-		<script type="text/x-jquery-tmpl" id="numberentry">
+	
+			<script type="text/x-jquery-tmpl" id="numberentry">
 			<div class="properties">
 				<div data-bind="template: {
 					name: 'property',
@@ -288,8 +289,8 @@
 				}"></div>
 			</div>
 		</script>
-
-		<script type="text/x-jquery-tmpl" id="patternmatch">
+	
+			<script type="text/x-jquery-tmpl" id="patternmatch">
 			<div class="properties">
 				<div data-bind="template: {
 					name: 'property',
@@ -311,9 +312,9 @@
 				}"></div>
 			</div>
 		</script>
-
-
-		<script type="text/x-jquery-tmpl" id="1_n_2">
+	
+	
+			<script type="text/x-jquery-tmpl" id="1_n_2">
 			<div class="properties">
 				<div data-bind="template: {
 					name: 'property',
@@ -339,7 +340,7 @@
 				</ul>
 			</div>
 		</script>
-		<script type="text/x-jquery-tmpl" id="m_n_2">
+			<script type="text/x-jquery-tmpl" id="m_n_2">
 			<div class="properties">
 				<div data-bind="template: {
 					name: 'property',
@@ -370,8 +371,8 @@
 				</ul>
 			</div>
 		</script>
-
-		<script type="text/x-jquery-tmpl" id="choice-1_n_2">
+	
+			<script type="text/x-jquery-tmpl" id="choice-1_n_2">
 			<li class="choice">
 				<button class="remove" data-bind="click:remove"></button>
 				<span>
@@ -387,8 +388,8 @@
 				</span>
 			</li>
 		</script>
-
-		<script type="text/x-jquery-tmpl" id="m_n_x">
+	
+			<script type="text/x-jquery-tmpl" id="m_n_x">
 			<div class="properties">
 				<div data-bind="template: {
 					name: 'property',
@@ -442,8 +443,8 @@
 				</table>
 			</div>
 		</script>
-
-		<script type="text/x-jquery-tmpl" id="choice-m_n_x">
+	
+			<script type="text/x-jquery-tmpl" id="choice-m_n_x">
 			<tr>
 				<th>
 					<input type="text" data-bind="value:content, valueUpdate:'input'"/>
@@ -456,27 +457,30 @@
 				{{/each}}
 			</tr>
 		</script>
-    {% endverbatim %}
-
-        <div>
-            <div id="controls">
-                <div class="controlbox" id="author">
-                    Author: {{object.author.username}}
-                </div>
-                <div class="controlbox" id="buttons">
-                    Download: 
-                    <a href="{% url question_download object.pk object.slug %}">standalone .zip</a>,
-                    <a href="{% url question_download object.pk object.slug %}?scorm">SCORM package</a>,
-                    <a href="{% url question_source object.pk object.slug %}">source</a>
-                </div>
-                <div class="controlbox" id="admin">
-                    <button id="preview" data-bind="click: showPreview">Test Run</button>
-                    <a id="delete" href="{% url question_delete object.pk object.slug %}"><img src="{{STATIC_URL}}images/delete.png"/> Delete</a>
-                    <a id="copy" href="{% url question_copy object.pk object.slug %}">Make a Copy</a>
-                </div>
-            </div>
-			<div id="editor" data-bind="template: 'questionTemplate'"></div>
-		</div>
+	    {% endverbatim %}
+	
+	        <div>
+	            <div id="controls">
+	                <div class="controlbox" id="author">
+	                Author: {{ object.author.first_name }} {{ object.author.last_name }} ({{ object.author.username }})
+	                </div>
+	                <div class="controlbox" id="buttons">
+	                    Download: 
+	                    <a href="{% url question_download object.pk object.slug %}">standalone .zip</a>,
+	                    <a href="{% url question_download object.pk object.slug %}?scorm">SCORM package</a>,
+	                    <a href="{% url question_source object.pk object.slug %}">source</a>
+	                </div>
+	                <div class="controlbox" id="admin">
+	                    <button id="preview" data-bind="click: showPreview">Test Run</button>
+	                    <a id="delete" href="{% url question_delete object.pk object.slug %}"><img src="{{STATIC_URL}}images/delete.png"/> Delete</a>
+	                    <a id="copy" href="{% url question_copy object.pk object.slug %}">Make a Copy</a>
+	                </div>
+	            </div>
+				<div id="editor" data-bind="template: 'questionTemplate'"></div>
+			</div>
+		{% else %}
+			<div>You are not permitted to view this question</div>
+		{% endif %}
 
 {% endblock content %}
 

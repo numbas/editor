@@ -56,9 +56,9 @@
 				<div id="menubar">
 					<div id="session">
 						{% if user.is_authenticated %}
-                        Hi, {{ user.username }}! <a id="logout" href="{% url logout %}?next={{request.path|escape}}">Log out</a>.
+	                        Hi, {{ user.first_name }}! <a id="logout" href="{% url logout %}?next={{request.path|escape}}">Log out</a>.
 						{% else %}
-                        <a href="{% url login %}?next={{request.path|escape}}">Log in</a>.
+	                        <a href="{% url login %}?next={{request.path|escape}}">Log in</a>.
 						{% endif %}
 					</div>
 					{% block menubar %}

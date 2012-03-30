@@ -6,7 +6,9 @@
 		{% for exam in exam_list %}
 			<li class="exam">
 				<a href="{% url exam_edit exam.pk exam.slug %}">{{ exam.name }}</a>
-				<a class="delete" href="{% url exam_delete exam.pk exam.slug %}"></a>
+				{% if user.username == exam.author.username %}
+					<a class="delete" href="{% url exam_delete exam.pk exam.slug %}"></a>
+				{% endif %}
 			</li>
 		{% endfor %}
 		</ul>

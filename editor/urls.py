@@ -40,13 +40,13 @@ urlpatterns = patterns('',
                        
     url(r'^exam/search/$', ExamSearchView.as_view(), name='exam_search'),
     
-    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/$', ExamUpdateView.as_view(),
+    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/$', login_required(ExamUpdateView.as_view()),
         name='exam_edit'),
                        
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/copy/$',ExamCopyView.as_view(), name='exam_copy',),
                        
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/delete/$',
-        ExamDeleteView.as_view(), name='exam_delete'),
+        login_required(ExamDeleteView.as_view()), name='exam_delete'),
     
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/preview/$',
         ExamPreviewView.as_view(), name='exam_preview'),
@@ -66,12 +66,12 @@ urlpatterns = patterns('',
     url(r'^question/search/$', QuestionSearchView.as_view(), name='question_search',),
     
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/$',
-        QuestionUpdateView.as_view(), name='question_edit'),
+        login_required(QuestionUpdateView.as_view()), name='question_edit'),
                        
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/copy/$',QuestionCopyView.as_view(), name='question_copy',),
                        
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/delete/$',
-        QuestionDeleteView.as_view(), name='question_delete'),
+        login_required(QuestionDeleteView.as_view()), name='question_delete'),
                        
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/preview/$',
         QuestionPreviewView.as_view(), name='question_preview'),

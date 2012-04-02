@@ -88,7 +88,12 @@ $(function() {
             el.parent().append('<div class="preview"/>');
 
             var queue = MathJax.Callback.Queue(MathJax.Hub.Register.StartupHook("End",{}));
-            el.on('keyup click',function(e) {
+            el
+			.on('blur',function(e) {
+                var previewElement = el.parent().find('.preview');
+				previewElement.hide();
+			})
+			.on('keyup click',function(e) {
 
                 var previewElement = el.parent().find('.preview');
                 previewElement.hide();

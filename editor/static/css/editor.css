@@ -27,7 +27,7 @@
 	padding-right:1em;
 }
 
-.question > * > button.remove, .part > * > button.remove {
+.question > * > button.remove, .part > * > button.remove, .function > * > button.remove {
 	position:relative;
 	display:run-in;
 	left: -2em;
@@ -63,6 +63,19 @@
 .variable td.value {
 	max-width: 20em;
 	overflow-x: auto;
+}
+
+.function .parameters .list {
+	float: right;
+	margin-bottom: 0.5em;
+}
+.function .parameters .addparameter {
+	clear: both;
+	float: right;
+}
+
+.function .definition textarea {
+	width: 20em;
 }
 
 

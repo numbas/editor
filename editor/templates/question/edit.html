@@ -71,6 +71,19 @@
 					</table>
 				</div>
 			{{/wrap}}
+
+			{{wrap(this,{label:"Functions",show:false}) '#folder'}}
+				<div>
+					<ol class="editlist" data-bind="template:{
+						name: 'function',
+						foreach: functions,
+						beforeRemove: function(elem) { $(elem).slideUp(150,function(){$(this).remove()}) },
+						afterAdd: function(elem) { $(elem).hide().slideDown(150) }
+					}"></ol>
+					<button data-bind="click:addFunction, text: functions().length ? 'Add another function' : 'Add a function'"></button>
+				</div>
+			{{/wrap}}
+
 			{{wrap(this,{label:"Parts",show:true}) '#folder'}}
 				<div>
 					<ol class="editlist" data-bind="template:{
@@ -90,7 +103,7 @@
 			{{/wrap}}
 		</script>
 	
-			<script type="text/x-jquery-tmpl" id="part">
+		<script type="text/x-jquery-tmpl" id="part">
 			<li class="part">
 				<div data-bind="foldlist: $data, label: type().niceName, show:true">
 					<div class="properties">
@@ -130,11 +143,10 @@
 			</li>
 		</script>
 			
-			<script type="text/x-jquery-tmpl" id="information">
-			
+		<script type="text/x-jquery-tmpl" id="information">	
 		</script>
 	
-			<script type="text/x-jquery-tmpl" id="gapfill">
+		<script type="text/x-jquery-tmpl" id="gapfill">
 			<div class="gaps fold">
 				<div id="folder-header">Gaps</div>
 				<div id="folder">
@@ -149,7 +161,7 @@
 			</div>
 		</script>
 	
-			<script type="text/x-jquery-tmpl" id="jme">
+		<script type="text/x-jquery-tmpl" id="jme">
 			<div class="properties">
 				<div data-bind="template: {
 					name: 'property',
@@ -268,7 +280,7 @@
 			{{/wrap}}
 		</script>
 	
-			<script type="text/x-jquery-tmpl" id="numberentry">
+		<script type="text/x-jquery-tmpl" id="numberentry">
 			<div class="properties">
 				<div data-bind="template: {
 					name: 'property',
@@ -290,7 +302,7 @@
 			</div>
 		</script>
 	
-			<script type="text/x-jquery-tmpl" id="patternmatch">
+		<script type="text/x-jquery-tmpl" id="patternmatch">
 			<div class="properties">
 				<div data-bind="template: {
 					name: 'property',
@@ -314,7 +326,7 @@
 		</script>
 	
 	
-			<script type="text/x-jquery-tmpl" id="1_n_2">
+		<script type="text/x-jquery-tmpl" id="1_n_2">
 			<div class="properties">
 				<div data-bind="template: {
 					name: 'property',
@@ -340,7 +352,8 @@
 				</ul>
 			</div>
 		</script>
-			<script type="text/x-jquery-tmpl" id="m_n_2">
+
+		<script type="text/x-jquery-tmpl" id="m_n_2">
 			<div class="properties">
 				<div data-bind="template: {
 					name: 'property',
@@ -372,7 +385,7 @@
 			</div>
 		</script>
 	
-			<script type="text/x-jquery-tmpl" id="choice-1_n_2">
+		<script type="text/x-jquery-tmpl" id="choice-1_n_2">
 			<li class="choice">
 				<button class="remove" data-bind="click:remove"></button>
 				<span>
@@ -389,7 +402,7 @@
 			</li>
 		</script>
 	
-			<script type="text/x-jquery-tmpl" id="m_n_x">
+		<script type="text/x-jquery-tmpl" id="m_n_x">
 			<div class="properties">
 				<div data-bind="template: {
 					name: 'property',
@@ -444,7 +457,7 @@
 			</div>
 		</script>
 	
-			<script type="text/x-jquery-tmpl" id="choice-m_n_x">
+		<script type="text/x-jquery-tmpl" id="choice-m_n_x">
 			<tr>
 				<th>
 					<input type="text" data-bind="value:content, valueUpdate:'input'"/>
@@ -457,6 +470,67 @@
 				{{/each}}
 			</tr>
 		</script>
+
+		<script type="text/x-jquery-tmpl" id="variable">
+			<tr class="variable dict">
+				<td><span class="handle"></span></td>
+				<td><div><input type="text" class="name" data-bind="value:name, valueUpdate: 'input', event: {keyup: function(d,e){if(e.which==13){ $(e.target).parents('.variable').find('.def').focus();} } }"/> = </div></td>
+				<td><div><input class="def" type="text" data-bind="value:definition, valueUpdate: 'input', event: {keyup: function(d,e){if(e.which==13){ $parent.addVariable($parent,e,$parent.variables.indexOf(this)+1); } } }"/></div></td>
+				<td class="value"><div><span class="value" data-bind="css: {error: error().length>0}, text: display, mathjax: value"></span></div></td>
+				<td><div><button class="remove" data-bind="click:remove"></button></div></td>
+			</tr>
+		</script>
+
+		<script type="text/x-jquery-tmpl" id="function">
+			<li class="function">
+				<div data-bind="foldlist: $data, label: name, show:true">
+					<div class="properties">
+						<div data-bind="template: {
+							name: 'property',
+							templateOptions: {property:name,label: 'Name:'}
+						}"></div>
+						<div class="parameters">
+							<label>Parameters:</label>
+							<table class="list">
+								<thead data-bind="visible: parameters().length>0">
+									<th>Name</th>
+									<th>Type</th>
+									<th></th>
+								</thead>
+								<tbody data-bind="template:{
+									name:'parameter',
+									foreach: parameters,
+									beforeRemove: function(elem) { $(elem).find('td>div').slideUp(150,function() {console.log($(this));$(this).remove()}) },
+									afterAdd: function(elem) { $(elem).find('td>div').hide().slideDown(150).end().find('.name').focus(); },
+								}"></tbody>
+							</table>
+							<button class="addparameter" data-bind="click:addParameter, text: parameters().length ? 'Add another parameter' : 'Add a parameter'"></button>
+						</div>
+						<div>
+							<label>Output type: </label>
+							<select data-bind="options: types, value:type"></select>
+						</div>
+						<div>
+							<label>Language:</label>
+							<select data-bind="options: languages, value: language"></select>
+						</div>
+						<div class="definition">
+							<label>Definition:</label>
+							<textarea data-bind="value: definition, valueUpdate: 'input'"></textarea>
+						</div>
+					</div>
+				</div>
+			</li>
+		</script>
+
+		<script type="text/x-jquery-tmpl" id="parameter">
+			<tr>
+				<td><div><input data-bind="value: name"/></div></td>
+				<td><div><select data-bind="options: $parent.types, value: type"></select></div></td>
+				<td><div><button class="remove" data-bind="click: remove"></div></button>
+			</tr>
+		</script>
+
 	    {% endverbatim %}
 	
 	        <div>

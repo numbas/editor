@@ -29,6 +29,7 @@ jme.display = {
 	{
 		if(!ruleset)
 			ruleset = simplificationRules.basic;
+		ruleset = collectRuleset(ruleset,Numbas.exam ? Numbas.exam.rulesets : simplificationRules);
 
 		expr+='';	//make sure expr is a string
 
@@ -55,6 +56,7 @@ jme.display = {
 
 		if(!ruleset)
 			ruleset = simplificationRules.basic;
+		ruleset = collectRuleset(ruleset,Numbas.exam ? Numbas.exam.rulesets : simplificationRules);		//collect the ruleset - replace set names with the appropriate Rule objects
 
 		try 
 		{
@@ -413,9 +415,6 @@ var texOps = {
 	}),
 	'verbatim': (function(thing,texArgs) {
 		return thing.args[0].tok.value;
-	}),
-	'subvar': (function(thing,texArgs) {
-		return '\\color{'+thing.args[1].tok.value+'}{'+texArgs[0]+'}';
 	})
 }
 
@@ -513,6 +512,9 @@ function texRealNumber(n)
 	}
 	else
 	{
+		if(n==Infinity)
+			return '\\infty';
+
 		var piD;
 		if((piD = math.piDegree(n)) > 0)
 			n /= Math.pow(Math.PI,piD);

@@ -17,6 +17,7 @@ var viewModel;
 
 $(document).ready(function() {
 	Numbas.loadScript('scripts/jme-display.js');
+	Numbas.loadScript('scripts/jme-variables.js');
 	Numbas.loadScript('scripts/jme.js');
 	Numbas.startOK = true;
 	Numbas.init = function() {
@@ -150,9 +151,10 @@ $(document).ready(function() {
         addFunction: function(q,e,n) {
             var f = new JMEFunction(this);
             if(n!=undefined)
-                this.functions.splice(n,0,v);
+                this.functions.splice(n,0,f);
             else
-                this.functions.push(v);
+                this.functions.push(f);
+			return f;
         },
 
         addVariable: function(q,e,n) {
@@ -161,10 +163,13 @@ $(document).ready(function() {
 				this.variables.splice(n,0,v);
 			else
 	            this.variables.push(v);
+			return v;
         },
 
         addPart: function() {
-            this.parts.push(new Part(this));
+			var p = new Part(this);
+            this.parts.push(p);
+			return p;
         },
 
 		computeVariables: function() {
@@ -176,12 +181,80 @@ $(document).ready(function() {
 				};
 				return;
 			}
+
+			var functions = {};
+			var jme = Numbas.jme;
+			this.functions().map(function(f) {
+
+				var name = f.name();
+
+				var intype = [],
+					paramNames = [];
+
+				f.parameters().map(function(p) {
+					intype.push(jme.types[p.type()]);
+					paramNames.push(p.name());
+				});
+
+				var outcons = jme.types[f.type()];
+
+				var fn = new jme.funcObj(name,intype,outcons,null,true);
+
+				switch(f.language())
+				{
+				case 'jme':
+					fn.tree = jme.compile(f.definition(),functions);
+
+					fn.evaluate = function(args,variables,functions)
+					{
+						nvariables = Numbas.util.copyobj(variables);
+
+						for(var j=0;j<args.length;j++)
+						{
+							nvariables[paramNames[j]] = jme.evaluate(args[j],variables,functions);
+						}
+						return jme.evaluate(this.tree,nvariables,functions);
+					}
+					break;
+				case 'javascript':
+					var preamble='(function('+paramNames.join(',')+'){';
+					var math = Numbas.math, 
+						util = Numbas.util;
+					var jfn = eval(preamble+f.definition()+'})');
+					fn.evaluate = function(args,variables,functions)
+					{
+						args = args.map(function(a){return jme.evaluate(a,variables,functions).value});
+						try {
+							var val = jfn.apply(this,args);
+							if(!val.type)
+								val = new outcons(val);
+							return val;
+						}
+						catch(e)
+						{
+							throw(new Numbas.Error('jme.user javascript error',f.name(),e.message));
+						}
+					}
+					break;
+				}
+
+				if(functions[name]===undefined)
+					functions[name] = [];
+				functions[name].push(fn);
+			});
+
+			for(var x in Numbas.jme.builtins) {
+				if(!(x in functions))
+					functions[x] = [];
+				functions[x] = functions[x].concat(Numbas.jme.builtins[x]);
+			}
+
 			var todo = {}
 			this.variables().map(function(v) {
 				if(!v.name() || !v.definition())
 					return;
 				try {
-					var tree = Numbas.jme.compile(v.definition());
+					var tree = Numbas.jme.compile(v.definition(),functions);
 					var vars = Numbas.jme.findvars(tree);
 				}
 				catch(e) {
@@ -225,7 +298,7 @@ $(document).ready(function() {
 					}
 				}
 
-				variables[name] = Numbas.jme.evaluate(v.tree,variables,Numbas.jme.builtins);
+				variables[name] = Numbas.jme.evaluate(v.tree,variables,functions);
 				v.v.value(variables[name]);
 			}
 			var variables = {};
@@ -250,11 +323,16 @@ $(document).ready(function() {
             this.variables().map(function(v) {
                 variables[v.name()] = v.definition();
             });
+			var functions = {};
+			this.functions().map(function(f) {
+				functions[f.name()] = f.toJSON();
+			});
             return {
                 name: this.name(),
                 statement: this.statement(),
                 advice: this.advice(),
                 variables: variables,
+				functions: functions,
                 parts: this.parts().map(function(p){return p.toJSON();})
             }
         },
@@ -269,6 +347,15 @@ $(document).ready(function() {
                     this.variables.push(new Variable(this,{name:x,definition:data.variables[x]}));
                 }
             }
+
+			if('functions' in data)
+			{
+				for(var x in data.functions)
+				{
+					data.functions[x].name = x;
+					this.functions.push(new JMEFunction(this,data.functions[x]));
+				}
+			}
 
             if('parts' in data)
             {
@@ -339,23 +426,63 @@ $(document).ready(function() {
     }
     Variable.prototype = {
         load: function(data) {
-            this.name(data.name);
-            this.definition(data.definition);
+			tryLoad(data,['name','definition'],this)
         }
     }
 
     function JMEFunction(q,data) {
         this.name = ko.observable('');
-        this.types = ['number','string','boolean','vector','matrix','list','name','function','op','range'];
+        this.types = ['number','string','boolean','vector','matrix','list','name','function','op','range','?'];
         this.parameters = ko.observableArray([])
         this.type = ko.observable('number');
         this.definition = ko.observable('');
+		this.languages = ['jme','javascript'];
         this.language = ko.observable('jme');
 
         this.remove = function() {
             q.functions.remove(this);
         };
+		if(data)
+			this.load(data);
     }
+	JMEFunction.prototype = {
+		load: function(data) {
+			var f = this;
+			tryLoad(data,['name','type','definition','language'],this);
+			if('parameters' in data) {
+				data.parameters.map(function(p) {
+					f.parameters.push(new FunctionParameter(this,p[0],p[1]));
+				});
+			}
+		},
+
+		toJSON: function() {
+			var parameters = this.parameters().map(function(p) {
+				return [p.name(), p.type()];
+			});
+			return {
+				parameters: parameters,
+				type: this.type(),
+				language: this.language(),
+				definition: this.definition()
+			};
+		},
+
+		addParameter: function() {
+			this.parameters.push(new FunctionParameter(this,'','number'));
+		},
+		removeParameter: function() {
+			 this.parameters.pop();
+		}
+	};
+
+	function FunctionParameter(f,name,type) {
+		this.name = ko.observable(name);
+		this.type = ko.observable(type);
+		this.remove = function() {
+			f.parameters.remove(this);
+		}
+	};
 
     var Part = function(q,parent,parentList,data) {
         this.type = ko.observable('information');

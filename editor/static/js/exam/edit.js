@@ -35,9 +35,9 @@ $(document).ready(function() {
         this.shuffleQuestions = ko.observable(false);
         this.showfrontpage = ko.observable(true);
 
-        this.allowregen = ko.observable(false);
-        this.reverse = ko.observable(false);
-        this.browse = ko.observable(false);
+        this.allowregen = ko.observable(true);
+        this.reverse = ko.observable(true);
+        this.browse = ko.observable(true);
 
         this.onadvance = ko.observable(null);
         this.onreverse = ko.observable(null);

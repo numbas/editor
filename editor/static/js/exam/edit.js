@@ -262,11 +262,11 @@ $(document).ready(function() {
 				var message = textile('h3. Error making the preview:\n\n'+responseObj.message+'\n\n'+responseObj.traceback);
 				noty({
 					text: message,
-					layout: "center",
+					layout: "topLeft",
 					type: "error",
 					animateOpen: {"height":"toggle"},
 					animateClose: {"height":"toggle"},
-				timeout: false,
+					timeout: 5000,
 					speed: "500",
 					closable: true,
 					closeOnSelfClick: true,

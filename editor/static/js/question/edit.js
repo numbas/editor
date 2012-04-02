@@ -375,14 +375,15 @@ $(document).ready(function() {
 			})
 			.error(function(response, status, xhr) {
 				var responseObj = $.parseJSON(response.responseText);
-				var message = textile('h3. Error making the preview:\n\n'+responseObj.message+'\n\n'+responseObj.traceback);
+				var message = 'h3. Error making the preview:\n\n'+responseObj.message+'\n\n'+responseObj.traceback;
+				console.log(message);
 				noty({
-					text: message,
-					layout: "center",
+					text: textile(message),
+					layout: "topLeft",
 					type: "error",
 					animateOpen: {"height":"toggle"},
 					animateClose: {"height":"toggle"},
-				timeout: false,
+					timeout: 5000,
 					speed: "500",
 					closable: true,
 					closeOnSelfClick: true,
@@ -880,7 +881,8 @@ $(document).ready(function() {
                     var c = this.addChoice(data.choices[i]);
                     c.content(data.choices[i] || '');
                     c.marks(data.matrix[i] || 0);
-                    c.distractor(data.distractors[i] || '');
+					if('distractors' in data)
+	                    c.distractor(data.distractors[i] || '');
                 }
                 break;
 

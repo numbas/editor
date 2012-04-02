@@ -69,7 +69,7 @@ $(document).ready(function() {
             return data+'';
         case 'string':
             //this tries to use as little extra syntax as possible. Quotes or triple-quotes are only used if necessary.
-            if(data.contains('"'))
+            if(data.contains('"') || data.contains("'"))
                 return '"""'+data+'"""';
             if(data.search(/[:\n,\{\}\[\] ]/)>=0)
                 return '"'+data+'"';
@@ -334,6 +334,7 @@ $(document).ready(function() {
         },
         update: function(element, valueAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor()) || '';
+			value = textile(value);
 			var pt = $(element).find('.plaintext');
 			if(!pt.is(':focus'))
 				pt.val(value)

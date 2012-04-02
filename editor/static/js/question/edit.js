@@ -26,8 +26,7 @@ $(document).ready(function() {
 	};
 	Numbas.tryInit();
 
-    var Variable = Editor.Variable,
-        Ruleset = Editor.Ruleset;
+    var Ruleset = Editor.Ruleset;
 
     function Question(data)
     {
@@ -68,6 +67,8 @@ $(document).ready(function() {
 
         this.statement = ko.observable('');
         this.advice = ko.observable('');
+
+        this.functions = ko.observableArray([]);
 
         this.variables = ko.observableArray([]);
 
@@ -146,6 +147,14 @@ $(document).ready(function() {
         },this).extend({throttle:1000});
     }
     Question.prototype = {
+        addFunction: function(q,e,n) {
+            var f = new JMEFunction(this);
+            if(n!=undefined)
+                this.functions.splice(n,0,v);
+            else
+                this.functions.push(v);
+        },
+
         addVariable: function(q,e,n) {
 			var v = new Variable(this);
 			if(n!=undefined)
@@ -299,6 +308,54 @@ $(document).ready(function() {
 			window.location = Editor.download_url;
 		}
     };
+
+    function Variable(q,data) {
+        this.name = ko.observable('');
+        this.definition = ko.observable('');
+		this.value = ko.observable('');
+		this.error = ko.observable('');
+		this.display = ko.computed(function() {
+			var v;
+			if(this.error())
+				return this.error();
+			else if(v = this.value())
+			{
+				switch(v.type)
+				{
+				case 'string':
+					return v.value;
+				default:
+					return '$'+Numbas.jme.display.texify({tok:this.value()})+'$';
+				}
+			}
+			else
+				return '';
+		},this);
+        this.remove = function() {
+            q.variables.remove(this);
+        };
+        if(data)
+            this.load(data);
+    }
+    Variable.prototype = {
+        load: function(data) {
+            this.name(data.name);
+            this.definition(data.definition);
+        }
+    }
+
+    function JMEFunction(q,data) {
+        this.name = ko.observable('');
+        this.types = ['number','string','boolean','vector','matrix','list','name','function','op','range'];
+        this.parameters = ko.observableArray([])
+        this.type = ko.observable('number');
+        this.definition = ko.observable('');
+        this.language = ko.observable('jme');
+
+        this.remove = function() {
+            q.functions.remove(this);
+        };
+    }
 
     var Part = function(q,parent,parentList,data) {
         this.type = ko.observable('information');

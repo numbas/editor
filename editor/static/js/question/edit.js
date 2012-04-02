@@ -17,7 +17,6 @@ var viewModel;
 
 $(document).ready(function() {
 	Numbas.loadScript('scripts/jme-display.js');
-	Numbas.loadScript('scripts/jme-variables.js');
 	Numbas.loadScript('scripts/jme.js');
 	Numbas.startOK = true;
 	Numbas.init = function() {

@@ -190,6 +190,7 @@ $(document).ready(function() {
                 percentPass: this.percentPass(),
                 shuffleQuestions: this.shuffleQuestions(),
                 navigation: {
+					allowregen: this.allowregen(),
                     reverse: this.reverse(),
                     browse: this.browse(),
                     showfrontpage: this.showfrontpage(),
@@ -218,7 +219,7 @@ $(document).ready(function() {
 
             if('navigation' in data)
             {
-				tryLoad(data.navigation,['reverse','browse','showfrontpage'],this);
+				tryLoad(data.navigation,['allowregen','reverse','browse','showfrontpage'],this);
                 this.onadvance.load(data.navigation.onadvance);
                 this.onreverse.load(data.navigation.onreverse);
                 this.onmove.load(data.navigation.onmove);

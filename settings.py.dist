@@ -137,10 +137,11 @@ LOGGING = {
 }
 
 GLOBAL_SETTINGS = {
-    'REPO_PATH': '/srv/numbas-questiondb',
-    'NUMBAS_PATH': '/srv/numbas',
-    'PREVIEW_PATH': '/srv/numbas-previews',
-    'PREVIEW_URL': 'http://numbas.mas.ncl.ac.uk/numbas-previews/',
+    'REPO_PATH': '/srv/numbas/questiondb',
+    'NUMBAS_PATH': '/srv/numbas/dist',
+    'PREVIEW_PATH': '/srv/numbas/previews',
+    'PREVIEW_URL': 'http://server.domain/numbas-previews/',	#a URL which serves files from PREVIEW_PATH
+	  'HELP_URL': 'http://server.domain/help/',		#the URL of the Numbas webdocs
     'PYTHON_EXEC': '/usr/bin/python3.1',
 }
 
@@ -154,7 +155,8 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.media",
     "django.core.context_processors.static",
     "django.core.context_processors.request",
-    "django.contrib.messages.context_processors.messages"
+    "django.contrib.messages.context_processors.messages",
+    "editor.context_processors.global_settings",
 )
 
 examparser = imp.load_source(

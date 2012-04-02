@@ -53,24 +53,29 @@
 					<!-- end #logo_text -->
 				</div>
 				<!-- end #logo -->
-				<div id="menubar">
-					<div id="session">
+				{% block menubar %}
+					<div id="menubar">
+						<div id="session">
+							{% if user.is_authenticated %}
+		                        Hi, {{ user.first_name }}! <a id="logout" href="{% url logout %}?next={{request.path|escape}}">(Log out)</a>
+							{% else %}
+		                        <a href="{% url login %}?next={{request.path|escape}}">Log in</a>.
+							{% endif %}
+						</div>
 						{% if user.is_authenticated %}
-                        Hi, {{ user.username }}! <a id="logout" href="{% url logout %}?next={{request.path|escape}}">Log out</a>.
-						{% else %}
-                        <a href="{% url login %}?next={{request.path|escape}}">Log in</a>.
+							<ul id="menu">
+								<li><a href="{% url editor_index %}">Home</a></li>
+								<li><a href="{% url exam_index %}">Exams</a></li>
+								<li><a href="{% url question_index %}">Questions</a></li>   
+							</ul>
 						{% endif %}
+						<div style="clear:both"></div>
 					</div>
-					{% block menubar %}
-						<ul id="menu">
-							<li><a href="{% url editor_index %}">Home</a></li>
-							<li><a href="{% url exam_index %}">Exams</a></li>
-							<li><a href="{% url question_index %}">Questions</a></li>   
-						</ul>
-					{% endblock menubar %}
-					<div style="clear:both"></div>
+					<!-- end #menubar -->
+				{% endblock menubar %}
+				<div id="helpbox">
+					<a href="{{ HELP_URL }}" target="_blank">Help</a>
 				</div>
-				<!-- end #menubar -->
 			</div>
 		</div>
         <!-- end #header -->

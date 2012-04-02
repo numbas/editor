@@ -71,6 +71,7 @@ body {
 
 #menubar {
 	position: relative;
+	height: 3ex;
 }
 
 ul#menu {
@@ -91,6 +92,14 @@ ul#menu li a {
     float: left; 
     margin-left: 0.8em;
 } 
+
+#helpbox {
+	position: absolute;
+	top: 0;
+	right: 0;
+	padding-right: 1em;
+	padding-top: 0.2em;
+}
 
 #content_header, #content_footer {
     width: 940px;

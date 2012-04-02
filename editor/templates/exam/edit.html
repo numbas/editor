@@ -22,11 +22,13 @@
 {% endblock javascripts %}
 
 {% block content %}
-    {{block.super }}
+    {{ block.super }}
 
-    {% verbatim %}
 
-		<script type="text/x-jquery-tmpl" id="examTemplate">
+	{% if user.username == object.author.username or user.is_superuser %}
+	    {% verbatim %}
+	
+			<script type="text/x-jquery-tmpl" id="examTemplate">
 			<div class="properties">
 				<div data-bind="template: {
 					name: 'property',
@@ -142,8 +144,8 @@
 			</div>
 			{{/wrap}}
 		</script>
-
-		<script type="text/x-jquery-tmpl" id="event">
+	
+			<script type="text/x-jquery-tmpl" id="event">
 			{{wrap(this,{label:niceName}) "#folder"}}
 				<div>
 				<div class="properties">
@@ -159,42 +161,45 @@
 				</div>
 			{{/wrap}}
 		</script>
-
-		<script type="text/x-jquery-tmpl" id="ruleset">
+	
+			<script type="text/x-jquery-tmpl" id="ruleset">
 			<li class="ruleset">
 				<input type="text" data-bind="value:name, valueUpdate: 'input'"/>: <div data-bind="listbox:sets, rulesetcomplete: allsets"></div>
 				<button class="remove" data-bind="click:remove"></button>
 			</li>
 		</script>
-
-		<script type="text/x-jquery-tmpl" id="question">
+	
+			<script type="text/x-jquery-tmpl" id="question">
 			<li class="question">
 				<span class="handle"></span>
 				<div data-bind="searchClick: {value: name, options: exam.allQuestions, hasfocus: isNew}"></div>
 				<button class="remove" data-bind="click:remove"></button>
 			</li>
 		</script>
-    {% endverbatim %}
-
-    <div>
-        <div id="controls">
-            <div class="controlbox" id="author">
-                Author: {{object.author.username}}
-            </div>
-            <div class="controlbox" id="buttons">
-                Download: 
-                <a href="{% url exam_download object.pk object.slug %}">standalone .zip</a>,
-                <a href="{% url exam_download object.pk object.slug %}?scorm">SCORM package</a>,
-                <a href="{% url exam_source object.pk object.slug %}">source</a>
-            </div>
-            <div class="controlbox" id="admin">
-                <button id="preview" data-bind="click: showPreview">Test Run</button>
-                <a id="delete" href="{% url exam_delete object.pk object.slug %}"><img src="{{STATIC_URL}}images/delete.png"/> Delete</a>
-                <a id="copy" href="{% url exam_copy object.pk object.slug %}">Make a Copy</a>
-            </div>
-        </div>
-        <div id="editor" data-bind="template: 'examTemplate'"></div>
-    </div>
+	    {% endverbatim %}
+	
+	    <div>
+	        <div id="controls">
+	            <div class="controlbox" id="author">
+	                Author: {{ object.author.first_name }} {{ object.author.last_name }} ({{ object.author.username }})
+	            </div>
+	            <div class="controlbox" id="buttons">
+	                Download: 
+	                <a href="{% url exam_download object.pk object.slug %}">standalone .zip</a>,
+	                <a href="{% url exam_download object.pk object.slug %}?scorm">SCORM package</a>,
+	                <a href="{% url exam_source object.pk object.slug %}">source</a>
+	            </div>
+	            <div class="controlbox" id="admin">
+	                <button id="preview" data-bind="click: showPreview">Test Run</button>
+	                <a id="delete" href="{% url exam_delete object.pk object.slug %}"><img src="{{STATIC_URL}}images/delete.png"/> Delete</a>
+	                <a id="copy" href="{% url exam_copy object.pk object.slug %}">Make a Copy</a>
+	            </div>
+	        </div>
+	        <div id="editor" data-bind="template: 'examTemplate'"></div>
+	    </div>
+    {% else %}
+	    <div>You are not permitted to view this exam.</div>
+    {% endif %}
 {% endblock content %}
 
 {% block sidebar %}

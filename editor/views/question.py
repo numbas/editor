@@ -45,6 +45,7 @@ class QuestionPreviewView(PreviewView):
         else:
             return self.preview(q)
 
+
 class QuestionZipView(ZipView):
 
     """Compile a question as a SCORM package and return the .zip file"""
@@ -65,6 +66,7 @@ class QuestionZipView(ZipView):
         else:
             return self.download(q,scorm)
 
+
 class QuestionSourceView(SourceView):
 
     """Compile a question as a SCORM package and return the .zip file"""
@@ -84,6 +86,7 @@ class QuestionSourceView(SourceView):
         else:
             return self.source(q)
 
+
 class QuestionCreateView(CreateView):
     
     """Create a question."""
@@ -100,6 +103,7 @@ class QuestionCreateView(CreateView):
         return reverse('question_edit', args=(self.object.pk,
                                               self.object.slug,))
  
+ 
 class QuestionUploadView(CreateView):
     
     """Upload a .exam file representing a question"""
@@ -108,12 +112,14 @@ class QuestionUploadView(CreateView):
 
     def post(self, request, *args, **kwargs):
         self.object = Question(content=request.POST['content'])
+        self.object.author = self.request.user
         self.object.save()
 
         return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
         return reverse('question_edit', args=(self.object.pk, self.object.slug) )
+
 
 class QuestionCopyView(View, SingleObjectMixin):
 
@@ -140,6 +146,7 @@ class QuestionCopyView(View, SingleObjectMixin):
                                            content_type='application/json')
         else:
             return HttpResponseRedirect(reverse('question_edit', args=(q2.pk,q2.slug)))
+
 
 class QuestionDeleteView(DeleteView):
     

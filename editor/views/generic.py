@@ -29,6 +29,7 @@ class CompileError(Exception):
     def __str__(self):
         return repr(self.status)
     
+    
 class CompileObject():
     
     """Compile an exam or question."""
@@ -85,6 +86,7 @@ class PreviewView(DetailView,CompileObject):
             return HttpResponse(json.dumps(status),
                                 content_type='application/json')
         
+        
 class ZipView(DetailView,CompileObject):
     def download(self,obj,scorm=False):
         source = obj.as_source()    #need to catch errors
@@ -103,6 +105,7 @@ class ZipView(DetailView,CompileObject):
             response['Content-Disposition'] = 'attachment; filename=%s.zip' % obj.slug
             response['Content-Length'] = os.path.getsize(fsLocation)
             return response
+
 
 class SourceView(DetailView):
     def source(self,obj):

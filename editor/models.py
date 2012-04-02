@@ -45,6 +45,7 @@ class NumbasObject:
             self.content = printdata(data)
         self.save()
 
+
 class GitObject:
 
     message = ''
@@ -111,6 +112,7 @@ def validate_content(content):
     except ParseError as err:
         raise ValidationError(err)
 
+
 class Question(models.Model,NumbasObject,GitObject):
     
     """Model class for a question.
@@ -158,6 +160,7 @@ class Question(models.Model,NumbasObject,GitObject):
         d['tags'] = [ti.tag.name for ti in d['tags']]
         return json.dumps(d)
 
+
 class Exam(models.Model,NumbasObject,GitObject):
     
     """Model class for an Exam.
@@ -196,11 +199,10 @@ class Exam(models.Model,NumbasObject,GitObject):
         for order,question in enumerate(question_list):
             exam_question = ExamQuestion(exam=self,question=question, qn_order=order)
             exam_question.save()
-
     
     def save(self, *args, **kwargs):
         NumbasObject.save(self)
-
+        
         self.slug = slugify(self.name)
             
         GitObject.save(self)
@@ -213,6 +215,7 @@ class Exam(models.Model,NumbasObject,GitObject):
         data['name'] = self.name
         data['questions'] = [parser.parse(q.content) for q in self.get_questions()]
         return printdata(data)
+        
         
 class ExamQuestion(models.Model):
     

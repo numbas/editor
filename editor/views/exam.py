@@ -48,6 +48,7 @@ class ExamPreviewView(PreviewView):
         else:
             return self.preview(e)
 
+
 class ExamZipView(ZipView):
 
     """Compile an exam as a SCORM package and return the .zip file"""
@@ -68,6 +69,7 @@ class ExamZipView(ZipView):
                                            content_type='application/json')
         else:
             return self.download(e,scorm)
+
 
 class ExamSourceView(SourceView):
 
@@ -106,6 +108,7 @@ class ExamCreateView(CreateView):
         return reverse('exam_edit', args=(self.object.pk,
                                           self.object.slug,))
     
+    
 class ExamUploadView(CreateView):
     
     """Upload a .exam file representing an exam"""
@@ -114,12 +117,14 @@ class ExamUploadView(CreateView):
 
     def post(self, request, *args, **kwargs):
         self.object = Exam(content=request.POST['content'])
+        self.object.author = self.request.user
         self.object.save()
 
         return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
         return reverse('exam_edit', args=(self.object.pk, self.object.slug) )
+
 
 class ExamCopyView(View, SingleObjectMixin):
 
@@ -146,6 +151,7 @@ class ExamCopyView(View, SingleObjectMixin):
                                            content_type='application/json')
         else:
             return HttpResponseRedirect(reverse('exam_edit', args=(e2.pk,e2.slug)))
+
 
 class ExamDeleteView(DeleteView):
     

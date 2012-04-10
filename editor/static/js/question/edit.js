@@ -261,7 +261,7 @@ $(document).ready(function() {
 					return;
 				}
 				v.value('');
-				todo[v.name()] = {
+				todo[v.name().toLowerCase()] = {
 					v: v,
 					tree: tree,
 					vars: vars

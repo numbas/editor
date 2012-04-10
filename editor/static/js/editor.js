@@ -295,15 +295,14 @@ $(document).ready(function() {
     ko.bindingHandlers.writemaths = {
         init: function(element,valueAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor()) || '';
-			value = value.split(/\n[ \t]*\n/).join('\n');
 
 			//a container for both the rich and plain editing areas
-			var bd = $('<div/>').addClass('writemathsContainer').attr('style','position:relative;');
+			var container = $('<div/>').addClass('writemathsContainer').attr('style','position:relative;');
 			var swap = $('<div class="wmToggle on">Rich editor: <span class="ticko"></span></div>').attr('style','position:absolute;top:-1.2em;right:0;');
 
 			var ta = $('<textarea class="plaintext"/>')	//the plain text area
 	        var d = $('<div/>')	//the rich editing aea
-			bd.append(d,swap,ta);
+			container.append(d,swap,ta);
 
 			d
 				.writemaths({cleanMaths: cleanJME})
@@ -322,7 +321,7 @@ $(document).ready(function() {
 			;
 
 
-            $(element).append(bd);
+            $(element).append(container);
 
 			var toggle = true;
 			swap.click(function() {
@@ -334,7 +333,9 @@ $(document).ready(function() {
         },
         update: function(element, valueAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor()) || '';
+			console.log(value);
 			value = textile(value);
+			console.log(value);
 			var pt = $(element).find('.plaintext');
 			if(!pt.is(':focus'))
 				pt.val(value)

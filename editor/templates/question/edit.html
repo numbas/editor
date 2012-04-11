@@ -47,6 +47,18 @@
 				</div>
 			{{/wrap}}
 
+			{{wrap(this,{label:"Rulesets"}) "#folder"}}
+			<div class="rulesets">
+				<ul class="editlist" data-bind="template:{
+					name:'ruleset',
+					foreach: rulesets,
+					beforeRemove: function(elem) { $(elem).slideUp(150,function(){$(this).remove()}) },
+					afterAdd: function(elem) { $(elem).hide().slideDown(150) }
+				}"></ul>
+				<button data-bind="click:addRuleset, text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></button>
+			</div>
+			{{/wrap}}
+
 			{{wrap(this,{label:"Variables",show:true}) '#folder'}}
 				<div>
 					<table class="variables editlist">
@@ -469,6 +481,13 @@
 					</td>
 				{{/each}}
 			</tr>
+		</script>
+
+		<script type="text/x-jquery-tmpl" id="ruleset">
+			<li class="ruleset">
+				<input type="text" data-bind="value:name, valueUpdate: 'input'"/>: <div data-bind="listbox:sets, rulesetcomplete: allsets"></div>
+				<button class="remove" data-bind="click:remove"></button>
+			</li>
 		</script>
 
 		<script type="text/x-jquery-tmpl" id="variable">

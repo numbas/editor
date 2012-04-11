@@ -26,8 +26,6 @@ $(document).ready(function() {
 	};
 	Numbas.tryInit();
 
-    var Ruleset = Editor.Ruleset;
-
     function Question(data)
     {
         this.realName = ko.observable('A Question');
@@ -67,6 +65,11 @@ $(document).ready(function() {
 
         this.statement = ko.observable('');
         this.advice = ko.observable('');
+
+        var rulesets = this.rulesets = ko.observableArray([]);
+        this.allsets = ko.computed(function() {
+            return builtinRulesets.concat(rulesets().map(function(r){return r.name()})).sort();
+        });
 
         this.functions = ko.observableArray([]);
 
@@ -147,6 +150,10 @@ $(document).ready(function() {
         },this).extend({throttle:1000});
     }
     Question.prototype = {
+        addRuleset: function() {
+            this.rulesets.push(new Ruleset(this));
+        },
+
         addFunction: function(q,e,n) {
             var f = new JMEFunction(this);
             if(n!=undefined)
@@ -313,18 +320,26 @@ $(document).ready(function() {
         },
 
         toJSON: function() {
+            var rulesets = {};
+            this.rulesets().map(function(r){
+                rulesets[r.name()] = r.sets();
+            });
+
             var variables = {};
             this.variables().map(function(v) {
                 variables[v.name()] = v.definition();
             });
+
 			var functions = {};
 			this.functions().map(function(f) {
 				functions[f.name()] = f.toJSON();
 			});
+
             return {
                 name: this.name(),
                 statement: this.statement(),
                 advice: this.advice(),
+                rulesets: rulesets,
                 variables: variables,
 				functions: functions,
                 parts: this.parts().map(function(p){return p.toJSON();})
@@ -350,6 +365,14 @@ $(document).ready(function() {
 					this.functions.push(new JMEFunction(this,data.functions[x]));
 				}
 			}
+
+            if('rulesets' in data)
+            {
+                for(var x in data.rulesets)
+                {
+                    this.rulesets.push(new Ruleset(this,{name: x, sets:data.rulesets[x]}));
+                }
+            }
 
             if('parts' in data)
             {
@@ -389,6 +412,28 @@ $(document).ready(function() {
 		download: function() {
 			window.location = Editor.download_url;
 		}
+    };
+
+    var builtinRulesets = ['basic','unitFactor','unitPower','unitDenominator','zeroFactor','zeroTerm','zeroPower','noLeadingMinus','collectNumbers','simplifyFractions','zeroBase','constantsFirst','sqrtProduct','sqrtDivision','sqrtSquare','trig','otherNumbers']
+
+    function Ruleset(exam,data)
+    {
+        this.name = ko.observable('ruleset'+exam.rulesets().length);
+        this.sets = ko.observableArray([]);
+        this.allsets = exam.allsets;
+        this.remove = function() {
+            if(confirm("Remove this ruleset?"))
+                exam.rulesets.remove(this);
+        };
+        if(data)
+            this.load(data);
+    }
+    Ruleset.prototype = {
+        load: function(data) {
+            var ruleset = this;
+            this.name(data.name);
+            data.sets.map(function(set){ ruleset.sets.push(set); });
+        }
     };
 
     function Variable(q,data) {

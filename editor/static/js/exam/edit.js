@@ -52,11 +52,6 @@ $(document).ready(function() {
         this.allowrevealanswer = ko.observable(true);
         this.advicethreshold = ko.observable(0);
 
-        var rulesets = this.rulesets = ko.observableArray([]);
-        this.allsets = ko.computed(function() {
-            return Editor.builtinRulesets.concat(rulesets().map(function(r){return r.name()})).sort();
-        });
-
 		this.questions = ko.observableArray([]);
 
         this.onadvance = new Event(
@@ -168,10 +163,6 @@ $(document).ready(function() {
 
     }
     Exam.prototype = {
-        addRuleset: function() {
-            this.rulesets.push(new Ruleset(this));
-        },
-
 		addQuestion: function() {
 			var q = new Question(0,'',this);
 			q.isNew(true);
@@ -180,10 +171,6 @@ $(document).ready(function() {
 
         //returns a JSON-y object representing the exam
         toJSON: function() {
-            var rulesets = {};
-            this.rulesets().map(function(r){
-                rulesets[r.name()] = r.sets();
-            });
             return {
                 name: this.name(),
                 duration: this.duration()*60,
@@ -208,8 +195,7 @@ $(document).ready(function() {
                   showanswerstate: this.showanswerstate(),
                   allowrevealanswer: this.allowrevealanswer(),
                   advicethreshold: this.advicethreshold()
-                },
-                rulesets: rulesets,
+                }
             };
         },
 
@@ -236,14 +222,6 @@ $(document).ready(function() {
                 ['showactualmark','showtotalmark','showanswerstate','allowrevealanswer','advicethreshold'].map(function(n){
                     this[n](data.feedback[n]);
                 },this);
-            }
-
-            if('rulesets' in data)
-            {
-                for(var x in data.rulesets)
-                {
-                    this.rulesets.push(new Ruleset(this,{name: x, sets:data.rulesets[x]}));
-                }
             }
         },
 

@@ -121,28 +121,6 @@ $(document).ready(function() {
         }
     };
 
-    Editor.builtinRulesets = ['basic','unitFactor','unitPower','unitDenominator','zeroFactor','zeroTerm','zeroPower','noLeadingMinus','collectNumbers','simplifyFractions','zeroBase','constantsFirst','sqrtProduct','sqrtDivision','sqrtSquare','trig','otherNumbers']
-
-    Editor.Ruleset = function(exam,data)
-    {
-        this.name = ko.observable('ruleset'+exam.rulesets().length);
-        this.sets = ko.observableArray([]);
-        this.allsets = exam.allsets;
-        this.remove = function() {
-            if(confirm("Remove this ruleset?"))
-                exam.rulesets.remove(this);
-        };
-        if(data)
-            this.load(data);
-    }
-    Editor.Ruleset.prototype = {
-        load: function(data) {
-            var ruleset = this;
-            this.name(data.name);
-            data.sets.map(function(set){ ruleset.sets.push(set); });
-        }
-    };
-
     //make folders work
     $('.fold > #folder-header').live('click',function() {
         $(this).siblings('#folder').toggle(150,function() {

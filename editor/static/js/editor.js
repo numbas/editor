@@ -333,9 +333,7 @@ $(document).ready(function() {
         },
         update: function(element, valueAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor()) || '';
-			console.log(value);
 			value = textile(value);
-			console.log(value);
 			var pt = $(element).find('.plaintext');
 			if(!pt.is(':focus'))
 				pt.val(value)

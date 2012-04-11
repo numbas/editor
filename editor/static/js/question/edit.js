@@ -181,7 +181,8 @@ $(document).ready(function() {
 				return;
 			}
 
-			var functions = {};
+			var scope = new Numbas.jme.Scope(Numbas.jme.builtinScope);
+
 			var jme = Numbas.jme;
 			this.functions().map(function(f) {
 
@@ -202,17 +203,17 @@ $(document).ready(function() {
 				switch(f.language())
 				{
 				case 'jme':
-					fn.tree = jme.compile(f.definition(),functions);
+					fn.tree = jme.compile(f.definition(),scope);
 
-					fn.evaluate = function(args,variables,functions)
+					fn.evaluate = function(args,scope)
 					{
-						nvariables = Numbas.util.copyobj(variables);
+						scope = new Numbas.jme.Scope(scope);
 
 						for(var j=0;j<args.length;j++)
 						{
-							nvariables[paramNames[j]] = jme.evaluate(args[j],variables,functions);
+							scope.variables[paramNames[j]] = jme.evaluate(args[j],scope);
 						}
-						return jme.evaluate(this.tree,nvariables,functions);
+						return jme.evaluate(this.tree,scope);
 					}
 					break;
 				case 'javascript':
@@ -220,9 +221,9 @@ $(document).ready(function() {
 					var math = Numbas.math, 
 						util = Numbas.util;
 					var jfn = eval(preamble+f.definition()+'})');
-					fn.evaluate = function(args,variables,functions)
+					fn.evaluate = function(args,scope)
 					{
-						args = args.map(function(a){return jme.evaluate(a,variables,functions).value});
+						args = args.map(function(a){return jme.evaluate(a,scope).value});
 						try {
 							var val = jfn.apply(this,args);
 							if(!val.type)
@@ -237,23 +238,17 @@ $(document).ready(function() {
 					break;
 				}
 
-				if(functions[name]===undefined)
-					functions[name] = [];
-				functions[name].push(fn);
+				if(scope.functions[name]===undefined)
+					scope.functions[name] = [];
+				scope.functions[name].push(fn);
 			});
-
-			for(var x in Numbas.jme.builtins) {
-				if(!(x in functions))
-					functions[x] = [];
-				functions[x] = functions[x].concat(Numbas.jme.builtins[x]);
-			}
 
 			var todo = {}
 			this.variables().map(function(v) {
 				if(!v.name() || !v.definition())
 					return;
 				try {
-					var tree = Numbas.jme.compile(v.definition(),functions);
+					var tree = Numbas.jme.compile(v.definition(),scope);
 					var vars = Numbas.jme.findvars(tree);
 				}
 				catch(e) {
@@ -297,14 +292,14 @@ $(document).ready(function() {
 					}
 				}
 
-				variables[name] = Numbas.jme.evaluate(v.tree,variables,functions);
+				variables[name] = Numbas.jme.evaluate(v.tree,scope);
 				v.v.value(variables[name]);
 			}
-			var variables = {};
+
 			for(var x in todo)
 			{
 				try {
-					compute(x,todo,variables);
+					compute(x,todo,scope.variables);
 					todo[x].v.error('');
 				}
 				catch(e) {

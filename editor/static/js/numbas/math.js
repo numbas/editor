@@ -129,33 +129,21 @@ var math = Numbas.math = {
 
 	pow: function(a,b)
 	{
-		if(a.complex)
+		if(a.complex || b.complex || a<0)
 		{
-			if(b.complex)
-			{
-				var ss = a.re*a.re + a.im*a.im;
-				var arg1 = math.arg(a);
-				var mag = Math.pow(ss,b.re/2) * Math.exp(-b.im*arg1);
-				var arg = b.re*arg1 + (b.im * Math.log(ss))/2;
-				return math.complex(mag*Math.cos(arg), mag*Math.sin(arg));
-			}
-			else
-			{
-				var mag = Math.pow( math.abs(a), b);
-				var arg = math.arg(a) * b;
-				return math.complex( mag*Math.cos(arg), mag*Math.sin(arg) );
-			}
+			if(!a.complex)
+				a = {re: a, im: 0, complex: true};
+			if(!b.complex)
+				b = {re: b, im: 0, complex: true};
+			var ss = a.re*a.re + a.im*a.im;
+			var arg1 = math.arg(a);
+			var mag = Math.pow(ss,b.re/2) * Math.exp(-b.im*arg1);
+			var arg = b.re*arg1 + (b.im * Math.log(ss))/2;
+			return math.complex(mag*Math.cos(arg), mag*Math.sin(arg));
 		}
 		else
 		{
-			if(b.complex)
-			{
-				var mag = Math.pow(a,b.re);
-				var arg = b.im * Math.log(a);
-				return math.complex( mag*Math.cos(arg), mag*Math.sin(arg) );
-			}
-			else
-				return Math.pow(a,b);
+			return Math.pow(a,b);
 		}
 	},
 
@@ -367,6 +355,9 @@ var math = Numbas.math = {
 		}
 		else	
 		{
+			if(n==Infinity)
+				return 'infinity';
+
 			if((piD = math.piDegree(n)) > 0)
 				n /= Math.pow(Math.PI,piD);
 
@@ -446,6 +437,7 @@ var math = Numbas.math = {
 			var s = math.sign(a);
 			a = Math.abs(a);
 			if(a==0) { return s*a; }
+			if(a==Infinity) { return s*a; }
 			b = Math.pow(10,Math.ceil(Math.log(a)/Math.log(10))-b);
 			return s*Math.round(a/b)*b;
 		}
@@ -663,6 +655,18 @@ var math = Numbas.math = {
 				return range[0]+n*range[2];
 			}
 		}
+	},
+
+	//removes all the values in the list `exclude` from the list `range`
+	except: function(range,exclude) {
+		range = range.filter(function(r) {
+			for(var i=0;i<exclude.length;i++) {
+				if(math.eq(r,exclude[i]))
+					return false;
+			}
+			return true;
+		});
+		return range;
 	},
 
 	//choose one item from an array
@@ -901,13 +905,7 @@ var vectormath = Numbas.vectormath = {
 	},
 
 	neq: function(a,b) {
-		if(b.length>a.length)
-		{
-			var c = b;
-			b = a;
-			a = c;
-		}
-		return a.reduce(function(s,x,i){return s || neq(x,b[i]||0)},false);
+		return !vectormath.eq(a,b);
 	},
 
 	//multiply vector v by matrix m

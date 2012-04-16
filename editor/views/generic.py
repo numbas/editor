@@ -34,11 +34,13 @@ class CompileObject():
     
     """Compile an exam or question."""
 
-    def compile(self,source,switches,location):
+    def compile(self,source,switches,location,obj):
         """
             Construct a temporary exam/question file and compile it.
             Returns the path to the output produced
         """
+        theme = obj.theme if hasattr(obj,'theme') else 'default'
+
 
         output_location = os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'], location)
         numbas_command = [
@@ -46,7 +48,8 @@ class CompileObject():
             os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'],'bin','numbas.py'),
             '--pipein',
             '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
-            '-o'+output_location
+            '-o'+output_location,
+            '-t'+theme,
         ] + switches
 
         try:
@@ -73,7 +76,7 @@ class PreviewView(DetailView,CompileObject):
         location = obj.filename
         switches = ['-c']
         try:
-            fsLocation = self.compile(source, switches, location)
+            fsLocation = self.compile(source, switches, location, obj)
         except CompileError as err:
             return HttpResponseServerError(json.dumps(err.status),
                                            content_type='application/json')
@@ -95,7 +98,7 @@ class ZipView(DetailView,CompileObject):
             switches.append('-s')
         location = obj.filename + '.zip'
         try:
-            fsLocation = self.compile(source, switches, location)
+            fsLocation = self.compile(source, switches, location, obj)
         except CompileError as err:
             return HttpResponseServerError(json.dumps(err.status),
                                            content_type='application/json')

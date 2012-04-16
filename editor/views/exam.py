@@ -15,6 +15,7 @@ import json
 import traceback
 from copy import deepcopy
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
@@ -216,6 +217,7 @@ class ExamUpdateView(UpdateView):
         exam_dict['questions'] = [
             {'id': q.id, 'name':q.name} for q in self.object.get_questions()]
         context['exam_JSON'] = json.dumps(exam_dict)
+        context['themes'] = settings.GLOBAL_SETTINGS['NUMBAS_THEMES']
         return context
 
     def get_success_url(self):

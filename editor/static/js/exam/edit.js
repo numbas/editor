@@ -30,6 +30,8 @@ $(document).ready(function() {
 
 		this.metadata = ko.observable('');
 
+		this.theme = ko.observable('default');
+
         this.duration = ko.observable(0);
         this.percentPass = ko.observable(50);
         this.shuffleQuestions = ko.observable(false);
@@ -125,6 +127,7 @@ $(document).ready(function() {
 			}
             return {
 				content: this.output(),
+                theme: this.theme(),
 				metadata: this.metadata(),
 				questions: this.questions().filter(function(q){return q.id()>0}).map(function(q){ return q.id(); }),
 			};

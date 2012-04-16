@@ -122,6 +122,7 @@ class Question(models.Model,NumbasObject,GitObject):
     """
     
     name = models.CharField(max_length=200)
+    theme = 'default'
     slug = models.SlugField(editable=False,unique=False)
     author = models.ForeignKey(User)
     filename = models.CharField(max_length=200, editable=False)
@@ -172,6 +173,7 @@ class Exam(models.Model,NumbasObject,GitObject):
     questions = models.ManyToManyField(Question, through='ExamQuestion',
                                        blank=True, editable=False)
     name = models.CharField(max_length=200)
+    theme = models.CharField(max_length=200)
     slug = models.SlugField(editable=False,unique=False)
     author = models.ForeignKey(User)
     filename = models.CharField(max_length=200, editable=False)

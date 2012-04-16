@@ -17,6 +17,9 @@
             }
             window.Editor['preview_url'] = '{% url exam_preview object.pk object.slug %}';
             window.Editor['download_url'] = '{% url exam_download object.pk object.slug %}';
+            {% autoescape off %}
+            window.Editor['themes'] = {{themes}};
+            {% endautoescape %}
         })();
     </script>
 {% endblock javascripts %}
@@ -34,6 +37,10 @@
 					name: 'property',
 					templateOptions: {label:'Exam name:',property:name}
 				}"></div>
+                <div>
+                    <label>Action: </label>
+                    <select data-bind="options: Editor.themes, value: theme"></select>
+                </div>
 
 				<div data-bind="template: {
 					name: 'property',

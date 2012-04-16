@@ -140,9 +140,10 @@ GLOBAL_SETTINGS = {
     'REPO_PATH': '/srv/numbas/questiondb',
     'NUMBAS_PATH': '/srv/numbas/dist',
     'PREVIEW_PATH': '/srv/numbas/previews',
-    'PREVIEW_URL': 'http://server.domain/numbas-previews/',	#a URL which serves files from PREVIEW_PATH
-	  'HELP_URL': 'http://server.domain/help/',		#the URL of the Numbas webdocs
+    'PREVIEW_URL': 'http://server.domain/numbas-previews/',    #a URL which serves files from PREVIEW_PATH
+    'HELP_URL': 'http://server.domain/help/',        #the URL of the Numbas webdocs
     'PYTHON_EXEC': '/usr/bin/python3.1',
+    'NUMBAS_THEMES': ['default','worksheet'],
 }
 
 LOGIN_REDIRECT_URL = '/'
@@ -160,6 +161,6 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 )
 
 examparser = imp.load_source(
-	'examparser',
+    'examparser',
      os.path.join(GLOBAL_SETTINGS['NUMBAS_PATH'],
-			      os.path.normpath('bin/examparser.py')))
+                  os.path.normpath('bin/examparser.py')))

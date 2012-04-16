@@ -113,6 +113,8 @@ $(document).ready(function() {
 		{
 			this.id = data.id;
             this.load(parseExam(data.content));
+            if('theme' in data)
+                this.theme(data.theme);
 			if('questions' in data)
 			{
 				this.questions(data.questions.map(function(q) {

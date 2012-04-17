@@ -26,8 +26,10 @@ from django.views.generic import CreateView, DeleteView, FormView, ListView, Upd
 from django.views.generic.detail import SingleObjectMixin
 
 from editor.forms import ExamForm, NewExamForm, ExamSearchForm
-from editor.models import Exam
+from editor.models import Exam, Question
 from editor.views.generic import PreviewView, ZipView, SourceView
+
+from examparser import ExamParser, ParseError, printdata
 
 class ExamPreviewView(PreviewView):
     
@@ -118,8 +120,21 @@ class ExamUploadView(CreateView):
 
     def post(self, request, *args, **kwargs):
         self.object = Exam(content=request.POST['content'])
+
         self.object.author = self.request.user
         self.object.save()
+
+        data = ExamParser().parse(self.object.content)
+
+        qs = []
+        for q in data['questions']:
+            qo = Question(
+                content = printdata(q), 
+                author = self.object.author
+            )
+            qo.save()
+            qs.append(qo)
+        self.object.set_questions(qs)
 
         return HttpResponseRedirect(self.get_success_url())
 

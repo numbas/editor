@@ -272,7 +272,7 @@ $(document).ready(function() {
         this.actionName = ko.computed(function() {
             return this.action().name;
         },this);
-        this.message = ko.observable('')
+        this.message = Editor.contentObservable('')
     }
     Event.prototype = {
         toJSON: function() {
@@ -283,6 +283,8 @@ $(document).ready(function() {
         },
 
         load: function(data) {
+            if(!data)
+                return;
             for(var i=0;i<this.actions.length;i++)
             {
                 if(this.actions[i].name==data.action)

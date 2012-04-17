@@ -63,8 +63,8 @@ $(document).ready(function() {
 
 		this.metadata = ko.observable('');
 
-        this.statement = ko.observable('');
-        this.advice = ko.observable('');
+        this.statement = Editor.contentObservable('');
+        this.advice = Editor.contentObservable('');
 
         var rulesets = this.rulesets = ko.observableArray([]);
         this.allsets = ko.computed(function() {
@@ -348,7 +348,7 @@ $(document).ready(function() {
 
         load: function(data) {
             tryLoad(data,['name','statement','advice'],this);
-
+            
             if('variables' in data)
             {
                 for(var x in data.variables)
@@ -526,7 +526,7 @@ $(document).ready(function() {
 
     var Part = function(q,parent,parentList,data) {
         this.type = ko.observable('information');
-        this.prompt = ko.observable('');
+        this.prompt = Editor.contentObservable('');
         this.parent = parent;
 
         this.marks = ko.observable(0);
@@ -552,24 +552,24 @@ $(document).ready(function() {
             maxlength: {
                 length: ko.observable(0),
                 partialCredit: ko.observable(0),
-                message: ko.observable(''),
+                message: Editor.contentObservable(''),
             },
             minlength: {
                 length: ko.observable(0),
                 partialCredit: ko.observable(0),
-                message: ko.observable(''),
+                message: Editor.contentObservable(''),
             },
             musthave: {
                 strings: ko.observableArray([]),
                 showStrings: ko.observable(false),
                 partialCredit: ko.observable(0),
-                message: ko.observable('')
+                message: Editor.contentObservable('')
             },
             notallowed: {
                 strings: ko.observableArray([]),
                 showStrings: ko.observable(false),
                 partialCredit: ko.observable(0),
-                message: ko.observable('')
+                message: Editor.contentObservable('')
             },
         };
         this.jme.checkingType = ko.observable(this.jme.checkingTypes[0]);
@@ -583,7 +583,7 @@ $(document).ready(function() {
 
         this.patternmatch = {
             answer: ko.observable(''),
-            displayAnswer: ko.observable(''),
+            displayAnswer: Editor.contentObservable(''),
             caseSensitive: ko.observable(false),
             partialCredit: ko.observable(0)
         };
@@ -656,9 +656,9 @@ $(document).ready(function() {
 
         addChoice: function() {
             var c = {
-                content: ko.observable('Choice '+(this.multiplechoice.choices().length+1)),
+                content: Editor.contentObservable('Choice '+(this.multiplechoice.choices().length+1)),
                 marks: ko.observable(0),
-                distractor: ko.observable(''),
+                distractor: Editor.contentObservable(''),
                 answers: ko.observableArray([])
             };
             var p = this;
@@ -922,7 +922,9 @@ $(document).ready(function() {
                     c.content(data.choices[i] || '');
                     c.marks(data.matrix[i] || 0);
 					if('distractors' in data)
+                    {
 	                    c.distractor(data.distractors[i] || '');
+                    }
                 }
                 break;
 

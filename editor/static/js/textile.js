@@ -146,7 +146,6 @@ var textile;
 		[new RegExp('(\\S)"(?=\\s|'+re_punct.source+'|<|$)','g'),'$1&#8221;'],				//double quote closing
 		[/"/g,'&#8220;'],																//double quote opening
 		[/\b([A-Z][A-Z0-9]{2,})\b(?:\(([^\)]*)\))/g,'<acronym title="$2"><span class="caps">$1</span></acronym>'],	//acronym with a definition
-		[/\b([A-Z][A-Z'\-]+[A-Z])(?=[\s.,\)>]|$)/g,'<span class="caps">$1</span>'],		//uppercase word
 		[/\b( ?)\.{3}/g,'$1&#8230;'],													//ellipsis
 		[/(\s?)--(\s?)/g,'$1&#8212;$2'],													//em dash
 		[/(\s?)-(?:\s|$)/g,' &#8211; '],													//en dash
@@ -415,7 +414,7 @@ var textile;
 			var tag = '<code>'+this.escapeHTML(m[1])+'</code>';
 			span = span.slice(re_codeHTMLPhrase.lastIndex);
 			bit = this.convertGlyphs(bit);
-			nspan = this.joinPhraseBits(nspan,[bit,tag],nspan.length+1)
+			nspan = this.joinPhraseBits(nspan,[bit,tag],nspan.length+1);
 			re_codeHTMLPhrase.lastIndex = 0;
 		}
 		if(nspan.length)
@@ -433,8 +432,26 @@ var textile;
 			var tag = m[1];
 			span = span.slice(re_notextileHTMLPhrase.lastIndex);
 			bit = this.convertGlyphs(bit);
-			nspan = this.joinPhraseBits(nspan,[bit,tag],nspan.length+1)
+			nspan = this.joinPhraseBits(nspan,[bit,tag],nspan.length+1);
 			re_notextileHTMLPhrase.lastIndex = 0;
+		}
+		if(nspan.length)
+			nspan.push(span);
+		return nspan;
+	});
+
+	var re_capsPhrase = /<span class="caps">([A-Z][A-Z'\-]+[A-Z])<\/span>|\b([A-Z][A-Z'\-]+[A-Z])(?=[\s.,\)>]|$)/gm;
+	phraseTypes.push(function(span) {
+		var m;
+		var nspan = [];
+		while(m = re_capsPhrase.exec(span))
+		{
+			var bit = span.slice(0,m.index);
+			span = span.slice(re_capsPhrase.lastIndex);
+			bit = this.convertGlyphs(bit);
+			var tag = m[1] ? m[0] : '<span class="caps">'+m[2]+'</span>';
+			nspan = this.joinPhraseBits(nspan,[bit,tag],nspan.length+1);
+			re_capsPhrase.lastIndex = 0;
 		}
 		if(nspan.length)
 			nspan.push(span);

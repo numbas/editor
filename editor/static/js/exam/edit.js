@@ -224,9 +224,7 @@ $(document).ready(function() {
 
             if('feedback' in data)
             {
-                ['showactualmark','showtotalmark','showanswerstate','allowrevealanswer','advicethreshold'].map(function(n){
-                    this[n](data.feedback[n]);
-                },this);
+                tryLoad(data.feedback,['showactualmark','showtotalmark','showanswerstate','allowrevealanswer','advicethreshold'],this);
             }
         },
 

@@ -217,7 +217,7 @@ var textile;
 		if(m=attr.match(re_attrClassId))
 		{
 			var n = m.length;
-			for(j=0;j<n && m[j].length==2;j++){}
+			for(var j=0;j<n && m[j].length==2;j++){}
 			if(j<n)
 			{
 				m=re_attrClassIdSingle.exec(m[j]);
@@ -560,6 +560,7 @@ var textile;
 		match: function() { return re_table.test(this.src); },
 		run: function() {
 			var m = re_table.exec(this.src);
+			var tableTag;
 			if(m[1])
 			{
 				var attr = getAttributes(m[2]);

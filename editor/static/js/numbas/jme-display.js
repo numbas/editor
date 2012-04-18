@@ -416,6 +416,9 @@ var texOps = {
 	}),
 	'verbatim': (function(thing,texArgs) {
 		return thing.args[0].tok.value;
+	}),
+	'subvar': (function(thing,texArgs) {
+		return '\\color{'+thing.args[1].tok.value+'}{\\boxed{'+texArgs[0]+'}}';
 	})
 }
 

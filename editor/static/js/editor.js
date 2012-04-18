@@ -248,7 +248,7 @@ $(document).ready(function() {
 		return out;
 	}
 	function texMaths(s) {
-
+		var scope = new Numbas.jme.Scope(Numbas.jme.builtinScope,{rulesets: Numbas.jme.display.simplificationRules});
 		var bits = texsplit(s);
 		var out = '';
 		for(var i=0;i<bits.length-3;i+=4)
@@ -264,7 +264,7 @@ $(document).ready(function() {
 				{
 					expr += j%2 ? 'subvar('+sbits[j]+',"red")' : sbits[j];
 				}
-				expr = Numbas.jme.display.exprToLaTeX(expr);
+				expr = Numbas.jme.display.exprToLaTeX(expr,args,scope);
 			} catch(e) {
 				expr = '\\color{red}{'+expr+'}';
 			}

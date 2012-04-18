@@ -441,11 +441,12 @@ var jme = Numbas.jme = {
 		case 'list':
 			if(tok.value===undefined)
 			{
-				tok.value = [];
+				var value = [];
 				for(var i=0;i<tree.args.length;i++)
 				{
-					tok.value[i] = jme.evaluate(tree.args[i],scope);
+					value[i] = jme.evaluate(tree.args[i],scope);
 				}
+				tok = new TList(value);
 			}
 			return tok;
 		case 'string':
@@ -565,8 +566,8 @@ var jme = Numbas.jme = {
 		var checkingFunction = checkingFunctions[settings.checkingType.toLowerCase()];	//work out which checking type is being used
 
 		try {
-			var tree1 = compile(expr1);
-			var tree2 = compile(expr2);
+			var tree1 = compile(expr1,scope);
+			var tree2 = compile(expr2,scope);
 
 			if(tree1 == null || tree2 == null) 
 			{	//one or both expressions are invalid, can't compare
@@ -593,9 +594,10 @@ var jme = Numbas.jme = {
 				var errors = 0;
 				var rs = randoms(vars1, settings.vsetRangeStart, settings.vsetRangeEnd, settings.vsetRangePoints);
 				for(var i = 0; i<rs.length; i++) {
+					var nscope = new jme.Scope(scope,{variables:rs[i]});
 					util.copyinto(scope.variables,rs[i]);
-					var r1 = evaluate(tree1,rs[i]);
-					var r2 = evaluate(tree2,rs[i]);
+					var r1 = evaluate(tree1,nscope);
+					var r2 = evaluate(tree2,nscope);
 					if( !resultsEqual(r1,r2,checkingFunction,settings.checkingAccuracy) ) { errors++; }
 				}
 				if(errors < settings.failureRate) {
@@ -605,8 +607,8 @@ var jme = Numbas.jme = {
 				}
 			} else {
 				//if no variables used, can just evaluate both expressions once and compare
-				r1 = evaluate(tree1,scope.variables);
-				r2 = evaluate(tree2,scope.variables);
+				r1 = evaluate(tree1,scope);
+				r2 = evaluate(tree2,scope);
 				return resultsEqual(r1,r2,checkingFunction,settings.checkingAccuracy);
 			}
 		}

@@ -9,12 +9,34 @@
     <p>
       Outline instructions on setting up the Numbas editor with a backend MySQL
       database.  The following is for a Debian Squeeze (6.0.2) Linux server.
-      If each step is followed exactly, it should result in a working setup.
-      More detailed instructions at some point soon.
+      If each step is followed exactly, a working setup should result.  More
+      detailed instructions at some point soon.
+    </p>
+
+    <h2>Package installation</h2>
+    <p>
+      Packages that would be installed as part of a standard Debian install are
+      not listed.  Python 3 is required for compilation of Numbas exams; Python
+      2.6 (or greater) is required for Django.
     </p>
     <ul>
-      <li><code>aptitude install apache2 git-core libapache2-mod-wsgi
-        mysql-server mysql-common python3.1 python-mysqldb</code></li>
+      <li>Install Apache, Git, Apache WSGI module, MySQL, Python 3, Python
+      MySQLdb interface: <code>apt-get install apache2 git-core
+        libapache2-mod-wsgi mysql-server mysql-common python3.1
+        python-mysqldb</code></li>
+      <li>Install Django (need version 1.3, not in Squeeze): <code>apt-get
+        install python-django/squeeze-backports</code></li>
+      <li>Install Pip: <code>apt-get install python-pip</code></li>
+      <li>Install GitPython: <code>pip install GitPython</code></li>
+      <li>Install Django Taggit: <code>pip install django-taggit</code></li>
+      <li>Bug in GitPython.  Change <code>util.py</code> by adding <code>import
+        pwd</code> to the top, and edit <code>def get_user_id()</code>
+      replacing <code>username = os.getlogin()</code> with <code>username =
+        pwd.getpwuid(os.getuid()).pw_name</code></li>
+    </ul>
+
+    <h2>Configuration</h2>
+    <ul>
       <li>Create database <code>numbas_editor</code></li>
       <li>Create database user and grant privileges on
       <code>numbas_editor</code> database:
@@ -52,15 +74,6 @@
           <li><code>git init</code></li>
         </ul>
       </li>
-      <li>Install Django (need version 1.3, not in Squeeze): <code>aptitude
-        install python-django/squeeze-backports</code></li>
-      <li>Install Pip: <code>aptitude install python-pip</code></li>
-      <li><code>pip install GitPython</code></li>
-      <li><code>pip install django-taggit</code></li>
-      <li>Bug in GitPython.  Change <code>util.py</code> by adding <code>import
-        pwd</code> to the top, and edit <code>def get_user_id()</code>
-      replacing <code>username = os.getlogin()</code> with <code>username =
-        pwd.getpwuid(os.getuid()).pw_name</code></li>
       <li>Create the editor directory and clone the editor under webroot:
         <ul>
           <li><code>mkdir /srv/www/numbas_editor</code></li>

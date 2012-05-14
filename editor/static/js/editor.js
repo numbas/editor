@@ -46,16 +46,7 @@ $(document).ready(function() {
 	}
 
 	Editor.contentObservable = function(val) {
-		val = val || '';
-		var obs = ko.observable(val);
-		return ko.computed({
-			read: obs,
-			write: function(n) {
-				n = n.split('\n').map(function(line){return line.trimLeft()}).join('\n');
-				n = textile(n);
-				obs(n);
-			}
-		});
+		return ko.observable(val);
 	};
 
 	function indent(s,n)

@@ -27,11 +27,9 @@ var jme = Numbas.jme = {
 	constants: {
 		'e': Math.E,
 		'pi': Math.PI,
-		'\\pi': Math.PI,
 		'i': math.complex(0,1),
 		'infinity': Infinity,
 		'infty': Infinity,
-		'\\infty': Infinity
 	},
 
 	tokenise: function(expr)
@@ -39,17 +37,19 @@ var jme = Numbas.jme = {
 	{
 		if(!expr)
 			return [];
-	
+
 		expr += '';
+		
+		var oexpr = expr;
 
 		expr = expr.replace(/^\s+|\s+$/g, '');	//get rid of whitespace
 
 		var tokens = [];
 		var i = 0;
-		var re_bool = /^true|^false/;
+		var re_bool = /^true|^false/i;
 		var re_number = /^[0-9]+(?:\x2E[0-9]+)?/;
 		var re_name = /^{?((?:(?:[a-zA-Z]+):)*)((?:\$?[a-zA-Z][a-zA-Z0-9]*'*)|\?)}?/i;
-		var re_op = /^(_|\.\.|#|<=|>=|<>|&&|\|\||[\|*+\-\/\^<>=!]|(?:(not|and|or|xor|isa|except)([^a-zA-Z0-9])))/i;
+		var re_op = /^(_|\.\.|#|<=|>=|<>|&&|\|\||[\|*+\-\/\^<>=!&]|(?:(not|and|or|xor|isa|except)([^a-zA-Z0-9]|$)))/i;
 		var re_punctuation = /^([\(\),\[\]])/;
 		var re_string = /^("([^"]*)")|^('([^']*)')/;
 		var re_special = /^\\\\([%!+\-\,\.\/\:;\?\[\]=\*\&<>\|~\(\)]|\d|([a-zA-Z]+))/;
@@ -103,7 +103,7 @@ var jme = Numbas.jme = {
 					if(lname in jme.constants) {
 						token = new TNum(jme.constants[lname]);
 					}else{
-						token = new TName(name,annotation);
+						token = new TName(name);
 					}
 				}
 				else
@@ -157,7 +157,7 @@ var jme = Numbas.jme = {
 			else
 			{
 				//invalid character or not able to match a token
-				return undefined;
+				throw(new Numbas.Error('jme.tokenise.invalid',oexpr));
 			}
 			
 			expr=expr.slice(result[0].length);	//chop found token off the expression
@@ -419,14 +419,12 @@ var jme = Numbas.jme = {
 
 	evaluate: function(tree,scope)
 	{
+		//if a string is given instead of an expression tree, compile it to a tree
 		if( typeof(tree)=='string' )
 			tree = jme.compile(tree,scope);
 		if(!tree)
 			return null;
 
-		//make the scope.
-		//If the scope parameter is not given to this function, we will end up with a good scope object anyway
-		scope = new Scope(builtinScope,scope);
 
 		tree = jme.substituteTree(tree,scope,true);
 		jme.bind(tree,scope);
@@ -456,7 +454,6 @@ var jme = Numbas.jme = {
 				return scope.variables[tok.name.toLowerCase()];
 			else
 				return tok;
-				throw(new Numbas.Error('jme.evaluate.undefined variable'));
 			break;
 		case 'op':
 		case 'function':
@@ -477,9 +474,6 @@ var jme = Numbas.jme = {
 
 		//tokenise expression
 		var tokens = jme.tokenise(expr);
-		if(tokens===undefined){
-			throw(new Numbas.Error('jme.compile.tokenise failed',expr));
-		}
 
 		//compile to parse tree
 		var tree = jme.shunt(tokens,scope);
@@ -488,12 +482,9 @@ var jme = Numbas.jme = {
 			return;
 
 		if(!notypecheck)
-		{
-			if(!jme.typecheck(tree,scope))
-				throw(new Numbas.Error('jme.compile.type error'));
-		}
+			jme.typecheck(tree,scope);	//will throw an error if there is a type problem
 
-		return(tree);
+		return(tree);nop
 	},
 
 	typecheck: function(tree,scope)
@@ -766,10 +757,6 @@ var jme = Numbas.jme = {
 					v = jme.display.treeToJME({tok:v});
 				}
 
-				if(display)
-				{
-					v = textile(v,{nowrapPlainBlocks:true});
-				}
 				out += v;
 			}
 			else
@@ -783,6 +770,8 @@ var jme = Numbas.jme = {
 
 //evaluation environment
 //if called with a list of scopes, they will be combined into this new one
+var fnSort = util.sortBy('id');
+var ruleSort = util.sortBy('patternString');
 var Scope = jme.Scope = function() {
 	this.variables = {};
 	this.functions = {};
@@ -798,15 +787,18 @@ var Scope = jme.Scope = function() {
 			}
 			if('functions' in scope) {
 				for(var x in scope.functions) {
-					if(!(x in this.functions)) {
-						this.functions[x] = [];
-					}
-					this.functions[x] = this.functions[x].merge(scope.functions[x]);
+					if(!(x in this.functions))
+						this.functions[x] = scope.functions[x].slice();
+					else 
+						this.functions[x] = this.functions[x].merge(scope.functions[x],fnSort);
 				}
 			}
 			if('rulesets' in scope) {
 				for(var x in scope.rulesets) {
-					this.rulesets[x] = scope.rulesets[x];
+					if(!(x in this.rulesets))
+						this.rulesets[x] = scope.rulesets[x].slice();
+					else
+						this.rulesets[x] = this.rulesets[x].merge(scope.rulesets[x],ruleSort);
 				}
 			}
 		}
@@ -951,11 +943,12 @@ var TRange = types.TRange = types.range = function(range)
 	{
 		var start = this.value[0], end = this.value[1], step = this.value[2];
 
-		//if step is discrete, store all values in range so they don't need to be computed each time
-		if(step > 0)
+		//if range is discrete, store all values in range so they don't need to be computed each time
+		if(step != 0)
 		{
-			var n = this.size = (end-start)/step+1;
-			for(var i=0;i<n;i++)
+			var n = (end-start)/step;
+			this.size = n+1;
+			for(var i=0;i<=n;i++)
 			{
 				this.value[i+3] = start+i*step;
 			}
@@ -1063,6 +1056,7 @@ var precedence = jme.precedence = {
 	'-u': 3.5,
 	'+': 4,
 	'-': 4,
+	'|': 5,
 	'..': 5,
 	'#':6,
 	'except': 6.5,
@@ -1072,22 +1066,17 @@ var precedence = jme.precedence = {
 	'>=': 7,
 	'<>': 8,
 	'=': 8,
-	'|': 9,
-	'&': 11,
-	'&&': 11,
+	'isa': 9,
 	'and': 11,
-	'|': 12,
-	'||': 12,
 	'or': 12,
 	'xor': 13,
-	'isa': 0
 };
 
 var synonyms = {
-	'&':'&&',
-	'and':'&&',
+	'&':'and',
+	'&&':'and',
 	'divides': '|',
-	'or':'||',
+	'||':'or',
 	'sqr':'sqrt',
 	'gcf': 'gcd',
 	'sgn':'sign',
@@ -1109,7 +1098,7 @@ var commutative = jme.commutative =
 {
 	'*': true,
 	'+': true,
-	'&&': true
+	'and': true
 };
 
 
@@ -1124,8 +1113,10 @@ var commutative = jme.commutative =
 //	nobuiltin: don't add this funcObj to the list of builtins
 //	typecheck: a function which checks whether the funcObj can be applied to the given arguments 
 //  evaluate: a function which performs the funcObj on given arguments and variables. Arguments are passed as expression trees, i.e. unevaluated
+var funcObjAcc = 0;	//accumulator for ids for funcObjs, so they can be sorted
 var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
 {
+	this.id = funcObjAcc++;
 	options = options || {};
 	for(var i=0;i<intype.length;i++)
 	{
@@ -1310,9 +1301,18 @@ new funcObj('#', [TRange,TNum], TRange, math.rangeSteps, {doc: {usage: ['a..b#c'
 //exclude numbers from a range, given either as a range, a list or a single value
 new funcObj('except', [TRange,TRange], TList,
 	function(range,except) {
+		if(range[2]==0)
+			throw(new Numbas.Error("jme.func.except.continuous range"));
 		range = range.slice(3);
-		except = except.slice(3);
-		return math.except(range,except).map(function(i){return new TNum(i)});
+		if(except[2]==0)
+		{
+			return range.filter(function(i){return i<except[0] || i>except[1]}).map(function(i){return new TNum(i)});
+		}
+		else
+		{
+			except = except.slice(3);
+			return math.except(range,except).map(function(i){return new TNum(i)});
+		}
 	},
 
 	{doc: {
@@ -1324,6 +1324,8 @@ new funcObj('except', [TRange,TRange], TList,
 
 new funcObj('except', [TRange,TList], TList,
 	function(range,except) {
+		if(range[2]==0)
+			throw(new Numbas.Error("jme.func.except.continuous range"));
 		range = range.slice(3);
 		except = except.map(function(i){ return i.value; });
 		return math.except(range,except).map(function(i){return new TNum(i)});
@@ -1338,6 +1340,8 @@ new funcObj('except', [TRange,TList], TList,
 
 new funcObj('except', [TRange,TNum], TList,
 	function(range,except) {
+		if(range[2]==0)
+			throw(new Numbas.Error("jme.func.except.continuous range"));
 		range = range.slice(3);
 		return math.except(range,[except]).map(function(i){return new TNum(i)});
 	},
@@ -1420,14 +1424,14 @@ new funcObj('=', ['?','?'], TBool, null, {
 	}
 });
 
-new funcObj('&&', [TBool,TBool], TBool, function(a,b){return a&&b;}, {doc: {usage: ['true && true','true and true'], description: 'Logical AND.'}} );
+new funcObj('and', [TBool,TBool], TBool, function(a,b){return a&&b;}, {doc: {usage: ['true && true','true and true'], description: 'Logical AND.'}} );
 new funcObj('not', [TBool], TBool, function(a){return !a;}, {doc: {usage: ['not x','!x'], description: 'Logical NOT.'}} );	
-new funcObj('||', [TBool,TBool], TBool, function(a,b){return a||b;}, {doc: {usage: ['x || y','x or y'], description: 'Logical OR.'}} );
+new funcObj('or', [TBool,TBool], TBool, function(a,b){return a||b;}, {doc: {usage: ['x || y','x or y'], description: 'Logical OR.'}} );
 new funcObj('xor', [TBool,TBool], TBool, function(a,b){return (a || b) && !(a && b);}, {doc: {usage: 'a xor b', description: 'Logical XOR.', tags: ['exclusive or']}} );
 
 new funcObj('abs', [TNum], TNum, math.abs, {doc: {usage: 'abs(x)', description: 'Absolute value of a number.', tags: ['norm','length','complex']}} );
 new funcObj('abs', [TList], TNum, function(l) { return l.length; }, {doc: {usage: 'abs([1,2,3])', description: 'Length of a list.', tags: ['size','number','elements']}});
-new funcObj('abs', [TRange], TNum, function(r) { return (r[1]-r[0])/r[2]+1; }, {doc: {usage: 'abs(1..5)', description: 'Number of elements in a numerical range.', tags: ['size','length']}});
+new funcObj('abs', [TRange], TNum, function(r) { return r[2]==0 ? Math.abs(r[0]-r[1]) : r.length-3; }, {doc: {usage: 'abs(1..5)', description: 'Number of elements in a numerical range.', tags: ['size','length']}});
 new funcObj('abs', [TVector], TNum, vectormath.abs, {doc: {usage: 'abs(vector(1,2,3))', description: 'Modulus of a vector.', tags: ['size','length','norm']}});
 new funcObj('arg', [TNum], TNum, math.arg, {doc: {usage: 'arg(1+i)', description: 'Argument of a complex number.', tags: ['angle','direction']}} );
 new funcObj('re', [TNum], TNum, math.re, {doc: {usage: 're(1 + 2i)', description: 'Real part of a complex number.'}} );
@@ -1467,6 +1471,7 @@ new funcObj('degrees', [TNum], TNum, math.degrees, {doc: {usage: 'degrees(pi/2)'
 new funcObj('radians', [TNum], TNum, math.radians, {doc: {usage: 'radians(90)', description: 'Convert degrees to radians.'}} );
 new funcObj('round', [TNum], TNum, math.round, {doc: {usage: 'round(x)', description: 'Round to nearest integer.', tags: ['whole number']}} );
 new funcObj('sign', [TNum], TNum, math.sign, {doc: {usage: 'sign(x)', description: 'Sign of a number. Equivalent to $\\frac{x}{|x|}$, or $0$ when $x=0$.', tags: ['positive','negative']}} );
+
 new funcObj('random', [TRange], TNum, math.random, {doc: {usage: 'random(1..4)', description: 'A random number in the given range.', tags: ['choose','pick']}} );
 
 new funcObj('random',[TList],'?',null, {
@@ -1500,7 +1505,7 @@ new funcObj('precround', [TNum,TNum], TNum, math.precround, {doc: {usage: 'precr
 new funcObj('siground', [TNum,TNum], TNum, math.siground, {doc: {usage: 'siground(x,3)', description: 'Round to given number of significant figures.', tags: ['sig figs','sigfig']}} );
 new funcObj('perm', [TNum,TNum], TNum, math.permutations, {doc: {usage: 'perm(6,3)', description: 'Count permutations. $^n \\kern-2pt P_r$.', tags: ['combinatorics']}} );
 new funcObj('comb', [TNum,TNum], TNum, math.combinations , {doc: {usage: 'comb(6,3)', description: 'Count combinations. $^n \\kern-2pt C_r$.', tags: ['combinatorics']}});
-new funcObj('root', [TNum,TNum], TNum, math.root, {doc: {usage: 'root(x,3)', description: '$n$<sup>th</sup> root.', tags: ['cube']}} );
+new funcObj('root', [TNum,TNum], TNum, math.root, {doc: {usage: ['root(8,3)','root(x,n)'], description: '$n$<sup>th</sup> root.', tags: ['cube']}} );
 new funcObj('award', [TNum,TBool], TNum, function(a,b){return (b?a:0);}, {doc: {usage: ['award(a,b)','award(5,x=y)'], description: 'If @b@ is @true@, returns @a@, otherwise returns @0@.', tags: ['mark']}} );
 new funcObj('gcd', [TNum,TNum], TNum, math.gcf, {doc: {usage: 'gcd(a,b)', description: 'Greatest common denominator of two integers.', tags: ['highest']}} );
 new funcObj('lcm', [TNum,TNum], TNum, math.lcm, {doc: {usage: 'lcm(a,b)', description: 'Lowest common multiple of two integers.', tags: ['least']}} );
@@ -1601,12 +1606,13 @@ new funcObj('isa',['?',TString],TBool, null, {
 		var match = false;
 		if(kind=='complex')
 		{
-			if(args[0].tok.type=='number' && v.value.complex)
+			var v = jme.evaluate(args[0],scope);
+			if(v.type=='number' && v.value.complex)
 				match = true
 		}
 		else
 		{
-			var match = args[0].tok.type == kind;
+			var match = args[0].tok.outtype == kind;
 		}
 		return new TBool(match);
 	},
@@ -1815,11 +1821,23 @@ new funcObj('matrix',[TList],TMatrix,null, {
 		var rows = list.vars;
 		var columns = 0;
 		var value = [];
-		for(var i=0;i<rows;i++)
+		switch(list.value[0].type)
 		{
-			var row = list.value[i].value;
-			value.push(row.map(function(x){return x.value}));
-			columns = Math.max(columns,row.length);
+		case 'number':
+			value = [list.value.map(function(e){return e.value})];
+			rows = 1;
+			columns = list.vars;
+			break;
+		case 'list':
+			for(var i=0;i<rows;i++)
+			{
+				var row = list.value[i].value;
+				value.push(row.map(function(x){return x.value}));
+				columns = Math.max(columns,row.length);
+			}
+			break;
+		default:
+			throw(new Numbas.Error('jme.func.matrix.invalid row type',list.value[0].type));
 		}
 		value.rows = rows;
 		value.columns = columns;

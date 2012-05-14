@@ -288,7 +288,7 @@ $(document).ready(function() {
 
 			d
 				.writemaths({cleanMaths: cleanJME})
-				.on('input',function() {
+				.on('input keypress',function() {
 					var value = $(this).html();
 					valueAccessor()(value);
 				})

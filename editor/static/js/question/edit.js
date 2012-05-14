@@ -48,8 +48,9 @@ $(document).ready(function() {
                         newtags.splice(i,1);
                 }
                 this.realtags(newtags);
-            },
+            }
         },this);
+
         this.tags.push = function(thing) {
             if(realtags().indexOf(thing)==-1)
                 realtags.push(thing);
@@ -131,7 +132,7 @@ $(document).ready(function() {
                 })
                 .error(function(response,type,message) {
 					noty({
-						text: textile('Error saving question:\n\n'+message),
+						text: 'Error saving question:\n\n'+message,
 						layout: "topLeft",
 						type: "error",
 						textAlign: "center",
@@ -393,10 +394,10 @@ $(document).ready(function() {
 			})
 			.error(function(response, status, xhr) {
 				var responseObj = $.parseJSON(response.responseText);
-				var message = 'h3. Error making the preview:\n\n'+responseObj.message+'\n\n'+responseObj.traceback;
+				var message = 'Error making the preview:\n\n'+responseObj.message+'\n\n'+responseObj.traceback;
 				console.log(message);
 				noty({
-					text: textile(message),
+					text: message,
 					layout: "topLeft",
 					type: "error",
 					animateOpen: {"height":"toggle"},

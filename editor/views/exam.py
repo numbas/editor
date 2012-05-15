@@ -119,7 +119,11 @@ class ExamUploadView(CreateView):
     model = Exam
 
     def post(self, request, *args, **kwargs):
-        self.object = Exam(content=request.POST['content'])
+        content = request.FILES['file'].read()
+        self.object = Exam(content=content)
+
+        if not self.object.content:
+            return
 
         self.object.author = self.request.user
         self.object.save()
@@ -200,6 +204,7 @@ class ExamUpdateView(UpdateView):
         self.user = request.user
 
         self.object = self.get_object()
+
         exam_form = ExamForm(data, instance=self.object)
 
         if exam_form.is_valid():

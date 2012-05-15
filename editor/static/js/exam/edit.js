@@ -13,6 +13,7 @@ Copyright 2012 Newcastle University
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
 $(document).ready(function() {
 	var Ruleset = Editor.Ruleset;
     function Exam(data)
@@ -148,7 +149,7 @@ $(document).ready(function() {
                 })
                 .error(function(response,type,message) {
 					noty({
-						text: textile('Error saving exam:\n\n'+message),
+						text: 'Error saving exam:\n\n'+message,
 						layout: "topLeft",
 						type: "error",
 						textAlign: "center",
@@ -240,7 +241,7 @@ $(document).ready(function() {
 			})
 			.error(function(response, status, xhr) {
 				var responseObj = $.parseJSON(response.responseText);
-				var message = textile('h3. Error making the preview:\n\n'+responseObj.message+'\n\n'+responseObj.traceback);
+				var message = '<h3>Error making the preview:</h3><p>'+responseObj.message+'</p><code>'+responseObj.traceback+'</code>';
 				noty({
 					text: message,
 					layout: "topLeft",

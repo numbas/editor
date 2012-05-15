@@ -50,6 +50,11 @@ $(document).ready(function() {
 			;
 		}
 	});
+/*
+	function uploadFile(content) {
+		contentInput.text(content);
+		$('#uploadForm').submit();
+	}
 
 	function loadFile(file) {
 		if(!file) { return; }
@@ -57,8 +62,7 @@ $(document).ready(function() {
 		var contentInput = $('#uploadForm').find('[name=content]')
 		fr.onload = function(e) {
 			var content = e.target.result;
-			contentInput.text(content);
-			$('#uploadForm').submit();
+			uploadFile(content);
 		}
 		fr.readAsText(file);
 	}
@@ -80,7 +84,13 @@ $(document).ready(function() {
         },
         drop: function(e) {
             $(this).removeClass('over');
-            loadFile(e.dataTransfer.files[0]);
+			if('files' in e.dataTransfer)
+	            loadFile(e.dataTransfer.files[0]);
+			else
+			{
+				console.log(JSON.stringify(e.dataTransfer));
+			//	uploadFile(e.dataTransfer.getData('text'));
+			}
         }
     })
 	.find('button').on('click',function(e) {
@@ -90,8 +100,15 @@ $(document).ready(function() {
 	})
 	.end()
 	.find('input[type=file]').on('change',function() {
-		loadFile(this.files[0]);
-		var file = this.files[0];
+		if(this.files)
+			loadFile(this.files[0]);
+		else
+		{
+//			$('textarea[name=content]').remove();
+//			$(this).attr('name','content');
+			$('#uploadForm').submit();
+		}
 	});
+*/
 });
 

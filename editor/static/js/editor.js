@@ -43,7 +43,7 @@ $(document).ready(function() {
 		if(attr in data)
 			obj[altname](data[attr]);
 		else if(attr.toLowerCase() in data)
-			obj[altname](data[attr.toLowerCase]);
+			obj[altname](data[attr.toLowerCase()]);
 	}
 
 	Editor.contentObservable = function(val) {

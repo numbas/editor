@@ -24,11 +24,11 @@
             <input type="submit" value="Create" />
             <input type="hidden" name="author" value="{{user.id}}"/>
         </form>
-        <form action="{% url exam_upload %}" method="post" id="uploadForm">
+        <form action="{% url exam_upload %}" method="post" id="uploadForm" enctype="multipart/form-data">
             {% csrf_token %}
             <button>Upload an exam</button>
+			<input type="file" name="file" value="yo"/>
             <div class="upload">
-                <input type="file" name="file" value="yo"/>
                 <textarea name="content"></textarea>
             </div>
         </form>

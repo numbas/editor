@@ -93,4 +93,6 @@ $(document).ready(function() {
 		loadFile(this.files[0]);
 		var file = this.files[0];
 	});
+
+    $('#question-list').tablesorter();
 });

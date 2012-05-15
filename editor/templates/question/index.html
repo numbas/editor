@@ -2,16 +2,28 @@
 
 {% block content %}
 	{% if question_list %}
-		<ul>
+        <table id="question-list">
+        <thead>
+            <th>Name</th>
+            <th>Author</th>
+            <th></th>
+        </thead>
+        <tbody>
 		{% for question in question_list %}
-			<li class="question">
-				<a href="{% url question_edit question.pk question.slug %}">{{ question.name }}</a>
-				{% if user.username == question.author.username or user.is_superuser %}
-					<a class="delete" href="{% url question_delete question.pk question.slug %}"></a>
-				{% endif %}
-			</li>
-		{% endfor %}
-		</ul>
+            <tr class="question">
+                <td><a href="{% url question_edit question.pk question.slug %}">{{ question.name }}</a></td>
+                <td class="author {% if user == question.author %}me{% endif %}">
+                    {% if user == question.author %}You{% else %}{{ question.author.get_full_name }}{% endif %}
+                </td>
+                <td class="delete">
+    				{% if user == question.author or user.is_superuser %}
+	    				<a class="delete" href="{% url question_delete question.pk question.slug %}"></a>
+		    		{% endif %}
+                </td>
+			</tr>
+        {% endfor %}
+        </tbody>
+		</table>
 	{% else %}
 		<p>No questions are available.</p>
 	{% endif %}
@@ -40,9 +52,11 @@
 {% block javascripts %}
     {{block.super}}
     <script type="text/javascript" src="{{ STATIC_URL }}js/question/index.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.js"></script>
 {% endblock javascripts %}
 
 {% block stylesheets %}
 	{{ block.super }}
     <link href="{{ STATIC_URL }}css/index.css" type="text/css" rel="stylesheet" />
+    <link href="{{ STATIC_URL }}css/question/index.css" type="text/css" rel="stylesheet" />
 {% endblock stylesheets %}

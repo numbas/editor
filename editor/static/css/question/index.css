@@ -1,0 +1,11 @@
+﻿#question-list {
+	width: 100%;
+}
+
+#question-list td.delete {
+	width: 20px;
+}
+
+#question-list th {
+    cursor: pointer;
+}

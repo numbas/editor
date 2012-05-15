@@ -2,7 +2,7 @@
 	display: none;
 }
 
-.delete {
+a.delete {
 	display: inline-block;
 	background: transparent url(../images/delete.png);
 	width: 14px;

@@ -135,7 +135,6 @@ $(document).ready(function() {
 					closeOnSelfClick: false, 
 					closeButton: false
 				});
-				console.log(this.save_noty);
 			}
 			
             $.post(

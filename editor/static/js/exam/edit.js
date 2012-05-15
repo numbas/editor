@@ -138,6 +138,20 @@ $(document).ready(function() {
 
 		this.autoSave = ko.computed(function() {
             var e = this;
+
+			if(!this.save_noty)
+			{
+				this.save_noty = noty({
+					text: 'Saving...', 
+					layout: 'topCenter', 
+					type: 'information',
+					timeout: 0, 
+					speed: 150,
+					closeOnSelfClick: false, 
+					closeButton: false
+				});
+			}
+			
             $.post(
                 '/exam/'+this.id+'/'+slugify(this.name())+'/',
                 {json: JSON.stringify(this.save()), csrfmiddlewaretoken: getCookie('csrftoken')}
@@ -146,6 +160,8 @@ $(document).ready(function() {
                     var address = location.protocol+'//'+location.host+'/exam/'+examJSON.id+'/'+slugify(e.name())+'/';
                     if(history.replaceState)
                         history.replaceState({},e.name(),address);
+					$.noty.setText(viewModel.save_noty,'Saved.');
+					$.noty.setType(viewModel.save_noty,'success');
                 })
                 .error(function(response,type,message) {
 					noty({
@@ -163,6 +179,8 @@ $(document).ready(function() {
                 })
 				.complete(function() {
 					window.onbeforeunload = null;
+					$.noty.close(viewModel.save_noty);
+					viewModel.save_noty = null;
 				})
             ;
         },this).extend({throttle:1000});

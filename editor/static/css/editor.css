@@ -256,6 +256,7 @@ button.remove {
 	height: 14px;
 	border:none;
 	margin-left: .3em;
+	padding: 0;
 }
 
 button.remove:hover {

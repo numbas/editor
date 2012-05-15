@@ -2,16 +2,28 @@
 
 {% block content %}
 	{% if exam_list %}
-		<ul id="examList">
+        <table id="exam-list">
+        <thead>
+            <th>Name</th>
+            <th>Author</th>
+            <th></th>
+        </thead>
+        <tbody>
 		{% for exam in exam_list %}
-			<li class="exam">
-				<a href="{% url exam_edit exam.pk exam.slug %}">{{ exam.name }}</a>
-				{% if user.username == exam.author.username or user.is_superuser %}
-					<a class="delete" href="{% url exam_delete exam.pk exam.slug %}"></a>
-				{% endif %}
-			</li>
-		{% endfor %}
-		</ul>
+            <tr class="exam">
+                <td><a href="{% url exam_edit exam.pk exam.slug %}">{{ exam.name }}</a></td>
+                <td class="author {% if user == exam.author %}me{% endif %}">
+                    {% if user == exam.author %}You{% else %}{{ exam.author.get_full_name }}{% endif %}
+                </td>
+                <td class="delete">
+    				{% if user == exam.author or user.is_superuser %}
+	    				<a class="delete" href="{% url exam_delete exam.pk exam.slug %}"></a>
+		    		{% endif %}
+                </td>
+			</tr>
+        {% endfor %}
+        </tbody>
+		</table>
 	{% else %}
 		<p>No exams are available.</p>
     {% endif %}
@@ -42,9 +54,11 @@
 {% block javascripts %}
 	{{block.super}}
 	<script type="text/javascript" src="{{ STATIC_URL }}js/exam/index.js"></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.js"></script>
 {% endblock javascripts %}
 
 {% block stylesheets %}
 	{{ block.super }}
     <link href="{{ STATIC_URL }}css/index.css" type="text/css" rel="stylesheet" />
+    <link href="{{ STATIC_URL }}css/exam/index.css" type="text/css" rel="stylesheet" />
 {% endblock stylesheets %}

@@ -50,6 +50,9 @@ $(document).ready(function() {
 			;
 		}
 	});
+
+	$('#exam-list').tablesorter();
+
 /*
 	function uploadFile(content) {
 		contentInput.text(content);

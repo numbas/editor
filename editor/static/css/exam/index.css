@@ -1,0 +1,12 @@
+﻿#exam-list {
+	width: 100%;
+}
+
+#exam-list td.delete {
+	width: 20px;
+}
+
+#exam-list th {
+    cursor: pointer;
+}
+

@@ -119,6 +119,20 @@
 	  		}
 	  	});
 
+	  	$noty.bind('noty.setType', function(event, type) {
+	  		$noty.removeClass($noty.data('noty_options').type); 
+
+			type = $noty.data('noty_options').cssPrefix+type;
+
+			$noty.data('noty_options').type = type;
+
+			$noty.addClass(type);
+	  		
+	  		if (base.options.layout == 'noty_layout_topCenter' || base.options.layout == 'noty_layout_center') {
+	  			$.noty.reCenter($noty);
+	  		}
+	  	});
+
 	  	$noty.bind('noty.getId', function(event) {
 	  		return $noty.data('noty_options').id;
 	  	});
@@ -170,6 +184,9 @@
 	};
 	$.noty.setText = function(id, text) {
 		$.noty.get(id).trigger('noty.setText', text);
+	};
+	$.noty.setType = function(id, type) {
+		$.noty.get(id).trigger('noty.setType', type);
 	};
 	$.noty.closeAll = function() {
 		$.noty.clearQueue();

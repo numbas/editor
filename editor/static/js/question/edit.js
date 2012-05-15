@@ -16,6 +16,8 @@ Copyright 2012 Newcastle University
 var viewModel;
 
 $(document).ready(function() {
+	var builtinRulesets = ['basic','unitFactor','unitPower','unitDenominator','zeroFactor','zeroTerm','zeroPower','noLeadingMinus','collectNumbers','simplifyFractions','zeroBase','constantsFirst','sqrtProduct','sqrtDivision','sqrtSquare','trig','otherNumbers']
+
 	Numbas.loadScript('scripts/jme-display.js');
 	Numbas.loadScript('scripts/jme.js');
 	Numbas.startOK = true;
@@ -111,6 +113,7 @@ $(document).ready(function() {
 			window.onbeforeunload = function() {
 				return 'There are still unsaved changes.';
 			}
+
 			return {
 				content: this.output(),
 				tags: this.tags(),
@@ -121,6 +124,20 @@ $(document).ready(function() {
 		this.autoSave = ko.computed(function() {
             var q = this;
 
+			if(!this.save_noty)
+			{
+				this.save_noty = noty({
+					text: 'Saving...', 
+					layout: 'topCenter', 
+					type: 'information',
+					timeout: 0, 
+					speed: 150,
+					closeOnSelfClick: false, 
+					closeButton: false
+				});
+				console.log(this.save_noty);
+			}
+			
             $.post(
 				'/question/'+this.id+'/'+slugify(this.name())+'/',
 				{json: JSON.stringify(this.save()), csrfmiddlewaretoken: getCookie('csrftoken')}
@@ -129,8 +146,13 @@ $(document).ready(function() {
                     var address = location.protocol+'//'+location.host+'/question/'+Editor.questionJSON.id+'/'+slugify(q.name())+'/';
                     if(history.replaceState)
                         history.replaceState({},q.name(),address);
+					$.noty.setText(viewModel.save_noty,'Saved.');
+					$.noty.setType(viewModel.save_noty,'success');
                 })
                 .error(function(response,type,message) {
+					if(message=='')
+						message = 'Server did not respond.';
+
 					noty({
 						text: 'Error saving question:\n\n'+message,
 						layout: "topLeft",
@@ -146,6 +168,8 @@ $(document).ready(function() {
                 })
 				.complete(function() {
 					window.onbeforeunload = null;
+					$.noty.close(viewModel.save_noty);
+					viewModel.save_noty = null;
 				})
             ;
         },this).extend({throttle:1000});
@@ -395,7 +419,6 @@ $(document).ready(function() {
 			.error(function(response, status, xhr) {
 				var responseObj = $.parseJSON(response.responseText);
 				var message = 'Error making the preview:\n\n'+responseObj.message+'\n\n'+responseObj.traceback;
-				console.log(message);
 				noty({
 					text: message,
 					layout: "topLeft",
@@ -405,7 +428,7 @@ $(document).ready(function() {
 					timeout: 5000,
 					speed: "500",
 					closable: true,
-					closeOnSelfClick: true,
+					closeOnSelfClick: true
 				});
 			});
 		},
@@ -415,7 +438,6 @@ $(document).ready(function() {
 		}
     };
 
-    var builtinRulesets = ['basic','unitFactor','unitPower','unitDenominator','zeroFactor','zeroTerm','zeroPower','noLeadingMinus','collectNumbers','simplifyFractions','zeroBase','constantsFirst','sqrtProduct','sqrtDivision','sqrtSquare','trig','otherNumbers']
 
     function Ruleset(exam,data)
     {

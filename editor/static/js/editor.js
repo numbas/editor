@@ -18,6 +18,7 @@ if(!window.Editor)
 	window.Editor = {};
 
 $(document).ready(function() {
+	$.noty.defaultOptions.theme = 'noty_theme_twitter';
 
 	slugify = function(s) {
 		return s.trim().replace(/[^\w\s]/g,'').toLowerCase().replace(/\s/g,'-');
@@ -288,7 +289,7 @@ $(document).ready(function() {
 
 			d
 				.writemaths({cleanMaths: cleanJME})
-				.on('input keypress',function() {
+				.on('blur keyup paste',function() {
 					var value = $(this).html();
 					valueAccessor()(value);
 				})

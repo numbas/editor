@@ -900,6 +900,11 @@ $(document).ready(function() {
                 break;
             case 'numberentry':
                 tryLoad(data,['minValue','maxValue','integerAnswer','partialCredit'],this.numberentry);
+				if('answer' in data) {
+					this.numberentry.minValue(data.answer);
+					this.numberentry.maxValue(data.answer);
+				}
+
                 break;
             case 'patternmatch':
                 tryLoad(data,['answer','displayAnswer','caseSensitive','partialCredit'],this.patternmatch);

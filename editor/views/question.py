@@ -35,6 +35,8 @@ class QuestionPreviewView(PreviewView):
     def get(self, request, *args, **kwargs):
         try:
             q = self.get_object()
+            print("PREVIEW")
+            print(q.content)
         except (Question.DoesNotExist, TypeError) as err:
             status = {
                 "result": "error",
@@ -169,6 +171,9 @@ class QuestionUpdateView(UpdateView):
     def post(self, request, *args, **kwargs):
         self.data = json.loads(request.POST['json'])
         self.user = request.user
+
+        print("UPDATE")
+        print(self.data['content'])
 
         self.object = self.get_object()
         question_form = QuestionForm(self.data, instance=self.object)

@@ -86,8 +86,10 @@ class PreviewView(DetailView,CompileObject):
                 "url": settings.GLOBAL_SETTINGS['PREVIEW_URL'] +
                        location + '/index.html'
             }
-            return HttpResponse(json.dumps(status),
+            response = HttpResponse(json.dumps(status),
                                 content_type='application/json')
+            response['Cache-Control'] = 'max-age=0,no-cache,no-store'
+            return response
         
         
 class ZipView(DetailView,CompileObject):
@@ -107,6 +109,7 @@ class ZipView(DetailView,CompileObject):
             response = HttpResponse(wrapper, content_type='application/zip')
             response['Content-Disposition'] = 'attachment; filename=%s.zip' % obj.slug
             response['Content-Length'] = os.path.getsize(fsLocation)
+            response['Cache-Control'] = 'max-age=0,no-cache,no-store'
             return response
 
 
@@ -115,4 +118,5 @@ class SourceView(DetailView):
         source = obj.as_source()
         response = HttpResponse(source, 'text/plain')
         response['Content-Disposition'] = 'attachment; filename=%s.exam' % obj.slug
+        response['Cache-Control'] = 'max-age=0,no-cache,no-store'
         return response

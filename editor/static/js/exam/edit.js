@@ -160,8 +160,7 @@ $(document).ready(function() {
                     var address = location.protocol+'//'+location.host+'/exam/'+examJSON.id+'/'+slugify(e.name())+'/';
                     if(history.replaceState)
                         history.replaceState({},e.name(),address);
-					$.noty.setText(viewModel.save_noty,'Saved.');
-					$.noty.setType(viewModel.save_noty,'success');
+					noty({text:'Saved.',type:'success',timeout: 1000, layout: 'topCenter'});
                 })
                 .error(function(response,type,message) {
 					noty({

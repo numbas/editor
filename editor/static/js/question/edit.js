@@ -145,8 +145,7 @@ $(document).ready(function() {
                     var address = location.protocol+'//'+location.host+'/question/'+Editor.questionJSON.id+'/'+slugify(q.name())+'/';
                     if(history.replaceState)
                         history.replaceState({},q.name(),address);
-					$.noty.setText(viewModel.save_noty,'Saved.');
-					$.noty.setType(viewModel.save_noty,'success');
+					noty({text:'Saved.',type:'success',timeout: 1000, layout: 'topCenter'});
                 })
                 .error(function(response,type,message) {
 					if(message=='')

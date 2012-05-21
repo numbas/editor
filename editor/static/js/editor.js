@@ -306,12 +306,18 @@ $(document).ready(function() {
 
 			$(element).append(container);
 
-			var toggle = true;
-			swap.click(function() {
-				toggle = !toggle;
+			var toggle = false;
+
+			function toggleRichText() {
 				swap.toggleClass('on',toggle);
 				ta.toggle(!toggle);
 				d.toggle(toggle);
+			}
+			toggleRichText();
+
+			swap.click(function() {
+				toggle = !toggle;
+				toggleRichText();
 			});
 		},
 		update: function(element, valueAccessor) {

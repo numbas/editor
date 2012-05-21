@@ -123,6 +123,7 @@ $(document).ready(function() {
 
 		this.autoSave = ko.computed(function() {
             var q = this;
+			var vm = this;
 
 			if(!this.save_noty)
 			{
@@ -145,6 +146,7 @@ $(document).ready(function() {
                     var address = location.protocol+'//'+location.host+'/question/'+Editor.questionJSON.id+'/'+slugify(q.name())+'/';
                     if(history.replaceState)
                         history.replaceState({},q.name(),address);
+					$.noty.close(vm.save_noty);
 					noty({text:'Saved.',type:'success',timeout: 1000, layout: 'topCenter'});
                 })
                 .error(function(response,type,message) {
@@ -166,8 +168,8 @@ $(document).ready(function() {
                 })
 				.complete(function() {
 					window.onbeforeunload = null;
-					$.noty.close(viewModel.save_noty);
-					viewModel.save_noty = null;
+					$.noty.close(vm.save_noty);
+					vm.save_noty = null;
 				})
             ;
         },this).extend({throttle:1000});

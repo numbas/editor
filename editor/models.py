@@ -123,7 +123,7 @@ class Question(models.Model,NumbasObject,GitObject):
     
     name = models.CharField(max_length=200)
     theme = 'default'
-    slug = models.SlugField(editable=False,unique=False)
+    slug = models.SlugField(max_length=200,editable=False,unique=False)
     author = models.ForeignKey(User)
     filename = models.CharField(max_length=200, editable=False)
     content = models.TextField(blank=True,validators=[validate_content])
@@ -174,7 +174,7 @@ class Exam(models.Model,NumbasObject,GitObject):
                                        blank=True, editable=False)
     name = models.CharField(max_length=200)
     theme = models.CharField(max_length=200,default='default')
-    slug = models.SlugField(editable=False,unique=False)
+    slug = models.SlugField(max_length=200,editable=False,unique=False)
     author = models.ForeignKey(User)
     filename = models.CharField(max_length=200, editable=False)
     content = models.TextField(blank=True, validators=[validate_content])

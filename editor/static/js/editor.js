@@ -443,7 +443,9 @@ $(document).ready(function() {
 	//connect items with observableArrays
 	ko.bindingHandlers.sortableList = {
 		init: function(element, valueAccessor, allBindingsAccessor, context) {
-			var list = valueAccessor();
+			var obj = valueAccessor();
+			var list = obj.list || obj;
+			var add = obj.add || function(e){ return e};
 			var startPos = 0;
 			$(element).sortable({
 				handle: '.handle',
@@ -453,99 +455,40 @@ $(document).ready(function() {
 				},
 				update: function(e, ui) {
 					var newPos = ui.item.prevAll().length;
-					var item = list()[startPos];
-					list.remove(item);
-					list.splice(newPos,0,item);
+					if($(element).has(e.target).length) {	//if dropped item was already in the list
+						var item = list()[startPos];
+						list.remove(item);
+						list.splice(newPos,0,item);
+						return;
+					}
 					ui.item.remove();
-					return;
+				},
+				receive: function(e,ui) {
+					var oldPos = ui.sender.prevAll().length;
+					add(oldPos);
 				}
 			});
 		}
 	};
 
-	ko.bindingHandlers.searchClick = {
-		init: function(element, valueAccessor, allBindingsAccessor, context) {
-			var obj = valueAccessor();
-			var show = $('<span></span>').addClass('name');
-			var input = $('<input type="text"></input>');
-
-			function showName() {
-				show.show();
-				input.hide();
-			}
-			function showInput() {
-				show.hide();
-				input.show().select();
-			}
-			
+	ko.bindingHandlers.dragOut = {
+		init: function(element, valueAccessor) {
+			var obj = {
+				data: null,
+				sortable: ''
+			};
+			obj = $.extend(obj,valueAccessor());
 			$(element)
-				.addClass('searchClick')
-				.attr('tabindex',0)
-				.append(show,input)
-				.focus(showInput)
-			;
-
-			var value = obj.value();
-			show.html(value);
-			input.val(value);
-
-
-
-			input
-				.autocomplete({
-					minLength: 0,
-					delay: 100,
-					source: function(request,response) {
-						input.addClass('loading');
-						$.getJSON('/question/search/', {q:request.term})
-							.success(function(data) {
-								var results = data.object_list;
-								response( results.map(function(q){
-									return {
-										label: q.name,
-										value: q.name,
-										q: q
-									}
-								}));
-							})
-							.complete(function() {
-								input.removeClass('loading');
-							});
-						;
-					},
-					select: function(e, ui) {
-						var q = ui.item.q;
-						context.name(q.name);
-						context.id(q.id);
-						showName();
-
-						e.preventDefault();
-					},
-					change: function(e, ui) {
-						input.val(obj.value());
-						showName();
-					}
-				})
-				.blur(function() {
-					input.val(obj.value());
-					showName();
+				.draggable({
+					handle: '.handle',
+					revert: true, 
+					revertDuration: 100,
+					helper: 'clone',
+					connectToSortable: obj.sortable
 				})
 			;
-
-			if(obj.hasfocus())
-				showInput();
-			else
-				showName();
-		},
-		update: function(element, valueAccessor, allBindingsAccessor) {
-			var obj = valueAccessor();
-			var value = obj.value();
-			$(element)
-				.find('.name').toggleClass('nothing',!value).html(value ? value : 'No question selected!')
-				.end()
-				.find('input').val(value);
 		}
-	}
+	};
 
 	ko.bindingHandlers.mathjax = {
 		update: function(element) {

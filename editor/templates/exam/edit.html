@@ -1,6 +1,11 @@
 {% extends "editor.html" %}
 {% load verbatim %}
 
+{% block stylesheets %}
+	{{ block.super }}
+	<link href="{{ STATIC_URL }}css/exam/edit.css" type="text/css" rel="stylesheet" />
+{% endblock stylesheets %}
+
 {% block javascripts %}
     {{ block.super }}
 
@@ -127,21 +132,34 @@
 			{{/wrap}}
 			{{wrap(this,{label:"Questions", show: true}) "#folder"}}
 			<div class="questions">
-				<ul class="editlist" data-bind="
+				<ul class="questionList editlist" data-bind="
 					template:{
 						name:'question',
 						foreach: questions,
 						beforeRemove: function(elem) { $(elem).slideUp(150,function(){$(this).remove()}); },
 						afterAdd: function(elem) { $(elem).hide().slideDown(150) }
 					},
-					sortableList: questions
+					sortableList: {list: questions, add: questionAdder()}
 				"></ul>
-				<button data-bind="click: addQuestion, text: questions().length ? 'Add another question' : 'Add a question'"></button>
+				<div class="searchBox">
+					<label for="questionsearch">Search for questions: </label>
+					<input type="text" name="questionsearch" class="search" data-bind="
+						value: questionSearch, 
+						valueUpdate: 'afterkeydown',
+						css: {loading: searching()}
+					"/>
+					<ul class="results editlist" data-bind="
+						template: {
+							name: 'questionResult',
+							foreach: questionSearchResults
+						}
+					"></ul>
+				</div>
 			</div>
 			{{/wrap}}
 		</script>
 	
-			<script type="text/x-jquery-tmpl" id="event">
+		<script type="text/x-jquery-tmpl" id="event">
 			{{wrap(this,{label:niceName}) "#folder"}}
 				<div>
 				<div class="properties">
@@ -161,8 +179,15 @@
 		<script type="text/x-jquery-tmpl" id="question">
 			<li class="question">
 				<span class="handle"></span>
-				<div data-bind="searchClick: {value: name, options: exam.allQuestions, hasfocus: isNew}"></div>
+				<span data-bind="text: name"></span>
 				<button class="remove" data-bind="click:remove"></button>
+			</li>
+		</script>
+
+		<script type="text/x-jquery-tmpl" id="questionResult">
+			<li class="questionResult" data-bind="dragOut: {data: $data, sortable: '.questions ul.editlist'}">
+				<span class="handle"></span>
+				<span data-bind="text: name"></span>
 			</li>
 		</script>
 	    {% endverbatim %}

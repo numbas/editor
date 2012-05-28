@@ -57,6 +57,29 @@ $(document).ready(function() {
 
 		this.questions = ko.observableArray([]);
 
+		this.questionSearch = ko.observable('');
+		this.questionSearchResults = ko.observableArray([]);
+		this.searching = ko.observable(false);
+		ko.computed(function() {
+			var search = this.questionSearch();
+			if(search.length)
+			{
+				var vm = this;
+				this.searching(true);
+				$.getJSON('/question/search/',{q:this.questionSearch()})
+					.success(function(data) {
+						vm.questionSearchResults(data.object_list);
+					})
+					.complete(function() {
+						vm.searching(false);
+					});
+				;
+			}
+			else {
+				this.questionSearchResults([]);
+			}
+		},this).extend({throttle:100});
+
         this.onadvance = new Event(
             'onadvance',
             'On advance',
@@ -186,10 +209,13 @@ $(document).ready(function() {
 
     }
     Exam.prototype = {
-		addQuestion: function() {
-			var q = new Question(0,'',this);
-			q.isNew(true);
-			this.questions.push(q);
+		questionAdder: function() {
+			var e = this;
+			return function(i) {
+				var data = e.questionSearchResults()[i];
+				q = new Question(data.id,data.name,e);
+				e.questions.splice(i,0,q);
+			}
 		},
 
         //returns a JSON-y object representing the exam
@@ -315,22 +341,10 @@ $(document).ready(function() {
 		this.id = ko.observable(id);
 		this.name = ko.observable(name);
 		this.exam = exam;
-		
-		this.isNew = ko.observable(false);
-		
-		this.selected = ko.observable(true);
 	}
 	Question.prototype = {
 		remove: function() {
 			this.exam.questions.remove(this);
-		},
-
-		select: function() {
-			this.selected(true);
-		},
-
-		deselect: function() {
-			this.selected(false);
 		},
 
 		toJSON: function() {

@@ -212,6 +212,7 @@ $(document).ready(function() {
 				};
 				return;
 			}
+            console.log('calc');
 
 			var scope = new Numbas.jme.Scope(Numbas.jme.builtinScope);
 

@@ -211,10 +211,10 @@ $(document).ready(function() {
     Exam.prototype = {
 		questionAdder: function() {
 			var e = this;
-			return function(i) {
-				var data = e.questionSearchResults()[i];
+			return function(oldPos,newPos) {
+				var data = e.questionSearchResults()[oldPos];
 				q = new Question(data.id,data.name,e);
-				e.questions.splice(i,0,q);
+				e.questions.splice(newPos,0,q);
 			}
 		},
 

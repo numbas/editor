@@ -465,7 +465,8 @@ $(document).ready(function() {
 				},
 				receive: function(e,ui) {
 					var oldPos = ui.sender.prevAll().length;
-					add(oldPos);
+					var newPos = $(this).data('sortable').currentItem.prevAll().length;
+					add(oldPos,newPos);
 				}
 			});
 		}

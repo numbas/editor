@@ -15,6 +15,7 @@ import json
 import traceback
 from copy import deepcopy
 
+from django.db.models import Q
 from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView, View
@@ -228,6 +229,6 @@ class QuestionSearchView(ListView):
     
     def get_queryset(self):
         search_term = self.request.GET['q']
-        question_objects = Question.objects.filter(name__icontains=search_term)
+        question_objects = Question.objects.filter(Q(name__icontains=search_term) | Q(tags__name__istartswith=search_term))
         return [{'id':q.id, 'name':q.name, 'url':reverse('question_edit', args=(q.pk,q.slug,))} for q in question_objects]
     

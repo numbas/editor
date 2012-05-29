@@ -112,7 +112,8 @@ class QuestionUploadView(CreateView):
     model = Question
 
     def post(self, request, *args, **kwargs):
-        self.object = Question(content=request.POST['content'])
+        content = request.FILES['file'].read()
+        self.object = Question(content=content)
         self.object.author = self.request.user
         self.object.save()
 

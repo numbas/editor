@@ -38,10 +38,9 @@
         </form>
         <form action="{% url exam_upload %}" method="post" id="uploadForm" enctype="multipart/form-data">
             {% csrf_token %}
-            <button>Upload an exam</button>
-			<input type="file" name="file" value="yo"/>
+            <button id="uploadButton">Upload an exam</button>
             <div class="upload">
-                <textarea name="content"></textarea>
+                <input type="file" name="file" value="yo"/>
             </div>
         </form>
     {% endif %}

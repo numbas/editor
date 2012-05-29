@@ -38,13 +38,12 @@
 	        <input type="hidden" name="author" value="{{user.id}}" />
 		</form>
 	
-		<form action="{% url question_upload %}" method="post" id="uploadForm">
-			{% csrf_token %}
-			<button>Upload a question</button>
-			<div class="upload">
-				<input type="file" name="file" value="yo"/>
-				<textarea name="content"></textarea>
-			</div>
+		<form action="{% url question_upload %}" method="post" id="uploadForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            <button id="uploadButton">Upload a question</button>
+            <div class="upload">
+                <input type="file" name="file" value="yo"/>
+            </div>
 		</form>
 	{% endif %}
 {% endblock content %}

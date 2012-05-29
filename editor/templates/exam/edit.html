@@ -132,7 +132,7 @@
 			{{/wrap}}
 			{{wrap(this,{label:"Questions", show: true}) "#folder"}}
 			<div class="questions">
-				<ul class="questionList editlist" data-bind="
+				<ul class="questionList editlist big" data-bind="
 					template:{
 						name:'question',
 						foreach: questions,
@@ -148,7 +148,7 @@
 						valueUpdate: 'afterkeydown',
 						css: {loading: searching()}
 					"/>
-					<ul class="results editlist" data-bind="
+					<ul class="results editlist big" data-bind="
 						template: {
 							name: 'questionResult',
 							foreach: questionSearchResults

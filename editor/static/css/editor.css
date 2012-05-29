@@ -28,7 +28,7 @@
 }
 
 .question > * > button.remove, .part > * > button.remove, .function > * > button.remove {
-	position:relative;
+	position: relative;
 	display:run-in;
 	left: -2em;
 	top: 1em;
@@ -192,10 +192,13 @@ ol.editlist > button {
 	margin-left:-1em;
 }
 
-#editor .editlist > li {
+.editlist > li {
 	margin-bottom:0.5em;
     list-style-image:none;
     list-style-type:none;
+}
+
+.editlist.big > li {
 	background-color: #eee;
 	line-height: 2.5em;
 	position: relative;
@@ -267,7 +270,7 @@ button.remove {
 }
 
 button.remove:hover {
-	cursor:default;
+	cursor:pointer;
 	background-color: #ccc;
 }
 
@@ -327,5 +330,5 @@ button.remove:hover {
 
 .sort-placeholder {
 	border: 1px dashed;
-	height: 1em;
+	height: 2.5em;
 }

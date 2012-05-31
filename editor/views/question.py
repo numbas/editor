@@ -19,9 +19,10 @@ from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView, View
 from django.views.generic.detail import SingleObjectMixin
+from django.forms import model_to_dict
 
 from editor.forms import NewQuestionForm, QuestionForm
-from editor.models import Question
+from editor.models import Question,Extension
 from editor.views.generic import PreviewView, ZipView, SourceView
 
 from examparser import ExamParser, ParseError
@@ -199,6 +200,7 @@ class QuestionUpdateView(UpdateView):
     
     def get_context_data(self, **kwargs):
         context = super(QuestionUpdateView, self).get_context_data(**kwargs)
+        context['extensions'] = json.dumps([model_to_dict(e) for e in Extension.objects.all()])
         return context
     
     def get_success_url(self):

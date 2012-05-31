@@ -13,8 +13,9 @@
 #   limitations under the License.
 from django.contrib import admin
 
-from editor.models import Exam, ExamQuestion, Question
+from editor.models import Exam, ExamQuestion, Question, Extension
 
 admin.site.register(Exam)
 admin.site.register(ExamQuestion)
 admin.site.register(Question)
+admin.site.register(Extension)

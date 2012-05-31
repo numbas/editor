@@ -66,6 +66,13 @@ $(document).ready(function() {
 
 		this.metadata = ko.observable('');
 
+		this.extensions = ko.observableArray([]);
+		for(var i=0;i<Editor.numbasExtensions.length;i++) {
+			var ext = Editor.numbasExtensions[i];
+			ext.used = ko.observable(false);
+			this.extensions.push(ext);
+		}
+
         this.statement = Editor.contentObservable('');
         this.advice = Editor.contentObservable('');
 
@@ -360,9 +367,16 @@ $(document).ready(function() {
 				functions[f.name()] = f.toJSON();
 			});
 
+			var extensions = [];
+			this.extensions().map(function(e) {
+				if(e.used())
+					extensions.push(e.location);
+			});
+
             return {
                 name: this.name(),
                 statement: this.statement(),
+				extensions: extensions,
                 advice: this.advice(),
                 rulesets: rulesets,
                 variables: variables,
@@ -373,6 +387,13 @@ $(document).ready(function() {
 
         load: function(data) {
             tryLoad(data,['name','statement','advice'],this);
+
+			if('extensions' in data) {
+				this.extensions().map(function(e) {
+					if(data.extensions.indexOf(e.location)>=0)
+						e.used(true);
+				});
+			}
             
             if('variables' in data)
             {

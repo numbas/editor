@@ -112,6 +112,17 @@ def validate_content(content):
     except ParseError as err:
         raise ValidationError(err)
 
+class Extension(models.Model):
+	name = models.CharField(max_length=200,help_text='A readable name, to be displayed to the user')
+	location = models.CharField(max_length=200,help_text='The location of the extension on disk')
+	url = models.CharField(max_length=300,blank=True,help_text='Address of a page about the extension')
+
+	def __unicode__(self):
+		return self.name
+
+	def as_json(self):
+		d = model_to_dict(self)
+		return json.dumps(d)
 
 class Question(models.Model,NumbasObject,GitObject):
     

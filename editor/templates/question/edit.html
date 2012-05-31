@@ -18,7 +18,9 @@
             var Editor = window.Editor;
             Editor['preview_url'] = '{% url question_preview object.pk object.slug %}';
             Editor['download_url'] = '{% url question_download object.pk object.slug %}';
-            Editor.questionJSON = {% autoescape off %}{{question.as_json}}{% endautoescape %};
+			Editor.questionJSON = {% autoescape off %}{{question.as_json}}{% endautoescape %};
+
+			Editor.numbasExtensions = {% autoescape off %}{{extensions}}{% endautoescape %};
         })();
     </script>
 {% endblock javascripts %}
@@ -40,6 +42,14 @@
 				</div>
 			</div>
 
+			{{wrap(this,{label:"Extensions"}) '#folder'}}
+				<div>
+				<ul data-bind="template: {
+					name:'extension',
+					foreach: extensions
+				}"></ul>
+				</div>
+			{{/wrap}}
 
 			{{wrap(this,{label:"Statement",show:true}) '#folder'}}
 				<div style="padding-top:0.7em;">
@@ -113,6 +123,13 @@
 					<div data-bind="writemaths:advice"></div>
 				</div>
 			{{/wrap}}
+		</script>
+	
+		<script type="text/x-jquery-tmpl" id="extension">
+			<li>
+				<input type="checkbox" data-bind="checked: used">
+				<a data-bind="attr: {href:url}, text:name" target="_blank"></a>
+			</li>
 		</script>
 	
 		<script type="text/x-jquery-tmpl" id="part">

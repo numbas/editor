@@ -47,7 +47,13 @@ $(document).ready(function() {
 	}
 
 	Editor.contentObservable = function(val) {
-		return ko.observable(val);
+		var obs = ko.observable(val);
+        return ko.computed({
+            read: obs,
+            write: function(v) {
+                obs(HTMLtoXML(v));
+            }
+        });
 	};
 
 	function indent(s,n)

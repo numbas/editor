@@ -51,6 +51,17 @@ $(document).ready(function() {
         }
     });
 
+    $('#question-list').tablesorter();
+
+    $('#uploadButton').click(function(e) {
+        e.preventDefault();
+        $('#uploadForm input[type=file]').trigger('click');
+    });
+    $('#uploadForm input[type=file]').change(function(e) {
+        $('#uploadForm').submit();
+    });
+
+    /*
 	function loadFile(file) {
 		if(!file) { return; }
 		var fr = new FileReader();
@@ -93,6 +104,6 @@ $(document).ready(function() {
 		loadFile(this.files[0]);
 		var file = this.files[0];
 	});
+    */
 
-    $('#question-list').tablesorter();
 });

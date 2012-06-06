@@ -28,7 +28,7 @@
 }
 
 .question > * > button.remove, .part > * > button.remove, .function > * > button.remove {
-	position:relative;
+	position: relative;
 	display:run-in;
 	left: -2em;
 	top: 1em;
@@ -192,10 +192,17 @@ ol.editlist > button {
 	margin-left:-1em;
 }
 
-#editor .editlist > li {
+.editlist > li {
 	margin-bottom:0.5em;
     list-style-image:none;
     list-style-type:none;
+}
+
+.editlist.big > li {
+	background-color: #eee;
+	line-height: 2.5em;
+	position: relative;
+	padding-right: 2em;
 }
 
 .editlist > li.closed {
@@ -257,10 +264,13 @@ button.remove {
 	border:none;
 	margin-left: .3em;
 	padding: 0;
+	position: absolute;
+	top: 1em;
+	right: 1em;
 }
 
 button.remove:hover {
-	cursor:default;
+	cursor:pointer;
 	background-color: #ccc;
 }
 
@@ -306,29 +316,19 @@ button.remove:hover {
 .handle {
 	cursor: move;
 	width: 6px;
-	height: 16px;
+	height: 2.5em;
 	display: inline-block;
 	background: transparent url(../images/move_vertical_6x16.png) no-repeat;
 	padding: 2px 8px;
+	padding-left: 30px;
+	background-position: center center;
+	vertical-align: middle;
+}
+.handle:hover {
+	background-color: #f90;
 }
 
 .sort-placeholder {
 	border: 1px dashed;
-	height: 1em;
-}
-
-.searchClick {
-	display: inline-block;
-}
-
-.searchClick .nothing {
-	color: red;
-}
-
-.searchClick input {
-	background: white url(../images/search.png) no-repeat right;
-}
-
-.searchClick input.loading {
-	background-image: url(../images/busy.gif);
+	height: 2.5em;
 }

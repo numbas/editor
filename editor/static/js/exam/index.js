@@ -53,6 +53,20 @@ $(document).ready(function() {
 
 	$('#exam-list').tablesorter();
 
+    $('#uploadButton').click(function(e) {
+        if(!$('#uploadForm input[type=file]').val().length) {
+            e.preventDefault();
+            e.stopPropagation();
+            $('#uploadForm input[type=file]').trigger('click');
+        }
+    });
+    $('#uploadForm input[type=file]').change(function(e) {
+        if($.browser.msie)
+            $('#uploadButton').text('Click again to upload');
+        else
+            $('#uploadForm').submit();
+    });
+
 /*
 	function uploadFile(content) {
 		contentInput.text(content);

@@ -15,6 +15,7 @@ import json
 import traceback
 from copy import deepcopy
 
+from django.db.models import Q
 from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView, View
@@ -112,7 +113,8 @@ class QuestionUploadView(CreateView):
     model = Question
 
     def post(self, request, *args, **kwargs):
-        self.object = Question(content=request.POST['content'])
+        content = request.FILES['file'].read()
+        self.object = Question(content=content)
         self.object.author = self.request.user
         self.object.save()
 
@@ -230,6 +232,6 @@ class QuestionSearchView(ListView):
     
     def get_queryset(self):
         search_term = self.request.GET['q']
-        question_objects = Question.objects.filter(name__icontains=search_term)
-        return [{'id':q.id, 'name':q.name} for q in question_objects]
+        question_objects = Question.objects.filter(Q(name__icontains=search_term) | Q(tags__name__istartswith=search_term))
+        return [{'id':q.id, 'name':q.name, 'url':reverse('question_edit', args=(q.pk,q.slug,))} for q in question_objects]
     

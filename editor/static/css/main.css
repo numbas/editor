@@ -169,3 +169,10 @@ ul#menu li a {
     color: #333;
 }
 
+input.search {
+	background: white url(../images/search.png) no-repeat right;
+}
+
+input.search.loading {
+	background-image: url(../images/busy.gif);
+}

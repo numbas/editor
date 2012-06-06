@@ -586,7 +586,7 @@
 	                    <a id="copy" href="{% url question_copy object.pk object.slug %}">Make a Copy</a>
 	                </div>
 	            </div>
-				<div id="editor" data-bind="template: 'questionTemplate'"></div>
+				<div id="editor" data-bind="template: 'questionTemplate'">Loading...</div>
 			</div>
 		{% else %}
 			<div>You are not permitted to view this question</div>

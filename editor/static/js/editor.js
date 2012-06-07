@@ -260,7 +260,7 @@ $(document).ready(function() {
 				var expr = '';
 				for(var j=0;j<sbits.length;j+=1)
 				{
-					expr += j%2 ? 'subvar('+sbits[j]+',"red")' : sbits[j];
+					expr += j%2 ? 'subvar('+sbits[j]+',"gray")' : sbits[j]; //subvar here instead of \\color because we're still in JME
 				}
 				expr = Numbas.jme.display.exprToLaTeX(expr,args,scope);
 			} catch(e) {
@@ -270,10 +270,10 @@ $(document).ready(function() {
 			switch(cmd)
 			{
 			case 'var':	//substitute a variable
-				out += ' \\color{olive}{\\boxed{'+expr+'}} ';
+				out += ' \\color{olive}{'+expr+'}';
 				break;
 			case 'simplify': //a JME expression to be simplified
-				out += ' \\color{#ff1493}{\\boxed{'+expr+'}} ';
+				out += ' \\color{blue}{'+expr+'}';
 				break;
 			}
 		}

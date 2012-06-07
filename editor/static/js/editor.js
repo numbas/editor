@@ -264,7 +264,7 @@ $(document).ready(function() {
 				}
 				expr = Numbas.jme.display.exprToLaTeX(expr,args,scope);
 			} catch(e) {
-				expr = '\\color{red}{'+expr+'}';
+				expr = '\\color{red}{\\textrm{'+e.message+'}}';
 			}
 
 			switch(cmd)

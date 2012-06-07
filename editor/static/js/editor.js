@@ -342,7 +342,7 @@ $(document).ready(function() {
 		update: function(element,valueAccessor) {
 			var value = ko.utils.unwrapObservable(valueAccessor()) || '';
 			value = cleanJME(value);
-			$(element).html(value);
+			$(element).html(value).mathjax();
 		}
 	}
 	

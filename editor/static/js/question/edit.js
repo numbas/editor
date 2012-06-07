@@ -242,7 +242,7 @@ $(document).ready(function() {
 				switch(f.language())
 				{
 				case 'jme':
-					fn.tree = jme.compile(f.definition(),scope);
+					fn.tree = jme.compile(f.definition(),scope,true);
 
 					fn.evaluate = function(args,scope)
 					{

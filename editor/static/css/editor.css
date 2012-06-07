@@ -55,14 +55,21 @@
     font-family: monospace;
 	text-align: right;
 }
-.variable td {
+.variable > td {
 	padding-right: 0.5em;
 	text-align: center;
+	padding-bottom: 0.3em;
+	border-bottom: #ccc 1px solid;
+}
+.variable > td.value {
+    border-left: #ccc 1px dashed;
 }
 
-.variable td.value {
+.variable > td.value div {
 	max-width: 20em;
 	overflow-x: auto;
+    max-height: 8em;
+    overflow-y: auto;
 }
 
 .function .parameters .list {
@@ -148,6 +155,10 @@ ul.choices {
 .writemathsContainer {
 	width: 90%;
 	margin-left: 1em;
+}
+
+.writemathsContainer textarea {
+    width: 100%;
 }
 
 .wmToggle .ticko {

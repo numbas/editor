@@ -337,6 +337,14 @@ $(document).ready(function() {
 		  	  $(element).find('.writemaths').html(value);
 		}
 	};
+
+	ko.bindingHandlers.cleanJME = {
+		update: function(element,valueAccessor) {
+			var value = ko.utils.unwrapObservable(valueAccessor()) || '';
+			value = cleanJME(value);
+			$(element).html(value);
+		}
+	}
 	
 	ko.bindingHandlers.foldlist = {
 		init: function(element,valueAccessor,allBindingsAccessor,viewModel)

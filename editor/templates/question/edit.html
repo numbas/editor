@@ -512,7 +512,7 @@
 				<td><span class="handle"></span></td>
 				<td><div><input type="text" class="name" data-bind="value:name, valueUpdate: 'afterkeydown', event: {keyup: function(d,e){if(e.which==13){ $(e.target).parents('.variable').find('.def').focus();} } }"/> = </div></td>
 				<td><div><input class="def" type="text" data-bind="value:definition, valueUpdate: 'afterkeydown', event: {keyup: function(d,e){if(e.which==13){ $parent.addVariable($parent,e,$parent.variables.indexOf(this)+1); } } }"/></div></td>
-				<td class="value"><div><span class="value" data-bind="css: {error: error().length>0}, text: display, mathjax: value"></span></div></td>
+				<td class="value"><div class="value" data-bind="css: {error: error().length>0}, html: display, mathjax: value"></div></td>
 				<td><div><button class="remove" data-bind="click:remove"></button></div></td>
 			</tr>
 		</script>

@@ -283,8 +283,31 @@ $(document).ready(function() {
 
 	ko.bindingHandlers.writemaths = {
 		init: function(element,valueAccessor) {
-			var value = ko.utils.unwrapObservable(valueAccessor()) || '';
+            valueAccessor = valueAccessor();
+			var value = ko.utils.unwrapObservable(valueAccessor) || '';
 
+            function onkeyup(e,tinymce) {
+                if(e.type!='keyup')
+                    return;
+
+                valueAccessor(tinymce.getContent());
+            }
+
+            var t = $('<textarea/>');
+            $(element)
+                .addClass('writemathsContainer')
+                .append(t)
+            ;
+
+            $(t)
+                .tinymce({
+                    theme:'numbas',
+                    handle_event_callback: onkeyup
+                })
+                .html(value)
+            ;
+            
+            /*
 			//a container for both the rich and plain editing areas
 			var container = $('<div/>').addClass('writemathsContainer').attr('style','position:relative;');
 			var swap = $('<div class="wmToggle on">Rich editor: <span class="ticko"></span></div>').attr('style','position:absolute;top:-1.2em;right:0;');
@@ -325,9 +348,12 @@ $(document).ready(function() {
 				toggle = !toggle;
 				toggleRichText();
 			});
+            */
 		},
 		update: function(element, valueAccessor) {
 			var value = ko.utils.unwrapObservable(valueAccessor()) || '';
+            $(element).children('textarea').html(value);
+            /*
 			var pt = $(element).find('.plaintext');
 			if(!pt.is(':focus'))
 				pt.val(value)
@@ -335,6 +361,7 @@ $(document).ready(function() {
 			var wm = $(element).find('.writemaths');
 			if(!wm.is(':focus'))
 		  	  $(element).find('.writemaths').html(value);
+            */
 		}
 	};
 

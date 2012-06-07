@@ -67,6 +67,17 @@
 			{{/if}}
 		</script>
 
+		<script type="text/x-jquery-tmpl" id="viewProperty">
+			<label>${$item.label}</label>
+			{{if $item.type=='checkbox'}}
+				<input data-bind="checked: $item.property" type="checkbox" disabled/>
+			{{else}}
+				<div data-bind="
+						text: $item.property" 
+				/>
+			{{/if}}
+		</script>
+
 		<script type="text/x-jquery-tmpl" id="folder">
 			<div class="fold {{if !$item.show}}folded{{/if}}">
 				<div id="folder-header" data-bind="unselectable: true">${$item.label}</div>

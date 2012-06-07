@@ -301,7 +301,7 @@ $(document).ready(function() {
 
             $(t)
                 .tinymce({
-                    theme:'numbas',
+                    theme:'simple',
                     handle_event_callback: onkeyup
                 })
                 .html(value)

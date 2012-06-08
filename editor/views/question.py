@@ -233,5 +233,5 @@ class QuestionSearchView(ListView):
     def get_queryset(self):
         search_term = self.request.GET['q']
         question_objects = Question.objects.filter(Q(name__icontains=search_term) | Q(tags__name__istartswith=search_term))
-        return [{'id':q.id, 'name':q.name, 'url':reverse('question_edit', args=(q.pk,q.slug,))} for q in question_objects]
+        return [q.summary() for q in question_objects]
     

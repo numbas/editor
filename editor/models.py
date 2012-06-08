@@ -18,6 +18,7 @@ import json
 
 from django.conf import settings
 from django.db import models
+from django.core.urlresolvers import reverse
 from django.template.defaultfilters import slugify
 from django.template import loader, Context
 from django.core.exceptions import ValidationError
@@ -113,16 +114,16 @@ def validate_content(content):
         raise ValidationError(err)
 
 class Extension(models.Model):
-	name = models.CharField(max_length=200,help_text='A readable name, to be displayed to the user')
-	location = models.CharField(max_length=200,help_text='The location of the extension on disk')
-	url = models.CharField(max_length=300,blank=True,help_text='Address of a page about the extension')
+    name = models.CharField(max_length=200,help_text='A readable name, to be displayed to the user')
+    location = models.CharField(max_length=200,help_text='The location of the extension on disk')
+    url = models.CharField(max_length=300,blank=True,help_text='Address of a page about the extension')
 
-	def __unicode__(self):
-		return self.name
+    def __unicode__(self):
+        return self.name
 
-	def as_json(self):
-		d = model_to_dict(self)
-		return json.dumps(d)
+    def as_json(self):
+        d = model_to_dict(self)
+        return json.dumps(d)
 
 class Question(models.Model,NumbasObject,GitObject):
     
@@ -171,6 +172,10 @@ class Question(models.Model,NumbasObject,GitObject):
         d = model_to_dict(self)
         d['tags'] = [ti.tag.name for ti in d['tags']]
         return json.dumps(d)
+
+    def summary(self):
+        """return id, name and url, enough to identify a question and say where to find it"""
+        return {'id':self.id, 'name':self.name, 'url':reverse('question_edit', args=(self.pk,self.slug,))}
 
 
 class Exam(models.Model,NumbasObject,GitObject):

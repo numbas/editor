@@ -234,8 +234,7 @@ class ExamUpdateView(UpdateView):
     def get_context_data(self, **kwargs):
         context = super(ExamUpdateView, self).get_context_data(**kwargs)
         exam_dict = model_to_dict(self.object)
-        exam_dict['questions'] = [
-            {'id': q.id, 'name':q.name} for q in self.object.get_questions()]
+        exam_dict['questions'] = [q.summary() for q in self.object.get_questions()]
         context['exam_JSON'] = json.dumps(exam_dict)
         context['themes'] = settings.GLOBAL_SETTINGS['NUMBAS_THEMES']
         return context

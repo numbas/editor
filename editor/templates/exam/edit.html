@@ -179,7 +179,7 @@
 		<script type="text/x-jquery-tmpl" id="question">
 			<li class="question">
 				<span class="handle"></span>
-				<span data-bind="text: name"></span>
+				<a data-bind="attr:{href: url}, text: name" target="_blank"></a>
 				<button class="remove" data-bind="click:remove"></button>
 			</li>
 		</script>
@@ -187,7 +187,7 @@
 		<script type="text/x-jquery-tmpl" id="questionResult">
 			<li class="questionResult" data-bind="dragOut: {data: $data, sortable: '.questions ul.editlist'}">
 				<span class="handle"></span>
-				<span data-bind="text: name"></span>
+				<a data-bind="attr: {href: url}, text: name" target="_blank"></span>
 			</li>
 		</script>
 	    {% endverbatim %}

@@ -142,7 +142,7 @@ $(document).ready(function() {
 			if('questions' in data)
 			{
 				this.questions(data.questions.map(function(q) {
-					return new Question(q.id,q.name,e)
+					return new Question(q,e)
 				}));
 			}
 		}
@@ -155,7 +155,9 @@ $(document).ready(function() {
 				content: this.output(),
                 theme: this.theme(),
 				metadata: this.metadata(),
-				questions: this.questions().filter(function(q){return q.id()>0}).map(function(q){ return q.id(); }),
+				questions: this.questions()
+							.filter(function(q){return q.id()>0})
+							.map(function(q){ return q.id(); })
 			};
 		},this);
 
@@ -213,7 +215,7 @@ $(document).ready(function() {
 			var e = this;
 			return function(oldPos,newPos) {
 				var data = e.questionSearchResults()[oldPos];
-				q = new Question(data.id,data.name,e);
+				q = new Question(data,e);
 				e.questions.splice(newPos,0,q);
 			}
 		},
@@ -336,10 +338,11 @@ $(document).ready(function() {
         }
     };
 
-	function Question(id,name,exam)
+	function Question(data,exam)
 	{
-		this.id = ko.observable(id);
-		this.name = ko.observable(name);
+		this.id = ko.observable(data.id);
+		this.name = ko.observable(data.name);
+		this.url = ko.observable(data.url);
 		this.exam = exam;
 	}
 	Question.prototype = {

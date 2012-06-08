@@ -63,6 +63,10 @@
 }
 .variable > td.value {
     border-left: #ccc 1px dashed;
+    border-right: #ccc 1px dashed;
+}
+.variable button.remove {
+    position: inherit;
 }
 
 .variable > td.value div {

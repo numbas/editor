@@ -138,7 +138,6 @@ class QuestionCopyView(View, SingleObjectMixin):
             q2.filename = None
             q2.author = request.user
             q2.save()
-            q2.tags.set(*[tag.name for tag in q.tags.all()])
             q2.set_name("%s's copy of %s" % (q2.author.first_name,q.name))
         except (Question.DoesNotExist, TypeError) as err:
             status = {
@@ -184,7 +183,6 @@ class QuestionUpdateView(UpdateView):
     def form_valid(self, form):
         self.object = form.save(commit=False)
 
-        self.object.tags.set(*self.data['tags'])
         self.object.edit_user = self.user
 
         self.object.save()

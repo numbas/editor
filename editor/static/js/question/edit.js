@@ -375,6 +375,7 @@ $(document).ready(function() {
 
             return {
                 name: this.name(),
+                tags: this.tags(),
                 statement: this.statement(),
 				extensions: extensions,
                 advice: this.advice(),

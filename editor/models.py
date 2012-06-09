@@ -33,10 +33,11 @@ class NumbasObject:
     def save(self):
         if self.content:
             parser = ExamParser()
-            data = parser.parse(self.content)
-            self.name = data['name']
+            self.parsedContent= parser.parse(self.content)
+            self.name = self.parsedContent['name']
         elif self.name:
             self.content = '{name: %s}' % self.name
+            self.parsedContent = {'name': self.name}
 
     def set_name(self,name):
         self.name = name
@@ -155,6 +156,9 @@ class Question(models.Model,NumbasObject,GitObject):
         GitObject.save(self)
 
         super(Question, self).save(*args, **kwargs)
+
+        if 'tags' in self.parsedContent:
+           self.tags.set(*self.parsedContent['tags'])
 
     def delete(self, *args, **kwargs):
         GitObject.delete(self)

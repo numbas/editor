@@ -38,7 +38,7 @@
 				}"></div>
 				<div>
 					<label>Tags:</label>
-					<div data-bind="listbox: tags"></div>
+					<div data-bind="listbox:tags"></div>
 				</div>
 			</div>
 
@@ -602,12 +602,10 @@
 				}"></div>
 				<div>
 					<label>Tags:</label>                    
-                    <ol data-bind="template: {
+                    <ol class="viewtags" data-bind="template: {
                       name: 'tag',
                       foreach: tags
-                      }">
-                    </ol>
-                              
+                      }"></ol>        
 				</div>
 			</div>
 
@@ -623,7 +621,8 @@
 
 			{{wrap(this,{label:"Statement",show:true}) '#folder'}}
 				<div style="padding-top:0.7em;">
-					<div data-bind="cleanJME:statement"></div>
+                    <div class="textblock" data-bind="visible: statement, cleanJME: statement"></div>
+                    <div class="textblock" data-bind="visible: statement().length == 0 ">No statement specified</div>
 				</div>
 			{{/wrap}}
 
@@ -681,7 +680,7 @@
 
 			{{wrap(this,{label:"Advice"}) '#folder'}}
 				<div style="padding-top:0.7em;">
-					<div data-bind="html:advice"></div>
+					<div class="textblock" data-bind="cleanJME:advice"></div>
 				</div>
 			{{/wrap}}
 		</script>
@@ -692,12 +691,16 @@
         </script>
 
 
-    <script type="text/x-jquery-tmpl" id="extension">
+        <script type="text/x-jquery-tmpl" id="extension">
 			<li>
 				<a data-bind="attr: {href:url}, text:name" target="_blank"></a>
 			</li>
 		</script>
 	
+        <script type="text/x-jquery-tmpl" id="jmestrings">
+			<li data-bind="text: $data"></li>
+		</script>
+
 		<script type="text/x-jquery-tmpl" id="part">
 			<li class="part">
 				<div data-bind="foldlist: $data, label: type().niceName, show:true">
@@ -713,7 +716,7 @@
 					</div>
 					<div data-bind="visible: $data.parent==null || $data.parent.type().name!='gapfill' || $data.parent.steps().contains($data)">
 						Prompt:
-						<div data-bind="cleanJME: prompt"></div>
+						<div  class="textblock" data-bind="cleanJME: prompt"></div>
 					</div>
 					<div style="margin-top:1em;" data-bind="template: type"></div>
 					<div class="steps fold" data-bind="visible:parent==null">
@@ -725,13 +728,13 @@
 									templateOptions: {label:'Penalty for revealing steps (marks):',property:stepsPenalty, type:'number'}
 								}"></div>
 							</div>
+                            
 							<ol class="editlist" data-bind="template:{
 								name: 'part',
 								foreach: steps,
 								beforeRemove: function(elem) { $(elem).slideUp(150,function(){$(this).remove()}) },
 								afterAdd: function(elem) { $(elem).hide().slideDown(150) }
 							}"></ol>
-							<button data-bind="click:addStep, text: steps().length ? 'Add another step' : 'Add a step'"></button>
 						</div>
 					</div>
 				</div>
@@ -751,17 +754,16 @@
 						beforeRemove: function(elem) { $(elem).slideUp(150,function(){$(this).remove()}) },
 						afterAdd: function(elem) { $(elem).hide().slideDown(150) }
 					}"></ol>
-					<button data-bind="click:addGap, text: gapfill.gaps().length ? 'Add another gap' : 'Add a gap'"></button>
 				</div>
 			</div>
 		</script>
 	
 		<script type="text/x-jquery-tmpl" id="jme">
 			<div class="properties">
-				<div>
+				<div class="correctanswer">
 					<label>Correct answer: </label>
-					<span data-bind="text: jme.answer"></span>
-					<span data-bind="cleanJME: '$\\simplify{' + jme.answer() + '}$'"></span>
+					<div data-bind="text: jme.answer"></div>
+					<div class="mathdisplay" data-bind="cleanJME: '$\\simplify{' + jme.answer() + '}$'"></div>
 				</div>
                 
 				<div data-bind="template: {
@@ -802,12 +804,13 @@
 				}"></div>
 				<div data-bind="visible: jme.maxlength.length()>0">
 					<div data-bind="template: {
-						name:'percentproperty',
+						name:'viewPercentproperty',
 						templateOptions: {label:'Partial credit for long answer:',property:jme.maxlength.partialCredit}
 					}"></div>
 					<div>
 						Warning message:
-						<div data-bind="html: jme.maxlength.message"></div>
+                        <div class="textblock" data-bind="visible: jme.maxlength.message, html: jme.maxlength.message"></div>
+                        <div class="textblock" data-bind="visible: jme.maxlength.message().length == 0 ">No message specified</div>
 					</div>
 				</div>
 			</div>
@@ -819,14 +822,15 @@
 					name: 'viewProperty',
 					templateOptions: {label:'Minimum length:',property:jme.minlength.length, type:'number',min:0}
 				}"></div>
-				<div data-bind="fadeVisible: jme.minlength.length()>0">
+				<div data-bind="visible: jme.minlength.length()>0">
 					<div data-bind="template: {
-						name:'percentproperty',
+						name:'viewPercentproperty',
 						templateOptions: {label:'Partial credit for short answer:',property:jme.minlength.partialCredit}
 					}"></div>
 					<div>
-						Warning message:
-						<div data-bind="html: jme.minlength.message"></div>
+                        Warning message:
+                        <div class="textblock" data-bind="visible: jme.minlength.message, html: jme.minlength.message"></div>
+                        <div class="textblock" data-bind="visible: jme.minlength.message().length == 0 ">No message specified</div>
 					</div>
 				</div>
 			</div>
@@ -835,20 +839,24 @@
 			<div class="properties">
 				<div>
 					<label>Required strings:</label>
-					<div data-bind="listbox:jme.musthave.strings"></div>
-				</div>
-				<div data-bind="fadeVisible: jme.musthave.strings().length>0">
+                    <ul class="jmestrings" data-bind="template: {
+                        name:'jmestrings',
+                        foreach: jme.musthave.strings
+                    }"></ul>
+                </div>
+				<div data-bind="visible: jme.musthave.strings().length>0">
 					<div data-bind="template: {
-						name:'percentproperty',
+						name:'viewPercentproperty',
 						templateOptions: {label:'Partial credit for not using all required strings:',property:jme.musthave.partialCredit}
 					}"></div>
 					<div data-bind="template: {
-						name: 'booleanproperty',
+						name: 'viewProperty',
 						templateOptions: {label:'Show required strings in warning?', property:jme.musthave.showStrings}
 					}"></div>
 					<div>
 						Warning message:
-						<div data-bind="html: jme.musthave.message"></div>
+                        <div class="textblock" data-bind="visible: jme.musthave.message, html: jme.musthave.message"></div>
+                        <div class="textblock" data-bind="visible: jme.musthave.message().length == 0 ">No message specified</div>
 					</div>
 				</div>
 			</div>
@@ -857,20 +865,24 @@
 			<div class="properties">
 				<div>
 					<label>Forbidden strings:</label>
-					<div data-bind="listbox:jme.notallowed.strings"></div>
+                    <ul class="jmestrings" data-bind="template: {
+                        name:'jmestrings',
+                        foreach: jme.notallowed.strings
+                    }"></ul>
 				</div>
-				<div data-bind="fadeVisible: jme.notallowed.strings().length>0">
+				<div data-bind="visible: jme.notallowed.strings().length>0">
 					<div data-bind="template: {
-						name:'percentproperty',
+						name:'viewPercentproperty',
 						templateOptions: {label:'Partial credit for using forbidden strings:',property:jme.notallowed.partialCredit}
 					}"></div>
 					<div data-bind="template: {
-						name: 'booleanproperty',
+						name: 'viewProperty',
 						templateOptions: {label:'Show forbidden strings in warning?', property:jme.notallowed.showStrings}
 					}"></div>
 					<div>
 						Warning message:
-						<div data-bind="html: jme.notallowed.message"></div>
+                        <div class="textblock" data-bind="visible: jme.notallowed.message, html: jme.notallowed.message"></div>
+                        <div class="textblock" data-bind="visible: jme.notallowed.message().length == 0 ">No message specified</div>
 					</div>
 				</div>
 			</div>
@@ -893,7 +905,7 @@
 				}"></div>
 				<div data-bind="visible: numberentry.integerAnswer,
 				template: {
-					name:'percentproperty',
+					name:'viewPercentproperty',
 					templateOptions: {label:'Partial credit for non-integer answer:',property:numberentry.partialCredit}
 				}"></div>
 			</div>
@@ -902,21 +914,21 @@
 		<script type="text/x-jquery-tmpl" id="patternmatch">
 			<div class="properties">
 				<div data-bind="template: {
-					name: 'property',
+					name: 'viewProperty',
 					templateOptions: {label:'Answer pattern:',property:patternmatch.answer}
 				}"></div>
 				<div data-bind="template: {
-					name: 'property',
-					templateOptions: {label:'Correct answer:',property:a.displayAnswer}
+					name: 'viewProperty',
+					templateOptions: {label:'Correct answer:',property:patternmatch.displayAnswer}
 				}"></div>
 				<div data-bind="template: {
-					name: 'booleanproperty',
+					name: 'viewProperty',
 					templateOptions: {label:'Must answer be in the correct case?', property:patternmatch.caseSensitive}
 				}"></div>
 				<div data-bind="
 				fadeVisible:patternmatch.caseSensitive,
 				template: {
-					name:'percentproperty',
+					name:'viewPercentproperty',
 					templateOptions: {label:'Partial credit for answer not matching case:',property:patternmatch.partialCredit}
 				}"></div>
 			</div>
@@ -952,78 +964,76 @@
 		<script type="text/x-jquery-tmpl" id="m_n_2">
 			<div class="properties">
 				<div data-bind="template: {
-					name: 'property',
+					name: 'viewProperty',
 					templateOptions: {label:'Minimum marks:',property:multiplechoice.minMarks, type: 'number', max:multiplechoice.maxMarks }
 				}"></div>
 				<div data-bind="template: {
-					name: 'property',
+					name: 'viewProperty',
 					templateOptions: {label:'Maximum marks:',property:multiplechoice.maxMarks, type: 'number', min:multiplechoice.minMarks}
 				}"></div>
 				<div data-bind="template: {
-					name: 'booleanproperty',
+					name: 'viewProperty',
 					templateOptions: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
 				}"></div>
-				<label>Selection type:</label><select data-bind="options: multiplechoice.displayTypes['m_n_2'], value: multiplechoice.displayType, optionsText: 'niceName'"></select>
-				<div data-bind="fadeVisible: multiplechoice.displayType().name!='dropdown',
-				template: {
-					name: 'property',
-					templateOptions: {label:'Number of display columns:',property:multiplechoice.displayColumns, type: 'number'}
+				<label>Selection type:</label><span data-bind="text: multiplechoice.displayType().niceName"></span>
+				<div data-bind="template: {
+					name: 'viewProperty',
+					templateOptions: {label:'Number of display columns:',property:multiplechoice.displayColumns}
 				}"></div>
 			</div>
 			<div>
 				Choices:
-				<ul class="choices" data-bind="template: {
+				<table class="choices" data-bind="template: {
 					name: 'choice-1_n_2',
 					foreach: multiplechoice.choices
 				}">
-					<li><button data-bind="click:addChoice">Add a choice</button></li>
-				</ul>
+				</table>
 			</div>
 		</script>
 	
 		<script type="text/x-jquery-tmpl" id="choice-1_n_2">
-			<li class="choice">
-				<span>
+			<tr class="choice">
+				<td>
 					<span data-bind="html:content"></span>
-				</span>
-				<span>
+				</td>
+				<td>
 					<label>Marks:</label>
-					<span data-bind="text:marks">,/span>
-				</span>
-				<span>
+					<span data-bind="text:marks"></span>
+				</td>
+				<td>
 					<label>Distractor Message:</label>
 					<span data-bind="html:distractor"></span>
-				</span>
-			</li>
+				</td>
+			</tr>
 		</script>
 	
 		<script type="text/x-jquery-tmpl" id="m_n_x">
 			<div class="properties">
 				<div data-bind="template: {
-					name: 'property',
+					name: 'viewProperty',
 					templateOptions: {label:'Minimum marks:',property:multiplechoice.minMarks, type: 'number', max:multiplechoice.maxMarks }
 				}"></div>
 				<div data-bind="template: {
-					name: 'property',
+					name: 'viewProperty',
 					templateOptions: {label:'Maximum marks:',property:multiplechoice.maxMarks, type: 'number', min:multiplechoice.minMarks}
 				}"></div>
 				<div data-bind="template: {
-					name: 'property',
+					name: 'viewProperty',
 					templateOptions: {label:'Minimum answers:',property:multiplechoice.minAnswers, type:'number', max:multiplechoice.maxAnswers}
 				}"></div>
 				<div data-bind="template: {
-					name: 'property',
+					name: 'viewProperty',
 					templateOptions: {label:'Maximum answers:',property:multiplechoice.maxAnswers, type:'number', min:multiplechoice.minAnswers}
 				}"></div>
 				<div data-bind="template: {
-					name: 'booleanproperty',
+					name: 'viewProperty',
 					templateOptions: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
 				}"></div>
 				<div data-bind="template: {
-					name: 'booleanproperty',
+					name: 'viewProperty',
 					templateOptions: {label:'Shuffle order of answers?', property:multiplechoice.shuffleAnswers}
 				}"></div>
-				<label>Selection type:</label><select data-bind="options: multiplechoice.displayTypes.m_n_x, value: multiplechoice.displayType, optionsText: 'niceName'"></select>
+				<label>Selection type:</label><span data-bind="text: multiplechoice.displayType().niceName"></span>
 			</div>
 			<div class="matrix">
 				<label>Marking matrix:</label>
@@ -1033,20 +1043,16 @@
 							<td/>
 							{{each multiplechoice.answers()}}
 								<th>
-									<input type="text" data-bind="value:$value.content, valueUpdate:'input'">
-									<button class="remove" data-bind="click:function(){removeAnswer($value)}"></button>
+									<span data-bind="html:$value.content"></span>
 								</th>
 							{{/each}}
-							<td>
-								<button data-bind="click:addAnswer">Add Answer</button>
-							</td>
+                            <th></th>
 						</tr>
 					</thead>
 					<tbody data-bind="template: {
 						name: 'choice-m_n_x',
 						foreach: multiplechoice.choices
 					}">
-						<tr><td><button data-bind="click:addChoice">Add Choice</button></td></tr>
 					</tbody>
 				</table>
 			</div>
@@ -1055,15 +1061,15 @@
 		<script type="text/x-jquery-tmpl" id="choice-m_n_x">
 			<tr>
 				<th>
-					<input type="text" data-bind="value:content, valueUpdate:'input'"/>
-					<button class="remove" data-bind="click:remove"></button>
+					<span data-bind="cleanJME:content"></span>
 				</th>
 				{{each answers()}}
 					<td>
-						<input class="mark" type="number" data-bind="value:$value.marks, valueUpdate:'input'"/>
+						<span class="mark" data-bind="text:$value.marks"></span>
 					</td>
 				{{/each}}
 			</tr>
+            <tr><td></td></tr>
 		</script>
 
 		<script type="text/x-jquery-tmpl" id="ruleset">
@@ -1089,7 +1095,7 @@
 							name: 'viewProperty',
 							templateOptions: {property:name,label: 'Name:'}
 						}"></div>
-						<div class="parameters">
+						<div class="viewparameters">
 							<label>Parameters:</label>
 							<table class="list">
 								<thead data-bind="visible: parameters().length>0">
@@ -1112,7 +1118,7 @@
 						</div>
 						<div class="definition">
 							<label>Definition:</label>
-							<code data-bind="text: definition"/>
+							<div class="code"><code data-bind="text: definition"/></div>
 						</div>
 					</div>
 				</div>
@@ -1121,8 +1127,8 @@
 
 		<script type="text/x-jquery-tmpl" id="parameter">
 			<tr>
-				<td><div><span data-bind="text: name"/></div></td>
-				<td><div><span data-bind="text: type"/></div></td>
+				<td><span data-bind="text: name"/></td>
+				<td class="parametertype"><span data-bind="text: type"/></td>
 			</tr>
 		</script>
 
@@ -1141,7 +1147,6 @@
 	                </div>
 	                <div class="controlbox" id="admin">
 	                    <button id="preview" data-bind="click: showPreview">Test Run</button>
-	                    <a id="delete" href="{% url question_delete object.pk object.slug %}"><img src="{{STATIC_URL}}images/delete.png"/> Delete</a>
 	                    <a id="copy" href="{% url question_copy object.pk object.slug %}">Make a Copy</a>
 	                </div>
 	            </div>

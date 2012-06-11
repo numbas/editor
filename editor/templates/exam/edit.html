@@ -33,7 +33,7 @@
     {{ block.super }}
 
 
-	{% if user.username == object.author.username or user.is_superuser %}
+	{% if user == object.author or user.is_superuser %}
 	    {% verbatim %}
 	
 			<script type="text/x-jquery-tmpl" id="examTemplate">
@@ -212,7 +212,171 @@
 	        <div id="editor" data-bind="template: 'examTemplate'">Loading...</div>
 	    </div>
     {% else %}
-	    <div>You are not permitted to view this exam.</div>
+
+
+
+    
+    
+    
+    	    {% verbatim %}
+	
+			<script type="text/x-jquery-tmpl" id="examTemplate">
+			<div class="properties">
+				<div data-bind="template: {
+					name: 'viewProperty',
+					templateOptions: {label:'Exam name:',property:name}
+				}"></div>
+                <div>
+                    <label>Theme: </label>
+                    <span data-bind="text: theme"></span>
+                </div>
+
+				<div data-bind="template: {
+					name: 'viewProperty',
+					templateOptions: {label:'Duration (minutes):',property:duration, type:'number',min:0}
+				}"></div>
+				<div data-bind="template: {
+					name: 'viewPercentproperty',
+					templateOptions: {label:'Pass threshold (percent):',property:percentPass}
+				}"></div>
+				<div data-bind="template: {
+					name: 'viewProperty',
+					templateOptions: {label: 'Shuffle questions?',property:shuffleQuestions}
+				}"></div>
+			</div>
+			{{wrap(this,{label:"Navigation"}) "#folder"}}
+				<div>
+					<div class="properties">
+						<div data-bind="template: {
+							name: 'viewProperty',
+							templateOptions: {label:'Allow user to regenerate questions?', property:allowregen}
+						}"></div>
+						<div data-bind="template: {
+							name: 'viewProperty',
+							templateOptions: {label:'Allow move to previous question?', property:reverse}
+						}"></div>
+						<div data-bind="template: {
+							name: 'viewProperty',
+							templateOptions: {label:'Allow jump to any question?', property:browse}
+						}"></div>
+						<div data-bind="template: {
+							name: 'viewProperty',
+							templateOptions: {label: 'Show front page?',property:showfrontpage}
+						}"></div>
+					</div>
+					<div data-bind="template: {
+						name: 'event',
+						data: onadvance
+					}"></div>
+					<div data-bind="template: {
+						name: 'event',
+						data: onreverse
+					}"></div>
+					<div data-bind="template: {
+						name: 'event',
+						data: onmove
+					}"></div>
+				</div>
+			{{/wrap}}
+			{{wrap(this,{label:"Timing"}) "#folder"}}
+				<div>
+					<div data-bind="template: {
+						name: 'event',
+						data: timeout
+					}"></div>
+					<div data-bind="template: {
+						name: 'event',
+						data: timedwarning
+					}"></div>
+				</div>
+			{{/wrap}}
+			{{wrap(this,{label:"Feedback"}) "#folder"}}
+				<div class="properties">
+					<div data-bind="template: {
+						name: 'viewProperty',
+						templateOptions: { label:'Show actual mark?', property:showactualmark}
+					}"></div>
+					<div data-bind="template: {
+						name: 'viewProperty',
+						templateOptions: { label:'Show total mark?', property:showtotalmark}
+					}"></div>
+					<div data-bind="template: {
+						name: 'viewProperty',
+						templateOptions: { label:'Show answer state?', property:showanswerstate}
+					}"></div>
+					<div data-bind="template: {
+						name: 'viewProperty',
+						templateOptions: { label:'Allow reveal answer?', property:allowrevealanswer}
+					}"></div>
+					<div data-bind="template: {
+						name: 'viewPercentproperty',
+						templateOptions: { label:'Advice threshold (percent)', property:advicethreshold}
+					}"></div>
+				</div>
+			{{/wrap}}
+			{{wrap(this,{label:"Questions", show: true}) "#folder"}}
+			<div class="questions">
+				<ul class="questionList editlist normal" data-bind="
+					template:{
+						name:'question',
+						foreach: questions,
+					},
+				"></ul>
+			</div>
+			{{/wrap}}
+		</script>
+	
+		<script type="text/x-jquery-tmpl" id="event">
+			{{wrap(this,{label:niceName}) "#folder"}}
+				<div>
+				<div class="properties">
+					<div>
+						<label>Action: </label>
+						<span data-bind="text: action().niceName"></span>
+					</div>
+				</div>
+				<div data-bind="fadeVisible:action().value!='none'">
+					Message: 
+					<div class="textblock" data-bind="html: message"/>
+				</div>
+				</div>
+			{{/wrap}}
+		</script>
+	
+		<script type="text/x-jquery-tmpl" id="question">
+			<li class="question">
+				<a data-bind="attr:{href: url}, text: name" target="_blank"></a>
+			</li>
+		</script>
+
+	    {% endverbatim %}
+	
+	    <div>
+	        <div id="controls">
+	            <div class="controlbox" id="author">
+	                Author: {{ object.author.first_name }} {{ object.author.last_name }} ({{ object.author.username }})
+	            </div>
+	            <div class="controlbox" id="buttons">
+	                Download: 
+	                <a href="{% url exam_download object.pk object.slug %}">standalone .zip</a>,
+	                <a href="{% url exam_download object.pk object.slug %}?scorm">SCORM package</a>,
+	                <a href="{% url exam_source object.pk object.slug %}">source</a>
+	            </div>
+	            <div class="controlbox" id="admin">
+	                <button id="preview" data-bind="click: showPreview">Test Run</button>
+	                <a id="copy" href="{% url exam_copy object.pk object.slug %}">Make a Copy</a>
+	            </div>
+	        </div>
+	        <div id="editor" data-bind="template: 'examTemplate'">Loading...</div>
+	    </div>
+
+    
+    
+    
+
+
+
+
     {% endif %}
 {% endblock content %}
 

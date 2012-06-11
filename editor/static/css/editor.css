@@ -21,6 +21,10 @@
 	overflow-y:scroll;
 }
 
+.textblock {
+    border: #ccc 1px solid;
+    padding: 0.5em;
+}
 
 .question > * > .fold {
 	background: #f5f5ff;
@@ -53,7 +57,12 @@
 .variable .def {
 	width: 20em;
     font-family: monospace;
-	text-align: right;
+	text-align: left;
+    
+    word-wrap: break-word;
+    max-height: 8em;
+	overflow-x: auto;
+    overflow-y: auto;
 }
 .variable > td {
 	padding-right: 0.5em;
@@ -61,6 +70,7 @@
 	padding-bottom: 0.3em;
 	border-bottom: #ccc 1px solid;
 }
+
 .variable > td.value {
     border-left: #ccc 1px dashed;
     border-right: #ccc 1px dashed;
@@ -80,6 +90,20 @@
 	float: right;
 	margin-bottom: 0.5em;
 }
+
+.function .viewparameters .list {
+	margin-bottom: 0.5em;
+    border-bottom: #ccc 1px solid;
+}
+
+.function .viewparameters .list th,td{
+    padding: 0 0.5em 0 0.5em;
+}
+
+.function .viewparameters .list td.parametertype {
+    border-left: #ccc 1px dashed;
+}
+
 .function .parameters .addparameter {
 	clear: both;
 	float: right;
@@ -89,6 +113,9 @@
 	width: 20em;
 }
 
+.function .definition .code {
+    border: #ccc 1px solid;
+}
 
 table.multiplechoice {
 	width:auto;
@@ -116,6 +143,18 @@ ul.choices {
 	list-style:none;
 }
 
+li.choice  {
+    margin-right: 10px;
+}
+
+tr.choice td {
+    max-height: 8em;
+    max-width: 20em;
+	overflow-x: auto;
+    overflow-y: auto;
+    margin-right: 10px;
+}
+
 .properties {
 	display:inline-block;
 }
@@ -139,6 +178,7 @@ ul.choices {
 	float:left;
 	margin-right: 5em;
 }
+
 .properties input,.properties select, .properties .display, .properties .listbox {
 	float:right;
 }
@@ -154,6 +194,25 @@ ul.choices {
 
 .properties .listbox {
 	clear:none;
+}
+
+.correctanswer {
+    bborder: #ccc 1px solid;
+}
+
+.correctanswer label{
+    background-color: #eee;
+    padding: 0 1em 0 1em;
+    border: #ccc 1px solid;
+}
+
+.correctanswer div{
+    border: #ccc 1px dashed;
+    padding: 0.5em;
+    margin-bottom: 0em;
+}
+.correctanswer .mathdisplay {
+    border-top: 0px;
 }
 
 .writemathsContainer {
@@ -216,6 +275,13 @@ ol.editlist > button {
 .editlist.big > li {
 	background-color: #eee;
 	line-height: 2.5em;
+	position: relative;
+	padding-right: 2em;
+}
+
+.editlist.normal > li {
+	background-color: #eee;
+	line-height: 1.5em;
 	position: relative;
 	padding-right: 2em;
 }
@@ -326,6 +392,28 @@ button.remove:hover {
 .listbox li:hover {
 	background: #bbb;
 	cursor:default;
+}
+
+.viewtags {
+    display: inline;
+   	list-style:none;
+    padding: 0px;
+}
+
+.viewtags li{
+    display: inline;
+    padding-right: 2em;
+}
+
+.jmestrings {
+    display: inline;
+    list-style: none;
+    padding: 0px;
+}
+
+.jmestrings li{
+    display: inline;
+    padding-right: 2em;
 }
 
 .handle {

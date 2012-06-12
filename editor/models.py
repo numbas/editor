@@ -143,6 +143,9 @@ class Question(models.Model,NumbasObject,GitObject):
     metadata = models.TextField(blank=True)
     tags = TaggableManager()
 
+    class Meta:
+      ordering = ['name']
+
     git_directory = 'questions'
     
     def __unicode__(self):
@@ -199,6 +202,9 @@ class Exam(models.Model,NumbasObject,GitObject):
     filename = models.CharField(max_length=200, editable=False)
     content = models.TextField(blank=True, validators=[validate_content])
     metadata = models.TextField(blank=True)
+
+    class Meta:
+      ordering = ['name']
 
     git_directory = 'exams'
     

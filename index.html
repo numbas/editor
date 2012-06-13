@@ -132,12 +132,12 @@
       <li>Create apache config file and enable the site.
         <ul>
           <li>Edit <code>/etc/apache2/sites-available/numbas_editor</code> with
-            contents similar to that in <code>editor_apache2.conf</code> (this
-            is in the same directory as this file).  If following these
-            instructions exactly, then all that needs changing are the lines
-            <code>ServerName</code>, <code>ServerAdmin</code>,
-            <code>WSGIDaemonProcess</code>, and
-            <code>WSGIProcessGroup</code>.</li>
+          contents similar to that in <a
+            href="editor_apache2.conf"><code>editor_apache2.conf</code></a>.
+          If following these instructions exactly, then all that needs changing
+          are the lines <code>ServerName</code>, <code>ServerAdmin</code>,
+          <code>WSGIDaemonProcess</code>, and
+          <code>WSGIProcessGroup</code>.</li>
           <li><code>a2ensite numbas_editor &amp;&amp; service apache2
               restart</code></li>
         </ul>

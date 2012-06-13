@@ -303,6 +303,7 @@ $(document).ready(function() {
                 .tinymce({
                     theme:'simple',
                     handle_event_callback: onkeyup
+                    
                 })
                 .html(value)
             ;
@@ -351,8 +352,10 @@ $(document).ready(function() {
             */
 		},
 		update: function(element, valueAccessor) {
-			var value = ko.utils.unwrapObservable(valueAccessor()) || '';
-            $(element).children('textarea').html(value);
+            if (!$(element).find('iframe').contents().find('body').is(':focus')) {              
+                var value = ko.utils.unwrapObservable(valueAccessor()) || '';
+                $(element).children('textarea').html(value);
+            }
             /*
 			var pt = $(element).find('.plaintext');
 			if(!pt.is(':focus'))

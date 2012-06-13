@@ -680,7 +680,8 @@
 
 			{{wrap(this,{label:"Advice"}) '#folder'}}
 				<div style="padding-top:0.7em;">
-					<div class="textblock" data-bind="cleanJME:advice"></div>
+                    <div class="textblock" data-bind="visible: advice, cleanJME: advice"></div>
+                    <div class="textblock" data-bind="visible: advice().length == 0 ">No advice specified</div>
 				</div>
 			{{/wrap}}
 		</script>
@@ -716,14 +717,15 @@
 					</div>
 					<div data-bind="visible: $data.parent==null || $data.parent.type().name!='gapfill' || $data.parent.steps().contains($data)">
 						Prompt:
-						<div  class="textblock" data-bind="cleanJME: prompt"></div>
+                        <div class="textblock" data-bind="visible: prompt, cleanJME: prompt"></div>
+                        <div class="textblock" data-bind="visible: prompt().length == 0 ">No prompt specified</div>
 					</div>
 					<div style="margin-top:1em;" data-bind="template: type"></div>
-					<div class="steps fold" data-bind="visible:parent==null">
+					<div data-bind="visible: steps().length>0" class="steps fold">
 						<div id="folder-header">Steps</div>
 						<div id="folder">
 							<div class="properties">
-								<div data-bind="visible: steps().length>0, template: {
+								<div data-bind="template: {
 									name: 'viewProperty',
 									templateOptions: {label:'Penalty for revealing steps (marks):',property:stepsPenalty, type:'number'}
 								}"></div>
@@ -762,8 +764,8 @@
 			<div class="properties">
 				<div class="correctanswer">
 					<label>Correct answer: </label>
-					<div data-bind="text: jme.answer"></div>
-					<div class="mathdisplay" data-bind="cleanJME: '$\\simplify{' + jme.answer() + '}$'"></div>
+					<div><label>Entered as :</label> <span data-bind="text: jme.answer"></span></div>
+					<div><label>Displayed as :</label> <span class="mathdisplay" data-bind="cleanJME: '$\\simplify{' + jme.answer() + '}$'"></span></div>
 				</div>
                 
 				<div data-bind="template: {
@@ -949,15 +951,25 @@
 					name: 'viewProperty',
 					templateOptions: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
 				}"></div>
-				<label>Selection type:</label><span data-bind="text: multiplechoice.displayType().niceName"></span>
+                <div>
+                    <label>Selection type:</label><span data-bind="text: multiplechoice.displayType().niceName"></span>
+                </div>
 			</div>
 			<div>
-				Choices:
-				<ul class="choices" data-bind="template: {
-					name: 'choice-1_n_2',
-					foreach: multiplechoice.choices
-				}">
-				</ul>
+                <table class="choices">
+                    <thead>
+                        <tr>
+                            <th>Choice</th>
+                            <th>Mark</th>
+                            <th>Distrator Message</th>
+                        </tr>
+                    </thead>
+                    <tbody data-bind="template: {
+                        name: 'choice-1_n_2',
+                        foreach: multiplechoice.choices
+                    }">
+                    </tbody>
+                </table>
 			</div>
 		</script>
 
@@ -975,18 +987,28 @@
 					name: 'viewProperty',
 					templateOptions: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
 				}"></div>
-				<label>Selection type:</label><span data-bind="text: multiplechoice.displayType().niceName"></span>
+                <div>
+                    <label>Selection type:</label><span data-bind="text: multiplechoice.displayType().niceName"></span>
+                </div>
 				<div data-bind="template: {
 					name: 'viewProperty',
 					templateOptions: {label:'Number of display columns:',property:multiplechoice.displayColumns}
 				}"></div>
 			</div>
 			<div>
-				Choices:
-				<table class="choices" data-bind="template: {
-					name: 'choice-1_n_2',
-					foreach: multiplechoice.choices
-				}">
+                <table class="choices">
+                    <thead>
+                        <tr>
+                            <th>Choice</th>
+                            <th>Mark</th>
+                            <th>Distrator Message</th>
+                        </tr>
+                    </thead>
+                    <tbody data-bind="template: {
+                        name: 'choice-1_n_2',
+                        foreach: multiplechoice.choices
+                    }">
+                    </tbody>
 				</table>
 			</div>
 		</script>
@@ -997,12 +1019,11 @@
 					<span data-bind="html:content"></span>
 				</td>
 				<td>
-					<label>Marks:</label>
 					<span data-bind="text:marks"></span>
 				</td>
 				<td>
-					<label>Distractor Message:</label>
-					<span data-bind="html:distractor"></span>
+                    <span data-bind="visible: distractor, html: distractor"></span>
+                    <span data-bind="visible: distractor().length == 0 ">None</span>
 				</td>
 			</tr>
 		</script>
@@ -1033,7 +1054,9 @@
 					name: 'viewProperty',
 					templateOptions: {label:'Shuffle order of answers?', property:multiplechoice.shuffleAnswers}
 				}"></div>
-				<label>Selection type:</label><span data-bind="text: multiplechoice.displayType().niceName"></span>
+                <div>
+                    <label>Selection type:</label><span data-bind="text: multiplechoice.displayType().niceName"></span>
+                </div>
 			</div>
 			<div class="matrix">
 				<label>Marking matrix:</label>

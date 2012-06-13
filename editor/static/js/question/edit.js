@@ -150,7 +150,7 @@ $(document).ready(function() {
 				{json: JSON.stringify(this.save()), csrfmiddlewaretoken: getCookie('csrftoken')}
 			)
                 .success(function(data){
-                    var address = location.protocol+'//'+location.host+'/question/'+Editor.questionJSON.id+'/'+slugify(q.name())+'/';
+                    var address = location.protocol+'//'+location.host+data.url;
                     if(history.replaceState)
                         history.replaceState({},q.name(),address);
 					$.noty.close(vm.save_noty);

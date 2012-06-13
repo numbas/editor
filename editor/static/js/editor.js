@@ -262,7 +262,7 @@ $(document).ready(function() {
 				{
 					expr += j%2 ? 'subvar('+sbits[j]+',"gray")' : sbits[j]; //subvar here instead of \\color because we're still in JME
 				}
-				expr = Numbas.jme.display.exprToLaTeX(expr,args,scope);
+				expr = Numbas.jme.display.exprToLaTeX(expr,[],scope);
 			} catch(e) {
 				expr = '\\color{red}{\\textrm{'+e.message+'}}';
 			}

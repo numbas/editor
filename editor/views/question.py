@@ -187,7 +187,7 @@ class QuestionUpdateView(UpdateView):
 
         self.object.save()
 
-        status = {"result": "success"}
+        status = {"result": "success", "url": self.get_success_url()}
         return HttpResponse(json.dumps(status), content_type='application/json')
         
     def form_invalid(self, form):

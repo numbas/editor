@@ -1,4 +1,8 @@
-﻿#controls {
+﻿#editable {
+    font-weight: bold;
+}
+
+#controls {
     margin-bottom: 0.5em;
 }
 

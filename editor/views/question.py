@@ -169,7 +169,7 @@ class QuestionUpdateView(UpdateView):
     
     def get_template_names(self):
         self.object = self.get_object()
-        if self.request.user == self.object.author:
+        if self.request.user == self.object.author or self.request.user.is_superuser:
             return 'question/editable.html'
         else:
             return 'question/noneditable.html'
@@ -207,7 +207,7 @@ class QuestionUpdateView(UpdateView):
     def get_context_data(self, **kwargs):
         context = super(QuestionUpdateView, self).get_context_data(**kwargs)
         context['extensions'] = json.dumps([model_to_dict(e) for e in Extension.objects.all()])
-        if self.request.user == self.object.author:
+        if self.request.user == self.object.author or self.request.user.is_superuser:
             context['editable'] = 'true'
         else:
             context['editable'] = 'false'

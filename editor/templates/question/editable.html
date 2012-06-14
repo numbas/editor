@@ -107,13 +107,11 @@
 				</div>
 			{{/wrap}}
 
-            <div data-bind="fadeVisible: isadvanced">
-                {{wrap(this,{label:"Advice"}) '#folder'}}
-                    <div style="padding-top:0.7em;">
-                        <div data-bind="writemaths:advice"></div>
-                    </div>
-                {{/wrap}}
-            </div>
+			{{wrap(this,{label:"Advice"}) '#folder'}}
+				<div style="padding-top:0.7em;">
+					<div data-bind="writemaths:advice"></div>
+				</div>
+			{{/wrap}}
 		</script>
 	
 		<script type="text/x-jquery-tmpl" id="extension">

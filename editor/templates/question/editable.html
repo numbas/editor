@@ -1,6 +1,13 @@
 {% extends "question/edit.html" %}
 {% load verbatim %}
 
+{% block controls %}
+	<div class="editlevels">
+		<button data-bind="click: changeEditLevel, text: isadvanced() ? 'Switch to simplified editing mode' : 'Switch to full editing mode'">Switch to simplified editing mode</button>
+	</div>
+	{{block.super}}
+{% endblock controls %}
+
 {% block content %}
     {{ block.super }}
     
@@ -11,13 +18,13 @@
 					name: 'property',
 					templateOptions: {property:name,label:'Question name:'}
 				}"></div>
-				<div data-bind="visible: isadvanced">
+				<div data-bind="fadeVisible: isadvanced">
 					<label>Tags:</label>
 					<div data-bind="listbox:tags"></div>
 				</div>
 			</div>
 
-            <div data-bind="visible: isadvanced">
+            <div data-bind="fadeVisible: isadvanced">
                 {{wrap(this,{label:"Extensions"}) '#folder'}}
                     <div>
                     <ul data-bind="template: {
@@ -34,7 +41,7 @@
 				</div>
 			{{/wrap}}
 
-            <div data-bind="visible: isadvanced">
+            <div data-bind="fadeVisible: isadvanced">
                 {{wrap(this,{label:"Rulesets"}) "#folder"}}
                     <div class="rulesets">
                         <ul class="editlist" data-bind="template:{
@@ -54,6 +61,7 @@
 						<thead data-bind="visible: variables().length>0">
 							<th/>
 							<th>Name</th>
+							<th/>
 							<th>Definition</th>
 							<th>Computed value</th>
 						</thead>
@@ -73,7 +81,7 @@
 				</div>
 			{{/wrap}}
 
-            <div data-bind="visible: isadvanced">
+            <div data-bind="fadeVisible: isadvanced">
                 {{wrap(this,{label:"Functions",show:false}) '#folder'}}
                     <div>
                         <ol class="editlist" data-bind="template:{
@@ -99,7 +107,7 @@
 				</div>
 			{{/wrap}}
 
-            <div data-bind="visible: isadvanced">
+            <div data-bind="fadeVisible: isadvanced">
                 {{wrap(this,{label:"Advice"}) '#folder'}}
                     <div style="padding-top:0.7em;">
                         <div data-bind="writemaths:advice"></div>
@@ -505,10 +513,14 @@
 		<script type="text/x-jquery-tmpl" id="variable">
 			<tr class="variable dict">
 				<td><span class="handle"></span></td>
-				<td><div><input type="text" class="name" data-bind="value:name, valueUpdate: 'afterkeydown', event: {keyup: function(d,e){if(e.which==13){ $(e.target).parents('.variable').find('.def').focus();} } }"/> = </div></td>
+				<td><div>
+						<input type="text" class="name" data-bind="visible: $parent.isadvanced, value:name, valueUpdate: 'afterkeydown', event: {keyup: function(d,e){if(e.which==13){ $(e.target).parents('.variable').find('.def').focus();} } }"/> 
+						<span class="name" data-bind="visible: !$parent.isadvanced(), text: name"></span>
+				</div></td>
+				<td>=</td>
 				<td><div><input class="def" type="text" data-bind="value:definition, valueUpdate: 'afterkeydown', event: {keyup: function(d,e){if(e.which==13){ $parent.addVariable($parent,e,$parent.variables.indexOf(this)+1); } } }"/></div></td>
 				<td class="value"><div class="value" data-bind="css: {error: error().length>0}, html: display, mathjax: value"></div></td>
-				<td><div><button class="remove" data-bind="click:remove"></button></div></td>
+				<td data-bind="visible: $parent.isadvanced"><div><button class="remove" data-bind="click:remove"></button></div></td>
 			</tr>
 		</script>
 

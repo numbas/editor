@@ -6,6 +6,10 @@
     margin-bottom: 0.5em;
 }
 
+.editlevels {
+    float: right;
+}
+
 .controlbox {
     margin-top: 0.5em;
 }

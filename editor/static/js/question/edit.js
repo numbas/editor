@@ -30,6 +30,8 @@ $(document).ready(function() {
 
     function Question(data)
     {
+		var isadvanced = this.isadvanced = ko.observable(true);
+
         this.realName = ko.observable('A Question');
 		this.name = ko.computed({
 			read: this.realName,
@@ -383,7 +385,8 @@ $(document).ready(function() {
                 variables: variables,
 				functions: functions,
                 parts: this.parts().map(function(p){return p.toJSON();})
-            }
+
+                }
         },
 
         load: function(data) {
@@ -457,7 +460,12 @@ $(document).ready(function() {
 
 		download: function() {
 			window.location = Editor.download_url;
-		}
+		},
+        
+        changeEditLevel: function() {
+            this.isadvanced(!this.isadvanced());
+        }
+        
     };
 
 

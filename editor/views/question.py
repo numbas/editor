@@ -208,9 +208,9 @@ class QuestionUpdateView(UpdateView):
         context = super(QuestionUpdateView, self).get_context_data(**kwargs)
         context['extensions'] = json.dumps([model_to_dict(e) for e in Extension.objects.all()])
         if self.request.user == self.object.author:
-            context['editable'] = 'true'
+            context['editable'] = True
         else:
-            context['editable'] = 'false'
+            context['editable'] = False
         return context
     
     def get_success_url(self):

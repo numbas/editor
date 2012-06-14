@@ -163,11 +163,17 @@ class QuestionDeleteView(DeleteView):
 
 class QuestionUpdateView(UpdateView):
     
-    """Edit a question."""
+    """Edit a question or view as non-editable if not author."""
     
     model = Question
-    template_name = 'question/edit.html'
     
+    def get_template_names(self):
+        self.object = self.get_object()
+        if self.request.user == self.object.author:
+            return 'question/editable.html'
+        else:
+            return 'question/noneditable.html'
+
     def post(self, request, *args, **kwargs):
         self.data = json.loads(request.POST['json'])
         self.user = request.user
@@ -187,7 +193,7 @@ class QuestionUpdateView(UpdateView):
 
         self.object.save()
 
-        status = {"result": "success"}
+        status = {"result": "success", "url": self.get_success_url()}
         return HttpResponse(json.dumps(status), content_type='application/json')
         
     def form_invalid(self, form):
@@ -201,6 +207,10 @@ class QuestionUpdateView(UpdateView):
     def get_context_data(self, **kwargs):
         context = super(QuestionUpdateView, self).get_context_data(**kwargs)
         context['extensions'] = json.dumps([model_to_dict(e) for e in Extension.objects.all()])
+        if self.request.user == self.object.author:
+            context['editable'] = 'true'
+        else:
+            context['editable'] = 'false'
         return context
     
     def get_success_url(self):

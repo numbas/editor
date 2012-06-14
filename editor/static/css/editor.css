@@ -1,4 +1,8 @@
-﻿#controls {
+﻿#editable {
+    font-weight: bold;
+}
+
+#controls {
     margin-bottom: 0.5em;
 }
 
@@ -24,6 +28,7 @@
 .textblock {
     border: #ccc 1px solid;
     padding: 0.5em;
+    background-color: #fff;
 }
 
 .question > * > .fold {
@@ -139,19 +144,19 @@ table.multiplechoice tbody tr:not(:last-child) th{
 	border-right: 1px solid;
 }
 
+table.choices th,td{
+	text-align: center;
+	padding: 0 0.5em 0 0.5em;
+	border-bottom: #ccc 1px solid;
+	overflow-x: auto;
+    overflow-y: auto;
+}
+
 ul.choices {
 	list-style:none;
 }
 
 li.choice  {
-    margin-right: 10px;
-}
-
-tr.choice td {
-    max-height: 8em;
-    max-width: 20em;
-	overflow-x: auto;
-    overflow-y: auto;
     margin-right: 10px;
 }
 
@@ -179,7 +184,7 @@ tr.choice td {
 	margin-right: 5em;
 }
 
-.properties input,.properties select, .properties .display, .properties .listbox {
+.properties input,.properties select, .properties .labelvalue, .properties .display, .properties .listbox {
 	float:right;
 }
 
@@ -200,7 +205,7 @@ tr.choice td {
     bborder: #ccc 1px solid;
 }
 
-.correctanswer label{
+.correctanswer > label{
     background-color: #eee;
     padding: 0 1em 0 1em;
     border: #ccc 1px solid;

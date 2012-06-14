@@ -262,7 +262,7 @@ $(document).ready(function() {
 				{
 					expr += j%2 ? 'subvar('+sbits[j]+',"gray")' : sbits[j]; //subvar here instead of \\color because we're still in JME
 				}
-				expr = Numbas.jme.display.exprToLaTeX(expr,args,scope);
+				expr = Numbas.jme.display.exprToLaTeX(expr,[],scope);
 			} catch(e) {
 				expr = '\\color{red}{\\textrm{'+e.message+'}}';
 			}
@@ -303,6 +303,7 @@ $(document).ready(function() {
                 .tinymce({
                     theme:'simple',
                     handle_event_callback: onkeyup
+                    
                 })
                 .html(value)
             ;
@@ -351,8 +352,10 @@ $(document).ready(function() {
             */
 		},
 		update: function(element, valueAccessor) {
-			var value = ko.utils.unwrapObservable(valueAccessor()) || '';
-            $(element).children('textarea').html(value);
+            if (!$(element).find('iframe').contents().find('body').is(':focus')) {              
+                var value = ko.utils.unwrapObservable(valueAccessor()) || '';
+                $(element).children('textarea').html(value);
+            }
             /*
 			var pt = $(element).find('.plaintext');
 			if(!pt.is(':focus'))

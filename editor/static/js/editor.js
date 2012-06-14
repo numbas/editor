@@ -293,7 +293,7 @@ $(document).ready(function() {
                 valueAccessor(tinymce.getContent());
             }
 
-            var t = $('<textarea/>');
+            var t = $('<textarea style="width:100%"/>');
             $(element)
                 .addClass('writemathsContainer')
                 .append(t)

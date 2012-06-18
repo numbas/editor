@@ -1,4 +1,4 @@
-﻿#editable {
+﻿#editable_message {
     font-weight: bold;
 }
 
@@ -41,8 +41,7 @@
 }
 
 .question > * > button.remove, .part > * > button.remove, .function > * > button.remove {
-	position: relative;
-	display:run-in;
+	position: absolute;
 	left: -2em;
 	top: 1em;
 }
@@ -62,13 +61,9 @@
 .variable .def {
 	width: 20em;
     font-family: monospace;
-	text-align: left;
-    
-    word-wrap: break-word;
-    max-height: 8em;
-	overflow-x: auto;
-    overflow-y: auto;
+	text-align: right;
 }
+
 .variable > td {
 	padding-right: 0.5em;
 	text-align: center;
@@ -91,24 +86,6 @@
     overflow-y: auto;
 }
 
-.function .parameters .list {
-	float: right;
-	margin-bottom: 0.5em;
-}
-
-.function .viewparameters .list {
-	margin-bottom: 0.5em;
-    border-bottom: #ccc 1px solid;
-}
-
-.function .viewparameters .list th,td{
-    padding: 0 0.5em 0 0.5em;
-}
-
-.function .viewparameters .list td.parametertype {
-    border-left: #ccc 1px dashed;
-}
-
 .function .parameters .addparameter {
 	clear: both;
 	float: right;
@@ -116,10 +93,6 @@
 
 .function .definition textarea {
 	width: 20em;
-}
-
-.function .definition .code {
-    border: #ccc 1px solid;
 }
 
 table.multiplechoice {
@@ -156,10 +129,6 @@ ul.choices {
 	list-style:none;
 }
 
-li.choice  {
-    margin-right: 10px;
-}
-
 .properties {
 	display:inline-block;
 }
@@ -184,7 +153,7 @@ li.choice  {
 	margin-right: 5em;
 }
 
-.properties input,.properties select, .properties .labelvalue, .properties .display, .properties .listbox {
+.properties input,.properties select, .properties .value, .properties .display, .properties .listbox {
 	float:right;
 }
 
@@ -199,25 +168,6 @@ li.choice  {
 
 .properties .listbox {
 	clear:none;
-}
-
-.correctanswer {
-    bborder: #ccc 1px solid;
-}
-
-.correctanswer > label{
-    background-color: #eee;
-    padding: 0 1em 0 1em;
-    border: #ccc 1px solid;
-}
-
-.correctanswer div{
-    border: #ccc 1px dashed;
-    padding: 0.5em;
-    margin-bottom: 0em;
-}
-.correctanswer .mathdisplay {
-    border-top: 0px;
 }
 
 .writemathsContainer {
@@ -275,6 +225,7 @@ ol.editlist > button {
 	margin-bottom:0.5em;
     list-style-image:none;
     list-style-type:none;
+	position: relative;
 }
 
 .editlist.big > li {
@@ -284,21 +235,8 @@ ol.editlist > button {
 	padding-right: 2em;
 }
 
-.editlist.normal > li {
-	background-color: #eee;
-	line-height: 1.5em;
-	position: relative;
-	padding-right: 2em;
-}
-
 .editlist > li.closed {
 	overflow-y:hidden;
-}
-
-.editlist > li > * > .fold > #folder-header {
-	padding-left:1em;
-	min-width:5em;
-	min-height:1em;
 }
 
 ul.editlist {
@@ -317,28 +255,30 @@ ul.editlist {
 	border-left:2px solid #ccc;
 }
 
-.fold > #folder-header {
+.fold > .folder-header {
 	display: block;
 	font-weight: bold;
 	background: no-repeat 0.4em 50%;
 	background-color: #eee;
 	background-image: url(../images/accordion-down.png);
 	padding-left: 1em;
+	min-width:5em;
+	min-height:1.4em;
 }
 
-.fold > #folder {
+.fold > .folder {
 	padding-left: 1em;
 	padding-top: 0.5em;
 }
-.fold.folded > #folder {
+.fold.folded > .folder {
 	display: none;
 }
-.fold.folded > #folder-header {
+.fold.folded > .folder-header {
 	background-color: #ddd;
 	background-image: url(../images/accordion-right.png);
 }
 
-.fold > #folder-header:hover {
+.fold > .folder-header:hover {
 	cursor: pointer;
 	background-color: #ec8;
 }
@@ -350,9 +290,6 @@ button.remove {
 	border:none;
 	margin-left: .3em;
 	padding: 0;
-	position: absolute;
-	top: 1em;
-	right: 1em;
 }
 
 button.remove:hover {
@@ -397,28 +334,6 @@ button.remove:hover {
 .listbox li:hover {
 	background: #bbb;
 	cursor:default;
-}
-
-.viewtags {
-    display: inline;
-   	list-style:none;
-    padding: 0px;
-}
-
-.viewtags li{
-    display: inline;
-    padding-right: 2em;
-}
-
-.jmestrings {
-    display: inline;
-    list-style: none;
-    padding: 0px;
-}
-
-.jmestrings li{
-    display: inline;
-    padding-right: 2em;
 }
 
 .handle {

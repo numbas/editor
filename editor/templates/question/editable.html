@@ -8,570 +8,557 @@
 	{{block.super}}
 {% endblock controls %}
 
+{% block editable_message %}You can edit this question.{% endblock %}
+
 {% block content %}
     {{ block.super }}
-    
-		{% verbatim %}
-			<script type="text/x-jquery-tmpl" id="questionTemplate">
-			<div class="properties">
-				<div data-bind="template: {
-					name: 'property',
-					templateOptions: {property:name,label:'Question name:'}
-				}"></div>
-				<div data-bind="fadeVisible: isadvanced">
-					<label>Tags:</label>
-					<div data-bind="listbox:tags"></div>
-				</div>
+	{% include "editable.html" %}
+
+	{% verbatim %}
+		<script type="text/html" id="questionTemplate">
+		<div class="properties">
+			<div data-bind="template: {
+				name: 'property',
+				data: {property:name,label:'Question name:'}
+			}"></div>
+			<div data-bind="fadeVisible: isadvanced">
+				<label>Tags:</label>
+				<div data-bind="listbox:tags"></div>
 			</div>
+		</div>
 
-            <div data-bind="fadeVisible: isadvanced">
-                {{wrap(this,{label:"Extensions"}) '#folder'}}
-                    <div>
-                    <ul data-bind="template: {
-                        name:'extension',
-                        foreach: extensions
-                    }"></ul>
-                    </div>
-                {{/wrap}}
-            </div>
-
-			{{wrap(this,{label:"Statement",show:true}) '#folder'}}
-				<div style="padding-top:0.7em;">
-					<div data-bind="writemaths:statement"></div>
-				</div>
-			{{/wrap}}
-
-            <div data-bind="fadeVisible: isadvanced">
-                {{wrap(this,{label:"Rulesets"}) "#folder"}}
-                    <div class="rulesets">
-                        <ul class="editlist" data-bind="template:{
-                            name:'ruleset',
-                            foreach: rulesets,
-                            beforeRemove: function(elem) { $(elem).slideUp(150,function(){$(this).remove()}) },
-                            afterAdd: function(elem) { $(elem).hide().slideDown(150) }
-                        }"></ul>
-                        <button data-bind="click:addRuleset, text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></button>
-                    </div>
-                {{/wrap}}
-            </div>
-
-			{{wrap(this,{label:"Variables",show:true}) '#folder'}}
-				<div>
-					<table class="variables editlist">
-						<thead data-bind="visible: variables().length>0">
-							<th/>
-							<th>Name</th>
-							<th/>
-							<th>Definition</th>
-							<th>Computed value</th>
-						</thead>
-						<tbody data-bind="template:{
-							name:'variable',
-							foreach: variables,
-							beforeRemove: function(elem) { $(elem).find('td>div').slideUp(150,function() {$(this).parent().parent().remove()}) },
-							afterAdd: function(elem) { $(elem).find('td>div').hide().slideDown(150).end().find('.name').focus(); },
-						}, sortableList: variables"></tbody>
-						<tr>
-							<td/>
-							<td><button data-bind="click:addVariable, text: variables().length ? 'Add another variable' : 'Add a variable'"></button></td>
-							<td></td>
-							<td><button data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button></td>
-						</tr>
-					</table>
-				</div>
-			{{/wrap}}
-
-            <div data-bind="fadeVisible: isadvanced">
-                {{wrap(this,{label:"Functions",show:false}) '#folder'}}
-                    <div>
-                        <ol class="editlist" data-bind="template:{
-                            name: 'function',
-                            foreach: functions,
-                            beforeRemove: function(elem) { $(elem).slideUp(150,function(){$(this).remove()}) },
-                            afterAdd: function(elem) { $(elem).hide().slideDown(150) }
-                        }"></ol>
-                        <button data-bind="click:addFunction, text: functions().length ? 'Add another function' : 'Add a function'"></button>
-                    </div>
-                {{/wrap}}
-            </div>
-
-			{{wrap(this,{label:"Parts",show:true}) '#folder'}}
-				<div>
-					<ol class="editlist" data-bind="template:{
-						name: 'part',
-						foreach: parts,
-						beforeRemove: function(elem) { $(elem).slideUp(150,function(){$(this).remove()}) },
-						afterAdd: function(elem) { $(elem).hide().slideDown(150) }
-					}"></ol>
-					<button data-bind="visible: $root.isadvanced, click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
-				</div>
-			{{/wrap}}
-
-			{{wrap(this,{label:"Advice"}) '#folder'}}
-				<div style="padding-top:0.7em;">
-					<div data-bind="writemaths:advice"></div>
-				</div>
-			{{/wrap}}
-		</script>
-	
-		<script type="text/x-jquery-tmpl" id="extension">
-			<li>
-				<input type="checkbox" data-bind="checked: used">
-				<a data-bind="attr: {href:url}, text:name" target="_blank"></a>
-			</li>
-		</script>
-	
-		<script type="text/x-jquery-tmpl" id="part">
-			<li class="part">
-				<div data-bind="foldlist: $data, label: type().niceName, show:true">
-					<div class="properties">
-						<div data-bind="visible: $root.isadvanced">
-							<label>Part type: </label>
-							<select data-bind="options: types, value:type, optionsText: 'niceName'"></select>
-						</div>
-						<div data-bind="fadeVisible: type().has_marks===true, template: {
-							name: 'property',
-							templateOptions: {label:'Marks:',property:marks, type:'number'}
-						}"></div>
-					</div>
-					<div data-bind="visible: $data.parent==null || $data.parent.type().name!='gapfill' || $data.parent.steps().contains($data)">
-						Prompt:
-						<div data-bind="writemaths: prompt"></div>
-					</div>
-					<div style="margin-top:1em;" data-bind="template: type"></div>
-					<div class="steps fold" data-bind="visible:parent==null">
-						<div id="folder-header">Steps</div>
-						<div id="folder">
-							<div class="properties">
-								<div data-bind="fadeVisible: steps().length>0, template: {
-									name: 'property',
-									templateOptions: {label:'Penalty for revealing steps (marks):',property:stepsPenalty, type:'number'}
-								}"></div>
-							</div>
-							<ol class="editlist" data-bind="template:{
-								name: 'part',
-								foreach: steps,
-								beforeRemove: function(elem) { $(elem).slideUp(150,function(){$(this).remove()}) },
-								afterAdd: function(elem) { $(elem).hide().slideDown(150) }
-							}"></ol>
-							<button data-bind="visible: $root.isadvanced, click:addStep, text: steps().length ? 'Add another step' : 'Add a step'"></button>
-						</div>
-					</div>
-				</div>
-			</li>
-		</script>
-			
-		<script type="text/x-jquery-tmpl" id="information">	
-		</script>
-	
-		<script type="text/x-jquery-tmpl" id="gapfill">
-			<div class="gaps fold">
-				<div id="folder-header">Gaps</div>
-				<div id="folder">
-					<ol class="editlist" data-bind="template:{
-						name: 'part',
-						foreach: gapfill.gaps,
-						beforeRemove: function(elem) { $(elem).slideUp(150,function(){$(this).remove()}) },
-						afterAdd: function(elem) { $(elem).hide().slideDown(150) }
-					}"></ol>
-					<button data-bind="visible: $root.isadvanced, click:addGap, text: gapfill.gaps().length ? 'Add another gap' : 'Add a gap'"></button>
-				</div>
-			</div>
-		</script>
-	
-		<script type="text/x-jquery-tmpl" id="jme">
-			<div class="properties">
-				<div data-bind="template: {
-					name: 'property',
-					templateOptions: {label:'Correct answer:',property:jme.answer}
-				}"></div>
-				<div data-bind="visible: $root.isadvanced, template: {
-					name: 'property',
-					templateOptions: {label:'Answer simplification rules:',property:jme.answerSimplification}
-				}"></div>
-			</div>
-            <div data-bind="visible: $root.isadvanced">
-                {{wrap(this,{label:'Checking accuracy'}) '#folder'}}
-                <div class="properties">
-                    <div>
-                        <label>Checking type: </label>
-                        <select data-bind="options: jme.checkingTypes, value: jme.checkingType, optionsText:'niceName'"></select>
-                    </div>
-                    <div data-bind="template: {
-                        name: 'property',
-                        templateOptions: {label:'Checking accuracy:',property:jme.checkingType().accuracy, type:'number',min:0}
-                    }"></div>
-                    <div data-bind="template: {
-                        name: 'property',
-                        templateOptions: {label:'Points to check:',property:jme.vset.points, type:'number',min:0}
-                    }"></div>
-                    <div data-bind="template: {
-                        name: 'property',
-                        templateOptions: {label:'Checking range start:',property:jme.vset.start, type:'number',max:jme.vset.end}
-                    }"></div>
-                    <div data-bind="template: {
-                        name: 'property',
-                        templateOptions: {label:'Checking range end:',property:jme.vset.end, type:'number',min:jme.vset.start}
-                    }"></div>
-                </div>
-                {{/wrap}}
-            </div>
-
-            <div data-bind="visible: $root.isadvanced">
-                {{wrap(this,{label:'Maximum length restriction'}) '#folder'}}
-                <div class="properties">
-                    <div data-bind="template: {
-                        name: 'property',
-                        templateOptions: {label:'Maximum length:',property:jme.maxlength.length, type:'number',min:0}
-                    }"></div>
-                    <div data-bind="fadeVisible: jme.maxlength.length()>0">
-                        <div data-bind="template: {
-                            name:'percentproperty',
-                            templateOptions: {label:'Partial credit for long answer:',property:jme.maxlength.partialCredit}
-                        }"></div>
-                        <div>
-                            Warning message:
-                            <div data-bind="writemaths: jme.maxlength.message"></div>
-                        </div>
-                    </div>
-                </div>
-                {{/wrap}}
-            </div>
-
-            <div data-bind="visible: $root.isadvanced">
-                {{wrap(this,{label:'Minimum length restriction'}) '#folder'}}
-                <div class="properties">
-                    <div data-bind="template: {
-                        name: 'property',
-                        templateOptions: {label:'Minimum length:',property:jme.minlength.length, type:'number',min:0}
-                    }"></div>
-                    <div data-bind="fadeVisible: jme.minlength.length()>0">
-                        <div data-bind="template: {
-                            name:'percentproperty',
-                            templateOptions: {label:'Partial credit for short answer:',property:jme.minlength.partialCredit}
-                        }"></div>
-                        <div>
-                            Warning message:
-                            <div data-bind="writemaths: jme.minlength.message"></div>
-                        </div>
-                    </div>
-                </div>
-                {{/wrap}}
-            </div>
-            
-            <div data-bind="visible: $root.isadvanced">
-                {{wrap(this,{label:'Required strings'}) '#folder'}}
-                <div class="properties">
-                    <div>
-                        <label>Required strings:</label>
-                        <div data-bind="listbox:jme.musthave.strings"></div>
-                    </div>
-                    <div data-bind="fadeVisible: jme.musthave.strings().length>0">
-                        <div data-bind="template: {
-                            name:'percentproperty',
-                            templateOptions: {label:'Partial credit for not using all required strings:',property:jme.musthave.partialCredit}
-                        }"></div>
-                        <div data-bind="template: {
-                            name: 'booleanproperty',
-                            templateOptions: {label:'Show required strings in warning?', property:jme.musthave.showStrings}
-                        }"></div>
-                        <div>
-                            Warning message:
-                            <div data-bind="writemaths: jme.musthave.message"></div>
-                        </div>
-                    </div>
-                </div>
-                {{/wrap}}
-            </div>
-            
-            <div data-bind="visible: $root.isadvanced">
-                {{wrap(this,{label:'Forbidden strings'}) '#folder'}}
-                <div class="properties">
-                    <div>
-                        <label>Forbidden strings:</label>
-                        <div data-bind="listbox:jme.notallowed.strings"></div>
-                    </div>
-                    <div data-bind="fadeVisible: jme.notallowed.strings().length>0">
-                        <div data-bind="template: {
-                            name:'percentproperty',
-                            templateOptions: {label:'Partial credit for using forbidden strings:',property:jme.notallowed.partialCredit}
-                        }"></div>
-                        <div data-bind="template: {
-                            name: 'booleanproperty',
-                            templateOptions: {label:'Show forbidden strings in warning?', property:jme.notallowed.showStrings}
-                        }"></div>
-                        <div>
-                            Warning message:
-                            <div data-bind="writemaths: jme.notallowed.message"></div>
-                        </div>
-                    </div>
-                </div>
-                {{/wrap}}
-            </div>
-		</script>
-	
-		<script type="text/x-jquery-tmpl" id="numberentry">
-			<div class="properties">
-				<div data-bind="template: {
-					name: 'property',
-					templateOptions: {label:'Minimum value:',property:numberentry.minValue}
-				}"></div>
-				<div data-bind="template: {
-					name: 'property',
-					templateOptions: {label:'Maximum value:',property:numberentry.maxValue}
-				}"></div>
-				<div data-bind="template: {
-					name: 'booleanproperty',
-					templateOptions: {label:'Must answer be an integer?', property:numberentry.integerAnswer}
-				}"></div>
-				<div data-bind="fadeVisible: numberentry.integerAnswer,
-				template: {
-					name:'percentproperty',
-					templateOptions: {label:'Partial credit for non-integer answer:',property:numberentry.partialCredit}
-				}"></div>
-			</div>
-		</script>
-	
-		<script type="text/x-jquery-tmpl" id="patternmatch">
-			<div class="properties">
-				<div data-bind="template: {
-					name: 'property',
-					templateOptions: {label:'Answer pattern:',property:patternmatch.answer}
-				}"></div>
-				<div data-bind="template: {
-					name: 'property',
-					templateOptions: {label:'Correct answer:',property:patternmatch.displayAnswer}
-				}"></div>
-				<div data-bind="template: {
-					name: 'booleanproperty',
-					templateOptions: {label:'Must answer be in the correct case?', property:patternmatch.caseSensitive}
-				}"></div>
-				<div data-bind="
-				fadeVisible:patternmatch.caseSensitive,
-				template: {
-					name:'percentproperty',
-					templateOptions: {label:'Partial credit for answer not matching case:',property:patternmatch.partialCredit}
-				}"></div>
-			</div>
-		</script>
-	
-	
-		<script type="text/x-jquery-tmpl" id="1_n_2">
-			<div class="properties">
-				<div data-bind="template: {
-					name: 'property',
-					templateOptions: {label:'Minimum marks:',property:multiplechoice.minMarks, type: 'number', max:multiplechoice.maxMarks }
-				}"></div>
-				<div data-bind="template: {
-					name: 'property',
-					templateOptions: {label:'Maximum marks:',property:multiplechoice.maxMarks, type: 'number', min:multiplechoice.minMarks}
-				}"></div>
-				<div data-bind="template: {
-					name: 'booleanproperty',
-					templateOptions: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
-				}"></div>
-				<label>Selection type:</label><select data-bind="options: multiplechoice.displayTypes['1_n_2'], value: multiplechoice.displayType, optionsText: 'niceName'"></select>
-			</div>
+		<div data-bind="folder: 'Extensions', fadeVisible: isadvanced">
 			<div>
-				Choices:
-				<ul class="choices" data-bind="template: {
-					name: 'choice-1_n_2',
-					foreach: multiplechoice.choices
-				}">
-					<li><button data-bind="visible: $root.isadvanced, click:addChoice">Add a choice</button></li>
-				</ul>
+				<ul data-bind="template: {
+					name:'extension',
+					foreach: extensions
+				}"></ul>
 			</div>
-		</script>
+		</div>
 
-		<script type="text/x-jquery-tmpl" id="m_n_2">
-			<div class="properties">
-				<div data-bind="template: {
-					name: 'property',
-					templateOptions: {label:'Minimum marks:',property:multiplechoice.minMarks, type: 'number', max:multiplechoice.maxMarks }
-				}"></div>
-				<div data-bind="template: {
-					name: 'property',
-					templateOptions: {label:'Maximum marks:',property:multiplechoice.maxMarks, type: 'number', min:multiplechoice.minMarks}
-				}"></div>
-				<div data-bind="template: {
-					name: 'booleanproperty',
-					templateOptions: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
-				}"></div>
-				<label>Selection type:</label><select data-bind="options: multiplechoice.displayTypes['m_n_2'], value: multiplechoice.displayType, optionsText: 'niceName'"></select>
-				<div data-bind="fadeVisible: multiplechoice.displayType().name!='dropdown',
-				template: {
-					name: 'property',
-					templateOptions: {label:'Number of display columns:',property:multiplechoice.displayColumns, type: 'number'}
-				}"></div>
-			</div>
+		<div data-bind="folder: {label:'Statement', show: true}">
 			<div>
-				Choices:
-				<ul class="choices" data-bind="template: {
-					name: 'choice-1_n_2',
-					foreach: multiplechoice.choices
-				}">
-					<li><button data-bind="click:addChoice">Add a choice</button></li>
-				</ul>
+				<div data-bind="writemaths:statement"></div>
 			</div>
-		</script>
-	
-		<script type="text/x-jquery-tmpl" id="choice-1_n_2">
-			<li class="choice">
-				<button class="remove" data-bind="click:remove"></button>
-				<span>
-					<input type="text" data-bind="value:content, valueUpdate:'input'"/>
-				</span>
-				<span>
-					<label>Marks:</label>
-					<input type="number" data-bind="value:marks, valueUpdate:'input'"/>
-				</span>
-				<span>
-					<label>Distractor Message:</label>
-					<input type="text" data-bind="value:distractor, valueUpdate:'input'"/>
-				</span>
-			</li>
-		</script>
-	
-		<script type="text/x-jquery-tmpl" id="m_n_x">
-			<div class="properties">
-				<div data-bind="template: {
-					name: 'property',
-					templateOptions: {label:'Minimum marks:',property:multiplechoice.minMarks, type: 'number', max:multiplechoice.maxMarks }
-				}"></div>
-				<div data-bind="template: {
-					name: 'property',
-					templateOptions: {label:'Maximum marks:',property:multiplechoice.maxMarks, type: 'number', min:multiplechoice.minMarks}
-				}"></div>
-				<div data-bind="template: {
-					name: 'property',
-					templateOptions: {label:'Minimum answers:',property:multiplechoice.minAnswers, type:'number', max:multiplechoice.maxAnswers}
-				}"></div>
-				<div data-bind="template: {
-					name: 'property',
-					templateOptions: {label:'Maximum answers:',property:multiplechoice.maxAnswers, type:'number', min:multiplechoice.minAnswers}
-				}"></div>
-				<div data-bind="template: {
-					name: 'booleanproperty',
-					templateOptions: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
-				}"></div>
-				<div data-bind="template: {
-					name: 'booleanproperty',
-					templateOptions: {label:'Shuffle order of answers?', property:multiplechoice.shuffleAnswers}
-				}"></div>
-				<label>Selection type:</label><select data-bind="options: multiplechoice.displayTypes.m_n_x, value: multiplechoice.displayType, optionsText: 'niceName'"></select>
+		</div>
+
+		<div data-bind="folder: 'Rulesets', fadeVisible: isadvanced">
+			<div class="rulesets">
+				<ul class="editlist" data-bind="template:{
+					name:'ruleset',
+					foreach: rulesets,
+					beforeRemove: function(elem) { $(elem).slideUp(150,function(){$(this).remove()}) },
+					afterAdd: function(elem) { $(elem).hide().slideDown(150) }
+				}"></ul>
+				<button data-bind="click:addRuleset, text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></button>
 			</div>
-			<div class="matrix">
-				<label>Marking matrix:</label>
-				<table class="multiplechoice">
-					<thead>
-						<tr>
-							<td/>
-							{{each multiplechoice.answers()}}
-								<th>
-									<input type="text" data-bind="value:$value.content, valueUpdate:'input'">
-									<button class="remove" data-bind="click:function(){removeAnswer($value)}"></button>
-								</th>
-							{{/each}}
-							<td>
-								<button data-bind="visible: $root.isadvanced, click:addAnswer">Add Answer</button>
-							</td>
-						</tr>
+		</div>
+
+		<div data-bind="folder: {label: 'Variables', show: true}">
+			<div>
+				<table class="variables editlist">
+					<thead data-bind="visible: variables().length>0">
+						<th/>
+						<th>Name</th>
+						<th/>
+						<th>Definition</th>
+						<th>Computed value</th>
 					</thead>
-					<tbody data-bind="template: {
-						name: 'choice-m_n_x',
-						foreach: multiplechoice.choices
-					}">
-						<tr><td><button data-bind="visible: $root.isadvanced, click:addChoice">Add Choice</button></td></tr>
-					</tbody>
+					<tbody data-bind="template:{
+						name:'variable',
+						foreach: variables,
+						beforeRemove: function(elem) { $(elem).find('td>div').slideUp(150,function() {$(this).parent().parent().remove()}) },
+						afterAdd: function(elem) { $(elem).find('td>div').hide().slideDown(150).end().find('.name').focus(); },
+					}, sortableList: variables"></tbody>
+					<tr>
+						<td/>
+						<td><button data-bind="click:addVariable, text: variables().length ? 'Add another variable' : 'Add a variable'"></button></td>
+						<td></td>
+						<td><button data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button></td>
+					</tr>
 				</table>
 			</div>
-		</script>
-	
-		<script type="text/x-jquery-tmpl" id="choice-m_n_x">
-			<tr>
-				<th>
-					<input type="text" data-bind="value:content, valueUpdate:'input'"/>
-					<button class="remove" data-bind="click:remove"></button>
-				</th>
-				{{each answers()}}
-					<td>
-						<input class="mark" type="number" data-bind="value:$value.marks, valueUpdate:'input'"/>
-					</td>
-				{{/each}}
-			</tr>
-		</script>
+		</div>
 
-		<script type="text/x-jquery-tmpl" id="ruleset">
-			<li class="ruleset">
-				<input type="text" data-bind="value:name, valueUpdate: 'afterkeydown'"/>: <div data-bind="listbox:sets, rulesetcomplete: allsets"></div>
-				<button class="remove" data-bind="click:remove"></button>
-			</li>
-		</script>
+		<div data-bind="folder: 'Functions', fadeVisible: isadvanced">
+			<div>
+				<ol class="editlist" data-bind="template:{
+					name: 'function',
+					foreach: functions,
+					beforeRemove: function(elem) { $(elem).slideUp(150,function(){$(this).remove()}) },
+					afterAdd: function(elem) { $(elem).hide().slideDown(150) }
+				}"></ol>
+				<button data-bind="click:addFunction, text: functions().length ? 'Add another function' : 'Add a function'"></button>
+			</div>
+		</div>
 
-		<script type="text/x-jquery-tmpl" id="variable">
-			<tr class="variable dict">
-				<td><span class="handle"></span></td>
-				<td><div>
-						<input type="text" class="name" data-bind="visible: $parent.isadvanced, value:name, valueUpdate: 'afterkeydown', event: {keyup: function(d,e){if(e.which==13){ $(e.target).parents('.variable').find('.def').focus();} } }"/> 
-						<span class="name" data-bind="visible: !$parent.isadvanced(), text: name"></span>
-				</div></td>
-				<td>=</td>
-				<td><div><input class="def" type="text" data-bind="value:definition, valueUpdate: 'afterkeydown', event: {keyup: function(d,e){if(e.which==13){ $parent.addVariable($parent,e,$parent.variables.indexOf(this)+1); } } }"/></div></td>
-				<td class="value"><div class="value" data-bind="css: {error: error().length>0}, html: display, mathjax: value"></div></td>
-				<td data-bind="visible: $parent.isadvanced"><div><button class="remove" data-bind="click:remove"></button></div></td>
-			</tr>
-		</script>
+		<div data-bind="folder: {label:'Parts',show:true}">
+			<div>
+				<ol class="editlist" data-bind="template:{
+					name: 'part',
+					foreach: parts,
+					beforeRemove: function(elem,i) { elem = $(elem).siblings().eq(i); elem.slideUp(150,function(){$(this).remove()}) },
+					afterAdd: function(elem,i) { elem = $(elem).siblings().eq(i); elem.hide().slideDown(150) }
+				}"></ol>
+				<button data-bind="visible: $root.isadvanced, click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
+			</div>
+		</div>
 
-		<script type="text/x-jquery-tmpl" id="function">
-			<li class="function">
-				<div data-bind="foldlist: $data, label: name, show:true">
-					<div class="properties">
-						<div data-bind="template: {
-							name: 'property',
-							templateOptions: {property:name,label: 'Name:'}
-						}"></div>
-						<div class="parameters">
-							<label>Parameters:</label>
-							<table class="list">
-								<thead data-bind="visible: parameters().length>0">
-									<th>Name</th>
-									<th>Type</th>
-									<th></th>
-								</thead>
-								<tbody data-bind="template:{
-									name:'parameter',
-									foreach: parameters,
-									beforeRemove: function(elem) { $(elem).find('td>div').slideUp(150,function() {console.log($(this));$(this).remove()}) },
-									afterAdd: function(elem) { $(elem).find('td>div').hide().slideDown(150).end().find('.name').focus(); },
-								}"></tbody>
-							</table>
-							<button class="addparameter" data-bind="click:addParameter, text: parameters().length ? 'Add another parameter' : 'Add a parameter'"></button>
+		<div data-bind="folder:'Advice'">
+			<div style="padding-top:0.7em;">
+				<div data-bind="writemaths:advice"></div>
+			</div>
+		</div>
+	</script>
+
+	<script type="text/html" id="extension">
+		<li>
+			<input type="checkbox" data-bind="checked: used">
+			<a data-bind="attr: {href:url}, text:name" target="_blank"></a>
+		</li>
+	</script>
+
+	<script type="text/html" id="part">
+		<li class="part">
+			<div data-bind="folder:{label: type().niceName, show:true}, foldlist: true">
+				<div class="properties">
+					<div data-bind="visible: $root.isadvanced">
+						<label>Part type: </label>
+						<select data-bind="options: types, value:type, optionsText: 'niceName'"></select>
+					</div>
+					<div data-bind="fadeVisible: type().has_marks===true, template: {
+						name: 'property',
+						data: {label:'Marks:',property:marks, type:'number'}
+					}"></div>
+				</div>
+				<div data-bind="visible: $data.parent==null || $data.parent.type().name!='gapfill' || $data.parent.steps().contains($data)">
+					Prompt:
+					<div data-bind="writemaths: prompt"></div>
+				</div>
+				<div style="margin-top:1em;" data-bind="template: type"></div>
+
+				<div class="steps" data-bind="folder: {label:'Steps',show:true}, visible: parent==null">
+					<div>
+						<div class="properties">
+							<div data-bind="fadeVisible: steps().length>0, template: {
+								name: 'property',
+								data: {label:'Penalty for revealing steps (marks):',property:stepsPenalty, type:'number'}
+							}"></div>
 						</div>
-						<div>
-							<label>Output type: </label>
-							<select data-bind="options: types, value:type"></select>
-						</div>
-						<div>
-							<label>Language:</label>
-							<select data-bind="options: languages, value: language"></select>
-						</div>
-						<div class="definition">
-							<label>Definition:</label>
-							<textarea data-bind="value: definition, valueUpdate: 'afterkeydown'"></textarea>
-						</div>
+						<ol class="editlist" data-bind="template:{
+							name: 'part',
+							foreach: steps,
+							beforeRemove: function(elem,i) { elem = $(elem).siblings().eq(i); elem.slideUp(150,function(){$(this).remove()}) },
+							afterAdd: function(elem) { elem = $(elem).siblings().eq(i); elem.hide().slideDown(150) }
+						}"></ol>
+						<button data-bind="visible: $root.isadvanced, click:addStep, text: steps().length ? 'Add another step' : 'Add a step'"></button>
 					</div>
 				</div>
-			</li>
-		</script>
+			</div>
+		</li>
+	</script>
+		
+	<script type="text/html" id="information">	
+	</script>
 
-		<script type="text/x-jquery-tmpl" id="parameter">
-			<tr>
-				<td><div><input data-bind="value: name"/></div></td>
-				<td><div><select data-bind="options: $parent.types, value: type"></select></div></td>
-				<td><div><button class="remove" data-bind="click: remove"></div></button></td>
-			</tr>
-		</script>
+	<script type="text/html" id="gapfill">
+		<div class="gaps" data-bind="folder: {label:'Gaps', show:true}">
+			<div>
+				<ol class="editlist" data-bind="template:{
+					name: 'part',
+					foreach: gapfill.gaps,
+					beforeRemove: function(elem,i) { elem = $(elem).siblings().eq(i); elem.slideUp(150,function(){$(this).remove()}) },
+					afterAdd: function(elem) { elem = $(elem).siblings().eq(i); elem.hide().slideDown(150) }
+				}"></ol>
+				<button data-bind="visible: $root.isadvanced, click:addGap, text: gapfill.gaps().length ? 'Add another gap' : 'Add a gap'"></button>
+			</div>
+		</div>
+	</script>
 
-	    {% endverbatim %}
+	<script type="text/html" id="jme">
+		<div class="properties">
+			<div data-bind="template: {
+				name: 'property',
+				data: {label:'Correct answer:',property:jme.answer}
+			}"></div>
+			<div data-bind="visible: $root.isadvanced, template: {
+				name: 'property',
+				data: {label:'Answer simplification rules:',property:jme.answerSimplification}
+			}"></div>
+		</div>
+		<div data-bind="folder: 'Checking accuracy', visible: $root.isadvanced">
+			<div class="properties">
+				<div>
+					<label>Checking type: </label>
+					<select data-bind="options: jme.checkingTypes, value: jme.checkingType, optionsText:'niceName'"></select>
+				</div>
+				<div data-bind="template: {
+					name: 'property',
+					data: {label:'Checking accuracy:',property:jme.checkingType().accuracy, type:'number',min:0}
+				}"></div>
+				<div data-bind="template: {
+					name: 'property',
+					data: {label:'Points to check:',property:jme.vset.points, type:'number',min:0}
+				}"></div>
+				<div data-bind="template: {
+					name: 'property',
+					data: {label:'Checking range start:',property:jme.vset.start, type:'number',max:jme.vset.end}
+				}"></div>
+				<div data-bind="template: {
+					name: 'property',
+					data: {label:'Checking range end:',property:jme.vset.end, type:'number',min:jme.vset.start}
+				}"></div>
+			</div>
+		</div>
+
+		<div data-bind="folder: 'Maximum length restriction', visible: $root.isadvanced">
+			<div class="properties">
+				<div data-bind="template: {
+					name: 'property',
+					data: {label:'Maximum length:',property:jme.maxlength.length, type:'number',min:0}
+				}"></div>
+				<div data-bind="fadeVisible: jme.maxlength.length()>0">
+					<div data-bind="template: {
+						name:'percentproperty',
+						data: {label:'Partial credit for long answer:',property:jme.maxlength.partialCredit}
+					}"></div>
+					<div>
+						Warning message:
+						<div data-bind="writemaths: jme.maxlength.message"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div data-bind="visible: $root.isadvanced, folder: 'Minimum length restriction'">
+			<div class="properties">
+				<div data-bind="template: {
+					name: 'property',
+					data: {label:'Minimum length:',property:jme.minlength.length, type:'number',min:0}
+				}"></div>
+				<div data-bind="fadeVisible: jme.minlength.length()>0">
+					<div data-bind="template: {
+						name:'percentproperty',
+						data: {label:'Partial credit for short answer:',property:jme.minlength.partialCredit}
+					}"></div>
+					<div>
+						Warning message:
+						<div data-bind="writemaths: jme.minlength.message"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div data-bind="visible: $root.isadvanced, folder: 'Required strings'">
+			<div class="properties">
+				<div>
+					<label>Required strings:</label>
+					<div data-bind="listbox:jme.musthave.strings"></div>
+				</div>
+				<div data-bind="fadeVisible: jme.musthave.strings().length>0">
+					<div data-bind="template: {
+						name:'percentproperty',
+						data: {label:'Partial credit for not using all required strings:',property:jme.musthave.partialCredit}
+					}"></div>
+					<div data-bind="template: {
+						name: 'booleanproperty',
+						data: {label:'Show required strings in warning?', property:jme.musthave.showStrings}
+					}"></div>
+					<div>
+						Warning message:
+						<div data-bind="writemaths: jme.musthave.message"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div data-bind="visible: $root.isadvanced, folder: 'Forbidden strings'">
+			<div class="properties">
+				<div>
+					<label>Forbidden strings:</label>
+					<div data-bind="listbox:jme.notallowed.strings"></div>
+				</div>
+				<div data-bind="fadeVisible: jme.notallowed.strings().length>0">
+					<div data-bind="template: {
+						name:'percentproperty',
+						data: {label:'Partial credit for using forbidden strings:',property:jme.notallowed.partialCredit}
+					}"></div>
+					<div data-bind="template: {
+						name: 'booleanproperty',
+						data: {label:'Show forbidden strings in warning?', property:jme.notallowed.showStrings}
+					}"></div>
+					<div>
+						Warning message:
+						<div data-bind="writemaths: jme.notallowed.message"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</script>
+
+	<script type="text/html" id="numberentry">
+		<div class="properties">
+			<div data-bind="template: {
+				name: 'property',
+				data: {label:'Minimum value:',property:numberentry.minValue}
+			}"></div>
+			<div data-bind="template: {
+				name: 'property',
+				data: {label:'Maximum value:',property:numberentry.maxValue}
+			}"></div>
+			<div data-bind="template: {
+				name: 'booleanproperty',
+				data: {label:'Must answer be an integer?', property:numberentry.integerAnswer}
+			}"></div>
+			<div data-bind="fadeVisible: numberentry.integerAnswer,
+			template: {
+				name:'percentproperty',
+				data: {label:'Partial credit for non-integer answer:',property:numberentry.partialCredit}
+			}"></div>
+		</div>
+	</script>
+
+	<script type="text/html" id="patternmatch">
+		<div class="properties">
+			<div data-bind="template: {
+				name: 'property',
+				data: {label:'Answer pattern:',property:patternmatch.answer}
+			}"></div>
+			<div data-bind="template: {
+				name: 'property',
+				data: {label:'Correct answer:',property:patternmatch.displayAnswer}
+			}"></div>
+			<div data-bind="template: {
+				name: 'booleanproperty',
+				data: {label:'Must answer be in the correct case?', property:patternmatch.caseSensitive}
+			}"></div>
+			<div data-bind="
+			fadeVisible:patternmatch.caseSensitive,
+			template: {
+				name:'percentproperty',
+				data: {label:'Partial credit for answer not matching case:',property:patternmatch.partialCredit}
+			}"></div>
+		</div>
+	</script>
+
+
+	<script type="text/html" id="1_n_2">
+		<div class="properties">
+			<div data-bind="template: {
+				name: 'property',
+				data: {label:'Minimum marks:',property:multiplechoice.minMarks, type: 'number', max:multiplechoice.maxMarks }
+			}"></div>
+			<div data-bind="template: {
+				name: 'property',
+				data: {label:'Maximum marks:',property:multiplechoice.maxMarks, type: 'number', min:multiplechoice.minMarks}
+			}"></div>
+			<div data-bind="template: {
+				name: 'booleanproperty',
+				data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
+			}"></div>
+			<label>Selection type:</label><select data-bind="options: multiplechoice.displayTypes['1_n_2'], value: multiplechoice.displayType, optionsText: 'niceName'"></select>
+		</div>
+		<div>
+			Choices:
+			<ul class="choices" data-bind="template: {
+				name: 'choice-1_n_2',
+				foreach: multiplechoice.choices
+			}">
+				<li><button data-bind="visible: $root.isadvanced, click:addChoice">Add a choice</button></li>
+			</ul>
+		</div>
+	</script>
+
+	<script type="text/html" id="m_n_2">
+		<div class="properties">
+			<div data-bind="template: {
+				name: 'property',
+				data: {label:'Minimum marks:',property:multiplechoice.minMarks, type: 'number', max:multiplechoice.maxMarks }
+			}"></div>
+			<div data-bind="template: {
+				name: 'property',
+				data: {label:'Maximum marks:',property:multiplechoice.maxMarks, type: 'number', min:multiplechoice.minMarks}
+			}"></div>
+			<div data-bind="template: {
+				name: 'booleanproperty',
+				data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
+			}"></div>
+			<label>Selection type:</label><select data-bind="options: multiplechoice.displayTypes['m_n_2'], value: multiplechoice.displayType, optionsText: 'niceName'"></select>
+			<div data-bind="fadeVisible: multiplechoice.displayType().name!='dropdown',
+			template: {
+				name: 'property',
+				data: {label:'Number of display columns:',property:multiplechoice.displayColumns, type: 'number'}
+			}"></div>
+		</div>
+		<div>
+			Choices:
+			<ul class="choices" data-bind="template: {
+				name: 'choice-1_n_2',
+				foreach: multiplechoice.choices
+			}">
+				<li><button data-bind="click:addChoice">Add a choice</button></li>
+			</ul>
+		</div>
+	</script>
+
+	<script type="text/html" id="choice-1_n_2">
+		<li class="choice">
+			<button class="remove" data-bind="click:remove"></button>
+			<span>
+				<input type="text" data-bind="value:content, valueUpdate:'input'"/>
+			</span>
+			<span>
+				<label>Marks:</label>
+				<input type="number" data-bind="value:marks, valueUpdate:'input'"/>
+			</span>
+			<span>
+				<label>Distractor Message:</label>
+				<input type="text" data-bind="value:distractor, valueUpdate:'input'"/>
+			</span>
+		</li>
+	</script>
+
+	<script type="text/html" id="m_n_x">
+		<div class="properties">
+			<div data-bind="template: {
+				name: 'property',
+				data: {label:'Minimum marks:',property:multiplechoice.minMarks, type: 'number', max:multiplechoice.maxMarks }
+			}"></div>
+			<div data-bind="template: {
+				name: 'property',
+				data: {label:'Maximum marks:',property:multiplechoice.maxMarks, type: 'number', min:multiplechoice.minMarks}
+			}"></div>
+			<div data-bind="template: {
+				name: 'property',
+				data: {label:'Minimum answers:',property:multiplechoice.minAnswers, type:'number', max:multiplechoice.maxAnswers}
+			}"></div>
+			<div data-bind="template: {
+				name: 'property',
+				data: {label:'Maximum answers:',property:multiplechoice.maxAnswers, type:'number', min:multiplechoice.minAnswers}
+			}"></div>
+			<div data-bind="template: {
+				name: 'booleanproperty',
+				data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
+			}"></div>
+			<div data-bind="template: {
+				name: 'booleanproperty',
+				data: {label:'Shuffle order of answers?', property:multiplechoice.shuffleAnswers}
+			}"></div>
+			<label>Selection type:</label><select data-bind="options: multiplechoice.displayTypes.m_n_x, value: multiplechoice.displayType, optionsText: 'niceName'"></select>
+		</div>
+		<div class="matrix">
+			<label>Marking matrix:</label>
+			<table class="multiplechoice">
+				<thead>
+					<tr>
+						<td/>
+						<!-- ko foreach: multiplechoice.answers -->
+							<th>
+								<input type="text" data-bind="value:content, valueUpdate:'input'">
+								<button class="remove" data-bind="click:function(){removeAnswer(this)}"></button>
+							</th>
+						<!-- /ko -->
+						<td>
+							<button data-bind="visible: $root.isadvanced, click:addAnswer">Add Answer</button>
+						</td>
+					</tr>
+				</thead>
+				<tbody data-bind="template: {
+					name: 'choice-m_n_x',
+					foreach: multiplechoice.choices
+				}">
+					<tr><td><button data-bind="visible: $root.isadvanced, click:addChoice">Add Choice</button></td></tr>
+				</tbody>
+			</table>
+		</div>
+	</script>
+
+	<script type="text/html" id="choice-m_n_x">
+		<tr>
+			<th>
+				<input type="text" data-bind="value:content, valueUpdate:'input'"/>
+				<button class="remove" data-bind="click:remove"></button>
+			</th>
+			<!-- ko foreach: answers -->
+				<td>
+					<input class="mark" type="number" data-bind="value: marks, valueUpdate:'input'"/>
+				</td>
+			<!-- /ko -->
+		</tr>
+	</script>
+
+	<script type="text/html" id="ruleset">
+		<li class="ruleset">
+			<input type="text" data-bind="value:name, valueUpdate: 'afterkeydown'"/>: <div data-bind="listbox:sets, rulesetcomplete: allsets"></div>
+			<button class="remove" data-bind="click:remove"></button>
+		</li>
+	</script>
+
+	<script type="text/html" id="variable">
+		<tr class="variable dict">
+			<td><span class="handle"></span></td>
+			<td><div>
+					<input type="text" class="name" data-bind="visible: $parent.isadvanced, value:name, valueUpdate: 'afterkeydown', event: {keyup: function(d,e){if(e.which==13){ $(e.target).parents('.variable').find('.def').focus();} } }"/> 
+					<span class="name" data-bind="visible: !$parent.isadvanced(), text: name"></span>
+			</div></td>
+			<td>=</td>
+			<td><div><input class="def" type="text" data-bind="value:definition, valueUpdate: 'afterkeydown', event: {keyup: function(d,e){if(e.which==13){ $parent.addVariable($parent,e,$parent.variables.indexOf(this)+1); } } }"/></div></td>
+			<td class="value"><div class="value" data-bind="css: {error: error().length>0}, html: display, mathjax: value"></div></td>
+			<td data-bind="visible: $parent.isadvanced"><div><button class="remove" data-bind="click:remove"></button></div></td>
+		</tr>
+	</script>
+
+	<script type="text/html" id="function">
+		<li class="function">
+			<div data-bind="folder:{label: name(), show:true}, foldlist: true">
+				<div class="properties">
+					<div data-bind="template: {
+						name: 'property',
+						data: {property:name,label: 'Name:'}
+					}"></div>
+					<div class="parameters">
+						<label>Parameters:</label>
+						<table class="list">
+							<thead data-bind="visible: parameters().length>0">
+								<th>Name</th>
+								<th>Type</th>
+								<th></th>
+							</thead>
+							<tbody data-bind="template:{
+								name:'parameter',
+								foreach: parameters,
+								beforeRemove: function(elem) { $(elem).find('td>div').slideUp(150,function() {$(this).remove()}) },
+								afterAdd: function(elem) { $(elem).find('td>div').hide().slideDown(150).end().find('.name').focus(); },
+							}"></tbody>
+						</table>
+						<button class="addparameter" data-bind="click:addParameter, text: parameters().length ? 'Add another parameter' : 'Add a parameter'"></button>
+					</div>
+					<div>
+						<label>Output type: </label>
+						<select data-bind="options: types, value:type"></select>
+					</div>
+					<div>
+						<label>Language:</label>
+						<select data-bind="options: languages, value: language"></select>
+					</div>
+					<div class="definition">
+						<label>Definition:</label>
+						<textarea data-bind="value: definition, valueUpdate: 'afterkeydown'"></textarea>
+					</div>
+				</div>
+			</div>
+		</li>
+	</script>
+
+	<script type="text/html" id="parameter">
+		<tr>
+			<td><div><input data-bind="value: name"/></div></td>
+			<td><div><select data-bind="options: $parent.types, value: type"></select></div></td>
+			<td><div><button class="remove" data-bind="click: remove"></div></button></td>
+		</tr>
+	</script>
+
+	{% endverbatim %}
+
 {% endblock content %}
 

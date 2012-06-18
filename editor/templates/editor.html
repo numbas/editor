@@ -31,57 +31,7 @@
 {% block content %}
     {{block.super }}
     {% verbatim %}
-
 		<!-- Property Inputs -->
-
-		<script type="text/x-jquery-tmpl" id="percentproperty">
-			<label>${$item.label}</label>
-			<span class="percentproperty display" data-bind="text: $item.property()+'%'"></span>
-			<input data-bind="
-					value: $item.property, 
-					valueUpdate: 'afterkeydown'" 
-				type="range"
-				step="5"
-				min="0"
-				max="100"
-			/>
-		</script>
-
-		<script type="text/x-jquery-tmpl" id="viewPercentproperty">
-			<label>${$item.label}</label>
-			<span class="percentproperty display" data-bind="text: $item.property()+'%'"></span>
-		</script>
-
-		<script type="text/x-jquery-tmpl" id="booleanproperty">
-			<label>${$item.label}</label>
-			<input data-bind="checked: $item.property" type="checkbox"/>
-		</script>
-
-		<script type="text/x-jquery-tmpl" id="property">
-			<label>${$item.label}</label>
-			{{if $item.type=='checkbox'}}
-				<input data-bind="checked: $item.property" type="checkbox"/>
-			{{else}}
-				<input data-bind="
-						value: $item.property, 
-						valueUpdate: 'afterkeydown'" 
-					type="${$item.type || 'text'}" 
-					{{if $item.min!==undefined}} min="${$item.min}" {{/if}}
-					{{if $item.max!==undefined}} max="${$item.max}" {{/if}}
-				/>
-			{{/if}}
-		</script>
-
-		<script type="text/x-jquery-tmpl" id="viewProperty">
-			<label>${$item.label}</label>
-			{{if $item.type=='checkbox'}}
-				<input data-bind="checked: $item.property" type="checkbox" disabled/>
-			{{else}}
-				<span class="labelvalue" data-bind="
-						text: $item.property" 
-				/>
-			{{/if}}
-		</script>
 
 		<script type="text/x-jquery-tmpl" id="folder">
 			<div class="fold {{if !$item.show}}folded{{/if}}">

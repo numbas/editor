@@ -132,14 +132,6 @@ $(document).ready(function() {
 		}
 	};
 
-	//make folders work
-	$('.fold > #folder-header').live('click',function() {
-		$(this).siblings('#folder').toggle(150,function() {
-			var p = $(this).parent();
-			p.hasClass('folded') ? p.removeClass('folded') : p.addClass('folded');
-		});
-	});
-
 	function cleanJME(val)
 	{
 		var dval = $.trim(val);
@@ -368,6 +360,59 @@ $(document).ready(function() {
 		}
 	};
 
+	$.fn.unselectable = function() {
+			$(this).on('mousedown',function(e){ e.preventDefault(); });
+	};
+
+	ko.bindingHandlers.folder = {
+		init: function(element,valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+			var value = ko.utils.unwrapObservable(valueAccessor());
+
+			var options = {
+				label: '',
+				show: false
+			}
+			if(typeof value == 'string')
+				options.label = value;
+			else
+				options = $.extend(options,value);
+
+			var root = $(element);
+
+			root.addClass('fold');
+			var header = $('<div class="folder-header"/>');
+			var content = $('<div class="folder"/>');
+			root.toggleClass('folded',!options.show);
+			root.contents().appendTo(content);
+			root.append(header,content);
+
+			header.on('click',function() {
+				$(this).siblings('.folder').toggle(150,function() {
+					$(this).parent().toggleClass('folded');
+				});
+			});
+
+			ko.applyBindingsToDescendants(bindingContext, element);
+			return {controlsDescendantBindings: true};
+		},
+		update: function(element,valueAccessor) {
+			var value = ko.utils.unwrapObservable(valueAccessor());
+
+			var options = {
+				label: '',
+				show: false
+			}
+			if(typeof value == 'string')
+				options.label = value;
+			else
+				options = $.extend(options,value);
+
+			$(element)
+				.children('.folder-header').html(options.label);
+
+		}
+	};
+
 	ko.bindingHandlers.cleanJME = {
 		update: function(element,valueAccessor) {
 			var value = ko.utils.unwrapObservable(valueAccessor()) || '';
@@ -383,19 +428,9 @@ $(document).ready(function() {
 			var show = allBindings.show;
 
 			element=$(element);
-			var f=$('<div class="fold"><div id="folder-header"></div><div id="folder"></div></div>');
-			f.find('#folder-header').html(ko.utils.unwrapObservable(allBindings.label));
-			f.toggleClass('folded',!show)
-			element.contents().appendTo(f.find('#folder'));
 			var b = $('<button class="remove" data-bind="click:remove"></button>');
 			b.click(function(){viewModel.remove()});
-			element.append(b);
-			element.append(f);
-		},
-		update: function(element,valueAccessor,allBindingsAccessor)
-		{
-			var value = valueAccessor(), allBindings = allBindingsAccessor();
-			$(element).find('>.fold>#folder-header').html(ko.utils.unwrapObservable(allBindings.label));
+			element.prepend(b);
 		}
 	};
 
@@ -538,12 +573,6 @@ $(document).ready(function() {
 	ko.bindingHandlers.mathjax = {
 		update: function(element) {
 			$(element).mathjax();
-		}
-	};
-
-	ko.bindingHandlers.unselectable = {
-		init: function(element) {
-			$(element).on('mousedown',function(e){ e.preventDefault(); });
 		}
 	};
 });

@@ -1,0 +1,17 @@
+﻿{% load verbatim %}
+{% verbatim %}
+	<script type="text/html" id="property">
+		<label data-bind="html: label"></label>
+		<span class="value" data-bind="text: property"/>
+	</script>
+	<script type="text/html" id="booleanproperty">
+		<label data-bind="html: label"></label>
+		<input class="value" data-bind="checked: property" type="checkbox" disabled/>
+	</script>
+
+	<script type="text/html" id="percentproperty">
+		<label data-bind="html: label"></label>
+		<span class="percentproperty value" data-bind="text: property()+'%'"></span>
+	</script>
+
+{% endverbatim %}

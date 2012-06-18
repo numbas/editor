@@ -74,6 +74,9 @@ $(document).ready(function() {
 			ext.used = ko.observable(false);
 			this.extensions.push(ext);
 		}
+		this.usedExtensions = ko.computed(function() {
+			return this.extensions().filter(function(e){return e.used()});
+		},this);
 
         this.statement = Editor.contentObservable('');
         this.advice = Editor.contentObservable('');

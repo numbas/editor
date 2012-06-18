@@ -34,50 +34,53 @@
 
 
 	{% if user == object.author or user.is_superuser %}
+		{% include "editable.html" %}
+
 	    {% verbatim %}
 	
-			<script type="text/x-jquery-tmpl" id="examTemplate">
+			<script type="text/html" id="examTemplate">
 			<div class="properties">
 				<div data-bind="template: {
 					name: 'property',
-					templateOptions: {label:'Exam name:',property:name}
+					data: {label:'Exam name:',property:name}
 				}"></div>
-                <div>
-                    <label>Theme: </label>
-                    <select data-bind="options: Editor.themes, value: theme"></select>
-                </div>
+				<div data-bind="template: {
+					name: 'property',
+					data: {label: 'Theme:', property: theme}
+				}"></div>
 
 				<div data-bind="template: {
 					name: 'property',
-					templateOptions: {label:'Duration (minutes):',property:duration, type:'number',min:0}
+					data: {label:'Duration (minutes):',property:duration, type:'number',min:0}
 				}"></div>
 				<div data-bind="template: {
 					name: 'percentproperty',
-					templateOptions: {label:'Pass threshold (percent):',property:percentPass}
+					data: {label:'Pass threshold (percent):',property:percentPass}
 				}"></div>
 				<div data-bind="template: {
 					name: 'booleanproperty',
-					templateOptions: {label: 'Shuffle questions?',property:shuffleQuestions}
+					data: {label: 'Shuffle questions?',property:shuffleQuestions}
 				}"></div>
 			</div>
-			{{wrap(this,{label:"Navigation"}) "#folder"}}
+
+			<div data-bind="folder: 'Navigation'">
 				<div>
 					<div class="properties">
 						<div data-bind="template: {
 							name: 'booleanproperty',
-							templateOptions: {label:'Allow user to regenerate questions?', property:allowregen}
+							data: {label:'Allow user to regenerate questions?', property:allowregen}
 						}"></div>
 						<div data-bind="template: {
 							name: 'booleanproperty',
-							templateOptions: {label:'Allow move to previous question?', property:reverse}
+							data: {label:'Allow move to previous question?', property:reverse}
 						}"></div>
 						<div data-bind="template: {
 							name: 'booleanproperty',
-							templateOptions: {label:'Allow jump to any question?', property:browse}
+							data: {label:'Allow jump to any question?', property:browse}
 						}"></div>
 						<div data-bind="template: {
 							name: 'booleanproperty',
-							templateOptions: {label: 'Show front page?',property:showfrontpage}
+							data: {label: 'Show front page?',property:showfrontpage}
 						}"></div>
 					</div>
 					<div data-bind="template: {
@@ -93,8 +96,9 @@
 						data: onmove
 					}"></div>
 				</div>
-			{{/wrap}}
-			{{wrap(this,{label:"Timing"}) "#folder"}}
+			</div>
+
+			<div data-bind="folder: 'Timing'">
 				<div>
 					<div data-bind="template: {
 						name: 'event',
@@ -105,67 +109,70 @@
 						data: timedwarning
 					}"></div>
 				</div>
-			{{/wrap}}
-			{{wrap(this,{label:"Feedback"}) "#folder"}}
+			</div>
+
+			<div data-bind="folder: 'Feedback'">
 				<div class="properties">
 					<div data-bind="template: {
 						name: 'booleanproperty',
-						templateOptions: { label:'Show actual mark?', property:showactualmark}
+						data: { label:'Show actual mark?', property:showactualmark}
 					}"></div>
 					<div data-bind="template: {
 						name: 'booleanproperty',
-						templateOptions: { label:'Show total mark?', property:showtotalmark}
+						data: { label:'Show total mark?', property:showtotalmark}
 					}"></div>
 					<div data-bind="template: {
 						name: 'booleanproperty',
-						templateOptions: { label:'Show answer state?', property:showanswerstate}
+						data: { label:'Show answer state?', property:showanswerstate}
 					}"></div>
 					<div data-bind="template: {
 						name: 'booleanproperty',
-						templateOptions: { label:'Allow reveal answer?', property:allowrevealanswer}
+						data: { label:'Allow reveal answer?', property:allowrevealanswer}
 					}"></div>
 					<div data-bind="template: {
 						name: 'percentproperty',
-						templateOptions: { label:'Advice threshold (percent)', property:advicethreshold}
+						data: { label:'Advice threshold (percent)', property:advicethreshold}
 					}"></div>
 				</div>
-			{{/wrap}}
-			{{wrap(this,{label:"Questions", show: true}) "#folder"}}
-			<div class="questions">
-				<ul class="questionList editlist big" data-bind="
-					template:{
-						name:'question',
-						foreach: questions,
-						beforeRemove: function(elem) { $(elem).slideUp(150,function(){$(this).remove()}); },
-						afterAdd: function(elem) { $(elem).hide().slideDown(150) }
-					},
-					sortableList: {list: questions, add: questionAdder()}
-				"></ul>
-				<div class="searchBox">
-					<label for="questionsearch">Search for questions: </label>
-					<input type="text" name="questionsearch" class="search" data-bind="
-						value: questionSearch, 
-						valueUpdate: 'afterkeydown',
-						css: {loading: searching()}
-					"/>
-					<ul class="results editlist big" data-bind="
-						template: {
-							name: 'questionResult',
-							foreach: questionSearchResults
-						}
-					"></ul>
+			</div>
+
+			<div data-bind="folder: {label: 'Questions', show: true}">
+				<div class="questions">
+					<ol class="questionList editlist big" data-bind="
+						template:{
+							name:'question',
+							foreach: questions,
+							beforeRemove: function(elem) { $(elem).slideUp(150,function(){$(this).remove()}); },
+							afterAdd: function(elem) { $(elem).hide().slideDown(150) }
+						},
+						sortableList: {list: questions, add: questionAdder()}
+					"></ol>
+					<div class="searchBox">
+						<label for="questionsearch">Search for questions: </label>
+						<input type="text" name="questionsearch" class="search" data-bind="
+							value: questionSearch, 
+							valueUpdate: 'afterkeydown',
+							css: {loading: searching()}
+						"/>
+						<ul class="results editlist big" data-bind="
+							template: {
+								name: 'questionResult',
+								foreach: questionSearchResults
+							}
+						"></ul>
+					</div>
 				</div>
 			</div>
-			{{/wrap}}
 		</script>
 	
-		<script type="text/x-jquery-tmpl" id="event">
-			{{wrap(this,{label:niceName}) "#folder"}}
+		<script type="text/html" id="event">
+			<div data-bind="folder: niceName">
 				<div>
 				<div class="properties">
-					<div>
-						<label>Action: </label>
-						<select data-bind="options: actions, value: action, optionsText: 'niceName'"></select>
+					<div data-bind="template: {
+						name: 'property',
+						data: {label: 'Action:', property: action().niceName}
+					}">
 					</div>
 				</div>
 				<div data-bind="fadeVisible:action().value!='none'">
@@ -173,10 +180,10 @@
 					<div data-bind="writemaths: message"/>
 				</div>
 				</div>
-			{{/wrap}}
+			</div>
 		</script>
 	
-		<script type="text/x-jquery-tmpl" id="question">
+		<script type="text/html" id="question">
 			<li class="question">
 				<span class="handle"></span>
 				<a data-bind="attr:{href: url}, text: name" target="_blank"></a>
@@ -184,7 +191,7 @@
 			</li>
 		</script>
 
-		<script type="text/x-jquery-tmpl" id="questionResult">
+		<script type="text/html" id="questionResult">
 			<li class="questionResult" data-bind="dragOut: {data: $data, sortable: '.questions ul.editlist'}">
 				<span class="handle"></span>
 				<a data-bind="attr: {href: url}, text: name" target="_blank"></span>
@@ -192,76 +199,55 @@
 		</script>
 	    {% endverbatim %}
 	
-	    <div>
-	        <div id="controls">
-	            <div class="controlbox" id="author">
-	                Author: {{ object.author.first_name }} {{ object.author.last_name }} ({{ object.author.username }})
-	            </div>
-	            <div class="controlbox" id="buttons">
-	                Download: 
-	                <a href="{% url exam_download object.pk object.slug %}">standalone .zip</a>,
-	                <a href="{% url exam_download object.pk object.slug %}?scorm">SCORM package</a>,
-	                <a href="{% url exam_source object.pk object.slug %}">source</a>
-	            </div>
-	            <div class="controlbox" id="admin">
-	                <button id="preview" data-bind="click: showPreview">Test Run</button>
-	                <a id="delete" href="{% url exam_delete object.pk object.slug %}"><img src="{{STATIC_URL}}images/delete.png"/> Delete</a>
-	                <a id="copy" href="{% url exam_copy object.pk object.slug %}">Make a Copy</a>
-	            </div>
-	        </div>
-	        <div id="editor" data-bind="template: 'examTemplate'">Loading...</div>
-	    </div>
     {% else %}
-
-
-
-    
-    
+			{% include "noneditable.html" %}
     
     	    {% verbatim %}
 	
-			<script type="text/x-jquery-tmpl" id="examTemplate">
+			<script type="text/html" id="examTemplate">
 			<div class="properties">
 				<div data-bind="template: {
-					name: 'viewProperty',
-					templateOptions: {label:'Exam name:',property:name}
+					name: 'property',
+					data: {label:'Exam name:',property:name}
 				}"></div>
-                <div>
-                    <label>Theme: </label>
-                    <span data-bind="text: theme"></span>
+				<div data-bind="template: {
+					name: 'property',
+					data: {label: 'Theme:', property: theme}
+				}">
                 </div>
 
 				<div data-bind="template: {
-					name: 'viewProperty',
-					templateOptions: {label:'Duration (minutes):',property:duration, type:'number',min:0}
+					name: 'property',
+					data: {label:'Duration (minutes):',property:duration, type:'number',min:0}
 				}"></div>
 				<div data-bind="template: {
-					name: 'viewPercentproperty',
-					templateOptions: {label:'Pass threshold (percent):',property:percentPass}
+					name: 'percentproperty',
+					data: {label:'Pass threshold (percent):',property:percentPass}
 				}"></div>
 				<div data-bind="template: {
-					name: 'viewProperty',
-					templateOptions: {label: 'Shuffle questions?',property:shuffleQuestions}
+					name: 'property',
+					data: {label: 'Shuffle questions?',property:shuffleQuestions}
 				}"></div>
 			</div>
-			{{wrap(this,{label:"Navigation"}) "#folder"}}
+
+			<div data-bind="folder: 'Navigation'">
 				<div>
 					<div class="properties">
 						<div data-bind="template: {
-							name: 'viewProperty',
-							templateOptions: {label:'Allow user to regenerate questions?', property:allowregen}
+							name: 'property',
+							data: {label:'Allow user to regenerate questions?', property:allowregen}
 						}"></div>
 						<div data-bind="template: {
-							name: 'viewProperty',
-							templateOptions: {label:'Allow move to previous question?', property:reverse}
+							name: 'property',
+							data: {label:'Allow move to previous question?', property:reverse}
 						}"></div>
 						<div data-bind="template: {
-							name: 'viewProperty',
-							templateOptions: {label:'Allow jump to any question?', property:browse}
+							name: 'property',
+							data: {label:'Allow jump to any question?', property:browse}
 						}"></div>
 						<div data-bind="template: {
-							name: 'viewProperty',
-							templateOptions: {label: 'Show front page?',property:showfrontpage}
+							name: 'property',
+							data: {label: 'Show front page?',property:showfrontpage}
 						}"></div>
 					</div>
 					<div data-bind="template: {
@@ -277,8 +263,9 @@
 						data: onmove
 					}"></div>
 				</div>
-			{{/wrap}}
-			{{wrap(this,{label:"Timing"}) "#folder"}}
+			</div>
+
+			<div data-bind="folder: 'Timing'">
 				<div>
 					<div data-bind="template: {
 						name: 'event',
@@ -289,50 +276,53 @@
 						data: timedwarning
 					}"></div>
 				</div>
-			{{/wrap}}
-			{{wrap(this,{label:"Feedback"}) "#folder"}}
+			</div>
+
+			<div data-bind="folder: 'Feedback'">
 				<div class="properties">
 					<div data-bind="template: {
-						name: 'viewProperty',
-						templateOptions: { label:'Show actual mark?', property:showactualmark}
+						name: 'property',
+						data: { label:'Show actual mark?', property:showactualmark}
 					}"></div>
 					<div data-bind="template: {
-						name: 'viewProperty',
-						templateOptions: { label:'Show total mark?', property:showtotalmark}
+						name: 'property',
+						data: { label:'Show total mark?', property:showtotalmark}
 					}"></div>
 					<div data-bind="template: {
-						name: 'viewProperty',
-						templateOptions: { label:'Show answer state?', property:showanswerstate}
+						name: 'property',
+						data: { label:'Show answer state?', property:showanswerstate}
 					}"></div>
 					<div data-bind="template: {
-						name: 'viewProperty',
-						templateOptions: { label:'Allow reveal answer?', property:allowrevealanswer}
+						name: 'property',
+						data: { label:'Allow reveal answer?', property:allowrevealanswer}
 					}"></div>
 					<div data-bind="template: {
-						name: 'viewPercentproperty',
-						templateOptions: { label:'Advice threshold (percent)', property:advicethreshold}
+						name: 'percentproperty',
+						data: { label:'Advice threshold (percent)', property:advicethreshold}
 					}"></div>
 				</div>
-			{{/wrap}}
-			{{wrap(this,{label:"Questions", show: true}) "#folder"}}
-			<div class="questions">
-				<ul class="questionList editlist normal" data-bind="
-					template:{
-						name:'question',
-						foreach: questions,
-					},
-				"></ul>
 			</div>
-			{{/wrap}}
+
+			<div data-bind="folder: {label: 'Questions', show:true}">
+				<div class="questions">
+					<ol data-bind="
+						template:{
+							name:'question',
+							foreach: questions,
+						},
+					"></ol>
+				</div>
+			</div>
 		</script>
 	
-		<script type="text/x-jquery-tmpl" id="event">
-			{{wrap(this,{label:niceName}) "#folder"}}
+		<script type="text/html" id="event">
+			<div data-bind="folder: niceName">
 				<div>
 				<div class="properties">
-					<div>
-						<label>Action: </label>
-						<span data-bind="text: action().niceName"></span>
+					<div data-bind="template: {
+						name: 'property',
+						data: {label: 'Action:', property: action().niceName}
+					}">
 					</div>
 				</div>
 				<div data-bind="fadeVisible:action().value!='none'">
@@ -340,44 +330,36 @@
 					<div class="textblock" data-bind="html: message"/>
 				</div>
 				</div>
-			{{/wrap}}
+			</div>
 		</script>
 	
-		<script type="text/x-jquery-tmpl" id="question">
+		<script type="text/html" id="question">
 			<li class="question">
 				<a data-bind="attr:{href: url}, text: name" target="_blank"></a>
 			</li>
 		</script>
 
 	    {% endverbatim %}
-	
-	    <div>
-	        <div id="controls">
-	            <div class="controlbox" id="author">
-	                Author: {{ object.author.first_name }} {{ object.author.last_name }} ({{ object.author.username }})
-	            </div>
-	            <div class="controlbox" id="buttons">
-	                Download: 
-	                <a href="{% url exam_download object.pk object.slug %}">standalone .zip</a>,
-	                <a href="{% url exam_download object.pk object.slug %}?scorm">SCORM package</a>,
-	                <a href="{% url exam_source object.pk object.slug %}">source</a>
-	            </div>
-	            <div class="controlbox" id="admin">
-	                <button id="preview" data-bind="click: showPreview">Test Run</button>
-	                <a id="copy" href="{% url exam_copy object.pk object.slug %}">Make a Copy</a>
-	            </div>
-	        </div>
-	        <div id="editor" data-bind="template: 'examTemplate'">Loading...</div>
-	    </div>
+	{% endif %}
 
-    
-    
-    
-
-
-
-
-    {% endif %}
+	<div>
+		<div id="controls">
+			<div class="controlbox" id="author">
+				Author: {{ object.author.first_name }} {{ object.author.last_name }} ({{ object.author.username }})
+			</div>
+			<div class="controlbox" id="buttons">
+				Download: 
+				<a href="{% url exam_download object.pk object.slug %}">standalone .zip</a>,
+				<a href="{% url exam_download object.pk object.slug %}?scorm">SCORM package</a>,
+				<a href="{% url exam_source object.pk object.slug %}">source</a>
+			</div>
+			<div class="controlbox" id="admin">
+				<button id="preview" data-bind="click: showPreview">Test Run</button>
+				<a id="copy" href="{% url exam_copy object.pk object.slug %}">Make a Copy</a>
+			</div>
+		</div>
+		<div id="editor" data-bind="template: 'examTemplate'">Loading...</div>
+	</div>
 {% endblock content %}
 
 {% block sidebar %}

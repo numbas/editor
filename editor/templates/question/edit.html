@@ -26,12 +26,14 @@
 {% endblock javascripts %}
 	
 {% block content %}
-    {{block.super }}
+	{{block.super }}
 
-	<div>
+	{% block property_templates %}{% endblock %}
+
+	<div id="question" class="{% if not editable %}nonedit{% endif %}">
 		<div id="controls">
 			{% block controls %}
-				<div id="editable">This question is {% if not editable %}not{% endif %} editable by you.</div>
+			<div id="editable_message">{% block editable_message %}{% endblock %}</div>
 				<div class="controlbox" id="author">
 					Author: {{ object.author.first_name }} {{ object.author.last_name }} ({{ object.author.username }})
 				</div>

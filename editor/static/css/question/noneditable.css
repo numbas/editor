@@ -1,0 +1,82 @@
+﻿.variable .def {
+	text-align: left;
+    word-wrap: break-word;
+    max-height: 8em;
+	overflow-x: auto;
+    overflow-y: auto;
+}
+
+.tags {
+    display: inline;
+   	list-style:none;
+    padding: 0px;
+}
+
+.tags li{
+    display: inline;
+    padding-right: 2em;
+}
+
+li.choice  {
+    margin-right: 10px;
+}
+
+.function .definition .code {
+    border: #ccc 1px solid;
+}
+
+.function .parameters .list {
+	float: right;
+	margin-bottom: 0.5em;
+}
+
+.function .parameters .list {
+	margin-bottom: 0.5em;
+    border-bottom: #ccc 1px solid;
+}
+
+.function .parameters .list th,td{
+    padding: 0 0.5em 0 0.5em;
+}
+
+.function .parameters .list td.type {
+    border-left: #ccc 1px dashed;
+}
+
+.correctanswer {
+	border: #ccc 1px solid;
+}
+
+.correctanswer > label{
+    background-color: #eee;
+    padding: 0 1em 0 1em;
+    border: #ccc 1px solid;
+}
+
+.correctanswer div{
+    border: #ccc 1px dashed;
+    padding: 0.5em;
+    margin-bottom: 0em;
+}
+.correctanswer .mathdisplay {
+    border-top: 0px;
+}
+
+.editlist.normal > li {
+	background-color: #eee;
+	line-height: 1.5em;
+	position: relative;
+	padding-right: 2em;
+}
+
+.jmestrings {
+    display: inline;
+    list-style: none;
+    padding: 0px;
+}
+
+.jmestrings li{
+    display: inline;
+    padding-right: 2em;
+}
+

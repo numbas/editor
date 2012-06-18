@@ -80,31 +80,26 @@ $(function() {
 
         $(this).each(function() {
 
-            var el = $(this);
+			var root = this;
+			var iframe = $(this).find('iframe')[0];
+            var el = $(iframe).contents().find('body');
             el
                 .addClass('writemaths tex2jax_ignore')
-                .attr('contenteditable','true')
             ;
-            el.parent().append('<div class="preview"/>');
+            var previewElement = $('<div class="wm_preview"/>');
+			$(root).append(previewElement);
 
             var queue = MathJax.Callback.Queue(MathJax.Hub.Register.StartupHook("End",{}));
             el
 			.on('blur',function(e) {
-                var previewElement = el.parent().find('.preview');
 				previewElement.hide();
 			})
 			.on('keyup click',function(e) {
-
-                var previewElement = el.parent().find('.preview');
                 previewElement.hide();
 
-                var sel = rangy.getSelection();
+				var sel = rangy.getIframeSelection(iframe);
                 try{
                     var pos = sel.getStartDocumentPos();
-                }
-                catch(e) {
-                    return;
-                }
                 var anchor = sel.anchorNode;
                 var range = sel.getRangeAt(0);
 
@@ -113,6 +108,10 @@ $(function() {
                 if(range.startOffset != range.endOffset)
                     return;
 
+                }
+                catch(e) {
+                    return;
+                }
                 //get the text in th
                 var txt = $(anchor).text();
 
@@ -200,7 +199,7 @@ $(function() {
                 math = mathLimit + math + mathDelimit;
 
                 function positionPreview() {
-                    previewElement.position({my: 'left bottom', at: 'left top', of: document, offset: pos.x+' '+pos.y, collision: 'fit'})
+                    previewElement.position({my: 'left bottom', at: 'left top', of: iframe, offset: pos.x+' '+pos.y, collision: 'fit'})
                 }
 
                 previewElement

@@ -1,4 +1,4 @@
-.writemathsContainer .preview {
+.wm_preview {
 	z-index: 1;
 	position: absolute;
 	display: none;
@@ -8,9 +8,4 @@
 	margin: 0 auto;
 	background: white;
 	display: none;
-}
-
-
-.writemaths .wm_maths {
-	color: blue;
 }

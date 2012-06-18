@@ -279,10 +279,12 @@ $(document).ready(function() {
 			var value = ko.utils.unwrapObservable(valueAccessor) || '';
 
             function onkeyup(e,tinymce) {
-                if(e.type!='keyup')
-                    return;
-
-                valueAccessor(tinymce.getContent());
+                switch(e.type) {
+				case 'onkeyup':
+				case 'onpaste':
+					valueAccessor(tinymce.getContent());
+					break;
+				}
             }
 
             var t = $('<textarea style="width:100%"/>');
@@ -293,9 +295,11 @@ $(document).ready(function() {
 
             $(t)
                 .tinymce({
-                    theme:'simple',
-                    handle_event_callback: onkeyup
-                    
+                    theme:'numbas',
+                    handle_event_callback: onkeyup,
+					init_instance_callback: function() { 
+						$(element).writemaths({cleanMaths: cleanJME}); 
+					}
                 })
                 .html(value)
             ;

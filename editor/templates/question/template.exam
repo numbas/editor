@@ -1,6 +1,7 @@
 {% autoescape off %}
 {
     name: {{ name }}
+    extensions: {{ extensions }}
     navigation: {
         allowregen: true
         showfrontpage: false

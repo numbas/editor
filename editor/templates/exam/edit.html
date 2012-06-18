@@ -142,8 +142,7 @@
 						template:{
 							name:'question',
 							foreach: questions,
-							beforeRemove: function(elem) { $(elem).slideUp(150,function(){$(this).remove()}); },
-							afterAdd: function(elem) { $(elem).hide().slideDown(150) }
+                            beforeRemove: function(elem,i) { if(!$(elem).hasClass('question')){return}; $(elem).slideUp(150,function(){$(this).remove()}); },
 						},
 						sortableList: {list: questions, add: questionAdder()}
 					"></ol>
@@ -192,9 +191,9 @@
 		</script>
 
 		<script type="text/html" id="questionResult">
-			<li class="questionResult" data-bind="dragOut: {data: $data, sortable: '.questions ul.editlist'}">
+			<li class="questionResult" data-bind="dragOut: {data: $data, sortable: '.questionList'}">
 				<span class="handle"></span>
-				<a data-bind="attr: {href: url}, text: name" target="_blank"></span>
+				<a data-bind="attr: {href: url}, text: name" target="_blank"></a>
 			</li>
 		</script>
 	    {% endverbatim %}

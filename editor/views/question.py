@@ -240,6 +240,6 @@ class QuestionSearchView(ListView):
     
     def get_queryset(self):
         search_term = self.request.GET['q']
-        question_objects = Question.objects.filter(Q(name__icontains=search_term) | Q(tags__name__istartswith=search_term))
+        question_objects = Question.objects.filter(Q(name__icontains=search_term) | Q(tags__name__istartswith=search_term)).distinct()
         return [q.summary() for q in question_objects]
     

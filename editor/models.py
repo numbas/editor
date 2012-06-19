@@ -15,6 +15,13 @@ import uuid
 import git
 import os
 import json
+try:
+  # For Python > 2.7
+  from collections import OrderedDict
+except ImportError:
+  # For Python < 2.6 (after installing ordereddict)
+  from ordereddict import OrderedDict
+
 
 from django.conf import settings
 from django.db import models
@@ -30,14 +37,18 @@ from taggit.managers import TaggableManager
 from examparser import ExamParser, ParseError, printdata
 
 class NumbasObject:
-    def save(self):
+    def get_parsed_content(self):
         if self.content:
             parser = ExamParser()
-            self.parsedContent= parser.parse(self.content)
-            self.name = self.parsedContent['name']
+            self.parsed_content = parser.parse(self.content)
+            self.name = self.parsed_content['name']
         elif self.name:
             self.content = '{name: %s}' % self.name
-            self.parsedContent = {'name': self.name}
+            self.parsed_content = {'name': self.name}
+
+        self.extensions = self.parsed_content.get('extensions',[])
+
+        return self.parsed_content
 
     def set_name(self,name):
         self.name = name
@@ -152,7 +163,7 @@ class Question(models.Model,NumbasObject,GitObject):
         return 'Question "%s"' % self.name
     
     def save(self, *args, **kwargs):
-        NumbasObject.save(self)
+        NumbasObject.get_parsed_content(self)
 
         self.slug = slugify(self.name)
 
@@ -160,8 +171,8 @@ class Question(models.Model,NumbasObject,GitObject):
 
         super(Question, self).save(*args, **kwargs)
 
-        if 'tags' in self.parsedContent:
-           self.tags.set(*self.parsedContent['tags'])
+        if 'tags' in self.parsed_content:
+           self.tags.set(*self.parsed_content['tags'])
 
     def delete(self, *args, **kwargs):
         GitObject.delete(self)
@@ -169,11 +180,14 @@ class Question(models.Model,NumbasObject,GitObject):
 
     def as_source(self):
         t = loader.get_template('question/template.exam')
-        return t.render(Context({
-            'name': self.name,
-            'content': self.content,
-            'question': self
-        }))
+        self.get_parsed_content()
+        data = OrderedDict([
+            ('name',self.name),
+            ('extensions',self.extensions),
+            ('navigaton',{'allowregen': True, 'showfrontpage': True}),
+            ('questions',[self.parsed_content])
+        ])
+        return printdata(data)
 
     def as_json(self):
         d = model_to_dict(self)
@@ -229,7 +243,7 @@ class Exam(models.Model,NumbasObject,GitObject):
             exam_question.save()
     
     def save(self, *args, **kwargs):
-        NumbasObject.save(self)
+        NumbasObject.get_parsed_content(self)
         
         self.slug = slugify(self.name)
             

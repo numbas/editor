@@ -280,8 +280,9 @@ $(document).ready(function() {
 
             function onkeyup(e,tinymce) {
                 switch(e.type) {
-				case 'onkeyup':
-				case 'onpaste':
+				case 'keyup':
+				case 'paste':
+					console.log(e.type);
 					valueAccessor(tinymce.getContent());
 					break;
 				}

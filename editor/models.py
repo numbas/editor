@@ -15,7 +15,13 @@ import uuid
 import git
 import os
 import json
-from collections import OrderedDict
+try:
+  # For Python > 2.7
+  from collections import OrderedDict
+except ImportError:
+  # For Python < 2.6 (after installing ordereddict)
+  from ordereddict import OrderedDict
+
 
 from django.conf import settings
 from django.db import models

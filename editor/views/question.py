@@ -239,7 +239,11 @@ class QuestionSearchView(ListView):
         raise Http404
     
     def get_queryset(self):
-        search_term = self.request.GET['q']
-        question_objects = Question.objects.filter(Q(name__icontains=search_term) | Q(tags__name__istartswith=search_term)).distinct()
-        return [q.summary() for q in question_objects]
+        search_term = self.request.GET['q'] if 'q' in self.request.GET else ''
+        if 'a' in self.request.GET:
+            author_term = self.request.GET['a']
+            question_objects = Question.objects.filter(Q(name__icontains=search_term) | Q(tags__name__istartswith=search_term), Q(author__first_name__icontains=author_term)).distinct()
+        else :
+            question_objects = Question.objects.filter(Q(name__icontains=search_term) | Q(tags__name__istartswith=search_term)).distinct()
+        return [q.summary(user=self.request.user) for q in question_objects]
     

@@ -1,32 +1,6 @@
 {% extends "layout.html" %}
 
 {% block content %}
-	{% if question_list %}
-        <table id="question-list">
-        <thead>
-            <th>Name</th>
-            <th>Author</th>
-            <th></th>
-        </thead>
-        <tbody>
-		{% for question in question_list %}
-            <tr class="question">
-                <td><a href="{% url question_edit question.pk question.slug %}">{{ question.name }}</a></td>
-                <td class="author {% if user == question.author %}me{% endif %}">
-                    {% if user == question.author %}You{% else %}{{ question.author.get_full_name }}{% endif %}
-                </td>
-                <td class="delete">
-    				{% if user == question.author or user.is_superuser %}
-	    				<a class="delete" href="{% url question_delete question.pk question.slug %}"></a>
-		    		{% endif %}
-                </td>
-			</tr>
-        {% endfor %}
-        </tbody>
-		</table>
-	{% else %}
-		<p>No questions are available.</p>
-	{% endif %}
 
 	{% if user.is_authenticated %}
 		<button id="newQuestion" href="{% url question_new %}">New question</button>
@@ -46,6 +20,57 @@
             </div>
 		</form>
 	{% endif %}
+
+    <div>
+        <div class="searchBox">
+            <label for="questionsearch">Search for questions: </label>
+            <input type="text" name="questionsearch" class="search" data-bind="
+                value: questionSearch, 
+                valueUpdate: 'afterkeydown',
+                css: {loading: searching()}
+            "/>
+
+            <label for="questionsearchbyauthor"> by author: </label>
+            <input type="text" class="search" size="30" data-bind="
+                value: questionSearchByAuthor,
+                valueUpdate: 'afterkeydown',
+                autocomplete: '{% url user_search %}', 
+                autocompleteCallback: function(user) { return {label: user.username+' ('+user.name+')', value: user.username} }
+            "/>
+
+               <table  id="question-list">
+                <thead>
+                    <th>Name</th>
+                    <th>Author</th>
+                    <th></th>
+                </thead>
+                <tbody  id="question-list" class="results editlist big" data-bind="
+                    template: {
+                        name: 'questionResult',
+                        foreach: questionSearchResults
+                    }
+                ">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script type="text/x-jquery-tmpl" id="questionResult">
+        <tr class="question">
+            <td><span class="handle"></span>
+            <a data-bind="attr: {href: url}, text: name"></a>
+            </td>
+            <td><span data-bind="text: author"></span></td>
+            <td class="delete">
+                <a class="delete" data-bind="visible: canEdit, attr: {href: url+'delete/'}"></a>
+            </td>
+            <td>
+            <a class="copy" data-bind="attr: {href: url+'copy/'}">Copy</a>
+            <a class="preview" data-bind="attr: {href: url+'preview/'}">Test Run</a>
+            </td>
+        </tr>
+    </script>
+
 {% endblock content %}
 
 {% block javascripts %}

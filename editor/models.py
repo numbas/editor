@@ -194,9 +194,16 @@ class Question(models.Model,NumbasObject,GitObject):
         d['tags'] = [ti.tag.name for ti in d['tags']]
         return json.dumps(d)
 
-    def summary(self):
+    def summary(self, user=None):
         """return id, name and url, enough to identify a question and say where to find it"""
-        return {'id':self.id, 'name':self.name, 'url':reverse('question_edit', args=(self.pk,self.slug,))}
+        obj = {'id':self.id, 'name':self.name, 'author':self.author.get_full_name(), 'url':reverse('question_edit', args=(self.pk,self.slug,))}
+        if user:
+            obj['canEdit'] = self.can_be_edited_by(user) 
+        return obj
+
+    def can_be_edited_by(self, user):
+        return user == self.author or user.is_superuser
+
 
 
 class Exam(models.Model,NumbasObject,GitObject):

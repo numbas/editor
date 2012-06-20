@@ -34,7 +34,8 @@ $(document).ready(function() {
             })
     ;
 
-    $('.question .delete').on('click',function(e) {
+    
+    $('body').on('click','.question .delete',function(e) {
         e.stopPropagation();
         e.preventDefault();
         if(window.confirm('Delete this question?')) {
@@ -60,7 +61,7 @@ $(document).ready(function() {
     $('#uploadForm input[type=file]').change(function(e) {
         $('#uploadForm').submit();
     });
-
+        
     /*
 	function loadFile(file) {
 		if(!file) { return; }
@@ -106,4 +107,44 @@ $(document).ready(function() {
 	});
     */
 
+        
+    function QuestionSelect()
+    {
+		var e = this;
+
+		this.questionSearch = ko.observable('');
+		this.questionSearchByAuthor = ko.observable('');
+		this.questionSearchResults = ko.observableArray([]);
+		this.searching = ko.observable(false);
+		ko.computed(function() {
+			var search = this.questionSearch();
+            var vm = this;
+            this.searching(true);
+            console.log("q="+this.questionSearch()+" a="+this.questionSearchByAuthor());
+            $.getJSON('/question/search/',{q:this.questionSearch(), a:this.questionSearchByAuthor()})
+                .success(function(data) {
+                    vm.questionSearchResults(data.object_list);
+                    console.log(data.object_list);
+                })
+                .error(function() {
+                    console.log(arguments);
+                })
+                .complete(function() {
+                    vm.searching(false);
+                });
+            ;
+
+		},this).extend({throttle:100});
+
+
+
+    }
+
+    
+    
+    //create an exam object
+    viewModel = new QuestionSelect();
+    ko.applyBindings(viewModel);
+    
 });
+

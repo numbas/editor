@@ -583,36 +583,4 @@ $(document).ready(function() {
 		}
 	};
 
-    ko.bindingHandlers.autocomplete = {
-        init: function(element,valueAccessor,allBindingsAccessor) {
-            var allBindings = allBindingsAccessor();
-            var autocompleteCallback = function(e){ return e; };
-            if('autocompleteCallback' in allBindings) {
-                autocompleteCallback = allBindings.autocompleteCallback;
-            }
-
-            var source = ko.utils.unwrapObservable(valueAccessor());
-
-            if(typeof source == 'string') {
-                var url = source;
-                source = function(req,callback) {
-                    $(element).addClass('loading');
-                    $.getJSON(url,{q:req.term})
-                        .success(function(data) {
-                            console.log(data.object_list);
-                            var things = data.object_list.map(autocompleteCallback);
-                            callback(things);
-                        })
-                        .complete(function() {
-                            $(element).removeClass('loading');
-                        })
-                    ;
-                }
-            }
-
-            $(element).autocomplete({
-                source: source
-            });
-        }
-    }
 });

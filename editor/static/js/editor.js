@@ -591,6 +591,8 @@ $(document).ready(function() {
                 autocompleteCallback = allBindings.autocompleteCallback;
             }
 
+            $(element).addClass('search');
+
             var source = ko.utils.unwrapObservable(valueAccessor());
 
             if(typeof source == 'string') {

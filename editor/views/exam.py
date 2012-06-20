@@ -237,6 +237,10 @@ class ExamUpdateView(UpdateView):
         exam_dict['questions'] = [q.summary() for q in self.object.get_questions()]
         context['exam_JSON'] = json.dumps(exam_dict)
         context['themes'] = settings.GLOBAL_SETTINGS['NUMBAS_THEMES']
+        if self.request.user == self.object.author or self.request.user.is_superuser:
+            context['editable'] = True
+        else:
+            context['editable'] = False
         return context
 
     def get_success_url(self):

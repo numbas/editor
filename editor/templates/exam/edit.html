@@ -355,7 +355,7 @@
 			<div class="controlbox" id="admin">
 				<a id="preview" href="{% url exam_preview object.pk object.slug %}">Test Run</a>
 				{% if editable %}
-					<a id="delete" href="{% url question_delete object.pk object.slug %}"><img src="{{STATIC_URL}}images/delete.png"/> Delete</a>
+					<a id="delete" href="{% url question_delete object.pk object.slug %}">Delete</a>
 				{% endif %}
 				<a id="copy" href="{% url exam_copy object.pk object.slug %}">Make a Copy</a>
 			</div>

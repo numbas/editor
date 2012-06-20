@@ -14,6 +14,30 @@
     margin-top: 0.5em;
 }
 
+.controlbox#admin a {
+    font-size: 22px;
+    text-decoration: none;
+    margin-right: 0.5em;
+}
+.controlbox#admin a:before {
+    padding-right: 4px;
+}
+.controlbox#admin a:visited {
+    color: #00e;
+}
+
+.controlbox #preview:before {
+    content: url(../images/play_alt_16x16.png);
+}
+
+.controlbox #delete:before {
+    content: url(../images/x_alt_16x16.png);
+}
+
+.controlbox #copy:before {
+    content: url(../images/plus_16x16.png);
+}
+
 .controlbox:first-child {
     margin-top: 0;
 }
@@ -284,9 +308,9 @@ ul.editlist {
 }
 
 button.remove {
-	background: transparent url(../images/delete.png);
-	width: 14px;
-	height: 14px;
+	background: transparent url(../images/x_alt_16x16.png) no-repeat;
+	width: 16px;
+	height: 16px;
 	border:none;
 	margin-left: .3em;
 	padding: 0;
@@ -294,7 +318,8 @@ button.remove {
 
 button.remove:hover {
 	cursor:pointer;
-	background-color: #ccc;
+	background-color: #f90;
+    border-radius: 50%;
 }
 
 .listbox {

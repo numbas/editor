@@ -282,7 +282,6 @@ $(document).ready(function() {
                 switch(e.type) {
 				case 'keyup':
 				case 'paste':
-					console.log(e.type);
 					valueAccessor(tinymce.getContent());
 					break;
 				}

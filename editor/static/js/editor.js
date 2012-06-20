@@ -282,7 +282,6 @@ $(document).ready(function() {
                 switch(e.type) {
 				case 'keyup':
 				case 'paste':
-					console.log(e.type);
 					valueAccessor(tinymce.getContent());
 					break;
 				}
@@ -601,7 +600,6 @@ $(document).ready(function() {
                     $(element).addClass('loading');
                     $.getJSON(url,{q:req.term})
                         .success(function(data) {
-                            console.log(data.object_list);
                             var things = data.object_list.map(autocompleteCallback);
                             callback(things);
                         })

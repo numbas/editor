@@ -596,11 +596,17 @@ $(document).ready(function() {
             if(typeof source == 'string') {
                 var url = source;
                 source = function(req,callback) {
-                    $.getJSON(url,{q:req.term}).success(function(data) {
-                        console.log(data.object_list);
-                        var things = data.object_list.map(autocompleteCallback);
-                        callback(things);
-                    });
+                    $(element).addClass('loading');
+                    $.getJSON(url,{q:req.term})
+                        .success(function(data) {
+                            console.log(data.object_list);
+                            var things = data.object_list.map(autocompleteCallback);
+                            callback(things);
+                        })
+                        .complete(function() {
+                            $(element).removeClass('loading');
+                        })
+                    ;
                 }
             }
 

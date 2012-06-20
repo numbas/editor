@@ -19,6 +19,11 @@
 		/>
 	</script>
 
+	<script type="text/html" id="selectproperty">
+		<label data-bind="html: label"/>
+		<select data-bind="options: options, value: property"></select>
+	</script>
+
 	<script type="text/html" id="booleanproperty">
 		<label data-bind="html: label"/>
 		<input data-bind="checked: property" type="checkbox"/>

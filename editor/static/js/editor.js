@@ -300,7 +300,9 @@ $(document).ready(function() {
                     handle_event_callback: onkeyup,
 					init_instance_callback: function() { 
 						$(element).writemaths({cleanMaths: cleanJME}); 
-					}
+					},
+                    theme_advanced_resizing: true,
+                    theme_advanced_resizing_max_width: 800
                 })
                 .html(value)
             ;

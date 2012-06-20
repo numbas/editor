@@ -28,7 +28,9 @@
 {% block content %}
 	{{block.super }}
 
-	{% block property_templates %}{% endblock %}
+    {% block property_templates %}{% endblock %}
+
+    <input data-bind="autocomplete: '{% url user_search %}', autocompleteCallback: function(user) { return {label: user.username+' ('+user.name+')', value: user.username} }"/>
 
 	<div id="question" class="{% if not editable %}nonedit{% endif %}">
 		<div id="controls">

@@ -20,6 +20,7 @@ from django.contrib.auth.decorators import login_required
 
 from editor.views.exam import ExamPreviewView, ExamZipView, ExamSourceView, ExamCreateView, ExamCopyView, ExamUploadView, ExamDeleteView, ExamListView, ExamSearchView, ExamUpdateView
 from editor.views.question import QuestionPreviewView, QuestionZipView, QuestionSourceView, QuestionCreateView, QuestionCopyView, QuestionUploadView, QuestionDeleteView, QuestionListView, QuestionSearchView, QuestionUpdateView
+from editor.views.user import UserSearchView
 
 admin.autodiscover()
 
@@ -81,4 +82,6 @@ urlpatterns = patterns('',
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+).exam$',
         QuestionSourceView.as_view(), name='question_source'),
+
+	url(r'^users/search/$',UserSearchView.as_view(),name='user_search'),
 )

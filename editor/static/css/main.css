@@ -103,8 +103,20 @@ ul#menu li a {
 
 #content_header, #content_footer {
     width: 940px;
-    background: url(../images/content_header.png) no-repeat;
+    background: white;
     height: 14px;
+}
+#content_header {
+    border-radius: 1em 1em 0 0;
+    border-top: 1px solid #ECECE0;
+    border-left: 1px solid #ECECE0;
+    border-right: 1px solid #ECECE0;
+}
+#content_footer {
+    border-radius: 0 0 1em 1em;
+    border-bottom: 1px solid #ECECE0;
+    border-left: 1px solid #ECECE0;
+    border-right: 1px solid #ECECE0;
 }
 
 #content_footer {
@@ -112,7 +124,7 @@ ul#menu li a {
 }
 
 #site_content {
-    width: 878px;
+    width: 880px;
     overflow: hidden;
     margin: 0 auto 0 auto;
     padding: 0 20px 20px 40px;

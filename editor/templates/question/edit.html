@@ -33,7 +33,7 @@
 	<div id="question" class="{% if not editable %}nonedit{% endif %}">
 		<div id="controls">
 			{% block controls %}
-			<div id="editable_message">{% block editable_message %}{% endblock %}</div>
+    			<div id="editable_message">{% block editable_message %}{% endblock %}</div>
 				<div class="controlbox" id="author">
 					Author: {{ object.author.first_name }} {{ object.author.last_name }} ({{ object.author.username }})
 				</div>
@@ -43,8 +43,8 @@
 					<a href="{% url question_download object.pk object.slug %}?scorm">SCORM package</a>,
 					<a href="{% url question_source object.pk object.slug %}">source</a>
 				</div>
-				<div class="controlbox" id="admin">
-					<button id="preview" data-bind="click: showPreview">Test Run</button>
+                <div class="controlbox" id="admin">
+    				<a id="preview" href="{% url question_preview object.pk object.slug %}">Test Run</a>
 					
 					{% if editable %}
 						<a id="delete" href="{% url question_delete object.pk object.slug %}"><img src="{{STATIC_URL}}images/delete.png"/> Delete</a>

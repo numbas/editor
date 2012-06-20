@@ -184,7 +184,7 @@ class Question(models.Model,NumbasObject,GitObject):
         data = OrderedDict([
             ('name',self.name),
             ('extensions',self.extensions),
-            ('navigaton',{'allowregen': True, 'showfrontpage': True}),
+            ('navigation',{'allowregen': 'true', 'showfrontpage': 'false'}),
             ('questions',[self.parsed_content])
         ])
         return printdata(data)

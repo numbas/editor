@@ -274,33 +274,6 @@ $(document).ready(function() {
             }
         },
 
-		showPreview: function() {
-			if(this.preview)
-				this.preview.close();
-
-			var e = this;
-
-			$.get(Editor.preview_url)
-			.success(function(response, status, xhr) {
-				e.preview = window.open(response.url);
-			})
-			.error(function(response, status, xhr) {
-				var responseObj = $.parseJSON(response.responseText);
-				var message = '<h3>Error making the preview:</h3><p>'+responseObj.message+'</p><code>'+responseObj.traceback+'</code>';
-				noty({
-					text: message,
-					layout: "topLeft",
-					type: "error",
-					animateOpen: {"height":"toggle"},
-					animateClose: {"height":"toggle"},
-					timeout: 5000,
-					speed: "500",
-					closable: true,
-					closeOnSelfClick: true,
-				});
-			});
-		},
-
         download: function() {
             window.location = Editor.download_url;
         }

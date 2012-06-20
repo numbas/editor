@@ -16,6 +16,7 @@ import os
 import subprocess
 import traceback
 
+from django.shortcuts import redirect
 from django.conf import settings
 from django.core.servers.basehttp import FileWrapper
 from django.http import HttpResponse, HttpResponseServerError
@@ -81,15 +82,8 @@ class PreviewView(DetailView,CompileObject):
             return HttpResponseServerError(json.dumps(err.status),
                                            content_type='application/json')
         else:
-            status = {
-                "result": "success",
-                "url": settings.GLOBAL_SETTINGS['PREVIEW_URL'] +
-                       location + '/index.html'
-            }
-            response = HttpResponse(json.dumps(status),
-                                content_type='application/json')
-            response['Cache-Control'] = 'max-age=0,no-cache,no-store'
-            return response
+            url = settings.GLOBAL_SETTINGS['PREVIEW_URL'] + location + '/index.html'
+            return redirect(url)
         
         
 class ZipView(DetailView,CompileObject):

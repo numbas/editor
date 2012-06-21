@@ -8,6 +8,9 @@ import logging
 from django_auth_ldap.config import LDAPSearch, ActiveDirectoryGroupType
 
 # For secure LDAP lookups.
+# When set to True, you need to make sure that the system TLS library is installed.
+# Also ensure that the TLS certificates are correctly set in the system LDAP config.
+# e.g. Debian/Ubuntu should have TLS_CACERT set in /etc/ldap/ldap.conf.
 AUTH_LDAP_START_TLS = True
 
 # Your LDAP server.

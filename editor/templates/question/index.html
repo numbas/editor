@@ -61,12 +61,10 @@
             <a data-bind="attr: {href: url}, text: name"></a>
             </td>
             <td><span data-bind="text: author"></span></td>
-            <td class="delete">
-                <a class="delete" data-bind="visible: canEdit, attr: {href: url+'delete/'}"></a>
-            </td>
             <td>
-            <a class="copy" data-bind="attr: {href: url+'copy/'}">Copy</a>
-            <a class="preview" data-bind="attr: {href: url+'preview/'}">Test Run</a>
+    	        <a class="admin preview" data-bind="attr: {href: url+'preview/'}" target="_blank" title="Test run"></a>
+	            <a class="admin copy" data-bind="attr: {href: url+'copy/'}" title="Make a copy"></a>
+                <a class="admin delete" data-bind="visible: canEdit, attr: {href: url+'delete/'}" title="Delete"></a>
             </td>
         </tr>
     </script>

@@ -2,12 +2,28 @@
 	display: none;
 }
 
-a.delete {
+.question .admin {
 	display: inline-block;
-	background: transparent url(../images/delete.png);
-	width: 14px;
-	height: 14px;
-	border: none;
+	margin-right: 0.5em;
+}
+
+.question .delete {
+	background: transparent url(../images/x_alt_16x16.png);
+	width: 16px;
+	height: 16px;
+	margin-left: 0.5em;
+}
+
+.question .copy {
+	background: transparent url(../images/plus_alt_16x16.png);
+	width: 16px;
+	height: 16px;
+}
+
+.question .preview {
+	background: transparent url(../images/play_alt_16x16.png);
+	width: 16px;
+	height: 16px;
 }
 
 .upload {

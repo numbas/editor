@@ -216,6 +216,4 @@ $(function() {
         });
 		return this;
 	}
-
-	$('#wm').writemaths();
 });

@@ -166,3 +166,12 @@ examparser = imp.load_source(
     'examparser',
      os.path.join(GLOBAL_SETTINGS['NUMBAS_PATH'],
                   os.path.normpath('bin/examparser.py')))
+                  
+AUTHENTICATION_BACKENDS = (
+    # Uncomment to enable LDAP authentication, then look at ldap_auth.py.dist
+    #'django_auth_ldap.backend.LDAPBackend',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+# Uncomment to enable LDAP authentication, then look at ldap_auth.py.dist
+#from ldap_auth import *

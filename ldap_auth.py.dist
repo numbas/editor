@@ -1,0 +1,62 @@
+# LDAP configuration.
+# Copy this file to ldap_auth.py and edit to suit.
+# Also make sure that the relevant lines in settings.py are uncommented.
+# See http://packages.python.org/django-auth-ldap/ for full usage instructions.
+
+import ldap
+import logging
+from django_auth_ldap.config import LDAPSearch, ActiveDirectoryGroupType
+
+# For secure LDAP lookups.
+AUTH_LDAP_START_TLS = True
+
+# Your LDAP server.
+AUTH_LDAP_SERVER_URI = 'ldap://ldap.example.com'
+
+# DN of the user to bind to LDAP with.  This user performs LDAP lookups.  Can be left blank if anonymous lookups are allowed.
+AUTH_LDAP_BIND_DN = 'cn=bind_user,ou=users,dc=example,dc=com'
+
+# Password of the bind user.  Can be left blank if anonymous lookups are allowed.
+AUTH_LDAP_BIND_PASSWORD = 'password'
+
+# DN of the container where users can be found.
+AUTH_LDAP_USER_SEARCH = LDAPSearch('ou=users,dc=example,dc=com',
+    ldap.SCOPE_SUBTREE, '(cn=%(user)s)')
+
+# For django_ldap_auth >= 1.1 can do a union search for users in multiple containers.
+#AUTH_LDAP_USER_SEARCH = LDAPSearchUnion(
+#    LDAPSearch('ou=users 1,dc=example,dc=com', ldap.SCOPE_ONELEVEL, '(cn=%(user)s)'),
+#    LDAPSearch('ou=users 2,dc=example,dc=com', ldap.SCOPE_ONELEVEL, '(cn=%(user)s)'),
+#)
+
+# If users only exist in one place, and a DN can be constructed explicitly, then use this, since it's more efficient.
+#AUTH_LDAP_USER_DN_TEMPLATE = 'cn=%(user)s,ou=users,dc=example,dc=com'
+
+# Mapping of LDAP attributes to User model properties.
+AUTH_LDAP_USER_ATTR_MAP = {
+    'first_name': 'givenName',
+    'last_name': 'sn',
+    'email': 'mail'
+}
+
+# DN of the container where groups can be found.
+AUTH_LDAP_GROUP_SEARCH = LDAPSearch('ou=groups,dc=example,dc=com',
+    ldap.SCOPE_SUBTREE, "(objectClass=group)"
+)
+
+# Type of group (see django_auth_ldap docs).
+AUTH_LDAP_GROUP_TYPE = ActiveDirectoryGroupType()
+
+# LDAP groups containing "staff" and "superusers".
+# Staff are allowed to login to the admin site.  Permission to do anything within the admin site must be granted explicitly.
+# Superusers are given all permissions without explicitly defining them.
+# Groups defined here must have at least one member, otherwise errors about LDAP 'member' attributes not being defined will result.
+AUTH_LDAP_USER_FLAGS_BY_GROUP = {
+    'is_staff': 'cn=staff users,ou=groups,dc=example,dc=com',
+    'is_superuser': 'cn=superusers,ou=groups,dc=example,dc=com',
+}
+
+# Uncomment if you want DEBUG LDAP logging.
+#logger = logging.getLogger('django_auth_ldap')
+#logger.addHandler(logging.StreamHandler())
+#logger.setLevel(logging.DEBUG)

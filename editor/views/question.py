@@ -25,6 +25,7 @@ from django.forms import model_to_dict
 from editor.forms import NewQuestionForm, QuestionForm
 from editor.models import Question,Extension
 from editor.views.generic import PreviewView, ZipView, SourceView
+from editor.views.user import find_users
 
 from examparser import ExamParser, ParseError
 
@@ -239,11 +240,34 @@ class QuestionSearchView(ListView):
         raise Http404
     
     def get_queryset(self):
-        search_term = self.request.GET['q'] if 'q' in self.request.GET else ''
-        if 'a' in self.request.GET:
-            author_term = self.request.GET['a']
-            question_objects = Question.objects.filter(Q(name__icontains=search_term) | Q(tags__name__istartswith=search_term), Q(author__first_name__icontains=author_term)).distinct()
-        else :
-            question_objects = Question.objects.filter(Q(name__icontains=search_term) | Q(tags__name__istartswith=search_term)).distinct()
-        return [q.summary(user=self.request.user) for q in question_objects]
+        questions = Question.objects.all()
+        print(self.request.GET)
+        try:
+            search_term = self.request.GET['q']
+            print(search_term)
+            questions = questions.filter(Q(name__icontains=search_term) | Q(tags__name__istartswith=search_term)).distinct()
+        except KeyError:
+            pass
+
+        try:
+            mine = self.request.GET['mine'] == 'true'
+            print(mine)
+            if mine:
+                questions = questions.filter(author=self.request.user)
+        except KeyError:
+            mine = False
+
+        try:
+            if not mine:
+                author_term = self.request.GET['author']
+                print(author_term)
+                authors = find_users(author_term)
+                print(authors)
+                questions = questions.filter(author__in=authors).distinct()
+            else:
+                print(not mine)
+        except KeyError:
+            pass
+
+        return [q.summary(user=self.request.user) for q in questions]
     

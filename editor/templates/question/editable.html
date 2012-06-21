@@ -403,7 +403,7 @@
 
 	<script type="text/html" id="choice-1_n_2">
 		<li class="choice">
-			<button class="remove" data-bind="click:remove"></button>
+			<button class="delete" data-bind="click:remove"></button>
 			<span>
 				<input type="text" data-bind="value:content, valueUpdate:'input'"/>
 			</span>
@@ -455,7 +455,7 @@
 						<!-- ko foreach: multiplechoice.answers -->
 							<th>
 								<input type="text" data-bind="value:content, valueUpdate:'input'">
-								<button class="remove" data-bind="click:function(){removeAnswer(this)}"></button>
+								<button class="delete" data-bind="click:function(){removeAnswer(this)}"></button>
 							</th>
 						<!-- /ko -->
 						<td>
@@ -477,7 +477,7 @@
 		<tr>
 			<th>
 				<input type="text" data-bind="value:content, valueUpdate:'input'"/>
-				<button class="remove" data-bind="click:remove"></button>
+				<button class="delete" data-bind="click:remove"></button>
 			</th>
 			<!-- ko foreach: answers -->
 				<td>
@@ -490,7 +490,7 @@
 	<script type="text/html" id="ruleset">
 		<li class="ruleset">
 			<input type="text" data-bind="value:name, valueUpdate: 'afterkeydown'"/>: <div data-bind="listbox:sets, rulesetcomplete: allsets"></div>
-			<button class="remove" data-bind="click:remove"></button>
+			<button class="delete data-bind="click:remove"></button>
 		</li>
 	</script>
 
@@ -504,7 +504,7 @@
 			<td>=</td>
 			<td><div><input class="def" type="text" data-bind="value:definition, valueUpdate: 'afterkeydown', event: {keyup: function(d,e){if(e.which==13){ $parent.addVariable($parent,e,$parent.variables.indexOf(this)+1); } } }"/></div></td>
 			<td class="value"><div class="value" data-bind="css: {error: error().length>0}, html: display, mathjax: value"></div></td>
-			<td data-bind="visible: $parent.isadvanced"><div><button class="remove" data-bind="click:remove"></button></div></td>
+			<td data-bind="visible: $parent.isadvanced"><div><button class="delete data-bind="click:remove"></button></div></td>
 		</tr>
 	</script>
 
@@ -554,7 +554,7 @@
 		<tr>
 			<td><div><input data-bind="value: name"/></div></td>
 			<td><div><select data-bind="options: $parent.types, value: type"></select></div></td>
-			<td><div><button class="remove" data-bind="click: remove"></div></button></td>
+			<td><div><button class="delete data-bind="click: remove"></div></button></td>
 		</tr>
 	</script>
 

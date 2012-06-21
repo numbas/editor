@@ -22,51 +22,59 @@
 	{% endif %}
 
     <div>
-        <div class="searchBox">
-            <label for="questionsearch">Search for questions: </label>
-            <input type="text" name="questionsearch" class="search" data-bind="
-                value: questionSearch, 
-                valueUpdate: 'afterkeydown',
-                css: {loading: searching()}
+        <div id="searchBox" data-bind="with: search">
+            <label for="search_query">Search for questions: </label>
+            <input id="search_query" type="text" name="questionsearch" class="search" data-bind="
+                value: query, 
+                valueUpdate: 'afterkeydown'
             "/>
 
-            <label for="questionsearchbyauthor"> by author: </label>
-            <input type="text" class="search" size="30" data-bind="
-                value: questionSearchByAuthor,
-                valueUpdate: 'afterkeydown',
+			<label for="search_author"> by author: </label>
+			<input id="search_author" type="text" class="search" size="30" data-bind="
+                value: author,
+                valueUpdate: 'afterkeydown change',
                 autocomplete: '{% url user_search %}', 
-                autocompleteCallback: function(user) { return {label: user.username+' ('+user.name+')', value: user.username} }
-            "/>
+				autocompleteCallback: function(user) { return {label: user.username+' ('+user.name+')', value: user.username} },
+				click: clearMine
+			"/>
+			(mine only <input type="checkbox" data-bind="checked: mine"/>)
 
-               <table  id="question-list">
-                <thead>
-                    <th>Name</th>
-                    <th>Author</th>
-                    <th></th>
-                </thead>
-                <tbody  id="question-list" class="results editlist big" data-bind="
-                    template: {
-                        name: 'questionResult',
-                        foreach: questionSearchResults
-                    }
-                ">
-                </tbody>
-            </table>
+			<div data-bind="with: results">
+				<div class="results">
+					<table id="question-list">
+							<col span="1" class="name"/>
+							<col span="1" class="author"/>
+							<col span="1" class="admin"/>
+						<thead>
+							<th>Name</th>
+							<th>Author</th>
+						</thead>
+						<tbody class="results editlist big" data-bind="
+							template: {
+								name: 'question',
+								foreach: pages()[page()-1]
+							}
+						"></tbody>
+					</table>
+				</div>
+				<div class="pagination" data-bind="visible: pages().length>0">
+					Page:
+					<button class="previous" data-bind="click: prevPage"></button>
+					<span data-bind="text: pageText"></span>
+					<button class="next" data-bind="click: nextPage"></button>
+				</div>
+			</div>
         </div>
     </div>
     
-    <script type="text/x-jquery-tmpl" id="questionResult">
-        <tr class="question">
-            <td><span class="handle"></span>
-            <a data-bind="attr: {href: url}, text: name"></a>
-            </td>
+    <script type="text/html" id="question">
+        <tr class="result question">
+			<td><a data-bind="attr: {href: url}, text: name"></a></td>
             <td><span data-bind="text: author"></span></td>
-            <td class="delete">
-                <a class="delete" data-bind="visible: canEdit, attr: {href: url+'delete/'}"></a>
-            </td>
-            <td>
-            <a class="copy" data-bind="attr: {href: url+'copy/'}">Copy</a>
-            <a class="preview" data-bind="attr: {href: url+'preview/'}">Test Run</a>
+            <td class="admin">
+    	        <a class="preview" data-bind="attr: {href: url+'preview/'}" target="_blank" title="Test run"></a>
+	            <a class="copy" data-bind="attr: {href: url+'copy/'}" title="Make a copy"></a>
+                <a class="delete" data-bind="visible: canEdit, attr: {href: url+'delete/'}" title="Delete"></a>
             </td>
         </tr>
     </script>
@@ -76,7 +84,7 @@
 {% block javascripts %}
     {{block.super}}
     <script type="text/javascript" src="{{ STATIC_URL }}js/question/index.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.js"></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.js"></script>
 {% endblock javascripts %}
 
 {% block stylesheets %}

@@ -2,12 +2,30 @@
 	display: none;
 }
 
-a.delete {
+.admin a {
 	display: inline-block;
-	background: transparent url(../images/delete.png);
-	width: 14px;
-	height: 14px;
-	border: none;
+	margin-right: 0.5em;
+	background-color: white;
+	border-radius: 50%;
+}
+
+.admin .delete {
+	background-image: url(../images/x_alt_16x16.png);
+	width: 16px;
+	height: 16px;
+	margin-left: 0.5em;
+}
+
+.admin .copy {
+	background-image: url(../images/plus_alt_16x16.png);
+	width: 16px;
+	height: 16px;
+}
+
+.admin .preview {
+	background-image: url(../images/play_alt_16x16.png);
+	width: 16px;
+	height: 16px;
 }
 
 .upload {
@@ -22,4 +40,53 @@ a.delete {
 
 #uploadForm.over button {
 	border: red;
+}
+
+#searchBox {
+    margin: 1em 0 0 0;
+}
+
+.results {
+    margin: 1em 0 1em 0;
+	height: 17em;
+}
+.results table {
+	width: 100%;
+}
+
+.results tbody tr:nth-child(odd) {
+	background: #eee;
+}
+
+.results th {
+    cursor: pointer;
+}
+
+.results col.name {
+	width: 300px;
+}
+
+.results col.author {
+	width: 150px;
+}
+
+.results col.admin {
+	width: 100px;
+}
+
+#searchBox .pagination .previous {
+	display: inline-block;
+	background: url(../images/arrow_left_12x12.png);
+	border: none;
+	width: 12px;
+	height: 12px;
+	margin-right: 5px;
+}
+#searchBox .pagination .next {
+	display: inline-block;
+	background: url(../images/arrow_right_12x12.png);
+	border: none;
+	width: 12px;
+	height: 12px;
+	margin-left: 5px;
 }

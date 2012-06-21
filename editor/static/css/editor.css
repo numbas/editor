@@ -35,7 +35,7 @@
 }
 
 .controlbox #copy:before {
-    content: url(../images/plus_16x16.png);
+    content: url(../images/plus_alt_16x16.png);
 }
 
 .controlbox:first-child {
@@ -307,7 +307,7 @@ ul.editlist {
 	background-color: #ec8;
 }
 
-button.remove {
+button.delete {
 	background: transparent url(../images/x_alt_16x16.png) no-repeat;
 	width: 16px;
 	height: 16px;
@@ -316,7 +316,7 @@ button.remove {
 	padding: 0;
 }
 
-button.remove:hover {
+button.delete:hover {
 	cursor:pointer;
 	background-color: #f90;
     border-radius: 50%;

@@ -144,6 +144,29 @@
       </li>
       <li>Point a web browser at the server hosting the editor.</li>
     </ul>
+    
+    <h2>LDAP authentication</h2>
+    <p>
+    	LDAP authentication is possible within the editor.  This can work in
+    	combination with the default Django Model authentication backend.
+    </p>
+    
+    <h3>Extra required packages</h3>
+	<ul>
+		<li>Python LDAP: <code>apt-get install python-ldap</code></li>
+		<li>Django LDAP: <code>apt-get install python-django-auth-ldap</code></li>
+		<li>GnuTLS (for secure LDAP lookups only): <code>apt-get install libgnutls26</code></li>
+	</ul>
+	
+	<h3>Extra configuration</h3>
+    <ul>
+    	<li>Copy <code>ldap_auth.py.dist</code> to <code>ldap_auth.py</code>
+    		and edit, following the comments in that file.</li>
+		<li>In <code>settings.py</code> uncomment the LDAP auth line in
+			<code>AUTHENTICATION_BACKENDS</code> and the <code>ldap_auth</code>
+			import line.</li>
+    </ul>
+    
     <p>
       <b>Note that if any changes are made to the editor code, including
         editing the settings files, then for the web server to recognise these

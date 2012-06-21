@@ -62,87 +62,85 @@ $(document).ready(function() {
         $('#uploadForm').submit();
     });
         
-    /*
-	function loadFile(file) {
-		if(!file) { return; }
-		var fr = new FileReader();
-		var contentInput = $('#uploadForm').find('[name=content]')
-		fr.onload = function(e) {
-			var content = e.target.result;
-			contentInput.text(content);
-			$('#uploadForm').submit();
-		}
-		fr.readAsText(file);
-	}
-
-    $.event.props.push('dataTransfer');
-    $('#uploadForm').on({
-        dragenter: function(e) {
-            e.stopPropagation();
-            e.preventDefault();
-            $(this).addClass('over')
-        },
-        dragover: function(e) {
-            e.stopPropagation();
-            e.preventDefault();
-            $(this).addClass('over')
-        },
-        dragleave: function(e) {
-            $(this).removeClass('over');
-        },
-        drop: function(e) {
-            $(this).removeClass('over');
-            loadFile(e.dataTransfer.files[0]);
-        }
-    })
-	.find('button').on('click',function(e) {
-		e.preventDefault();
-		e.stopPropagation();
-		$('#uploadForm input[type=file]').click();
-	})
-	.end()
-	.find('input[type=file]').on('change',function() {
-		loadFile(this.files[0]);
-		var file = this.files[0];
-	});
-    */
-
-        
     function QuestionSelect()
     {
 		var e = this;
 
-		this.questionSearch = ko.observable('');
-		this.questionSearchByAuthor = ko.observable('');
-		this.questionSearchResults = ko.observableArray([]);
-		this.searching = ko.observable(false);
+		this.search = {
+			query: ko.observable(''),
+			author: ko.observable(''),
+			results: {
+				all: ko.observableArray([]),
+				page: ko.observable(1),
+				prevPage: function() {
+					var page = this.page();
+					if(page>1)
+						this.page(page-1);
+				},
+				nextPage: function() {
+					var page = this.page();
+					if(page<this.pages().length)
+						this.page(page+1);
+				}
+			},
+			searching: ko.observable(false),
+			realMine: ko.observable(false),
+			clearMine: function() {
+				this.search.mine(false);
+			}
+		}
+		this.search.results.pages = ko.computed(function() {
+			this.page(1);
+
+			var results = this.all();
+			var pages = [];
+			for(var i=0;results.length>0;i+=10) {
+				pages.push(results.splice(0,10));
+			}
+
+			return pages;
+		},this.search.results);
+		this.search.results.pageText = ko.computed(function() {
+			return this.page()+'/'+this.pages().length;
+		},this.search.results);
+
+
+		this.search.mine = ko.computed({
+			read: function() {
+				return this.realMine();
+			},
+			write: function(v) {
+				this.realMine(v);
+				if(v)
+					this.author('');
+			}
+		},this.search);
+
 		ko.computed(function() {
-			var search = this.questionSearch();
             var vm = this;
-            this.searching(true);
-            console.log("q="+this.questionSearch()+" a="+this.questionSearchByAuthor());
-            $.getJSON('/question/search/',{q:this.questionSearch(), a:this.questionSearchByAuthor()})
+            this.search.searching(true);
+			var data = {
+				q: this.search.query(),
+				author: this.search.author(),
+				mine: this.search.mine()
+			};
+            $.getJSON('/question/search/',data)
                 .success(function(data) {
-                    vm.questionSearchResults(data.object_list);
-                    console.log(data.object_list);
+                    vm.search.results.all(data.object_list);
                 })
                 .error(function() {
-                    console.log(arguments);
+					if('console' in window)
+	                    console.log(arguments);
                 })
                 .complete(function() {
-                    vm.searching(false);
+                    vm.search.searching(false);
                 });
             ;
 
 		},this).extend({throttle:100});
-
-
-
     }
-
     
-    
-    //create an exam object
+    //create a view model
     viewModel = new QuestionSelect();
     ko.applyBindings(viewModel);
     

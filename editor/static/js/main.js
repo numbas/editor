@@ -32,7 +32,6 @@ $(document).ready(function() {
                     $(element).addClass('loading');
                     $.getJSON(url,{q:req.term})
                         .success(function(data) {
-                            console.log(data.object_list);
                             var things = data.object_list.map(autocompleteCallback);
                             callback(things);
                         })
@@ -44,7 +43,8 @@ $(document).ready(function() {
             }
 
             $(element).autocomplete({
-                source: source
+                source: source,
+                select: function() {$(this).change()}
             });
         }
     }    

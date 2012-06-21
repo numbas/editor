@@ -4,6 +4,19 @@ from django.contrib.auth.models import User
 from django.views.generic import ListView
 from django.http import Http404, HttpResponse
 
+def find_users(name=''):
+    q = Q()
+
+    #first part - search on full name
+    for word in name.split(' '):
+        q &= (Q(first_name__icontains=word) | Q(last_name__icontains=word))
+
+    #second part - search on username
+    q |= Q(username__icontains=name)
+
+    users = User.objects.filter(q).distinct()
+    return users
+
 class UserSearchView(ListView):
     
     """Search users."""
@@ -18,8 +31,10 @@ class UserSearchView(ListView):
         raise Http404
     
     def get_queryset(self):
-        search_term = self.request.GET['q'] if 'q' in self.request.GET else ''
-        users = User.objects.filter(Q(username__icontains=search_term) | Q(first_name__icontains=search_term) | Q(last_name__icontains=search_term)).distinct()
+        try:
+            search_term = self.request.GET['q']
+            users = find_users(name=search_term)
+        except KeyError:
+            users = User.objects.all()
         return [{"name": u.get_full_name(), "username": u.username, "id": u.id} for u in users]
     
-

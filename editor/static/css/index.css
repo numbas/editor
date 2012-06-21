@@ -2,26 +2,28 @@
 	display: none;
 }
 
-.question .admin {
+.admin a {
 	display: inline-block;
 	margin-right: 0.5em;
+	background-color: white;
+	border-radius: 50%;
 }
 
-.question .delete {
-	background: transparent url(../images/x_alt_16x16.png);
+.admin .delete {
+	background-image: url(../images/x_alt_16x16.png);
 	width: 16px;
 	height: 16px;
 	margin-left: 0.5em;
 }
 
-.question .copy {
-	background: transparent url(../images/plus_alt_16x16.png);
+.admin .copy {
+	background-image: url(../images/plus_alt_16x16.png);
 	width: 16px;
 	height: 16px;
 }
 
-.question .preview {
-	background: transparent url(../images/play_alt_16x16.png);
+.admin .preview {
+	background-image: url(../images/play_alt_16x16.png);
 	width: 16px;
 	height: 16px;
 }
@@ -38,4 +40,53 @@
 
 #uploadForm.over button {
 	border: red;
+}
+
+#searchBox {
+    margin: 1em 0 0 0;
+}
+
+.results {
+    margin: 1em 0 1em 0;
+	height: 17em;
+}
+.results table {
+	width: 100%;
+}
+
+.results tbody tr:nth-child(odd) {
+	background: #eee;
+}
+
+.results th {
+    cursor: pointer;
+}
+
+.results col.name {
+	width: 300px;
+}
+
+.results col.author {
+	width: 150px;
+}
+
+.results col.admin {
+	width: 100px;
+}
+
+#searchBox .pagination .previous {
+	display: inline-block;
+	background: url(../images/arrow_left_12x12.png);
+	border: none;
+	width: 12px;
+	height: 12px;
+	margin-right: 5px;
+}
+#searchBox .pagination .next {
+	display: inline-block;
+	background: url(../images/arrow_right_12x12.png);
+	border: none;
+	width: 12px;
+	height: 12px;
+	margin-left: 5px;
 }

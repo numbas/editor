@@ -155,6 +155,29 @@ ul#menu li a {
 input.search {
 	background: white url(../images/search.png) no-repeat right;
 	padding-right: 18px;
+	width: 200px;
+}
+
+input.search.entered {
+	padding-right: 34px;
+	width:184px
+}
+span.search {
+	position: relative;
+}
+
+.search .clear {
+	display: none;
+}
+
+.search.entered .clear {
+	display: block;
+	position: absolute;
+	right: 20px;
+	top: 4px;
+	width: 14px;
+	height: 14px;
+	background: white url(../images/grey_x_14x14.png) no-repeat;
 }
 
 input.search.loading {

@@ -1,16 +1,1 @@
-﻿#question-list {
-    margin: 1em 0 1em 0;
-	width: 100%;
-}
-
-#question-list td.delete {
-	width: 20px;
-}
-
-#question-list th {
-    cursor: pointer;
-}
-
-.searchBox {
-    margin: 1em 0 0 0;
-}
+﻿

@@ -241,17 +241,14 @@ class QuestionSearchView(ListView):
     
     def get_queryset(self):
         questions = Question.objects.all()
-        print(self.request.GET)
         try:
             search_term = self.request.GET['q']
-            print(search_term)
             questions = questions.filter(Q(name__icontains=search_term) | Q(tags__name__istartswith=search_term)).distinct()
         except KeyError:
             pass
 
         try:
             mine = self.request.GET['mine'] == 'true'
-            print(mine)
             if mine:
                 questions = questions.filter(author=self.request.user)
         except KeyError:
@@ -260,12 +257,8 @@ class QuestionSearchView(ListView):
         try:
             if not mine:
                 author_term = self.request.GET['author']
-                print(author_term)
                 authors = find_users(author_term)
-                print(authors)
                 questions = questions.filter(author__in=authors).distinct()
-            else:
-                print(not mine)
         except KeyError:
             pass
 

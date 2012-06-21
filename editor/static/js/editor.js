@@ -628,7 +628,7 @@ $(document).ready(function() {
 			var show = allBindings.show;
 
 			element=$(element);
-			var b = $('<button class="remove" data-bind="click:remove"></button>');
+			var b = $('<button class="delete" data-bind="click:remove"></button>');
 			b.click(function(){viewModel.remove()});
 			element.prepend(b);
 		}

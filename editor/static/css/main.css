@@ -154,6 +154,7 @@ ul#menu li a {
 
 input.search {
 	background: white url(../images/search.png) no-repeat right;
+	padding-right: 18px;
 }
 
 input.search.loading {

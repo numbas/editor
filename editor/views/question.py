@@ -259,7 +259,6 @@ class QuestionSearchView(ListView):
                 author_term = self.request.GET['author']
                 authors = find_users(author_term)
                 questions = questions.filter(author__in=authors).distinct()
-            else:
         except KeyError:
             pass
 

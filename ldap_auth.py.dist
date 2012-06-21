@@ -50,6 +50,11 @@ AUTH_LDAP_GROUP_SEARCH = LDAPSearch('ou=groups,dc=example,dc=com',
 # Type of group (see django_auth_ldap docs).
 AUTH_LDAP_GROUP_TYPE = ActiveDirectoryGroupType()
 
+# Basic allow/deny login access.
+# Users in the defined group are allowed/denied login.
+#AUTH_LDAP_REQUIRE_GROUP = 'cn=enabled,ou=groups,dc=example,dc=com'
+#AUTH_LDAP_DENY_GROUP = 'cn=disabled,ou=groups,dc=example,dc=com'
+
 # LDAP groups containing "staff" and "superusers".
 # Staff are allowed to login to the admin site.  Permission to do anything within the admin site must be granted explicitly.
 # Superusers are given all permissions without explicitly defining them.

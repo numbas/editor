@@ -68,7 +68,10 @@ $(document).ready(function() {
 				this.searching(true);
 				$.getJSON('/question/search/',{q:this.questionSearch()})
 					.success(function(data) {
-						vm.questionSearchResults(data.object_list);
+                        var questions = data.object_list.map(function(d) {
+                            return new Question(d,vm.questionSearchResults);
+                        });
+						vm.questionSearchResults(questions);
 					})
 					.complete(function() {
 						vm.searching(false);
@@ -142,7 +145,7 @@ $(document).ready(function() {
 			if('questions' in data)
 			{
 				this.questions(data.questions.map(function(q) {
-					return new Question(q,e)
+					return new Question(q,e.questions)
 				}));
 			}
 		}
@@ -182,7 +185,7 @@ $(document).ready(function() {
                 {json: JSON.stringify(this.save()), csrfmiddlewaretoken: getCookie('csrftoken')}
             )
                 .success(function(data){
-                    var address = location.protocol+'//'+location.host+'/exam/'+examJSON.id+'/'+slugify(e.name())+'/';
+                    var address = location.protocol+'//'+location.host+'/exam/'+Editor.examJSON.id+'/'+slugify(e.name())+'/';
                     if(history.replaceState)
                         history.replaceState({},e.name(),address);
 					noty({text:'Saved.',type:'success',timeout: 1000, layout: 'topCenter'});
@@ -211,13 +214,13 @@ $(document).ready(function() {
 
     }
     Exam.prototype = {
-		questionAdder: function() {
-			var e = this;
-			return function(oldPos,newPos) {
-				var data = e.questionSearchResults()[oldPos];
-				q = new Question(data,e);
-				e.questions.splice(newPos,0,q);
-			}
+		dropQuestion: function(data) {
+            data.item.parent = data.targetParent;
+            if(data.sourceParent==viewModel.questionSearchResults && data.targetParent != viewModel.questionSearchResults) {
+                var clone = data.item.clone();
+                clone.parent = data.sourceParent;
+                viewModel.questionSearchResults.splice(data.sourceIndex,0,clone);
+            }
 		},
 
         //returns a JSON-y object representing the exam
@@ -311,16 +314,16 @@ $(document).ready(function() {
         }
     };
 
-	function Question(data,exam)
+	function Question(data,parent)
 	{
 		this.id = ko.observable(data.id);
 		this.name = ko.observable(data.name);
 		this.url = ko.observable(data.url);
-		this.exam = exam;
+		this.parent = parent;
 	}
 	Question.prototype = {
 		remove: function() {
-			this.exam.questions.remove(this);
+			this.parent.remove(this);
 		},
 
 		toJSON: function() {
@@ -328,10 +331,18 @@ $(document).ready(function() {
 				id: this.id(),
 				name: this.name()
 			};
-		}
+		},
+
+        clone: function() {
+            return new Question({
+                id: this.id(),
+                name: this.name(),
+                url: this.url()
+            },this.parent);
+        }
 	}
 
     //create an exam object
-    viewModel = new Exam(examJSON);
+    viewModel = new Exam(Editor.examJSON);
     ko.applyBindings(viewModel);
 });

@@ -88,6 +88,11 @@
 	text-align: right;
 }
 
+.variable.ui-sortable-helper {
+	border: 1px solid #ccc;
+	background: #f4f4ee;
+}
+
 .variable > td {
 	padding-right: 0.5em;
 	text-align: center;
@@ -376,7 +381,3 @@ button.delete:hover {
 	background-color: #f90;
 }
 
-.sort-placeholder {
-	border: 1px dashed;
-	height: 2.5em;
-}

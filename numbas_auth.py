@@ -15,5 +15,5 @@ class NumbasAuthBackend(LDAPBackend):
     def get_or_create_user(self, username, ldap_user):
         """Alter the LDAP givenName attribute to the familiar first name in displayName."""
         
-        ldap_user.attrs['givenname'] = [ldap_user.attrs['displayname'][0].split()[0]]
+        ldap_user.attrs['givenName'] = [ldap_user.attrs['displayName'][0].split()[0]]
         return super(NumbasAuthBackend, self).get_or_create_user(username, ldap_user)

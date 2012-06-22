@@ -64,7 +64,7 @@
 	padding-right:1em;
 }
 
-.question > * > button.remove, .part > * > button.remove, .function > * > button.remove {
+.question > * > button.delete, .part > * > button.delete, .function > * > button.delete {
 	position: absolute;
 	left: -2em;
 	top: 1em;
@@ -88,6 +88,11 @@
 	text-align: right;
 }
 
+.variable.ui-sortable-helper {
+	border: 1px solid #ccc;
+	background: #f4f4ee;
+}
+
 .variable > td {
 	padding-right: 0.5em;
 	text-align: center;
@@ -99,7 +104,7 @@
     border-left: #ccc 1px dashed;
     border-right: #ccc 1px dashed;
 }
-.variable button.remove {
+.variable button.delete {
     position: inherit;
 }
 
@@ -376,7 +381,3 @@ button.delete:hover {
 	background-color: #f90;
 }
 
-.sort-placeholder {
-	border: 1px dashed;
-	height: 2.5em;
-}

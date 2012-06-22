@@ -14,16 +14,16 @@
 
     <script type="text/javascript">
         {% autoescape off %}
-        var examJSON = {{ exam_JSON }};
         {% endautoescape %}
         (function() {
             if (!window.Editor) {
             	window.Editor = {};
             }
-            window.Editor['preview_url'] = '{% url exam_preview object.pk object.slug %}';
-            window.Editor['download_url'] = '{% url exam_download object.pk object.slug %}';
+            var Editor = window.Editor;
+			Editor.editable = {% if editable %}true{% else %}false{% endif %};
             {% autoescape off %}
-            window.Editor['themes'] = {{themes}};
+        	Editor.examJSON = {{ exam_JSON }};
+            Editor['themes'] = {{themes}};
             {% endautoescape %}
         })();
     </script>
@@ -138,14 +138,14 @@
 
 			<div data-bind="folder: {label: 'Questions', show: true}">
 				<div class="questions">
-					<ol class="questionList editlist big" data-bind="
-						template:{
-							name:'question',
-							foreach: questions,
-                            beforeRemove: function(elem,i) { if(!$(elem).hasClass('question')){return}; $(elem).slideUp(150,function(){$(this).remove()}); },
-						},
-						sortableList: {list: questions, add: questionAdder()}
-					"></ol>
+					<ul class="questionList editlist big" data-bind="
+						sortable: {
+							template: 'question', 
+							data: questions, 
+							afterMove: dropQuestion,
+							options: {handle: '.handle', placeholder: 'placeholder'}
+						}
+					"></ul>
 					<div class="searchBox">
 						<label for="questionsearch">Search for questions: </label>
 						<input type="text" name="questionsearch" class="search" data-bind="
@@ -154,9 +154,11 @@
 							css: {loading: searching()}
 						"/>
 						<ul class="results editlist big" data-bind="
-							template: {
-								name: 'questionResult',
-								foreach: questionSearchResults
+							sortable: {
+								template: 'question',
+								data: questionSearchResults,
+								afterMove: dropQuestion,
+								options: {handle: '.handle', placeholder: 'placeholder', helper: 'clone'}
 							}
 						"></ul>
 					</div>
@@ -186,7 +188,7 @@
 			<li class="question">
 				<span class="handle"></span>
 				<a data-bind="attr:{href: url}, text: name" target="_blank"></a>
-				<button class="remove" data-bind="click:remove"></button>
+				<button class="delete" data-bind="click:remove"></button>
 			</li>
 		</script>
 

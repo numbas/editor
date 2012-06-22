@@ -65,13 +65,11 @@
 		                        <a href="{% url login %}?next={{request.path|escape}}">Log in</a>.
 							{% endif %}
 						</div>
-						{% if user.is_authenticated %}
-							<ul id="menu">
-								<li><a href="{% url editor_index %}">Home</a></li>
-								<li><a href="{% url exam_index %}">Exams</a></li>
-								<li><a href="{% url question_index %}">Questions</a></li>   
-							</ul>
-						{% endif %}
+                        <ul id="menu">
+                            <li><a href="{% url editor_index %}">Home</a></li>
+                            <li><a href="{% url exam_index %}">Exams</a></li>
+                            <li><a href="{% url question_index %}">Questions</a></li>   
+                        </ul>
 						<div style="clear:both"></div>
 					</div>
 					<!-- end #menubar -->

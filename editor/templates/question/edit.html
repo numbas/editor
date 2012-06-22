@@ -16,9 +16,8 @@
                 window.Editor = {};
             }
             var Editor = window.Editor;
-            Editor['preview_url'] = '{% url question_preview object.pk object.slug %}';
-            Editor['download_url'] = '{% url question_download object.pk object.slug %}';
 			Editor.questionJSON = {% autoescape off %}{{question.as_json}}{% endautoescape %};
+			Editor.editable = {% if editable %}true{% else %}false{% endif %};
 
 			Editor.numbasExtensions = {% autoescape off %}{{extensions}}{% endautoescape %};
         })();
@@ -49,8 +48,10 @@
 					{% if editable %}
 						<a id="delete" href="{% url question_delete object.pk object.slug %}">Delete</a>
 					{% endif %}
-					
-					<a id="copy" href="{% url question_copy object.pk object.slug %}">Make a Copy</a>
+
+					{% if user.is_authenticated %}
+						<a id="copy" href="{% url question_copy object.pk object.slug %}">Make a Copy</a>
+					{% endif %}
 				</div>
 			{% endblock controls %}
 		</div>

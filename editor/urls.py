@@ -33,7 +33,7 @@ urlpatterns = patterns('',
 	url(r'^login/','django.contrib.auth.views.login',{'template_name':'auth/login.html'},name='login'),
 	url(r'^logout/','django.contrib.auth.views.logout',{'next_page':'/'},name='logout'),
                        
-    url(r'^exams/$',login_required(ExamListView.as_view()), name='exam_index',),
+    url(r'^exams/$',ExamListView.as_view(), name='exam_index',),
                        
     url(r'^exam/new/$', login_required(ExamCreateView.as_view()), name='exam_new'),
     
@@ -41,7 +41,7 @@ urlpatterns = patterns('',
                        
     url(r'^exam/search/$', ExamSearchView.as_view(), name='exam_search'),
     
-    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/$', login_required(ExamUpdateView.as_view()),
+    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/$', ExamUpdateView.as_view(),
         name='exam_edit'),
                        
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/copy/$',ExamCopyView.as_view(), name='exam_copy',),
@@ -58,7 +58,7 @@ urlpatterns = patterns('',
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+).exam$',
         ExamSourceView.as_view(), name='exam_source'),
                        
-    url(r'^questions/$', login_required(QuestionListView.as_view()), name='question_index',),
+    url(r'^questions/$', QuestionListView.as_view(), name='question_index',),
     
     url(r'^question/new/$', login_required(QuestionCreateView.as_view()), name='question_new'),
 
@@ -67,9 +67,9 @@ urlpatterns = patterns('',
     url(r'^question/search/$', QuestionSearchView.as_view(), name='question_search',),
     
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/$',
-        login_required(QuestionUpdateView.as_view()), name='question_edit'),
+        QuestionUpdateView.as_view(), name='question_edit'),
                        
-    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/copy/$',QuestionCopyView.as_view(), name='question_copy',),
+    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/copy/$',login_required(QuestionCopyView.as_view()), name='question_copy',),
                        
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/delete/$',
         login_required(QuestionDeleteView.as_view()), name='question_delete'),

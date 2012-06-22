@@ -64,12 +64,13 @@
 						<th>Definition</th>
 						<th>Computed value</th>
 					</thead>
-					<tbody data-bind="template:{
-						name:'variable',
-						foreach: variables,
+					<tbody data-bind="sortable:{
+						template: 'variable',
+						data: variables,
 						beforeRemove: function(elem) { $(elem).find('td>div').slideUp(150,function() {$(this).parent().parent().remove()}) },
 						afterAdd: function(elem) { $(elem).find('td>div').hide().slideDown(150).end().find('.name').focus(); },
-					}, sortableList: variables"></tbody>
+						options: {handle: '.handle'}
+					}"></tbody>
 					<tr>
 						<td/>
 						<td><button data-bind="click:addVariable, text: variables().length ? 'Add another variable' : 'Add a variable'"></button></td>
@@ -137,7 +138,7 @@
 				</div>
 				<div style="margin-top:1em;" data-bind="template: type"></div>
 
-				<div class="steps" data-bind="folder: {label:'Steps',show:true}, visible: parent==null">
+				<div class="steps" data-bind="folder: 'Steps', visible: parent==null">
 					<div>
 						<div class="properties">
 							<div data-bind="fadeVisible: steps().length>0, template: {

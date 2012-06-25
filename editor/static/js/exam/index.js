@@ -53,7 +53,7 @@ $(document).ready(function() {
 
 	$('#exam-list').tablesorter();
 
-    $('#uploadButton').click(function(e) {
+    $('#upload').click(function(e) {
         if(!$('#uploadForm input[type=file]').val().length) {
             e.preventDefault();
             e.stopPropagation();
@@ -62,7 +62,7 @@ $(document).ready(function() {
     });
     $('#uploadForm input[type=file]').change(function(e) {
         if($.browser.msie)
-            $('#uploadButton').text('Click again to upload');
+            $('#upload').text('Click again to upload');
         else
             $('#uploadForm').submit();
     });

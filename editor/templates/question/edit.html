@@ -23,6 +23,10 @@
         })();
     </script>
 {% endblock javascripts %}
+{% block stylesheets %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/question/edit.css"/>
+{% endblock stylesheets %}
 	
 {% block content %}
 	{{block.super }}
@@ -46,7 +50,12 @@
     				<a id="preview" href="{% url question_preview object.pk object.slug %}" target="_blank">Test Run</a>
 					
 					{% if editable %}
-						<a id="delete" href="{% url question_delete object.pk object.slug %}">Delete</a>
+                    <a id="delete" data-bind="click: deleteQuestion" href="{% url question_delete object.pk object.slug %}">Delete
+                        <form action="{% url question_delete object.pk object.slug %}" method="post">{% csrf_token %}
+                            <input type="submit" value="Submit" />
+                        </form>
+                    </a>
+
 					{% endif %}
 
 					{% if user.is_authenticated %}

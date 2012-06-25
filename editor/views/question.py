@@ -15,12 +15,13 @@ import json
 import traceback
 from copy import deepcopy
 
-from django.db.models import Q
 from django.core.urlresolvers import reverse
+from django.db.models import Q
+from django.forms import model_to_dict
 from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError
+from django.shortcuts import render,redirect
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView, View
 from django.views.generic.detail import SingleObjectMixin
-from django.forms import model_to_dict
 
 from editor.forms import NewQuestionForm, QuestionForm
 from editor.models import Question,Extension
@@ -97,10 +98,13 @@ class QuestionCreateView(CreateView):
     model = Question
     form_class = NewQuestionForm
     template_name = 'question/new.html'
-    
-    def form_valid(self, form):
-        self.object = form.save()
-        return HttpResponseRedirect(self.get_success_url())
+
+    def get(self, request, *args, **kwargs):
+        self.object = Question()
+        self.object.author = request.user
+        self.object.save()
+        return redirect(self.get_success_url())
+
     
     def get_success_url(self):
         return reverse('question_edit', args=(self.object.pk,

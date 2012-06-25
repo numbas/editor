@@ -211,7 +211,7 @@
 				<ol class="editlist" data-bind="template:{
 					name: 'part',
 					foreach: gapfill.gaps,
-					beforeRemove: Editor.beforeRemove
+					beforeRemove: Editor.beforeRemove,
 					afterAdd: Editor.afterAdd
 				}"></ol>
 				<button data-bind="visible: $root.isadvanced, click:addGap, text: gapfill.gaps().length ? 'Add another gap' : 'Add a gap'"></button>

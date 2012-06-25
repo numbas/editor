@@ -214,6 +214,12 @@ $(document).ready(function() {
 
     }
     Exam.prototype = {
+		deleteExam: function(q,e) {
+			if(window.confirm('Really delete this exam?')) {
+				$(e.target).find('form').submit();
+			}
+		},
+
 		dropQuestion: function(data) {
             data.item.parent = data.targetParent;
             if(data.sourceParent==viewModel.questionSearchResults && data.targetParent != viewModel.questionSearchResults) {

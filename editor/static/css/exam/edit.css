@@ -1,3 +1,6 @@
+#admin #delete form {
+    display: none;
+}
 .questions .questionList {
     width: 400px;
     display: inline-block;

@@ -35,26 +35,9 @@ $(document).ready(function() {
     ;
 
     
-    $('body').on('click','.question .delete',function(e) {
-        e.stopPropagation();
-        e.preventDefault();
-        if(window.confirm('Delete this question?')) {
-            var url = $(this).attr('href');
-            var item = $(this).parents('.question');
-            $.post(url,{csrfmiddlewaretoken: getCookie('csrftoken')})
-                .success(function() {
-                    item.slideUp(200,function() {item.remove()})
-                })
-                .error(function(response) {
-                    noty({text: 'Error deleting question:\n\n'+response.responseText, layout: 'center', type: 'error'});
-                })
-            ;
-        }
-    });
-
     $('#question-list').tablesorter();
 
-    $('#uploadButton').click(function(e) {
+    $('#upload').click(function(e) {
         e.preventDefault();
         $('#uploadForm input[type=file]').trigger('click');
     });
@@ -81,7 +64,21 @@ $(document).ready(function() {
 					var page = this.page();
 					if(page<this.pages().length)
 						this.page(page+1);
-				}
+				},
+                deleteQuestion: function(q) {
+                    if(window.confirm('Delete this question?')) {
+                        var results = this;
+                        var item = $(this).parents('.question');
+                        $.post(q.deleteURL,{csrfmiddlewaretoken: getCookie('csrftoken')})
+                            .success(function() {
+                                results.all.remove(q);
+                            })
+                            .error(function(response) {
+                                noty({text: 'Error deleting question:\n\n'+response.responseText, layout: 'center', type: 'error'});
+                            })
+                        ;
+                    }
+                }
 			},
 			searching: ko.observable(false),
 			realMine: ko.observable(false),
@@ -94,8 +91,8 @@ $(document).ready(function() {
 
 			var results = this.all();
 			var pages = [];
-			for(var i=0;results.length>0;i+=10) {
-				pages.push(results.splice(0,10));
+			for(var i=0;i<results.length;i+=10) {
+				pages.push(results.slice(i,i+10));
 			}
 
 			return pages;

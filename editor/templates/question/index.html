@@ -3,22 +3,16 @@
 {% block content %}
 
 	{% if user.is_authenticated %}
-		<button id="newQuestion" href="{% url question_new %}">New question</button>
-	
-		<form action="{% url question_new %}" method="post" id="newQuestionForm">
-			{% csrf_token %}
-			Name: <input type="text" name="name" maxlength="200" />
-	        <input type="submit" value="Create" />
-	        <input type="hidden" name="author" value="{{user.id}}" />
-		</form>
-	
-		<form action="{% url question_upload %}" method="post" id="uploadForm" enctype="multipart/form-data">
-            {% csrf_token %}
-            <button id="uploadButton">Upload a question</button>
-            <div class="upload">
-                <input type="file" name="file" value="yo"/>
-            </div>
-		</form>
+        <div class="controlbox" id="admin">
+            <a id="new" href="{% url question_new %}">Create a new question</a>
+            <form action="{% url question_upload %}" method="post" id="uploadForm" enctype="multipart/form-data">
+                {% csrf_token %}
+                <a href="" id="upload">Upload a question</a>
+                <div class="upload">
+                    <input type="file" name="file" value="yo"/>
+                </div>
+            </form>
+        </div>
 	{% endif %}
 
     <div>
@@ -40,8 +34,8 @@
 			(mine only <input type="checkbox" data-bind="checked: mine"/>)
 
 			<div data-bind="with: results">
-				<div class="results">
-					<table id="question-list">
+                <div class="results">
+					<table id="question-list" data-bind="visible: all().length>0">
 							<col span="1" class="name"/>
 							<col span="1" class="author"/>
 							<col span="1" class="admin"/>
@@ -49,13 +43,24 @@
 							<th>Name</th>
 							<th>Author</th>
 						</thead>
-						<tbody class="results editlist big" data-bind="
-							template: {
-								name: 'question',
-								foreach: pages()[page()-1]
-							}
-						"></tbody>
-					</table>
+                        <tbody class="results editlist big" data-bind="foreach: {
+                            data: pages()[page()-1],
+                            beforeRemove: function(elem){$(elem).fadeOut(150)}
+                        }">
+                            <tr class="result question">
+                                <td><a data-bind="attr: {href: url}, text: name"></a></td>
+                                <td><span data-bind="text: author"></span></td>
+                                <td class="admin">
+                                    <a class="preview" data-bind="attr: {href: url+'preview/'}" target="_blank" title="Test run"></a>
+                                    <a class="copy" data-bind="attr: {href: url+'copy/'}" title="Make a copy"></a>
+                                    <a class="delete" data-bind="visible: canEdit, attr: {href: url+'delete/'}, click: function() {$parent.deleteQuestion(this) }" title="Delete"></a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="none" data-bind="visible: all().length==0">
+                        No questions found.
+                    </div>
 				</div>
 				<div class="pagination" data-bind="visible: pages().length>0">
 					Page:
@@ -68,15 +73,6 @@
     </div>
     
     <script type="text/html" id="question">
-        <tr class="result question">
-			<td><a data-bind="attr: {href: url}, text: name"></a></td>
-            <td><span data-bind="text: author"></span></td>
-            <td class="admin">
-    	        <a class="preview" data-bind="attr: {href: url+'preview/'}" target="_blank" title="Test run"></a>
-	            <a class="copy" data-bind="attr: {href: url+'copy/'}" title="Make a copy"></a>
-                <a class="delete" data-bind="visible: canEdit, attr: {href: url+'delete/'}" title="Delete"></a>
-            </td>
-        </tr>
     </script>
 
 {% endblock content %}

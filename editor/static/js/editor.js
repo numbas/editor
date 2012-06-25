@@ -510,73 +510,24 @@ $(document).ready(function() {
 						$(element).writemaths({cleanMaths: cleanJME}); 
 					},
                     theme_advanced_resizing: true,
-                    theme_advanced_resizing_max_width: 800
+                    theme_advanced_resizing_max_width: '750'
                 })
                 .html(value)
             ;
             
-            /*
-			//a container for both the rich and plain editing areas
-			var container = $('<div/>').addClass('writemathsContainer').attr('style','position:relative;');
-			var swap = $('<div class="wmToggle on">Rich editor: <span class="ticko"></span></div>').attr('style','position:absolute;top:-1.2em;right:0;');
-
-			var ta = $('<textarea class="plaintext"/>')	//the plain text area
-			var d = $('<div/>')	//the rich editing aea
-			container.append(d,swap,ta);
-
-			d
-				.writemaths({cleanMaths: cleanJME})
-				.on('blur keyup paste',function() {
-					var value = $(this).html();
-					valueAccessor()(value);
-				})
-			;
-
-			ta
-				.hide()
-				.on('input',function() {
-					var value = $(this).val();
-					valueAccessor()(value);
-				})
-			;
-
-
-			$(element).append(container);
-
-			var toggle = false;
-
-			function toggleRichText() {
-				swap.toggleClass('on',toggle);
-				ta.toggle(!toggle);
-				d.toggle(toggle);
-			}
-			toggleRichText();
-
-			swap.click(function() {
-				toggle = !toggle;
-				toggleRichText();
-			});
-            */
 		},
 		update: function(element, valueAccessor) {
+			if(!($(element).find('iframe').length))
+				return;
             if (!$(element).find('iframe').contents().find('body').is(':focus')) {              
                 var value = ko.utils.unwrapObservable(valueAccessor()) || '';
                 $(element).children('textarea').html(value);
-            }
-            /*
-			var pt = $(element).find('.plaintext');
-			if(!pt.is(':focus'))
-				pt.val(value)
-			pt.attr('rows',value.split('\n').length)
-			var wm = $(element).find('.writemaths');
-			if(!wm.is(':focus'))
-		  	  $(element).find('.writemaths').html(value);
-            */
+            }		
 		}
 	};
 
 	$.fn.unselectable = function() {
-			$(this).on('mousedown',function(e){ e.preventDefault(); });
+		$(this).on('mousedown',function(e){ e.preventDefault(); });
 	};
 
 	ko.bindingHandlers.folder = {

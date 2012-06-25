@@ -18,9 +18,9 @@ from copy import deepcopy
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.forms.models import model_to_dict
-from django.shortcuts import render
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
+from django.shortcuts import render,redirect
 from django.utils.decorators import method_decorator
 from django.views.generic import CreateView, DeleteView, FormView, ListView, UpdateView, View
 from django.views.generic.detail import SingleObjectMixin
@@ -101,12 +101,13 @@ class ExamCreateView(CreateView):
     
     model = Exam
     form_class = NewExamForm
-    template_name = 'exam/new.html'
-    
-    def form_valid(self, form):
-        self.object = form.save()
-        return HttpResponseRedirect(self.get_success_url())
-    
+
+    def get(self, request, *args, **kwargs):
+        self.object = Exam()
+        self.object.author = request.user
+        self.object.save()
+        return redirect(self.get_success_url())
+
     def get_success_url(self):
         return reverse('exam_edit', args=(self.object.pk,
                                           self.object.slug,))

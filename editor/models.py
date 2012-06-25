@@ -145,7 +145,7 @@ class Question(models.Model,NumbasObject,GitObject):
     
     """
     
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200,default='Untitled Question')
     theme = 'default'
     slug = models.SlugField(max_length=200,editable=False,unique=False)
     author = models.ForeignKey(User)
@@ -196,7 +196,13 @@ class Question(models.Model,NumbasObject,GitObject):
 
     def summary(self, user=None):
         """return id, name and url, enough to identify a question and say where to find it"""
-        obj = {'id':self.id, 'name':self.name, 'author':self.author.get_full_name(), 'url':reverse('question_edit', args=(self.pk,self.slug,))}
+        obj = {
+            'id': self.id, 
+            'name': self.name, 
+            'author': self.author.get_full_name(), 
+            'url': reverse('question_edit', args=(self.pk,self.slug,)),
+            'deleteURL': reverse('question_delete', args=(self.pk,self.slug)),
+        }
         if user:
             obj['canEdit'] = self.can_be_edited_by(user) 
         return obj
@@ -216,7 +222,7 @@ class Exam(models.Model,NumbasObject,GitObject):
     
     questions = models.ManyToManyField(Question, through='ExamQuestion',
                                        blank=True, editable=False)
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200,default='Untitled Exam')
     theme = models.CharField(max_length=200,default='default')
     slug = models.SlugField(max_length=200,editable=False,unique=False)
     author = models.ForeignKey(User)

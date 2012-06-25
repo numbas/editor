@@ -50,6 +50,7 @@
     margin: 1em 0 1em 0;
 	height: 17em;
 }
+
 .results table {
 	width: 100%;
 }
@@ -89,4 +90,31 @@
 	width: 12px;
 	height: 12px;
 	margin-left: 5px;
+}
+
+.controlbox {
+}
+
+.controlbox#admin a {
+    font-size: 18px;
+    text-decoration: none;
+    margin-right: 0.5em;
+}
+.controlbox#admin a:before {
+    padding-right: 4px;
+}
+.controlbox#admin a:visited {
+    color: #00e;
+}
+
+.controlbox #upload:before {
+    content: url(../images/upload_12x16.png);
+}
+
+.controlbox #new:before {
+    content: url(../images/plus_alt_16x16.png);
+}
+
+.controlbox:first-child {
+    margin-top: 0;
 }

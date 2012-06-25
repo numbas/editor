@@ -189,6 +189,12 @@ $(document).ready(function() {
         }
     }
     Question.prototype = {
+		deleteQuestion: function(q,e) {
+			if(window.confirm('Really delete this question?')) {
+				$(e.target).find('form').submit();
+			}
+		},
+
         addRuleset: function() {
             this.rulesets.push(new Ruleset(this));
         },

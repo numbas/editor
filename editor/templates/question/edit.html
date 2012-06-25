@@ -47,7 +47,7 @@
 					<a href="{% url question_source object.pk object.slug %}">source</a>
 				</div>
                 <div class="controlbox" id="admin">
-    				<a id="preview" href="{% url question_preview object.pk object.slug %}" target="_blank">Test Run</a>
+                    <a id="preview" href="{% url question_preview object.pk object.slug %}" target="{% now "U" %}">Test Run</a>
 					
 					{% if editable %}
                     <a id="delete" data-bind="click: deleteQuestion" href="{% url question_delete object.pk object.slug %}">Delete

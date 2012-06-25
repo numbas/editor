@@ -29,10 +29,12 @@
 
 		<div data-bind="folder: 'Extensions', fadeVisible: isadvanced">
 			<div>
-				<ul data-bind="template: {
-					name:'extension',
-					foreach: extensions
-				}"></ul>
+				<ul data-bind="foreach: extensions">
+					<li>
+						<input type="checkbox" data-bind="checked: used">
+						<a data-bind="attr: {href:url}, text:name" target="_blank"></a>
+					</li>
+				</ul>
 			</div>
 		</div>
 
@@ -44,12 +46,16 @@
 
 		<div data-bind="folder: 'Rulesets', fadeVisible: isadvanced">
 			<div class="rulesets">
-				<ul class="editlist" data-bind="template:{
-					name:'ruleset',
-					foreach: rulesets,
-					beforeRemove: function(elem) { $(elem).slideUp(150,function(){$(this).remove()}) },
-					afterAdd: function(elem) { $(elem).hide().slideDown(150) }
-				}"></ul>
+				<ul class="editlist" data-bind="foreach: {
+					data: rulesets,
+					afterAdd: Editor.afterAdd,
+					beforeRemove: Editor.beforeRemove
+				}">
+					<li class="ruleset">
+						<input type="text" data-bind="value:name, valueUpdate: 'afterkeydown'"/>: <div data-bind="listbox:sets, rulesetcomplete: allsets"></div>
+						<button class="delete" data-bind="click:remove"></button>
+					</li>
+				</ul>
 				<button data-bind="click:addRuleset, text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></button>
 			</div>
 		</div>
@@ -64,7 +70,7 @@
 						<th>Definition</th>
 						<th>Computed value</th>
 					</thead>
-					<tbody data-bind="sortable:{
+					<tbody data-bind="sortable: {
 						template: 'variable',
 						data: variables,
 						beforeRemove: function(elem) { $(elem).find('td>div').slideUp(150,function() {$(this).parent().parent().remove()}) },
@@ -83,12 +89,56 @@
 
 		<div data-bind="folder: 'Functions', fadeVisible: isadvanced">
 			<div>
-				<ol class="editlist" data-bind="template:{
-					name: 'function',
-					foreach: functions,
-					beforeRemove: function(elem) { $(elem).slideUp(150,function(){$(this).remove()}) },
-					afterAdd: function(elem) { $(elem).hide().slideDown(150) }
-				}"></ol>
+				<ol class="editlist" data-bind="foreach: {
+					data: functions,
+					beforeRemove: Editor.beforeRemove,
+					afterAdd: Editor.afterAdd
+				}">
+					<li class="function">
+						<div data-bind="folder:{label: name(), show:true}, foldlist: true">
+							<div class="properties">
+								<div data-bind="template: {
+									name: 'property',
+									data: {property:name,label: 'Name:'}
+								}"></div>
+								<div class="parameters">
+									<label>Parameters:</label>
+									<table class="list">
+										<thead data-bind="visible: parameters().length>0">
+											<th>Name</th>
+											<th>Type</th>
+											<th></th>
+										</thead>
+										<tbody data-bind="foreach: {
+											data: parameters,
+											beforeRemove: function(elem) { $(elem).find('td>div').slideUp(150,function() {$(this).remove()}) },
+											afterAdd: function(elem) { $(elem).find('td>div').hide().slideDown(150).end().find('.name').focus(); },
+										}">
+											<tr>
+												<td><div><input data-bind="value: name"/></div></td>
+												<td><div><select data-bind="options: $parent.types, value: type"></select></div></td>
+												<td><div><button class="delete" data-bind="click: remove"></div></button></td>
+											</tr>
+										</tbody>
+									</table>
+									<button class="addparameter" data-bind="click:addParameter, text: parameters().length ? 'Add another parameter' : 'Add a parameter'"></button>
+								</div>
+								<div>
+									<label>Output type: </label>
+									<select data-bind="options: types, value:type"></select>
+								</div>
+								<div>
+									<label>Language:</label>
+									<select data-bind="options: languages, value: language"></select>
+								</div>
+								<div class="definition">
+									<label>Definition:</label>
+									<textarea data-bind="value: definition, valueUpdate: 'afterkeydown'"></textarea>
+								</div>
+							</div>
+						</div>
+					</li>
+				</ol>
 				<button data-bind="click:addFunction, text: functions().length ? 'Add another function' : 'Add a function'"></button>
 			</div>
 		</div>
@@ -98,8 +148,8 @@
 				<ol class="editlist" data-bind="template:{
 					name: 'part',
 					foreach: parts,
-					beforeRemove: function(elem,i) { elem = $(elem).siblings().eq(i); elem.slideUp(150,function(){$(this).remove()}) },
-					afterAdd: function(elem,i) { elem = $(elem).siblings().eq(i); elem.hide().slideDown(150) }
+					beforeRemove: Editor.beforeRemove,
+					afterAdd: Editor.afterAdd
 				}"></ol>
 				<button data-bind="visible: $root.isadvanced, click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
 			</div>
@@ -110,13 +160,6 @@
 				<div data-bind="writemaths:advice"></div>
 			</div>
 		</div>
-	</script>
-
-	<script type="text/html" id="extension">
-		<li>
-			<input type="checkbox" data-bind="checked: used">
-			<a data-bind="attr: {href:url}, text:name" target="_blank"></a>
-		</li>
 	</script>
 
 	<script type="text/html" id="part">
@@ -149,8 +192,8 @@
 						<ol class="editlist" data-bind="template:{
 							name: 'part',
 							foreach: steps,
-							beforeRemove: function(elem,i) { elem = $(elem).siblings().eq(i); elem.slideUp(150,function(){$(this).remove()}) },
-							afterAdd: function(elem) { elem = $(elem).siblings().eq(i); elem.hide().slideDown(150) }
+							beforeRemove: Editor.beforeRemove,
+							afterAdd: Editor.afterAdd
 						}"></ol>
 						<button data-bind="visible: $root.isadvanced, click:addStep, text: steps().length ? 'Add another step' : 'Add a step'"></button>
 					</div>
@@ -168,8 +211,8 @@
 				<ol class="editlist" data-bind="template:{
 					name: 'part',
 					foreach: gapfill.gaps,
-					beforeRemove: function(elem,i) { elem = $(elem).siblings().eq(i); elem.slideUp(150,function(){$(this).remove()}) },
-					afterAdd: function(elem) { elem = $(elem).siblings().eq(i); elem.hide().slideDown(150) }
+					beforeRemove: Editor.beforeRemove
+					afterAdd: Editor.afterAdd
 				}"></ol>
 				<button data-bind="visible: $root.isadvanced, click:addGap, text: gapfill.gaps().length ? 'Add another gap' : 'Add a gap'"></button>
 			</div>
@@ -361,10 +404,23 @@
 		</div>
 		<div>
 			Choices:
-			<ul class="choices" data-bind="template: {
-				name: 'choice-1_n_2',
-				foreach: multiplechoice.choices
-			}">
+			<ul class="choices">
+				<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
+				<li class="choice">
+					<button class="delete" data-bind="click:remove"></button>
+					<span>
+						<input type="text" data-bind="value:content, valueUpdate:'input'"/>
+					</span>
+					<span>
+						<label>Marks:</label>
+						<input type="number" data-bind="value:marks, valueUpdate:'input'"/>
+					</span>
+					<span>
+						<label>Distractor Message:</label>
+						<input type="text" data-bind="value:distractor, valueUpdate:'input'"/>
+					</span>
+				</li>
+				<!-- /ko -->
 				<li><button data-bind="visible: $root.isadvanced, click:addChoice">Add a choice</button></li>
 			</ul>
 		</div>
@@ -393,30 +449,26 @@
 		</div>
 		<div>
 			Choices:
-			<ul class="choices" data-bind="template: {
-				name: 'choice-1_n_2',
-				foreach: multiplechoice.choices
-			}">
+			<ul class="choices">
+				<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
+				<li class="choice">
+					<button class="delete" data-bind="click:remove"></button>
+					<span>
+						<input type="text" data-bind="value:content, valueUpdate:'input'"/>
+					</span>
+					<span>
+						<label>Marks:</label>
+						<input type="number" data-bind="value:marks, valueUpdate:'input'"/>
+					</span>
+					<span>
+						<label>Distractor Message:</label>
+						<input type="text" data-bind="value:distractor, valueUpdate:'input'"/>
+					</span>
+				</li>
+				<!-- /ko -->
 				<li><button data-bind="click:addChoice">Add a choice</button></li>
 			</ul>
 		</div>
-	</script>
-
-	<script type="text/html" id="choice-1_n_2">
-		<li class="choice">
-			<button class="delete" data-bind="click:remove"></button>
-			<span>
-				<input type="text" data-bind="value:content, valueUpdate:'input'"/>
-			</span>
-			<span>
-				<label>Marks:</label>
-				<input type="number" data-bind="value:marks, valueUpdate:'input'"/>
-			</span>
-			<span>
-				<label>Distractor Message:</label>
-				<input type="text" data-bind="value:distractor, valueUpdate:'input'"/>
-			</span>
-		</li>
 	</script>
 
 	<script type="text/html" id="m_n_x">
@@ -453,10 +505,10 @@
 				<thead>
 					<tr>
 						<td/>
-						<!-- ko foreach: multiplechoice.answers -->
+						<!-- ko foreach: {data: multiplechoice.answers, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
 							<th>
 								<input type="text" data-bind="value:content, valueUpdate:'input'">
-								<button class="delete" data-bind="click:function(){removeAnswer(this)}"></button>
+								<button class="delete" data-bind="click:function(){this.remove()}"></button>
 							</th>
 						<!-- /ko -->
 						<td>
@@ -464,35 +516,24 @@
 						</td>
 					</tr>
 				</thead>
-				<tbody data-bind="template: {
-					name: 'choice-m_n_x',
-					foreach: multiplechoice.choices
-				}">
+				<tbody>
+					<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
+						<tr>
+							<th>
+								<input type="text" data-bind="value:content, valueUpdate:'input'"/>
+								<button class="delete" data-bind="click:remove"></button>
+							</th>
+							<!-- ko foreach: answers -->
+								<td>
+									<input class="mark" type="number" data-bind="value: marks, valueUpdate:'input'"/>
+								</td>
+							<!-- /ko -->
+						</tr>
+					<!-- /ko -->
 					<tr><td><button data-bind="visible: $root.isadvanced, click:addChoice">Add Choice</button></td></tr>
 				</tbody>
 			</table>
 		</div>
-	</script>
-
-	<script type="text/html" id="choice-m_n_x">
-		<tr>
-			<th>
-				<input type="text" data-bind="value:content, valueUpdate:'input'"/>
-				<button class="delete" data-bind="click:remove"></button>
-			</th>
-			<!-- ko foreach: answers -->
-				<td>
-					<input class="mark" type="number" data-bind="value: marks, valueUpdate:'input'"/>
-				</td>
-			<!-- /ko -->
-		</tr>
-	</script>
-
-	<script type="text/html" id="ruleset">
-		<li class="ruleset">
-			<input type="text" data-bind="value:name, valueUpdate: 'afterkeydown'"/>: <div data-bind="listbox:sets, rulesetcomplete: allsets"></div>
-			<button class="delete data-bind="click:remove"></button>
-		</li>
 	</script>
 
 	<script type="text/html" id="variable">
@@ -505,57 +546,7 @@
 			<td>=</td>
 			<td><div><input class="def" type="text" data-bind="value:definition, valueUpdate: 'afterkeydown', event: {keyup: function(d,e){if(e.which==13){ $parent.addVariable($parent,e,$parent.variables.indexOf(this)+1); } } }"/></div></td>
 			<td class="value"><div class="value" data-bind="css: {error: error().length>0}, html: display, mathjax: value"></div></td>
-			<td data-bind="visible: $parent.isadvanced"><div><button class="delete data-bind="click:remove"></button></div></td>
-		</tr>
-	</script>
-
-	<script type="text/html" id="function">
-		<li class="function">
-			<div data-bind="folder:{label: name(), show:true}, foldlist: true">
-				<div class="properties">
-					<div data-bind="template: {
-						name: 'property',
-						data: {property:name,label: 'Name:'}
-					}"></div>
-					<div class="parameters">
-						<label>Parameters:</label>
-						<table class="list">
-							<thead data-bind="visible: parameters().length>0">
-								<th>Name</th>
-								<th>Type</th>
-								<th></th>
-							</thead>
-							<tbody data-bind="template:{
-								name:'parameter',
-								foreach: parameters,
-								beforeRemove: function(elem) { $(elem).find('td>div').slideUp(150,function() {$(this).remove()}) },
-								afterAdd: function(elem) { $(elem).find('td>div').hide().slideDown(150).end().find('.name').focus(); },
-							}"></tbody>
-						</table>
-						<button class="addparameter" data-bind="click:addParameter, text: parameters().length ? 'Add another parameter' : 'Add a parameter'"></button>
-					</div>
-					<div>
-						<label>Output type: </label>
-						<select data-bind="options: types, value:type"></select>
-					</div>
-					<div>
-						<label>Language:</label>
-						<select data-bind="options: languages, value: language"></select>
-					</div>
-					<div class="definition">
-						<label>Definition:</label>
-						<textarea data-bind="value: definition, valueUpdate: 'afterkeydown'"></textarea>
-					</div>
-				</div>
-			</div>
-		</li>
-	</script>
-
-	<script type="text/html" id="parameter">
-		<tr>
-			<td><div><input data-bind="value: name"/></div></td>
-			<td><div><select data-bind="options: $parent.types, value: type"></select></div></td>
-			<td><div><button class="delete data-bind="click: remove"></div></button></td>
+			<td data-bind="visible: $parent.isadvanced"><div><button class="delete" data-bind="click:remove"></button></div></td>
 		</tr>
 	</script>
 

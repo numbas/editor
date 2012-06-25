@@ -115,6 +115,10 @@
     overflow-y: auto;
 }
 
+.function .parameters .list {
+	float: right;
+}
+
 .function .parameters .addparameter {
 	clear: both;
 	float: right;
@@ -126,7 +130,6 @@
 
 table.multiplechoice {
 	width:auto;
-	border: 1px solid;
 	margin-left:2em;
 }
 
@@ -138,15 +141,7 @@ table.multiplechoice th {
 	background: #c3d9ff;
 }
 
-table.multiplechoice thead tr th:not(:last-child) {
-	border-bottom: 1px solid;
-}
-
-table.multiplechoice tbody tr:not(:last-child) th{
-	border-right: 1px solid;
-}
-
-table.choices th,td{
+.choice td, .choice th {
 	text-align: center;
 	padding: 0 0.5em 0 0.5em;
 	border-bottom: #ccc 1px solid;

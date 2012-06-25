@@ -194,7 +194,7 @@ $(document).ready(function() {
         },
 
         addFunction: function(q,e,n) {
-            var f = new JMEFunction(this);
+            var f = new CustomFunction(this);
             if(n!=undefined)
                 this.functions.splice(n,0,f);
             else
@@ -417,7 +417,7 @@ $(document).ready(function() {
 				for(var x in data.functions)
 				{
 					data.functions[x].name = x;
-					this.functions.push(new JMEFunction(this,data.functions[x]));
+					this.functions.push(new CustomFunction(this,data.functions[x]));
 				}
 			}
 
@@ -502,7 +502,7 @@ $(document).ready(function() {
         }
     }
 
-    function JMEFunction(q,data) {
+    function CustomFunction(q,data) {
         this.name = ko.observable('');
         this.types = ['number','string','boolean','vector','matrix','list','name','function','op','range','?'];
         this.parameters = ko.observableArray([])
@@ -512,12 +512,13 @@ $(document).ready(function() {
         this.language = ko.observable('jme');
 
         this.remove = function() {
-            q.functions.remove(this);
+            if(confirm("Remove this function?"))
+            	q.functions.remove(this);
         };
 		if(data)
 			this.load(data);
     }
-	JMEFunction.prototype = {
+	CustomFunction.prototype = {
 		load: function(data) {
 			var f = this;
 			tryLoad(data,['name','type','definition','language'],this);
@@ -632,7 +633,7 @@ $(document).ready(function() {
 
             displayTypes: {
                 m_n_x: [
-                    {name: 'radiogroup', niceName: 'Radio boxes'},
+                    {name: 'radiogroup', niceName: 'One from each row'},
                     {name: 'checkbox', niceName: 'Checkboxes'},
                 ],
                 'm_n_2': [
@@ -719,6 +720,11 @@ $(document).ready(function() {
             var a = {
                 content: ko.observable('Answer '+(this.multiplechoice.answers().length+1))
             };
+            var p = this;
+            a.remove = function() {
+                p.removeAnswer(a);
+            }
+
             for(var i=0;i<this.multiplechoice.choices().length;i++)
             {
                 this.multiplechoice.choices()[i].answers.push({

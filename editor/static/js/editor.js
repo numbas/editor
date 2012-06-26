@@ -507,7 +507,7 @@ $(document).ready(function() {
                     theme:'numbas',
                     handle_event_callback: onkeyup,
 					init_instance_callback: function() { 
-						$(element).writemaths({cleanMaths: cleanJME}); 
+						$(element).writemaths({cleanMaths: cleanJME, iFrame: true}); 
 					},
                     theme_advanced_resizing: true,
                     theme_advanced_resizing_max_width: '750'

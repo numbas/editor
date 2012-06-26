@@ -1,3 +1,13 @@
+/*
+Copyright (C) 2012 Christian Perfect
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
 function saveSelection(containerEl) {
     var charIndex = 0, start = 0, end = 0, foundStart = false, stop = {};
     var sel = rangy.getSelection(), range;
@@ -71,23 +81,32 @@ function restoreSelection(containerEl, savedSel) {
 }
 
 
-$(function() {
-	$.fn.writemaths = function(options) {
-		options = $.extend({
+jQuery(function() {
+    jQuery("<style type='text/css'> .wm_preview { z-index: 1; position: absolute; display: none; border: 1px solid; padding: 0.2em; width: auto; margin: 0 auto; background: white;} </style>").appendTo("head");
+
+	jQuery.fn.writemaths = function(options) {
+		options = jQuery.extend({
 			cleanMaths: function(m){ return m; },
-			callback: function() {}
+			callback: function() {},
+            iFrame: false,
 		},options);
 
-        $(this).each(function() {
+        jQuery(this).each(function() {
 
-			var root = this;
-			var iframe = $(this).find('iframe')[0];
-            var el = $(iframe).contents().find('body');
-            el
-                .addClass('writemaths tex2jax_ignore')
-            ;
-            var previewElement = $('<div class="wm_preview"/>');
-			$(root).append(previewElement);
+            var textarea = jQuery(this).is('textarea,input');
+
+            var root = this;
+            if(options.iFrame) {
+    			var iframe = jQuery(this).find('iframe')[0];
+                var el = jQuery(iframe).contents().find('body');
+            }
+            else
+            {
+                el = jQuery(this);
+            }
+            el.addClass('writemaths tex2jax_ignore');
+            var previewElement = jQuery('<div class="wm_preview"/>');
+			jQuery('body').append(previewElement);
 
             var queue = MathJax.Callback.Queue(MathJax.Hub.Register.StartupHook("End",{}));
             el
@@ -97,23 +116,39 @@ $(function() {
 			.on('keyup click',function(e) {
                 previewElement.hide();
 
-				var sel = rangy.getIframeSelection(iframe);
-                try{
-                    var pos = sel.getStartDocumentPos();
-                var anchor = sel.anchorNode;
-                var range = sel.getRangeAt(0);
+                var pos, txt, sel, range;
+                if(textarea) {
+                    pos = jQuery(this).getCaretPosition();
+                    var fontHeight = parseInt(jQuery(this).css('font-size').replace('px',''));
+                    pos = {x: pos.left, y: pos.top - fontHeight};
+                    sel = jQuery(this).getSelection();
+                    range = {startOffset: sel.start, endOffset: sel.end};
+                    txt = jQuery(this).val();
+                }
+                else {
+                    sel = options.iFrame ? rangy.getIframeSelection(iframe) : rangy.getSelection();
+                    try{
+                        pos = sel.getStartDocumentPos();
+                    }
+                    catch(e) {
+                        return;
+                    }
+                    var anchor = sel.anchorNode;
+
+					while(anchor.parentNode && anchor.nodeType == anchor.TEXT_NODE) {	//find the tag containing the anchor text node, so we can get all of its text.
+						anchor = anchor.parentNode
+					}
+
+                    if(jQuery(anchor).parents('code,pre,.wm_ignore').length)
+                        return;
+                    txt = jQuery(anchor).text();
+                    range = sel.getRangeAt(0);
+                }
 
                 //only do this if the selection has zero width
                 //so when you're selecting blocks of text, distracting previews don't pop up
                 if(range.startOffset != range.endOffset)
                     return;
-
-                }
-                catch(e) {
-                    return;
-                }
-                //get the text in th
-                var txt = $(anchor).text();
 
                 var i=0;
                 var inMath=false;
@@ -130,15 +165,6 @@ $(function() {
                             i+=mathDelimit.length-1;
 
                             var ol = txt.length;
-                            /*if(i<txt.length-1 && !$(anchor).parents('.wm_maths').length) {
-                                txt = 
-                                    txt.slice(0,startMath-mathLimit.length) +
-                                    '<span class="wm_maths">' +
-                                    txt.slice(startMath-mathLimit.length,i+mathDelimit.length) +
-                                    '</span><span> </span>' +
-                                    txt.slice(i+mathDelimit.length);
-                                i+=txt.length-ol.length;
-                            }*/
                         }
                     }
                     else if(txt[i]=='$')
@@ -158,9 +184,7 @@ $(function() {
                     i+=1;
                 }
                 if(txt!=otxt) {
-                    //sel = saveSelection(el[0]);
-                    anchor = $(anchor).replaceWith(txt);
-                    //restoreSelection(el[0],sel);
+                    anchor = jQuery(anchor).replaceWith(txt);
                 }
 
                 if(!inMath)
@@ -199,7 +223,8 @@ $(function() {
                 math = mathLimit + math + mathDelimit;
 
                 function positionPreview() {
-                    previewElement.position({my: 'left bottom', at: 'left top', of: iframe, offset: pos.x+' '+pos.y, collision: 'fit'})
+                    var of = options.iFrame ? iframe : textarea ? root : document;
+                    previewElement.position({my: 'left bottom', at: 'left top', of: of, offset: pos.x+' '+pos.y, collision: 'fit'})
                 }
 
                 previewElement

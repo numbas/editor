@@ -162,7 +162,7 @@
 			// Setup default buttons
 			if (!s.theme_advanced_buttons1) {
 				s = extend({
-					theme_advanced_buttons1 : "bold,italic,underline,|,justifyleft,justifycenter,justifyright,justifyfull,|,formatselect|bullist,numlist,|,image,|,undo,redo,|,link,unlink,code",
+					theme_advanced_buttons1 : "bold,italic,underline,|,formatselect,|,justifyleft,justifycenter,justifyright,justifyfull,|,bullist,numlist,|,image,|,undo,redo,|,link,unlink,code",
 				}, s);
 			}
 	

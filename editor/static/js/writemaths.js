@@ -135,14 +135,20 @@ jQuery(function() {
                     }
                     var anchor = sel.anchorNode;
 
-					while(anchor.parentNode && anchor.nodeType == anchor.TEXT_NODE) {	//find the tag containing the anchor text node, so we can get all of its text.
-						anchor = anchor.parentNode
+                    range = sel.getRangeAt(0);
+
+					if(anchor.nodeType == anchor.TEXT_NODE) {	
+						while(anchor.previousSibling) {
+							anchor = anchor.previousSibling;
+							range.startOffset += anchor.textContent.length;
+							range.endOffset += anchor.textContent.length;
+						}
+						anchor = anchor.parentNode;
 					}
 
                     if(jQuery(anchor).parents('code,pre,.wm_ignore').length)
                         return;
                     txt = jQuery(anchor).text();
-                    range = sel.getRangeAt(0);
                 }
 
                 //only do this if the selection has zero width

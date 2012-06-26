@@ -45,7 +45,6 @@
 						</thead>
                         <tbody class="results editlist big" data-bind="foreach: {
                             data: pages()[page()-1],
-                            beforeRemove: function(elem){$(elem).fadeOut(150)}
                         }">
                             <tr class="result question">
                                 <td><a data-bind="attr: {href: url}, text: name"></a></td>

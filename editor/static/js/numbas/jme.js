@@ -51,7 +51,7 @@ var jme = Numbas.jme = {
 		var re_name = /^{?((?:(?:[a-zA-Z]+):)*)((?:\$?[a-zA-Z][a-zA-Z0-9]*'*)|\?)}?/i;
 		var re_op = /^(_|\.\.|#|<=|>=|<>|&&|\|\||[\|*+\-\/\^<>=!&]|(?:(not|and|or|xor|isa|except)([^a-zA-Z0-9]|$)))/i;
 		var re_punctuation = /^([\(\),\[\]])/;
-		var re_string = /^("([^"]*)")|^('([^']*)')/;
+		var re_string = /^(['"])((?:[^\1\\]|\\.)*?)\1/;
 		var re_special = /^\\\\([%!+\-\,\.\/\:;\?\[\]=\*\&<>\|~\(\)]|\d|([a-zA-Z]+))/;
 		
 		while( expr.length )
@@ -64,7 +64,7 @@ var jme = Numbas.jme = {
 			{
 				token = new TNum(result[0]);
 
-				if(tokens.length>0 && (tokens[tokens.length-1].type==')'))	//right bracket followed by a number is interpreted as multiplying contents of brackets by number
+				if(tokens.length>0 && (tokens[tokens.length-1].type==')' || tokens[tokens.length-1].type=='name'))	//right bracket followed by a number is interpreted as multiplying contents of brackets by number
 				{
 					tokens.push(new TOp('*'));
 				}
@@ -125,9 +125,10 @@ var jme = Numbas.jme = {
 			}
 			else if (result = expr.match(re_string))
 			{
-				var string = result[2] || result[4];
-				string = string.replace(/\\n/g,'\n');
-				token = new TString(string);
+				var str = result[2];
+				str = str.replace(/\\n/g,'\n').replace(/\\(["'])/g,'$1');
+
+				token = new TString(str);
 			}
 			else if (result = expr.match(re_special))
 			{
@@ -680,7 +681,7 @@ var jme = Numbas.jme = {
 					brackets--;
 			}
 			if(i == s.length-1 && brackets>0)
-				throw(new Numbas.Error('jme.texsubvars.no right brace'));
+				throw(new Numbas.Error('jme.texsubvars.no right brace',cmd));
 
 			var expr = s.slice(si,i);
 			s = s.slice(i+1);
@@ -1049,11 +1050,11 @@ var precedence = jme.precedence = {
 	'_': 0,
 	'fact': 1,
 	'not': 1,
+	'+u': 2.5,
+	'-u': 2.5,
 	'^': 2,
 	'*': 3,
 	'/': 3,
-	'+u': 3.5,
-	'-u': 3.5,
 	'+': 4,
 	'-': 4,
 	'|': 5,
@@ -1147,14 +1148,14 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
 
 	if(!options.nobuiltin)
 	{
-		if(builtins[name]===undefined)
+		if(jme.builtinScope.functions[name]===undefined)
 		{
-			builtins[name]=[this];
+			jme.builtinScope.functions[name]=[this];
 			builtinsbylength.add(name);
 		}
 		else
 		{
-			builtins[name].push(this);
+			jme.builtinScope.functions[name].push(this);
 		}
 	}
 
@@ -1205,10 +1206,9 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
 }
 
 // the built-in operations and functions
-var builtinScope = jme.builtinScope = new Scope({functions: builtins});
-var builtins = jme.builtins = builtinScope.functions;
+var builtinScope = jme.builtinScope = new Scope();
 
-builtins['eval'] = [{
+builtinScope.functions['eval'] = [{
 	name: 'eval',
 	intype: ['?'],
 	outtype: '?',
@@ -1612,7 +1612,7 @@ new funcObj('isa',['?',TString],TBool, null, {
 		}
 		else
 		{
-			var match = args[0].tok.outtype == kind;
+			var match = args[0].tok.type == kind;
 		}
 		return new TBool(match);
 	},
@@ -1995,8 +1995,10 @@ var checkingFunctions =
 	}
 };
 
-var findvars = jme.findvars = function(tree,boundvars)
+var findvars = jme.findvars = function(tree,boundvars,scope)
 {
+	if(!scope)
+		scope = jme.builtinScope;
 	if(boundvars===undefined)
 		boundvars = [];
 
@@ -2027,14 +2029,14 @@ var findvars = jme.findvars = function(tree,boundvars)
 				switch(cmd)
 				{
 				case 'var':
-					var tree2 = jme.compile(expr,{},true);
+					var tree2 = jme.compile(expr,scope,true);
 					out = out.merge(findvars(tree2,boundvars));
 					break;
 				case 'simplify':
 					var sbits = util.splitbrackets(expr,'{','}');
 					for(var i=1;i<sbits.length-1;i+=2)
 					{
-						var tree2 = jme.compile(sbits[i],{},true);
+						var tree2 = jme.compile(sbits[i],scope,true);
 						out = out.merge(findvars(tree2,boundvars));
 					}
 					break;

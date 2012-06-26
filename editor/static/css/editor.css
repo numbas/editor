@@ -201,20 +201,23 @@ ul.choices {
 
 .writemathsContainer textarea {
     width: 100%;
+	height: 8em;
 }
 
-.wmToggle .ticko {
-	width: 14px;
-	height: 14px;
-	display: inline-block;
-	background: url(../images/x_14x14.png);
-    cursor: pointer;
+.writemathsContainer .wmToggle {
+	float: right;
+	border: none;
+	background: none;
+	padding: 0;
 }
 
-.wmToggle.on .ticko {
-	width: 16px;
-	height: 13px;
-	background: url(../images/check_16x13.png);
+.writemathsContainer .wmToggle:after {
+	content: url(../images/x_14x14.png);
+	padding-left: 4px;
+}
+
+.writemathsContainer .wmToggle.on:after {
+	content: url(../images/check_16x13.png);
 }
 
 .writemaths, .plaintext { 

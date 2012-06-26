@@ -496,6 +496,17 @@ $(document).ready(function() {
 				}
             }
 
+			var toggle = $('<button class="wmToggle on">Toggle rich text editor</button>');
+			$(element).append(toggle);
+			toggle.click(function() {
+				var ed = $(this).siblings('textarea').tinymce();
+				if(ed.isHidden())
+					ed.show()
+				else
+					ed.hide();
+				$(this).toggleClass('on',!ed.isHidden());
+			});
+
             var t = $('<textarea style="width:100%"/>');
             $(element)
                 .addClass('writemathsContainer')

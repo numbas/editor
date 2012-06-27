@@ -924,6 +924,11 @@ $(document).ready(function() {
                         this.jme.checkingType(this.jme.checkingTypes[i]);
                 }
                 tryLoad(data,'checkingaccuracy',this.jme.checkingType(),'accuracy');
+				tryLoad(data,'vsetrangepoints',this.jme.vset,'points');
+				if('vsetrange' in data) {
+					this.jme.vset.start(data.vsetrange[0]);
+					this.jme.vset.end(data.vsetrange[1]);
+				}
 
                 tryLoad(data.maxlength,['length','partialCredit','message'],this.jme.maxlength);
                 tryLoad(data.minlength,['length','partialCredit','message'],this.jme.minlength);

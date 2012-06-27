@@ -20,6 +20,7 @@ $(document).ready(function() {
 
 	Numbas.loadScript('scripts/jme-display.js');
 	Numbas.loadScript('scripts/jme.js');
+	Numbas.loadScript('scripts/editor-extras.js');
 	Numbas.startOK = true;
 	Numbas.init = function() {
 		//create a question object

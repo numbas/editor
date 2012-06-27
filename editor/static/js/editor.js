@@ -554,6 +554,8 @@ $(document).ready(function() {
 			else
 				options = $.extend(options,value);
 
+			ko.applyBindingsToDescendants(bindingContext, element);
+
 			var root = $(element);
 
 			root.addClass('fold');
@@ -569,7 +571,6 @@ $(document).ready(function() {
 				});
 			});
 
-			ko.applyBindingsToDescendants(bindingContext, element);
 			return {controlsDescendantBindings: true};
 		},
 		update: function(element,valueAccessor) {

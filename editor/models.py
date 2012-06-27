@@ -22,19 +22,21 @@ except ImportError:
   # For Python < 2.6 (after installing ordereddict)
   from ordereddict import OrderedDict
 
-
 from django.conf import settings
-from django.db import models
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
+from django.db import models
+from django.forms import model_to_dict
 from django.template.defaultfilters import slugify
 from django.template import loader, Context
-from django.core.exceptions import ValidationError
-from django.contrib.auth.models import User
-from django.forms import model_to_dict
 
 from taggit.managers import TaggableManager
 
 from examparser import ExamParser, ParseError, printdata
+
+from jsonfield import JSONField
 
 class NumbasObject:
     def get_parsed_content(self):
@@ -151,7 +153,7 @@ class Question(models.Model,NumbasObject,GitObject):
     author = models.ForeignKey(User)
     filename = models.CharField(max_length=200, editable=False)
     content = models.TextField(blank=True,validators=[validate_content])
-    metadata = models.TextField(blank=True)
+    metadata = JSONField(blank=True)
     tags = TaggableManager()
 
     class Meta:
@@ -191,6 +193,7 @@ class Question(models.Model,NumbasObject,GitObject):
 
     def as_json(self):
         d = model_to_dict(self)
+        d['metadata'] = self.metadata
         d['tags'] = [ti.tag.name for ti in d['tags']]
         return json.dumps(d)
 
@@ -228,7 +231,7 @@ class Exam(models.Model,NumbasObject,GitObject):
     author = models.ForeignKey(User)
     filename = models.CharField(max_length=200, editable=False)
     content = models.TextField(blank=True, validators=[validate_content])
-    metadata = models.TextField(blank=True)
+    metadata = JSONField(blank=True)
 
     class Meta:
       ordering = ['name']

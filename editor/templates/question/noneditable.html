@@ -29,6 +29,11 @@
 				</div>
 			</div>
 
+            <div data-bind="folder: {label: 'Author\'s Notes', show: true}, visible: notes().length>0">
+                <div>
+                    <div data-bind="html: notes"></div>
+                </div>
+            </div>
 
 			<div data-bind="folder: 'Extensions', visible: usedExtensions().length>0">
 				<div>

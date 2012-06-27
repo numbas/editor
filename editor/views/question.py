@@ -193,6 +193,7 @@ class QuestionUpdateView(UpdateView):
         
     def form_valid(self, form):
         self.object = form.save(commit=False)
+        self.object.metadata = json.dumps(self.object.metadata)
 
         self.object.edit_user = self.user
 

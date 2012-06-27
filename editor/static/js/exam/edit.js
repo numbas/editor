@@ -29,7 +29,12 @@ $(document).ready(function() {
 			owner: this
 		});
 
-		this.metadata = ko.observable('');
+        this.notes = ko.observable('');
+		this.metadata = ko.computed(function() {
+			return {
+				notes: this.notes()
+			};
+		},this);
 
 		this.theme = ko.observable('default');
 
@@ -139,9 +144,16 @@ $(document).ready(function() {
         if(data)
 		{
 			this.id = data.id;
+
+			if('metadata' in data) {
+				tryLoad(data.metadata,['notes'],this);
+			}
+
             this.load(parseExam(data.content));
+
             if('theme' in data)
                 this.theme(data.theme);
+
 			if('questions' in data)
 			{
 				this.questions(data.questions.map(function(q) {

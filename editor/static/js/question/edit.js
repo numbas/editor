@@ -66,7 +66,12 @@ $(document).ready(function() {
             return realtags.splice(i,n);
         }
 
-		this.metadata = ko.observable('');
+		this.notes = ko.observable('');
+		this.metadata = ko.computed(function() {
+			return {
+				notes: this.notes()
+			};
+		},this);
 
 		this.extensions = ko.observableArray([]);
 		for(var i=0;i<Editor.numbasExtensions.length;i++) {
@@ -112,7 +117,13 @@ $(document).ready(function() {
         if(data)
 		{
 			this.id = data.id;
+
+			if('metadata' in data) {
+				tryLoad(data.metadata,['notes'],this);
+			}
+
 			this.load(parseExam(data.content));
+
 			try{
 				this.tags(data.tags);
 			}

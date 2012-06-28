@@ -31,7 +31,7 @@
 
             <div data-bind="folder: {label: 'Author\'s Notes', show: true}, visible: notes().length>0">
                 <div>
-                    <div data-bind="html: notes"></div>
+                    <div class="textblock" data-bind="cleanJME: notes"></div>
                 </div>
             </div>
 

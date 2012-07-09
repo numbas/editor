@@ -211,30 +211,30 @@
     </p>
     
     <h3>SELinux</h3>
-      <p>
-        The default SELinux configuration prevents apache processes from
-        accessing certain files in non-standard locations.  The web server
-        needs read access to the files in <code>/srv/numbas/dist</code> and
-        read/write access to the files in <code>/srv/numbas/previews</code> and
-        <code>/srv/numbas/questiondb</code>.  It also needs read access to the
-        files in the Python 3 library.  The following commands will alter the
-        SELinux security policy to grant the web server these permissions.
-      </p>
-      <ul>
-        <li><code>chcon -R --type=httpd_sys_content_t
-          /srv/numbas/dist</code></li>
-        <li><code>chcon -R --type=httpd_sys_rw_content_t /srv/numbas/previews
-          /srv/numbas/questiondb</code></li>
-        <li><code>chcon -R --reference=/usr/lib/python2.6
-          /opt/python3/lib</code></li>
-      </ul>
+    <p>
+      The default SELinux configuration prevents apache processes from
+      accessing certain files in non-standard locations.  The web server
+      needs read access to the files in <code>/srv/numbas/dist</code> and
+      read/write access to the files in <code>/srv/numbas/previews</code> and
+      <code>/srv/numbas/questiondb</code>.  It also needs read access to the
+      files in the Python 3 library.  The following commands will alter the
+      SELinux security policy to grant the web server these permissions.
+    </p>
+    <ul>
+      <li><code>chcon -R --type=httpd_sys_content_t
+        /srv/numbas/dist</code></li>
+      <li><code>chcon -R --type=httpd_sys_rw_content_t /srv/numbas/previews
+        /srv/numbas/questiondb</code></li>
+      <li><code>chcon -R --reference=/usr/lib/python2.6
+        /opt/python3/lib</code></li>
+    </ul>
 
-      <h3>Services</h3>
-      <p>
-        To enable the MySQL and Apache services at system start, use the
-        <code>chkconfig</code> command: <code>chkconfig mysqld on</code>,
-        <code>chkconfig httpd on</code>.
-      </p>
+    <h3>Services</h3>
+    <p>
+      To enable the MySQL and Apache services at system start, use the
+      <code>chkconfig</code> command: <code>chkconfig mysqld on</code>,
+      <code>chkconfig httpd on</code>.
+    </p>
     
     <h2>LDAP authentication</h2>
     <p>
@@ -243,12 +243,12 @@
     </p>
     
     <h3>Extra required packages</h3>
-	<ul>
-    <li><code>yum install openldap-devel</code></li>
-		<li>Django LDAP: (from within the virtualenv) <code>pip install django-auth-ldap</code></li>
-	</ul>
+	  <ul>
+      <li><code>yum install openldap-devel</code></li>
+		  <li>Django LDAP: (from within the virtualenv) <code>pip install django-auth-ldap</code></li>
+	  </ul>
 	
-	<h3>Extra configuration</h3>
+	  <h3>Extra configuration</h3>
     <ul>
     	<li>Copy <code>ldap_auth.py.dist</code> to <code>ldap_auth.py</code>
     		and edit, following the comments in that file.</li>

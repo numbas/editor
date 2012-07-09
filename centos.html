@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Numbas editor</title>
+  </head>
+  <body>
+    <h1>CentOS installation</h1>
+    <p>
+      Outline instructions on setting up the Numbas editor with a backend MySQL
+      database.  The following is for a CentOS 6.2 Linux server.  The author is
+      not entirely familiar with CentOS, so please get in touch with the <a
+        href="mailto:numbas@ncl.ac.uk">Numbas team</a> with suggestions for
+      corrections or improvements.
+    </p>
+
+    <h2>Package installation</h2>
+    <p>
+      Packages that would be installed as part of a standard CentOS "web
+      server" install are not listed.  Python 3 is required for compilation of
+      Numbas exams; Python 2.6 (or greater) is required for Django.
+    </p>
+
+    <h3>Python 3</h3>
+    <p>
+      CentOS does not have packages for Python 3, so it must be installed by
+      hand.
+    </p>
+    <ul>
+      <li>Get the latest version of Python 3 from <a
+        href="http://www.python.org/download/">http://www.python.org/download/</a>.</li>
+      <li>To build Python 3 you need to install some extra packages: <code>yum
+        install bzip2-devel gcc gdbm-devel ncurses-devel openssl-devel
+        readline-devel sqlite-devel tcl-devel tk-devel zlib-devel</code>
+      <li>Unpack, change to the unpacked directory, then type <code>./configure
+        --prefix=&lt;install_dir&gt;</code></li>
+      <li>If <code>configure</code> completes successfully, type
+        <code>make</code>.  At this step, make sure that there are no reports of
+        not being able to build certain Python modules.  If there are, install
+        the relevant CentOS packages, then recompile.</li>
+      <li>Once <code>make</code> completes successfully, type <code>make
+        install</code> to install Python 3 in your chosen install
+        directory.</li>
+    </ul>
+
+    <h3>Python Pip, virtualenv and Django</h3>
+    <p>
+      CentOS does not have packages for Django, so it must be installed by
+      hand.  The easiest way to do this, without impacting on the system Python
+      installation, is to use <a
+        href="http://www.virtualenv.org">virtualenv</a>, which is a tool to
+      create an isolated Python environment.
+    </p>
+    <ul>
+      <li>Get the <code>virtualenv.py</code> script from the above URL.</li>
+      <li>Type <code>python virtualenv.py &lt;dest_dir&gt;</code> to set up the
+        isolated Python environment in <code>&lt;dest_dir&gt;</code>.</li>
+      <li>Now 'activate' the environment with <code>.
+        &lt;dest_dir&gt;/bin/activate</code> (this ensures that the Python
+      libraries in the next step are installed in this environment, and not the
+      system environment).</li>
+      <li>Install extra system packages: <code>yum install
+        mysql-devel python-devel</code>.</li>
+      <li>Use the Python package installer (pip) to install Django and
+        associated libraries: <code>pip install django django-taggit GitPython
+        MySQL-python OrderedDict</code>.
+      <li>Bug in GitPython.  Change
+      <code>&lt;dest_dir&gt;/lib/python2.6/site-packages/git/util.py</code> by
+      adding <code>import pwd</code> to the top, and edit <code>def
+        get_user_id()</code> replacing <code>username = os.getlogin()</code>
+      with <code>username = pwd.getpwuid(os.getuid()).pw_name</code></li>
+    </ul>
+
+    <h3>MySQL</h3>
+    <ul>
+      <li><code>yum install mysql-server</code></li>
+      <li>Start the MySQL server: <code>service mysqld start</code>.
+      <li>Possibly also run <code>mysql_secure_installation</code> to set up
+      root MySQL passwords, and perform other security tasks.</li>
+    </ul>
+
+    <h3>Other packages</h3>
+    <ul>
+      <li><code>yum install git</code></li>
+    </ul>
+
+    <h2>Configuration</h2>
+    <ul>
+      <li>Create database <code>numbas_editor</code></li>
+      <li>Create database user and grant privileges on
+      <code>numbas_editor</code> database:
+        <ul>
+          <li><code>grant all privileges on numbas_editor.* to
+            'numbas'@'localhost' identified by 'password';</code></li>
+        </ul>
+      </li>
+      <li>Create Numbas directories outside the webroot:
+        <ul>
+          <li><code>mkdir /srv/numbas</code></li>
+          <li><code>mkdir /srv/numbas/dist</code></li>
+          <li><code>mkdir /srv/numbas/previews</code></li>
+          <li><code>mkdir /srv/numbas/questiondb</code></li>
+        </ul>
+      </li>
+      <li>Set the correct ownership and permissions (need file system ACLs
+      enabled on <code>/srv</code>):
+        <ul>
+          <li><code>chmod 2770 previews questiondb</code></li>
+          <li><code>chmod 2750 dist</code></li>
+          <li><code>chgrp apache dist previews questiondb</code></li>
+          <li><code>setfacl -R -m g:apache:rwX previews questiondb</code></li>
+          <li><code>setfacl -dR -m g:apache:rwX previews questiondb</code></li>
+          <li><code>setfacl -R -m g:apache:rX dist</code></li>
+          <li><code>setfacl -dR -m g:apache:rX dist</code></li>
+        </ul>
+      </li>
+      <li>Clone the Numbas repository: <code>git clone
+        git://github.com/numbas/Numbas /srv/numbas/dist</code></li>
+      <li>Create the question/exam database:
+        <ul>
+          <li><code>cd /srv/numbas/questiondb</code></li>
+          <li><code>mkdir exams questions</code></li>
+          <li><code>git init</code></li>
+        </ul>
+      </li>
+      <li>Create the editor directory and clone the editor under webroot:
+        <ul>
+          <li><code>git clone git://github.com/numbas/editor
+            /var/www/html/numbas_editor</code></li>
+        </ul>
+      </li>
+      <li>Copy the editor distribution database and settings files:
+        <ul>
+          <li><code>cd /var/www/html/numbas_editor</code></li>
+          <li><code>cp database.py.dist database.py</code></li>
+          <li><code>cp settings.py.dist settings.py</code></li>
+        </ul>
+      </li>
+      <li>Edit <code>database.py</code>:
+        <ul>
+          <li>Set <code>ENGINE</code> to
+          <code>django.db.backends.mysql</code></li>
+          <li>Set <code>NAME</code> to the database name
+          (<code>numbas_editor</code>)</li>
+          <li>Set <code>USER</code> to the database user
+          (<code>numbas</code>)</li>
+          <li>Set <code>PASSWORD</code> to the database password
+          (<code>password</code>)</li>
+        </ul>
+      </li>
+      <li>Edit <code>settings.py</code>:
+        <ul>
+          <li>Make sure settings in <code>GLOBAL_SETTINGS</code> match those
+          above</li>
+          <li><code>PREVIEW_URL</code> should be set to the URL at which
+          preview exams can be viewed (see Apache 2 config file).</li>
+          <li><code>HELP_URL</code> should be set to the URL at which the
+            Numbas web documentation can be viewed (see Apache 2 config
+            file).</li>
+          <li><code>PYTHON_EXEC</code> is the path to the Python 3
+          executable (<code>&lt;install_dir&gt;/bin/python3</code>).</li>
+        </ul>
+      </li>
+      <li>Copy <code>web/django.wsgi.dist</code> to
+      <code>web/django.wsgi</code> and edit:
+        <ul>
+          <li>Make sure the two <code>sys.path.append</code> lines match the
+            paths on the file system.</li>
+          <li><code>DJANGO_SETTINGS_MODULE</code> should be set to
+            <code>numbas_editor.settings</code> (if following above naming
+            scheme).</li>
+          <li>Uncomment the two lines needed to add an additional Python site
+          directory.  Edit the path to the virtualenv as necessary.</li>
+        </ul>
+      </li>
+      <li>Sync the database:
+        <ul>
+          <li><code>python manage.py syncdb</code></li>
+          <li>Create a superuser (answer <code>yes</code>).</li>
+          <li>Enter username, e-mail address, and password.</li>
+        </ul>
+      </li>
+      <li>Create apache config file
+        <code>/etc/httpd/conf.d/numbas-editor.conf</code>.
+        <ul>
+          <li>Edit <code>/etc/apache2/sites-available/numbas_editor</code> with
+          contents similar to that in <a
+            href="apache2_centos.conf"><code>apache2_centos.conf</code></a>.
+          If following these instructions exactly, then all that needs changing
+          are the lines <code>ServerName</code>, <code>ServerAdmin</code>,
+          <code>WSGIDaemonProcess</code>,
+          <code>WSGIProcessGroup</code>, and the two lines for the static admin
+          pages (set the path to the virtualenv correctly).</li>
+        </ul>
+        <li>Add the line <code>WSGISocketPrefix run/wsgi</code> to
+        <code>/etc/httpd/conf.d/wsgi.conf</code>, otherwise you will see socket
+        errors in the apache logs.</li>
+    </ul>
+
+    <h2>Extra security configuration</h2>
+    <h3>Apache</h3>
+    <p>
+      Incoming connections to port 80 are denied by default.  If the
+      intention is to run the editor as a normal (non-secure) website, then
+      port 80 must be open.  Run <code>system-config-firewall-tui</code> and
+      customise the firewall, enabling the option <code>WWW (HTTP)</code>.
+    </p>
+
+    <p>
+      Then start the web server with <code>service httpd start</code>.
+    </p>
+    
+    <h3>SELinux</h3>
+      <p>
+        The default SELinux configuration prevents apache processes from
+        accessing certain files in non-standard locations.  The web server
+        needs read access to the files in <code>/srv/numbas/dist</code> and
+        read/write access to the files in <code>/srv/numbas/previews</code> and
+        <code>/srv/numbas/questiondb</code>.  It also needs read access to the
+        files in the Python 3 library.  The following commands will alter the
+        SELinux security policy to grant the web server these permissions.
+      </p>
+      <ul>
+        <li><code>chcon -R --type=httpd_sys_content_t
+          /srv/numbas/dist</code></li>
+        <li><code>chcon -R --type=httpd_sys_rw_content_t /srv/numbas/previews
+          /srv/numbas/questiondb</code></li>
+        <li><code>chcon -R --reference=/usr/lib/python2.6
+          /opt/python3/lib</code></li>
+      </ul>
+
+      <h3>Services</h3>
+      <p>
+        To enable the MySQL and Apache services at system start, use the
+        <code>chkconfig</code> command: <code>chkconfig mysqld on</code>,
+        <code>chkconfig httpd on</code>.
+      </p>
+    
+      <!--
+    <h2>LDAP authentication</h2>
+    <p>
+    	LDAP authentication is possible within the editor.  This can work in
+    	combination with the default Django Model authentication backend.
+    </p>
+    
+    <h3>Extra required packages</h3>
+	<ul>
+		<li>Python LDAP: <code>apt-get install python-ldap</code></li>
+		<li>Django LDAP: <code>apt-get install python-django-auth-ldap</code></li>
+		<li>GnuTLS (for secure LDAP lookups only): <code>apt-get install libgnutls26</code></li>
+	</ul>
+	
+	<h3>Extra configuration</h3>
+    <ul>
+    	<li>Copy <code>ldap_auth.py.dist</code> to <code>ldap_auth.py</code>
+    		and edit, following the comments in that file.</li>
+		<li>In <code>settings.py</code> uncomment the LDAP auth line in
+			<code>AUTHENTICATION_BACKENDS</code> and the <code>ldap_auth</code>
+			import line.</li>
+    </ul>
+    -->
+    
+    <p>
+      <b>Note that if any changes are made to the editor code, including
+        editing the settings files, then for the web server to recognise these
+        changes either touch the <code>web/django.wsgi</code> file, or restart
+        the Apache server.</b>
+    </p>
+  </body>
+</html>

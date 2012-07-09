@@ -13,8 +13,8 @@
 #   limitations under the License.
 import os, sys
 sys.path.append('/srv/www/numbas.mas.ncl.ac.uk80')
-sys.path.append('/srv/www/numbas.mas.ncl.ac.uk80/numbas')
-os.environ['DJANGO_SETTINGS_MODULE'] = 'numbas.settings'
+sys.path.append('/srv/www/numbas.mas.ncl.ac.uk80/numbas_editor')
+os.environ['DJANGO_SETTINGS_MODULE'] = 'numbas_editor.settings'
 
 import django.core.handlers.wsgi
 

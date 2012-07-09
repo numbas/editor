@@ -183,14 +183,13 @@
       <li>Create apache config file
         <code>/etc/httpd/conf.d/numbas-editor.conf</code>.
         <ul>
-          <li>Edit <code>/etc/apache2/sites-available/numbas_editor</code> with
-          contents similar to that in <a
+          <li>Edit the config file with contents similar to that in <a
             href="apache2_centos.conf"><code>apache2_centos.conf</code></a>.
           If following these instructions exactly, then all that needs changing
           are the lines <code>ServerName</code>, <code>ServerAdmin</code>,
-          <code>WSGIDaemonProcess</code>,
-          <code>WSGIProcessGroup</code>, and the two lines for the static admin
-          pages (set the path to the virtualenv correctly).</li>
+          <code>WSGIDaemonProcess</code>, <code>WSGIProcessGroup</code>, and
+          the two lines for the static admin pages (set the path to the
+          virtualenv correctly).</li>
         </ul>
         <li>Add the line <code>WSGISocketPrefix run/wsgi</code> to
         <code>/etc/httpd/conf.d/wsgi.conf</code>, otherwise you will see socket

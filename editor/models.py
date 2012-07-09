@@ -274,6 +274,22 @@ class Exam(models.Model,NumbasObject,GitObject):
         data['questions'] = [parser.parse(q.content) for q in self.get_questions()]
         return printdata(data)
         
+    def summary(self, user=None):
+        """return id, name and url, enough to identify a exm and say where to find it"""
+        obj = {
+            'id': self.id, 
+            'name': self.name, 
+            'author': self.author.get_full_name(), 
+            'url': reverse('exam_edit', args=(self.pk,self.slug,)),
+            'deleteURL': reverse('exam_delete', args=(self.pk,self.slug)),
+        }
+        if user:
+            obj['canEdit'] = self.can_be_edited_by(user) 
+        return obj
+        
+    def can_be_edited_by(self, user):
+        return user == self.author or user.is_superuser
+        
         
 class ExamQuestion(models.Model):
     

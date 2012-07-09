@@ -18,6 +18,7 @@ from copy import deepcopy
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
+from django.db.models import Q
 from django.forms.models import model_to_dict
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.shortcuts import render,redirect
@@ -28,6 +29,7 @@ from django.views.generic.detail import SingleObjectMixin
 from editor.forms import ExamForm, NewExamForm, ExamSearchForm
 from editor.models import Exam, Question
 from editor.views.generic import PreviewView, ZipView, SourceView
+from editor.views.user import find_users
 
 from examparser import ExamParser, ParseError, printdata
 
@@ -248,17 +250,45 @@ class ExamUpdateView(UpdateView):
         return reverse('exam_edit', args=(self.object.pk,self.object.slug,))
     
     
-class ExamSearchView(FormView):
+class ExamSearchView(ListView):
     
-    """Search for an exam."""
+    """Search exams."""
     
-    form_class = ExamSearchForm
-    template_name = 'exam/search.html'
+    model=Exam
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.is_ajax():
+            return HttpResponse(json.dumps(context),
+                                content_type='application/json',
+                                **response_kwargs)
+        raise Http404
     
-    def form_valid(self, form):
-        exam_list = Exam.objects.filter(
-            name__icontains=form.cleaned_data['name'])
-        return render(self.request, 'exam/index.html', {'exam_list': exam_list})
+    def get_queryset(self):
+        exams = Exam.objects.all()
+        try:
+            search_term = self.request.GET['q']
+            exams = exams.filter(Q(name__icontains=search_term)).distinct()
+#            exams = exams.filter(Q(name__icontains=search_term) | Q(tags__name__istartswith=search_term)).distinct()
+        except KeyError:
+            pass
+
+        try:
+            mine = self.request.GET['mine'] == 'true'
+            if mine:
+                exams = exams.filter(author=self.request.user)
+        except KeyError:
+            mine = False
+
+        try:
+            if not mine:
+                author_term = self.request.GET['author']
+                authors = find_users(author_term)
+                exams = exams.filter(author__in=authors).distinct()
+        except KeyError:
+            pass
+
+        return [q.summary(user=self.request.user) for q in exams]
+
     
     
 class ExamListView(ListView):

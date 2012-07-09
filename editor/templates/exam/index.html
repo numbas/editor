@@ -1,33 +1,7 @@
 {% extends "layout.html" %}
 
 {% block content %}
-	{% if exam_list %}
-        <table id="exam-list">
-        <thead>
-            <th>Name</th>
-            <th>Author</th>
-            <th></th>
-        </thead>
-        <tbody>
-		{% for exam in exam_list %}
-            <tr class="exam">
-                <td><a href="{% url exam_edit exam.pk exam.slug %}">{{ exam.name }}</a></td>
-                <td class="author {% if user == exam.author %}me{% endif %}">
-                    {% if user == exam.author %}You{% else %}{{ exam.author.get_full_name }}{% endif %}
-                </td>
-                <td class="delete">
-    				{% if user == exam.author or user.is_superuser %}
-	    				<a class="delete" href="{% url exam_delete exam.pk exam.slug %}"></a>
-		    		{% endif %}
-                </td>
-			</tr>
-        {% endfor %}
-        </tbody>
-		</table>
-	{% else %}
-		<p>No exams are available.</p>
-    {% endif %}
-    
+
     {% if user.is_authenticated %}
         <div class="controlbox" id="admin">
             <a id="new" href="{% url exam_new %}">Create a new exam</a>
@@ -40,11 +14,67 @@
             </form>
         </div>
     {% endif %}
-{% endblock content %}
 
-{% block sidebar %}
-<a href="{% url exam_search %}">Search exams</a>
-{% endblock sidebar %}
+    <div>
+        <div id="searchBox" data-bind="with: search">
+            <label for="search_query">Search for exams: </label>
+            <input id="search_query" type="text" name="examSearch" class="search" data-bind="
+                value: query, 
+                valueUpdate: 'afterkeydown'
+            "/>
+
+			<label for="search_author"> by author: </label>
+			<input id="search_author" type="text" class="search" size="30" data-bind="
+                value: author,
+                valueUpdate: 'afterkeydown change',
+                autocomplete: '{% url user_search %}', 
+				autocompleteCallback: function(user) { return {label: user.username+' ('+user.name+')', value: user.username} },
+				click: clearMine
+			"/>
+			(mine only <input type="checkbox" data-bind="checked: mine"/>)
+
+			<div data-bind="with: results">
+                <div class="results">
+					<table id="exam-list" data-bind="visible: all().length>0">
+							<col span="1" class="name"/>
+							<col span="1" class="author"/>
+							<col span="1" class="admin"/>
+						<thead>
+							<th>Name</th>
+							<th>Author</th>
+						</thead>
+                        <tbody class="results editlist big" data-bind="foreach: {
+                            data: pages()[page()-1],
+                        }">
+                            <tr class="result exam">
+                                <td><a data-bind="attr: {href: url}, text: name"></a></td>
+                                <td><span data-bind="text: author"></span></td>
+                                <td class="admin">
+                                    <a class="preview" data-bind="attr: {href: url+'preview/'}" target="_blank" title="Test run"></a>
+                                    <a class="copy" data-bind="attr: {href: url+'copy/'}" title="Make a copy"></a>
+                                    <a class="delete" data-bind="visible: canEdit, attr: {href: url+'delete/'}, click: function() {$parent.deleteExam(this) }" title="Delete"></a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="none" data-bind="visible: all().length==0">
+                        No exams found.
+                    </div>
+				</div>
+				<div class="pagination" data-bind="visible: pages().length>0">
+					Page:
+					<button class="previous" data-bind="click: prevPage"></button>
+					<span data-bind="text: pageText"></span>
+					<button class="next" data-bind="click: nextPage"></button>
+				</div>
+			</div>
+        </div>
+    </div>
+    
+    <script type="text/html" id="exam">
+    </script>
+ 
+{% endblock content %}
 
 {% block javascripts %}
 	{{block.super}}

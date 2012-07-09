@@ -236,7 +236,6 @@
         <code>chkconfig httpd on</code>.
       </p>
     
-      <!--
     <h2>LDAP authentication</h2>
     <p>
     	LDAP authentication is possible within the editor.  This can work in
@@ -245,9 +244,8 @@
     
     <h3>Extra required packages</h3>
 	<ul>
-		<li>Python LDAP: <code>apt-get install python-ldap</code></li>
-		<li>Django LDAP: <code>apt-get install python-django-auth-ldap</code></li>
-		<li>GnuTLS (for secure LDAP lookups only): <code>apt-get install libgnutls26</code></li>
+    <li><code>yum install openldap-devel</code></li>
+		<li>Django LDAP: (from within the virtualenv) <code>pip install django-auth-ldap</code></li>
 	</ul>
 	
 	<h3>Extra configuration</h3>
@@ -258,7 +256,6 @@
 			<code>AUTHENTICATION_BACKENDS</code> and the <code>ldap_auth</code>
 			import line.</li>
     </ul>
-    -->
     
     <p>
       <b>Note that if any changes are made to the editor code, including

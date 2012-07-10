@@ -91,7 +91,7 @@ $(document).ready(function() {
 	//automatically resize a text input to fit its contents
 	ko.bindingHandlers.autosize = {
 		update: function(element,valueAccessor) {
-			var settings = { max: null, min: 0, padding: 30 };
+			var settings = { max: null, min: 60, padding: 30 };
 
 			var value = ko.utils.unwrapObservable(valueAccessor());
 			if(typeof value == 'object')

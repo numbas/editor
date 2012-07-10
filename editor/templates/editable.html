@@ -2,15 +2,26 @@
 {% verbatim %}
     <script type="text/html" id="property">
 		<label data-bind="html: label"/>
-		<input data-bind="value: property, valueUpdate: 'afterkeydown', attr: {type: $data.type || 'text', min: $data.min, max: $data.max}"/>
+		<input data-bind="
+			value: property, 
+			valueUpdate: 'afterkeydown', 
+			attr: {
+				type: $data.type || 'text', 
+				min: $data.min, 
+				max: $data.max
+			}, 
+			autosize: {max: 500, padding: 10, value: property}
+		"/>
 	</script>
 
 	<script type="text/html" id="percentproperty">
 		<label data-bind="html: label"/>
 		<span class="percentproperty value" data-bind="text: property()+'%'"></span>
-		<input data-bind="
+		<input 
+			data-bind="
 				value: property, 
-				valueUpdate: 'afterkeydown'" 
+				valueUpdate: 'afterkeydown'
+			"
 			type="range"
 			step="5"
 			min="0"

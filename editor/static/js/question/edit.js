@@ -33,15 +33,11 @@ $(document).ready(function() {
     {
 		var isadvanced = this.isadvanced = ko.observable(true);
 
-        this.realName = ko.observable('A Question');
-		this.name = ko.computed({
-			read: this.realName,
-			write: function(value) {
-				if(value.length)
-						this.realName(value);
-			},
-			owner: this
-		});
+        this.name = ko.observable('Untitled Question');
+		this.realName = ko.computed(function() {
+			var name = this.name()
+			return name.length>0 ? name : 'Untitled Question';
+		},this);
 
 		var realtags = this.realtags = ko.observableArray([]);
         this.tags = ko.computed({
@@ -164,13 +160,13 @@ $(document).ready(function() {
                 }
                 
                 $.post(
-                    '/question/'+this.id+'/'+slugify(this.name())+'/',
+                    '/question/'+this.id+'/'+slugify(this.realName())+'/',
                     {json: JSON.stringify(this.save()), csrfmiddlewaretoken: getCookie('csrftoken')}
                 )
                     .success(function(data){
                         var address = location.protocol+'//'+location.host+data.url;
                         if(history.replaceState)
-                            history.replaceState({},q.name(),address);
+                            history.replaceState({},q.realName(),address);
                         $.noty.close(vm.save_noty);
                         noty({text:'Saved.',type:'success',timeout: 1000, layout: 'topCenter'});
                     })
@@ -399,7 +395,7 @@ $(document).ready(function() {
 			});
 
             return {
-                name: this.name(),
+                name: this.realName(),
                 tags: this.tags(),
                 statement: this.statement(),
 				extensions: extensions,

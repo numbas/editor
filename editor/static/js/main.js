@@ -7,7 +7,46 @@ if(!Array.prototype.contains)
 {
 	Array.prototype.contains = function(it) { return this.indexOf(it) != -1; };
 }
+
+//get size of contents of an input
+//from http://stackoverflow.com/questions/118241/calculate-text-width-with-javascript
+$.textMetrics = function(el) {
+	var h = 0, w = 0;
+
+	var div = document.createElement('div');
+	document.body.appendChild(div);
+	$(div).css({
+		position: 'absolute',
+		left: -1000,
+		top: -1000,
+		display: 'none'
+	});
+
+	var val = $(el).val();
+	val = val.replace(/ /g,'&nbsp;');
+	$(div).html(val);
+	var styles = ['font-size','font-style', 'font-weight', 'font-family','line-height', 'text-transform', 'letter-spacing'];
+	$(styles).each(function() {
+		var s = this.toString();
+		$(div).css(s, $(el).css(s));
+	});
+
+	h = $(div).outerHeight();
+	w = $(div).outerWidth();
+
+	$(div).remove();
+
+	var ret = {
+	 height: h,
+	 width: w
+	};
+
+	return ret;
+}
+
 var MathJaxQueue;
+
+
 $(document).ready(function() {
 	MathJaxQueue = MathJax.Callback.Queue(MathJax.Hub.Register.StartupHook('End',{}));
 	$.fn.mathjax = function() {
@@ -48,6 +87,23 @@ $(document).ready(function() {
             });
         }
     }    
+
+	//automatically resize a text input to fit its contents
+	ko.bindingHandlers.autosize = {
+		update: function(element,valueAccessor) {
+			var settings = { max: null, min: 0, padding: 30 };
+
+			var value = ko.utils.unwrapObservable(valueAccessor());
+			if(typeof value == 'object')
+				settings = $.extend(settings,value);
+
+			var w = $.textMetrics(element).width + settings.padding;
+			w = Math.max(w,settings.min||0);
+			if(settings.max!=null)
+				w = Math.min(w,settings.max);
+			$(element).width(w+'px');
+		}
+	}
     
 })
 

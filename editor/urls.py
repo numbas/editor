@@ -39,7 +39,7 @@ urlpatterns = patterns('',
     
     url(r'^exam/upload/$', ExamUploadView.as_view(), name='exam_upload'),
                        
-    url(r'^exam/search/$', ExamSearchView.as_view(), name='exam_search'),
+    url(r'^exams/search/$', ExamSearchView.as_view(), name='exam_search'),
     
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/$', ExamUpdateView.as_view(),
         name='exam_edit'),
@@ -64,7 +64,7 @@ urlpatterns = patterns('',
 
     url(r'^question/upload/$', QuestionUploadView.as_view(), name='question_upload'),
 
-    url(r'^question/search/$', QuestionSearchView.as_view(), name='question_search',),
+    url(r'^questions/search/$', QuestionSearchView.as_view(), name='question_search',),
     
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/$',
         QuestionUpdateView.as_view(), name='question_edit'),

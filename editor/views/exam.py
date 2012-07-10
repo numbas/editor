@@ -20,7 +20,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.forms.models import model_to_dict
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
+from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.shortcuts import render,redirect
 from django.utils.decorators import method_decorator
 from django.views.generic import CreateView, DeleteView, FormView, ListView, UpdateView, View
@@ -263,12 +263,20 @@ class ExamSearchView(ListView):
                                 **response_kwargs)
         raise Http404
     
+    def get_context_data(self, **kwargs):
+        context = super(ExamSearchView,self).get_context_data(**kwargs)
+        try:
+            context['id'] = self.request.GET['id']
+        except KeyError:
+            pass
+
+        return context
+
     def get_queryset(self):
         exams = Exam.objects.all()
         try:
             search_term = self.request.GET['q']
             exams = exams.filter(Q(name__icontains=search_term)).distinct()
-#            exams = exams.filter(Q(name__icontains=search_term) | Q(tags__name__istartswith=search_term)).distinct()
         except KeyError:
             pass
 
@@ -294,8 +302,3 @@ class ExamSearchView(ListView):
 class ExamListView(ListView):
     model=Exam
     template_name='exam/index.html'
-
-#    def get_queryset(self):
-#        if 'exam' in self.kwargs:
-#            print "hello"
-#        return Exam.objects.all()

@@ -243,6 +243,15 @@ class QuestionSearchView(ListView):
                                 content_type='application/json',
                                 **response_kwargs)
         raise Http404
+
+    def get_context_data(self, **kwargs):
+        context = super(QuestionSearchView,self).get_context_data(**kwargs)
+        try:
+            context['id'] = self.request.GET['id']
+        except KeyError:
+            pass
+
+        return context
     
     def get_queryset(self):
         questions = Question.objects.all()
@@ -263,7 +272,11 @@ class QuestionSearchView(ListView):
             if not mine:
                 author_term = self.request.GET['author']
                 authors = find_users(author_term)
-                questions = questions.filter(author__in=authors).distinct()
+                if len(authors) == 0:
+                    return []
+                else:
+                    questions = questions.filter(author__in=authors).distinct()
+
         except KeyError:
             pass
 

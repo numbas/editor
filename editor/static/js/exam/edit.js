@@ -71,7 +71,7 @@ $(document).ready(function() {
 			{
 				var vm = this;
 				this.searching(true);
-				$.getJSON('/question/search/',{q:this.questionSearch()})
+				$.getJSON('/questions/search/',{q:this.questionSearch()})
 					.success(function(data) {
                         var questions = data.object_list.map(function(d) {
                             return new Question(d,vm.questionSearchResults);

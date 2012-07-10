@@ -250,6 +250,29 @@ $(document).ready(function() {
         });
 	};
 
+    Editor.searchBinding = function(search,url,makeQuery) {
+		return ko.computed(function() {
+            search.searching(true);
+            var data = makeQuery();
+            data.id = search.lastID = Math.random()+'';
+            $.getJSON(url,data)
+                .success(function(data) {
+					if(data.id != search.lastID)
+						return;
+                    search.results.all(data.object_list);
+                })
+                .error(function() {
+					if('console' in window)
+	                    console.log(arguments);
+                })
+                .complete(function() {
+                    search.searching(false);
+                });
+            ;
+
+		},this).extend({throttle:100});
+    }
+
 	Editor.beforeRemove = function(elem) {
 		if(elem.nodeType==elem.ELEMENT_NODE) {
 			$(elem).slideUp(150,function(){$(this).remove()});

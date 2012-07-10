@@ -47,7 +47,7 @@ $(document).ready(function() {
         
     function QuestionSelect()
     {
-		var e = this;
+		var vm = this;
 
 		this.search = {
 			query: ko.observable(''),
@@ -113,28 +113,13 @@ $(document).ready(function() {
 			}
 		},this.search);
 
-		ko.computed(function() {
-            var vm = this;
-            this.search.searching(true);
-			var data = {
-				q: this.search.query(),
-				author: this.search.author(),
-				mine: this.search.mine()
+		Editor.searchBinding(this.search,'/questions/search/',function() {
+			return {
+				q: vm.search.query(),
+				author: vm.search.author(),
+				mine: vm.search.mine()
 			};
-            $.getJSON('/question/search/',data)
-                .success(function(data) {
-                    vm.search.results.all(data.object_list);
-                })
-                .error(function() {
-					if('console' in window)
-	                    console.log(arguments);
-                })
-                .complete(function() {
-                    vm.search.searching(false);
-                });
-            ;
-
-		},this).extend({throttle:100});
+		});
     }
     
     //create a view model

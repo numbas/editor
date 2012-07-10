@@ -446,8 +446,22 @@ $(document).ready(function() {
 		out.push(s);
 		return out;
 	}
-	function texMaths(s) {
+	function texJMEBit(expr) {
 		var scope = new Numbas.jme.Scope(Numbas.jme.builtinScope,{rulesets: Numbas.jme.display.simplificationRules});
+		try{
+			var sbits = Numbas.util.splitbrackets(expr,'{','}');
+			var expr = '';
+			for(var j=0;j<sbits.length;j+=1)
+			{
+				expr += j%2 ? 'subvar('+sbits[j]+',"gray")' : sbits[j]; //subvar here instead of \\color because we're still in JME
+			}
+			expr = Numbas.jme.display.exprToLaTeX(expr,[],scope);
+			return expr;
+		} catch(e) {
+			return '\\color{red}{\\textrm{'+e.message+'}}';
+		}
+	}
+	function texMaths(s) {
 		var bits = texsplit(s);
 		var out = '';
 		for(var i=0;i<bits.length-3;i+=4)
@@ -456,17 +470,7 @@ $(document).ready(function() {
 			var cmd = bits[i+1],
 				args = bits[i+2],
 				expr = bits[i+3];
-			try{
-				var sbits = Numbas.util.splitbrackets(expr,'{','}');
-				var expr = '';
-				for(var j=0;j<sbits.length;j+=1)
-				{
-					expr += j%2 ? 'subvar('+sbits[j]+',"gray")' : sbits[j]; //subvar here instead of \\color because we're still in JME
-				}
-				expr = Numbas.jme.display.exprToLaTeX(expr,[],scope);
-			} catch(e) {
-				expr = '\\color{red}{\\textrm{'+e.message+'}}';
-			}
+			expr = texJMEBit(expr);
 
 			switch(cmd)
 			{
@@ -719,6 +723,17 @@ $(document).ready(function() {
 	ko.bindingHandlers.mathjax = {
 		update: function(element) {
 			$(element).mathjax();
+		}
+	};
+
+	ko.bindingHandlers.JME = {
+		update: function(element,valueAccessor) {
+			var value = ko.utils.unwrapObservable(valueAccessor());
+			var tex = texJMEBit(value);
+			if(tex.length>0)
+				$(element).html('$'+tex+'$').mathjax();
+			else
+				$(element).html('');
 		}
 	};
 

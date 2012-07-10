@@ -231,6 +231,8 @@
 				name: 'property',
 				data: {label:'Correct answer:',property:jme.answer}
 			}"></div>
+			<span data-bind="JME: jme.answer" class="jme-answer value"></span>
+
 			<div data-bind="visible: $root.isadvanced, template: {
 				name: 'property',
 				data: {label:'Answer simplification rules:',property:jme.answerSimplification}

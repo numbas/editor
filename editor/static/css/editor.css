@@ -236,6 +236,18 @@ ul.choices {
 	padding: 1em 0em;
 }
 
+.jme-var {
+	color: olive;
+}
+
+.jme-simplify {
+	color: blue;
+}
+
+.jme-subvar {
+	color: gray;
+}
+
 input[type=number] {
 	width: 5em;
 }

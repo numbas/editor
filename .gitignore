@@ -7,3 +7,4 @@ database.py
 ldap_auth.py
 settings.py
 web/django.wsgi
+editor/templates/index.html

@@ -117,7 +117,7 @@ jQuery(function() {
                 if(textarea) {
                     pos = jQuery(this).getCaretPosition();
                     var fontHeight = parseInt(jQuery(this).css('font-size').replace('px',''));
-                    pos = {x: pos.left, y: pos.top - fontHeight - 4};
+                    pos = {x: pos.left, y: pos.top - fontHeight};
                     sel = jQuery(this).getSelection();
                     range = {startOffset: sel.start, endOffset: sel.end};
                     txt = jQuery(this).val();

@@ -109,18 +109,15 @@ jQuery(function() {
 			jQuery('body').append(previewElement);
 
             var queue = MathJax.Callback.Queue(MathJax.Hub.Register.StartupHook("End",{}));
-            el
-			.on('blur',function(e) {
-				previewElement.hide();
-			})
-			.on('keyup click',function(e) {
+
+			function updatePreview(e) {
                 previewElement.hide();
 
                 var pos, txt, sel, range;
                 if(textarea) {
                     pos = jQuery(this).getCaretPosition();
                     var fontHeight = parseInt(jQuery(this).css('font-size').replace('px',''));
-                    pos = {x: pos.left, y: pos.top - fontHeight};
+                    pos = {x: pos.left, y: pos.top - fontHeight - 4};
                     sel = jQuery(this).getSelection();
                     range = {startOffset: sel.start, endOffset: sel.end};
                     txt = jQuery(this).val();
@@ -133,6 +130,10 @@ jQuery(function() {
                     catch(e) {
                         return;
                     }
+					if(options.iFrame) {
+						pos.y -= $(iframe).contents().scrollTop();
+						previewElement.html(pos.y+','+$(iframe).contents().scrollTop()+','+$(iframe).position().y);
+					}
                     var anchor = sel.anchorNode;
 
                     range = sel.getRangeAt(0);
@@ -150,6 +151,8 @@ jQuery(function() {
                         return;
                     txt = jQuery(anchor).text();
                 }
+				if(pos.y<0)
+					return;
 
                 //only do this if the selection has zero width
                 //so when you're selecting blocks of text, distracting previews don't pop up
@@ -242,7 +245,17 @@ jQuery(function() {
                 queue.Push(['Typeset',MathJax.Hub,previewElement[0]]);
                 queue.Push(positionPreview);
                 queue.Push(options.callback);
-            });
+            }
+
+            el
+			.on('blur',function(e) {
+				previewElement.hide();
+			})
+			.on('keyup click',updatePreview);
+			if(options.iFrame)
+				$(el[0].ownerDocument).on('scroll',updatePreview);
+			else
+				el.on('scroll',updatePreview);
 
         });
 		return this;

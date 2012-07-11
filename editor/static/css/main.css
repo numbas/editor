@@ -4,8 +4,8 @@ html {
 }
 
 body { 
-    font: normal 1em 'trebuchet ms', arial, sans-serif;
-    background: #F4F4EE;
+    font: normal 1em arial, sans-serif;
+    background: #acdeff;
     margin: 0;
 }
 
@@ -28,29 +28,33 @@ body {
 
 }
 
-#main, #logo, #menubar, #content_header, #site_content, #content_footer, #footer {
+#main, #logo, #menu, #content_header, #site_content, #content_footer, #footer {
     margin-left: auto; 
     margin-right: auto;
 
 }
 
 .headerwrap {
-    background: #3A332D;
     margin-bottom: 0.5em;
-	color: white;
 }
 
 #header {
 	width: 940px;
 	margin: 0 auto;
+	padding-top: 1em;
+	padding-bottom: 0.5em;
 }
 
 #header a {
-    color: #FFF;
-    text-decoration: none;
+	color: black;
 }
-#menubar a:hover {
-	color: #ecef01;
+
+#menu a:hover {
+	color: #999;
+}
+
+#logo a {
+	text-decoration: none;
 }
 
 #logo h1, #logo h2 {
@@ -59,9 +63,11 @@ body {
 }
 
 #session {
-	position: absolute;
-	bottom: 0;
-	float: left;
+	float: right;
+}
+
+#session a {
+	text-decoration: underline;
 }
 
 #session #logout {
@@ -69,64 +75,37 @@ body {
 	margin-left: 2em;
 }
 
-#menubar {
-	position: relative;
-	height: 3ex;
-}
-
 ul#menu {
-    float: right;
 	margin: 0;
+	padding-top: 1em;
+	padding-left: 0;
+	padding-bottom: 1em;
+	overflow: hidden;
 }
 
 ul#menu li {
-    float: left;
-    padding: 0 0 0 6px;
     list-style: none;
     margin: 0 0.2em 0 0;
 	font-size: 1.2em;
+    display: inline-block;
 }
 
 ul#menu li a {
     display: block; 
-    float: left; 
-    margin-left: 0.8em;
+    text-decoration: none; 
+    margin-right: 0.8em;
+	color: #2f6990;
+    font-size: 120%;
 } 
 
-#helpbox {
-	position: absolute;
-	top: 0;
-	right: 0;
-	padding-right: 1em;
-	padding-top: 0.2em;
-}
-
-#content_header, #content_footer {
-    width: 940px;
-    background: white;
-    height: 14px;
-}
-#content_header {
-    border-radius: 1em 1em 0 0;
-    border-top: 1px solid #ECECE0;
-    border-left: 1px solid #ECECE0;
-    border-right: 1px solid #ECECE0;
-}
-#content_footer {
-    border-radius: 0 0 1em 1em;
-    border-bottom: 1px solid #ECECE0;
-    border-left: 1px solid #ECECE0;
-    border-right: 1px solid #ECECE0;
-}
-
 #site_content {
+	clear: both;
     width: 880px;
     overflow: hidden;
     margin: 0 auto 0 auto;
     padding: 0 20px 20px 40px;
     background: #FFF;
-    border-left: 1px solid #ECECE0;
-    border-right: 1px solid #ECECE0;
+	border-radius: 0.5em;
 } 
 
 #content {
@@ -136,11 +115,10 @@ ul#menu li a {
 
 #footer {
     width: 916px;
-    font: normal 90% sans-serif;
+    font: normal 75% sans-serif;
     text-align: center; 
     background: transparent;
     color: #333;
-    text-transform: uppercase;
 }
 
 #footer a, #footer a:hover {

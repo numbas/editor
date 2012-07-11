@@ -48,48 +48,37 @@
 	<div id="main">
 		<div class="headerwrap">
 			<div id="header">
+				<div id="session">
+					{% if user.is_authenticated %}
+						Hi, {{ user.first_name }}! <a id="logout" href="{% url logout %}?next={{request.path|escape}}">Log out</a>
+					{% else %}
+						<a href="{% url login %}?next={{request.path|escape}}">Log in</a>.
+					{% endif %}
+				</div>
 				<div id="logo">
 					<div id="logo_text">
 						{% block logo_text %}
 						<a href="/">
-							<h1>Numbas</h1>
+							<img src="{{STATIC_URL}}images/numbas_logo.png"/>
 						</a>
 						{% endblock logo_text %}
 					</div>
 					<!-- end #logo_text -->
 				</div>
 				<!-- end #logo -->
-				{% block menubar %}
-					<div id="menubar">
-						<div id="session">
-							{% if user.is_authenticated %}
-		                        Hi, {{ user.first_name }}! <a id="logout" href="{% url logout %}?next={{request.path|escape}}">(Log out)</a>
-							{% else %}
-		                        <a href="{% url login %}?next={{request.path|escape}}">Log in</a>.
-							{% endif %}
-						</div>
-                        <ul id="menu">
-                            <li><a href="{% url editor_index %}">Home</a></li>
-                            <li><a href="{% url exam_index %}">Exams</a></li>
-                            <li><a href="{% url question_index %}">Questions</a></li>   
-                        </ul>
-						<div style="clear:both"></div>
-					</div>
-					<!-- end #menubar -->
-				{% endblock menubar %}
-				<div id="helpbox">
-					<a href="{{ HELP_URL }}" target="_blank">Help</a>
-				</div>
 			</div>
 		</div>
         <!-- end #header -->
-        <div id="content_header"></div>
         <div id="site_content">
-            <div class="sidebar">
-                {% block sidebar %}
-                {% endblock sidebar %}
-            </div>
-            <!-- end .sidebar -->
+			{% block menubar %}
+				<ul id="menu">
+					<li><a href="{% url editor_index %}">Home</a></li>
+					<li><a id="help" href="{{ HELP_URL }}" target="_blank">Help</a></li>
+					<li><a href="{% url exam_index %}">Exams</a></li>
+					<li><a href="{% url question_index %}">Questions</a></li>   
+				</ul>
+				<!-- end #menubar -->
+			{% endblock menubar %}
             <div id="content">
                 {% block content %}
                 {% endblock content %}
@@ -97,11 +86,11 @@
             <!-- end #content -->
         </div>
         <!-- end #site_content -->
-        <div id="content_footer"></div>
         <div id="footer">
-                    <p>
+            <p>
                 <a href="http://www.ncl.ac.uk/math/">&copy; 2011 School of Mathematics &amp; Statistics, Newcastle University</a>
-            </p>
+			</p>
+			<p>Some icons from <a href="http://somerandomdude.com/work/iconic/">Iconic Icon Set</a> &copy; P.J. Onori, Licensed under Creative Commons Attribution-ShareAlike 3.0 Unported.</p>
         </div>
         <!-- end #footer -->
     </div>

@@ -48,7 +48,7 @@
 
 .results {
     margin: 1em 0 1em 0;
-	height: 17em;
+	height: 21em;
 }
 
 .results table {
@@ -73,6 +73,10 @@
 
 .results col.admin {
 	width: 100px;
+}
+
+.result td {
+	padding: 0.4em;
 }
 
 #searchBox .pagination .previous {

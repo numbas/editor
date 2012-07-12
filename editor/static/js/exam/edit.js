@@ -148,7 +148,7 @@ $(document).ready(function() {
 			this.id = data.id;
 
 			if('metadata' in data) {
-				tryLoad(data.metadata,['notes'],this);
+				tryLoad(data.metadata,['notes','description'],this);
 			}
 
             this.load(parseExam(data.content));

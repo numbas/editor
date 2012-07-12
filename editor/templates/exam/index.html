@@ -20,7 +20,8 @@
             <label for="search_query">Search for exams: </label>
             <input id="search_query" type="text" name="examSearch" class="search" data-bind="
                 value: query, 
-                valueUpdate: 'afterkeydown'
+				valueUpdate: 'afterkeydown',
+				css: {loading: searching}
             "/>
 
 			<label for="search_author"> by author: </label>
@@ -66,9 +67,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <div class="none" data-bind="visible: all().length==0">
-                        No exams found.
-                    </div>
+                    <div class="none" data-bind="visible: all().length==0, text: $parent.searching() ? 'Loading results...' : 'No exams found.'">
 				</div>
 			</div>
         </div>

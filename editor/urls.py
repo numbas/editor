@@ -33,12 +33,7 @@ urlpatterns = patterns('',
 	url(r'^login/','django.contrib.auth.views.login',{'template_name':'auth/login.html'},name='login'),
 	url(r'^logout/','django.contrib.auth.views.logout',{'next_page':'/'},name='logout'),
 
-    url(r'^accounts/password/reset/$', 'django.contrib.auth.views.password_reset', {'post_reset_redirect' : '/accounts/password/reset/done/'}, name='password_reset'),
-    url(r'^accounts/password/reset/done/$', 'django.contrib.auth.views.password_reset_done'),
-    url(r'^accounts/password/reset/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$', 'django.contrib.auth.views.password_reset_confirm', {'post_reset_redirect' : '/accounts/password/done/'}),
-    url(r'^accounts/password/done/$', 'django.contrib.auth.views.password_reset_complete'),
-
-
+    url(r'^accounts/', include('registration.backends.default.urls')),
     
     url(r'^exams/$',ExamListView.as_view(), name='exam_index',),
                        

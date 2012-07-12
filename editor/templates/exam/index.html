@@ -34,6 +34,12 @@
 			(mine only <input type="checkbox" data-bind="checked: mine"/>)
 
 			<div data-bind="with: results">
+				<div id="pagination" data-bind="visible: pages().length>0">
+					Page:
+					<button class="previous" data-bind="click: prevPage"></button>
+					<span data-bind="text: pageText"></span>
+					<button class="next" data-bind="click: nextPage"></button>
+				</div>
                 <div class="results">
 					<table id="exam-list" data-bind="visible: all().length>0">
 							<col span="1" class="name"/>
@@ -47,7 +53,10 @@
                             data: pages()[page()-1],
                         }">
                             <tr class="result exam">
-                                <td><a data-bind="attr: {href: url}, text: name"></a></td>
+								<td>
+									<a data-bind="attr: {href: url}, text: name"></a>
+									<div class="description" data-bind="visible: metadata.description.length>0, html: $(metadata.description).text(), dotdotdot: true"></div>
+								</td>
                                 <td><span data-bind="text: author"></span></td>
                                 <td class="admin">
                                     <a class="preview" data-bind="attr: {href: url+'preview/'}" target="_blank" title="Test run"></a>
@@ -61,12 +70,6 @@
                         No exams found.
                     </div>
 				</div>
-				<div class="pagination" data-bind="visible: pages().length>0">
-					Page:
-					<button class="previous" data-bind="click: prevPage"></button>
-					<span data-bind="text: pageText"></span>
-					<button class="next" data-bind="click: nextPage"></button>
-				</div>
 			</div>
         </div>
     </div>
@@ -79,7 +82,6 @@
 {% block javascripts %}
 	{{block.super}}
 	<script type="text/javascript" src="{{ STATIC_URL }}js/exam/index.js"></script>
-	<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.js"></script>
 {% endblock javascripts %}
 
 {% block stylesheets %}

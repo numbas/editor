@@ -35,8 +35,6 @@ $(document).ready(function() {
     ;
 
     
-    $('#question-list').tablesorter();
-
     $('#upload').click(function(e) {
         e.preventDefault();
         $('#uploadForm input[type=file]').trigger('click');

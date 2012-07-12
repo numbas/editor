@@ -208,6 +208,7 @@
 				<span class="handle"></span>
 				<a data-bind="attr:{href: url}, text: name" target="_blank"></a>
 				<button class="delete" data-bind="click:remove"></button>
+				<div class="description" data-bind="visible: description.length>0, html: description, dotdotdot: true"></div>
 			</li>
 		</script>
 
@@ -215,6 +216,7 @@
 			<li class="questionResult" data-bind="dragOut: {data: $data, sortable: '.questionList'}">
 				<span class="handle"></span>
 				<a data-bind="attr: {href: url}, text: name" target="_blank"></a>
+				<div class="description" data-bind="visible: description.length>0, html: description, dotdotdot: true"></div>
 			</li>
 		</script>
 	    {% endverbatim %}

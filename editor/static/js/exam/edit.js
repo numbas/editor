@@ -339,6 +339,7 @@ $(document).ready(function() {
 		this.id = ko.observable(data.id);
 		this.name = ko.observable(data.name);
 		this.url = ko.observable(data.url);
+		this.description = $(data.metadata.description).text();
 		this.parent = parent;
 	}
 	Question.prototype = {

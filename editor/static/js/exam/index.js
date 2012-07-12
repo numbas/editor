@@ -51,8 +51,6 @@ $(document).ready(function() {
 		}
 	});
 
-	$('#exam-list').tablesorter();
-
     $('#upload').click(function(e) {
         if(!$('#uploadForm input[type=file]').val().length) {
             e.preventDefault();

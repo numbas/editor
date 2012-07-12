@@ -21,28 +21,39 @@
 				name: 'property',
 				data: {property:name,label:'Question name:'}
 			}"></div>
-			<div data-bind="fadeVisible: isadvanced">
-				<label>Tags:</label>
-				<div data-bind="listbox:tags"></div>
+		</div>
+
+		<div data-bind="folder: {label:'Metadata',show:true}">
+			<div class="properties">
+				<div data-bind="fadeVisible: isadvanced">
+					<label>Tags:</label>
+					<div data-bind="listbox:tags"></div>
+				</div>
+			</div>
+			<div data-bind="folder: 'Description'">
+				<div>
+					<div data-bind="writemaths: description"></div>
+				</div>
+			</div>
+
+			<div data-bind="folder: 'Author\'s Notes'">
+				<div>
+					<div data-bind="writemaths: notes"></div>
+				</div>
+			</div>
+
+			<div data-bind="folder: 'Extensions', fadeVisible: isadvanced">
+				<div>
+					<ul data-bind="foreach: extensions">
+						<li>
+							<input type="checkbox" data-bind="checked: used">
+							<a data-bind="attr: {href:url}, text:name" target="_blank"></a>
+						</li>
+					</ul>
+				</div>
 			</div>
 		</div>
 
-		<div data-bind="folder: 'Author\'s Notes'">
-			<div>
-				<div data-bind="writemaths: notes"></div>
-			</div>
-		</div>
-
-		<div data-bind="folder: 'Extensions', fadeVisible: isadvanced">
-			<div>
-				<ul data-bind="foreach: extensions">
-					<li>
-						<input type="checkbox" data-bind="checked: used">
-						<a data-bind="attr: {href:url}, text:name" target="_blank"></a>
-					</li>
-				</ul>
-			</div>
-		</div>
 
 		<div data-bind="folder: {label:'Statement', show: true}">
 			<div>

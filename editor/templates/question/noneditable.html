@@ -20,27 +20,38 @@
 					name: 'property',
 					data: {property:name,label:'Question name:'}
 				}"></div>
-				<div class="tags">
-					<label>Tags:</label>                    
-                    <ul class="value" data-bind="template: {
-                    	name: 'tag',
-                    	foreach: tags
-					}"></ul>        
-				</div>
 			</div>
 
-            <div data-bind="folder: {label: 'Author\'s Notes', show: true}, visible: notes().length>0">
-                <div>
-                    <div class="textblock" data-bind="cleanJME: notes"></div>
-                </div>
-            </div>
+			<div data-bind="folder: {label: 'Metadata', show: true}">
+				<div class="properties">
+					<div class="tags">
+						<label>Tags:</label>                    
+						<ul class="value" data-bind="template: {
+							name: 'tag',
+							foreach: tags
+						}"></ul>        
+					</div>
+				</div>
 
-			<div data-bind="folder: 'Extensions', visible: usedExtensions().length>0">
-				<div>
-				<ul data-bind="template: {
-					name:'extension',
-					foreach: usedExtensions
-				}"></ul>
+				<div data-bind="folder: {label: 'Description', show: true}, visible: description().length>0">
+					<div>
+						<div class="textblock" data-bind="cleanJME: description"></div>
+					</div>
+				</div>
+
+				<div data-bind="folder: {label: 'Author\'s Notes', show: true}, visible: notes().length>0">
+					<div>
+						<div class="textblock" data-bind="cleanJME: notes"></div>
+					</div>
+				</div>
+
+				<div data-bind="folder: 'Extensions', visible: usedExtensions().length>0">
+					<div>
+					<ul data-bind="template: {
+						name:'extension',
+						foreach: usedExtensions
+					}"></ul>
+					</div>
 				</div>
 			</div>
 

@@ -30,9 +30,11 @@ $(document).ready(function() {
 		});
 
         this.notes = ko.observable('');
+		this.description = ko.observable('');
 		this.metadata = ko.computed(function() {
 			return {
-				notes: this.notes()
+				notes: this.notes(),
+				description: this.description()
 			};
 		},this);
 

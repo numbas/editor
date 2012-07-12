@@ -63,11 +63,19 @@
 				}"></div>
 			</div>
 
-            <div data-bind="folder: 'Author\'s Notes'">
-                <div>
-                    <div data-bind="writemaths: notes"></div>
-                </div>
-            </div>
+		<div data-bind="folder: {label:'Metadata',show:true}">
+			<div data-bind="folder: 'Description'">
+				<div>
+					<div data-bind="writemaths: description"></div>
+				</div>
+			</div>
+
+			<div data-bind="folder: 'Author\'s Notes'">
+				<div>
+					<div data-bind="writemaths: notes"></div>
+				</div>
+			</div>
+		</div>
 
 			<div data-bind="folder: 'Navigation'">
 				<div>
@@ -237,11 +245,19 @@
 				}"></div>
 			</div>
 
-            <div data-bind="folder: {label: 'Author\'s Notes', show: true}, visible: notes().length>0">
-                <div>
-                    <div data-bind="html: notes"></div>
-                </div>
-            </div>
+			<div data-bind="folder: {label: 'Metadata', show: true}">
+				<div data-bind="folder: {label: 'Description', show: true}, visible: description().length>0">
+					<div>
+						<div class="textblock" data-bind="cleanJME: description"></div>
+					</div>
+				</div>
+
+				<div data-bind="folder: {label: 'Author\'s Notes', show: true}, visible: notes().length>0">
+					<div>
+						<div class="textblock" data-bind="cleanJME: notes"></div>
+					</div>
+				</div>
+			</div>
 
 			<div data-bind="folder: 'Navigation'">
 				<div>

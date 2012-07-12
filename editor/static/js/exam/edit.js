@@ -362,7 +362,14 @@ $(document).ready(function() {
         }
 	}
 
-    //create an exam object
-    viewModel = new Exam(Editor.examJSON);
-    ko.applyBindings(viewModel);
+	Numbas.loadScript('scripts/jme-display.js');
+	Numbas.loadScript('scripts/jme.js');
+	Numbas.loadScript('scripts/editor-extras.js');
+	Numbas.startOK = true;
+	Numbas.init = function() {
+		//create an exam object
+		viewModel = new Exam(Editor.examJSON);
+		ko.applyBindings(viewModel);
+	};
+	Numbas.tryInit();
 });

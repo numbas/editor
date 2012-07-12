@@ -9,6 +9,11 @@
 {% block javascripts %}
     {{ block.super }}
 
+	<!-- numbas -->
+    <script src="{{ STATIC_URL }}js/numbas/R/R.js" type="text/javascript"></script>
+    <script src="{{ STATIC_URL }}js/numbas/R/en-gb.js" type="text/javascript"></script>
+	<script src="{{ STATIC_URL }}js/numbas/numbas.js" type="text/javascript"></script>
+
     <!-- exam editor -->
     <script src="{{ STATIC_URL }}js/exam/edit.js" type="text/javascript"></script>
 

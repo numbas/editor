@@ -17,7 +17,7 @@
 
     <div>
         <div id="searchBox" data-bind="with: search">
-            <label for="search_query">Search for exams: </label>
+            <label for="search_query">Search for exams called: </label>
             <input id="search_query" type="text" name="examSearch" class="search" data-bind="
                 value: query, 
 				valueUpdate: 'afterkeydown',
@@ -67,7 +67,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <div class="none" data-bind="visible: all().length==0, text: $parent.searching() ? 'Loading results...' : 'No exams found.'">
+					<div class="none" data-bind="visible: all().length==0, text: $parent.searching() ? 'Loading results...' : 'No exams found.'"></div>
 				</div>
 			</div>
         </div>

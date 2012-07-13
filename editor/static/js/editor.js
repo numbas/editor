@@ -770,12 +770,6 @@ $(document).ready(function() {
 		}
 	};
 
-	ko.bindingHandlers.mathjax = {
-		update: function(element) {
-			$(element).mathjax();
-		}
-	};
-
 	ko.bindingHandlers.JME = {
 		update: function(element,valueAccessor) {
 			var value = ko.utils.unwrapObservable(valueAccessor());

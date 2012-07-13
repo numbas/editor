@@ -30,9 +30,11 @@ $(document).ready(function() {
 		});
 
         this.notes = ko.observable('');
+		this.description = ko.observable('');
 		this.metadata = ko.computed(function() {
 			return {
-				notes: this.notes()
+				notes: this.notes(),
+				description: this.description()
 			};
 		},this);
 
@@ -146,7 +148,7 @@ $(document).ready(function() {
 			this.id = data.id;
 
 			if('metadata' in data) {
-				tryLoad(data.metadata,['notes'],this);
+				tryLoad(data.metadata,['notes','description'],this);
 			}
 
             this.load(parseExam(data.content));
@@ -337,6 +339,7 @@ $(document).ready(function() {
 		this.id = ko.observable(data.id);
 		this.name = ko.observable(data.name);
 		this.url = ko.observable(data.url);
+		this.description = $(data.metadata.description).text();
 		this.parent = parent;
 	}
 	Question.prototype = {
@@ -360,7 +363,14 @@ $(document).ready(function() {
         }
 	}
 
-    //create an exam object
-    viewModel = new Exam(Editor.examJSON);
-    ko.applyBindings(viewModel);
+	Numbas.loadScript('scripts/jme-display.js');
+	Numbas.loadScript('scripts/jme.js');
+	Numbas.loadScript('scripts/editor-extras.js');
+	Numbas.startOK = true;
+	Numbas.init = function() {
+		//create an exam object
+		viewModel = new Exam(Editor.examJSON);
+		ko.applyBindings(viewModel);
+	};
+	Numbas.tryInit();
 });

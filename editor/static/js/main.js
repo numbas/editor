@@ -55,6 +55,21 @@ $(document).ready(function() {
 		});
 	}
 
+	ko.bindingHandlers.dotdotdot = {
+		update: function(element) {
+			$(element).dotdotdot({
+				watch:true, 
+				callback: function() { $(element).mathjax(); }
+			});
+		}
+	}
+
+	ko.bindingHandlers.mathjax = {
+		update: function(element) {
+			$(element).mathjax();
+		}
+	};
+
     ko.bindingHandlers.autocomplete = {
         init: function(element,valueAccessor,allBindingsAccessor) {
             var allBindings = allBindingsAccessor();

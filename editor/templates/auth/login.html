@@ -1,11 +1,21 @@
 {% extends "layout.html" %}
 
+{% block stylesheets %}
+{{block.super}}
+<style type="text/css">
+	#loginForm label {
+		display: inline-block;
+		width: 5em;
+	}
+</style>
+{% endblock stylesheets %}
+
 {% block content %}
 {% if form.errors %}
 	<p>Your username and password did not match.</p>
 {% endif %}
 
-<form method="post" action="{% url login %}" autocomplete="off">
+<form id="loginForm" method="post" action="{% url login %}" autocomplete="off">
 	{% csrf_token %}
 	{{ form.as_p }}
 	<input type="submit" value="Log in"/>

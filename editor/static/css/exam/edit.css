@@ -8,6 +8,19 @@
     min-height: 5em;
     border: 1px dashed;
 }
+
+.question .description {
+	max-height: 4em;
+	line-height: 1.2em;
+	font-size: 80%;
+	padding-left: 4em;
+	padding-bottom: 0.5em;
+}
+
+.question .description p {
+	margin: 0;
+}
+
 .questions .searchBox {
     display: inline-block;
     width: 400px;

@@ -35,8 +35,6 @@ $(document).ready(function() {
     ;
 
     
-    $('#question-list').tablesorter();
-
     $('#upload').click(function(e) {
         e.preventDefault();
         $('#uploadForm input[type=file]').trigger('click');
@@ -120,6 +118,9 @@ $(document).ready(function() {
 				mine: vm.search.mine()
 			};
 		});
+
+		Mousetrap.bind('left',function() { vm.search.results.prevPage.apply(vm.search.results) });
+		Mousetrap.bind('right',function() { vm.search.results.nextPage.apply(vm.search.results) });
     }
     
     //create a view model

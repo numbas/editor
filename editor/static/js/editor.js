@@ -585,17 +585,44 @@ $(document).ready(function() {
 			var root = $(element);
 
 			root.addClass('fold');
-			var header = $('<div class="folder-header"/>');
-			var content = $('<div class="folder"/>');
+			var header = $('<div class="folder-header" tabindex="0"/>');
+			var content = $('<div class="folder" role="treeitem"/>');
 			root.toggleClass('folded',!options.show);
 			root.contents().appendTo(content);
 			root.append(header,content);
 
-			header.on('click',function() {
-				$(this).siblings('.folder').toggle(150,function() {
+			function toggleOpen(state) {
+				var currentState = !root.hasClass('folded');
+				if(state==currentState)
+					return;
+				header.siblings('.folder').toggle(150,function() {
 					$(this).parent().toggleClass('folded');
 				});
-			});
+			}
+
+			header
+				.on('click',function(){toggleOpen();})
+				.on('keydown',function(e) {
+					switch(e.which) {
+					case 37:	//left arrow
+						toggleOpen(false);
+						break;
+					case 39:	//right arrow
+						toggleOpen(true);
+						break;
+					case 32:	//space
+						toggleOpen();
+						break;
+					default:
+						return;
+					}
+
+					e.preventDefault();
+					e.stopPropagation();
+				})
+			;
+
+
 			ko.applyBindingsToDescendants(bindingContext, content[0]);
 
 			return {controlsDescendantBindings: true};
@@ -633,9 +660,9 @@ $(document).ready(function() {
 			var show = allBindings.show;
 
 			element=$(element);
-			var b = $('<button class="delete" data-bind="click:remove"></button>');
+			var b = $('<button class="delete" data-bind="click:remove" value="Delete"></button>');
 			b.click(function(){viewModel.remove()});
-			element.prepend(b);
+			element.append(b);
 		}
 	};
 

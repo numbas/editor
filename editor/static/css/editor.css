@@ -89,7 +89,7 @@
 .variable .def {
     font-family: monospace;
 	text-align: right;
-	width: 30em;
+	width: 24em;
 }
 
 .variable.ui-sortable-helper {

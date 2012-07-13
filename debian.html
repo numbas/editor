@@ -5,27 +5,30 @@
     <title>Numbas editor</title>
   </head>
   <body>
-    <h1>Debian installation</h1>
+    <h1>Debian/Ubuntu installation</h1>
     <p>
       Outline instructions on setting up the Numbas editor with a backend MySQL
-      database.  The following is for a Debian Squeeze (6.0.2) Linux server.
-      If each step is followed exactly, a working setup should result.  More
-      detailed instructions at some point soon.
+      database.  The following is for a Debian Squeeze (6.0.2) or Ubuntu
+      Precise (12.04) Linux server.
     </p>
 
     <h2>Package installation</h2>
     <p>
-      Packages that would be installed as part of a standard Debian install are
-      not listed.  Python 3 is required for compilation of Numbas exams; Python
-      2.6 (or greater) is required for Django.
+      Packages that would be installed as part of a standard Debian/Ubuntu
+      install are not listed.  Python 3 is required for compilation of Numbas
+      exams; Python 2.6 (or greater) is required for Django.
     </p>
     <ul>
       <li>Install Apache, Git, Apache WSGI module, MySQL, Python 3, Python
       MySQLdb interface: <code>apt-get install apache2 git-core
-        libapache2-mod-wsgi mysql-server mysql-common python3.1
+        libapache2-mod-wsgi mysql-server mysql-common python3
         python-mysqldb</code></li>
-      <li>Install Django (need version 1.3, not in Squeeze): <code>apt-get
-        install python-django/squeeze-backports</code></li>
+      <li>Install Django (need at least version 1.3).
+        <ul>
+          <li>Debian (not in Squeeze): <code>apt-get install python-django/squeeze-backports</code></li>
+          <li>Ubuntu: <code>apt-get install python-django</code></li>
+        </ul>
+      </li>
       <li>Install Pip: <code>apt-get install python-pip</code></li>
       <li>Install GitPython: <code>pip install GitPython</code></li>
       <li>Install Django Taggit: <code>pip install django-taggit</code></li>
@@ -119,6 +122,8 @@
           <li>Enter username, e-mail address, and password</li>
         </ul>
       </li>
+      <li>Copy <code>editor/templates/index.html.dist</code> to
+      <code>editor/templates/index.html</code> and customise.</li>
       <li>Copy <code>web/django.wsgi.dist</code> to
       <code>web/django.wsgi</code> and edit:
         <ul>

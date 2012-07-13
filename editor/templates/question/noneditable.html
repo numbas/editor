@@ -75,20 +75,23 @@
 			<div data-bind="folder: {label: 'Variables', show: true}">
 				<div>
 					<table class="variables editlist">
+						<col span="1" class="name"/>
+						<col span="1"/>
+						<col span="1" class="definition"/>
+						<col span="1" class="value"/>
 						<thead data-bind="visible: variables().length>0">
 							<th>Name</th>
 							<th/>
-							<th>Definition</th>
+							<th class="definition">Definition</th>
 							<th>Computed value</th>
 						</thead>
-						<tbody data-bind="template:{
-							name:'variable',
-							foreach: variables,
-						}"></tbody>
-						<tr>
-							<td colspan="3"/>
-							<td><button data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button></td>
-						</tr>
+						<tbody>
+							<!-- ko template:{name:'variable',foreach: variables}--><!-- /ko -->
+							<tr>
+								<td colspan="3"/>
+								<td><button data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button></td>
+							</tr>
+						</tbody>
 					</table>
 				</div>
 			</div>

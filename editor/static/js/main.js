@@ -57,7 +57,6 @@ $(document).ready(function() {
 
 	ko.bindingHandlers.dotdotdot = {
 		update: function(element) {
-			console.log('dotdotdot',element);
 			$(element).dotdotdot({watch:true});
 		}
 	}

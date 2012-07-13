@@ -28,21 +28,20 @@ body {
 
 }
 
+#main {
+	width: 940px;
+	margin: 0 auto;
+}
+
 #main, #logo, #menu, #content_header, #site_content, #content_footer, #footer {
     margin-left: auto; 
     margin-right: auto;
 
 }
 
-.headerwrap {
-    margin-bottom: 0.5em;
-}
-
 #header {
-	width: 940px;
-	margin: 0 auto;
 	padding-top: 1em;
-	padding-bottom: 0.5em;
+	padding-bottom: 1em;
 }
 
 #header a {
@@ -77,7 +76,6 @@ body {
 
 ul#menu {
 	margin: 0;
-	padding-top: 1em;
 	padding-left: 0;
 	padding-bottom: 1em;
 	overflow: hidden;
@@ -99,11 +97,12 @@ ul#menu li a {
 } 
 
 #site_content {
-	clear: both;
-    width: 880px;
-    overflow: hidden;
-    margin: 0 auto 0 auto;
-    padding: 0 20px 20px 40px;
+    
+    
+	overflow: hidden;
+    
+    
+	padding: 1em 20px 20px 40px;
     background: #FFF;
 	border-radius: 0.5em;
 } 
@@ -114,8 +113,7 @@ ul#menu li a {
 }
 
 #footer {
-    width: 916px;
-    font: normal 75% sans-serif;
+    font: 75% sans-serif;
     text-align: center; 
     background: transparent;
     color: #333;

@@ -5,33 +5,26 @@
     <title>Numbas editor</title>
   </head>
   <body>
-    <h1>Debian/Ubuntu installation</h1>
+    <h1>SUSE installation</h1>
     <p>
       Outline instructions on setting up the Numbas editor with a backend MySQL
-      database.  The following is for a Debian Squeeze (6.0.2) or Ubuntu
-      Precise (12.04) Linux server.
+      database.  The following is for a SUSE Asparagus (12.1) Linux server.
     </p>
 
     <h2>Package installation</h2>
     <p>
-      Packages that would be installed as part of a standard Debian/Ubuntu
+      Packages that would be installed as part of a standard minimal server
       install are not listed.  Python 3 is required for compilation of Numbas
       exams; Python 2.6 (or greater) is required for Django.
     </p>
     <ul>
       <li>Install Apache, Git, Apache WSGI module, MySQL, Python 3, Python
-      MySQLdb interface: <code>apt-get install apache2 git-core
-        libapache2-mod-wsgi mysql-server mysql-common python3
-        python-mysqldb</code></li>
-      <li>Install Django (need at least version 1.3).
-        <ul>
-          <li>Debian (not in Squeeze): <code>apt-get install python-django/squeeze-backports</code></li>
-          <li>Ubuntu: <code>apt-get install python-django</code></li>
-        </ul>
-      </li>
-      <li>Install some extra packages for Python module compilation:
-      <code>apt-get install gcc python-dev zlib1g-dev</code>
-      <li>Install Pip: <code>apt-get install python-pip</code></li>
+        MySQLdb interface: <code>yast -i apache2 apache2-mod_wsgi git
+        mysql-cluster python-mysql python3 python3-xml</code></li>
+      <li>Install Django (need at least version 1.3): <code>yast -i python-django</code></li>
+      <li>Install some extra packages for Python module compilation: <code>yast
+        -i gcc python-devel zlib-devel</code>
+      <li>Install Pip: <code>yast -i python-pip</code></li>
       <li>Install GitPython: <code>pip install GitPython</code></li>
       <li>Install Django Taggit: <code>pip install django-taggit</code></li>
       <li>Bug in GitPython.  Change <code>util.py</code> by adding <code>import
@@ -41,6 +34,12 @@
     </ul>
 
     <h2>Configuration</h2>
+    <ul>
+      <li>Make sure the relevant HTTP service is allowed through the
+      firewall.</li>
+      <li>Make sure the web server and MySQL server start at system startup:
+      <code>insserv apache2</code>, <code>insserv mysql</code>.
+    </ul>
     <ul>
       <li>Create database <code>numbas_editor</code></li>
       <li>Create database user and grant privileges on
@@ -63,11 +62,11 @@
         <ul>
           <li><code>chmod 2770 previews questiondb</code></li>
           <li><code>chmod 2750 dist</code></li>
-          <li><code>chgrp www-data dist previews questiondb</code></li>
-          <li><code>setfacl -R -m g:www-data:rwX previews questiondb</code></li>
-          <li><code>setfacl -dR -m g:www-data:rwX previews questiondb</code></li>
-          <li><code>setfacl -R -m g:www-data:rX dist</code></li>
-          <li><code>setfacl -dR -m g:www-data:rX dist</code></li>
+          <li><code>chgrp www dist previews questiondb</code></li>
+          <li><code>setfacl -R -m g:www:rwX previews questiondb</code></li>
+          <li><code>setfacl -dR -m g:www:rwX previews questiondb</code></li>
+          <li><code>setfacl -R -m g:www:rX dist</code></li>
+          <li><code>setfacl -dR -m g:www:rX dist</code></li>
         </ul>
       </li>
       <li>Clone the Numbas repository: <code>git clone
@@ -138,20 +137,21 @@
       </li>
       <li>Create apache config file and enable the site.
         <ul>
-          <li>Edit <code>/etc/apache2/sites-available/numbas_editor</code> with
+          <li>Edit <code>/etc/apache2/vhosts.d/numbas_editor.conf</code> with
           contents similar to that in <a
-            href="apache2_debian.conf"><code>apache2_debian.conf</code></a>.
+            href="apache2_suse.conf"><code>apache2_suse.conf</code></a>.
           If following these instructions exactly, then all that needs changing
           are the lines <code>ServerName</code>, <code>ServerAdmin</code>,
           <code>WSGIDaemonProcess</code>, and
           <code>WSGIProcessGroup</code>.</li>
-          <li><code>a2ensite numbas_editor &amp;&amp; service apache2
-              restart</code></li>
         </ul>
       </li>
-      <li>Point a web browser at the server hosting the editor.</li>
+      <li>Enable the Apache WSGI module: <code>a2enmod wsgi</code>.
+      <li>Restart the web server, then point a web browser at the server
+      hosting the editor.</li>
     </ul>
     
+    <!--
     <h2>LDAP authentication</h2>
     <p>
     	LDAP authentication is possible within the editor.  This can work in
@@ -173,6 +173,7 @@
 			<code>AUTHENTICATION_BACKENDS</code> and the <code>ldap_auth</code>
 			import line.</li>
     </ul>
+    -->
     
     <p>
       <b>Note that if any changes are made to the editor code, including

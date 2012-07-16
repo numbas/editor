@@ -312,9 +312,11 @@ $(document).ready(function() {
 			return data+'';
 		case 'string':
 			//this tries to use as little extra syntax as possible. Quotes or triple-quotes are only used if necessary.
-			if(data.contains('"') || data.contains("'"))
+			if(data.toLowerCase()=='infinity')
+				return '"infinity"';
+			else if(data.contains('"') || data.contains("'"))
 				return '"""'+data+'"""';
-			if(data.search(/[:\n,\{\}\[\] ]/)>=0)
+			else if(data.search(/[:\n,\{\}\[\] ]/)>=0)
 				return '"'+data+'"';
 			else if(!data.trim())
 				return '""';

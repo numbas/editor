@@ -202,7 +202,7 @@ class Question(models.Model,NumbasObject,GitObject):
         obj = {
             'id': self.id, 
             'name': self.name, 
-			'metadata': self.metadata,
+            'metadata': self.metadata,
             'author': self.author.get_full_name(), 
             'url': reverse('question_edit', args=(self.pk,self.slug,)),
             'deleteURL': reverse('question_delete', args=(self.pk,self.slug)),
@@ -280,7 +280,7 @@ class Exam(models.Model,NumbasObject,GitObject):
         obj = {
             'id': self.id, 
             'name': self.name, 
-			'metadata': self.metadata,
+            'metadata': self.metadata,
             'author': self.author.get_full_name(), 
             'url': reverse('exam_edit', args=(self.pk,self.slug,)),
             'deleteURL': reverse('exam_delete', args=(self.pk,self.slug)),

@@ -271,6 +271,11 @@ class Exam(models.Model,NumbasObject,GitObject):
     def as_source(self):
         parser = ExamParser()
         data = parser.parse(self.content)
+        extensions = []
+        for q in self.get_questions():
+            q.get_parsed_content()
+            extensions += q.extensions
+        data['extensions'] = list(set(extensions))
         data['name'] = self.name
         data['questions'] = [parser.parse(q.content) for q in self.get_questions()]
         return printdata(data)

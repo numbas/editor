@@ -155,7 +155,6 @@
       hosting the editor.</li>
     </ul>
     
-    <!--
     <h2>LDAP authentication</h2>
     <p>
     	LDAP authentication is possible within the editor.  This can work in
@@ -164,20 +163,23 @@
     
     <h3>Extra required packages</h3>
 	<ul>
-		<li>Python LDAP: <code>apt-get install python-ldap</code></li>
-		<li>Django LDAP: <code>apt-get install python-django-auth-ldap</code></li>
-		<li>GnuTLS (for secure LDAP lookups only): <code>apt-get install libgnutls26</code></li>
+		<li>Python LDAP: <code>yast -i python-ldap</code></li>
+		<li>Django LDAP: <code>pip install django-auth-ldap</code></li>
+    <li>GnuTLS (for secure LDAP lookups only): probably already installed, but
+    if not <code>yast -i libgnutls28</code></li>
 	</ul>
 	
 	<h3>Extra configuration</h3>
     <ul>
     	<li>Copy <code>ldap_auth.py.dist</code> to <code>ldap_auth.py</code>
-    		and edit, following the comments in that file.</li>
-		<li>In <code>settings.py</code> uncomment the LDAP auth line in
+      and edit, following the comments in that file.</li>
+      <li>Note that SUSE does not come with a bundle of SSL certificates by
+      default, so if you need to use secure LDAP lookups, see the note at the
+      top of <code>ldap_auth.py.dist</code>.</li>
+		  <li>In <code>settings.py</code> uncomment the LDAP auth line in
 			<code>AUTHENTICATION_BACKENDS</code> and the <code>ldap_auth</code>
 			import line.</li>
     </ul>
-    -->
     
     <p>
       <b>Note that if any changes are made to the editor code, including

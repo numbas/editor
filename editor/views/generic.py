@@ -58,8 +58,7 @@ class CompileObject():
             status = process.communicate(source)
             code = process.poll()
             if code != 0:
-                raise OSError("Compilation failed. %s %s" %
-                              tuple(status))
+                raise OSError("Compilation failed. Stdout: %s, Stderr: %s, Code: %s." % (status + (code,)))
 
         except (NameError, OSError) as err:
             status = {

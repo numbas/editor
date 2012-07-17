@@ -141,9 +141,13 @@
           contents similar to that in <a
             href="apache2_suse.conf"><code>apache2_suse.conf</code></a>.
           If following these instructions exactly, then all that needs changing
-          are the lines <code>ServerName</code>, <code>ServerAdmin</code>,
-          <code>WSGIDaemonProcess</code>, and
-          <code>WSGIProcessGroup</code>.</li>
+          are the lines <code>ServerName</code>, <code>ServerAdmin</code>, and
+          <code>WSGIDaemonProcess</code>.</li>
+          <li>Ordinarily <code>WSGIProcessGroup</code> should also be set to
+          <code>server.domain</code>, but there is a bug (issue #13156) in
+          Python 2.7.2 (the default Python version in SUSE 12.1) such that it
+          must be set to <code>%{GLOBAL}</code>.  This problem does not exist
+          in any other version of Python 2.</li>
         </ul>
       </li>
       <li>Enable the Apache WSGI module: <code>a2enmod wsgi</code>.

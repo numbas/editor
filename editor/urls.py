@@ -14,7 +14,6 @@
 from django.conf import settings
 from django.conf.urls.defaults import *
 from django.views.generic import RedirectView, TemplateView
-from django.contrib import admin,auth
 
 from django.contrib.auth.decorators import login_required
 
@@ -22,19 +21,11 @@ from editor.views.exam import ExamPreviewView, ExamZipView, ExamSourceView, Exam
 from editor.views.question import QuestionPreviewView, QuestionZipView, QuestionSourceView, QuestionCreateView, QuestionCopyView, QuestionUploadView, QuestionDeleteView, QuestionListView, QuestionSearchView, QuestionUpdateView
 from editor.views.user import UserSearchView
 
-admin.autodiscover()
 
 urlpatterns = patterns('',
     url(r'^$', TemplateView.as_view(template_name='index.html'),
         name='editor_index'),
 
-    url(r'^admin/',include(admin.site.urls)),
-
-	url(r'^login/','django.contrib.auth.views.login',{'template_name':'auth/login.html'},name='login'),
-	url(r'^logout/','django.contrib.auth.views.logout',{'next_page':'/'},name='logout'),
-
-    url(r'^accounts/', include('registration.backends.default.urls')),
-    
     url(r'^exams/$',ExamListView.as_view(), name='exam_index',),
                        
     url(r'^exam/new/$', login_required(ExamCreateView.as_view()), name='exam_new'),

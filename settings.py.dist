@@ -110,6 +110,8 @@ INSTALLED_APPS = (
     'editor',
     'taggit',
     'django.contrib.admin',
+	'auth',
+	'registration',
     # 'django.contrib.admindocs',
 )
 
@@ -172,6 +174,10 @@ AUTHENTICATION_BACKENDS = (
     #'django_auth_ldap.backend.LDAPBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
+
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+EMAIL_FILE_PATH = 'tmp/email/'
+ACCOUNT_ACTIVATION_DAYS = 10
 
 # Uncomment to enable LDAP authentication, then look at ldap_auth.py.dist
 #from ldap_auth import *

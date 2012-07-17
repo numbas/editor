@@ -30,7 +30,6 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.forms import model_to_dict
 from django.template.defaultfilters import slugify
-from django.template import loader, Context
 
 from taggit.managers import TaggableManager
 
@@ -181,7 +180,6 @@ class Question(models.Model,NumbasObject,GitObject):
         super(Question,self).delete(*args, **kwargs)
 
     def as_source(self):
-        t = loader.get_template('question/template.exam')
         self.get_parsed_content()
         data = OrderedDict([
             ('name',self.name),

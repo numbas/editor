@@ -83,6 +83,7 @@
 	margin-top: 0.5em;
 	padding-left: 1em;
 	max-height: 3em;
+	overflow-y: hidden;
 }
 .result .description p {
 	margin: 0;

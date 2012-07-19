@@ -1,0 +1,29 @@
+.formfield {
+  margin: 1.5em;
+}
+
+.formfield label {
+  float: left;
+  width: 10em;
+}
+
+.errorlist, .errorsmain, .errors {
+  height: 28px;
+  line-height: 28px;
+  padding-left: 4px;
+  padding-right: 4px;
+  border: 1px solid #FFAAAA;
+  color: red;
+  background-color: #FFDDDD;
+  display: inline-block;
+}
+
+.errorlist, .errors  {
+  padding-left: 28px;
+  background: #FFDDDD url(../images/bolt_24x24.png) no-repeat 5px center;
+}
+
+.errorlist {
+  list-style: none;
+}
+

@@ -37,12 +37,12 @@ USE_L10N = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
-MEDIA_ROOT = ''
+MEDIA_ROOT = '/numbas/numbas/editor/media/'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
-MEDIA_URL = ''
+MEDIA_URL = '/media/'
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
@@ -92,7 +92,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
-ROOT_URLCONF = 'numbas_editor.urls'
+ROOT_URLCONF = 'numbas.urls'
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
@@ -108,12 +108,12 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'editor',
-    'taggit',
-    'django.contrib.admin',
-	'auth',
-	'registration',
+	'taggit',
+    'fileupload',
+    'registration',
     'accounts',
     'django.contrib.admin',
+    # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
 
@@ -141,19 +141,17 @@ LOGGING = {
 }
 
 GLOBAL_SETTINGS = {
-    'REPO_PATH': '/srv/numbas/questiondb',
-    'NUMBAS_PATH': '/srv/numbas/dist',
-    'PREVIEW_PATH': '/srv/numbas/previews',
-    'PREVIEW_URL': 'http://server.domain/numbas-previews/',    #a URL which serves files from PREVIEW_PATH
-    'HELP_URL': 'http://server.domain/help/',        #the URL of the Numbas webdocs
-    'PYTHON_EXEC': '/usr/bin/python3.1',
+	'REPO_PATH': r'c:\numbas\numbas\repo',
+	'NUMBAS_PATH': r'c:\numbas\dev',
     'NUMBAS_THEMES': ['default','worksheet'],
+	'PREVIEW_PATH': r'c:\numbas\numbas\editor\static\previews',
+	'PREVIEW_URL': r'/static/previews/',
+	'HELP_URL': r'/static/webdocs/index.html',
+	'PYTHON_EXEC': 'c:\python32\python.exe',
 }
 
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'
-
-SESSION_COOKIE_HTTPONLY = True
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     "django.contrib.auth.context_processors.auth",
@@ -167,19 +165,16 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 )
 
 examparser = imp.load_source(
-    'examparser',
+	'examparser',
      os.path.join(GLOBAL_SETTINGS['NUMBAS_PATH'],
-                  os.path.normpath('bin/examparser.py')))
-                  
-AUTHENTICATION_BACKENDS = (
-    # Uncomment to enable LDAP authentication, then look at ldap_auth.py.dist
-    #'django_auth_ldap.backend.LDAPBackend',
-    'django.contrib.auth.backends.ModelBackend',
-)
+			      os.path.normpath('bin/examparser.py')))
 
+#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = 'tmp/email/'
-ACCOUNT_ACTIVATION_DAYS = 10
 
-# Uncomment to enable LDAP authentication, then look at ldap_auth.py.dist
-#from ldap_auth import *
+# settings for registration package
+ACCOUNT_ACTIVATION_DAYS = 2
+#EMAIL_HOST = 'localhost'
+DEFAULT_FROM_EMAIL = 'webmaster@localhost'
+LOGIN_REDIRECT_URL = '/'

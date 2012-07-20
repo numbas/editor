@@ -12,9 +12,7 @@ from django_auth_ldap.config import LDAPSearch, ActiveDirectoryGroupType
 # Also ensure that the TLS certificates are correctly set in the system LDAP config:
 # Debian (/etc/ldap/ldap.conf): TLS_CACERT /etc/ssl/certs/ca-certificates.crt
 # CentOS (/etc/openldap/ldap.conf): TLS_CACERT /etc/ssl/certs/ca-bundle.crt
-# SUSE (/etc/openldap/ldap.conf): Create a local bundle of SSL certificates,
-#   e.g. cd /etc/ssl/certs && cat *.pem >> local-bundle.crt then set TLS_CACERT
-#   /etc/ssl/certs/local-bundle.crt
+# SUSE (/etc/openldap/ldap.conf): TLS_CACERT /etc/ssl/ca-bundle.pem
 AUTH_LDAP_START_TLS = True
 
 # Your LDAP server.

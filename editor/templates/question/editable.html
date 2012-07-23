@@ -42,7 +42,7 @@
 				</div>
 			</div>
 
-			<div data-bind="folder: 'Extensions', fadeVisible: isadvanced">
+			<div data-bind="folder: 'Extensions', fadeVisible: isadvanced() && extensions().length>0">
 				<div>
 					<ul data-bind="foreach: extensions">
 						<li>
@@ -61,13 +61,16 @@
 			</div>
 		</div>
 
-		<div data-bind="folder: 'Rulesets', fadeVisible: isadvanced">
+		<div data-bind="folder: 'Rulesets ('+rulesets().length+')', fadeVisible: isadvanced">
 			<div class="rulesets">
-				<ul class="editlist" data-bind="foreach: {
-					data: rulesets,
-					afterAdd: Editor.afterAdd,
-					beforeRemove: Editor.beforeRemove
-				}">
+				<ul class="editlist" data-bind="
+					visible: rulesets().length>0,
+					foreach: {
+						data: rulesets,
+						afterAdd: Editor.afterAdd,
+						beforeRemove: Editor.beforeRemove
+					}
+				">
 					<li class="ruleset">
 						<input type="text" data-bind="value:name, valueUpdate: 'afterkeydown'"/>: <div data-bind="listbox:sets, rulesetcomplete: allsets"></div>
 						<button class="delete" data-bind="click:remove"></button>
@@ -77,7 +80,7 @@
 			</div>
 		</div>
 
-		<div data-bind="folder: {label: 'Variables', show: true}">
+		<div data-bind="folder: {label: 'Variables ('+variables().length+')', show: true}">
 			<div>
 				<table class="variables editlist">
 					<thead data-bind="visible: variables().length>0">
@@ -104,13 +107,16 @@
 			</div>
 		</div>
 
-		<div data-bind="folder: 'Functions', fadeVisible: isadvanced">
+		<div data-bind="folder: 'Functions ('+functions().length+')', fadeVisible: isadvanced">
 			<div>
-				<ol class="editlist" data-bind="foreach: {
-					data: functions,
-					beforeRemove: Editor.beforeRemove,
-					afterAdd: Editor.afterAdd
-				}">
+				<ol class="editlist" data-bind="
+					visible: functions().length>0,
+					foreach: {
+						data: functions,
+						beforeRemove: Editor.beforeRemove,
+						afterAdd: Editor.afterAdd
+					}
+				">
 					<li class="function">
 						<div data-bind="folder:{label: name(), show:true}, foldlist: true">
 							<div class="properties">
@@ -160,14 +166,17 @@
 			</div>
 		</div>
 
-		<div data-bind="folder: {label:'Parts',show:true}">
+		<div data-bind="folder: {label:'Parts ('+parts().length+')',show:true}">
 			<div>
-				<ol class="editlist" data-bind="template:{
-					name: 'part',
-					foreach: parts,
-					beforeRemove: Editor.beforeRemove,
-					afterAdd: Editor.afterAdd
-				}"></ol>
+				<ol class="editlist" data-bind="
+					visible: parts().length>0,
+					template:{
+						name: 'part',
+						foreach: parts,
+						beforeRemove: Editor.beforeRemove,
+						afterAdd: Editor.afterAdd
+					}
+				"></ol>
 				<button data-bind="visible: $root.isadvanced, click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
 			</div>
 		</div>
@@ -181,11 +190,11 @@
 
 	<script type="text/html" id="part">
 		<li class="part">
-			<div data-bind="folder:{label: type().niceName, show:true}, foldlist: true">
+			<div data-bind="folder:{label: ($index()+1)+'. '+type().niceName, show:true}, foldlist: true">
 				<div class="properties">
 					<div data-bind="visible: $root.isadvanced">
 						<label>Part type: </label>
-						<select data-bind="options: types, value:type, optionsText: 'niceName'"></select>
+						<select data-bind="options: availableTypes, value:type, optionsText: 'niceName'"></select>
 					</div>
 					<div data-bind="fadeVisible: type().has_marks===true, template: {
 						name: 'property',
@@ -198,7 +207,7 @@
 				</div>
 				<div style="margin-top:1em;" data-bind="template: type"></div>
 
-				<div class="steps" data-bind="folder: 'Steps', visible: parent==null">
+				<div class="steps" data-bind="folder: 'Steps: ('+steps().length+')', visible: parent==null">
 					<div>
 						<div class="properties">
 							<div data-bind="fadeVisible: steps().length>0, template: {
@@ -206,12 +215,15 @@
 								data: {label:'Penalty for revealing steps (marks):',property:stepsPenalty, type:'number'}
 							}"></div>
 						</div>
-						<ol class="editlist" data-bind="template:{
-							name: 'part',
-							foreach: steps,
-							beforeRemove: Editor.beforeRemove,
-							afterAdd: Editor.afterAdd
-						}"></ol>
+						<ol class="editlist" data-bind="
+							visible: steps().length>0,
+							template:{
+								name: 'part',
+								foreach: steps,
+								beforeRemove: Editor.beforeRemove,
+								afterAdd: Editor.afterAdd
+							}
+						"></ol>
 						<button data-bind="visible: $root.isadvanced, click:addStep, text: steps().length ? 'Add another step' : 'Add a step'"></button>
 					</div>
 				</div>
@@ -225,12 +237,15 @@
 	<script type="text/html" id="gapfill">
 		<div class="gaps" data-bind="folder: {label:'Gaps', show:true}">
 			<div>
-				<ol class="editlist" data-bind="template:{
-					name: 'part',
-					foreach: gapfill.gaps,
-					beforeRemove: Editor.beforeRemove,
-					afterAdd: Editor.afterAdd
-				}"></ol>
+				<ol class="editlist" data-bind="
+					visible: gapfill.gaps().length>0,
+					template:{
+						name: 'part',
+						foreach: gapfill.gaps,
+						beforeRemove: Editor.beforeRemove,
+						afterAdd: Editor.afterAdd
+					}
+				"></ol>
 				<button data-bind="visible: $root.isadvanced, click:addGap, text: gapfill.gaps().length ? 'Add another gap' : 'Add a gap'"></button>
 			</div>
 		</div>

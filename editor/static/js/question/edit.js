@@ -579,9 +579,19 @@ $(document).ready(function() {
 	};
 
     var Part = function(q,parent,parentList,data) {
-        this.type = ko.observable('information');
+
         this.prompt = Editor.contentObservable('');
         this.parent = parent;
+
+		this.availableTypes = ko.computed(function() {
+			var nonGapTypes = ['information','gapfill'];
+			if(this.parent && this.parent.type().name=='gapfill')
+				return this.types.filter(function(t){return nonGapTypes.indexOf(t.name)==-1});
+			else
+				return this.types;
+		},this);
+
+        this.type = ko.observable(this.availableTypes()[0]);
 
         this.marks = ko.observable(0);
 

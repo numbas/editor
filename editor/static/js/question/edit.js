@@ -888,6 +888,8 @@ $(document).ready(function() {
                 o.shuffleChoices = this.multiplechoice.shuffleChoices();
                 o.displayType = this.multiplechoice.displayType().name;
                 o.displayColumns = this.multiplechoice.displayColumns();
+                o.minAnswers = this.multiplechoice.minAnswers();
+                o.maxAnswers = this.multiplechoice.maxAnswers();
 
                 var choices = this.multiplechoice.choices();
                 o.choices = choices.map(function(c){return c.content()});
@@ -986,7 +988,7 @@ $(document).ready(function() {
                 break;
             case '1_n_2':
             case 'm_n_2':
-                tryLoad(data,['minMarks','maxMarks','shuffleChoices','displayColumns'],this.multiplechoice);
+                tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','displayColumns'],this.multiplechoice);
 
                 var displayTypes = this.multiplechoice.displayTypes[this.type().name];
                 for(var i=0;i<displayTypes.length;i++)

@@ -424,6 +424,14 @@
 				}"></div>
 				<div data-bind="template: {
 					name: 'property',
+					data: {label:'Minimum answers:',property:multiplechoice.minAnswers, type:'number', max:multiplechoice.maxAnswers}
+				}"></div>
+				<div data-bind="template: {
+					name: 'property',
+					data: {label:'Maximum answers:',property:multiplechoice.maxAnswers, type:'number', min:multiplechoice.minAnswers}
+				}"></div>
+				<div data-bind="template: {
+					name: 'property',
 					data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
 				}"></div>
 				<div data-bind="template: {

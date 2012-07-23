@@ -106,6 +106,11 @@ $(document).ready(function() {
 
 		ko.computed(function() {
 			//the ko dependency checker seems not to pay attention to what happens in the computeVariables method, so access the variable bits here to give it a prompt
+			this.functions().map(function(v) {
+				v.name();
+				v.definition();
+				v.parameters();
+			});
 			this.variables().map(function(v) {
 				v.name();
 				v.definition();
@@ -260,7 +265,7 @@ $(document).ready(function() {
 
 				var outcons = jme.types[f.type()];
 
-				var fn = new jme.funcObj(name,intype,outcons,null,true);
+				var fn = new jme.funcObj(name,intype,outcons,null,{nobuiltin: true});
 
 				switch(f.language())
 				{

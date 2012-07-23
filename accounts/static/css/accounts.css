@@ -7,23 +7,24 @@
   width: 10em;
 }
 
-.errorlist, .errorsmain, .errors {
-  height: 28px;
-  line-height: 28px;
-  padding-left: 4px;
-  padding-right: 4px;
-  border: 1px solid #FFAAAA;
+#errorheader, .errorlist {
+  padding: 4px;
   color: red;
-  background-color: #FFDDDD;
-  display: inline-block;
-}
-
-.errorlist, .errors  {
-  padding-left: 28px;
-  background: #FFDDDD url(../images/bolt_24x24.png) no-repeat 5px center;
 }
 
 .errorlist {
+  display: inline-block;
+  padding-left: 24px;
+  margin: 0;
+  line-height: 1.3em;
   list-style: none;
+}
+
+.errorlist:before {
+	position: absolute;
+	margin-left: -20px;
+	width: 14px;
+	height: 14px;
+	content: url(../images/x_14x14.png) no-repeat 5px center;
 }
 

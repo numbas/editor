@@ -183,3 +183,7 @@ ACCOUNT_ACTIVATION_DAYS = 10
 
 # Uncomment to enable LDAP authentication, then look at ldap_auth.py.dist
 #from ldap_auth import *
+
+#address of the site's root (used in activation email)
+# eg "http://numbaseditor.com/"
+SITE_ADDRESS = 'http://localhost:8000/'

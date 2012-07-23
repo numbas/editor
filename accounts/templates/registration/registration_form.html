@@ -1,54 +1,54 @@
 {% extends "base.html" %}
 
 {% block stylesheets %}
-    {{ block.super }}
-    <link href="{{ STATIC_URL }}css/accounts.css" type="text/css" rel="stylesheet" >
+        {{ block.super }}
+        <link href="{{ STATIC_URL }}css/accounts.css" type="text/css" rel="stylesheet" >
 {% endblock stylesheets %}
 
 {% block title %}Sign up{% endblock %}
 
 {% block content %}
 
+    <h1>Create an account</h1>
+    
+    {% if form.errors %}
+        <p id="errorheader">There were errors with the details you provided. Please correct them and resubmit. {{ form.non_field_errors }}</p>
+    {% endif %}
 
-  <h1>Create an account</h1>
-  
-  {% if form.errors %}
-  <p class="errorsmain">Please correct the errors. {{ form.non_field_errors }}</p>
-  {% endif %}
-
-  <form method="post" action="" class="wide">
- {% csrf_token %} 
-    <div class="formfield">
-      <label for="id_username">Username:</label>
-      {{ form.username }}
-      {% if form.username.errors %}
-        <span class="errors">{{ form.username.errors.as_text }}</span>
-      {% endif %}
-    </div>
-    <div class="formfield">
-      <label for="id_email">Email address:</label>
-      {{ form.email }}
-      {% if form.email.errors %}
-        <span class="errors">{{ form.email.errors.as_text }}</span>
-      {% endif %}
-    </div>
-    <div class="formfield">
-      <label for="id_password1">Password:</label>
-      {{ form.password1 }}
-      {% if form.password1.errors %}
-        <span class="errors">{{ form.password1.errors.as_text }}</span>
-      {% endif %}
-    </div>
-    <div class="formfield">
-      <label for="id_password2">Re-enter Password:</label>
-      {{ form.password2 }}
-      {% if form.password2.errors %}
-        <span class="errors">{{ form.password2.errors.as_text }}</span>
-      {% endif %}
-    </div>
-    <p class="submit"><input type="submit" value="Register &rarr;"></p>
-  </form>
-  
+    <form method="post" action="" class="wide">
+        {% csrf_token %} 
+        <div class="formfield">
+            <label for="id_username">{{form.username.label}}: </label>
+            {{ form.username }}
+            {{ form.username.errors }}
+        </div>
+        <div class="formfield">
+            <label for="id_first_name">{{form.first_name.label}}: </label>
+            {{ form.first_name }}
+            {{ form.first_name.errors }}
+        </div>
+        <div class="formfield">
+            <label for="id_last_name">{{form.last_name.label}}: </label>
+            {{ form.last_name }}
+            {{ form.last_name.errors }}
+        </div>
+        <div class="formfield">
+            <label for="id_email">{{form.email.label}}: </label>
+            {{ form.email }}
+            {{ form.email.errors }}
+        </div>
+        <div class="formfield">
+            <label for="id_password1">{{form.password1.label}}: </label>
+            {{ form.password1 }}
+            {{ form.password1.errors }}
+        </div>
+        <div class="formfield">
+            <label for="id_password1">{{form.password2.label}}: </label>
+            {{ form.password2 }}
+            {{ form.password2.errors }}
+        </div>
+        <p class="submit"><input type="submit" value="{{ form.register_button }}"></p>
+    </form>
 {% endblock %}
 
 {% block content-related %}

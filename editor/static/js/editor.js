@@ -234,10 +234,16 @@ $(document).ready(function() {
 		}
 		altname = altname || attr;
 
+		function set(value) {
+			if(altname in obj && typeof obj[altname]() == 'string')
+				value+='';
+			obj[altname](value);
+		}
+
 		if(attr in data)
-			obj[altname](data[attr]);
+			set(data[attr]);
 		else if(attr.toLowerCase() in data)
-			obj[altname](data[attr.toLowerCase()]);
+			set(data[attr.toLowerCase()]);
 	}
 
 	Editor.contentObservable = function(val) {

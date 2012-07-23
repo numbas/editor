@@ -519,7 +519,7 @@ $(document).ready(function() {
     }
     Variable.prototype = {
         load: function(data) {
-			tryLoad(data,['name','definition'],this)
+			tryLoad(data,['name','definition'],this);
         }
     }
 

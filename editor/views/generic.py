@@ -16,19 +16,24 @@ import os
 import subprocess
 import traceback
 
-from django.shortcuts import redirect
+from django.shortcuts import render,redirect
 from django.conf import settings
 from django.core.servers.basehttp import FileWrapper
 from django.http import HttpResponse, HttpResponseServerError
 from django.views.generic import DetailView
+from django.template.loader import get_template
+from django.template import RequestContext
 
 from examparser import ExamParser, ParseError
 
 class CompileError(Exception):
-    def __init__(self, status):
-        self.status = status
+    def __init__(self, message, stdout='',stderr='',code=0):
+        self.message = message
+        self.stdout = stdout
+        self.stderr = stderr
+        self.code = code
     def __str__(self):
-        return repr(self.status)
+        return 'Compilation failed: %s\n Stdout: %s\nStderr: %s\nExit code: %i' % (self.message, self.stderr, self.stdout, self.code)
     
     
 class CompileObject():
@@ -53,23 +58,22 @@ class CompileObject():
             '-t'+theme,
         ] + switches
 
-        try:
-            process = subprocess.Popen(numbas_command, stdout = subprocess.PIPE, stdin=subprocess.PIPE)
-            status = process.communicate(source)
-            code = process.poll()
-            if code != 0:
-                raise OSError("Compilation failed. %s %s" %
-                              tuple(status))
-
-        except (NameError, OSError) as err:
-            status = {
-                "result": "error",
-                "message": str(err),
-                "traceback": traceback.format_exc(),}
-            raise CompileError(status)
+        process = subprocess.Popen(numbas_command, stdout = subprocess.PIPE, stdin=subprocess.PIPE, stderr = subprocess.PIPE)
+        stdout,stderr = process.communicate(source)
+        code = process.poll()
+        if code != 0:
+            raise CompileError('Compilation failed.',stdout=stdout,stderr=stderr,code=code)
         else:
             return output_location
     
+    def get_error_response(self,error):
+        template = get_template("compile/error.html")
+        return HttpResponseServerError(template.render(RequestContext(self.request,{
+            'message': error.message,
+            'stdout': error.stdout,
+            'stderr': error.stderr,
+            'code': error.code,
+        })))
 
 class PreviewView(DetailView,CompileObject):
     def preview(self,obj):
@@ -79,8 +83,7 @@ class PreviewView(DetailView,CompileObject):
         try:
             fsLocation = self.compile(source, switches, location, obj)
         except CompileError as err:
-            return HttpResponseServerError(json.dumps(err.status),
-                                           content_type='application/json')
+            return self.get_error_response(err)
         else:
             url = settings.GLOBAL_SETTINGS['PREVIEW_URL'] + location + '/index.html'
             return redirect(url)
@@ -96,8 +99,7 @@ class ZipView(DetailView,CompileObject):
         try:
             fsLocation = self.compile(source, switches, location, obj)
         except CompileError as err:
-            return HttpResponseServerError(json.dumps(err.status),
-                                           content_type='application/json')
+            return self.get_error_response(err)
         else:
             wrapper = FileWrapper(file(fsLocation,'rb'))
             response = HttpResponse(wrapper, content_type='application/zip')

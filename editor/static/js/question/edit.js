@@ -106,6 +106,11 @@ $(document).ready(function() {
 
 		ko.computed(function() {
 			//the ko dependency checker seems not to pay attention to what happens in the computeVariables method, so access the variable bits here to give it a prompt
+			this.functions().map(function(v) {
+				v.name();
+				v.definition();
+				v.parameters();
+			});
 			this.variables().map(function(v) {
 				v.name();
 				v.definition();
@@ -260,7 +265,7 @@ $(document).ready(function() {
 
 				var outcons = jme.types[f.type()];
 
-				var fn = new jme.funcObj(name,intype,outcons,null,true);
+				var fn = new jme.funcObj(name,intype,outcons,null,{nobuiltin: true});
 
 				switch(f.language())
 				{
@@ -514,7 +519,7 @@ $(document).ready(function() {
     }
     Variable.prototype = {
         load: function(data) {
-			tryLoad(data,['name','definition'],this)
+			tryLoad(data,['name','definition'],this);
         }
     }
 
@@ -574,9 +579,19 @@ $(document).ready(function() {
 	};
 
     var Part = function(q,parent,parentList,data) {
-        this.type = ko.observable('information');
+
         this.prompt = Editor.contentObservable('');
         this.parent = parent;
+
+		this.availableTypes = ko.computed(function() {
+			var nonGapTypes = ['information','gapfill'];
+			if(this.parent && this.parent.type().name=='gapfill')
+				return this.types.filter(function(t){return nonGapTypes.indexOf(t.name)==-1});
+			else
+				return this.types;
+		},this);
+
+        this.type = ko.observable(this.availableTypes()[0]);
 
         this.marks = ko.observable(0);
 
@@ -873,6 +888,8 @@ $(document).ready(function() {
                 o.shuffleChoices = this.multiplechoice.shuffleChoices();
                 o.displayType = this.multiplechoice.displayType().name;
                 o.displayColumns = this.multiplechoice.displayColumns();
+                o.minAnswers = this.multiplechoice.minAnswers();
+                o.maxAnswers = this.multiplechoice.maxAnswers();
 
                 var choices = this.multiplechoice.choices();
                 o.choices = choices.map(function(c){return c.content()});
@@ -971,7 +988,7 @@ $(document).ready(function() {
                 break;
             case '1_n_2':
             case 'm_n_2':
-                tryLoad(data,['minMarks','maxMarks','shuffleChoices','displayColumns'],this.multiplechoice);
+                tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','displayColumns'],this.multiplechoice);
 
                 var displayTypes = this.multiplechoice.displayTypes[this.type().name];
                 for(var i=0;i<displayTypes.length;i++)

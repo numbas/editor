@@ -4,7 +4,7 @@ Maths and Stats](http://www.ncl.ac.uk/maths/).
 
 This repository is an editor for creating Numbas exams.
 
-Instructions for installation on a Debian server (so that the editor can be
+Instructions for installation on a Linux server (so that the editor can be
 used by multiple people) can be found at http://numbas.github.com/editor/.
 Note that a full installation like this is not necessary if you just want to
 try out the editor on your personal desktop or laptop computer.

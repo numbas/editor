@@ -234,10 +234,16 @@ $(document).ready(function() {
 		}
 		altname = altname || attr;
 
+		function set(value) {
+			if(altname in obj && typeof obj[altname]() == 'string')
+				value+='';
+			obj[altname](value);
+		}
+
 		if(attr in data)
-			obj[altname](data[attr]);
+			set(data[attr]);
 		else if(attr.toLowerCase() in data)
-			obj[altname](data[attr.toLowerCase()]);
+			set(data[attr.toLowerCase()]);
 	}
 
 	Editor.contentObservable = function(val) {
@@ -272,6 +278,17 @@ $(document).ready(function() {
 
 		},this).extend({throttle:100});
     }
+
+	Editor.mappedObservableArray = function(map) {
+		var obj = {list: ko.observableArray([])};
+		return ko.computed({
+			owner: obj,
+			read: obj.list,
+			write: function(l) {
+				this.list(l.map(map));
+			}
+		});
+	}
 
 	Editor.beforeRemove = function(elem) {
 		if(elem.nodeType==elem.ELEMENT_NODE) {
@@ -312,9 +329,11 @@ $(document).ready(function() {
 			return data+'';
 		case 'string':
 			//this tries to use as little extra syntax as possible. Quotes or triple-quotes are only used if necessary.
-			if(data.contains('"') || data.contains("'"))
+			if(data.toLowerCase()=='infinity')
+				return '"infinity"';
+			else if(data.contains('"') || data.contains("'"))
 				return '"""'+data+'"""';
-			if(data.search(/[:\n,\{\}\[\] ]/)>=0)
+			else if(data.search(/[:\n,\{\}\[\] ]/)>=0)
 				return '"'+data+'"';
 			else if(!data.trim())
 				return '""';

@@ -30,7 +30,6 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.forms import model_to_dict
 from django.template.defaultfilters import slugify
-from django.template import loader, Context
 
 from taggit.managers import TaggableManager
 
@@ -181,7 +180,6 @@ class Question(models.Model,NumbasObject,GitObject):
         super(Question,self).delete(*args, **kwargs)
 
     def as_source(self):
-        t = loader.get_template('question/template.exam')
         self.get_parsed_content()
         data = OrderedDict([
             ('name',self.name),
@@ -202,7 +200,7 @@ class Question(models.Model,NumbasObject,GitObject):
         obj = {
             'id': self.id, 
             'name': self.name, 
-			'metadata': self.metadata,
+            'metadata': self.metadata,
             'author': self.author.get_full_name(), 
             'url': reverse('question_edit', args=(self.pk,self.slug,)),
             'deleteURL': reverse('question_delete', args=(self.pk,self.slug)),
@@ -271,16 +269,21 @@ class Exam(models.Model,NumbasObject,GitObject):
     def as_source(self):
         parser = ExamParser()
         data = parser.parse(self.content)
+        extensions = []
+        for q in self.get_questions():
+            q.get_parsed_content()
+            extensions += q.extensions
+        data['extensions'] = list(set(extensions))
         data['name'] = self.name
         data['questions'] = [parser.parse(q.content) for q in self.get_questions()]
         return printdata(data)
         
     def summary(self, user=None):
-        """return id, name and url, enough to identify a exm and say where to find it"""
+        """return enough to identify an exam and say where to find it, along with a description"""
         obj = {
             'id': self.id, 
             'name': self.name, 
-			'metadata': self.metadata,
+            'metadata': self.metadata,
             'author': self.author.get_full_name(), 
             'url': reverse('exam_edit', args=(self.pk,self.slug,)),
             'deleteURL': reverse('exam_delete', args=(self.pk,self.slug)),

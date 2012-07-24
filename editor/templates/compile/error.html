@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Compilation Error{% endblock %}
+{% block body %}
+	<h1>Compilation Error</h1>
+	{% autoescape on %}
+	<p id="message">{{message}} (code {{code}})</p>
+	<h3>STDERR</h3>
+	<pre id="stderr"><code>{{stderr}}</code></pre>
+	<h3>STDOUT</h3>
+	<pre id="stdout"><code>{{stdout}}</code></pre>
+	{% endautoescape %}
+{% endblock %}
+

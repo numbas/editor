@@ -264,7 +264,7 @@ class QuestionSearchView(ListView):
         try:
             mine = self.request.GET['mine'] == 'true'
             if mine:
-                questions = questions.filter(author=self.request.user)
+                questions = questions.filter(author=self.request.user.pk)
         except KeyError:
             mine = False
 

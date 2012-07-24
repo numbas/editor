@@ -283,7 +283,7 @@ class ExamSearchView(ListView):
         try:
             mine = self.request.GET['mine'] == 'true'
             if mine:
-                exams = exams.filter(author=self.request.user)
+                exams = exams.filter(author=self.request.user.pk)
         except KeyError:
             mine = False
 

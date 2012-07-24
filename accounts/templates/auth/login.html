@@ -20,7 +20,7 @@
 	{{ form.as_p }}
 	<input type="submit" value="Log in"/>
 	<input type="hidden" name="next" value="{{ next }}" />
-    <p><a href="{% url auth_password_reset %}">Forgot password?</a></p>
-    <p><a href="{% url registration_register %}">Register for your own account</a></p>
+    <p><a href="{% url auth_password_reset %}">Forgotten your password?</a></p>
+	{% if ALLOW_REGISTRATION %}<p><a href="{% url registration_register %}">Register for your own account</a></p>{% endif %}
 </form>
 {% endblock content %}

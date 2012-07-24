@@ -150,6 +150,8 @@ GLOBAL_SETTINGS = {
     'NUMBAS_THEMES': ['default','worksheet'],
 }
 
+ALLOW_REGISTRATION = False
+
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'
 

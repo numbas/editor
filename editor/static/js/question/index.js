@@ -43,6 +43,23 @@ $(document).ready(function() {
         $('#uploadForm').submit();
     });
         
+	function QuestionResult(data) {
+		if(!('id' in data))
+			throw(new Error('Search result doesn\'t have an ID: '+json.dumps(data)));
+		this.id = data.id;
+		this.name = data.name || 'Untitled Question';
+		this.metadata = {
+			description: '',
+			notes: ''
+		};
+		if(typeof data.metadata == 'object')
+			this.metadata = $.extend(this.metadata,data.metadata);
+		this.author = data.author;
+		this.url = data.url || '';
+		this.deleteURL = data.deleteURL || '';
+		this.canEdit = data.canEdit || false;
+	}
+
     function QuestionSelect()
     {
 		var vm = this;
@@ -51,7 +68,7 @@ $(document).ready(function() {
 			query: ko.observable(''),
 			author: ko.observable(''),
 			results: {
-				all: ko.observableArray([]),
+				all: Editor.mappedObservableArray(function(d){ return new QuestionResult(d) }),
 				page: ko.observable(1),
 				prevPage: function() {
 					var page = this.page();

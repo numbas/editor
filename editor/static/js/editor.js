@@ -279,6 +279,17 @@ $(document).ready(function() {
 		},this).extend({throttle:100});
     }
 
+	Editor.mappedObservableArray = function(map) {
+		var obj = {list: ko.observableArray([])};
+		return ko.computed({
+			owner: obj,
+			read: obj.list,
+			write: function(l) {
+				this.list(l.map(map));
+			}
+		});
+	}
+
 	Editor.beforeRemove = function(elem) {
 		if(elem.nodeType==elem.ELEMENT_NODE) {
 			$(elem).slideUp(150,function(){$(this).remove()});

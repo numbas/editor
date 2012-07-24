@@ -279,7 +279,7 @@ class Exam(models.Model,NumbasObject,GitObject):
         return printdata(data)
         
     def summary(self, user=None):
-        """return id, name and url, enough to identify a exm and say where to find it"""
+        """return enough to identify an exam and say where to find it, along with a description"""
         obj = {
             'id': self.id, 
             'name': self.name, 

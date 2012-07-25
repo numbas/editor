@@ -110,7 +110,6 @@ INSTALLED_APPS = (
     'editor',
     'taggit',
     'django.contrib.admin',
-    'auth',
     'registration',
     'accounts',
     # 'django.contrib.admindocs',
@@ -180,12 +179,13 @@ AUTHENTICATION_BACKENDS = (
 )
 
 # Settings for sending email. Other backends are available - see https://docs.djangoproject.com/en/dev/topics/email/#obtaining-an-instance-of-an-email-backend
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = ''
-EMAIL_PORT = 25
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
-EMAIL_USE_TLS = False
+#DEFAULT_FROM_EMAIL = 'numbas@domain'
+#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+#EMAIL_HOST = ''
+#EMAIL_PORT = 25
+#EMAIL_HOST_USER = ''
+#EMAIL_HOST_PASSWORD = ''
+#EMAIL_USE_TLS = False
 
 # Uncomment to enable LDAP authentication, then look at ldap_auth.py.dist
 #from ldap_auth import *

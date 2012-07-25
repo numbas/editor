@@ -261,16 +261,25 @@ $(document).ready(function() {
 		search.searching = ko.observable(false);
 		
 		return ko.computed(function() {
-            search.searching(true);
             var data = makeQuery();
+
+			//this is a terrible, terrible way of doing things. There must be a better way.
+			if(JSON.stringify(data)==JSON.stringify(search.lastQuery)) {
+				search.lastID = null;
+				return;
+			}
+			search.lastQuery = data;
+
             data.id = search.lastID = Math.random()+'';
-			console.log(data);
+
 			search.results.error('');
+            search.searching(true);
+
             $.getJSON(url,data)
                 .success(function(response) {
 					if(response.id != search.lastID)
 						return;
-                    search.results.all(response.object_list);
+					search.results.raw(response.object_list);
                 })
                 .error(function() {
 					if('console' in window)

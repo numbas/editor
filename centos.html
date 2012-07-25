@@ -97,18 +97,19 @@
           <li><code>mkdir /srv/numbas/dist</code></li>
           <li><code>mkdir /srv/numbas/previews</code></li>
           <li><code>mkdir /srv/numbas/questiondb</code></li>
+          <li><code>mkdir /srv/numbas/static</code></li>
         </ul>
       </li>
       <li>Set the correct ownership and permissions (need file system ACLs
       enabled on <code>/srv</code>):
         <ul>
           <li><code>chmod 2770 previews questiondb</code></li>
-          <li><code>chmod 2750 dist</code></li>
-          <li><code>chgrp apache dist previews questiondb</code></li>
+          <li><code>chmod 2750 dist static</code></li>
+          <li><code>chgrp apache dist previews questiondb static</code></li>
           <li><code>setfacl -R -m g:apache:rwX previews questiondb</code></li>
           <li><code>setfacl -dR -m g:apache:rwX previews questiondb</code></li>
-          <li><code>setfacl -R -m g:apache:rX dist</code></li>
-          <li><code>setfacl -dR -m g:apache:rX dist</code></li>
+          <li><code>setfacl -R -m g:apache:rX dist static</code></li>
+          <li><code>setfacl -dR -m g:apache:rX dist static</code></li>
         </ul>
       </li>
       <li>Clone the Numbas repository: <code>git clone
@@ -179,16 +180,16 @@
           <li>Enter username, e-mail address, and password.</li>
         </ul>
       </li>
+      <li>Set up static files: <code>python manage.py collectstatic --noinput</code></li>
       <li>Create apache config file
         <code>/etc/httpd/conf.d/numbas-editor.conf</code>.
         <ul>
           <li>Edit the config file with contents similar to that in <a
-            href="apache2_centos.conf"><code>apache2_centos.conf</code></a>.
-          If following these instructions exactly, then all that needs changing
-          are the lines <code>ServerName</code>, <code>ServerAdmin</code>,
-          <code>WSGIDaemonProcess</code>, <code>WSGIProcessGroup</code>, and
-          the two lines for the static admin pages (set the path to the
-          virtualenv correctly).</li>
+              href="apache2_centos.conf"><code>apache2_centos.conf</code></a>.
+            If following these instructions exactly, then all that needs
+            changing are the lines <code>ServerName</code>,
+            <code>ServerAdmin</code>, <code>WSGIDaemonProcess</code>, and
+            <code>WSGIProcessGroup</code>.</li>
         </ul>
         <li>Add the line <code>WSGISocketPrefix run/wsgi</code> to
         <code>/etc/httpd/conf.d/wsgi.conf</code>, otherwise you will see socket
@@ -211,16 +212,17 @@
     <h3>SELinux</h3>
     <p>
       The default SELinux configuration prevents apache processes from
-      accessing certain files in non-standard locations.  The web server
-      needs read access to the files in <code>/srv/numbas/dist</code> and
-      read/write access to the files in <code>/srv/numbas/previews</code> and
+      accessing certain files in non-standard locations.  The web server needs
+      read access to the files in <code>/srv/numbas/dist</code> and
+      <code>/srv/numbas/static</code>, and read/write access to the files in
+      <code>/srv/numbas/previews</code> and
       <code>/srv/numbas/questiondb</code>.  It also needs read access to the
       files in the Python 3 library.  The following commands will alter the
       SELinux security policy to grant the web server these permissions.
     </p>
     <ul>
       <li><code>chcon -R --type=httpd_sys_content_t
-        /srv/numbas/dist</code></li>
+        /srv/numbas/dist /srv/numbas/static</code></li>
       <li><code>chcon -R --type=httpd_sys_rw_content_t /srv/numbas/previews
         /srv/numbas/questiondb</code></li>
       <li><code>chcon -R --reference=/usr/lib/python2.6

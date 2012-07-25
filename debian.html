@@ -58,18 +58,19 @@
           <li><code>mkdir /srv/numbas/dist</code></li>
           <li><code>mkdir /srv/numbas/previews</code></li>
           <li><code>mkdir /srv/numbas/questiondb</code></li>
+          <li><code>mkdir /srv/numbas/static</code></li>
         </ul>
       </li>
       <li>Set the correct ownership and permissions (need file system ACLs
       enabled on <code>/srv</code>):
         <ul>
           <li><code>chmod 2770 previews questiondb</code></li>
-          <li><code>chmod 2750 dist</code></li>
-          <li><code>chgrp www-data dist previews questiondb</code></li>
+          <li><code>chmod 2750 dist static</code></li>
+          <li><code>chgrp www-data dist previews questiondb static</code></li>
           <li><code>setfacl -R -m g:www-data:rwX previews questiondb</code></li>
           <li><code>setfacl -dR -m g:www-data:rwX previews questiondb</code></li>
-          <li><code>setfacl -R -m g:www-data:rX dist</code></li>
-          <li><code>setfacl -dR -m g:www-data:rX dist</code></li>
+          <li><code>setfacl -R -m g:www-data:rX dist static</code></li>
+          <li><code>setfacl -dR -m g:www-data:rX dist static</code></li>
         </ul>
       </li>
       <li>Clone the Numbas repository: <code>git clone
@@ -126,6 +127,7 @@
           <li>Enter username, e-mail address, and password</li>
         </ul>
       </li>
+      <li>Set up static files: <code>python manage.py collectstatic --noinput</code></li>
       <li>Copy <code>editor/templates/index.html.dist</code> to
       <code>editor/templates/index.html</code> and customise.</li>
       <li>Copy <code>web/django.wsgi.dist</code> to

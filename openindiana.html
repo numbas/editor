@@ -161,6 +161,7 @@
           <li><code>mkdir /srv/numbas/dist</code></li>
           <li><code>mkdir /srv/numbas/previews</code></li>
           <li><code>mkdir /srv/numbas/questiondb</code></li>
+          <li><code>mkdir /srv/numbas/static</code></li>
         </ul>
       </li>
       <li>
@@ -170,11 +171,11 @@
         and <code>aclinherit=passthrough-x</code> are set on <code>/srv</code>.
         <ul>
           <li><code>chmod 770 previews questiondb</code></li>
-          <li><code>chmod 750 dist</code></li>
-          <li><code>chmod g+s dist previews questiondb</code></li>
-          <li><code>chgrp webservd dist previews questiondb</code></li>
+          <li><code>chmod 750 dist static</code></li>
+          <li><code>chmod g+s dist previews questiondb static</code></li>
+          <li><code>chgrp webservd dist previews questiondb static</code></li>
           <li><code>chmod A=owner@:full_set:fd:allow,group@:rwxpaRcs:fd:allow,everyone@:aRcs:fd:allow previews questiondb</code></li>
-          <li><code>chmod A=owner@:full_set:fd:allow,group@:rxaRcs:fd:allow,everyone@:aRcs:fd:allow dist</code></li>
+          <li><code>chmod A=owner@:full_set:fd:allow,group@:rxaRcs:fd:allow,everyone@:aRcs:fd:allow dist static</code></li>
         </ul>
       </li>
       <li>
@@ -277,6 +278,7 @@
           <li>Enter username, e-mail address, and password.</li>
         </ul>
       </li>
+      <li>Set up static files: <code>python manage.py collectstatic --noinput</code></li>
       <li>
         Create apache config file
         <code>/etc/httpd/conf.d/numbas-editor.conf</code>.

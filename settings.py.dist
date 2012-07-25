@@ -110,10 +110,9 @@ INSTALLED_APPS = (
     'editor',
     'taggit',
     'django.contrib.admin',
-	'auth',
-	'registration',
+    'auth',
+    'registration',
     'accounts',
-    'django.contrib.admin',
     # 'django.contrib.admindocs',
 )
 

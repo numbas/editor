@@ -150,6 +150,7 @@ $(document).ready(function() {
 			query: ko.observable(''),
 			author: ko.observable(''),
 			results: {
+				raw: ko.observableArray([]),
 				all: Editor.mappedObservableArray(function(d){ return new ExamResult(d) }),
 				page: ko.observable(1),
 				prevPage: function() {
@@ -220,6 +221,29 @@ $(document).ready(function() {
 
 		Mousetrap.bind('left',function() { vm.search.results.prevPage.apply(vm.search.results) });
 		Mousetrap.bind('right',function() { vm.search.results.nextPage.apply(vm.search.results) });
+
+		//save state in browser history - restore query when you go back to this page
+		if(history.state) {
+			if('query' in history.state)
+				vm.search.query(history.state.query);
+			if('author' in history.state)
+				vm.search.author(history.state.author);
+			if('mine' in history.state)
+				vm.search.mine(history.state.mine);
+			if('results' in history.state)
+				vm.search.results.all(history.state.results);
+			if('page' in history.state)
+				vm.search.results.page(history.state.page);
+		}
+		ko.computed(function() {
+			history.replaceState({
+				page: vm.search.results.page(),
+				query: vm.search.query(),
+				author: vm.search.author(),
+				mine: vm.search.mine(),
+				results: vm.search.results.raw()
+			});
+		})
     }
     
     //create a view model

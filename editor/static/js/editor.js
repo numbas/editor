@@ -257,19 +257,26 @@ $(document).ready(function() {
 	};
 
     Editor.searchBinding = function(search,url,makeQuery) {
+		search.results.error = ko.observable('');
+		search.searching = ko.observable(false);
+		
 		return ko.computed(function() {
             search.searching(true);
             var data = makeQuery();
             data.id = search.lastID = Math.random()+'';
+			console.log(data);
+			search.results.error('');
             $.getJSON(url,data)
-                .success(function(data) {
-					if(data.id != search.lastID)
+                .success(function(response) {
+					if(response.id != search.lastID)
 						return;
-                    search.results.all(data.object_list);
+                    search.results.all(response.object_list);
                 })
                 .error(function() {
 					if('console' in window)
 	                    console.log(arguments);
+					search.results.all([]);
+					search.results.error('Error fetching results: '+arguments[2]);
                 })
                 .complete(function() {
                     search.searching(false);

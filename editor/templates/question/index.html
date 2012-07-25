@@ -32,7 +32,7 @@
 				autocompleteCallback: function(user) { return {label: user.username+' ('+user.name+')', value: user.username} },
 				click: clearMine
 			"/>
-			(mine only <input type="checkbox" data-bind="checked: mine"/>)
+			{% if user.is_authenticated %}(mine only <input type="checkbox" data-bind="checked: mine"/>){% endif %}
 
 			<div data-bind="with: results">
 				<div id="pagination" data-bind="visible: pages().length>0">
@@ -67,7 +67,8 @@
                             </tr>
                         </tbody>
                     </table>
-                    <div class="none" data-bind="visible: all().length==0, text: $parent.searching() ? 'Loading results...' : 'No questions found.'" ></div>
+					<div class="none" data-bind="visible: all().length==0, text: $parent.searching() ? 'Loading results...' : 'No questions found.'" ></div>
+					<div class="error" data-bind="visible: error().length>0, html: error"></div>
 				</div>
 			</div>
         </div>

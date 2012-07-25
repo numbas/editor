@@ -151,6 +151,7 @@ GLOBAL_SETTINGS = {
 }
 
 ALLOW_REGISTRATION = False
+ACCOUNT_ACTIVATION_DAYS = 10
 
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'
@@ -179,9 +180,13 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 
-EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-EMAIL_FILE_PATH = 'tmp/email/'
-ACCOUNT_ACTIVATION_DAYS = 10
+# Settings for sending email. Other backends are available - see https://docs.djangoproject.com/en/dev/topics/email/#obtaining-an-instance-of-an-email-backend
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = ''
+EMAIL_PORT = 25
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+EMAIL_USE_TLS = False
 
 # Uncomment to enable LDAP authentication, then look at ldap_auth.py.dist
 #from ldap_auth import *

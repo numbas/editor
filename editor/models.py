@@ -147,7 +147,7 @@ class Question(models.Model,NumbasObject,GitObject):
     """
     
     name = models.CharField(max_length=200,default='Untitled Question')
-    theme = 'default'
+    theme = 'question'
     slug = models.SlugField(max_length=200,editable=False,unique=False)
     author = models.ForeignKey(User)
     filename = models.CharField(max_length=200, editable=False)

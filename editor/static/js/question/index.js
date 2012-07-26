@@ -160,16 +160,17 @@ $(document).ready(function() {
 				vm.search.results.page(history.state.page);
 			vm.search.lastQuery = makeQuery();
 		}
-		ko.computed(function() {
-			history.replaceState({
-				page: vm.search.results.page(),
-				query: vm.search.query(),
-				author: vm.search.author(),
-				mine: vm.search.mine(),
-				results: vm.search.results.raw()
-			});
-		})
-
+		if(history.replaceState) {
+			ko.computed(function() {
+				history.replaceState({
+					page: vm.search.results.page(),
+					query: vm.search.query(),
+					author: vm.search.author(),
+					mine: vm.search.mine(),
+					results: vm.search.results.raw()
+				});
+			})
+		}
     }
 
     

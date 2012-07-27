@@ -168,7 +168,7 @@ $(document).ready(function() {
 					author: vm.search.author(),
 					mine: vm.search.mine(),
 					results: vm.search.results.raw()
-				});
+				},'',window.location.pathname);
 			})
 		}
     }

@@ -562,20 +562,25 @@ $(document).ready(function() {
 			$(element).append(toggle);
 			toggle.click(function() {
 				var ed = $(this).siblings('textarea').tinymce();
-				if(ed.isHidden())
+				if(ed.isHidden()) {
 					ed.show()
+					ed.setContent(ko.utils.unwrapObservable(valueAccessor));
+				}
 				else
 					ed.hide();
-				$(this).toggleClass('on',!ed.isHidden());
+				$(element).toggleClass('on',!ed.isHidden());
 			});
 
-            var t = $('<textarea style="width:100%"/>');
+            var t = $('<textarea class="wmTextArea" style="width:100%"/>');
+			var plaintext = $('<textarea class="plaintext"/>');
+
             $(element)
-                .addClass('writemathsContainer')
+                .addClass('writemathsContainer on')
                 .append(t)
+				.append(plaintext)
             ;
 
-            $(t)
+            t
                 .tinymce({
                     theme:'numbas',
                     handle_event_callback: onkeyup,
@@ -585,16 +590,26 @@ $(document).ready(function() {
                     theme_advanced_resizing: true,
                     theme_advanced_resizing_max_width: '750'
                 })
-                .html(value)
+				.val(value);
             ;
-            
+
+			plaintext.on('keyup paste',function() {
+				console.log($(this).val());
+				valueAccessor($(this).val());
+			})
 		},
 		update: function(element, valueAccessor) {
-			if(!($(element).find('iframe').length))
-				return;
-            if (!$(element).find('iframe').contents().find('body').is(':focus')) {              
-                var value = ko.utils.unwrapObservable(valueAccessor()) || '';
-                $(element).children('textarea').html(value);
+			var tinymce = $(element).find('iframe').contents().find('body');
+			var plaintext = $(element).children('.plaintext');
+
+			var value = ko.utils.unwrapObservable(valueAccessor()) || '';
+            if (!tinymce.is(':focus')) {
+				var ed = $(element).children('.wmTextArea').tinymce();
+				if(ed)
+					ed.setContent(value);
+			}
+			if(plaintext.length && !plaintext.is(':focus')) {
+				plaintext.val(value);
             }		
 		}
 	};

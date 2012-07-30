@@ -207,6 +207,14 @@ ul.choices {
 .writemathsContainer textarea {
     width: 100%;
 	height: 14em;
+	display: none;
+}
+
+.writemathsContainer .plaintext {
+	display: inherit;
+}
+.writemathsContainer.on .plaintext {
+	display: none;
 }
 
 .writemathsContainer .wmToggle {
@@ -221,24 +229,8 @@ ul.choices {
 	padding-left: 4px;
 }
 
-.writemathsContainer .wmToggle.on:after {
+.writemathsContainer.on .wmToggle:after {
 	content: url(../images/check_16x13.png);
-}
-
-.writemaths, .plaintext { 
-	width: 100%;
-	border: 1px solid #aaa;
-	background: white;
-}
-
-.writemaths input, .writemaths .line {
-	padding: 0;
-	text-align:left;
-}
-
-.writemaths .MathJax_Display {
-	margin: 0;
-	padding: 1em 0em;
 }
 
 .jme-var {

@@ -64,31 +64,23 @@ $(document).ready(function() {
 
 		this.questions = ko.observableArray([]);
 
-		this.questionSearch = ko.observable('');
-		this.questionSearchResults = ko.observableArray([]);
-		this.searching = ko.observable(false);
+		this.search = {
+			query: ko.observable(''),
+			results: {
+				raw: ko.observableArray([]),
+				all: Editor.mappedObservableArray(function(d) {return new Question(d,e.questionSearchResults);})
+			}
+		};
+
+		function makeQuery() {
+			return {q: e.search.query()}
+		}
+
+		Editor.searchBinding(this.search,'/questions/search/',makeQuery);
+
 		ko.computed(function() {
-			var search = this.questionSearch();
-			if(search.length)
-			{
-				var vm = this;
-				this.searching(true);
-				$.getJSON('/questions/search/',{q:this.questionSearch()})
-					.success(function(data) {
-                        var questions = data.object_list.map(function(d) {
-                            return new Question(d,vm.questionSearchResults);
-                        });
-						vm.questionSearchResults(questions);
-					})
-					.complete(function() {
-						vm.searching(false);
-					});
-				;
-			}
-			else {
-				this.questionSearchResults([]);
-			}
-		},this).extend({throttle:100});
+			e.search.results.all(e.search.results.raw());
+		});
 
         this.onadvance = new Event(
             'onadvance',
@@ -236,11 +228,6 @@ $(document).ready(function() {
 
 		dropQuestion: function(data) {
             data.item.parent = data.targetParent;
-            if(data.sourceParent==viewModel.questionSearchResults && data.targetParent != viewModel.questionSearchResults) {
-                var clone = data.item.clone();
-                clone.parent = data.sourceParent;
-                viewModel.questionSearchResults.splice(data.sourceIndex,0,clone);
-            }
 		},
 
         //returns a JSON-y object representing the exam
@@ -341,6 +328,7 @@ $(document).ready(function() {
 		this.url = ko.observable(data.url);
 		this.description = $(data.metadata.description).text();
 		this.parent = parent;
+		this.data = data;
 	}
 	Question.prototype = {
 		remove: function() {
@@ -355,12 +343,14 @@ $(document).ready(function() {
 		},
 
         clone: function() {
-            return new Question({
-                id: this.id(),
-                name: this.name(),
-                url: this.url()
-            },this.parent);
-        }
+            return new Question(this.data,this.parent);
+        },
+
+		add: function() {
+			var newQ = this.clone();
+			newQ.parent = viewModel.questions;
+			viewModel.questions.push(newQ);
+		}
 	}
 
 	Numbas.loadScript('scripts/jme-display.js');

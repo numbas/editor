@@ -76,14 +76,17 @@
 
 .result td {
 	padding: 0.4em;
+	max-width: 400px;
+	overflow-x: hidden;
 }
 
 .result .description {
 	font-size: 0.8em;
 	margin-top: 0.5em;
 	padding-left: 1em;
-	max-height: 3em;
+	max-height: 5em;
 	overflow-y: hidden;
+	overflow-x: hidden;
 }
 .result .description p {
 	margin: 0;

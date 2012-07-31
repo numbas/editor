@@ -10,11 +10,12 @@
 }
 
 .question .description {
-	max-height: 4em;
+	max-height: 5em;
 	line-height: 1.2em;
 	font-size: 80%;
 	padding-left: 4em;
 	padding-bottom: 0.5em;
+	overflow-y: hidden;
 }
 
 .question .description p {
@@ -33,6 +34,16 @@
     padding: 0;
     max-height: 25em;
     overflow-y: scroll;
+}
+.questionResult .handle {
+	width: 16px;
+    background-image: url(../../images/plus_alt_16x16.png);
+	padding-left: 20px;
+	cursor: pointer;
+}
+
+.question.ui-sortable-helper .number {
+	display: none;
 }
 
 li.questionResult.ui-draggable-dragging, li.question.ui-sortable-helper {

@@ -284,7 +284,7 @@ $(document).ready(function() {
                 .error(function() {
 					if('console' in window)
 	                    console.log(arguments);
-					search.results.all([]);
+					search.results.raw([]);
 					search.results.error('Error fetching results: '+arguments[2]);
                 })
                 .complete(function() {

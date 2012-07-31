@@ -155,7 +155,7 @@
 				</div>
 			</div>
 
-			<div data-bind="folder: {label: 'Questions', show: true}">
+			<div data-bind="folder: {label: 'Questions ('+questions().length+')', show: true}">
 				<div class="questions">
 					<ul class="questionList editlist big" data-bind="
 						sortable: {
@@ -167,17 +167,15 @@
 					"></ul>
 					<div class="searchBox">
 						<label for="questionsearch">Search for questions: </label>
-						<input type="text" name="questionsearch" class="search" data-bind="
-							value: questionSearch, 
+						<input type="text" id="questionsearch" class="search" data-bind="
+							value: search.query, 
 							valueUpdate: 'afterkeydown',
-							css: {loading: searching()}
+							css: {loading: search.searching()}
 						"/>
 						<ul class="results editlist big" data-bind="
-							sortable: {
-								template: 'question',
-								data: questionSearchResults,
-								afterMove: dropQuestion,
-								options: {handle: '.handle', placeholder: 'placeholder', helper: 'clone'}
+							template: {
+								name: 'questionResult',
+								foreach: search.results.all,
 							}
 						"></ul>
 					</div>
@@ -206,17 +204,18 @@
 		<script type="text/html" id="question">
 			<li class="question">
 				<span class="handle"></span>
+				<span class="number" data-bind="text: ($index()+1)+'.'"/>
 				<a data-bind="attr:{href: url}, text: name" target="_blank"></a>
 				<button class="delete" data-bind="click:remove"></button>
-				<div class="description" data-bind="visible: description.length>0, html: description, dotdotdot: true"></div>
+				<div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
 			</li>
 		</script>
 
 		<script type="text/html" id="questionResult">
-			<li class="questionResult" data-bind="dragOut: {data: $data, sortable: '.questionList'}">
-				<span class="handle"></span>
+			<li class="question questionResult">
+				<span class="handle" data-bind="click: add"></span>
 				<a data-bind="attr: {href: url}, text: name" target="_blank"></a>
-				<div class="description" data-bind="visible: description.length>0, html: description, dotdotdot: true"></div>
+				<div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
 			</li>
 		</script>
 	    {% endverbatim %}
@@ -339,7 +338,7 @@
 				</div>
 			</div>
 
-			<div data-bind="folder: {label: 'Questions', show:true}">
+			<div data-bind="folder: {label: 'Questions ('+questions().length+')', show:true}">
 				<div class="questions">
 					<ol data-bind="
 						template:{
@@ -371,7 +370,8 @@
 	
 		<script type="text/html" id="question">
 			<li class="question">
-				<a data-bind="attr:{href: url}, text: name" target="_blank"></a>
+				<a data-bind="attr: {href: url}, text: name" target="_blank"></a>
+				<div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
 			</li>
 		</script>
 

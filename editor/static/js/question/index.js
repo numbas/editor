@@ -84,7 +84,6 @@ $(document).ready(function() {
                 deleteQuestion: function(q) {
                     if(window.confirm('Delete this question?')) {
                         var results = this;
-                        var item = $(this).parents('.question');
                         $.post(q.deleteURL,{csrfmiddlewaretoken: getCookie('csrftoken')})
                             .success(function() {
                                 results.all.remove(q);

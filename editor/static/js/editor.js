@@ -297,13 +297,23 @@ $(document).ready(function() {
 
 	Editor.mappedObservableArray = function(map) {
 		var obj = {list: ko.observableArray([])};
-		return ko.computed({
+		var obs = ko.computed({
 			owner: obj,
 			read: obj.list,
 			write: function(l) {
 				this.list(l.map(map));
 			}
 		});
+		obs.remove = function(o) {
+			return obj.list.remove(o);
+		}
+		obs.push = function(o) {
+			return obj.list.push(map(o));
+		}
+		obs.indexOf = function(o) {
+			return obj.list.indexOf(o);
+		}
+		return obs;
 	}
 
 	Editor.beforeRemove = function(elem) {

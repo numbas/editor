@@ -163,13 +163,13 @@ $(document).ready(function() {
 					if(page<this.pages().length)
 						this.page(page+1);
 				},
-                deleteExam: function(q) {
+                deleteExam: function(e) {
+					console.log(e);
                     if(window.confirm('Delete this exam?')) {
                         var results = this;
-                        var item = $(this).parents('.exam');
-                        $.post(q.deleteURL,{csrfmiddlewaretoken: getCookie('csrftoken')})
+                        $.post(e.deleteURL,{csrfmiddlewaretoken: getCookie('csrftoken')})
                             .success(function() {
-                                results.all.remove(q);
+                                results.all.remove(e);
                             })
                             .error(function(response) {
                                 noty({text: 'Error deleting exam:\n\n'+response.responseText, layout: 'center', type: 'error'});

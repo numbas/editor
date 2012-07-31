@@ -585,7 +585,7 @@ $(document).ready(function() {
 
 		this.availableTypes = ko.computed(function() {
 			var nonGapTypes = ['information','gapfill'];
-			if(this.parent && this.parent.type().name=='gapfill')
+			if(this.isGap())
 				return this.types.filter(function(t){return nonGapTypes.indexOf(t.name)==-1});
 			else
 				return this.types;
@@ -775,6 +775,14 @@ $(document).ready(function() {
             }
             this.multiplechoice.answers.remove(answer);
         },
+
+		isGap: function() {
+			return this.parent && this.parent.type().name=='gapfill' && !this.parent.steps().contains(this);
+		},
+
+		isStep: function() {
+			return this.parent && this.parent.steps().contains(this);
+		},
 
         toJSON: function() {
             var o = {

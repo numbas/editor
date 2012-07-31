@@ -262,6 +262,11 @@ $(document).ready(function() {
 		
 		return ko.computed(function() {
             var data = makeQuery();
+			if(!data) {
+				search.results.raw([]);
+				search.lastID = null;
+				return;
+			}
 
 			//this is a terrible, terrible way of doing things. There must be a better way.
 			if(JSON.stringify(data)==JSON.stringify(search.lastQuery)) {

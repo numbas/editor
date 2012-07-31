@@ -73,7 +73,8 @@ $(document).ready(function() {
 		};
 
 		function makeQuery() {
-			return {q: e.search.query()}
+			if(e.search.query().length>0)
+				return {q: e.search.query()}
 		}
 
 		Editor.searchBinding(this.search,'/questions/search/',makeQuery);

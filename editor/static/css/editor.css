@@ -327,12 +327,22 @@ button.delete {
 	margin-left: .3em;
 	padding: 0;
 }
-
 button.delete:hover {
 	cursor:pointer;
 	background-color: #f90;
     border-radius: 50%;
 }
+button.delete-grey {
+	background: transparent url(../images/x_14x14.png) no-repeat center;
+	width: 14px;
+	height: 14px;
+    padding: 9px;
+}
+button.delete-grey:hover {
+    border-radius: 0;
+}
+
+
 
 .listbox {
     background: white;

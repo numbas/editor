@@ -398,7 +398,7 @@
 					</form>
 				</a>
 				{% endif %}
-				<a id="copy" href="{% url exam_copy object.pk object.slug %}">Make a Copy</a>
+				<a id="copy" href="{% url exam_copy object.pk object.slug %}" title="Create a copy of this exam.">Make a Copy</a>
 			</div>
 		</div>
 		<div id="editor" data-bind="template: 'examTemplate'" role="form tree">Loading...</div>

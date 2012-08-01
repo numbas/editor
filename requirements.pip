@@ -2,3 +2,4 @@ django
 GitPython
 django-taggit
 django-registration
+south

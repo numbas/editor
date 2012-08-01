@@ -390,7 +390,7 @@
 				<a href="{% url exam_source object.pk object.slug %}">source</a>
 			</div>
 			<div class="controlbox" id="admin">
-				<a id="preview" href="{% url exam_preview object.pk object.slug %}" target="{% now "U" %}">Test Run</a>
+				<a id="preview" href="{% url exam_preview object.pk object.slug %}" target="{% now "U" %}" title="Run this exam in a new window">Test Run</a>
 				{% if editable %}
 				<a id="delete" data-bind="click: deleteExam" href="{% url exam_delete object.pk object.slug %}" title="Delete this exam permanently but not the questions it uses">Delete
 					<form action="{% url exam_delete object.pk object.slug %}" method="post">{% csrf_token %}

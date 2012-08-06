@@ -22,6 +22,10 @@
 	margin: 0;
 }
 
+.question .number {
+	font-weight: bold;
+}
+
 .questions .searchBox {
     display: inline-block;
     width: 400px;
@@ -35,6 +39,11 @@
     max-height: 25em;
     overflow-y: scroll;
 }
+
+.questionResult {
+	border: 1px solid #888;
+}
+
 .questionResult .handle {
 	width: 16px;
     background-image: url(../../images/plus_alt_16x16.png);

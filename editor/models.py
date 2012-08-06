@@ -48,6 +48,7 @@ class NumbasObject:
             self.parsed_content = {'name': self.name}
 
         self.extensions = self.parsed_content.get('extensions',[])
+        self.metadata = self.parsed_content.get('metadata',{})
 
         return self.parsed_content
 

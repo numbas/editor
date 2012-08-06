@@ -404,6 +404,7 @@ $(document).ready(function() {
             return {
                 name: this.realName(),
                 tags: this.tags(),
+                metadata: this.metadata(),
                 statement: this.statement(),
 				extensions: extensions,
                 advice: this.advice(),

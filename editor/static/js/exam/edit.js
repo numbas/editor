@@ -235,6 +235,7 @@ $(document).ready(function() {
         toJSON: function() {
             return {
                 name: this.name(),
+                metadata: this.metadata(),
                 duration: this.duration()*60,
                 percentPass: this.percentPass(),
                 shuffleQuestions: this.shuffleQuestions(),

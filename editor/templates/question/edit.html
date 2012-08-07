@@ -42,12 +42,6 @@
 				<div class="controlbox" id="author">
 					Author: {{ object.author.first_name }} {{ object.author.last_name }} ({{ object.author.username }})
 				</div>
-				<div class="controlbox" id="buttons">
-					Download: 
-					<a href="{% url question_download object.pk object.slug %}">standalone .zip</a>,
-					<a href="{% url question_download object.pk object.slug %}?scorm">SCORM package</a>,
-					<a href="{% url question_source object.pk object.slug %}">source</a>
-				</div>
                 <div class="controlbox" id="admin">
                     <a id="preview" href="{% url question_preview object.pk object.slug %}" target="{% now "U" %}">Test Run</a>
 					
@@ -63,6 +57,13 @@
 					{% if user.is_authenticated %}
 						<a id="copy" href="{% url question_copy object.pk object.slug %}">Make a Copy</a>
 					{% endif %}
+
+					<span id="download">
+						Download: 
+						<a href="{% url question_download object.pk object.slug %}">standalone .zip</a>,
+						<a href="{% url question_download object.pk object.slug %}?scorm">SCORM package</a>,
+						<a href="{% url question_source object.pk object.slug %}">source</a>
+					</span>
 				</div>
 			{% endblock controls %}
 		</div>

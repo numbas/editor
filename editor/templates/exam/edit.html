@@ -383,14 +383,9 @@
 			<div class="controlbox" id="author">
 				Author: {{ object.author.first_name }} {{ object.author.last_name }} ({{ object.author.username }})
 			</div>
-			<div class="controlbox" id="buttons">
-				Download: 
-				<a href="{% url exam_download object.pk object.slug %}">standalone .zip</a>,
-				<a href="{% url exam_download object.pk object.slug %}?scorm">SCORM package</a>,
-				<a href="{% url exam_source object.pk object.slug %}">source</a>
-			</div>
 			<div class="controlbox" id="admin">
 				<a id="preview" href="{% url exam_preview object.pk object.slug %}" target="{% now "U" %}" title="Run this exam in a new window">Test Run</a>
+				
 				{% if editable %}
 				<a id="delete" data-bind="click: deleteExam" href="{% url exam_delete object.pk object.slug %}" title="Delete this exam permanently but not the questions it uses">Delete
 					<form action="{% url exam_delete object.pk object.slug %}" method="post">{% csrf_token %}
@@ -398,7 +393,17 @@
 					</form>
 				</a>
 				{% endif %}
-				<a id="copy" href="{% url exam_copy object.pk object.slug %}" title="Create a copy of this exam.">Make a Copy</a>
+
+				{% if user.is_authenticated %}
+					<a id="copy" href="{% url exam_copy object.pk object.slug %}" title="Create a copy of this exam.">Make a Copy</a>
+				{% endif %}
+
+				<span id="download">
+					Download: 
+					<a href="{% url exam_download object.pk object.slug %}">standalone .zip</a>,
+					<a href="{% url exam_download object.pk object.slug %}?scorm">SCORM package</a>,
+					<a href="{% url exam_source object.pk object.slug %}">source</a>
+				</span>
 			</div>
 		</div>
 		<div id="editor" data-bind="template: 'examTemplate'" role="form tree">Loading...</div>

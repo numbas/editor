@@ -14,16 +14,27 @@
     margin-top: 0.5em;
 }
 
-.controlbox#admin a {
+.controlbox#admin {
     font-size: 22px;
+}
+
+.controlbox#admin > a {
     text-decoration: none;
     margin-right: 0.5em;
 }
-.controlbox#admin a:before {
+.controlbox#admin > a:before {
     padding-right: 4px;
 }
-.controlbox#admin a:visited {
+.controlbox#admin > a:visited {
     color: #00e;
+}
+
+#download a {
+	font-size: 18px;
+}
+
+#download:before {
+	content: url(../images/download_12x16.png);
 }
 
 .controlbox #preview:before {

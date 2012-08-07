@@ -252,7 +252,7 @@ $(document).ready(function() {
 				return;
 			}
 
-			var scopes = [Numbas.jme.builtinScopes];
+			var scopes = [Numbas.jme.builtinScope];
 			var extensions = this.extensions().filter(function(e){return e.used()});
 			for(var i=0;i<extensions.length;i++) {
 				var extension = extensions[i].location;

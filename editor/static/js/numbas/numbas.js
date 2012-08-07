@@ -1,5 +1,8 @@
 (function() {
 if(!window.Numbas) { window.Numbas = {} }	// create the Numbas object.
+
+Numbas.extensions = {};
+
 // Numbas.debug is a function for displaying debug info in the console. It will try to give a reference back to the line that called it, if it can.
 Numbas.debug = function(msg,noStack)
 {
@@ -56,6 +59,8 @@ var loadScript = Numbas.loadScript = function(file,noreq)
 	var m;
 	if(m=file.match(/^scripts\/(.+)/))
 		file='/static/js/numbas/'+m[1];
+	if(m=file.match(/^extensions\/(.+)/))
+		file='/static/js/numbas/extensions/'+m[1];
 	if(!noreq)
 	{
 		if(scriptreqs[file]!==undefined)
@@ -88,6 +93,8 @@ Numbas.queueScript = function(file, deps, callback)
 	var m;
 	if(m=file.match(/^scripts\/(.+)/))
 		file='/static/js/numbas/'+m[1];
+	if(m=file.match(/^extensions\/(.+)/))
+		file='/static/js/numbas/extensions/'+m[1];
 
 	var req = scriptreqs[file];
 

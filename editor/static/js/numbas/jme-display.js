@@ -102,7 +102,7 @@ jme.display = {
 					var match;
 					if(match = rules[i].match(exprTree,scope))	//if rule can be applied, apply it!
 					{
-						exprTree = jme.substituteTree(Numbas.util.copyobj(rules[i].result,true),new jme.Scope({variables:match}));
+						exprTree = jme.substituteTree(Numbas.util.copyobj(rules[i].result,true),new jme.Scope([{variables:match}]));
 						applied = true;
 						break;
 					}
@@ -466,11 +466,21 @@ function texRationalNumber(n)
 		if((piD = math.piDegree(n)) > 0)
 			n /= Math.pow(Math.PI,piD);
 
+		var m;
+		var out = math.niceNumber(n);
+		if(m = out.match(math.re_scientificNumber)) {
+			var mantissa = m[1];
+			var exponent = m[2];
+			if(exponent[0]=='+')
+				exponent = exponent.slice(1);
+			return mantissa+' \times 10^{'+exponent+'}';
+		}
+
 		var f = math.rationalApproximation(Math.abs(n));
 		if(f[1]==1)
 			out = Math.abs(f[0]).toString();
 		else
-			var out = '\\frac{'+f[0]+'}{'+f[1]+'}';
+			out = '\\frac{'+f[0]+'}{'+f[1]+'}';
 		if(n<0)
 			out=' - '+out;
 
@@ -528,7 +538,17 @@ function texRealNumber(n)
 		if((piD = math.piDegree(n)) > 0)
 			n /= Math.pow(Math.PI,piD);
 
-		out = math.niceNumber(n);
+		var out = math.niceNumber(n);
+
+		var m;
+		if(m = out.match(math.re_scientificNumber)) {
+			var mantissa = m[1];
+			var exponent = m[2];
+			if(exponent[0]=='+')
+				exponent = exponent.slice(1);
+			return mantissa+' \times 10^{'+exponent+'}';
+		}
+
 		switch(piD)
 		{
 		case 0:
@@ -755,11 +775,22 @@ function jmeRationalNumber(n)
 		if((piD = math.piDegree(n)) > 0)
 			n /= Math.pow(Math.PI,piD);
 
+		
+		var m;
+		var out = math.niceNumber(n);
+		if(m = out.match(math.re_scientificNumber)) {
+			var mantissa = m[1];
+			var exponent = m[2];
+			if(exponent[0]=='+')
+				exponent = exponent.slice(1);
+			return mantissa+'*10^('+exponent+')';
+		}
+
 		var f = math.rationalApproximation(Math.abs(n));
 		if(f[1]==1)
 			out = Math.abs(f[0]).toString();
 		else
-			var out = f[0]+'/'+f[1];
+			out = f[0]+'/'+f[1];
 		if(n<0)
 			out=' - '+out;
 
@@ -817,7 +848,18 @@ function jmeRealNumber(n)
 		if((piD = math.piDegree(n)) > 0)
 			n /= Math.pow(Math.PI,piD);
 
-		out = math.niceNumber(n);
+		var out = math.niceNumber(n);
+
+		var m;
+		if(m = out.match(math.re_scientificNumber)) {
+			var mantissa = m[1];
+			var exponent = m[2];
+			if(exponent[0]=='+')
+				exponent = exponent.slice(1);
+			return mantissa+'*10^('+exponent+')';
+		}
+
+		
 		switch(piD)
 		{
 		case 0:
@@ -1002,7 +1044,7 @@ Rule.prototype = {
 		for(var i=0;i<this.conditions.length;i++)
 		{
 			var c = Numbas.util.copyobj(this.conditions[i],true);
-			c = jme.substituteTree(c,new jme.Scope({variables:match}));
+			c = jme.substituteTree(c,new jme.Scope([{variables:match}]));
 			try
 			{
 				var result = jme.evaluate(c,scope);
@@ -1223,13 +1265,13 @@ for(var x in simplificationRules)
 }
 simplificationRules = nsimplificationRules;
 simplificationRules['all']=all;
-Numbas.jme.builtinScope = new Numbas.jme.Scope(Numbas.jme.builtinScope,{rulesets: simplificationRules});
+Numbas.jme.builtinScope = new Numbas.jme.Scope([Numbas.jme.builtinScope,{rulesets: simplificationRules}]);
 
 var displayFlags = ['fractionnumbers','rowvector'];
 
 var collectRuleset = jme.display.collectRuleset = function(set,scope)
 {
-	scope = new jme.Scope(scope);
+	scope = new jme.Scope([scope]);
 	var sets = scope.rulesets;
 	if(typeof(set)=='string')
 	{

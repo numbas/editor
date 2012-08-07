@@ -21,6 +21,10 @@ $(document).ready(function() {
 	Numbas.loadScript('scripts/jme-display.js');
 	Numbas.loadScript('scripts/jme.js');
 	Numbas.loadScript('scripts/editor-extras.js');
+	for(var i=0;i<Editor.numbasExtensions.length;i++) {
+		var name = Editor.numbasExtensions[i].location;
+		Numbas.loadScript('scripts/extensions/'+name+'/'+name+'.js');
+	}
 	Numbas.startOK = true;
 	Numbas.init = function() {
 		//create a question object
@@ -248,7 +252,15 @@ $(document).ready(function() {
 				return;
 			}
 
-			var scope = new Numbas.jme.Scope(Numbas.jme.builtinScope);
+			var scopes = [Numbas.jme.builtinScopes];
+			var extensions = this.extensions().filter(function(e){return e.used()});
+			for(var i=0;i<extensions.length;i++) {
+				var extension = extensions[i].location;
+				if(extension in Numbas.extensions && 'scope' in Numbas.extensions[extension]) {
+					scopes.push(Numbas.extensions[extension].scope);
+				}
+			}
+			var scope = new Numbas.jme.Scope(scopes);
 
 			var jme = Numbas.jme;
 			this.functions().map(function(f) {

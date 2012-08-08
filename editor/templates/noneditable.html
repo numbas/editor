@@ -1,17 +1,28 @@
 ﻿{% load verbatim %}
+
+{% block stylesheets %}
+	<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/noneditable.css">
+{% endblock stylesheets %}
+
 {% verbatim %}
 	<script type="text/html" id="property">
 		<label data-bind="html: label"></label>
 		<span class="value" data-bind="text: property"/>
 	</script>
+
 	<script type="text/html" id="booleanproperty">
 		<label data-bind="html: label"></label>
-		<input class="value" data-bind="checked: property" type="checkbox" disabled/>
+		<span class="value" data-bind="text: property ? 'Yes' : 'No'"></span>
 	</script>
 
 	<script type="text/html" id="percentproperty">
 		<label data-bind="html: label"></label>
 		<span class="percentproperty value" data-bind="text: property()+'%'"></span>
+	</script>
+
+	<script type="text/html" id="jmeproperty">
+		<label data-bind="html: label"></label>
+		<span class="value" data-bind="JME: property"/>
 	</script>
 
 {% endverbatim %}

@@ -56,7 +56,7 @@
                             <tr class="result question">
 								<td>
 									<a data-bind="attr: {href: url}, text: name"></a>
-									<div class="description" data-bind="visible: metadata.description.length>0, html: $(metadata.description).text()"></div>
+									<div class="description" data-bind="visible: metadata.description.length>0, html: $(metadata.description).text(), mathjax: true"></div>
 								</td>
                                 <td><span data-bind="text: author"></span></td>
                                 <td class="admin">

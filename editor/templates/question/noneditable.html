@@ -20,38 +20,34 @@
 					name: 'property',
 					data: {property:name,label:'Question name:'}
 				}"></div>
+
+				<div class="tags">
+					<label>Tags:</label>                    
+					<ul class="tags value" data-bind="template: {
+						name: 'tag',
+						foreach: tags
+					}"></ul>        
+				</div>
 			</div>
 
-			<div data-bind="folder: {label: 'Metadata', show: true}">
-				<div class="properties">
-					<div class="tags">
-						<label>Tags:</label>                    
-						<ul class="value" data-bind="template: {
-							name: 'tag',
-							foreach: tags
-						}"></ul>        
-					</div>
+			<div data-bind="folder: {label: 'Description', show: true}">
+				<div>
+					<div class="textblock" data-bind="cleanJME: description"></div>
 				</div>
+			</div>
 
-				<div data-bind="folder: {label: 'Description', show: true}, visible: description().length>0">
-					<div>
-						<div class="textblock" data-bind="cleanJME: description"></div>
-					</div>
+			<div data-bind="folder: {label: 'Author\'s Notes', show: true}, visible: notes().length>0">
+				<div>
+					<div class="textblock" data-bind="cleanJME: notes"></div>
 				</div>
+			</div>
 
-				<div data-bind="folder: {label: 'Author\'s Notes', show: true}, visible: notes().length>0">
-					<div>
-						<div class="textblock" data-bind="cleanJME: notes"></div>
-					</div>
-				</div>
-
-				<div data-bind="folder: 'Extensions', visible: usedExtensions().length>0">
-					<div>
-					<ul data-bind="template: {
-						name:'extension',
-						foreach: usedExtensions
-					}"></ul>
-					</div>
+			<div data-bind="folder: 'Extensions', visible: usedExtensions().length>0">
+				<div>
+				<ul data-bind="template: {
+					name:'extension',
+					foreach: usedExtensions
+				}"></ul>
 				</div>
 			</div>
 
@@ -72,7 +68,7 @@
 				</div>
 			</div>
 
-			<div data-bind="folder: {label: 'Variables', show: true}">
+			<div data-bind="folder: {label: 'Variables', show: false}">
 				<div>
 					<table class="variables editlist">
 						<col span="1" class="name"/>
@@ -126,7 +122,7 @@
 	
 
         <script type="text/html" id="tag">
-          <li data-bind="text: $data"></li>
+          <li class="tag" data-bind="text: $data"></li>
         </script>
 
 
@@ -197,11 +193,11 @@
 			<div class="properties">
 				<div class="correctanswer">
 					<label>Correct answer: </label>
-					<div><label>Entered as :</label> <span data-bind="text: jme.answer"></span></div>
-					<div><label>Displayed as :</label> <span class="mathdisplay" data-bind="cleanJME: '$\\simplify{' + jme.answer() + '}$'"></span></div>
+					<span class="value" data-bind="text: jme.answer"></span>
+					<span class="value" data-bind="cleanJME: '$\\simplify{' + jme.answer() + '}$'"></span>
 				</div>
                 
-				<div data-bind="template: {
+				<div data-bind="visible: jme.answerSimplification().length>0, template: {
 					name: 'property',
 					data: {label:'Answer simplification rules:',property:jme.answerSimplification}
 				}"></div>
@@ -233,7 +229,7 @@
 				</div>
 			</div>
 
-			<div data-bind="folder:'Maximum length restriction'">
+			<div data-bind="folder:'Maximum length restriction', visible: jme.maxlength.length()>0">
 				<div class="properties">
 					<div data-bind="template: {
 						name: 'property',
@@ -253,7 +249,7 @@
 				</div>
 			</div>
 
-			<div data-bind="folder:'Minimum length restriction'">
+			<div data-bind="folder:'Minimum length restriction', visible: jme.minlength.length()>0">
 				<div class="properties">
 					<div data-bind="template: {
 						name: 'property',
@@ -273,7 +269,7 @@
 				</div>
 			</div>
 
-			<div data-bind="folder:'Required strings'">
+			<div data-bind="folder:'Required strings', visible: jme.musthave.strings().length>0">
 				<div class="properties">
 					<div>
 						<label>Required strings:</label>
@@ -282,13 +278,13 @@
 							foreach: jme.musthave.strings
 						}"></ul>
 					</div>
-					<div data-bind="visible: jme.musthave.strings().length>0">
+					<div>
 						<div data-bind="template: {
 							name:'percentproperty',
 							data: {label:'Partial credit for not using all required strings:',property:jme.musthave.partialCredit}
 						}"></div>
 						<div data-bind="template: {
-							name: 'property',
+							name: 'booleanproperty',
 							data: {label:'Show required strings in warning?', property:jme.musthave.showStrings}
 						}"></div>
 						<div>
@@ -300,7 +296,7 @@
 				</div>
 			</div>
 
-			<div data-bind="folder:'Forbidden strings'">
+			<div data-bind="folder:'Forbidden strings', visible: jme.notallowed.strings().length>0">
 				<div class="properties">
 					<div>
 						<label>Forbidden strings:</label>
@@ -309,13 +305,13 @@
 							foreach: jme.notallowed.strings
 						}"></ul>
 					</div>
-					<div data-bind="visible: jme.notallowed.strings().length>0">
+					<div>
 						<div data-bind="template: {
 							name:'percentproperty',
 							data: {label:'Partial credit for using forbidden strings:',property:jme.notallowed.partialCredit}
 						}"></div>
 						<div data-bind="template: {
-							name: 'property',
+							name: 'booleanproperty',
 							data: {label:'Show forbidden strings in warning?', property:jme.notallowed.showStrings}
 						}"></div>
 						<div>
@@ -331,15 +327,15 @@
 		<script type="text/html" id="numberentry">
 			<div class="properties">
 				<div data-bind="template: {
-					name: 'property',
+					name: 'jmeproperty',
 					data: {label:'Minimum value:',property:numberentry.minValue}
 				}"></div>
 				<div data-bind="template: {
-					name: 'property',
+					name: 'jmeproperty',
 					data: {label:'Maximum value:',property:numberentry.maxValue}
 				}"></div>
 				<div data-bind="template: {
-					name: 'property',
+					name: 'booleanproperty',
 					data: {label:'Must answer be an integer?', property:numberentry.integerAnswer}
 				}"></div>
 				<div data-bind="visible: numberentry.integerAnswer,
@@ -361,7 +357,7 @@
 					data: {label:'Correct answer:',property:patternmatch.displayAnswer}
 				}"></div>
 				<div data-bind="template: {
-					name: 'property',
+					name: 'booleanproperty',
 					data: {label:'Must answer be in the correct case?', property:patternmatch.caseSensitive}
 				}"></div>
 				<div data-bind="
@@ -385,7 +381,7 @@
 					data: {label:'Maximum marks:',property:multiplechoice.maxMarks, type: 'number', min:multiplechoice.minMarks}
 				}"></div>
 				<div data-bind="template: {
-					name: 'property',
+					name: 'booleanproperty',
 					data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
 				}"></div>
 				<div data-bind="template: {
@@ -431,7 +427,7 @@
 					data: {label:'Maximum answers:',property:multiplechoice.maxAnswers, type:'number', min:multiplechoice.minAnswers}
 				}"></div>
 				<div data-bind="template: {
-					name: 'property',
+					name: 'booleanproperty',
 					data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
 				}"></div>
 				<div data-bind="template: {
@@ -496,11 +492,11 @@
 					data: {label:'Maximum answers:',property:multiplechoice.maxAnswers, type:'number', min:multiplechoice.minAnswers}
 				}"></div>
 				<div data-bind="template: {
-					name: 'property',
+					name: 'booleanproperty',
 					data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
 				}"></div>
 				<div data-bind="template: {
-					name: 'property',
+					name: 'booleanproperty',
 					data: {label:'Shuffle order of answers?', property:multiplechoice.shuffleAnswers}
 				}"></div>
 				<div data-bind="template: {

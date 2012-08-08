@@ -8,13 +8,19 @@
 
 .tags {
     display: inline;
-   	list-style:none;
-    padding: 0px;
+   	list-style: none;
+    padding: 0;
+	margin: 0;
+	background: inherit !important;
+	line-height: 24px;
 }
 
-.tags li{
+.tag {
     display: inline;
-    padding-right: 2em;
+    margin-right: 0.4em;
+	background: white;
+	padding: 3px;
+	font-family: monospace;
 }
 
 li.choice  {
@@ -41,25 +47,6 @@ li.choice  {
 
 .function .parameters .list td.type {
     border-left: #ccc 1px dashed;
-}
-
-.correctanswer {
-	border: #ccc 1px solid;
-}
-
-.correctanswer > label{
-    background-color: #eee;
-    padding: 0 1em 0 1em;
-    border: #ccc 1px solid;
-}
-
-.correctanswer div{
-    border: #ccc 1px dashed;
-    padding: 0.5em;
-    margin-bottom: 0em;
-}
-.correctanswer .mathdisplay {
-    border-top: 0px;
 }
 
 .editlist.normal > li {

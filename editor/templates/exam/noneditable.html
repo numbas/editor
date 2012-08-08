@@ -1,0 +1,161 @@
+{% extends "exam/edit.html" %}
+{% load verbatim %}
+
+{% block editable_message %}You may only view this question. {% if user.is_authenticated %}If you want to change something, make a copy.{% endif %}{% endblock editable_message %}
+
+{% block content %}
+	{{ block.super }}
+
+	{% include "noneditable.html" %}
+	{% verbatim %}
+
+		<script type="text/html" id="examTemplate">
+		<div class="properties">
+			<div data-bind="template: {
+				name: 'property',
+				data: {label:'Exam name:',property:name}
+			}"></div>
+			<div data-bind="template: {
+				name: 'property',
+				data: {label: 'Theme:', property: theme}
+			}">
+			</div>
+
+			<div data-bind="template: {
+				name: 'property',
+				data: {label:'Duration (minutes):',property:duration, type:'number',min:0}
+			}"></div>
+			<div data-bind="template: {
+				name: 'percentproperty',
+				data: {label:'Pass threshold (percent):',property:percentPass}
+			}"></div>
+			<div data-bind="template: {
+				name: 'booleanproperty',
+				data: {label: 'Shuffle questions?',property:shuffleQuestions}
+			}"></div>
+		</div>
+
+		<div data-bind="folder: {label: 'Description', show: true}">
+			<div>
+				<div class="textblock" data-bind="cleanJME: description"></div>
+			</div>
+		</div>
+
+		<div data-bind="folder: {label: 'Author\'s Notes', show: true}, visible: notes().length>0">
+			<div>
+				<div class="textblock" data-bind="cleanJME: notes"></div>
+			</div>
+		</div>
+
+		<div data-bind="folder: 'Navigation'">
+			<div>
+				<div class="properties">
+					<div data-bind="template: {
+						name: 'booleanproperty',
+						data: {label:'Allow user to regenerate questions?', property:allowregen}
+					}"></div>
+					<div data-bind="template: {
+						name: 'booleanproperty',
+						data: {label:'Allow move to previous question?', property:reverse}
+					}"></div>
+					<div data-bind="template: {
+						name: 'booleanproperty',
+						data: {label:'Allow jump to any question?', property:browse}
+					}"></div>
+					<div data-bind="template: {
+						name: 'booleanproperty',
+						data: {label: 'Show front page?',property:showfrontpage}
+					}"></div>
+				</div>
+				<div data-bind="template: {
+					name: 'event',
+					data: onadvance
+				}"></div>
+				<div data-bind="template: {
+					name: 'event',
+					data: onreverse
+				}"></div>
+				<div data-bind="template: {
+					name: 'event',
+					data: onmove
+				}"></div>
+			</div>
+		</div>
+
+		<div data-bind="folder: 'Timing'">
+			<div>
+				<div data-bind="template: {
+					name: 'event',
+					data: timeout
+				}"></div>
+				<div data-bind="template: {
+					name: 'event',
+					data: timedwarning
+				}"></div>
+			</div>
+		</div>
+
+		<div data-bind="folder: 'Feedback'">
+			<div class="properties">
+				<div data-bind="template: {
+					name: 'booleanproperty',
+					data: { label:'Show actual mark?', property:showactualmark}
+				}"></div>
+				<div data-bind="template: {
+					name: 'booleanproperty',
+					data: { label:'Show total mark?', property:showtotalmark}
+				}"></div>
+				<div data-bind="template: {
+					name: 'booleanproperty',
+					data: { label:'Show answer state?', property:showanswerstate}
+				}"></div>
+				<div data-bind="template: {
+					name: 'booleanproperty',
+					data: { label:'Allow reveal answer?', property:allowrevealanswer}
+				}"></div>
+				<div data-bind="template: {
+					name: 'percentproperty',
+					data: { label:'Advice threshold (percent)', property:advicethreshold}
+				}"></div>
+			</div>
+		</div>
+
+		<div data-bind="folder: {label: 'Questions ('+questions().length+')', show:true}">
+			<div class="questions">
+				<ol data-bind="
+					template:{
+						name:'question',
+						foreach: questions,
+					},
+				"></ol>
+			</div>
+		</div>
+		</script>
+
+		<script type="text/html" id="event">
+		<div data-bind="folder: niceName">
+			<div>
+			<div class="properties">
+				<div data-bind="template: {
+					name: 'property',
+					data: {label: 'Action:', property: action().niceName}
+				}">
+				</div>
+			</div>
+			<div data-bind="fadeVisible:action().value!='none'">
+				Message: 
+				<div class="textblock" data-bind="html: message"/>
+			</div>
+			</div>
+		</div>
+		</script>
+
+		<script type="text/html" id="question">
+		<li class="question">
+			<a data-bind="attr: {href: url}, text: name" target="_blank"></a>
+			<div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
+		</li>
+		</script>
+
+	{% endverbatim %}
+{% endblock content %}

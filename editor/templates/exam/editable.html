@@ -1,0 +1,186 @@
+{% extends "exam/edit.html" %}
+{% load verbatim %}
+
+{% block editable_message %}You can edit this question.{% endblock %}
+
+{% block content %}
+	{{ block.super }}
+	{% include "editable.html" %}
+	{% verbatim %}
+
+		<script type="text/html" id="examTemplate">
+		<div class="properties">
+			<div data-bind="template: {
+				name: 'property',
+				data: {label:'Exam name:',property:name}
+			}"></div>
+			<div data-bind="template: {
+				name: 'selectproperty',
+				data: {label: 'Theme:', property: theme, options: Editor.themes}
+			}"></div>
+
+			<div data-bind="template: {
+				name: 'property',
+				data: {label:'Duration (minutes):',property:duration, type:'number',min:0}
+			}"></div>
+			<div data-bind="template: {
+				name: 'percentproperty',
+				data: {label:'Pass threshold (percent):',property:percentPass}
+			}"></div>
+			<div data-bind="template: {
+				name: 'booleanproperty',
+				data: {label: 'Shuffle questions?',property:shuffleQuestions}
+			}"></div>
+		</div>
+
+		<div data-bind="folder: 'Description', show: true">
+			<div>
+				<div data-bind="writemaths: description"></div>
+			</div>
+		</div>
+
+		<div data-bind="folder: 'Author\'s Notes'">
+			<div>
+				<div data-bind="writemaths: notes"></div>
+			</div>
+		</div>
+
+		<div data-bind="folder: 'Navigation'">
+			<div>
+				<div class="properties">
+					<div data-bind="template: {
+						name: 'booleanproperty',
+						data: {label:'Allow user to regenerate questions?', property:allowregen}
+					}"></div>
+					<div data-bind="template: {
+						name: 'booleanproperty',
+						data: {label:'Allow move to previous question?', property:reverse}
+					}"></div>
+					<div data-bind="template: {
+						name: 'booleanproperty',
+						data: {label:'Allow jump to any question?', property:browse}
+					}"></div>
+					<div data-bind="template: {
+						name: 'booleanproperty',
+						data: {label: 'Show front page?',property:showfrontpage}
+					}"></div>
+				</div>
+				<div data-bind="template: {
+					name: 'event',
+					data: onadvance
+				}"></div>
+				<div data-bind="template: {
+					name: 'event',
+					data: onreverse
+				}"></div>
+				<div data-bind="template: {
+					name: 'event',
+					data: onmove
+				}"></div>
+			</div>
+		</div>
+
+		<div data-bind="folder: 'Timing'">
+			<div>
+				<div data-bind="template: {
+					name: 'event',
+					data: timeout
+				}"></div>
+				<div data-bind="template: {
+					name: 'event',
+					data: timedwarning
+				}"></div>
+			</div>
+		</div>
+
+		<div data-bind="folder: 'Feedback'">
+			<div class="properties">
+				<div data-bind="template: {
+					name: 'booleanproperty',
+					data: { label:'Show actual mark?', property:showactualmark}
+				}"></div>
+				<div data-bind="template: {
+					name: 'booleanproperty',
+					data: { label:'Show total mark?', property:showtotalmark}
+				}"></div>
+				<div data-bind="template: {
+					name: 'booleanproperty',
+					data: { label:'Show answer state?', property:showanswerstate}
+				}"></div>
+				<div data-bind="template: {
+					name: 'booleanproperty',
+					data: { label:'Allow reveal answer?', property:allowrevealanswer}
+				}"></div>
+				<div data-bind="template: {
+					name: 'percentproperty',
+					data: { label:'Advice threshold (percent)', property:advicethreshold}
+				}"></div>
+			</div>
+		</div>
+
+		<div data-bind="folder: {label: 'Questions ('+questions().length+')', show: true}">
+			<div class="questions">
+				<ul class="questionList editlist big" data-bind="
+					sortable: {
+						template: 'question', 
+						data: questions, 
+						afterMove: dropQuestion,
+						options: {handle: '.handle', placeholder: 'placeholder'}
+					}
+				"></ul>
+				<div class="searchBox">
+					<label for="questionsearch">Search for questions: </label>
+					<input type="text" id="questionsearch" class="search" data-bind="
+						value: search.query, 
+						valueUpdate: 'afterkeydown',
+						css: {loading: search.searching()}
+					"/>
+					<ul class="results editlist big" data-bind="
+						template: {
+							name: 'questionResult',
+							foreach: search.results.all,
+						}
+					"></ul>
+				</div>
+			</div>
+		</div>
+	</script>
+
+	<script type="text/html" id="event">
+		<div data-bind="folder: niceName">
+			<div>
+			<div class="properties">
+				<div data-bind="template: {
+					name: 'property',
+					data: {label: 'Action:', property: action().niceName}
+				}">
+				</div>
+			</div>
+			<div data-bind="fadeVisible:action().value!='none'">
+				Message: 
+				<div data-bind="writemaths: message"/>
+			</div>
+			</div>
+		</div>
+	</script>
+
+	<script type="text/html" id="question">
+		<li class="question">
+			<span class="handle"></span>
+			<span class="number" data-bind="text: ($index()+1)+'.'"/>
+			<a data-bind="attr:{href: url}, text: name" target="_blank"></a>
+			<button class="delete delete-grey" data-bind="click:remove"></button>
+			<div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
+		</li>
+	</script>
+
+	<script type="text/html" id="questionResult">
+		<li class="question questionResult">
+			<span class="handle" data-bind="click: add"></span>
+			<a data-bind="attr: {href: url}, text: name" target="_blank"></a>
+			<div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
+		</li>
+	</script>
+	{% endverbatim %}
+
+{% endblock content %}

@@ -198,6 +198,13 @@ class ExamUpdateView(UpdateView):
 #    def dispatch(self, *args, **kwargs):
 #        return super(ExamUpdateView, self).dispatch(*args, **kwargs)
     
+    def get_template_names(self):
+        self.object = self.get_object()
+        if self.request.user == self.object.author or self.request.user.is_superuser:
+            return 'exam/editable.html'
+        else:
+            return 'exam/noneditable.html'
+
     def post(self, request, *args, **kwargs):
         data = json.loads(request.POST['json'])
 

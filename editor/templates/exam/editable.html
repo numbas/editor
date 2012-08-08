@@ -150,13 +150,12 @@
 		<div data-bind="folder: niceName">
 			<div>
 			<div class="properties">
-				<div data-bind="template: {
-					name: 'property',
-					data: {label: 'Action:', property: action().niceName}
-				}">
+				<div>
+					<label>Action: </label>
+					<select data-bind="options: actions, value: action, optionsText: 'niceName'"></select>
 				</div>
 			</div>
-			<div data-bind="fadeVisible:action().value!='none'">
+			<div data-bind="fadeVisible:action().name!='none'">
 				Message: 
 				<div data-bind="writemaths: message"/>
 			</div>

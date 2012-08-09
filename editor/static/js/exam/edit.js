@@ -113,7 +113,7 @@ $(document).ready(function() {
 
         this.timeout = new Event(
             'timeout',
-            'On Timeout',
+            'On timeout',
             [
                 {name:'none', niceName:'None'},
                 {name:'warn', niceName:'Warn'}

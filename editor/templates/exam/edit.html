@@ -51,7 +51,7 @@
 				Author: {{ object.author.first_name }} {{ object.author.last_name }} ({{ object.author.username }})
 			</div>
 			<div class="controlbox" id="admin">
-				<a id="preview" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this exam in a new window">Test Run</a>
+				<a id="preview" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this exam in a new window (Ctrl+B)">Test Run</a>
 				
 				{% if editable %}
 				<a id="delete" data-bind="click: deleteExam" href="{% url exam_delete object.pk object.slug %}" title="Delete this exam permanently but not the questions it uses">Delete
@@ -62,7 +62,7 @@
 				{% endif %}
 
 				{% if user.is_authenticated %}
-					<a id="copy" href="{% url exam_copy object.pk object.slug %}" title="Create a copy of this exam.">Make a Copy</a>
+					<a id="copy" href="{% url exam_copy object.pk object.slug %}" title="Create your own copy of this exam">Make a Copy</a>
 				{% endif %}
 
 				<span id="download">

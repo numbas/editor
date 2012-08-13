@@ -82,7 +82,7 @@ $(document).ready(function() {
 						this.page(page+1);
 				},
                 deleteQuestion: function(q) {
-                    if(window.confirm('Delete this question?')) {
+                    if(window.confirm('Really delete this question? You won\'t be able to get it back.')) {
                         var results = this;
                         $.post(q.deleteURL,{csrfmiddlewaretoken: getCookie('csrftoken')})
                             .success(function() {

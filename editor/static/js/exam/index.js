@@ -34,23 +34,6 @@ $(document).ready(function() {
 			})
 	;
 
-	$('.exam .delete').on('click',function(e) {
-		e.stopPropagation();
-		e.preventDefault();
-		if(window.confirm('Delete this exam?')) {
-			var url = $(this).attr('href');
-			var item = $(this).parents('.exam');
-			$.post(url,{csrfmiddlewaretoken: getCookie('csrftoken')})
-				.success(function() {
-					item.slideUp(200,function() {item.remove()})
-				})
-				.error(function(response) {
-					noty({text: 'Error deleting exam:\n\n'+response.responseText, layout: 'center', type: 'error'});
-				})
-			;
-		}
-	});
-
     $('#upload').click(function(e) {
         if(!$('#uploadForm input[type=file]').val().length) {
             e.preventDefault();
@@ -165,7 +148,7 @@ $(document).ready(function() {
 				},
                 deleteExam: function(e) {
 					console.log(e);
-                    if(window.confirm('Delete this exam?')) {
+                    if(window.confirm('Really delete this exam? You won\'t be able to get it back if you do.')) {
                         var results = this;
                         $.post(e.deleteURL,{csrfmiddlewaretoken: getCookie('csrftoken')})
                             .success(function() {

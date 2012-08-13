@@ -30,6 +30,8 @@
         	Editor.examJSON = {{ exam_JSON }};
             Editor['themes'] = {{themes}};
             {% endautoescape %}
+			Editor.previewURL = '{% url question_preview object.pk object.slug %}';
+			Editor.previewWindow = '{% now "U" %}';
         })();
     </script>
 {% endblock javascripts %}
@@ -49,7 +51,7 @@
 				Author: {{ object.author.first_name }} {{ object.author.last_name }} ({{ object.author.username }})
 			</div>
 			<div class="controlbox" id="admin">
-				<a id="preview" href="{% url exam_preview object.pk object.slug %}" target="{% now "U" %}" title="Run this exam in a new window">Test Run</a>
+				<a id="preview" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this exam in a new window">Test Run</a>
 				
 				{% if editable %}
 				<a id="delete" data-bind="click: deleteExam" href="{% url exam_delete object.pk object.slug %}" title="Delete this exam permanently but not the questions it uses">Delete

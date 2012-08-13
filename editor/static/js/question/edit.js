@@ -33,6 +33,10 @@ $(document).ready(function() {
 	};
 	Numbas.tryInit();
 
+	Mousetrap.bind(['ctrl+b','command+b'],function() {
+		window.open(Editor.previewURL,Editor.previewWindow);
+	});
+
     function Question(data)
     {
 		var isadvanced = this.isadvanced = ko.observable(true);

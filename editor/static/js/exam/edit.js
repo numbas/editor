@@ -365,4 +365,9 @@ $(document).ready(function() {
 		ko.applyBindings(viewModel);
 	};
 	Numbas.tryInit();
+
+	Mousetrap.bind(['ctrl+b','command+b'],function() {
+		window.open(Editor.previewURL,Editor.previewWindow);
+	});
+
 });

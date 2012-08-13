@@ -22,6 +22,9 @@
 			Editor.editable = {% if editable %}true{% else %}false{% endif %};
 
 			Editor.numbasExtensions = {% autoescape off %}{{extensions}}{% endautoescape %};
+
+			Editor.previewURL = '{% url question_preview object.pk object.slug %}';
+			Editor.previewWindow = '{% now "U" %}';
         })();
     </script>
 {% endblock javascripts %}
@@ -43,7 +46,7 @@
 					Author: {{ object.author.first_name }} {{ object.author.last_name }} ({{ object.author.username }})
 				</div>
                 <div class="controlbox" id="admin">
-                    <a id="preview" href="{% url question_preview object.pk object.slug %}" target="{% now "U" %}">Test Run</a>
+					<a id="preview" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}">Test Run</a>
 					
 					{% if editable %}
                     <a id="delete" data-bind="click: deleteQuestion" href="{% url question_delete object.pk object.slug %}">Delete

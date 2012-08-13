@@ -30,7 +30,7 @@
         	Editor.examJSON = {{ exam_JSON }};
             Editor['themes'] = {{themes}};
             {% endautoescape %}
-			Editor.previewURL = '{% url question_preview object.pk object.slug %}';
+			Editor.previewURL = '{% url exam_preview object.pk object.slug %}';
 			Editor.previewWindow = '{% now "U" %}';
         })();
     </script>

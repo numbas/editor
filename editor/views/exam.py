@@ -200,20 +200,20 @@ class ExamUpdateView(UpdateView):
     
     def get_template_names(self):
         self.object = self.get_object()
-        if self.request.user == self.object.author or self.request.user.is_superuser:
-            return 'exam/editable.html'
-        else:
-            return 'exam/noneditable.html'
+        return 'exam/editable.html' if self.object.can_be_edited_by(self.request.user) else 'exam/noneditable.html'
 
     def post(self, request, *args, **kwargs):
+        self.user = request.user
+
+        self.object = self.get_object()
+
+        if not self.object.can_be_edited_by(self.user):
+            return HttpResponseForbidden()
+
         data = json.loads(request.POST['json'])
 
         self.questions = data['questions']
         del data['questions']
-
-        self.user = request.user
-
-        self.object = self.get_object()
 
         exam_form = ExamForm(data, instance=self.object)
 
@@ -247,10 +247,7 @@ class ExamUpdateView(UpdateView):
         exam_dict['questions'] = [q.summary() for q in self.object.get_questions()]
         context['exam_JSON'] = json.dumps(exam_dict)
         context['themes'] = settings.GLOBAL_SETTINGS['NUMBAS_THEMES']
-        if self.request.user == self.object.author or self.request.user.is_superuser:
-            context['editable'] = True
-        else:
-            context['editable'] = False
+        context['editable'] = self.object.can_be_edited_by(self.request.user)
         return context
 
     def get_success_url(self):

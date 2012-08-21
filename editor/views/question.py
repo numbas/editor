@@ -18,7 +18,7 @@ from copy import deepcopy
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.forms import model_to_dict
-from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError
+from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError, HttpResponseForbidden
 from django.shortcuts import render,redirect
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView, View
 from django.views.generic.detail import SingleObjectMixin
@@ -174,16 +174,18 @@ class QuestionUpdateView(UpdateView):
     
     def get_template_names(self):
         self.object = self.get_object()
-        if self.request.user == self.object.author or self.request.user.is_superuser:
-            return 'question/editable.html'
-        else:
-            return 'question/noneditable.html'
+        return 'question/editable.html' if self.object.can_be_edited_by(self.request.user) else 'question/noneditable.html'
+
 
     def post(self, request, *args, **kwargs):
-        self.data = json.loads(request.POST['json'])
         self.user = request.user
-
         self.object = self.get_object()
+
+        if not self.object.can_be_edited_by(self.user):
+            return HttpResponseForbidden()
+
+        self.data = json.loads(request.POST['json'])
+
         question_form = QuestionForm(self.data, instance=self.object)
 
         if question_form.is_valid():
@@ -213,10 +215,7 @@ class QuestionUpdateView(UpdateView):
     def get_context_data(self, **kwargs):
         context = super(QuestionUpdateView, self).get_context_data(**kwargs)
         context['extensions'] = json.dumps([model_to_dict(e) for e in Extension.objects.all()])
-        if self.request.user == self.object.author or self.request.user.is_superuser:
-            context['editable'] = True
-        else:
-            context['editable'] = False
+        context['editable'] = self.object.can_be_edited_by(self.request.user)
         return context
     
     def get_success_url(self):

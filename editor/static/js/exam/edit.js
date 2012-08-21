@@ -157,68 +157,69 @@ $(document).ready(function() {
 			}
 		}
 
-        this.save = ko.computed(function() {
-			window.onbeforeunload = function() {
-				return 'There are still unsaved changes.';
-			}
-            return {
-				content: this.output(),
-                theme: this.theme(),
-				metadata: this.metadata(),
-				questions: this.questions()
-							.filter(function(q){return q.id()>0})
-							.map(function(q){ return q.id(); })
-			};
-		},this);
+		if(Editor.editable) {
+			this.save = ko.computed(function() {
+				window.onbeforeunload = function() {
+					return 'There are still unsaved changes.';
+				}
+				return {
+					content: this.output(),
+					theme: this.theme(),
+					metadata: this.metadata(),
+					questions: this.questions()
+								.filter(function(q){return q.id()>0})
+								.map(function(q){ return q.id(); })
+				};
+			},this);
 
-		this.autoSave = ko.computed(function() {
-            var e = this;
+			this.autoSave = ko.computed(function() {
+				var e = this;
 
-			if(!this.save_noty)
-			{
-				this.save_noty = noty({
-					text: 'Saving...', 
-					layout: 'topCenter', 
-					type: 'information',
-					timeout: 0, 
-					speed: 150,
-					closeOnSelfClick: false, 
-					closeButton: false
-				});
-			}
-			
-            $.post(
-                '/exam/'+this.id+'/'+slugify(this.name())+'/',
-                {json: JSON.stringify(this.save()), csrfmiddlewaretoken: getCookie('csrftoken')}
-            )
-                .success(function(data){
-                    var address = location.protocol+'//'+location.host+'/exam/'+Editor.examJSON.id+'/'+slugify(e.name())+'/';
-                    if(history.replaceState)
-                        history.replaceState({},e.name(),address);
-					noty({text:'Saved.',type:'success',timeout: 1000, layout: 'topCenter'});
-                })
-                .error(function(response,type,message) {
-					noty({
-						text: 'Error saving exam:\n\n'+message,
-						layout: "topLeft",
-						type: "error",
-						textAlign: "center",
-						animateOpen: {"height":"toggle"},
-						animateClose: {"height":"toggle"},
-						speed: 200,
-						timeout: 5000,
-						closable:true,
-						closeOnSelfClick: true
+				if(!this.save_noty)
+				{
+					this.save_noty = noty({
+						text: 'Saving...', 
+						layout: 'topCenter', 
+						type: 'information',
+						timeout: 0, 
+						speed: 150,
+						closeOnSelfClick: false, 
+						closeButton: false
 					});
-                })
-				.complete(function() {
-					window.onbeforeunload = null;
-					$.noty.close(viewModel.save_noty);
-					viewModel.save_noty = null;
-				})
-            ;
-        },this).extend({throttle:1000});
-
+				}
+				
+				$.post(
+					'/exam/'+this.id+'/'+slugify(this.name())+'/',
+					{json: JSON.stringify(this.save()), csrfmiddlewaretoken: getCookie('csrftoken')}
+				)
+					.success(function(data){
+						var address = location.protocol+'//'+location.host+'/exam/'+Editor.examJSON.id+'/'+slugify(e.name())+'/';
+						if(history.replaceState)
+							history.replaceState({},e.name(),address);
+						noty({text:'Saved.',type:'success',timeout: 1000, layout: 'topCenter'});
+					})
+					.error(function(response,type,message) {
+						noty({
+							text: 'Error saving exam:\n\n'+message,
+							layout: "topLeft",
+							type: "error",
+							textAlign: "center",
+							animateOpen: {"height":"toggle"},
+							animateClose: {"height":"toggle"},
+							speed: 200,
+							timeout: 5000,
+							closable:true,
+							closeOnSelfClick: true
+						});
+					})
+					.complete(function() {
+						window.onbeforeunload = null;
+						$.noty.close(viewModel.save_noty);
+						viewModel.save_noty = null;
+					})
+				;
+			},this).extend({throttle:1000});
+		}
     }
     Exam.prototype = {
 		deleteExam: function(q,e) {

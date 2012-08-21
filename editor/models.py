@@ -37,6 +37,10 @@ from examparser import ExamParser, ParseError, printdata
 
 from jsonfield import JSONField
 
+class ControlledObject:
+    def can_be_edited_by(self, user):
+        return user == self.author or user.is_superuser
+
 class NumbasObject:
     def get_parsed_content(self):
         if self.content:
@@ -73,8 +77,11 @@ class GitObject:
 
         author = getattr(self,'edit_user',self.author)
 
-        os.environ['GIT_AUTHOR_NAME'] = author.get_full_name()
-        os.environ['GIT_AUTHOR_EMAIL'] = author.email
+        try:
+            os.environ['GIT_AUTHOR_NAME'] = author.get_full_name()
+            os.environ['GIT_AUTHOR_EMAIL'] = author.email
+        except AttributeError:
+            os.environ['GIT_AUTHOR_NAME'] = 'Anonymous'
 
 
         return repo
@@ -139,7 +146,7 @@ class Extension(models.Model):
         d = model_to_dict(self)
         return json.dumps(d)
 
-class Question(models.Model,NumbasObject,GitObject):
+class Question(models.Model,NumbasObject,GitObject,ControlledObject):
     
     """Model class for a question.
     
@@ -210,12 +217,8 @@ class Question(models.Model,NumbasObject,GitObject):
             obj['canEdit'] = self.can_be_edited_by(user) 
         return obj
 
-    def can_be_edited_by(self, user):
-        return user == self.author or user.is_superuser
 
-
-
-class Exam(models.Model,NumbasObject,GitObject):
+class Exam(models.Model,NumbasObject,GitObject,ControlledObject):
     
     """Model class for an Exam.
     
@@ -292,9 +295,6 @@ class Exam(models.Model,NumbasObject,GitObject):
         if user:
             obj['canEdit'] = self.can_be_edited_by(user) 
         return obj
-        
-    def can_be_edited_by(self, user):
-        return user == self.author or user.is_superuser
         
         
 class ExamQuestion(models.Model):

@@ -168,6 +168,7 @@
 			<span class="handle"></span>
 			<span class="number" data-bind="text: ($index()+1)+'.'"/>
 			<a data-bind="attr:{href: url}, text: name" target="_blank"></a>
+			<a class="preview" data-bind="attr: {href: url()+'preview/'}" target="_blank" title="Test run this question"></a>
 			<button class="delete delete-grey" data-bind="click:remove"></button>
 			<div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
 		</li>
@@ -177,6 +178,7 @@
 		<li class="question questionResult">
 			<span class="handle" data-bind="click: add"></span>
 			<a data-bind="attr: {href: url}, text: name" target="_blank"></a>
+			<a class="preview" data-bind="attr: {href: url()+'preview/'}" target="_blank" title="Test run this question"></a>
 			<div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
 		</li>
 	</script>

@@ -50,6 +50,14 @@
 	cursor: pointer;
 }
 
+.question .preview {
+	background-image: url(../../images/play_alt_16x16.png);
+	width: 16px;
+	height: 16px;
+	display: inline-block;
+}
+
+
 .question.ui-sortable-helper .number {
 	display: none;
 }

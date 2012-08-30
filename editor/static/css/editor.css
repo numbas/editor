@@ -141,7 +141,8 @@
 }
 
 .function .definition textarea {
-	width: 20em;
+	width: 30em;
+	font-family: monospace;
 }
 
 table.multiplechoice {

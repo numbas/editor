@@ -259,7 +259,23 @@ $(document).ready(function() {
     Editor.searchBinding = function(search,url,makeQuery) {
 		search.results.error = ko.observable('');
 		search.searching = ko.observable(false);
-		
+
+        if('page' in search.results) {
+            search.results.pages = ko.computed(function() {
+                var results = this.all();
+                var pages = [];
+                for(var i=0;i<results.length;i+=10) {
+                    pages.push(results.slice(i,i+10));
+                }
+
+                return pages;
+            },search.results);
+
+            search.results.pageText = ko.computed(function() {
+                return this.page()+'/'+this.pages().length;
+            },search.results);
+        }
+
 		return ko.computed(function() {
             var data = makeQuery();
 			if(!data) {
@@ -268,14 +284,9 @@ $(document).ready(function() {
 				return;
 			}
 
-			//this is a terrible, terrible way of doing things. There must be a better way.
-			if(JSON.stringify(data)==JSON.stringify(search.lastQuery)) {
-				search.lastID = null;
-				return;
-			}
-			search.lastQuery = data;
-
             data.id = search.lastID = Math.random()+'';
+            if(search.restorePage)
+                data.page = search.restorePage;
 
 			search.results.error('');
             search.searching(true);
@@ -285,6 +296,8 @@ $(document).ready(function() {
 					if(response.id != search.lastID)
 						return;
 					search.results.raw(response.object_list);
+                    if('page' in search.results)
+                        search.results.page(parseInt(response.page) || 1);
                 })
                 .error(function() {
 					if('console' in window)

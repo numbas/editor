@@ -257,6 +257,10 @@ class QuestionSearchView(ListView):
     def get_context_data(self, **kwargs):
         context = super(QuestionSearchView,self).get_context_data(**kwargs)
         try:
+            context['page'] = self.request.GET['page']
+        except KeyError:
+            pass
+        try:
             context['id'] = self.request.GET['id']
         except KeyError:
             pass

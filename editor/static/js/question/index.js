@@ -100,20 +100,6 @@ $(document).ready(function() {
 				vm.search.mine(false);
 			}
 		}
-		this.search.results.pages = ko.computed(function() {
-			this.page(1);
-
-			var results = this.all();
-			var pages = [];
-			for(var i=0;i<results.length;i+=10) {
-				pages.push(results.slice(i,i+10));
-			}
-
-			return pages;
-		},this.search.results);
-		this.search.results.pageText = ko.computed(function() {
-			return this.page()+'/'+this.pages().length;
-		},this.search.results);
 
 		ko.computed(function() {
 			vm.search.results.all(vm.search.results.raw());
@@ -138,7 +124,6 @@ $(document).ready(function() {
 				mine: vm.search.mine()
 			};
 		}
-		Editor.searchBinding(this.search,'/questions/search/',makeQuery);
 
 		Mousetrap.bind('left',function() { vm.search.results.prevPage.apply(vm.search.results) });
 		Mousetrap.bind('right',function() { vm.search.results.nextPage.apply(vm.search.results) });
@@ -153,11 +138,8 @@ $(document).ready(function() {
 				vm.search.author(history.state.author);
 			if('mine' in history.state)
 				vm.search.mine(history.state.mine);
-			if('results' in history.state)
-				vm.search.results.raw(history.state.results);
 			if('page' in history.state)
-				vm.search.results.page(history.state.page);
-			vm.search.lastQuery = makeQuery();
+                vm.search.restorePage = history.state.page;
 		}
 		if(history.replaceState) {
 			ko.computed(function() {
@@ -166,10 +148,12 @@ $(document).ready(function() {
 					query: vm.search.query(),
 					author: vm.search.author(),
 					mine: vm.search.mine(),
-					results: vm.search.results.raw()
 				},'',window.location.pathname);
 			})
 		}
+
+		Editor.searchBinding(this.search,'/questions/search/',makeQuery);
+        delete vm.search.restorePage;
     }
 
     

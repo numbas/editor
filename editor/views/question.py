@@ -28,7 +28,7 @@ from editor.models import Question,Extension
 from editor.views.generic import PreviewView, ZipView, SourceView
 from editor.views.user import find_users
 
-from examparser import ExamParser, ParseError
+from examparser import ExamParser, ParseError, printdata
 
 class QuestionPreviewView(PreviewView):
     
@@ -119,14 +119,25 @@ class QuestionUploadView(CreateView):
 
     def post(self, request, *args, **kwargs):
         content = request.FILES['file'].read()
-        self.object = Question(content=content)
-        self.object.author = self.request.user
-        self.object.save()
+
+        data = ExamParser().parse(content)
+        self.qs = []
+        for q in data['questions']:
+            qo = Question(
+                content = printdata(q), 
+                author = self.request.user
+            )
+            qo.save()
+            self.qs.append(qo)
 
         return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
-        return reverse('question_edit', args=(self.object.pk, self.object.slug) )
+        if len(self.qs)==1:
+            q = self.qs[0]
+            return reverse('question_edit', args=(q.pk, q.slug) )
+        else:
+            return reverse('question_index')
 
 
 class QuestionCopyView(View, SingleObjectMixin):

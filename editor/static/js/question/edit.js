@@ -542,7 +542,7 @@ $(document).ready(function() {
 
     function CustomFunction(q,data) {
         this.name = ko.observable('');
-        this.types = ['number','string','boolean','vector','matrix','list','name','function','op','range','?'];
+        this.types = ['number','string','boolean','vector','matrix','list','name','function','op','range','html','?'];
         this.parameters = ko.observableArray([])
         this.type = ko.observable('number');
         this.definition = ko.observable('');

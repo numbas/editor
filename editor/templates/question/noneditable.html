@@ -104,12 +104,10 @@
 			</div>
 
 			<div data-bind="folder:{label: 'Parts', show: true}">
-				<div>
-					<ol class="editlist" data-bind="template:{
-						name: 'part',
-						foreach: parts,
-					}"></ol>
-				</div>
+                <ol data-bind="template:{
+                    name: 'part',
+                    foreach: parts,
+                }"></ol>
 			</div>
 
 			<div data-bind="folder:'Advice'">
@@ -138,7 +136,7 @@
 
 		<script type="text/html" id="part">
 			<li class="part">
-				<div data-bind="folder:{label: type().niceName, show:true}">
+				<div data-bind="folder:{label: $index()+'. '+type().niceName, show:true}">
 					<div class="properties">
 						<div data-bind="template: {
 							name: 'property',

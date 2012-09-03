@@ -5,3 +5,14 @@
 .jme-answer {
 	margin-bottom: 0.5em;
 }
+
+.definition code {
+    background: white;
+    display: block;
+    clear: both;
+    padding: 0.5em 1em;
+    max-width: 700px;
+    white-space: pre;
+    overflow-x: auto;
+}
+

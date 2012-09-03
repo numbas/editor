@@ -190,7 +190,7 @@
 
 	<script type="text/html" id="part">
 		<li class="part">
-			<div data-bind="folder:{label: ($index()+1)+'. '+type().niceName, show:true}, foldlist: true">
+			<div data-bind="folder:{label: $index()+'. '+type().niceName, show:true}, foldlist: true">
 				<div class="properties">
 					<div data-bind="visible: $root.isadvanced">
 						<label>Part type: </label>

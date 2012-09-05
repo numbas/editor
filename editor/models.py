@@ -15,6 +15,7 @@ import uuid
 import git
 import os
 import json
+import codecs
 try:
   # For Python > 2.7
   from collections import OrderedDict
@@ -106,7 +107,7 @@ class GitObject:
                 self.message += 'Renamed %s to %s.\n' % (original.name,self.name)
 
         repo = self.repo()
-        fh = open(self.abs_path_to_file(), 'w')
+        fh = codecs.open(self.abs_path_to_file(), 'w', encoding='utf-8')
         fh.write(self.content)
         fh.close()
         repo.index.add([self.path_to_file()])

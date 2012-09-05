@@ -59,7 +59,7 @@ class CompileObject():
         ] + switches
 
         process = subprocess.Popen(numbas_command, stdout = subprocess.PIPE, stdin=subprocess.PIPE, stderr = subprocess.PIPE)
-        stdout,stderr = process.communicate(source)
+        stdout,stderr = process.communicate(source.encode('utf-8'))
         code = process.poll()
         if code != 0:
             raise CompileError('Compilation failed.',stdout=stdout,stderr=stderr,code=code)

@@ -716,6 +716,9 @@ $(document).ready(function() {
 				options.label = value;
 			else
 				options = $.extend(options,value);
+			for(var x in options) {
+				options[x] = ko.utils.unwrapObservable(options[x]);
+			}
 
 			$(element)
 				.children('.folder-header').html(options.label);

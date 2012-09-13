@@ -522,6 +522,9 @@ $(document).ready(function() {
 				case 'string':
 					return v.value;
 				default:
+                    var val = this.value();
+                    if(val.type=='list')
+                        return 'List of '+val.value.length+' items';
 					return '$'+Numbas.jme.display.texify({tok:this.value()})+'$';
 				}
 			}

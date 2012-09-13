@@ -913,6 +913,17 @@ TBool.doc = {
 	description: "Booleans represent either truth or falsity. The logical operations @and@, @or@ and @xor@ operate on and return booleans."
 }
 
+var THTML = types.THTML = types.html = function(html) {
+	this.value = $(html);
+}
+THTML.prototype.type = 'html';
+THTML.doc = {
+	name: 'html',
+	usage: ['html(\'<div>things</div>\')'],
+	description: "An HTML DOM node."
+}
+
+
 var TList = types.TList = types.list = function(value)
 {
 	switch(typeof(value))
@@ -1200,8 +1211,16 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
 	this.evaluate = options.evaluate || function(args,scope)
 	{
 		var nargs = [];
-		for(var i=0; i<args.length; i++)
-			nargs.push(jme.evaluate(args[i],scope).value);
+		for(var i=0; i<args.length; i++) {
+			var result = jme.evaluate(args[i],scope);
+			if(options.unwrapLists && result.type=='list') {
+				var value = result.value.map(function(v){
+					return v.value;
+				});
+				nargs.push(value);
+			}else
+				nargs.push(result.value);
+		}
 
 		var result = this.fn.apply(null,nargs);
 
@@ -1306,6 +1325,7 @@ newBuiltin('id',[TNum],TMatrix, matrixmath.id, {doc: {usage: 'id(3)', descriptio
 newBuiltin('..', [TNum,TNum], TRange, math.defineRange, {doc: {usage: ['a..b','1..2'], description: 'Define a range', tags: ['interval']}});
 newBuiltin('#', [TRange,TNum], TRange, math.rangeSteps, {doc: {usage: ['a..b#c','0..1 # 0.1'], description: 'Set the step size for a range.'}}); 
 
+newBuiltin('html',[TString],THTML,function(html) { return $(html) }, {doc: {usage: ['html(\'<div>things</div>\')'], description: 'Parse HTML from a string', tags: ['element','node']}});
 
 //the next three versions of the `except` operator
 //exclude numbers from a range, given either as a range, a list or a single value

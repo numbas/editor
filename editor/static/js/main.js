@@ -70,7 +70,7 @@ $(document).ready(function() {
 		}
 	};
 
-	ko.bindingHandlers.class = {
+	ko.bindingHandlers.addClass = {
 		update: function(element,valueAccessor) {
 			var value = ko.utils.unwrapObservable(valueAccessor());
 			console.log(value);

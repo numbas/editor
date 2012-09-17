@@ -120,6 +120,10 @@ input.marks {
 	text-align: center;
 }
 
+.part.m_n_x input.marks {
+	width: 100%;
+}
+
 .choice {
 	margin-bottom: 0.5em;
 }

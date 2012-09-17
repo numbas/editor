@@ -189,7 +189,7 @@
 	</script>
 
 	<script type="text/html" id="part">
-		<li class="part">
+		<li class="part" data-bind="class: type().name">
 			<div data-bind="folder:{label: $index()+'. '+type().niceName, show:true}, foldlist: true">
 				<div class="properties">
 					<div data-bind="visible: $root.isadvanced">
@@ -458,7 +458,7 @@
 					</span>
 					<span data-bind="visible: !$parent.multiplechoice.customMarking()">
 						<label>Marks:</label>
-						<input class="marks" data-bind="autosize: {max: 500, min: 30, padding: 10, value: marks}, value:marks, valueUpdate:'input'"/>
+						<input class="marks" data-bind="value:marks, valueUpdate:'input', autosize: {max: 500, min: 30, padding: 10, value: marks}"/>
 					</span>
 					<span>
 						<label>Distractor Message:</label>
@@ -522,7 +522,7 @@
 					</span>
 					<span data-bind="visible: !$parent.multiplechoice.customMarking()">
 						<label>Marks:</label>
-						<input class="marks" data-bind="autosize: {max: 500, min: 30, padding: 10, value: marks}, value:marks, valueUpdate:'input'"/>
+						<input class="marks" data-bind="value:marks, valueUpdate:'input', autosize: {max: 500, min: 30, padding: 10, value: marks}"/>
 					</span>
 					<span>
 						<label>Distractor Message:</label>
@@ -600,7 +600,7 @@
 							</th>
 							<!-- ko foreach: answers -->
 								<td>
-									<input class="marks" data-bind="visible: !$parents[1].multiplechoice.customMarking(), autosize: {max: 500, min: 30, padding: 10, value: marks}, value: marks, valueUpdate:'input'"/>
+									<input class="marks" data-bind="visible: !$parents[1].multiplechoice.customMarking(), value: marks, valueUpdate:'input'"/>
 								</td>
 							<!-- /ko -->
 						</tr>

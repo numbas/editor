@@ -70,6 +70,18 @@ $(document).ready(function() {
 		}
 	};
 
+	ko.bindingHandlers.class = {
+		update: function(element,valueAccessor) {
+			var value = ko.utils.unwrapObservable(valueAccessor());
+			console.log(value);
+			var oldClass;
+			if(oldClass = ko.utils.domData.get(element,'class')) {
+				$(element).removeClass(oldClass);
+			}
+			$(element).addClass(value);
+		}
+	}
+
     ko.bindingHandlers.autocomplete = {
         init: function(element,valueAccessor,allBindingsAccessor) {
             var allBindings = allBindingsAccessor();
@@ -109,8 +121,10 @@ $(document).ready(function() {
 			var settings = { max: null, min: 60, padding: 30 };
 
 			var value = ko.utils.unwrapObservable(valueAccessor());
-			if(typeof value == 'object')
+			if(typeof value == 'object') {
 				settings = $.extend(settings,value);
+				value = ko.utils.unwrapObservable(settings.value);
+			}
 
 			var w = $.textMetrics(element).width + settings.padding;
 			w = Math.max(w,settings.min||0);

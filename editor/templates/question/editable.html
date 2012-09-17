@@ -438,6 +438,11 @@
 				<label>Selection type:</label>
 				<select data-bind="options: multiplechoice.displayTypes['1_n_2'], value: multiplechoice.displayType, optionsText: 'niceName'"></select>
 			</div>
+			<div data-bind="fadeVisible: multiplechoice.displayType().name!='dropdown',
+			template: {
+				name: 'property',
+				data: {label:'Number of display columns:',property:multiplechoice.displayColumns}
+			}"></div>
 			<div data-bind="template: {
 				name: 'booleanproperty',
 				data: {label: 'Custom marking matrix?', property: multiplechoice.customMarking}

@@ -681,6 +681,8 @@ $(document).ready(function() {
             shuffleAnswers: ko.observable(false),
             displayColumns: ko.observable(0),
             displayType:ko.observable(''),
+			customMarking: ko.observable(false),
+			customMatrix: ko.observable(''),
 
             displayTypes: {
                 m_n_x: [
@@ -900,11 +902,13 @@ $(document).ready(function() {
                 var matrix = [];
                 var choices = this.multiplechoice.choices();
                 o.choices = choices.map(function(c){return c.content()});
-                for(var i=0;i<choices.length;i++)
-                {
-                    matrix.push(choices[i].answers().map(function(a){return a.marks();}));
-                }
-                o.matrix = matrix;
+				for(var i=0;i<choices.length;i++)
+					matrix.push(choices[i].answers().map(function(a){return a.marks();}));
+
+				if(this.multiplechoice.customMarking())
+					o.matrix = this.multiplechoice.customMatrix();
+				else
+					o.matrix = matrix;
 
                 var answers = this.multiplechoice.answers();
                 o.answers = answers.map(function(a){return a.content()});
@@ -928,7 +932,12 @@ $(document).ready(function() {
                     matrix.push(choices[i].marks());
                     distractors.push(choices[i].distractor());
                 }
-                o.matrix = matrix;
+
+				if(this.multiplechoice.customMarking())
+					o.matrix = this.multiplechoice.customMatrix();
+				else
+					o.matrix = matrix;
+
                 o.distractors = distractors;
                 break;
             }
@@ -993,6 +1002,10 @@ $(document).ready(function() {
                 break;
             case 'm_n_x':
                 tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','shuffleAnswers'],this.multiplechoice);
+				if(typeof data.matrix == 'string') {
+					this.multiplechoice.customMarking(true);
+					this.multiplechoice.customMatrix(data.matrix);
+				}
                 for(var i=0;i<this.multiplechoice.displayTypes.m_n_x.length;i++)
                 {
                     if(this.multiplechoice.displayTypes.m_n_x[i].name==data.displayType)
@@ -1008,15 +1021,19 @@ $(document).ready(function() {
                 {
                     var c = this.addChoice(data.choices[i]);
                     c.content(data.choices[i]);
-                    for(var j=0;j<data.answers.length;j++)
-                    {
-                        this.multiplechoice.choices()[i].answers()[j].marks(data.matrix[i][j]);
-                    }
+					if(!this.multiplechoice.customMarking()) {
+						for(var j=0;j<data.answers.length;j++)
+							this.multiplechoice.choices()[i].answers()[j].marks(data.matrix[i][j] || 0);
+					}
                 }
                 break;
             case '1_n_2':
             case 'm_n_2':
                 tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','displayColumns'],this.multiplechoice);
+				if(typeof data.matrix == 'string') {
+					this.multiplechoice.customMarking(true);
+					this.multiplechoice.customMatrix(data.matrix);
+				}
 
                 var displayTypes = this.multiplechoice.displayTypes[this.type().name];
                 for(var i=0;i<displayTypes.length;i++)
@@ -1029,7 +1046,8 @@ $(document).ready(function() {
                 {
                     var c = this.addChoice(data.choices[i]);
                     c.content(data.choices[i] || '');
-                    c.marks(data.matrix[i] || 0);
+					if(!this.multiplechoice.customMarking())
+	                    c.marks(data.matrix[i] || 0);
 					if('distractors' in data)
                     {
 	                    c.distractor(data.distractors[i] || '');

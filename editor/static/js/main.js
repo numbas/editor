@@ -119,7 +119,6 @@ $(document).ready(function() {
 			$(element).width(w+'px');
 		}
 	}
-    
 })
 
 function getCookie(name) {

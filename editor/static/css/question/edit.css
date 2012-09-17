@@ -1,5 +1,105 @@
 ﻿#admin #delete form {
-    display: none;
+	display: none;
+}
+
+.question > * > .fold {
+	background: #f5f5ff;
+	padding-right:1em;
+}
+
+.question > * > button.delete, .part > * > button.delete, .function > * > button.delete {
+	position: absolute;
+	left: -2em;
+	top: 1em;
+}
+
+.part > * > .fold {
+	background: #f5fff5;
+}
+
+.variables {
+	width: 100%;
+}
+
+.variables th {
+	text-align: center;
+}
+
+.variable .name {
+	width: 8em;
+}
+
+.variable .def {
+    font-family: monospace;
+	text-align: right;
+	width: 18em;
+}
+
+.variable.ui-sortable-helper {
+	border: 1px solid #ccc;
+	background: #f4f4ee;
+}
+
+.variable > td {
+	padding-right: 0.5em;
+	text-align: center;
+	padding-bottom: 0.3em;
+	border-bottom: #ccc 1px solid;
+}
+
+.variable > td.value {
+    border-left: #ccc 1px dashed;
+    border-right: #ccc 1px dashed;
+}
+.variable button.delete {
+    position: inherit;
+}
+
+.variable > td.value div {
+	max-width: 20em;
+	overflow-x: auto;
+    max-height: 8em;
+    overflow-y: auto;
+	padding: 2px;
+}
+
+.function .parameters .list {
+	float: right;
+}
+
+.function .parameters .addparameter {
+	clear: both;
+	float: right;
+}
+
+.function .definition textarea {
+	width: 30em;
+	font-family: monospace;
+}
+
+table.multiplechoice {
+	width:auto;
+	margin-left:2em;
+}
+
+.matrix {
+	overflow:auto;
+}
+
+table.multiplechoice th {
+	background: #c3d9ff;
+}
+
+.choice td, .choice th {
+	text-align: center;
+	padding: 0 0.5em 0 0.5em;
+	border-bottom: #ccc 1px solid;
+	overflow-x: auto;
+    overflow-y: auto;
+}
+
+ul.choices {
+	list-style:none;
 }
 
 .jme-answer {
@@ -16,3 +116,10 @@
     overflow-x: auto;
 }
 
+input.marks {
+	text-align: center;
+}
+
+.choice {
+	margin-bottom: 0.5em;
+}

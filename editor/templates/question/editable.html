@@ -198,7 +198,7 @@
 					</div>
 					<div data-bind="fadeVisible: type().has_marks===true, template: {
 						name: 'property',
-						data: {label:'Marks:',property:marks, type:'number'}
+						data: {label:'Marks:',property:marks}
 					}"></div>
 				</div>
 				<div data-bind="visible: $data.parent==null || $data.parent.type().name!='gapfill' || $data.parent.steps().contains($data)">
@@ -212,7 +212,7 @@
 						<div class="properties">
 							<div data-bind="fadeVisible: steps().length>0, template: {
 								name: 'property',
-								data: {label:'Penalty for revealing steps (marks):',property:stepsPenalty, type:'number'}
+								data: {label:'Penalty for revealing steps (marks):',property:stepsPenalty}
 							}"></div>
 						</div>
 						<ol class="editlist" data-bind="
@@ -272,19 +272,19 @@
 				</div>
 				<div data-bind="template: {
 					name: 'property',
-					data: {label:'Checking accuracy:',property:jme.checkingType().accuracy, type:'number',min:0}
+					data: {label:'Checking accuracy:',property:jme.checkingType().accuracy,min:0}
 				}"></div>
 				<div data-bind="template: {
 					name: 'property',
-					data: {label:'Points to check:',property:jme.vset.points, type:'number',min:0}
+					data: {label:'Points to check:',property:jme.vset.points,min:0}
 				}"></div>
 				<div data-bind="template: {
 					name: 'property',
-					data: {label:'Checking range start:',property:jme.vset.start, type:'number',max:jme.vset.end}
+					data: {label:'Checking range start:',property:jme.vset.start,max:jme.vset.end}
 				}"></div>
 				<div data-bind="template: {
 					name: 'property',
-					data: {label:'Checking range end:',property:jme.vset.end, type:'number',min:jme.vset.start}
+					data: {label:'Checking range end:',property:jme.vset.end,min:jme.vset.start}
 				}"></div>
 			</div>
 		</div>
@@ -293,7 +293,7 @@
 			<div class="properties">
 				<div data-bind="template: {
 					name: 'property',
-					data: {label:'Maximum length:',property:jme.maxlength.length, type:'number',min:0}
+					data: {label:'Maximum length:',property:jme.maxlength.length,min:0}
 				}"></div>
 				<div data-bind="fadeVisible: jme.maxlength.length()>0">
 					<div data-bind="template: {
@@ -312,7 +312,7 @@
 			<div class="properties">
 				<div data-bind="template: {
 					name: 'property',
-					data: {label:'Minimum length:',property:jme.minlength.length, type:'number',min:0}
+					data: {label:'Minimum length:',property:jme.minlength.length,min:0}
 				}"></div>
 				<div data-bind="fadeVisible: jme.minlength.length()>0">
 					<div data-bind="template: {
@@ -424,17 +424,28 @@
 		<div class="properties">
 			<div data-bind="template: {
 				name: 'property',
-				data: {label:'Minimum marks:',property:multiplechoice.minMarks, type: 'number', max:multiplechoice.maxMarks }
+				data: {label:'Minimum marks:',property:multiplechoice.minMarks, max:multiplechoice.maxMarks }
 			}"></div>
 			<div data-bind="template: {
 				name: 'property',
-				data: {label:'Maximum marks:',property:multiplechoice.maxMarks, type: 'number', min:multiplechoice.minMarks}
+				data: {label:'Maximum marks:',property:multiplechoice.maxMarks, min:multiplechoice.minMarks}
 			}"></div>
 			<div data-bind="template: {
 				name: 'booleanproperty',
 				data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
 			}"></div>
-			<label>Selection type:</label><select data-bind="options: multiplechoice.displayTypes['1_n_2'], value: multiplechoice.displayType, optionsText: 'niceName'"></select>
+			<div>
+				<label>Selection type:</label>
+				<select data-bind="options: multiplechoice.displayTypes['1_n_2'], value: multiplechoice.displayType, optionsText: 'niceName'"></select>
+			</div>
+			<div data-bind="template: {
+				name: 'booleanproperty',
+				data: {label: 'Custom marking matrix?', property: multiplechoice.customMarking}
+			}"></div>
+			<div data-bind="fadeVisible: multiplechoice.customMarking, template: {
+				name: 'property',
+				data: {label: 'Custom matrix expression:', property: multiplechoice.customMatrix}
+			}"></div>
 		</div>
 		<div>
 			Choices:
@@ -445,9 +456,9 @@
 					<span>
 						<input type="text" data-bind="value:content, valueUpdate:'input'"/>
 					</span>
-					<span>
+					<span data-bind="visible: !$parent.multiplechoice.customMarking()">
 						<label>Marks:</label>
-						<input type="number" data-bind="value:marks, valueUpdate:'input'"/>
+						<input class="marks" data-bind="autosize: {max: 500, min: 30, padding: 10, value: marks}, value:marks, valueUpdate:'input'"/>
 					</span>
 					<span>
 						<label>Distractor Message:</label>
@@ -464,29 +475,40 @@
 		<div class="properties">
 			<div data-bind="template: {
 				name: 'property',
-				data: {label:'Minimum marks:',property:multiplechoice.minMarks, type: 'number', max:multiplechoice.maxMarks }
+				data: {label:'Minimum marks:',property:multiplechoice.minMarks, max:multiplechoice.maxMarks }
 			}"></div>
 			<div data-bind="template: {
 				name: 'property',
-				data: {label:'Maximum marks:',property:multiplechoice.maxMarks, type: 'number', min:multiplechoice.minMarks}
+				data: {label:'Maximum marks:',property:multiplechoice.maxMarks, min:multiplechoice.minMarks}
 			}"></div>
 			<div data-bind="template: {
 				name: 'property',
-				data: {label:'Minimum answers:',property:multiplechoice.minAnswers, type:'number', max:multiplechoice.maxAnswers}
+				data: {label:'Minimum answers:',property:multiplechoice.minAnswers, max:multiplechoice.maxAnswers}
 			}"></div>
 			<div data-bind="template: {
 				name: 'property',
-				data: {label:'Maximum answers:',property:multiplechoice.maxAnswers, type:'number', min:multiplechoice.minAnswers}
+				data: {label:'Maximum answers:',property:multiplechoice.maxAnswers, min:multiplechoice.minAnswers}
 			}"></div>
 			<div data-bind="template: {
 				name: 'booleanproperty',
 				data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
 			}"></div>
-			<label>Selection type:</label><select data-bind="options: multiplechoice.displayTypes['m_n_2'], value: multiplechoice.displayType, optionsText: 'niceName'"></select>
+			<div>
+				<label>Selection type:</label>
+				<select data-bind="options: multiplechoice.displayTypes['m_n_2'], value: multiplechoice.displayType, optionsText: 'niceName'"></select>
+			</div>
 			<div data-bind="fadeVisible: multiplechoice.displayType().name!='dropdown',
 			template: {
 				name: 'property',
-				data: {label:'Number of display columns:',property:multiplechoice.displayColumns, type: 'number'}
+				data: {label:'Number of display columns:',property:multiplechoice.displayColumns}
+			}"></div>
+			<div data-bind="template: {
+				name: 'booleanproperty',
+				data: {label: 'Custom marking matrix?', property: multiplechoice.customMarking}
+			}"></div>
+			<div data-bind="fadeVisible: multiplechoice.customMarking, template: {
+				name: 'property',
+				data: {label: 'Custom matrix expression:', property: multiplechoice.customMatrix}
 			}"></div>
 		</div>
 		<div>
@@ -498,9 +520,9 @@
 					<span>
 						<input type="text" data-bind="value:content, valueUpdate:'input'"/>
 					</span>
-					<span>
+					<span data-bind="visible: !$parent.multiplechoice.customMarking()">
 						<label>Marks:</label>
-						<input type="number" data-bind="value:marks, valueUpdate:'input'"/>
+						<input class="marks" data-bind="autosize: {max: 500, min: 30, padding: 10, value: marks}, value:marks, valueUpdate:'input'"/>
 					</span>
 					<span>
 						<label>Distractor Message:</label>
@@ -517,19 +539,19 @@
 		<div class="properties">
 			<div data-bind="template: {
 				name: 'property',
-				data: {label:'Minimum marks:',property:multiplechoice.minMarks, type: 'number', max:multiplechoice.maxMarks }
+				data: {label:'Minimum marks:',property:multiplechoice.minMarks, max:multiplechoice.maxMarks }
 			}"></div>
 			<div data-bind="template: {
 				name: 'property',
-				data: {label:'Maximum marks:',property:multiplechoice.maxMarks, type: 'number', min:multiplechoice.minMarks}
+				data: {label:'Maximum marks:',property:multiplechoice.maxMarks, min:multiplechoice.minMarks}
 			}"></div>
 			<div data-bind="template: {
 				name: 'property',
-				data: {label:'Minimum answers:',property:multiplechoice.minAnswers, type:'number', max:multiplechoice.maxAnswers}
+				data: {label:'Minimum answers:',property:multiplechoice.minAnswers, max:multiplechoice.maxAnswers}
 			}"></div>
 			<div data-bind="template: {
 				name: 'property',
-				data: {label:'Maximum answers:',property:multiplechoice.maxAnswers, type:'number', min:multiplechoice.minAnswers}
+				data: {label:'Maximum answers:',property:multiplechoice.maxAnswers, min:multiplechoice.minAnswers}
 			}"></div>
 			<div data-bind="template: {
 				name: 'booleanproperty',
@@ -539,7 +561,18 @@
 				name: 'booleanproperty',
 				data: {label:'Shuffle order of answers?', property:multiplechoice.shuffleAnswers}
 			}"></div>
-			<label>Selection type:</label><select data-bind="options: multiplechoice.displayTypes.m_n_x, value: multiplechoice.displayType, optionsText: 'niceName'"></select>
+			<div>
+				<label>Selection type:</label>
+				<select data-bind="options: multiplechoice.displayTypes.m_n_x, value: multiplechoice.displayType, optionsText: 'niceName'"></select>
+			</div>
+			<div data-bind="template: {
+				name: 'booleanproperty',
+				data: {label: 'Custom marking matrix?', property: multiplechoice.customMarking}
+			}"></div>
+			<div data-bind="fadeVisible: multiplechoice.customMarking, template: {
+				name: 'property',
+				data: {label: 'Custom matrix expression:', property: multiplechoice.customMatrix}
+			}"></div>
 		</div>
 		<div class="matrix">
 			<label>Marking matrix:</label>
@@ -567,7 +600,7 @@
 							</th>
 							<!-- ko foreach: answers -->
 								<td>
-									<input class="mark" type="number" data-bind="value: marks, valueUpdate:'input'"/>
+									<input class="marks" data-bind="visible: !$parents[1].multiplechoice.customMarking(), autosize: {max: 500, min: 30, padding: 10, value: marks}, value: marks, valueUpdate:'input'"/>
 								</td>
 							<!-- /ko -->
 						</tr>

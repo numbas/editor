@@ -20,6 +20,11 @@
 	margin: 0;
 }
 
+.question .control {
+	float: right;
+	margin-top: 0.5em;
+}
+
 .question .number {
 	font-weight: bold;
 }

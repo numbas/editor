@@ -152,6 +152,7 @@
 
 		<script type="text/html" id="question">
 		<li class="question">
+			<a class="control preview" data-bind="attr: {href: previewURL()}" target="_blank" title="Test run this question"></a>
 			<a data-bind="attr: {href: url}, text: name" target="_blank"></a>
 			<div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
 		</li>

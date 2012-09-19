@@ -326,9 +326,13 @@ $(document).ready(function() {
 
 	function Question(data,parent)
 	{
+		var q = this;
 		this.id = ko.observable(data.id);
 		this.name = ko.observable(data.name);
 		this.url = ko.observable(data.url);
+		this.previewURL = ko.computed(function() {
+			return q.url()+'preview/';
+		},this);
 		this.description = $(data.metadata.description).text();
 		this.parent = parent;
 		this.data = data;

@@ -638,12 +638,12 @@ $(document).ready(function() {
             maxlength: {
                 length: ko.observable(0),
                 partialCredit: ko.observable(0),
-                message: Editor.contentObservable(''),
+                message: Editor.contentObservable('')
             },
             minlength: {
                 length: ko.observable(0),
                 partialCredit: ko.observable(0),
-                message: Editor.contentObservable(''),
+                message: Editor.contentObservable('')
             },
             musthave: {
                 strings: ko.observableArray([]),
@@ -656,7 +656,7 @@ $(document).ready(function() {
                 showStrings: ko.observable(false),
                 partialCredit: ko.observable(0),
                 message: Editor.contentObservable('')
-            },
+            }
         };
         this.jme.checkingType = ko.observable(this.jme.checkingTypes[0]);
 
@@ -687,9 +687,9 @@ $(document).ready(function() {
 			customMatrix: ko.observable(''),
 
             displayTypes: {
-                m_n_x: [
+                'm_n_x': [
                     {name: 'radiogroup', niceName: 'One from each row'},
-                    {name: 'checkbox', niceName: 'Checkboxes'},
+                    {name: 'checkbox', niceName: 'Checkboxes'}
                 ],
                 'm_n_2': [
                     {name: 'checkbox', niceName: 'Checkboxes'},
@@ -811,7 +811,7 @@ $(document).ready(function() {
         toJSON: function() {
             var o = {
                 type: this.type().name,
-                marks: this.marks(),
+                marks: this.marks()
             };
             if(this.prompt())
                 o.prompt = this.prompt();

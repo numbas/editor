@@ -215,7 +215,7 @@ $(document).ready(function() {
 					page: vm.search.results.page(),
 					query: vm.search.query(),
 					author: vm.search.author(),
-					mine: vm.search.mine(),
+					mine: vm.search.mine()
 				},'',window.location.pathname);
 			})
 		}

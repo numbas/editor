@@ -88,7 +88,7 @@ jQuery(function() {
 		options = jQuery.extend({
 			cleanMaths: function(m){ return m; },
 			callback: function() {},
-            iFrame: false,
+            iFrame: false
 		},options);
 
         jQuery(this).each(function() {

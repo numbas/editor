@@ -73,7 +73,6 @@ $(document).ready(function() {
 	ko.bindingHandlers.addClass = {
 		update: function(element,valueAccessor) {
 			var value = ko.utils.unwrapObservable(valueAccessor());
-			console.log(value);
 			var oldClass;
 			if(oldClass = ko.utils.domData.get(element,'class')) {
 				$(element).removeClass(oldClass);

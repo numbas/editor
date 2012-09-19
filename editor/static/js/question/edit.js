@@ -39,6 +39,8 @@ $(document).ready(function() {
 
     function Question(data)
     {
+		var q = this;
+
 		var isadvanced = this.isadvanced = ko.observable(true);
 
         this.name = ko.observable('Untitled Question');
@@ -105,7 +107,7 @@ $(document).ready(function() {
         this.parts = ko.observableArray([]);
 
         this.output = ko.computed(function() {
-            return prettyData(this.toJSON());
+            return prettyData(q.toJSON());
         },this);
 
         ko.computed(function() {

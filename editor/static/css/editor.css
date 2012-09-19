@@ -171,10 +171,12 @@ ol.editlist > button {
 }
 
 .editlist > li {
-	margin-bottom:0.5em;
     list-style-image:none;
     list-style-type:none;
 	position: relative;
+}
+.editlist > li:not(:last-child) {
+	margin-bottom:0.5em;
 }
 
 .editlist.big > li {

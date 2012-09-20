@@ -5,6 +5,7 @@
 .question {
 	line-height: 1.5em !important;
 	padding: 0.5em 2em;
+	clear: both;
 }
 
 .question .handle {

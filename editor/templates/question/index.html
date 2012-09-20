@@ -37,9 +37,7 @@
 			<div data-bind="with: results">
 				<div id="pagination" data-bind="visible: pages().length>0">
 					Page:
-					<button class="previous" data-bind="click: prevPage"></button>
-					<span data-bind="text: pageText"></span>
-					<button class="next" data-bind="click: nextPage"></button>
+					<button class="move previous" data-bind="click: prevPage"></button><span class="pagenumber" data-bind="text: pageText"></span><button class="move next" data-bind="click: nextPage"></button>
 				</div>
                 <div class="results">
 					<table id="question-list" data-bind="visible: all().length>0">

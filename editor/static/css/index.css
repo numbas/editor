@@ -94,24 +94,33 @@
 
 #pagination {
 	margin-top: 1em;
+	vertical-align: center;
+}
+
+#pagination .move {
+	display: inline-block;
+	background: center no-repeat;
+	border: none;
+	width: 30px;
+	height: 16px;
+	padding: 0;
+}
+
+#pagination .move:hover {
+	background-color: #f90;
 }
 
 #pagination .previous {
-	display: inline-block;
-	background: url(../images/arrow_left_12x12.png);
-	border: none;
-	width: 12px;
-	height: 12px;
-	margin-right: 5px;
+	background-image: url(../images/arrow_left_12x12.png);
 }
 #pagination .next {
-	display: inline-block;
-	background: url(../images/arrow_right_12x12.png);
-	border: none;
-	width: 12px;
-	height: 12px;
-	margin-left: 5px;
+	background-image: url(../images/arrow_right_12x12.png);
 }
+
+#pagination .pagenumber {
+	margin: 0 4px;
+}
+
 
 .controlbox {
 }

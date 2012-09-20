@@ -1,6 +1,21 @@
 #admin #delete form {
     display: none;
 }
+
+.question {
+	line-height: 1.5em !important;
+	padding: 0.5em 2em;
+}
+
+.question .handle {
+	margin-left: -2em;
+	float: left;
+}
+
+.question .number {
+	font-weight: bold;
+}
+
 .questions .questionList {
     width: 400px;
     display: inline-block;
@@ -8,25 +23,34 @@
     border: 1px dashed;
 }
 
+.question .controls {
+	float: right;
+	margin-top: 0.5em;
+	margin-left: 1em;
+	margin-right: -1em;
+	width: 16px;
+}
+.question .controls .delete {
+	margin: 0;
+}
+
+.question .title {
+	margin-bottom: 0.5em;
+}
+
+.question .number {
+	font-weight: bold;
+}
+
 .question .description {
 	line-height: 1.2em;
 	font-size: 80%;
-	padding-left: 4em;
 	padding-bottom: 0.5em;
 	overflow-y: hidden;
 }
 
 .question .description p {
 	margin: 0;
-}
-
-.question .control {
-	float: right;
-	margin-top: 0.5em;
-}
-
-.question .number {
-	font-weight: bold;
 }
 
 .questions .searchBox {
@@ -59,6 +83,10 @@
 	width: 16px;
 	height: 16px;
 	display: inline-block;
+}
+.question .preview:hover {
+	background-color: #06f;
+	border-radius: 50%;
 }
 
 

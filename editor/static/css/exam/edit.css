@@ -4,12 +4,13 @@
 
 .question {
 	line-height: 1.5em !important;
-	padding: 0.5em 2em;
+	padding: 0 2em 0 44px !important;
 	clear: both;
+	min-height: 44px;
 }
 
 .question .handle {
-	margin-left: -2em;
+	margin-left: -44px;
 	float: left;
 }
 
@@ -36,7 +37,6 @@
 }
 
 .question .title {
-	margin-bottom: 0.5em;
 }
 
 .question .number {

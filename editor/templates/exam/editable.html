@@ -181,8 +181,12 @@
 	<script type="text/html" id="questionResult">
 		<li class="question questionResult">
 			<span class="handle" data-bind="click: add"></span>
-			<a data-bind="attr: {href: url}, text: name" target="_blank"></a>
-			<a class="control preview" data-bind="attr: {href: url()+'preview/'}" target="_blank" title="Test run this question"></a>
+			<div class="controls">
+				<a class="preview" data-bind="attr: {href: previewURL()}" target="_blank" title="Test run this question"></a>
+			</div>
+			<div class="title">
+				<a data-bind="attr:{href: url}, text: name" target="_blank"></a>
+			</div>
 			<div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
 		</li>
 	</script>

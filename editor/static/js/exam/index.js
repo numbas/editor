@@ -34,19 +34,19 @@ $(document).ready(function() {
 			})
 	;
 
-    $('#upload').click(function(e) {
-        if(!$('#uploadForm input[type=file]').val().length) {
-            e.preventDefault();
-            e.stopPropagation();
-            $('#uploadForm input[type=file]').trigger('click');
-        }
-    });
-    $('#uploadForm input[type=file]').change(function(e) {
-        if($.browser.msie)
-            $('#upload').text('Click again to upload');
-        else
-            $('#uploadForm').submit();
-    });
+	$('#upload').click(function(e) {
+		if(!$('#uploadForm input[type=file]').val().length) {
+			e.preventDefault();
+			e.stopPropagation();
+			$('#uploadForm input[type=file]').trigger('click');
+		}
+	});
+	$('#uploadForm input[type=file]').change(function(e) {
+		if($.browser.msie)
+			$('#upload').text('Click again to upload');
+		else
+			$('#uploadForm').submit();
+	});
 
 /*
 	function uploadFile(content) {
@@ -65,32 +65,32 @@ $(document).ready(function() {
 		fr.readAsText(file);
 	}
 
-    $.event.props.push('dataTransfer');
-    $('#uploadForm').on({
-        dragenter: function(e) {
-            e.stopPropagation();
-            e.preventDefault();
-            $(this).addClass('over')
-        },
-        dragover: function(e) {
-            e.stopPropagation();
-            e.preventDefault();
-            $(this).addClass('over')
-        },
-        dragleave: function(e) {
-            $(this).removeClass('over');
-        },
-        drop: function(e) {
-            $(this).removeClass('over');
+	$.event.props.push('dataTransfer');
+	$('#uploadForm').on({
+		dragenter: function(e) {
+			e.stopPropagation();
+			e.preventDefault();
+			$(this).addClass('over')
+		},
+		dragover: function(e) {
+			e.stopPropagation();
+			e.preventDefault();
+			$(this).addClass('over')
+		},
+		dragleave: function(e) {
+			$(this).removeClass('over');
+		},
+		drop: function(e) {
+			$(this).removeClass('over');
 			if('files' in e.dataTransfer)
-	            loadFile(e.dataTransfer.files[0]);
+				loadFile(e.dataTransfer.files[0]);
 			else
 			{
 				console.log(JSON.stringify(e.dataTransfer));
 			//	uploadFile(e.dataTransfer.getData('text'));
 			}
-        }
-    })
+		}
+	})
 	.find('button').on('click',function(e) {
 		e.preventDefault();
 		e.stopPropagation();
@@ -125,8 +125,8 @@ $(document).ready(function() {
 		this.canEdit = data.canEdit || false;
 	}
 
-    function ExamSelect()
-    {
+	function ExamSelect()
+	{
 		var vm = this;
 
 		this.search = {
@@ -146,20 +146,20 @@ $(document).ready(function() {
 					if(page<this.pages().length)
 						this.page(page+1);
 				},
-                deleteExam: function(e) {
+				deleteExam: function(e) {
 					console.log(e);
-                    if(window.confirm('Really delete this exam? You won\'t be able to get it back if you do.')) {
-                        var results = this;
-                        $.post(e.deleteURL,{csrfmiddlewaretoken: getCookie('csrftoken')})
-                            .success(function() {
-                                results.all.remove(e);
-                            })
-                            .error(function(response) {
-                                noty({text: 'Error deleting exam:\n\n'+response.responseText, layout: 'center', type: 'error'});
-                            })
-                        ;
-                    }
-                }
+					if(window.confirm('Really delete this exam? You won\'t be able to get it back if you do.')) {
+						var results = this;
+						$.post(e.deleteURL,{csrfmiddlewaretoken: getCookie('csrftoken')})
+							.success(function() {
+								results.all.remove(e);
+							})
+							.error(function(response) {
+								noty({text: 'Error deleting exam:\n\n'+response.responseText, layout: 'center', type: 'error'});
+							})
+						;
+					}
+				}
 			},
 			searching: ko.observable(false),
 			realMine: ko.observable(false),
@@ -204,10 +204,8 @@ $(document).ready(function() {
 				vm.search.author(history.state.author);
 			if('mine' in history.state)
 				vm.search.mine(history.state.mine);
-			if('results' in history.state)
-				vm.search.results.raw(history.state.results);
 			if('page' in history.state)
-                vm.search.restorePage = history.state.page;
+				vm.search.restorePage = history.state.page;
 		}
 		if(history.replaceState) {
 			ko.computed(function() {
@@ -221,12 +219,12 @@ $(document).ready(function() {
 		}
 
 		Editor.searchBinding(this.search,'/exams/search/',makeQuery);
-        delete vm.search.restorePage;
-    }
-    
-    //create a view model
-    viewModel = new ExamSelect();
-    ko.applyBindings(viewModel);
+		delete vm.search.restorePage;
+	}
+	
+	//create a view model
+	viewModel = new ExamSelect();
+	ko.applyBindings(viewModel);
 
 
 });

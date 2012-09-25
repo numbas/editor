@@ -30,7 +30,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.forms import model_to_dict
-from django.template.defaultfilters import slugify
+from uuslug import slugify
 
 from taggit.managers import TaggableManager
 

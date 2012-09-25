@@ -122,31 +122,36 @@ class ExamUploadView(CreateView):
     model = Exam
 
     def post(self, request, *args, **kwargs):
-        content = request.FILES['file'].read()
-        self.object = Exam(content=content)
+        self.files = request.FILES.getlist('file')
+        for file in self.files:
+            content = file.read().decode('utf-8')
+            self.object = Exam(content=content)
 
-        if not self.object.content:
-            return
+            if not self.object.content:
+                return
 
-        self.object.author = self.request.user
-        self.object.save()
+            self.object.author = self.request.user
+            self.object.save()
 
-        data = ExamParser().parse(self.object.content)
+            data = ExamParser().parse(self.object.content)
 
-        qs = []
-        for q in data['questions']:
-            qo = Question(
-                content = printdata(q), 
-                author = self.object.author
-            )
-            qo.save()
-            qs.append(qo)
-        self.object.set_questions(qs)
+            qs = []
+            for q in data['questions']:
+                qo = Question(
+                    content = printdata(q), 
+                    author = self.object.author
+                )
+                qo.save()
+                qs.append(qo)
+            self.object.set_questions(qs)
 
         return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
-        return reverse('exam_edit', args=(self.object.pk, self.object.slug) )
+        if len(self.files)==1:
+            return reverse('exam_edit', args=(self.object.pk, self.object.slug) )
+        else:
+            return reverse('exam_index')
 
 
 class ExamCopyView(View, SingleObjectMixin):

@@ -571,6 +571,36 @@ $(document).ready(function() {
 		return out+bits[bits.length-1];
 	};
 
+	ko.bindingHandlers.codemirror = {
+		init: function(element,valueAccessor) {
+			var value = valueAccessor();
+			$(element).val(ko.utils.unwrapObservable(value));
+
+			function onChange(editor,change) {
+				if(typeof value=='function') {
+					value(editor.getValue());
+				}
+			}
+
+			var mc = CodeMirror.fromTextArea(element,{
+				lineNumbers: true,
+				onChange: onChange
+			});
+			ko.utils.domData.set(element,'codemirror',mc);
+			console.log($(element).parents('.folder'));
+			$(element).parents('.folder').on('folder-open',function() {
+				console.log('refresh');
+				mc.refresh();
+			});
+		},
+		update: function(element,valueAccessor) {
+			var mc = ko.utils.domData.get(element,'codemirror');
+			var value = ko.utils.unwrapObservable(valueAccessor());
+			if(value!=mc.getValue()) {
+				mc.setValue(value);
+			}
+		}
+	}
 
 	ko.bindingHandlers.writemaths = {
 		init: function(element,valueAccessor) {
@@ -675,6 +705,8 @@ $(document).ready(function() {
 					return;
 				header.siblings('.folder').toggle(150,function() {
 					$(this).parent().toggleClass('folded');
+					var open = !$(this).parent().hasClass('folded');
+					content.trigger('folder-'+(open ? 'open' : 'closed'));
 				});
 			}
 

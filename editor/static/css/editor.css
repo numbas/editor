@@ -317,3 +317,12 @@ button.delete-grey:hover {
 .ui-effects-wrapper {
 	display: inline-block;
 }
+
+.CodeMirror {
+	width: 50em;
+	background: white;
+}
+.CodeMirror-scroll {
+	height: auto;
+	max-height: 20em;
+}

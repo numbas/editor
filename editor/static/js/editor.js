@@ -587,9 +587,7 @@ $(document).ready(function() {
 				onChange: onChange
 			});
 			ko.utils.domData.set(element,'codemirror',mc);
-			console.log($(element).parents('.folder'));
 			$(element).parents('.folder').on('folder-open',function() {
-				console.log('refresh');
 				mc.refresh();
 			});
 		},
@@ -652,7 +650,6 @@ $(document).ready(function() {
             ;
 
 			plaintext.on('keyup paste',function() {
-				console.log($(this).val());
 				valueAccessor($(this).val());
 			})
 		},

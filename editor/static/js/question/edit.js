@@ -284,42 +284,72 @@ $(document).ready(function() {
 				var outcons = jme.types[f.type()];
 
 				var fn = new jme.funcObj(name,intype,outcons,null,{nobuiltin: true});
+				fn.paramNames = paramNames;
+				fn.definition = f.definition();
 
-				switch(f.language())
-				{
-				case 'jme':
-					fn.tree = jme.compile(f.definition(),scope,true);
-
-					fn.evaluate = function(args,scope)
-					{
-						scope = new Numbas.jme.Scope(scope);
+				function makeJMEFunction(fn) {
+					fn.tree = jme.compile(fn.definition,scope);
+					return function(args,scope) {
+						var oscope = scope;
+						scope = new jme.Scope(scope);
 
 						for(var j=0;j<args.length;j++)
 						{
-							scope.variables[paramNames[j]] = jme.evaluate(args[j],scope);
+							scope.variables[fn.paramNames[j]] = jme.evaluate(args[j],oscope);
 						}
 						return jme.evaluate(this.tree,scope);
 					}
-					break;
-				case 'javascript':
-					var preamble='(function('+paramNames.join(',')+'){';
-					var math = Numbas.math, 
-						util = Numbas.util;
-					var jfn = eval(preamble+f.definition()+'})');
-					fn.evaluate = function(args,scope)
-					{
-						args = args.map(function(a){return jme.evaluate(a,scope).value});
+				}
+				function unwrapValue(v) {
+					if(v.type=='list')
+						return v.value.map(unwrapValue);
+					else
+						return v.value;
+				}
+				function wrapValue(v) {
+					switch(typeof v) {
+					case 'number':
+						return new jme.types.TNum(v);
+					case 'string':
+						return new jme.types.TString(v);
+					case 'boolean':
+						return new jme.types.TBool(v);
+					default:
+						if($.isArray(v)) {
+							v = v.map(wrapValue);
+							return new jme.types.TList(v);
+						}
+						return v;
+					}
+				}
+				function makeJavascriptFunction(fn) {
+					var preamble='(function('+fn.paramNames.join(',')+'){';
+					var math = Numbas.math;
+					var util = Numbas.util;
+					var jfn = eval(preamble+fn.definition+'})');
+					return function(args,scope) {
+						args = args.map(function(a){return unwrapValue(jme.evaluate(a,scope))});
 						try {
 							var val = jfn.apply(this,args);
+							val = wrapValue(val);
 							if(!val.type)
-								val = new outcons(val);
+								val = new fn.outcons(val);
 							return val;
 						}
 						catch(e)
 						{
-							throw(new Numbas.Error('jme.user javascript error',f.name(),e.message));
+							throw(new Numbas.Error('jme.user javascript error',fn.name,e.message));
 						}
 					}
+				}
+				switch(f.language())
+				{
+				case 'jme':
+					fn.evaluate = makeJMEFunction(fn);
+
+					break;
+				case 'javascript':
+					fn.evaluate = makeJavascriptFunction(fn);
 					break;
 				}
 

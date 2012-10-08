@@ -36,6 +36,20 @@ body {
 
 }
 
+
+button {
+	margin: 0.1em 0.3em;
+	/*border: 1px solid #999999*/;
+	background: #acdeff;
+	border: 1px solid #999;
+	border-radius: 2px;
+	padding: 0.3em 0.5em;
+}
+
+button:hover, button:focus {
+	background: #f90;
+}
+
 #main {
 	width: 940px;
 	margin: 0 auto;

@@ -158,6 +158,9 @@
 									<label>Definition:</label>
 									<textarea data-bind="codemirror: definition, valueUpdate: 'afterkeydown'"></textarea>
 								</div>
+								<div class="error" data-bind="visible: error().length>0">
+									Error: <span class="errortext" data-bind="html: error">
+								</div>
 							</div>
 						</div>
 					</li>

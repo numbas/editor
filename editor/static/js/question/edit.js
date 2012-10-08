@@ -288,7 +288,7 @@ $(document).ready(function() {
 				fn.definition = f.definition();
 
 				function makeJMEFunction(fn) {
-					fn.tree = jme.compile(fn.definition,scope);
+					fn.tree = jme.compile(fn.definition,scope,true);
 					return function(args,scope) {
 						var oscope = scope;
 						scope = new jme.Scope(scope);
@@ -342,20 +342,28 @@ $(document).ready(function() {
 						}
 					}
 				}
-				switch(f.language())
-				{
-				case 'jme':
-					fn.evaluate = makeJMEFunction(fn);
 
-					break;
-				case 'javascript':
-					fn.evaluate = makeJavascriptFunction(fn);
-					break;
+				f.error('');
+
+				try {
+					switch(f.language())
+					{
+					case 'jme':
+						fn.evaluate = makeJMEFunction(fn);
+
+						break;
+					case 'javascript':
+						fn.evaluate = makeJavascriptFunction(fn);
+						break;
+					}
+					if(scope.functions[name]===undefined)
+						scope.functions[name] = [];
+					scope.functions[name].push(fn);
+				}
+				catch(e) {
+					f.error(e.message);
 				}
 
-				if(scope.functions[name]===undefined)
-					scope.functions[name] = [];
-				scope.functions[name].push(fn);
 			});
 
 			var todo = {}
@@ -583,6 +591,7 @@ $(document).ready(function() {
         this.definition = ko.observable('');
 		this.languages = ['jme','javascript'];
         this.language = ko.observable('jme');
+		this.error = ko.observable('');
 
         this.remove = function() {
             if(confirm("Remove this function?"))

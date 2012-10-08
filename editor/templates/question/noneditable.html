@@ -589,6 +589,9 @@
 							<label>Definition:</label>
 							<code data-bind="text: definition"/>
 						</div>
+						<div class="error" data-bind="visible: error().length>0">
+							Error: <span class="errortext" data-bind="html: error">
+						</div>
 					</div>
 				</div>
 			</li>

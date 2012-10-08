@@ -77,6 +77,14 @@
 	font-family: monospace;
 }
 
+.function .error {
+    color: red;
+    background: #fcc;
+    display: inline-block;
+    padding: 0.3em 0.5em;
+    vertical-align: middle;
+}
+
 table.multiplechoice {
 	width:auto;
 	margin-left:2em;

@@ -323,7 +323,7 @@ $(document).ready(function() {
 					}
 				}
 				function makeJavascriptFunction(fn) {
-					var preamble='(function('+fn.paramNames.join(',')+'){';
+					var preamble='fn.jfn=(function('+fn.paramNames.join(',')+'){';
 					var math = Numbas.math;
 					var util = Numbas.util;
 					var jfn = eval(preamble+fn.definition+'})');

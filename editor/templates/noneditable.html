@@ -12,7 +12,7 @@
 
 	<script type="text/html" id="booleanproperty">
 		<label data-bind="html: label"></label>
-		<span class="value" data-bind="text: property ? 'Yes' : 'No'"></span>
+		<span class="value" data-bind="text: property() ? 'Yes' : 'No'"></span>
 	</script>
 
 	<script type="text/html" id="percentproperty">

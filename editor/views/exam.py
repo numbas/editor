@@ -289,7 +289,7 @@ class ExamSearchView(ListView):
         exams = Exam.objects.all()
         try:
             search_term = self.request.GET['q']
-            exams = exams.filter(Q(name__icontains=search_term)).distinct()
+            exams = exams.filter(Q(name__icontains=search_term) | Q(metadata__icontains=search_term)).distinct()
         except KeyError:
             pass
 

@@ -271,7 +271,7 @@ class QuestionSearchView(ListView):
         questions = Question.objects.all()
         try:
             search_term = self.request.GET['q']
-            questions = questions.filter(Q(name__icontains=search_term) | Q(tags__name__istartswith=search_term)).distinct()
+            questions = questions.filter(Q(name__icontains=search_term) | Q(metadata__icontains=search_term) | Q(tags__name__istartswith=search_term)).distinct()
         except KeyError:
             pass
 

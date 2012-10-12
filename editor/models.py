@@ -12,7 +12,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 import uuid
-import git
 import os
 import json
 import codecs
@@ -66,66 +65,6 @@ class NumbasObject:
         self.save()
 
 
-class GitObject:
-
-    message = ''
-
-    def repo(self):
-        repo = git.Repo(settings.GLOBAL_SETTINGS['REPO_PATH'])
-
-        if repo.heads:
-            repo.head.reset(working_tree=True)
-
-        author = getattr(self,'edit_user',self.author)
-
-        try:
-            os.environ['GIT_AUTHOR_NAME'] = author.get_full_name()
-            os.environ['GIT_AUTHOR_EMAIL'] = author.email
-        except AttributeError:
-            os.environ['GIT_AUTHOR_NAME'] = 'Anonymous'
-
-
-        return repo
-
-    def abs_path_to_file(self):
-        return os.path.join(self.repo().working_dir,self.path_to_file())
-    
-    def path_to_file(self):
-        return os.path.join(self.git_directory, self.filename)
-
-    def save(self):
-        """ if content has changed, save to git repo """
-
-        if not self.filename:
-            self.filename = str(uuid.uuid4())
-
-        if self.pk is not None:
-            original = self.__class__.objects.get(pk=self.pk)
-            if original.content == self.content:    #if content has not changed, do nothing
-                return
-            if original.name != self.name:
-                self.message += 'Renamed %s to %s.\n' % (original.name,self.name)
-
-        repo = self.repo()
-        fh = codecs.open(self.abs_path_to_file(), 'w', encoding='utf-8')
-        fh.write(self.content)
-        fh.close()
-        repo.index.add([self.path_to_file()])
-        self.message += 'Made some changes to %s.\n' % str(self)
-        repo.index.commit(self.message)
-        
-    def delete(self):
-        """ Remove file from repository """
-
-        repo = self.repo()
-        try:
-            repo.index.remove([self.path_to_file()])
-            os.remove(self.abs_path_to_file())
-            repo.index.commit('Deleted %s' % str(self))
-        except Exception as err:
-            print(err)
-
-
 #check that the .exam file for an object is valid and defines at the very least a name
 def validate_content(content):
     try:
@@ -147,7 +86,7 @@ class Extension(models.Model):
         d = model_to_dict(self)
         return json.dumps(d)
 
-class Question(models.Model,NumbasObject,GitObject,ControlledObject):
+class Question(models.Model,NumbasObject,ControlledObject):
     
     """Model class for a question.
     
@@ -167,8 +106,6 @@ class Question(models.Model,NumbasObject,GitObject,ControlledObject):
     class Meta:
       ordering = ['name']
 
-    git_directory = 'questions'
-    
     def __unicode__(self):
         return 'Question "%s"' % self.name
     
@@ -177,15 +114,12 @@ class Question(models.Model,NumbasObject,GitObject,ControlledObject):
 
         self.slug = slugify(self.name)
 
-        GitObject.save(self)
-
         super(Question, self).save(*args, **kwargs)
 
         if 'tags' in self.parsed_content:
            self.tags.set(*self.parsed_content['tags'])
 
     def delete(self, *args, **kwargs):
-        GitObject.delete(self)
         super(Question,self).delete(*args, **kwargs)
 
     def as_source(self):
@@ -219,7 +153,7 @@ class Question(models.Model,NumbasObject,GitObject,ControlledObject):
         return obj
 
 
-class Exam(models.Model,NumbasObject,GitObject,ControlledObject):
+class Exam(models.Model,NumbasObject,ControlledObject):
     
     """Model class for an Exam.
     
@@ -240,8 +174,6 @@ class Exam(models.Model,NumbasObject,GitObject,ControlledObject):
     class Meta:
       ordering = ['name']
 
-    git_directory = 'exams'
-    
     def __unicode__(self):
         return 'Exam "%s"' %self.name
     
@@ -267,8 +199,6 @@ class Exam(models.Model,NumbasObject,GitObject,ControlledObject):
         
         self.slug = slugify(self.name)
             
-        GitObject.save(self)
-
         super(Exam, self).save(*args, **kwargs)
         
     def as_source(self):

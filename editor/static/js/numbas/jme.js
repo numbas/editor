@@ -22,6 +22,9 @@ var math = Numbas.math;
 var vectormath = Numbas.vectormath;
 var matrixmath = Numbas.matrixmath;
 
+var re_whitespace = '[\\s \\f\\n\\r\\t\\v\\u00A0\\u2028\\u2029]';
+var re_strip_whitespace = new RegExp('^'+re_whitespace+'+|'+re_whitespace+'+$','g');
+
 var jme = Numbas.jme = {
 
 	constants: {
@@ -42,7 +45,7 @@ var jme = Numbas.jme = {
 		
 		var oexpr = expr;
 
-		expr = expr.replace(/^\s+|\s+$/g, '');	//get rid of whitespace
+		expr = expr.replace(re_strip_whitespace, '');	//get rid of whitespace
 
 		var tokens = [];
 		var i = 0;
@@ -53,13 +56,19 @@ var jme = Numbas.jme = {
 		var re_punctuation = /^([\(\),\[\]])/;
 		var re_string = /^(['"])((?:[^\1\\]|\\.)*?)\1/;
 		var re_special = /^\\\\([%!+\-\,\.\/\:;\?\[\]=\*\&<>\|~\(\)]|\d|([a-zA-Z]+))/;
+        var re_comment = /^\/\/.*\n/;
 		
 		while( expr.length )
 		{
-			expr = expr.replace(/^\s+|\s+$/g, '');	//get rid of whitespace
+			expr = expr.replace(re_strip_whitespace, '');	//get rid of whitespace
 		
 			var result;
 			var token;
+
+            while(result=expr.match(re_comment)) {
+                expr=expr.slice(result[0].length).replace(re_strip_whitespace,'');
+            }
+
 			if(result = expr.match(re_number))
 			{
 				token = new TNum(result[0]);
@@ -1676,6 +1685,12 @@ newBuiltin('listval',[TList,TNum],'?', null, {
 	{
 		var index = jme.evaluate(args[1],scope).value;
 		var list = jme.evaluate(args[0],scope);
+		if(list.type!='list') {
+			if(list.type=='name')
+				throw(new Numbas.Error('jme.variables.variable not defined',list.name));
+			else
+				throw(new Numbas.Error('jme.func.listval.not a list'));
+		}
 		if(index<0)
 			index += list.vars;
 		if(index in list.value)

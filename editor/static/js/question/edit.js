@@ -103,6 +103,7 @@ $(document).ready(function() {
         this.functions = ko.observableArray([]);
 
         this.variables = ko.observableArray([]);
+		this.autoCalculateVariables = ko.observable(true);
 
         this.parts = ko.observableArray([]);
 
@@ -115,6 +116,8 @@ $(document).ready(function() {
         },this);
 
 		ko.computed(function() {
+			if(!this.autoCalculateVariables())
+				return;
 			//the ko dependency checker seems not to pay attention to what happens in the computeVariables method, so access the variable bits here to give it a prompt
 			this.functions().map(function(v) {
 				v.name();

@@ -572,9 +572,13 @@ $(document).ready(function() {
 	};
 
 	ko.bindingHandlers.codemirror = {
-		init: function(element,valueAccessor) {
+		init: function(element,valueAccessor,allBindingsAccessor) {
 			var value = valueAccessor();
+			var allBindings = allBindingsAccessor();
+
 			$(element).val(ko.utils.unwrapObservable(value));
+			
+			var mode = ko.utils.unwrapObservable(allBindings.codemirrorMode) || 'javascript';
 
 			function onChange(editor,change) {
 				if(typeof value=='function') {
@@ -584,6 +588,8 @@ $(document).ready(function() {
 
 			var mc = CodeMirror.fromTextArea(element,{
 				lineNumbers: true,
+				matchBrackets: true,
+                mode: mode,
 				onChange: onChange
 			});
 			ko.utils.domData.set(element,'codemirror',mc);
@@ -591,12 +597,15 @@ $(document).ready(function() {
 				mc.refresh();
 			});
 		},
-		update: function(element,valueAccessor) {
+		update: function(element,valueAccessor,allBindingsAccessor) {
 			var mc = ko.utils.domData.get(element,'codemirror');
 			var value = ko.utils.unwrapObservable(valueAccessor());
 			if(value!=mc.getValue()) {
 				mc.setValue(value);
 			}
+			var allBindings = allBindingsAccessor();
+			var mode = ko.utils.unwrapObservable(allBindings.codemirrorMode) || 'javascript';
+			mc.setOption('mode',mode);
 		}
 	}
 

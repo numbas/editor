@@ -319,7 +319,7 @@ button.delete-grey:hover {
 }
 
 .CodeMirror {
-	width: 50em;
+	max-width: 50em;
 	background: white;
 }
 .CodeMirror-scroll {

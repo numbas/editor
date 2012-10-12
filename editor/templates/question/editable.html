@@ -84,11 +84,9 @@
 			<div>
 				<table class="variables editlist">
 					<thead data-bind="visible: variables().length>0">
-						<th/>
-						<th>Name</th>
-						<th/>
-						<th>Definition</th>
+						<th colspan="2"/>
 						<th>Computed value</th>
+						<th/>
 					</thead>
 					<tbody data-bind="sortable: {
 						template: 'variable',
@@ -97,11 +95,13 @@
 						afterAdd: function(elem) { $(elem).find('td>div').hide().slideDown(150).end().find('.name').focus(); },
 						options: {handle: '.handle'}
 					}"></tbody>
-					<tr>
-						<td/>
-						<td><button data-bind="click:addVariable, text: variables().length ? 'Add another variable' : 'Add a variable'"></button></td>
-						<td colspan="2"></td>
+					<tr class="controls">
+						<td colspan="2">
+							<button data-bind="click:addVariable, text: variables().length ? 'Add another variable' : 'Add a variable'"></button>
+							Automatically recalculate variables: <input type="checkbox" data-bind="checked: autoCalculateVariables"/>
+						</td>
 						<td><button data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button></td>
+						<td/>
 					</tr>
 				</table>
 			</div>
@@ -156,7 +156,7 @@
 								</div>
 								<div class="definition">
 									<label>Definition:</label>
-									<textarea data-bind="codemirror: definition, valueUpdate: 'afterkeydown'"></textarea>
+									<textarea data-bind="codemirror: definition, codemirrorMode: language, valueUpdate: 'afterkeydown'"></textarea>
 								</div>
 								<div class="error" data-bind="visible: error().length>0">
 									Error: <span class="errortext" data-bind="html: error">
@@ -621,13 +621,16 @@
 
 	<script type="text/html" id="variable">
 		<tr class="variable dict">
-			<td><span class="handle"></span></td>
-			<td><div>
-					<input type="text" class="name" data-bind="visible: $parent.isadvanced, value:name, valueUpdate: 'afterkeydown', event: {keyup: function(d,e){if(e.which==13){ $(e.target).parents('.variable').find('.def').focus();} } }"/> 
-					<span class="name" data-bind="visible: !$parent.isadvanced(), text: name"></span>
-			</div></td>
-			<td>=</td>
-			<td><div><input class="def" type="text" data-bind="value:definition, valueUpdate: 'afterkeydown', event: {keyup: function(d,e){if(e.which==13){ $parent.addVariable($parent,e,$parent.variables.indexOf(this)+1); } } }"/></div></td>
+			<td class="handlecol"><span class="handle"></span></td>
+			<td class="assign">
+				<div class="name property">
+					<label>Name:</label> <input type="text" class="name" data-bind="value:name, valueUpdate: 'afterkeydown', attr: {disabled: !$parent.isadvanced()}, autosize: name"/> 
+				</div>
+				<div class="definition property">
+					<label>Definition:</label>
+					<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: definition, codemirrorMode: 'jme'"/>
+				</div>
+			</td>
 			<td class="value"><div class="value" data-bind="css: {error: error().length>0}, html: display, mathjax: value"></div></td>
 			<td data-bind="visible: $parent.isadvanced"><div><button class="delete" data-bind="click:remove"></button></div></td>
 		</tr>

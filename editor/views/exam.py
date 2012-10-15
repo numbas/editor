@@ -165,7 +165,6 @@ class ExamCopyView(View, SingleObjectMixin):
             e = self.get_object()
             e2 = deepcopy(e)
             e2.id = None
-            e2.filename = None
             e2.author = request.user
             e2.save()
             e2.set_questions(e.questions.all())

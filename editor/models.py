@@ -98,7 +98,7 @@ class Question(models.Model,NumbasObject,ControlledObject):
     theme = 'question'
     slug = models.SlugField(max_length=200,editable=False,unique=False)
     author = models.ForeignKey(User)
-    filename = models.CharField(max_length=200, editable=False)
+    filename = models.CharField(max_length=200, editable=False,default='')
     content = models.TextField(blank=True,validators=[validate_content])
     metadata = JSONField(blank=True)
     tags = TaggableManager()
@@ -167,7 +167,7 @@ class Exam(models.Model,NumbasObject,ControlledObject):
     theme = models.CharField(max_length=200,default='default')
     slug = models.SlugField(max_length=200,editable=False,unique=False)
     author = models.ForeignKey(User)
-    filename = models.CharField(max_length=200, editable=False)
+    filename = models.CharField(max_length=200, editable=False,default='')
     content = models.TextField(blank=True, validators=[validate_content])
     metadata = JSONField(blank=True)
 

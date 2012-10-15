@@ -151,7 +151,6 @@ class QuestionCopyView(View, SingleObjectMixin):
             q = self.get_object()
             q2 = deepcopy(q)
             q2.id = None
-            q2.filename = None
             q2.author = request.user
             q2.save()
             q2.set_name("%s's copy of %s" % (q2.author.first_name,q.name))

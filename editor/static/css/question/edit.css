@@ -57,10 +57,13 @@
 	margin-right: 3em;
 }
 
+.variable .definition {
+	width: 600px;
+}
+
 .variable .def {
     font-family: monospace;
 	text-align: right;
-	width: 18em;
 }
 
 .variable button.delete {
@@ -70,7 +73,6 @@
 .variable > td.value div {
 	max-width: 20em;
 	overflow-x: auto;
-    max-height: 8em;
     overflow-y: auto;
 	padding: 2px;
 }

@@ -283,6 +283,10 @@
 				}"></div>
 				<div data-bind="template: {
 					name: 'property',
+					data: {label:'Maximum no. of failures:',property:jme.failureRate,min:0, max:jme.vset.points()-1}
+				}"></div>
+				<div data-bind="template: {
+					name: 'property',
 					data: {label:'Checking range start:',property:jme.vset.start,max:jme.vset.end}
 				}"></div>
 				<div data-bind="template: {

@@ -441,10 +441,6 @@
 				name: 'booleanproperty',
 				data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
 			}"></div>
-			<div>
-				<label>Selection type:</label>
-				<select data-bind="options: multiplechoice.displayTypes['1_n_2'], value: multiplechoice.displayType, optionsText: 'niceName'"></select>
-			</div>
 			<div data-bind="fadeVisible: multiplechoice.displayType().name!='dropdown',
 			template: {
 				name: 'property',
@@ -505,10 +501,6 @@
 				name: 'booleanproperty',
 				data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
 			}"></div>
-			<div>
-				<label>Selection type:</label>
-				<select data-bind="options: multiplechoice.displayTypes['m_n_2'], value: multiplechoice.displayType, optionsText: 'niceName'"></select>
-			</div>
 			<div data-bind="fadeVisible: multiplechoice.displayType().name!='dropdown',
 			template: {
 				name: 'property',

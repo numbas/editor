@@ -14,6 +14,7 @@
 import uuid
 import os
 import json
+from datetime import datetime
 import codecs
 try:
   # For Python > 2.7
@@ -42,6 +43,7 @@ class ControlledObject:
         return user == self.author or user.is_superuser
 
 class NumbasObject:
+
     def get_parsed_content(self):
         if self.content:
             parser = ExamParser()
@@ -101,6 +103,8 @@ class Question(models.Model,NumbasObject,ControlledObject):
     filename = models.CharField(max_length=200, editable=False,default='')
     content = models.TextField(blank=True,validators=[validate_content])
     metadata = JSONField(blank=True)
+    created=models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
+    last_modified=models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
     tags = TaggableManager()
 
     class Meta:
@@ -172,6 +176,8 @@ class Exam(models.Model,NumbasObject,ControlledObject):
     author = models.ForeignKey(User)
     filename = models.CharField(max_length=200, editable=False,default='')
     content = models.TextField(blank=True, validators=[validate_content])
+    created=models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
+    last_modified=models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
     metadata = JSONField(blank=True)
 
     class Meta:

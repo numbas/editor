@@ -8,6 +8,11 @@ from django.utils.translation import ugettext_lazy as _
 from django.forms.fields import Field
 from django.forms.util import ValidationError as FormValidationError
 
+try:
+	from south.modelsinspector import add_introspection_rules
+except ImportError:
+	pass
+
 class JSONFormField(Field):
     def clean(self, value):
 
@@ -67,3 +72,7 @@ class JSONField(models.TextField):
 
         return field
 
+try:
+	add_introspection_rules([], ["^editor\.jsonfield\.JSONField"])
+except NameError:
+	pass

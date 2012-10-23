@@ -78,7 +78,7 @@ class CompileObject():
 class PreviewView(DetailView,CompileObject):
     def preview(self,obj):
         source = obj.as_source()    #need to catch errors
-        location = obj.filename
+        location = obj.get_filename()
         switches = ['-c']
         try:
             fsLocation = self.compile(source, switches, location, obj)
@@ -95,7 +95,7 @@ class ZipView(DetailView,CompileObject):
         switches = ['-cz']
         if scorm:
             switches.append('-s')
-        location = obj.filename + '.zip'
+        location = obj.get_filename() + '.zip'
         try:
             fsLocation = self.compile(source, switches, location, obj)
         except CompileError as err:

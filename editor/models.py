@@ -122,6 +122,9 @@ class Question(models.Model,NumbasObject,ControlledObject):
     def delete(self, *args, **kwargs):
         super(Question,self).delete(*args, **kwargs)
 
+    def get_filename(self):
+        return 'question-%i-%s' % (self.pk,self.slug)
+
     def as_source(self):
         self.get_parsed_content()
         data = OrderedDict([
@@ -200,6 +203,9 @@ class Exam(models.Model,NumbasObject,ControlledObject):
         self.slug = slugify(self.name)
             
         super(Exam, self).save(*args, **kwargs)
+
+    def get_filename(self):
+        return 'exam-%i-%s' % (self.pk,self.slug)
         
     def as_source(self):
         parser = ExamParser()

@@ -54,11 +54,6 @@ STATIC_ROOT = '/srv/numbas/static/'
 # Example: "http://media.lawrence.com/static/"
 STATIC_URL = '/static/'
 
-# URL prefix for admin static files -- CSS, JavaScript and images.
-# Make sure to use a trailing slash.
-# Examples: "http://foo.com/static/admin/", "/static/admin/".
-ADMIN_MEDIA_PREFIX = '/static/admin/'
-
 # Additional locations of static files
 STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
@@ -90,6 +85,9 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    # Uncomment *one* of the two lines below to enable Shibboleth authentication, then look at shib_auth.py.dist and/or numbas_auth.py.
+    #'shibboleth.middleware.ShibbolethRemoteUserMiddleware',
+    #'numbas_auth.NumbasShibbolethRemoteUserMiddleware',
 )
 
 ROOT_URLCONF = 'numbas_editor.urls'
@@ -107,11 +105,12 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'editor',
-    'taggit',
     'django.contrib.admin',
-    'registration',
     'accounts',
+    'editor',
+    'registration',
+    #'south', # for database migration
+    'taggit',
     # 'django.contrib.admindocs',
 )
 
@@ -188,3 +187,5 @@ AUTHENTICATION_BACKENDS = (
 
 # Uncomment to enable LDAP authentication, then look at ldap_auth.py.dist
 #from ldap_auth import *
+# Uncomment to enable Shibboleth authentication, then look at shib_auth.py.dist
+#from shib_auth import *

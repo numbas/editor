@@ -1,0 +1,12 @@
+# Shibboleth Remote User configuration.
+# Copy this file to shib_auth.py and edit to suit.
+# Also make sure that the relevant lines in settings.py are uncommented.
+# See https://github.com/Brown-University-Library/django-shibboleth-remoteuser
+# for full usage instructions.
+
+# Shibboleth attributes on the left map to Django user attributes on the right.
+SHIBBOLETH_ATTRIBUTE_MAP = {
+    'email': (True, 'email'),
+    'givenname': (True, 'first_name'),
+    'surname': (True, 'last_name'),
+}

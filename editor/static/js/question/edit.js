@@ -658,6 +658,15 @@ $(document).ready(function() {
         this.type = ko.observable(this.availableTypes()[0]);
 
         this.marks = ko.observable(1);
+		this.realMarks = ko.computed(function() {
+			switch(this.type().name) {
+			case 'information':
+			case 'gapfill':
+				return 0;
+			default:
+				return this.marks();
+			}
+		},this);
 
         this.steps = ko.observableArray([]);
         this.stepsPenalty = ko.observable(0);
@@ -853,7 +862,7 @@ $(document).ready(function() {
         toJSON: function() {
             var o = {
                 type: this.type().name,
-                marks: this.marks()
+                marks: this.realMarks()
             };
             if(this.prompt())
                 o.prompt = this.prompt();

@@ -398,8 +398,26 @@
 			<div data-bind="fadeVisible: numberentry.integerAnswer,
 			template: {
 				name:'percentproperty',
-				data: {label:'Partial credit for non-integer answer:',property:numberentry.partialCredit}
+				data: {label:'Partial credit for non-integer answer:',property:numberentry.integerPartialCredit}
 			}"></div>
+			<div>
+				<label>Precision restriction:</label>
+				<select data-bind="options: numberentry.precisionTypes, value: numberentry.precisionType, optionsText: 'niceName'"></select>
+			</div>
+			<div data-bind="fadeVisible: numberentry.precisionType().name!='none',
+			template: {
+				name:'property',
+				data: {label:numberentry.precisionWord,property:numberentry.precision}
+			}"></div>
+			<div data-bind="fadeVisible: numberentry.precisionType().name!='none',
+			template: {
+				name:'percentproperty',
+				data: {label:'Partial credit for wrong precision:',property:numberentry.precisionPartialCredit}
+			}"></div>
+			<div data-bind="fadeVisible: numberentry.precisionType().name!='none'">
+				Message if wrong precision:
+				<div data-bind="writemaths: numberentry.precisionMessage"></div>
+			</div>
 		</div>
 	</script>
 

@@ -714,9 +714,26 @@ $(document).ready(function() {
         this.numberentry = {
             minValue: ko.observable(''),
 			maxValue: ko.observable(''),
-            integerAnswer:ko.observable(false),
-            partialCredit:ko.observable(0)
+            integerAnswer: ko.observable(false),
+            integerPartialCredit: ko.observable(0),
+			precisionTypes: [
+				{name: 'none', niceName: 'None'},
+				{name: 'dp', niceName: 'Decimal places'},
+				{name: 'sigfig', niceName: 'Significant figures'}
+			],
+			precision: ko.observable(0),
+			precisionPartialCredit: ko.observable(0),
+			precisionMessage: ko.observable('You have not given your answer to the correct precision.')
         };
+		this.numberentry.precisionType = ko.observable(this.numberentry.precisionTypes[0]);
+		this.numberentry.precisionWord = ko.computed(function() {
+			switch(this.precisionType().name) {
+			case 'dp':
+				return 'Digits:';
+			case 'sigfig':
+				return 'Significant figures:';
+			}
+		},this.numberentry);
 
         this.patternmatch = {
             answer: ko.observable(''),
@@ -931,8 +948,14 @@ $(document).ready(function() {
                 if(this.numberentry.integerAnswer())
                 {
                     o.integerAnswer = this.numberentry.integerAnswer();
-                    o.partialCredit = this.numberentry.partialCredit();
+                    o.integerPartialCredit= this.numberentry.integerPartialCredit();
                 }
+				if(this.numberentry.precisionType().name!='none') {
+					o.precisionType = this.numberentry.precisionType().name;
+					o.precision = this.numberentry.precision();
+					o.precisionPartialCredit = this.numberentry.precisionPartialCredit();
+					o.precisionMessage = this.numberentry.precisionMessage();
+				}
                 break;
             case 'patternmatch':
                 o.answer = this.patternmatch.answer();
@@ -1043,10 +1066,14 @@ $(document).ready(function() {
 
                 break;
             case 'numberentry':
-                tryLoad(data,['minValue','maxValue','integerAnswer','partialCredit'],this.numberentry);
+                tryLoad(data,['minValue','maxValue','integerAnswer','integerPartialCredit','precision','precisionPartialCredit','precisionMessage'],this.numberentry);
 				if('answer' in data) {
 					this.numberentry.minValue(data.answer);
 					this.numberentry.maxValue(data.answer);
+				}
+				for(var i=0;i<this.numberentry.precisionTypes.length;i++) {
+					if(this.numberentry.precisionTypes[i].name == data.precisionType)
+						this.numberentry.precisionType(this.numberentry.precisionTypes[i]);
 				}
 
                 break;

@@ -34,12 +34,7 @@
       <li>Install some extra packages for Python module compilation:
       <code>apt-get install gcc python-dev zlib1g-dev</code>
       <li>Install Pip: <code>apt-get install python-pip</code></li>
-      <li>Install GitPython: <code>pip install GitPython</code></li>
       <li>Install Django Taggit: <code>pip install django-taggit</code></li>
-      <li>Bug in GitPython.  Change <code>util.py</code> by adding <code>import
-        pwd</code> to the top, and edit <code>def get_user_id()</code>
-      replacing <code>username = os.getlogin()</code> with <code>username =
-        pwd.getpwuid(os.getuid()).pw_name</code></li>
     </ul>
 
     <h2>Configuration</h2>
@@ -57,31 +52,23 @@
           <li><code>mkdir /srv/numbas</code></li>
           <li><code>mkdir /srv/numbas/dist</code></li>
           <li><code>mkdir /srv/numbas/previews</code></li>
-          <li><code>mkdir /srv/numbas/questiondb</code></li>
           <li><code>mkdir /srv/numbas/static</code></li>
         </ul>
       </li>
       <li>Set the correct ownership and permissions (need file system ACLs
       enabled on <code>/srv</code>):
         <ul>
-          <li><code>chmod 2770 previews questiondb</code></li>
+          <li><code>chmod 2770 previews</code></li>
           <li><code>chmod 2750 dist static</code></li>
-          <li><code>chgrp www-data dist previews questiondb static</code></li>
-          <li><code>setfacl -R -m g:www-data:rwX previews questiondb</code></li>
-          <li><code>setfacl -dR -m g:www-data:rwX previews questiondb</code></li>
+          <li><code>chgrp www-data dist previews static</code></li>
+          <li><code>setfacl -R -m g:www-data:rwX previews</code></li>
+          <li><code>setfacl -dR -m g:www-data:rwX previews</code></li>
           <li><code>setfacl -R -m g:www-data:rX dist static</code></li>
           <li><code>setfacl -dR -m g:www-data:rX dist static</code></li>
         </ul>
       </li>
       <li>Clone the Numbas repository: <code>git clone
         git://github.com/numbas/Numbas /srv/numbas/dist</code></li>
-      <li>Create the question/exam database:
-        <ul>
-          <li><code>cd /srv/numbas/questiondb</code></li>
-          <li><code>mkdir exams questions</code></li>
-          <li><code>git init</code></li>
-        </ul>
-      </li>
       <li>Create the editor directory and clone the editor under webroot:
         <ul>
           <li><code>git clone git://github.com/numbas/editor

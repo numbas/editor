@@ -60,12 +60,7 @@
         mysql-devel python-devel</code>.</li>
       <li>Use the Python package installer (pip) to install Django and
         associated libraries: <code>pip install django django-registration
-          django-taggit GitPython MySQL-python OrderedDict</code>.</li>
-      <li>Bug in GitPython.  Change
-      <code>&lt;dest_dir&gt;/lib/python2.6/site-packages/git/util.py</code> by
-      adding <code>import pwd</code> to the top, and edit <code>def
-        get_user_id()</code> replacing <code>username = os.getlogin()</code>
-      with <code>username = pwd.getpwuid(os.getuid()).pw_name</code></li>
+          django-taggit MySQL-python OrderedDict</code>.</li>
     </ul>
 
     <h3>MySQL</h3>
@@ -96,31 +91,23 @@
           <li><code>mkdir /srv/numbas</code></li>
           <li><code>mkdir /srv/numbas/dist</code></li>
           <li><code>mkdir /srv/numbas/previews</code></li>
-          <li><code>mkdir /srv/numbas/questiondb</code></li>
           <li><code>mkdir /srv/numbas/static</code></li>
         </ul>
       </li>
       <li>Set the correct ownership and permissions (need file system ACLs
       enabled on <code>/srv</code>):
         <ul>
-          <li><code>chmod 2770 previews questiondb</code></li>
+          <li><code>chmod 2770 previews</code></li>
           <li><code>chmod 2750 dist static</code></li>
-          <li><code>chgrp apache dist previews questiondb static</code></li>
-          <li><code>setfacl -R -m g:apache:rwX previews questiondb</code></li>
-          <li><code>setfacl -dR -m g:apache:rwX previews questiondb</code></li>
+          <li><code>chgrp apache dist previews static</code></li>
+          <li><code>setfacl -R -m g:apache:rwX previews</code></li>
+          <li><code>setfacl -dR -m g:apache:rwX previews</code></li>
           <li><code>setfacl -R -m g:apache:rX dist static</code></li>
           <li><code>setfacl -dR -m g:apache:rX dist static</code></li>
         </ul>
       </li>
       <li>Clone the Numbas repository: <code>git clone
         git://github.com/numbas/Numbas /srv/numbas/dist</code></li>
-      <li>Create the question/exam database:
-        <ul>
-          <li><code>cd /srv/numbas/questiondb</code></li>
-          <li><code>mkdir exams questions</code></li>
-          <li><code>git init</code></li>
-        </ul>
-      </li>
       <li>Create the editor directory and clone the editor under webroot:
         <ul>
           <li><code>git clone git://github.com/numbas/editor
@@ -215,16 +202,15 @@
       accessing certain files in non-standard locations.  The web server needs
       read access to the files in <code>/srv/numbas/dist</code> and
       <code>/srv/numbas/static</code>, and read/write access to the files in
-      <code>/srv/numbas/previews</code> and
-      <code>/srv/numbas/questiondb</code>.  It also needs read access to the
+      <code>/srv/numbas/previews</code>.  It also needs read access to the
       files in the Python 3 library.  The following commands will alter the
       SELinux security policy to grant the web server these permissions.
     </p>
     <ul>
       <li><code>chcon -R --type=httpd_sys_content_t
         /srv/numbas/dist /srv/numbas/static</code></li>
-      <li><code>chcon -R --type=httpd_sys_rw_content_t /srv/numbas/previews
-        /srv/numbas/questiondb</code></li>
+      <li><code>chcon -R --type=httpd_sys_rw_content_t
+          /srv/numbas/previews</code></li>
       <li><code>chcon -R --reference=/usr/lib/python2.6
         /opt/python3/lib</code></li>
     </ul>

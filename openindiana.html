@@ -115,20 +115,13 @@
       <li>
         Use the Python package installer (pip) to install Django and associated
         libraries: <code>pip install django django-registration django-taggit
-          GitPython MySQL-python OrderedDict</code> (make sure the directory
+          MySQL-python OrderedDict</code> (make sure the directory
         including the MySQL binaries is in the PATH, otherwise the MySQL-python
         install will fail).
       </li>
       <li>
         Update the library path: <code>crle -u -l
         /usr/mysql/5.1/lib/mysql</code>
-      </li>
-      <li>
-        Bug in GitPython.  Change
-        <code>&lt;dest_dir&gt;/lib/python2.6/site-packages/git/util.py</code>
-        by adding <code>import pwd</code> to the top, and edit <code>def
-          get_user_id()</code> replacing <code>username = os.getlogin()</code>
-        with <code>username = pwd.getpwuid(os.getuid()).pw_name</code>
       </li>
     </ul>
 
@@ -160,7 +153,6 @@
           <li><code>mkdir /srv/numbas</code></li>
           <li><code>mkdir /srv/numbas/dist</code></li>
           <li><code>mkdir /srv/numbas/previews</code></li>
-          <li><code>mkdir /srv/numbas/questiondb</code></li>
           <li><code>mkdir /srv/numbas/static</code></li>
         </ul>
       </li>
@@ -170,25 +162,17 @@
         systems, and that the ZFS properties <code>aclmode=passthrough</code>
         and <code>aclinherit=passthrough-x</code> are set on <code>/srv</code>.
         <ul>
-          <li><code>chmod 770 previews questiondb</code></li>
+          <li><code>chmod 770 previews</code></li>
           <li><code>chmod 750 dist static</code></li>
-          <li><code>chmod g+s dist previews questiondb static</code></li>
-          <li><code>chgrp webservd dist previews questiondb static</code></li>
-          <li><code>chmod A=owner@:full_set:fd:allow,group@:rwxpaRcs:fd:allow,everyone@:aRcs:fd:allow previews questiondb</code></li>
+          <li><code>chmod g+s dist previewsstatic</code></li>
+          <li><code>chgrp webservd dist previewsstatic</code></li>
+          <li><code>chmod A=owner@:full_set:fd:allow,group@:rwxpaRcs:fd:allow,everyone@:aRcs:fd:allow previews</code></li>
           <li><code>chmod A=owner@:full_set:fd:allow,group@:rxaRcs:fd:allow,everyone@:aRcs:fd:allow dist static</code></li>
         </ul>
       </li>
       <li>
         Clone the Numbas repository: <code>git clone
         git://github.com/numbas/Numbas /srv/numbas/dist</code>
-      </li>
-      <li>
-        Create the question/exam database:
-        <ul>
-          <li><code>cd /srv/numbas/questiondb</code></li>
-          <li><code>mkdir exams questions</code></li>
-          <li><code>git init</code></li>
-        </ul>
       </li>
       <li>
         Create the editor directory and clone the editor under webroot:

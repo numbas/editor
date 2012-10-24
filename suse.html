@@ -153,20 +153,46 @@
     </p>
     
     <h3>Extra required packages</h3>
-	<ul>
-		<li>Python LDAP: <code>yast -i python-ldap</code></li>
-		<li>Django LDAP: <code>pip install django-auth-ldap</code></li>
-    <li>GnuTLS (for secure LDAP lookups only): probably already installed, but
-    if not <code>yast -i libgnutls28</code></li>
-	</ul>
-	
-	<h3>Extra configuration</h3>
+	  <ul>
+	  	<li>Python LDAP: <code>yast -i python-ldap</code></li>
+	  	<li>Django LDAP: <code>pip install django-auth-ldap</code></li>
+      <li>GnuTLS (for secure LDAP lookups only): probably already installed, but
+      if not <code>yast -i libgnutls28</code></li>
+	  </ul>
+	  
+	  <h3>Extra configuration</h3>
     <ul>
     	<li>Copy <code>ldap_auth.py.dist</code> to <code>ldap_auth.py</code>
       and edit, following the comments in that file.</li>
 		  <li>In <code>settings.py</code> uncomment the LDAP auth line in
 			<code>AUTHENTICATION_BACKENDS</code> and the <code>ldap_auth</code>
 			import line.</li>
+    </ul>
+
+    <h2>Shibboleth authentication</h2>
+    <p>
+      The editor also supports Shibboleth authentication, using the Django
+      Remote User backend and the <a
+        href="https://github.com/Brown-University-Library/django-shibboleth-remoteuser">django-shibboleth-remoteuser</a>
+      middleware.
+    </p>
+
+    <h3>Extra configuration</h3>
+    <p>
+      Apache setup for a Shibboleth service provider (SP) is beyond the scope
+      of this installation guide, and depends on the setup of the local
+      Identity Provider (IdP).
+    </p>
+
+    <p>
+      Once the SP is set up, do the following.
+    </p>
+    <ul>
+      <li>Copy <code>shib_auth.py.dist</code> to <code>shib_auth.py</code>
+        and edit, following the comments in that file.</li>
+      <li>In <code>settings.py</code> uncomment the relevant line in
+        <code>MIDDLEWARE_CLASSES</code> and the <code>shib_auth</code> import
+        line.</li>
     </ul>
     
     <p>

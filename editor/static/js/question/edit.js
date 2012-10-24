@@ -657,7 +657,7 @@ $(document).ready(function() {
 
         this.type = ko.observable(this.availableTypes()[0]);
 
-        this.marks = ko.observable(0);
+        this.marks = ko.observable(1);
 
         this.steps = ko.observableArray([]);
         this.stepsPenalty = ko.observable(0);

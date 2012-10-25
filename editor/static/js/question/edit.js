@@ -973,7 +973,7 @@ $(document).ready(function() {
                 o.maxAnswers = this.multiplechoice.maxAnswers();
                 o.shuffleChoices = this.multiplechoice.shuffleChoices();
                 o.shuffleAnswers = this.multiplechoice.shuffleAnswers();
-                o.displayType = this.multiplechoice.displayType().name;
+                //o.displayType = this.multiplechoice.displayType().name;
 
                 var matrix = [];
                 var choices = this.multiplechoice.choices();
@@ -994,7 +994,7 @@ $(document).ready(function() {
                 o.minMarks = this.multiplechoice.minMarks();
                 o.maxMarks = this.multiplechoice.maxMarks();
                 o.shuffleChoices = this.multiplechoice.shuffleChoices();
-                o.displayType = this.multiplechoice.displayType().name;
+                o.displayType = this.type().name=='1_n_2' ? 'radiogroup' : 'checkbox';
                 o.displayColumns = this.multiplechoice.displayColumns();
                 o.minAnswers = this.multiplechoice.minAnswers();
                 o.maxAnswers = this.multiplechoice.maxAnswers();

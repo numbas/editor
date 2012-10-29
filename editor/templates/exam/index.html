@@ -43,10 +43,12 @@
 					<table id="exam-list" data-bind="visible: all().length>0">
 							<col span="1" class="name"/>
 							<col span="1" class="author"/>
+							<col span="1" class="last_modified"/>
 							<col span="1" class="admin"/>
 						<thead>
 							<th>Name</th>
-							<th>Author</th>
+                            <th>Author</th>
+                            <th>Last Modified</th>
 						</thead>
                         <tbody class="results editlist big" data-bind="foreach: {
                             data: pages()[page()-1],
@@ -57,6 +59,7 @@
 									<div class="description" data-bind="visible: metadata.description.length>0, html: $(metadata.description).text(), mathjax: true"></div>
 								</td>
                                 <td><span data-bind="text: author"></span></td>
+								<td><span data-bind="calendarTime: last_modified"></span></td>
                                 <td class="admin">
                                     <a class="preview" data-bind="attr: {href: url+'preview/'}" target="_blank" title="Test run"></a>
                                     <a class="copy" data-bind="attr: {href: url+'copy/'}" title="Make a copy"></a>

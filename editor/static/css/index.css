@@ -58,10 +58,6 @@
 	background: #eee;
 }
 
-.results th {
-    cursor: pointer;
-}
-
 .results col.name {
 	width: 300px;
 }

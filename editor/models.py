@@ -103,8 +103,8 @@ class Question(models.Model,NumbasObject,ControlledObject):
     filename = models.CharField(max_length=200, editable=False,default='')
     content = models.TextField(blank=True,validators=[validate_content])
     metadata = JSONField(blank=True)
-    created=models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
-    last_modified=models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
+    created = models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
+    last_modified = models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
     tags = TaggableManager()
 
     class Meta:
@@ -151,6 +151,8 @@ class Question(models.Model,NumbasObject,ControlledObject):
             'id': self.id, 
             'name': self.name, 
             'metadata': self.metadata,
+            'created': str(self.created), 
+            'last_modified': str(self.last_modified), 
             'author': self.author.get_full_name(), 
             'url': reverse('question_edit', args=(self.pk,self.slug,)),
             'deleteURL': reverse('question_delete', args=(self.pk,self.slug)),
@@ -231,6 +233,8 @@ class Exam(models.Model,NumbasObject,ControlledObject):
             'id': self.id, 
             'name': self.name, 
             'metadata': self.metadata,
+            'created': str(self.created), 
+            'last_modified': str(self.last_modified), 
             'author': self.author.get_full_name(), 
             'url': reverse('exam_edit', args=(self.pk,self.slug,)),
             'deleteURL': reverse('exam_delete', args=(self.pk,self.slug)),

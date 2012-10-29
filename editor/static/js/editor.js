@@ -901,4 +901,32 @@ $(document).ready(function() {
 		}
 	};
 
+    ko.bindingHandlers.fromNow = {
+        init: function(element,valueAccessor) {
+            var value = valueAccessor();
+            function update() {
+                $(element).text(moment(ko.utils.unwrapObservable(value)).fromNow());
+            }
+            update();
+            ko.utils.domData.set(element,'fromNow',setInterval(update,30000));
+        },
+        update: function(element,valueAccessor) {
+            clearInterval(ko.utils.domData.get(element,'fromNow'));
+            ko.bindingHandlers.fromNow.init(element,valueAccessor);
+        }
+    }
+    ko.bindingHandlers.calendarTime = {
+        init: function(element,valueAccessor) {
+            var value = valueAccessor();
+            function update() {
+                $(element).text(moment(ko.utils.unwrapObservable(value)).calendar());
+            }
+            update();
+            ko.utils.domData.set(element,'calendarTime',setInterval(update,30000));
+        },
+        update: function(element,valueAccessor) {
+            clearInterval(ko.utils.domData.get(element,'calendarTime'));
+            ko.bindingHandlers.calendarTime.init(element,valueAccessor);
+        }
+    }
 });

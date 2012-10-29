@@ -113,12 +113,15 @@ $(document).ready(function() {
 			throw(new Error('Search result doesn\'t have an ID: '+json.dumps(data)));
 		this.id = data.id;
 		this.name = data.name || 'Untitled Exam';
-		this.metadata = {
+		
+        this.metadata = {
 			description: '',
 			notes: ''
 		};
 		if(typeof data.metadata == 'object')
 			this.metadata = $.extend(this.metadata,data.metadata);
+
+        this.last_modified = new Date(data.last_modified);
 		this.author = data.author;
 		this.url = data.url || '';
 		this.deleteURL = data.deleteURL || '';

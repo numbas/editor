@@ -17,7 +17,7 @@
 
 	<script type="text/html" id="percentproperty">
 		<label data-bind="html: label"></label>
-		<span class="percentproperty value" data-bind="text: property()+'%'"></span>
+		<span class="percentproperty value" data-bind="text: ko.utils.unwrapObservable(property)+'%'"></span>
 	</script>
 
 	<script type="text/html" id="jmeproperty">

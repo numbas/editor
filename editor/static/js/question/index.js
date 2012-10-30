@@ -58,7 +58,7 @@ $(document).ready(function() {
 		if(typeof data.metadata == 'object')
 			this.metadata = $.extend(this.metadata,data.metadata);
 
-        this.last_modified = moment(data.last_modified);
+        this.last_modified = moment(data.last_modified,'YYYY-MM-DD HH:mm:ss.SSS');
 		this.author = data.author;
 		this.url = data.url || '';
 		this.deleteURL = data.deleteURL || '';

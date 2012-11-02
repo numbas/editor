@@ -251,7 +251,7 @@ $(document).ready(function() {
         return ko.computed({
             read: obs,
             write: function(v) {
-                obs(HTMLtoXML(v));
+                obs(HTMLtoXML(v+''));
             }
         });
 	};

@@ -120,13 +120,17 @@
 .writemathsContainer textarea {
     width: 100%;
 	height: 14em;
+}
+
+.writemathsContainer textarea.wmTextArea {
 	display: none;
 }
 
-.writemathsContainer .plaintext {
+.writemathsContainer .CodeMirror {
 	display: inherit;
+	width: 100%;
 }
-.writemathsContainer.on .plaintext {
+.writemathsContainer.on .CodeMirror {
 	display: none;
 }
 

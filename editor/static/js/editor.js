@@ -251,7 +251,11 @@ $(document).ready(function() {
         return ko.computed({
             read: obs,
             write: function(v) {
-                obs(HTMLtoXML(v+''));
+				try {
+	                obs(HTMLtoXML(v+''));
+				}
+				catch(e) {
+				}
             }
         });
 	};
@@ -627,17 +631,21 @@ $(document).ready(function() {
 			$(element).append(toggle);
 			toggle.click(function() {
 				var ed = $(this).siblings('textarea').tinymce();
+				$(element).toggleClass('on',ed.isHidden());
 				if(ed.isHidden()) {
 					ed.show()
 					ed.setContent(ko.utils.unwrapObservable(valueAccessor));
 				}
-				else
+				else {
 					ed.hide();
-				$(element).toggleClass('on',!ed.isHidden());
+					var mc = ko.utils.domData.get(plaintext[0],'codemirror');
+					mc.setValue(ko.utils.unwrapObservable(valueAccessor));
+				}
 			});
 
             var t = $('<textarea class="wmTextArea" style="width:100%"/>');
 			var plaintext = $('<textarea class="plaintext"/>');
+
 
             $(element)
                 .addClass('writemathsContainer on')
@@ -659,9 +667,23 @@ $(document).ready(function() {
 				.val(value);
             ;
 
-			plaintext.on('keyup paste',function() {
-				valueAccessor($(this).val());
-			})
+			function onChange(editor,change) {
+				if(typeof valueAccessor=='function') {
+					valueAccessor(editor.getValue());
+				}
+			}
+
+			var mc = CodeMirror.fromTextArea(plaintext[0],{
+				lineNumbers: true,
+				matchBrackets: true,
+                mode: 'htmlmixed',
+				onChange: onChange
+			});
+			ko.utils.domData.set(plaintext[0],'codemirror',mc);
+			$(element).parents('.folder').on('folder-open',function() {
+				mc.refresh();
+			});
+
 		},
 		update: function(element, valueAccessor) {
 			var tinymce = $(element).find('iframe').contents().find('body');
@@ -673,8 +695,11 @@ $(document).ready(function() {
 				if(ed)
 					ed.setContent(value);
 			}
-			if(plaintext.length && !plaintext.is(':focus')) {
-				plaintext.val(value);
+			if(plaintext.length && tinymce.is(':focus')) {
+				var mc = ko.utils.domData.get(plaintext[0],'codemirror');
+				if(value!=mc.getValue()) {
+					mc.setValue(value);
+				}
             }		
 		}
 	};

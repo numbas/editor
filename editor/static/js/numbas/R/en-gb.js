@@ -14,6 +14,7 @@ Copyright 2011 Newcastle University
    limitations under the License.
 */
 R.registerLocale('en-GB',{
+	'control.confirm leave': "You haven't finished the exam.",
 	'control.confirm end': "Are you sure you want to end the exam? After you end the exam, you will not be able to change any of your answers.",
 	'control.confirm regen': "Would you like to re-randomise this question? If you click OK, all your answers and marks for the current question will be lost.",
 	'control.confirm reveal': "Would you like to reveal the answer to this question? Any marks you have received so far will be removed and you will not be able to answer this question later.",
@@ -42,6 +43,7 @@ R.registerLocale('en-GB',{
 	'jme.shunt.no right square bracket': "No matching right square bracket to end list",
 	'jme.shunt.missing operator': "Expression can't be evaluated -- missing an operator.",
 
+	'jme.typecheck.function maybe implicit multiplication': "Operation %s is not defined. Did you mean <br/><code>%s*%s(...)</code>?",
 	'jme.typecheck.function not defined': "Operation '%s' is not defined. Did you mean <br/><code>%s*(...)</code>?",
 	'jme.typecheck.op not defined': "Operation '%s' is not defined.",
 	'jme.typecheck.no right type definition': "No definition of '%s' of correct type found.",
@@ -50,6 +52,7 @@ R.registerLocale('en-GB',{
 
 	'jme.func.switch.no default case': "No default case for Switch statement",
 	'jme.func.listval.invalid index': "Invalid list index %i on list of size %i",
+	'jme.func.listval.not a list': "Object is not subscriptable",
 	'jme.func.matrix.invalid row type': "Can't construct a matrix from rows of type %s",
 	'jme.func.except.continuous range': "Can't use the 'except' operator on continuous ranges.",
 
@@ -59,7 +62,8 @@ R.registerLocale('en-GB',{
 
 	'jme.user javascript error': "Error in user-defined javascript function <code>%s</code><br/>%s",
 
-	'jme.variables.variable not defined': "Variable %s not defined.",
+	'jme.variables.variable not defined': "Variable %s is not defined.",
+	'jme.variables.empty definition': "Definition of variable %s is empty.",
 	'jme.variables.circular reference': "Circular variable reference in question %s %s",
 
 	'jme.display.unknown token type': "Can't texify token type %s",
@@ -126,7 +130,11 @@ R.registerLocale('en-GB',{
 	'part.mcq.wrong number of choices': "You selected the wrong number of choices.",
 	'part.mcq.no choices selected': "No choices selected.",
 	'part.mcq.matrix not a list': "Marking matrix for a Multiple Response part, defined by JME expression, is not a list but it should be.",
+	'part.mcq.correct choice': "You chose the correct answer.",
+
+	'part.gapfill.feedback header': '<strong>Gap %i</strong>',
 	
+	'question.header': "Question %i",
 	'question.substituting': "Error substituting content: <br/>%s<br/>%s",
 	'question.no such part': "Can't find part %s",
 	'question.can not submit': "Can not submit answer - check for errors.",

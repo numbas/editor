@@ -49,9 +49,7 @@ $(document).ready(function() {
         this.reverse = ko.observable(true);
         this.browse = ko.observable(true);
 
-        this.onadvance = ko.observable(null);
-        this.onreverse = ko.observable(null);
-        this.onmove = ko.observable(null);
+        this.onleave = ko.observable(null);
 
         this.timeout = ko.observable(null);
         this.timedwarning = ko.observable(null);
@@ -83,27 +81,9 @@ $(document).ready(function() {
 			e.search.results.all(e.search.results.raw());
 		});
 
-        this.onadvance = new Event(
-            'onadvance',
-            'On advance',
-            [
-                {name:'none', niceName:'None'},
-                {name:'warnifunattempted', niceName:'Warn if unattempted'},
-                {name:'preventifunattempted',niceName:'Prevent if unattempted'}
-            ]
-        );
-        this.onreverse = new Event(
-            'onreverse',
-            'On reverse',
-            [
-                {name:'none', niceName:'None'},
-                {name:'warnifunattempted', niceName:'Warn if unattempted'},
-                {name:'preventifunattempted',niceName:'Prevent if unattempted'}
-            ]
-        );
-        this.onmove = new Event(
-            'onmove',
-            'On move',
+        this.onleave = new Event(
+            'onleave',
+            'On leaving a question',
             [
                 {name:'none', niceName:'None'},
                 {name:'warnifunattempted', niceName:'Warn if unattempted'},
@@ -245,9 +225,7 @@ $(document).ready(function() {
                     reverse: this.reverse(),
                     browse: this.browse(),
                     showfrontpage: this.showfrontpage(),
-                    onadvance: this.onadvance.toJSON(),
-                    onreverse: this.onreverse.toJSON(),
-                    onmove: this.onmove.toJSON()
+                    onleave: this.onleave.toJSON()
                 },
                 timing: {
                     timeout: this.timeout.toJSON(),
@@ -270,9 +248,7 @@ $(document).ready(function() {
             if('navigation' in data)
             {
 				tryLoad(data.navigation,['allowregen','reverse','browse','showfrontpage'],this);
-                this.onadvance.load(data.navigation.onadvance);
-                this.onreverse.load(data.navigation.onreverse);
-                this.onmove.load(data.navigation.onmove);
+                this.onleave.load(data.navigation.onleave);
             }
 
             if('timing' in data)

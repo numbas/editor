@@ -212,6 +212,8 @@ ko.bindingHandlers.sortable = {
 
 
 $(document).ready(function() {
+
+
 	$.noty.defaultOptions.theme = 'noty_theme_twitter';
 
 	slugify = function(s) {
@@ -244,6 +246,11 @@ $(document).ready(function() {
 			set(data[attr]);
 		else if(attr.toLowerCase() in data)
 			set(data[attr.toLowerCase()]);
+	}
+
+	Editor.Tab = function(id,title) {
+		this.id = ko.observable(id);
+		this.title = ko.observable(title);
 	}
 
 	Editor.contentObservable = function(val) {

@@ -1,4 +1,5 @@
-﻿#editable_message {
+﻿/*
+#editable_message {
     font-weight: bold;
 }
 
@@ -28,12 +29,13 @@
 .controlbox#admin > a:visited {
     color: #00e;
 }
+*/
 
-#download a {
+.controlbox #download a {
 	font-size: 18px;
 }
 
-#download:before {
+.controlbox #download:before {
 	content: url(../images/download_12x16.png);
 }
 
@@ -49,27 +51,32 @@
     content: url(../images/plus_alt_16x16.png);
 }
 
+/*
 .controlbox:first-child {
     margin-top: 0;
 }
+*/
 
+/*
 #editor {
 	border:2px solid #ccc;
 	padding:1em;
 	background: #f4f4ee;
 }
+*/
 
 #preview-error {
 	max-height: 15em;
 	overflow-y:scroll;
 }
 
+/*
 .textblock {
     border: #ccc 1px solid;
     padding: 0.5em;
     background-color: #fff;
 }
-
+*/
 
 .properties {
 	display:inline-block;
@@ -324,7 +331,7 @@ button.delete-grey:hover {
 
 .CodeMirror {
 	max-width: 50em;
-	background: white;
+	background: #fdfdfd;
 }
 .CodeMirror-scroll {
 	height: auto;

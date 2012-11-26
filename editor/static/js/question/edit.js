@@ -41,6 +41,29 @@ $(document).ready(function() {
     {
 		var q = this;
 
+		this.mainTabs = ko.observableArray([
+			new Editor.Tab('general','General'),
+			new Editor.Tab('statement','Statement'),
+			new Editor.Tab('randomisation','Randomisation'),
+			new Editor.Tab('parts','Parts'),
+			new Editor.Tab('advice','Advice')
+		]);
+		this.currentPage = ko.observable(this.mainTabs()[0]);
+		if(window.location.hash!='') {
+			var tabs = this.mainTabs();
+			var hash = window.location.hash.slice(1);
+			for(var i=0;i<tabs.length;i++) {
+				if(tabs[i].id()==hash) {
+					this.currentPage(tabs[i]);
+					break;
+				}
+			}
+		}
+		ko.computed(function() {
+			window.location.hash = this.currentPage().id();
+		},this);
+
+
 		var isadvanced = this.isadvanced = ko.observable(true);
 
         this.name = ko.observable('Untitled Question');
@@ -605,7 +628,7 @@ $(document).ready(function() {
 			tryLoad(data,['name','type','definition','language'],this);
 			if('parameters' in data) {
 				data.parameters.map(function(p) {
-					f.parameters.push(new FunctionParameter(this,p[0],p[1]));
+					f.parameters.push(new FunctionParameter(f,p[0],p[1]));
 				});
 			}
 		},
@@ -624,9 +647,6 @@ $(document).ready(function() {
 
 		addParameter: function() {
 			this.parameters.push(new FunctionParameter(this,'','number'));
-		},
-		removeParameter: function() {
-			 this.parameters.pop();
 		}
 	};
 

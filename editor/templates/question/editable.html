@@ -2,13 +2,140 @@
 {% load verbatim %}
 
 {% block controls %}
-	<div class="editlevels">
+	{{block.super}}
+	<div class="editlevels" class="span2">
 		<button data-bind="click: changeEditLevel, text: isadvanced() ? 'Switch to simplified editing mode' : 'Switch to full editing mode'">Switch to simplified editing mode</button>
 	</div>
-	{{block.super}}
 {% endblock controls %}
 
 {% block editable_message %}You can edit this question.{% endblock %}
+
+{% block editor %}
+	<div class="tab-content">
+		<section class="tab-pane" data-bind="css: {active: $root.currentPage().id()=='general'}">
+			<div class="row-fluid">
+				<input class="input-block-level" id="question-name" data-bind="value: name, valueUpdate: 'afterkeydown'" type="text"/>
+			</div>
+			<div class="row-fluid">
+				<div class="span6">
+					<label for="description"><h4>Description</h4></label>
+					<div id="description" data-bind="writemaths: description"></div>
+				</div>
+				<div class="span6">
+					<label for="authors-notes"><h4>Author's Notes</h4></label>
+					<div id="authors-notes" data-bind="writemaths: notes"></div>
+				</div>
+			</div>
+		</section>
+		<section class="tab-pane" data-bind="css: {active: $root.currentPage().id()=='statement'}">
+			<div id="statement" data-bind="writemaths: statement"></div>
+		</section>
+		<section class="tab-pane" data-bind="css: {active: $root.currentPage().id()=='randomisation'}">
+			<div class="row-fluid">
+				<div class="span6">
+					<h4>Variables</h4>
+
+					<!-- ko foreach: variables -->
+					<div class="row-fluid">
+						<div class="span1"><span class="handle"></span></div>
+						<div class="span8">
+							<form>
+								<input type="text" placeholder="Name" class="name" data-bind="value:name, valueUpdate: 'afterkeydown', attr: {disabled: !$parent.isadvanced()}, autosize: name"/> 
+								<label class="control-label">Definition</label>
+								<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: definition, codemirrorMode: 'jme'"></textarea>
+							</form>
+						</div>
+						<div class="span2">
+							<div class="value" data-bind="css: {error: error().length>0}, html: display, mathjax: display"></div>
+						</div>
+						<div class="span1">
+							<button class="delete" data-bind="click:remove"></button>
+						</div>
+					</div>
+					<!-- /ko -->
+
+					<div class="row-fluid">
+						<div class="span3">
+							<button data-bind="click:addVariable, text: variables().length ? 'Add another variable' : 'Add a variable'"></button>
+						</div>
+						<div class="span6">
+							Automatically recalculate variables: <input type="checkbox" data-bind="checked: autoCalculateVariables"/>
+						</div>
+						<div class="span3">
+							<button data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button>
+						</div>
+					</div>
+				</div>
+				<div class="span3">
+					<h4>Rulesets</h4>
+					<form class="form-horizontal">
+						<!-- ko foreach: rulesets -->
+						<div class="control-group ruleset">
+							<div class="control-label">
+								<input type="text" placeholder="Name" class="name" data-bind="value:name, valueUpdate: 'afterkeydown'"/>:
+							</div>
+							<div class="controls">
+								<div data-bind="listbox:sets, rulesetcomplete: allsets"></div>
+								<button class="delete" data-bind="click:remove"></button>
+							</div>
+						</div>
+						<!-- /ko -->
+						<button data-bind="click:addRuleset, text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></button>
+					</form>
+				</div>
+				<div class="span6">
+					<h4>Functions</h4>
+					<!-- ko foreach: functions -->
+					<div class="function">
+						<div class="row-fluid">
+							<div class="span7">
+								<div class="row-fluid">
+									<div class="span6">
+										<label>Name</label>
+										<input placeholder="Name" class="input-block-level" type="text" data-bind="value: name">
+									</div>
+									<div class="span5">
+										<label>Output type</label>
+										<select data-bind="options: types, value:type"></select>
+									</div>
+									<div class="span12">
+										<label>Definition:</label>
+										<textarea data-bind="codemirror: definition, codemirrorMode: language, valueUpdate: 'afterkeydown'"></textarea>
+									</div>
+								</div>
+							</div>
+							<div class="span4">
+								<label>Parameters</label>
+								<!-- ko foreach: parameters -->
+								<div class="row-fluid">
+									<form class="form-inline">
+										<input type="text" placholder="Name" data-bind="value: name"/>
+										<select data-bind="options: $parent.types, value: type"></select>
+										<button class="delete" data-bind="click: remove"></button>
+									</form>
+								</div>
+								<!-- /ko -->
+								<button class="addparameter" data-bind="click:addParameter, text: parameters().length ? 'Add another parameter' : 'Add a parameter'"></button>
+							</div>
+							<div class="span1">
+								<button class="delete" data-bind="click:remove" value="Delete"></button>
+							</div>
+						</div>
+						<div class="row-fluid">
+						</div>
+					</div>
+					<!-- /ko -->
+					<button data-bind="click:addFunction, text: functions().length ? 'Add another function' : 'Add a function'"></button>
+				</div>
+		</section>
+		<section class="tab-pane" data-bind="css: {active: $root.currentPage().id()=='parts'}">
+			parts
+		</section>
+		<section class="tab-pane" data-bind="css: {active: $root.currentPage().id()=='advice'}">
+			advice $x$
+		</section>
+	</div>
+{% endblock editor %}
 
 {% block content %}
     {{ block.super }}
@@ -30,17 +157,6 @@
 					<div data-bind="listbox:tags"></div>
 				</div>
 			</div>
-			<div data-bind="folder: 'Description'">
-				<div>
-					<div data-bind="writemaths: description"></div>
-				</div>
-			</div>
-
-			<div data-bind="folder: 'Author\'s Notes'">
-				<div>
-					<div data-bind="writemaths: notes"></div>
-				</div>
-			</div>
 
 			<div data-bind="folder: 'Extensions', fadeVisible: isadvanced() && extensions().length>0">
 				<div>
@@ -55,11 +171,6 @@
 		</div>
 
 
-		<div data-bind="folder: {label:'Statement', show: true}">
-			<div>
-				<div data-bind="writemaths: statement"></div>
-			</div>
-		</div>
 
 		<div data-bind="folder: 'Rulesets ('+rulesets().length+')', fadeVisible: isadvanced">
 			<div class="rulesets">
@@ -77,33 +188,6 @@
 					</li>
 				</ul>
 				<button data-bind="click:addRuleset, text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></button>
-			</div>
-		</div>
-
-		<div data-bind="folder: {label: 'Variables ('+variables().length+')', show: true}">
-			<div>
-				<table class="variables editlist">
-					<thead data-bind="visible: variables().length>0">
-						<th colspan="2"/>
-						<th>Computed value</th>
-						<th/>
-					</thead>
-					<tbody data-bind="sortable: {
-						template: 'variable',
-						data: variables,
-						beforeRemove: function(elem) { $(elem).find('td>div').slideUp(150,function() {$(this).parent().parent().remove()}) },
-						afterAdd: function(elem) { $(elem).find('td>div').hide().slideDown(150).end().find('.name').focus(); },
-						options: {handle: '.handle'}
-					}"></tbody>
-					<tr class="controls">
-						<td colspan="2">
-							<button data-bind="click:addVariable, text: variables().length ? 'Add another variable' : 'Add a variable'"></button>
-							Automatically recalculate variables: <input type="checkbox" data-bind="checked: autoCalculateVariables"/>
-						</td>
-						<td><button data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button></td>
-						<td/>
-					</tr>
-				</table>
 			</div>
 		</div>
 
@@ -636,23 +720,6 @@
 				</tbody>
 			</table>
 		</div>
-	</script>
-
-	<script type="text/html" id="variable">
-		<tr class="variable dict">
-			<td class="handlecol"><span class="handle"></span></td>
-			<td class="assign">
-				<div class="name property">
-					<label>Name:</label> <input type="text" class="name" data-bind="value:name, valueUpdate: 'afterkeydown', attr: {disabled: !$parent.isadvanced()}, autosize: name"/> 
-				</div>
-				<div class="definition property">
-					<label>Definition:</label>
-					<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: definition, codemirrorMode: 'jme'"/>
-				</div>
-			</td>
-			<td class="value"><div class="value" data-bind="css: {error: error().length>0}, html: display, mathjax: value"></div></td>
-			<td data-bind="visible: $parent.isadvanced"><div><button class="delete" data-bind="click:remove"></button></div></td>
-		</tr>
 	</script>
 
 	{% endverbatim %}

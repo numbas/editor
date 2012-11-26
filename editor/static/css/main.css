@@ -14,7 +14,7 @@ html {
 body { 
     font: normal 1em arial, sans-serif;
     background: #acdeff;
-    margin: 0;
+ /*   margin: 0;*/
 }
 
 .left {
@@ -50,6 +50,7 @@ button:hover, button:focus {
 	background: #f90;
 }
 
+/*
 #main {
 	width: 940px;
 	margin: 0 auto;
@@ -60,6 +61,7 @@ button:hover, button:focus {
     margin-right: auto;
 
 }
+*/
 
 #header {
 	padding-top: 1em;
@@ -74,6 +76,7 @@ button:hover, button:focus {
 	color: #999;
 }
 
+/*
 #logo a {
 	text-decoration: none;
 }
@@ -86,6 +89,7 @@ button:hover, button:focus {
 #session {
 	float: right;
 }
+*/
 
 #session a {
 	text-decoration: underline;
@@ -96,6 +100,11 @@ button:hover, button:focus {
 	margin-left: 2em;
 }
 
+ul#menu li {
+	font-size: 1.2em;
+}
+
+/*
 ul#menu {
 	margin: 0;
 	padding-left: 0;
@@ -132,6 +141,12 @@ ul#menu li a {
 #content {
     text-align: left;
     padding: 0;
+}
+
+*/
+
+#site_content {
+	background: white;
 }
 
 #footer {
@@ -180,4 +195,14 @@ span.search {
 
 input.search.loading {
 	background-image: url(../images/busy.gif);
+}
+
+.tab-content > .tab-pane, .pill-content > .pill-pane {
+	display: inherit;
+	position: absolute;
+	left: -100000px;
+	top: -1000000px;
+}
+.tab-content > .active, .pill-content > .active {
+	position: inherit;
 }

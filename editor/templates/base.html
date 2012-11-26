@@ -3,14 +3,18 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<meta http-equiv="X-UA-Compatible" content="IE=8"/>
 
 		<title>{% block title %}Numbas{% endblock %}</title>
 
 {% block javascripts %}
 	<!-- jQuery -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.13/jquery-ui.min.js" type="text/javascript"></script>
+
+	<!-- bootstrap -->
+	<script src="{{ STATIC_URL }}bootstrap/js/bootstrap.min.js"></script>
 
     <!-- knockout -->
 	<script type="text/javascript" src="{{ STATIC_URL }}js/knockout.js"></script>
@@ -41,25 +45,23 @@
 {% block head %}{% endblock %}
 
 {% block stylesheets %}
+	<link href="{{ STATIC_URL }}bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+	<link href="{{ STATIC_URL }}bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+
     <link href="{{ STATIC_URL }}css/jquery.noty.css" rel="stylesheet" type="text/css" />
     <link href="{{ STATIC_URL }}css/noty_theme_twitter.css" rel="stylesheet" type="text/css" />
-    <link href="{{ STATIC_URL }}css/jquery-ui.css" rel="stylesheet" type="text/css" />
-    <link href="{{ STATIC_URL }}css/normalize.css" type="text/css" rel="stylesheet" />
+	<link href="{{ STATIC_URL }}css/jquery-ui.css" rel="stylesheet" type="text/css" />
+
     <link href="{{ STATIC_URL }}css/main.css" type="text/css" rel="stylesheet" />
 {% endblock stylesheets %}
     </head>
-    <body>
+	<body>
+		<div id="container-fluid">
         {% block body %}
-            <div id="main">
-                <div id="header">
-                    <div id="session">
-                        {% if user.is_authenticated %}
-                            Hi, {{ user.first_name }}! <a tabindex="2" id="logout" href="{% url logout %}?next={{request.path|escape}}">Log out</a>
-                        {% else %}
-						<a tabindex="2" href="{% url login %}?next={{request.path|escape}}">Log in</a>{% if ALLOW_REGISTRATION %} or <a tabindex="2" href="{% url registration_register %}">create an account</a>{%endif%}.
-                        {% endif %}
-                    </div>
-                    <div id="logo" role="banner">
+			<div id="main">
+				<div id="header" class="row-fluid">
+                    <div id="logo" role="banner" class="span9">
+						<!-- logo -->
                         <div id="logo_text">
                             {% block logo_text %}
                             <a tabindex="1" alt="Numbas" href="/">
@@ -67,14 +69,20 @@
                             </a>
                             {% endblock logo_text %}
                         </div>
-                        <!-- end #logo_text -->
                     </div>
-                    <!-- end #logo -->
-                </div>
-                <!-- end #header -->
+                    <div id="session" class="span3">
+						<!-- login message or profile link -->
+                        {% if user.is_authenticated %}
+                            Hi, {{ user.first_name }}! <a tabindex="2" id="logout" href="{% url logout %}?next={{request.path|escape}}">Log out</a>
+                        {% else %}
+						<a tabindex="2" href="{% url login %}?next={{request.path|escape}}">Log in</a>{% if ALLOW_REGISTRATION %} or <a tabindex="2" href="{% url registration_register %}">create an account</a>{%endif%}.
+                        {% endif %}
+					</div>
+				</div>
+
                 <div id="site_content">
                     {% block menubar %}
-                        <ul id="menu" role="navigation">
+                        <ul id="menu" role="navigation" class="nav nav-tabs">
                             <li><a href="{% url editor_index %}">Home</a></li>
                             <li><a id="help" href="{{ HELP_URL }}" target="_blank">Help</a></li>
                             <li><a href="{% url exam_index %}">Exams</a></li>
@@ -89,15 +97,18 @@
                     <!-- end #content -->
                 </div>
                 <!-- end #site_content -->
-                <div id="footer">
-                    <p>
+                <div id="footer" class="row-fluid">
+					<div class="span3 offset3">
                         <a href="http://www.ncl.ac.uk/maths/">&copy; 2012 School of Mathematics &amp; Statistics, Newcastle University</a>
-                    </p>
-                    <p>Some icons from <a href="http://somerandomdude.com/work/iconic/">Iconic Icon Set</a> &copy; P.J. Onori, Licensed under Creative Commons Attribution-ShareAlike 3.0 Unported.</p>
+					</div>
+					<div class="span3">
+						Some icons from <a href="http://somerandomdude.com/work/iconic/">Iconic Icon Set</a> &copy; P.J. Onori, Licensed under Creative Commons Attribution-ShareAlike 3.0 Unported.
+					</div>
                 </div>
                 <!-- end #footer -->
             </div>
             <!-- end #main -->
-        {% endblock body %}
+		{% endblock body %}
+		</div>
     </body>
 </html>

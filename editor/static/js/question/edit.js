@@ -246,7 +246,7 @@ $(document).ready(function() {
         },
 
         addPart: function() {
-			var p = new Part(this);
+			var p = new Part(this,null,this.parts);
             this.parts.push(p);
 			return p;
         },
@@ -434,10 +434,6 @@ $(document).ready(function() {
 			}
 		},
 
-        removePart: function(p) {
-            this.parts.remove(p);
-        },
-
         toJSON: function() {
             var rulesets = {};
             this.rulesets().map(function(r){
@@ -512,8 +508,8 @@ $(document).ready(function() {
 
             if('parts' in data)
             {
-                data.parts.map(function(vd) {
-                    this.parts.push(new Part(this,null,null,vd));
+                data.parts.map(function(pd) {
+                    this.parts.push(new Part(this,null,this.parts,pd));
                 },this);
             }
         },
@@ -646,6 +642,7 @@ $(document).ready(function() {
 
         this.prompt = Editor.contentObservable('');
         this.parent = parent;
+		this.parentList = parentList;
 
 		this.availableTypes = ko.computed(function() {
 			var nonGapTypes = ['information','gapfill'];
@@ -777,16 +774,6 @@ $(document).ready(function() {
             gaps: ko.observableArray([])
         };
 
-        this.remove = function() {
-            if(confirm("Remove this part?"))
-            {
-                if(parentList)
-                    parentList.remove(this);
-                else
-                    q.removePart(this);
-            }
-        };
-
         if(data)
             this.load(data);
     }
@@ -867,6 +854,27 @@ $(document).ready(function() {
             }
             this.multiplechoice.answers.remove(answer);
         },
+
+		remove: function() {
+            if(confirm("Remove this part?"))
+            {
+				this.parentList.remove(this);
+            }
+        },
+
+		moveUp: function() {
+			var i = this.parentList.indexOf(this);
+			if(i>0) {
+				this.parentList.remove(this);
+				this.parentList.splice(i-1,0,this);
+			}
+		},
+
+		moveDown: function() {
+			var i = this.parentList.indexOf(this);
+			this.parentList.remove(this);
+			this.parentList.splice(i+1,0,this);
+		},
 
 		isGap: function() {
 			return this.parent && this.parent.type().name=='gapfill' && !this.parent.steps().contains(this);

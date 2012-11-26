@@ -13,6 +13,29 @@
 	top: 1em;
 }
 
+.part {
+    position: relative;
+}
+.part .reorder {
+    position: absolute;
+    left: -2em;
+    top: 3em;
+}
+
+.part .reorder button {
+	padding: 6px;
+	border: none;
+	background: none no-repeat;
+}
+
+.part .reorder .up {
+	background-image: url(../../images/arrow_up_12x12.png);
+}
+
+.part .reorder .down {
+	background-image: url(../../images/arrow_down_12x12.png);
+}
+
 .part > * > .fold {
 	background: #f5fff5;
 }

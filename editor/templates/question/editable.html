@@ -193,6 +193,11 @@
 
 	<script type="text/html" id="part">
 		<li class="part" data-bind="addClass: type().name">
+			<div class="reorder">
+				<button class="up" data-bind="click: moveUp"></button>
+				<br/>
+				<button class="down" data-bind="click: moveDown"></button>
+			</div>
 			<div data-bind="folder:{label: $index()+'. '+type().niceName, show:true}, foldlist: true">
 				<div class="properties">
 					<div data-bind="visible: $root.isadvanced">

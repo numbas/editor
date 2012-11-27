@@ -80,8 +80,8 @@
 
 		<div class="row-fluid">
 			<ul class="nav nav-tabs" data-bind="foreach: mainTabs">
-				<li data-bind="css: {active: $root.currentPage() == $data}">
-					<a href="#" data-bind="click: $root.currentPage, text: title"></a>
+				<li data-bind="css: {active: $root.currentTab() == $data}">
+					<a href="#" data-bind="click: $root.currentTab, text: title"></a>
 				</li>
 			</ul>
 		</div>

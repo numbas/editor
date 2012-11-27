@@ -44,23 +44,24 @@ $(document).ready(function() {
 		this.mainTabs = ko.observableArray([
 			new Editor.Tab('general','General'),
 			new Editor.Tab('statement','Statement'),
-			new Editor.Tab('randomisation','Randomisation'),
+			new Editor.Tab('variables','Variables'),
+			new Editor.Tab('functions','Functions'),
 			new Editor.Tab('parts','Parts'),
 			new Editor.Tab('advice','Advice')
 		]);
-		this.currentPage = ko.observable(this.mainTabs()[0]);
+		this.currentTab = ko.observable(this.mainTabs()[0]);
 		if(window.location.hash!='') {
 			var tabs = this.mainTabs();
 			var hash = window.location.hash.slice(1);
 			for(var i=0;i<tabs.length;i++) {
 				if(tabs[i].id()==hash) {
-					this.currentPage(tabs[i]);
+					this.currentTab(tabs[i]);
 					break;
 				}
 			}
 		}
 		ko.computed(function() {
-			window.location.hash = this.currentPage().id();
+			window.location.hash = this.currentTab().id();
 		},this);
 
 
@@ -658,7 +659,7 @@ $(document).ready(function() {
 		}
 	};
 
-    var Part = function(q,parent,parentList,data) {
+    function Part(q,parent,parentList,data) {
 
         this.prompt = Editor.contentObservable('');
         this.parent = parent;
@@ -673,6 +674,20 @@ $(document).ready(function() {
 		},this);
 
         this.type = ko.observable(this.availableTypes()[0]);
+
+		this.header = ko.computed(function() {
+			return this.parentList.indexOf(this)+'. '+this.type().niceName;
+		},this);
+
+		this.tabs = ko.computed(function() {
+			var tabs = [new Editor.Tab('prompt','Prompt')];
+			if(this.type().has_marks)
+				tabs.push(new Editor.Tab('marking','Marking'));
+			tabs = tabs.concat(this.type().tabs);
+			tabs.push(new Editor.Tab('steps','Steps'));
+			return tabs;
+		},this);
+		this.currentTab = ko.observable(this.tabs()[0]);
 
         this.marks = ko.observable(1);
 		this.realMarks = ko.computed(function() {
@@ -799,14 +814,62 @@ $(document).ready(function() {
     }
     Part.prototype = {
         types: [
-            {name: 'information', niceName: 'Information only'},
-            {name: 'gapfill', niceName: 'Gap-fill'},
-            {name:'jme', niceName: 'Mathematical expression', has_marks: true},
-            {name:'numberentry', niceName: 'Number entry', has_marks: true},
-            {name:'patternmatch', niceName: 'Match text pattern', has_marks: true},
-            {name:'1_n_2', niceName: 'Choose one from a list'},
-            {name:'m_n_2', niceName: 'Choose several from a list'},
-            {name:'m_n_x', niceName: 'Match choices with answers'}
+            {
+				name: 'information', 
+				niceName: 'Information only', 
+				tabs: []
+			},
+            {
+				name: 'gapfill', 
+				niceName: 'Gap-fill', 
+				tabs: [
+					new Editor.Tab('gaps','Gaps')
+				]
+			},
+            {
+				name:'jme', 
+				niceName: 'Mathematical expression', 
+				has_marks: true, 
+				tabs: [
+					new Editor.Tab('restrictions','Accuracy and string restrictions')
+				]
+			},
+            {
+				name:'numberentry', 
+				niceName: 'Number entry', 
+				has_marks: true,
+				tabs: []
+			},
+            {
+				name:'patternmatch', 
+				niceName: 'Match text pattern', 
+				has_marks: true,
+				tabs: []
+			},
+            {
+				name:'1_n_2', 
+				niceName: 'Choose one from a list',
+				tabs: [
+					new Editor.Tab('marking','Marking'),
+					new Editor.Tab('choices','Choices')
+				]
+			},
+            {
+				name:'m_n_2', 
+				niceName: 'Choose several from a list',
+				tabs: [
+					new Editor.Tab('marking','Marking'),
+					new Editor.Tab('choices','Choices')
+				]
+			},
+            {
+				name:'m_n_x', 
+				niceName: 'Match choices with answers',
+				tabs: [
+					new Editor.Tab('marking','Marking'),
+					new Editor.Tab('choices','Choices')
+				]
+			}
         ],
 
         addStep: function() {

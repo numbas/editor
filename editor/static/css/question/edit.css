@@ -91,6 +91,7 @@
 
 .variable button.delete {
     position: inherit;
+	float: right;
 }
 
 .variable > td.value div {

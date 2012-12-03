@@ -86,7 +86,6 @@
 					<thead data-bind="visible: variables().length>0">
 						<th colspan="2"/>
 						<th>Computed value</th>
-						<th/>
 					</thead>
 					<tbody data-bind="sortable: {
 						template: 'variable',
@@ -101,7 +100,6 @@
 							Automatically recalculate variables: <input type="checkbox" data-bind="checked: autoCalculateVariables"/>
 						</td>
 						<td><button data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button></td>
-						<td/>
 					</tr>
 				</table>
 			</div>
@@ -642,6 +640,7 @@
 		<tr class="variable dict">
 			<td class="handlecol"><span class="handle"></span></td>
 			<td class="assign">
+				<button class="delete" data-bind="click:remove"></button>
 				<div class="name property">
 					<label>Name:</label> <input type="text" class="name" data-bind="value:name, valueUpdate: 'afterkeydown', attr: {disabled: !$parent.isadvanced()}, autosize: name"/> 
 				</div>
@@ -651,7 +650,6 @@
 				</div>
 			</td>
 			<td class="value"><div class="value" data-bind="css: {error: error().length>0}, html: display, mathjax: value"></div></td>
-			<td data-bind="visible: $parent.isadvanced"><div><button class="delete" data-bind="click:remove"></button></div></td>
 		</tr>
 	</script>
 

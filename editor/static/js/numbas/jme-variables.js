@@ -110,7 +110,7 @@ jme.variables = {
 	computeVariable: function(name,todo,scope,path)
 	{
 		if(scope.variables[name]!==undefined)
-			return;
+			return scope.variables[name];
 
 		if(path===undefined)
 			path=[];

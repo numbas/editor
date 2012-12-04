@@ -128,6 +128,7 @@
 			link : ['link_desc', 'mceLink'],
 			unlink : ['unlink_desc', 'unlink'],
 			image : ['image_desc', 'mceImage'],
+			embed : ['embed_desc', 'mceEmbed'],
 			cleanup : ['cleanup_desc', 'mceCleanup'],
 			help : ['help_desc', 'mceHelp'],
 			code : ['code_desc', 'mceCodeEditor'],
@@ -162,7 +163,7 @@
 			// Setup default buttons
 			if (!s.theme_advanced_buttons1) {
 				s = extend({
-					theme_advanced_buttons1 : "bold,italic,underline,|,formatselect,|,justifyleft,justifycenter,justifyright,justifyfull,|,bullist,numlist,|,image,|,undo,redo,|,link,unlink",
+					theme_advanced_buttons1 : "bold,italic,underline,|,formatselect,|,justifyleft,justifycenter,justifyright,justifyfull,|,bullist,numlist,|,image,embed,|,undo,redo,|,link,unlink",
 				}, s);
 			}
 	
@@ -1427,6 +1428,27 @@
 				inline : true
 			}, {
 				theme_url : this.url
+			});
+		},
+
+		_mceEmbed : function(ui, val) {
+			var ed = this.editor;
+
+			var url = ed.selection.getContent();
+			if(!url.length)
+				url = prompt(ed.getLang('advanced.embed_prompt'));
+
+			if(!url.match(/^https?:\/\//)) {
+				alert(ed.getLang('advanced.embed_invalid_url'));
+				return;
+			}
+				
+			$('<a/>').oembed(url, {
+				embedMethod: 'fill',
+				afterEmbed: function(result) {
+					console.log($(this).html());
+					ed.selection.setContent($(this).html());
+				}
 			});
 		},
 

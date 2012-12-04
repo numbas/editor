@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Numbas editor</title>
+  </head>
+  <body>
+    <h1>Running a personal instance of the editor on a Mac</h1>
+    <h2>Installation</h2>
+    <ol>
+      <li>Install Python 3 and Python 2.7 from <a href="http://python.org/download/">python.org/download</a>. Python 2 is needed to run the webserver, while Python 3 is needed to run the Numbas tools.</li>
+      <li>
+        Install pip for both Python 2 and Python3 (this is annoyingly fiddly).
+        <ol>
+          <li>Download and install <a href="http://pypi.python.org/pypi/setuptools">setuptools for Python 2</a>.</li>
+          <li>Run <code>easy_install pip</code></li>
+        </ol>
+      </li>
+      <li>
+      Either download the Numbas runtime tools <a href="https://github.com/numbas/Numbas/archive/master.zip">from github</a> and extract to a folder called <code>numbas_runtime</code>, or git clone the repository:<br/>
+        <code>git clone git://github.com/numbas/Numbas.git numbas_runtime</code>
+      </li>
+      <li>
+      Either download the Numbas editor <a href="https://github.com/numbas/editor/archive/master.zip">from github</a> and extract to a folder called <code>numbas_editor</code>, or git clone the repository:<br/>
+        <code>git clone git://github.com/numbas/editor.git numbas_editor</code>
+      </li>
+      <li>
+        Go into the editor directory, and install all the required Python2 modules:<br/>
+        <code>pip install -r requirements.pip</code>
+      </li>
+    </ol>
+
+    <h2>Configuration</h2>
+    <ol>
+      <li>Copy <code>settings.py.dist</code> to <code>settings.py</code></li>
+      <li>Change <code>STATIC_ROOT</code> to <code>'editor/static'</code></li>
+      <li>Change <code>NUMBAS_PATH</code> to <code>'../numbas_runtime'</code></li>
+      <li>Change <code>PREVIEW_PATH</code> to <code>'editor/static/previews'</code>, and create that directory.</li>
+      <li>Change <code>PREVIEW_URL</code> to <code>'/static/previews/'</code></li>
+      <li>Change <code>PYTHON_EXEC</code> to <code>'python3'</code></li>
+
+      <li>Copy <code>database.py.dist</code> to <code>database.py</code></li>
+      <li>Change <code>ENGINE</code> to <code>'django.db.backends.sqlite3'</code></li>
+      <li>Change <code>NAME</code> to <code>'database.sqlite'</code></li>
+
+      <li>Sync the database:
+        <ol>
+          <li><code>python manage.py syncdb</code></li>
+          <li>Create a superuser (answer <code>yes</code>)</li>
+          <li>Enter username, e-mail address, and password</li>
+        </ol>
+      </li>
+      <li>Copy <code>editor/templates/index.html.dist</code> to <code>editor/templates/index.html</code>.</li>
+      <li>
+        Start the server<br/>
+        <code>python manage.py runserver</code></li>
+      </li>
+      <li>Open <a href="http://localhost:8000">htttp://localhost:8000</li>
+    </ol>
+
+  </body>
+</html>

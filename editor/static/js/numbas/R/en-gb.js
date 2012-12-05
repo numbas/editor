@@ -15,6 +15,7 @@ Copyright 2011 Newcastle University
 */
 R.registerLocale('en-GB',{
 	'control.confirm leave': "You haven't finished the exam.",
+	'control.not all questions answered': "You have not completed every question in this exam.",
 	'control.confirm end': "Are you sure you want to end the exam? After you end the exam, you will not be able to change any of your answers.",
 	'control.confirm regen': "Would you like to re-randomise this question? If you click OK, all your answers and marks for the current question will be lost.",
 	'control.confirm reveal': "Would you like to reveal the answer to this question? Any marks you have received so far will be removed and you will not be able to answer this question later.",
@@ -60,11 +61,13 @@ R.registerLocale('en-GB',{
 	'jme.texsubvars.missing parameter': "Missing parameter in %s: %s",
 	'jme.texsubvars.no right brace': "No matching <code>}</code> in %s",
 
-	'jme.user javascript error': "Error in user-defined javascript function <code>%s</code><br/>%s",
+	'jme.user javascript.error': "Error in user-defined javascript function <code>%s</code><br/>%s",
+	'jme.user javascript.error': "User-defined javascript function <code>%s</code> didn't return anything",
 
 	'jme.variables.variable not defined': "Variable %s is not defined.",
 	'jme.variables.empty definition': "Definition of variable %s is empty.",
 	'jme.variables.circular reference': "Circular variable reference in question %s %s",
+	'jme.variables.error computing dependency': "Error computing referenced variable <code>%s</code>",
 
 	'jme.display.unknown token type': "Can't texify token type %s",
 	'jme.display.collectRuleset.no sets': 'No sets given to collectRuleset!',

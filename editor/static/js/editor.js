@@ -663,6 +663,8 @@ $(document).ready(function() {
             t
                 .tinymce({
                     theme: 'numbas',
+					plugins: 'media',
+					media_srict: false,
                     handle_event_callback: onkeyup,
 					init_instance_callback: function() { 
 						$(element).writemaths({cleanMaths: cleanJME, iFrame: true}); 

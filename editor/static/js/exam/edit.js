@@ -48,6 +48,7 @@ $(document).ready(function() {
         this.allowregen = ko.observable(true);
         this.reverse = ko.observable(true);
         this.browse = ko.observable(true);
+		this.preventleave = ko.observable(true);
 
         this.onleave = ko.observable(null);
 
@@ -225,7 +226,8 @@ $(document).ready(function() {
                     reverse: this.reverse(),
                     browse: this.browse(),
                     showfrontpage: this.showfrontpage(),
-                    onleave: this.onleave.toJSON()
+                    onleave: this.onleave.toJSON(),
+					preventleave: this.preventleave()
                 },
                 timing: {
                     timeout: this.timeout.toJSON(),
@@ -247,7 +249,7 @@ $(document).ready(function() {
 
             if('navigation' in data)
             {
-				tryLoad(data.navigation,['allowregen','reverse','browse','showfrontpage'],this);
+				tryLoad(data.navigation,['allowregen','reverse','browse','showfrontpage','preventleave'],this);
                 this.onleave.load(data.navigation.onleave);
             }
 

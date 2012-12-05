@@ -418,7 +418,12 @@ var texOps = jme.display.texOps = {
 	'arcsinh': funcTex('\\operatorname{arcsinh}'),
 	'arccosh': funcTex('\\operatorname{arccosh}'),
 	'arctanh': funcTex('\\operatorname{arctanh}'),
-	'ln': funcTex('\\ln'),
+	'ln': function(thing,texArgs,settings) {
+		if(thing.args[0].tok.type=='function' && thing.args[0].tok.name=='abs')
+			return '\\ln '+texArgs[0];
+		else
+			return '\\ln \\left( '+texArgs[0]+' \\right)';
+	},
 	'log': funcTex('\\log_{10}'),
 	'vector': (function(thing,texArgs,settings) {
 		return '\\left( '+texVector(thing,settings)+' \\right)';
@@ -690,7 +695,10 @@ var texify = Numbas.jme.display.texify = function(thing,settings)
 		else
 			return texNumber(tok.value);
 	case 'string':
-		return '\\textrm{'+tok.value+'}';
+		if(tok.latex)
+			return tok.value;
+		else
+			return '\\textrm{'+tok.value+'}';
 		break;
 	case 'boolean':
 		return tok.value ? 'true' : 'false';
@@ -923,7 +931,7 @@ var treeToJME = jme.display.treeToJME = function(tree,settings)
 	case 'name':
 		return tok.name;
 	case 'string':
-		var str = tok.value.replace(/\n/g,'\\n').replace(/"/g,'\\"').replace(/'/g,"\\'");
+		var str = tok.value.replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/"/g,'\\"').replace(/'/g,"\\'");
 		return '"'+str+'"';
 	case 'boolean':
 		return (tok.value ? 'true' : 'false');

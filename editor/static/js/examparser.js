@@ -166,21 +166,21 @@ ExamParser.prototype = {
 			if(this.working.slice(0,3)=='"""')	//triple-quoted string
 			{
 				this.consume(3);
-				var i = this.working.indexOf('"""');
-				if(i==-1)
+				var match = this.working.match(/^([\s\S]*?"*)"""/);
+				if(!match)
 					throw(new ParseError(this,'Expected """ to end string literal'));
-				var str = this.working.slice(0,i);
-				this.consume(i+3);
+				var str = match[1];
+				this.consume(match[0].length);
 				return cleanString(str);
 			}
 			else
 			{
 				this.consume(1);
-				var i = this.working.indexOf('"');
-				if(i==-1)
+				var match = this.working.match(/^([\s\S]*?"*)"/);
+				if(!match)
 					throw(new ParseError(this,'Expected " to end string literal'));
-				var str = this.working.slice(0,i);
-				this.consume(i+1);
+				var str = match[1];
+				this.consume(match[0].length);
 				return cleanString(str);
 			}
 
@@ -189,21 +189,21 @@ ExamParser.prototype = {
 			if(this.working.slice(0,3)=="'''")	//triple-quoted string
 			{
 				this.consume(3);
-				var i = this.working.indexOf("'''");
-				if(i==-1)
-					throw(new ParseError(this,"Expected '''to end string literal"));
-				var str = this.working.slice(0,i);
-				this.consume(i+3);
+				var match = this.working.match(/^([\s\S]*?'*)'''/);
+				if(!match)
+					throw(new ParseError(this,'Expected \'\'\' to end string literal'));
+				var str = match[1];
+				this.consume(match[0].length);
 				return cleanString(str);
 			}
 			else
 			{
 				this.consume(1);
-				var i = this.working.indexOf("'");
-				if(i==-1)
-					throw(new ParseError(this,"Expected ' to end string literal"));
-				var str = this.working.slice(0,i);
-				this.consume(i+1);
+				var match = this.working.match(/^([\s\S]*?'*)'/);
+				if(!match)
+					throw(new ParseError(this,'Expected \' to end string literal'));
+				var str = match[1];
+				this.consume(match[0].length);
 				return cleanString(str);
 			}
 

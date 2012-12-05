@@ -46,6 +46,9 @@
 .controlbox #delete:before {
     content: url(../images/x_alt_16x16.png);
 }
+.controlbox #delete form {
+	display:none;
+}
 
 .controlbox #copy:before {
     content: url(../images/plus_alt_16x16.png);

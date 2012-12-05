@@ -133,17 +133,17 @@
 		<section class="tab-pane" data-bind="css: {active: $root.currentTab().id()=='parts'}">
 			<div class="row-fluid">
 				<div class="span2">
-					<ol class="nav nav-list" data-bind="foreach: parts">
+					<ol class="parts nav nav-list" data-bind="foreach: parts">
 						<li><button class="delete" data-bind="click: remove"></button><a data-bind="text: header"></a></li>
 					</ol>
 					<button data-bind="visible: $root.isadvanced, click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
 				</div>
 				<div class="span10" data-bind="foreach: parts">
 					<div class="part">
-						<h5>
+						<h4 class="header">
 							<span data-bind="text: $index()+'. '"></span>
-							<select data-bind="options: availableTypes, value:type, optionsText: 'niceName'"></select>
-						</h5>
+							<select class="type" data-bind="options: availableTypes, value:type, optionsText: 'niceName'"></select>
+						</h4>
 						<div class="row-fluid">
 							<ul class="nav nav-tabs" data-bind="foreach: tabs">
 								<li data-bind="css: {active: $parent.currentTab() == $data}">
@@ -156,6 +156,25 @@
 								<section class="tab-pane" data-bind="css: {active: currentTab().id()=='prompt'}">
 									<div data-bind="writemaths: prompt"></div>
 								</section>
+								<!-- ko if: type().name=='jme' -->
+								<section class="tab-pane" data-bind="css: {active: currentTab().id()=='marking'}">
+									<div class="row-fluid">
+										<div class="span1">
+											<label>Marks</label>
+											<input type="text" data-bind="value:marks, valueUpdate:'input', autosize: {max: 500, min: 30, padding: 10, value: marks}"/>
+										</div>
+										<div class="span8">
+											<label>Correct answer</label>
+											<input type="text" data-bind="value: jme.answer, valueUpdate: 'input', autosze: {max: 500, min: 30, padding: 10, value: jme.answer}"/>
+											<span data-bind="JME: jme.answer" class="jme-answer"></span>
+										</div>
+										<div class="span3">
+											<label>Answer simplification rules</label>
+											<input type="text" data-bind="value: jme.answerSimplification, valueUpdate: 'input', autosze: {max: 500, min: 30, padding: 10, value: jme.answerSimplification}"/>
+										</div>
+									</div>
+								</section>
+								<!-- /ko -->
 							</div>
 						</div>
 					</div>

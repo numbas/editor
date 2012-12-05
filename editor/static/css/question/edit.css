@@ -3,8 +3,43 @@
 	height: 1.5em;
 }
 
+.parts .delete {
+	float:right;
+}
 
-/* OLD */
+.part:not(:last-child) {
+	padding-bottom: 2em;
+	margin-bottom: 2em;
+	border-bottom: 3px dashed #888;
+}
+
+.part .header {
+	background-color: #eee;
+	padding: 0 6px;
+	border-radius: 6px;
+	margin: 0 0 6px 0;
+}
+
+.part .header .type {
+	font-size: 1em;
+	width: auto;
+	height: auto;
+	border: none;
+	padding: 0;
+	margin: 4px 0;
+}
+
+.jme-answer {
+	display: inline-block;
+	padding: 5px;
+}
+
+.variable button.delete {
+	float: right;
+}
+
+
+/* OLD 
 #admin #delete form {
 	display: none;
 }
@@ -70,10 +105,6 @@
 
 .variable .handlecol {
 	width: 50px;
-}
-
-.variable button.delete {
-	float: right;
 }
 
 .ruleset .name {
@@ -151,3 +182,4 @@ input.marks {
 .choice {
 	margin-bottom: 0.5em;
 }
+*/

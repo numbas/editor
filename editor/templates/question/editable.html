@@ -32,23 +32,19 @@
 		</section>
 		<section class="tab-pane" data-bind="css: {active: $root.currentTab().id()=='variables'}">
 			<div class="row-fluid">
-				<h4>Variables</h4>
-
 				<!-- ko foreach: variables -->
-				<div class="row-fluid">
+				<div class="row-fluid variable">
 					<div class="span1"><span class="handle"></span></div>
 					<div class="span8">
 						<form>
+							<button class="delete" data-bind="click:remove"></button>
 							<input type="text" placeholder="Name" class="name" data-bind="value:name, valueUpdate: 'afterkeydown', attr: {disabled: !$parent.isadvanced()}, autosize: name"/> 
 							<label class="control-label">Definition</label>
 							<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: definition, codemirrorMode: 'jme'"></textarea>
 						</form>
 					</div>
-					<div class="span2">
+					<div class="span3">
 						<div class="value" data-bind="css: {error: error().length>0}, html: display, mathjax: display"></div>
-					</div>
-					<div class="span1">
-						<button class="delete" data-bind="click:remove"></button>
 					</div>
 				</div>
 				<!-- /ko -->

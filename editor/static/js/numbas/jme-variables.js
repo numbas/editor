@@ -21,14 +21,14 @@ var util = Numbas.util;
 jme.variables = {
 	
 	makeJMEFunction: function(fn,scope) {
-		fn.tree = jme.compile(fn.definition,scope);
+		fn.tree = jme.compile(fn.definition,scope,true);
 		return function(args,scope) {
 			var oscope = scope;
 			scope = new jme.Scope(scope);
 
 			for(var j=0;j<args.length;j++)
 			{
-				scope.variables[fn.paramNames[j]] = jme.evaluate(args[j],oscope);
+				scope.variables[fn.paramNames[j]] = args[j];
 			}
 			return jme.evaluate(this.tree,scope);
 		}
@@ -40,7 +40,7 @@ jme.variables = {
 		var util = Numbas.util;
 		var jfn = eval(preamble+fn.definition+'})');
 		return function(args,scope) {
-			args = args.map(function(a){return jme.unwrapValue(jme.evaluate(a,scope))});
+			args = args.map(function(a){return jme.unwrapValue(a)});
 			try {
 				var val = jfn.apply(this,args);
 				if(val===undefined) {

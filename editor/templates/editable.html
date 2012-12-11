@@ -1,42 +1,50 @@
 ﻿{% load verbatim %}
 {% verbatim %}
     <script type="text/html" id="property">
-		<label data-bind="html: label"/>
-		<input data-bind="
-			value: property, 
-			valueUpdate: 'afterkeydown', 
-			attr: {
-				type: $data.type || 'text', 
-				min: $data.min, 
-				max: $data.max
-			}, 
-			autosize: {max: 500, padding: 10, value: property}
-		"/>
+		<label class="control-label" data-bind="html: label"/>
+		<div class="controls">
+			<input data-bind="
+				value: property, 
+				valueUpdate: 'afterkeydown', 
+				attr: {
+					type: $data.type || 'text', 
+					min: $data.min, 
+					max: $data.max
+				}, 
+				autosize: {max: 500, min: 30, padding: 10, value: property}
+			"/>
+		</div>
 	</script>
 
 	<script type="text/html" id="percentproperty">
-		<label data-bind="html: label"/>
-		<span class="percentproperty value" data-bind="text: property()+'%'"></span>
-		<input 
-			data-bind="
-				value: property, 
-				valueUpdate: 'afterkeydown'
-			"
-			type="range"
-			step="5"
-			min="0"
-			max="100"
-		/>
+		<label class="control-label" data-bind="html: label"/>
+		<div class="controls">
+			<input 
+				data-bind="
+					value: property, 
+					valueUpdate: 'afterkeydown'
+				"
+				type="range"
+				step="5"
+				min="0"
+				max="100"
+				/>
+			<span class="percentproperty value" data-bind="text: property()+'%'"></span>
+		</div>
 	</script>
 
 	<script type="text/html" id="selectproperty">
-		<label data-bind="html: label"/>
-		<select data-bind="options: options, value: property"></select>
+		<label class="control-label" data-bind="html: label"/>
+		<div class="controls">
+			<select data-bind="options: options, value: property"></select>
+		</div>
 	</script>
 
 	<script type="text/html" id="booleanproperty">
-		<label data-bind="html: label"/>
-		<input data-bind="checked: property" type="checkbox"/>
+		<label class="control-label" data-bind="html: label"/>
+		<div class="controls">
+			<input data-bind="checked: property" type="checkbox"/>
+		</div>
 	</script>
 
 {% endverbatim %}

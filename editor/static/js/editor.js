@@ -671,7 +671,7 @@ $(document).ready(function() {
 					},
                     theme_advanced_resizing: true,
                     theme_advanced_resizing_max_width: '750',
-					height: 350
+					height: 200
                 })
 				.val(value);
             ;

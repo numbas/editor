@@ -51,20 +51,6 @@ $(document).ready(function() {
 			new Editor.Tab('advice','Advice')
 		]);
 		this.currentTab = ko.observable(this.mainTabs()[0]);
-		if(window.location.hash!='') {
-			var tabs = this.mainTabs();
-			var hash = window.location.hash.slice(1);
-			for(var i=0;i<tabs.length;i++) {
-				if(tabs[i].id()==hash) {
-					this.currentTab(tabs[i]);
-					break;
-				}
-			}
-		}
-		ko.computed(function() {
-			window.location.hash = this.currentTab().id();
-		},this);
-
 
 		var isadvanced = this.isadvanced = ko.observable(true);
 
@@ -131,6 +117,10 @@ $(document).ready(function() {
 		this.autoCalculateVariables = ko.observable(true);
 
         this.parts = ko.observableArray([]);
+		this.currentPart = ko.observable(undefined);
+		this.showPart = function(part) {
+			q.currentPart(part);
+		};
 
         this.output = ko.computed(function() {
             return prettyData(q.toJSON());
@@ -592,7 +582,6 @@ $(document).ready(function() {
 			if(this.type().has_marks)
 				tabs.push(new Editor.Tab('marking','Marking'));
 			tabs = tabs.concat(this.type().tabs);
-			tabs.push(new Editor.Tab('steps','Steps'));
 			return tabs;
 		},this);
 		this.currentTab = ko.observable(this.tabs()[0]);
@@ -669,9 +658,9 @@ $(document).ready(function() {
 		this.numberentry.precisionWord = ko.computed(function() {
 			switch(this.precisionType().name) {
 			case 'dp':
-				return 'Digits:';
+				return 'Digits';
 			case 'sigfig':
-				return 'Significant figures:';
+				return 'Significant figures';
 			}
 		},this.numberentry);
 

@@ -134,48 +134,201 @@
 			<div class="row-fluid">
 				<div class="span2">
 					<ol class="parts nav nav-list" data-bind="foreach: parts">
-						<li><button class="delete" data-bind="click: remove"></button><a data-bind="text: header"></a></li>
+						<li data-bind="css: {active: $root.currentPart()==$data}"><button class="delete" data-bind="click: remove"></button><a data-bind="text: header, click: $root.showPart" href="#"></a></li>
 					</ol>
 					<button data-bind="visible: $root.isadvanced, click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
 				</div>
-				<div class="span10" data-bind="foreach: parts">
-					<div class="part">
-						<h4 class="header">
-							<span data-bind="text: $index()+'. '"></span>
-							<select class="type" data-bind="options: availableTypes, value:type, optionsText: 'niceName'"></select>
-						</h4>
-						<div class="row-fluid">
-							<ul class="nav nav-tabs" data-bind="foreach: tabs">
-								<li data-bind="css: {active: $parent.currentTab() == $data}">
-									<a href="#" data-bind="click: $parent.currentTab, text: title"></a>
-								</li>
-							</ul>
-						</div>
-						<div class="row-fluid">
-							<div class="tab-content">
-								<section class="tab-pane" data-bind="css: {active: currentTab().id()=='prompt'}">
-									<div data-bind="writemaths: prompt"></div>
-								</section>
-								<!-- ko if: type().name=='jme' -->
-								<section class="tab-pane" data-bind="css: {active: currentTab().id()=='marking'}">
-									<div class="row-fluid">
-										<div class="span1">
-											<label>Marks</label>
-											<input type="text" data-bind="value:marks, valueUpdate:'input', autosize: {max: 500, min: 30, padding: 10, value: marks}"/>
-										</div>
-										<div class="span8">
-											<label>Correct answer</label>
-											<input type="text" data-bind="value: jme.answer, valueUpdate: 'input', autosze: {max: 500, min: 30, padding: 10, value: jme.answer}"/>
+				<div class="span10" data-bind="with: currentPart">
+					<h4 class="header">
+						<span data-bind="text: $index()+'. '"></span>
+						<select class="type" data-bind="options: availableTypes, value:type, optionsText: 'niceName'"></select>
+					</h4>
+					<div class="row-fluid">
+						<ul class="nav nav-tabs" data-bind="foreach: tabs">
+							<li data-bind="css: {active: $parent.currentTab() == $data}">
+								<a href="#" data-bind="click: $parent.currentTab, text: title"></a>
+							</li>
+						</ul>
+					</div>
+					<div class="row-fluid">
+						<div class="tab-content">
+							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='prompt'}">
+								<div data-bind="writemaths: prompt"></div>
+							</section>
+							<!-- ko if: type().name=='jme' -->
+							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='marking'}">
+								<form class="form-horizontal">
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Marks',property:marks,min:0}
+									}"></div>
+									<div class="control-group">
+										<label class="control-label">Correct answer</label>
+										<div class="controls">
+											<input type="text" data-bind="value: jme.answer, valueUpdate: 'input', autosize: {max: 500, min: 30, padding: 10, value: jme.answer}"/>
 											<span data-bind="JME: jme.answer" class="jme-answer"></span>
 										</div>
-										<div class="span3">
-											<label>Answer simplification rules</label>
-											<input type="text" data-bind="value: jme.answerSimplification, valueUpdate: 'input', autosze: {max: 500, min: 30, padding: 10, value: jme.answerSimplification}"/>
+									</div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Answer simplification rules',property:jme.answerSimplification}
+									}"></div>
+								</form>
+							</section>
+							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='restrictions'}">
+								<form class="form-horizontal">
+									<h4>Checking accuracy</h4>
+									<div class="control-group">
+										<label class="control-label">Checking type</label>
+										<div class="controls">
+											<select data-bind="options: jme.checkingTypes, value: jme.checkingType, optionsText:'niceName'"></select>
 										</div>
 									</div>
-								</section>
-								<!-- /ko -->
-							</div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Checking accuracy',property:jme.checkingType().accuracy,min:0}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Points to check',property:jme.vset.points,min:0}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Maximum no. of failures',property:jme.failureRate,min:0, max:jme.vset.points}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Checking range start',property:jme.vset.start,max:jme.vset.end}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Checking range end',property:jme.vset.end,min:jme.vset.start}
+									}"></div>
+								</form>
+								<h4>Length restriction</h4>
+								<form class="form-horizontal">
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Maximum length',property:jme.maxlength.length,min:0}
+									}"></div>
+									<div data-bind="fadeVisible: jme.maxlength.length()>0">
+										<div class="control-group" data-bind="template: {
+											name:'percentproperty',
+											data: {label:'Partial credit for long answer',property:jme.maxlength.partialCredit}
+										}"></div>
+										<div class="control-group">
+											<label clas="control-label">Warning message</label>
+											<div class="controls" data-bind="writemaths: jme.maxlength.message"></div>
+										</div>
+									</div>
+								</form>
+								<form class="form-horizontal">
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Minimum length',property:jme.minlength.length,min:0}
+									}"></div>
+									<div data-bind="fadeVisible: jme.minlength.length()>0">
+										<div class="control-group" data-bind="template: {
+											name:'percentproperty',
+											data: {label:'Partial credit for short answer',property:jme.minlength.partialCredit}
+										}"></div>
+										<div class="control-group">
+											<label class="control-label">Warning message</label>
+											<div class="controls" data-bind="writemaths: jme.minlength.message"></div>
+										</div>
+									</div>
+								</form>
+								<h4>String restriction</h4>
+								<form class="form-horizontal">
+									<div class="control-group">
+										<label class="control-label">Required strings:</label>
+										<div class="controls" data-bind="listbox:jme.musthave.strings"></div>
+									</div>
+									<div data-bind="fadeVisible: jme.musthave.strings().length>0">
+										<div class="control-group" data-bind="template: {
+											name:'percentproperty',
+											data: {label:'Partial credit for not using all required strings:',property:jme.musthave.partialCredit}
+										}"></div>
+										<div class="control-group" data-bind="template: {
+											name: 'booleanproperty',
+											data: {label:'Show required strings in warning?', property:jme.musthave.showStrings}
+										}"></div>
+										<div class="control-group">
+											<label class="control-label">Warning message</label>
+											<div class="controls" data-bind="writemaths: jme.musthave.message"></div>
+										</div>
+									</div>
+								</form>
+								<hr class="dash"/>
+								<form class="form-horizontal">
+									<div class="control-group">
+										<label class="control-label">Forbidden strings:</label>
+										<div class="controls" data-bind="listbox:jme.notallowed.strings"></div>
+									</div>
+									<div data-bind="fadeVisible: jme.notallowed.strings().length>0">
+										<div class="control-group" data-bind="template: {
+											name:'percentproperty',
+											data: {label:'Partial credit for not using all required strings:',property:jme.notallowed.partialCredit}
+										}"></div>
+										<div class="control-group" data-bind="template: {
+											name: 'booleanproperty',
+											data: {label:'Show required strings in warning?', property:jme.notallowed.showStrings}
+										}"></div>
+										<div class="control-group">
+											<label class="control-label">Warning message</label>
+											<div class="controls" data-bind="writemaths: jme.notallowed.message"></div>
+										</div>
+									</div>
+								</form>
+							</section>
+							<!-- /ko -->
+							<!-- ko if: type().name=='numberentry' -->
+							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='marking'}">
+								<form class="form-horizontal">
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Marks',property:marks,min:0}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Minimum accepted value',property:numberentry.minValue}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Maximum accepted value',property:numberentry.maxValue}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label:'Must the answer be an integer?', property:numberentry.integerAnswer}
+									}"></div>
+									<div class="control-group" data-bind="fadeVisible: numberentry.integerAnswer,
+									template: {
+										name:'percentproperty',
+										data: {label:'Partial credit for non-integer answer',property:numberentry.integerPartialCredit}
+									}"></div>
+									<div class="control-group">
+										<label class="control-label">Precision restriction</label>
+										<div class="controls">
+											<select data-bind="options: numberentry.precisionTypes, value: numberentry.precisionType, optionsText: 'niceName'"></select>
+										</div>
+									</div>
+									<div class="control-group" data-bind="fadeVisible: numberentry.precisionType().name!='none',
+									template: {
+										name:'property',
+										data: {label:numberentry.precisionWord,property:numberentry.precision}
+									}"></div>
+									<div class="control-group" data-bind="fadeVisible: numberentry.precisionType().name!='none',
+									template: {
+										name:'percentproperty',
+										data: {label:'Partial credit for wrong precision',property:numberentry.precisionPartialCredit}
+									}"></div>
+									<div class="control-group" data-bind="fadeVisible: numberentry.precisionType().name!='none'">
+										<label class="control-label">Message if wrong precision</label>
+										<div class="controls" data-bind="writemaths: numberentry.precisionMessage"></div>
+									</div>
+								</form>
+							</section>
+							<!-- /ko -->
 						</div>
 					</div>
 				</div>

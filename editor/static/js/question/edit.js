@@ -489,10 +489,13 @@ $(document).ready(function() {
 				{
 				case 'string':
 					return v.value;
-				default:
-                    var val = this.value();
+				case 'list':
                     if(val.type=='list')
                         return 'List of '+val.value.length+' items';
+				case 'html':
+					return 'HTML node';
+				default:
+                    var val = this.value();
 					return '$'+Numbas.jme.display.texify({tok:this.value()})+'$';
 				}
 			}

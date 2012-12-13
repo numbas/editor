@@ -430,6 +430,8 @@ $(document).ready(function() {
                 data.parts.map(function(pd) {
                     this.parts.push(new Part(this,null,this.parts,pd));
                 },this);
+				if(this.parts().length) 
+					this.currentPart(this.parts()[0]);
             }
         },
 
@@ -839,6 +841,9 @@ $(document).ready(function() {
             if(confirm("Remove this part?"))
             {
 				this.parentList.remove(this);
+				if(viewModel.currentPart()==this) {
+					viewModel.currentPart(null);
+				}
             }
         },
 

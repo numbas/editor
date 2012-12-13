@@ -14,7 +14,14 @@ html {
 body { 
     font: normal 1em arial, sans-serif;
     background: #acdeff;
- /*   margin: 0;*/
+	padding-left: 20px;
+	padding-right: 20px;
+}
+
+#container-fluid {
+	max-width: 1200px;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 .left {
@@ -39,7 +46,6 @@ body {
 
 button {
 	margin: 0.1em 0.3em;
-	/*border: 1px solid #999999*/;
 	background: #acdeff;
 	border: 1px solid #999;
 	border-radius: 2px;
@@ -49,19 +55,6 @@ button {
 button:hover, button:focus {
 	background: #f90;
 }
-
-/*
-#main {
-	width: 940px;
-	margin: 0 auto;
-}
-
-#main, #logo, #menu, #content_header, #site_content, #content_footer, #footer {
-    margin-left: auto; 
-    margin-right: auto;
-
-}
-*/
 
 #header {
 	padding-top: 1em;
@@ -76,21 +69,6 @@ button:hover, button:focus {
 	color: #999;
 }
 
-/*
-#logo a {
-	text-decoration: none;
-}
-
-#logo h1, #logo h2 {
-    margin: 0;
-	display: inline;
-}
-
-#session {
-	float: right;
-}
-*/
-
 #session a {
 	text-decoration: underline;
 }
@@ -103,47 +81,6 @@ button:hover, button:focus {
 ul#menu li {
 	font-size: 1.2em;
 }
-
-/*
-ul#menu {
-	margin: 0;
-	padding-left: 0;
-	padding-bottom: 1em;
-	overflow: hidden;
-}
-
-ul#menu li {
-    list-style: none;
-    margin: 0 0.2em 0 0;
-	font-size: 1.2em;
-    display: inline-block;
-}
-
-ul#menu li a {
-    display: block; 
-    text-decoration: none; 
-    margin-right: 0.8em;
-	color: #2f6990;
-    font-size: 120%;
-} 
-
-#site_content {
-    
-    
-	overflow: hidden;
-    
-    
-	padding: 1em 20px 20px 40px;
-    background: #FFF;
-	border-radius: 0.5em;
-} 
-
-#content {
-    text-align: left;
-    padding: 0;
-}
-
-*/
 
 #site_content {
 	background: white;
@@ -205,4 +142,10 @@ input.search.loading {
 }
 .tab-content > .active, .pill-content > .active {
 	position: inherit;
+}
+
+.nav-tabs > li > a {
+	border-radius: inherit;
+	-webkit-border-radius: inherit;
+	-moz-border-radius: inherit;
 }

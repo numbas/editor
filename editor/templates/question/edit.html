@@ -39,35 +39,14 @@
     {% block property_templates %}{% endblock %}
 
 	<div id="question" class="container-fluid {% if not editable %}nonedit{% endif %}">
-		<div id="controls" class="row-fluid">
+		<div id="controls">
+			<div class="row-fluid">
 			{% block controls %}
     			<div class="span2" id="editable_message">{% block editable_message %}{% endblock %}</div>
-				<div class="span2 controlbox" id="author">
+				<div class="span3 controlbox" id="author">
 					Author: {{ object.author.first_name }} {{ object.author.last_name }} ({{ object.author.username }})
 				</div>
-				<div class="span3 controlbox" id="admin">
-					<div class="row-fluid">
-						<div class="span4">
-							<a id="preview" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this question in a new window (Ctrl+B)">Test Run</a>
-						</div>			
-					{% if editable %}
-						<div class="span4">
-							<a id="delete" data-bind="click: deleteQuestion" href="{% url question_delete object.pk object.slug %}" title="Delete this question permanently">Delete
-								<form action="{% url question_delete object.pk object.slug %}" method="post">{% csrf_token %}
-									<input type="submit" value="Submit" />
-								</form>
-							</a>
-						</div>
-					{% endif %}
-
-					{% if user.is_authenticated %}
-						<div class="span4">
-						<a id="copy" href="{% url question_copy object.pk object.slug %}" title="Create your own copy of this exam">Make a Copy</a>
-						</div>
-					{% endif %}
-					</div>
-				</div>
-				<div class="span3"
+				<div class="span5"
 					<span id="download">
 						Download: 
 						<a href="{% url question_download object.pk object.slug %}">standalone .zip</a>,
@@ -76,6 +55,27 @@
 					</span>
 				</div>
 			{% endblock controls %}
+			</div>
+			<div class="controlbox row-fluid" id="admin">
+				<div class="span2">
+					<a id="preview" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this question in a new window (Ctrl+B)">Test Run</a>
+				</div>			
+				{% if editable %}
+				<div class="span2">
+					<a id="delete" data-bind="click: deleteQuestion" href="{% url question_delete object.pk object.slug %}" title="Delete this question permanently">Delete
+						<form action="{% url question_delete object.pk object.slug %}" method="post">{% csrf_token %}
+							<input type="submit" value="Submit" />
+						</form>
+					</a>
+				</div>
+				{% endif %}
+
+				{% if user.is_authenticated %}
+				<div class="span2">
+				<a id="copy" href="{% url question_copy object.pk object.slug %}" title="Create your own copy of this exam">Make a Copy</a>
+				</div>
+				{% endif %}
+			</div>
 		</div>
 
 		<div class="row-fluid">

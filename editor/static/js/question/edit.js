@@ -521,7 +521,7 @@ $(document).ready(function() {
 			tryLoad(data,['name','type','definition','language'],this);
 			if('parameters' in data) {
 				data.parameters.map(function(p) {
-					f.parameters.push(new FunctionParameter(this,p[0],p[1]));
+					f.parameters.push(new FunctionParameter(f,p[0],p[1]));
 				});
 			}
 		},

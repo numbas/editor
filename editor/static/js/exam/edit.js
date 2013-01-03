@@ -139,10 +139,9 @@ $(document).ready(function() {
 		}
 
 		if(Editor.editable) {
+			this.firstSave = true;
+
 			this.save = ko.computed(function() {
-				window.onbeforeunload = function() {
-					return 'There are still unsaved changes.';
-				}
 				return {
 					content: this.output(),
 					theme: this.theme(),
@@ -155,6 +154,17 @@ $(document).ready(function() {
 
 			this.autoSave = ko.computed(function() {
 				var e = this;
+
+				var data = this.save();
+
+				if(this.firstSave) {
+					this.firstSave = false;
+					return;
+				}
+
+				window.onbeforeunload = function() {
+					return 'There are still unsaved changes.';
+				}
 
 				if(!this.save_noty)
 				{
@@ -171,7 +181,7 @@ $(document).ready(function() {
 				
 				$.post(
 					'/exam/'+this.id+'/'+slugify(this.name())+'/',
-					{json: JSON.stringify(this.save()), csrfmiddlewaretoken: getCookie('csrftoken')}
+					{json: JSON.stringify(data), csrfmiddlewaretoken: getCookie('csrftoken')}
 				)
 					.success(function(data){
 						var address = location.protocol+'//'+location.host+'/exam/'+Editor.examJSON.id+'/'+slugify(e.name())+'/';

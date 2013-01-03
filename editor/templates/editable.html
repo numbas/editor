@@ -1,50 +1,58 @@
 ﻿{% load verbatim %}
 {% verbatim %}
     <script type="text/html" id="property">
-		<label class="control-label" data-bind="html: label"/>
-		<div class="controls">
-			<input data-bind="
-				value: property, 
-				valueUpdate: 'afterkeydown', 
-				attr: {
-					type: $data.type || 'text', 
-					min: $data.min, 
-					max: $data.max
-				}, 
-				autosize: {max: 500, min: 30, padding: 10, value: property}
-			"/>
-		</div>
+		<label>
+			<span class="control-label" data-bind="html: label"></span>
+			<div class="controls">
+				<input data-bind="
+					value: property, 
+					valueUpdate: 'afterkeydown', 
+					attr: {
+						type: $data.type || 'text', 
+						min: $data.min, 
+						max: $data.max
+					}, 
+					autosize: {max: 500, min: 30, padding: 10, value: property}
+				"/>
+			</div>
+		</label>
 	</script>
 
 	<script type="text/html" id="percentproperty">
-		<label class="control-label" data-bind="html: label"/>
-		<div class="controls">
-			<input 
-				data-bind="
-					value: property, 
-					valueUpdate: 'afterkeydown'
-				"
-				type="range"
-				step="5"
-				min="0"
-				max="100"
-				/>
-			<span class="percentproperty value" data-bind="text: property()+'%'"></span>
-		</div>
+		<label>
+			<span class="control-label" data-bind="html: label"></span>
+			<div class="controls">
+				<input 
+					data-bind="
+						value: property, 
+						valueUpdate: 'afterkeydown'
+					"
+					type="range"
+					step="5"
+					min="0"
+					max="100"
+					/>
+				<span class="percentproperty value" data-bind="text: property()+'%'"></span>
+			</div>
+		</label>
 	</script>
 
 	<script type="text/html" id="selectproperty">
-		<label class="control-label" data-bind="html: label"/>
-		<div class="controls">
-			<select data-bind="options: options, value: property"></select>
-		</div>
+		<label>
+			<span class="control-label" data-bind="html: label"></span>
+			<div class="controls">
+				<select data-bind="options: options, value: property"></select>
+			</div>
+		</label>
 	</script>
 
 	<script type="text/html" id="booleanproperty">
-		<label class="control-label" data-bind="html: label"/>
-		<div class="controls">
-			<input data-bind="checked: property" type="checkbox"/>
-		</div>
+		<label>
+			<span class="control-label" data-bind="html: label"></span>
+			<div class="controls">
+				<input data-bind="checked: property" type="checkbox"/>
+			</div>
+		</label>
 	</script>
 
 {% endverbatim %}

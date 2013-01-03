@@ -123,7 +123,7 @@
 					</ol>
 					<button data-bind="visible: $root.isadvanced, click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
 				</div>
-				<div class="span9" data-bind="with: currentPart">
+				<div class="span9 part" data-bind="with: currentPart">
 					<h4 class="header">
 						<span data-bind="text: $index()+'. '"></span>
 						<select class="type" data-bind="options: availableTypes, value:type, optionsText: 'niceName'"></select>
@@ -371,6 +371,27 @@
 										data: {label: 'Custom matrix expression', property: multiplechoice.customMatrix}
 									}"></div>
 								</form>
+							</section>
+							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='choices'}">
+								<ul class="choices">
+									<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
+									<li class="choice">
+										<form class="form-inline">
+											<button class="delete" data-bind="click:remove"></button>
+											<label>
+												Marks:
+												<input class="marks" type="text" data-bind="value:marks, valueUpdate:'input', autosize: {max: 500, min: 30, padding: 10, value: marks}"/>
+											</label>
+											<label>
+												Distractor Message:
+												<input type="text" data-bind="value:distractor, valueUpdate:'input', autosize: {max: 500, min: 100, padding: 10, value: distractor}"/>
+											</label>
+											<div id="description" data-bind="writemaths: content, wmHeight: 100, wmWidth: 500"></div>
+										</form>
+									</li>
+									<!-- /ko -->
+									<li><button data-bind="visible: $root.isadvanced, click:addChoice">Add a choice</button></li>
+								</ul>
 							</section>
 							<!-- /ko -->
 						</div>

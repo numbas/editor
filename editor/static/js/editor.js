@@ -621,9 +621,14 @@ $(document).ready(function() {
 	}
 
 	ko.bindingHandlers.writemaths = {
-		init: function(element,valueAccessor) {
+		init: function(element,valueAccessor,allBindingsAccessor) {
             valueAccessor = valueAccessor();
+			allBindingsAccessor = allBindingsAccessor();
+
 			var value = ko.utils.unwrapObservable(valueAccessor) || '';
+
+			var height = allBindingsAccessor.hasOwnProperty('wmHeight') ? allBindingsAccessor.wmHeight : 200;
+			var width = allBindingsAccessor.hasOwnProperty('wmWidth') ? allBindingsAccessor.wmWidth : '';
 
             function onkeyup(e,tinymce) {
                 switch(e.type) {
@@ -655,6 +660,7 @@ $(document).ready(function() {
 
 
             $(element)
+				.css('width',width)
                 .addClass('writemathsContainer on')
                 .append(t)
 				.append(plaintext)
@@ -671,7 +677,8 @@ $(document).ready(function() {
 					},
                     theme_advanced_resizing: true,
                     theme_advanced_resizing_max_width: '750',
-					height: 200
+					height: height,
+					width: width
                 })
 				.val(value);
             ;

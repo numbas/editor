@@ -62,7 +62,9 @@ $(document).ready(function() {
 
 		var realtags = this.realtags = ko.observableArray([]);
         this.tags = ko.computed({
-            read: this.realtags,
+            read: function() {
+				return this.realtags().sort();
+			},
             write: function(newtags) {
                 for(var i=newtags.length-1;i>=0;i--)
                 {
@@ -74,6 +76,8 @@ $(document).ready(function() {
         },this);
 
         this.tags.push = function(thing) {
+			if(thing.length==0)
+				return;
             if(realtags().indexOf(thing)==-1)
                 realtags.push(thing);
         }
@@ -83,6 +87,9 @@ $(document).ready(function() {
         this.tags.splice = function(i,n) {
             return realtags.splice(i,n);
         }
+		this.tags.remove = function(q) {
+			return realtags.remove(q);
+		}
 
 		this.notes = ko.observable('');
 		this.description = ko.observable('');
@@ -271,6 +278,7 @@ $(document).ready(function() {
         addPart: function() {
 			var p = new Part(this,null,this.parts);
             this.parts.push(p);
+			this.currentPart(p);
 			return p;
         },
 

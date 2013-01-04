@@ -806,6 +806,13 @@ $(document).ready(function() {
 		}
 	};
 
+	ko.bindingHandlers.debug = {
+		update: function(element,valueAccessor) {
+			var value = valueAccessor();
+			console.log(value,ko.utils.unwrapObservable(value));
+		}
+	}
+
 	ko.bindingHandlers.cleanJME = {
 		update: function(element,valueAccessor) {
 			var value = ko.utils.unwrapObservable(valueAccessor()) || '';

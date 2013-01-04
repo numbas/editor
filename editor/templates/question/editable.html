@@ -394,6 +394,149 @@
 								</ul>
 							</section>
 							<!-- /ko -->
+							<!-- ko if: type().name=='m_n_2' -->
+							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='marking'}">
+								<form class="form-horizontal">
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Minimum marks',property:multiplechoice.minMarks, max:multiplechoice.maxMarks }
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Maximum marks',property:multiplechoice.maxMarks, min:multiplechoice.minMarks}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Minimum answers:',property:multiplechoice.minAnswers, max:multiplechoice.maxAnswers}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Maximum answers:',property:multiplechoice.maxAnswers, min:multiplechoice.minAnswers}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
+									}"></div>
+									<div class="control-group" data-bind="fadeVisible: multiplechoice.displayType().name!='dropdown',
+									template: {
+										name: 'property',
+										data: {label:'Number of display columns',property:multiplechoice.displayColumns}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label: 'Custom marking matrix?', property: multiplechoice.customMarking}
+									}"></div>
+									<div class="control-group" data-bind="fadeVisible: multiplechoice.customMarking, template: {
+										name: 'property',
+										data: {label: 'Custom matrix expression', property: multiplechoice.customMatrix}
+									}"></div>
+								</form>
+							</section>
+							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='choices'}">
+								<ul class="choices">
+									<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
+									<li class="choice">
+										<form class="form-inline">
+											<button class="delete" data-bind="click:remove"></button>
+											<label>
+												Marks:
+												<input class="marks" type="text" data-bind="value:marks, valueUpdate:'input', autosize: {max: 500, min: 30, padding: 10, value: marks}"/>
+											</label>
+											<label>
+												Distractor Message:
+												<input type="text" data-bind="value:distractor, valueUpdate:'input', autosize: {max: 500, min: 100, padding: 10, value: distractor}"/>
+											</label>
+											<div id="description" data-bind="writemaths: content, wmHeight: 100, wmWidth: 500"></div>
+										</form>
+									</li>
+									<!-- /ko -->
+									<li><button data-bind="visible: $root.isadvanced, click:addChoice">Add a choice</button></li>
+								</ul>
+							</section>
+							<!-- /ko -->
+							<!-- ko if: type().name=='m_n_x' -->
+							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='marking'}">
+								<form class="form-horizontal">
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Minimum marks',property:multiplechoice.minMarks, max:multiplechoice.maxMarks }
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Maximum marks',property:multiplechoice.maxMarks, min:multiplechoice.minMarks}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Minimum answers:',property:multiplechoice.minAnswers, max:multiplechoice.maxAnswers}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Maximum answers:',property:multiplechoice.maxAnswers, min:multiplechoice.minAnswers}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label:'Shuffle order of answers?', property:multiplechoice.shuffleAnswers}
+									}"></div>
+									<div class="control-group">
+										<label>
+											<span class="control-label">Selection type:</span>
+											<div class="controls">
+												<select data-bind="options: multiplechoice.displayTypes.m_n_x, value: multiplechoice.displayType, optionsText: 'niceName'"></select>
+											</div>
+										</label>
+									</div>
+									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label: 'Custom marking matrix?', property: multiplechoice.customMarking}
+									}"></div>
+									<div class="control-group" data-bind="fadeVisible: multiplechoice.customMarking, template: {
+										name: 'property',
+										data: {label: 'Custom matrix expression', property: multiplechoice.customMatrix}
+									}"></div>
+								</form>
+							</section>
+							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='choices'}">
+								<div class="matrix">
+									<label>Marking matrix:</label>
+									<table class="multiplechoice">
+										<thead>
+											<tr>
+												<td></td>
+												<!-- ko foreach: {data: multiplechoice.answers, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
+													<th>
+														<input type="text" data-bind="value:content, valueUpdate:'input'">
+														<button class="delete" data-bind="click:function(){this.remove()}"></button>
+													</th>
+												<!-- /ko -->
+												<td>
+													<button data-bind="visible: $root.isadvanced, click:addAnswer">Add Answer</button>
+												</td>
+											</tr>
+										</thead>
+										<tbody>
+											<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
+												<tr>
+													<th>
+														<input type="text" data-bind="value:content, valueUpdate:'input'"/>
+														<button class="delete" data-bind="click:remove"></button>
+													</th>
+													<!-- ko foreach: answers -->
+														<td>
+															<input class="marks" data-bind="visible: !$parents[1].multiplechoice.customMarking(), value: marks, valueUpdate:'input'"/>
+														</td>
+													<!-- /ko -->
+												</tr>
+											<!-- /ko -->
+											<tr><td><button data-bind="visible: $root.isadvanced, click:addChoice">Add Choice</button></td></tr>
+										</tbody>
+									</table>
+								</div>
+							</section>
+							<!-- /ko -->
 						</div>
 					</div>
 				</div>

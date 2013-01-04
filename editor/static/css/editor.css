@@ -1,4 +1,8 @@
-﻿.controlbox #download a {
+﻿.controlbox a:before {
+	margin-right: 4px;
+}
+
+.controlbox #download a {
 	font-size: 18px;
 }
 

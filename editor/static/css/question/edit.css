@@ -40,27 +40,35 @@
     margin: 2px 0;
 }
 
-.parts .delete {
+.parts.nav .delete {
 	float:right;
 	border-radius: 50%;
 	background-color: white;
 	margin-top: 4px;
 }
 
-.part:not(:last-child) {
+.parts.nav .part {
+	margin-bottom: 1em;
+}
+
+.gaps .addgap, .steps .addstep {
+	text-align: right;
+}
+
+.part-edit:not(:last-child) {
 	padding-bottom: 2em;
 	margin-bottom: 2em;
 	border-bottom: 3px dashed #888;
 }
 
-.part .header {
+.part-edit .header {
 	background-color: #eee;
 	padding: 0 6px;
 	border-radius: 6px;
 	margin: 0 0 6px 0;
 }
 
-.part .header .type {
+.part-edit .header .type {
 	font-size: 1em;
 	width: auto;
 	height: auto;
@@ -69,7 +77,7 @@
 	margin: 4px 0;
 }
 
-.part .choices {
+.part-edit .choices {
 	list-style-type: none;
 	margin-left: 0;
 }

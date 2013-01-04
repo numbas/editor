@@ -577,6 +577,7 @@ $(document).ready(function() {
 
     function Part(q,parent,parentList,data) {
 
+		this.q = q;
         this.prompt = Editor.contentObservable('');
         this.parent = parent;
 		this.parentList = parentList;
@@ -592,13 +593,24 @@ $(document).ready(function() {
         this.type = ko.observable(this.availableTypes()[0]);
 
 		this.header = ko.computed(function() {
-			return this.parentList.indexOf(this)+'. '+this.type().niceName;
+			var i = this.parentList.indexOf(this);
+			if(this.isGap() || this.isStep()) {
+				i = i+'. ';
+			}
+			else {
+				i= 'abcdefghijklmnopqrstuvwxyz'[i]+') ';
+			}
+			return i+this.type().niceName;
 		},this);
 
 		this.tabs = ko.computed(function() {
-			var tabs = [new Editor.Tab('prompt','Prompt')];
+			var tabs = [];
+			if(!this.isGap())
+				tabs.push(new Editor.Tab('prompt','Prompt'));
+
 			if(this.type().has_marks)
 				tabs.push(new Editor.Tab('marking','Marking'));
+
 			tabs = tabs.concat(this.type().tabs);
 			return tabs;
 		},this);
@@ -724,6 +736,18 @@ $(document).ready(function() {
             gaps: ko.observableArray([])
         };
 
+		this.meOrChildSelected = ko.computed(function() {
+			var currentPart = q.currentPart();
+			if(currentPart==this)
+				return true;
+			var children = this.gapfill.gaps().concat(this.steps());
+			for(var i=0;i<children.length;i++) {
+				if(currentPart==children[i])
+					return true;
+			}
+			return false;
+		},this);
+
         if(data)
             this.load(data);
     }
@@ -738,7 +762,6 @@ $(document).ready(function() {
 				name: 'gapfill', 
 				niceName: 'Gap-fill', 
 				tabs: [
-					new Editor.Tab('gaps','Gaps')
 				]
 			},
             {
@@ -788,11 +811,15 @@ $(document).ready(function() {
         ],
 
         addStep: function() {
-            this.steps.push(new Part(null,this,this.steps));
+			var step = new Part(this.q,this,this.steps);
+            this.steps.push(step);
+			this.q.currentPart(step);
         },
 
         addGap: function() {
-            this.gapfill.gaps.push(new Part(null,this,this.gapfill.gaps));
+			var gap = new Part(this.q,this,this.gapfill.gaps);
+            this.gapfill.gaps.push(gap);
+			this.q.currentPart(gap);
         },
 
         addChoice: function() {
@@ -1040,7 +1067,7 @@ $(document).ready(function() {
             if(data.steps)
             {
                 data.steps.map(function(s) {
-                    this.steps.push(new Part(null,this,this.steps,s));
+                    this.steps.push(new Part(this.q,this,this.steps,s));
                 },this);
             }
 
@@ -1050,7 +1077,7 @@ $(document).ready(function() {
                 if(data.gaps)
                 {
                     data.gaps.map(function(g) {
-                        this.gapfill.gaps.push(new Part(null,this,this.gapfill.gaps,g));
+                        this.gapfill.gaps.push(new Part(this.q,this,this.gapfill.gaps,g));
                     },this);
                 }
                 break;

@@ -119,11 +119,31 @@
 			<div class="row-fluid">
 				<div class="span3">
 					<ol class="parts nav nav-list" data-bind="foreach: parts">
-						<li data-bind="css: {active: $root.currentPart()==$data}"><button class="delete" data-bind="click: remove"></button><a data-bind="text: header, click: $root.showPart" href="#"></a></li>
+						<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
+							<button class="delete" data-bind="click: remove"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
+							<div data-bind="fadeVisible: meOrChildSelected">
+								<div class="gaps" data-bind="if: type().name=='gapfill'">
+									<ol class="gaps nav nav-list" data-bind="foreach: gapfill.gaps">
+										<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
+											<button class="delete" data-bind="click: remove"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
+										</li>
+									</ol>
+									<div class="addgap"><button data-bind="visible: $root.isadvanced, click:addGap, text: gapfill.gaps().length ? 'Add another gap' : 'Add a gap'"></button></div>
+								</div>
+								<div class="steps clearfix">
+									<ol class="steps nav nav-list" data-bind="foreach: steps">
+										<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
+											<button class="delete" data-bind="click: remove"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
+										</li>
+									</ol>
+									<div class="addstep"><button data-bind="visible: $root.isadvanced, click:addStep, text: steps().length ? 'Add another step' : 'Add a step'"></button></div>
+								</div>
+							</div>
+						</li>
 					</ol>
 					<button data-bind="visible: $root.isadvanced, click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
 				</div>
-				<div class="span9 part" data-bind="with: currentPart">
+				<div class="span9 part-edit" data-bind="with: currentPart">
 					<h4 class="header">
 						<span data-bind="text: $index()+'. '"></span>
 						<select class="type" data-bind="options: availableTypes, value:type, optionsText: 'niceName'"></select>

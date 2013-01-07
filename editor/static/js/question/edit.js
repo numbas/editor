@@ -885,7 +885,7 @@ $(document).ready(function() {
             {
 				this.parentList.remove(this);
 				if(viewModel.currentPart()==this) {
-					viewModel.currentPart(null);
+					viewModel.currentPart(this.parent);
 				}
             }
         },

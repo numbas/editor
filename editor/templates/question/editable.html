@@ -4,7 +4,7 @@
 {% block controls %}
 	{{block.super}}
 	<div class="editlevels span2">
-		<button data-bind="click: changeEditLevel, text: isadvanced() ? 'Switch to simplified editing mode' : 'Switch to full editing mode'">Switch to simplified editing mode</button>
+		<button type="button" data-bind="click: changeEditLevel, text: isadvanced() ? 'Switch to simplified editing mode' : 'Switch to full editing mode'">Switch to simplified editing mode</button>
 	</div>
 {% endblock controls %}
 
@@ -47,7 +47,7 @@
 					<ul class="tags" data-bind="foreach: tags">
 						<li class="tag well">
 							<span data-bind="text: $data"></span>
-							<button class="delete" data-bind="click: $root.tags.remove"/>
+							<button type="button" class="delete" data-bind="click: $root.tags.remove"/>
 						</li>
 					</ul>
 				</div>
@@ -63,7 +63,7 @@
 					<div class="span1"><span class="handle"></span></div>
 					<div class="span8">
 						<form>
-							<button class="delete" data-bind="click:remove"></button>
+							<button type="button" class="delete" data-bind="click:remove"></button>
 							<input type="text" placeholder="Name" class="name" data-bind="value:name, valueUpdate: 'afterkeydown', attr: {disabled: !$parent.isadvanced()}, autosize: name"/> 
 							<label class="control-label">Definition</label>
 							<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: definition, codemirrorMode: 'jme'"></textarea>
@@ -76,12 +76,12 @@
 				<!-- /ko -->
 
 				<div class="row-fluid">
-					<div class="span3">
-						<button data-bind="click:addVariable, text: variables().length ? 'Add another variable' : 'Add a variable'"></button>
+					<div class="span5">
+						<button type="button" data-bind="click:addVariable, text: variables().length ? 'Add another variable' : 'Add a variable'"></button>
 						Automatically recalculate variables: <input type="checkbox" data-bind="checked: autoCalculateVariables"/>
 					</div>
-					<div class="span3 offset 6">
-						<button data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button>
+					<div class="span3 offset4">
+						<button type="button" data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button>
 					</div>
 				</div>
 			</div>
@@ -93,21 +93,35 @@
 				<div class="function">
 					<div class="row-fluid">
 						<div class="span1">
-							<button class="delete" data-bind="click:remove" value="Delete"></button>
+							<button type="button" class="delete" data-bind="click:remove" value="Delete"></button>
 						</div>
 						<div class="span8">
 							<div class="row-fluid">
-								<div class="span8">
-									<label>Name</label>
-									<input placeholder="Name" class="input-block-level" type="text" data-bind="value: name">
+								<div class="span4">
+									<label>
+										Name
+										<div>
+											<input placeholder="Name" type="text" data-bind="value: name, valueUpdate: 'afterkeydown', autosize: {value: name, max: 220}">
+										</div>
+									</label>
 								</div>
 								<div class="span4">
-									<label>Output type</label>
-									<select data-bind="options: types, value:type"></select>
+									<label>
+										Language
+										<select data-bind="options: languages, value: language"></select>
+									</label>
 								</div>
-								<div class="span12">
-									<label>Definition:</label>
-									<textarea data-bind="codemirror: definition, codemirrorMode: language, valueUpdate: 'afterkeydown'"></textarea>
+								<div class="span4">
+									<label>
+										Output type
+										<select data-bind="options: types, value:type"></select>
+									</label>
+								</div>
+								<div>
+									<label>
+										Definition:
+										<textarea data-bind="codemirror: definition, codemirrorMode: language, valueUpdate: 'afterkeydown'"></textarea>
+									</label>
 								</div>
 							</div>
 						</div>
@@ -118,16 +132,16 @@
 								<form class="form-inline">
 									<input type="text" placholder="Name" data-bind="value: name"/>
 									<select data-bind="options: $parent.types, value: type"></select>
-									<button class="delete" data-bind="click: remove"></button>
+									<button type="button" class="delete" data-bind="click: remove"></button>
 								</form>
 							</div>
 							<!-- /ko -->
-							<button class="addparameter" data-bind="click:addParameter, text: parameters().length ? 'Add another parameter' : 'Add a parameter'"></button>
+							<button type="button" class="addparameter" data-bind="click:addParameter, text: parameters().length ? 'Add another parameter' : 'Add a parameter'"></button>
 						</div>
 					</div>
 				</div>
 				<!-- /ko -->
-				<button data-bind="click:addFunction, text: functions().length ? 'Add another function' : 'Add a function'"></button>
+				<button type="button" data-bind="click:addFunction, text: functions().length ? 'Add another function' : 'Add a function'"></button>
 			</div>
 			<div id="rulesets">
 				<h4>Rulesets</h4>
@@ -135,10 +149,10 @@
 					<div class="ruleset">
 						<input type="text" placeholder="Name" class="name" data-bind="value:name, valueUpdate: 'afterkeydown'"/>:
 						<div data-bind="listbox:sets, rulesetcomplete: allsets"></div>
-						<button class="delete" data-bind="click:remove"></button>
+						<button type="button" class="delete" data-bind="click:remove"></button>
 					</div>
 				<!-- /ko -->
-				<button data-bind="click:addRuleset, text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></button>
+				<button type="button" data-bind="click:addRuleset, text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></button>
 			</div>
 		</section>
 		<section class="tab-pane" data-bind="css: {active: $root.currentTab().id()=='parts'}">
@@ -146,28 +160,30 @@
 				<div class="span3">
 					<ol class="parts nav nav-list" data-bind="foreach: parts">
 						<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
-							<button class="delete" data-bind="click: remove"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
-							<div data-bind="fadeVisible: meOrChildSelected">
+							<button type="button" class="delete" data-bind="click: remove"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
+							<div class="subparts" data-bind="fadeVisible: meOrChildSelected">
 								<div class="gaps" data-bind="if: type().name=='gapfill'">
+									<h6>Gaps</h6>
 									<ol class="gaps nav nav-list" data-bind="foreach: gapfill.gaps">
 										<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
-											<button class="delete" data-bind="click: remove"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
+											<button type="button" class="delete" data-bind="click: remove"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
 										</li>
 									</ol>
-									<div class="addgap"><button data-bind="visible: $root.isadvanced, click:addGap, text: gapfill.gaps().length ? 'Add another gap' : 'Add a gap'"></button></div>
+									<div class="addgap"><button type="button" data-bind="visible: $root.isadvanced, click:addGap, text: gapfill.gaps().length ? 'Add another gap' : 'Add a gap'"></button></div>
 								</div>
 								<div class="steps clearfix">
+									<h6>Steps</h6>
 									<ol class="steps nav nav-list" data-bind="foreach: steps">
 										<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
-											<button class="delete" data-bind="click: remove"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
+											<button type="button" class="delete" data-bind="click: remove"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
 										</li>
 									</ol>
-									<div class="addstep"><button data-bind="visible: $root.isadvanced, click:addStep, text: steps().length ? 'Add another step' : 'Add a step'"></button></div>
+									<div class="addstep"><button type="button" data-bind="visible: $root.isadvanced, click:addStep, text: steps().length ? 'Add another step' : 'Add a step'"></button></div>
 								</div>
 							</div>
 						</li>
 					</ol>
-					<button data-bind="visible: $root.isadvanced, click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
+					<button type="button" data-bind="visible: $root.isadvanced, click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
 				</div>
 				<div class="span9 part-edit" data-bind="with: currentPart">
 					<h4 class="header">
@@ -176,7 +192,7 @@
 					</h4>
 					<div class="row-fluid">
 						<ul class="nav nav-tabs" data-bind="foreach: tabs">
-							<li data-bind="css: {active: $parent.currentTab() == $data}">
+							<li data-bind="css: {active: $parent.currentTab().id() == $data.id()}">
 								<a href="#" data-bind="click: $parent.currentTab, text: title"></a>
 							</li>
 						</ul>
@@ -194,11 +210,13 @@
 										data: {label:'Marks',property:marks,min:0}
 									}"></div>
 									<div class="control-group">
-										<label class="control-label">Correct answer</label>
-										<div class="controls">
-											<input type="text" data-bind="value: jme.answer, valueUpdate: 'input', autosize: {max: 500, min: 30, padding: 10, value: jme.answer}"/>
-											<span data-bind="JME: jme.answer" class="jme-answer"></span>
-										</div>
+										<label>
+											<span class="control-label">Correct answer</span>
+											<div class="controls">
+												<input type="text" data-bind="value: jme.answer, valueUpdate: 'input', autosize: {max: 500, min: 30, padding: 10, value: jme.answer}"/>
+												<span data-bind="JME: jme.answer" class="jme-answer"></span>
+											</div>
+										</label>
 									</div>
 									<div class="control-group" data-bind="template: {
 										name: 'property',
@@ -210,10 +228,12 @@
 								<form class="form-horizontal">
 									<h4>Checking accuracy</h4>
 									<div class="control-group">
-										<label class="control-label">Checking type</label>
-										<div class="controls">
-											<select data-bind="options: jme.checkingTypes, value: jme.checkingType, optionsText:'niceName'"></select>
-										</div>
+										<label>
+											<span class="control-label">Checking type</span>
+											<div class="controls">
+												<select data-bind="options: jme.checkingTypes, value: jme.checkingType, optionsText:'niceName'"></select>
+											</div>
+										</label>
 									</div>
 									<div class="control-group" data-bind="template: {
 										name: 'property',
@@ -248,8 +268,10 @@
 											data: {label:'Partial credit for long answer',property:jme.maxlength.partialCredit}
 										}"></div>
 										<div class="control-group">
-											<label clas="control-label">Warning message</label>
-											<div class="controls" data-bind="writemaths: jme.maxlength.message"></div>
+											<label>
+												<span class="control-label">Warning message</span>
+												<div class="controls" data-bind="writemaths: jme.maxlength.message"></div>
+											</label>
 										</div>
 									</div>
 								</form>
@@ -264,16 +286,20 @@
 											data: {label:'Partial credit for short answer',property:jme.minlength.partialCredit}
 										}"></div>
 										<div class="control-group">
-											<label class="control-label">Warning message</label>
-											<div class="controls" data-bind="writemaths: jme.minlength.message"></div>
+											<label>
+												<span class="control-label">Warning message</span>
+												<div class="controls" data-bind="writemaths: jme.minlength.message"></div>
+											</label>
 										</div>
 									</div>
 								</form>
 								<h4>String restriction</h4>
 								<form class="form-horizontal">
 									<div class="control-group">
-										<label class="control-label">Required strings:</label>
-										<div class="controls" data-bind="listbox:jme.musthave.strings"></div>
+										<label>
+											<span class="control-label">Required strings:</span>
+											<div class="controls" data-bind="listbox:jme.musthave.strings"></div>
+										</label>
 									</div>
 									<div data-bind="fadeVisible: jme.musthave.strings().length>0">
 										<div class="control-group" data-bind="template: {
@@ -285,16 +311,20 @@
 											data: {label:'Show required strings in warning?', property:jme.musthave.showStrings}
 										}"></div>
 										<div class="control-group">
-											<label class="control-label">Warning message</label>
-											<div class="controls" data-bind="writemaths: jme.musthave.message"></div>
+											<label>
+												<span class="control-label">Warning message</span>
+												<div class="controls" data-bind="writemaths: jme.musthave.message"></div>
+											</label>
 										</div>
 									</div>
 								</form>
 
 								<form class="form-horizontal">
 									<div class="control-group">
-										<label class="control-label">Forbidden strings:</label>
-										<div class="controls" data-bind="listbox:jme.notallowed.strings"></div>
+										<label>
+											<span class="control-label">Forbidden strings:</span>
+											<div class="controls" data-bind="listbox:jme.notallowed.strings"></div>
+										</label>
 									</div>
 									<div data-bind="fadeVisible: jme.notallowed.strings().length>0">
 										<div class="control-group" data-bind="template: {
@@ -306,8 +336,10 @@
 											data: {label:'Show required strings in warning?', property:jme.notallowed.showStrings}
 										}"></div>
 										<div class="control-group">
-											<label class="control-label">Warning message</label>
-											<div class="controls" data-bind="writemaths: jme.notallowed.message"></div>
+											<label>
+												<span class="control-label">Warning message</span>
+												<div class="controls" data-bind="writemaths: jme.notallowed.message"></div>
+											</label>
 										</div>
 									</div>
 								</form>
@@ -338,10 +370,12 @@
 										data: {label:'Partial credit for non-integer answer',property:numberentry.integerPartialCredit}
 									}"></div>
 									<div class="control-group">
-										<label class="control-label">Precision restriction</label>
-										<div class="controls">
-											<select data-bind="options: numberentry.precisionTypes, value: numberentry.precisionType, optionsText: 'niceName'"></select>
-										</div>
+										<label>
+											<span class="control-label">Precision restriction</span>
+											<div class="controls">
+												<select data-bind="options: numberentry.precisionTypes, value: numberentry.precisionType, optionsText: 'niceName'"></select>
+											</div>
+										</span>
 									</div>
 									<div class="control-group" data-bind="fadeVisible: numberentry.precisionType().name!='none',
 									template: {
@@ -354,8 +388,10 @@
 										data: {label:'Partial credit for wrong precision',property:numberentry.precisionPartialCredit}
 									}"></div>
 									<div class="control-group" data-bind="fadeVisible: numberentry.precisionType().name!='none'">
-										<label class="control-label">Message if wrong precision</label>
-										<div class="controls" data-bind="writemaths: numberentry.precisionMessage"></div>
+										<label>
+											<span class="control-label">Message if wrong precision</span>
+											<div class="controls" data-bind="writemaths: numberentry.precisionMessage"></div>
+										</label>
 									</div>
 								</form>
 							</section>
@@ -423,7 +459,7 @@
 									<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
 									<li class="choice">
 										<form class="form-inline">
-											<button class="delete" data-bind="click:remove"></button>
+											<button type="button" type="button" class="delete" data-bind="click:remove"></button>
 											<label>
 												Marks:
 												<input class="marks" type="text" data-bind="value:marks, valueUpdate:'input', autosize: {max: 500, min: 30, padding: 10, value: marks}"/>
@@ -436,7 +472,7 @@
 										</form>
 									</li>
 									<!-- /ko -->
-									<li><button data-bind="visible: $root.isadvanced, click:addChoice">Add a choice</button></li>
+									<li><button type="button" data-bind="visible: $root.isadvanced, click:addChoice">Add a choice</button></li>
 								</ul>
 							</section>
 							<!-- /ko -->
@@ -483,7 +519,7 @@
 									<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
 									<li class="choice">
 										<form class="form-inline">
-											<button class="delete" data-bind="click:remove"></button>
+											<button type="button" class="delete" data-bind="click:remove"></button>
 											<label>
 												Marks:
 												<input class="marks" type="text" data-bind="value:marks, valueUpdate:'input', autosize: {max: 500, min: 30, padding: 10, value: marks}"/>
@@ -496,7 +532,7 @@
 										</form>
 									</li>
 									<!-- /ko -->
-									<li><button data-bind="visible: $root.isadvanced, click:addChoice">Add a choice</button></li>
+									<li><button type="button" data-bind="visible: $root.isadvanced, click:addChoice">Add a choice</button></li>
 								</ul>
 							</section>
 							<!-- /ko -->
@@ -555,11 +591,11 @@
 												<!-- ko foreach: {data: multiplechoice.answers, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
 													<th>
 														<input type="text" data-bind="value:content, valueUpdate:'input'">
-														<button class="delete" data-bind="click:function(){this.remove()}"></button>
+														<button type="button" class="delete" data-bind="click:function(){this.remove()}"></button>
 													</th>
 												<!-- /ko -->
 												<td>
-													<button data-bind="visible: $root.isadvanced, click:addAnswer">Add Answer</button>
+													<button type="button" data-bind="visible: $root.isadvanced, click:addAnswer">Add Answer</button>
 												</td>
 											</tr>
 										</thead>
@@ -568,7 +604,7 @@
 												<tr>
 													<th>
 														<input type="text" data-bind="value:content, valueUpdate:'input'"/>
-														<button class="delete" data-bind="click:remove"></button>
+														<button type="button" class="delete" data-bind="click:remove"></button>
 													</th>
 													<!-- ko foreach: answers -->
 														<td>
@@ -577,7 +613,7 @@
 													<!-- /ko -->
 												</tr>
 											<!-- /ko -->
-											<tr><td><button data-bind="visible: $root.isadvanced, click:addChoice">Add Choice</button></td></tr>
+											<tr><td><button type="button" data-bind="visible: $root.isadvanced, click:addChoice">Add Choice</button></td></tr>
 										</tbody>
 									</table>
 								</div>
@@ -641,10 +677,10 @@
 				">
 					<li class="ruleset">
 						<input type="text" data-bind="value:name, valueUpdate: 'afterkeydown'"/>: <div data-bind="listbox:sets, rulesetcomplete: allsets"></div>
-						<button class="delete" data-bind="click:remove"></button>
+						<button type="button" class="delete" data-bind="click:remove"></button>
 					</li>
 				</ul>
-				<button data-bind="click:addRuleset, text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></button>
+				<button type="button" data-bind="click:addRuleset, text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></button>
 			</div>
 		</div>
 
@@ -681,11 +717,11 @@
 											<tr>
 												<td><div><input data-bind="value: name"/></div></td>
 												<td><div><select data-bind="options: $parent.types, value: type"></select></div></td>
-												<td><div><button class="delete" data-bind="click: remove"></div></button></td>
+												<td><div><button type="button" class="delete" data-bind="click: remove"></div></button></td>
 											</tr>
 										</tbody>
 									</table>
-									<button class="addparameter" data-bind="click:addParameter, text: parameters().length ? 'Add another parameter' : 'Add a parameter'"></button>
+									<button type="button" class="addparameter" data-bind="click:addParameter, text: parameters().length ? 'Add another parameter' : 'Add a parameter'"></button>
 								</div>
 								<div>
 									<label>Output type: </label>
@@ -706,7 +742,7 @@
 						</div>
 					</li>
 				</ol>
-				<button data-bind="click:addFunction, text: functions().length ? 'Add another function' : 'Add a function'"></button>
+				<button type="button" data-bind="click:addFunction, text: functions().length ? 'Add another function' : 'Add a function'"></button>
 			</div>
 		</div>
 
@@ -721,7 +757,7 @@
 						afterAdd: Editor.afterAdd
 					}
 				"></ol>
-				<button data-bind="visible: $root.isadvanced, click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
+				<button type="button" data-bind="visible: $root.isadvanced, click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
 			</div>
 		</div>
 
@@ -735,9 +771,9 @@
 	<script type="text/html" id="part">
 		<li class="part" data-bind="addClass: type().name">
 			<div class="reorder">
-				<button class="up" data-bind="click: moveUp"></button>
+				<button type="button" class="up" data-bind="click: moveUp"></button>
 				<br/>
-				<button class="down" data-bind="click: moveDown"></button>
+				<button type="button" class="down" data-bind="click: moveDown"></button>
 			</div>
 			<div data-bind="folder:{label: $index()+'. '+type().niceName, show:true}, foldlist: true">
 				<div class="properties">
@@ -773,7 +809,7 @@
 								afterAdd: Editor.afterAdd
 							}
 						"></ol>
-						<button data-bind="visible: $root.isadvanced, click:addStep, text: steps().length ? 'Add another step' : 'Add a step'"></button>
+						<button type="button" data-bind="visible: $root.isadvanced, click:addStep, text: steps().length ? 'Add another step' : 'Add a step'"></button>
 					</div>
 				</div>
 			</div>
@@ -795,7 +831,7 @@
 						afterAdd: Editor.afterAdd
 					}
 				"></ol>
-				<button data-bind="visible: $root.isadvanced, click:addGap, text: gapfill.gaps().length ? 'Add another gap' : 'Add a gap'"></button>
+				<button type="button" data-bind="visible: $root.isadvanced, click:addGap, text: gapfill.gaps().length ? 'Add another gap' : 'Add a gap'"></button>
 			</div>
 		</div>
 	</script>
@@ -1024,7 +1060,7 @@
 			<ul class="choices">
 				<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
 				<li class="choice">
-					<button class="delete" data-bind="click:remove"></button>
+					<button type="button" class="delete" data-bind="click:remove"></button>
 					<span>
 						<input type="text" data-bind="value:content, valueUpdate:'input'"/>
 					</span>
@@ -1038,7 +1074,7 @@
 					</span>
 				</li>
 				<!-- /ko -->
-				<li><button data-bind="visible: $root.isadvanced, click:addChoice">Add a choice</button></li>
+				<li><button type="button" data-bind="visible: $root.isadvanced, click:addChoice">Add a choice</button></li>
 			</ul>
 		</div>
 	</script>
@@ -1084,7 +1120,7 @@
 			<ul class="choices">
 				<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
 				<li class="choice">
-					<button class="delete" data-bind="click:remove"></button>
+					<button type="button" class="delete" data-bind="click:remove"></button>
 					<span>
 						<input type="text" data-bind="value:content, valueUpdate:'input'"/>
 					</span>
@@ -1098,7 +1134,7 @@
 					</span>
 				</li>
 				<!-- /ko -->
-				<li><button data-bind="click:addChoice">Add a choice</button></li>
+				<li><button type="button" data-bind="click:addChoice">Add a choice</button></li>
 			</ul>
 		</div>
 	</script>
@@ -1151,11 +1187,11 @@
 						<!-- ko foreach: {data: multiplechoice.answers, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
 							<th>
 								<input type="text" data-bind="value:content, valueUpdate:'input'">
-								<button class="delete" data-bind="click:function(){this.remove()}"></button>
+								<button type="button" class="delete" data-bind="click:function(){this.remove()}"></button>
 							</th>
 						<!-- /ko -->
 						<td>
-							<button data-bind="visible: $root.isadvanced, click:addAnswer">Add Answer</button>
+							<button type="button" data-bind="visible: $root.isadvanced, click:addAnswer">Add Answer</button>
 						</td>
 					</tr>
 				</thead>
@@ -1164,7 +1200,7 @@
 						<tr>
 							<th>
 								<input type="text" data-bind="value:content, valueUpdate:'input'"/>
-								<button class="delete" data-bind="click:remove"></button>
+								<button type="button" class="delete" data-bind="click:remove"></button>
 							</th>
 							<!-- ko foreach: answers -->
 								<td>
@@ -1173,7 +1209,7 @@
 							<!-- /ko -->
 						</tr>
 					<!-- /ko -->
-					<tr><td><button data-bind="visible: $root.isadvanced, click:addChoice">Add Choice</button></td></tr>
+					<tr><td><button type="button" data-bind="visible: $root.isadvanced, click:addChoice">Add Choice</button></td></tr>
 				</tbody>
 			</table>
 		</div>

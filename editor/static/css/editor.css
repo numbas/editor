@@ -96,29 +96,11 @@ button.delete-grey:hover {
 
 
 
-.listbox {
-    background: white;
-	display:inline-block;
-	border: 1px solid #aaa;
-	padding: 0;
-}
-
-.listbox input {
-	border: none;
-	float:initial;
-    width: 100%;
-}
-.listbox input:focus {
-	border:none;
-}
-
 .listbox ul {
 	display:inline-block;
 	padding: 0;
 	margin: 0;
 	background: white;
-    float: left;
-    text-align: left;
 }
 
 .listbox li {

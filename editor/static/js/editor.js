@@ -604,9 +604,6 @@ $(document).ready(function() {
 				onChange: onChange
 			});
 			ko.utils.domData.set(element,'codemirror',mc);
-			$(element).parents('.folder').on('folder-open',function() {
-				mc.refresh();
-			});
 		},
 		update: function(element,valueAccessor,allBindingsAccessor) {
 			var mc = ko.utils.domData.get(element,'codemirror');
@@ -639,7 +636,7 @@ $(document).ready(function() {
 				}
             }
 
-			var toggle = $('<button class="wmToggle on">Toggle rich text editor</button>');
+			var toggle = $('<button type="button" class="wmToggle on">Toggle rich text editor</button>');
 			$(element).append(toggle);
 			toggle.click(function() {
 				var ed = $(this).siblings('textarea').tinymce();
@@ -696,10 +693,6 @@ $(document).ready(function() {
 				onChange: onChange
 			});
 			ko.utils.domData.set(plaintext[0],'codemirror',mc);
-			$(element).parents('.folder').on('folder-open',function() {
-				mc.refresh();
-			});
-
 		},
 		update: function(element, valueAccessor) {
 			var tinymce = $(element).find('iframe').contents().find('body');
@@ -724,88 +717,6 @@ $(document).ready(function() {
 		$(this).on('mousedown',function(e){ e.preventDefault(); });
 	};
 
-	ko.bindingHandlers.folder = {
-		init: function(element,valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-			var value = ko.utils.unwrapObservable(valueAccessor());
-
-			var options = {
-				label: '',
-				show: false
-			}
-			if(typeof value == 'string')
-				options.label = value;
-			else
-				options = $.extend(options,value);
-
-
-			var root = $(element);
-
-			root.addClass('fold');
-			var header = $('<div class="folder-header" tabindex="0"/>');
-			var content = $('<div class="folder" role="treeitem"/>');
-			root.toggleClass('folded',!options.show);
-			root.contents().appendTo(content);
-			root.append(header,content);
-
-			function toggleOpen(state) {
-				var currentState = !root.hasClass('folded');
-				if(state==currentState)
-					return;
-				header.siblings('.folder').toggle(150,function() {
-					$(this).parent().toggleClass('folded');
-					var open = !$(this).parent().hasClass('folded');
-					content.trigger('folder-'+(open ? 'open' : 'closed'));
-				});
-			}
-
-			header
-				.on('click',function(){toggleOpen();})
-				.on('keydown',function(e) {
-					switch(e.which) {
-					case 37:	//left arrow
-						toggleOpen(false);
-						break;
-					case 39:	//right arrow
-						toggleOpen(true);
-						break;
-					case 32:	//space
-						toggleOpen();
-						break;
-					default:
-						return;
-					}
-
-					e.preventDefault();
-					e.stopPropagation();
-				})
-			;
-
-
-			ko.applyBindingsToDescendants(bindingContext, content[0]);
-
-			return {controlsDescendantBindings: true};
-		},
-		update: function(element,valueAccessor) {
-			var value = ko.utils.unwrapObservable(valueAccessor());
-
-			var options = {
-				label: '',
-				show: false
-			}
-			if(typeof value == 'string')
-				options.label = value;
-			else
-				options = $.extend(options,value);
-			for(var x in options) {
-				options[x] = ko.utils.unwrapObservable(options[x]);
-			}
-
-			$(element)
-				.children('.folder-header').html(options.label);
-
-		}
-	};
-
 	ko.bindingHandlers.debug = {
 		update: function(element,valueAccessor) {
 			var value = valueAccessor();
@@ -828,7 +739,7 @@ $(document).ready(function() {
 			var show = allBindings.show;
 
 			element=$(element);
-			var b = $('<button class="delete" data-bind="click:remove" value="Delete"></button>');
+			var b = $('<button type="button" class="delete" data-bind="click:remove" value="Delete"></button>');
 			b.click(function(){viewModel.remove()});
 			element.append(b);
 		}
@@ -852,7 +763,7 @@ $(document).ready(function() {
 			var value = valueAccessor();
 			$(element).addClass('listbox');
 
-			var i = $('<input/>');
+			var i = $('<input type="text"/>');
 			i.keydown(function(e){
 				switch(e.which)
 				{
@@ -884,8 +795,11 @@ $(document).ready(function() {
 					value.push(val);
 				$(this).val('');
 			});
-			$(element).append('<ul/>');
-			$(element).append(i);
+
+			var d = $('<div class="input-prepend"/>')
+			$(element).append(d);
+			$(d).append('<ul class="add-on"/>');
+			$(d).append(i);
 			function selectItem() {
 				var n = $(this).index();
 				i.val(value()[n]).focus();

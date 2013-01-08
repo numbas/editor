@@ -1,3 +1,16 @@
-.ruleset.well {
-	padding: 4px;
+.controls {
+	padding-top: 5px;
+}
+
+.part-edit .choices {
+	list-style-type: decimal;
+	margin-left: 25px;
+}
+.choice .choice-bits {
+	background: #eee;
+	padding-left: 4px;
+	margin-bottom: 4px;
+}
+.choice-bits label {
+	margin-bottom: 0;
 }

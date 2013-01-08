@@ -9,7 +9,7 @@
 		<label>
 			<span class="control-label" data-bind="html: label"></span>
 			<div class="controls">
-				<span class="value" data-bind="text: property"></span>
+				<span class="value" data-bind="text: property, css: {monospace: 'monospace' in $data ? monospace : false}"></span>
 			</div>
 		</label>
 	</script>

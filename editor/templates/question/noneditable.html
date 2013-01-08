@@ -115,7 +115,7 @@
 							<span class="control-label" data-bind="text: name"></span>
 							<div class="controls">:
 								<!-- ko foreach: sets -->
-								<span class="ruleset well" data-bind="text: $data"></span >
+								<span class="ruleset well well-small" data-bind="text: $data"></span >
 								<!-- /ko -->
 							</div>
 						</div>
@@ -130,7 +130,7 @@
 						<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
 							<a data-bind="text: header, click: $root.showPart" href="#"></a>
 							<div class="subparts" data-bind="fadeVisible: meOrChildSelected">
-								<div class="gaps" data-bind="if: type().name=='gapfill'">
+								<div class="gaps" data-bind="visible: type().name=='gapfill' && gaps().length>0">
 									<h6>Gaps</h6>
 									<ol class="gaps nav nav-list" data-bind="foreach: gapfill.gaps">
 										<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
@@ -138,7 +138,7 @@
 										</li>
 									</ol>
 								</div>
-								<div class="steps clearfix">
+								<div class="steps clearfix" data-bind="visible: steps().length>0">
 									<h6>Steps</h6>
 									<ol class="steps nav nav-list" data-bind="foreach: steps">
 										<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
@@ -152,8 +152,7 @@
 				</div>
 				<div class="span9 part-edit" data-bind="with: currentPart">
 					<h4 class="header">
-						<span data-bind="text: $index()+'. '"></span>
-						<select class="type" data-bind="options: availableTypes, value:type, optionsText: 'niceName'"></select>
+						<span data-bind="text: $index()+'. '+type().niceName"></span>
 					</h4>
 					<div class="row-fluid">
 						<ul class="nav nav-tabs" data-bind="foreach: tabs">
@@ -195,7 +194,7 @@
 										<label>
 											<span class="control-label">Checking type</span>
 											<div class="controls">
-												<select data-bind="options: jme.checkingTypes, value: jme.checkingType, optionsText:'niceName'"></select>
+												<span data-bind="text:jme.checkingType().niceName"></span>
 											</div>
 										</label>
 									</div>
@@ -262,7 +261,11 @@
 									<div class="control-group">
 										<label>
 											<span class="control-label">Required strings:</span>
-											<div class="controls" data-bind="listbox:jme.musthave.strings"></div>
+											<div class="controls">
+												<!-- ko foreach: jme.musthave.strings-->
+												<span class="well well-small" data-bind="text: $data"></span >
+												<!-- /ko -->
+											</div>
 										</label>
 									</div>
 									<div data-bind="fadeVisible: jme.musthave.strings().length>0">
@@ -287,7 +290,11 @@
 									<div class="control-group">
 										<label>
 											<span class="control-label">Forbidden strings:</span>
-											<div class="controls" data-bind="listbox:jme.notallowed.strings"></div>
+											<div class="controls">
+												<!-- ko foreach: jme.notallowed.strings-->
+												<span class="well well-small" data-bind="text: $data"></span >
+												<!-- /ko -->
+											</div>
 										</label>
 									</div>
 									<div data-bind="fadeVisible: jme.notallowed.strings().length>0">
@@ -337,7 +344,7 @@
 										<label>
 											<span class="control-label">Precision restriction</span>
 											<div class="controls">
-												<select data-bind="options: numberentry.precisionTypes, value: numberentry.precisionType, optionsText: 'niceName'"></select>
+												<span data-bind="text:numberentry.precisionType().niceName"></span>
 											</div>
 										</span>
 									</div>
@@ -367,9 +374,9 @@
 										name: 'property',
 										data: {label:'Marks',property:marks,min:0}
 									}"></div>
-									<div class="control-group" data-bind="template: {
+									<div class="control-group " data-bind="template: {
 										name: 'property',
-										data: {label:'Answer pattern',property:patternmatch.answer}
+										data: {label:'Answer pattern',property:patternmatch.answer, monospace: true}
 									}"></div>
 									<div class="control-group" data-bind="template: {
 										name: 'property',
@@ -419,23 +426,25 @@
 								</form>
 							</section>
 							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='choices'}">
-								<ul class="choices">
+								<ol class="choices">
 									<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
 									<li class="choice">
 										<form class="form-inline">
-											<label>
-												Marks:
-												<span class="marks" data-bind="text: marks"></span>
-											</label>
-											<label>
-												Distractor Message:
-												<span class="marks" data-bind="text: marks"></span>
-											</label>
+											<div class="choice-bits">
+												<label>
+													Marks:
+													<span class="marks" data-bind="text: marks"></span>
+												</label>
+												<label>
+													Distractor Message:
+													<span class="distractor" data-bind="text: distractor"></span>
+												</label>
+											</div>
 											<div id="description" data-bind="cleanJME: content, wmHeight: 100, wmWidth: 500"></div>
 										</form>
 									</li>
 									<!-- /ko -->
-								</ul>
+								</ol>
 							</section>
 							<!-- /ko -->
 							<!-- ko if: type().name=='m_n_2' -->
@@ -483,11 +492,11 @@
 										<form class="form-inline">
 											<label>
 												Marks:
-												<input class="marks" type="text" data-bind="value:marks, valueUpdate:'input', autosize: {max: 500, min: 30, padding: 10, value: marks}"/>
+												<span class="marks" data-bind="text: marks"></span>
 											</label>
 											<label>
 												Distractor Message:
-												<input type="text" data-bind="value:distractor, valueUpdate:'input', autosize: {max: 500, min: 100, padding: 10, value: distractor}"/>
+												<span class="distractor" data-bind="texr: distractor"></span>
 											</label>
 											<div id="description" data-bind="cleanJME: content, wmHeight: 100, wmWidth: 500"></div>
 										</form>
@@ -527,7 +536,7 @@
 										<label>
 											<span class="control-label">Selection type:</span>
 											<div class="controls">
-												<select data-bind="options: multiplechoice.displayTypes.m_n_x, value: multiplechoice.displayType, optionsText: 'niceName'"></select>
+												<span data-bind="text:multiplechoice.displayType().niceName"></span>
 											</div>
 										</label>
 									</div>
@@ -549,22 +558,16 @@
 											<tr>
 												<td></td>
 												<!-- ko foreach: {data: multiplechoice.answers, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
-													<th>
-														<input type="text" data-bind="value:content, valueUpdate:'input'">
-													</th>
+													<th data-bind="html:content"></th>
 												<!-- /ko -->
 											</tr>
 										</thead>
 										<tbody>
 											<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
 												<tr>
-													<th>
-														<input type="text" data-bind="value:content, valueUpdate:'input'"/>
-													</th>
+													<th data-bind="html:content"></th>
 													<!-- ko foreach: answers -->
-														<td>
-															<input class="marks" data-bind="visible: !$parents[1].multiplechoice.customMarking(), value: marks, valueUpdate:'input'"/>
-														</td>
+													<td data-bind="text: marks"></td>
 													<!-- /ko -->
 												</tr>
 											<!-- /ko -->
@@ -775,7 +778,7 @@
                 
 				<div data-bind="visible: jme.answerSimplification().length>0, template: {
 					name: 'property',
-					data: {label:'Answer simplification rules:',property:jme.answerSimplification}
+					data: {label:'Answer simplification rules:',property:jme.answerSimplification, monospace: true}
 				}"></div>
 			</div>
 

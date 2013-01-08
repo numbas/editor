@@ -242,14 +242,14 @@
 										<label>
 											<span class="control-label">Correct answer</span>
 											<div class="controls">
-												<input type="text" data-bind="value: jme.answer, valueUpdate: 'input', autosize: {max: 500, min: 30, padding: 10, value: jme.answer}"/>
+												<input class="monospace" type="text" data-bind="value: jme.answer, valueUpdate: 'input', autosize: {max: 500, min: 30, padding: 10, value: jme.answer}"/>
 												<span data-bind="JME: jme.answer" class="jme-answer"></span>
 											</div>
 										</label>
 									</div>
 									<div class="control-group" data-bind="template: {
 										name: 'property',
-										data: {label:'Answer simplification rules',property:jme.answerSimplification}
+										data: {label:'Answer simplification rules',property:jme.answerSimplification, monospace: true}
 									}"></div>
 								</form>
 							</section>
@@ -434,7 +434,7 @@
 									}"></div>
 									<div class="control-group" data-bind="template: {
 										name: 'property',
-										data: {label:'Answer pattern',property:patternmatch.answer}
+										data: {label:'Answer pattern',property:patternmatch.answer, monospace: true}
 									}"></div>
 									<div class="control-group" data-bind="template: {
 										name: 'property',

@@ -58,22 +58,28 @@
 		</section>
 		<section class="tab-pane" data-bind="css: {active: $root.currentTab().id()=='variables'}">
 			<div class="row-fluid">
-				<!-- ko foreach: variables -->
-				<div class="row-fluid variable">
-					<div class="span1"><span class="handle"></span></div>
-					<div class="span8">
-						<form>
-							<button type="button" class="delete" data-bind="click:remove"></button>
-							<input type="text" placeholder="Name" class="name" data-bind="value:name, valueUpdate: 'afterkeydown', attr: {disabled: !$parent.isadvanced()}, autosize: name"/> 
-							<label class="control-label">Definition</label>
-							<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: definition, codemirrorMode: 'jme'"></textarea>
-						</form>
-					</div>
-					<div class="span3">
-						<div class="value" data-bind="css: {error: error().length>0}, html: display, mathjax: display"></div>
-					</div>
+				<div data-bind="sortable: {
+							template: 'variable-template',
+							data: variables,
+							options: {handle: '.handle'}
+						}">
 				</div>
-				<!-- /ko -->
+				<script type="text/html" id="variable-template">
+					<div class="row-fluid variable">
+						<div class="span1"><span class="handle"></span></div>
+						<div class="span8">
+							<form>
+								<button type="button" class="delete" data-bind="click:remove"></button>
+								<input type="text" placeholder="Name" class="name" data-bind="value:name, valueUpdate: 'afterkeydown', attr: {disabled: !$parent.isadvanced()}, autosize: name"/> 
+								<label class="control-label">Definition</label>
+								<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: definition, codemirrorMode: 'jme'"></textarea>
+							</form>
+						</div>
+						<div class="span3">
+							<div class="value" data-bind="css: {error: error().length>0}, html: display, mathjax: display"></div>
+						</div>
+					</div>
+				</script>
 
 				<div class="row-fluid">
 					<div class="span5">
@@ -90,54 +96,55 @@
 			<div id="functions">
 				<h4>Functions</h4>
 				<!-- ko foreach: functions -->
-				<div class="function">
-					<div class="row-fluid">
-						<div class="span1">
-							<button type="button" class="delete" data-bind="click:remove" value="Delete"></button>
-						</div>
-						<div class="span8">
-							<div class="row-fluid">
-								<div class="span4">
-									<label>
-										Name
-										<div>
-											<input placeholder="Name" type="text" data-bind="value: name, valueUpdate: 'afterkeydown', autosize: {value: name, max: 220}">
-										</div>
-									</label>
-								</div>
-								<div class="span4">
-									<label>
-										Language
-										<select data-bind="options: languages, value: language"></select>
-									</label>
-								</div>
-								<div class="span4">
-									<label>
-										Output type
-										<select data-bind="options: types, value:type"></select>
-									</label>
-								</div>
-								<div>
-									<label>
-										Definition:
-										<textarea data-bind="codemirror: definition, codemirrorMode: language, valueUpdate: 'afterkeydown'"></textarea>
-									</label>
+				<div class="function row-fluid">
+					<div class="span1">
+						<button type="button" class="delete" data-bind="click:remove" value="Delete"></button>
+					</div>
+					<div class="span8">
+						<div class="row-fluid">
+							<div class="span4">
+								<label>
+									Name
+									<div>
+										<input placeholder="Name" type="text" data-bind="value: name, valueUpdate: 'afterkeydown', autosize: {value: name, max: 220}">
+									</div>
+								</label>
+							</div>
+							<div class="span4">
+								<label>
+									Language
+									<select data-bind="options: languages, value: language"></select>
+								</label>
+							</div>
+							<div class="span4">
+								<label>
+									Output type
+									<select data-bind="options: types, value:type"></select>
+								</label>
+							</div>
+							<div>
+								<label>
+									Definition:
+									<textarea data-bind="codemirror: definition, codemirrorMode: language, valueUpdate: 'afterkeydown'"></textarea>
+								</label>
+								<div class="error" data-bind="visible: error().length>0">
+									Error: <span class="errortext" data-bind="html: error"></span>
 								</div>
 							</div>
 						</div>
-						<div class="span3">
-							<label>Parameters</label>
-							<!-- ko foreach: parameters -->
-							<div class="row-fluid">
-								<form class="form-inline">
-									<input type="text" placholder="Name" data-bind="value: name"/>
-									<select data-bind="options: $parent.types, value: type"></select>
-									<button type="button" class="delete" data-bind="click: remove"></button>
-								</form>
-							</div>
-							<!-- /ko -->
-							<button type="button" class="addparameter" data-bind="click:addParameter, text: parameters().length ? 'Add another parameter' : 'Add a parameter'"></button>
+					</div>
+					<div class="span3">
+						<label>Parameters</label>
+						<!-- ko foreach: parameters -->
+						<div class="row-fluid parameter">
+							<form class="form-inline">
+								<input class="name" type="text" placholder="Name" data-bind="value: name"/>
+								<select class="type" data-bind="options: $parent.types, value: type"></select>
+								<button type="button" class="delete" data-bind="click: remove"></button>
+							</form>
 						</div>
+						<!-- /ko -->
+						<button type="button" class="addparameter" data-bind="click:addParameter, text: parameters().length ? 'Add another parameter' : 'Add a parameter'"></button>
 					</div>
 				</div>
 				<!-- /ko -->
@@ -145,14 +152,20 @@
 			</div>
 			<div id="rulesets">
 				<h4>Rulesets</h4>
-				<!-- ko foreach: rulesets -->
-					<div class="ruleset">
-						<input type="text" placeholder="Name" class="name" data-bind="value:name, valueUpdate: 'afterkeydown'"/>:
-						<div data-bind="listbox:sets, rulesetcomplete: allsets"></div>
-						<button type="button" class="delete" data-bind="click:remove"></button>
-					</div>
-				<!-- /ko -->
-				<button type="button" data-bind="click:addRuleset, text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></button>
+				<form class="form-horizontal">
+					<!-- ko foreach: rulesets -->
+						<div class="ruleset control-group">
+							<span class="control-label">
+								<input type="text" placeholder="Name" class="name control-label" data-bind="value:name, valueUpdate: 'afterkeydown'"/>
+							</span>
+							<div class="controls">:
+								<div class="rules" data-bind="listbox:sets, rulesetcomplete: allsets"></div>
+								<button type="button" class="delete" data-bind="click:remove"></button>
+							</div>
+						</div>
+					<!-- /ko -->
+					<button type="button" data-bind="click:addRuleset, text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></button>
+				</form>
 			</div>
 		</section>
 		<section class="tab-pane" data-bind="css: {active: $root.currentTab().id()=='parts'}">
@@ -160,12 +173,22 @@
 				<div class="span3">
 					<ol class="parts nav nav-list" data-bind="foreach: parts">
 						<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
+							<div class="reorder" data-bind="visible: $root.currentPart()==$data && parentList().length>1">
+								<button type="button" class="up" data-bind="click: moveUp"></button>
+								<br/>
+								<button type="button" class="down" data-bind="click: moveDown"></button>
+							</div>
 							<button type="button" class="delete" data-bind="click: remove"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
 							<div class="subparts" data-bind="fadeVisible: meOrChildSelected">
 								<div class="gaps" data-bind="if: type().name=='gapfill'">
 									<h6>Gaps</h6>
 									<ol class="gaps nav nav-list" data-bind="foreach: gapfill.gaps">
 										<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
+											<div class="reorder" data-bind="visible: $root.currentPart()==$data && parentList().length>1">
+												<button type="button" class="up" data-bind="click: moveUp"></button>
+												<br/>
+												<button type="button" class="down" data-bind="click: moveDown"></button>
+											</div>
 											<button type="button" class="delete" data-bind="click: remove"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
 										</li>
 									</ol>
@@ -175,6 +198,11 @@
 									<h6>Steps</h6>
 									<ol class="steps nav nav-list" data-bind="foreach: steps">
 										<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
+										<div class="reorder" data-bind="visible: $root.currentPart()==$data && parentList().length>1">
+												<button type="button" class="up" data-bind="click: moveUp"></button>
+												<br/>
+												<button type="button" class="down" data-bind="click: moveDown"></button>
+											</div>
 											<button type="button" class="delete" data-bind="click: remove"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
 										</li>
 									</ol>
@@ -628,6 +656,7 @@
 			<div data-bind="writemaths:advice"></div>
 		</section>
 	</div>
+
 {% endblock editor %}
 
 {% block content %}

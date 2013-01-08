@@ -11,6 +11,7 @@
 {% block editable_message %}You can edit this question.{% endblock %}
 
 {% block editor %}
+	{% include "editable.html" %}
 	<div class="tab-content">
 		<section class="tab-pane" data-bind="css: {active: $root.currentTab().id()=='general'}">
 			<div class="row-fluid">
@@ -138,7 +139,7 @@
 						<!-- ko foreach: parameters -->
 						<div class="row-fluid parameter">
 							<form class="form-inline">
-								<input class="name" type="text" placholder="Name" data-bind="value: name"/>
+								<input class="name" type="text" placeholder="Name" data-bind="value: name"/>
 								<select class="type" data-bind="options: $parent.types, value: type"></select>
 								<button type="button" class="delete" data-bind="click: remove"></button>
 							</form>

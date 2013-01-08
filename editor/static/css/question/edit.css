@@ -32,12 +32,21 @@
 .tags ul {
     list-style: none;
     margin-left: 0;
+	line-height: 2em;
 }
 
 .tag {
     display: inline-block;
     padding: 4px;
     margin: 2px 0;
+}
+
+.parts.nav {
+	background: #eee;
+	padding-bottom: 1em;
+}
+.parts.nav .subparts {
+	background: white;
 }
 
 .parts.nav .delete {

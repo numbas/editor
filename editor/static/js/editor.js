@@ -590,6 +590,7 @@ $(document).ready(function() {
 			$(element).val(ko.utils.unwrapObservable(value));
 			
 			var mode = ko.utils.unwrapObservable(allBindings.codemirrorMode) || 'javascript';
+			var readOnly = ko.utils.unwrapObservable(allBindings.readOnly) || false;
 
 			function onChange(editor,change) {
 				if(typeof value=='function') {

@@ -5,8 +5,587 @@
 	{{ block.super }}
 	<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/question/noneditable.css">
 {% endblock stylesheets %}
+
 {% block editable_message %}You may only view this question. {% if user.is_authenticated %}If you want to change something, make a copy.{% endif %}{% endblock editable_message %}
 
+{% block editor %}
+	{% include "noneditable.html" %}
+	<div class="tab-content">
+		<section class="tab-pane" data-bind="css: {active: $root.currentTab().id()=='general'}">
+			<div class="row-fluid">
+				<label><h4>Question Name</h4></label>
+				<span id="question-name" data-bind="html: name"/>
+			</div>
+			<div class="row-fluid">
+				<div class="span6">
+					<label for="description"><h4>Description</h4></label>
+					<div id="description" data-bind="cleanJME: description"></div>
+				</div>
+				<div class="span6">
+					<label for="authors-notes"><h4>Author's Notes</h4></label>
+					<div id="authors-notes" data-bind="cleanJME: notes"></div>
+				</div>
+			</div>
+			<div class="tags">
+				<h4>Tags</h4>
+				<ul class="tags" data-bind="foreach: tags">
+					<li class="tag well">
+						<span data-bind="text: $data"></span>
+					</li>
+				</ul>
+			</div>
+		</section>
+		<section class="tab-pane" data-bind="css: {active: $root.currentTab().id()=='statement'}">
+			<div id="statement" data-bind="cleanJME: statement"></div>
+		</section>
+		<section class="tab-pane" data-bind="css: {active: $root.currentTab().id()=='variables'}">
+			<div class="row-fluid">
+				<div data-bind="sortable: {
+							template: 'variable-template',
+							data: variables,
+							options: {handle: '.handle'}
+						}">
+				</div>
+				<script type="text/html" id="variable-template">
+					<div class="row-fluid variable">
+						<div class="span1"><span class="handle"></span></div>
+						<div class="span8">
+							<form>
+								<span class="name" data-bind="text: name"></span>
+								<label class="control-label">Definition</label>
+								<textarea disabled class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: definition, codemirrorMode: 'jme'"></textarea>
+							</form>
+						</div>
+						<div class="span3">
+							<div class="value" data-bind="css: {error: error().length>0}, html: display, mathjax: display"></div>
+						</div>
+					</div>
+				</script>
+
+				<div class="row-fluid">
+					<div class="span3 offset9">
+						<button type="button" data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button>
+					</div>
+				</div>
+			</div>
+		</section>
+		<section class="tab-pane" data-bind="css: {active: $root.currentTab().id()=='functions'}">
+			<div id="functions">
+				<h4>Functions</h4>
+				<!-- ko foreach: functions -->
+				<div class="function row-fluid">
+					<div class="span8">
+						<div class="row-fluid">
+							<div class="span4">
+								Name: <span data-bind="text: name"></span>
+							</div>
+							<div class="span4">
+								Language: <span data-bind="text: language"></span>
+							</div>
+							<div class="span4">
+								Output type: <span data-bind="text: type">
+							</div>
+							<div>
+								<label>
+									Definition:
+									<textarea data-bind="codemirror: definition, codemirrorMode: language, valueUpdate: 'afterkeydown'"></textarea>
+								</label>
+								<div class="error" data-bind="visible: error().length>0">
+									Error: <span class="errortext" data-bind="html: error"></span>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="span3">
+						<label>Parameters</label>
+						<!-- ko foreach: parameters -->
+						<div class="row-fluid parameter">
+							<span class="name" data-bind="text: name"></span>: <span class="type" data-bind="text: type"></span>
+						</div>
+						<!-- /ko -->
+					</div>
+				</div>
+				<!-- /ko -->
+			</div>
+			<div id="rulesets">
+				<h4>Rulesets</h4>
+				<form class="form-horizontal">
+					<!-- ko foreach: rulesets -->
+						<div class="ruleset control-group">
+							<span class="control-label" data-bind="text: name"></span>
+							<div class="controls">:
+								<!-- ko foreach: sets -->
+								<span class="ruleset well" data-bind="text: $data"></span >
+								<!-- /ko -->
+							</div>
+						</div>
+					<!-- /ko -->
+				</form>
+			</div>
+		</section>
+		<section class="tab-pane" data-bind="css: {active: $root.currentTab().id()=='parts'}">
+			<div class="row-fluid">
+				<div class="span3">
+					<ol class="parts nav nav-list" data-bind="foreach: parts">
+						<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
+							<a data-bind="text: header, click: $root.showPart" href="#"></a>
+							<div class="subparts" data-bind="fadeVisible: meOrChildSelected">
+								<div class="gaps" data-bind="if: type().name=='gapfill'">
+									<h6>Gaps</h6>
+									<ol class="gaps nav nav-list" data-bind="foreach: gapfill.gaps">
+										<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
+											<a data-bind="text: header, click: $root.showPart" href="#"></a>
+										</li>
+									</ol>
+								</div>
+								<div class="steps clearfix">
+									<h6>Steps</h6>
+									<ol class="steps nav nav-list" data-bind="foreach: steps">
+										<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
+											<a data-bind="text: header, click: $root.showPart" href="#"></a>
+										</li>
+									</ol>
+								</div>
+							</div>
+						</li>
+					</ol>
+				</div>
+				<div class="span9 part-edit" data-bind="with: currentPart">
+					<h4 class="header">
+						<span data-bind="text: $index()+'. '"></span>
+						<select class="type" data-bind="options: availableTypes, value:type, optionsText: 'niceName'"></select>
+					</h4>
+					<div class="row-fluid">
+						<ul class="nav nav-tabs" data-bind="foreach: tabs">
+							<li data-bind="css: {active: $parent.currentTab().id() == $data.id()}">
+								<a href="#" data-bind="click: $parent.currentTab, text: title"></a>
+							</li>
+						</ul>
+					</div>
+					<div class="row-fluid">
+						<div class="tab-content">
+							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='prompt'}">
+								<div data-bind="cleanJME: prompt"></div>
+							</section>
+							<!-- ko if: type().name=='jme' -->
+							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='marking'}">
+								<form class="form-horizontal">
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Marks',property:marks,min:0}
+									}"></div>
+									<div class="control-group">
+										<label>
+											<span class="control-label">Correct answer</span>
+											<div class="controls">
+												<span data-bind="JME: jme.answer" class="jme-answer"></span>
+											</div>
+										</label>
+									</div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Answer simplification rules',property:jme.answerSimplification}
+									}"></div>
+								</form>
+							</section>
+							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='restrictions'}">
+								<form class="form-horizontal">
+									<h4>Checking accuracy</h4>
+									<div class="control-group">
+										<label>
+											<span class="control-label">Checking type</span>
+											<div class="controls">
+												<select data-bind="options: jme.checkingTypes, value: jme.checkingType, optionsText:'niceName'"></select>
+											</div>
+										</label>
+									</div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Checking accuracy',property:jme.checkingType().accuracy,min:0}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Points to check',property:jme.vset.points,min:0}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Maximum no. of failures',property:jme.failureRate,min:0, max:jme.vset.points}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Checking range start',property:jme.vset.start,max:jme.vset.end}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Checking range end',property:jme.vset.end,min:jme.vset.start}
+									}"></div>
+								</form>
+								<h4>Length restriction</h4>
+								<form class="form-horizontal">
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Maximum length',property:jme.maxlength.length,min:0}
+									}"></div>
+									<div data-bind="fadeVisible: jme.maxlength.length()>0">
+										<div class="control-group" data-bind="template: {
+											name:'percentproperty',
+											data: {label:'Partial credit for long answer',property:jme.maxlength.partialCredit}
+										}"></div>
+										<div class="control-group">
+											<label>
+												<span class="control-label">Warning message</span>
+												<div class="controls" data-bind="cleanJME: jme.maxlength.message"></div>
+											</label>
+										</div>
+									</div>
+								</form>
+								<form class="form-horizontal">
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Minimum length',property:jme.minlength.length,min:0}
+									}"></div>
+									<div data-bind="fadeVisible: jme.minlength.length()>0">
+										<div class="control-group" data-bind="template: {
+											name:'percentproperty',
+											data: {label:'Partial credit for short answer',property:jme.minlength.partialCredit}
+										}"></div>
+										<div class="control-group">
+											<label>
+												<span class="control-label">Warning message</span>
+												<div class="controls" data-bind="cleanJME: jme.minlength.message"></div>
+											</label>
+										</div>
+									</div>
+								</form>
+								<h4>String restriction</h4>
+								<form class="form-horizontal">
+									<div class="control-group">
+										<label>
+											<span class="control-label">Required strings:</span>
+											<div class="controls" data-bind="listbox:jme.musthave.strings"></div>
+										</label>
+									</div>
+									<div data-bind="fadeVisible: jme.musthave.strings().length>0">
+										<div class="control-group" data-bind="template: {
+											name:'percentproperty',
+											data: {label:'Partial credit for not using all required strings:',property:jme.musthave.partialCredit}
+										}"></div>
+										<div class="control-group" data-bind="template: {
+											name: 'booleanproperty',
+											data: {label:'Show required strings in warning?', property:jme.musthave.showStrings}
+										}"></div>
+										<div class="control-group">
+											<label>
+												<span class="control-label">Warning message</span>
+												<div class="controls" data-bind="cleanJME: jme.musthave.message"></div>
+											</label>
+										</div>
+									</div>
+								</form>
+
+								<form class="form-horizontal">
+									<div class="control-group">
+										<label>
+											<span class="control-label">Forbidden strings:</span>
+											<div class="controls" data-bind="listbox:jme.notallowed.strings"></div>
+										</label>
+									</div>
+									<div data-bind="fadeVisible: jme.notallowed.strings().length>0">
+										<div class="control-group" data-bind="template: {
+											name:'percentproperty',
+											data: {label:'Partial credit for not using all required strings:',property:jme.notallowed.partialCredit}
+										}"></div>
+										<div class="control-group" data-bind="template: {
+											name: 'booleanproperty',
+											data: {label:'Show required strings in warning?', property:jme.notallowed.showStrings}
+										}"></div>
+										<div class="control-group">
+											<label>
+												<span class="control-label">Warning message</span>
+												<div class="controls" data-bind="cleanJME: jme.notallowed.message"></div>
+											</label>
+										</div>
+									</div>
+								</form>
+							</section>
+							<!-- /ko -->
+							<!-- ko if: type().name=='numberentry' -->
+							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='marking'}">
+								<form class="form-horizontal">
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Marks',property:marks,min:0}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Minimum accepted value',property:numberentry.minValue}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Maximum accepted value',property:numberentry.maxValue}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label:'Must the answer be an integer?', property:numberentry.integerAnswer}
+									}"></div>
+									<div class="control-group" data-bind="fadeVisible: numberentry.integerAnswer,
+									template: {
+										name:'percentproperty',
+										data: {label:'Partial credit for non-integer answer',property:numberentry.integerPartialCredit}
+									}"></div>
+									<div class="control-group">
+										<label>
+											<span class="control-label">Precision restriction</span>
+											<div class="controls">
+												<select data-bind="options: numberentry.precisionTypes, value: numberentry.precisionType, optionsText: 'niceName'"></select>
+											</div>
+										</span>
+									</div>
+									<div class="control-group" data-bind="fadeVisible: numberentry.precisionType().name!='none',
+									template: {
+										name:'property',
+										data: {label:numberentry.precisionWord,property:numberentry.precision}
+									}"></div>
+									<div class="control-group" data-bind="fadeVisible: numberentry.precisionType().name!='none',
+									template: {
+										name:'percentproperty',
+										data: {label:'Partial credit for wrong precision',property:numberentry.precisionPartialCredit}
+									}"></div>
+									<div class="control-group" data-bind="fadeVisible: numberentry.precisionType().name!='none'">
+										<label>
+											<span class="control-label">Message if wrong precision</span>
+											<div class="controls" data-bind="cleanJME: numberentry.precisionMessage"></div>
+										</label>
+									</div>
+								</form>
+							</section>
+							<!-- /ko -->
+							<!-- ko if: type().name=='patternmatch' -->
+							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='marking'}">
+								<form class="form-horizontal">
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Marks',property:marks,min:0}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Answer pattern',property:patternmatch.answer}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Display answer',property:patternmatch.displayAnswer}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label:'Must the answer be in the correct case?', property:patternmatch.caseSensitive}
+									}"></div>
+									<div class="control-group" data-bind="
+									fadeVisible:patternmatch.caseSensitive,
+									template: {
+										name:'percentproperty',
+										data: {label:'Partial credit for answer not matching case',property:patternmatch.partialCredit}
+									}"></div>
+								</form>
+							</section>
+							<!-- /ko -->
+							<!-- ko if: type().name=='1_n_2' -->
+							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='marking'}">
+								<form class="form-horizontal">
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Minimum marks',property:multiplechoice.minMarks, max:multiplechoice.maxMarks }
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Maximum marks',property:multiplechoice.maxMarks, min:multiplechoice.minMarks}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
+									}"></div>
+									<div class="control-group" data-bind="fadeVisible: multiplechoice.displayType().name!='dropdown',
+									template: {
+										name: 'property',
+										data: {label:'Number of display columns',property:multiplechoice.displayColumns}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label: 'Custom marking matrix?', property: multiplechoice.customMarking}
+									}"></div>
+									<div class="control-group" data-bind="fadeVisible: multiplechoice.customMarking, template: {
+										name: 'property',
+										data: {label: 'Custom matrix expression', property: multiplechoice.customMatrix}
+									}"></div>
+								</form>
+							</section>
+							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='choices'}">
+								<ul class="choices">
+									<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
+									<li class="choice">
+										<form class="form-inline">
+											<label>
+												Marks:
+												<span class="marks" data-bind="text: marks"></span>
+											</label>
+											<label>
+												Distractor Message:
+												<span class="marks" data-bind="text: marks"></span>
+											</label>
+											<div id="description" data-bind="cleanJME: content, wmHeight: 100, wmWidth: 500"></div>
+										</form>
+									</li>
+									<!-- /ko -->
+								</ul>
+							</section>
+							<!-- /ko -->
+							<!-- ko if: type().name=='m_n_2' -->
+							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='marking'}">
+								<form class="form-horizontal">
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Minimum marks',property:multiplechoice.minMarks, max:multiplechoice.maxMarks }
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Maximum marks',property:multiplechoice.maxMarks, min:multiplechoice.minMarks}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Minimum answers:',property:multiplechoice.minAnswers, max:multiplechoice.maxAnswers}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Maximum answers:',property:multiplechoice.maxAnswers, min:multiplechoice.minAnswers}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
+									}"></div>
+									<div class="control-group" data-bind="fadeVisible: multiplechoice.displayType().name!='dropdown',
+									template: {
+										name: 'property',
+										data: {label:'Number of display columns',property:multiplechoice.displayColumns}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label: 'Custom marking matrix?', property: multiplechoice.customMarking}
+									}"></div>
+									<div class="control-group" data-bind="fadeVisible: multiplechoice.customMarking, template: {
+										name: 'property',
+										data: {label: 'Custom matrix expression', property: multiplechoice.customMatrix}
+									}"></div>
+								</form>
+							</section>
+							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='choices'}">
+								<ul class="choices">
+									<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
+									<li class="choice">
+										<form class="form-inline">
+											<label>
+												Marks:
+												<input class="marks" type="text" data-bind="value:marks, valueUpdate:'input', autosize: {max: 500, min: 30, padding: 10, value: marks}"/>
+											</label>
+											<label>
+												Distractor Message:
+												<input type="text" data-bind="value:distractor, valueUpdate:'input', autosize: {max: 500, min: 100, padding: 10, value: distractor}"/>
+											</label>
+											<div id="description" data-bind="cleanJME: content, wmHeight: 100, wmWidth: 500"></div>
+										</form>
+									</li>
+									<!-- /ko -->
+								</ul>
+							</section>
+							<!-- /ko -->
+							<!-- ko if: type().name=='m_n_x' -->
+							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='marking'}">
+								<form class="form-horizontal">
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Minimum marks',property:multiplechoice.minMarks, max:multiplechoice.maxMarks }
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Maximum marks',property:multiplechoice.maxMarks, min:multiplechoice.minMarks}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Minimum answers:',property:multiplechoice.minAnswers, max:multiplechoice.maxAnswers}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Maximum answers:',property:multiplechoice.maxAnswers, min:multiplechoice.minAnswers}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label:'Shuffle order of answers?', property:multiplechoice.shuffleAnswers}
+									}"></div>
+									<div class="control-group">
+										<label>
+											<span class="control-label">Selection type:</span>
+											<div class="controls">
+												<select data-bind="options: multiplechoice.displayTypes.m_n_x, value: multiplechoice.displayType, optionsText: 'niceName'"></select>
+											</div>
+										</label>
+									</div>
+									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label: 'Custom marking matrix?', property: multiplechoice.customMarking}
+									}"></div>
+									<div class="control-group" data-bind="fadeVisible: multiplechoice.customMarking, template: {
+										name: 'property',
+										data: {label: 'Custom matrix expression', property: multiplechoice.customMatrix}
+									}"></div>
+								</form>
+							</section>
+							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='choices'}">
+								<div class="matrix">
+									<label>Marking matrix:</label>
+									<table class="multiplechoice">
+										<thead>
+											<tr>
+												<td></td>
+												<!-- ko foreach: {data: multiplechoice.answers, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
+													<th>
+														<input type="text" data-bind="value:content, valueUpdate:'input'">
+													</th>
+												<!-- /ko -->
+											</tr>
+										</thead>
+										<tbody>
+											<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
+												<tr>
+													<th>
+														<input type="text" data-bind="value:content, valueUpdate:'input'"/>
+													</th>
+													<!-- ko foreach: answers -->
+														<td>
+															<input class="marks" data-bind="visible: !$parents[1].multiplechoice.customMarking(), value: marks, valueUpdate:'input'"/>
+														</td>
+													<!-- /ko -->
+												</tr>
+											<!-- /ko -->
+										</tbody>
+									</table>
+								</div>
+							</section>
+							<!-- /ko -->
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<section class="tab-pane" data-bind="css: {active: $root.currentTab().id()=='advice'}">
+			<div data-bind="cleanJME:advice"></div>
+		</section>
+	</div>
+
+{% endblock editor %}
+
+<!--
 {% block content %}
     {{ block.super }}
 
@@ -85,7 +664,6 @@
 							<!-- ko template:{name:'variable',foreach: variables}--><!-- /ko -->
 							<tr>
 								<td colspan="3"/>
-								<td><button data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button></td>
 							</tr>
 						</tbody>
 					</table>
@@ -602,4 +1180,4 @@
 
 	    {% endverbatim %}
 {% endblock content %}
-
+-->

@@ -65,6 +65,12 @@ button:hover, button:focus {
 	color: black;
 }
 
+#site_content {
+	border-radius: 10px;
+	padding-bottom: 2em;
+	margin-bottom: 1em;
+}
+
 #menu a:hover {
 	color: #999;
 }

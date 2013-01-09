@@ -223,18 +223,18 @@
 					</h4>
 					<div class="row-fluid">
 						<ul class="nav nav-tabs" data-bind="foreach: tabs">
-							<li data-bind="css: {active: $parent.currentTab().id() == $data.id()}">
+							<li data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id) == $data.id}">
 								<a href="#" data-bind="click: $parent.currentTab, text: title"></a>
 							</li>
 						</ul>
 					</div>
 					<div class="row-fluid">
 						<div class="tab-content">
-							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='prompt'}">
+							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='prompt'}">
 								<div data-bind="writemaths: prompt"></div>
 							</section>
 							<!-- ko if: type().name=='jme' -->
-							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='marking'}">
+							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='marking'}">
 								<form class="form-horizontal">
 									<div class="control-group" data-bind="template: {
 										name: 'property',
@@ -255,7 +255,7 @@
 									}"></div>
 								</form>
 							</section>
-							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='restrictions'}">
+							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='restrictions'}">
 								<form class="form-horizontal">
 									<h4>Checking accuracy</h4>
 									<div class="control-group">
@@ -377,7 +377,7 @@
 							</section>
 							<!-- /ko -->
 							<!-- ko if: type().name=='numberentry' -->
-							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='marking'}">
+							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='marking'}">
 								<form class="form-horizontal">
 									<div class="control-group" data-bind="template: {
 										name: 'property',
@@ -428,7 +428,7 @@
 							</section>
 							<!-- /ko -->
 							<!-- ko if: type().name=='patternmatch' -->
-							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='marking'}">
+							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='marking'}">
 								<form class="form-horizontal">
 									<div class="control-group" data-bind="template: {
 										name: 'property',
@@ -456,7 +456,7 @@
 							</section>
 							<!-- /ko -->
 							<!-- ko if: type().name=='1_n_2' -->
-							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='marking'}">
+							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='marking'}">
 								<form class="form-horizontal">
 									<div class="control-group" data-bind="template: {
 										name: 'property',
@@ -485,7 +485,7 @@
 									}"></div>
 								</form>
 							</section>
-							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='choices'}">
+							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='choices'}">
 								<ul class="choices">
 									<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
 									<li class="choice">
@@ -508,7 +508,7 @@
 							</section>
 							<!-- /ko -->
 							<!-- ko if: type().name=='m_n_2' -->
-							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='marking'}">
+							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='marking'}">
 								<form class="form-horizontal">
 									<div class="control-group" data-bind="template: {
 										name: 'property',
@@ -545,7 +545,7 @@
 									}"></div>
 								</form>
 							</section>
-							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='choices'}">
+							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='choices'}">
 								<ul class="choices">
 									<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
 									<li class="choice">
@@ -568,7 +568,7 @@
 							</section>
 							<!-- /ko -->
 							<!-- ko if: type().name=='m_n_x' -->
-							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='marking'}">
+							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='marking'}">
 								<form class="form-horizontal">
 									<div class="control-group" data-bind="template: {
 										name: 'property',
@@ -612,7 +612,7 @@
 									}"></div>
 								</form>
 							</section>
-							<section class="tab-pane" data-bind="css: {active: currentTab().id()=='choices'}">
+							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='choices'}">
 								<div class="matrix">
 									<label>Marking matrix:</label>
 									<table class="multiplechoice">

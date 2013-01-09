@@ -85,23 +85,23 @@
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='feedback'}">
 			<form class="form-horizontal">
-				<div data-bind="template: {
+				<div class="control-group" data-bind="template: {
 					name: 'booleanproperty',
 					data: { label:'Show current score?', property:showactualmark}
 				}"></div>
-				<div data-bind="template: {
+				<div class="control-group" data-bind="template: {
 					name: 'booleanproperty',
 					data: { label:'Show maximum score?', property:showtotalmark}
 				}"></div>
-				<div data-bind="template: {
+				<div class="control-group" data-bind="template: {
 					name: 'booleanproperty',
 					data: { label:'Show answer state?', property:showanswerstate}
 				}"></div>
-				<div data-bind="template: {
+				<div class="control-group" data-bind="template: {
 					name: 'booleanproperty',
 					data: { label:'Allow reveal answer?', property:allowrevealanswer}
 				}"></div>
-				<div data-bind="template: {
+				<div class="control-group" data-bind="template: {
 					name: 'percentproperty',
 					data: { label:'Advice threshold (percent)', property:advicethreshold}
 				}"></div>
@@ -155,16 +155,20 @@
 
 	<script type="text/html" id="event">
 		<h4 data-bind="html:niceName"></h4>
-		<label>
-			<span class="control-label">Action:</span>
-			<div class="controls">
-				<select data-bind="options: actions, value: action, optionsText: 'niceName'"></select>
-			</div>
-		</label>
-		<label data-bind="fadeVisible:action().name!='none'">
-			<span class="control-label">Message:</span>
-			<div class="controls" data-bind="writemaths: message, wmHeight: 100, wmWidth: 500"/>
-		</label>
+		<div class="control-group">
+			<label>
+				<span class="control-label">Action:</span>
+				<div class="controls">
+					<select data-bind="options: actions, value: action, optionsText: 'niceName'"></select>
+				</div>
+			</label>
+		</div>
+		<div class="control-group">
+			<label data-bind="fadeVisible:action().name!='none'">
+				<span class="control-label">Message:</span>
+				<div class="controls" data-bind="writemaths: message, wmHeight: 100, wmWidth: 500"/>
+			</label>
+		</div>
 	</script>
 
 	<script type="text/html" id="question">

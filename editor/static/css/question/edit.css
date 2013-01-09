@@ -112,6 +112,10 @@
 	margin-left: 0;
 }
 
+.part-edit .multiplechoice .marks {
+	text-align: center;
+}
+
 .jme-answer {
 	display: inline-block;
 	padding: 5px;

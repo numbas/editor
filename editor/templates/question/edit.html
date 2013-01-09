@@ -28,6 +28,7 @@
         })();
     </script>
 {% endblock javascripts %}
+
 {% block stylesheets %}
 	{{ block.super }}
 	<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/question/edit.css"/>
@@ -38,7 +39,7 @@
 
     {% block property_templates %}{% endblock %}
 
-	<div id="question" class="container-fluid {% if not editable %}nonedit{% endif %}">
+	<div id="question" class="{% if not editable %}nonedit{% endif %}">
 		<div id="controls">
 			<div class="row-fluid">
 			{% block controls %}

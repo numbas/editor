@@ -421,7 +421,7 @@
 									}"></div>
 									<div class="control-group" data-bind="fadeVisible: multiplechoice.customMarking, template: {
 										name: 'property',
-										data: {label: 'Custom matrix expression', property: multiplechoice.customMatrix}
+										data: {label: 'Custom matrix expression', property: multiplechoice.customMatrix, monospace: true}
 									}"></div>
 								</form>
 							</section>
@@ -481,7 +481,7 @@
 									}"></div>
 									<div class="control-group" data-bind="fadeVisible: multiplechoice.customMarking, template: {
 										name: 'property',
-										data: {label: 'Custom matrix expression', property: multiplechoice.customMatrix}
+										data: {label: 'Custom matrix expression', property: multiplechoice.customMatrix, monospace: true}
 									}"></div>
 								</form>
 							</section>
@@ -546,7 +546,7 @@
 									}"></div>
 									<div class="control-group" data-bind="fadeVisible: multiplechoice.customMarking, template: {
 										name: 'property',
-										data: {label: 'Custom matrix expression', property: multiplechoice.customMatrix}
+										data: {label: 'Custom matrix expression', property: multiplechoice.customMatrix, monospace: true}
 									}"></div>
 								</form>
 							</section>
@@ -558,16 +558,16 @@
 											<tr>
 												<td></td>
 												<!-- ko foreach: {data: multiplechoice.answers, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
-													<th data-bind="html:content"></th>
+													<th class="answer" data-bind="html:content"></th>
 												<!-- /ko -->
 											</tr>
 										</thead>
 										<tbody>
 											<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
 												<tr>
-													<th data-bind="html:content"></th>
+													<th class="choice" data-bind="html:content"></th>
 													<!-- ko foreach: answers -->
-													<td data-bind="text: marks"></td>
+													<td class="marks monospace" data-bind="text: marks"></td>
 													<!-- /ko -->
 												</tr>
 											<!-- /ko -->

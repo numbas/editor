@@ -804,8 +804,8 @@ $(document).ready(function() {
 				name:'m_n_x', 
 				niceName: 'Match choices with answers',
 				tabs: [
-					new Editor.Tab('marking','Marking'),
-					new Editor.Tab('choices','Choices')
+					new Editor.Tab('choices','Marking matrix'),
+					new Editor.Tab('marking','Marking options')
 				]
 			}
         ],

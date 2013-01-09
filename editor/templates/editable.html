@@ -19,6 +19,24 @@
 		</label>
 	</script>
 
+    <script type="text/html" id="numberproperty">
+		<label>
+			<span class="control-label" data-bind="html: label"></span>
+			<div class="controls">
+				<input type="number" data-bind="
+					value: property, 
+					valueUpdate: 'afterkeydown', 
+					attr: {
+						min: $data.min, 
+						max: $data.max
+					}, 
+					css: {monospace: 'monospace' in $data ? monospace : false},
+					autosize: {max: 500, min: 30, padding: 25, value: property}
+				"/>
+			</div>
+		</label>
+	</script>
+
 	<script type="text/html" id="percentproperty">
 		<label>
 			<span class="control-label" data-bind="html: label"></span>

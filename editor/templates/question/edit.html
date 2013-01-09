@@ -45,7 +45,7 @@
 			{% block controls %}
     			<div class="span2" id="editable_message">{% block editable_message %}{% endblock %}</div>
 				<div class="span3 controlbox" id="author">
-					Author: {{ object.author.first_name }} {{ object.author.last_name }} ({{ object.author.username }})
+					Author: {{object.author.get_full_name}} ({{ object.author.username }})
 				</div>
 				<div class="span5"
 					<span id="download">
@@ -89,7 +89,6 @@
 
 		{% block editor %}
 		{% endblock %}
-		<!--	<div id="editor" style="margin-top: 5em;" data-bind="template: 'questionTemplate'" role="form tree">Loading...</div> -->
 	</div>
 
 {% endblock content %}

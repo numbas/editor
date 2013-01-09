@@ -108,9 +108,8 @@ ul#menu li {
 }
 
 input.search {
-	background: white url(../images/search.png) no-repeat right;
+	background: white url(../images/search.png) no-repeat 210px 50%;
 	padding-right: 18px;
-	width: 200px;
 }
 
 input.search.entered {

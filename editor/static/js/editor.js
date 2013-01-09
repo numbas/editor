@@ -249,8 +249,8 @@ $(document).ready(function() {
 	}
 
 	Editor.Tab = function(id,title) {
-		this.id = ko.observable(id);
-		this.title = ko.observable(title);
+		this.id = id;
+		this.title = title;
 	}
 
 	Editor.contentObservable = function(val) {

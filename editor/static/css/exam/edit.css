@@ -1,10 +1,17 @@
-#admin #delete form {
-    display: none;
+#admin {
+	margin-top: 5px;
+	margin-bottom: 15px;
+	font-size: 24px;
+}
+
+#exam-name {
+	font-size: 2em;
+	height: 1.5em;
 }
 
 .question {
 	line-height: 1.5em !important;
-	padding: 0 2em 0 44px !important;
+	padding: 0 2em 0.5em 44px !important;
 	clear: both;
 	min-height: 44px;
 }
@@ -18,11 +25,14 @@
 	font-weight: bold;
 }
 
+.questions {
+	padding-bottom: 1em;
+}
 .questions .questionList {
-    width: 400px;
     display: inline-block;
     padding-left: 0;
     border: 1px dashed;
+	list-style-type: none;
 }
 
 .question .controls {
@@ -56,20 +66,17 @@
 
 .questions .searchBox {
     display: inline-block;
-    width: 400px;
-    padding-left: 19px;
     vertical-align: top;
-    border-left: 
 }
 
-.questions .searchBox .results {
+.questions .searchBox .results, .questions .questionList {
     padding: 0;
-    max-height: 25em;
-    overflow-y: scroll;
+    height: 25em;
+    overflow-y: auto;
 }
 
 .questionResult {
-	border: 1px solid #888;
+	margin-bottom: 0.5em;
 }
 
 .questionResult .handle {
@@ -90,7 +97,10 @@
 	border-radius: 50%;
 }
 
-
+.question.ui-sortable-helper {
+	background: white;
+	opacity: 0.8;
+}
 .question.ui-sortable-helper .number {
 	display: none;
 }
@@ -103,3 +113,10 @@ li.questionResult.ui-draggable-dragging, li.question.ui-sortable-helper {
 	border: 1px dashed;
 	height: 2.5em;
 }
+/* OLD
+ * 
+#admin #delete form {
+    display: none;
+}
+
+*/

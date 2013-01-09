@@ -19,6 +19,23 @@ $(document).ready(function() {
     function Exam(data)
     {
 		var e = this;
+
+		this.questions = ko.observableArray([]);
+
+		this.mainTabs = ko.observableArray([
+			new Editor.Tab('general','General'),
+			new Editor.Tab('navigation','Navigation'),
+			new Editor.Tab('timing','Timing'),
+			new Editor.Tab('feedback','Feedback'),
+			new Editor.Tab(
+				'questions',
+				ko.computed(function() {
+					return 'Questions ('+e.questions().length+')';
+				})
+			)
+		]);
+		this.currentTab = ko.observable(this.mainTabs()[0]);
+
         this.realName = ko.observable('An Exam');
 		this.name = ko.computed({
 			read: this.realName,
@@ -61,7 +78,6 @@ $(document).ready(function() {
         this.allowrevealanswer = ko.observable(true);
         this.advicethreshold = ko.observable(0);
 
-		this.questions = ko.observableArray([]);
 
 		this.search = {
 			query: ko.observable(''),

@@ -3,81 +3,76 @@
 
 {% block editable_message %}You can edit this question.{% endblock %}
 
-{% block content %}
+{% block editor %}
 	{{ block.super }}
 	{% include "editable.html" %}
-	{% verbatim %}
 
-		<script type="text/html" id="examTemplate">
-		<div class="properties">
-			<div data-bind="template: {
-				name: 'property',
-				data: {label:'Exam name:',property:name}
-			}"></div>
-			<div data-bind="template: {
-				name: 'selectproperty',
-				data: {label: 'Theme:', property: theme, options: Editor.themes}
-			}"></div>
-
-			<div data-bind="template: {
-				name: 'property',
-				data: {label:'Duration (minutes):',property:duration, type:'number',min:0}
-			}"></div>
-			<div data-bind="template: {
-				name: 'percentproperty',
-				data: {label:'Pass threshold (percent):',property:percentPass}
-			}"></div>
-			<div data-bind="template: {
-				name: 'booleanproperty',
-				data: {label: 'Shuffle questions?',property:shuffleQuestions}
-			}"></div>
-		</div>
-
-		<div data-bind="folder: 'Description', show: true">
-			<div>
-				<div data-bind="writemaths: description"></div>
+	<div class="tab-content">
+		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='general'}">
+			<div class="row-fluid">
+				<label>
+					<h4>Exam Name</h4>
+					<input class="input-block-level" id="exam-name" data-bind="value: name, valueUpdate: 'afterkeydown'" type="text"/>
+				</label>
 			</div>
-		</div>
+			<div class="row-fluid">
+				<form class="form-horizontal">
+					<div class="control-group" data-bind="template: {
+						name: 'selectproperty',
+						data: {label: 'Theme:', property: theme, options: Editor.themes}
+					}"></div>
 
-		<div data-bind="folder: 'Author\'s Notes'">
-			<div>
-				<div data-bind="writemaths: notes"></div>
+					<div class="control-group" data-bind="template: {
+						name: 'percentproperty',
+						data: {label:'Pass threshold (percent):',property:percentPass}
+					}"></div>
+				</form>
 			</div>
-		</div>
-
-		<div data-bind="folder: 'Navigation'">
-			<div>
-				<div class="properties">
-					<div data-bind="template: {
-						name: 'booleanproperty',
-						data: {label:'Allow user to regenerate questions?', property:allowregen}
-					}"></div>
-					<div data-bind="template: {
-						name: 'booleanproperty',
-						data: {label:'Allow move to previous question?', property:reverse}
-					}"></div>
-					<div data-bind="template: {
-						name: 'booleanproperty',
-						data: {label:'Allow jump to any question?', property:browse}
-					}"></div>
-					<div data-bind="template: {
-						name: 'booleanproperty',
-						data: {label: 'Show front page?',property:showfrontpage}
-					}"></div>
-					<div data-bind="template: {
-						name: 'booleanproperty',
-						data: {label: 'Confirm before leaving the exam while it\'s running?',property:preventleave}
-					}"></div>
+			<div class="row-fluid">
+				<div class="span6">
+					<label for="description"><h4>Description</h4></label>
+					<div id="description" data-bind="writemaths: description"></div>
 				</div>
+				<div class="span6">
+					<label for="authors-notes"><h4>Author's Notes</h4></label>
+					<div id="authors-notes" data-bind="writemaths: notes"></div>
+				</div>
+			</div>
+		</section>
+		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='navigation'}">
+			<form class="form-horizontal">
+				<div class="control-group" data-bind="template: {
+					name: 'booleanproperty',
+					data: {label:'Allow user to regenerate questions?', property:allowregen}
+				}"></div>
+				<div class="control-group" data-bind="template: {
+					name: 'booleanproperty',
+					data: {label:'Allow move to previous question?', property:reverse}
+				}"></div>
+				<div class="control-group" data-bind="template: {
+					name: 'booleanproperty',
+					data: {label:'Allow jump to any question?', property:browse}
+				}"></div>
+				<div class="control-group" data-bind="template: {
+					name: 'booleanproperty',
+					data: {label: 'Show front page?',property:showfrontpage}
+				}"></div>
+				<div class="control-group" data-bind="template: {
+					name: 'booleanproperty',
+					data: {label: 'Confirm before leaving the exam while it\'s running?',property:preventleave}
+				}"></div>
 				<div data-bind="template: {
 					name: 'event',
 					data: onleave
 				}"></div>
-			</div>
-		</div>
-
-		<div data-bind="folder: 'Timing'">
-			<div>
+			</form>
+		</section>
+		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='timing'}">
+			<form class="form-horizontal">
+				<div class="control-group" data-bind="template: {
+					name: 'numberproperty',
+					data: {label:'Exam duration (minutes):',property:duration, type:'number',min:0}
+				}"></div>
 				<div data-bind="template: {
 					name: 'event',
 					data: timeout
@@ -86,11 +81,10 @@
 					name: 'event',
 					data: timedwarning
 				}"></div>
-			</div>
-		</div>
-
-		<div data-bind="folder: 'Feedback'">
-			<div class="properties">
+			</form>
+		</section>
+		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='feedback'}">
+			<form class="form-horizontal">
 				<div data-bind="template: {
 					name: 'booleanproperty',
 					data: { label:'Show current score?', property:showactualmark}
@@ -111,12 +105,33 @@
 					name: 'percentproperty',
 					data: { label:'Advice threshold (percent)', property:advicethreshold}
 				}"></div>
+			</form>
+		</section>
+		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='questions'}">
+			<div class="row-fluid">
+				<form class="span6 form-horizontal">
+					<div class="control-group" data-bind="template: {
+						name: 'booleanproperty',
+						data: {label: 'Shuffle questions?',property:shuffleQuestions}
+					}"></div>
+				</form>
+				<form class="form-horizontal span6">
+					<div class="control-group">
+						<label for="questionsearch">
+							<span class="control-label">Search for questions:</span>
+							<div class="controls">
+								<input type="text" id="questionsearch" class="search" data-bind="
+									value: search.query, 
+									valueUpdate: 'afterkeydown',
+									css: {loading: search.searching()}
+									"/>
+							</div>
+						</label>
+					</div>
+				</form>
 			</div>
-		</div>
-
-		<div data-bind="folder: {label: 'Questions ('+questions().length+')', show: true}">
-			<div class="questions">
-				<ul class="questionList editlist big" data-bind="
+			<div class="questions row-fluid">
+				<ul class="questionList span6" data-bind="
 					sortable: {
 						template: 'question', 
 						data: questions, 
@@ -124,13 +139,7 @@
 						options: {handle: '.handle', placeholder: 'placeholder'}
 					}
 				"></ul>
-				<div class="searchBox">
-					<label for="questionsearch">Search for questions: </label>
-					<input type="text" id="questionsearch" class="search" data-bind="
-						value: search.query, 
-						valueUpdate: 'afterkeydown',
-						css: {loading: search.searching()}
-					"/>
+				<div class="searchBox span6">
 					<ul class="results editlist big" data-bind="
 						template: {
 							name: 'questionResult',
@@ -139,24 +148,23 @@
 					"></ul>
 				</div>
 			</div>
-		</div>
-	</script>
+		</section>
+	</div>
+
+	{% verbatim %}
 
 	<script type="text/html" id="event">
-		<div data-bind="folder: niceName">
-			<div>
-			<div class="properties">
-				<div>
-					<label>Action: </label>
-					<select data-bind="options: actions, value: action, optionsText: 'niceName'"></select>
-				</div>
+		<h4 data-bind="html:niceName"></h4>
+		<label>
+			<span class="control-label">Action:</span>
+			<div class="controls">
+				<select data-bind="options: actions, value: action, optionsText: 'niceName'"></select>
 			</div>
-			<div data-bind="fadeVisible:action().name!='none'">
-				Message: 
-				<div data-bind="writemaths: message"/>
-			</div>
-			</div>
-		</div>
+		</label>
+		<label data-bind="fadeVisible:action().name!='none'">
+			<span class="control-label">Message:</span>
+			<div class="controls" data-bind="writemaths: message, wmHeight: 100, wmWidth: 500"/>
+		</label>
 	</script>
 
 	<script type="text/html" id="question">
@@ -164,7 +172,7 @@
 			<span class="handle"></span>
 			<div class="controls">
 				<a class="preview" data-bind="attr: {href: previewURL()}" target="_blank" title="Test run this question"></a>
-				<button class="delete delete-grey" data-bind="click:remove" title="Delete this question"></button>
+				<button type="button" class="delete delete-grey" data-bind="click:remove" title="Delete this question"></button>
 			</div>
 			<div class="title">
 				<span class="number" data-bind="text: ($index()+1)+'.'"/>
@@ -188,4 +196,4 @@
 	</script>
 	{% endverbatim %}
 
-{% endblock content %}
+{% endblock editor %}

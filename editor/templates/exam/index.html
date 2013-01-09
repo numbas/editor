@@ -17,28 +17,31 @@
 
 	<div class="row-fluid">
 		<form class="searchBox form-inline" data-bind="with: search">
-            <label for="search_query">Search for exams called: </label>
-            <input role="search" id="search_query" type="text" name="examSearch" class="search" data-bind="
-                value: query, 
-				valueUpdate: 'afterkeydown',
-				css: {loading: searching}
-            "/>
-
-			<label for="search_author"> by author: </label>
-			<input id="search_author" type="text" class="search" size="30" data-bind="
-                value: author,
-                valueUpdate: 'afterkeydown change',
-                autocomplete: '{% url user_search %}', 
-				autocompleteCallback: function(user) { return {label: user.username+' ('+user.name+')', value: user.username} },
-				click: clearMine
-			"/>
-			{% if user.is_authenticated %}(mine only <input type="checkbox" data-bind="checked: mine"/>){% endif %}
+			<label for="search_query">
+				Search for exams called:
+				<input role="search" id="search_query" type="text" name="examSearch" class="search" data-bind="
+					value: query, 
+					valueUpdate: 'afterkeydown',
+					css: {loading: searching}
+				"/>
+			</label>
+			<label for="search_author">
+				by author: 	
+				<input id="search_author" type="text" class="search" size="30" data-bind="
+					value: author,
+					valueUpdate: 'afterkeydown change',
+					autocomplete: '{% url user_search %}', 
+					autocompleteCallback: function(user) { return {label: user.username+' ('+user.name+')', value: user.username} },
+					click: clearMine
+				"/>
+			</label>
+			{% if user.is_authenticated %}<label class="checkbox"><input type="checkbox" data-bind="checked: mine"/> Mine only</label>{% endif %}
 		</form>
 	</div>
-	<div data-bind="with: results">
+	<div data-bind="with: search.results">
 		<div id="pagination" data-bind="visible: pages().length>0">
 			Page:
-			<button class="move previous" data-bind="click: prevPage"></button><span data-bind="text: pageText"></span><button class="move next" data-bind="click: nextPage"></button>
+			<button type="button" class="move previous" data-bind="click: prevPage"></button><span data-bind="text: pageText"></span><button type="button" class="move next" data-bind="click: nextPage"></button>
 		</div>
 		<div class="results">
 			<table id="exam-list" data-bind="visible: all().length>0">

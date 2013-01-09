@@ -167,7 +167,7 @@ $(document).ready(function() {
 			searching: ko.observable(false),
 			realMine: ko.observable(false),
 			clearMine: function() {
-				this.search.mine(false);
+				vm.search.mine(false);
 			}
 		}
 

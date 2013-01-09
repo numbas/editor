@@ -42,10 +42,6 @@
 	border: red;
 }
 
-#searchBox {
-    margin: 1em 0 0 0;
-}
-
 .results {
     margin: 0.5em 0 0 0;
 }
@@ -68,6 +64,10 @@
 
 .results col.admin {
 	width: 100px;
+}
+
+col.last_modified {
+	width: 125px;
 }
 
 .result td {

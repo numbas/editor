@@ -158,6 +158,51 @@ $(document).ready(function() {
 			this.computeVariables();
 		},this).extend({throttle:300});
 
+        this.load = function(data) {
+            tryLoad(data,['name','statement','advice'],this);
+
+			if('extensions' in data) {
+				this.extensions().map(function(e) {
+					if(data.extensions.indexOf(e.location)>=0)
+						e.used(true);
+				});
+			}
+            
+            if('variables' in data)
+            {
+                for(var x in data.variables)
+                {
+                    this.variables.push(new Variable(this,{name:x,definition:data.variables[x]}));
+                }
+            }
+
+			if('functions' in data)
+			{
+				for(var x in data.functions)
+				{
+					data.functions[x].name = x;
+					this.functions.push(new CustomFunction(this,data.functions[x]));
+				}
+			}
+
+            if('rulesets' in data)
+            {
+                for(var x in data.rulesets)
+                {
+                    this.rulesets.push(new Ruleset(this,{name: x, sets:data.rulesets[x]}));
+                }
+            }
+
+            if('parts' in data)
+            {
+                data.parts.map(function(pd) {
+                    this.parts.push(new Part(this,null,this.parts,pd));
+                },this);
+				if(this.parts().length) 
+					this.currentPart(this.parts()[0]);
+            }
+        }
+
         if(data)
 		{
 			this.id = data.id;
@@ -411,50 +456,6 @@ $(document).ready(function() {
                 }
         },
 
-        load: function(data) {
-            tryLoad(data,['name','statement','advice'],this);
-
-			if('extensions' in data) {
-				this.extensions().map(function(e) {
-					if(data.extensions.indexOf(e.location)>=0)
-						e.used(true);
-				});
-			}
-            
-            if('variables' in data)
-            {
-                for(var x in data.variables)
-                {
-                    this.variables.push(new Variable(this,{name:x,definition:data.variables[x]}));
-                }
-            }
-
-			if('functions' in data)
-			{
-				for(var x in data.functions)
-				{
-					data.functions[x].name = x;
-					this.functions.push(new CustomFunction(this,data.functions[x]));
-				}
-			}
-
-            if('rulesets' in data)
-            {
-                for(var x in data.rulesets)
-                {
-                    this.rulesets.push(new Ruleset(this,{name: x, sets:data.rulesets[x]}));
-                }
-            }
-
-            if('parts' in data)
-            {
-                data.parts.map(function(pd) {
-                    this.parts.push(new Part(this,null,this.parts,pd));
-                },this);
-				if(this.parts().length) 
-					this.currentPart(this.parts()[0]);
-            }
-        },
 
 		download: function() {
 			window.location = Editor.download_url;
@@ -476,15 +477,15 @@ $(document).ready(function() {
             if(confirm("Remove this ruleset?"))
                 exam.rulesets.remove(this);
         };
-        if(data)
-            this.load(data);
-    }
-    Ruleset.prototype = {
-        load: function(data) {
+		this.load = function(data) {
             var ruleset = this;
             this.name(data.name);
             data.sets.map(function(set){ ruleset.sets.push(set); });
         }
+        if(data)
+            this.load(data);
+    }
+    Ruleset.prototype = {
     };
 
     function Variable(q,data) {
@@ -518,13 +519,14 @@ $(document).ready(function() {
         this.remove = function() {
             q.variables.remove(this);
         };
+
+        this.load = function(data) {
+			tryLoad(data,['name','definition'],this);
+        }
         if(data)
             this.load(data);
     }
     Variable.prototype = {
-        load: function(data) {
-			tryLoad(data,['name','definition'],this);
-        }
     }
 
     function CustomFunction(q,data) {
@@ -541,11 +543,7 @@ $(document).ready(function() {
             if(confirm("Remove this function?"))
             	q.functions.remove(this);
         };
-		if(data)
-			this.load(data);
-    }
-	CustomFunction.prototype = {
-		load: function(data) {
+		this.load = function(data) {
 			var f = this;
 			tryLoad(data,['name','type','definition','language'],this);
 			if('parameters' in data) {
@@ -553,7 +551,11 @@ $(document).ready(function() {
 					f.parameters.push(new FunctionParameter(f,p[0],p[1]));
 				});
 			}
-		},
+		}
+		if(data)
+			this.load(data);
+    }
+	CustomFunction.prototype = {
 
 		toJSON: function() {
 			var parameters = this.parameters().map(function(p) {
@@ -753,6 +755,123 @@ $(document).ready(function() {
 			return false;
 		},this);
 
+        this.load = function(data) {
+            for(var i=0;i<this.types.length;i++)
+            {
+                if(this.types[i].name == data.type.toLowerCase())
+                    this.type(this.types[i]);
+            }
+            tryLoad(data,['marks','prompt','stepsPenalty'],this);
+
+            if(data.steps)
+            {
+                data.steps.map(function(s) {
+                    this.steps.push(new Part(this.q,this,this.steps,s));
+                },this);
+            }
+
+            switch(this.type().name)
+            {
+            case 'gapfill':
+                if(data.gaps)
+                {
+                    data.gaps.map(function(g) {
+                        this.gapfill.gaps.push(new Part(this.q,this,this.gapfill.gaps,g));
+                    },this);
+                }
+                break;
+            case 'jme':
+                tryLoad(data,['answer','answerSimplification'],this.jme);
+                for(var i=0;i<this.jme.checkingTypes.length;i++)
+                {
+                    if(this.jme.checkingTypes[i].name == data.checkingtype)
+                        this.jme.checkingType(this.jme.checkingTypes[i]);
+                }
+                tryLoad(data,'checkingaccuracy',this.jme.checkingType(),'accuracy');
+				tryLoad(data,'vsetrangepoints',this.jme.vset,'points');
+				if('vsetrange' in data) {
+					this.jme.vset.start(data.vsetrange[0]);
+					this.jme.vset.end(data.vsetrange[1]);
+				}
+
+                tryLoad(data.maxlength,['length','partialCredit','message'],this.jme.maxlength);
+                tryLoad(data.minlength,['length','partialCredit','message'],this.jme.minlength);
+                tryLoad(data.musthave,['strings','showStrings','partialCredit','message'],this.jme.musthave);
+                tryLoad(data.notallowed,['strings','showStrings','partialCredt','message'],this.jme.notallowed);
+
+                break;
+            case 'numberentry':
+                tryLoad(data,['minValue','maxValue','integerAnswer','integerPartialCredit','precision','precisionPartialCredit','precisionMessage'],this.numberentry);
+				if('answer' in data) {
+					this.numberentry.minValue(data.answer);
+					this.numberentry.maxValue(data.answer);
+				}
+				for(var i=0;i<this.numberentry.precisionTypes.length;i++) {
+					if(this.numberentry.precisionTypes[i].name == data.precisionType)
+						this.numberentry.precisionType(this.numberentry.precisionTypes[i]);
+				}
+
+                break;
+            case 'patternmatch':
+                tryLoad(data,['answer','displayAnswer','caseSensitive','partialCredit'],this.patternmatch);
+                break;
+            case 'm_n_x':
+                tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','shuffleAnswers'],this.multiplechoice);
+				if(typeof data.matrix == 'string') {
+					this.multiplechoice.customMarking(true);
+					this.multiplechoice.customMatrix(data.matrix);
+				}
+                for(var i=0;i<this.multiplechoice.displayTypes.m_n_x.length;i++)
+                {
+                    if(this.multiplechoice.displayTypes.m_n_x[i].name==data.displayType)
+                        this.multiplechoice.displayType(this.multiplechoice.displayTypes.m_n_x[i]);
+                }
+
+                for(var i=0;i<data.answers.length;i++)
+                {
+                    var a = this.addAnswer();
+                    a.content(data.answers[i]);
+                }
+                for(var i=0;i<data.choices.length;i++)
+                {
+                    var c = this.addChoice(data.choices[i]);
+                    c.content(data.choices[i]);
+					if(!this.multiplechoice.customMarking()) {
+						for(var j=0;j<data.answers.length;j++)
+							this.multiplechoice.choices()[i].answers()[j].marks(data.matrix[i][j] || 0);
+					}
+                }
+                break;
+            case '1_n_2':
+            case 'm_n_2':
+                tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','displayColumns'],this.multiplechoice);
+				if(typeof data.matrix == 'string') {
+					this.multiplechoice.customMarking(true);
+					this.multiplechoice.customMatrix(data.matrix);
+				}
+
+                var displayTypes = this.multiplechoice.displayTypes[this.type().name];
+                for(var i=0;i<displayTypes.length;i++)
+                {
+                    if(displayTypes[i].name==data.displayType)
+                        this.multiplechoice.displayType(displayTypes[i]);
+                }
+
+                for(var i=0;i<data.choices.length;i++)
+                {
+                    var c = this.addChoice(data.choices[i]);
+                    c.content(data.choices[i] || '');
+					if(!this.multiplechoice.customMarking())
+	                    c.marks(data.matrix[i] || 0);
+					if('distractors' in data)
+                    {
+	                    c.distractor(data.distractors[i] || '');
+                    }
+                }
+                break;
+
+            }
+        }
         if(data)
             this.load(data);
     }
@@ -1061,123 +1180,6 @@ $(document).ready(function() {
             return o;
         },
 
-        load: function(data) {
-            for(var i=0;i<this.types.length;i++)
-            {
-                if(this.types[i].name == data.type.toLowerCase())
-                    this.type(this.types[i]);
-            }
-            tryLoad(data,['marks','prompt','stepsPenalty'],this);
-
-            if(data.steps)
-            {
-                data.steps.map(function(s) {
-                    this.steps.push(new Part(this.q,this,this.steps,s));
-                },this);
-            }
-
-            switch(this.type().name)
-            {
-            case 'gapfill':
-                if(data.gaps)
-                {
-                    data.gaps.map(function(g) {
-                        this.gapfill.gaps.push(new Part(this.q,this,this.gapfill.gaps,g));
-                    },this);
-                }
-                break;
-            case 'jme':
-                tryLoad(data,['answer','answerSimplification'],this.jme);
-                for(var i=0;i<this.jme.checkingTypes.length;i++)
-                {
-                    if(this.jme.checkingTypes[i].name == data.checkingtype)
-                        this.jme.checkingType(this.jme.checkingTypes[i]);
-                }
-                tryLoad(data,'checkingaccuracy',this.jme.checkingType(),'accuracy');
-				tryLoad(data,'vsetrangepoints',this.jme.vset,'points');
-				if('vsetrange' in data) {
-					this.jme.vset.start(data.vsetrange[0]);
-					this.jme.vset.end(data.vsetrange[1]);
-				}
-
-                tryLoad(data.maxlength,['length','partialCredit','message'],this.jme.maxlength);
-                tryLoad(data.minlength,['length','partialCredit','message'],this.jme.minlength);
-                tryLoad(data.musthave,['strings','showStrings','partialCredit','message'],this.jme.musthave);
-                tryLoad(data.notallowed,['strings','showStrings','partialCredt','message'],this.jme.notallowed);
-
-                break;
-            case 'numberentry':
-                tryLoad(data,['minValue','maxValue','integerAnswer','integerPartialCredit','precision','precisionPartialCredit','precisionMessage'],this.numberentry);
-				if('answer' in data) {
-					this.numberentry.minValue(data.answer);
-					this.numberentry.maxValue(data.answer);
-				}
-				for(var i=0;i<this.numberentry.precisionTypes.length;i++) {
-					if(this.numberentry.precisionTypes[i].name == data.precisionType)
-						this.numberentry.precisionType(this.numberentry.precisionTypes[i]);
-				}
-
-                break;
-            case 'patternmatch':
-                tryLoad(data,['answer','displayAnswer','caseSensitive','partialCredit'],this.patternmatch);
-                break;
-            case 'm_n_x':
-                tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','shuffleAnswers'],this.multiplechoice);
-				if(typeof data.matrix == 'string') {
-					this.multiplechoice.customMarking(true);
-					this.multiplechoice.customMatrix(data.matrix);
-				}
-                for(var i=0;i<this.multiplechoice.displayTypes.m_n_x.length;i++)
-                {
-                    if(this.multiplechoice.displayTypes.m_n_x[i].name==data.displayType)
-                        this.multiplechoice.displayType(this.multiplechoice.displayTypes.m_n_x[i]);
-                }
-
-                for(var i=0;i<data.answers.length;i++)
-                {
-                    var a = this.addAnswer();
-                    a.content(data.answers[i]);
-                }
-                for(var i=0;i<data.choices.length;i++)
-                {
-                    var c = this.addChoice(data.choices[i]);
-                    c.content(data.choices[i]);
-					if(!this.multiplechoice.customMarking()) {
-						for(var j=0;j<data.answers.length;j++)
-							this.multiplechoice.choices()[i].answers()[j].marks(data.matrix[i][j] || 0);
-					}
-                }
-                break;
-            case '1_n_2':
-            case 'm_n_2':
-                tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','displayColumns'],this.multiplechoice);
-				if(typeof data.matrix == 'string') {
-					this.multiplechoice.customMarking(true);
-					this.multiplechoice.customMatrix(data.matrix);
-				}
-
-                var displayTypes = this.multiplechoice.displayTypes[this.type().name];
-                for(var i=0;i<displayTypes.length;i++)
-                {
-                    if(displayTypes[i].name==data.displayType)
-                        this.multiplechoice.displayType(displayTypes[i]);
-                }
-
-                for(var i=0;i<data.choices.length;i++)
-                {
-                    var c = this.addChoice(data.choices[i]);
-                    c.content(data.choices[i] || '');
-					if(!this.multiplechoice.customMarking())
-	                    c.marks(data.matrix[i] || 0);
-					if('distractors' in data)
-                    {
-	                    c.distractor(data.distractors[i] || '');
-                    }
-                }
-                break;
-
-            }
-        }
     };
 
 

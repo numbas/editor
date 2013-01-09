@@ -13,7 +13,7 @@
 {% block editor %}
 	{% include "editable.html" %}
 	<div class="tab-content">
-		<section class="tab-pane" data-bind="css: {active: $root.currentTab().id()=='general'}">
+		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='general'}">
 			<div class="row-fluid">
 				<label>
 					<h4>Question Name</h4>
@@ -56,10 +56,10 @@
 				</div>
 			</div>
 		</section>
-		<section class="tab-pane" data-bind="css: {active: $root.currentTab().id()=='statement'}">
+		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='statement'}">
 			<div id="statement" data-bind="writemaths: statement"></div>
 		</section>
-		<section class="tab-pane" data-bind="css: {active: $root.currentTab().id()=='variables'}">
+		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='variables'}">
 			<div class="row-fluid">
 				<div data-bind="sortable: {
 							template: 'variable-template',
@@ -95,7 +95,7 @@
 				</div>
 			</div>
 		</section>
-		<section class="tab-pane" data-bind="css: {active: $root.currentTab().id()=='functions'}">
+		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='functions'}">
 			<div id="functions">
 				<h4>Functions</h4>
 				<!-- ko foreach: functions -->
@@ -171,7 +171,7 @@
 				</form>
 			</div>
 		</section>
-		<section class="tab-pane" data-bind="css: {active: $root.currentTab().id()=='parts'}">
+		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='parts'}">
 			<div class="row-fluid">
 				<div class="span3">
 					<ol class="parts nav nav-list" data-bind="foreach: parts">
@@ -655,7 +655,7 @@
 				</div>
 			</div>
 		</section>
-		<section class="tab-pane" data-bind="css: {active: $root.currentTab().id()=='advice'}">
+		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='advice'}">
 			<div data-bind="writemaths:advice"></div>
 		</section>
 	</div>

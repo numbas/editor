@@ -47,7 +47,12 @@ $(document).ready(function() {
 			new Editor.Tab('statement','Statement'),
 			new Editor.Tab('variables','Variables'),
 			new Editor.Tab('functions','Functions'),
-			new Editor.Tab('parts','Parts'),
+			new Editor.Tab(
+				'parts',
+				ko.computed(function() {
+					return 'Parts ('+q.parts().length+')';
+				})
+			),
 			new Editor.Tab('advice','Advice')
 		]);
 		this.currentTab = ko.observable(this.mainTabs()[0]);

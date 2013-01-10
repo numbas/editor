@@ -52,7 +52,7 @@
 					<ul class="tags" data-bind="foreach: tags">
 						<li class="tag well">
 							<span data-bind="text: $data"></span>
-							<button type="button" class="delete" data-bind="click: $root.tags.remove"/>
+							<button type="button" class="delete" data-bind="click: $root.tags.remove"></button>
 						</li>
 					</ul>
 				</div>
@@ -408,7 +408,7 @@
 											<div class="controls">
 												<select data-bind="options: numberentry.precisionTypes, value: numberentry.precisionType, optionsText: 'niceName'"></select>
 											</div>
-										</span>
+										</label>
 									</div>
 									<div class="control-group" data-bind="fadeVisible: numberentry.precisionType().name!='none',
 									template: {

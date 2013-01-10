@@ -6,6 +6,17 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 		<title>{% block title %}Numbas{% endblock %}</title>
+		<!--[if lt IE 9]>
+		<script>
+		document.createElement('header');
+		document.createElement('nav');
+		document.createElement('section');
+		document.createElement('article');
+		document.createElement('aside');
+		document.createElement('footer');
+		document.createElement('hgroup');
+		</script>
+		<![endif]-->
 
 {% block javascripts %}
 	<!-- jQuery -->

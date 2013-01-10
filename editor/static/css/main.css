@@ -1,3 +1,14 @@
+header
+,nav
+,section
+,article
+,aside
+,footer
+,hgroup 
+{ 
+display: block;
+}
+
 .clearAfter::after {
     clear: both;
     content: '.';

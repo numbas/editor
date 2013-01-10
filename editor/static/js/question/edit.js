@@ -18,26 +18,6 @@ var viewModel;
 $(document).ready(function() {
 	var builtinRulesets = ['basic','unitFactor','unitPower','unitDenominator','zeroFactor','zeroTerm','zeroPower','noLeadingMinus','collectNumbers','simplifyFractions','zeroBase','constantsFirst','sqrtProduct','sqrtDivision','sqrtSquare','trig','otherNumbers']
 
-	Numbas.loadScript('scripts/jme-display.js');
-	Numbas.loadScript('scripts/jme-variables.js');
-	Numbas.loadScript('scripts/jme.js');
-	Numbas.loadScript('scripts/editor-extras.js');
-	for(var i=0;i<Editor.numbasExtensions.length;i++) {
-		var name = Editor.numbasExtensions[i].location;
-		Numbas.loadScript('scripts/extensions/'+name+'/'+name+'.js');
-	}
-	Numbas.startOK = true;
-	Numbas.init = function() {
-		//create a question object
-		viewModel = new Question(Editor.questionJSON);
-		ko.applyBindings(viewModel);
-	};
-	Numbas.tryInit();
-
-	Mousetrap.bind(['ctrl+b','command+b'],function() {
-		window.open(Editor.previewURL,Editor.previewWindow);
-	});
-
     function Question(data)
     {
 		var q = this;
@@ -1179,6 +1159,26 @@ $(document).ready(function() {
             }
         }
     };
+
+	Numbas.loadScript('scripts/jme-display.js');
+	Numbas.loadScript('scripts/jme-variables.js');
+	Numbas.loadScript('scripts/jme.js');
+	Numbas.loadScript('scripts/editor-extras.js');
+	for(var i=0;i<Editor.numbasExtensions.length;i++) {
+		var name = Editor.numbasExtensions[i].location;
+		Numbas.loadScript('scripts/extensions/'+name+'/'+name+'.js');
+	}
+	Numbas.startOK = true;
+	Numbas.init = function() {
+		//create a question object
+		viewModel = new Question(Editor.questionJSON);
+		ko.applyBindings(viewModel);
+	};
+	Numbas.tryInit();
+
+	Mousetrap.bind(['ctrl+b','command+b'],function() {
+		window.open(Editor.previewURL,Editor.previewWindow);
+	});
 
 
 });

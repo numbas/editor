@@ -16,6 +16,12 @@
 	min-height: 44px;
 }
 
+.question .author {
+    font-size: smaller;
+    line-height: 1em;
+    margin-bottom: 1em;
+}
+
 .question .handle {
 	margin-left: -44px;
 	float: left;

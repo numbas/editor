@@ -333,6 +333,7 @@ $(document).ready(function() {
 		var q = this;
 		this.id = ko.observable(data.id);
 		this.name = ko.observable(data.name);
+		this.author = ko.observable(data.author);
 		this.url = ko.observable(data.url);
 		this.previewURL = ko.computed(function() {
 			return q.url()+'preview/';

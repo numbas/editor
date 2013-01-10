@@ -195,6 +195,9 @@
 			<div class="title">
 				<a data-bind="attr:{href: url}, text: name" target="_blank"></a>
 			</div>
+			<div class="author">
+				(<span data-bind="text: author"></span>)
+			</div>
 			<div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
 		</li>
 	</script>

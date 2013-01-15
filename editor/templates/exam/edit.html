@@ -28,7 +28,8 @@
 			Editor.editable = {% if editable %}true{% else %}false{% endif %};
             {% autoescape off %}
         	Editor.examJSON = {{ exam_JSON }};
-            Editor['themes'] = {{themes}};
+            Editor.themes = {{themes}};
+            Editor.locales = {{locales}};
             {% endautoescape %}
 			Editor.previewURL = '{% url exam_preview object.pk object.slug %}';
 			Editor.previewWindow = '{% now "U" %}';

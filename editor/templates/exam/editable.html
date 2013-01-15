@@ -21,6 +21,10 @@
 						name: 'selectproperty',
 						data: {label: 'Theme:', property: theme, options: Editor.themes}
 					}"></div>
+					<div class="control-group" data-bind="visible: Editor.locales.length>1, template: {
+						name: 'selectproperty',
+						data: {label: 'Interface language:', property: locale, options: Editor.locales}
+					}"></div>
 
 					<div class="control-group" data-bind="template: {
 						name: 'percentproperty',

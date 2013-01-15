@@ -55,7 +55,8 @@ $(document).ready(function() {
 			};
 		},this);
 
-		this.theme = ko.observable('default');
+		this.theme = ko.observable(Editor.themes[0]);
+		this.locale = ko.observable(Editor.locales[0]);
 
         this.duration = ko.observable(0);
         this.percentPass = ko.observable(50);
@@ -145,6 +146,8 @@ $(document).ready(function() {
 
             if('theme' in data)
                 this.theme(data.theme);
+            if('locale' in data)
+                this.locale(data.locale);
 
 			if('questions' in data)
 			{
@@ -161,6 +164,7 @@ $(document).ready(function() {
 				return {
 					content: this.output(),
 					theme: this.theme(),
+					locale: this.locale(),
 					metadata: this.metadata(),
 					questions: this.questions()
 								.filter(function(q){return q.id()>0})

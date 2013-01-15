@@ -251,6 +251,7 @@ class ExamUpdateView(UpdateView):
         exam_dict['questions'] = [q.summary() for q in self.object.get_questions()]
         context['exam_JSON'] = json.dumps(exam_dict)
         context['themes'] = settings.GLOBAL_SETTINGS['NUMBAS_THEMES']
+        context['locales'] = settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']
         context['editable'] = self.object.can_be_edited_by(self.request.user)
         return context
 

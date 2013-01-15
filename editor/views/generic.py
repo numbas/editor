@@ -46,6 +46,7 @@ class CompileObject():
             Returns the path to the output produced
         """
         theme = obj.theme if hasattr(obj,'theme') else 'default'
+        locale = obj.locale if hasattr(obj,'locale') else 'en-GB'
 
 
         output_location = os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'], location)
@@ -56,6 +57,7 @@ class CompileObject():
             '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
             '-o'+output_location,
             '-t'+theme,
+			'-l'+locale,
         ] + switches
 
         process = subprocess.Popen(numbas_command, stdout = subprocess.PIPE, stdin=subprocess.PIPE, stderr = subprocess.PIPE)

@@ -144,6 +144,7 @@ GLOBAL_SETTINGS = {
     'HELP_URL': 'http://numbas-editor.readthedocs.org',        #the URL of the Numbas webdocs
     'PYTHON_EXEC': '/usr/bin/python3',
     'NUMBAS_THEMES': ['default','worksheet'],
+    'NUMBAS_LOCALES': ['en-GB'],
 }
 
 ALLOW_REGISTRATION = False

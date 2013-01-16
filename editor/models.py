@@ -174,7 +174,7 @@ class Exam(models.Model,NumbasObject,ControlledObject):
                                        blank=True, editable=False)
     name = models.CharField(max_length=200,default='Untitled Exam')
     theme = models.CharField(max_length=200,default='default')
-    locale = models.CharField(max_length=200,default='en-GB')
+    locale = models.CharField(max_length=200,default='en-GB',editable=False)
     slug = models.SlugField(max_length=200,editable=False,unique=False)
     author = models.ForeignKey(User)
     filename = models.CharField(max_length=200, editable=False,default='')

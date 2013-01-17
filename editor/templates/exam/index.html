@@ -16,20 +16,19 @@
     {% endif %}
 
 	<div class="row-fluid">
-		<form class="searchBox form-inline" data-bind="with: search">
+		<form class="searchBox form-inline" data-bind="with: search, submit: search.submit">
 			<label for="search_query">
 				Search for exams called:
-				<input role="search" id="search_query" type="text" name="examSearch" class="search" data-bind="
-					value: query, 
-					valueUpdate: 'afterkeydown',
-					css: {loading: searching}
-				"/>
+				<div class="input-append">
+					<input role="search" id="search_query" type="text" name="examSearch" class="search" data-bind="value: query, valueUpdate: 'afterkeydown'"/>
+					<span class="add-on"><button type="submit" class="search" data-bind="css: {loading: searching}"></button></span>
+				</div>
 			</label>
 			<label for="search_author">
 				by author: 	
 				<input id="search_author" type="text" class="search" size="30" data-bind="
 					value: author,
-					valueUpdate: 'afterkeydown change',
+					valueUpdate: 'afterkeydown',
 					autocomplete: '{% url user_search %}', 
 					autocompleteCallback: function(user) { return {label: user.username+' ('+user.name+')', value: user.username} },
 					click: clearMine

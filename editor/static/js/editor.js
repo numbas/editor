@@ -287,7 +287,7 @@ $(document).ready(function() {
             },search.results);
         }
 
-		return ko.computed(function() {
+		search.submit = function() {
             var data = makeQuery();
 			if(!data) {
 				search.results.raw([]);
@@ -321,7 +321,8 @@ $(document).ready(function() {
                 });
             ;
 
-		},this).extend({throttle:100});
+		};
+		search.submit();
     }
 
 	Editor.mappedObservableArray = function(map) {

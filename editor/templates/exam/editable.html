@@ -119,16 +119,18 @@
 						data: {label: 'Shuffle questions?',property:shuffleQuestions}
 					}"></div>
 				</form>
-				<form class="form-horizontal span6">
+				<form class="form-horizontal span6" data-bind="submit: search.submit">
 					<div class="control-group">
 						<label for="questionsearch">
 							<span class="control-label">Search for questions:</span>
 							<div class="controls">
-								<input type="text" id="questionsearch" class="search" data-bind="
-									value: search.query, 
-									valueUpdate: 'afterkeydown',
-									css: {loading: search.searching()}
+								<div class="input-append">
+									<input type="text" id="questionsearch" class="search" data-bind="
+										value: search.query, 
+										valueUpdate: 'afterkeydown'
 									"/>
+									<span class="add-on"><button type="submit" class="search" data-bind="css: {loading: searching}"></button></span>
+								</div>
 							</div>
 						</label>
 					</div>

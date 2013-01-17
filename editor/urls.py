@@ -37,7 +37,7 @@ urlpatterns = patterns('',
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/$', ExamUpdateView.as_view(),
         name='exam_edit'),
                        
-    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/copy/$',ExamCopyView.as_view(), name='exam_copy',),
+    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/copy/$',login_required(ExamCopyView.as_view()), name='exam_copy',),
                        
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/delete/$',
         login_required(ExamDeleteView.as_view()), name='exam_delete'),

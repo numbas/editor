@@ -59,7 +59,7 @@ $(document).ready(function() {
 		this.locale = ko.observable(Editor.locales[0]);
 
         this.duration = ko.observable(0);
-        this.percentPass = ko.observable(50);
+        this.percentPass = ko.observable(0);
         this.shuffleQuestions = ko.observable(false);
         this.showfrontpage = ko.observable(true);
 

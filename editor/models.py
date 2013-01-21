@@ -107,12 +107,12 @@ class Question(models.Model,NumbasObject,ControlledObject):
     last_modified = models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
 
     PROGRESS_CHOICES = (
-        ('in progress','Writing in progress'),
-        ('not for use','Not for general use'),
+        ('in-progress','Writing in progress'),
+        ('not-for-use','Not for general use'),
         ('testing','Undergoing testing'),
         ('ready','Tested and ready to use'),
     )
-    progress = models.CharField(max_length=15,editable=True,default='in progress',choices=PROGRESS_CHOICES)
+    progress = models.CharField(max_length=15,editable=True,default='in-progress',choices=PROGRESS_CHOICES)
 
     tags = TaggableManager()
 

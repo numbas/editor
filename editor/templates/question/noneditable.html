@@ -584,6 +584,19 @@
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='advice'}">
 			<div data-bind="cleanJME:advice"></div>
 		</section>
+		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='exams'}">
+			{% if object.exam_set.count %}
+				<ul class="exams-list">
+				{% for exam in object.exam_set.all %}
+					<li class="exam">
+						<a href="{% url exam_edit exam.pk exam.slug %}">{{exam.name}}</a> ({{ exam.author.get_full_name }})
+					</li>
+				{% endfor %}
+				</ul>
+			{% else %}
+				This question is not used in any exams.
+			{% endif %}
+		</section>
 	</div>
 
 {% endblock editor %}

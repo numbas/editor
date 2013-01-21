@@ -33,9 +33,12 @@ $(document).ready(function() {
 					return 'Parts ('+q.parts().length+')';
 				})
 			),
-			new Editor.Tab('advice','Advice')
+			new Editor.Tab('advice','Advice'),
+			new Editor.Tab('exams','Exams using this question')
 		]);
 		this.currentTab = ko.observable(this.mainTabs()[0]);
+
+		this.exams = data.exams;
 
 		var isadvanced = this.isadvanced = ko.observable(true);
 

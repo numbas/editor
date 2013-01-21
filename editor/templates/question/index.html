@@ -47,11 +47,13 @@
 			<table id="question-list" data-bind="visible: all().length>0">
 				<col span="1" class="name"/>
 				<col span="1" class="author"/>
+				<col span="1" class="col-progress"/>
 				<col span="1" class="last_modified"/>
 				<col span="1" class="admin"/>
 				<thead>
 					<th>Name</th>
-					<th>Author</th>
+                    <th>Author</th>
+                    <th>Progress</th>
 					<th>Last Modified</th>
 				</thead>
 				<tbody class="results editlist big" data-bind="foreach: {
@@ -62,7 +64,8 @@
 							<a data-bind="attr: {href: url}, text: name"></a>
 							<div class="description" data-bind="visible: metadata.description.length>0, html: $(metadata.description).text(), mathjax: true"></div>
 						</td>
-						<td><span data-bind="text: author"></span></td>
+                        <td><span data-bind="text: author"></span></td>
+                        <td><span data-bind="text: progress"></span></td>
 						<td><span data-bind="calendarTime: last_modified"></span></td>
 						<td class="admin">
 							<a class="preview" data-bind="attr: {href: url+'preview/'}" target="_blank" title="Test run"></a>

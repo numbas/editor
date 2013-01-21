@@ -1,5 +1,6 @@
 {% extends "editor.html" %}
 {% load verbatim %}
+{% load json %}
 
 {% block javascripts %}
     {{ block.super }}
@@ -18,10 +19,12 @@
                 window.Editor = {};
             }
             var Editor = window.Editor;
-			Editor.questionJSON = {% autoescape off %}{{question.as_json}}{% endautoescape %};
+			Editor.questionJSON = {{question.as_json|safe}};
 			Editor.editable = {% if editable %}true{% else %}false{% endif %};
 
-			Editor.numbasExtensions = {% autoescape off %}{{extensions}}{% endautoescape %};
+			Editor.progresses = {{object.PROGRESS_CHOICES|json|safe}};
+
+			Editor.numbasExtensions = {{extensions|safe}};
 
 			Editor.previewURL = '{% url question_preview object.pk object.slug %}';
 			Editor.previewWindow = '{% now "U" %}';

@@ -62,6 +62,10 @@
 	width: 150px;
 }
 
+.results col.col-progress {
+	width: 150px;
+}
+
 .results col.admin {
 	width: 100px;
 }

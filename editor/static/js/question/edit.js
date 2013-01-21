@@ -40,6 +40,8 @@ $(document).ready(function() {
 
 		this.exams = data.exams;
 
+		this.progress = ko.observable(Editor.progresses[0]);
+
 		var isadvanced = this.isadvanced = ko.observable(true);
 
         this.name = ko.observable('Untitled Question');
@@ -149,6 +151,16 @@ $(document).ready(function() {
 				tryLoad(data.metadata,['notes','description'],this);
 			}
 
+			if('progress' in data) {
+				for(var i=0;i<Editor.progresses.length;i++) {
+					if(Editor.progresses[i][0]==data.progress) {
+						this.progress(Editor.progresses[i]);
+						break;
+					}
+				}
+			}
+
+
 			this.load(parseExam(data.content));
 
 			try{
@@ -166,6 +178,7 @@ $(document).ready(function() {
                 return {
                     content: this.output(),
                     tags: this.tags(),
+					progress: this.progress()[0],
                     metadata: this.metadata()
                 };
 			},this);
@@ -382,6 +395,7 @@ $(document).ready(function() {
             return {
                 name: this.realName(),
                 tags: this.tags(),
+				progress: this.progress()[0],
                 metadata: this.metadata(),
                 statement: this.statement(),
 				extensions: extensions,
@@ -391,7 +405,7 @@ $(document).ready(function() {
 				functions: functions,
                 parts: this.parts().map(function(p){return p.toJSON();})
 
-                }
+            }
         },
 
         load: function(data) {

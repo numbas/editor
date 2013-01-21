@@ -59,6 +59,7 @@ $(document).ready(function() {
 			this.metadata = $.extend(this.metadata,data.metadata);
 
         this.last_modified = moment(data.last_modified,'YYYY-MM-DD HH:mm:ss.SSS');
+        this.progress = data.progress;
 		this.author = data.author;
 		this.url = data.url || '';
 		this.deleteURL = data.deleteURL || '';

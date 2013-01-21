@@ -65,7 +65,7 @@
 							<div class="description" data-bind="visible: metadata.description.length>0, html: $(metadata.description).text(), mathjax: true"></div>
 						</td>
                         <td><span data-bind="text: author"></span></td>
-                        <td><span data-bind="text: progress"></span></td>
+                        <td><span data-bind="text: progressDisplay, attr: {class: 'progress-display '+progress}"></span></td>
 						<td><span data-bind="calendarTime: last_modified"></span></td>
 						<td class="admin">
 							<a class="preview" data-bind="attr: {href: url+'preview/'}" target="_blank" title="Test run"></a>

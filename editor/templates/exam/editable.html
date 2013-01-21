@@ -203,7 +203,8 @@
 			</div>
 			<div class="author">
 				(<span data-bind="text: author"></span>)
-			</div>
+            </div>
+            <div data-bind="attr: {class: 'progress-display '+progress}, text: progressDisplay"></div>
 			<div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
 		</li>
 	</script>

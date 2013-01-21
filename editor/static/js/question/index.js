@@ -60,6 +60,7 @@ $(document).ready(function() {
 
         this.last_modified = moment(data.last_modified,'YYYY-MM-DD HH:mm:ss.SSS');
         this.progress = data.progress;
+        this.progressDisplay = data.progressDisplay;
 		this.author = data.author;
 		this.url = data.url || '';
 		this.deleteURL = data.deleteURL || '';

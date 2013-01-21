@@ -12,8 +12,18 @@
 	<div class="tab-content">
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='general'}">
 			<div class="row-fluid">
-				<label><h4>Question Name</h4></label>
-				<span id="question-name" data-bind="html: name"></span>
+				<div class="span9">
+					<label>
+						<h4>Question Name</h4>
+						<input class="input-block-level" id="question-name" data-bind="value: name, valueUpdate: 'afterkeydown'" type="text"/>
+					</label>
+				</div>
+				<div class="span3">
+					<label>
+                        <h4>Progress</h4>
+                        <span data-bind="text: progress()[1]"></span>
+					</label>
+				</div>
 			</div>
 			<div class="row-fluid">
 				<div class="span6">

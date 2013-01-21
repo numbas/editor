@@ -154,3 +154,7 @@ button.search.loading {
 .monospace {
 	font-family: monospace;
 }
+
+.progress-display.ready {
+    font-weight: bold;
+}

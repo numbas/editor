@@ -159,7 +159,8 @@ class Question(models.Model,NumbasObject,ControlledObject):
         obj = {
             'id': self.id, 
             'name': self.name, 
-            'progress': self.get_progress_display(),
+            'progress': self.progress,
+            'progressDisplay': self.get_progress_display(),
             'metadata': self.metadata,
             'created': str(self.created), 
             'last_modified': str(self.last_modified), 

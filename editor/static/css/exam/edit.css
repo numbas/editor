@@ -19,6 +19,10 @@
 .question .author {
     font-size: smaller;
     line-height: 1em;
+}
+.question .progress-display {
+    font-size: smaller;
+    font-style: italic;
     margin-bottom: 1em;
 }
 

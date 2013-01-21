@@ -342,6 +342,8 @@ $(document).ready(function() {
 		this.previewURL = ko.computed(function() {
 			return q.url()+'preview/';
 		},this);
+        this.progress = data.progress;
+        this.progressDisplay = data.progressDisplay;
 		this.description = $(data.metadata.description).text();
 		this.parent = parent;
 		this.data = data;

@@ -161,6 +161,11 @@ $(document).ready(function() {
 
 		Editor.searchBinding(this.search,'/questions/search/',makeQuery);
         delete vm.search.restorePage;
+
+		ko.computed(function() {
+			this.mine();
+			this.submit();
+		},this.search);
     }
 
     

@@ -10,7 +10,7 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
         # Adding field 'Question.progress'
         db.add_column('editor_question', 'progress',
-                      self.gf('django.db.models.fields.CharField')(default='in progress', max_length=15),
+                      self.gf('django.db.models.fields.CharField')(default='in-progress', max_length=15),
                       keep_default=False)
 
 

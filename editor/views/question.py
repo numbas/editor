@@ -238,6 +238,11 @@ class QuestionListView(ListView):
     
     model=Question
     template_name='question/index.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(QuestionListView, self).get_context_data(**kwargs)
+        context['progresses'] = Question.PROGRESS_CHOICES
+        return context
     
     
 class QuestionSearchView(ListView):
@@ -289,7 +294,13 @@ class QuestionSearchView(ListView):
                     return []
                 else:
                     questions = questions.filter(author__in=authors).distinct()
+        except KeyError:
+            pass
 
+        try:
+            progress = self.request.GET['progress']
+            if progress!='':
+                questions = questions.filter(progress=progress)
         except KeyError:
             pass
 

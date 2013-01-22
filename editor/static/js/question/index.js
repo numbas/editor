@@ -74,6 +74,7 @@ $(document).ready(function() {
 		this.search = {
 			query: ko.observable(''),
 			author: ko.observable(''),
+			progress: ko.observable(''),
 			results: {
 				raw: ko.observableArray([]),
 				all: Editor.mappedObservableArray(function(d){ return new QuestionResult(d) }),
@@ -128,6 +129,7 @@ $(document).ready(function() {
 			return {
 				q: vm.search.query(),
 				author: vm.search.author(),
+				progress: vm.search.progress(),
 				mine: vm.search.mine()
 			};
 		}
@@ -143,6 +145,8 @@ $(document).ready(function() {
 				vm.search.query(history.state.query);
 			if('author' in history.state)
 				vm.search.author(history.state.author);
+			if('progress' in history.state)
+				vm.search.progress(history.state.progress);
 			if('mine' in history.state)
 				vm.search.mine(history.state.mine);
 			if('page' in history.state)
@@ -154,6 +158,7 @@ $(document).ready(function() {
 					page: vm.search.results.page(),
 					query: vm.search.query(),
 					author: vm.search.author(),
+					progress: vm.search.progress(),
 					mine: vm.search.mine()
 				},'',window.location.pathname);
 			})

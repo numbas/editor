@@ -34,7 +34,16 @@
 					click: clearMine
 				"/>
 			</label>
-			{% if user.is_authenticated %}<label class="checkbox"><input type="checkbox" data-bind="checked: mine"/> Mine only</label>{% endif %}
+			{% if user.is_authenticated %}<label class="checkbox"><input type="checkbox" data-bind="checked: mine"/> Mine only.</label>{% endif %}
+			<label for="search_progress">
+				Filter by progress:
+				<select data-bind="value: progress">
+					<option selected></option>
+					{% for code,text in progresses %}
+					<option value="{{code}}">{{text}}</option>
+					{% endfor %}
+				</select>
+			</label>
 		</form>
 	</div>
 

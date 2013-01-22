@@ -1,4 +1,12 @@
-﻿.controlbox a:before {
+﻿#controls {
+	font-size: 14px;
+}
+
+#controls #progress select {
+	width: 200px;
+}
+
+.controlbox a:before {
 	margin-right: 4px;
 }
 

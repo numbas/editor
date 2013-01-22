@@ -46,17 +46,12 @@
 		<div id="controls">
 			<div class="row-fluid">
 			{% block controls %}
-    			<div class="span2" id="editable_message">{% block editable_message %}{% endblock %}</div>
+    			<div class="span4" id="editable_message">{% block editable_message %}{% endblock %}</div>
 				<div class="span3 controlbox" id="author">
 					Author: {{object.author.get_full_name}} ({{ object.author.username }})
 				</div>
-				<div class="span5"
-					<span id="download">
-						Download: 
-						<a href="{% url question_download object.pk object.slug %}">standalone .zip</a>,
-						<a href="{% url question_download object.pk object.slug %}?scorm">SCORM package</a>,
-						<a href="{% url question_source object.pk object.slug %}">source</a>
-					</span>
+				<div class="offset1 span4" id="progress">
+					{% block progress %}{% endblock progress %}
 				</div>
 			{% endblock controls %}
 			</div>
@@ -79,6 +74,15 @@
 				<a id="copy" href="{% url question_copy object.pk object.slug %}" title="Create your own copy of this exam">Make a Copy</a>
 				</div>
 				{% endif %}
+
+				<div class="span6">
+					<span id="download">
+						Download: 
+						<a href="{% url question_download object.pk object.slug %}">standalone .zip</a>,
+						<a href="{% url question_download object.pk object.slug %}?scorm">SCORM package</a>,
+						<a href="{% url question_source object.pk object.slug %}">source</a>
+					</span>
+				</div>
 			</div>
 		</div>
 

@@ -7,6 +7,10 @@
 
 {% block editable_message %}You may only view this question. {% if user.is_authenticated %}If you want to change something, make a copy.{% endif %}{% endblock editable_message %}
 
+{% block progress %}
+Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display '+progress()[0]}"></span>
+{% endblock progress %}
+
 {% block editor %}
 	{% include "noneditable.html" %}
 	<div class="tab-content">
@@ -16,12 +20,6 @@
 					<label>
 						<h4>Question Name</h4>
 						<input class="input-block-level" id="question-name" data-bind="value: name, valueUpdate: 'afterkeydown'" type="text"/>
-					</label>
-				</div>
-				<div class="span3">
-					<label>
-                        <h4>Progress</h4>
-                        <span data-bind="text: progress()[1]"></span>
 					</label>
 				</div>
 			</div>

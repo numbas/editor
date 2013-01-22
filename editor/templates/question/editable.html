@@ -11,6 +11,16 @@
 
 {% block editable_message %}You can edit this question.{% endblock %}
 
+{% block progress %}
+<form class="form-inline">
+	<label>
+		Progress:
+		<select data-bind="options: Editor.progresses, optionsText: '1', value: progress">
+		</select>
+	</label>
+</form>
+{% endblock progress %}
+
 {% block editor %}
 	{% include "editable.html" %}
 	<div class="tab-content">
@@ -20,13 +30,6 @@
 					<label>
 						<h4>Question Name</h4>
 						<input class="input-block-level" id="question-name" data-bind="value: name, valueUpdate: 'afterkeydown'" type="text"/>
-					</label>
-				</div>
-				<div class="span3">
-					<label>
-						<h4>Progress</h4>
-						<select data-bind="options: Editor.progresses, optionsText: '1', value: progress">
-						</select>
 					</label>
 				</div>
 			</div>

@@ -158,3 +158,12 @@ button.search.loading {
 .progress-display.ready {
     font-weight: bold;
 }
+
+.progress-display.not-for-use {
+    color: red;
+    font-style: italic;
+}
+
+.progress-display.testing {
+    color: #666;
+}

@@ -114,14 +114,18 @@ $(document).ready(function() {
 		});
 
 
+		vm.search.restorePage = 0;
 		this.search.mine = ko.computed({
 			read: function() {
 				return this.realMine();
 			},
 			write: function(v) {
+				var ov = this.realMine();
 				this.realMine(v);
 				if(v)
 					this.author('');
+				if(v!=ov && !this.hasOwnProperty('restorePage'))
+					this.submit();
 			}
 		},this.search);
 
@@ -136,7 +140,6 @@ $(document).ready(function() {
 
 		Mousetrap.bind('left',function() { vm.search.results.prevPage.apply(vm.search.results) });
 		Mousetrap.bind('right',function() { vm.search.results.nextPage.apply(vm.search.results) });
-
 
 		//save state in browser history - restore query when you go back to this page
 		if(history.state) {
@@ -166,13 +169,7 @@ $(document).ready(function() {
 
 		Editor.searchBinding(this.search,'/questions/search/',makeQuery);
         delete vm.search.restorePage;
-
-		ko.computed(function() {
-			this.mine();
-			this.submit();
-		},this.search);
     }
-
     
     //create a view model
     viewModel = new QuestionSelect();

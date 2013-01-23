@@ -109,7 +109,10 @@ $(document).ready(function() {
 
             $(element).autocomplete({
                 source: source,
-                select: function() {$(this).change()}
+                select: function(e,ui) {
+					allBindings.value(ui.item.value);
+					$(this).submit();
+				}
             });
         }
     }    

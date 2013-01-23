@@ -176,14 +176,18 @@ $(document).ready(function() {
 		});
 
 
+		vm.search.restorePage = 0;
 		this.search.mine = ko.computed({
 			read: function() {
 				return this.realMine();
 			},
 			write: function(v) {
+				var ov = this.realMine();
 				this.realMine(v);
 				if(v)
 					this.author('');
+				if(v!=ov && !this.hasOwnProperty('restorePage'))
+					this.submit();
 			}
 		},this.search);
 

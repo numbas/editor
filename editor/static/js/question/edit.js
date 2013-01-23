@@ -113,6 +113,12 @@ $(document).ready(function() {
         this.variables = ko.observableArray([]);
 		this.autoCalculateVariables = ko.observable(true);
 
+		this.addVariableBefore = function() {
+			var n = q.variables.indexOf(this);
+			var v = new Variable(q);
+			q.variables.splice(n,0,v);
+		}
+
         this.parts = ko.observableArray([]);
 		this.currentPart = ko.observable(undefined);
 		this.showPart = function(part) {

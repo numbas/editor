@@ -81,11 +81,14 @@
 						}">
 				</div>
 				<script type="text/html" id="variable-template">
+					<div class="row-fluid insertvariable">
+						<button title="Insert a new variable here" class="addvariable" data-bind="click: $parent.addVariableBefore"></button>
+					</div>
 					<div class="row-fluid variable">
 						<div class="span1"><span class="handle"></span></div>
 						<div class="span8">
 							<form>
-								<button type="button" class="delete" data-bind="click:remove"></button>
+								<button type="button" title="Remove this variable" class="delete" data-bind="click:remove"></button>
 								<input type="text" placeholder="Name" class="name" data-bind="value:name, valueUpdate: 'afterkeydown', attr: {disabled: !$parent.isadvanced()}, autosize: name"/> 
 								<label class="control-label">Definition</label>
 								<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: definition, codemirrorMode: 'jme'"></textarea>

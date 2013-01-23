@@ -125,6 +125,20 @@
 	float: right;
 }
 
+.insertvariable button.addvariable {
+	background-image: url(../../images/plus_8x8.png);
+	background-position: 50%;
+	background-repeat: no-repeat;
+	background-color: transparent;
+	border-radius: 0;
+	border: none;
+	padding: 4px 18px;
+}
+
+.insertvariable button.addvariable:hover {
+	background-color: #f90;
+}
+
 .function {
 	margin-bottom: 1em;
 }

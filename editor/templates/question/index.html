@@ -48,22 +48,22 @@
 	</div>
 
 	<div data-bind="with: search.results">
-		<div id="pagination" data-bind="visible: pages().length>0">
+		<div class="pagination" data-bind="visible: pages().length>0">
 			Page:
 			<button type="button" class="move previous" data-bind="click: prevPage"></button><span class="pagenumber" data-bind="text: pageText"></span><button type="button" class="move next" data-bind="click: nextPage"></button>
 		</div>
 		<div class="results">
-			<table id="question-list" data-bind="visible: all().length>0">
+			<table class="search-results" id="question-list" data-bind="visible: all().length>0">
 				<col span="1" class="name"/>
 				<col span="1" class="author"/>
 				<col span="1" class="col-progress"/>
 				<col span="1" class="last_modified"/>
 				<col span="1" class="admin"/>
-				<thead>
-					<th>Name</th>
-                    <th>Author</th>
-                    <th>Progress</th>
-					<th>Last Modified</th>
+                <thead data-bind="with: $root.search">
+                    <th data-bind="css: {sorted: orderBy()=='name', descending: descending}, click: setOrder('name')">Name</th>
+                    <th data-bind="css: {sorted: orderBy()=='author', descending: descending}, click: setOrder('author')">Author</th>
+                    <th data-bind="css: {sorted: orderBy()=='progress', descending: descending}, click: setOrder('progress')">Progress</th>
+					<th data-bind="css: {sorted: orderBy()=='last_modified', descending: descending}, click: setOrder('last_modified',true)">Last Modified</th>
 				</thead>
 				<tbody class="results editlist big" data-bind="foreach: {
 					data: pages()[page()-1],
@@ -88,6 +88,10 @@
 			</table>
 			<div class="none" data-bind="visible: all().length==0, text: $parent.searching() ? 'Loading results...' : 'No questions found.'" ></div>
 			<div class="error" data-bind="visible: error().length>0, html: error"></div>
+		</div>
+		<div class="pagination" data-bind="visible: pages().length>0">
+			Page:
+			<button type="button" class="move previous" data-bind="click: prevPage"></button><span class="pagenumber" data-bind="text: pageText"></span><button type="button" class="move next" data-bind="click: nextPage"></button>
 		</div>
 	</div>
     

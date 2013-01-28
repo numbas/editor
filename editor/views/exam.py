@@ -308,6 +308,18 @@ class ExamSearchView(ListView):
         except KeyError:
             pass
 
+        try:
+            descending = '-' if self.request.GET['descending']=='true' else ''
+            order_by = self.request.GET['order_by']
+            if order_by == 'name':
+                exams = exams.order_by(descending+'slug')
+            elif order_by == 'author':
+                exams = exams.order_by(descending+'author__first_name',descending+'author__last_name')
+            elif order_by == 'last_modified':
+                exams = exams.order_by(descending+'last_modified')
+        except KeyError:
+            pass
+
         return [q.summary(user=self.request.user) for q in exams]
 
     

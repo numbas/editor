@@ -46,31 +46,52 @@
     margin: 0.5em 0 0 0;
 }
 
-.results table {
+.search-results {
 	width: 100%;
 }
 
-.results tbody tr:nth-child(odd) {
+.search-results th {
+    cursor: pointer;
+}
+
+.search-results th.sorted:after {
+    background-image: url(../images/accordion-up.png);
+    background-position: 50%;
+    background-repeat: no-repeat;
+    content: '';
+    width: 8px;
+    height: 6px;
+    display: inline-block;
+    vertical-align: middle;
+    padding-left: 8px;
+}
+
+.search-results th.sorted.descending:after {
+    background-image: url(../images/accordion-down.png);
+}
+
+
+.search-results tbody tr:nth-child(odd) {
 	background: #eee;
 }
 
-.results col.name {
+.search-results col.name {
 	width: 300px;
 }
 
-.results col.author {
+.search-results col.author {
 	width: 150px;
 }
 
-.results col.col-progress {
+.search-results col.col-progress {
 	width: 150px;
 }
 
-.results col.admin {
+.search-results col.admin {
 	width: 100px;
 }
 
-col.last_modified {
+.search-results col.last_modified {
 	width: 125px;
 }
 
@@ -92,12 +113,12 @@ col.last_modified {
 	margin: 0;
 }
 
-#pagination {
+.pagination {
 	margin-top: 1em;
 	vertical-align: center;
 }
 
-#pagination .move {
+.pagination .move {
 	display: inline-block;
 	background: center no-repeat;
 	border: none;
@@ -106,18 +127,18 @@ col.last_modified {
 	padding: 0;
 }
 
-#pagination .move:hover {
+.pagination .move:hover {
 	background-color: #f90;
 }
 
-#pagination .previous {
+.pagination .previous {
 	background-image: url(../images/arrow_left_12x12.png);
 }
-#pagination .next {
+.pagination .next {
 	background-image: url(../images/arrow_right_12x12.png);
 }
 
-#pagination .pagenumber {
+.pagination .pagenumber {
 	margin: 0 4px;
 }
 

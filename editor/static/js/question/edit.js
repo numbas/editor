@@ -26,7 +26,7 @@ $(document).ready(function() {
 			new Editor.Tab('general','General'),
 			new Editor.Tab('statement','Statement'),
 			new Editor.Tab('variables','Variables'),
-			new Editor.Tab('functions','Functions'),
+			new Editor.Tab('functions','Functions & Rulesets'),
 			new Editor.Tab(
 				'parts',
 				ko.computed(function() {

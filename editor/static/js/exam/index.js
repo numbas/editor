@@ -136,7 +136,7 @@ $(document).ready(function() {
 			query: ko.observable(''),
 			author: ko.observable(''),
             descending: ko.observable(false),
-            orderBy: ko.observable(''),
+            orderBy: ko.observable('name'),
 			results: {
 				raw: ko.observableArray([]),
 				all: Editor.mappedObservableArray(function(d){ return new ExamResult(d) }),
@@ -227,6 +227,10 @@ $(document).ready(function() {
 				vm.search.author(history.state.author);
 			if('mine' in history.state)
 				vm.search.mine(history.state.mine);
+			if('descending' in history.state)
+				vm.search.descending(history.state.descending);
+			if('orderBy' in history.state)
+				vm.search.orderBy(history.state.orderBy);
 			if('page' in history.state)
 				vm.search.restorePage = history.state.page;
 		}
@@ -236,7 +240,9 @@ $(document).ready(function() {
 					page: vm.search.results.page(),
 					query: vm.search.query(),
 					author: vm.search.author(),
-					mine: vm.search.mine()
+					mine: vm.search.mine(),
+                    descending: vm.search.descending(),
+                    orderBy: vm.search.orderBy()
 				},'',window.location.pathname);
 			})
 		}

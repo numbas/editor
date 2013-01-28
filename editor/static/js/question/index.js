@@ -76,7 +76,7 @@ $(document).ready(function() {
 			author: ko.observable(''),
 			progress: ko.observable(''),
             descending: ko.observable(false),
-            orderBy: ko.observable(''),
+            orderBy: ko.observable('name'),
 			results: {
 				raw: ko.observableArray([]),
 				all: Editor.mappedObservableArray(function(d){ return new QuestionResult(d) }),
@@ -166,6 +166,10 @@ $(document).ready(function() {
 				vm.search.author(history.state.author);
 			if('progress' in history.state)
 				vm.search.progress(history.state.progress);
+			if('descending' in history.state)
+				vm.search.descending(history.state.descending);
+			if('orderBy' in history.state)
+				vm.search.orderBy(history.state.orderBy);
 			if('mine' in history.state)
 				vm.search.mine(history.state.mine);
 			if('page' in history.state)
@@ -178,7 +182,9 @@ $(document).ready(function() {
 					query: vm.search.query(),
 					author: vm.search.author(),
 					progress: vm.search.progress(),
-					mine: vm.search.mine()
+					mine: vm.search.mine(),
+                    descending: vm.search.descending(),
+                    orderBy: vm.search.orderBy()
 				},'',window.location.pathname);
 			})
 		}

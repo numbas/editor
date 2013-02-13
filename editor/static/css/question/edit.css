@@ -137,6 +137,11 @@
 	font-style: italic;
 }
 
+.variable .value {
+	padding: 4px;
+}
+
+
 .insertvariable button.addvariable {
 	background-image: url(../../images/plus_8x8.png);
 	background-position: 50%;

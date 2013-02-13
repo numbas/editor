@@ -544,13 +544,11 @@ $(document).ready(function() {
 				case 'string':
 					return v.value;
 				case 'list':
-                    if(val.type=='list')
-                        return 'List of '+val.value.length+' items';
+					return 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
 				case 'html':
 					return 'HTML node';
 				default:
-                    var val = this.value();
-					return '$'+Numbas.jme.display.texify({tok:this.value()})+'$';
+					return '$'+Numbas.jme.display.texify({tok:v})+'$';
 				}
 			}
 			else

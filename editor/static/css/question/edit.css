@@ -132,6 +132,11 @@
 	float: right;
 }
 
+.variable .name-error {
+	color: red;
+	font-style: italic;
+}
+
 .insertvariable button.addvariable {
 	background-image: url(../../images/plus_8x8.png);
 	background-position: 50%;

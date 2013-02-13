@@ -113,6 +113,15 @@ $(document).ready(function() {
         this.variables = ko.observableArray([]);
 		this.autoCalculateVariables = ko.observable(true);
 
+		this.variableErrors = ko.computed(function() {
+			var variables = this.variables();
+			for(var i=0;i<variables.length;i++) {
+				if(variables[i].nameError() || variables[i].error())
+					return true;
+			}
+			return false;
+		},this);
+
 		this.addVariableBefore = function() {
 			var n = q.variables.indexOf(this);
 			var v = new Variable(q);
@@ -201,6 +210,13 @@ $(document).ready(function() {
 
 				window.onbeforeunload = function() {
 					return 'There are still unsaved changes.';
+				}
+
+				if(this.variableErrors()) {
+					window.onbeforeunload = function() {
+						return 'There are errors in one or more variable definitions, so the question can\'t be saved.';
+					}
+					return;
 				}
 
                 if(!this.save_noty)
@@ -490,8 +506,30 @@ $(document).ready(function() {
         }
     };
 
+	var re_name = /^{?((?:(?:[a-zA-Z]+):)*)((?:\$?[a-zA-Z][a-zA-Z0-9]*'*)|\?)}?$/i;
+
     function Variable(q,data) {
         this.name = ko.observable('');
+		this.nameError = ko.computed(function() {
+			var name = this.name();
+			if(name=='')
+				return '';
+
+			var variables = q.variables();
+			for(var i=0;i<variables.length;i++) {
+				var v = variables[i];
+				if(v==this)
+					break;
+				else if(v.name().toLowerCase()==name.toLowerCase())
+					return 'There\'s already a variable with this name.';
+			}
+
+			if(!re_name.test(this.name())) {
+				return 'This variable name is invalid.';
+			}
+
+			return '';
+		},this);
         this.definition = ko.observable('');
 		this.value = ko.observable('');
 		this.error = ko.observable('');

@@ -89,7 +89,8 @@
 						<div class="span8">
 							<form>
 								<button type="button" title="Remove this variable" class="delete" data-bind="click:remove"></button>
-								<input type="text" placeholder="Name" class="name" data-bind="value:name, valueUpdate: 'afterkeydown', attr: {disabled: !$parent.isadvanced()}, autosize: name"/> 
+								<input type="text" placeholder="Name" class="name" data-bind="value:name, valueUpdate: 'afterkeydown', attr: {disabled: !$parent.isadvanced()}, autosize: name"/>
+								<span class="name-error" data-bind="text: nameError, visible: nameError"></span>
 								<label class="control-label">Definition</label>
 								<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: definition, codemirrorMode: 'jme'"></textarea>
 							</form>

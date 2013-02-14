@@ -1053,7 +1053,7 @@ $(document).ready(function() {
                 o.maxAnswers = this.multiplechoice.maxAnswers();
                 o.shuffleChoices = this.multiplechoice.shuffleChoices();
                 o.shuffleAnswers = this.multiplechoice.shuffleAnswers();
-                //o.displayType = this.multiplechoice.displayType().name;
+                o.displayType = this.multiplechoice.displayType().name;
 
                 var matrix = [];
                 var choices = this.multiplechoice.choices();

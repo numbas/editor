@@ -88,7 +88,9 @@ jQuery(function() {
 		options = jQuery.extend({
 			cleanMaths: function(m){ return m; },
 			callback: function() {},
-            iFrame: false
+            iFrame: false,
+			position: false,
+			previewPosition: 'left top'
 		},options);
 
         jQuery(this).each(function() {
@@ -147,7 +149,7 @@ jQuery(function() {
 						anchor = anchor.parentNode;
 					}
 
-                    if(jQuery(anchor).parents('code,pre,.wm_ignore').length)
+                    if(jQuery(anchor).add(jQuery(anchor).parents()).filter('code,pre,.wm_ignore').length)
                         return;
                     txt = jQuery(anchor).text();
                 }
@@ -233,7 +235,10 @@ jQuery(function() {
 
                 function positionPreview() {
                     var of = options.iFrame ? iframe : textarea ? root : document;
-                    previewElement.position({my: 'left bottom', at: 'left top', of: of, offset: pos.x+' '+pos.y, collision: 'fit'})
+					if(options.position)
+	                    previewElement.position({my: options.previewPosition, at: options.position, of: of, collision: 'fit'})
+					else
+	                    previewElement.position({my: 'left bottom', at: 'left top', of: of, offset: pos.x+' '+pos.y, collision: 'fit'})
                 }
 
                 previewElement

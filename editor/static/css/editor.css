@@ -67,6 +67,10 @@
 	content: url(../images/check_16x13.png);
 }
 
+body .wm_preview {
+	padding: 1.5em;
+}
+
 .jme-var {
 	color: olive;
 }

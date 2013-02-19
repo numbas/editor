@@ -672,10 +672,10 @@ $(document).ready(function() {
 					media_srict: false,
                     handle_event_callback: onkeyup,
 					init_instance_callback: function() { 
-						$(element).writemaths({cleanMaths: cleanJME, iFrame: true}); 
+						$(element).writemaths({cleanMaths: cleanJME, iFrame: true, position: 'center top', previewPosition: 'center bottom'}); 
 					},
                     theme_advanced_resizing: true,
-                    theme_advanced_resizing_max_width: '750',
+					theme_advanced_resize_horizontal: false,
 					height: height,
 					width: width
                 })

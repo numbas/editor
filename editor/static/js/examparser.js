@@ -83,7 +83,7 @@ ExamParser.prototype = {
 			var obj = {};
 			while(this.working.length && this.working[0]!='}')
 			{
-				var re_name = /^(\w*)$/;
+				var re_name = /^([\w_]*'*)$/;
 				var i = this.working.indexOf(':');
 				if(i==-1)
 					throw(new ParseError(this,'Expected a colon'));

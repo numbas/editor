@@ -506,7 +506,7 @@ $(document).ready(function() {
         }
     };
 
-	var re_name = /^{?((?:(?:[a-zA-Z]+):)*)((?:\$?[a-zA-Z][a-zA-Z0-9]*'*)|\?)}?$/i;
+	var re_name = /^{?((?:(?:[a-zA-Z]+):)*)((?:\$?[a-zA-Z_][a-zA-Z0-9_]*'*)|\?)}?$/i;
 
     function Variable(q,data) {
         this.name = ko.observable('');

@@ -190,9 +190,6 @@ var texOps = jme.display.texOps = {
 	//range definition. Should never really be seen
 	'#': (function(thing,texArgs) { return texArgs[0]+' \\, \\# \\, '+texArgs[1]; }),	
 
-	//subscript
-	'_': (function(thing,texArgs) { return texArgs[0]+'_{'+texArgs[1]+'}'; }),
-
 	//logical negation
 	'!': infixTex('\\neg '),	
 
@@ -232,7 +229,7 @@ var texOps = jme.display.texOps = {
 		for(var i=1; i<thing.args.length; i++ )
 		{
 			//specials or subscripts
-			if(thing.args[i-1].tok.type=='special' || thing.args[i].tok.type=='special' || (thing.args[i-1].tok.type=='op' && thing.args[i-1].tok.name=='_') || (thing.args[i].tok.type=='op' && thing.args[i].tok.name=='_'))	
+			if(thing.args[i-1].tok.type=='special' || thing.args[i].tok.type=='special')	
 			{
 				s+=' ';
 			}
@@ -428,11 +425,8 @@ var texOps = jme.display.texOps = {
 	'vector': (function(thing,texArgs,settings) {
 		return '\\left( '+texVector(thing,settings)+' \\right)';
 	}),
-	'matrix': (function(thing,texArgs) {
-		var rows = thing.args.map(function(x) {
-			return x.args.map(function(y){ return texify(y); }).join(' & ');
-		})
-		return '\\begin{pmatrix} ' + rows.join(' \\\\ ')+' \\end{pmatrix}';
+	'matrix': (function(thing,texArgs,settings) {
+		return texMatrix(thing,settings,true);
 	}),
 	'listval': (function(thing,texArgs) {
 		return texArgs[0]+' \\left['+texArgs[1]+'\\right]';
@@ -602,31 +596,45 @@ function texVector(v,settings)
 	return out;
 }
 
-function texMatrix(m,settings)
+function texMatrix(m,settings,parens)
 {
 	var out;
+
 	if(m.args)
 	{
 		var rows = m.args.map(function(x) {
-			return x.args.map(function(y){ return texify(y,settings); }).join(' & ');
+			return x.args.map(function(y){ return texify(y,settings); });
 		})
-		out = rows.join(' \\\\ ');
 	}
 	else
 	{
 		var texNumber = settings.fractionnumbers ? texRationalNumber : texRealNumber;
 		var rows = m.map(function(x){
-			return x.map(function(y){ return texNumber(y) }).join(' & ');
+			return x.map(function(y){ return texNumber(y) });
+		});
+	}
+
+	if(rows.length==1) {
+		out = rows[0].join(', & ');
+	}
+	else {
+		rows = rows.map(function(x) {
+			return x.join(' & ');
 		});
 		out = rows.join(' \\\\ ');
 	}
-	return '\\begin{matrix} '+out+' \\end{matrix}';
+
+	if(parens)
+		return '\\begin{pmatrix} '+out+' \\end{pmatrix}';
+	else
+		return '\\begin{matrix} '+out+' \\end{matrix}';
 }
 
 function texName(name,annotation)
 {
 	var name = greek.contains(name) ? '\\'+name : name;
-	name = name.replace(/^(.*?)(\d+)/,'$1_{$2}');	//make numbers at the end of a variable name subscripts
+	name = name.replace(/_/g,'\\_');	//make numbers at the end of a variable name subscripts
+	name = name.replace(/^(.*?[^_])(\d+)$/,'$1_{$2}');	//make numbers at the end of a variable name subscripts
 	if(!annotation)
 		return name;
 
@@ -933,6 +941,10 @@ var treeToJME = jme.display.treeToJME = function(tree,settings)
 	case 'string':
 		var str = tok.value.replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/"/g,'\\"').replace(/'/g,"\\'");
 		return '"'+str+'"';
+	case 'html':
+		var html = $(tok.value).clone().wrap('<div>').parent().html();
+		html = html.replace(/"/g,'\\"');
+		return 'html("'+html+'")';
 	case 'boolean':
 		return (tok.value ? 'true' : 'false');
 	case 'range':

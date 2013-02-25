@@ -191,7 +191,7 @@
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='parts'}">
 			<div class="row-fluid">
 				<div class="span3">
-					<ol class="parts nav nav-list" data-bind="foreach: parts">
+                    <ol class="parts nav nav-list" data-bind="visible: parts().length>0, foreach: parts">
 						<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
 							<div class="reorder" data-bind="visible: $root.currentPart()==$data && parentList().length>1">
 								<button type="button" class="up" data-bind="click: moveUp"></button>

@@ -226,6 +226,7 @@ class QuestionUpdateView(UpdateView):
         context = super(QuestionUpdateView, self).get_context_data(**kwargs)
         context['extensions'] = json.dumps([model_to_dict(e) for e in Extension.objects.all()])
         context['editable'] = self.object.can_be_edited_by(self.request.user)
+        context['navtab'] = 'questions'
         return context
     
     def get_success_url(self):
@@ -242,6 +243,7 @@ class QuestionListView(ListView):
     def get_context_data(self, **kwargs):
         context = super(QuestionListView, self).get_context_data(**kwargs)
         context['progresses'] = Question.PROGRESS_CHOICES
+        context['navtab'] = 'questions'
         return context
     
     

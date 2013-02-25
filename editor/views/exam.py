@@ -253,6 +253,7 @@ class ExamUpdateView(UpdateView):
         context['themes'] = settings.GLOBAL_SETTINGS['NUMBAS_THEMES']
         context['locales'] = settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']
         context['editable'] = self.object.can_be_edited_by(self.request.user)
+        context['navtab'] = 'exams'
         return context
 
     def get_success_url(self):
@@ -327,3 +328,8 @@ class ExamSearchView(ListView):
 class ExamListView(ListView):
     model=Exam
     template_name='exam/index.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(ExamListView, self).get_context_data(**kwargs)
+        context['navtab'] = 'exams'
+        return context

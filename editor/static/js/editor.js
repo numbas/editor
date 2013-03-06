@@ -298,6 +298,8 @@ $(document).ready(function() {
             data.id = search.lastID = Math.random()+'';
             if(search.restorePage)
                 data.page = search.restorePage;
+            else
+                data.page = 1;
 
 			search.results.error('');
             search.searching(true);

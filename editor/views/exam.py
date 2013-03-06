@@ -268,7 +268,7 @@ class ExamSearchView(ListView):
 
     def render_to_response(self, context, **response_kwargs):
         if self.request.is_ajax():
-            return HttpResponse(json.dumps(context),
+            return HttpResponse(json.dumps({'object_list':context['object_list'],'page':context['page'],'id':context['id']}),
                                 content_type='application/json',
                                 **response_kwargs)
         raise Http404
@@ -278,6 +278,7 @@ class ExamSearchView(ListView):
         try:
             context['page'] = self.request.GET['page']
         except KeyError:
+            context['page'] = 1
             pass
         try:
             context['id'] = self.request.GET['id']

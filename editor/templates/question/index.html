@@ -4,8 +4,8 @@
 
 	{% if user.is_authenticated %}
         <div class="controlbox" id="admin">
-            <a id="new" href="{% url question_new %}">Create a new question</a>
-            <form action="{% url question_upload %}" method="post" id="uploadForm" enctype="multipart/form-data">
+            <a id="new" href="{% url 'question_new' %}">Create a new question</a>
+            <form action="{% url 'question_upload' %}" method="post" id="uploadForm" enctype="multipart/form-data">
                 {% csrf_token %}
                 <a href="" id="upload">Upload a question</a>
                 <div class="upload">
@@ -29,7 +29,7 @@
 				<input id="search_author" type="text" size="30" data-bind="
 					value: author,
 					valueUpdate: 'afterkeydown',
-					autocomplete: '{% url user_search %}', 
+					autocomplete: '{% url 'user_search' %}', 
 					autocompleteCallback: function(user) { return {label: user.username+' ('+user.name+')', value: user.username} },
 					click: clearMine
 				"/>

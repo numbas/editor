@@ -5,7 +5,7 @@
 
 {% if error %}<p><strong>{{ error }}</strong></p>{% endif %}
 
-<form action="{% url exam_new %}" method="post">
+<form action="{% url 'exam_new' %}" method="post">
 {% csrf_token %}
 {{ form.as_p }}
 {% for formset in inlines %}

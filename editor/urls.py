@@ -12,7 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 from django.conf import settings
-from django.conf.urls.defaults import *
+from django.conf.urls import *
 from django.views.generic import RedirectView, TemplateView
 
 from django.contrib.auth.decorators import login_required

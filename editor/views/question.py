@@ -255,7 +255,7 @@ class QuestionSearchView(ListView):
     
     def render_to_response(self, context, **response_kwargs):
         if self.request.is_ajax():
-            return HttpResponse(json.dumps(context),
+            return HttpResponse(json.dumps({'object_list':context['object_list'],'page':context['page'],'id':context['id']}),
                                 content_type='application/json',
                                 **response_kwargs)
         raise Http404
@@ -265,12 +265,12 @@ class QuestionSearchView(ListView):
         try:
             context['page'] = self.request.GET['page']
         except KeyError:
+            context['page'] = 1
             pass
         try:
             context['id'] = self.request.GET['id']
         except KeyError:
             pass
-
         return context
     
     def get_queryset(self):

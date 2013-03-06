@@ -6,10 +6,10 @@
 {% if error %}<p><strong>{{ error }}</strong></p>{% endif %}
 
 {% if user.username == question.author.username or user.is_superuser %}
-	<form action="{% url question_delete question.pk,question.slug %}" method="post">
+	<form action="{% url 'question_delete' question.pk,question.slug %}" method="post">
 	{% csrf_token %}
 	<p>Are you sure?</p>
-	<p><input type="submit" value="Delete" /> <a href="{% url question_index %}"/>Cancel</a></p>
+	<p><input type="submit" value="Delete" /> <a href="{% url 'question_index' %}"/>Cancel</a></p>
 	</form>
 {% else %}
 	<p>You are not permitted to delete this question.</p>

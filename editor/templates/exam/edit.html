@@ -31,7 +31,7 @@
             Editor.themes = {{themes}};
             Editor.locales = {{locales}};
             {% endautoescape %}
-			Editor.previewURL = '{% url exam_preview object.pk object.slug %}';
+			Editor.previewURL = '{% url 'exam_preview' object.pk object.slug %}';
 			Editor.previewWindow = '{% now "U" %}';
         })();
     </script>
@@ -61,8 +61,8 @@
 				</div>			
 				{% if editable %}
 				<div class="span2">
-					<a id="delete" data-bind="click: deleteExam" href="{% url exam_delete object.pk object.slug %}" title="Delete this exam permanently but not the questions it uses">Delete
-						<form action="{% url exam_delete object.pk object.slug %}" method="post">{% csrf_token %}
+					<a id="delete" data-bind="click: deleteExam" href="{% url 'exam_delete' object.pk object.slug %}" title="Delete this exam permanently but not the questions it uses">Delete
+						<form action="{% url 'exam_delete' object.pk object.slug %}" method="post">{% csrf_token %}
 							<input type="submit" value="Submit" />
 						</form>
 					</a>
@@ -71,16 +71,16 @@
 
 				{% if user.is_authenticated %}
 				<div class="span2">
-					<a id="copy" href="{% url exam_copy object.pk object.slug %}" title="Create your own copy of this exam">Make a Copy</a>
+					<a id="copy" href="{% url 'exam_copy' object.pk object.slug %}" title="Create your own copy of this exam">Make a Copy</a>
 				</div>
 				{% endif %}
 
 				<div class="span6">
 					<span id="download">
 						Download: 
-						<a href="{% url exam_download object.pk object.slug %}">standalone .zip</a>,
-						<a href="{% url exam_download object.pk object.slug %}?scorm">SCORM package</a>,
-						<a href="{% url exam_source object.pk object.slug %}">source</a>
+						<a href="{% url 'exam_download' object.pk object.slug %}">standalone .zip</a>,
+						<a href="{% url 'exam_download' object.pk object.slug %}?scorm">SCORM package</a>,
+						<a href="{% url 'exam_source' object.pk object.slug %}">source</a>
 					</span>
 				</div>
 			</div>

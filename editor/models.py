@@ -88,6 +88,39 @@ class Extension(models.Model):
         d = model_to_dict(self)
         return json.dumps(d)
 
+class Image( models.Model ):
+    title = models.CharField( max_length=255 ) 
+    image = models.ImageField( upload_to='images/', max_length=255) 
+
+    @property 
+    def data_url( self ):
+        try:
+            img = open( self.image.path, "rb") 
+            data = img.read() 
+            return "data:image/jpg;base64,%s" % codecs.encode(data,'base64')[:-1]
+    
+        except IOError as e:
+            print(e)
+            return self.image.url
+
+    @property
+    def resource_url(self):
+        return 'resources/%s' % self.image.name
+
+    def delete(self,*args,**kwargs):
+        self.image.delete(save=False)
+        super(Image,self).delete(*args,**kwargs)
+
+    def as_json(self):
+        return {
+			'url': self.resource_url,
+			'name': self.title,
+			'pk': self.pk
+		}
+
+    def summary(self):
+		return json.dumps(self.as_json()),
+
 class Question(models.Model,NumbasObject,ControlledObject):
     
     """Model class for a question.
@@ -105,6 +138,7 @@ class Question(models.Model,NumbasObject,ControlledObject):
     metadata = JSONField(blank=True)
     created = models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
     last_modified = models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
+    resources = models.ManyToManyField(Image,blank=True)
 
     PROGRESS_CHOICES = (
         ('in-progress','Writing in progress'),
@@ -143,7 +177,8 @@ class Question(models.Model,NumbasObject,ControlledObject):
         data = OrderedDict([
             ('name',self.name),
             ('extensions',self.extensions),
-			('navigation',{'allowregen': 'true', 'showfrontpage': 'false', 'preventleave': False}),
+            ('resources',[[i.image.name,i.image.path] for i in self.resources.all()]),
+            ('navigation',{'allowregen': 'true', 'showfrontpage': 'false', 'preventleave': False}),
             ('questions',[self.parsed_content])
         ])
         return printdata(data)
@@ -152,6 +187,7 @@ class Question(models.Model,NumbasObject,ControlledObject):
         d = model_to_dict(self)
         d['metadata'] = self.metadata
         d['tags'] = [ti.tag.name for ti in d['tags']]
+        d['resources'] = [res.as_json() for res in self.resources.all()]
         return json.dumps(d)
 
     def summary(self, user=None):
@@ -162,7 +198,7 @@ class Question(models.Model,NumbasObject,ControlledObject):
             'progress': self.progress,
             'progressDisplay': self.get_progress_display(),
             'metadata': self.metadata,
-            'created': str(self.created), 
+            'created': str(self.created),
             'last_modified': str(self.last_modified), 
             'author': self.author.get_full_name(), 
             'url': reverse('question_edit', args=(self.pk,self.slug,)),
@@ -266,3 +302,4 @@ class ExamQuestion(models.Model):
     exam = models.ForeignKey(Exam)
     question = models.ForeignKey(Question)
     qn_order = models.PositiveIntegerField()
+

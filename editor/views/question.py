@@ -24,7 +24,7 @@ from django.views.generic import CreateView, DeleteView, ListView, UpdateView, V
 from django.views.generic.detail import SingleObjectMixin
 
 from editor.forms import NewQuestionForm, QuestionForm
-from editor.models import Question,Extension
+from editor.models import Question,Extension,Image
 from editor.views.generic import PreviewView, ZipView, SourceView
 from editor.views.user import find_users
 
@@ -154,6 +154,8 @@ class QuestionCopyView(View, SingleObjectMixin):
             q2.author = request.user
             q2.save()
             q2.set_name("%s's copy of %s" % (q2.author.first_name,q.name))
+            q2.resources = q.resources.all()
+            q2.save()
         except (Question.DoesNotExist, TypeError) as err:
             status = {
                 "result": "error",
@@ -195,7 +197,8 @@ class QuestionUpdateView(UpdateView):
             return HttpResponseForbidden()
 
         self.data = json.loads(request.POST['json'])
-
+        self.resources = self.data['resources']
+        del self.data['resources']
         question_form = QuestionForm(self.data, instance=self.object)
 
         if question_form.is_valid():
@@ -208,6 +211,10 @@ class QuestionUpdateView(UpdateView):
         self.object.metadata = json.dumps(self.object.metadata)
 
         self.object.edit_user = self.user
+
+        print(self.resources)
+        resource_pks = [res['pk'] for res in self.resources]
+        self.object.resources = Image.objects.filter(pk__in=resource_pks)
 
         self.object.save()
 

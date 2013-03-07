@@ -12,6 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 from django.conf.urls.defaults import *
+from django.conf.urls.static import static
 import settings
 
 from django.contrib import admin,auth
@@ -27,4 +28,4 @@ urlpatterns = patterns('',
 	url(r'^accounts/', include('accounts.urls')),
     
     url(r'', include('editor.urls')),
-)
+) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -3,3 +3,4 @@ django-taggit
 django-registration
 south
 django-uuslug
+pil

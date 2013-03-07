@@ -674,6 +674,15 @@
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='advice'}">
 			<div data-bind="writemaths:advice"></div>
 		</section>
+		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='resources'}">
+			<form data-bind="fileupload: addResource" data-url="{% url 'upload_resource' object.pk object.slug %}">
+				{% csrf_token %}
+				<input id="fileupload" type="file" name="files[]" multiple>
+			</form>
+			<ul class="resources-list" data-bind="foreach: resources">
+				<li><img class="thumbnail" data-bind="attr: {src: url, title: name}"/><span data-bind="text: url"></span></li>
+			</ul>
+		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='exams'}">
 			{% if object.exam_set.count %}
 				<ul class="exams-list">

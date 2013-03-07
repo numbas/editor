@@ -20,6 +20,7 @@ from django.contrib.auth.decorators import login_required
 from editor.views.exam import ExamPreviewView, ExamZipView, ExamSourceView, ExamCreateView, ExamCopyView, ExamUploadView, ExamDeleteView, ExamListView, ExamSearchView, ExamUpdateView
 from editor.views.question import QuestionPreviewView, QuestionZipView, QuestionSourceView, QuestionCreateView, QuestionCopyView, QuestionUploadView, QuestionDeleteView, QuestionListView, QuestionSearchView, QuestionUpdateView
 from editor.views.user import UserSearchView
+from editor.views.resource import upload_resource, media_view
 
 
 urlpatterns = patterns('',
@@ -61,6 +62,12 @@ urlpatterns = patterns('',
     
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/$',
         QuestionUpdateView.as_view(), name='question_edit'),
+
+    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/upload-resource$',
+		upload_resource,name='upload_resource'),
+
+    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/resources/(?P<resource>.*)$',
+        media_view, name='question_edit'),
                        
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/copy/$',login_required(QuestionCopyView.as_view()), name='question_copy',),
                        

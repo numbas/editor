@@ -895,4 +895,23 @@ $(document).ready(function() {
             ko.bindingHandlers.calendarTime.init(element,valueAccessor);
         }
     }
+
+	ko.bindingHandlers.fileupload = {
+		init: function(element, valueAccessor) {
+			var callback = valueAccessor();
+			console.log('fileupload',callback)
+			$(element).fileupload({
+				dataType: 'json',
+
+				done: function (e, data) {
+					console.log('done',data.result);
+					callback(data.result);
+				},
+				add: function(e, data) {
+					console.log('add',data);
+					data.submit();
+				}
+			});
+		}
+	}
 });

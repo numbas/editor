@@ -34,11 +34,14 @@ $(document).ready(function() {
 				})
 			),
 			new Editor.Tab('advice','Advice'),
+			new Editor.Tab('resources','Resources'),
 			new Editor.Tab('exams','Exams using this question')
 		]);
 		this.currentTab = ko.observable(this.mainTabs()[0]);
 
 		this.exams = data.exams;
+
+		this.resources = ko.observableArray(data.resources);
 
 		this.progress = ko.observable(Editor.progresses[0]);
 
@@ -187,6 +190,11 @@ $(document).ready(function() {
 		}
 
         if(Editor.editable) {
+
+			this.addResource = function(data) {
+				q.resources.push(data);
+			}
+
 			this.firstSave = true;
 
 			this.save = ko.computed(function() {
@@ -194,6 +202,7 @@ $(document).ready(function() {
                     content: this.output(),
                     tags: this.tags(),
 					progress: this.progress()[0],
+					resources: this.resources(),
                     metadata: this.metadata()
                 };
 			},this);

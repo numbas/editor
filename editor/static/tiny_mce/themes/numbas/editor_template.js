@@ -1420,15 +1420,9 @@
 			// Internal image object like a flash placeholder
 			if (ed.dom.getAttrib(ed.selection.getNode(), 'class', '').indexOf('mceItem') != -1)
 				return;
-
-			ed.windowManager.open({
-				url : this.url + '/image.htm',
-				width : 355 + parseInt(ed.getLang('advanced.image_delta_width', 0)),
-				height : 275 + parseInt(ed.getLang('advanced.image_delta_height', 0)),
-				inline : true
-			}, {
-				theme_url : this.url
-			});
+            
+            viewModel.currentTinyMCE = ed;
+            $('#imageModal').modal('show');
 		},
 
 		_mceEmbed : function(ui, val) {
@@ -1437,6 +1431,9 @@
 			var url = ed.selection.getContent();
 			if(!url.length)
 				url = prompt(ed.getLang('advanced.embed_prompt'));
+
+            if(!url)
+                return;
 
 			if(!url.match(/^https?:\/\//)) {
 				alert(ed.getLang('advanced.embed_invalid_url'));

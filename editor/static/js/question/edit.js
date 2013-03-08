@@ -34,7 +34,12 @@ $(document).ready(function() {
 				})
 			),
 			new Editor.Tab('advice','Advice'),
-			new Editor.Tab('resources','Resources'),
+			new Editor.Tab(
+                'resources',
+                ko.computed(function() {
+                    return 'Resources ('+q.resources().length+')';
+                })
+            ),
 			new Editor.Tab('exams','Exams using this question')
 		]);
 		this.currentTab = ko.observable(this.mainTabs()[0]);
@@ -490,8 +495,14 @@ $(document).ready(function() {
         
         changeEditLevel: function() {
             this.isadvanced(!this.isadvanced());
-        }
+        },
         
+        insertImage: function(image) {
+            var ed = viewModel.currentTinyMCE;
+            var img = '<img src="'+image.url+'">';
+            ed.execCommand('mceInsertContent',false,img);
+            $('#imageModal').modal('hide');
+        }
     };
 
 

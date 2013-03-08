@@ -191,7 +191,13 @@
 	overflow:auto;
 }
 
-.resources-list .thumbnail {
+.resource:not(:last-child) {
+    margin-bottom: 1em
+}
+
+.resource .thumbnail {
     max-width: 100px;
     max-height: 100px;
+    float: left;
+    margin-right: 1em;
 }

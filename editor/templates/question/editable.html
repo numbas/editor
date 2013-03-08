@@ -677,10 +677,10 @@
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='resources'}">
 			<form data-bind="fileupload: addResource" data-url="{% url 'upload_resource' object.pk object.slug %}">
 				{% csrf_token %}
-				<input id="fileupload" type="file" name="files[]" multiple>
+				<input id="fileupload" type="file" name="files[]">
 			</form>
-			<ul class="resources-list" data-bind="foreach: resources">
-				<li><img class="thumbnail" data-bind="attr: {src: url, title: name}"/><span data-bind="text: url"></span></li>
+			<ul class="unstyled resources-list" data-bind="foreach: resources">
+				<li class="resource clearfix"><img class="thumbnail" data-bind="attr: {src: url, title: name}"/><span data-bind="text: name"></span></li>
 			</ul>
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='exams'}">
@@ -698,4 +698,26 @@
 		</section>
 	</div>
 
+    <div class="modal hide fade" id="imageModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3>Insert image</h3>
+        </div>
+        <div class="modal-body">
+			<form data-bind="fileupload: addResource" data-url="{% url 'upload_resource' object.pk object.slug %}">
+				{% csrf_token %}
+                <div class="control-group">
+                    <label>
+                        <span class="control-label">Upload an image</span>
+                        <div class="controls">
+                            <input id="fileupload" type="file" name="files[]">
+                        </div>
+                    </label>
+                </div>
+			</form>
+            <ul class="unstyled resources-list" data-bind="foreach: resources">
+				<li class="resource clearfix"><img class="thumbnail" data-bind="attr: {src: url, title: name}, click: $root.insertImage"/><span data-bind="text: name"></span></li>
+            </ul>
+        </div>
+    </div>
 {% endblock editor %}

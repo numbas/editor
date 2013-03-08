@@ -29,6 +29,7 @@ from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
 from django.db import models
+from django.db.models import Q
 from django.forms import model_to_dict
 from uuslug import slugify
 
@@ -113,13 +114,13 @@ class Image( models.Model ):
 
     def as_json(self):
         return {
-			'url': self.resource_url,
-			'name': self.title,
-			'pk': self.pk
-		}
+            'url': self.resource_url,
+            'name': self.title,
+            'pk': self.pk
+        }
 
     def summary(self):
-		return json.dumps(self.as_json()),
+        return json.dumps(self.as_json()),
 
 class Question(models.Model,NumbasObject,ControlledObject):
     
@@ -267,12 +268,15 @@ class Exam(models.Model,NumbasObject,ControlledObject):
         parser = ExamParser()
         data = parser.parse(self.content)
         extensions = []
+        resources = []
         for q in self.get_questions():
             q.get_parsed_content()
             extensions += q.extensions
+            resources += q.resources.all()
         data['extensions'] = list(set(extensions))
         data['name'] = self.name
         data['questions'] = [parser.parse(q.content) for q in self.get_questions()]
+        data['resources'] = [[i.image.name,i.image.path] for i in set(resources)]
         return printdata(data)
         
     def summary(self, user=None):

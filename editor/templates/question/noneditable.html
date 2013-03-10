@@ -591,6 +591,11 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='advice'}">
 			<div data-bind="cleanJME:advice"></div>
 		</section>
+		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='resources'}">
+			<ul class="unstyled resources-list" data-bind="foreach: resources">
+				<li class="resource clearfix"><img class="thumbnail" data-bind="attr: {src: url, title: name}"/><span data-bind="text: name"></span></li>
+			</ul>
+		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='exams'}">
 			{% if object.exam_set.count %}
 				<ul class="exams-list">

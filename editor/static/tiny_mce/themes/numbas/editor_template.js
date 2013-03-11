@@ -1454,8 +1454,8 @@
 			$('<a/>').oembed(url, {
 				embedMethod: 'fill',
 				afterEmbed: function(result) {
-					console.log($(this).html());
 					ed.selection.setContent($(this).html());
+					ed.onChange.dispatch();
 				}
 			});
 		},

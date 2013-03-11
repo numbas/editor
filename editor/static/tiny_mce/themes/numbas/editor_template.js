@@ -1415,14 +1415,25 @@
 		},
 
 		_mceImage : function(ui, val) {
-			var ed = this.editor;
+			var ed = viewModel.currentTinyMCE = this.editor;
 
-			// Internal image object like a flash placeholder
-			if (ed.dom.getAttrib(ed.selection.getNode(), 'class', '').indexOf('mceItem') != -1)
+			var node = ed.selection.getNode();
+
+			// Ignore internal image object like a flash placeholder
+			if (ed.dom.getAttrib(node, 'class', '').indexOf('mceItem') != -1)
 				return;
-            
-            viewModel.currentTinyMCE = ed;
-            $('#imageModal').modal('show');
+
+			if(node.tagName=='IMG') {
+				viewModel.imageModal.selectedNode = node;
+				viewModel.imageModal.width($(node).width());
+				viewModel.imageModal.height($(node).height());
+				viewModel.imageModal.title($(node).attr('title'));
+				viewModel.imageModal.alt($(node).attr('alt'));
+				$('#imageAttributeModal').modal('show');
+			}
+			else {
+				$('#imagePickModal').modal('show');
+			}
 		},
 
 		_mceEmbed : function(ui, val) {

@@ -116,7 +116,8 @@ class Image( models.Model ):
         return {
             'url': self.resource_url,
             'name': self.title,
-            'pk': self.pk
+            'pk': self.pk,
+			'delete_url': reverse('delete_resource',args=(self.pk,)),
         }
 
     def summary(self):

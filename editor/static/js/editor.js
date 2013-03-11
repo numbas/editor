@@ -631,15 +631,6 @@ $(document).ready(function() {
 			var height = allBindingsAccessor.hasOwnProperty('wmHeight') ? allBindingsAccessor.wmHeight : 200;
 			var width = allBindingsAccessor.hasOwnProperty('wmWidth') ? allBindingsAccessor.wmWidth : '';
 
-            function onkeyup(e,tinymce) {
-                switch(e.type) {
-				case 'keyup':
-				case 'paste':
-					valueAccessor(tinymce.getContent());
-					break;
-				}
-            }
-
 			var toggle = $('<button type="button" class="wmToggle on">Toggle rich text editor</button>');
 			$(element).append(toggle);
 			toggle.click(function() {
@@ -667,14 +658,22 @@ $(document).ready(function() {
 				.append(plaintext)
             ;
 
+
+			//tinyMCE
+			function onMCEChange(ed) {
+				valueAccessor(ed.getContent());
+			}
+
             t
                 .tinymce({
                     theme: 'numbas',
 					plugins: 'media',
 					media_srict: false,
-                    handle_event_callback: onkeyup,
-					init_instance_callback: function() { 
+					init_instance_callback: function(ed) { 
 						$(element).writemaths({cleanMaths: cleanJME, iFrame: true, position: 'center top', previewPosition: 'center bottom'}); 
+						ed.onChange.add(onMCEChange);
+						ed.onKeyUp.add(onMCEChange);
+						ed.onPaste.add(onMCEChange);
 					},
                     theme_advanced_resizing: true,
 					theme_advanced_resize_horizontal: false,
@@ -684,6 +683,8 @@ $(document).ready(function() {
 				.val(value);
             ;
 
+
+			//codemirror
 			function onChange(editor,change) {
 				if(typeof valueAccessor=='function') {
 					valueAccessor(editor.getValue());
@@ -896,17 +897,43 @@ $(document).ready(function() {
         }
     }
 
+	var Resource = Editor.Resource = function(data) {
+		this.progress = ko.observable(0);
+		this.url = ko.observable('');
+		this.name = ko.observable('');
+		this.pk = ko.observable(0);
+
+		if(data) {
+			this.load(data);
+			this.progress(1);
+		}
+	}
+	Resource.prototype = {
+		load: function(data) {
+			this.url(data.url);
+			this.name(data.name);
+			this.pk(data.pk);
+			this.deleteURL = data.delete_url;
+		}
+	};
+
 	ko.bindingHandlers.fileupload = {
 		init: function(element, valueAccessor) {
-			var callback = valueAccessor();
+			var fileArray = valueAccessor();
 			$(element).fileupload({
 				dataType: 'json',
 
 				done: function (e, data) {
-					callback(data.result);
+					data.res.load(data.result);
 				},
 				add: function(e, data) {
+					data.res = new Resource();
+					fileArray.push(data.res);
 					data.submit();
+				},
+
+				progress: function(e,data) {
+					data.res.progress(data.loaded/data.total);
 				}
 			});
 		}

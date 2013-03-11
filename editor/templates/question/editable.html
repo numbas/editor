@@ -63,7 +63,7 @@
 					<ul class="tags" data-bind="foreach: tags">
 						<li class="tag well">
 							<span data-bind="text: $data"></span>
-							<button type="button" class="delete" data-bind="click: $root.tags.remove"></button>
+							<button type="button" class="delete" data-bind="click: $root.tags.remove" title="Remove this tag"></button>
 						</li>
 					</ul>
 				</div>
@@ -118,7 +118,7 @@
 				<!-- ko foreach: functions -->
 				<div class="function row-fluid">
 					<div class="span1">
-						<button type="button" class="delete" data-bind="click:remove" value="Delete"></button>
+						<button type="button" class="delete" data-bind="click:remove" title="Delete this function"></button>
 					</div>
 					<div class="span8">
 						<div class="row-fluid">
@@ -160,7 +160,7 @@
 							<form class="form-inline">
 								<input class="name" type="text" placeholder="Name" data-bind="value: name"/>
 								<select class="type" data-bind="options: $parent.types, value: type"></select>
-								<button type="button" class="delete" data-bind="click: remove"></button>
+								<button type="button" class="delete" data-bind="click: remove" title="Remove this parameter"></button>
 							</form>
 						</div>
 						<!-- /ko -->
@@ -180,7 +180,7 @@
 							</span>
 							<div class="controls">:
 								<div class="rules" data-bind="listbox:sets, rulesetcomplete: allsets"></div>
-								<button type="button" class="delete" data-bind="click:remove"></button>
+								<button type="button" class="delete" data-bind="click:remove" title="Delete this ruleset"></button>
 							</div>
 						</div>
 					<!-- /ko -->
@@ -198,7 +198,7 @@
 								<br/>
 								<button type="button" class="down" data-bind="click: moveDown"></button>
 							</div>
-							<button type="button" class="delete" data-bind="click: remove"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
+							<button type="button" class="delete" data-bind="click: remove" title="Delete this part"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
 							<div class="subparts" data-bind="fadeVisible: meOrChildSelected">
 								<div class="gaps" data-bind="if: type().name=='gapfill'">
 									<h6>Gaps</h6>
@@ -209,7 +209,7 @@
 												<br/>
 												<button type="button" class="down" data-bind="click: moveDown"></button>
 											</div>
-											<button type="button" class="delete" data-bind="click: remove"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
+											<button type="button" class="delete" data-bind="click: remove" title="Delete this gap"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
 										</li>
 									</ol>
 									<div class="addgap"><button type="button" data-bind="visible: $root.isadvanced, click:addGap, text: gapfill.gaps().length ? 'Add another gap' : 'Add a gap'"></button></div>
@@ -223,7 +223,7 @@
 												<br/>
 												<button type="button" class="down" data-bind="click: moveDown"></button>
 											</div>
-											<button type="button" class="delete" data-bind="click: remove"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
+											<button type="button" class="delete" data-bind="click: remove" title="Delete this step"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
 										</li>
 									</ol>
 									<div class="addstep"><button type="button" data-bind="visible: $root.isadvanced, click:addStep, text: steps().length ? 'Add another step' : 'Add a step'"></button></div>
@@ -506,7 +506,7 @@
 									<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
 									<li class="choice">
 										<form class="form-inline">
-											<button type="button" type="button" class="delete" data-bind="click:remove"></button>
+											<button type="button" type="button" class="delete" data-bind="click:remove" title="Delete this choice"></button>
 											<label>
 												Marks:
 												<input class="marks" type="text" data-bind="value:marks, valueUpdate:'input', autosize: {max: 500, min: 30, padding: 10, value: marks}"/>
@@ -566,7 +566,7 @@
 									<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
 									<li class="choice">
 										<form class="form-inline">
-											<button type="button" class="delete" data-bind="click:remove"></button>
+											<button type="button" class="delete" data-bind="click:remove" title="Delete this choice"></button>
 											<label>
 												Marks:
 												<input class="marks" type="text" data-bind="value:marks, valueUpdate:'input', autosize: {max: 500, min: 30, padding: 10, value: marks}"/>
@@ -638,7 +638,7 @@
 												<!-- ko foreach: {data: multiplechoice.answers, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
 													<th>
 														<input type="text" data-bind="value:content, valueUpdate:'input'">
-														<button type="button" class="delete" data-bind="click:function(){this.remove()}"></button>
+														<button type="button" class="delete" data-bind="click:function(){this.remove()}" title="Delete this answer"></button>
 													</th>
 												<!-- /ko -->
 												<td>
@@ -651,8 +651,8 @@
 												<tr>
 													<th>
 														<input type="text" data-bind="value:content, valueUpdate:'input'"/>
-														<button type="button" class="delete" data-bind="click:remove"></button>
-													</th>
+														<button type="button" class="delete" data-bind="click:remove" title="Delete this choice"></button>
+													</th> 
 													<!-- ko foreach: answers -->
 														<td>
 															<input type="text" class="marks monospace" data-bind="visible: !$parents[1].multiplechoice.customMarking(), value: marks, valueUpdate:'input'"/>
@@ -675,12 +675,28 @@
 			<div data-bind="writemaths:advice"></div>
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='resources'}">
-			<form data-bind="fileupload: addResource" data-url="{% url 'upload_resource' object.pk object.slug %}">
+			<form data-bind="fileupload: resources" data-url="{% url 'upload_resource' object.pk object.slug %}">
 				{% csrf_token %}
-				<input id="fileupload" type="file" name="files[]">
+                <div class="control-group">
+                    <label>
+                        <span class="control-label">Upload an image</span>
+                        <div class="controls">
+                            <input id="fileupload" type="file" name="files[]">
+                        </div>
+                    </label>
+                </div>
 			</form>
 			<ul class="unstyled resources-list" data-bind="foreach: resources">
-				<li class="resource clearfix"><img class="thumbnail" data-bind="attr: {src: url, title: name}"/><span data-bind="text: name"></span></li>
+				<li class="resource clearfix">
+					<div data-bind="visible: progress()<1" class="progress progress-striped active">
+						<div class="bar" data-bind="style: {width: progress()+'%'}"></div>
+					</div>
+					<div data-bind="visible: progress()==1">
+						<img class="thumbnail" data-bind="attr: {src: url, title: name}"/>
+						<span data-bind="text: name"></span>
+						<button type="button" class="delete" data-bind="click: $root.deleteResource" title="Delete this image"></button>
+					</div>
+				</li>
 			</ul>
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='exams'}">
@@ -698,13 +714,13 @@
 		</section>
 	</div>
 
-    <div class="modal hide fade" id="imageModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal hide fade" id="imagePickModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             <h3>Insert image</h3>
         </div>
         <div class="modal-body">
-			<form data-bind="fileupload: addResource" data-url="{% url 'upload_resource' object.pk object.slug %}">
+			<form data-bind="fileupload: resources" data-url="{% url 'upload_resource' object.pk object.slug %}">
 				{% csrf_token %}
                 <div class="control-group">
                     <label>
@@ -716,8 +732,54 @@
                 </div>
 			</form>
             <ul class="unstyled resources-list" data-bind="foreach: resources">
-				<li class="resource clearfix"><img class="thumbnail" data-bind="attr: {src: url, title: name}, click: $root.insertImage"/><span data-bind="text: name"></span></li>
+				<li class="resource clearfix" data-bind="click: $root.insertImage"><img class="thumbnail" data-bind="attr: {src: url, title: name}"/><span data-bind="text: name"></span></li>
             </ul>
         </div>
     </div>
+    <div class="modal hide fade" id="imageAttributeModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3>Image attributes</h3>
+        </div>
+		<div class="modal-body">
+			<form class="form-horizontal">
+				<div class="control-group">
+					<label>
+						<span class="control-label">Width</span>
+						<div class="controls">
+							<input type="text" class="span1" data-bind="value: imageModal.width"> px
+						</div>
+					</label>
+				</div>
+				<div class="control-group">
+					<label>
+						<span class="control-label">Height</span>
+						<div class="controls">
+							<input type="text" class="span1" data-bind="value: imageModal.height"> px
+						</div>
+					</label>
+				</div>
+				<div class="control-group">
+					<label>
+						<span class="control-label">Title text</span>
+						<div class="controls">
+							<input type="text" data-bind="value: imageModal.title">
+						</div>
+					</label>
+				</div>
+				<div class="control-group">
+					<label>
+						<span class="control-label">Alt text</span>
+						<div class="controls">
+							<input type="text" data-bind="value: imageModal.alt">
+						</div>
+					</label>
+				</div>
+			</form>
+		</div>
+		<div class="modal-footer">
+			<button type="button" class="btn" data-bind="click: function(){$('#imageAttributeModal').modal('hide');}">Cancel</button>
+			<button type="button" class="btn btn-primary" data-bind="click: $root.changeImageAttributes">Apply</button>
+		</div>
+	</div>
 {% endblock editor %}

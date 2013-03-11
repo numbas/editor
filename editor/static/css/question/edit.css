@@ -191,6 +191,11 @@
 	overflow:auto;
 }
 
+#imageModal .resource:hover {
+	background: #acdeff;
+	cursor: pointer;
+}
+
 .resource:not(:last-child) {
     margin-bottom: 1em
 }
@@ -201,3 +206,4 @@
     float: left;
     margin-right: 1em;
 }
+

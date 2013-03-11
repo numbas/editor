@@ -46,7 +46,20 @@ $(document).ready(function() {
 
 		this.exams = data.exams;
 
-		this.resources = ko.observableArray(data.resources);
+		this.resources = ko.observableArray([]);
+		this.saveResources = ko.computed(function() {
+			var resources = this.resources();
+			var out = [];
+			for(var i=0;i<resources.length;i++) {
+				var res = resources[i];
+				if(res.progress()==1) {
+					out.push({
+						pk: res.pk()
+					});
+				}
+			}
+			return out;
+		},this);
 
 		this.progress = ko.observable(Editor.progresses[0]);
 
@@ -146,6 +159,14 @@ $(document).ready(function() {
             return prettyData(q.toJSON());
         },this);
 
+		//for image attribute modal
+		this.imageModal = {
+			width: ko.observable(0),
+			height: ko.observable(0),
+			title: ko.observable(''),
+			alt: ko.observable('')
+		}
+
         ko.computed(function() {
             document.title = this.name() ? this.name()+' - Numbas Editor' : 'Numbas Editor';
         },this);
@@ -183,6 +204,12 @@ $(document).ready(function() {
 				}
 			}
 
+			if('resources' in data)
+			{
+				data.resources.map(function(rd) {
+					this.resources.push(new Editor.Resource(rd));
+				},this);
+			}
 
 			this.load(parseExam(data.content));
 
@@ -195,19 +222,24 @@ $(document).ready(function() {
 		}
 
         if(Editor.editable) {
-
-			this.addResource = function(data) {
-				q.resources.push(data);
-			}
-
 			this.firstSave = true;
+
+			this.deleteResource =  function(res) {
+				$.get(res.deleteURL)
+					.success(function() {
+						q.resources.remove(res);
+					})
+					.error(function() {
+					})
+				;
+			}
 
 			this.save = ko.computed(function() {
                 return {
                     content: this.output(),
                     tags: this.tags(),
 					progress: this.progress()[0],
-					resources: this.resources(),
+					resources: this.saveResources(),
                     metadata: this.metadata()
                 };
 			},this);
@@ -487,6 +519,7 @@ $(document).ready(function() {
 				if(this.parts().length) 
 					this.currentPart(this.parts()[0]);
             }
+
         },
 
 		download: function() {
@@ -499,10 +532,26 @@ $(document).ready(function() {
         
         insertImage: function(image) {
             var ed = viewModel.currentTinyMCE;
-            var img = '<img src="'+image.url+'">';
+            var img = '<img src="'+image.url()+'">';
             ed.execCommand('mceInsertContent',false,img);
-            $('#imageModal').modal('hide');
-        }
+            $('#imagePickModal').modal('hide');
+        },
+
+		changeImageAttributes: function() {
+			$(this.imageModal.selectedNode)
+				.css({
+					width: this.imageModal.width(), 
+					height: this.imageModal.height()
+				})
+				.attr('alt',this.imageModal.alt())
+				.attr('title',this.imageModal.title())
+			;
+
+			$('#imageAttributeModal').modal('hide');
+
+            var ed = viewModel.currentTinyMCE;
+			ed.onChange.dispatch();
+		}
     };
 
 

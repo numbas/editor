@@ -25,7 +25,7 @@ from django.contrib.auth import views as auth_views
 from registration.views import activate
 from accounts.views import register
 
-import settings
+from numbas import settings
 
 
 

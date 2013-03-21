@@ -212,7 +212,6 @@ class QuestionUpdateView(UpdateView):
 
         self.object.edit_user = self.user
 
-        print(self.resources)
         resource_pks = [res['pk'] for res in self.resources]
         self.object.resources = Image.objects.filter(pk__in=resource_pks)
 

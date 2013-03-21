@@ -14,7 +14,6 @@ def upload_resource(request,**kwargs):
         return HttpResponseServerError(403)
 
     file = request.FILES['files[]']
-    print(file.name)
     i=Image(title=file.name,image=file)
     i.save()
 
@@ -26,15 +25,11 @@ class ImageDeleteView(DeleteView):
 
 def delete_resource(request,**kwargs):
     pk = int(kwargs['pk'])
-    print(pk)
     try:
         i = Image.objects.get(pk=pk)
-        print(i)
         return HttpResponse(pk)
     except Image.DoesNotExist:
-        print('poo')
         a=HttpResponseServerError(404)
-        print(a)
         return a
     except Exception as e:
         print(e)

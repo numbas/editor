@@ -918,17 +918,22 @@ $(document).ready(function() {
 	};
 
 	ko.bindingHandlers.fileupload = {
-		init: function(element, valueAccessor) {
+		init: function(element, valueAccessor, allBindingsAccessor) {
 			var fileArray = valueAccessor();
+			var allBindings = allBindingsAccessor();
+			var afterUpload = allBindings.afterupload;
+
 			$(element).fileupload({
 				dataType: 'json',
 
 				done: function (e, data) {
 					data.res.load(data.result);
+					if(afterUpload)
+						afterUpload(data.res);
 				},
 				add: function(e, data) {
 					data.res = new Resource();
-					fileArray.push(data.res);
+					fileArray.splice(0,0,data.res);
 					data.submit();
 				},
 

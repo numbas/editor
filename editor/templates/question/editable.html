@@ -720,7 +720,7 @@
             <h3>Insert image</h3>
         </div>
         <div class="modal-body">
-			<form data-bind="fileupload: resources" data-url="{% url 'upload_resource' object.pk object.slug %}">
+			<form data-bind="fileupload: resources, afterupload: $root.insertImage" data-url="{% url 'upload_resource' object.pk object.slug %}">
 				{% csrf_token %}
                 <div class="control-group">
                     <label>

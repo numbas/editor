@@ -90,7 +90,7 @@ MIDDLEWARE_CLASSES = (
     #'numbas_auth.NumbasShibbolethRemoteUserMiddleware',
 )
 
-ROOT_URLCONF = 'numbas_editor.urls'
+ROOT_URLCONF = 'numbas.urls'
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".

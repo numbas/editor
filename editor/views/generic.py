@@ -57,7 +57,7 @@ class CompileObject():
             '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
             '-o'+output_location,
             '-t'+theme,
-			'-l'+locale,
+            '-l'+locale,
         ] + switches
 
         process = subprocess.Popen(numbas_command, stdout = subprocess.PIPE, stdin=subprocess.PIPE, stderr = subprocess.PIPE)
@@ -94,10 +94,16 @@ class PreviewView(DetailView,CompileObject):
 class ZipView(DetailView,CompileObject):
     def download(self,obj,scorm=False):
         source = obj.as_source()    #need to catch errors
+
         switches = ['-cz']
+
+        if settings.GLOBAL_SETTINGS.get('MINIFIER_PATH'):
+            switches+=['--minify',settings.GLOBAL_SETTINGS['MINIFIER_PATH']]
         if scorm:
             switches.append('-s')
+
         location = obj.get_filename() + '.zip'
+
         try:
             fsLocation = self.compile(source, switches, location, obj)
         except CompileError as err:

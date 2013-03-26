@@ -17,7 +17,7 @@ def upload_resource(request,**kwargs):
     i=Image(title=file.name,image=file)
     i.save()
 
-    return HttpResponse(i.summary(),content_type='application/json'
+    return HttpResponse(i.summary(),content_type='text/plain'
     )
 
 class ImageDeleteView(DeleteView):

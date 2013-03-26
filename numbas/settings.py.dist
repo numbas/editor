@@ -151,6 +151,8 @@ GLOBAL_SETTINGS = {
     'PYTHON_EXEC': '/usr/bin/python3',
     'NUMBAS_THEMES': ['default','worksheet'],
     'NUMBAS_LOCALES': ['en-GB'],
+    #Uncomment the line below and provide a path to a minification tool to minify javascript files
+    #'MINIFIER_PATH': 'uglifyjs',
 }
 
 ALLOW_REGISTRATION = False

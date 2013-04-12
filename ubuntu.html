@@ -5,36 +5,51 @@
     <title>Numbas editor</title>
   </head>
   <body>
-    <h1>Debian/Ubuntu installation</h1>
+    <h1>Ubuntu installation</h1>
     <p>
       Outline instructions on setting up the Numbas editor with a backend MySQL
-      database.  The following is for a Debian Squeeze (6.0.2) or Ubuntu
-      Precise (12.04) Linux server.
+      database.  The following is for an Ubuntu Precise (12.04) Linux server.
     </p>
 
-    <h2>Package installation</h2>
+    <h2>Essential package installation</h2>
     <p>
-      Packages that would be installed as part of a standard Debian/Ubuntu
-      install are not listed.  Python 3 is required for compilation of Numbas
-      exams; Python 2.6 (or greater) is required for Django.
+      Packages that would be installed as part of a standard Ubuntu install are
+      not listed.  Python 3 is required for compilation of Numbas exams; Python
+      2.6 (or greater) is required for Django.
     </p>
     <ul>
       <li>
-        Install Apache, Git, Apache WSGI module, MySQL, Python 3, Python
-        MySQLdb interface, Django self-registration application: <code>apt-get
+        Install Apache, Git, Apache WSGI module, MySQL, Python 3, and the
+        Python Imaging Library using the packaging system: <code>apt-get
           install apache2 git-core libapache2-mod-wsgi mysql-server
-          mysql-common python3 python-mysqldb python-django-registration</code>
+          mysql-common python3 python-imaging</code>
       </li>
-      <li>Install Django (need at least version 1.3).
-        <ul>
-          <li>Debian (not in Squeeze): <code>apt-get install python-django/squeeze-backports</code></li>
-          <li>Ubuntu: <code>apt-get install python-django</code></li>
-        </ul>
+    </ul>
+
+    <h2>Virtualenv</h2>
+    <p>
+      Rather than rely on the packaged version of Django, a more flexible approach is to use <a href="http://www.virtualenv.org/">virtualenv</a>, which is a tool to create an isolated Python environment.
+    </p>
+    <ul>
+      <li>
+        Install Pip: <code>apt-get install python-pip</code>
       </li>
-      <li>Install some extra packages for Python module compilation:
-      <code>apt-get install gcc python-dev zlib1g-dev</code>
-      <li>Install Pip: <code>apt-get install python-pip</code></li>
-      <li>Install Django Taggit: <code>pip install django-taggit</code></li>
+      <li>
+        Install virtualenv: <code>pip install virtualenv</code>
+      </li>
+      <li>
+        Create the virtualenv in a suitable location: <code>virtualenv /opt/python/numbas-editor</code>
+      </li>
+      <li>
+        Activate the virtualenv: <code>. /opt/python/numbas-editor/bin/activate</code> (this ensures that subsequent python packages are installed in this isolated environment, and not in the system environment).
+      </li>
+      <li>Install extra packages to ensure Python packages compile and install correctly: <code>apt-get install libmysqlclient-dev python-dev python-tk tcl-dev tk-dev</code>
+      </li>
+      <li>Install Django (need at least version 1.5) and other python
+        dependencies of the editor (in the virtualenv): <code>pip install
+          django django-taggit django-registration django-uuslug south
+          MySQL-python</code>
+      </li>
     </ul>
 
     <h2>Configuration</h2>
@@ -51,6 +66,7 @@
         <ul>
           <li><code>mkdir /srv/numbas</code></li>
           <li><code>mkdir /srv/numbas/dist</code></li>
+          <li><code>mkdir /srv/numbas/media</code></li>
           <li><code>mkdir /srv/numbas/previews</code></li>
           <li><code>mkdir /srv/numbas/static</code></li>
         </ul>
@@ -58,13 +74,11 @@
       <li>Set the correct ownership and permissions (need file system ACLs
       enabled on <code>/srv</code>):
         <ul>
-          <li><code>chmod 2770 previews</code></li>
+          <li><code>chmod 2770 media previews</code></li>
           <li><code>chmod 2750 dist static</code></li>
-          <li><code>chgrp www-data dist previews static</code></li>
-          <li><code>setfacl -R -m g:www-data:rwX previews</code></li>
-          <li><code>setfacl -dR -m g:www-data:rwX previews</code></li>
-          <li><code>setfacl -R -m g:www-data:rX dist static</code></li>
-          <li><code>setfacl -dR -m g:www-data:rX dist static</code></li>
+          <li><code>chgrp www-data dist media previews static</code></li>
+          <li><code>setfacl -dR -m g::rwX media previews</code></li>
+          <li><code>setfacl -dR -m g::rX dist static</code></li>
         </ul>
       </li>
       <li>Clone the Numbas repository: <code>git clone
@@ -77,7 +91,7 @@
       </li>
       <li>Copy the editor distribution database and settings files:
         <ul>
-          <li><code>cd /srv/www/numbas_editor</code></li>
+          <li><code>cd /srv/www/numbas_editor/numbas</code></li>
           <li><code>cp database.py.dist database.py</code></li>
           <li><code>cp settings.py.dist settings.py</code></li>
         </ul>
@@ -96,19 +110,18 @@
       </li>
       <li>Edit <code>settings.py</code>:
         <ul>
-          <li>Make sure settings in <code>GLOBAL_SETTINGS</code> match those
-          above</li>
+          <li>Make sure settings in <code>GLOBAL_SETTINGS</code>,
+            <code>MEDIA_ROOT</code>, and <code>STATIC_ROOT</code> match those
+            above.</li>
           <li><code>PREVIEW_URL</code> should be set to the URL at which
           preview exams can be viewed (see Apache 2 config file).</li>
-          <li><code>HELP_URL</code> should be set to the URL at which the
-            Numbas web documentation can be viewed (see Apache 2 config
-            file).</li>
           <li><code>PYTHON_EXEC</code> is the path to the Python 3
           executable.</li>
         </ul>
       </li>
       <li>Sync the database:
         <ul>
+          <li><code>cd /srv/www/numbas_editor</code></li>
           <li><code>python manage.py syncdb</code></li>
           <li>Create a superuser (answer <code>yes</code>)</li>
           <li>Enter username, e-mail address, and password</li>
@@ -120,10 +133,10 @@
       <li>Copy <code>web/django.wsgi.dist</code> to
       <code>web/django.wsgi</code> and edit:
         <ul>
-          <li>Make sure the two <code>sys.path.append</code> lines match the
-          paths on the file system.</li>
+          <li>Make sure the <code>sys.path.append</code> line matches the
+          path to the editor on the file system.</li>
           <li><code>DJANGO_SETTINGS_MODULE</code> should be set to
-          <code>numbas_editor.settings</code> (if following above naming
+          <code>numbas.settings</code> (if following the above naming
           scheme).</li>
         </ul>
       </li>
@@ -133,9 +146,7 @@
           contents similar to that in <a
             href="apache2_debian.conf"><code>apache2_debian.conf</code></a>.
           If following these instructions exactly, then all that needs changing
-          are the lines <code>ServerName</code>, <code>ServerAdmin</code>,
-          <code>WSGIDaemonProcess</code>, and
-          <code>WSGIProcessGroup</code>.</li>
+          are the lines <code>ServerName</code> and <code>ServerAdmin</code>.
           <li><code>a2ensite numbas_editor &amp;&amp; service apache2
               restart</code></li>
         </ul>
@@ -143,6 +154,28 @@
       <li>Point a web browser at the server hosting the editor.</li>
     </ul>
     
+    <h2>Self registration</h2>
+    <p>
+      To allow users to register themselves within the editor, edit
+      <code>settings.py</code> and set <code>ALLOW_REGISTRATION = True</code>.
+      An e-mail is sent to the user, providing a link that they must click on
+      to complete the registration process.  To complete the self registration
+      configuration do the following:
+    </p>
+    <ul>
+      <li>
+        Set <code>DEFAULT_FROM_EMAIL</code> to something sensible.  This is
+        where the self-registration e-mails will appear to come from.
+      </li>
+      <li>
+        Log in to the admin interface of the editor (by going to
+        <code>http://server.domain/admin/</code>) as the admin user you created
+        earlier.  Click on <code>Sites</code>, then <code>example.com</code>,
+        then change both fields to <code>server.domain</code>.  This sets the
+        URL that will appear in the self-registration e-mails.
+      </li>
+    </ul>
+<!--    
     <h2>LDAP authentication</h2>
     <p>
     	LDAP authentication is possible within the editor.  This can work in
@@ -190,6 +223,7 @@
         <code>MIDDLEWARE_CLASSES</code> and the <code>shib_auth</code> import
         line.</li>
     </ul>
+    -->
     
     <p>
       <b>Note that if any changes are made to the editor code, including

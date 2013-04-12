@@ -1,9 +1,13 @@
 from django.db import transaction
+from django.db.models.signals import post_save
 from django.contrib.sites.models import RequestSite
 from django.contrib.auth.models import User
+from django.db import models
 
-from registration import models
-class RegistrationManager(models.RegistrationManager):
+import registration
+from registration.signals import user_registered
+
+class RegistrationManager(registration.models.RegistrationManager):
     def create_inactive_user(self, username, first_name, last_name, email, password,
                              site, send_email=True):
         """
@@ -31,6 +35,17 @@ class RegistrationManager(models.RegistrationManager):
         return new_user
     create_inactive_user = transaction.commit_on_success(create_inactive_user)
 
-class RegistrationProfile(models.RegistrationProfile):
+class RegistrationProfile(registration.models.RegistrationProfile):
     objects = RegistrationManager()
 
+
+class UserProfile(models.Model):
+	user = models.OneToOneField(User)
+	language = models.CharField(max_length=100,default='en-gb')
+
+def createUserProfile(sender, instance, **kwargs):
+    """Create a UserProfile object each time a User is created ; and link it.
+    """
+    UserProfile.objects.get_or_create(user=instance)
+
+post_save.connect(createUserProfile, sender=User)

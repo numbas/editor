@@ -631,10 +631,12 @@ $(document).ready(function() {
 			var height = allBindingsAccessor.hasOwnProperty('wmHeight') ? allBindingsAccessor.wmHeight : 200;
 			var width = allBindingsAccessor.hasOwnProperty('wmWidth') ? allBindingsAccessor.wmWidth : '';
 
+			var d = $('<div style="text-align:right"/>');
 			var toggle = $('<button type="button" class="wmToggle on">Toggle rich text editor</button>');
-			$(element).append(toggle);
+			d.append(toggle);
+			$(element).append(d);
 			toggle.click(function() {
-				var ed = $(this).siblings('textarea').tinymce();
+				var ed = $(element).children('textarea').tinymce();
 				$(element).toggleClass('on',ed.isHidden());
 				if(ed.isHidden()) {
 					ed.show()

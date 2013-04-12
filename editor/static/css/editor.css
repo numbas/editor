@@ -52,18 +52,17 @@
 }
 
 .writemathsContainer .wmToggle {
-	float: right;
 	border: none;
 	background: none;
 	padding: 0;
 }
 
-.writemathsContainer .wmToggle:after {
+.writemathsContainer .wmToggle:before {
 	content: url(../images/x_14x14.png);
 	padding-left: 4px;
 }
 
-.writemathsContainer.on .wmToggle:after {
+.writemathsContainer.on .wmToggle:before {
 	content: url(../images/check_16x13.png);
 }
 

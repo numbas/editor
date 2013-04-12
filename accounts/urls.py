@@ -21,9 +21,11 @@ up your own URL patterns for these views instead.
 from django.conf.urls import *
 from django.views.generic import TemplateView
 
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth import views as auth_views
+
 from registration.views import activate
-from accounts.views import register
+from accounts.views import register,UserUpdateView
 
 from numbas import settings
 
@@ -48,6 +50,9 @@ urlpatterns = patterns('',
                        url(r'^password/reset/done/$',
                            auth_views.password_reset_done,
                            name='auth_password_reset_done'),
+                       url(r'^profile/edit$',
+                           login_required(UserUpdateView.as_view()),
+                           name='edit_profile'),
                        )
 if settings.ALLOW_REGISTRATION:
 	urlpatterns += patterns('',

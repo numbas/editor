@@ -19,7 +19,7 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.forms import model_to_dict
 from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError, HttpResponseForbidden
-from django.shortcuts import render,redirect
+from django.shortcuts import redirect
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView, View
 from django.views.generic.detail import SingleObjectMixin
 

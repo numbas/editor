@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+	<h1>Your user profile</h1>
+
+    <form method="post" action="" class="form-horizontal">
+		{% csrf_token %} 
+		{% for field in form %}
+        <div class="control-group">
+			<label>
+				<span class="control-label">{{field.label}}:</span>
+				<div class="controls">
+					{{ field }}
+        		    {{ field.errors }}
+				</div>
+			</label>
+		</div>
+		{% endfor %}
+		<div class="control-group">
+			<div class="controls">
+				<button type="submit">Update</button>
+			</div>
+		</div>
+		<div> (change your password) </div>
+    </form>
+{% endblock content %}

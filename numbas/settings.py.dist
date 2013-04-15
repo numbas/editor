@@ -183,6 +183,8 @@ examparser = imp.load_source(
 AUTHENTICATION_BACKENDS = (
     # Uncomment to enable LDAP authentication, then look at ldap_auth.py.dist
     #'django_auth_ldap.backend.LDAPBackend',
+    # Uncomment to enable the RemoteUser backend for Shibboleth authentication
+    #'django.contrib.auth.backends.RemoteUserBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
 

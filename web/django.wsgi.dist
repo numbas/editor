@@ -11,14 +11,10 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-import os, sys
-# Uncomment the following two lines if you need to add an additional Python
-# site directory, for example, if using a virtualenv.
-#import site
-#site.addsitedir('/path/to/virtualenv/lib/python2.6/site-packages')
-sys.path.append('/srv/www/numbas.mas.ncl.ac.uk80')
-sys.path.append('/srv/www/numbas.mas.ncl.ac.uk80/numbas_editor')
-os.environ['DJANGO_SETTINGS_MODULE'] = 'numbas_editor.settings'
+import os, site, sys
+site.addsitedir('/path/to/virtualenv/lib/python2.7/site-packages')
+sys.path.append('/srv/www/numbas_editor')
+os.environ['DJANGO_SETTINGS_MODULE'] = 'numbas.settings'
 
 import django.core.handlers.wsgi
 

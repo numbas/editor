@@ -175,7 +175,6 @@
         URL that will appear in the self-registration e-mails.
       </li>
     </ul>
-<!--    
     <h2>LDAP authentication</h2>
     <p>
     	LDAP authentication is possible within the editor.  This can work in
@@ -184,8 +183,8 @@
     
     <h3>Extra required packages</h3>
 	  <ul>
-	  	<li>Python LDAP: <code>apt-get install python-ldap</code></li>
-	  	<li>Django LDAP: <code>apt-get install python-django-auth-ldap</code></li>
+	  	<li>Python LDAP: <code>apt-get install python-ldap libldap2-dev libsasl2-dev</code></li>
+	  	<li>Django LDAP: <code>pip install django-auth-ldap</code></li>
 	  	<li>GnuTLS (for secure LDAP lookups only): <code>apt-get install libgnutls26</code></li>
 	  </ul>
 	  
@@ -220,10 +219,10 @@
     	<li>Copy <code>shib_auth.py.dist</code> to <code>shib_auth.py</code>
     		and edit, following the comments in that file.</li>
       <li>In <code>settings.py</code> uncomment the relevant line in
-        <code>MIDDLEWARE_CLASSES</code> and the <code>shib_auth</code> import
-        line.</li>
+        <code>MIDDLEWARE_CLASSES</code>, the <code>RemoteUser</code> backend in
+        <code>AUTHENTICATION_BACKENDS</code>, and the <code>shib_auth</code>
+        import line.</li>
     </ul>
-    -->
     
     <p>
       <b>Note that if any changes are made to the editor code, including

@@ -4,10 +4,10 @@ from django.contrib.sites.models import RequestSite
 from django.contrib.auth.models import User
 from django.db import models
 
-import registration
+from registration import models as regmodels
 from registration.signals import user_registered
 
-class RegistrationManager(registration.models.RegistrationManager):
+class RegistrationManager(regmodels.RegistrationManager):
     def create_inactive_user(self, username, first_name, last_name, email, password,
                              site, send_email=True):
         """
@@ -35,7 +35,7 @@ class RegistrationManager(registration.models.RegistrationManager):
         return new_user
     create_inactive_user = transaction.commit_on_success(create_inactive_user)
 
-class RegistrationProfile(registration.models.RegistrationProfile):
+class RegistrationProfile(regmodels.RegistrationProfile):
     objects = RegistrationManager()
 
 

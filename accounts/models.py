@@ -41,7 +41,7 @@ class RegistrationProfile(regmodels.RegistrationProfile):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
-    language = models.CharField(max_length=100,default='en-gb')
+    language = models.CharField(max_length=100,default='en-GB')
 
 def createUserProfile(sender, instance, **kwargs):
     """Create a UserProfile object each time a User is created ; and link it.

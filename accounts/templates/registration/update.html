@@ -5,6 +5,7 @@
 
     <form method="post" action="" class="form-horizontal">
 		{% csrf_token %} 
+		{{form.non_field_errors}}
 		{% for field in form %}
         <div class="control-group">
 			<label>
@@ -21,6 +22,6 @@
 				<button type="submit">Update</button>
 			</div>
 		</div>
-		<div> (change your password) </div>
+		<div><a href="{% url 'change_password' %}">Change your password</a></div>
     </form>
 {% endblock content %}

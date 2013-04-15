@@ -1,6 +1,7 @@
 from django.conf import settings
 from registration.forms import RegistrationForm
 from django import forms
+from django.forms.widgets import PasswordInput
 from django.utils.translation import ugettext_lazy as _
 from accounts.models import UserProfile
 
@@ -27,6 +28,27 @@ class UserProfileForm(forms.ModelForm):
 	def save(self,*args,**kwargs):
 		self.profile.language = self.cleaned_data.get('language')
 		self.profile = self.profile.save()
-		print(self.initial)
-
 		super(UserProfileForm,self).save(self,*args,**kwargs)
+
+class ChangePasswordForm(forms.ModelForm):
+	password1 = forms.CharField(widget=PasswordInput,label='New password')
+	password2 = forms.CharField(widget=PasswordInput,label='Type new password again')
+
+	def clean(self):
+		cleaned_data = super(forms.ModelForm,self).clean()
+
+		password1 = cleaned_data.get('password1')
+		password2 = cleaned_data.get('password2')
+
+		if (not password2) or password1 != password2:
+			raise forms.ValidationError("You didn't type the same password twice.")
+
+		return cleaned_data
+
+
+	def save(self,*args,**kwargs):
+		print('save!')
+		password = self.cleaned_data.get('password1')
+
+		self.instance.set_password(password)
+		self.instance.save()

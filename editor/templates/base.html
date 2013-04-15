@@ -89,7 +89,7 @@ if (typeof GSFN !== "undefined") { GSFN.loadWidget(4240,{"containerId":"getsat-w
                     <div id="session" class="span3">
 						<!-- login message or profile link -->
                         {% if user.is_authenticated %}
-						Hi, {{ user.first_name }}! {% if CAN_LOGOUT %}<a tabindex="2" id="logout" href="{% url 'logout' %}?next={{request.path|escape}}">Log out</a>{% endif %}
+						Hi, {{ user.first_name }}! {% if CAN_LOGOUT %}<span class="account-links"><a tabindex="2" href="{% url 'edit_profile' %}">Edit profile</a> ⋅ <a tabindex="2" id="logout" href="{% url 'logout' %}?next={{request.path|escape}}">Log out</a>{% endif %}
                         {% else %}
 						<a tabindex="2" href="{% url 'login' %}?next={{request.path|escape}}">Log in</a>{% if ALLOW_REGISTRATION %} or <a tabindex="2" href="{% url 'registration_register' %}">create an account</a>{%endif%}.
                         {% endif %}

@@ -89,7 +89,7 @@ button:hover, button:focus {
 	text-decoration: underline;
 }
 
-#session #logout {
+#session .account-links {
 	font-size: 0.8em;
 	margin-left: 2em;
 }
@@ -166,4 +166,11 @@ button.search.loading {
 
 .progress-display.testing {
     color: #666;
+}
+
+.errorlist {
+    list-style: none;
+    border: 1px solid red;
+    display: inline-block;
+    padding: 0.5em;
 }

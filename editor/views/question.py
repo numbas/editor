@@ -28,6 +28,8 @@ from editor.models import Question,Extension,Image
 from editor.views.generic import PreviewView, ZipView, SourceView
 from editor.views.user import find_users
 
+from accounts.models import UserProfile
+
 from examparser import ExamParser, ParseError, printdata
 
 class QuestionPreviewView(PreviewView):
@@ -47,6 +49,12 @@ class QuestionPreviewView(PreviewView):
             return HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
         else:
+            try:
+                profile = UserProfile.objects.get(user=request.user)
+                q.locale = profile.language
+            except Exception:
+                pass
+
             return self.preview(q)
 
 
@@ -68,6 +76,12 @@ class QuestionZipView(ZipView):
             return HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
         else:
+            try:
+                profile = UserProfile.objects.get(user=request.user)
+                q.locale = profile.language
+            except Exception:
+                pass
+
             return self.download(q,scorm)
 
 

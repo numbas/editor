@@ -53,10 +53,15 @@ urlpatterns = patterns('',
                        url(r'^profile/edit$',
                            login_required(UserUpdateView.as_view()),
                            name='edit_profile'),
-                       url(r'^profile/change-password$',
-                           login_required(ChangePasswordView.as_view()),
-                           name='change_password'),
                        )
+
+if settings.CAN_CHANGE_PASSWORD:
+	urlpatterns += patterns('',
+						   url(r'^profile/change-password$',
+							   login_required(ChangePasswordView.as_view()),
+							   name='change_password'),
+						   )
+
 if settings.ALLOW_REGISTRATION:
 	urlpatterns += patterns('',
 						   url(r'^activate/complete/$',

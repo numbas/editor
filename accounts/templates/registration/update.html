@@ -22,6 +22,6 @@
 				<button type="submit">Update</button>
 			</div>
 		</div>
-		<div><a href="{% url 'change_password' %}">Change your password</a></div>
+		{% if CAN_CHANGE_PASSWORD %}<div><a href="{% url 'change_password' %}">Change your password</a></div>{% endif %}
     </form>
 {% endblock content %}

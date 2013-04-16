@@ -103,7 +103,7 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 							</div>
 						</div>
 					</div>
-					<div class="span3">
+					<div class="span3" data-bind="visible: parameters().length>0">
 						<label>Parameters</label>
 						<!-- ko foreach: parameters -->
 						<div class="row-fluid parameter">
@@ -116,6 +116,9 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 			</div>
 			<div id="rulesets">
 				<h4>Rulesets</h4>
+				<div data-bind="visible: rulesets().length==0">
+					No rulesets defined
+				</div>
 				<form class="form-horizontal">
 					<!-- ko foreach: rulesets -->
 						<div class="ruleset control-group">

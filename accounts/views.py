@@ -4,6 +4,7 @@ from django.views.generic import UpdateView
 from django.contrib.auth.models import User
 from django.shortcuts import redirect
 from django.core.urlresolvers import reverse
+from django.contrib import messages
 from accounts.forms import UserProfileForm,ChangePasswordForm
 
 def register(*args,**kwargs):
@@ -21,6 +22,10 @@ class UserUpdateView(CurrentUserUpdateView):
 
 	form_class = UserProfileForm
 
+	def form_valid(self,form):
+		messages.success(self.request,'Your profile has been updated.')
+		return super(UserUpdateView,self).form_valid(form)
+
 	def get_success_url(self):
 		return reverse('edit_profile')
 
@@ -32,7 +37,10 @@ class ChangePasswordView(CurrentUserUpdateView):
 	def get_object(self,queryset=None):
 		return self.request.user
 	
+	def form_valid(self,form):
+		messages.success(self.request,'Your password has been changed.')
+		return super(ChangePasswordView,self).form_valid(form)
+
 	def get_success_url(self):
-		print(reverse('edit_profile'))
 		return reverse('edit_profile')
 

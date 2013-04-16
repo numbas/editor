@@ -173,12 +173,26 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='prompt'}">
 								<div data-bind="cleanJME: prompt"></div>
 							</section>
+							<!-- ko if: type().name=='gapfill' -->
+							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='marking'}">
+								<form class="form-horizontal">
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Penalty for revealing steps',property:stepsPenalty,min:0}
+									}"></div>
+								</form>
+							</section>
+							<!-- /ko -->
 							<!-- ko if: type().name=='jme' -->
 							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='marking'}">
 								<form class="form-horizontal">
 									<div class="control-group" data-bind="template: {
 										name: 'property',
 										data: {label:'Marks',property:marks,min:0}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Penalty for revealing steps',property:stepsPenalty,min:0}
 									}"></div>
 									<div class="control-group">
 										<label>
@@ -332,6 +346,10 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 									}"></div>
 									<div class="control-group" data-bind="template: {
 										name: 'property',
+										data: {label:'Penalty for revealing steps',property:stepsPenalty,min:0}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
 										data: {label:'Minimum accepted value',property:numberentry.minValue}
 									}"></div>
 									<div class="control-group" data-bind="template: {
@@ -381,6 +399,10 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 										name: 'property',
 										data: {label:'Marks',property:marks,min:0}
 									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Penalty for revealing steps',property:stepsPenalty,min:0}
+									}"></div>
 									<div class="control-group " data-bind="template: {
 										name: 'property',
 										data: {label:'Answer pattern',property:patternmatch.answer, monospace: true}
@@ -412,6 +434,10 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 									<div class="control-group" data-bind="template: {
 										name: 'property',
 										data: {label:'Maximum marks',property:multiplechoice.maxMarks, min:multiplechoice.minMarks}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Penalty for revealing steps',property:stepsPenalty,min:0}
 									}"></div>
 									<div class="control-group" data-bind="template: {
 										name: 'booleanproperty',
@@ -464,6 +490,10 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 									<div class="control-group" data-bind="template: {
 										name: 'property',
 										data: {label:'Maximum marks',property:multiplechoice.maxMarks, min:multiplechoice.minMarks}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Penalty for revealing steps',property:stepsPenalty,min:0}
 									}"></div>
 									<div class="control-group" data-bind="template: {
 										name: 'property',
@@ -522,6 +552,10 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 									<div class="control-group" data-bind="template: {
 										name: 'property',
 										data: {label:'Maximum marks',property:multiplechoice.maxMarks, min:multiplechoice.minMarks}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'Penalty for revealing steps',property:stepsPenalty,min:0}
 									}"></div>
 									<div class="control-group" data-bind="template: {
 										name: 'property',

@@ -874,6 +874,7 @@ $(document).ready(function() {
             {
 				name: 'gapfill', 
 				niceName: 'Gap-fill', 
+				has_marks: true,
 				tabs: [
 				]
 			},

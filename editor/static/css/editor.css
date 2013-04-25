@@ -158,3 +158,10 @@ button.delete-grey:hover {
 .nav-list {
 	margin-bottom: 1em;
 }
+
+.access-search {
+    margin-top: 2em;
+}
+.access-search:first-child {
+    margin-top: 0;
+}

@@ -40,8 +40,20 @@ from examparser import ExamParser, ParseError, printdata
 from jsonfield import JSONField
 
 class ControlledObject:
+
+    def get_access_for(self,user):
+        try:
+            question_access = QuestionAccess.objects.get(question=self,user=user)
+            return question_access.access
+        except QuestionAccess.DoesNotExist:
+            return 'none'
+
+    def can_be_viewed_by(self,user):
+        accept_levels = ('view','edit')
+        return (self.public_access in accept_levels) or (user.is_superuser) or (self.get_access_for(user) in accept_levels)
+
     def can_be_edited_by(self, user):
-        return user == self.author or user.is_superuser
+        return self.public_access=='edit' or (user.is_superuser) or self.get_access_for(user)=='edit'
 
 class NumbasObject:
 
@@ -117,11 +129,19 @@ class Image( models.Model ):
             'url': self.resource_url,
             'name': self.title,
             'pk': self.pk,
-			'delete_url': reverse('delete_resource',args=(self.pk,)),
+            'delete_url': reverse('delete_resource',args=(self.pk,)),
         }
 
     def summary(self):
         return json.dumps(self.as_json()),
+
+class QuestionManager(models.Manager):
+    def viewable_by(self,user):
+        if user.is_superuser:
+            return self.all()
+        else:
+            return list(self.all().filter(public_view=True)).extend(user.viewable_questions.all())
+
 
 class Question(models.Model,NumbasObject,ControlledObject):
     
@@ -130,17 +150,23 @@ class Question(models.Model,NumbasObject,ControlledObject):
     Many-to-many relation with Exam through ExamQuestion.
     
     """
+
+    objects = QuestionManager()
     
     name = models.CharField(max_length=200,default='Untitled Question')
     theme = 'question'
     slug = models.SlugField(max_length=200,editable=False,unique=False)
-    author = models.ForeignKey(User)
+    author = models.ForeignKey(User,related_name='own_questions')
     filename = models.CharField(max_length=200, editable=False,default='')
     content = models.TextField(blank=True,validators=[validate_content])
     metadata = JSONField(blank=True)
     created = models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
     last_modified = models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
     resources = models.ManyToManyField(Image,blank=True)
+
+    PUBLIC_ACCESS_CHOICES = (('hidden','Hidden'),('view','Public can view'),('edit','Public can edit'))
+    public_access = models.CharField(default='view',editable=True,choices=PUBLIC_ACCESS_CHOICES,max_length=6)
+    access_rights = models.ManyToManyField(User, through='QuestionAccess', blank=True, editable=False,related_name='accessed_questions+')
 
     PROGRESS_CHOICES = (
         ('in-progress','Writing in progress'),
@@ -209,6 +235,16 @@ class Question(models.Model,NumbasObject,ControlledObject):
         if user:
             obj['canEdit'] = self.can_be_edited_by(user) 
         return obj
+
+    def set_access(self,user,access_level):
+        access = QuestionAccess(user=user,question=self,access=access_level)
+        access.save()
+
+class QuestionAccess(models.Model):
+    question = models.ForeignKey(Question)
+    user = models.ForeignKey(User)
+    ACCESS_CHOICES = (('view','Public can view'),('edit','Public can edit'))
+    access = models.CharField(default='view',editable=True,choices=ACCESS_CHOICES,max_length=6)
 
 
 class Exam(models.Model,NumbasObject,ControlledObject):

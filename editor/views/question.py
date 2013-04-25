@@ -18,14 +18,17 @@ from copy import deepcopy
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.forms import model_to_dict
-from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError, HttpResponseForbidden
+from django.http import Http404, HttpResponse
+from django import http
 from django.shortcuts import redirect
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView, View
 from django.views.generic.detail import SingleObjectMixin
+from django.template.loader import render_to_string
 
-from editor.forms import NewQuestionForm, QuestionForm
-from editor.models import Question,Extension,Image
+from editor.forms import NewQuestionForm, QuestionForm, QuestionSetAccessForm
+from editor.models import Question,Extension,Image,QuestionAccess
 from editor.views.generic import PreviewView, ZipView, SourceView
+from editor.views.errors import forbidden
 from editor.views.user import find_users
 
 from accounts.models import UserProfile
@@ -46,7 +49,7 @@ class QuestionPreviewView(PreviewView):
                 "result": "error",
                 "message": str(err),
                 "traceback": traceback.format_exc(),}
-            return HttpResponseServerError(json.dumps(status),
+            return http.HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
         else:
             try:
@@ -73,7 +76,7 @@ class QuestionZipView(ZipView):
                 "result": "error",
                 "message": str(err),
                 "traceback": traceback.format_exc(),}
-            return HttpResponseServerError(json.dumps(status),
+            return http.HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
         else:
             try:
@@ -99,7 +102,7 @@ class QuestionSourceView(SourceView):
                 "result": "error",
                 "message": str(err),
                 "traceback": traceback.format_exc(),}
-            return HttpResponseServerError(json.dumps(status),
+            return http.HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
         else:
             return self.source(q)
@@ -144,7 +147,7 @@ class QuestionUploadView(CreateView):
             qo.save()
             self.qs.append(qo)
 
-        return HttpResponseRedirect(self.get_success_url())
+        return redirect(self.get_success_url())
 
     def get_success_url(self):
         if len(self.qs)==1:
@@ -175,10 +178,10 @@ class QuestionCopyView(View, SingleObjectMixin):
                 "result": "error",
                 "message": str(err),
                 "traceback": traceback.format_exc(),}
-            return HttpResponseServerError(json.dumps(status),
+            return http.HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
         else:
-            return HttpResponseRedirect(reverse('question_edit', args=(q2.pk,q2.slug)))
+            return redirect(reverse('question_edit', args=(q2.pk,q2.slug)))
 
 
 class QuestionDeleteView(DeleteView):
@@ -198,17 +201,24 @@ class QuestionUpdateView(UpdateView):
     
     model = Question
     
+    def get_object(self):
+        obj = super(QuestionUpdateView,self).get_object()
+        self.editable = obj.can_be_edited_by(self.request.user)
+        return obj
+
     def get_template_names(self):
         self.object = self.get_object()
-        return 'question/editable.html' if self.object.can_be_edited_by(self.request.user) else 'question/noneditable.html'
+        can_edit = self.editable
+        return 'question/editable.html' if can_edit else 'question/noneditable.html'
 
 
     def post(self, request, *args, **kwargs):
+        print('start!')
         self.user = request.user
         self.object = self.get_object()
 
         if not self.object.can_be_edited_by(self.user):
-            return HttpResponseForbidden()
+            return http.HttpResponseForbidden()
 
         self.data = json.loads(request.POST['json'])
         self.resources = self.data['resources']
@@ -220,6 +230,14 @@ class QuestionUpdateView(UpdateView):
         else:
             return self.form_invalid(question_form)
         
+    def get(self, request, *args, **kwargs):
+        self.user = request.user
+        self.object = self.get_object()
+        if not self.object.can_be_viewed_by(request.user):
+            return forbidden(request)
+        else:
+            return super(QuestionUpdateView,self).get(request,*args,**kwargs)
+
     def form_valid(self, form):
         self.object = form.save(commit=False)
         self.object.metadata = json.dumps(self.object.metadata)
@@ -239,14 +257,17 @@ class QuestionUpdateView(UpdateView):
             "result": "error",
             "message": "Something went wrong...",
             "traceback": traceback.format_exc(),}
-        return HttpResponseServerError(json.dumps(status),
+        return http.HttpResponseServerError(json.dumps(status),
                                        content_type='application/json')
     
     def get_context_data(self, **kwargs):
         context = super(QuestionUpdateView, self).get_context_data(**kwargs)
-        context['extensions'] = json.dumps([model_to_dict(e) for e in Extension.objects.all()])
-        context['editable'] = self.object.can_be_edited_by(self.request.user)
+        context['extensions'] = [model_to_dict(e) for e in Extension.objects.all()]
+        context['editable'] = self.editable
         context['navtab'] = 'questions'
+    
+        context['access_rights'] = [{'id': qa.user.pk, 'name': qa.user.get_full_name(), 'access_level': qa.access} for qa in QuestionAccess.objects.filter(question=self.object)]
+
         return context
     
     def get_success_url(self):
@@ -282,19 +303,13 @@ class QuestionSearchView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(QuestionSearchView,self).get_context_data(**kwargs)
-        try:
-            context['page'] = self.request.GET['page']
-        except KeyError:
-            context['page'] = 1
-            pass
-        try:
-            context['id'] = self.request.GET['id']
-        except KeyError:
-            pass
+        context['page'] = self.request.GET.get('page',1)
+        context['id'] = self.request.GET.get('id',None)
         return context
     
     def get_queryset(self):
         questions = Question.objects.all()
+
         try:
             search_term = self.request.GET['q']
             questions = questions.filter(Q(name__icontains=search_term) | Q(metadata__icontains=search_term) | Q(tags__name__istartswith=search_term)).distinct()
@@ -340,5 +355,26 @@ class QuestionSearchView(ListView):
         except KeyError:
             pass
 
+        questions = [q for q in questions if q.can_be_viewed_by(self.request.user)]
+
         return [q.summary(user=self.request.user) for q in questions]
     
+class QuestionSetAccessView(UpdateView):
+    model = Question
+    form_class = QuestionSetAccessForm
+
+    def form_valid(self, form):
+        question = self.get_object()
+
+        if not question.can_be_edited_by(self.request.user):
+            return http.HttpResponseForbidden("You don't have permission to edit this question.")
+
+        self.object = form.save()
+
+        return HttpResponse('ok!')
+
+    def form_invalid(self,form):
+        return HttpResponse(form.errors.as_text())
+
+    def get(self, request, *args, **kwargs):
+        return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')

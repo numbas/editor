@@ -25,7 +25,7 @@ class UserSearchView(ListView):
     
     def render_to_response(self, context, **response_kwargs):
         if self.request.is_ajax():
-            return HttpResponse(json.dumps(context),
+            return HttpResponse(json.dumps(context['object_list']),
                                 content_type='application/json',
                                 **response_kwargs)
         raise Http404

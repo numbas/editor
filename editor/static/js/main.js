@@ -91,13 +91,21 @@ $(document).ready(function() {
 
             var source = ko.utils.unwrapObservable(valueAccessor());
 
+            var dataDict = {};
+
             if(typeof source == 'string') {
                 var url = source;
                 source = function(req,callback) {
                     $(element).addClass('loading');
                     $.getJSON(url,{q:req.term})
                         .success(function(data) {
-                            var things = data.object_list.map(autocompleteCallback);
+                            dataDict = {};
+                            var things = [];
+                            for(var i=0;i<data.length;i++) {
+                                var thing = autocompleteCallback(data[i]);
+                                dataDict[thing.value] = data[i];
+                                things.push(thing);
+                            }
                             callback(things);
                         })
                         .complete(function() {
@@ -107,13 +115,18 @@ $(document).ready(function() {
                 }
             }
 
-            $(element).autocomplete({
-                source: source,
-                select: function(e,ui) {
-					allBindings.value(ui.item.value);
-					$(this).submit();
-				}
-            });
+            $(element)
+                .autocomplete({
+                    source: source,
+                    select: function(e,ui) {
+                        if('value' in allBindings)
+                            allBindings.value(ui.item.value);
+                        if('autocompleteSelect' in allBindings)
+                            allBindings.autocompleteSelect(dataDict[ui.item.value]);
+                        $(this).submit();
+                    }
+                })
+            ;
         }
     }    
 

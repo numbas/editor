@@ -15,19 +15,22 @@
 
     <script type="text/javascript">
         (function() {
-            if (!window.Editor) {
-                window.Editor = {};
-            }
-            var Editor = window.Editor;
-			Editor.questionJSON = {{question.as_json|safe}};
-			Editor.editable = {% if editable %}true{% else %}false{% endif %};
+            var Editor = window.Editor = {
+			    questionJSON: {{question.as_json|safe}},
+                editable: {{editable|json}},
 
-			Editor.progresses = {{object.PROGRESS_CHOICES|json|safe}};
+                {% if editable %}
+				public_access: {{question.public_access|json|safe}},
+				access_rights: {{access_rights|json|safe}},
+                {% endif %}
 
-			Editor.numbasExtensions = {{extensions|safe}};
+			    progresses: {{object.PROGRESS_CHOICES|json|safe}},
 
-			Editor.previewURL = '{% url 'question_preview' object.pk object.slug %}';
-			Editor.previewWindow = '{% now "U" %}';
+    			numbasExtensions: {{extensions|json|safe}},
+
+    			previewURL: '{% url 'question_preview' object.pk object.slug %}',
+                previewWindow: '{% now "U" %}'
+            };
         })();
     </script>
 {% endblock javascripts %}

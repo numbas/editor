@@ -363,6 +363,61 @@ $(document).ready(function() {
 		}
 	}
 
+    Editor.savers = 0;
+    //fn should do the save and return a promise which resolves when the save is done
+    Editor.startSave = function() {
+        Editor.savers += 1;
+
+        if(Editor.savers==1) {
+            if(!Editor.save_noty)
+            {
+                Editor.save_noty = noty({
+                    text: 'Saving...', 
+                    layout: 'topCenter', 
+                    type: 'information',
+                    timeout: 0, 
+                    speed: 150,
+                    closeOnSelfClick: false, 
+                    closeButton: false
+                });
+            }
+                
+            window.onbeforeunload = function() {
+                return 'There are still unsaved changes.';
+            }
+        }
+    }
+    Editor.endSave = function() {
+        Editor.savers = Math.max(Editor.savers-1,0);
+        if(Editor.savers==0) {
+            window.onbeforeunload = null;
+            $.noty.close(Editor.save_noty);
+            Editor.save_noty = null;
+        }
+    }
+
+    //obs is an observable on trhe data to be saved
+    //savefn is a function which does the save, and returns a deferred object which resolves when the save is done
+    Editor.saver = function(obs,savefn) {
+        var firstSave = true;
+
+        return ko.computed(function() {
+            var data = obs();
+            if(firstSave) {
+                firstSave = false;
+                return;
+            }
+            Editor.startSave();
+            var def = savefn(data);
+            def
+                .always(Editor.endSave)
+                .done(function() {
+                    noty({text:'Saved.',type:'success',timeout: 1000, layout: 'topCenter'})
+                })
+            ;
+        }).extend({throttle:1000});
+    }
+
 	function indent(s,n)
 	{
 		//if n is not given, set n=1

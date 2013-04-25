@@ -18,7 +18,7 @@ from django.views.generic import RedirectView, TemplateView
 from django.contrib.auth.decorators import login_required
 
 from editor.views.exam import ExamPreviewView, ExamZipView, ExamSourceView, ExamCreateView, ExamCopyView, ExamUploadView, ExamDeleteView, ExamListView, ExamSearchView, ExamUpdateView
-from editor.views.question import QuestionPreviewView, QuestionZipView, QuestionSourceView, QuestionCreateView, QuestionCopyView, QuestionUploadView, QuestionDeleteView, QuestionListView, QuestionSearchView, QuestionUpdateView
+from editor.views.question import QuestionPreviewView, QuestionZipView, QuestionSourceView, QuestionCreateView, QuestionCopyView, QuestionUploadView, QuestionDeleteView, QuestionListView, QuestionSearchView, QuestionUpdateView, QuestionSetAccessView
 from editor.views.user import UserSearchView
 from editor.views.resource import upload_resource, ImageDeleteView, media_view
 
@@ -64,9 +64,12 @@ urlpatterns = patterns('',
         QuestionUpdateView.as_view(), name='question_edit'),
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/upload-resource$',
-		upload_resource,name='upload_resource'),
+        upload_resource,name='upload_resource'),
 
-	url(r'^resources/(?P<pk>\d+)/delete$',
+    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/set-access$',
+        QuestionSetAccessView.as_view(),name='set_question_access'),
+
+    url(r'^resources/(?P<pk>\d+)/delete$',
         login_required(ImageDeleteView.as_view()), name='delete_resource'),
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/resources/(?P<resource>.*)$',
@@ -86,5 +89,5 @@ urlpatterns = patterns('',
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+).exam$',
         QuestionSourceView.as_view(), name='question_source'),
 
-	url(r'^users/search/$',UserSearchView.as_view(),name='user_search'),
+    url(r'^users/search/$',UserSearchView.as_view(),name='user_search'),
 )

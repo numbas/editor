@@ -42,6 +42,9 @@ $(document).ready(function() {
             ),
 			new Editor.Tab('exams','Exams using this question')
 		]);
+        if(Editor.editable)
+            this.mainTabs.push(new Editor.Tab('access','Access'));
+
 		this.currentTab = ko.observable(this.mainTabs()[0]);
 
 		this.exams = data.exams;
@@ -244,75 +247,91 @@ $(document).ready(function() {
                 };
 			},this);
 
-            this.autoSave = ko.computed(function() {
-                var vm = this;
+            this.autoSave = Editor.saver(
+                function() {
+                    var data = q.save();
 
-				var data = this.save();
+                    if(q.variableErrors()) {
+                        window.onbeforeunload = function() {
+                            return 'There are errors in one or more variable definitions, so the question can\'t be saved.';
+                        }
+                        return;
+                    }
+                    return data;
+                },
+                function(data) {
+                    return $.post(
+                        '/question/'+q.id+'/'+slugify(q.realName())+'/',
+                        {json: JSON.stringify(data), csrfmiddlewaretoken: getCookie('csrftoken')}
+                    )
+                        .success(function(data){
+                            var address = location.protocol+'//'+location.host+data.url;
+                            if(history.replaceState)
+                                history.replaceState({},vm.realName(),address);
+                        })
+                        .error(function(response,type,message) {
+                            if(message=='')
+                                message = 'Server did not respond.';
 
-				if(this.firstSave) {
-					this.firstSave = false;
-					return;
-				}
-
-				window.onbeforeunload = function() {
-					return 'There are still unsaved changes.';
-				}
-
-				if(this.variableErrors()) {
-					window.onbeforeunload = function() {
-						return 'There are errors in one or more variable definitions, so the question can\'t be saved.';
-					}
-					return;
-				}
-
-                if(!this.save_noty)
-                {
-                    this.save_noty = noty({
-                        text: 'Saving...', 
-                        layout: 'topCenter', 
-                        type: 'information',
-                        timeout: 0, 
-                        speed: 150,
-                        closeOnSelfClick: false, 
-                        closeButton: false
-                    });
+                            noty({
+                                text: 'Error saving question:\n\n'+message,
+                                layout: "topLeft",
+                                type: "error",
+                                textAlign: "center",
+                                animateOpen: {"height":"toggle"},
+                                animateClose: {"height":"toggle"},
+                                speed: 200,
+                                timeout: 5000,
+                                closable:true,
+                                closeOnSelfClick: true
+                            });
+                        })
+                    ;
                 }
-                
-                $.post(
-                    '/question/'+this.id+'/'+slugify(this.realName())+'/',
-                    {json: JSON.stringify(data), csrfmiddlewaretoken: getCookie('csrftoken')}
-                )
-                    .success(function(data){
-                        var address = location.protocol+'//'+location.host+data.url;
-                        if(history.replaceState)
-                            history.replaceState({},vm.realName(),address);
-                        $.noty.close(vm.save_noty);
-                        noty({text:'Saved.',type:'success',timeout: 1000, layout: 'topCenter'});
-                    })
-                    .error(function(response,type,message) {
-                        if(message=='')
-                            message = 'Server did not respond.';
+            );
 
+            //access control stuff
+            this.public_access = ko.observable(Editor.public_access);
+            this.access_options = [
+                {value:'hidden',text:'Hidden'},
+                {value:'view',text:'Anyone can view this'},
+                {value:'edit',text:'Anyone can edit this'}
+            ];
+            this.access_rights = ko.observableArray(Editor.access_rights.map(function(d){return new UserAccess(q,d)}));
+
+            this.access_data = ko.computed(function() {
+                return {
+                    public_access: q.public_access(),
+                    user_ids: q.access_rights().map(function(u){return u.id}),
+                    access_levels: q.access_rights().map(function(u){return u.access_level()}),
+                    csrfmiddlewaretoken: getCookie('csrftoken')
+                }
+            });
+            this.saveAccess = Editor.saver(this.access_data,function(data) {
+                return $.post('set-access',data);
+            });
+            this.userAccessSearch=ko.observable('');
+
+            this.addUserAccess = function(data) {
+                var access_rights = q.access_rights();
+                for(var i=0;i<access_rights.length;i++) {
+                    if(access_rights[i].id==data.id) {
                         noty({
-                            text: 'Error saving question:\n\n'+message,
-                            layout: "topLeft",
-                            type: "error",
-                            textAlign: "center",
+                            text: "That user is already in the access list.",
+                            layout: "center",
+                            speed: 100,
+                            type: 'error',
+                            timeout: 2000,
+                            closable: true,
                             animateOpen: {"height":"toggle"},
                             animateClose: {"height":"toggle"},
-                            speed: 200,
-                            timeout: 5000,
-                            closable:true,
                             closeOnSelfClick: true
                         });
-                    })
-                    .complete(function() {
-                        window.onbeforeunload = null;
-                        $.noty.close(vm.save_noty);
-                        vm.save_noty = null;
-                    })
-                ;
-            },this).extend({throttle:1000});
+                        return;
+                    }
+                }
+                q.access_rights.push(new UserAccess(q,data));
+            };
         }
     }
     Question.prototype = {
@@ -554,6 +573,19 @@ $(document).ready(function() {
 		}
     };
 
+
+    function UserAccess(question,data) {
+        var ua = this;
+        this.id = data.id;
+        this.name = data.name;
+        this.access_level = ko.observable(data.access_level || 'view');
+        this.remove = function() {
+            question.access_rights.remove(ua);
+        }
+    }
+    UserAccess.prototype = {
+        access_options: [{value:'view',text:'Can view this'},{value:'edit',text:'Can edit this'}]
+    }
 
     function Ruleset(exam,data)
     {

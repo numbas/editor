@@ -236,6 +236,8 @@ class Question(models.Model,NumbasObject,ControlledObject):
         access.save()
 
     def get_access_for(self,user):
+        if user.is_anonymous():
+            return 'none'
         try:
             question_access = QuestionAccess.objects.get(question=self,user=user)
             return question_access.access
@@ -342,6 +344,8 @@ class Exam(models.Model,NumbasObject,ControlledObject):
         access.save()
 
     def get_access_for(self,user):
+        if user.is_anonymous():
+            return 'none'
         try:
             exam_access = ExamAccess.objects.get(exam=self,user=user)
             return exam_access.access

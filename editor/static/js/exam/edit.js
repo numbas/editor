@@ -34,6 +34,8 @@ $(document).ready(function() {
 				})
 			)
 		]);
+        if(Editor.editable)
+            this.mainTabs.push(new Editor.Tab('access','Access'));
 		this.currentTab = ko.observable(this.mainTabs()[0]);
 
         this.realName = ko.observable('An Exam');
@@ -172,64 +174,80 @@ $(document).ready(function() {
 				};
 			},this);
 
-			this.autoSave = ko.computed(function() {
-				var e = this;
+			this.autoSave = Editor.saver(
+				this.save,
+				function(data) {
+					return $.post(
+						'/exam/'+e.id+'/'+slugify(e.name())+'/',
+						{json: JSON.stringify(data), csrfmiddlewaretoken: getCookie('csrftoken')}
+					)
+						.success(function(data){
+							var address = location.protocol+'//'+location.host+'/exam/'+Editor.examJSON.id+'/'+slugify(e.name())+'/';
+							if(history.replaceState)
+								history.replaceState({},e.name(),address);
+						})
+						.error(function(response,type,message) {
+                            if(message=='')
+                                message = 'Server did not respond.';
 
-				var data = this.save();
-
-				if(this.firstSave) {
-					this.firstSave = false;
-					return;
+							noty({
+								text: 'Error saving exam:\n\n'+message,
+								layout: "topLeft",
+								type: "error",
+								textAlign: "center",
+								animateOpen: {"height":"toggle"},
+								animateClose: {"height":"toggle"},
+								speed: 200,
+								timeout: 5000,
+								closable:true,
+								closeOnSelfClick: true
+							});
+						})
 				}
+			);
 
-				window.onbeforeunload = function() {
-					return 'There are still unsaved changes.';
-				}
+            //access control stuff
+            this.public_access = ko.observable(Editor.public_access);
+            this.access_options = [
+                {value:'hidden',text:'Hidden'},
+                {value:'view',text:'Anyone can view this'},
+                {value:'edit',text:'Anyone can edit this'}
+            ];
+            this.access_rights = ko.observableArray(Editor.access_rights.map(function(d){return new UserAccess(e,d)}));
 
-				if(!this.save_noty)
-				{
-					this.save_noty = noty({
-						text: 'Saving...', 
-						layout: 'topCenter', 
-						type: 'information',
-						timeout: 0, 
-						speed: 150,
-						closeOnSelfClick: false, 
-						closeButton: false
-					});
-				}
-				
-				$.post(
-					'/exam/'+this.id+'/'+slugify(this.name())+'/',
-					{json: JSON.stringify(data), csrfmiddlewaretoken: getCookie('csrftoken')}
-				)
-					.success(function(data){
-						var address = location.protocol+'//'+location.host+'/exam/'+Editor.examJSON.id+'/'+slugify(e.name())+'/';
-						if(history.replaceState)
-							history.replaceState({},e.name(),address);
-						noty({text:'Saved.',type:'success',timeout: 1000, layout: 'topCenter'});
-					})
-					.error(function(response,type,message) {
-						noty({
-							text: 'Error saving exam:\n\n'+message,
-							layout: "topLeft",
-							type: "error",
-							textAlign: "center",
-							animateOpen: {"height":"toggle"},
-							animateClose: {"height":"toggle"},
-							speed: 200,
-							timeout: 5000,
-							closable:true,
-							closeOnSelfClick: true
-						});
-					})
-					.complete(function() {
-						window.onbeforeunload = null;
-						$.noty.close(viewModel.save_noty);
-						viewModel.save_noty = null;
-					})
-				;
-			},this).extend({throttle:1000});
+            this.access_data = ko.computed(function() {
+                return {
+                    public_access: e.public_access(),
+                    user_ids: e.access_rights().map(function(u){return u.id}),
+                    access_levels: e.access_rights().map(function(u){return u.access_level()}),
+                    csrfmiddlewaretoken: getCookie('csrftoken')
+                }
+            });
+            this.saveAccess = Editor.saver(this.access_data,function(data) {
+                return $.post('set-access',data);
+            });
+            this.userAccessSearch=ko.observable('');
+
+            this.addUserAccess = function(data) {
+                var access_rights = e.access_rights();
+                for(var i=0;i<access_rights.length;i++) {
+                    if(access_rights[i].id==data.id) {
+                        noty({
+                            text: "That user is already in the access list.",
+                            layout: "center",
+                            speed: 100,
+                            type: 'error',
+                            timeout: 2000,
+                            closable: true,
+                            animateOpen: {"height":"toggle"},
+                            animateClose: {"height":"toggle"},
+                            closeOnSelfClick: true
+                        });
+                        return;
+                    }
+                }
+                e.access_rights.push(new UserAccess(e,data));
+            };
 		}
     }
     Exam.prototype = {
@@ -299,6 +317,19 @@ $(document).ready(function() {
             window.location = Editor.download_url;
         }
     };
+
+    function UserAccess(question,data) {
+        var ua = this;
+        this.id = data.id;
+        this.name = data.name;
+        this.access_level = ko.observable(data.access_level || 'view');
+        this.remove = function() {
+            question.access_rights.remove(ua);
+        }
+    }
+    UserAccess.prototype = {
+        access_options: [{value:'view',text:'Can view this'},{value:'edit',text:'Can edit this'}]
+    }
 
     function Event(name,niceName,actions)
     {

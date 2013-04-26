@@ -764,8 +764,8 @@
 					<label>
 						<span class="control-label" data-bind="text:name"></span>
 						<div class="controls">
-							<select data-bind="value: access_level, options: access_options, optionsText:'text',optionsValue:'value'"></select>
-							<button type="button" class="delete" data-bind="click: remove" title="Remove access for this user"></button>
+							<select data-bind="hasfocus: true, value: access_level, options: access_options, optionsText:'text',optionsValue:'value'"></select>
+							<button type="button" class="delete" data-bind="click: remove" title="Remove this user's access"></button>
 						</div>
 					</label>
 				</div>

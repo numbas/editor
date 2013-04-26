@@ -124,6 +124,10 @@ $(document).ready(function() {
                         if('autocompleteSelect' in allBindings)
                             allBindings.autocompleteSelect(dataDict[ui.item.value]);
                         $(this).submit();
+						$(this).val('');
+						e.stopPropagation();
+						e.preventDefault();
+						return false;
                     }
                 })
             ;

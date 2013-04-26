@@ -39,14 +39,10 @@ from examparser import ExamParser, ParseError, printdata
 
 from jsonfield import JSONField
 
-class ControlledObject:
+PUBLIC_ACCESS_CHOICES = (('hidden','Hidden'),('view','Public can view'),('edit','Public can edit'))
+USER_ACCESS_CHOICES = (('view','Public can view'),('edit','Public can edit'))
 
-    def get_access_for(self,user):
-        try:
-            question_access = QuestionAccess.objects.get(question=self,user=user)
-            return question_access.access
-        except QuestionAccess.DoesNotExist:
-            return 'none'
+class ControlledObject:
 
     def can_be_viewed_by(self,user):
         accept_levels = ('view','edit')
@@ -164,7 +160,6 @@ class Question(models.Model,NumbasObject,ControlledObject):
     last_modified = models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
     resources = models.ManyToManyField(Image,blank=True)
 
-    PUBLIC_ACCESS_CHOICES = (('hidden','Hidden'),('view','Public can view'),('edit','Public can edit'))
     public_access = models.CharField(default='view',editable=True,choices=PUBLIC_ACCESS_CHOICES,max_length=6)
     access_rights = models.ManyToManyField(User, through='QuestionAccess', blank=True, editable=False,related_name='accessed_questions+')
 
@@ -240,11 +235,18 @@ class Question(models.Model,NumbasObject,ControlledObject):
         access = QuestionAccess(user=user,question=self,access=access_level)
         access.save()
 
+    def get_access_for(self,user):
+        try:
+            question_access = QuestionAccess.objects.get(question=self,user=user)
+            return question_access.access
+        except QuestionAccess.DoesNotExist:
+            return 'none'
+
+
 class QuestionAccess(models.Model):
     question = models.ForeignKey(Question)
     user = models.ForeignKey(User)
-    ACCESS_CHOICES = (('view','Public can view'),('edit','Public can edit'))
-    access = models.CharField(default='view',editable=True,choices=ACCESS_CHOICES,max_length=6)
+    access = models.CharField(default='view',editable=True,choices=USER_ACCESS_CHOICES,max_length=6)
 
 
 class Exam(models.Model,NumbasObject,ControlledObject):
@@ -267,6 +269,9 @@ class Exam(models.Model,NumbasObject,ControlledObject):
     created=models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
     last_modified=models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
     metadata = JSONField(blank=True)
+
+    public_access = models.CharField(default='view',editable=True,choices=PUBLIC_ACCESS_CHOICES,max_length=6)
+    access_rights = models.ManyToManyField(User, through='ExamAccess', blank=True, editable=False,related_name='accessed_exams+')
 
     class Meta:
       ordering = ['name']
@@ -331,6 +336,22 @@ class Exam(models.Model,NumbasObject,ControlledObject):
         if user:
             obj['canEdit'] = self.can_be_edited_by(user) 
         return obj
+
+    def set_access(self,user,access_level):
+        access = ExamAccess(user=user,exam=self,access=access_level)
+        access.save()
+
+    def get_access_for(self,user):
+        try:
+            exam_access = ExamAccess.objects.get(exam=self,user=user)
+            return exam_access.access
+        except ExamAccess.DoesNotExist:
+            return 'none'
+
+class ExamAccess(models.Model):
+    exam = models.ForeignKey(Exam)
+    user = models.ForeignKey(User)
+    access = models.CharField(default='view',editable=True,choices=USER_ACCESS_CHOICES,max_length=6)
         
         
 class ExamQuestion(models.Model):

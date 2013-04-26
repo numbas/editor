@@ -267,7 +267,7 @@ $(document).ready(function() {
                         .success(function(data){
                             var address = location.protocol+'//'+location.host+data.url;
                             if(history.replaceState)
-                                history.replaceState({},vm.realName(),address);
+                                history.replaceState({},q.realName(),address);
                         })
                         .error(function(response,type,message) {
                             if(message=='')

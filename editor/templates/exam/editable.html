@@ -155,6 +155,45 @@
 				</div>
 			</div>
 		</section>
+		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='access'}">
+			<form class="form-horizontal">
+				<div class="control-group">
+					<label>
+						<span class="control-label">Public visibility:</span>
+						<div class="controls">
+							<select data-bind="value: public_access, options: access_options, optionsText:'text',optionsValue:'value'"></select>
+						</div>
+					</label>
+				</div>
+			</form>
+			<h4>Individual access rights</h4>
+			<form class="form-horizontal" data-bind="submit: function(){}">
+				<!-- ko foreach: {data: access_rights, afterAdd: Editor.afterAdd, beforeRemove: Editor.beforeRemove} -->
+				<div class=control-group">
+					<label>
+						<span class="control-label" data-bind="text:name"></span>
+						<div class="controls">
+							<select data-bind="hasfocus: true, value: access_level, options: access_options, optionsText:'text',optionsValue:'value'"></select>
+							<button type="button" class="delete" data-bind="click: remove" title="Remove this user's access"></button>
+						</div>
+					</label>
+				</div>
+				<!-- /ko -->
+				<div class="control-group access-search">
+					<label>
+						<span class="control-label">Search for a user to give access to:</span>
+						<div class="controls">
+							<input id="search_author" type="text" size="30" data-bind="
+								value: userAccessSearch,
+								autocomplete: '{% url 'user_search' %}', 
+								autocompleteCallback: function(user) { return {label: user.username+' ('+user.name+')', value: user.username} },
+								autocompleteSelect: addUserAccess
+								"/>
+						</div>
+					</label>
+				</div>
+			</form>
+		</section>
 	</div>
 
 	{% verbatim %}

@@ -16,7 +16,7 @@ from django.forms.models import inlineformset_factory
 from django.forms.widgets import SelectMultiple
 from django.core.exceptions import ValidationError
 
-from editor.models import Exam, Question, ExamQuestion, QuestionAccess
+from editor.models import Exam, Question, ExamQuestion, QuestionAccess, ExamAccess
 from django.contrib.auth.models import User
 
 class FixedSelectMultiple(SelectMultiple):
@@ -64,6 +64,46 @@ class QuestionSetAccessForm(forms.ModelForm):
         for f in self.user_access_forms:
             f.save()
         return super(QuestionSetAccessForm,self).save()
+
+class ExamAccessForm(forms.ModelForm):
+    class Meta:
+        model = ExamAccess
+
+class ExamSetAccessForm(forms.ModelForm):
+    class Meta:
+        model = Exam
+        fields = ['public_access']
+
+    def is_valid(self):
+        v = super(ExamSetAccessForm,self).is_valid()
+        for f in self.user_access_forms:
+            if not f.is_valid():
+                print(f.errors)
+                return False
+        return v
+    
+    def clean(self):
+        cleaned_data = super(ExamSetAccessForm,self).clean()
+
+        user_ids = self.data.getlist('user_ids[]')
+        access_levels = self.data.getlist('access_levels[]')
+        self.user_access_forms = []
+        print(user_ids)
+
+        for i,(user,access_level) in enumerate(zip(user_ids,access_levels)):
+            f = ExamAccessForm({'user':user,'access':access_level,'exam':self.instance.pk})
+            f.full_clean()
+            self.user_access_forms.append(f)
+            for key,messages in f.errors.items():
+                self._errors[('user %i: ' % i)+key]=messages
+
+        return cleaned_data
+
+    def save(self):
+        self.instance.access_rights.clear()
+        for f in self.user_access_forms:
+            f.save()
+        return super(ExamSetAccessForm,self).save()
         
 class QuestionForm(forms.ModelForm):
     
@@ -71,7 +111,7 @@ class QuestionForm(forms.ModelForm):
 
     class Meta:
         model = Question
-        exclude = ('name','author','tags')
+        exclude = ('name','author','tags','public_access')
         
         
 class NewQuestionForm(forms.ModelForm):
@@ -89,7 +129,7 @@ class ExamForm(forms.ModelForm):
     
     class Meta:
         model = Exam
-        exclude = ('name','author')
+        exclude = ('name','author','public_access')
         
         
 class NewExamForm(forms.ModelForm):

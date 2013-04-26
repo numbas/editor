@@ -26,9 +26,10 @@ from django.utils.decorators import method_decorator
 from django.views.generic import CreateView, DeleteView, FormView, ListView, UpdateView, View
 from django.views.generic.detail import SingleObjectMixin
 
-from editor.forms import ExamForm, NewExamForm, ExamSearchForm
-from editor.models import Exam, Question
+from editor.forms import ExamForm, NewExamForm, ExamSearchForm,ExamSetAccessForm
+from editor.models import Exam, Question, ExamAccess
 from editor.views.generic import PreviewView, ZipView, SourceView
+from editor.views.errors import forbidden
 from editor.views.user import find_users
 
 from examparser import ExamParser, ParseError, printdata
@@ -222,10 +223,20 @@ class ExamUpdateView(UpdateView):
         exam_form = ExamForm(data, instance=self.object)
 
         if exam_form.is_valid():
+            print('save')
             return self.form_valid(exam_form)
         else:
+            print('no save')
             return self.form_invalid(exam_form)
     
+    def get(self, request, *args, **kwargs):
+        self.user = request.user
+        self.object = self.get_object()
+        if not self.object.can_be_viewed_by(request.user):
+            return forbidden(request)
+        else:
+            return super(ExamUpdateView,self).get(request,*args,**kwargs)
+
     def form_valid(self, form):
         self.object = form.save(commit=False)
 
@@ -254,6 +265,9 @@ class ExamUpdateView(UpdateView):
         context['locales'] = settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']
         context['editable'] = self.object.can_be_edited_by(self.request.user)
         context['navtab'] = 'exams'
+
+        context['access_rights'] = [{'id': ea.user.pk, 'name': ea.user.get_full_name(), 'access_level': ea.access} for ea in ExamAccess.objects.filter(exam=self.object)]
+
         return context
 
     def get_success_url(self):
@@ -322,6 +336,8 @@ class ExamSearchView(ListView):
         except KeyError:
             pass
 
+        exams = [e for e in exams if e.can_be_viewed_by(self.request.user)]
+
         return [q.summary(user=self.request.user) for q in exams]
 
     
@@ -334,3 +350,23 @@ class ExamListView(ListView):
         context = super(ExamListView, self).get_context_data(**kwargs)
         context['navtab'] = 'exams'
         return context
+
+class ExamSetAccessView(UpdateView):
+    model = Exam
+    form_class = ExamSetAccessForm
+
+    def form_valid(self, form):
+        exam = self.get_object()
+
+        if not exam.can_be_edited_by(self.request.user):
+            return http.HttpResponseForbidden("You don't have permission to edit this exam.")
+
+        self.object = form.save()
+
+        return HttpResponse('ok!')
+
+    def form_invalid(self,form):
+        return HttpResponse(form.errors.as_text())
+
+    def get(self, request, *args, **kwargs):
+        return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')

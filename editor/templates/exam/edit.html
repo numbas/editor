@@ -1,5 +1,6 @@
 {% extends "editor.html" %}
 {% load verbatim %}
+{% load json %}
 
 {% block stylesheets %}
 	{{ block.super }}
@@ -24,15 +25,20 @@
             if (!window.Editor) {
             	window.Editor = {};
             }
-            var Editor = window.Editor;
-			Editor.editable = {% if editable %}true{% else %}false{% endif %};
-            {% autoescape off %}
-        	Editor.examJSON = {{ exam_JSON }};
-            Editor.themes = {{themes}};
-            Editor.locales = {{locales}};
-            {% endautoescape %}
-			Editor.previewURL = '{% url 'exam_preview' object.pk object.slug %}';
-			Editor.previewWindow = '{% now "U" %}';
+            var Editor = window.Editor = {
+                editable: {{editable|json}},
+                examJSON: {{ exam_JSON|safe }},
+
+                {% if editable %}
+				public_access: {{exam.public_access|json|safe}},
+				access_rights: {{access_rights|json|safe}},
+                {% endif %}
+
+                themes: {{themes|json|safe}},
+                locales: {{locales|json|safe}},
+                previewURL: '{% url 'exam_preview' object.pk object.slug %}',
+                previewWindow: '{% now "U" %}'
+            }
         })();
     </script>
 {% endblock javascripts %}

@@ -46,10 +46,10 @@ class ControlledObject:
 
     def can_be_viewed_by(self,user):
         accept_levels = ('view','edit')
-        return (self.public_access in accept_levels) or (user.is_superuser) or (self.get_access_for(user) in accept_levels)
+        return (self.public_access in accept_levels) or (user.is_superuser) or (self.author==user) or (self.get_access_for(user) in accept_levels)
 
     def can_be_edited_by(self, user):
-        return self.public_access=='edit' or (user.is_superuser) or self.get_access_for(user)=='edit'
+        return self.public_access=='edit' or (user.is_superuser) or (self.author==user) or self.get_access_for(user)=='edit'
 
 class NumbasObject:
 

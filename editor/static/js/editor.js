@@ -446,7 +446,7 @@ $(document).ready(function() {
 				return '"infinity"';
 			else if(data.contains('"') || data.contains("'"))
 				return '"""'+data+'"""';
-			else if(data.search(/[:\n,\{\}\[\] ]/)>=0)
+			else if(data.search(/[:\n,\{\}\[\] ]|\/\//)>=0)
 				return '"'+data+'"';
 			else if(!data.trim())
 				return '""';

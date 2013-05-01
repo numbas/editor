@@ -38,7 +38,7 @@ jme.variables = {
 		var preamble='fn.jfn=(function('+fn.paramNames.join(',')+'){';
 		var math = Numbas.math;
 		var util = Numbas.util;
-		var jfn = eval(preamble+fn.definition+'})');
+		var jfn = eval(preamble+fn.definition+'\n})');
 		return function(args,scope) {
 			args = args.map(function(a){return jme.unwrapValue(a)});
 			try {

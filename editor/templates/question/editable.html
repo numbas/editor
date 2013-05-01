@@ -115,7 +115,7 @@
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='functions'}">
 			<div id="functions">
 				<h4>Functions</h4>
-				<!-- ko foreach: functions -->
+				<!-- ko foreach: {data: functions, afterAdd: Editor.afterAdd, beforeRemove: Editor.beforeRemove} -->
 				<div class="function row-fluid">
 					<div class="span1">
 						<button type="button" class="delete" data-bind="click:remove" title="Delete this function"></button>
@@ -155,7 +155,7 @@
 					</div>
 					<div class="span3">
 						<label>Parameters</label>
-						<!-- ko foreach: parameters -->
+						<!-- ko foreach: {data: parameters, afterAdd: Editor.afterAdd, beforeRemove: Editor.beforeRemove} -->
 						<div class="row-fluid parameter">
 							<form class="form-inline">
 								<input class="name" type="text" placeholder="Name" data-bind="value: name"/>
@@ -173,7 +173,7 @@
 			<div id="rulesets">
 				<h4>Rulesets</h4>
 				<form class="form-horizontal">
-					<!-- ko foreach: rulesets -->
+					<!-- ko foreach: {data: rulesets, afterAdd: Editor.afterAdd, beforeRemove: Editor.beforeRemove} -->
 						<div class="ruleset control-group">
 							<span class="control-label">
 								<input type="text" placeholder="Name" class="name control-label" data-bind="value:name, valueUpdate: 'afterkeydown'"/>
@@ -191,7 +191,7 @@
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='parts'}">
 			<div class="row-fluid">
 				<div class="span3">
-                    <ol class="parts nav nav-list" data-bind="visible: parts().length>0, foreach: parts">
+					<ol class="parts nav nav-list" data-bind="visible: parts().length>0, foreach: {data: parts, afterAdd: Editor.afterAdd, beforeRemove: Editor.beforeRemove}">
 						<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
 							<div class="reorder" data-bind="visible: $root.currentPart()==$data && parentList().length>1">
 								<button type="button" class="up" data-bind="click: moveUp"></button>
@@ -202,7 +202,7 @@
 							<div class="subparts" data-bind="fadeVisible: meOrChildSelected">
 								<div class="gaps" data-bind="if: type().name=='gapfill'">
 									<h6>Gaps</h6>
-									<ol class="gaps nav nav-list" data-bind="foreach: gapfill.gaps">
+									<ol class="gaps nav nav-list" data-bind="foreach: {data: gapfill.gaps, afterAdd: Editor.afterAdd, beforeRemove: Editor.beforeRemove}">
 										<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
 											<div class="reorder" data-bind="visible: $root.currentPart()==$data && parentList().length>1">
 												<button type="button" class="up" data-bind="click: moveUp"></button>
@@ -216,7 +216,7 @@
 								</div>
 								<div class="steps clearfix">
 									<h6>Steps</h6>
-									<ol class="steps nav nav-list" data-bind="foreach: steps">
+									<ol class="steps nav nav-list" data-bind="foreach: {data: steps, afterAdd: Editor.afterAdd, beforeRemove: Editor.beforeRemove}">
 										<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
 										<div class="reorder" data-bind="visible: $root.currentPart()==$data && parentList().length>1">
 												<button type="button" class="up" data-bind="click: moveUp"></button>
@@ -713,13 +713,14 @@
 				{% csrf_token %}
                 <div class="control-group">
                     <label>
-                        <span class="control-label">Upload an image</span>
+                        <h4 class="control-label">Upload an image</h4>
                         <div class="controls">
                             <input id="fileupload" type="file" name="files[]">
                         </div>
                     </label>
                 </div>
 			</form>
+			<h4>Uploaded images</h4>
 			<ul class="unstyled resources-list" data-bind="foreach: resources">
 				<li class="resource clearfix">
 					<div data-bind="visible: progress()<1" class="progress progress-striped active">

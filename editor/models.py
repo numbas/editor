@@ -184,10 +184,13 @@ class Question(models.Model,NumbasObject,ControlledObject):
 
         self.slug = slugify(self.name)
 
+        self.progress = self.parsed_content.get('progress','in-progress')
+
         super(Question, self).save(*args, **kwargs)
 
         if 'tags' in self.parsed_content:
            self.tags.set(*self.parsed_content['tags'])
+
 
     def delete(self, *args, **kwargs):
         super(Question,self).delete(*args, **kwargs)

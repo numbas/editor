@@ -562,6 +562,7 @@ $(document).ready(function() {
 					width: this.imageModal.width(), 
 					height: this.imageModal.height()
 				})
+                .removeAttr('data-mce-style')
 				.attr('alt',this.imageModal.alt())
 				.attr('title',this.imageModal.title())
 			;

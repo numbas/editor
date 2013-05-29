@@ -943,7 +943,7 @@ $(document).ready(function() {
         init: function(element,valueAccessor) {
             var value = valueAccessor();
             function update() {
-                $(element).text(moment(ko.utils.unwrapObservable(value)).calendar());
+                $(element).text(moment(ko.utils.unwrapObservable(value)).format('DD/MM/YYYY'));
             }
             update();
             ko.utils.domData.set(element,'calendarTime',setInterval(update,30000));

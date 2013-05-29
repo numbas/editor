@@ -23,6 +23,9 @@ def upload_resource(request,**kwargs):
 class ImageDeleteView(DeleteView):
     model = Image
 
+    def render_to_response(self,context):
+        return HttpResponse('deleted')
+
 def delete_resource(request,**kwargs):
     pk = int(kwargs['pk'])
     try:

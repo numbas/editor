@@ -189,6 +189,8 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 
+AUTH_PROFILE_MODULE = 'accounts.UserProfile'
+
 # Settings for sending email. Other backends are available - see https://docs.djangoproject.com/en/dev/topics/email/#obtaining-an-instance-of-an-email-backend
 #DEFAULT_FROM_EMAIL = 'numbas@domain'
 #EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

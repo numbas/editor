@@ -1,0 +1,12 @@
+#taglist {
+    list-style: none;
+    line-height: 2.5em;
+    max-height: 11em;
+    overflow-y: auto;
+}
+#taglist .tag {
+    display: inline-block;
+    margin: 0 0.5em;
+    background: #eee;
+    padding: 4px;
+}

@@ -46,6 +46,11 @@
     margin: 0.5em 0 0 0;
 }
 
+.toggle-advanced-search {
+    font-size: smaller;
+    margin-left: 1em;
+}
+
 .search-results {
 	width: 100%;
 }

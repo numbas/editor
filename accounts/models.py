@@ -4,8 +4,12 @@ from django.contrib.sites.models import RequestSite
 from django.contrib.auth.models import User
 from django.db import models
 
+from taggit.models import Tag
+
 from registration import models as regmodels
 from registration.signals import user_registered
+
+from operator import itemgetter
 
 class RegistrationManager(regmodels.RegistrationManager):
     def create_inactive_user(self, username, first_name, last_name, email, password,
@@ -42,6 +46,14 @@ class RegistrationProfile(regmodels.RegistrationProfile):
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
     language = models.CharField(max_length=100,default='en-GB')
+
+    def sorted_tags(self):
+        qs = self.user.own_questions
+        tags = Tag.objects.filter(question__author=self.user).distinct()
+        tag_counts = [(tag,len(qs.filter(tags__id=tag.id))) for tag in tags]
+        tag_counts.sort(key=itemgetter(1),reverse=True)
+
+        return tag_counts
 
 def createUserProfile(sender, instance, **kwargs):
     """Create a UserProfile object each time a User is created ; and link it.

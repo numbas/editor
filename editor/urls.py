@@ -55,7 +55,7 @@ urlpatterns = patterns('',
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/set-access$',
         ExamSetAccessView.as_view(),name='set_exam_access'),
 
-    url(r'^questions/$', QuestionListView.as_view(), name='question_index',),
+    url(r'^questions/(\?q=(?P<query>.+))?$', QuestionListView.as_view(), name='question_index',),
     
     url(r'^question/new/$', login_required(QuestionCreateView.as_view()), name='question_new'),
 

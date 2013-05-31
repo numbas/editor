@@ -281,12 +281,64 @@ class QuestionListView(ListView):
     model=Question
     template_name='question/index.html'
 
+    def get_queryset(self):
+        questions = Question.objects.all()
+
+        try:
+            search_term = self.request.GET['q']
+            questions = questions.filter(Q(name__icontains=search_term) | Q(metadata__icontains=search_term) | Q(tags__name__istartswith=search_term)).distinct()
+        except KeyError:
+            pass
+
+        try:
+            mine = self.request.GET['mine'] == 'true'
+            if mine:
+                questions = questions.filter(author=self.request.user.pk)
+        except KeyError:
+            mine = False
+
+        try:
+            if not mine:
+                author_term = self.request.GET['author']
+                authors = find_users(author_term)
+                if len(authors) == 0:
+                    return []
+                else:
+                    questions = questions.filter(author__in=authors).distinct()
+        except KeyError:
+            pass
+
+        try:
+            progress = self.request.GET['progress']
+            if progress!='':
+                questions = questions.filter(progress=progress)
+        except KeyError:
+            pass
+
+        try:
+            descending = '-' if self.request.GET['descending']=='true' else ''
+            order_by = self.request.GET['order_by']
+            if order_by == 'name':
+                questions = questions.order_by(descending+'slug')
+            elif order_by == 'author':
+                questions = questions.order_by(descending+'author__first_name',descending+'author__last_name')
+            elif order_by == 'progress':
+                questions = questions.order_by(descending+'progress')
+            elif order_by == 'last_modified':
+                questions = questions.order_by(descending+'last_modified')
+        except KeyError:
+            pass
+
+        questions = [q for q in questions if q.can_be_viewed_by(self.request.user)]
+
+        return questions
+        
+
     def get_context_data(self, **kwargs):
         context = super(QuestionListView, self).get_context_data(**kwargs)
         context['progresses'] = Question.PROGRESS_CHOICES
         context['navtab'] = 'questions'
         return context
-    
     
 class QuestionSearchView(ListView):
     

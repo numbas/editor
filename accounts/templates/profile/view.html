@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+
+{% block stylesheets %}
+{{block.super}}
+<link href="{{ STATIC_URL }}css/profile-view.css" type="text/css" rel="stylesheet" />
+{% endblock stylesheets %}
+
+{% block content %}
+
+<h2>{{object.get_full_name}}</h2>
+
+<h4>Tags used in {% if user == object %}your{% else %}their{% endif %} questions</h4>
+<ul id="taglist">
+    {% for tag,count in object.get_profile.sorted_tags %}
+    <li class="tag">{{tag}} ({{count}})</li>
+    {% endfor %}
+</ul>
+
+{% endblock content %}

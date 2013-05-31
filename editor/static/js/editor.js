@@ -396,7 +396,7 @@ $(document).ready(function() {
         }
     }
 
-    //obs is an observable on trhe data to be saved
+    //obs is an observable on the data to be saved
     //savefn is a function which does the save, and returns a deferred object which resolves when the save is done
     Editor.saver = function(obs,savefn) {
         var firstSave = true;

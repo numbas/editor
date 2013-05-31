@@ -23,37 +23,41 @@
 					<input role="search" id="search_query" type="text" name="questionSearch" data-bind="value: query, valueUpdate: 'afterkeydown'"/>
 					<span class="add-on"><button type="submit" class="search" data-bind="css: {loading: searching}"></button></span>
 				</div>
-			</label>
-			<label for="search_author">
-				by author: 	
-				<input id="search_author" type="text" size="30" data-bind="
-					value: author,
-					valueUpdate: 'afterkeydown',
-					autocomplete: '{% url 'user_search' %}', 
-					autocompleteCallback: function(user) { return {label: user.username+' ('+user.name+')', value: user.username} },
-					click: clearMine
-				"/>
-			</label>
-			{% if user.is_authenticated %}<label class="checkbox"><input type="checkbox" data-bind="checked: mine"/> Mine only.</label>{% endif %}
-			<label for="search_progress">
-				Filter by progress:
-				<select data-bind="value: progress">
-					<option selected></option>
-					{% for code,text in progresses %}
-					<option value="{{code}}">{{text}}</option>
-					{% endfor %}
-				</select>
-			</label>
+            </label>
+            <button class="toggle-advanced-search" type="button" data-bind="click: toggleAdvancedSearch, visible: !advancedSearch()">Filter results</button>
+            <div data-bind="fadeVisible: advancedSearch">
+                <strong>Filter results</strong> 
+                <label for="search_author">
+                    by author: 	
+                    <input id="search_author" type="text" size="30" data-bind="
+                        value: author,
+                        valueUpdate: 'afterkeydown',
+                        autocomplete: '{% url 'user_search' %}', 
+                        autocompleteCallback: function(user) { return {label: user.username+' ('+user.name+')', value: user.username} },
+                        click: clearMine
+                    "/>
+                </label>
+                <label for="search_progress">
+                    by progress:
+                    <select data-bind="value: progress">
+                        <option selected></option>
+                        {% for code,text in progresses %}
+                        <option value="{{code}}">{{text}}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
 		</form>
 	</div>
 
-	<div data-bind="with: search.results">
-		<div class="pagination" data-bind="visible: pages().length>0">
+	<div>
+		<div class="pagination">
 			Page:
 			<button type="button" class="move previous" data-bind="click: prevPage"></button><span class="pagenumber" data-bind="text: pageText"></span><button type="button" class="move next" data-bind="click: nextPage"></button>
 		</div>
 		<div class="results">
-			<table class="search-results" id="question-list" data-bind="visible: all().length>0">
+			{% if object_list %}
+			<table class="search-results" id="question-list">
 				<col span="1" class="name"/>
 				<col span="1" class="author"/>
 				<col span="1" class="col-progress"/>
@@ -65,29 +69,34 @@
                     <th data-bind="css: {sorted: orderBy()=='progress', descending: descending}, click: setOrder('progress')">Progress</th>
 					<th data-bind="css: {sorted: orderBy()=='last_modified', descending: descending}, click: setOrder('last_modified',true)">Last Modified</th>
 				</thead>
-				<tbody class="results editlist big" data-bind="foreach: {
-					data: pages()[page()-1]
-				}">
+				<tbody class="results editlist big">
+				{% for question in object_list %}
 					<tr class="result question">
 						<td>
-							<a data-bind="attr: {href: url}, text: name"></a>
-							<div class="description" data-bind="visible: metadata.description.length>0, html: $(metadata.description).text(), mathjax: true"></div>
+							<a href="{% url 'question_edit' question.pk question.slug %}">{{question.name}}</a>
+							{% if question.metadata.description %}
+							<div class="description">
+								{{question.metadata.description|safe}}
+							</div>
+							{% endif %}
 						</td>
-                        <td><span data-bind="text: author"></span></td>
-                        <td><span data-bind="text: progressDisplay, attr: {'class': 'progress-display '+progress}"></span></td>
-						<td><span data-bind="calendarTime: last_modified"></span></td>
+						<td>{{question.author}}</td>
+						<td class="progress-display {{question.progress}}">{{question.get_progress_display}}</td>
+						<td>{{question.last_modified|date:"m/d/Y H:m"}}</td>
 						<td class="admin">
-							<a class="preview" data-bind="attr: {href: url+'preview/'}" target="_blank" title="Test run"></a>
+							<a class="preview" href="{% url 'question_preview' question.pk question.slug %}" target="_blank" title="Test run"></a>
 							{% if user.is_authenticated %}
-							<a class="copy" data-bind="attr: {href: url+'copy/'}" title="Make a copy"></a>
+							<a class="copy" href="{% url 'question_copy' question.pk question.slug %}" title="Make a copy"></a>
 							{% endif %}
 							<a class="delete" data-bind="visible: canEdit, attr: {href: url+'delete/'}, click: function() {$parent.deleteQuestion(this) }" title="Delete"></a>
 						</td>
 					</tr>
+				{% endfor %}
 				</tbody>
 			</table>
-			<div class="none" data-bind="visible: all().length==0, text: $root.search.searching() ? 'Loading results...' : 'No questions found.'" ></div>
-			<div class="error" data-bind="visible: error().length>0, html: error"></div>
+			{% else %}
+			<div class="none">No questions found.</div>
+			{% endif %}
 		</div>
 		<div class="pagination" data-bind="visible: pages().length>0">
 			Page:
@@ -102,7 +111,6 @@
 
 {% block javascripts %}
     {{block.super}}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/question/index.js"></script>
 {% endblock javascripts %}
 
 {% block stylesheets %}

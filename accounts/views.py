@@ -1,6 +1,6 @@
 from accounts.forms import NumbasRegistrationForm
 from registration.views import register as original_register
-from django.views.generic import UpdateView
+from django.views.generic import UpdateView, DetailView
 from django.contrib.auth.models import User
 from django.shortcuts import redirect
 from django.core.urlresolvers import reverse
@@ -44,3 +44,8 @@ class ChangePasswordView(CurrentUserUpdateView):
 	def get_success_url(self):
 		return reverse('edit_profile')
 
+class UserProfileView(DetailView):
+
+    template_name = 'profile/view.html'
+
+    model = User

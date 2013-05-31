@@ -73,6 +73,10 @@ $(document).ready(function() {
 
 		this.search = {
 			query: ko.observable(''),
+            advancedSearch: ko.observable(false),
+            toggleAdvancedSearch: function() {
+                vm.search.advancedSearch(!vm.search.advancedSearch());
+            },
 			author: ko.observable(''),
 			progress: ko.observable(''),
             descending: ko.observable(false),
@@ -105,10 +109,6 @@ $(document).ready(function() {
                     }
                 }
 			},
-			realMine: ko.observable(false),
-			clearMine: function() {
-				vm.search.mine(false);
-			},
             setOrder: function(field,defaultOrder) {
                 defaultOrder = defaultOrder ? true : false;
                 return function() {
@@ -129,26 +129,11 @@ $(document).ready(function() {
 
 
 		vm.search.restorePage = 0;
-		this.search.mine = ko.computed({
-			read: function() {
-				return this.realMine();
-			},
-			write: function(v) {
-				var ov = this.realMine();
-				this.realMine(v);
-				if(v)
-					this.author('');
-				if(v!=ov && !this.hasOwnProperty('restorePage'))
-					this.submit();
-			}
-		},this.search);
-
 		function makeQuery() {
 			return {
 				q: vm.search.query(),
 				author: vm.search.author(),
 				progress: vm.search.progress(),
-				mine: vm.search.mine(),
                 descending: vm.search.descending(),
                 order_by: vm.search.orderBy()
 			};
@@ -162,6 +147,8 @@ $(document).ready(function() {
 			vm.search.lastID = null;
 			if('query' in history.state)
 				vm.search.query(history.state.query);
+			if('advancedSearch' in history.state)
+				vm.search.advancedSearch(history.state.advancedSearch);
 			if('author' in history.state)
 				vm.search.author(history.state.author);
 			if('progress' in history.state)
@@ -170,8 +157,6 @@ $(document).ready(function() {
 				vm.search.descending(history.state.descending);
 			if('orderBy' in history.state)
 				vm.search.orderBy(history.state.orderBy);
-			if('mine' in history.state)
-				vm.search.mine(history.state.mine);
 			if('page' in history.state)
                 vm.search.restorePage = history.state.page;
 		}
@@ -180,9 +165,9 @@ $(document).ready(function() {
 				history.replaceState({
 					page: vm.search.results.page(),
 					query: vm.search.query(),
+                    advancedSearch: vm.search.advancedSearch(),
 					author: vm.search.author(),
 					progress: vm.search.progress(),
-					mine: vm.search.mine(),
                     descending: vm.search.descending(),
                     orderBy: vm.search.orderBy()
 				},'',window.location.pathname);

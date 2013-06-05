@@ -163,12 +163,12 @@ class Question(models.Model,NumbasObject,ControlledObject):
     public_access = models.CharField(default='view',editable=True,choices=PUBLIC_ACCESS_CHOICES,max_length=6)
     access_rights = models.ManyToManyField(User, through='QuestionAccess', blank=True, editable=False,related_name='accessed_questions+')
 
-    PROGRESS_CHOICES = (
+    PROGRESS_CHOICES = [
         ('in-progress','Writing in progress'),
         ('not-for-use','Not for general use'),
         ('testing','Undergoing testing'),
         ('ready','Tested and ready to use'),
-    )
+    ]
     progress = models.CharField(max_length=15,editable=True,default='in-progress',choices=PROGRESS_CHOICES)
 
     tags = TaggableManager()

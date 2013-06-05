@@ -1,0 +1,15 @@
+{% load django_tables2 %}
+<div class="pagination">
+    {% if results.page.has_previous %}
+	<a title="Previous page" class="move previous"href="{% querystring results.prefixed_page_field=results.page.previous_page_number %}"></a></li>
+    {% endif %}
+
+    {% if results.page.has_previous or results.page.has_next %}
+	<span class="current">Page {{ results.page.number }} of {{ results.paginator.num_pages }}</span>
+    {% endif %}
+
+    {% if results.page.has_next %}
+	<a title="Next page" class="move next" href="{% querystring results.prefixed_page_field=results.page.next_page_number %}"></a></li>
+    {% endif %}
+</div>
+

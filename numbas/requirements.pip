@@ -1,6 +1,7 @@
 django>=1.5
 django-taggit
 django-registration
+django-tables2
 south
 django-uuslug
 pil

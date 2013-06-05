@@ -1,4 +1,7 @@
 {% extends "layout.html" %}
+{% load django_tables2 %}
+{% load render_table from django_tables2 %}
+{% load can_edit %}
 
 {% block content %}
 
@@ -7,7 +10,7 @@
             <a id="new" href="{% url 'question_new' %}">Create a new question</a>
             <form action="{% url 'question_upload' %}" method="post" id="uploadForm" enctype="multipart/form-data">
                 {% csrf_token %}
-                <a href="" id="upload">Upload a question</a>
+				<a href="{% url 'question_upload' %}" id="upload">Upload a question</a>
                 <div class="upload">
                     <input type="file" name="file" value="yo"/>
                 </div>
@@ -16,20 +19,20 @@
 	{% endif %}
 
     <div class="row-fluid">
-        <form class="searchBox form-inline" data-bind="with: search, submit: search.submit">
+		<form class="searchBox form-inline">
+			{% with form.cleaned_data as data %}
 			<label for="search_query">
 				Search for questions called:
 				<div class="input-append">
-					<input role="search" id="search_query" type="text" name="questionSearch" data-bind="value: query, valueUpdate: 'afterkeydown'"/>
-					<span class="add-on"><button type="submit" class="search" data-bind="css: {loading: searching}"></button></span>
+					<input role="search" id="search_query" type="text" name="query" value="{{ data.query }}"/>
+					<span class="add-on"><button type="submit" class="search"></button></span>
 				</div>
             </label>
-            <button class="toggle-advanced-search" type="button" data-bind="click: toggleAdvancedSearch, visible: !advancedSearch()">Filter results</button>
             <div data-bind="fadeVisible: advancedSearch">
                 <strong>Filter results</strong> 
                 <label for="search_author">
                     by author: 	
-                    <input id="search_author" type="text" size="30" data-bind="
+					<input id="search_author" name="author" type="text" size="30" value="{{ data.author }}" data-bind="
                         value: author,
                         valueUpdate: 'afterkeydown',
                         autocomplete: '{% url 'user_search' %}', 
@@ -38,23 +41,16 @@
                     "/>
                 </label>
                 <label for="search_progress">
-                    by progress:
-                    <select data-bind="value: progress">
-                        <option selected></option>
-                        {% for code,text in progresses %}
-                        <option value="{{code}}">{{text}}</option>
-                        {% endfor %}
-                    </select>
+					by progress:
+					{{ form.progress }}
                 </label>
-            </div>
+			</div>
+			{% endwith %}
 		</form>
 	</div>
 
 	<div>
-		<div class="pagination">
-			Page:
-			<button type="button" class="move previous" data-bind="click: prevPage"></button><span class="pagenumber" data-bind="text: pageText"></span><button type="button" class="move next" data-bind="click: nextPage"></button>
-		</div>
+		{% include "question/pagination.html" %}
 		<div class="results">
 			{% if object_list %}
 			<table class="search-results" id="question-list">
@@ -63,45 +59,52 @@
 				<col span="1" class="col-progress"/>
 				<col span="1" class="last_modified"/>
 				<col span="1" class="admin"/>
-                <thead data-bind="with: $root.search">
-                    <th data-bind="css: {sorted: orderBy()=='name', descending: descending}, click: setOrder('name')">Name</th>
-                    <th data-bind="css: {sorted: orderBy()=='author', descending: descending}, click: setOrder('author')">Author</th>
-                    <th data-bind="css: {sorted: orderBy()=='progress', descending: descending}, click: setOrder('progress')">Progress</th>
-					<th data-bind="css: {sorted: orderBy()=='last_modified', descending: descending}, click: setOrder('last_modified',true)">Last Modified</th>
-				</thead>
-				<tbody class="results editlist big">
-				{% for question in object_list %}
-					<tr class="result question">
-						<td>
-							<a href="{% url 'question_edit' question.pk question.slug %}">{{question.name}}</a>
-							{% if question.metadata.description %}
-							<div class="description">
-								{{question.metadata.description|safe}}
-							</div>
+				<thead>
+					<tr>
+					{% for column in results.columns %}
+						<th {{ column.attrs.th.as_html }}>
+							{% if column.orderable %}
+								<a href="{% querystring results.prefixed_order_by_field=column.order_by_alias.next "page"=1 %}">{{ column.header }}</a>
+							{% else %}
+								{{ column.header }}
 							{% endif %}
-						</td>
-						<td>{{question.author}}</td>
-						<td class="progress-display {{question.progress}}">{{question.get_progress_display}}</td>
-						<td>{{question.last_modified|date:"m/d/Y H:m"}}</td>
+						</th>
+					{% endfor %}
+					</tr>
+				</thead>
+				<tbody>
+					{% for row in results.page.object_list|default:results.rows %}
+					{% block results.tbody.row %}
+					<tr class="result question">
+						{% for column, cell in row.items %}
+							<td {{ column.attrs.td.as_html }}>{{ cell }}</td>
+						{% endfor %}
 						<td class="admin">
+							{% with row.record as question %}
 							<a class="preview" href="{% url 'question_preview' question.pk question.slug %}" target="_blank" title="Test run"></a>
 							{% if user.is_authenticated %}
 							<a class="copy" href="{% url 'question_copy' question.pk question.slug %}" title="Make a copy"></a>
 							{% endif %}
-							<a class="delete" data-bind="visible: canEdit, attr: {href: url+'delete/'}, click: function() {$parent.deleteQuestion(this) }" title="Delete"></a>
+							{% if question|can_be_edited_by:user %}<a class="delete" href="{% url 'question_delete' question.pk question.slug %}" title="Delete"></a>{% endif %}
+							{% endwith %}
 						</td>
 					</tr>
-				{% endfor %}
+					{% endblock results.tbody.row %}
+					{% empty %}
+					{% if results.empty_text %}
+					{% block results.tbody.empty_text %}
+					<tr><td colspan="{{ results.columns|length }}">{{ results.empty_text }}</td></tr>
+					{% endblock results.tbody.empty_text %}
+					{% endif %}
+					{% endfor %}
 				</tbody>
 			</table>
+
 			{% else %}
 			<div class="none">No questions found.</div>
 			{% endif %}
 		</div>
-		<div class="pagination" data-bind="visible: pages().length>0">
-			Page:
-			<button type="button" class="move previous" data-bind="click: prevPage"></button><span class="pagenumber" data-bind="text: pageText"></span><button type="button" class="move next" data-bind="click: nextPage"></button>
-		</div>
+		{% include "question/pagination.html" %}
 	</div>
     
     <script type="text/html" id="question">
@@ -110,7 +113,8 @@
 {% endblock content %}
 
 {% block javascripts %}
-    {{block.super}}
+	{{block.super}}
+	<script type="text/javascript" src="{{STATIC_URL}}js/question/index.js"></script>
 {% endblock javascripts %}
 
 {% block stylesheets %}

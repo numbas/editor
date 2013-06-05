@@ -25,6 +25,11 @@ class FixedSelectMultiple(SelectMultiple):
         v = super(FixedSelectMultiple,self).value_from_datadict(data,files,name)
         return v
 
+class QuestionSearchForm(forms.Form):
+    query = forms.CharField(initial='', required=False)
+    author = forms.CharField(initial='', required=False)
+    progress = forms.ChoiceField(initial='',choices = [('','')]+Question.PROGRESS_CHOICES, required=False)
+
 class QuestionAccessForm(forms.ModelForm):
     class Meta:
         model = QuestionAccess

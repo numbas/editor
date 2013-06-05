@@ -61,8 +61,7 @@
 	padding: 0 0.4em;
 }
 
-.search-results th.sorted:after {
-    background-image: url(../images/accordion-up.png);
+.search-results th.sortable:after {
     background-position: 50%;
     background-repeat: no-repeat;
     content: '';
@@ -73,7 +72,10 @@
     padding-left: 8px;
 }
 
-.search-results th.sorted.descending:after {
+.search-results th.sortable.asc:after {
+    background-image: url(../images/accordion-up.png);
+}
+.search-results th.sortable.desc:after {
     background-image: url(../images/accordion-down.png);
 }
 

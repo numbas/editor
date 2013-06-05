@@ -23,13 +23,17 @@ from django import http
 from django.shortcuts import redirect
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView, View
 from django.views.generic.detail import SingleObjectMixin
+from django.views.generic.edit import FormMixin
 from django.template.loader import render_to_string
 
-from editor.forms import NewQuestionForm, QuestionForm, QuestionSetAccessForm
+from django_tables2.config import RequestConfig
+
+from editor.forms import NewQuestionForm, QuestionForm, QuestionSetAccessForm, QuestionSearchForm
 from editor.models import Question,Extension,Image,QuestionAccess
 from editor.views.generic import PreviewView, ZipView, SourceView
 from editor.views.errors import forbidden
 from editor.views.user import find_users
+from editor.tables import QuestionTable
 
 from accounts.models import UserProfile
 
@@ -191,6 +195,14 @@ class QuestionDeleteView(DeleteView):
     model = Question
     template_name = 'question/delete.html'
     
+    def delete(self,request,*args,**kwargs):
+        self.object = self.get_object()
+        if self.object.can_be_edited_by(self.request.user):
+            self.object.delete()
+            return http.HttpResponseRedirect(self.get_success_url())
+        else:
+            return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
+    
     def get_success_url(self):
         return reverse('question_index')
 
@@ -213,7 +225,6 @@ class QuestionUpdateView(UpdateView):
 
 
     def post(self, request, *args, **kwargs):
-        print('start!')
         self.user = request.user
         self.object = self.get_object()
 
@@ -279,65 +290,46 @@ class QuestionListView(ListView):
     """List of questions."""
     
     model=Question
+
     template_name='question/index.html'
 
     def get_queryset(self):
+
+        form = self.form = QuestionSearchForm(self.request.GET)
+        form.is_valid()
+
         questions = Question.objects.all()
 
-        try:
-            search_term = self.request.GET['q']
+        search_term = form.cleaned_data.get('query')
+        if search_term:
             questions = questions.filter(Q(name__icontains=search_term) | Q(metadata__icontains=search_term) | Q(tags__name__istartswith=search_term)).distinct()
-        except KeyError:
-            pass
 
-        try:
-            mine = self.request.GET['mine'] == 'true'
-            if mine:
-                questions = questions.filter(author=self.request.user.pk)
-        except KeyError:
-            mine = False
+        author = form.cleaned_data.get('author')
+        if author:
+            questions = questions.filter(author__in=find_users(author))
 
-        try:
-            if not mine:
-                author_term = self.request.GET['author']
-                authors = find_users(author_term)
-                if len(authors) == 0:
-                    return []
-                else:
-                    questions = questions.filter(author__in=authors).distinct()
-        except KeyError:
-            pass
-
-        try:
-            progress = self.request.GET['progress']
-            if progress!='':
-                questions = questions.filter(progress=progress)
-        except KeyError:
-            pass
-
-        try:
-            descending = '-' if self.request.GET['descending']=='true' else ''
-            order_by = self.request.GET['order_by']
-            if order_by == 'name':
-                questions = questions.order_by(descending+'slug')
-            elif order_by == 'author':
-                questions = questions.order_by(descending+'author__first_name',descending+'author__last_name')
-            elif order_by == 'progress':
-                questions = questions.order_by(descending+'progress')
-            elif order_by == 'last_modified':
-                questions = questions.order_by(descending+'last_modified')
-        except KeyError:
-            pass
+        progress = form.cleaned_data.get('progress')
+        if progress:
+            questions = questions.filter(progress=progress)
 
         questions = [q for q in questions if q.can_be_viewed_by(self.request.user)]
 
         return questions
         
+    def make_table(self):
+        config = RequestConfig(self.request, paginate={'per_page': 10})
+        results = QuestionTable(self.object_list)
+        config.configure(results)
+
+        return results
 
     def get_context_data(self, **kwargs):
         context = super(QuestionListView, self).get_context_data(**kwargs)
         context['progresses'] = Question.PROGRESS_CHOICES
         context['navtab'] = 'questions'
+        context['results'] = self.make_table()
+        context['form'] = self.form
+
         return context
     
 class QuestionSearchView(ListView):
@@ -365,24 +357,6 @@ class QuestionSearchView(ListView):
         try:
             search_term = self.request.GET['q']
             questions = questions.filter(Q(name__icontains=search_term) | Q(metadata__icontains=search_term) | Q(tags__name__istartswith=search_term)).distinct()
-        except KeyError:
-            pass
-
-        try:
-            mine = self.request.GET['mine'] == 'true'
-            if mine:
-                questions = questions.filter(author=self.request.user.pk)
-        except KeyError:
-            mine = False
-
-        try:
-            if not mine:
-                author_term = self.request.GET['author']
-                authors = find_users(author_term)
-                if len(authors) == 0:
-                    return []
-                else:
-                    questions = questions.filter(author__in=authors).distinct()
         except KeyError:
             pass
 

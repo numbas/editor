@@ -9,11 +9,23 @@
 
 <h2>{{object.get_full_name}}</h2>
 
-<h4>Tags used in {% if user == object %}your{% else %}their{% endif %} questions</h4>
+<p>
+    {% if object.own_questions.count %}
+    <a href="{% url 'question_index' %}?author={{object.username}}">{{object.first_name}}'s  questions</a>.
+    {% else %}
+    {{object.first_name}} hasn't written any questions.
+    {% endif %}
+</p>
+
+{% with object.get_profile.sorted_tags as tags %}
+{% if tags|length %}
+<h4>Tags used in {% if user == object %}your{% else %}{{object.first_name}}'s{% endif %} questions</h4>
 <ul id="taglist">
     {% for tag,count in object.get_profile.sorted_tags %}
-    <li class="tag">{{tag}} ({{count}})</li>
+    <li class="tag"><a href="{% url 'question_index' %}?tags={{tag|urlencode}}">{{tag}} ({{count}})</a></li>
     {% endfor %}
 </ul>
+{% endif %}
+{% endwith %}
 
 {% endblock content %}

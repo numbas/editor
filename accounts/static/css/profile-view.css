@@ -1,7 +1,7 @@
 #taglist {
     list-style: none;
     line-height: 2.5em;
-    max-height: 11em;
+    max-height: 19em;
     overflow-y: auto;
 }
 #taglist .tag {

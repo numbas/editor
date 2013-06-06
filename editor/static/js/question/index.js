@@ -21,5 +21,20 @@ $(document).ready(function() {
             ;
         }
     });
+
+	if($('.pagination .previous').length) {
+		Mousetrap.bind('k',function() {
+			window.location = $('.pagination .previous').attr('href');
+		});
+	}
+	if($('.pagination .next').length) {
+		Mousetrap.bind('j',function() {
+			window.location = $('.pagination .next').attr('href');
+		});
+	}
+	Mousetrap.bind(['/','?'],function() {
+		$('#search_query').focus();
+		return false;
+	});
 });
 

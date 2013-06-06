@@ -312,6 +312,11 @@ class QuestionListView(ListView):
         if progress:
             questions = questions.filter(progress=progress)
 
+        tags = form.cleaned_data.get('tags')
+        if len(tags):
+            for tag in tags:
+                questions = questions.filter(tags__name__in=[tag])
+
         questions = [q for q in questions if q.can_be_viewed_by(self.request.user)]
 
         return questions

@@ -151,6 +151,14 @@
 	margin: 0 4px;
 }
 
+.small-help {
+	font-size: smaller;
+	color: #444;
+}
+
+.list-total {
+	float: right;
+}
 
 .controlbox {
 }

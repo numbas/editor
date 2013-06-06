@@ -25,10 +25,21 @@ class FixedSelectMultiple(SelectMultiple):
         v = super(FixedSelectMultiple,self).value_from_datadict(data,files,name)
         return v
 
+class TagField(forms.CharField):
+    def clean(self,value):
+        tags_string = super(TagField,self).clean(value)
+        if len(tags_string.strip()):
+            tags = tags_string.split(',')
+            print(tags)
+            return [t.strip() for t in tags]
+        else:
+            return []
+
 class QuestionSearchForm(forms.Form):
     query = forms.CharField(initial='', required=False)
     author = forms.CharField(initial='', required=False)
     progress = forms.ChoiceField(initial='',choices = [('','')]+Question.PROGRESS_CHOICES, required=False)
+    tags = TagField(initial='', required=False)
 
 class QuestionAccessForm(forms.ModelForm):
     class Meta:

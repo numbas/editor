@@ -21,35 +21,37 @@
     <div class="row-fluid">
 		<form class="searchBox form-inline">
 			{% with form.cleaned_data as data %}
+			<div>
+			<strong>Search</strong>
 			<label for="search_query">
-				Search for questions called:
+				for questions called:
 				<div class="input-append">
 					<input role="search" id="search_query" type="text" name="query" value="{{ data.query }}"/>
 					<span class="add-on"><button type="submit" class="search"></button></span>
 				</div>
-            </label>
-            <div data-bind="fadeVisible: advancedSearch">
-                <strong>Filter results</strong> 
-                <label for="search_author">
-                    by author: 	
-					<input id="search_author" name="author" type="text" size="30" value="{{ data.author }}" data-bind="
-                        value: author,
-                        valueUpdate: 'afterkeydown',
-                        autocomplete: '{% url 'user_search' %}', 
-                        autocompleteCallback: function(user) { return {label: user.username+' ('+user.name+')', value: user.username} },
-                        click: clearMine
-                    "/>
-                </label>
-                <label for="search_progress">
-					by progress:
-					{{ form.progress }}
-                </label>
+			</label>
+			</div>
+			<div>
+			<strong>Filter results</strong> 
+			<label for="search_author">
+				by author: 	
+				<input id="search_author" name="author" type="text" size="30" value="{{ data.author }}"/>
+			</label>
+			<label for="search_progress">
+				by progress:
+				{{ form.progress }}
+			</label>
+			<label for="search_tags">
+				by tag: 
+				{{form.tags}}
+			</label>
 			</div>
 			{% endwith %}
 		</form>
 	</div>
 
 	<div>
+		<div class="list-total">{{ results.page.paginator.count }} questions found.</div>
 		{% include "question/pagination.html" %}
 		<div class="results">
 			{% if object_list %}
@@ -105,6 +107,10 @@
 			{% endif %}
 		</div>
 		{% include "question/pagination.html" %}
+		<p class="small-help">
+			<strong>Keyboard shortcuts:</strong>
+			You can use <code>j</code>/<code>k</code> to move through pages, and <code>?</code> or <code>/</code> to search.
+		</p>
 	</div>
     
     <script type="text/html" id="question">

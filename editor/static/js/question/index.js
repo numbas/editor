@@ -22,6 +22,44 @@ $(document).ready(function() {
         }
     });
 
+	var user_search_url = $('#search_author').attr('data-autocomplete-url');
+	console.log(user_search_url);
+	function parseUser(user) { 
+		return {label: user.username+' ('+user.name+')', value: user.username} 
+	}
+	var author_source = function(req,callback) {
+		$(this).addClass('loading');
+		$.getJSON(user_search_url,{q:req.term})
+			.success(function(data) {
+				console.log(data);
+				var things = [];
+				for(var i=0;i<data.length;i++) {
+					var thing = parseUser(data[i]);
+					things.push(thing);
+				}
+				callback(things);
+			})
+			.error(function() {
+				console.log(arguments);
+			})
+			.complete(function() {
+				$(this).removeClass('loading');
+			})
+		;
+	}
+	$('#search_author')
+		.autocomplete({
+			source: author_source,
+			select: function(e,ui) {
+				$(this).val(ui.item.value);
+				$(this).parents('form').submit();
+				e.stopPropagation();
+				e.preventDefault();
+				return false;
+			}
+		})
+	;
+
 	$('#id_progress').on('change',function() {
 		$(this).parents('form').submit();
 	});

@@ -38,8 +38,8 @@ class TagField(forms.CharField):
 class QuestionSearchForm(forms.Form):
     query = forms.CharField(initial='', required=False)
     author = forms.CharField(initial='', required=False)
-    progress = forms.ChoiceField(initial='',choices = [('','')]+Question.PROGRESS_CHOICES, required=False)
-    tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Separate tags with commas'}))
+    progress = forms.ChoiceField(initial='',choices = [('','Any')]+Question.PROGRESS_CHOICES, required=False)
+    tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
 
 class QuestionAccessForm(forms.ModelForm):
     class Meta:

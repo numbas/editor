@@ -332,7 +332,7 @@ class QuestionListView(ListView):
 
         return context
     
-class QuestionSearchView(ListView):
+class QuestionSearchView(QuestionListView):
     
     """Search questions."""
     
@@ -345,45 +345,15 @@ class QuestionSearchView(ListView):
                                 **response_kwargs)
         raise Http404
 
+    def get_queryset(self):
+        questions = super(QuestionListView,self).get_queryset()
+        return [q.summary() for q in questions]
+
     def get_context_data(self, **kwargs):
-        context = super(QuestionSearchView,self).get_context_data(**kwargs)
+        context = ListView.get_context_data(self,**kwargs)
         context['page'] = self.request.GET.get('page',1)
         context['id'] = self.request.GET.get('id',None)
         return context
-    
-    def get_queryset(self):
-        questions = Question.objects.all()
-
-        try:
-            search_term = self.request.GET['q']
-            questions = questions.filter(Q(name__icontains=search_term) | Q(metadata__icontains=search_term) | Q(tags__name__istartswith=search_term)).distinct()
-        except KeyError:
-            pass
-
-        try:
-            progress = self.request.GET['progress']
-            if progress!='':
-                questions = questions.filter(progress=progress)
-        except KeyError:
-            pass
-
-        try:
-            descending = '-' if self.request.GET['descending']=='true' else ''
-            order_by = self.request.GET['order_by']
-            if order_by == 'name':
-                questions = questions.order_by(descending+'slug')
-            elif order_by == 'author':
-                questions = questions.order_by(descending+'author__first_name',descending+'author__last_name')
-            elif order_by == 'progress':
-                questions = questions.order_by(descending+'progress')
-            elif order_by == 'last_modified':
-                questions = questions.order_by(descending+'last_modified')
-        except KeyError:
-            pass
-
-        questions = [q for q in questions if q.can_be_viewed_by(self.request.user)]
-
-        return [q.summary(user=self.request.user) for q in questions]
     
 class QuestionSetAccessView(UpdateView):
     model = Question

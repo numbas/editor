@@ -22,6 +22,10 @@ $(document).ready(function() {
         }
     });
 
+	$('#id_progress').on('change',function() {
+		$(this).parents('form').submit();
+	});
+
 	if($('.pagination .previous').length) {
 		Mousetrap.bind('k',function() {
 			window.location = $('.pagination .previous').attr('href');

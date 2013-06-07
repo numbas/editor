@@ -46,6 +46,7 @@ class RegistrationProfile(regmodels.RegistrationProfile):
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
     language = models.CharField(max_length=100,default='en-GB')
+    bio = models.TextField(default='')
 
     def sorted_tags(self):
         qs = self.user.own_questions

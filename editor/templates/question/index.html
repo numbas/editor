@@ -76,22 +76,23 @@
 				</thead>
 				<tbody>
 					{% for row in results.page.object_list|default:results.rows %}
+					{% with row.record as question %}
 					{% block results.tbody.row %}
 					<tr class="result question">
-						{% for column, cell in row.items %}
-							<td {{ column.attrs.td.as_html }}>{{ cell }}</td>
-						{% endfor %}
+						<td class="name">{{row.name}}</td>
+						<td class="author">{{row.author}}</td>
+						<td class="col_progress progress-display {{question.progress}}">{{row.col_progress}}</td>
+						<td class="last_modified">{{row.last_modified}}</td>
 						<td class="admin">
-							{% with row.record as question %}
 							<a class="preview" href="{% url 'question_preview' question.pk question.slug %}" target="_blank" title="Test run"></a>
 							{% if user.is_authenticated %}
 							<a class="copy" href="{% url 'question_copy' question.pk question.slug %}" title="Make a copy"></a>
 							{% endif %}
 							{% if question|can_be_edited_by:user %}<a class="delete" href="{% url 'question_delete' question.pk question.slug %}" title="Delete"></a>{% endif %}
-							{% endwith %}
 						</td>
 					</tr>
 					{% endblock results.tbody.row %}
+					{% endwith %}
 					{% empty %}
 					{% if results.empty_text %}
 					{% block results.tbody.empty_text %}

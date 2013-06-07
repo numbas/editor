@@ -44,8 +44,10 @@
 
 .questions {
 	padding-bottom: 1em;
+    overflow-x: hidden;
 }
 .questions .questionList {
+    width: 100%;
     display: inline-block;
     padding-left: 0;
     border: 1px dashed;

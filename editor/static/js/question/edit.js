@@ -574,7 +574,6 @@ $(document).ready(function() {
 		}
     };
 
-
     function UserAccess(question,data) {
         var ua = this;
         this.id = data.id;

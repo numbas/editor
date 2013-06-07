@@ -84,6 +84,7 @@ $(document).ready(function() {
 
 		this.search = {
 			query: ko.observable(''),
+            tags: ko.observable(''),
 			results: {
 				raw: ko.observableArray([]),
 				all: Editor.mappedObservableArray(function(d) {return new Question(d,e.questionSearchResults);})
@@ -91,8 +92,11 @@ $(document).ready(function() {
 		};
 
 		function makeQuery() {
-			if(e.search.query().length>0)
-				return {q: e.search.query()}
+			if(e.search.query().length>0 || e.search.tags().length>0)
+				return {
+                    query: e.search.query(), 
+                    tags: e.search.tags()
+                }
 		}
 
 		Editor.searchBinding(this.search,'/questions/search/',makeQuery);

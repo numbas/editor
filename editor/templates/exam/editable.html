@@ -113,46 +113,59 @@
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='questions'}">
 			<div class="row-fluid">
-				<form class="span6 form-horizontal">
-					<div class="control-group" data-bind="template: {
-						name: 'booleanproperty',
-						data: {label: 'Shuffle questions?',property:shuffleQuestions}
-					}"></div>
-				</form>
-				<form class="form-horizontal span6" data-bind="submit: search.submit">
-					<div class="control-group">
-						<label for="questionsearch">
-							<span class="control-label">Search for questions:</span>
-							<div class="controls">
-								<div class="input-append">
-									<input type="text" id="questionsearch" class="search" data-bind="
-										value: search.query, 
-										valueUpdate: 'afterkeydown'
-									"/>
-									<span class="add-on"><button type="submit" class="search" data-bind="css: {loading: searching}"></button></span>
-								</div>
-							</div>
-						</label>
-					</div>
-				</form>
 			</div>
-			<div class="questions row-fluid">
-				<ul class="questionList span6" data-bind="
-					sortable: {
-						template: 'question', 
-						data: questions, 
-						afterMove: dropQuestion,
-						options: {handle: '.handle', placeholder: 'placeholder'}
-					}
-				"></ul>
-				<div class="searchBox span6">
-					<ul class="results editlist big" data-bind="
-						template: {
-							name: 'questionResult',
-							foreach: search.results.all,
-						}
-					"></ul>
-				</div>
+            <div class="questions row-fluid">
+                <div class="span6">
+                    <form class="form-horizontal">
+                        <div class="control-group" data-bind="template: {
+                            name: 'booleanproperty',
+                            data: {label: 'Shuffle questions?',property:shuffleQuestions}
+                        }"></div>
+                    </form>
+                    <ul class="questionList" data-bind="
+                        sortable: {
+                            template: 'question', 
+                            data: questions, 
+                            afterMove: dropQuestion,
+                            options: {handle: '.handle', placeholder: 'placeholder'}
+                        }
+                        "></ul>
+                </div>
+                <div class="span6">
+                    <form class="form-horizontal" data-bind="submit: search.submit">
+                        <div class="control-group">
+                            <label for="questionsearch">
+                                <span class="control-label">Search for questions:</span>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" id="questionsearch" class="search" placeholder="Topic or question name" data-bind="
+                                            value: search.query, 
+                                            valueUpdate: 'afterkeydown'
+                                        "/>
+                                        <span class="add-on"><button type="submit" class="search" data-bind="css: {loading: searching}"></button></span>
+                                    </div>
+                                </div>
+                            </label>
+                            <label for="questionsearchtags">
+                                <span class="control-label">Filter by tags:</span>
+                                <div class="controls">
+                                    <input type="text" id="questionsearchtags" class="search" placeholder="Tags separated by commas" data-bind="
+                                        value: search.tags, 
+                                        valueUpdate: 'afterkeydown'
+                                    "/>
+                                </div>
+                            </label>
+                        </div>
+                    </form>
+                    <div class="searchBox">
+                        <ul class="results editlist big" data-bind="
+                            template: {
+                                name: 'questionResult',
+                                foreach: search.results.all,
+                            }
+                        "></ul>
+                    </div>
+                </div>
 			</div>
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='access'}">

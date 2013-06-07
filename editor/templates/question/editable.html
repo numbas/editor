@@ -62,7 +62,7 @@
 					</form>
 					<ul class="tags" data-bind="foreach: tags">
 						<li class="tag well">
-							<span data-bind="text: $data"></span>
+                        <a data-bind="attr: {href: '{% url 'question_index' %}?tags='+encodeURIComponent($data)}, text: $data"></a>
 							<button type="button" class="delete" data-bind="click: $root.tags.remove" title="Remove this tag"></button>
 						</li>
 					</ul>

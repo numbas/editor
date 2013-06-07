@@ -37,7 +37,7 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 				<h4>Tags</h4>
 				<ul class="tags" data-bind="foreach: tags">
 					<li class="tag well">
-						<span data-bind="text: $data"></span>
+						<a data-bind="attr: {href: '{% url 'question_index' %}?tags='+encodeURIComponent($data)}, text: $data"></a>
 					</li>
 				</ul>
 			</div>

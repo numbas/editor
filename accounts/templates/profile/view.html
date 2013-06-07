@@ -11,7 +11,7 @@
 
 <p>
     {% if object.own_exams.count %}
-    <a href="{% url 'exam_index' %}?author={{object.username}}">{{object.first_name}}'s  exams</a>.
+    <a href="{% url 'exam_index' %}?author={{object.get_full_name|urlencode}}">{{object.first_name}}'s  exams</a>.
     {% else %}
     {{object.first_name}} hasn't written any exams.
     {% endif %}
@@ -19,7 +19,7 @@
 
 <p>
     {% if object.own_questions.count %}
-    <a href="{% url 'question_index' %}?author={{object.username}}">{{object.first_name}}'s  questions</a>.
+    <a href="{% url 'question_index' %}?author={{object.get_full_name|urlencode}}">{{object.first_name}}'s  questions</a>.
     {% else %}
     {{object.first_name}} hasn't written any questions.
     {% endif %}

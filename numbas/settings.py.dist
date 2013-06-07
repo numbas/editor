@@ -109,6 +109,7 @@ INSTALLED_APPS = (
     'accounts',
     'editor',
     'registration',
+    'django_tables2',
     #'south', # for database migration
     'taggit',
     # 'django.contrib.admindocs',

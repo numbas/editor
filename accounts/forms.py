@@ -17,7 +17,12 @@ class UserProfileForm(forms.ModelForm):
     last_name = forms.CharField(max_length=30)
     email = forms.EmailField()
     language = forms.ChoiceField(choices=[(x,x) for x in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']])
-    bio = SanitizedCharField(widget=Textarea, allowed_tags=settings.SANITIZER_ALLOWED_TAGS, allowed_attributes=settings.SANITIZER_ALLOWED_ATTRIBUTES)
+    bio = SanitizedCharField(
+            widget=Textarea, 
+            allowed_tags=settings.SANITIZER_ALLOWED_TAGS, 
+            allowed_attributes=settings.SANITIZER_ALLOWED_ATTRIBUTES, 
+            required=False
+            )
 
     def __init__(self, *args, **kw):
         super(UserProfileForm, self).__init__(*args, **kw)

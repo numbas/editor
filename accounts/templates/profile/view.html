@@ -7,11 +7,14 @@
 {% endblock stylesheets %}
 
 {% block content %}
+{% with object.get_profile as profile %}
 {% if is_me %}<div class="pull-right" id="edit-profile"><a href="{% url 'edit_profile' %}">Edit your profile</a></div>{% endif %}
 
 <h2 class="big-name">{{object.get_full_name}}</h2>
 
-<div class="bio well">{{object.get_profile.bio|escape_html|safe }}</div>
+{% if profile.bio %}
+<div class="bio well">{{profile.bio|escape_html|safe }}</div>
+{% endif %}
 
 <ul>
     <li>
@@ -39,14 +42,15 @@
     </li>
 </ul>
 
-{% with object.get_profile.sorted_tags as tags %}
+{% with profile.sorted_tags as tags %}
 {% if tags|length %}
 <h4>Tags used in {% if is_me %}your{% else %}{{object.first_name}}'s{% endif %} questions</h4>
 <ul id="taglist">
-    {% for tag,count in object.get_profile.sorted_tags %}
+    {% for tag,count in profile.sorted_tags %}
     <li class="tag"><a href="{% url 'question_index' %}?tags={{tag|urlencode}}">{{tag}} ({{count}})</a></li>
     {% endfor %}
 </ul>
 {% endif %}
+{% endwith %}
 {% endwith %}
 {% endblock content %}

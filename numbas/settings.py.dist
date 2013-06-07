@@ -106,6 +106,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.admin',
+    'sanitizer',
     'accounts',
     'editor',
     'registration',
@@ -206,3 +207,6 @@ AUTH_PROFILE_MODULE = 'accounts.UserProfile'
 #from ldap_auth import *
 # Uncomment to enable Shibboleth authentication, then look at shib_auth.py.dist
 #from shib_auth import *
+
+SANITIZER_ALLOWED_TAGS = ['a', 'p', 'img','br','strong','em','div','code','i','b', 'ul', 'ol', 'li', 'table','thead','tbody','td','th','tr']
+SANITIZER_ALLOWED_ATTRIBUTES = ['href','title']

@@ -2,6 +2,7 @@ django>=1.5
 django-taggit
 django-registration
 django-tables2
+django-html_sanitizer
 south
 django-uuslug
 pil

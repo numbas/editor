@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import transaction
 from django.db.models.signals import post_save
 from django.contrib.sites.models import RequestSite
@@ -8,6 +9,8 @@ from taggit.models import Tag
 
 from registration import models as regmodels
 from registration.signals import user_registered
+
+from sanitizer.models import SanitizedTextField
 
 from operator import itemgetter
 
@@ -46,7 +49,7 @@ class RegistrationProfile(regmodels.RegistrationProfile):
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
     language = models.CharField(max_length=100,default='en-GB')
-    bio = models.TextField(default='')
+    bio = SanitizedTextField(default='',allowed_tags=settings.SANITIZER_ALLOWED_TAGS,allowed_attributes=settings.SANITIZER_ALLOWED_ATTRIBUTES)
 
     def sorted_tags(self):
         qs = self.user.own_questions

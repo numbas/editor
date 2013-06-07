@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% load escape_html from sanitizer %}
 
 {% block stylesheets %}
 {{block.super}}
@@ -6,10 +7,11 @@
 {% endblock stylesheets %}
 
 {% block content %}
-{% if is_me %}<div id="edit-profile"><a href="{% url 'edit_profile' %}">Edit your profile</a></div>{% endif %}
+{% if is_me %}<div class="pull-right" id="edit-profile"><a href="{% url 'edit_profile' %}">Edit your profile</a></div>{% endif %}
 
-<h2>{{object.get_full_name}}</h2>
+<h2 class="big-name">{{object.get_full_name}}</h2>
 
+<div class="bio well">{{object.get_profile.bio|escape_html|safe }}</div>
 
 <ul>
     <li>

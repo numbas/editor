@@ -3,10 +3,16 @@
     line-height: 2.5em;
     max-height: 19em;
     overflow-y: auto;
+    background: #eee;
 }
 #taglist .tag {
     display: inline-block;
     margin: 0 0.5em;
-    background: #eee;
+    background: #fff;
     padding: 4px;
+}
+
+#edit-profile {
+    font-style: italic;
+    float: right;
 }

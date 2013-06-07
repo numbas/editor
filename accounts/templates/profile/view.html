@@ -6,28 +6,40 @@
 {% endblock stylesheets %}
 
 {% block content %}
+{% if is_me %}<div id="edit-profile"><a href="{% url 'edit_profile' %}">Edit your profile</a></div>{% endif %}
 
 <h2>{{object.get_full_name}}</h2>
 
-<p>
-    {% if object.own_exams.count %}
-    <a href="{% url 'exam_index' %}?author={{object.get_full_name|urlencode}}">{{object.first_name}}'s  exams</a>.
-    {% else %}
-    {{object.first_name}} hasn't written any exams.
-    {% endif %}
-</p>
 
-<p>
-    {% if object.own_questions.count %}
-    <a href="{% url 'question_index' %}?author={{object.get_full_name|urlencode}}">{{object.first_name}}'s  questions</a>.
-    {% else %}
-    {{object.first_name}} hasn't written any questions.
-    {% endif %}
-</p>
+<ul>
+    <li>
+        {% if object.own_exams.count %}
+        <a href="{% url 'exam_index' %}?author={{object.get_full_name|urlencode}}">{% if is_me %}Your{% else %}{{object.first_name}}'s{% endif %}  exams</a>.
+        {% else %}
+            {% if is_me %}
+                You haven't created any exams.
+            {% else %}
+                {{object.first_name}} hasn't created any exams.
+            {% endif %}
+        {% endif %}
+    </li>
+
+    <li>
+        {% if object.own_questions.count %}
+        <a href="{% url 'question_index' %}?author={{object.get_full_name|urlencode}}">{% if is_me %}Your{% else %}{{object.first_name}}'s{% endif %}  questions</a>.
+        {% else %}
+            {% if is_me %}
+                You haven't created any questions.
+            {% else %}
+                {{object.first_name}} hasn't created any questions.
+            {% endif %}
+        {% endif %}
+    </li>
+</ul>
 
 {% with object.get_profile.sorted_tags as tags %}
 {% if tags|length %}
-<h4>Tags used in {% if user == object %}your{% else %}{{object.first_name}}'s{% endif %} questions</h4>
+<h4>Tags used in {% if is_me %}your{% else %}{{object.first_name}}'s{% endif %} questions</h4>
 <ul id="taglist">
     {% for tag,count in object.get_profile.sorted_tags %}
     <li class="tag"><a href="{% url 'question_index' %}?tags={{tag|urlencode}}">{{tag}} ({{count}})</a></li>
@@ -35,5 +47,4 @@
 </ul>
 {% endif %}
 {% endwith %}
-
 {% endblock content %}

@@ -49,3 +49,8 @@ class UserProfileView(DetailView):
     template_name = 'profile/view.html'
 
     model = User
+
+    def get_context_data(self,*args,**kwargs):
+        context = super(UserProfileView,self).get_context_data(*args,**kwargs)
+        context['is_me'] = self.request.user == self.object
+        return context

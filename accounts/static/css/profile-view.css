@@ -9,9 +9,10 @@
 #taglist {
     list-style: none;
     line-height: 2.5em;
-    max-height: 19em;
+    max-height: 18.5em;
     overflow-y: auto;
     background: #eee;
+    margin-left: 0;
 }
 #taglist .tag {
     display: inline-block;

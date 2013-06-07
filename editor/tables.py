@@ -8,7 +8,7 @@ from editor.models import Question, Exam
 class UserColumn(columns.linkcolumn.BaseLinkColumn):
     def render(self,value,record,bound_column):
         user = value
-        uri = reverse('view_profile',args=[user.pk,user.username])
+        uri = reverse('view_profile',args=[user.pk])
         text = user.get_full_name()
         return self.render_link(uri,text)
 

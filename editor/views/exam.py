@@ -21,12 +21,16 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.forms.models import model_to_dict
 from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError
+from django import http
 from django.shortcuts import render,redirect
 from django.utils.decorators import method_decorator
 from django.views.generic import CreateView, DeleteView, FormView, ListView, UpdateView, View
 from django.views.generic.detail import SingleObjectMixin
 
-from editor.forms import ExamForm, NewExamForm, ExamSearchForm,ExamSetAccessForm
+from django_tables2.config import RequestConfig
+
+from editor.forms import ExamForm, NewExamForm, ExamSearchForm,ExamSetAccessForm, ExamSearchForm
+from editor.tables import ExamTable
 from editor.models import Exam, Question, ExamAccess
 from editor.views.generic import PreviewView, ZipView, SourceView
 from editor.views.errors import forbidden
@@ -188,6 +192,14 @@ class ExamDeleteView(DeleteView):
     model = Exam
     template_name = 'exam/delete.html'
     
+    def delete(self,request,*args,**kwargs):
+        self.object = self.get_object()
+        if self.object.can_be_edited_by(self.request.user):
+            self.object.delete()
+            return http.HttpResponseRedirect(self.get_success_url())
+        else:
+            return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
+    
     def get_success_url(self):
         return reverse('exam_index')
     
@@ -274,11 +286,48 @@ class ExamUpdateView(UpdateView):
         return reverse('exam_edit', args=(self.object.pk,self.object.slug,))
     
     
-class ExamSearchView(ListView):
+class ExamListView(ListView):
+    model=Exam
+    template_name='exam/index.html'
+
+    def get_queryset(self):
+
+        form = self.form = ExamSearchForm(self.request.GET)
+        form.is_valid()
+
+        exams = Exam.objects.all()
+
+        search_term = form.cleaned_data.get('query')
+        if search_term:
+            exams = exams.filter(Q(name__icontains=search_term) | Q(metadata__icontains=search_term)).distinct()
+
+        author_term = form.cleaned_data.get('author')
+        if author_term:
+            authors = find_users(author_term)
+            exams = exams.filter(author__in=authors).distinct()
+
+        exams = [e for e in exams if e.can_be_viewed_by(self.request.user)]
+
+        return exams
+
+    def make_table(self):
+        config = RequestConfig(self.request, paginate={'per_page': 10})
+        results = ExamTable(self.object_list)
+        config.configure(results)
+
+        return results
+
+    def get_context_data(self, **kwargs):
+        context = super(ExamListView, self).get_context_data(**kwargs)
+        context['navtab'] = 'exams'
+        context['results'] = self.make_table()
+        context['form'] = self.form
+
+        return context
+
+class ExamSearchView(ExamListView):
     
     """Search exams."""
-    
-    model=Exam
 
     def render_to_response(self, context, **response_kwargs):
         if self.request.is_ajax():
@@ -300,57 +349,7 @@ class ExamSearchView(ListView):
             pass
 
         return context
-
-    def get_queryset(self):
-        exams = Exam.objects.all()
-        try:
-            search_term = self.request.GET['q']
-            exams = exams.filter(Q(name__icontains=search_term) | Q(metadata__icontains=search_term)).distinct()
-        except KeyError:
-            pass
-
-        try:
-            mine = self.request.GET['mine'] == 'true'
-            if mine:
-                exams = exams.filter(author=self.request.user.pk)
-        except KeyError:
-            mine = False
-
-        try:
-            if not mine:
-                author_term = self.request.GET['author']
-                authors = find_users(author_term)
-                exams = exams.filter(author__in=authors).distinct()
-        except KeyError:
-            pass
-
-        try:
-            descending = '-' if self.request.GET['descending']=='true' else ''
-            order_by = self.request.GET['order_by']
-            if order_by == 'name':
-                exams = exams.order_by(descending+'slug')
-            elif order_by == 'author':
-                exams = exams.order_by(descending+'author__first_name',descending+'author__last_name')
-            elif order_by == 'last_modified':
-                exams = exams.order_by(descending+'last_modified')
-        except KeyError:
-            pass
-
-        exams = [e for e in exams if e.can_be_viewed_by(self.request.user)]
-
-        return [q.summary(user=self.request.user) for q in exams]
-
     
-    
-class ExamListView(ListView):
-    model=Exam
-    template_name='exam/index.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(ExamListView, self).get_context_data(**kwargs)
-        context['navtab'] = 'exams'
-        return context
-
 class ExamSetAccessView(UpdateView):
     model = Exam
     form_class = ExamSetAccessForm

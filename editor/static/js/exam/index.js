@@ -34,6 +34,59 @@ $(document).ready(function() {
 			})
 	;
 
+    $('.exam .delete').on('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if(window.confirm('Really delete this exam? You won\'t be able to get it back.')) {
+            $.post($(this).attr('href'),{csrfmiddlewaretoken: getCookie('csrftoken')})
+                .success(function() {
+                    window.location.reload();
+                })
+                .error(function(response) {
+                    noty({text: 'Error deleting exam:\n\n'+response.responseText, layout: 'center', type: 'error'});
+                })
+            ;
+        }
+    });
+
+	var user_search_url = $('#search_author').attr('data-autocomplete-url');
+	console.log(user_search_url);
+	function parseUser(user) { 
+		return {label: user.username+' ('+user.name+')', value: user.username} 
+	}
+	var author_source = function(req,callback) {
+		$(this).addClass('loading');
+		$.getJSON(user_search_url,{q:req.term})
+			.success(function(data) {
+				console.log(data);
+				var things = [];
+				for(var i=0;i<data.length;i++) {
+					var thing = parseUser(data[i]);
+					things.push(thing);
+				}
+				callback(things);
+			})
+			.error(function() {
+				console.log(arguments);
+			})
+			.complete(function() {
+				$(this).removeClass('loading');
+			})
+		;
+	}
+	$('#search_author')
+		.autocomplete({
+			source: author_source,
+			select: function(e,ui) {
+				$(this).val(ui.item.value);
+				$(this).parents('form').submit();
+				e.stopPropagation();
+				e.preventDefault();
+				return false;
+			}
+		})
+	;
+
 	$('#upload').click(function(e) {
 		if(!$('#uploadForm input[type=file]').val().length) {
 			e.preventDefault();
@@ -48,213 +101,20 @@ $(document).ready(function() {
 			$('#uploadForm').submit();
 	});
 
-/*
-	function uploadFile(content) {
-		contentInput.text(content);
-		$('#uploadForm').submit();
-	}
-
-	function loadFile(file) {
-		if(!file) { return; }
-		var fr = new FileReader();
-		var contentInput = $('#uploadForm').find('[name=content]')
-		fr.onload = function(e) {
-			var content = e.target.result;
-			uploadFile(content);
-		}
-		fr.readAsText(file);
-	}
-
-	$.event.props.push('dataTransfer');
-	$('#uploadForm').on({
-		dragenter: function(e) {
-			e.stopPropagation();
-			e.preventDefault();
-			$(this).addClass('over')
-		},
-		dragover: function(e) {
-			e.stopPropagation();
-			e.preventDefault();
-			$(this).addClass('over')
-		},
-		dragleave: function(e) {
-			$(this).removeClass('over');
-		},
-		drop: function(e) {
-			$(this).removeClass('over');
-			if('files' in e.dataTransfer)
-				loadFile(e.dataTransfer.files[0]);
-			else
-			{
-				console.log(JSON.stringify(e.dataTransfer));
-			//	uploadFile(e.dataTransfer.getData('text'));
-			}
-		}
-	})
-	.find('button').on('click',function(e) {
-		e.preventDefault();
-		e.stopPropagation();
-		$('#uploadForm input[type=file]').click();
-	})
-	.end()
-	.find('input[type=file]').on('change',function() {
-		if(this.files)
-			loadFile(this.files[0]);
-		else
-		{
-//			$('textarea[name=content]').remove();
-//			$(this).attr('name','content');
-			$('#uploadForm').submit();
-		}
-	});
-*/
-	function ExamResult(data) {
-		if(!('id' in data))
-			throw(new Error('Search result doesn\'t have an ID: '+json.dumps(data)));
-		this.id = data.id;
-		this.name = data.name || 'Untitled Exam';
-		
-        this.metadata = {
-			description: '',
-			notes: ''
-		};
-		if(typeof data.metadata == 'object')
-			this.metadata = $.extend(this.metadata,data.metadata);
-
-        this.last_modified = moment(data.last_modified,'YYYY-MM-DD HH:mm:ss.SSS');
-		this.author = data.author;
-		this.url = data.url || '';
-		this.deleteURL = data.deleteURL || '';
-		this.canEdit = data.canEdit || false;
-	}
-
-	function ExamSelect()
-	{
-		var vm = this;
-
-		this.search = {
-			query: ko.observable(''),
-			author: ko.observable(''),
-            descending: ko.observable(false),
-            orderBy: ko.observable('name'),
-			results: {
-				raw: ko.observableArray([]),
-				all: Editor.mappedObservableArray(function(d){ return new ExamResult(d) }),
-				page: ko.observable(1),
-				prevPage: function() {
-					var page = this.page();
-					if(page>1)
-						this.page(page-1);
-				},
-				nextPage: function() {
-					var page = this.page();
-					if(page<this.pages().length)
-						this.page(page+1);
-				},
-				deleteExam: function(e) {
-					console.log(e);
-					if(window.confirm('Really delete this exam? You won\'t be able to get it back if you do.')) {
-						var results = this;
-						$.post(e.deleteURL,{csrfmiddlewaretoken: getCookie('csrftoken')})
-							.success(function() {
-								results.all.remove(e);
-							})
-							.error(function(response) {
-								noty({text: 'Error deleting exam:\n\n'+response.responseText, layout: 'center', type: 'error'});
-							})
-						;
-					}
-				}
-			},
-			searching: ko.observable(false),
-			realMine: ko.observable(false),
-			clearMine: function() {
-				vm.search.mine(false);
-			},
-            setOrder: function(field,defaultOrder) {
-                defaultOrder = defaultOrder ? true : false;
-                return function() {
-                    if(vm.search.orderBy()==field)
-                        vm.search.descending(!vm.search.descending());
-                    else {
-                        vm.search.orderBy(field);
-                        vm.search.descending(defaultOrder);
-                    }
-                    vm.search.submit();
-                }
-            }
-		}
-
-		ko.computed(function() {
-			vm.search.results.all(vm.search.results.raw());
+	if($('.pagination .previous[href]').length) {
+		Mousetrap.bind(['left','k'],function() {
+			window.location = $('.pagination .previous').attr('href');
 		});
-
-
-		vm.search.restorePage = 0;
-		this.search.mine = ko.computed({
-			read: function() {
-				return this.realMine();
-			},
-			write: function(v) {
-				var ov = this.realMine();
-				this.realMine(v);
-				if(v)
-					this.author('');
-				if(v!=ov && !this.hasOwnProperty('restorePage'))
-					this.submit();
-			}
-		},this.search);
-
-		function makeQuery() {
-			return {
-				q: vm.search.query(),
-				author: vm.search.author(),
-				mine: vm.search.mine(),
-                descending: vm.search.descending(),
-                order_by: vm.search.orderBy()
-			};
-		}
-
-		Mousetrap.bind('left',function() { vm.search.results.prevPage.apply(vm.search.results) });
-		Mousetrap.bind('right',function() { vm.search.results.nextPage.apply(vm.search.results) });
-
-		//save state in browser history - restore query when you go back to this page
-		if(history.state) {
-			vm.search.lastID = null;
-			if('query' in history.state)
-				vm.search.query(history.state.query);
-			if('author' in history.state)
-				vm.search.author(history.state.author);
-			if('mine' in history.state)
-				vm.search.mine(history.state.mine);
-			if('descending' in history.state)
-				vm.search.descending(history.state.descending);
-			if('orderBy' in history.state)
-				vm.search.orderBy(history.state.orderBy);
-			if('page' in history.state)
-				vm.search.restorePage = history.state.page;
-		}
-		if(history.replaceState) {
-			ko.computed(function() {
-				history.replaceState({
-					page: vm.search.results.page(),
-					query: vm.search.query(),
-					author: vm.search.author(),
-					mine: vm.search.mine(),
-                    descending: vm.search.descending(),
-                    orderBy: vm.search.orderBy()
-				},'',window.location.pathname);
-			})
-		}
-
-		Editor.searchBinding(this.search,'/exams/search/',makeQuery);
-		delete vm.search.restorePage;
 	}
-	
-	//create a view model
-	viewModel = new ExamSelect();
-	ko.applyBindings(viewModel);
-
+	if($('.pagination .next[href]').length) {
+		Mousetrap.bind(['right','j'],function() {
+			window.location = $('.pagination .next').attr('href');
+		});
+	}
+	Mousetrap.bind(['/','?'],function() {
+		$('#search_query').focus();
+		return false;
+	});
 
 });
 

@@ -81,6 +81,10 @@ class QuestionSetAccessForm(forms.ModelForm):
             f.save()
         return super(QuestionSetAccessForm,self).save()
 
+class ExamSearchForm(forms.Form):
+    query = forms.CharField(initial='', required=False)
+    author = forms.CharField(initial='', required=False)
+
 class ExamAccessForm(forms.ModelForm):
     class Meta:
         model = ExamAccess
@@ -170,7 +174,8 @@ class ExamSearchForm(forms.Form):
     
     """Search form for an exam."""
     
-    name = forms.CharField()
+    query = forms.CharField(initial='', required=False)
+    author = forms.CharField(initial='', required=False)
         
         
 ExamQuestionFormSet = inlineformset_factory(Exam, ExamQuestion, form=ExamQuestionForm)

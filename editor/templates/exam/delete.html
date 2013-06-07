@@ -6,7 +6,7 @@
 {% if error %}<p><strong>{{ error }}</strong></p>{% endif %}
 
 {% if user.username == exam.author.username or user.is_superuser %}
-	<form action="{% url 'exam_delete' exam.pk,exam.slug %}" method="post">
+	<form action="{% url 'exam_delete' exam.pk exam.slug %}" method="post">
 	{% csrf_token %}
 	<p>Are you sure? <input type="submit" value="Delete" /></p>
 	<a href="{% url 'exam_index' %}"/>Cancel</a>

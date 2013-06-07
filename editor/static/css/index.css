@@ -136,14 +136,14 @@
 	padding: 0;
 }
 
-.pagination .move:hover {
+.pagination .move[href]:hover {
 	background-color: #f90;
 }
 
-.pagination .previous {
+.pagination .previous[href] {
 	background-image: url(../images/arrow_left_12x12.png);
 }
-.pagination .next {
+.pagination .next[href] {
 	background-image: url(../images/arrow_right_12x12.png);
 }
 

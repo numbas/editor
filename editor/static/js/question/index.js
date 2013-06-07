@@ -64,13 +64,13 @@ $(document).ready(function() {
 		$(this).parents('form').submit();
 	});
 
-	if($('.pagination .previous').length) {
-		Mousetrap.bind('k',function() {
+	if($('.pagination .previous[href]').length) {
+		Mousetrap.bind(['left','k'],function() {
 			window.location = $('.pagination .previous').attr('href');
 		});
 	}
-	if($('.pagination .next').length) {
-		Mousetrap.bind('j',function() {
+	if($('.pagination .next[href]').length) {
+		Mousetrap.bind(['right','j'],function() {
 			window.location = $('.pagination .next').attr('href');
 		});
 	}

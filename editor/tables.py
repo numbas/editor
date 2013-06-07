@@ -3,7 +3,7 @@ from django.core.urlresolvers import reverse
 from django_tables2.columns import TemplateColumn,Column
 from django_tables2 import columns
 from django_tables2.utils import A
-from editor.models import Question
+from editor.models import Question, Exam
 
 class UserColumn(columns.linkcolumn.BaseLinkColumn):
     def render(self,value,record,bound_column):
@@ -12,20 +12,31 @@ class UserColumn(columns.linkcolumn.BaseLinkColumn):
         text = user.get_full_name()
         return self.render_link(uri,text)
 
-class QuestionTable(tables.Table):
+class ObjectTable(tables.Table):
+
+    class Meta:
+        attrs = {'class': 'search-results'}
+
+        fields = ('name', 'author')
+        order_by = ('-last_modified')
+
+    def render_last_modified(self,record):
+        return record.last_modified.strftime('%d/%m/%Y %H:%M')
+
+class QuestionTable(ObjectTable):
     name = TemplateColumn(template_name='question/name_column.html')
     author = UserColumn()
     col_progress = Column(verbose_name='Progress',accessor='progress')
     last_modified = Column()
 
-    class Meta:
-        attrs = {'class': 'search-results'}
-
+    class Meta(ObjectTable.Meta):
         model = Question
 
-        fields = ('name', 'author')
-        order_by = ('-last_modified')
 
+class ExamTable(ObjectTable):
+    name = TemplateColumn(template_name='exam/name_column.html')
+    author = UserColumn()
+    last_modified = Column()
 
-    def render_last_modified(self,record):
-        return record.last_modified.strftime('%d/%m/%Y %H:%M')
+    class Meta(ObjectTable.Meta):
+        model = Exam

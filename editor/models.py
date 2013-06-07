@@ -268,7 +268,7 @@ class Exam(models.Model,NumbasObject,ControlledObject):
     theme = models.CharField(max_length=200,default='default')
     locale = models.CharField(max_length=200,default='en-GB')
     slug = models.SlugField(max_length=200,editable=False,unique=False)
-    author = models.ForeignKey(User)
+    author = models.ForeignKey(User,related_name='own_exams')
     filename = models.CharField(max_length=200, editable=False,default='')
     content = models.TextField(blank=True, validators=[validate_content])
     created=models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))

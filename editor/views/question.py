@@ -288,9 +288,7 @@ class QuestionUpdateView(UpdateView):
 class QuestionListView(ListView):
     
     """List of questions."""
-    
     model=Question
-
     template_name='question/index.html'
 
     def get_queryset(self):
@@ -341,8 +339,6 @@ class QuestionSearchView(QuestionListView):
     
     """Search questions."""
     
-    model=Question
-    
     def render_to_response(self, context, **response_kwargs):
         if self.request.is_ajax():
             return HttpResponse(json.dumps({'object_list':context['object_list'],'page':context['page'],'id':context['id']}),
@@ -351,7 +347,7 @@ class QuestionSearchView(QuestionListView):
         raise Http404
 
     def get_queryset(self):
-        questions = super(QuestionListView,self).get_queryset()
+        questions = super(QuestionSearchView,self).get_queryset()
         return [q.summary() for q in questions]
 
     def get_context_data(self, **kwargs):

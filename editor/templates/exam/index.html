@@ -1,86 +1,109 @@
 {% extends "layout.html" %}
+{% load querystring from django_tables2 %}
+{% load can_edit %}
 
 {% block content %}
 
-    {% if user.is_authenticated %}
+	{% if user.is_authenticated %}
         <div class="controlbox" id="admin">
             <a id="new" href="{% url 'exam_new' %}">Create a new exam</a>
             <form action="{% url 'exam_upload' %}" method="post" id="uploadForm" enctype="multipart/form-data">
                 {% csrf_token %}
-                <a href="" id="upload">Upload an exam</a>
+				<a href="{% url 'exam_upload' %}" id="upload">Upload a exam</a>
                 <div class="upload">
-                    <input type="file" name="file" multiple value="yo"/>
+                    <input type="file" name="file" value="yo"/>
                 </div>
             </form>
         </div>
-    {% endif %}
+	{% endif %}
 
-	<div class="row-fluid">
-		<form class="searchBox form-inline" data-bind="with: search, submit: search.submit">
-			<label for="search_query">
-				Search for exams called:
-				<div class="input-append">
-					<input role="search" id="search_query" type="text" name="examSearch" class="search" data-bind="value: query, valueUpdate: 'afterkeydown'"/>
-					<span class="add-on"><button type="submit" class="search" data-bind="css: {loading: searching}"></button></span>
-				</div>
-			</label>
-			<label for="search_author">
-				by author: 	
-				<input id="search_author" type="text" class="search" size="30" data-bind="
-					value: author,
-					valueUpdate: 'afterkeydown',
-					autocomplete: '{% url 'user_search' %}', 
-					autocompleteCallback: function(user) { return {label: user.username+' ('+user.name+')', value: user.username} },
-					click: clearMine
-				"/>
-			</label>
-			{% if user.is_authenticated %}<label class="checkbox"><input type="checkbox" data-bind="checked: mine"/> Mine only</label>{% endif %}
+    <div class="row-fluid">
+		<form class="searchBox form-inline">
+			{% with form.cleaned_data as data %}
+			<div>
+                <strong>Search</strong>
+                <label for="search_query">
+                    for exams called:
+                    <div class="input-append">
+                        <input role="search" id="search_query" type="text" name="query" value="{{ data.query }}" placeholder="Topic or exam name"/>
+                        <span class="add-on"><button type="submit" class="search" title="Search"></button></span>
+                    </div>
+                </label>
+			</div>
+			<div>
+                <strong>Filter results</strong> 
+                <label for="search_author">
+                    by author: 	
+                    <input id="search_author" data-autocomplete-url="{% url 'user_search' %}" name="author" type="text" size="30" value="{{ data.author }}" placeholder="User name"/>
+                </label>
+			</div>
+			{% endwith %}
 		</form>
 	</div>
-	<div data-bind="with: search.results">
-		<div class="pagination" data-bind="visible: pages().length>0">
-			Page:
-			<button type="button" class="move previous" data-bind="click: prevPage"></button><span data-bind="text: pageText"></span><button type="button" class="move next" data-bind="click: nextPage"></button>
-		</div>
+
+	<div>
+		<div class="list-total">{{ results.page.paginator.count }} exams found.</div>
+		{% include "pagination.html" %}
 		<div class="results">
-			<table class="search-results" id="exam-list" data-bind="visible: all().length>0">
-					<col span="1" class="name"/>
-					<col span="1" class="author"/>
-					<col span="1" class="last_modified"/>
-					<col span="1" class="admin"/>
-				<thead data-bind="with: $root.search">
-                    <th data-bind="css: {sorted: orderBy()=='name', descending: descending}, click: setOrder('name')">Name</th>
-                    <th data-bind="css: {sorted: orderBy()=='author', descending: descending}, click: setOrder('author')">Author</th>
-					<th data-bind="css: {sorted: orderBy()=='last_modified', descending: descending}, click: setOrder('last_modified',true)">Last Modified</th>
-				</thead>
-				<tbody class="results editlist big" data-bind="foreach: {
-					data: pages()[page()-1]
-				}">
-					<tr class="result exam">
-						<td>
-							<a data-bind="attr: {href: url}, text: name"></a>
-							<div class="description" data-bind="visible: metadata.description.length>0, html: $(metadata.description).text(), mathjax: true"></div>
-						</td>
-						<td><span data-bind="text: author"></span></td>
-						<td><span data-bind="calendarTime: last_modified"></span></td>
-						<td class="admin">
-							<a class="preview" data-bind="attr: {href: url+'preview/'}" target="_blank" title="Test run"></a>
-							{% if user.is_authenticated %}
-							<a class="copy" data-bind="attr: {href: url+'copy/'}" title="Make a copy"></a>
+			{% if object_list %}
+			<table class="search-results" id="exam-list">
+				<col span="1" class="name"/>
+				<col span="1" class="author"/>
+				<col span="1" class="col-progress"/>
+				<col span="1" class="last_modified"/>
+				<col span="1" class="admin"/>
+				<thead>
+					<tr>
+					{% for column in results.columns %}
+						<th {{ column.attrs.th.as_html }}>
+							{% if column.orderable %}
+								<a href="{% querystring results.prefixed_order_by_field=column.order_by_alias.next "page"=1 %}">{{ column.header }}</a>
+							{% else %}
+								{{ column.header }}
 							{% endif %}
-							<a class="delete" data-bind="visible: canEdit, attr: {href: url+'delete/'}, click: function() {$parent.deleteExam(this) }" title="Delete"></a>
+						</th>
+					{% endfor %}
+					</tr>
+				</thead>
+				<tbody>
+					{% for row in results.page.object_list|default:results.rows %}
+					{% block results.tbody.row %}
+					<tr class="result exam">
+						{% for column, cell in row.items %}
+							<td {{ column.attrs.td.as_html }}>{{ cell }}</td>
+						{% endfor %}
+						<td class="admin">
+							{% with row.record as exam %}
+							<a class="preview" href="{% url 'exam_preview' exam.pk exam.slug %}" target="_blank" title="Test run"></a>
+							{% if user.is_authenticated %}
+							<a class="copy" href="{% url 'exam_copy' exam.pk exam.slug %}" title="Make a copy"></a>
+							{% endif %}
+							{% if exam|can_be_edited_by:user %}<a class="delete" href="{% url 'exam_delete' exam.pk exam.slug %}" title="Delete"></a>{% endif %}
+							{% endwith %}
 						</td>
 					</tr>
+					{% endblock results.tbody.row %}
+					{% empty %}
+					{% if results.empty_text %}
+					{% block results.tbody.empty_text %}
+					<tr><td colspan="{{ results.columns|length }}">{{ results.empty_text }}</td></tr>
+					{% endblock results.tbody.empty_text %}
+					{% endif %}
+					{% endfor %}
 				</tbody>
 			</table>
-			<div class="none" data-bind="visible: all().length==0, text: $root.search.searching() ? 'Loading results...' : 'No exams found.'"></div>
-			<div class="error" data-bind="visible: error().length>0, html: error"></div>
+
+			{% else %}
+			<div class="none">No exams found.</div>
+			{% endif %}
 		</div>
-		<div class="pagination" data-bind="visible: pages().length>0">
-			Page:
-			<button type="button" class="move previous" data-bind="click: prevPage"></button><span data-bind="text: pageText"></span><button type="button" class="move next" data-bind="click: nextPage"></button>
-		</div>
+		{% include "pagination.html" %}
+		<p class="small-help">
+			<strong>Keyboard shortcuts:</strong>
+			You can use <code>j</code>/<code>k</code> to move through pages, and <code>?</code> or <code>/</code> to search.
+		</p>
 	</div>
+    
 {% endblock content %}
 
 {% block javascripts %}

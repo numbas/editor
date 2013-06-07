@@ -25,7 +25,7 @@ $(document).ready(function() {
 	var user_search_url = $('#search_author').attr('data-autocomplete-url');
 	console.log(user_search_url);
 	function parseUser(user) { 
-		return {label: user.username+' ('+user.name+')', value: user.username} 
+		return {label: user.name, value: user.name} 
 	}
 	var author_source = function(req,callback) {
 		$(this).addClass('loading');

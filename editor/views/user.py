@@ -36,5 +36,5 @@ class UserSearchView(ListView):
             users = find_users(name=search_term)
         except KeyError:
             users = User.objects.all()
-        return [{"name": u.get_full_name(), "username": u.username, "id": u.id} for u in users]
+        return [{"name": u.get_full_name(), "id": u.id} for u in users]
     

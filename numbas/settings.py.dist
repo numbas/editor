@@ -3,6 +3,8 @@ import imp
 import os
 from database import DATABASES
 
+SITE_TITLE = 'Numbas'
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 

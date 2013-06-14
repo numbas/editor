@@ -9,7 +9,7 @@
             <a id="new" href="{% url 'exam_new' %}">Create a new exam</a>
             <form action="{% url 'exam_upload' %}" method="post" id="uploadForm" enctype="multipart/form-data">
                 {% csrf_token %}
-				<a href="{% url 'exam_upload' %}" id="upload">Upload a exam</a>
+				<a href="{% url 'exam_upload' %}" id="upload">Upload an exam</a>
                 <div class="upload">
                     <input type="file" name="file" value="yo"/>
                 </div>

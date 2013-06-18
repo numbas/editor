@@ -495,7 +495,7 @@
     new $.fn.oembed.OEmbedProvider("hulu", "video", ["hulu\\.com/watch/.*"], "//www.hulu.com/api/oembed.json"),
     new $.fn.oembed.OEmbedProvider("ustream", "video", ["ustream\\.tv/recorded/.*"], "//www.ustream.tv/oembed",{useYQL:'json'}),
     new $.fn.oembed.OEmbedProvider("vodpod", "video", ["vodpod.com/watch/.*"], "//vodpod.com/oembed.js",{useYQL:'json'}),
-	new $.fn.oembed.OEmbedProvider("vimeo", "video", ["http:\/\/www\.vimeo\.com\/groups\/.*\/videos\/.*", "http:\/\/www\.vimeo\.com\/.*", "http:\/\/vimeo\.com\/groups\/.*\/videos\/.*", "http:\/\/vimeo\.com\/.*"], "//vimeo.com/api/oembed.json"),
+	new $.fn.oembed.OEmbedProvider("vimeo", "video", ["www\.vimeo\.com\/groups\/.*\/videos\/.*", "www\.vimeo\.com\/.*", "vimeo\.com\/groups\/.*\/videos\/.*", "vimeo\.com\/.*"], "//vimeo.com/api/oembed.json"),
 	new $.fn.oembed.OEmbedProvider("dailymotion", "video", ["dailymotion\\.com/.+"],'//www.dailymotion.com/services/oembed'), 
     new $.fn.oembed.OEmbedProvider("5min", "video", ["www\\.5min\\.com/.+"], '//api.5min.com/oembed.xml',{useYQL:'xml'}),
     new $.fn.oembed.OEmbedProvider("National Film Board of Canada", "video", ["nfb\\.ca/film/.+"],'//www.nfb.ca/remote/services/oembed/',{useYQL:'json'}),

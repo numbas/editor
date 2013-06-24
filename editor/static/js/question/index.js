@@ -23,7 +23,6 @@ $(document).ready(function() {
     });
 
 	var user_search_url = $('#search_author').attr('data-autocomplete-url');
-	console.log(user_search_url);
 	function parseUser(user) { 
 		return {label: user.name, value: user.name} 
 	}
@@ -31,7 +30,6 @@ $(document).ready(function() {
 		$(this).addClass('loading');
 		$.getJSON(user_search_url,{q:req.term})
 			.success(function(data) {
-				console.log(data);
 				var things = [];
 				for(var i=0;i<data.length;i++) {
 					var thing = parseUser(data[i]);
@@ -40,7 +38,6 @@ $(document).ready(function() {
 				callback(things);
 			})
 			.error(function() {
-				console.log(arguments);
 			})
 			.complete(function() {
 				$(this).removeClass('loading');

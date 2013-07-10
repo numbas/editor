@@ -382,6 +382,15 @@ $(document).ready(function() {
 		this.description = $(data.metadata.description).text();
 		this.parent = parent;
 		this.data = data;
+
+		this.replaceWithCopy = function() {
+			$.get(this.url()+'copy/',{csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(data) {
+				var newq = new Question(data,q.parent);
+				var i = q.parent.indexOf(q)
+				q.parent.splice(i,1,newq);
+			})
+		}
+
 	}
 	Question.prototype = {
 		remove: function() {

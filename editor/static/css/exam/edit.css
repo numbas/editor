@@ -111,9 +111,26 @@
 	height: 16px;
 	display: inline-block;
 }
+
 .question .preview:hover {
 	background-color: #06f;
 	border-radius: 50%;
+}
+
+.question .copy {
+	background-image: url(../../images/plus_alt_16x16.png);
+	width: 16px;
+	height: 16px;
+	display: inline-block;
+    border: none;
+    padding: 0;
+    margin: 0;
+    background-color: transparent;
+}
+
+.question .copy:hover {
+    background-color: #f90;
+    border-radius: 50%;
 }
 
 .question.ui-sortable-helper {
@@ -132,10 +149,3 @@ li.questionResult.ui-draggable-dragging, li.question.ui-sortable-helper {
 	border: 1px dashed;
 	height: 2.5em;
 }
-/* OLD
- * 
-#admin #delete form {
-    display: none;
-}
-
-*/

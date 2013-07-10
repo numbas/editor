@@ -185,7 +185,10 @@ class QuestionCopyView(View, SingleObjectMixin):
             return http.HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
         else:
-            return redirect(reverse('question_edit', args=(q2.pk,q2.slug)))
+            if self.request.is_ajax():
+                return HttpResponse(json.dumps(q2.summary()),content_type='application/json')
+            else:
+                return redirect(reverse('question_edit', args=(q2.pk,q2.slug)))
 
 
 class QuestionDeleteView(DeleteView):

@@ -9,6 +9,4 @@ used by multiple people) can be found at http://numbas.github.com/editor/.
 Note that a full installation like this is not necessary if you just want to
 try out the editor on your personal desktop or laptop computer.
 
-**Note that it is in no way ready for production use yet!**
-
 Some icons from [Iconic Icon Set](http://somerandomdude.com/work/iconic/) © P.J. Onori, Licensed under Creative Commons Attribution-ShareAlike 3.0 Unported.

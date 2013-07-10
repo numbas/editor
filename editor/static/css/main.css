@@ -102,6 +102,10 @@ button:hover, button:focus {
 	padding: 1px 30px 1px 0;
 }
 
+#session {
+    text-align: right;
+}
+
 #session a {
 	text-decoration: underline;
 }

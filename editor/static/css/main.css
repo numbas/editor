@@ -94,6 +94,14 @@ button:hover, button:focus {
 	color: #999;
 }
 
+#menu .help a {
+	color: #f90;
+}
+
+.nav-tabs .divider {
+	padding: 1px 30px 1px 0;
+}
+
 #session a {
 	text-decoration: underline;
 }

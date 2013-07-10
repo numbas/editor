@@ -118,9 +118,9 @@
 }
 
 .question .copy {
-	background-image: url(../../images/plus_alt_16x16.png);
+	background-image: url(../../images/loop_alt1_16x12.png);
 	width: 16px;
-	height: 16px;
+	height: 12px;
 	display: inline-block;
     border: none;
     padding: 0;
@@ -130,7 +130,6 @@
 
 .question .copy:hover {
     background-color: #f90;
-    border-radius: 50%;
 }
 
 .question.ui-sortable-helper {

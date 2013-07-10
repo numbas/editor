@@ -5,5 +5,5 @@
 {% block content %}
 <h1>Congratulations!</h1>
 <p>Your account registration is now complete.</p>
-<p>Please <a href="{% url 'login' %}">log in</a> with the username and password you chose.</p>
+<p>Please <a href="{% url 'login' %}?next={% url 'after_first_login' %}">log in</a> with the username and password you chose.</p>
 {% endblock %}

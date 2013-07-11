@@ -778,7 +778,7 @@
 							<input id="search_author" type="text" size="30" data-bind="
 								value: userAccessSearch,
 								autocomplete: '{% url 'user_search' %}', 
-								autocompleteCallback: function(user) { return {label: user.username+' ('+user.name+')', value: user.username} },
+								autocompleteCallback: function(user) { return {label: user.name, value: user.name} },
 								autocompleteSelect: addUserAccess
 								"/>
 						</div>

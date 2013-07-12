@@ -14,6 +14,8 @@ from sanitizer.models import SanitizedTextField
 
 from operator import itemgetter
 
+from editor.models import Question, Exam
+
 class RegistrationManager(regmodels.RegistrationManager):
     def create_inactive_user(self, username, first_name, last_name, email, password,
                              site, send_email=True):
@@ -50,6 +52,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User)
     language = models.CharField(max_length=100,default='en-GB')
     bio = SanitizedTextField(default='',allowed_tags=settings.SANITIZER_ALLOWED_TAGS,allowed_attributes=settings.SANITIZER_ALLOWED_ATTRIBUTES)
+    favourite_questions = models.ManyToManyField(Question,blank=True)
 
     def sorted_tags(self):
         qs = self.user.own_questions

@@ -408,6 +408,7 @@ $(document).ready(function() {
                 return;
             }
             Editor.startSave();
+            data.csrfmiddlewaretoken = getCookie('csrftoken');
             var def = savefn(data);
             def
                 .always(Editor.endSave)

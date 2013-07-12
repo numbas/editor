@@ -21,7 +21,7 @@ from django.forms import model_to_dict
 from django.http import Http404, HttpResponse
 from django import http
 from django.shortcuts import redirect
-from django.views.generic import CreateView, DeleteView, ListView, UpdateView, View
+from django.views import generic
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import FormMixin
 from django.template.loader import render_to_string
@@ -30,7 +30,7 @@ from django_tables2.config import RequestConfig
 
 from editor.forms import NewQuestionForm, QuestionForm, QuestionSetAccessForm, QuestionSearchForm
 from editor.models import Question,Extension,Image,QuestionAccess
-from editor.views.generic import PreviewView, ZipView, SourceView
+import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
 from editor.tables import QuestionTable
@@ -39,7 +39,7 @@ from accounts.models import UserProfile
 
 from examparser import ExamParser, ParseError, printdata
 
-class QuestionPreviewView(PreviewView):
+class PreviewView(editor.views.generic.PreviewView):
     
     """Compile question as a preview and return its URL."""
     
@@ -65,7 +65,7 @@ class QuestionPreviewView(PreviewView):
             return self.preview(q)
 
 
-class QuestionZipView(ZipView):
+class ZipView(editor.views.generic.ZipView):
 
     """Compile a question as a SCORM package and return the .zip file"""
 
@@ -92,7 +92,7 @@ class QuestionZipView(ZipView):
             return self.download(q,scorm)
 
 
-class QuestionSourceView(SourceView):
+class SourceView(editor.views.generic.SourceView):
 
     """Compile a question as a SCORM package and return the .zip file"""
 
@@ -112,7 +112,7 @@ class QuestionSourceView(SourceView):
             return self.source(q)
 
 
-class QuestionCreateView(CreateView):
+class CreateView(generic.CreateView):
     
     """Create a question."""
     
@@ -132,7 +132,7 @@ class QuestionCreateView(CreateView):
                                               self.object.slug,))
  
  
-class QuestionUploadView(CreateView):
+class UploadView(generic.CreateView):
     
     """Upload a .exam file representing a question"""
 
@@ -161,7 +161,7 @@ class QuestionUploadView(CreateView):
             return reverse('question_index')
 
 
-class QuestionCopyView(View, SingleObjectMixin):
+class CopyView(generic.View, SingleObjectMixin):
 
     """ Copy a question and redirect to its edit page. """
 
@@ -191,7 +191,7 @@ class QuestionCopyView(View, SingleObjectMixin):
                 return redirect(reverse('question_edit', args=(q2.pk,q2.slug)))
 
 
-class QuestionDeleteView(DeleteView):
+class DeleteView(generic.DeleteView):
     
     """Delete a question."""
     
@@ -210,14 +210,14 @@ class QuestionDeleteView(DeleteView):
         return reverse('question_index')
 
 
-class QuestionUpdateView(UpdateView):
+class UpdateView(generic.UpdateView):
     
     """Edit a question or view as non-editable if not author."""
     
     model = Question
     
     def get_object(self):
-        obj = super(QuestionUpdateView,self).get_object()
+        obj = super(UpdateView,self).get_object()
         self.editable = obj.can_be_edited_by(self.request.user)
         return obj
 
@@ -250,7 +250,7 @@ class QuestionUpdateView(UpdateView):
         if not self.object.can_be_viewed_by(request.user):
             return forbidden(request)
         else:
-            return super(QuestionUpdateView,self).get(request,*args,**kwargs)
+            return super(UpdateView,self).get(request,*args,**kwargs)
 
     def form_valid(self, form):
         self.object = form.save(commit=False)
@@ -275,10 +275,11 @@ class QuestionUpdateView(UpdateView):
                                        content_type='application/json')
     
     def get_context_data(self, **kwargs):
-        context = super(QuestionUpdateView, self).get_context_data(**kwargs)
+        context = super(UpdateView, self).get_context_data(**kwargs)
         context['extensions'] = [model_to_dict(e) for e in Extension.objects.all()]
         context['editable'] = self.editable
         context['navtab'] = 'questions'
+        context['starred'] = self.request.user.get_profile().favourite_questions.filter(pk=self.object.pk).exists()
     
         context['access_rights'] = [{'id': qa.user.pk, 'name': qa.user.get_full_name(), 'access_level': qa.access} for qa in QuestionAccess.objects.filter(question=self.object)]
 
@@ -286,13 +287,25 @@ class QuestionUpdateView(UpdateView):
     
     def get_success_url(self):
         return reverse('question_edit', args=(self.object.pk,self.object.slug))
+ 
+class IndexView(generic.TemplateView):
+
+    template_name = 'question/index.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(IndexView, self).get_context_data(**kwargs)
+
+        if self.request.user.is_authenticated:
+            profile = self.request.user.get_profile()
+            context['favourites'] = profile.favourite_questions.all()
+        context['navtab'] = 'questions'
+
+        return context
     
-    
-class QuestionListView(ListView):
+class ListView(generic.ListView):
     
     """List of questions."""
     model=Question
-    template_name='question/index.html'
 
     def get_queryset(self):
 
@@ -330,7 +343,7 @@ class QuestionListView(ListView):
         return results
 
     def get_context_data(self, **kwargs):
-        context = super(QuestionListView, self).get_context_data(**kwargs)
+        context = super(ListView, self).get_context_data(**kwargs)
         context['progresses'] = Question.PROGRESS_CHOICES
         context['navtab'] = 'questions'
         context['results'] = self.make_table()
@@ -338,7 +351,10 @@ class QuestionListView(ListView):
 
         return context
     
-class QuestionSearchView(QuestionListView):
+class SearchView(ListView):
+    template_name = 'question/search.html'
+
+class JSONSearchView(ListView):
     
     """Search questions."""
     
@@ -350,7 +366,7 @@ class QuestionSearchView(QuestionListView):
         raise Http404
 
     def get_queryset(self):
-        questions = super(QuestionSearchView,self).get_queryset()
+        questions = super(JSONSearchView,self).get_queryset()
         return [q.summary() for q in questions]
 
     def get_context_data(self, **kwargs):
@@ -359,7 +375,7 @@ class QuestionSearchView(QuestionListView):
         context['id'] = self.request.GET.get('id',None)
         return context
     
-class QuestionSetAccessView(UpdateView):
+class SetAccessView(generic.UpdateView):
     model = Question
     form_class = QuestionSetAccessForm
 
@@ -375,6 +391,26 @@ class QuestionSetAccessView(UpdateView):
 
     def form_invalid(self,form):
         return HttpResponse(form.errors.as_text())
+
+    def get(self, request, *args, **kwargs):
+        return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
+
+class SetStarView(generic.UpdateView):
+    model = Question
+
+    def post(self, request, *args, **kwargs):
+        question = self.get_object()
+
+        profile = request.user.get_profile()
+        starred = request.POST.get('starred') == 'true'
+        print(starred)
+        if starred:
+            profile.favourite_questions.add(question)
+        else:
+            profile.favourite_questions.remove(question)
+        profile.save()
+
+        return HttpResponse('ok!')
 
     def get(self, request, *args, **kwargs):
         return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')

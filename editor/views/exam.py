@@ -38,7 +38,7 @@ from editor.views.user import find_users
 
 from examparser import ExamParser, ParseError, printdata
 
-class ExamPreviewView(PreviewView):
+class PreviewView(PreviewView):
     
     """Compile an exam as a preview and return its URL."""
     
@@ -59,7 +59,7 @@ class ExamPreviewView(PreviewView):
             return self.preview(e)
 
 
-class ExamZipView(ZipView):
+class ZipView(ZipView):
 
     """Compile an exam as a SCORM package and return the .zip file"""
 
@@ -81,7 +81,7 @@ class ExamZipView(ZipView):
             return self.download(e,scorm)
 
 
-class ExamSourceView(SourceView):
+class SourceView(SourceView):
 
     """Return the .exam version of an exam"""
 
@@ -102,7 +102,7 @@ class ExamSourceView(SourceView):
             return self.source(e)
     
     
-class ExamCreateView(CreateView):
+class CreateView(CreateView):
     
     """Create an exam."""
     
@@ -120,7 +120,7 @@ class ExamCreateView(CreateView):
                                           self.object.slug,))
     
     
-class ExamUploadView(CreateView):
+class UploadView(CreateView):
     
     """Upload a .exam file representing an exam"""
 
@@ -159,7 +159,7 @@ class ExamUploadView(CreateView):
             return reverse('exam_index')
 
 
-class ExamCopyView(View, SingleObjectMixin):
+class CopyView(View, SingleObjectMixin):
 
     """ Copy an exam and redirect to to the copy's edit page. """
 
@@ -185,7 +185,7 @@ class ExamCopyView(View, SingleObjectMixin):
             return HttpResponseRedirect(reverse('exam_edit', args=(e2.pk,e2.slug)))
 
 
-class ExamDeleteView(DeleteView):
+class DeleteView(DeleteView):
     
     """Delete an exam."""
     
@@ -204,7 +204,7 @@ class ExamDeleteView(DeleteView):
         return reverse('exam_index')
     
     
-class ExamUpdateView(UpdateView):
+class UpdateView(UpdateView):
     
     """Edit an exam."""
     
@@ -213,7 +213,7 @@ class ExamUpdateView(UpdateView):
     
 #    @method_decorator(login_required)
 #    def dispatch(self, *args, **kwargs):
-#        return super(ExamUpdateView, self).dispatch(*args, **kwargs)
+#        return super(UpdateView, self).dispatch(*args, **kwargs)
     
     def get_template_names(self):
         self.object = self.get_object()
@@ -247,7 +247,7 @@ class ExamUpdateView(UpdateView):
         if not self.object.can_be_viewed_by(request.user):
             return forbidden(request)
         else:
-            return super(ExamUpdateView,self).get(request,*args,**kwargs)
+            return super(UpdateView,self).get(request,*args,**kwargs)
 
     def form_valid(self, form):
         self.object = form.save(commit=False)
@@ -269,7 +269,7 @@ class ExamUpdateView(UpdateView):
                                        content_type='application/json')
         
     def get_context_data(self, **kwargs):
-        context = super(ExamUpdateView, self).get_context_data(**kwargs)
+        context = super(UpdateView, self).get_context_data(**kwargs)
         exam_dict = model_to_dict(self.object)
         exam_dict['questions'] = [q.summary() for q in self.object.get_questions()]
         context['exam_JSON'] = json.dumps(exam_dict)
@@ -286,7 +286,7 @@ class ExamUpdateView(UpdateView):
         return reverse('exam_edit', args=(self.object.pk,self.object.slug,))
     
     
-class ExamListView(ListView):
+class ListView(ListView):
     model=Exam
     template_name='exam/index.html'
 
@@ -318,14 +318,14 @@ class ExamListView(ListView):
         return results
 
     def get_context_data(self, **kwargs):
-        context = super(ExamListView, self).get_context_data(**kwargs)
+        context = super(ListView, self).get_context_data(**kwargs)
         context['navtab'] = 'exams'
         context['results'] = self.make_table()
         context['form'] = self.form
 
         return context
 
-class ExamSearchView(ExamListView):
+class SearchView(ListView):
     
     """Search exams."""
 
@@ -337,7 +337,7 @@ class ExamSearchView(ExamListView):
         raise Http404
     
     def get_context_data(self, **kwargs):
-        context = super(ExamSearchView,self).get_context_data(**kwargs)
+        context = super(SearchView,self).get_context_data(**kwargs)
         try:
             context['page'] = self.request.GET['page']
         except KeyError:
@@ -350,7 +350,7 @@ class ExamSearchView(ExamListView):
 
         return context
     
-class ExamSetAccessView(UpdateView):
+class SetAccessView(UpdateView):
     model = Exam
     form_class = ExamSetAccessForm
 

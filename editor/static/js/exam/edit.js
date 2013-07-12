@@ -99,7 +99,7 @@ $(document).ready(function() {
                 }
 		}
 
-		Editor.searchBinding(this.search,'/questions/search/',makeQuery);
+		Editor.searchBinding(this.search,'/questions/search/json',makeQuery);
 
 		ko.computed(function() {
 			e.search.results.all(e.search.results.raw());

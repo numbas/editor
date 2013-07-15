@@ -1,0 +1,53 @@
+{% extends "question/list.html" %}
+
+{% block content %}
+
+	{% if user.is_authenticated %}
+        <div class="controlbox" id="admin">
+            <a id="new" href="{% url 'question_new' %}">Create a new question</a>
+            <form action="{% url 'question_upload' %}" method="post" id="uploadForm" enctype="multipart/form-data">
+                {% csrf_token %}
+				<a href="{% url 'question_upload' %}" id="upload">Upload a question</a>
+                <div class="upload">
+                    <input type="file" name="file" value="yo"/>
+                </div>
+            </form>
+        </div>
+	{% endif %}
+
+    <div class="row-fluid">
+		<form class="searchBox form-inline">
+			{% with form.cleaned_data as data %}
+			<div>
+				<strong>Search</strong>
+				<label for="search_query">
+					for questions called:
+					<div class="input-append">
+						<input role="search" id="search_query" type="text" name="query" value="{{ data.query }}" placeholder="Topic or question name"/>
+						<span class="add-on"><button type="submit" class="search" title="Search"></button></span>
+					</div>
+				</label>
+			</div>
+			<div>
+				<strong>Filter results</strong> 
+				<label for="search_author">
+					by author: 	
+					<input id="search_author" data-autocomplete-url="{% url 'user_search' %}" name="author" type="text" size="30" value="{{ data.author }}" placeholder="User name"/>
+				</label>
+				<label for="search_progress">
+					by progress:
+					{{ form.progress }}
+				</label>
+				<label for="search_tags">
+					by tag: 
+					{{form.tags}}
+				</label>
+			</div>
+			{% endwith %}
+		</form>
+	</div>
+
+	{{block.super}}
+    
+{% endblock content %}
+

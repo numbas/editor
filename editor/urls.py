@@ -17,14 +17,13 @@ from django.views.generic import RedirectView, TemplateView
 
 from django.contrib.auth.decorators import login_required
 
-from editor.views import exam, question
+from editor.views import exam, question, HomeView
 from editor.views.user import UserSearchView
 from editor.views.resource import upload_resource, ImageDeleteView, media_view
 
 
 urlpatterns = patterns('',
-    url(r'^$', TemplateView.as_view(template_name='index.html'),
-        name='editor_index'),
+    url(r'^$', HomeView.as_view(), name='editor_index'),
 
     url(r'^exams/$',exam.ListView.as_view(), name='exam_index',),
                        
@@ -61,6 +60,8 @@ urlpatterns = patterns('',
     url(r'^question/upload/$', question.UploadView.as_view(), name='question_upload'),
 
     url(r'^questions/search/(\?q=(?P<query>.+))?$', question.SearchView.as_view(), name='question_search',),
+
+    url(r'^questions/starred/$', question.FavouritesView.as_view(), name='favourite_questions',),
     
     url(r'^questions/search/json$', question.JSONSearchView.as_view(), name='question_search_json',),
     

@@ -1,1 +1,20 @@
-﻿
+﻿.description {
+    margin-left: 1em;
+	background: #eee;
+}
+.question-list {
+    list-style: none;
+	margin-bottom: 1em;
+}
+
+.favourites {
+	margin-bottom: 2em;
+}
+
+.question:not(:last-child) {
+	border-bottom: 1px solid #eee;
+}
+
+.question .admin {
+	float: right;
+}

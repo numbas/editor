@@ -25,46 +25,51 @@
                 <span class="add-on"><button type="submit" class="search" title="Search"></button></span>
             </div>
         </label>
-    </form>
+	</form>
 
-	{% if user.is_authenticated %}
-        <div class="favourites">
+	<div class="row-fluid">
+		<div class="span7">
 
-            <h3>Favourites</h3>
-			<ul class="question-list">
-			{% for question in favourites|slice:":5" %}
-				<li class="question">
-					<h5 class="name">
-						<a href="{% url 'question_edit' question.pk question.slug %}">{{ question.name }}</a>
-						<span class="admin">
-							<a class="preview" href="{% url 'question_preview' question.pk question.slug %}" target="_blank" title="Test run"></a>
-							{% if user.is_authenticated %}
-							<a class="copy" href="{% url 'question_copy' question.pk question.slug %}" title="Make a copy"></a>
-							{% endif %}
-							{% if question|can_be_edited_by:user %}<a class="delete" href="{% url 'question_delete' question.pk question.slug %}" title="Delete"></a>{% endif %}
-						</span>
-					</h5>
-					<div class="description">{{ question.metadata.description|safe }}</div>
-				</li>
-			{% endfor %}
-			</ul>
+			{% if user.is_authenticated %}
+				<div class="favourites">
 
-			{% if favourites.count > 5 %}
-				All {{favourites|length}} favourites 
+					<h3>Starred questions</h3>
+					<ul class="question-list">
+					{% for question in favourites|slice:":5" %}
+						<li class="question">
+							<h5 class="name">
+								<a href="{% url 'question_edit' question.pk question.slug %}">{{ question.name }}</a>
+								<span class="admin">
+									<a class="preview" href="{% url 'question_preview' question.pk question.slug %}" target="_blank" title="Test run"></a>
+									{% if user.is_authenticated %}
+									<a class="copy" href="{% url 'question_copy' question.pk question.slug %}" title="Make a copy"></a>
+									{% endif %}
+									{% if question|can_be_edited_by:user %}<a class="delete" href="{% url 'question_delete' question.pk question.slug %}" title="Delete"></a>{% endif %}
+								</span>
+							</h5>
+							<div class="description">{{ question.metadata.description|safe }}</div>
+						</li>
+					{% endfor %}
+					</ul>
+
+					{% if favourites.count > 5 %}
+					<p><em><a href="{% url 'favourite_questions' %}">All {{favourites|length}} starred questions</a></em>.</p>
+					{% endif %}
+				</div>
 			{% endif %}
-        </div>
-    {% endif %}
 
-    <div class="highlights">
-        <h3>Highlighted questions</h3>
-        <ul class="question-list">
-            <li>.......</li>
-            <li>.......</li>
-            <li>.......</li>
-            <li>.......</li>
-            <li>.......</li>
-        </ul>
-    </div>
+			<div class="highlights">
+				<h3>Editors' picks</h3>
+				<ul class="question-list">
+					<li>.......</li>
+					<li>.......</li>
+					<li>.......</li>
+					<li>.......</li>
+					<li>.......</li>
+				</ul>
+			</div>
+		</div>
+	</div>
     
 {% endblock content %}
 

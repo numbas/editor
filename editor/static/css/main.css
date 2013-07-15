@@ -98,6 +98,10 @@ button:hover, button:focus {
 	color: #f90;
 }
 
+.nav-tabs > .active > a:hover {
+	cursor: pointer;
+}
+
 .nav-tabs .divider {
 	padding: 1px 30px 1px 0;
 }
@@ -193,3 +197,30 @@ button.search.loading {
     list-style: none;
     display: inline-block;
 }
+
+.admin a {
+	display: inline-block;
+	margin-right: 0.5em;
+	background-color: white;
+	border-radius: 50%;
+}
+
+.admin .delete {
+	background-image: url(../images/x_alt_16x16.png);
+	width: 16px;
+	height: 16px;
+	margin-left: 0.5em;
+}
+
+.admin .copy {
+	background-image: url(../images/plus_alt_16x16.png);
+	width: 16px;
+	height: 16px;
+}
+
+.admin .preview {
+	background-image: url(../images/play_alt_16x16.png);
+	width: 16px;
+	height: 16px;
+}
+

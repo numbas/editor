@@ -295,7 +295,7 @@ class IndexView(generic.TemplateView):
     def get_context_data(self, **kwargs):
         context = super(IndexView, self).get_context_data(**kwargs)
 
-        if self.request.user.is_authenticated:
+        if self.request.user.is_authenticated():
             profile = self.request.user.get_profile()
             context['favourites'] = profile.favourite_questions.all()
         context['navtab'] = 'questions'
@@ -307,8 +307,24 @@ class ListView(generic.ListView):
     """List of questions."""
     model=Question
 
-    def get_queryset(self):
+    def make_table(self):
+        config = RequestConfig(self.request, paginate={'per_page': 10})
+        results = QuestionTable(self.object_list)
+        config.configure(results)
 
+        return results
+
+    def get_context_data(self, **kwargs):
+        context = super(ListView, self).get_context_data(**kwargs)
+        context['navtab'] = 'questions'
+        context['results'] = self.make_table()
+
+        return context
+    
+class SearchView(ListView):
+    template_name = 'question/search.html'
+
+    def get_queryset(self):
         form = self.form = QuestionSearchForm(self.request.GET)
         form.is_valid()
 
@@ -335,24 +351,18 @@ class ListView(generic.ListView):
 
         return questions
         
-    def make_table(self):
-        config = RequestConfig(self.request, paginate={'per_page': 10})
-        results = QuestionTable(self.object_list)
-        config.configure(results)
-
-        return results
-
     def get_context_data(self, **kwargs):
-        context = super(ListView, self).get_context_data(**kwargs)
+        context = super(SearchView, self).get_context_data(**kwargs)
         context['progresses'] = Question.PROGRESS_CHOICES
-        context['navtab'] = 'questions'
-        context['results'] = self.make_table()
         context['form'] = self.form
 
         return context
-    
-class SearchView(ListView):
-    template_name = 'question/search.html'
+
+class FavouritesView(ListView):
+	template_name = 'question/favourites.html'
+
+	def get_queryset(self):
+		return self.request.user.get_profile().favourite_questions.all()
 
 class JSONSearchView(ListView):
     

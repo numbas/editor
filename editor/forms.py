@@ -16,7 +16,7 @@ from django.forms.models import inlineformset_factory
 from django.forms.widgets import SelectMultiple
 from django.core.exceptions import ValidationError
 
-from editor.models import Exam, Question, ExamQuestion, QuestionAccess, ExamAccess
+from editor.models import Exam, Question, ExamQuestion, QuestionAccess, ExamAccess, QuestionHighlight
 from django.contrib.auth.models import User
 
 class FixedSelectMultiple(SelectMultiple):
@@ -132,7 +132,13 @@ class QuestionForm(forms.ModelForm):
     class Meta:
         model = Question
         exclude = ('name','author','tags','public_access')
-        
+
+class QuestionHighlightForm(forms.ModelForm):
+    note = forms.CharField(widget=forms.Textarea(attrs={'data-bind':'text:note'}), label='Write a note explaining why you\'re highlighting this question.')
+
+    class Meta:
+        model = QuestionHighlight
+        fields = ['note']
         
 class NewQuestionForm(forms.ModelForm):
     

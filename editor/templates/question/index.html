@@ -31,14 +31,46 @@
 		<div class="span7">
 
 			{% if user.is_authenticated %}
-				<div class="favourites">
+				<div class="favourites question-list">
+                    <h3><a href="{% url 'favourite_questions' %}">Your starred questions</a></h3>
 
-					<h3>Starred questions</h3>
-					<ul class="question-list">
-					{% for question in favourites|slice:":5" %}
+                    {% if favourites.count > 0 %}
+                        <ul>
+                        {% for question in favourites|slice:":5" %}
+                            <li class="question">
+                                <div class="header">
+                                    <span class="name"><a href="{% url 'question_edit' question.pk question.slug %}">{{ question.name }}</a></span>
+                                    <span class="admin">
+                                        <a class="preview" href="{% url 'question_preview' question.pk question.slug %}" target="_blank" title="Test run"></a>
+                                        {% if user.is_authenticated %}
+                                        <a class="copy" href="{% url 'question_copy' question.pk question.slug %}" title="Make a copy"></a>
+                                        {% endif %}
+                                        {% if question|can_be_edited_by:user %}<a class="delete" href="{% url 'question_delete' question.pk question.slug %}" title="Delete"></a>{% endif %}
+                                    </span>
+                                </div>
+                                <div class="description">{{ question.metadata.description|safe }}</div>
+                            </li>
+                        {% endfor %}
+                        </ul>
+
+                        {% if favourites.count > 5 %}
+                        <p style="font-style: italic;"><a href="{% url 'favourite_questions' %}">All starred questions</a>.</p>
+                        {% endif %}
+                    {% else %}
+                        <p style="font-style:italic">When looking at a question, you can click on the star icon next to its name to save it for later. The list of questions you've starred will appear here.</p>
+                    {% endif %}
+				</div>
+			{% endif %}
+
+			{% if highlights.count > 0 %}
+				<div class="highlights question-list">
+					<h3>Editors' picks</h3>
+					<ul>
+					{% for highlight in highlights|slice:":5" %}
+						{% with question=highlight.question %}
 						<li class="question">
-							<h5 class="name">
-								<a href="{% url 'question_edit' question.pk question.slug %}">{{ question.name }}</a>
+							<div class="header">
+								<span class="name"><a href="{% url 'question_edit' question.pk question.slug %}">{{ question.name }}</a></span>
 								<span class="admin">
 									<a class="preview" href="{% url 'question_preview' question.pk question.slug %}" target="_blank" title="Test run"></a>
 									{% if user.is_authenticated %}
@@ -46,28 +78,20 @@
 									{% endif %}
 									{% if question|can_be_edited_by:user %}<a class="delete" href="{% url 'question_delete' question.pk question.slug %}" title="Delete"></a>{% endif %}
 								</span>
-							</h5>
-							<div class="description">{{ question.metadata.description|safe }}</div>
+							</div>
+							<div class="description">
+								{{ question.metadata.description|safe }}
+							</div>
+							<blockquote class="note">
+								{{highlight.note|safe}}
+								<cite class="picked-by">- Picked by <a href="{% url 'view_profile' highlight.picked_by.pk %}">{{highlight.picked_by.get_full_name}}</a>.</cite>
+							</blockquote>
 						</li>
+						{% endwith %}
 					{% endfor %}
 					</ul>
-
-					{% if favourites.count > 5 %}
-					<p><em><a href="{% url 'favourite_questions' %}">All {{favourites|length}} starred questions</a></em>.</p>
-					{% endif %}
 				</div>
 			{% endif %}
-
-			<div class="highlights">
-				<h3>Editors' picks</h3>
-				<ul class="question-list">
-					<li>.......</li>
-					<li>.......</li>
-					<li>.......</li>
-					<li>.......</li>
-					<li>.......</li>
-				</ul>
-			</div>
 		</div>
 	</div>
     

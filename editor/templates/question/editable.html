@@ -1,14 +1,5 @@
 {% extends "question/edit.html" %}
 
-{% block controls %}
-	{{block.super}}
-	<!--
-	<div class="editlevels span2">
-		<button type="button" data-bind="click: changeEditLevel, text: isadvanced() ? 'Switch to simplified editing mode' : 'Switch to full editing mode'">Switch to simplified editing mode</button>
-	</div>
-	-->
-{% endblock controls %}
-
 {% block editable_message %}You can edit this question.{% endblock %}
 
 {% block progress %}

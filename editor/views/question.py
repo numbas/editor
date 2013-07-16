@@ -15,6 +15,7 @@ import json
 import traceback
 from copy import deepcopy
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.forms import model_to_dict
@@ -28,8 +29,8 @@ from django.template.loader import render_to_string
 
 from django_tables2.config import RequestConfig
 
-from editor.forms import NewQuestionForm, QuestionForm, QuestionSetAccessForm, QuestionSearchForm
-from editor.models import Question,Extension,Image,QuestionAccess
+from editor.forms import NewQuestionForm, QuestionForm, QuestionSetAccessForm, QuestionSearchForm, QuestionHighlightForm
+from editor.models import Question,Extension,Image,QuestionAccess,QuestionHighlight
 import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
@@ -223,8 +224,7 @@ class UpdateView(generic.UpdateView):
 
     def get_template_names(self):
         self.object = self.get_object()
-        can_edit = self.editable
-        return 'question/editable.html' if can_edit else 'question/noneditable.html'
+        return 'question/editable.html' if self.editable else 'question/noneditable.html'
 
 
     def post(self, request, *args, **kwargs):
@@ -279,7 +279,10 @@ class UpdateView(generic.UpdateView):
         context['extensions'] = [model_to_dict(e) for e in Extension.objects.all()]
         context['editable'] = self.editable
         context['navtab'] = 'questions'
-        context['starred'] = self.request.user.get_profile().favourite_questions.filter(pk=self.object.pk).exists()
+        if not self.request.user.is_anonymous():
+            context['starred'] = self.request.user.get_profile().favourite_questions.filter(pk=self.object.pk).exists()
+        else:
+            context['starred'] = False
     
         context['access_rights'] = [{'id': qa.user.pk, 'name': qa.user.get_full_name(), 'access_level': qa.access} for qa in QuestionAccess.objects.filter(question=self.object)]
 
@@ -287,7 +290,43 @@ class UpdateView(generic.UpdateView):
     
     def get_success_url(self):
         return reverse('question_edit', args=(self.object.pk,self.object.slug))
- 
+
+class HighlightView(generic.FormView):
+    template_name = 'question/highlight.html'
+    form_class = QuestionHighlightForm
+
+    def get_initial(self):
+        initial = super(HighlightView,self).get_initial()
+
+        self.question = Question.objects.get(pk=self.kwargs.get('pk'))
+
+        try:
+            qh = QuestionHighlight.objects.get(question=self.question, picked_by=self.request.user)
+            initial['note'] = qh.note
+        except ObjectDoesNotExist:
+            initial['note'] = u''
+
+        return initial
+
+    def form_valid(self, form):
+        note = form.cleaned_data.get('note')
+
+        self.object, new = QuestionHighlight.objects.get_or_create(question=self.question, picked_by=self.request.user)
+        self.object.note = note
+        self.object.save()
+
+        return super(HighlightView,self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse('question_edit', args=(self.question.pk,self.question.slug))
+
+    def get_context_data(self, **kwargs):
+        context = super(HighlightView, self).get_context_data(**kwargs)
+        
+        context['question'] = self.question
+
+        return context
+
 class IndexView(generic.TemplateView):
 
     template_name = 'question/index.html'
@@ -298,6 +337,9 @@ class IndexView(generic.TemplateView):
         if self.request.user.is_authenticated():
             profile = self.request.user.get_profile()
             context['favourites'] = profile.favourite_questions.all()
+        
+        context['highlights'] = QuestionHighlight.objects.all().order_by('-date')
+
         context['navtab'] = 'questions'
 
         return context
@@ -359,10 +401,10 @@ class SearchView(ListView):
         return context
 
 class FavouritesView(ListView):
-	template_name = 'question/favourites.html'
+    template_name = 'question/favourites.html'
 
-	def get_queryset(self):
-		return self.request.user.get_profile().favourite_questions.all()
+    def get_queryset(self):
+        return self.request.user.get_profile().favourite_questions.all()
 
 class JSONSearchView(ListView):
     

@@ -726,7 +726,7 @@ $(document).ready(function() {
                 .tinymce({
                     theme: 'numbas',
 					plugins: 'media',
-					media_srict: false,
+					media_strict: false,
 					init_instance_callback: function(ed) { 
 						$(element).writemaths({cleanMaths: cleanJME, iFrame: true, position: 'center top', previewPosition: 'center bottom'}); 
 						ed.onChange.add(onMCEChange);

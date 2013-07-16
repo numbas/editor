@@ -52,7 +52,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User)
     language = models.CharField(max_length=100,default='en-GB')
     bio = SanitizedTextField(default='',allowed_tags=settings.SANITIZER_ALLOWED_TAGS,allowed_attributes=settings.SANITIZER_ALLOWED_ATTRIBUTES)
-    favourite_questions = models.ManyToManyField(Question,blank=True)
+    favourite_questions = models.ManyToManyField(Question,blank=True,related_name='fans')
 
     def sorted_tags(self):
         qs = self.user.own_questions

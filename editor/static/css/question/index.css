@@ -1,8 +1,11 @@
 ﻿.description {
-    margin-left: 1em;
-	background: #eee;
 }
-.question-list {
+
+.question-list h3 a {
+	color: inherit;
+}
+
+.question-list ul {
     list-style: none;
 	margin-bottom: 1em;
 }
@@ -17,4 +20,18 @@
 
 .question .admin {
 	float: right;
+}
+
+.question .name {
+    font-weight: bold;
+}
+.question .picked-by {
+    font-style: italic;
+    font-size: 0.9em;
+    margin-left: 0.5em;
+	display: block;
+	text-align: right;
+}
+.question .header {
+    margin: 1em 0;
 }

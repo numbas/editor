@@ -174,7 +174,10 @@ class Question(models.Model,NumbasObject,ControlledObject):
     tags = TaggableManager()
 
     class Meta:
-      ordering = ['name']
+        ordering = ['name']
+        permissions = (
+              ('highlight', 'Can pick questions to be featured on the front page.'),
+        )
 
     def __unicode__(self):
         return 'Question "%s"' % self.name
@@ -253,6 +256,14 @@ class QuestionAccess(models.Model):
     user = models.ForeignKey(User)
     access = models.CharField(default='view',editable=True,choices=USER_ACCESS_CHOICES,max_length=6)
 
+class QuestionHighlight(models.Model):
+    class Meta:
+        ordering = ['-date']
+
+    question = models.ForeignKey(Question)
+    picked_by = models.ForeignKey(User)
+    note = models.TextField(blank=True)
+    date = models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
 
 class Exam(models.Model,NumbasObject,ControlledObject):
     

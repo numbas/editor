@@ -49,9 +49,9 @@
 	<div id="question" class="{% if not editable %}nonedit{% endif %}">
 		<div class="row-fluid">
             <h1 id="name-header">
-                <span data-bind="text: name"></span>
+                <span data-bind="text: name">{{object.name}}</span>
                 {% if request.user.is_authenticated %}
-                <button type="button" data-bind="css:{starred: starred}, attr: {title: starred() ? 'Unstar this question' : 'Star this question'}, click: toggleStar" class="star" ></button>
+                <button type="button" data-bind="css:{starred: starred}, attr: {title: starred() ? 'This question is starred. Click to unstar it.' : 'Star this question'}, click: toggleStar" class="star" ></button>
                 {% endif %}
             </h1>
 		</div>
@@ -65,6 +65,11 @@
 				<div class="span4" id="progress">
 					{% block progress %}{% endblock progress %}
                 </div>
+                {% if perms.editor.question_highlight %}
+                <div class="span2">
+                    <a href="{% url 'highlight_question' object.pk object.slug %}">Highlight</a>
+                </div>
+                {% endif %}
 			{% endblock controls %}
 			</div>
 			<ul class="controlbox" id="admin">

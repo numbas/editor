@@ -34,7 +34,7 @@ from editor.models import Question,Extension,Image,QuestionAccess,QuestionHighli
 import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
-from editor.tables import QuestionTable
+from editor.tables import QuestionTable, QuestionHighlightTable
 
 from accounts.models import UserProfile
 
@@ -347,11 +347,13 @@ class IndexView(generic.TemplateView):
 class ListView(generic.ListView):
     
     """List of questions."""
-    model=Question
+    model = Question
+    table_class = QuestionTable
+    per_page = 10
 
     def make_table(self):
-        config = RequestConfig(self.request, paginate={'per_page': 10})
-        results = QuestionTable(self.object_list)
+        config = RequestConfig(self.request, paginate={'per_page': self.per_page})
+        results = self.table_class(self.object_list)
         config.configure(results)
 
         return results
@@ -405,6 +407,16 @@ class FavouritesView(ListView):
 
     def get_queryset(self):
         return self.request.user.get_profile().favourite_questions.all()
+
+class HighlightsView(ListView):
+    model = QuestionHighlight
+    template_name = 'question/highlights.html'
+    table_class = QuestionHighlightTable
+    per_page = 5
+
+    def get_queryset(self):
+        highlights = QuestionHighlight.objects.all()
+        return highlights
 
 class JSONSearchView(ListView):
     

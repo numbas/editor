@@ -3,7 +3,7 @@ from django.core.urlresolvers import reverse
 from django_tables2.columns import TemplateColumn,Column
 from django_tables2 import columns
 from django_tables2.utils import A
-from editor.models import Question, Exam
+from editor.models import Question, Exam, QuestionHighlight
 
 class UserColumn(columns.linkcolumn.BaseLinkColumn):
     def render(self,value,record,bound_column):
@@ -32,6 +32,13 @@ class QuestionTable(ObjectTable):
     class Meta(ObjectTable.Meta):
         model = Question
 
+class QuestionHighlightTable(ObjectTable):
+	name = Column()
+	
+	class Meta:
+		model = QuestionHighlight
+		fields = ('name','date')
+		order_by = ('date')
 
 class ExamTable(ObjectTable):
     name = TemplateColumn(template_name='exam/name_column.html')

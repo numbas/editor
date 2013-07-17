@@ -5,7 +5,7 @@
 	color: inherit;
 }
 
-.question-list ul {
+.question-list ol {
     list-style: none;
 	margin-bottom: 1em;
 }

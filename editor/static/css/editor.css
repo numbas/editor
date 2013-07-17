@@ -1,5 +1,11 @@
-﻿#controls {
+﻿.row-fluid.section:not(:last-child) {
+	margin-bottom: 1em;
+	padding-bottom: 1em;
+	border-bottom: 1px solid #eee;
+}
+#controls {
 	font-size: 14px;
+	margin-bottom: 1em;
 }
 
 #controls #progress select {

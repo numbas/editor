@@ -63,6 +63,8 @@ urlpatterns = patterns('',
 
     url(r'^questions/starred/$', question.FavouritesView.as_view(), name='favourite_questions',),
     
+    url(r'^questions/highlights/$', question.HighlightsView.as_view(), name='highlighted_questions',),
+    
     url(r'^questions/search/json$', question.JSONSearchView.as_view(), name='question_search_json',),
     
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/$',

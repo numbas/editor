@@ -1,6 +1,7 @@
 {% extends "editor.html" %}
 {% load verbatim %}
 {% load json %}
+{% load user_link %}
 
 {% block stylesheets %}
 	{{ block.super }}
@@ -56,7 +57,7 @@
 			{% block controls %}
 				<div class="span4" id="editable_message">{% block editable_message %}{% endblock %}</div>
 				<div class="span3 controlbox" id="author">
-					Author: <a href="{% url 'view_profile' object.author.pk %}">{{object.author.get_full_name}}</a>
+                    Author: {% user_link object.author %}
 				</div>
 			{% endblock controls %}
 			</div>

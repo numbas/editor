@@ -1,4 +1,8 @@
-﻿#name-header {
+﻿.nothing-here {
+	font-style: italic;
+}
+
+#name-header {
     padding: 0;
     height: 1.2em;
     font-size: 2em;
@@ -22,6 +26,14 @@
 	height: 1.5em;
 }
 
+.question-author {
+	font-weight: bold;
+}
+
+.editable-message {
+	font-style: italic;
+}
+
 #rulesets {
 	margin-top: 30px;
 }
@@ -31,7 +43,7 @@
 	margin-left: 0;
 }
 .extension {
-	padding: 4px;
+	padding: 4px 0;
 }
 
 .extension input[type="checkbox"] {

@@ -2,6 +2,7 @@
 {% load django_tables2 %}
 {% load render_table from django_tables2 %}
 {% load can_edit %}
+{% load user_link %}
 
 {% block content %}
 
@@ -35,7 +36,7 @@
                     <h3><a href="{% url 'favourite_questions' %}">Your starred questions</a></h3>
 
                     {% if favourites.count > 0 %}
-                        <ul>
+                        <ol>
                         {% for question in favourites|slice:":5" %}
                             <li class="question">
                                 <div class="header">
@@ -51,7 +52,7 @@
                                 <div class="description">{{ question.metadata.description|safe }}</div>
                             </li>
                         {% endfor %}
-                        </ul>
+                        </ol>
 
                         {% if favourites.count > 5 %}
                         <p style="font-style: italic;"><a href="{% url 'favourite_questions' %}">All starred questions</a>.</p>
@@ -65,7 +66,7 @@
 			{% if highlights.count > 0 %}
 				<div class="highlights question-list">
 					<h3>Editors' picks</h3>
-					<ul>
+					<ol>
 					{% for highlight in highlights|slice:":5" %}
 						{% with question=highlight.question %}
 						<li class="question">
@@ -84,12 +85,15 @@
 							</div>
 							<blockquote class="note">
 								{{highlight.note|safe}}
-								<cite class="picked-by">- Picked by <a href="{% url 'view_profile' highlight.picked_by.pk %}">{{highlight.picked_by.get_full_name}}</a>.</cite>
+								<cite class="picked-by">- Picked by {% user_link highlight.picked_by %}.</cite>
 							</blockquote>
 						</li>
 						{% endwith %}
 					{% endfor %}
-					</ul>
+					</ol>
+					{% if highlights.count > 5 %}
+					<p style="font-style: italic;"><a href="{% url 'highlighted_questions' %}">All highlighted questions</a>.</p>
+					{% endif %}
 				</div>
 			{% endif %}
 		</div>

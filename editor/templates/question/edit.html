@@ -58,18 +58,6 @@
 		<div id="controls">
 			<div class="row-fluid">
 			{% block controls %}
-    			<div class="span4" id="editable_message">{% block editable_message %}{% endblock %}</div>
-				<div class="span2 controlbox" id="author">
-					Author: <a href="{% url 'view_profile' object.author.pk %}">{{object.author.get_full_name}}</a>
-				</div>
-				<div class="span4" id="progress">
-					{% block progress %}{% endblock progress %}
-                </div>
-                {% if perms.editor.question_highlight %}
-                <div class="span2">
-                    <a href="{% url 'highlight_question' object.pk object.slug %}">Highlight</a>
-                </div>
-                {% endif %}
 			{% endblock controls %}
 			</div>
 			<ul class="controlbox" id="admin">

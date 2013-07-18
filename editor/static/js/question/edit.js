@@ -822,7 +822,8 @@ $(document).ready(function() {
                 showStrings: ko.observable(false),
                 partialCredit: ko.observable(0),
                 message: Editor.contentObservable('')
-            }
+            },
+			expectedVariableNames: ko.observableArray([])
         };
         this.jme.checkingType = ko.observable(this.jme.checkingTypes[0]);
 
@@ -1100,6 +1101,7 @@ $(document).ready(function() {
                 o.checkingaccuracy = this.jme.checkingType().accuracy();
                 o.vsetrangepoints = this.jme.vset.points();
                 o.vsetrange = [this.jme.vset.start(),this.jme.vset.end()];
+				o.expectedvariablenames = this.jme.expectedVariableNames();
                 if(this.jme.maxlength.length())
                 {
                     o.maxlength = {
@@ -1239,7 +1241,7 @@ $(document).ready(function() {
                 }
                 break;
             case 'jme':
-                tryLoad(data,['answer','answerSimplification'],this.jme);
+                tryLoad(data,['answer','answerSimplification','expectedVariableNames'],this.jme);
                 for(var i=0;i<this.jme.checkingTypes.length;i++)
                 {
                     if(this.jme.checkingTypes[i].name == data.checkingtype)

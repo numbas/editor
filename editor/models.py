@@ -34,6 +34,7 @@ from django.forms import model_to_dict
 from uuslug import slugify
 
 from taggit.managers import TaggableManager
+import taggit.models
 
 from examparser import ExamParser, ParseError, printdata
 
@@ -41,6 +42,19 @@ from jsonfield import JSONField
 
 PUBLIC_ACCESS_CHOICES = (('hidden','Hidden'),('view','Public can view'),('edit','Public can edit'))
 USER_ACCESS_CHOICES = (('view','Public can view'),('edit','Public can edit'))
+
+class EditorTag(taggit.models.TagBase):
+    official = models.BooleanField(default=False)
+
+    def used_count(self):
+        return Question.objects.filter(tags__id=self.id).count()
+
+    class Meta:
+        verbose_name = 'tag'
+        ordering = ['name']
+
+class TaggedQuestion(taggit.models.GenericTaggedItemBase):
+    tag = models.ForeignKey(EditorTag,related_name='tagged_items')
 
 class ControlledObject:
 
@@ -171,7 +185,7 @@ class Question(models.Model,NumbasObject,ControlledObject):
     ]
     progress = models.CharField(max_length=15,editable=True,default='in-progress',choices=PROGRESS_CHOICES)
 
-    tags = TaggableManager()
+    tags = TaggableManager(through=TaggedQuestion)
 
     class Meta:
         ordering = ['name']

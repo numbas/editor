@@ -338,6 +338,23 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 										</div>
 									</div>
 								</form>
+
+								<form class="form-horizontal">
+                                    <div class="control-group" data-bind="template: {
+                                        name: 'booleanproperty',
+                                        data: {label: 'Warn if student uses an unexpected variable name?', property:jme.checkVariableNames}
+                                    }"></div>
+									<div class="control-group" data-bind="fadeVisible:jme.checkVariableNames">
+										<label>
+											<span class="control-label">Expected variable names:</span>
+											<div class="controls">
+												<!-- ko foreach: jme.expectedVariableNames -->
+												<span class="well well-small" data-bind="text: $data"></span >
+												<!-- /ko -->
+											</div>
+										</label>
+									</div>
+								</form>
 							</section>
 							<!-- /ko -->
 							<!-- ko if: type().name=='numberentry' -->

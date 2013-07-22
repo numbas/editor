@@ -735,7 +735,8 @@ $(document).ready(function() {
                     theme_advanced_resizing: true,
 					theme_advanced_resize_horizontal: false,
 					height: height,
-					width: width
+					width: width,
+					verify_html: false
                 })
 				.val(value);
             ;

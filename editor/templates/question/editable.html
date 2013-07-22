@@ -398,7 +398,11 @@
 								</form>
 
 								<form class="form-horizontal">
-									<div class="control-group">
+                                    <div class="control-group" data-bind="template: {
+                                        name: 'booleanproperty',
+                                        data: {label: 'Warn if student uses an unexpected variable name?', property:jme.checkVariableNames}
+                                    }"></div>
+									<div class="control-group" data-bind="fadeVisible:jme.checkVariableNames">
 										<label>
 											<span class="control-label">Expected variable names:</span>
 											<div class="controls" data-bind="listbox:jme.expectedVariableNames"></div>

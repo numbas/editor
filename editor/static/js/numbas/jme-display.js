@@ -1,5 +1,5 @@
 /*
-Copyright 2011 Newcastle University
+Copyright 2011-13 Newcastle University
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -338,18 +338,18 @@ var texOps = jme.display.texOps = {
 			}),
 	'ceil': (function(thing,texArgs) { return '\\left \\lceil '+texArgs[0]+' \\right \\rceil';}),
 	'floor': (function(thing,texArgs) { return '\\left \\lfloor '+texArgs[0]+' \\right \\rfloor';}),
-	'int': (function(thing,texArgs) { return ('\\int \\! '+texArgs[0]+' \\, d'+texArgs[1]); }),
-	'defint': (function(thing,texArgs) { return ('\\int_{'+texArgs[2]+'}^{'+texArgs[3]+'} \\! '+texArgs[0]+' \\, d'+texArgs[1]); }),
+	'int': (function(thing,texArgs) { return ('\\int \\! '+texArgs[0]+' \\, \\mathrm{d}'+texArgs[1]); }),
+	'defint': (function(thing,texArgs) { return ('\\int_{'+texArgs[2]+'}^{'+texArgs[3]+'} \\! '+texArgs[0]+' \\, \\mathrm{d}'+texArgs[1]); }),
 	'diff': (function(thing,texArgs) 
 			{
 				var degree = (thing.args[2].tok.type=='number' && thing.args[2].tok.value==1) ? '' : '^{'+texArgs[2]+'}';
 				if(thing.args[0].tok.type=='name')
 				{
-					return ('\\frac{d'+degree+texArgs[0]+'}{d'+texArgs[1]+degree+'}');
+					return ('\\frac{\\mathrm{d}'+degree+texArgs[0]+'}{\\mathrm{d}'+texArgs[1]+degree+'}');
 				}
 				else
 				{
-					return ('\\frac{d'+degree+'}{d'+texArgs[1]+degree+'} \\left ('+texArgs[0]+' \\right )');
+					return ('\\frac{\\mathrm{d}'+degree+'}{\\mathrm{d}'+texArgs[1]+degree+'} \\left ('+texArgs[0]+' \\right )');
 				}
 			}),
 	'partialdiff': (function(thing,texArgs) 
@@ -427,6 +427,12 @@ var texOps = jme.display.texOps = {
 	'log': funcTex('\\log_{10}'),
 	'vector': (function(thing,texArgs,settings) {
 		return '\\left( '+texVector(thing,settings)+' \\right)';
+	}),
+	'rowvector': (function(thing,texArgs,settings) {
+		if(thing.args[0].tok.type!='list')
+			return texMatrix({args:[{args:thing.args}]},settings,true);
+		else
+			return texMatrix(thing,settings,true);
 	}),
 	'matrix': (function(thing,texArgs,settings) {
 		return texMatrix(thing,settings,true);

@@ -29,7 +29,7 @@
 	</form>
 
 	<div class="row-fluid">
-		<div class="span7">
+		<div class="span6">
 
 			{% if user.is_authenticated %}
 				<div class="favourites question-list">
@@ -96,7 +96,15 @@
 					{% endif %}
 				</div>
 			{% endif %}
-		</div>
+        </div>
+        <div class="span5 offset1">
+            <h3>Tags</h3>
+            <ul class="inline tagcloud">
+                {% for tag,quartile in officialtags %}
+                <li class="tag quartile-{{quartile}}"><a href="{% url 'question_search' %}?tags={{tag|urlencode}}">{{tag|capfirst}}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
 	</div>
     
 {% endblock content %}

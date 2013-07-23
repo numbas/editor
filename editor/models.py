@@ -47,7 +47,7 @@ class EditorTag(taggit.models.TagBase):
     official = models.BooleanField(default=False)
 
     def used_count(self):
-        return Question.objects.filter(tags__id=self.id).count()
+        return self.tagged_items.count()
 
     class Meta:
         verbose_name = 'tag'

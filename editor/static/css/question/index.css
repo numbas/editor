@@ -35,3 +35,47 @@
 .question .header {
     margin: 1em 0;
 }
+
+.tagcloud {
+    list-style: none;
+    margin: 0;
+    line-height: 2em;
+    text-align: justify;
+}
+.tagcloud .tag {
+    display: inline-block;
+}
+.tagcloud .tag:not(:first-child) {
+    padding-left: 5px;
+}
+.tagcloud .tag:not(:last-child) {
+    padding-right: 5px;
+}
+
+.tagcloud .quartile-0 {
+    font-size: 100%;
+}
+.tagcloud .quartile-0 a {
+    color: #888;
+}
+
+.tagcloud .quartile-1 {
+    font-size: 110%;
+}
+.tagcloud .quartile-1 a {
+    color: #666;
+}
+
+.tagcloud .quartile-2 {
+    font-size: 130%;
+}
+.tagcloud .quartile-2 a {
+    color: #444;
+}
+
+.tagcloud .quartile-3 {
+    font-size: 160%;
+}
+.tagcloud .quartile-3 a {
+    color: #222;
+}

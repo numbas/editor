@@ -30,7 +30,7 @@ from django.template.loader import render_to_string
 from django_tables2.config import RequestConfig
 
 from editor.forms import NewQuestionForm, QuestionForm, QuestionSetAccessForm, QuestionSearchForm, QuestionHighlightForm
-from editor.models import Question,Extension,Image,QuestionAccess,QuestionHighlight
+from editor.models import Question,Extension,Image,QuestionAccess,QuestionHighlight,EditorTag
 import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
@@ -341,6 +341,15 @@ class IndexView(generic.TemplateView):
         context['highlights'] = QuestionHighlight.objects.all().order_by('-date')
 
         context['navtab'] = 'questions'
+
+        tags = list(EditorTag.objects.filter(official=True))
+        tags.sort(key=EditorTag.used_count)
+        numtags = len(tags)
+        #mad magic to get approximate quartiles
+        tag_counts = [(t,(4*s)//numtags) for t,s in zip(tags,range(numtags))]
+        tag_counts.sort(key=lambda x:x[0].name)
+
+        context['officialtags'] = tag_counts
 
         return context
     

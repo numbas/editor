@@ -7,15 +7,14 @@ from django.db import models
 class Migration(DataMigration):
 
     def forwards(self, orm):
-        "Write your forwards methods here."
         EditorTag = orm['editor.EditorTag']
+        Question = orm['editor.Question']
         TaggedQuestion = orm['editor.TaggedQuestion']
-        # Note: Remember to use orm['appname.ModelName'] rather than "from appname.models..."
         for ti in orm['taggit.TaggedItem'].objects.all():
-            TaggedQuestion(tag=EditorTag.objects.get_or_create(name=ti.tag.name,slug=ti.tag.slug)[0],object_id=ti.object_id)
+            TaggedQuestion(tag=EditorTag.objects.get_or_create(name=ti.tag.name,slug=ti.tag.slug)[0],object_id=ti.object_id,content_type_id=ti.content_type_id).save()
 
     def backwards(self, orm):
-        "Write your backwards methods here."
+        pass
 
     models = {
         u'auth.group': {

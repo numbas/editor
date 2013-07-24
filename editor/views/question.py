@@ -476,7 +476,6 @@ class SetStarView(generic.UpdateView):
 
         profile = request.user.get_profile()
         starred = request.POST.get('starred') == 'true'
-        print(starred)
         if starred:
             profile.favourite_questions.add(question)
         else:

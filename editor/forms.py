@@ -30,7 +30,6 @@ class TagField(forms.CharField):
         tags_string = super(TagField,self).clean(value)
         if len(tags_string.strip()):
             tags = tags_string.split(',')
-            print(tags)
             return [t.strip() for t in tags]
         else:
             return []
@@ -54,7 +53,6 @@ class QuestionSetAccessForm(forms.ModelForm):
         v = super(QuestionSetAccessForm,self).is_valid()
         for f in self.user_access_forms:
             if not f.is_valid():
-                print(f.errors)
                 return False
         return v
     
@@ -64,7 +62,6 @@ class QuestionSetAccessForm(forms.ModelForm):
         user_ids = self.data.getlist('user_ids[]')
         access_levels = self.data.getlist('access_levels[]')
         self.user_access_forms = []
-        print(user_ids)
 
         for i,(user,access_level) in enumerate(zip(user_ids,access_levels)):
             f = QuestionAccessForm({'user':user,'access':access_level,'question':self.instance.pk})
@@ -98,7 +95,6 @@ class ExamSetAccessForm(forms.ModelForm):
         v = super(ExamSetAccessForm,self).is_valid()
         for f in self.user_access_forms:
             if not f.is_valid():
-                print(f.errors)
                 return False
         return v
     
@@ -108,7 +104,6 @@ class ExamSetAccessForm(forms.ModelForm):
         user_ids = self.data.getlist('user_ids[]')
         access_levels = self.data.getlist('access_levels[]')
         self.user_access_forms = []
-        print(user_ids)
 
         for i,(user,access_level) in enumerate(zip(user_ids,access_levels)):
             f = ExamAccessForm({'user':user,'access':access_level,'exam':self.instance.pk})

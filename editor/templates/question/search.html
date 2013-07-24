@@ -1,4 +1,5 @@
 {% extends "question/list.html" %}
+{% load human_list %}
 
 {% block content %}
 
@@ -19,6 +20,9 @@
 		<form class="searchBox form-inline">
 			{% with form.cleaned_data as data %}
 			<div>
+				{% if data.tags %}
+				<h3>Questions tagged {% for tag in data.tags %}{% if forloop.first %}{% else %}{% if forloop.last %} and {% else %}, {% endif %}{% endif %}<span class="tag-filter">{{tag}}</span>{% endfor %}</h3>
+				{% endif %}
 				<strong>Search</strong>
 				<label for="search_query">
 					for questions called:
@@ -28,7 +32,7 @@
 					</div>
 				</label>
 			</div>
-			<div>
+			<div class="search-filter">
 				<strong>Filter results</strong> 
 				<label for="search_author">
 					by author: 	
@@ -37,10 +41,6 @@
 				<label for="search_progress">
 					by progress:
 					{{ form.progress }}
-				</label>
-				<label for="search_tags">
-					by tag: 
-					{{form.tags}}
 				</label>
 			</div>
 			{% endwith %}

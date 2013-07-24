@@ -1,5 +1,5 @@
 /*
-Copyright 2011 Newcastle University
+Copyright 2011-13 Newcastle University
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,9 +21,6 @@ var math = Numbas.math;
 var vectormath = Numbas.vectormath;
 var matrixmath = Numbas.matrixmath;
 
-var re_whitespace = '(?:[\\s \\f\\n\\r\\t\\v\\u00A0\\u2028\\u2029]|(?:\&nbsp;))';
-var re_strip_whitespace = new RegExp('^'+re_whitespace+'+|'+re_whitespace+'+$','g');
-
 var jme = Numbas.jme = {
 
 	constants: {
@@ -32,6 +29,18 @@ var jme = Numbas.jme = {
 		'i': math.complex(0,1),
 		'infinity': Infinity,
 		'infty': Infinity
+	},
+
+	re: {
+		re_bool: /^true|^false/i,
+		re_number: /^[0-9]+(?:\x2E[0-9]+)?/,
+		re_name: /^{?((?:(?:[a-zA-Z]+):)*)((?:\$?[a-zA-Z_][a-zA-Z0-9_]*'*)|\?)}?/i,
+		re_short_name: /((?:(?:[a-zA-Z]+):)*\$?[a-zA-Z_][0-9_]*'*)/gi,
+		re_op: /^(\.\.|#|<=|>=|<>|&&|\|\||[\|*+\-\/\^<>=!&]|(?:(not|and|or|xor|isa|except)([^a-zA-Z0-9]|$)))/i,
+		re_punctuation: /^([\(\),\[\]])/,
+		re_string: /^(['"])((?:[^\1\\]|\\.)*?)\1/,
+		re_special: /^\\\\([%!+\-\,\.\/\:;\?\[\]=\*\&<>\|~\(\)]|\d|([a-zA-Z]+))/,
+		re_comment: /^\/\/.*(?:\n|$)/,
 	},
 
 	tokenise: function(expr)
@@ -44,31 +53,23 @@ var jme = Numbas.jme = {
 		
 		var oexpr = expr;
 
-		expr = expr.replace(re_strip_whitespace, '');	//get rid of whitespace
+		expr = expr.replace(jme.re.re_strip_whitespace, '');	//get rid of whitespace
 
 		var tokens = [];
 		var i = 0;
-		var re_bool = /^true|^false/i;
-		var re_number = /^[0-9]+(?:\x2E[0-9]+)?/;
-		var re_name = /^{?((?:(?:[a-zA-Z]+):)*)((?:\$?[a-zA-Z_][a-zA-Z0-9_]*'*)|\?)}?/i;
-		var re_op = /^(\.\.|#|<=|>=|<>|&&|\|\||[\|*+\-\/\^<>=!&]|(?:(not|and|or|xor|isa|except)([^a-zA-Z0-9]|$)))/i;
-		var re_punctuation = /^([\(\),\[\]])/;
-		var re_string = /^(['"])((?:[^\1\\]|\\.)*?)\1/;
-		var re_special = /^\\\\([%!+\-\,\.\/\:;\?\[\]=\*\&<>\|~\(\)]|\d|([a-zA-Z]+))/;
-        var re_comment = /^\/\/.*(?:\n|$)/;
 		
 		while( expr.length )
 		{
-			expr = expr.replace(re_strip_whitespace, '');	//get rid of whitespace
+			expr = expr.replace(jme.re.re_strip_whitespace, '');	//get rid of whitespace
 		
 			var result;
 			var token;
 
-            while(result=expr.match(re_comment)) {
-                expr=expr.slice(result[0].length).replace(re_strip_whitespace,'');
+            while(result=expr.match(jme.re.re_comment)) {
+                expr=expr.slice(result[0].length).replace(jme.re.re_strip_whitespace,'');
             }
 
-			if(result = expr.match(re_number))
+			if(result = expr.match(jme.re.re_number))
 			{
 				token = new TNum(result[0]);
 
@@ -77,11 +78,11 @@ var jme = Numbas.jme = {
 					tokens.push(new TOp('*'));
 				}
 			}
-			else if (result = expr.match(re_bool))
+			else if (result = expr.match(jme.re.re_bool))
 			{
 				token = new TBool(util.parseBool(result[0]));
 			}
-			else if (result = expr.match(re_op))
+			else if (result = expr.match(jme.re.re_op))
 			{
 				if(result[2])		//if word-ish operator
 					result[0] = result[2];
@@ -100,7 +101,7 @@ var jme = Numbas.jme = {
 				}
 				token=new TOp(token);
 			}
-			else if (result = expr.match(re_name))
+			else if (result = expr.match(jme.re.re_name))
 			{
 				var name = result[2];
 				var annotation = result[1] ? result[1].split(':') : null;
@@ -123,7 +124,7 @@ var jme = Numbas.jme = {
 					tokens.push(new TOp('*'));
 				}
 			}
-			else if (result = expr.match(re_punctuation))
+			else if (result = expr.match(jme.re.re_punctuation))
 			{
 				if(result[0]=='(' && tokens.length>0 && (tokens[tokens.length-1].type=='number' || tokens[tokens.length-1].type==')')) {	//number or right bracket followed by left parenthesis is also interpreted to mean multiplication
 					tokens.push(new TOp('*'));
@@ -131,7 +132,7 @@ var jme = Numbas.jme = {
 
 				token = new TPunc(result[0]);
 			}
-			else if (result = expr.match(re_string))
+			else if (result = expr.match(jme.re.re_string))
 			{
 				var str = result[2];
 	
@@ -159,7 +160,7 @@ var jme = Numbas.jme = {
 
 				token = new TString(estr);
 			}
-			else if (result = expr.match(re_special))
+			else if (result = expr.match(jme.re.re_special))
 			{
 				var code = result[1] || result[2];
 				
@@ -489,8 +490,8 @@ var jme = Numbas.jme = {
 					if(tok.type=='function') {
 						//check if the user typed something like xtan(y), when they meant x*tan(y)
 						var possibleOp = op.slice(1);
-						if(op.slice(1) in scope.functions)
-							throw(new Numbas.Error('jme.typecheck.function maybe implicit multiplication',op,op[0],op.slice(1)));
+						if(possibleOp in scope.functions)
+							throw(new Numbas.Error('jme.typecheck.function maybe implicit multiplication',op,op[0],possibleOp));
 						else
 							throw(new Numbas.Error('jme.typecheck.function not defined',op,op));
 					}
@@ -517,7 +518,7 @@ var jme = Numbas.jme = {
 		}
 	},
 
-	compile: function(expr,scope,notypecheck) 
+	compile: function(expr,scope)
 	{
 		expr+='';	//make sure expression is a string and not a number or anything like that
 
@@ -779,6 +780,10 @@ var jme = Numbas.jme = {
 		}
 	}
 };
+
+jme.re.re_whitespace = '(?:[\\s \\f\\n\\r\\t\\v\\u00A0\\u2028\\u2029]|(?:\&nbsp;))';
+jme.re.re_strip_whitespace = new RegExp('^'+jme.re.re_whitespace+'+|'+jme.re.re_whitespace+'+$','g');
+
 
 var displayFlags = {
 	fractionnumbers: undefined,
@@ -1435,6 +1440,7 @@ newBuiltin('..', [TNum,TNum], TRange, math.defineRange, {doc: {usage: ['a..b','1
 newBuiltin('#', [TRange,TNum], TRange, math.rangeSteps, {doc: {usage: ['a..b#c','0..1 # 0.1'], description: 'Set the step size for a range.'}}); 
 
 newBuiltin('html',[TString],THTML,function(html) { return $(html) }, {doc: {usage: ['html(\'<div>things</div>\')'], description: 'Parse HTML from a string', tags: ['element','node']}});
+newBuiltin('image',[TString],THTML,function(url){ return $('<img/>').attr('src',url); }, {doc: {usage: ['image(\'picture.png\')'], description: 'Load an image from the given URL', tags: ['element','image','html']}});
 
 newBuiltin('latex',[TString],TString,null,{
 	evaluate: function(args,scope) {
@@ -2192,7 +2198,7 @@ function randoms(varnames,min,max,times)
 function varnamesAgree(array1, array2) {
 	var name;
 	for(var i=0; i<array1.length; i++) {
-		if( (name=array1[i][0])!='$' && !array2.contains(name) )
+		if( (name=array1[i])[0]!='$' && !array2.contains(name) )
 			return false;
 	}
 	
@@ -2333,7 +2339,7 @@ function resultsEqual(r1,r2,checkingFunction,checkingAccuracy)
 			return false;
 		for(var i=0;i<v1.length;i++)
 		{
-			if(!resultsEqual(v1[i],v2[i],checkingFunction,checkingAccuracy))
+			if(!resultsEqual(new TNum(v1[i]),new TNum(v2[i]),checkingFunction,checkingAccuracy))
 				return false;
 		}
 		return true;
@@ -2345,7 +2351,7 @@ function resultsEqual(r1,r2,checkingFunction,checkingAccuracy)
 		{
 			for(var j=0;j<v1.columns;j++)
 			{
-				if(!resultsEqual(v1[i][j]||0,v2[i][j]||0,checkingFunction,checkingAccuracy))
+				if(!resultsEqual(new TNum(v1[i][j]||0),new TNum(v2[i][j]||0),checkingFunction,checkingAccuracy))
 					return false;
 			}
 		}

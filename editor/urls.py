@@ -25,13 +25,17 @@ from editor.views.resource import upload_resource, ImageDeleteView, media_view
 urlpatterns = patterns('',
     url(r'^$', HomeView.as_view(), name='editor_index'),
 
-    url(r'^exams/$',exam.ListView.as_view(), name='exam_index',),
+    url(r'^exams/$',exam.IndexView.as_view(), name='exam_index',),
                        
     url(r'^exam/new/$', login_required(exam.CreateView.as_view()), name='exam_new'),
     
     url(r'^exam/upload/$', exam.UploadView.as_view(), name='exam_upload'),
                        
     url(r'^exams/search/$', exam.SearchView.as_view(), name='exam_search'),
+
+    url(r'^exams/starred/$', exam.FavouritesView.as_view(), name='favourite_exams',),
+    
+    url(r'^exams/highlights/$', exam.HighlightsView.as_view(), name='highlighted_exams',),
     
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/$', exam.UpdateView.as_view(),
         name='exam_edit'),
@@ -52,6 +56,12 @@ urlpatterns = patterns('',
                        
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/set-access$',
         exam.SetAccessView.as_view(),name='set_exam_access'),
+
+    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/highlight$',
+        login_required(exam.HighlightView.as_view()),name='highlight_exam'),
+
+    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/set-star$',
+        login_required(exam.SetStarView.as_view()),name='set_exam_star'),
 
     url(r'^questions/$', question.IndexView.as_view(), name='question_index',),
 

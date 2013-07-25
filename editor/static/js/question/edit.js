@@ -55,7 +55,6 @@ $(document).ready(function() {
             return {starred: this.starred()}
         },this);
         this.saveStar = Editor.saver(this.starData,function(data) {
-            console.log('save star',data);
             return $.post('set-star',data);
         });
 

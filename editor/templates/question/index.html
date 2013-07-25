@@ -1,6 +1,4 @@
 {% extends "layout.html" %}
-{% load django_tables2 %}
-{% load render_table from django_tables2 %}
 {% load can_edit %}
 {% load user_link %}
 
@@ -83,9 +81,9 @@
 							<div class="description">
 								{{ question.metadata.description|safe }}
 							</div>
-							<blockquote class="note">
+							<blockquote class="note well well-small">
+								<cite class="picked-by">Picked by {% user_link highlight.picked_by %}.</cite>
 								{{highlight.note|safe}}
-								<cite class="picked-by">- Picked by {% user_link highlight.picked_by %}.</cite>
 							</blockquote>
 						</li>
 						{% endwith %}

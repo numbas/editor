@@ -25,12 +25,14 @@
 .question .name {
     font-weight: bold;
 }
+.question .note {
+    padding-left: 2em;
+}
 .question .picked-by {
     font-style: italic;
     font-size: 0.9em;
-    margin-left: 0.5em;
+    margin-left: -1.5em;
 	display: block;
-	text-align: right;
 }
 .question .header {
     margin: 1em 0;

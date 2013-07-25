@@ -304,7 +304,10 @@ class Exam(models.Model,NumbasObject,ControlledObject):
     access_rights = models.ManyToManyField(User, through='ExamAccess', blank=True, editable=False,related_name='accessed_exams+')
 
     class Meta:
-      ordering = ['name']
+        ordering = ['name']
+        permissions = (
+              ('highlight', 'Can pick exams to be featured on the front page.'),
+        )
 
     def __unicode__(self):
         return 'Exam "%s"' %self.name
@@ -379,6 +382,15 @@ class Exam(models.Model,NumbasObject,ControlledObject):
             return exam_access.access
         except ExamAccess.DoesNotExist:
             return 'none'
+
+class ExamHighlight(models.Model):
+    class Meta:
+        ordering = ['-date']
+
+    exam = models.ForeignKey(Exam)
+    picked_by = models.ForeignKey(User)
+    note = models.TextField(blank=True)
+    date = models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
 
 class ExamAccess(models.Model):
     exam = models.ForeignKey(Exam)

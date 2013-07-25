@@ -38,6 +38,17 @@ $(document).ready(function() {
             this.mainTabs.push(new Editor.Tab('access','Access'));
 		this.currentTab = ko.observable(this.mainTabs()[0]);
 
+        this.starred = ko.observable(Editor.starred);
+        this.toggleStar = function() {
+            e.starred(!e.starred());
+        }
+        this.starData = ko.computed(function() {
+            return {starred: this.starred()}
+        },this);
+        this.saveStar = Editor.saver(this.starData,function(data) {
+            return $.post('set-star',data);
+        });
+
         this.realName = ko.observable('An Exam');
 		this.name = ko.computed({
 			read: this.realName,

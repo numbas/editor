@@ -63,7 +63,7 @@
 
 			{% if highlights.count > 0 %}
 				<div class="highlights exam-list">
-					<h3>Editors' picks</h3>
+					<h3><a href="{% url 'highlighted_exams' %}">Editors' picks</a></h3>
 					<ol>
 					{% for highlight in highlights|slice:":5" %}
 						{% with exam=highlight.exam %}

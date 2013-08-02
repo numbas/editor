@@ -47,11 +47,8 @@
 .tagcloud .tag {
     display: inline-block;
 }
-.tagcloud .tag:not(:first-child) {
-    padding-left: 5px;
-}
 .tagcloud .tag:not(:last-child) {
-    padding-right: 5px;
+    padding-right: 10px;
 }
 
 .tagcloud .quartile-0 {
@@ -69,14 +66,14 @@
 }
 
 .tagcloud .quartile-2 {
-    font-size: 130%;
+    font-size: 120%;
 }
 .tagcloud .quartile-2 a {
     color: #444;
 }
 
 .tagcloud .quartile-3 {
-    font-size: 160%;
+    font-size: 130%;
 }
 .tagcloud .quartile-3 a {
     color: #222;

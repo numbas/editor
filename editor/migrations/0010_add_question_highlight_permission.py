@@ -11,7 +11,7 @@ class Migration(DataMigration):
         ct, created = orm['contenttypes.ContentType'].objects.get_or_create(
             model='question',app_label='editor')
         perm, created = orm['auth.permission'].objects.get_or_create(
-            content_type=ct, codename='question_highlight', defaults=dict(name=u'Can pick questions to be featured on the front page.'))
+            content_type=ct, codename='question_highlight', defaults=dict(name=u'Can pick questions to feature on the front page.'))
 
     def backwards(self, orm):
         "Write your backwards methods here."

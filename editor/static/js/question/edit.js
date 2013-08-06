@@ -47,6 +47,17 @@ $(document).ready(function() {
 
 		this.currentTab = ko.observable(this.mainTabs()[0]);
 
+        this.starred = ko.observable(Editor.starred);
+        this.toggleStar = function() {
+            q.starred(!q.starred());
+        }
+        this.starData = ko.computed(function() {
+            return {starred: this.starred()}
+        },this);
+        this.saveStar = Editor.saver(this.starData,function(data) {
+            return $.post('set-star',data);
+        });
+
 		this.exams = data.exams;
 
 		this.resources = ko.observableArray([]);
@@ -303,8 +314,7 @@ $(document).ready(function() {
                 return {
                     public_access: q.public_access(),
                     user_ids: q.access_rights().map(function(u){return u.id}),
-                    access_levels: q.access_rights().map(function(u){return u.access_level()}),
-                    csrfmiddlewaretoken: getCookie('csrftoken')
+                    access_levels: q.access_rights().map(function(u){return u.access_level()})
                 }
             });
             this.saveAccess = Editor.saver(this.access_data,function(data) {

@@ -1,1 +1,80 @@
-﻿
+﻿.description {
+}
+
+.question-list h3 a {
+	color: inherit;
+}
+
+.question-list ol {
+    list-style: none;
+	margin-bottom: 1em;
+}
+
+.favourites {
+	margin-bottom: 2em;
+}
+
+.question:not(:last-child) {
+	border-bottom: 1px solid #eee;
+}
+
+.question .admin {
+	float: right;
+}
+
+.question .name {
+    font-weight: bold;
+}
+.question .note {
+    padding-left: 2em;
+}
+.question .picked-by {
+    font-style: italic;
+    font-size: 0.9em;
+    margin-left: -1.5em;
+	display: block;
+}
+.question .header {
+    margin: 1em 0;
+}
+
+.tagcloud {
+    list-style: none;
+    margin: 0;
+    line-height: 2em;
+    text-align: justify;
+}
+.tagcloud .tag {
+    display: inline-block;
+}
+.tagcloud .tag:not(:last-child) {
+    padding-right: 10px;
+}
+
+.tagcloud .quartile-0 {
+    font-size: 100%;
+}
+.tagcloud .quartile-0 a {
+    color: #888;
+}
+
+.tagcloud .quartile-1 {
+    font-size: 110%;
+}
+.tagcloud .quartile-1 a {
+    color: #666;
+}
+
+.tagcloud .quartile-2 {
+    font-size: 120%;
+}
+.tagcloud .quartile-2 a {
+    color: #444;
+}
+
+.tagcloud .quartile-3 {
+    font-size: 130%;
+}
+.tagcloud .quartile-3 a {
+    color: #222;
+}

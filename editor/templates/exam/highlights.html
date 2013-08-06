@@ -1,0 +1,60 @@
+{% extends "exam/list.html" %}
+{% load django_tables2 %}
+{% load render_table from django_tables2 %}
+{% load can_edit %}
+{% load user_link %}
+
+{% block content %}
+
+	<h2>Editors' picks</h2>
+
+	<div>
+		{% include "pagination.html" %}
+		<div class="exam-list">
+			{% if object_list %}
+			<ol class="search-results">
+				{% for row in results.page.object_list|default:results.rows %}
+				{% with highlight=row.record exam=row.record.exam %}
+					<li class="exam">
+						<div class="header">
+                            <span class="name"><a href="{% url 'exam_edit' exam.pk exam.slug %}">{{ exam.name }}</a></span> by {% user_link exam.author %}
+							<span class="admin">
+								<a class="preview" href="{% url 'exam_preview' exam.pk exam.slug %}" target="_blank" title="Test run"></a>
+								{% if user.is_authenticated %}
+								<a class="copy" href="{% url 'exam_copy' exam.pk exam.slug %}" title="Make a copy"></a>
+								{% endif %}
+								{% if exam|can_be_edited_by:user %}<a class="delete" href="{% url 'exam_delete' exam.pk exam.slug %}" title="Delete"></a>{% endif %}
+							</span>
+						</div>
+						<div class="description">
+							{{ exam.metadata.description|safe }}
+						</div>
+						<blockquote class="note well well-small">
+							<cite class="picked-by">Picked by {% user_link highlight.picked_by %}</cite>
+							{{highlight.note|safe}}
+						</blockquote>
+					</li>
+				{% endwith %}
+				{% endfor %}
+			</ol>
+
+			{% else %}
+			<div class="none">No exams have been picked.</div>
+			{% endif %}
+		</div>
+		{% include "pagination.html" %}
+		<p class="small-help">
+			<strong>Keyboard shortcuts:</strong>
+			You can use <code>j</code>/<code>k</code> to move through pages, and <code>?</code> or <code>/</code> to search.
+		</p>
+	</div>
+    
+{% endblock content %}
+
+
+{% block stylesheets %}
+	{{ block.super }}
+	<link href="{{ STATIC_URL }}css/exam/index.css" type="text/css" rel="stylesheet" />
+	<link href="{{ STATIC_URL }}css/highlights.css" type="text/css" rel="stylesheet" />
+{% endblock stylesheets %}
+

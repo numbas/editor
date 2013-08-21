@@ -16,7 +16,7 @@
             </form>
         </div>
 	{% else %}
-		<a href="{% url "login" %}">Log in</a> to create your own exams.</a>
+	<p><a href="{% url "login" %}">Log in</a> to create your own exams.</a></p>
     {% endif %}
 
 	<form class="search" action="{% url 'exam_search' %}">

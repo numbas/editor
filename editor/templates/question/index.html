@@ -16,7 +16,7 @@
             </form>
 		</div>
 	{% else %}
-		<p><a href="{% url "login" %}">Log in</a> to create your own questions.</a></p>
+		<p class="hint"><a href="{% url "login" %}">Log in</a> to create your own questions.</a></p>
     {% endif %}
 
 	<form class="search" action="{% url 'question_search' %}">

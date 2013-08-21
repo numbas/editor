@@ -31,10 +31,16 @@
 				</div>
 			</div>
 			<div class="row-fluid section">
+				<h4>Options</h4>
 				<form class="form-horizontal">
 					<div class="control-group" data-bind="template: {
 						name: 'selectproperty',
 						data: {label: 'Theme:', property: theme, options: Editor.themes}
+					}"></div>
+
+					<div class="control-group" data-bind="visible: Editor.locales.length>1, template: {
+						name: 'selectproperty',
+						data: {label: 'Interface language:', property: locale, options: Editor.locales}
 					}"></div>
 
 					<div class="control-group" data-bind="template: {

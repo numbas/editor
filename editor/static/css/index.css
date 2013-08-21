@@ -48,6 +48,14 @@
 .search {
     text-align: center;
 }
+
+.search label {
+    font-size: 18px;
+}
+.search div.input-append {
+    display: inline-block;
+    vertical-align: middle;
+}
 #search_query {
     width: 40em;
 }

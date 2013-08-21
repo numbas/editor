@@ -106,6 +106,10 @@ button:hover, button:focus {
 	padding: 1px 30px 1px 0;
 }
 
+.hint {
+    font-style: italic;
+}
+
 #session {
     text-align: right;
 }

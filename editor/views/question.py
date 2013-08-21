@@ -337,6 +337,7 @@ class IndexView(generic.TemplateView):
         if self.request.user.is_authenticated():
             profile = self.request.user.get_profile()
             context['favourites'] = profile.favourite_questions.all()
+            context['recents'] = Question.objects.filter(author=self.request.user).order_by('-last_modified')
         
         context['highlights'] = QuestionHighlight.objects.all().order_by('-date')
 
@@ -347,7 +348,7 @@ class IndexView(generic.TemplateView):
         numtags = len(tags)
         #mad magic to get approximate quartiles
         tag_counts = [(t,(4*s)//numtags) for t,s in zip(tags,range(numtags))]
-        tag_counts.sort(key=lambda x:x[0].name)
+        tag_counts.sort(key=lambda x:x[0].name.upper())
 
         context['officialtags'] = tag_counts
 

@@ -30,6 +30,41 @@
 	</form>
 
 	<div class="row-fluid">
+        <div class="span6">
+			<div class="favourites exam-list">
+				<h3><a href="{% url 'favourite_exams' %}">Your starred exams</a></h3>
+				{% if user.is_authenticated %}
+
+                    {% if favourites.count > 0 %}
+                        <ol>
+                        {% for exam in favourites|slice:":5" %}
+                            <li class="exam">
+                                <div class="header">
+                                    <span class="name"><a href="{% url 'exam_edit' exam.pk exam.slug %}">{{ exam.name }}</a></span>
+                                    <span class="admin">
+                                        <a class="preview" href="{% url 'exam_preview' exam.pk exam.slug %}" target="_blank" title="Test run"></a>
+                                        {% if user.is_authenticated %}
+                                        <a class="copy" href="{% url 'exam_copy' exam.pk exam.slug %}" title="Make a copy"></a>
+                                        {% endif %}
+                                        {% if exam|can_be_edited_by:user %}<a class="delete" href="{% url 'exam_delete' exam.pk exam.slug %}" title="Delete"></a>{% endif %}
+                                    </span>
+                                </div>
+                                <div class="description">{{ exam.metadata.description|safe }}</div>
+                            </li>
+                        {% endfor %}s
+                        </ol>
+
+                        {% if favourites.count > 5 %}
+                        <p style="font-style: italic;"><a href="{% url 'favourite_exams' %}">All starred exams</a>.</p>
+                        {% endif %}
+                    {% else %}
+                        <p style="font-style:italic">When looking at an exam, you can click on the star icon next to its name to save it for later. The list of exams you've starred will appear here.</p>
+					{% endif %}
+				{% else %}
+					<p class="hint"><a href="{% url "login" %}">Log in</a> to star exams. They'll appear here every time you come back.</p>
+				{% endif %}
+			</div>
+        </div>
 		<div class="span6">
 			{% if highlights.count > 0 %}
 				<div class="highlights exam-list">
@@ -64,43 +99,6 @@
 					{% endif %}
 				</div>
 			{% endif %}
-        </div>
-        <div class="span6">
-
-			<div class="favourites exam-list">
-				<h3><a href="{% url 'favourite_exams' %}">Your starred exams</a></h3>
-				{% if user.is_authenticated %}
-
-                    {% if favourites.count > 0 %}
-                        <ol>
-                        {% for exam in favourites|slice:":5" %}
-                            <li class="exam">
-                                <div class="header">
-                                    <span class="name"><a href="{% url 'exam_edit' exam.pk exam.slug %}">{{ exam.name }}</a></span>
-                                    <span class="admin">
-                                        <a class="preview" href="{% url 'exam_preview' exam.pk exam.slug %}" target="_blank" title="Test run"></a>
-                                        {% if user.is_authenticated %}
-                                        <a class="copy" href="{% url 'exam_copy' exam.pk exam.slug %}" title="Make a copy"></a>
-                                        {% endif %}
-                                        {% if exam|can_be_edited_by:user %}<a class="delete" href="{% url 'exam_delete' exam.pk exam.slug %}" title="Delete"></a>{% endif %}
-                                    </span>
-                                </div>
-                                <div class="description">{{ exam.metadata.description|safe }}</div>
-                            </li>
-                        {% endfor %}s
-                        </ol>
-
-                        {% if favourites.count > 5 %}
-                        <p style="font-style: italic;"><a href="{% url 'favourite_exams' %}">All starred exams</a>.</p>
-                        {% endif %}
-                    {% else %}
-                        <p style="font-style:italic">When looking at an exam, you can click on the star icon next to its name to save it for later. The list of exams you've starred will appear here.</p>
-					{% endif %}
-				{% else %}
-					<p class="hint"><a href="{% url "login" %}">Log in</a> to star exams. They'll appear here every time you come back.</p>
-				{% endif %}
-			</div>
-
         </div>
 	</div>
     

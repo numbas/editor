@@ -206,7 +206,7 @@ class Question(models.Model,NumbasObject,ControlledObject):
         super(Question, self).save(*args, **kwargs)
 
         if 'tags' in self.parsed_content:
-           self.tags.set(*self.parsed_content['tags'])
+            self.tags.set(*[t.strip() for t in self.parsed_content['tags']])
 
 
     def delete(self, *args, **kwargs):

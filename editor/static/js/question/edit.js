@@ -101,6 +101,7 @@ $(document).ready(function() {
         },this);
 
         this.tags.push = function(thing) {
+            thing = thing.trim();
 			if(thing.length==0)
 				return;
             if(realtags().indexOf(thing)==-1)

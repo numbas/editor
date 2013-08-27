@@ -429,7 +429,7 @@ class HighlightsView(ListView):
         highlights = QuestionHighlight.objects.all()
         return highlights
 
-class JSONSearchView(ListView):
+class JSONSearchView(SearchView):
     
     """Search questions."""
     

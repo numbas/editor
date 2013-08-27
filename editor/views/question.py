@@ -401,6 +401,7 @@ class SearchView(ListView):
             for tag in tags:
                 questions = questions.filter(tags__name__in=[tag])
 
+		questions = questions.distinct()
         questions = [q for q in questions if q.can_be_viewed_by(self.request.user)]
 
         return questions

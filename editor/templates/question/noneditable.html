@@ -22,6 +22,9 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 					<p class="editable-message">
 						You may only view this question. {% if user.is_authenticated %}If you want to change something, make a copy.{% endif %}
 					</p>
+                    {% if object.copy_of %}
+                    <p>This question is based on <a href="{% url 'question_edit' object.copy_of.pk object.copy_of.slug %}">{{object.copy_of.name}}</a> by <a href="{% url 'view_profile' object.copy_of.author.pk %}">{{object.copy_of.author.get_full_name}}</a>.</p>
+                    {% endif %}
 				</div>
 				<div class="span4">
 

@@ -38,6 +38,7 @@ class QuestionSearchForm(forms.Form):
     query = forms.CharField(initial='', required=False)
     author = forms.CharField(initial='', required=False)
     progress = forms.ChoiceField(initial='',choices = [('','Any')]+Question.PROGRESS_CHOICES, required=False)
+    filter_copies = forms.BooleanField(initial=False)
     tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
 
 class QuestionAccessForm(forms.ModelForm):
@@ -126,7 +127,7 @@ class QuestionForm(forms.ModelForm):
 
     class Meta:
         model = Question
-        exclude = ('name','author','tags','public_access')
+        exclude = ('name','author','tags','public_access','copy_of')
 
 class QuestionHighlightForm(forms.ModelForm):
     note = forms.CharField(widget=forms.Textarea(attrs={'data-bind':'text:note'}), label='Write a note explaining why you\'re highlighting this question.')

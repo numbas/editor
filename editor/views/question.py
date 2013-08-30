@@ -176,6 +176,7 @@ class CopyView(generic.View, SingleObjectMixin):
             q2.author = request.user
             q2.save()
             q2.set_name("%s's copy of %s" % (q2.author.first_name,q.name))
+            q2.copy_of = q
             q2.resources = q.resources.all()
             q2.save()
         except (Question.DoesNotExist, TypeError) as err:
@@ -401,7 +402,11 @@ class SearchView(ListView):
             for tag in tags:
                 questions = questions.filter(tags__name__in=[tag])
 
-		questions = questions.distinct()
+        filter_copies = form.cleaned_data.get('filter_copies')
+        if filter_copies:
+            questions = questions.filter(copy_of=None)
+
+        questions = questions.distinct()
         questions = [q for q in questions if q.can_be_viewed_by(self.request.user)]
 
         return questions

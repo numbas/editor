@@ -34,14 +34,18 @@
 			</div>
 			<div class="search-filter">
 				<strong>Filter results</strong> 
-				<label for="search_author">
+				<label for="id_author">
 					by author: 	
 					<input id="search_author" data-autocomplete-url="{% url 'user_search' %}" name="author" type="text" size="30" value="{{ data.author }}" placeholder="User name"/>
 				</label>
-				<label for="search_progress">
+				<label for="id_progress">
 					by progress:
 					{{ form.progress }}
-				</label>
+                </label>
+                <label for="id_filter_copies">
+                    filter out copied questions: 
+                    {{form.filter_copies}}
+                </label>
 			</div>
 			{% endwith %}
 		</form>

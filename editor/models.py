@@ -173,6 +173,7 @@ class Question(models.Model,NumbasObject,ControlledObject):
     created = models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
     last_modified = models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
     resources = models.ManyToManyField(Image,blank=True)
+    copy_of = models.ForeignKey('self',null=True,related_name='copies')
 
     public_access = models.CharField(default='view',editable=True,choices=PUBLIC_ACCESS_CHOICES,max_length=6)
     access_rights = models.ManyToManyField(User, through='QuestionAccess', blank=True, editable=False,related_name='accessed_questions+')

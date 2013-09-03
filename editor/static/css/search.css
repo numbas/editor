@@ -21,6 +21,14 @@
 	font-weight: normal;
 }
 
+.remove-tag-filter {
+	display: inline-block;
+	border-radius: 50%;
+	background-image: url(../images/x_alt_16x16.png);
+	width: 16px;
+	height: 16px;
+}
+
 .search-filter {
 	margin-top: 0.3em;
 }

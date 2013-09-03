@@ -1,3 +1,7 @@
+.nothing-here {
+	font-style: italic;
+}
+
 #name-header {
     padding: 0;
     height: 1.2em;
@@ -9,12 +13,27 @@
 	margin-top: 5px;
 	margin-bottom: 15px;
 	font-size: 24px;
+    list-style: none;
+    margin: 0;
+}
+#admin li {
+    display: inline-block;
+    margin-right: 2em;
 }
 
 #exam-name {
 	font-size: 2em;
 	height: 1.5em;
 }
+
+.exam-author {
+	font-weight: bold;
+}
+
+.editable-message {
+	font-style: italic;
+}
+
 
 .question {
 	line-height: 1.5em !important;

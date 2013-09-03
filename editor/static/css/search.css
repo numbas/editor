@@ -1,0 +1,174 @@
+#newExamForm, #newQuestionForm {
+	display: none;
+}
+
+.upload {
+	visibility: hidden;
+	position: absolute;
+	top: 0;
+}
+
+#uploadForm {
+	display: inline-block;
+}
+
+#uploadForm.over button {
+	border: red;
+}
+
+.tag-filter {
+	font-style: italic;
+	font-weight: normal;
+}
+
+.remove-tag-filter {
+	display: inline-block;
+	border-radius: 50%;
+	background-image: url(../images/x_alt_16x16.png);
+	width: 16px;
+	height: 16px;
+}
+
+.search-filter {
+	margin-top: 0.3em;
+}
+
+.results {
+    margin: 0.5em 0 0 0;
+}
+
+.search-results {
+	width: 100%;
+}
+
+.search-results th {
+    cursor: pointer;
+	text-align: left;
+	padding: 0 0.4em;
+}
+
+.search-results th.sortable:after {
+    background-position: 50%;
+    background-repeat: no-repeat;
+    content: '';
+    width: 8px;
+    height: 6px;
+    display: inline-block;
+    vertical-align: middle;
+    padding-left: 8px;
+}
+
+.search-results th.sortable.asc:after {
+    background-image: url(../images/accordion-up.png);
+}
+.search-results th.sortable.desc:after {
+    background-image: url(../images/accordion-down.png);
+}
+
+
+.search-results tbody tr:nth-child(odd) {
+	background: #eee;
+}
+
+.search-results col.name {
+	width: 300px;
+}
+
+.search-results col.author {
+	width: 150px;
+}
+
+.search-results col.col-progress {
+	width: 150px;
+}
+
+.search-results col.admin {
+	width: 100px;
+}
+
+.search-results col.last_modified {
+	width: 125px;
+}
+
+.result td {
+	padding: 0.4em;
+	max-width: 400px;
+	overflow-x: hidden;
+}
+
+.result .description {
+	font-size: 0.8em;
+	margin-top: 0.5em;
+	padding-left: 1em;
+	max-height: 5em;
+	overflow-y: hidden;
+	overflow-x: hidden;
+}
+.result .description p {
+	margin: 0;
+}
+
+.pagination {
+	margin-top: 1em;
+	vertical-align: center;
+}
+
+.pagination .move {
+	display: inline-block;
+	background: center no-repeat;
+	border: none;
+	width: 30px;
+	height: 16px;
+	padding: 0;
+}
+
+.pagination .move[href]:hover {
+	background-color: #f90;
+}
+
+.pagination .previous[href] {
+	background-image: url(../images/arrow_left_12x12.png);
+}
+.pagination .next[href] {
+	background-image: url(../images/arrow_right_12x12.png);
+}
+
+.pagination .pagenumber {
+	margin: 0 4px;
+}
+
+.small-help {
+	font-size: smaller;
+	color: #444;
+}
+
+.list-total {
+	float: right;
+}
+
+.controlbox {
+}
+
+.controlbox#admin a {
+    font-size: 18px;
+    text-decoration: none;
+    margin-right: 0.5em;
+}
+.controlbox#admin a:before {
+    padding-right: 4px;
+}
+.controlbox#admin a:visited {
+    color: #00e;
+}
+
+.controlbox #upload:before {
+    content: url(../images/upload_12x16.png);
+}
+
+.controlbox #new:before {
+    content: url(../images/plus_alt_16x16.png);
+}
+
+.controlbox:first-child {
+    margin-top: 0;
+}

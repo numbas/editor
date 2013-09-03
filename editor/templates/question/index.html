@@ -1,7 +1,6 @@
 {% extends "layout.html" %}
-{% load django_tables2 %}
-{% load render_table from django_tables2 %}
 {% load can_edit %}
+{% load user_link %}
 
 {% block content %}
 
@@ -15,103 +14,132 @@
                     <input type="file" name="file" value="yo"/>
                 </div>
             </form>
-        </div>
-	{% endif %}
+		</div>
+	{% else %}
+		<p class="hint"><a href="{% url "login" %}">Log in</a> to create your own questions.</a></p>
+    {% endif %}
 
-    <div class="row-fluid">
-		<form class="searchBox form-inline">
-			{% with form.cleaned_data as data %}
-			<div>
-				<strong>Search</strong>
-				<label for="search_query">
-					for questions called:
-					<div class="input-append">
-						<input role="search" id="search_query" type="text" name="query" value="{{ data.query }}" placeholder="Topic or question name"/>
-						<span class="add-on"><button type="submit" class="search" title="Search"></button></span>
-					</div>
-				</label>
-			</div>
-			<div>
-				<strong>Filter results</strong> 
-				<label for="search_author">
-					by author: 	
-					<input id="search_author" data-autocomplete-url="{% url 'user_search' %}" name="author" type="text" size="30" value="{{ data.author }}" placeholder="User name"/>
-				</label>
-				<label for="search_progress">
-					by progress:
-					{{ form.progress }}
-				</label>
-				<label for="search_tags">
-					by tag: 
-					{{form.tags}}
-				</label>
-			</div>
-			{% endwith %}
-		</form>
+	<form class="search" action="{% url 'question_search' %}">
+        <label for="search_query">
+			Search the public question bank: 
+            <div class="input-append">
+                <input role="search" id="search_query" type="text" name="query" value="{{ data.query }}" placeholder="Keyword or title"/>
+                <span class="add-on"><button type="submit" class="search" title="Search"></button></span>
+            </div>
+        </label>
+	</form>
+
+	<div class="row-fluid popular-topics">
+		<h3>Popular Topics</h3>
+		<p class="hint">Find questions on a particular topic by following one of the links below.</p>
+		<ul class="inline tagcloud">
+			{% for tag,quartile in officialtags %}
+			<li class="tag quartile-{{quartile}}"><a href="{% url 'question_search' %}?tags={{tag|urlencode}}">{{tag|capfirst}}</a></li>
+			{% endfor %}
+		</ul>
 	</div>
 
-	<div>
-		<div class="list-total">{{ results.page.paginator.count }} questions found.</div>
-		{% include "pagination.html" %}
-		<div class="results">
-			{% if object_list %}
-			<table class="search-results" id="question-list">
-				<col span="1" class="name"/>
-				<col span="1" class="author"/>
-				<col span="1" class="col-progress"/>
-				<col span="1" class="last_modified"/>
-				<col span="1" class="admin"/>
-				<thead>
-					<tr>
-					{% for column in results.columns %}
-						<th {{ column.attrs.th.as_html }}>
-							{% if column.orderable %}
-								<a href="{% querystring results.prefixed_order_by_field=column.order_by_alias.next "page"=1 %}">{{ column.header }}</a>
-							{% else %}
-								{{ column.header }}
-							{% endif %}
-						</th>
-					{% endfor %}
-					</tr>
-				</thead>
-				<tbody>
-					{% for row in results.page.object_list|default:results.rows %}
-					{% with row.record as question %}
-					{% block results.tbody.row %}
-					<tr class="result question">
-						<td class="name">{{row.name}}</td>
-						<td class="author">{{row.author}}</td>
-						<td class="col_progress progress-display {{question.progress}}">{{row.col_progress}}</td>
-						<td class="last_modified">{{row.last_modified}}</td>
-						<td class="admin">
-							<a class="preview" href="{% url 'question_preview' question.pk question.slug %}" target="_blank" title="Test run"></a>
-							{% if user.is_authenticated %}
-							<a class="copy" href="{% url 'question_copy' question.pk question.slug %}" title="Make a copy"></a>
-							{% endif %}
-							{% if question|can_be_edited_by:user %}<a class="delete" href="{% url 'question_delete' question.pk question.slug %}" title="Delete"></a>{% endif %}
-						</td>
-					</tr>
-					{% endblock results.tbody.row %}
-					{% endwith %}
-					{% empty %}
-					{% if results.empty_text %}
-					{% block results.tbody.empty_text %}
-					<tr><td colspan="{{ results.columns|length }}">{{ results.empty_text }}</td></tr>
-					{% endblock results.tbody.empty_text %}
-					{% endif %}
-					{% endfor %}
-				</tbody>
-			</table>
+	<hr/>
 
-			{% else %}
-			<div class="none">No questions found.</div>
+	<div class="row-fluid">
+		<div class="span6">
+			{% if user.is_authenticated %}
+				<div class="recents question-list">
+					<h3><a href="{% url 'question_search' %}?author={{user.get_full_name|urlencode}}">Your recent questions</a></h3>
+					{% if recents.count > 0 %}
+                        <ol>
+                        {% for question in recents|slice:":3" %}
+                            <li class="question">
+                                <div class="header">
+                                    <span class="name"><a href="{% url 'question_edit' question.pk question.slug %}">{{ question.name }}</a></span>
+                                    <span class="admin">
+                                        <a class="preview" href="{% url 'question_preview' question.pk question.slug %}" target="_blank" title="Test run"></a>
+                                        {% if user.is_authenticated %}
+                                        <a class="copy" href="{% url 'question_copy' question.pk question.slug %}" title="Make a copy"></a>
+                                        {% endif %}
+                                        {% if question|can_be_edited_by:user %}<a class="delete" href="{% url 'question_delete' question.pk question.slug %}" title="Delete"></a>{% endif %}
+                                    </span>
+                                </div>
+                                <div class="description">{{ question.metadata.description|safe }}</div>
+                            </li>
+                        {% endfor %}
+                        </ol>
+
+                        {% if recents.count > 3 %}
+                        <p style="font-style: italic;"><a href="{% url 'question_search' %}?author={{user.get_full_name|urlencode}}">Browse all your questions</a>.</p>
+						{% endif %}
+					{% endif %}
+				</div>
 			{% endif %}
-		</div>
-		{% include "pagination.html" %}
-		<p class="small-help">
-			<strong>Keyboard shortcuts:</strong>
-			You can use <code>j</code>/<code>k</code> to move through pages, and <code>?</code> or <code>/</code> to search.
-		</p>
+			<div class="favourites question-list">
+				<h3><a href="{% url 'favourite_questions' %}">Your starred questions</a></h3>
+				{% if user.is_authenticated %}
+
+                    {% if favourites.count > 0 %}
+                        <ol>
+                        {% for question in favourites|slice:":3" %}
+                            <li class="question">
+                                <div class="header">
+                                    <span class="name"><a href="{% url 'question_edit' question.pk question.slug %}">{{ question.name }}</a></span>
+                                    <span class="admin">
+                                        <a class="preview" href="{% url 'question_preview' question.pk question.slug %}" target="_blank" title="Test run"></a>
+                                        {% if user.is_authenticated %}
+                                        <a class="copy" href="{% url 'question_copy' question.pk question.slug %}" title="Make a copy"></a>
+                                        {% endif %}
+                                        {% if question|can_be_edited_by:user %}<a class="delete" href="{% url 'question_delete' question.pk question.slug %}" title="Delete"></a>{% endif %}
+                                    </span>
+                                </div>
+                                <div class="description">{{ question.metadata.description|safe }}</div>
+                            </li>
+                        {% endfor %}
+                        </ol>
+
+                        {% if favourites.count > 3 %}
+                        <p style="font-style: italic;"><a href="{% url 'favourite_questions' %}">Browse all starred questions</a>.</p>
+                        {% endif %}
+                    {% else %}
+                        <p style="font-style:italic">When looking at a question, you can click on the star icon next to its name to save it for later. The list of questions you've starred will appear here.</p>
+                    {% endif %}
+				{% else %}
+					<p class="hint"><a href="{% url "login" %}">Log in</a> to star questions. They'll appear here every time you come back.</p>
+				{% endif %}
+			</div>
+        </div>
+		<div class="span6">
+			{% if highlights.count > 0 %}
+				<div class="highlights question-list">
+					<h3>Editors' picks</h3>
+					<ol>
+					{% for highlight in highlights|slice:":5" %}
+						{% with question=highlight.question %}
+						<li class="question">
+							<div class="header">
+								<span class="name"><a href="{% url 'question_edit' question.pk question.slug %}">{{ question.name }}</a></span>
+								<span class="admin">
+									<a class="preview" href="{% url 'question_preview' question.pk question.slug %}" target="_blank" title="Test run"></a>
+									{% if user.is_authenticated %}
+									<a class="copy" href="{% url 'question_copy' question.pk question.slug %}" title="Make a copy"></a>
+									{% endif %}
+									{% if question|can_be_edited_by:user %}<a class="delete" href="{% url 'question_delete' question.pk question.slug %}" title="Delete"></a>{% endif %}
+								</span>
+							</div>
+							<div class="description">
+								{{ question.metadata.description|safe }}
+							</div>
+							<blockquote class="note well well-small">
+								<cite class="picked-by">Picked by {% user_link highlight.picked_by %}</cite>
+								{{highlight.note|safe}}
+							</blockquote>
+						</li>
+						{% endwith %}
+					{% endfor %}
+					</ol>
+					{% if highlights.count > 5 %}
+					<p style="font-style: italic;"><a href="{% url 'highlighted_questions' %}">Browse all highlighted questions</a>.</p>
+					{% endif %}
+				</div>
+			{% endif %}
+        </div>
 	</div>
     
 {% endblock content %}

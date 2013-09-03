@@ -15,6 +15,7 @@ import json
 import traceback
 from copy import deepcopy
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
@@ -24,21 +25,21 @@ from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpRespons
 from django import http
 from django.shortcuts import render,redirect
 from django.utils.decorators import method_decorator
-from django.views.generic import CreateView, DeleteView, FormView, ListView, UpdateView, View
+from django.views import generic
 from django.views.generic.detail import SingleObjectMixin
 
 from django_tables2.config import RequestConfig
 
-from editor.forms import ExamForm, NewExamForm, ExamSearchForm,ExamSetAccessForm, ExamSearchForm
-from editor.tables import ExamTable
-from editor.models import Exam, Question, ExamAccess
-from editor.views.generic import PreviewView, ZipView, SourceView
+from editor.forms import ExamForm, NewExamForm, ExamSearchForm,ExamSetAccessForm, ExamSearchForm, ExamHighlightForm
+from editor.tables import ExamTable, ExamHighlightTable
+from editor.models import Exam, Question, ExamAccess, ExamHighlight
+import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
 
 from examparser import ExamParser, ParseError, printdata
 
-class ExamPreviewView(PreviewView):
+class PreviewView(editor.views.generic.PreviewView):
     
     """Compile an exam as a preview and return its URL."""
     
@@ -59,7 +60,7 @@ class ExamPreviewView(PreviewView):
             return self.preview(e)
 
 
-class ExamZipView(ZipView):
+class ZipView(editor.views.generic.ZipView):
 
     """Compile an exam as a SCORM package and return the .zip file"""
 
@@ -81,7 +82,7 @@ class ExamZipView(ZipView):
             return self.download(e,scorm)
 
 
-class ExamSourceView(SourceView):
+class SourceView(editor.views.generic.SourceView):
 
     """Return the .exam version of an exam"""
 
@@ -102,7 +103,7 @@ class ExamSourceView(SourceView):
             return self.source(e)
     
     
-class ExamCreateView(CreateView):
+class CreateView(generic.CreateView):
     
     """Create an exam."""
     
@@ -120,7 +121,7 @@ class ExamCreateView(CreateView):
                                           self.object.slug,))
     
     
-class ExamUploadView(CreateView):
+class UploadView(generic.CreateView):
     
     """Upload a .exam file representing an exam"""
 
@@ -159,7 +160,7 @@ class ExamUploadView(CreateView):
             return reverse('exam_index')
 
 
-class ExamCopyView(View, SingleObjectMixin):
+class CopyView(generic.View, SingleObjectMixin):
 
     """ Copy an exam and redirect to to the copy's edit page. """
 
@@ -185,7 +186,7 @@ class ExamCopyView(View, SingleObjectMixin):
             return HttpResponseRedirect(reverse('exam_edit', args=(e2.pk,e2.slug)))
 
 
-class ExamDeleteView(DeleteView):
+class DeleteView(generic.DeleteView):
     
     """Delete an exam."""
     
@@ -204,7 +205,7 @@ class ExamDeleteView(DeleteView):
         return reverse('exam_index')
     
     
-class ExamUpdateView(UpdateView):
+class UpdateView(generic.UpdateView):
     
     """Edit an exam."""
     
@@ -213,7 +214,7 @@ class ExamUpdateView(UpdateView):
     
 #    @method_decorator(login_required)
 #    def dispatch(self, *args, **kwargs):
-#        return super(ExamUpdateView, self).dispatch(*args, **kwargs)
+#        return super(UpdateView, self).dispatch(*args, **kwargs)
     
     def get_template_names(self):
         self.object = self.get_object()
@@ -247,7 +248,7 @@ class ExamUpdateView(UpdateView):
         if not self.object.can_be_viewed_by(request.user):
             return forbidden(request)
         else:
-            return super(ExamUpdateView,self).get(request,*args,**kwargs)
+            return super(UpdateView,self).get(request,*args,**kwargs)
 
     def form_valid(self, form):
         self.object = form.save(commit=False)
@@ -269,7 +270,7 @@ class ExamUpdateView(UpdateView):
                                        content_type='application/json')
         
     def get_context_data(self, **kwargs):
-        context = super(ExamUpdateView, self).get_context_data(**kwargs)
+        context = super(UpdateView, self).get_context_data(**kwargs)
         exam_dict = model_to_dict(self.object)
         exam_dict['questions'] = [q.summary() for q in self.object.get_questions()]
         context['exam_JSON'] = json.dumps(exam_dict)
@@ -285,10 +286,82 @@ class ExamUpdateView(UpdateView):
     def get_success_url(self):
         return reverse('exam_edit', args=(self.object.pk,self.object.slug,))
     
+class HighlightView(generic.FormView):
+    template_name = 'exam/highlight.html'
+    form_class = ExamHighlightForm
+
+    def get_initial(self):
+        initial = super(HighlightView,self).get_initial()
+
+        self.exam = Exam.objects.get(pk=self.kwargs.get('pk'))
+
+        try:
+            eh = ExamHighlight.objects.get(exam=self.exam, picked_by=self.request.user)
+            initial['note'] = eh.note
+        except ObjectDoesNotExist:
+            initial['note'] = u''
+
+        return initial
+
+    def form_valid(self, form):
+        note = form.cleaned_data.get('note')
+
+        self.object, new = ExamHighlight.objects.get_or_create(exam=self.exam, picked_by=self.request.user)
+        self.object.note = note
+        self.object.save()
+
+        return super(HighlightView,self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse('exam_edit', args=(self.exam.pk,self.exam.slug))
+
+    def get_context_data(self, **kwargs):
+        context = super(HighlightView, self).get_context_data(**kwargs)
+        
+        context['exam'] = self.exam
+
+        return context
+
+class IndexView(generic.TemplateView):
+
+    template_name = 'exam/index.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(IndexView, self).get_context_data(**kwargs)
+
+        if self.request.user.is_authenticated():
+            profile = self.request.user.get_profile()
+            context['favourites'] = profile.favourite_exams.all()
+        
+        context['highlights'] = ExamHighlight.objects.all().order_by('-date')
+
+        context['navtab'] = 'exams'
+
+        return context
     
-class ExamListView(ListView):
+    
+class ListView(generic.ListView):
     model=Exam
-    template_name='exam/index.html'
+    table_class = ExamTable
+
+    def make_table(self):
+        config = RequestConfig(self.request, paginate={'per_page': 10})
+        results = self.table_class(self.object_list)
+        config.configure(results)
+
+        return results
+
+    def get_context_data(self, **kwargs):
+        context = super(ListView, self).get_context_data(**kwargs)
+        context['navtab'] = 'exams'
+        context['results'] = self.make_table()
+
+        return context
+
+class SearchView(ListView):
+    
+    """Search exams."""
+    template_name='exam/search.html'
 
     def get_queryset(self):
 
@@ -310,47 +383,30 @@ class ExamListView(ListView):
 
         return exams
 
-    def make_table(self):
-        config = RequestConfig(self.request, paginate={'per_page': 10})
-        results = ExamTable(self.object_list)
-        config.configure(results)
-
-        return results
-
     def get_context_data(self, **kwargs):
-        context = super(ExamListView, self).get_context_data(**kwargs)
-        context['navtab'] = 'exams'
-        context['results'] = self.make_table()
+        context = super(SearchView,self).get_context_data(**kwargs)
         context['form'] = self.form
 
         return context
 
-class ExamSearchView(ExamListView):
-    
-    """Search exams."""
+class FavouritesView(ListView):
+    template_name = 'exam/favourites.html'
 
-    def render_to_response(self, context, **response_kwargs):
-        if self.request.is_ajax():
-            return HttpResponse(json.dumps({'object_list':context['object_list'],'page':context['page'],'id':context['id']}),
-                                content_type='application/json',
-                                **response_kwargs)
-        raise Http404
-    
-    def get_context_data(self, **kwargs):
-        context = super(ExamSearchView,self).get_context_data(**kwargs)
-        try:
-            context['page'] = self.request.GET['page']
-        except KeyError:
-            context['page'] = 1
-            pass
-        try:
-            context['id'] = self.request.GET['id']
-        except KeyError:
-            pass
+    def get_queryset(self):
+        return self.request.user.get_profile().favourite_exams.all()
 
-        return context
+class HighlightsView(ListView):
+    model = ExamHighlight
+    template_name = 'exam/highlights.html'
+    table_class = ExamHighlightTable
+    per_page = 5
+
+    def get_queryset(self):
+        highlights = ExamHighlight.objects.all()
+        return highlights
+
     
-class ExamSetAccessView(UpdateView):
+class SetAccessView(generic.UpdateView):
     model = Exam
     form_class = ExamSetAccessForm
 
@@ -366,6 +422,25 @@ class ExamSetAccessView(UpdateView):
 
     def form_invalid(self,form):
         return HttpResponse(form.errors.as_text())
+
+    def get(self, request, *args, **kwargs):
+        return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
+
+class SetStarView(generic.UpdateView):
+    model = Exam
+
+    def post(self, request, *args, **kwargs):
+        exam = self.get_object()
+
+        profile = request.user.get_profile()
+        starred = request.POST.get('starred') == 'true'
+        if starred:
+            profile.favourite_exams.add(exam)
+        else:
+            profile.favourite_exams.remove(exam)
+        profile.save()
+
+        return HttpResponse('ok!')
 
     def get(self, request, *args, **kwargs):
         return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')

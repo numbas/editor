@@ -16,7 +16,7 @@ from django.forms.models import inlineformset_factory
 from django.forms.widgets import SelectMultiple
 from django.core.exceptions import ValidationError
 
-from editor.models import Exam, Question, ExamQuestion, QuestionAccess, ExamAccess
+from editor.models import Exam, Question, ExamQuestion, QuestionAccess, ExamAccess, QuestionHighlight, ExamHighlight
 from django.contrib.auth.models import User
 
 class FixedSelectMultiple(SelectMultiple):
@@ -30,7 +30,6 @@ class TagField(forms.CharField):
         tags_string = super(TagField,self).clean(value)
         if len(tags_string.strip()):
             tags = tags_string.split(',')
-            print(tags)
             return [t.strip() for t in tags]
         else:
             return []
@@ -39,6 +38,7 @@ class QuestionSearchForm(forms.Form):
     query = forms.CharField(initial='', required=False)
     author = forms.CharField(initial='', required=False)
     progress = forms.ChoiceField(initial='',choices = [('','Any')]+Question.PROGRESS_CHOICES, required=False)
+    filter_copies = forms.BooleanField(initial=False)
     tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
 
 class QuestionAccessForm(forms.ModelForm):
@@ -54,7 +54,6 @@ class QuestionSetAccessForm(forms.ModelForm):
         v = super(QuestionSetAccessForm,self).is_valid()
         for f in self.user_access_forms:
             if not f.is_valid():
-                print(f.errors)
                 return False
         return v
     
@@ -64,7 +63,6 @@ class QuestionSetAccessForm(forms.ModelForm):
         user_ids = self.data.getlist('user_ids[]')
         access_levels = self.data.getlist('access_levels[]')
         self.user_access_forms = []
-        print(user_ids)
 
         for i,(user,access_level) in enumerate(zip(user_ids,access_levels)):
             f = QuestionAccessForm({'user':user,'access':access_level,'question':self.instance.pk})
@@ -98,7 +96,6 @@ class ExamSetAccessForm(forms.ModelForm):
         v = super(ExamSetAccessForm,self).is_valid()
         for f in self.user_access_forms:
             if not f.is_valid():
-                print(f.errors)
                 return False
         return v
     
@@ -108,7 +105,6 @@ class ExamSetAccessForm(forms.ModelForm):
         user_ids = self.data.getlist('user_ids[]')
         access_levels = self.data.getlist('access_levels[]')
         self.user_access_forms = []
-        print(user_ids)
 
         for i,(user,access_level) in enumerate(zip(user_ids,access_levels)):
             f = ExamAccessForm({'user':user,'access':access_level,'exam':self.instance.pk})
@@ -131,8 +127,14 @@ class QuestionForm(forms.ModelForm):
 
     class Meta:
         model = Question
-        exclude = ('name','author','tags','public_access')
-        
+        exclude = ('name','author','tags','public_access','copy_of')
+
+class QuestionHighlightForm(forms.ModelForm):
+    note = forms.CharField(widget=forms.Textarea(attrs={'data-bind':'text:note'}), label='Write a note explaining why you\'re highlighting this question.')
+
+    class Meta:
+        model = QuestionHighlight
+        fields = ['note']
         
 class NewQuestionForm(forms.ModelForm):
     
@@ -169,6 +171,13 @@ class ExamQuestionForm(forms.ModelForm):
     class Meta:
         model = ExamQuestion
 
+class ExamHighlightForm(forms.ModelForm):
+    note = forms.CharField(widget=forms.Textarea(attrs={'data-bind':'text:note'}), label='Write a note explaining why you\'re highlighting this exam.')
+
+    class Meta:
+        model = ExamHighlight
+        fields = ['note']
+        
 
 class ExamSearchForm(forms.Form):
     

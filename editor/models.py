@@ -34,6 +34,7 @@ from django.forms import model_to_dict
 from uuslug import slugify
 
 from taggit.managers import TaggableManager
+import taggit.models
 
 from examparser import ExamParser, ParseError, printdata
 
@@ -41,6 +42,19 @@ from jsonfield import JSONField
 
 PUBLIC_ACCESS_CHOICES = (('hidden','Hidden'),('view','Public can view'),('edit','Public can edit'))
 USER_ACCESS_CHOICES = (('view','Public can view'),('edit','Public can edit'))
+
+class EditorTag(taggit.models.TagBase):
+    official = models.BooleanField(default=False)
+
+    def used_count(self):
+        return self.tagged_items.count()
+
+    class Meta:
+        verbose_name = 'tag'
+        ordering = ['name']
+
+class TaggedQuestion(taggit.models.GenericTaggedItemBase):
+    tag = models.ForeignKey(EditorTag,related_name='tagged_items')
 
 class ControlledObject:
 
@@ -159,6 +173,7 @@ class Question(models.Model,NumbasObject,ControlledObject):
     created = models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
     last_modified = models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
     resources = models.ManyToManyField(Image,blank=True)
+    copy_of = models.ForeignKey('self',null=True,related_name='copies')
 
     public_access = models.CharField(default='view',editable=True,choices=PUBLIC_ACCESS_CHOICES,max_length=6)
     access_rights = models.ManyToManyField(User, through='QuestionAccess', blank=True, editable=False,related_name='accessed_questions+')
@@ -171,10 +186,13 @@ class Question(models.Model,NumbasObject,ControlledObject):
     ]
     progress = models.CharField(max_length=15,editable=True,default='in-progress',choices=PROGRESS_CHOICES)
 
-    tags = TaggableManager()
+    tags = TaggableManager(through=TaggedQuestion)
 
     class Meta:
-      ordering = ['name']
+        ordering = ['name']
+        permissions = (
+              ('highlight', 'Can pick questions to be featured on the front page.'),
+        )
 
     def __unicode__(self):
         return 'Question "%s"' % self.name
@@ -189,7 +207,7 @@ class Question(models.Model,NumbasObject,ControlledObject):
         super(Question, self).save(*args, **kwargs)
 
         if 'tags' in self.parsed_content:
-           self.tags.set(*self.parsed_content['tags'])
+            self.tags.set(*[t.strip() for t in self.parsed_content['tags']])
 
 
     def delete(self, *args, **kwargs):
@@ -253,6 +271,14 @@ class QuestionAccess(models.Model):
     user = models.ForeignKey(User)
     access = models.CharField(default='view',editable=True,choices=USER_ACCESS_CHOICES,max_length=6)
 
+class QuestionHighlight(models.Model):
+    class Meta:
+        ordering = ['-date']
+
+    question = models.ForeignKey(Question)
+    picked_by = models.ForeignKey(User)
+    note = models.TextField(blank=True)
+    date = models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
 
 class Exam(models.Model,NumbasObject,ControlledObject):
     
@@ -279,7 +305,10 @@ class Exam(models.Model,NumbasObject,ControlledObject):
     access_rights = models.ManyToManyField(User, through='ExamAccess', blank=True, editable=False,related_name='accessed_exams+')
 
     class Meta:
-      ordering = ['name']
+        ordering = ['name']
+        permissions = (
+              ('highlight', 'Can pick exams to be featured on the front page.'),
+        )
 
     def __unicode__(self):
         return 'Exam "%s"' %self.name
@@ -354,6 +383,15 @@ class Exam(models.Model,NumbasObject,ControlledObject):
             return exam_access.access
         except ExamAccess.DoesNotExist:
             return 'none'
+
+class ExamHighlight(models.Model):
+    class Meta:
+        ordering = ['-date']
+
+    exam = models.ForeignKey(Exam)
+    picked_by = models.ForeignKey(User)
+    note = models.TextField(blank=True)
+    date = models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
 
 class ExamAccess(models.Model):
     exam = models.ForeignKey(Exam)

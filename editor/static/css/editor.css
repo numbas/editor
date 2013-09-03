@@ -1,5 +1,11 @@
-﻿#controls {
+﻿.row-fluid.section:not(:last-child) {
+	margin-bottom: 1em;
+	padding-bottom: 1em;
+	border-bottom: 1px solid #eee;
+}
+#controls {
 	font-size: 14px;
+	margin-bottom: 1em;
 }
 
 #controls #progress select {
@@ -8,6 +14,19 @@
 
 .controlbox a:before {
 	margin-right: 4px;
+}
+
+.star {
+    background: url(../images/star_24x24_grey.png);
+    border: none;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    margin: 0 0 0.5em 0;
+}
+
+.star.starred, .star:hover {
+    background: url(../images/star_24x24_yellow.png);
 }
 
 .controlbox #download a {

@@ -1,6 +1,7 @@
 {% extends "editor.html" %}
 {% load verbatim %}
 {% load json %}
+{% load user_link %}
 
 {% block stylesheets %}
 	{{ block.super }}
@@ -37,7 +38,8 @@
                 themes: {{themes|json|safe}},
                 locales: {{locales|json|safe}},
                 previewURL: '{% url 'exam_preview' object.pk object.slug %}',
-                previewWindow: '{% now "U" %}'
+                previewWindow: '{% now "U" %}',
+                starred: {% if starred %}true{% else %}false{% endif %}
             }
         })();
     </script>
@@ -49,47 +51,48 @@
 
 	<div id="exam">
 		<div class="row-fluid">
-			<h1 id="name-header" data-bind="text: name"></h1>
+            <h1 id="name-header">
+                <span data-bind="text: name">{{object.name}}</span>
+                {% if request.user.is_authenticated %}
+                <button type="button" data-bind="css:{starred: starred}, attr: {title: starred() ? 'This exam is starred. Click to unstar it.' : 'Star this exam'}, click: toggleStar" class="star" ></button>
+                {% endif %}
+            </h1>
 		</div>
 		<div id="controls">
 			<div class="row-fluid">
 			{% block controls %}
-				<div class="span4" id="editable_message">{% block editable_message %}{% endblock %}</div>
-				<div class="span3 controlbox" id="author">
-					Author: <a href="{% url 'view_profile' object.author.pk %}">{{object.author.get_full_name}}</a>
-				</div>
 			{% endblock controls %}
 			</div>
 
-			<div class="controlbox row-fluid" id="admin">
-				<div class="span2">
+			<ul class="controlbox" id="admin">
+				<li>
 					<a id="preview" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this exam in a new window (Ctrl+B)">Test Run</a>
-				</div>			
+				</li>			
 				{% if editable %}
-				<div class="span2">
+				<li>
 					<a id="delete" data-bind="click: deleteExam" href="{% url 'exam_delete' object.pk object.slug %}" title="Delete this exam permanently but not the questions it uses">Delete
 						<form action="{% url 'exam_delete' object.pk object.slug %}" method="post">{% csrf_token %}
 							<input type="submit" value="Submit" />
 						</form>
 					</a>
-				</div>
+				</li>
 				{% endif %}
 
 				{% if user.is_authenticated %}
-				<div class="span2">
+				<li>
 					<a id="copy" href="{% url 'exam_copy' object.pk object.slug %}" target="_blank" title="Create your own copy of this exam">Make a Copy</a>
-				</div>
+				</li>
 				{% endif %}
 
-				<div class="span6">
-					<span id="download">
+                <li>
+                    <span id="download">
 						Download: 
 						<a href="{% url 'exam_download' object.pk object.slug %}">standalone .zip</a>,
 						<a href="{% url 'exam_download' object.pk object.slug %}?scorm">SCORM package</a>,
 						<a href="{% url 'exam_source' object.pk object.slug %}">source</a>
 					</span>
-				</div>
-			</div>
+				</li>
+			</ul>
 		</div>
 
 		<div class="row-fluid">

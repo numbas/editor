@@ -1,0 +1,59 @@
+{% extends "question/list.html" %}
+{% load django_tables2 %}
+{% load render_table from django_tables2 %}
+{% load can_edit %}
+{% load user_link %}
+
+{% block content %}
+
+	<h2>Editors' picks</h2>
+
+	<div>
+		{% include "pagination.html" %}
+		<div class="question-list">
+			{% if object_list %}
+			<ol class="search-results">
+				{% for row in results.page.object_list|default:results.rows %}
+				{% with highlight=row.record question=row.record.question %}
+					<li class="question">
+						<div class="header">
+                            <span class="name"><a href="{% url 'question_edit' question.pk question.slug %}">{{ question.name }}</a></span> by {% user_link question.author %}
+							<span class="admin">
+								<a class="preview" href="{% url 'question_preview' question.pk question.slug %}" target="_blank" title="Test run"></a>
+								{% if user.is_authenticated %}
+								<a class="copy" href="{% url 'question_copy' question.pk question.slug %}" title="Make a copy"></a>
+								{% endif %}
+								{% if question|can_be_edited_by:user %}<a class="delete" href="{% url 'question_delete' question.pk question.slug %}" title="Delete"></a>{% endif %}
+							</span>
+						</div>
+						<div class="description">
+							{{ question.metadata.description|safe }}
+						</div>
+						<blockquote class="note well well-small">
+							<cite class="picked-by">Picked by {% user_link highlight.picked_by %}</cite>
+							{{highlight.note|safe}}
+						</blockquote>
+					</li>
+				{% endwith %}
+				{% endfor %}
+			</ol>
+
+			{% else %}
+			<div class="none">No questions have been picked.</div>
+			{% endif %}
+		</div>
+		{% include "pagination.html" %}
+		<p class="small-help">
+			<strong>Keyboard shortcuts:</strong>
+			You can use <code>j</code>/<code>k</code> to move through pages, and <code>?</code> or <code>/</code> to search.
+		</p>
+	</div>
+    
+{% endblock content %}
+
+
+{% block stylesheets %}
+	{{ block.super }}
+	<link href="{{ STATIC_URL }}css/question/index.css" type="text/css" rel="stylesheet" />
+	<link href="{{ STATIC_URL }}css/highlights.css" type="text/css" rel="stylesheet" />
+{% endblock stylesheets %}

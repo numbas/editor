@@ -1,14 +1,43 @@
-{% extends "layout.html" %}
+{% extends "exam/list.html" %}
 
 {% block content %}
-<h2>Exam search</h2>
 
-{% if error %}<p><strong>{{ error }}</strong></p>{% endif %}
+	{% if user.is_authenticated %}
+        <div class="controlbox" id="admin">
+            <a id="new" href="{% url 'exam_new' %}">Create a new exam</a>
+            <form action="{% url 'exam_upload' %}" method="post" id="uploadForm" enctype="multipart/form-data">
+                {% csrf_token %}
+				<a href="{% url 'exam_upload' %}" id="upload">Upload an exam</a>
+                <div class="upload">
+                    <input type="file" name="file" value="yo"/>
+                </div>
+            </form>
+        </div>
+	{% endif %}
 
-<form action="{% url 'exam_search' %}" method="post">
-{% csrf_token %}
-{{ form.as_p }}
-<input type="submit" value="Submit" />
-</form>
+    <div class="row-fluid">
+		<form class="searchBox form-inline">
+			{% with form.cleaned_data as data %}
+			<div>
+                <strong>Search</strong>
+                <label for="search_query">
+                    for exams called:
+                    <div class="input-append">
+                        <input role="search" id="search_query" type="text" name="query" value="{{ data.query }}" placeholder="Topic or exam name"/>
+                        <span class="add-on"><button type="submit" class="search" title="Search"></button></span>
+                    </div>
+                </label>
+			</div>
+			<div>
+                <strong>Filter results</strong> 
+                <label for="search_author">
+                    by author: 	
+                    <input id="search_author" data-autocomplete-url="{% url 'user_search' %}" name="author" type="text" size="30" value="{{ data.author }}" placeholder="User name"/>
+                </label>
+			</div>
+			{% endwith %}
+		</form>
+	</div>
 
+	{{block.super}}
 {% endblock content %}

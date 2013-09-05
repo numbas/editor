@@ -770,7 +770,18 @@ $(document).ready(function() {
 			tabs = tabs.concat(this.type().tabs);
 			return tabs;
 		},this);
-		this.currentTab = ko.observable(this.tabs()[0]);
+		this.realCurrentTab = ko.observable(this.tabs()[0]);
+		this.currentTab = ko.computed({
+			read: function() {
+				if(this.tabs().indexOf(this.realCurrentTab())==-1) {
+					this.realCurrentTab(this.tabs()[0]);
+					return this.tabs()[0];
+				}
+				else
+					return this.realCurrentTab();
+			},
+			write: this.realCurrentTab
+		},this);
 
         this.marks = ko.observable(1);
 		this.realMarks = ko.computed(function() {

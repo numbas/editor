@@ -61,10 +61,10 @@ class UserProfile(models.Model):
 
         return tag_counts
 
-def createUserProfile(sender, instance, user_created, **kwargs):
+def createUserProfile(sender, instance, created, **kwargs):
     """Create a UserProfile object each time a User is created ; and link it.
     """
-    if user_created:
+    if created:
         UserProfile.objects.create(user=instance)
 
 post_save.connect(createUserProfile, sender=User)

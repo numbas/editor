@@ -275,6 +275,10 @@
 										</label>
 									</div>
 									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label:'Show preview of student\'s answer?', property:jme.showPreview}
+									}"></div>
+									<div class="control-group" data-bind="template: {
 										name: 'property',
 										data: {label:'Answer simplification rules',property:jme.answerSimplification, monospace: true}
 									}"></div>
@@ -407,7 +411,7 @@
                                     }"></div>
 									<div class="control-group" data-bind="fadeVisible:jme.checkVariableNames">
 										<label>
-											<span class="control-label">Expected variable names:</span>
+											<span class="control-label">Expected variable names</span>
 											<div class="controls" data-bind="listbox:jme.expectedVariableNames"></div>
 										</label>
 									</div>

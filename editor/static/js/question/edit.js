@@ -800,6 +800,7 @@ $(document).ready(function() {
         this.jme = {
             answer: ko.observable(''),
             answerSimplification: ko.observable(''),
+			showPreview: ko.observable(true),
             checkingTypes: [
                 {name:'absdiff',niceName:'Absolute difference', accuracy: ko.observable(0.001)},
                 {name:'reldiff',niceName:'Relative difference', accuracy: ko.observable(0.001)},
@@ -1109,6 +1110,7 @@ $(document).ready(function() {
                 o.answer = this.jme.answer();
                 if(this.jme.answerSimplification())
                     o.answersimplification = this.jme.answerSimplification();
+				o.showpreview = this.jme.showPreview();
                 o.checkingtype = this.jme.checkingType().name;
                 o.checkingaccuracy = this.jme.checkingType().accuracy();
                 o.vsetrangepoints = this.jme.vset.points();
@@ -1254,7 +1256,7 @@ $(document).ready(function() {
                 }
                 break;
             case 'jme':
-                tryLoad(data,['answer','answerSimplification','checkVariableNames','expectedVariableNames'],this.jme);
+                tryLoad(data,['answer','answerSimplification','checkVariableNames','expectedVariableNames','showPreview'],this.jme);
                 for(var i=0;i<this.jme.checkingTypes.length;i++)
                 {
                     if(this.jme.checkingTypes[i].name == data.checkingtype)

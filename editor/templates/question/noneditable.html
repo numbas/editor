@@ -236,6 +236,10 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 										</label>
 									</div>
 									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label:'Show preview of student\'s answer?', property:jme.showPreview}
+									}"></div>
+									<div class="control-group" data-bind="template: {
 										name: 'property',
 										data: {label:'Answer simplification rules',property:jme.answerSimplification}
 									}"></div>

@@ -72,6 +72,7 @@ $(document).ready(function() {
 		this.locale = ko.observable(Editor.locales[0]);
 
         this.duration = ko.observable(0);
+		this.allowPause = ko.observable(true);
         this.percentPass = ko.observable(0);
         this.shuffleQuestions = ko.observable(false);
         this.showfrontpage = ko.observable(true);
@@ -293,6 +294,7 @@ $(document).ready(function() {
 					preventleave: this.preventleave()
                 },
                 timing: {
+					allowPause: this.allowPause(),
                     timeout: this.timeout.toJSON(),
                     timedwarning: this.timedwarning.toJSON()
                 },
@@ -318,6 +320,7 @@ $(document).ready(function() {
 
             if('timing' in data)
             {
+				tryLoad(data.timing,['allowPause'],this);
                 this.timeout.load(data.timing.timeout);
                 this.timedwarning.load(data.timing.timedwarning);
             }

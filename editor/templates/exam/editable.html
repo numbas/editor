@@ -88,6 +88,10 @@
 					name: 'numberproperty',
 					data: {label:'Exam duration (minutes):',property:duration, type:'number',min:0}
 				}"></div>
+				<div class="control-group" data-bind="template: {
+					name: 'booleanproperty',
+					data: {label:'Allow pausing?',property:allowPause}
+				}"></div>
 				<div data-bind="template: {
 					name: 'event',
 					data: timeout

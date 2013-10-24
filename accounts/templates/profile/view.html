@@ -19,7 +19,8 @@
 <ul>
     <li>
         {% if object.own_exams.count %}
-        <a href="{% url 'exam_search' %}?author={{object.get_full_name|urlencode}}">{% if is_me %}Your{% else %}{{object.first_name}}'s{% endif %}  exams</a>.
+			<p><a href="{% url 'exam_search' %}?author={{object.get_full_name|urlencode}}">{% if is_me %}Your{% else %}{{object.first_name}}'s{% endif %}  exams</a>.</p>
+			<p>{% if is_me %}(Download a backup .zip file of <a href="{% url 'all_exams_download' %}">all your exams</a>){% endif %}</p>
         {% else %}
             {% if is_me %}
                 You haven't created any exams.
@@ -31,7 +32,8 @@
 
     <li>
         {% if object.own_questions.count %}
-        <a href="{% url 'question_search' %}?author={{object.get_full_name|urlencode}}">{% if is_me %}Your{% else %}{{object.first_name}}'s{% endif %}  questions</a>.
+			<p><a href="{% url 'question_search' %}?author={{object.get_full_name|urlencode}}">{% if is_me %}Your{% else %}{{object.first_name}}'s{% endif %}  questions</a>.</p>
+			<p>{% if is_me %}(Download a backup .zip file of <a href="{% url 'all_questions_download' %}">all your questions</a>){% endif %}</p>
         {% else %}
             {% if is_me %}
                 You haven't created any questions.

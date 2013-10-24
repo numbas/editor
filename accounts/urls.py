@@ -25,7 +25,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import views as auth_views
 
 from registration.views import activate
-from accounts.views import register,UserUpdateView,ChangePasswordView,UserProfileView
+from accounts.views import register,UserUpdateView,ChangePasswordView,UserProfileView,AllExamsView, AllQuestionsView
 
 from numbas import settings
 
@@ -56,6 +56,12 @@ urlpatterns = patterns('',
                        url(r'^profile/edit$',
                            login_required(UserUpdateView.as_view()),
                            name='edit_profile'),
+                       url(r'^profile/backup/all-exams$',
+                           login_required(AllExamsView.as_view()),
+                           name='all_exams_download'),
+                       url(r'^profile/backup/all-questions$',
+                           login_required(AllQuestionsView.as_view()),
+                           name='all_questions_download'),
                        )
 
 if settings.CAN_CHANGE_PASSWORD:

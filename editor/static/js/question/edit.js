@@ -740,8 +740,11 @@ $(document).ready(function() {
 
 		this.availableTypes = ko.computed(function() {
 			var nonGapTypes = ['information','gapfill'];
+			var nonStepTypes = ['gapfill'];
 			if(this.isGap())
 				return this.types.filter(function(t){return nonGapTypes.indexOf(t.name)==-1});
+			else if(this.isStep())
+				return this.types.filter(function(t){return nonStepTypes.indexOf(t.name)==-1});
 			else
 				return this.types;
 		},this);

@@ -1279,13 +1279,13 @@ $(document).ready(function() {
 
                 break;
             case 'numberentry':
-                tryLoad(data,['minValue','maxValue','integerAnswer','integerPartialCredit','precision','precisionPartialCredit','precisionMessage'],this.numberentry);
+                tryLoad(data,['minValue','maxValue','integerAnswer','integerPartialCredit','precision','precisionPartialCredit','precisionMessage','precisionType'],this.numberentry);
 				if('answer' in data) {
 					this.numberentry.minValue(data.answer);
 					this.numberentry.maxValue(data.answer);
 				}
 				for(var i=0;i<this.numberentry.precisionTypes.length;i++) {
-					if(this.numberentry.precisionTypes[i].name == data.precisionType)
+					if(this.numberentry.precisionTypes[i].name == this.numberentry.precisionType())
 						this.numberentry.precisionType(this.numberentry.precisionTypes[i]);
 				}
 

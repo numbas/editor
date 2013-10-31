@@ -42,7 +42,7 @@
 							{% if user.is_authenticated %}
 							<a class="copy" href="{% url 'question_copy' question.pk question.slug %}" title="Make a copy"></a>
 							{% endif %}
-							{% if question|can_be_edited_by:user %}<a class="delete" href="{% url 'question_delete' question.pk question.slug %}" title="Delete"></a>{% endif %}
+							{% if question|can_be_deleted_by:user %}<a class="delete" href="{% url 'question_delete' question.pk question.slug %}" title="Delete"></a>{% endif %}
 						</td>
 					</tr>
 					{% endblock results.tbody.row %}

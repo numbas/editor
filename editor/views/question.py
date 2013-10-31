@@ -202,7 +202,7 @@ class DeleteView(generic.DeleteView):
     
     def delete(self,request,*args,**kwargs):
         self.object = self.get_object()
-        if self.object.can_be_edited_by(self.request.user):
+        if self.object.can_be_deleted_by(self.request.user):
             self.object.delete()
             return http.HttpResponseRedirect(self.get_success_url())
         else:
@@ -221,6 +221,7 @@ class UpdateView(generic.UpdateView):
     def get_object(self):
         obj = super(UpdateView,self).get_object()
         self.editable = obj.can_be_edited_by(self.request.user)
+        self.can_delete = obj.can_be_deleted_by(self.request.user)
         return obj
 
     def get_template_names(self):
@@ -279,6 +280,7 @@ class UpdateView(generic.UpdateView):
         context = super(UpdateView, self).get_context_data(**kwargs)
         context['extensions'] = [model_to_dict(e) for e in Extension.objects.all()]
         context['editable'] = self.editable
+        context['can_delete'] = self.can_delete
         context['navtab'] = 'questions'
         if not self.request.user.is_anonymous():
             context['starred'] = self.request.user.get_profile().favourite_questions.filter(pk=self.object.pk).exists()

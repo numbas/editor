@@ -68,7 +68,7 @@
 				<li>
 					<a id="preview" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this exam in a new window (Ctrl+B)">Test Run</a>
 				</li>			
-				{% if editable %}
+				{% if can_delete %}
 				<li>
 					<a id="delete" data-bind="click: deleteExam" href="{% url 'exam_delete' object.pk object.slug %}" title="Delete this exam permanently but not the questions it uses">Delete
 						<form action="{% url 'exam_delete' object.pk object.slug %}" method="post">{% csrf_token %}

@@ -195,7 +195,7 @@ class DeleteView(generic.DeleteView):
     
     def delete(self,request,*args,**kwargs):
         self.object = self.get_object()
-        if self.object.can_be_edited_by(self.request.user):
+        if self.object.can_be_deleted_by(self.request.user):
             self.object.delete()
             return http.HttpResponseRedirect(self.get_success_url())
         else:
@@ -277,6 +277,7 @@ class UpdateView(generic.UpdateView):
         context['themes'] = settings.GLOBAL_SETTINGS['NUMBAS_THEMES']
         context['locales'] = settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']
         context['editable'] = self.object.can_be_edited_by(self.request.user)
+        context['can_delete'] = self.object.can_be_deleted_by(self.request.user)
         context['navtab'] = 'exams'
 
         context['access_rights'] = [{'id': ea.user.pk, 'name': ea.user.get_full_name(), 'access_level': ea.access} for ea in ExamAccess.objects.filter(exam=self.object)]

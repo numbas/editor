@@ -855,7 +855,8 @@ $(document).ready(function() {
 			],
 			precision: ko.observable(0),
 			precisionPartialCredit: ko.observable(0),
-			precisionMessage: ko.observable('You have not given your answer to the correct precision.')
+			precisionMessage: ko.observable('You have not given your answer to the correct precision.'),
+			strictPrecision: ko.observable(true)
         };
 		this.numberentry.precisionType = ko.observable(this.numberentry.precisionTypes[0]);
 		this.numberentry.precisionWord = ko.computed(function() {
@@ -1168,6 +1169,7 @@ $(document).ready(function() {
 					o.precision = this.numberentry.precision();
 					o.precisionPartialCredit = this.numberentry.precisionPartialCredit();
 					o.precisionMessage = this.numberentry.precisionMessage();
+					o.strictPrecision = this.numberentry.strictPrecision();
 				}
                 break;
             case 'patternmatch':
@@ -1279,7 +1281,7 @@ $(document).ready(function() {
 
                 break;
             case 'numberentry':
-                tryLoad(data,['minValue','maxValue','integerAnswer','integerPartialCredit','precision','precisionPartialCredit','precisionMessage','precisionType'],this.numberentry);
+                tryLoad(data,['minValue','maxValue','integerAnswer','integerPartialCredit','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision'],this.numberentry);
 				if('answer' in data) {
 					this.numberentry.minValue(data.answer);
 					this.numberentry.maxValue(data.answer);

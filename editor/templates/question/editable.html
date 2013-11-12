@@ -461,6 +461,11 @@
 									}"></div>
 									<div class="control-group" data-bind="fadeVisible: numberentry.precisionType().name!='none',
 									template: {
+										name:'booleanproperty',
+										data: {label:'Require trailing zeroes?',property:numberentry.strictPrecision}
+									}"></div>
+									<div class="control-group" data-bind="fadeVisible: numberentry.precisionType().name!='none',
+									template: {
 										name:'percentproperty',
 										data: {label:'Partial credit for wrong precision',property:numberentry.precisionPartialCredit}
 									}"></div>

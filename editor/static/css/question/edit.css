@@ -209,9 +209,11 @@
 	overflow:auto;
 }
 
-#imageModal .resource:hover {
-	background: #acdeff;
+#imagePickModal .resource {
 	cursor: pointer;
+}
+#imagePickModal .resource:hover {
+	background: #acdeff;
 }
 
 .resource:not(:last-child) {

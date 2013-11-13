@@ -973,6 +973,17 @@ $(document).ready(function() {
 			this.name(data.name);
 			this.pk(data.pk);
 			this.deleteURL = data.delete_url;
+		},
+		filePatterns: {
+			'html': /\.html?$/,
+			'img': /\.(png|jpg|gif|bmp|jpeg|webp|tiff|tif|raw|svg)$/
+		},
+		filetype: function() {
+			var name = this.name();
+			for(var type in this.filePatterns) {
+				if(this.filePatterns[type].test(name))
+					return type;
+			}
 		}
 	};
 

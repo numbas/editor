@@ -181,6 +181,11 @@ $(document).ready(function() {
 			title: ko.observable(''),
 			alt: ko.observable('')
 		}
+		//for iframe attribute modal
+		this.iframeModal = {
+			width: ko.observable(0),
+			height: ko.observable(0)
+		}
 
         ko.computed(function() {
             document.title = this.name() ? this.name()+' - Numbas Editor' : 'Numbas Editor';
@@ -562,8 +567,17 @@ $(document).ready(function() {
         
         insertImage: function(image) {
             var ed = viewModel.currentTinyMCE;
-            var img = '<img src="'+image.url()+'">';
-            ed.execCommand('mceInsertContent',false,img);
+			var name = image.name();
+			var html;
+
+			switch(image.filetype()) {
+			case 'html':
+				html = '<div><iframe src="'+image.url()+'"></div>';
+				break;
+			default:
+	            html = '<img src="'+image.url()+'">';
+			}
+            ed.execCommand('mceInsertContent',false,html);
             $('#imagePickModal').modal('hide');
         },
 
@@ -579,6 +593,21 @@ $(document).ready(function() {
 			;
 
 			$('#imageAttributeModal').modal('hide');
+
+            var ed = viewModel.currentTinyMCE;
+			ed.onChange.dispatch();
+		},
+
+		changeIframeAttributes: function() {
+			$(this.iframeModal.selectedNode)
+				.css({
+					width: this.iframeModal.width(), 
+					height: this.iframeModal.height()
+				})
+                .removeAttr('data-mce-style')
+			;
+
+			$('#iframeAttributeModal').modal('hide');
 
             var ed = viewModel.currentTinyMCE;
 			ed.onChange.dispatch();

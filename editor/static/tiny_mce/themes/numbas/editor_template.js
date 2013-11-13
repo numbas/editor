@@ -1419,17 +1419,23 @@
 
 			var node = ed.selection.getNode();
 
-			// Ignore internal image object like a flash placeholder
-			if (ed.dom.getAttrib(node, 'class', '').indexOf('mceItem') != -1)
-				return;
-
 			if(node.tagName=='IMG') {
-				viewModel.imageModal.selectedNode = node;
-				viewModel.imageModal.width($(node).width());
-				viewModel.imageModal.height($(node).height());
-				viewModel.imageModal.title($(node).attr('title'));
-				viewModel.imageModal.alt($(node).attr('alt'));
-				$('#imageAttributeModal').modal('show');
+				if($(node).hasClass('mceItemMedia')) {
+					if($(node).hasClass('mceItemIframe')) {
+						viewModel.iframeModal.selectedNode = node;
+						viewModel.iframeModal.width($(node).width());
+						viewModel.iframeModal.height($(node).height());
+						$('#iframeAttributeModal').modal('show');
+					}
+				}
+				else {
+					viewModel.imageModal.selectedNode = node;
+					viewModel.imageModal.width($(node).width());
+					viewModel.imageModal.height($(node).height());
+					viewModel.imageModal.title($(node).attr('title'));
+					viewModel.imageModal.alt($(node).attr('alt'));
+					$('#imageAttributeModal').modal('show');
+				}
 			}
 			else {
 				$('#imagePickModal').modal('show');

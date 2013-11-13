@@ -744,7 +744,7 @@
 						<div class="bar" data-bind="style: {width: progress()+'%'}"></div>
 					</div>
 					<div data-bind="visible: progress()==1">
-						<img class="thumbnail" data-bind="attr: {src: url, title: name}"/>
+						<img class="thumbnail" data-bind="visible: filetype()=='img', attr: {src: url, title: name}"/>
 						<span data-bind="text: name"></span>
 						<button type="button" class="delete" data-bind="click: $root.deleteResource" title="Delete this image"></button>
 					</div>
@@ -823,7 +823,10 @@
                 </div>
 			</form>
             <ul class="unstyled resources-list" data-bind="foreach: resources">
-				<li class="resource clearfix" data-bind="click: $root.insertImage"><img class="thumbnail" data-bind="attr: {src: url, title: name}"/><span data-bind="text: name"></span></li>
+				<li class="resource clearfix" data-bind="click: $root.insertImage">
+					<img class="thumbnail" data-bind="visible: filetype()=='img', attr: {src: url, title: name}"/>
+					<span data-bind="text: name"></span><span data-bind="visible: filetype()=='html'"> (will be embedded as an iframe)</span>
+				</li>
             </ul>
         </div>
     </div>
@@ -871,6 +874,36 @@
 		<div class="modal-footer">
 			<button type="button" class="btn" data-bind="click: function(){$('#imageAttributeModal').modal('hide');}">Cancel</button>
 			<button type="button" class="btn btn-primary" data-bind="click: $root.changeImageAttributes">Apply</button>
+		</div>
+	</div>
+    <div class="modal hide fade" id="iframeAttributeModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3>Embedded page attributes</h3>
+        </div>
+		<div class="modal-body">
+			<form class="form-horizontal">
+				<div class="control-group">
+					<label>
+						<span class="control-label">Width</span>
+						<div class="controls">
+							<input type="text" class="span1" data-bind="value: iframeModal.width"> px
+						</div>
+					</label>
+				</div>
+				<div class="control-group">
+					<label>
+						<span class="control-label">Height</span>
+						<div class="controls">
+							<input type="text" class="span1" data-bind="value: iframeModal.height"> px
+						</div>
+					</label>
+				</div>
+			</form>
+		</div>
+		<div class="modal-footer">
+			<button type="button" class="btn" data-bind="click: function(){$('#iframeAttributeModal').modal('hide');}">Cancel</button>
+			<button type="button" class="btn btn-primary" data-bind="click: $root.changeIframeAttributes">Apply</button>
 		</div>
 	</div>
 {% endblock editor %}

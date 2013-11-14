@@ -497,15 +497,15 @@
 									}"></div>
 									<div class="control-group" data-bind="template: {
 										name: 'property',
-										data: {label:'Answer pattern',property:patternmatch.answer, monospace: true}
+										data: {label:'Answer pattern',property:patternmatch.answer, monospace: true, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-answer-pattern'}
 									}"></div>
 									<div class="control-group" data-bind="template: {
 										name: 'property',
-										data: {label:'Display answer',property:patternmatch.displayAnswer}
+										data: {label:'Display answer',property:patternmatch.displayAnswer, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-display-answer'}
 									}"></div>
 									<div class="control-group" data-bind="template: {
 										name: 'booleanproperty',
-										data: {label:'Must the answer be in the correct case?', property:patternmatch.caseSensitive}
+										data: {label:'Must the answer be in the correct case?', property:patternmatch.caseSensitive, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-must-the-answer-be-in-the-correct-case'}
 									}"></div>
 									<div class="control-group" data-bind="
 									fadeVisible:patternmatch.caseSensitive,
@@ -521,11 +521,11 @@
 								<form class="form-horizontal">
 									<div class="control-group" data-bind="template: {
 										name: 'property',
-										data: {label:'Minimum marks',property:multiplechoice.minMarks, max:multiplechoice.maxMarks }
+										data: {label:'Minimum marks',property:multiplechoice.minMarks, max:multiplechoice.maxMarks, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-minimum-marks' }
 									}"></div>
 									<div class="control-group" data-bind="template: {
 										name: 'property',
-										data: {label:'Maximum marks',property:multiplechoice.maxMarks, min:multiplechoice.minMarks}
+										data: {label:'Maximum marks',property:multiplechoice.maxMarks, min:multiplechoice.minMarks, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-maximum-marks'}
 									}"></div>
 									<div class="control-group" data-bind="visible: !parent, template: {
 										name: 'property',
@@ -533,20 +533,20 @@
 									}"></div>
 									<div class="control-group" data-bind="template: {
 										name: 'booleanproperty',
-										data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
+										data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-shuffle-order-of-choices'}
 									}"></div>
 									<div class="control-group" data-bind="fadeVisible: multiplechoice.displayType().name!='dropdown',
 									template: {
 										name: 'property',
-										data: {label:'Number of display columns',property:multiplechoice.displayColumns}
+										data: {label:'Number of display columns',property:multiplechoice.displayColumns, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-number-of-display-columns'}
 									}"></div>
 									<div class="control-group" data-bind="template: {
 										name: 'booleanproperty',
-										data: {label: 'Custom marking matrix?', property: multiplechoice.customMarking}
+										data: {label: 'Custom marking matrix?', property: multiplechoice.customMarking, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-marking-matrix'}
 									}"></div>
 									<div class="control-group" data-bind="fadeVisible: multiplechoice.customMarking, template: {
 										name: 'property',
-										data: {label: 'Custom matrix expression', property: multiplechoice.customMatrix}
+										data: {label: 'Custom matrix expression', property: multiplechoice.customMatrix, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-matrix-expression'}
 									}"></div>
 								</form>
 							</section>

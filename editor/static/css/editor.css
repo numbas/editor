@@ -191,17 +191,20 @@ button.delete-grey:hover {
     height: 14px;
     display: inline-block;
     text-align: center;
-    vertical-align: middle;
+    vertical-align: top;
     border-radius: 50%;
     font-size: 10px;
     font-weight: normal;
     line-height: 14px;
     margin-left: 5px;
 	border: 1px solid #08c;
+	opacity: 0.5;
 }
 .helplink.small:hover {
     text-decoration: none;
     background: #fc0;
+	opacity: 1;
+	border-color: #005580;
 }
 
 .helplink.big {
@@ -219,3 +222,6 @@ button.delete-grey:hover {
     right: 10px;
 }
 
+.span4 select, .span4 input {
+	max-width: 170px;
+}

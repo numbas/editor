@@ -12,7 +12,7 @@
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='general'}">
 			<div class="row-fluid section">
 				<label>
-					<h4>Exam Name</h4>
+					<h4>Exam Name <span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-exam-name', topic: 'exam name'}}"></span></h4>
 					<input class="input-block-level" id="exam-name" data-bind="value: name, valueUpdate: 'afterkeydown'" type="text"/>
 				</label>
 			</div>
@@ -29,9 +29,9 @@
 			</div>
             <div class="row-fluid section">
                 <div class="span7">
-                    <label for="description"><h4>Description</h4></label>
+                    <label for="description"><h4>Description  <span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-description', topic: 'description'}}"></span></h4></label>
                     <div id="description" data-bind="writemaths: description"></div>
-                    <label for="authors-notes"><h4>Author's Notes</h4></label>
+                    <label for="authors-notes"><h4>Author's Notes  <span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-author-s-notes', topic: 'author\'s notes'}}"></span></h4></label>
                     <div id="authors-notes" data-bind="writemaths: notes"></div>
                 </div>
 				<div class="span4">
@@ -39,16 +39,16 @@
                     <form class="form-horizontal">
                         <div class="control-group" data-bind="template: {
                             name: 'selectproperty',
-                            data: {label: 'Theme:', property: theme, options: Editor.themes}
+                            data: {label: 'Theme:', property: theme, options: Editor.themes, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-theme'}
                         }"></div>
                         <div class="control-group" data-bind="visible: Editor.locales.length>1, template: {
                             name: 'selectproperty',
-                            data: {label: 'Interface language:', property: locale, options: Editor.locales}
+                            data: {label: 'Interface language:', property: locale, options: Editor.locales, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-interface-language'}
                         }"></div>
 
                         <div class="control-group" data-bind="template: {
                             name: 'percentproperty',
-                            data: {label:'Pass threshold (percent):',property:percentPass}
+                            data: {label:'Pass threshold (percent):',property:percentPass, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-pass-threshold'}
                         }"></div>
                     </form>
                 </div>
@@ -58,23 +58,23 @@
 			<form class="form-horizontal">
 				<div class="control-group" data-bind="template: {
 					name: 'booleanproperty',
-					data: {label:'Allow user to regenerate questions?', property:allowregen}
+					data: {label:'Allow user to regenerate questions?', property:allowregen, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-allow-user-to-regenerate-questions'}
 				}"></div>
 				<div class="control-group" data-bind="template: {
 					name: 'booleanproperty',
-					data: {label:'Allow move to previous question?', property:reverse}
+					data: {label:'Allow move to previous question?', property:reverse, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-allow-move-to-previous-question'}
 				}"></div>
 				<div class="control-group" data-bind="template: {
 					name: 'booleanproperty',
-					data: {label:'Allow jump to any question?', property:browse}
+					data: {label:'Allow jump to any question?', property:browse, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-allow-jump-to-any-question'}
 				}"></div>
 				<div class="control-group" data-bind="template: {
 					name: 'booleanproperty',
-					data: {label: 'Show front page?',property:showfrontpage}
+					data: {label: 'Show front page?',property:showfrontpage, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-show-front-page'}
 				}"></div>
 				<div class="control-group" data-bind="template: {
 					name: 'booleanproperty',
-					data: {label: 'Confirm before leaving the exam while it\'s running?',property:preventleave}
+					data: {label: 'Confirm before leaving the exam while it\'s running?',property:preventleave, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-confirm-before-leaving-the-exam-while-it-s-running'}
 				}"></div>
 				<div data-bind="template: {
 					name: 'event',
@@ -86,11 +86,11 @@
 			<form class="form-horizontal">
 				<div class="control-group" data-bind="template: {
 					name: 'numberproperty',
-					data: {label:'Exam duration (minutes):',property:duration, type:'number',min:0}
+					data: {label:'Exam duration (minutes):',property:duration, type:'number',min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-exam-duration'}
 				}"></div>
 				<div class="control-group" data-bind="template: {
 					name: 'booleanproperty',
-					data: {label:'Allow pausing?',property:allowPause}
+					data: {label:'Allow pausing?',property:allowPause, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-allow-pausing'}
 				}"></div>
 				<div data-bind="template: {
 					name: 'event',
@@ -106,23 +106,23 @@
 			<form class="form-horizontal">
 				<div class="control-group" data-bind="template: {
 					name: 'booleanproperty',
-					data: { label:'Show current score?', property:showactualmark}
+					data: { label:'Show current score?', property:showactualmark, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-show-current-score'}
 				}"></div>
 				<div class="control-group" data-bind="template: {
 					name: 'booleanproperty',
-					data: { label:'Show maximum score?', property:showtotalmark}
+					data: { label:'Show maximum score?', property:showtotalmark, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-show-maximum-score'}
 				}"></div>
 				<div class="control-group" data-bind="template: {
 					name: 'booleanproperty',
-					data: { label:'Show answer state?', property:showanswerstate}
+					data: { label:'Show answer state?', property:showanswerstate, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-show-answer-state'}
 				}"></div>
 				<div class="control-group" data-bind="template: {
 					name: 'booleanproperty',
-					data: { label:'Allow reveal answer?', property:allowrevealanswer}
+					data: { label:'Allow reveal answer?', property:allowrevealanswer, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-allow-reveal-answer'}
 				}"></div>
 				<div class="control-group" data-bind="template: {
 					name: 'percentproperty',
-					data: { label:'Advice threshold (percent)', property:advicethreshold}
+					data: { label:'Advice threshold (percent)', property:advicethreshold, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-advice-threshold'}
 				}"></div>
 			</form>
 		</section>
@@ -134,7 +134,7 @@
                     <form class="form-horizontal">
                         <div class="control-group" data-bind="template: {
                             name: 'booleanproperty',
-                            data: {label: 'Shuffle questions?',property:shuffleQuestions}
+                            data: {label: 'Shuffle questions?',property:shuffleQuestions, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-shuffle-questions'}
                         }"></div>
                     </form>
                     <ul class="questionList" data-bind="
@@ -184,6 +184,7 @@
 			</div>
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='access'}">
+			<div data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#access', topic: 'access rights', big: true}}"></div>
 			<form class="form-horizontal">
 				<div class="control-group">
 					<label>
@@ -227,7 +228,7 @@
 	{% verbatim %}
 
 	<script type="text/html" id="event">
-		<h4 data-bind="html:niceName"></h4>
+		<h4><span data-bind="html:niceName"></span> <span data-bind="template: {name: 'helplink', data: {url: helpURL}}"></span></h4>
 		<div class="control-group">
 			<label>
 				<span class="control-label">Action:</span>

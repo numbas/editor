@@ -1,7 +1,7 @@
 ﻿{% load verbatim %}
 {% verbatim %}
 	<script type="text/html" id="helplink">
-		<a class="helplink" data-bind="visible: $data.url, attr: {href: $data.url, title: $data.topic ? 'Help on '+$data.topic : 'Help'}, css: {big: $data.big, small: !$data.big}, text: $data.big ? 'Help' : '?'" target="numbasquickhelp">?</a>
+		<a tabindex="2" class="helplink" data-bind="visible: $data.url, attr: {href: $data.url, title: $data.topic ? 'Help on '+$data.topic : 'Help'}, css: {big: $data.big, small: !$data.big}, text: $data.big ? 'Help' : '?'" target="numbasquickhelp">?</a>
 	</script>
 
     <script type="text/html" id="property">

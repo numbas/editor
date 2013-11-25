@@ -419,22 +419,6 @@ $(document).ready(function() {
         }).extend({throttle:1000});
     }
 
-	function indent(s,n)
-	{
-		//if n is not given, set n=1
-		if(n===undefined)
-			n=1;
-
-		var lines = s.split('\n');
-		for(var tabs='';tabs.length<n;tabs+='  '){}
-
-		for(var i=0;i<lines.length;i++)
-		{
-			lines[i] = tabs+lines[i];
-		}
-		return lines.join('\n');
-	}
-
 	//represent a JSON-esque object in the Numbas .exam format
 	prettyData = function(data){
 		switch(typeof(data))
@@ -473,7 +457,6 @@ $(document).ready(function() {
 				}
 				if(multiline)
 				{
-					data=data.map(function(s){return indent(s)});
 					return '[\n'+data.join('\n')+'\n]';
 				}
 				else
@@ -489,7 +472,7 @@ $(document).ready(function() {
 				for(var x in data)
 				{
 					if(x)
-						o += indent(x+': '+prettyData(data[x]))+'\n';
+						o += x+': '+prettyData(data[x])+'\n';
 				}
 				o+='}';
 				return o;

@@ -386,6 +386,13 @@ $(document).ready(function() {
 			return p;
         },
 
+		loadPart: function(data) {
+			var p = new Part(this,null,this.parts,data);
+            this.parts.push(p);
+			this.currentPart(p);
+			return p;
+		},
+
 		computeVariables: function() {
 			if(!Numbas.jme)
 			{
@@ -549,7 +556,7 @@ $(document).ready(function() {
             if('parts' in data)
             {
                 data.parts.map(function(pd) {
-                    this.parts.push(new Part(this,null,this.parts,pd));
+                    this.loadPart(pd);
                 },this);
 				if(this.parts().length) 
 					this.currentPart(this.parts()[0]);
@@ -1013,6 +1020,23 @@ $(document).ready(function() {
 				]
 			}
         ],
+
+		copy: function() {
+			var data = this.toJSON();
+			var p = new Part(this.q,this.parent,this.parentList,data);
+			this.parentList.push(p);
+			this.q.currentPart(p);
+		},
+
+		canMove: function(direction) {
+			var parentList = ko.utils.unwrapObservable(this.parentList);
+			switch(direction) {
+				case 'up':
+					return parentList.indexOf(this)>0;
+				case 'down':
+					return parentList.indexOf(this)<parentList.length-1;
+			}
+		},
 
         addStep: function() {
 			var step = new Part(this.q,this,this.steps);

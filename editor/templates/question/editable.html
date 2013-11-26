@@ -191,9 +191,9 @@
 					<ol class="parts nav nav-list" data-bind="visible: parts().length>0, foreach: {data: parts, afterAdd: Editor.afterAdd, beforeRemove: Editor.beforeRemove}">
 						<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
 							<div class="reorder" data-bind="visible: $root.currentPart()==$data && parentList().length>1">
-								<button type="button" class="up" data-bind="click: moveUp"></button>
+								<button type="button" class="up" data-bind="click: moveUp, visible: canMove('up')" title="Move this part up one place"></button>
 								<br/>
-								<button type="button" class="down" data-bind="click: moveDown"></button>
+								<button type="button" class="down" data-bind="click: moveDown, visible: canMove('down')" title="Move this part down one place"></button>
 							</div>
 							<button type="button" class="delete" data-bind="click: remove" title="Delete this part"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
 							<div class="subparts" data-bind="fadeVisible: meOrChildSelected">
@@ -202,9 +202,9 @@
 									<ol class="gaps nav nav-list" data-bind="foreach: {data: gapfill.gaps, afterAdd: Editor.afterAdd, beforeRemove: Editor.beforeRemove}">
 										<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
 											<div class="reorder" data-bind="visible: $root.currentPart()==$data && parentList().length>1">
-												<button type="button" class="up" data-bind="click: moveUp"></button>
+												<button type="button" class="up" data-bind="click: moveUp, visible: canMove('up')" title="Move this part up one place"></button>
 												<br/>
-												<button type="button" class="down" data-bind="click: moveDown"></button>
+												<button type="button" class="down" data-bind="click: moveDown, visible: canMove('down')" title="Move this part down one place"></button>
 											</div>
 											<button type="button" class="delete" data-bind="click: remove" title="Delete this gap"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
 										</li>
@@ -216,9 +216,9 @@
 									<ol class="steps nav nav-list" data-bind="foreach: {data: steps, afterAdd: Editor.afterAdd, beforeRemove: Editor.beforeRemove}">
 										<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
 										<div class="reorder" data-bind="visible: $root.currentPart()==$data && parentList().length>1">
-												<button type="button" class="up" data-bind="click: moveUp"></button>
+												<button type="button" class="up" data-bind="click: moveUp, visible: canMove('up')" title="Move this part up one place"></button>
 												<br/>
-												<button type="button" class="down" data-bind="click: moveDown"></button>
+												<button type="button" class="down" data-bind="click: moveDown, visible: canMove('down')" title="Move this part down one place"></button>
 											</div>
 											<button type="button" class="delete" data-bind="click: remove" title="Delete this step"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
 										</li>
@@ -233,6 +233,7 @@
 				<div class="span9 part-edit" data-bind="with: currentPart">
 					<h4 class="header">
 						Type: <select class="type" data-bind="options: availableTypes, value:type, optionsText: 'niceName'"></select> <span data-bind="template: {name: 'helplink', data: {topic: 'part types', url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html'}}"></span>
+						<button class="copy-part" data-bind="click: copy">Copy this part</button>
 					</h4>
 					<div class="row-fluid">
 						<ul class="nav nav-tabs" data-bind="foreach: tabs">

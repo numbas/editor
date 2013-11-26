@@ -350,7 +350,7 @@ $(document).ready(function() {
 
 	Editor.beforeRemove = function(elem) {
 		if(elem.nodeType==elem.ELEMENT_NODE) {
-			$(elem).slideUp(150,function(){$(this).remove()});
+			$(elem).stop().slideUp(150,function(){$(this).remove()});
 		}
 		else {
 			$(elem).remove();
@@ -359,7 +359,7 @@ $(document).ready(function() {
 
 	Editor.afterAdd = function(elem) {
 		if(elem.nodeType==elem.ELEMENT_NODE) {
-			$(elem).hide().slideDown(150);
+			$(elem).stop().hide().slideDown(150);
 		}
 	}
 

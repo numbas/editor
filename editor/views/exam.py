@@ -333,6 +333,7 @@ class IndexView(generic.TemplateView):
         if self.request.user.is_authenticated():
             profile = self.request.user.get_profile()
             context['favourites'] = profile.favourite_exams.all()
+            context['recents'] = Exam.objects.filter(author=self.request.user).order_by('-last_modified')
         
         context['highlights'] = ExamHighlight.objects.all().order_by('-date')
 

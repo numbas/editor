@@ -211,8 +211,52 @@ ko.bindingHandlers.sortable = {
 })(ko, jQuery);
 
 
+
 $(document).ready(function() {
 
+	function texJMEBit(expr) {
+		var scope = new Numbas.jme.Scope(Numbas.jme.builtinScope,{rulesets: Numbas.jme.display.simplificationRules});
+		try{
+			var sbits = Numbas.util.splitbrackets(expr,'{','}');
+			var expr = '';
+			for(var j=0;j<sbits.length;j+=1)
+			{
+				expr += j%2 ? ' subvar('+sbits[j]+')' : sbits[j]; //subvar here instead of \\color because we're still in JME
+			}
+			expr = Numbas.jme.display.exprToLaTeX(expr,[],scope);
+			return expr;
+		} catch(e) {
+			return '\\color{red}{\\textrm{'+e.message+'}}';
+		}
+	}
+	MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
+
+		var TEX = MathJax.InputJax.TeX;
+
+		TEX.Definitions.Add({macros: {
+			'var': 'JMEvar', 
+			'simplify': 'JMEsimplify'
+		}});
+
+		TEX.Parse.Augment({
+			JMEvar: function(name) {
+				var expr = this.GetArgument(name);
+				expr = texJMEBit(expr);
+				var tex = '\\class{jme-var}{\\left\\{'+expr+'\\right\\}}';
+				var mml = TEX.Parse(tex,this.stack.env).mml();
+				this.Push(mml);
+			},
+
+			JMEsimplify: function(name) {
+				var rules = this.GetBrackets(name);
+				var expr = this.GetArgument(name);
+				expr = texJMEBit(expr);
+				var tex = ' \\class{jme-simplify}{\\left\\{'+expr+'\\right\\}}'
+				var mml = TEX.Parse(tex,this.stack.env).mml();
+				this.Push(mml);
+			}
+		})
+	});
 
 	$.noty.defaultOptions.theme = 'noty_theme_twitter';
 
@@ -480,150 +524,6 @@ $(document).ready(function() {
 		}
 	};
 
-	function cleanJME(val)
-	{
-		var dval = $.trim(val);
-		var bits = Numbas.util.contentsplitbrackets(dval);
-		dval='';
-		for(var i=0;i<bits.length;i++)
-		{
-			switch(i % 2)
-			{
-			case 0:	//text
-				dval += bits[i];
-				break;
-			case 1: //delimiter
-				switch(bits[i])
-				{
-				case '$':
-					if(i<bits.length-1)
-					{
-						dval += '$'+texMaths(bits[i+1])+'$';
-						i+=2;
-					}
-					else
-						dval += bits[i];
-					break;
-				case '\\[':
-					if(i<bits.length-1)
-					{
-						dval += '\\['+texMaths(bits[i+1])+'\\]';
-						i+=2;
-					}
-					else
-						dval += bits[i];
-					break;
-				}
-			}
-		}
-		return dval;
-	}
-	function texsplit(s)
-	{
-		var cmdre = /((?:.|\n)*?)\\((?:var)|(?:simplify))/m;
-		var out = [];
-		while( m = s.match(cmdre) )
-		{
-			out.push(m[1]);
-			var cmd = m[2];
-			out.push(cmd);
-
-			var i = m[0].length;
-
-			var args = '';
-			var argbrackets = false;
-			if( s.charAt(i) == '[' )
-			{
-				argbrackets = true;
-				var si = i+1;
-				while(i<s.length && s.charAt(i)!=']')
-					i++;
-				if(i==s.length)
-				{
-					out = out.slice(0,-2);
-					out.push(s);
-					return out;
-				}
-				else
-				{
-					args = s.slice(si,i);
-					i++;
-				}
-			}
-			if(!argbrackets)
-				args='all';
-			out.push(args);
-
-			if(s.charAt(i)!='{')
-			{
-				out = out.slice(0,-3);
-				out.push(s);
-				return out;
-			}
-
-			var brackets=1;
-			var si = i+1;
-			while(i<s.length-1 && brackets>0)
-			{
-				i++;
-				if(s.charAt(i)=='{')
-					brackets++;
-				else if(s.charAt(i)=='}')
-					brackets--;
-			}
-			if(i == s.length-1 && brackets>0)
-			{
-				out = out.slice(0,-3);
-				out.push(s);
-				return out;
-			}
-
-			var expr = s.slice(si,i);
-			s = s.slice(i+1);
-			out.push(expr);
-		}
-		out.push(s);
-		return out;
-	}
-	function texJMEBit(expr) {
-		var scope = new Numbas.jme.Scope(Numbas.jme.builtinScope,{rulesets: Numbas.jme.display.simplificationRules});
-		try{
-			var sbits = Numbas.util.splitbrackets(expr,'{','}');
-			var expr = '';
-			for(var j=0;j<sbits.length;j+=1)
-			{
-				expr += j%2 ? 'subvar('+sbits[j]+')' : sbits[j]; //subvar here instead of \\color because we're still in JME
-			}
-			expr = Numbas.jme.display.exprToLaTeX(expr,[],scope);
-			return expr;
-		} catch(e) {
-			return '\\color{red}{\\textrm{'+e.message+'}}';
-		}
-	}
-	function texMaths(s) {
-		var bits = texsplit(s);
-		var out = '';
-		for(var i=0;i<bits.length-3;i+=4)
-		{
-			out+=bits[i];
-			var cmd = bits[i+1],
-				args = bits[i+2],
-				expr = bits[i+3];
-			expr = texJMEBit(expr);
-
-			switch(cmd)
-			{
-			case 'var':	//substitute a variable
-				out += ' \\class{jme-var}{\\left\\{'+expr+'\\right\\}}';
-				break;
-			case 'simplify': //a JME expression to be simplified
-				out += ' \\class{jme-simplify}{\\left\\{'+expr+'\\right\\}}';
-				break;
-			}
-		}
-		return out+bits[bits.length-1];
-	};
-
 	ko.bindingHandlers.codemirror = {
 		init: function(element,valueAccessor,allBindingsAccessor) {
 			var value = valueAccessor();
@@ -711,7 +611,7 @@ $(document).ready(function() {
 					plugins: 'media',
 					media_strict: false,
 					init_instance_callback: function(ed) { 
-						$(element).writemaths({cleanMaths: cleanJME, iFrame: true, position: 'center top', previewPosition: 'center bottom'}); 
+						$(element).writemaths({iFrame: true, position: 'center top', previewPosition: 'center bottom'}); 
 						ed.onChange.add(onMCEChange);
 						ed.onKeyUp.add(onMCEChange);
 						ed.onPaste.add(onMCEChange);
@@ -771,14 +671,6 @@ $(document).ready(function() {
 		}
 	}
 
-	ko.bindingHandlers.cleanJME = {
-		update: function(element,valueAccessor) {
-			var value = ko.utils.unwrapObservable(valueAccessor()) || '';
-			value = cleanJME(value);
-			$(element).html(value).mathjax();
-		}
-	}
-	
 	ko.bindingHandlers.foldlist = {
 		init: function(element,valueAccessor,allBindingsAccessor,viewModel)
 		{

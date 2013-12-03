@@ -7,6 +7,7 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+(function() {
 
 function saveSelection(containerEl) {
     var charIndex = 0, start = 0, end = 0, foundStart = false, stop = {};
@@ -80,6 +81,74 @@ function restoreSelection(containerEl, savedSel) {
     }
 }
 
+var endDelimiters = {
+    '$': /[^\\]\$/,
+    '\\(': /[^\\]\\\)/,
+    '$$': /[^\\]\$\$/,
+    '\\[': /[^\\]\\\]/
+}
+var re_startMaths = /\$\$|\$|\\\(|\\\[|\\begin\{(\w+)\}/;
+function findMaths(txt,target) {
+    var i = 0;
+    var m;
+    var startDelimiter, endDelimiter;
+    var start, end;
+    var startChop, endChop;
+    var re_end;
+   
+    while(txt.length) {
+        m = re_startMaths.exec(txt);
+        
+        if(!m)     // if no maths delimiters, target is not in a maths section
+            return null;
+        
+        startDelimiter = m[0];
+        var start = m.index;
+        
+        if(i+start >= target)    // if target was before the starting delimiter, it's not in a maths section
+            return null;
+        
+        startChop = start+startDelimiter.length;
+        txt = txt.slice(startChop);
+        
+        if(startDelimiter.match(/^\\begin/)) {    //if this is an environment, construct a regexp to find the corresponding \end{} command.
+            var environment = m[1];
+            re_end = new RegExp('[^\\\\]\\\\end\\{'+environment+'\\}');    // don't ask if this copes with nested environments
+        }
+        else {
+            re_end = endDelimiters[startDelimiter];    // get the delimiter for the 
+        }
+        
+        m = re_end.exec(txt);
+        
+        if(!m) {    // if no ending delimiter, target is in a maths section
+            return {
+                start: i+start,
+                end: i+startChop+txt.length,
+                math: txt,
+                startDelimiter: startDelimiter,
+                endDelimiter: endDelimiter
+            };
+        }
+        
+        endDelimiter = m[0];
+        var end = m.index+1;    // the end delimiter regexp has a "not a backslash" character at the start because JS regexps don't do negative lookbehind
+        endChop = end+endDelimiter.length-1;
+        if(i+startChop+end >= target) {    // if target is before the end delimiter, it's in a maths section
+            return {
+                start: i+start,
+                end: i+startChop+endChop,
+                math: txt.slice(0,end),
+                startDelimiter: startDelimiter,
+                endDelimiter: endDelimiter.slice(1)
+            };
+        } 
+        else {
+            txt = txt.slice(endChop);
+            i += startChop+endChop;
+        }
+    }
+}
 
 jQuery(function() {
     jQuery("<style type='text/css'> .wm_preview { z-index: 1; position: absolute; display: none; border: 1px solid; padding: 0.2em; width: auto; margin: 0 auto; background: white;} </style>").appendTo("head");
@@ -112,6 +181,14 @@ jQuery(function() {
 
             var queue = MathJax.Callback.Queue(MathJax.Hub.Register.StartupHook("End",{}));
 
+			function positionPreview() {
+				var of = options.iFrame ? iframe : textarea ? root : document;
+				if(options.position)
+					previewElement.position({my: options.previewPosition, at: options.position, of: of, collision: 'fit'})
+				else
+					previewElement.position({my: 'left bottom', at: 'left top', of: of, offset: pos.x+' '+pos.y, collision: 'fit'})
+			}
+
 			function updatePreview(e) {
                 previewElement.hide();
 
@@ -134,7 +211,6 @@ jQuery(function() {
                     }
 					if(options.iFrame) {
 						pos.y -= $(iframe).contents().scrollTop();
-						previewElement.html(pos.y+','+$(iframe).contents().scrollTop()+','+$(iframe).position().y);
 					}
                     var anchor = sel.anchorNode;
 
@@ -161,96 +237,40 @@ jQuery(function() {
                 if(range.startOffset != range.endOffset)
                     return;
 
-                var i=0;
-                var inMath=false;
-                var startMath = 0;
-                var mathLimit,mathDelimit;
-                var otxt = txt;
-                while(i<range.startOffset)
-                {
-                    if(inMath)
-                    {
-                        if(txt.slice(i,i+mathDelimit.length)==mathDelimit)
-                        {
-                            inMath = false;
-                            i+=mathDelimit.length-1;
+				var target = range.startOffset;
 
-                            var ol = txt.length;
-                        }
-                    }
-                    else if(txt[i]=='$')
-                    {
-                        inMath = true;
-                        startMath = i+1;
-                        mathLimit = '$';
-                        mathDelimit = '$';
-                    }
-                    else if(txt.slice(i,i+2)=='\\[')
-                    {
-                        inMath = true;
-                        startMath = i+2;
-                        mathLimit = '\\[';
-                        mathDelimit = '\\]';
-                    }
-                    i+=1;
-                }
-                if(txt!=otxt) {
-                    anchor = jQuery(anchor).replaceWith(txt);
-                }
+				var q = findMaths(txt,target);
 
-                if(!inMath)
-                {
-                    previewElement.hide();
-                    return;
-                }
+				if(!q)
+					return;
 
-                i = startMath+1;
-                while(i<txt.length && inMath)
-                {
-                    if(txt.slice(i,i+mathDelimit.length)==mathDelimit)
-                        inMath = false;
-                    i+=1;
-                }
-
-                if(inMath && i==txt.length)
-                {
-                    //try to make a guess at how much of the remaining string is meant to be maths
-                    var words = txt.slice(startMath).split(' ');
-                    var j = 0;
-                    while(j<words.length && !words[j].match(/^([a-zA-Z]{2,})?$/))
-                    {
-                        j+=1;
-                    }
-                    i = startMath + words.slice(0,j).join(' ').length;
-                    i = Math.max(range.startOffset,i)+1;
-                }
-
-                var math = txt.slice(startMath,i-1);
-
+                var math;
+				if(q.startDelimiter.match(/^\\begin/))
+					math = q.startDelimiter + q.math + (q.endDelimiter ? q.endDelimiter : '');
+				else
+					math = q.math;
 
                 if(!math.length)
                     return;
 
-                math = mathLimit + math + mathDelimit;
+                previewElement.show();
 
-                function positionPreview() {
-                    var of = options.iFrame ? iframe : textarea ? root : document;
-					if(options.position)
-	                    previewElement.position({my: options.previewPosition, at: options.position, of: of, collision: 'fit'})
-					else
-	                    previewElement.position({my: 'left bottom', at: 'left top', of: of, offset: pos.x+' '+pos.y, collision: 'fit'})
-                }
+				if(math==$(this).data('writemaths-lastMath'))
+					return;
 
-                previewElement
-                    .show()
-                    .html(options.cleanMaths(math))
-                ;
+				var script = document.createElement('script');
+				script.setAttribute('type','math/tex');
+				script.textContent = options.cleanMaths(math);
+				previewElement.html(script);
+				$(this).data('writemaths-lastMath',math);;
                 positionPreview();
 
                 queue.Push(['Typeset',MathJax.Hub,previewElement[0]]);
                 queue.Push(positionPreview);
                 queue.Push(options.callback);
             }
+
+			updatePreview = $.throttle(100,updatePreview);
 
             el
 			.on('blur',function(e) {
@@ -266,3 +286,5 @@ jQuery(function() {
 		return this;
 	}
 });
+
+})();

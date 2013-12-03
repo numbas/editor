@@ -70,6 +70,13 @@ $(document).ready(function() {
 		}
 	};
 
+	ko.bindingHandlers.mathjaxHTML = {
+		update: function(element,valueAccessor) {
+			var value = ko.utils.unwrapObservable(valueAccessor()) || '';
+			$(element).html(value).mathjax();
+		}
+	};
+
 	ko.bindingHandlers.addClass = {
 		update: function(element,valueAccessor) {
 			var value = ko.utils.unwrapObservable(valueAccessor());

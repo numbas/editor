@@ -36,10 +36,10 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 			<div class="row-fluid section">
 				<div class="span8">
 					<label for="description"><h4>Description</h4></label>
-					<div id="description" data-bind="cleanJME: description"></div>
+					<div id="description" data-bind="mathjaxHTML: description"></div>
 					<div data-bind="if: !description()" class="nothing-here">The author has not written a description.</div>
 					<label for="authors-notes"><h4>Author's Notes</h4></label>
-					<div id="authors-notes" data-bind="cleanJME: notes"></div>
+					<div id="authors-notes" data-bind="mathjaxHTML: notes"></div>
 					<div data-bind="if:!notes()" class="nothing-here">The author has not made any notes.</div>
 				</div>
 				<div class="span4">
@@ -56,7 +56,7 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 						<h4>Tags</h4>
 						<ul class="tags" data-bind="foreach: tags">
 							<li class="tag well">
-								<a data-bind="attr: {href: '{% url 'question_index' %}?tags='+encodeURIComponent($data), title:'Questions with the tag \''+$data+'\''}, text: $data"></a>
+								<a data-bind="attr: {href: '{% url 'question_search' %}?tags='+encodeURIComponent($data), title:'Questions with the tag \''+$data+'\''}, text: $data"></a>
 							</li>
 						</ul>
 						<div class="nothing-here" data-bind="if: tags().length==0">This question does not have any tags.</div>
@@ -65,7 +65,7 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 			</div>
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='statement'}">
-			<div id="statement" data-bind="cleanJME: statement"></div>
+			<div id="statement" data-bind="mathjaxHTML: statement"></div>
 			<div class="nothing-here" data-bind="if:!statement()">No statement.</div>
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='variables'}">
@@ -203,7 +203,7 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 					<div class="row-fluid">
 						<div class="tab-content">
 							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='prompt'}">
-								<div data-bind="cleanJME: prompt"></div>
+								<div data-bind="mathjaxHTML: prompt"></div>
 								<div data-bind="if: !prompt()" class="nothing-here">No prompt.</div>
 							</section>
 							<!-- ko if: type().name=='gapfill' -->
@@ -291,7 +291,7 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 										<div class="control-group">
 											<label>
 												<span class="control-label">Warning message</span>
-												<div class="controls" data-bind="cleanJME: jme.maxlength.message"></div>
+												<div class="controls" data-bind="mathjaxHTML: jme.maxlength.message"></div>
 											</label>
 										</div>
 									</div>
@@ -309,7 +309,7 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 										<div class="control-group">
 											<label>
 												<span class="control-label">Warning message</span>
-												<div class="controls" data-bind="cleanJME: jme.minlength.message"></div>
+												<div class="controls" data-bind="mathjaxHTML: jme.minlength.message"></div>
 											</label>
 										</div>
 									</div>
@@ -338,7 +338,7 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 										<div class="control-group">
 											<label>
 												<span class="control-label">Warning message</span>
-												<div class="controls" data-bind="cleanJME: jme.musthave.message"></div>
+												<div class="controls" data-bind="mathjaxHTML: jme.musthave.message"></div>
 											</label>
 										</div>
 									</div>
@@ -367,7 +367,7 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 										<div class="control-group">
 											<label>
 												<span class="control-label">Warning message</span>
-												<div class="controls" data-bind="cleanJME: jme.notallowed.message"></div>
+												<div class="controls" data-bind="mathjaxHTML: jme.notallowed.message"></div>
 											</label>
 										</div>
 									</div>
@@ -445,7 +445,7 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 									<div class="control-group" data-bind="fadeVisible: numberentry.precisionType().name!='none'">
 										<label>
 											<span class="control-label">Message if wrong precision</span>
-											<div class="controls" data-bind="cleanJME: numberentry.precisionMessage"></div>
+											<div class="controls" data-bind="mathjaxHTML: numberentry.precisionMessage"></div>
 										</label>
 									</div>
 								</form>
@@ -532,7 +532,7 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 													<span class="distractor" data-bind="text: distractor"></span>
 												</label>
 											</div>
-											<div id="description" data-bind="cleanJME: content, wmHeight: 100, wmWidth: 500"></div>
+											<div id="description" data-bind="mathjaxHTML: content, wmHeight: 100, wmWidth: 500"></div>
 										</form>
 									</li>
 									<!-- /ko -->
@@ -594,7 +594,7 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 												Distractor Message:
 												<span class="distractor" data-bind="texr: distractor"></span>
 											</label>
-											<div id="description" data-bind="cleanJME: content, wmHeight: 100, wmWidth: 500"></div>
+											<div id="description" data-bind="mathjaxHTML: content, wmHeight: 100, wmWidth: 500"></div>
 										</form>
 									</li>
 									<!-- /ko -->

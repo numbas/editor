@@ -1,0 +1,37 @@
+body {
+	font-size: 16px;
+	line-height: 24px;
+	max-width: 900px;
+	margin-left: 2em;
+}
+
+.index-link {
+	margin-left: -16px;
+	font-size: 12px;
+}
+
+h2 {
+	border-bottom: 2px solid #ccc;
+}
+
+code {
+	padding: 0 2px;
+	margin: 2px 0;
+	display:inline-block;
+	color: #050;
+}
+
+code.shell {
+	padding: 0 4px;
+	background: #eee;
+	border: 1px solid #bbb;
+	border-radius: 2px;
+	display: block;
+	margin: 10px 0;
+	color: black;
+}
+
+code.shell:before {
+	content: '> ';
+	color: green;
+}

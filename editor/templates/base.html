@@ -18,66 +18,26 @@
 		</script>
 		<![endif]-->
 
-{% block javascripts %}
-	<!-- jQuery -->
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.13/jquery-ui.min.js" type="text/javascript"></script>
+		{% block head %}{% endblock %}
 
-	<!-- bootstrap -->
-	<script src="{{ STATIC_URL }}bootstrap/js/bootstrap.min.js"></script>
+		{% block stylesheets %}
+			<link href="{{ STATIC_URL }}bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+			<link href="{{ STATIC_URL }}bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet" media="screen">
 
-	<!-- jQuery.oembed all -->
-	<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.oembed.js"></script>
+			<link href="{{ STATIC_URL }}css/jquery.noty.css" rel="stylesheet" type="text/css" />
+			<link href="{{ STATIC_URL }}css/noty_theme_twitter.css" rel="stylesheet" type="text/css" />
+			<link href="{{ STATIC_URL }}css/jquery-ui.css" rel="stylesheet" type="text/css" />
 
-    <!-- knockout -->
-	<script type="text/javascript" src="{{ STATIC_URL }}js/knockout.js"></script>
-	
-	<!-- noty -->
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.noty.js"></script>
+			<link href="{{ STATIC_URL }}css/main.css" type="text/css" rel="stylesheet" />
+		{% endblock stylesheets %}
 
-	<!-- moment.js - formats dates -->
-	<script type="text/javascript" src="{{ STATIC_URL }}js/moment.js"></script>
-
-	<!-- mousetrap.js - handles keyboard shortcuts -->
-	<script type="text/javascript" src="{{ STATIC_URL }}js/mousetrap.min.js"></script>
-
-    <!-- MathJax -->
-	<script type="text/x-mathjax-config">
-		MathJax.Hub.Config({
-			tex2jax: {
-				inlineMath: [['$','$']],
-				displayMath: [['\\[','\\]']]
-			},
-			"HTML-CSS": {
-				mtextFontInherit: true
-			}
-		});
-	</script>
-    <script src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-    <script src="{{ STATIC_URL }}js/es5-shim.js" type="text/javascript"></script>
-
-{% endblock %}
-
-{% block head %}{% endblock %}
-
-{% block stylesheets %}
-	<link href="{{ STATIC_URL }}bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
-	<link href="{{ STATIC_URL }}bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet" media="screen">
-
-    <link href="{{ STATIC_URL }}css/jquery.noty.css" rel="stylesheet" type="text/css" />
-    <link href="{{ STATIC_URL }}css/noty_theme_twitter.css" rel="stylesheet" type="text/css" />
-	<link href="{{ STATIC_URL }}css/jquery-ui.css" rel="stylesheet" type="text/css" />
-
-    <link href="{{ STATIC_URL }}css/main.css" type="text/css" rel="stylesheet" />
-{% endblock stylesheets %}
     </head>
 	<body>
-<div id="getsat-widget-4240"></div>
-<script type="text/javascript" src="https://loader.engage.gsfn.us/loader.js"></script>
-<script type="text/javascript">
-if (typeof GSFN !== "undefined") { GSFN.loadWidget(4240,{"containerId":"getsat-widget-4240"}); }
-</script>
+		<div id="getsat-widget-4240"></div>
+		<script type="text/javascript" src="https://loader.engage.gsfn.us/loader.js"></script>
+		<script type="text/javascript">
+		if (typeof GSFN !== "undefined") { GSFN.loadWidget(4240,{"containerId":"getsat-widget-4240"}); }
+		</script>
 
 		<div id="container-fluid">
         {% block body %}
@@ -142,5 +102,46 @@ if (typeof GSFN !== "undefined") { GSFN.loadWidget(4240,{"containerId":"getsat-w
             <!-- end #main -->
 		{% endblock body %}
 		</div>
+
+		{% block javascripts %}
+			<!-- jQuery -->
+			<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+			<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.13/jquery-ui.min.js" type="text/javascript"></script>
+
+			<!-- bootstrap -->
+			<script src="{{ STATIC_URL }}bootstrap/js/bootstrap.min.js"></script>
+
+			<!-- jQuery.oembed all -->
+			<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.oembed.js"></script>
+
+			<!-- knockout -->
+			<script type="text/javascript" src="{{ STATIC_URL }}js/knockout.js"></script>
+			
+			<!-- noty -->
+			<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.noty.js"></script>
+
+			<!-- moment.js - formats dates -->
+			<script type="text/javascript" src="{{ STATIC_URL }}js/moment.js"></script>
+
+			<!-- mousetrap.js - handles keyboard shortcuts -->
+			<script type="text/javascript" src="{{ STATIC_URL }}js/mousetrap.min.js"></script>
+
+			<!-- MathJax -->
+			<script type="text/x-mathjax-config">
+				MathJax.Hub.Config({
+					tex2jax: {
+						inlineMath: [['$','$']],
+						displayMath: [['\\[','\\]']]
+					},
+					"HTML-CSS": {
+						mtextFontInherit: true
+					}
+				});
+			</script>
+			<script src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+			<script src="{{ STATIC_URL }}js/es5-shim.js" type="text/javascript"></script>
+
+		{% endblock %}
     </body>
 </html>

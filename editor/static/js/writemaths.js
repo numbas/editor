@@ -116,7 +116,7 @@ function findMaths(txt,target) {
             re_end = new RegExp('[^\\\\]\\\\end\\{'+environment+'\\}');    // don't ask if this copes with nested environments
         }
         else {
-            re_end = endDelimiters[startDelimiter];    // get the delimiter for the 
+            re_end = endDelimiters[startDelimiter];    // get the corresponding end delimiter for the matched start delimiter
         }
         
         m = re_end.exec(txt);

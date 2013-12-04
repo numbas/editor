@@ -4,9 +4,8 @@ Maths and Stats](http://www.ncl.ac.uk/maths/).
 
 This repository is an editor for creating Numbas exams.
 
-Instructions for installation on a Linux server (so that the editor can be
-used by multiple people) can be found at http://numbas.github.com/editor/.
+Instructions for installation can be found at http://numbas.github.io/editor/.
 Note that a full installation like this is not necessary if you just want to
-try out the editor on your personal desktop or laptop computer.
+try out the editor - you can use [the free public editor at **math**centre](http://numbas.mathcentre.ac.uk).
 
 Some icons from [Iconic Icon Set](http://somerandomdude.com/work/iconic/) © P.J. Onori, Licensed under Creative Commons Attribution-ShareAlike 3.0 Unported.

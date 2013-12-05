@@ -153,23 +153,29 @@ function findMaths(txt,target) {
 jQuery(function() {
     jQuery("<style type='text/css'> .wm_preview { z-index: 1; position: absolute; display: none; border: 1px solid; padding: 0.2em; width: auto; margin: 0 auto; background: white;} </style>").appendTo("head");
 
-	jQuery.fn.writemaths = function(options) {
-		options = jQuery.extend({
-			cleanMaths: function(m){ return m; },
-			callback: function() {},
-            iFrame: false,
-			position: false,
-			previewPosition: 'left top'
-		},options);
+	jQuery.fn.writemaths = function(custom_options) {
 
         jQuery(this).each(function() {
+			var options = jQuery.extend({
+				cleanMaths: function(m){ return m; },
+				callback: function() {},
+				iFrame: false,
+				position: 'left top',
+				previewPosition: 'left top'
+			},custom_options);
 
             var textarea = jQuery(this).is('textarea,input');
 
-            var root = this;
+			var root = this;
+			var el;
+			var iframe;
+
+			if(options.of=='this')
+				options.of = root;
+
             if(options.iFrame) {
-    			var iframe = jQuery(this).find('iframe')[0];
-                var el = jQuery(iframe).contents().find('body');
+    			iframe = jQuery(this).find('iframe')[0];
+                el = jQuery(iframe).contents().find('body');
             }
             else
             {
@@ -181,37 +187,22 @@ jQuery(function() {
 
             var queue = MathJax.Callback.Queue(MathJax.Hub.Register.StartupHook("End",{}));
 
+			var txt, sel, range;
 			function positionPreview() {
-				var of = options.iFrame ? iframe : textarea ? root : document;
-				if(options.position)
-					previewElement.position({my: options.previewPosition, at: options.position, of: of, collision: 'fit'})
-				else
-					previewElement.position({my: 'left bottom', at: 'left top', of: of, offset: pos.x+' '+pos.y, collision: 'fit'})
+				var of = options.of ? options.of : options.iFrame ? iframe : textarea ? root : document;
+				previewElement.position({my: options.previewPosition, at: options.position, of: of, collision: 'fit'})
 			}
 
 			function updatePreview(e) {
                 previewElement.hide();
 
-                var pos, txt, sel, range;
                 if(textarea) {
-                    pos = jQuery(this).getCaretPosition();
-                    var fontHeight = parseInt(jQuery(this).css('font-size').replace('px',''));
-                    pos = {x: pos.left, y: pos.top - fontHeight};
                     sel = jQuery(this).getSelection();
                     range = {startOffset: sel.start, endOffset: sel.end};
                     txt = jQuery(this).val();
                 }
                 else {
                     sel = options.iFrame ? rangy.getIframeSelection(iframe) : rangy.getSelection();
-                    try{
-                        pos = sel.getStartDocumentPos();
-                    }
-                    catch(e) {
-                        return;
-                    }
-					if(options.iFrame) {
-						pos.y -= $(iframe).contents().scrollTop();
-					}
                     var anchor = sel.anchorNode;
 
                     range = sel.getRangeAt(0);
@@ -229,8 +220,6 @@ jQuery(function() {
                         return;
                     txt = jQuery(anchor).text();
                 }
-				if(pos.y<0)
-					return;
 
                 //only do this if the selection has zero width
                 //so when you're selecting blocks of text, distracting previews don't pop up
@@ -255,19 +244,19 @@ jQuery(function() {
 
                 previewElement.show();
 
-				if(math==$(this).data('writemaths-lastMath'))
-					return;
+				if(math!=$(this).data('writemaths-lastMath')) {
+					var script = document.createElement('script');
+					script.setAttribute('type','math/tex');
+					script.textContent = options.cleanMaths(math);
+					previewElement.html(script);
+					$(this).data('writemaths-lastMath',math);
+					queue.Push(['Typeset',MathJax.Hub,previewElement[0]]);
+					queue.Push(positionPreview);
+					queue.Push(options.callback);
+				}
 
-				var script = document.createElement('script');
-				script.setAttribute('type','math/tex');
-				script.textContent = options.cleanMaths(math);
-				previewElement.html(script);
-				$(this).data('writemaths-lastMath',math);;
                 positionPreview();
 
-                queue.Push(['Typeset',MathJax.Hub,previewElement[0]]);
-                queue.Push(positionPreview);
-                queue.Push(options.callback);
             }
 
 			updatePreview = $.throttle(100,updatePreview);
@@ -287,4 +276,13 @@ jQuery(function() {
 	}
 });
 
+/*
+ * jQuery throttle / debounce - v1.1 - 3/7/2010
+ * http://benalman.com/projects/jquery-throttle-debounce-plugin/
+ * 
+ * Copyright (c) 2010 "Cowboy" Ben Alman
+ * Dual licensed under the MIT and GPL licenses.
+ * http://benalman.com/about/license/
+ */
+(function(b,c){var $=b.jQuery||b.Cowboy||(b.Cowboy={}),a;$.throttle=a=function(e,f,j,i){var h,d=0;if(typeof f!=="boolean"){i=j;j=f;f=c}function g(){var o=this,m=+new Date()-d,n=arguments;function l(){d=+new Date();j.apply(o,n)}function k(){h=c}if(i&&!h){l()}h&&clearTimeout(h);if(i===c&&m>e){l()}else{if(f!==true){h=setTimeout(i?k:l,i===c?e-m:e)}}}if($.guid){g.guid=j.guid=j.guid||$.guid++}return g};$.debounce=function(d,e,f){return f===c?a(d,e,false):a(d,f,e!==false)}})(this);
 })();

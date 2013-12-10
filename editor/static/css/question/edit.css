@@ -146,6 +146,81 @@
 	padding: 5px;
 }
 
+.variable-list {
+	width: 100%;
+	margin: 1em 0;
+}
+
+.variable-list th.name {
+	text-align: left;
+}
+
+.variable-list th.value {
+	text-align: right;
+}
+
+.variable-selector:hover, .variable-selector.current:hover, .variable-selector.dependency:hover {
+	background-color: #f90;
+	cursor: pointer;
+}
+
+.variable-selector {
+	border-bottom: 1px dashed #bbb;
+}
+
+.variable-selector.current {
+	background-color: #08c;
+	color: #fff;
+}
+
+.variable-selector.dependency {
+	background-color: #95dcff;
+}
+
+.variable-selector td {
+	padding: 0.3em 0.5em;
+}
+
+.variable-selector .name {
+	font-family: monospace;
+	font-size: 1.3em;
+	word-break: break-all;
+	width: 35%;
+}
+
+.variable-selector.current .name, .variable-selector.dependency .name {
+	font-weight: bold;
+}
+
+.variable-selector.noname .name {
+    font-family: inherit;
+    font-size: 1em;
+    font-weight: bold;
+}
+
+.variable-selector .value-cell {
+	text-align: right;
+}
+
+.variable-selector .value {
+	text-align: left;
+	display: inline-block;
+	max-height: 5em;
+	overflow-y: hidden;
+}
+
+.variable-selector .value.error {
+	color: red;
+	font-weight: bold;
+}
+
+.variable .control-label {
+    width: 70px;
+}
+.variable .controls {
+    margin-left: 90px;
+}
+
 .variable button.delete {
 	float: right;
 }
@@ -155,23 +230,24 @@
 	font-style: italic;
 }
 
-.variable .value {
-	padding: 4px;
+.variable .used-in {
+    display: inline;
+    margin: 0;
 }
-
-
-.insertvariable button.addvariable {
-	background-image: url(../../images/plus_8x8.png);
-	background-position: 50%;
-	background-repeat: no-repeat;
-	background-color: transparent;
-	border-radius: 0;
-	border: none;
-	padding: 4px 18px;
+.variable .used-in li {
+    display: inline-block;
 }
-
-.insertvariable button.addvariable:hover {
-	background-color: #f90;
+.variable .used-in .variable {
+    font-family: monospace;
+    font-size: 1.3em;
+    background-color: #eee;
+    padding: 0 2px;
+    border-radius: 3px;
+    border: 1px solid #ddd;
+}
+.variable .used-in .variable:hover {
+    background-color: #f90;
+    cursor: pointer;
 }
 
 .function {

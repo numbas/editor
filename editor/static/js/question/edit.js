@@ -148,6 +148,7 @@ $(document).ready(function() {
 
         this.variables = ko.observableArray([]);
 		this.autoCalculateVariables = ko.observable(true);
+		this.currentVariable = ko.observable(null);
 
 		this.variableErrors = ko.computed(function() {
 			var variables = this.variables();
@@ -376,6 +377,7 @@ $(document).ready(function() {
 				this.variables.splice(n,0,v);
 			else
 	            this.variables.push(v);
+			this.currentVariable(v);
 			return v;
         },
 
@@ -460,6 +462,7 @@ $(document).ready(function() {
 					return;
 				}
 				v.value('');
+				v.dependencies(vars);
 				todo[v.name().toLowerCase()] = {
 					v: v,
 					tree: tree,
@@ -534,6 +537,8 @@ $(document).ready(function() {
                 {
                     this.variables.push(new Variable(this,{name:x,definition:data.variables[x]}));
                 }
+				if(this.variables().length)
+					this.currentVariable(this.variables()[0]);
             }
 
 			if('functions' in data)
@@ -679,6 +684,19 @@ $(document).ready(function() {
 			return '';
 		},this);
         this.definition = ko.observable('');
+		this.dependencies = ko.observableArray([]);
+		this.isDependency = ko.computed(function() {
+			var currentVariable = q.currentVariable();
+			if(!currentVariable)
+				return false;
+			return currentVariable.dependencies().contains(this.name());
+		},this);
+		this.usedIn = ko.computed(function() {
+			var v = this;
+			return q.variables().filter(function(v2) {
+				return v2.dependencies().contains(v.name());
+			});
+		},this);
 		this.value = ko.observable('');
 		this.error = ko.observable('');
 		this.display = ko.computed(function() {

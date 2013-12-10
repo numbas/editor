@@ -753,7 +753,7 @@
 						<div class="bar" data-bind="style: {width: progress()+'%'}"></div>
 					</div>
 					<div data-bind="visible: progress()==1">
-						<img class="thumbnail" data-bind="visible: filetype()=='img', attr: {src: url, title: name}"/>
+						<a data-bind="attr: {href: url}" target="_blank"><img class="thumbnail" data-bind="visible: filetype()=='img', attr: {src: url, title: name}"/></a>
 						<span data-bind="text: name"></span>
 						<button type="button" class="delete" data-bind="click: $root.deleteResource" title="Delete this image"></button>
 					</div>

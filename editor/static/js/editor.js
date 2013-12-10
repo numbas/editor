@@ -850,8 +850,8 @@ $(document).ready(function() {
 			this.deleteURL = data.delete_url;
 		},
 		filePatterns: {
-			'html': /\.html?$/,
-			'img': /\.(png|jpg|gif|bmp|jpeg|webp|tiff|tif|raw|svg)$/
+			'html': /\.html?$/i,
+			'img': /\.(png|jpg|gif|bmp|jpeg|webp|tiff|tif|raw|svg)$/i
 		},
 		filetype: function() {
 			var name = this.name();

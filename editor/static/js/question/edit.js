@@ -147,7 +147,7 @@ $(document).ready(function() {
         this.functions = ko.observableArray([]);
 
         this.variables = ko.observableArray([]);
-		this.autoCalculateVariables = ko.observable(true);
+		this.autoCalculateVariables = ko.observable(false);
 		this.currentVariable = ko.observable(null);
 
 		this.variableErrors = ko.computed(function() {
@@ -722,6 +722,12 @@ $(document).ready(function() {
 		},this);
         this.remove = function() {
             q.variables.remove(this);
+			if(this==q.currentVariable()) {
+				if(q.variables().length)
+					q.currentVariable(q.variables()[0]);
+				else
+					q.currentVariable(null);
+			}
         };
         if(data)
             this.load(data);

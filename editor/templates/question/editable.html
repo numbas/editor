@@ -74,34 +74,36 @@
 				<div class="span4">
 					<button type="button" data-bind="click:addVariable, text: variables().length ? 'Add another variable' : 'Add a variable'"></button>
 					<button type="button" data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button>
-					<table class="variable-list">
-						<thead>
-							<tr>
-								<th class="name">Name</th>
-								<th class="value">Generated Value</th>
+					<div data-bind="visible: variables().length>0">
+						<table class="variable-list">
+							<thead>
+								<tr>
+									<th class="name">Name</th>
+									<th class="value">Generated Value</th>
+								</tr>
+							</thead>
+							<tbody data-bind="sortable: {
+								template: 'variable-template',
+								data: variables,
+								options: {
+									forcePlaceholderSize: true,
+									placeholder: 'placeholder'
+								}
+							}">
+							</tbody>
+						</table>
+						<script type="text/html" id="variable-template">
+							<tr data-bind="click: $root.currentVariable, css: {noname: !name(), current: $data==$root.currentVariable(), dependency: isDependency}" class="variable-selector">
+								<td class="name" data-bind="text: name() ? name() : 'Unnamed'"></td>
+								<td class="value-cell">
+									<div class="value" data-bind="css: {error: error().length>0}, html: display, mathjax: display"></div>
+								</td>
 							</tr>
-						</thead>
-						<tbody data-bind="sortable: {
-							template: 'variable-template',
-							data: variables,
-							options: {
-								forcePlaceholderSize: true,
-								placeholder: 'placeholder'
-							}
-						}">
-						</tbody>
-					</table>
-					<script type="text/html" id="variable-template">
-						<tr data-bind="click: $root.currentVariable, css: {noname: !name(), current: $data==$root.currentVariable(), dependency: isDependency}" class="variable-selector">
-							<td class="name" data-bind="text: name() ? name() : 'Unnamed'"></td>
-							<td class="value-cell">
-								<div class="value" data-bind="css: {error: error().length>0}, html: display, mathjax: display"></div>
-							</td>
-						</tr>
-					</script>
-					<p>
-						Automatically recalculate variables: <input type="checkbox" data-bind="checked: autoCalculateVariables"/>
-					</p>
+						</script>
+						<p>
+							<label><input type="checkbox" data-bind="checked: autoCalculateVariables"/> Automatically regenerate variables when changes are made.</label>
+						</p>
+					</div>
 				</div>
 				<div class="span8 variable" data-bind="with: currentVariable">
 					<form class="form-horizontal">

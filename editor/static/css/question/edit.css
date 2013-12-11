@@ -187,7 +187,6 @@
 
 .variable-selector .name {
 	font-family: monospace;
-	font-size: 1.3em;
 	word-break: break-all;
 	width: 35%;
 }
@@ -198,7 +197,6 @@
 
 .variable-selector.noname .name {
     font-family: inherit;
-    font-size: 1em;
     font-weight: bold;
 }
 
@@ -211,6 +209,7 @@
 	display: inline-block;
 	max-height: 5em;
 	overflow-y: hidden;
+	overflow-x: hidden;
 }
 
 .variable-selector .value.error {

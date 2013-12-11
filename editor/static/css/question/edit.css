@@ -159,6 +159,10 @@
 	text-align: right;
 }
 
+.variable-list .placeholder {
+	background-color: #eee;
+}
+
 .variable-selector:hover, .variable-selector.current:hover, .variable-selector.dependency:hover {
 	background-color: #f90;
 	cursor: pointer;
@@ -212,6 +216,10 @@
 .variable-selector .value.error {
 	color: red;
 	font-weight: bold;
+}
+
+.variable {
+	padding-bottom: 1em;
 }
 
 .variable .control-label {

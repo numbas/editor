@@ -130,9 +130,15 @@
 							</div>
 						</div>
 					</form>
-					<div data-bind="visible: usedIn().length>0">
-						This variable is used in the <span data-bind="text: usedIn().length==1 ? 'definition' : 'definitions'"></span> of 
-						<ul data-bind="foreach: usedIn" class="used-in">
+					<div data-bind="visible: dependencies().length>0" class="inline-names">
+						<strong>Depends on:</strong>
+						<ul data-bind="foreach: dependenciesObjects">
+							<li><!-- ko if: $index()>0 -->, <!-- /ko --><span class="variable" data-bind="click: $root.currentVariable, text: name"></span></li>
+						</ul>.
+					</div>
+					<div data-bind="visible: usedIn().length>0" class="inline-names">
+						<strong>Used by:</strong>
+						<ul data-bind="foreach: usedIn">
 							<li><!-- ko if: $index()>0 -->, <!-- /ko --><span class="variable" data-bind="click: $root.currentVariable, text: name"></span></li>
 						</ul>.
 					</div>

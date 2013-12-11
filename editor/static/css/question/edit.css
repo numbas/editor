@@ -177,9 +177,11 @@
 	color: #fff;
 }
 
+/*
 .variable-selector.dependency {
 	background-color: #95dcff;
 }
+*/
 
 .variable-selector td {
 	padding: 0.3em 0.5em;
@@ -237,14 +239,18 @@
 	font-style: italic;
 }
 
-.variable .used-in {
+.variable .inline-names {
+	margin: 1em 0;
+}
+
+.variable .inline-names ul {
     display: inline;
     margin: 0;
 }
-.variable .used-in li {
+.variable .inline-names li {
     display: inline-block;
 }
-.variable .used-in .variable {
+.variable .inline-names .variable {
     font-family: monospace;
     font-size: 1.3em;
     background-color: #eee;
@@ -252,7 +258,7 @@
     border-radius: 3px;
     border: 1px solid #ddd;
 }
-.variable .used-in .variable:hover {
+.variable .inline-names .variable:hover {
     background-color: #f90;
     cursor: pointer;
 }

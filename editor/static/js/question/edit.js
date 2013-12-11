@@ -147,7 +147,7 @@ $(document).ready(function() {
         this.functions = ko.observableArray([]);
 
         this.variables = ko.observableArray([]);
-		this.autoCalculateVariables = ko.observable(false);
+		this.autoCalculateVariables = ko.observable(true);
 		this.currentVariable = ko.observable(null);
 
 		this.variableErrors = ko.computed(function() {
@@ -690,6 +690,12 @@ $(document).ready(function() {
 			if(!currentVariable)
 				return false;
 			return currentVariable.dependencies().contains(this.name());
+		},this);
+		this.dependenciesObjects = ko.computed(function() {
+			var deps = this.dependencies();
+			return q.variables().filter(function(v2) {
+				return deps.contains(v2.name());
+			});
 		},this);
 		this.usedIn = ko.computed(function() {
 			var v = this;

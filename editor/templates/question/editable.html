@@ -98,16 +98,18 @@
 								<td class="value-cell">
 									<div class="value" data-bind="css: {error: error().length>0}, html: display, mathjax: display"></div>
 								</td>
+								<td class="delete-cell">
+									<button type="button" title="Remove this variable" class="delete" data-bind="click:remove"></button>
+								</td>
 							</tr>
 						</script>
 						<p>
-							<label><input type="checkbox" data-bind="checked: autoCalculateVariables"/> Automatically regenerate variables when changes are made.</label>
+							<label><input class="recalculate-checkbox" type="checkbox" data-bind="checked: autoCalculateVariables"/> Automatically regenerate variables when changes are made.</label>
 						</p>
 					</div>
 				</div>
 				<div class="span8 variable" data-bind="with: currentVariable">
 					<form class="form-horizontal">
-						<button type="button" title="Remove this variable" class="delete" data-bind="click:remove"></button>
 						<div class="control-group">
 							<label>
 								<span class="control-label">

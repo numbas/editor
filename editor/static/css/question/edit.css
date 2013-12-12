@@ -163,6 +163,19 @@
 	background-color: #eee;
 }
 
+.variable-list .delete-cell {
+    text-align: right;
+    padding: 0;
+}
+.variable-list .delete {
+    margin-left: 0;
+}
+
+input.recalculate-checkbox {
+	margin-right: 1em;
+}
+
+
 .variable-selector:hover, .variable-selector.current:hover, .variable-selector.dependency:hover {
 	background-color: #f90;
 	cursor: pointer;

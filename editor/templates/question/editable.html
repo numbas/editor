@@ -72,8 +72,6 @@
 			<span data-bind="template: {name: 'helplink', data: {topic: 'variables', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#variables', big: true}}"></span>
 			<div class="row-fluid">
 				<div class="span4">
-					<button type="button" data-bind="click:addVariable, text: variables().length ? 'Add another variable' : 'Add a variable'"></button>
-					<button type="button" data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button>
 					<div data-bind="visible: variables().length>0">
 						<table class="variable-list">
 							<thead>
@@ -107,6 +105,8 @@
 							<label><input class="recalculate-checkbox" type="checkbox" data-bind="checked: autoCalculateVariables"/> Automatically regenerate variables when changes are made.</label>
 						</p>
 					</div>
+					<button type="button" data-bind="click:addVariable, text: variables().length ? 'Add another variable' : 'Add a variable'"></button>
+					<button type="button" data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button>
 				</div>
 				<div class="span8 variable" data-bind="with: currentVariable">
 					<form class="form-horizontal">

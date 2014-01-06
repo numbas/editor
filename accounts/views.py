@@ -1,5 +1,6 @@
 from accounts.forms import NumbasRegistrationForm
-from registration.views import register as original_register
+import registration.views
+from django.conf import settings
 from django.views.generic import UpdateView, DetailView
 from django.contrib.auth.models import User
 from django.shortcuts import redirect
@@ -11,10 +12,43 @@ from accounts.forms import UserProfileForm,ChangePasswordForm
 from editor.models import Question, Exam
 from zipfile import ZipFile
 from cStringIO import StringIO
+from django.contrib.sites.models import Site
+from accounts.models import RegistrationProfile
+from registration import signals
 
-def register(*args,**kwargs):
-    kwargs['form_class'] = NumbasRegistrationForm
-    return original_register(*args,**kwargs)
+class RegistrationView(registration.views.RegistrationView):
+    form_class = NumbasRegistrationForm
+
+    def register(self,request,*args,**kwargs):
+        username, email, password = kwargs['username'], kwargs['email'], kwargs['password1']
+        first_name, last_name = kwargs['first_name'], kwargs['last_name']
+        if Site._meta.installed:
+            site = Site.objects.get_current()
+        else:
+            site = RequestSite(request)
+        new_user = RegistrationProfile.objects.create_inactive_user(username, first_name, last_name, email,
+                                                                    password, site)
+        signals.user_registered.send(sender=self.__class__,
+                                     user=new_user,
+                                     request=request)
+        return new_user
+
+    def get_success_url(self,*args,**kwargs):
+        return reverse('registration_complete')
+
+    def registration_allowed(self, request):
+        return settings.ALLOW_REGISTRATION
+
+class ActivationView(registration.views.ActivationView):
+    def activate(self,request,activation_key):
+        activated_user = RegistrationProfile.objects.activate_user(activation_key)
+        if activated_user:
+            signals.user_activated.send(sender=self.__class__,
+                                        user=activated_user,
+                                        request=request)
+        return activated_user
+    def get_success_url(self, request, user):
+        return ('registration_activation_complete', (), {})
 
 class CurrentUserUpdateView(UpdateView):
     model = User

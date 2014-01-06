@@ -24,8 +24,7 @@ from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import views as auth_views
 
-from registration.views import activate
-from accounts.views import register,UserUpdateView,ChangePasswordView,UserProfileView,AllExamsView, AllQuestionsView
+from accounts.views import ActivationView,RegistrationView,UserUpdateView,ChangePasswordView,UserProfileView,AllExamsView, AllQuestionsView
 
 from numbas import settings
 
@@ -76,16 +75,16 @@ if settings.ALLOW_REGISTRATION:
                            url(r'^activate/complete/$',
                                TemplateView.as_view(template_name='registration/activation_complete.html'),
                                name='registration_activation_complete'),
+
                            # Activation keys get matched by \w+ instead of the more specific
                            # [a-fA-F0-9]{40} because a bad activation key should still get to the view;
                            # that way it can return a sensible "invalid key" message instead of a
                            # confusing 404.
                            url(r'^activate/(?P<activation_key>\w+)/$',
-                               activate,
-                               {'backend': 'accounts.backend.Backend'},
+                               ActivationView.as_view(),
                                name='registration_activate'),
                            url(r'^register/$',
-                               register,
+                               RegistrationView.as_view(),
                                {'backend': 'accounts.backend.Backend'},
                                name='registration_register'),
                            url(r'^register/complete/$',

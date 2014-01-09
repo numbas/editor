@@ -183,7 +183,7 @@
 		//remove from queue if not already visible
 		for(var i=0;i<$.noty.queue.length;) {
 			if($.noty.queue[i].options.id==id)
-				$.noty.queue.splice(id,1);
+				$.noty.queue.splice(i,1);
 			else
 				i++;
 		}

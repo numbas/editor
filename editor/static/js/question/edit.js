@@ -146,6 +146,11 @@ $(document).ready(function() {
 
         this.functions = ko.observableArray([]);
 
+		this.preamble = {
+			css: ko.observable(''),
+			js: ko.observable('')
+		};
+
         this.variables = ko.observableArray([]);
 		this.autoCalculateVariables = ko.observable(true);
 		this.currentVariable = ko.observable(null);
@@ -516,6 +521,10 @@ $(document).ready(function() {
                 rulesets: rulesets,
                 variables: variables,
 				functions: functions,
+				preamble: {
+					js: this.preamble.js(),
+					css: this.preamble.css()
+				},
                 parts: this.parts().map(function(p){return p.toJSON();})
 
             }
@@ -530,7 +539,7 @@ $(document).ready(function() {
 						e.used(true);
 				});
 			}
-            
+
             if('variables' in data)
             {
                 for(var x in data.variables)
@@ -548,6 +557,11 @@ $(document).ready(function() {
 					data.functions[x].name = x;
 					this.functions.push(new CustomFunction(this,data.functions[x]));
 				}
+			}
+
+			if('preamble' in data)
+			{
+				tryLoad(data.preamble,['css','js'],this.preamble);
 			}
 
             if('rulesets' in data)

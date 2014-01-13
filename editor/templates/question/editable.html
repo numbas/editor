@@ -222,6 +222,30 @@
 					<button type="button" data-bind="click:addRuleset, text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></button>
 				</form>
 			</div>
+			<div id="preamble">
+				<h4>
+					Preamble
+					<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#preamble'}}"></span>
+				</h4>
+				<form class="form-horizontal">
+					<div class="control-group">
+						<label class="control-label">
+							Javascript
+						</label>
+						<div class="controls">
+							<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: preamble.js, codemirrorMode: 'javascript'"></textarea>
+						</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label">
+							CSS
+						</label>
+						<div class="controls">
+							<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: preamble.css, codemirrorMode: 'css'"></textarea>
+						</div>
+					</div>
+				</form>
+			</div>
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='parts'}">
 			<div class="row-fluid">

@@ -83,7 +83,7 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 							<form>
 								<span class="name" data-bind="text: name"></span>
 								<label class="control-label">Definition</label>
-								<textarea disabled class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: definition, codemirrorMode: 'jme'"></textarea>
+								<textarea disabled class="def" data-bind="readOnly: true, valueUpdate: 'afterkeydown', codemirror: definition, codemirrorMode: 'jme'"></textarea>
 							</form>
 						</div>
 						<div class="span3">
@@ -121,7 +121,7 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 							<div>
 								<label>
 									Definition:
-									<textarea data-bind="codemirror: definition, codemirrorMode: language, valueUpdate: 'afterkeydown'"></textarea>
+									<textarea data-bind="readOnly: true, codemirror: definition, codemirrorMode: language, valueUpdate: 'afterkeydown'"></textarea>
 								</label>
 								<div class="error" data-bind="visible: error().length>0">
 									Error: <span class="errortext" data-bind="html: error"></span>
@@ -160,6 +160,30 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 				<div data-bind="if: rulesets().length==0" class="nothing-here">
 					This question doesn't define any rulesets.
 				</div>
+			</div>
+			<div id="preamble">
+				<h4>
+					Preamble
+					<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#preamble'}}"></span>
+				</h4>
+				<form class="form-horizontal">
+					<div class="control-group">
+						<label class="control-label">
+							Javascript
+						</label>
+						<div class="controls">
+							<textarea class="def" data-bind="readOnly: true, valueUpdate: 'afterkeydown', codemirror: preamble.js, codemirrorMode: 'javascript'"></textarea>
+						</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label">
+							CSS
+						</label>
+						<div class="controls">
+							<textarea class="def" data-bind="readOnly: true, valueUpdate: 'afterkeydown', codemirror: preamble.css, codemirrorMode: 'css'"></textarea>
+						</div>
+					</div>
+				</form>
 			</div>
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='parts'}">

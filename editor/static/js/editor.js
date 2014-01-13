@@ -540,11 +540,25 @@ $(document).ready(function() {
 				}
 			}
 
+			//from https://github.com/marijnh/CodeMirror/issues/988
+			function betterTab(cm) {
+			  if (cm.somethingSelected()) {
+				cm.indentSelection("add");
+			  } else {
+				cm.replaceSelection(cm.getOption("indentWithTabs")? "\t":
+				  Array(cm.getOption("indentUnit") + 1).join(" "), "end", "+input");
+			  }
+			}
+
 			var mc = CodeMirror.fromTextArea(element,{
 				lineNumbers: true,
 				matchBrackets: true,
                 mode: mode,
-				onChange: onChange
+				indentWithTabs: false,
+				indentUnit: 2,
+				extraKeys: { Tab: betterTab },
+				onChange: onChange,
+				readOnly: readOnly
 			});
 			ko.utils.domData.set(element,'codemirror',mc);
 		},

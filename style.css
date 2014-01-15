@@ -35,3 +35,6 @@ code.shell:before {
 	content: '> ';
 	color: green;
 }
+code.shell.mysql:before {
+	content: 'mysql> ';
+}

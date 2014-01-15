@@ -39,13 +39,22 @@
 		</p>
 		<ul>
 			<li>
+				Create a user group which will have access to the virtualenv, and add yourself to it. 
+				<code class="shell">groupadd numbas</code>
+				<code class="shell">usermod username -a -G numbas,www-data</code>
+				You might need to log out and back in for the group change to take effect.
+			</li>
+			<li>
 				Install Pip: <code class="shell">apt-get install python-pip</code>
 			</li>
 			<li>
 				Install virtualenv: <code class="shell">pip install virtualenv</code>
 			</li>
 			<li>
-				Create the virtualenv in a suitable location: <code class="shell">virtualenv /opt/python/numbas-editor</code>
+				Create the virtualenv in a suitable location: 
+				<code class="shell">mkdir /opt/python</code>
+				<code class="shell">setfacl -dR -m g:numbas:rwx /opt/python</code>
+				<code class="shell">virtualenv /opt/python/numbas-editor</code>
 			</li>
 			<li>
 				Activate the virtualenv: <code class="shell">source /opt/python/numbas-editor/bin/activate</code> (This ensures that subsequent python packages are installed in this isolated environment, and not in the system environment.)
@@ -60,8 +69,9 @@
 			<li>Create database user and grant privileges on
 			<code>numbas_editor</code> database:
 				<ul>
-					<li><code class="shell">grant all privileges on numbas_editor.* to
-						'numbas'@'localhost' identified by 'password';</code></li>
+					<li><code class="shell mysql">grant all privileges on numbas_editor.* to
+						'numbas'@'localhost' identified by 'password';</code>
+					</li>
 				</ul>
 			</li>
 			<li>Create Numbas directories outside the webroot:
@@ -81,9 +91,8 @@
 			</li>
 			<li>Clone the Numbas repository: <code class="shell">git clone git://github.com/numbas/Numbas /srv/numbas/dist</code></li>
 			<li>Create the editor directory and clone the editor under webroot: <code class="shell">git clone git://github.com/numbas/editor /srv/www/numbas_editor</code></li>
-			<li>Install Django (need at least version 1.5) and other python
-				dependencies of the editor (in the virtualenv): 
-		<code class="shell">pip install -r /srv/www/numbas_editor/numbas/requirements.pip</code>
+			<li>Install the Python module dependencies of the editor (in the virtualenv): 
+				<code class="shell">pip install -r /srv/www/numbas_editor/numbas/requirements.pip</code>
 			</li>
 			<li>Copy the editor distribution database and settings files:
 					<code class="shell">cd /srv/www/numbas_editor/numbas</code>

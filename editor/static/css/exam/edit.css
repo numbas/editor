@@ -39,7 +39,10 @@
 	line-height: 1.5em !important;
 	padding: 0 2em 0.5em 44px !important;
 	clear: both;
+	background: #eee;
 	min-height: 44px;
+	margin-bottom: 0.5em;
+	position: relative;
 }
 
 .question .author {
@@ -54,7 +57,10 @@
 
 .question .handle {
 	margin-left: -44px;
-	float: left;
+	height: 100%;
+	position: absolute;
+	padding-top: 0;
+	padding-bottom: 0;
 }
 
 .question .number {

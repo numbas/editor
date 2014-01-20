@@ -66,7 +66,7 @@
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='statement'}">
 			<span data-bind="template: {name: 'helplink', data: {topic: 'the question statement', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#statement', big: true}}"></span>
-			<div id="statement" data-bind="writemaths: statement"></div>
+			<div id="statement" data-bind="writemaths: statement, preambleCSS: $root.preamble.css"></div>
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='variables'}">
 			<span data-bind="template: {name: 'helplink', data: {topic: 'variables', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#variables', big: true}}"></span>
@@ -222,6 +222,30 @@
 					<button type="button" data-bind="click:addRuleset, text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></button>
 				</form>
 			</div>
+			<div id="preamble">
+				<h4>
+					Preamble
+					<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#preamble'}}"></span>
+				</h4>
+				<form class="form-horizontal">
+					<div class="control-group">
+						<label class="control-label">
+							Javascript
+						</label>
+						<div class="controls">
+							<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: preamble.js, codemirrorMode: 'javascript'"></textarea>
+						</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label">
+							CSS
+						</label>
+						<div class="controls">
+							<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: preamble.css, codemirrorMode: 'css'"></textarea>
+						</div>
+					</div>
+				</form>
+			</div>
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='parts'}">
 			<div class="row-fluid">
@@ -287,7 +311,7 @@
 									name: 'helplink', 
 									data: {topic: 'part prompt', url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-prompt', big: true}
 								}"></span>
-								<div data-bind="writemaths: prompt"></div>
+								<div data-bind="writemaths: prompt, preambleCSS: $root.preamble.css"></div>
 							</section>
 							<!-- ko if: type().name=='gapfill' -->
 							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='marking'}">
@@ -375,7 +399,7 @@
 										<div class="control-group">
 											<label>
 												<span class="control-label">Warning message</span>
-												<div class="controls" data-bind="writemaths: jme.maxlength.message"></div>
+												<div class="controls" data-bind="writemaths: jme.maxlength.message, preambleCSS: $root.preamble.css"></div>
 											</label>
 										</div>
 									</div>
@@ -393,7 +417,7 @@
 										<div class="control-group">
 											<label>
 												<span class="control-label">Warning message</span>
-												<div class="controls" data-bind="writemaths: jme.minlength.message"></div>
+												<div class="controls" data-bind="writemaths: jme.minlength.message, preambleCSS: $root.preamble.css"></div>
 											</label>
 										</div>
 									</div>
@@ -418,7 +442,7 @@
 										<div class="control-group">
 											<label>
 												<span class="control-label">Warning message</span>
-												<div class="controls" data-bind="writemaths: jme.musthave.message"></div>
+												<div class="controls" data-bind="writemaths: jme.musthave.message, preambleCSS: $root.preamble.css"></div>
 											</label>
 										</div>
 									</div>
@@ -443,7 +467,7 @@
 										<div class="control-group">
 											<label>
 												<span class="control-label">Warning message</span>
-												<div class="controls" data-bind="writemaths: jme.notallowed.message"></div>
+												<div class="controls" data-bind="writemaths: jme.notallowed.message, preambleCSS: $root.preamble.css"></div>
 											</label>
 										</div>
 									</div>
@@ -517,7 +541,7 @@
 									<div class="control-group" data-bind="fadeVisible: numberentry.precisionType().name!='none'">
 										<label>
 											<span class="control-label">Message if wrong precision</span>
-											<div class="controls" data-bind="writemaths: numberentry.precisionMessage"></div>
+											<div class="controls" data-bind="writemaths: numberentry.precisionMessage, preambleCSS: $root.preamble.css"></div>
 										</label>
 									</div>
 								</form>
@@ -603,7 +627,7 @@
 												Distractor Message:
 												<input type="text" data-bind="value:distractor, valueUpdate:'input', autosize: {max: 500, min: 100, padding: 10, value: distractor}"/>
 											</label>
-											<div id="description" data-bind="writemaths: content, wmHeight: 100, wmWidth: 500"></div>
+											<div id="description" data-bind="writemaths: content, wmHeight: 100, wmWidth: 500, preambleCSS: $root.preamble.css"></div>
 										</form>
 									</li>
 									<!-- /ko -->
@@ -667,7 +691,7 @@
 												Distractor Message:
 												<input type="text" data-bind="value:distractor, valueUpdate:'input', autosize: {max: 500, min: 100, padding: 10, value: distractor}"/>
 											</label>
-											<div id="description" data-bind="writemaths: content, wmHeight: 100, wmWidth: 500"></div>
+											<div id="description" data-bind="writemaths: content, wmHeight: 100, wmWidth: 500, preambleCSS: $root.preamble.css"></div>
 										</form>
 									</li>
 									<!-- /ko -->
@@ -769,7 +793,7 @@
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='advice'}">
 			<span data-bind="template: {name: 'helplink', data: {topic: 'the advice section', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#advice', big: true}}"></span>
-			<div data-bind="writemaths:advice"></div>
+			<div data-bind="writemaths:advice, preambleCSS: $root.preamble.css"></div>
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='resources'}">
 			<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#resources', big: true}}"></span>

@@ -584,6 +584,8 @@ $(document).ready(function() {
 			var height = allBindingsAccessor.hasOwnProperty('wmHeight') ? allBindingsAccessor.wmHeight : 200;
 			var width = allBindingsAccessor.hasOwnProperty('wmWidth') ? allBindingsAccessor.wmWidth : '';
 
+			var preambleCSSAccessor = allBindingsAccessor.preambleCSS;
+
 			var d = $('<div style="text-align:right"/>');
 			var toggle = $('<button type="button" class="wmToggle on">Toggle rich text editor</button>');
 			d.append(toggle);
@@ -605,14 +607,12 @@ $(document).ready(function() {
             var t = $('<textarea class="wmTextArea" style="width:100%"/>');
 			var plaintext = $('<textarea class="plaintext"/>');
 
-
             $(element)
 				.css('width',width)
                 .addClass('writemathsContainer on')
                 .append(t)
 				.append(plaintext)
             ;
-
 
 			//tinyMCE
 			function onMCEChange(ed) {
@@ -629,6 +629,13 @@ $(document).ready(function() {
 						ed.onChange.add(onMCEChange);
 						ed.onKeyUp.add(onMCEChange);
 						ed.onPaste.add(onMCEChange);
+						if(preambleCSSAccessor !== undefined) {
+							var s = ed.dom.create('style',{type:'text/css',id:'preamblecss'});
+							ed.dom.doc.head.appendChild(s);
+							ko.computed(function() {
+								s.textContent = ko.utils.unwrapObservable(preambleCSSAccessor);
+							});
+						}
 					},
                     theme_advanced_resizing: true,
 					theme_advanced_resize_horizontal: false,

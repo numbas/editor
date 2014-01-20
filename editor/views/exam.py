@@ -37,7 +37,7 @@ import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
 
-from examparser import ExamParser, ParseError, printdata
+from numbasobject import NumbasObject
 
 class PreviewView(editor.views.generic.PreviewView):
     
@@ -139,12 +139,13 @@ class UploadView(generic.CreateView):
             self.object.author = self.request.user
             self.object.save()
 
-            data = ExamParser().parse(self.object.content)
+            exam_object = NumbasObject(source=self.object.content)
 
             qs = []
-            for q in data['questions']:
+            for q in exam_object.data['questions']:
+                question = NumbasObject(data=q,version=exam_object.version)
                 qo = Question(
-                    content = printdata(q), 
+                    content = str(question), 
                     author = self.object.author
                 )
                 qo.save()
@@ -271,6 +272,7 @@ class UpdateView(generic.UpdateView):
         
     def get_context_data(self, **kwargs):
         context = super(UpdateView, self).get_context_data(**kwargs)
+        self.object.get_parsed_content()
         exam_dict = model_to_dict(self.object)
         exam_dict['questions'] = [q.summary() for q in self.object.get_questions()]
         context['exam_JSON'] = json.dumps(exam_dict)

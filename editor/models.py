@@ -36,7 +36,7 @@ from uuslug import slugify
 from taggit.managers import TaggableManager
 import taggit.models
 
-from examparser import ExamParser, ParseError, printdata
+import numbasobject
 
 from jsonfield import JSONField
 
@@ -68,38 +68,37 @@ class ControlledObject:
     def can_be_edited_by(self, user):
         return self.public_access=='edit' or (user.is_superuser) or (self.author==user) or self.get_access_for(user)=='edit'
 
+NUMBAS_FILE_VERSION = '1'
 class NumbasObject:
 
     def get_parsed_content(self):
         if self.content:
-            parser = ExamParser()
-            self.parsed_content = parser.parse(self.content)
-            self.name = self.parsed_content['name']
+            self.parsed_content = numbasobject.NumbasObject(self.content)
+            self.name = self.parsed_content.data['name']
         elif self.name:
-            self.content = '{name: %s}' % self.name
-            self.parsed_content = {'name': self.name}
+            self.parsed_content = NumbasObject(data={'name': self.name}, version=NUMBAS_FILE_VERSION)
 
-        self.extensions = self.parsed_content.get('extensions',[])
-        self.metadata = self.parsed_content.get('metadata',self.metadata)
+        self.extensions = self.parsed_content.data.get('extensions',[])
+        self.metadata = self.parsed_content.data.get('metadata',self.metadata)
 
+        self.content = str(self.parsed_content)
         return self.parsed_content
 
     def set_name(self,name):
         self.name = name
         if self.content:
-            data = ExamParser().parse(self.content)
-            data['name'] = name
-            self.content = printdata(data)
+            self.get_parsed_content()
+            self.parsed_content.data['name'] = name
+            self.content = str(self.parsed_content)
         self.save()
-
 
 #check that the .exam file for an object is valid and defines at the very least a name
 def validate_content(content):
     try:
-        data = ExamParser().parse(content)
-        if not 'name' in data:
+        object = numbasobject.NumbasObject(content)
+        if not 'name' in object.data:
             raise ValidationError('No "name" property in content.')
-    except ParseError as err:
+    except Exception as err:
         raise ValidationError(err)
 
 class Extension(models.Model):
@@ -205,12 +204,12 @@ class Question(models.Model,NumbasObject,ControlledObject):
 
         self.slug = slugify(self.name)
 
-        self.progress = self.parsed_content.get('progress','in-progress')
+        self.progress = self.parsed_content.data.get('progress','in-progress')
 
         super(Question, self).save(*args, **kwargs)
 
-        if 'tags' in self.parsed_content:
-            self.tags.set(*[t.strip() for t in self.parsed_content['tags']])
+        if 'tags' in self.parsed_content.data:
+            self.tags.set(*[t.strip() for t in self.parsed_content.data['tags']])
 
 
     def delete(self, *args, **kwargs):
@@ -226,11 +225,13 @@ class Question(models.Model,NumbasObject,ControlledObject):
             ('extensions',self.extensions),
             ('resources',[[i.image.name,i.image.path] for i in self.resources.all()]),
             ('navigation',{'allowregen': 'true', 'showfrontpage': 'false', 'preventleave': False}),
-            ('questions',[self.parsed_content])
+            ('questions',[self.parsed_content.data])
         ])
-        return printdata(data)
+        obj = numbasobject.NumbasObject(data=data,version=NUMBAS_FILE_VERSION)
+        return str(obj)
 
     def as_json(self):
+        self.get_parsed_content()
         d = model_to_dict(self)
         d['metadata'] = self.metadata
         d['tags'] = [ti.tag.name for ti in d['tags']]
@@ -344,8 +345,8 @@ class Exam(models.Model,NumbasObject,ControlledObject):
         return 'exam-%i-%s' % (self.pk,self.slug)
         
     def as_source(self):
-        parser = ExamParser()
-        data = parser.parse(self.content)
+        obj = numbasobject.NumbasObject(self.content)
+        data = obj.data
         extensions = []
         resources = []
         for q in self.get_questions():
@@ -354,9 +355,9 @@ class Exam(models.Model,NumbasObject,ControlledObject):
             resources += q.resources.all()
         data['extensions'] = list(set(extensions))
         data['name'] = self.name
-        data['questions'] = [parser.parse(q.content) for q in self.get_questions()]
+        data['questions'] = [numbasobject.NumbasObject(q.content).data for q in self.get_questions()]
         data['resources'] = [[i.image.name,i.image.path] for i in set(resources)]
-        return printdata(data)
+        return str(obj)
         
     def summary(self, user=None):
         """return enough to identify an exam and say where to find it, along with a description"""

@@ -38,7 +38,7 @@ from editor.tables import QuestionTable, QuestionHighlightTable
 
 from accounts.models import UserProfile
 
-from examparser import ExamParser, ParseError, printdata
+from numbasobject import NumbasObject
 
 class PreviewView(editor.views.generic.PreviewView):
     
@@ -142,11 +142,12 @@ class UploadView(generic.CreateView):
     def post(self, request, *args, **kwargs):
         content = request.FILES['file'].read()
 
-        data = ExamParser().parse(content)
+        exam_object = NumbasObject(content)
         self.qs = []
-        for q in data['questions']:
+        for q in exam_object.data['questions']:
+            question = NumbasObject(data=q,version=exam_object.version)
             qo = Question(
-                content = printdata(q), 
+                content = str(question), 
                 author = self.request.user
             )
             qo.save()

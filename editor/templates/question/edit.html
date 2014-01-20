@@ -26,7 +26,9 @@
 
 			    progresses: {{object.PROGRESS_CHOICES|json|safe}},
 
-    			numbasExtensions: {{extensions|json|safe}},
+				numbasExtensions: {{extensions|json|safe}},
+
+				numbasVersion: 1,
 
     			previewURL: '{% url 'question_preview' object.pk object.slug %}',
                 previewWindow: '{% now "U" %}',

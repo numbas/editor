@@ -172,7 +172,8 @@ $(document).ready(function() {
 		};
 
         this.output = ko.computed(function() {
-            return prettyData(q.toJSON());
+            var data = JSON.stringify(q.toJSON());
+			return '// '+Editor.numbasVersion+'\n'+data;
         },this);
 
 		//for image attribute modal
@@ -232,7 +233,7 @@ $(document).ready(function() {
 				},this);
 			}
 
-			this.load(parseExam(data.content));
+			this.load(Editor.parseExam(data.content));
 
 			try{
 				this.tags(data.tags);

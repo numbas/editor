@@ -24,8 +24,6 @@ from django.views.generic import DetailView
 from django.template.loader import get_template
 from django.template import RequestContext
 
-from examparser import ExamParser, ParseError
-
 class CompileError(Exception):
     def __init__(self, message, stdout='',stderr='',code=0):
         self.message = message

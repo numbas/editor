@@ -163,7 +163,7 @@ $(document).ready(function() {
 				tryLoad(data.metadata,['notes','description'],this);
 			}
 
-            this.load(parseExam(data.content));
+            this.load(Editor.parseExam(data.content));
 
             if('theme' in data)
                 this.theme(data.theme);

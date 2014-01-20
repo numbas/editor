@@ -292,6 +292,11 @@ $(document).ready(function() {
 			set(data[attr.toLowerCase()]);
 	}
 
+	Editor.parseExam = function(source) {
+		var content = /\/\/(.*?)\n(.*)/.exec(source)[2]
+		return JSON.parse(content);
+	}
+
 	Editor.Tab = function(id,title) {
 		this.id = id;
 		this.title = title;

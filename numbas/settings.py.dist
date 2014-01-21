@@ -184,6 +184,11 @@ examparser = imp.load_source(
     'examparser',
     os.path.join(GLOBAL_SETTINGS['NUMBAS_PATH'],
                  os.path.normpath('bin/examparser.py')))
+    
+numbasobject = imp.load_source(
+    'numbasobject',
+     os.path.join(GLOBAL_SETTINGS['NUMBAS_PATH'],
+                  os.path.normpath('bin/numbasobject.py')))
                   
 AUTHENTICATION_BACKENDS = (
     # Uncomment to enable LDAP authentication, then look at ldap_auth.py.dist

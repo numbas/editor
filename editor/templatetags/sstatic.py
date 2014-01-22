@@ -1,3 +1,7 @@
+""" 
+from https://bitbucket.org/ad3w/django-sstatic/src/4401a4bc3058618dfc2eafaee6a23d287a99ede5/sstatic/templatetags/sstatic.py?at=default 
+"""
+
 import os
 
 from django import template

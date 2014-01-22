@@ -1,7 +1,8 @@
-﻿{% load verbatim %}
+﻿{% load sstatic %}
+{% load verbatim %}
 
 {% block stylesheets %}
-	<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/noneditable.css">
+	<link rel="stylesheet" type="text/css" href="{% sstatic 'css/noneditable.css' %}">
 {% endblock stylesheets %}
 
 {% verbatim %}

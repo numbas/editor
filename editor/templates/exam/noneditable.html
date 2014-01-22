@@ -1,10 +1,11 @@
 {% extends "exam/edit.html" %}
+{% load sstatic %}
 {% load verbatim %}
 {% load user_link %}
 
 {% block stylesheets %}
 	{{ block.super }}
-	<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/exam/noneditable.css">
+	<link rel="stylesheet" type="text/css" href="{% sstatic 'css/exam/noneditable.css' %}">
 {% endblock stylesheets %}
 
 {% block editable_message %}You may only view this question. {% if user.is_authenticated %}If you want to change something, make a copy.{% endif %}{% endblock editable_message %}
@@ -156,7 +157,7 @@
 						<div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
 					</li>
                 </ul>
-                <div data-bind="if: questions().length==0" class="nothing-here">The author hasn't added any questions to this exam yet.</div.
+				<div data-bind="if: questions().length==0" class="nothing-here">The author hasn't added any questions to this exam yet.</div>
 			</div>
 		</section>
 	</div>

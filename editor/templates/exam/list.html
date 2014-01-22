@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% load sstatic %}
 {% load django_tables2 %}
 {% load render_table from django_tables2 %}
 {% load can_edit %}
@@ -70,10 +71,10 @@
 
 {% block javascripts %}
 	{{block.super}}
-	<script type="text/javascript" src="{{STATIC_URL}}js/exam/index.js"></script>
+	<script type="text/javascript" src="{% sstatic 'js/exam/index.js' %}"></script>
 {% endblock javascripts %}
 
 {% block stylesheets %}
 	{{ block.super }}
-    <link href="{{ STATIC_URL }}css/search.css" type="text/css" rel="stylesheet" />
+    <link href="{% sstatic 'css/search.css' %}" type="text/css" rel="stylesheet" />
 {% endblock stylesheets %}

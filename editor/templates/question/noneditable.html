@@ -1,9 +1,10 @@
 {% extends "question/edit.html" %}
+{% load sstatic %}
 {% load user_link %}
 
 {% block stylesheets %}
 	{{ block.super }}
-	<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/question/noneditable.css">
+	<link rel="stylesheet" type="text/css" href="{% sstatic 'css/question/noneditable.css' %}">
 {% endblock stylesheets %}
 
 {% block editable_message %}{% endblock editable_message %}

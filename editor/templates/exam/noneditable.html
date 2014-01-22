@@ -52,12 +52,12 @@
 			<div class="row-fluid">
 				<div class="span6">
 					<label for="description"><h4>Description</h4></label>
-					<div id="description" data-bind="cleanJME: description"></div>
+					<div id="description" data-bind="mathjaxHTML: description"></div>
 					<div data-bind="if: !description()" class="nothing-here">The author has not written a description.</div>
 				</div>
 				<div class="span6">
 					<label for="authors-notes"><h4>Author's Notes</h4></label>
-					<div id="authors-notes" data-bind="cleanJME: notes"></div>
+					<div id="authors-notes" data-bind="mathjaxHTML: notes"></div>
 					<div data-bind="if:!notes()" class="nothing-here">The author has not made any notes.</div>
 				</div>
 			</div>
@@ -176,7 +176,7 @@
 		<div class="control-group">
 			<label data-bind="fadeVisible:action().name!='none'">
 				<span class="control-label">Message:</span>
-				<div class="controls" data-bind="cleanJME: message, wmHeight: 100, wmWidth: 500"/>
+				<div class="controls" data-bind="mathjaxHTML: message, wmHeight: 100, wmWidth: 500"/>
 			</label>
 		</div>
 	</script>

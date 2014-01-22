@@ -706,7 +706,7 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 			</div>
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='advice'}">
-			<div data-bind="cleanJME:advice"></div>
+			<div data-bind="mathjaxHTML: advice"></div>
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='resources'}">
 			<ul class="unstyled resources-list" data-bind="foreach: resources">

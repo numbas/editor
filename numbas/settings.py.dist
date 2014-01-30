@@ -154,7 +154,7 @@ GLOBAL_SETTINGS = {
     'HELP_URL': 'http://numbas-editor.readthedocs.org',        #the URL of the Numbas webdocs
     'PYTHON_EXEC': '/usr/bin/python3',
     'NUMBAS_THEMES': [('Standard','default'),('Printable worksheet','worksheet')],
-    'NUMBAS_LOCALES': [('English','en-GB')],
+    'NUMBAS_LOCALES': [('English','en-GB'),(u'Bokmål','nb-NO'),('Nederlands','nl-NL'),(u'Español','es-ES')],
     #Uncomment the line below and provide a path to a minification tool to minify javascript files
     #'MINIFIER_PATH': 'uglifyjs',
 }

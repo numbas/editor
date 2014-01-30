@@ -217,6 +217,8 @@ input.recalculate-checkbox {
 
 .variable-selector .value-cell {
 	text-align: right;
+    max-width: 8em;
+    overflow-x: auto;
 }
 
 .variable-selector .value {

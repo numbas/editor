@@ -14,6 +14,7 @@
 import json
 import traceback
 from copy import deepcopy
+import operator
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
@@ -274,8 +275,8 @@ class UpdateView(generic.UpdateView):
         exam_dict = model_to_dict(self.object)
         exam_dict['questions'] = [q.summary() for q in self.object.get_questions()]
         context['exam_JSON'] = json.dumps(exam_dict)
-        context['themes'] = settings.GLOBAL_SETTINGS['NUMBAS_THEMES']
-        context['locales'] = settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']
+        context['themes'] = sorted([{'name': x[0], 'path': x[1]} for x in settings.GLOBAL_SETTINGS['NUMBAS_THEMES']],key=operator.itemgetter('name'))
+        context['locales'] = sorted([{'name': x[0], 'code': x[1]} for x in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']],key=operator.itemgetter('name'))
         context['editable'] = self.object.can_be_edited_by(self.request.user)
         context['can_delete'] = self.object.can_be_deleted_by(self.request.user)
         context['navtab'] = 'exams'

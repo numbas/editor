@@ -69,7 +69,7 @@ $(document).ready(function() {
 		},this);
 
 		this.theme = ko.observable('default');
-		this.locale = ko.observable('en-GB');
+		this.locale = ko.observable(Editor.preferred_locale);
 
         this.duration = ko.observable(0);
 		this.allowPause = ko.observable(true);

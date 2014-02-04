@@ -24,24 +24,7 @@
         {% autoescape off %}
         {% endautoescape %}
         (function() {
-            if (!window.Editor) {
-            	window.Editor = {};
-            }
-            var Editor = window.Editor = {
-                editable: {{editable|json}},
-                examJSON: {{ exam_JSON|safe }},
-
-                {% if editable %}
-				public_access: {{exam.public_access|json|safe}},
-				access_rights: {{access_rights|json|safe}},
-                {% endif %}
-
-                themes: {{themes|json|safe}},
-                locales: {{locales|json|safe}},
-                previewURL: '{% url 'exam_preview' object.pk object.slug %}',
-                previewWindow: '{% now "U" %}',
-                starred: {% if starred %}true{% else %}false{% endif %}
-            }
+            window.Editor = {{editor_json|json|safe}};
         })();
     </script>
 {% endblock javascripts %}

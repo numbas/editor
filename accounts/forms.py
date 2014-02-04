@@ -13,10 +13,13 @@ class NumbasRegistrationForm(RegistrationForm):
     register_button = _('Register')
 
 class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        exclude = ('user','favourite_questions','favourite_exams',)
     first_name = forms.CharField(max_length=30)
     last_name = forms.CharField(max_length=30)
     email = forms.EmailField()
-    language = forms.ChoiceField(choices=[(x,x) for x in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']])
+    language = forms.ChoiceField(choices=[(x,y) for y,x in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']])
     bio = SanitizedCharField(
             widget=Textarea, 
             allowed_tags=settings.SANITIZER_ALLOWED_TAGS, 

@@ -193,7 +193,7 @@
 						<!-- ko foreach: {data: parameters, afterAdd: Editor.afterAdd, beforeRemove: Editor.beforeRemove} -->
 						<div class="row-fluid parameter">
 							<form class="form-inline">
-								<input class="name" type="text" placeholder="Name" data-bind="value: name"/>
+								<input class="name" type="text" placeholder="Name" data-bind="value: name, valueUpdate: 'afterkeydown'"/>
 								<select class="type" data-bind="options: $parent.types, value: type"></select>
 								<button type="button" class="delete" data-bind="click: remove" title="Remove this parameter"></button>
 							</form>

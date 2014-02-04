@@ -425,21 +425,23 @@ $(document).ready(function() {
 			var tmpFunctions = this.functions().map(function(f) {
 				f.error('');
 
-				var fn = {
-					name: f.name(),
-					definition: f.definition(),
-					language: f.language(),
-					outtype: f.type(),
-					parameters: f.parameters().map(function(p) {
-						return {
-							name: p.name(),
-							type: p.type()
-						}
-					})
-				};
-
-
 				try {
+					var fn = {
+						name: f.name(),
+						definition: f.definition(),
+						language: f.language(),
+						outtype: f.type(),
+						parameters: f.parameters().map(function(p) {
+							if(!p.name()) {
+								throw(new Error('A parameter is unnamed.'));
+							}
+							return {
+								name: p.name(),
+								type: p.type()
+							}
+						})
+					};
+
 					var cfn = jme.variables.makeFunction(fn,scope);
 					if(scope.functions[cfn.name]===undefined)
 						scope.functions[cfn.name] = [];

@@ -76,7 +76,7 @@ class NumbasObject:
             self.parsed_content = numbasobject.NumbasObject(self.content)
             self.name = self.parsed_content.data['name']
         elif self.name:
-            self.parsed_content = NumbasObject(data={'name': self.name}, version=NUMBAS_FILE_VERSION)
+            self.parsed_content = numbasobject.NumbasObject(data={'name': self.name}, version=NUMBAS_FILE_VERSION)
 
         self.extensions = self.parsed_content.data.get('extensions',[])
         self.metadata = self.parsed_content.data.get('metadata',self.metadata)

@@ -499,7 +499,7 @@ $(document).ready(function() {
 
             var variables = {};
             this.variables().map(function(v) {
-                variables[v.name()] = v.definition();
+                variables[v.name()] = v.toJSON();
             });
 
 			var functions = {};
@@ -547,7 +547,7 @@ $(document).ready(function() {
             {
                 for(var x in data.variables)
                 {
-                    this.variables.push(new Variable(this,{name:x,definition:data.variables[x]}));
+                    this.variables.push(new Variable(this,data.variables[x]));
                 }
 				if(this.variables().length)
 					this.currentVariable(this.variables()[0]);
@@ -758,7 +758,14 @@ $(document).ready(function() {
     Variable.prototype = {
         load: function(data) {
 			tryLoad(data,['name','definition'],this);
-        }
+        },
+
+		toJSON: function() {
+			return {
+				name: this.name(),
+				definition: this.definition()
+			}
+		}
     }
 
     function CustomFunction(q,data) {

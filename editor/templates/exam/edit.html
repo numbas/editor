@@ -1,46 +1,30 @@
 {% extends "editor.html" %}
+{% load sstatic %}
 {% load verbatim %}
 {% load json %}
 {% load user_link %}
 
 {% block stylesheets %}
 	{{ block.super }}
-	<link href="{{ STATIC_URL }}css/exam/edit.css" type="text/css" rel="stylesheet" />
+	<link href="{% sstatic 'css/exam/edit.css' %}" type="text/css" rel="stylesheet" />
 {% endblock stylesheets %}
 
 {% block javascripts %}
     {{ block.super }}
 
 	<!-- numbas -->
-    <script src="{{ STATIC_URL }}js/numbas/R/R.js" type="text/javascript"></script>
-    <script src="{{ STATIC_URL }}js/numbas/R/en-gb.js" type="text/javascript"></script>
-	<script src="{{ STATIC_URL }}js/numbas/numbas.js" type="text/javascript"></script>
+    <script src="{% sstatic 'js/numbas/R/R.js' %}" type="text/javascript"></script>
+    <script src="{% sstatic 'js/numbas/R/en-gb.js' %}" type="text/javascript"></script>
+	<script src="{% sstatic 'js/numbas/numbas.js' %}" type="text/javascript"></script>
 
     <!-- exam editor -->
-    <script src="{{ STATIC_URL }}js/exam/edit.js" type="text/javascript"></script>
+    <script src="{% sstatic 'js/exam/edit.js' %}" type="text/javascript"></script>
 
     <script type="text/javascript">
         {% autoescape off %}
         {% endautoescape %}
         (function() {
-            if (!window.Editor) {
-            	window.Editor = {};
-            }
-            var Editor = window.Editor = {
-                editable: {{editable|json}},
-                examJSON: {{ exam_JSON|safe }},
-
-                {% if editable %}
-				public_access: {{exam.public_access|json|safe}},
-				access_rights: {{access_rights|json|safe}},
-                {% endif %}
-
-                themes: {{themes|json|safe}},
-                locales: {{locales|json|safe}},
-                previewURL: '{% url 'exam_preview' object.pk object.slug %}',
-                previewWindow: '{% now "U" %}',
-                starred: {% if starred %}true{% else %}false{% endif %}
-            }
+            window.Editor = {{editor_json|json|safe}};
         })();
     </script>
 {% endblock javascripts %}

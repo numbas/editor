@@ -44,15 +44,5 @@
     </li>
 </ul>
 
-{% with profile.sorted_tags as tags %}
-{% if tags|length %}
-<h4>Tags used in {% if is_me %}your{% else %}{{object.first_name}}'s{% endif %} questions</h4>
-<ul id="taglist" class="well well-small">
-    {% for tag,count in profile.sorted_tags %}
-    <li class="tag"><a href="{% url 'question_search' %}?tags={{tag|urlencode}}">{{tag}} ({{count}})</a></li>
-    {% endfor %}
-</ul>
-{% endif %}
-{% endwith %}
 {% endwith %}
 {% endblock content %}

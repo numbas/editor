@@ -1,3 +1,4 @@
+{% load sstatic %}
 <!DOCTYPE html>
 <html>
     <head>
@@ -21,14 +22,14 @@
 		{% block head %}{% endblock %}
 
 		{% block stylesheets %}
-			<link href="{{ STATIC_URL }}bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
-			<link href="{{ STATIC_URL }}bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet" media="screen">
+			<link href="{% sstatic 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet" media="screen">
+			<link href="{% sstatic 'bootstrap/css/bootstrap-responsive.min.css' %}" rel="stylesheet" media="screen">
 
-			<link href="{{ STATIC_URL }}css/jquery.noty.css" rel="stylesheet" type="text/css" />
-			<link href="{{ STATIC_URL }}css/noty_theme_twitter.css" rel="stylesheet" type="text/css" />
-			<link href="{{ STATIC_URL }}css/jquery-ui.css" rel="stylesheet" type="text/css" />
+			<link href="{% sstatic 'css/jquery.noty.css' %}" rel="stylesheet" type="text/css" />
+			<link href="{% sstatic 'css/noty_theme_twitter.css' %}" rel="stylesheet" type="text/css" />
+			<link href="{% sstatic 'css/jquery-ui.css' %}" rel="stylesheet" type="text/css" />
 
-			<link href="{{ STATIC_URL }}css/main.css" type="text/css" rel="stylesheet" />
+			<link href="{% sstatic 'css/main.css' %}" type="text/css" rel="stylesheet" />
 		{% endblock stylesheets %}
 
     </head>
@@ -48,7 +49,7 @@
                         <div id="logo_text">
                             {% block logo_text %}
                             <a tabindex="1" alt="Numbas" href="/">
-                                <img src="{{STATIC_URL}}images/numbas_logo.png"/>
+                                <img src="{% sstatic 'images/numbas_logo.png' %}"/>
                             </a>
                             {% endblock logo_text %}
                         </div>
@@ -109,22 +110,22 @@
 			<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.13/jquery-ui.min.js" type="text/javascript"></script>
 
 			<!-- bootstrap -->
-			<script src="{{ STATIC_URL }}bootstrap/js/bootstrap.min.js"></script>
+			<script src="{% sstatic 'bootstrap/js/bootstrap.min.js' %}"></script>
 
 			<!-- jQuery.oembed all -->
-			<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.oembed.js"></script>
+			<script type="text/javascript" src="{% sstatic 'js/jquery.oembed.js' %}"></script>
 
 			<!-- knockout -->
-			<script type="text/javascript" src="{{ STATIC_URL }}js/knockout.js"></script>
+			<script type="text/javascript" src="{% sstatic 'js/knockout.js' %}"></script>
 			
 			<!-- noty -->
-			<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.noty.js"></script>
+			<script type="text/javascript" src="{% sstatic 'js/jquery.noty.js' %}"></script>
 
 			<!-- moment.js - formats dates -->
-			<script type="text/javascript" src="{{ STATIC_URL }}js/moment.js"></script>
+			<script type="text/javascript" src="{% sstatic 'js/moment.js' %}"></script>
 
 			<!-- mousetrap.js - handles keyboard shortcuts -->
-			<script type="text/javascript" src="{{ STATIC_URL }}js/mousetrap.min.js"></script>
+			<script type="text/javascript" src="{% sstatic 'js/mousetrap.min.js' %}"></script>
 
 			<!-- MathJax -->
 			<script type="text/x-mathjax-config">
@@ -140,7 +141,7 @@
 			</script>
 			<script src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
-			<script src="{{ STATIC_URL }}js/es5-shim.js" type="text/javascript"></script>
+			<script src="{% sstatic 'js/es5-shim.js' %}" type="text/javascript"></script>
 
 		{% endblock %}
     </body>

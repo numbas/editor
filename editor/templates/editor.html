@@ -1,23 +1,23 @@
 {% extends "layout.html" %}
+{% load sstatic %}
 {% load verbatim %}
 
 {% block javascripts %}
     {{ block.super }}
 
     <!-- write maths, see maths -->
-    <script type="text/javascript" src="{{ STATIC_URL }}js/rangy-core.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/textinputs_jquery.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/writemaths.js"></script>
+    <script type="text/javascript" src="{% sstatic 'js/rangy-core.js' %}"></script>
+    <script type="text/javascript" src="{% sstatic 'js/textinputs_jquery.js' %}"></script>
+    <script type="text/javascript" src="{% sstatic 'js/writemaths.js' %}"></script>
 
     <!-- HTML parser -->
-    <script type="text/javascript" src="{{ STATIC_URL }}js/htmlparser.js"></script>
-
+    <script type="text/javascript" src="{% sstatic 'js/htmlparser.js' %}"></script>
 {% endblock javascripts %}
 
 {% block stylesheets %}
     {{ block.super }}
 
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/writemaths.css">
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/editor.css">
+    <link rel="stylesheet" type="text/css" href="{% sstatic 'css/writemaths.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% sstatic 'css/editor.css' %}">
 
 {% endblock stylesheets %}

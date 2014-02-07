@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% load sstatic %}
 {% load can_edit %}
 {% load user_link %}
 
@@ -146,11 +147,11 @@
 
 {% block javascripts %}
 	{{block.super}}
-	<script type="text/javascript" src="{{STATIC_URL}}js/question/index.js"></script>
+	<script type="text/javascript" src="{% sstatic 'js/question/index.js' %}"></script>
 {% endblock javascripts %}
 
 {% block stylesheets %}
 	{{ block.super }}
-    <link href="{{ STATIC_URL }}css/index.css" type="text/css" rel="stylesheet" />
-    <link href="{{ STATIC_URL }}css/question/index.css" type="text/css" rel="stylesheet" />
+    <link href="{% sstatic 'css/index.css' %}" type="text/css" rel="stylesheet" />
+    <link href="{% sstatic 'css/question/index.css' %}" type="text/css" rel="stylesheet" />
 {% endblock stylesheets %}

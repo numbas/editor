@@ -37,15 +37,28 @@
 				<div class="span4">
 					<h4>Options</h4>
                     <form class="form-horizontal">
-                        <div class="control-group" data-bind="template: {
-                            name: 'selectproperty',
-                            data: {label: 'Theme:', property: theme, options: Editor.themes, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-theme'}
-                        }"></div>
-                        <div class="control-group" data-bind="visible: Editor.locales.length>1, template: {
-                            name: 'selectproperty',
-                            data: {label: 'Interface language:', property: locale, options: Editor.locales, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-interface-language'}
-                        }"></div>
-
+						<div class="control-group">
+							<label>
+								<span class="control-label">
+									Interface theme
+									<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-theme'}}"></span>
+								</span>
+								<div class="controls">
+									<select data-bind="options: Editor.themes, value: theme, optionsValue: 'path', optionsText: 'name'"></select>
+								</div>
+							</label>
+						</div>
+						<div class="control-group">
+							<label>
+								<span class="control-label">
+									Interface language
+									<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-interface-language'}}"></span>
+								</span>
+								<div class="controls">
+									<select data-bind="options: Editor.locales, value: locale, optionsValue: 'code', optionsText: 'name'"></select>
+								</div>
+							</label>
+						</div>
                         <div class="control-group" data-bind="template: {
                             name: 'percentproperty',
                             data: {label:'Pass threshold (percent):',property:percentPass, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-pass-threshold'}
@@ -157,7 +170,7 @@
                                             value: search.query, 
                                             valueUpdate: 'afterkeydown'
                                         "/>
-                                        <span class="add-on"><button type="submit" class="search" data-bind="css: {loading: searching}"></button></span>
+                                        <span class="add-on"><button type="submit" class="search" data-bind="css: {loading: search.searching}"></button></span>
                                     </div>
                                 </div>
                             </label>

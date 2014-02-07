@@ -68,8 +68,8 @@ $(document).ready(function() {
 			};
 		},this);
 
-		this.theme = ko.observable(Editor.themes[0]);
-		this.locale = ko.observable(Editor.locales[0]);
+		this.theme = ko.observable('default');
+		this.locale = ko.observable(Editor.preferred_locale);
 
         this.duration = ko.observable(0);
 		this.allowPause = ko.observable(true);

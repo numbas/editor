@@ -1,3 +1,5 @@
+# coding=utf-8
+
 # Django settings for numbas project.
 import imp
 import os
@@ -153,8 +155,8 @@ GLOBAL_SETTINGS = {
     'PREVIEW_URL': 'http://server.domain/numbas-previews/',    #a URL which serves files from PREVIEW_PATH
     'HELP_URL': 'http://numbas-editor.readthedocs.org',        #the URL of the Numbas webdocs
     'PYTHON_EXEC': '/usr/bin/python3',
-    'NUMBAS_THEMES': ['default','worksheet'],
-    'NUMBAS_LOCALES': ['en-GB'],
+    'NUMBAS_THEMES': [('Standard','default'),('Printable worksheet','worksheet')],
+    'NUMBAS_LOCALES': [('English','en-GB'),(u'Bokmål','nb-NO'),('Nederlands','nl-NL'),(u'Español','es-ES')],
     #Uncomment the line below and provide a path to a minification tool to minify javascript files
     #'MINIFIER_PATH': 'uglifyjs',
 }

@@ -68,7 +68,7 @@ class ControlledObject:
     def can_be_edited_by(self, user):
         return self.public_access=='edit' or (user.is_superuser) or (self.author==user) or self.get_access_for(user)=='edit'
 
-NUMBAS_FILE_VERSION = '1'
+NUMBAS_FILE_VERSION = 'variables_as_objects'
 class NumbasObject:
 
     def get_parsed_content(self):
@@ -227,7 +227,7 @@ class Question(models.Model,NumbasObject,ControlledObject):
             ('navigation',{'allowregen': 'true', 'showfrontpage': 'false', 'preventleave': False}),
             ('questions',[self.parsed_content.data])
         ])
-        obj = numbasobject.NumbasObject(data=data,version=NUMBAS_FILE_VERSION)
+        obj = numbasobject.NumbasObject(data=data,version=self.parsed_content.version)
         return str(obj)
 
     def as_json(self):

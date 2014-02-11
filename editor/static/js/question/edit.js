@@ -178,7 +178,7 @@ $(document).ready(function() {
 
         this.output = ko.computed(function() {
             var data = JSON.stringify(q.toJSON());
-			return '// '+Editor.numbasVersion+'\n'+data;
+			return '// Numbas version: '+Editor.numbasVersion+'\n'+data;
         },this);
 
 		//for image attribute modal

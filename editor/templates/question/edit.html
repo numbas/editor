@@ -52,10 +52,11 @@
 	<div id="question" class="{% if not editable %}nonedit{% endif %}">
 		<div class="row-fluid">
             <h1 id="name-header">
-                <span data-bind="text: name">{{object.name}}</span>
+				<span data-bind="text: name">{{object.name}}</span> 
                 {% if request.user.is_authenticated %}
                 <button type="button" data-bind="css:{starred: starred}, attr: {title: starred() ? 'This question is starred. Click to unstar it.' : 'Star this question'}, click: toggleStar" class="star" ></button>
                 {% endif %}
+				<input type="checkbox" data-bind="checked: useTemplate"/>
             </h1>
 		</div>
 		<div id="controls">
@@ -96,7 +97,7 @@
 
 		<div class="row-fluid">
 			<ul class="nav nav-tabs" data-bind="foreach: mainTabs">
-				<li data-bind="css: {active: $root.currentTab() == $data}">
+				<li data-bind="visible: visible, css: {active: $root.currentTab() == $data}">
 					<a href="#" data-bind="click: $root.currentTab, text: title"></a>
 				</li>
 			</ul>

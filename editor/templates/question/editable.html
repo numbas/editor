@@ -73,30 +73,70 @@
 			<div class="row-fluid">
 				<div class="span4">
 					<div data-bind="visible: variables().length>0">
-						<table class="variable-list">
-							<thead>
-								<tr>
-									<th class="name">Name</th>
-									<th class="value">Generated Value</th>
-								</tr>
-							</thead>
-							<tbody data-bind="sortable: {
-								template: 'variable-template',
-								data: variables,
-								options: {
-									forcePlaceholderSize: true,
-									placeholder: 'placeholder'
-								}
-							}">
-							</tbody>
-						</table>
+						<div data-bind="visible: useTemplate">
+							<h4>Editable variables</h4>
+							<table class="variable-list">
+								<thead>
+									<tr>
+										<th class="name">Name</th>
+										<th class="value">Generated Value</th>
+									</tr>
+								</thead>
+								<tbody data-bind="sortable: {
+									template: 'variable-template',
+									data: editableVariables,
+									options: {
+										forcePlaceholderSize: true,
+										placeholder: 'placeholder'
+									}
+								}">
+								</tbody>
+							</table>
+							<h4>Other variables</h4>
+							<table class="variable-list">
+								<thead>
+									<tr>
+										<th class="name">Name</th>
+										<th class="value">Generated Value</th>
+									</tr>
+								</thead>
+								<tbody data-bind="sortable: {
+									template: 'variable-template',
+									data: noneditableVariables,
+									options: {
+										forcePlaceholderSize: true,
+										placeholder: 'placeholder'
+									}
+								}">
+								</tbody>
+							</table>
+						</div>
+						<div data-bind="visible: !useTemplate()">
+							<table class="variable-list">
+								<thead>
+									<tr>
+										<th class="name">Name</th>
+										<th class="value">Generated Value</th>
+									</tr>
+								</thead>
+								<tbody data-bind="sortable: {
+									template: 'variable-template',
+									data: variables,
+									options: {
+										forcePlaceholderSize: true,
+										placeholder: 'placeholder'
+									}
+								}">
+								</tbody>
+							</table>
+						</div>
 						<script type="text/html" id="variable-template">
-							<tr data-bind="click: $root.currentVariable, css: {noname: !name(), current: $data==$root.currentVariable(), dependency: isDependency}" class="variable-selector">
+							<tr data-bind="click: $root.currentVariable, css: {noname: !name(), current: $data==$root.currentVariable(), dependency: isDependency, template: inTemplate}" class="variable-selector">
 								<td class="name" data-bind="text: name() ? name() : 'Unnamed'"></td>
 								<td class="value-cell">
 									<div class="value" data-bind="css: {error: error().length>0}, html: display, mathjax: display"></div>
 								</td>
-								<td class="delete-cell">
+								<td class="delete-cell" data-bind="if: !$root.useTemplate()">
 									<button type="button" title="Remove this variable" class="delete" data-bind="click:remove"></button>
 								</td>
 							</tr>
@@ -122,13 +162,63 @@
 								</div>
 							</label>
 						</div>
+						<div data-bind="visible: !$root.useTemplate()">
+							<div class="control-group" data-bind="visible: !$root.useTemplate()">
+								<label class="control-label">
+									Definition
+									<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#variables'}}"></span>
+								</label>
+								<div class="controls">
+									<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: definition, codemirrorMode: 'jme'"></textarea>
+								</div>
+							</div>
+							<div class="control-group" data-bind="template: {
+								name: 'booleanproperty',
+								data: {label:'Editable in template?', property:inTemplate, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-preview-of-student-s-answer'}
+							}"></div>
+							<div class="control-group" data-bind="template: {
+								name: 'selectproperty',
+								data: {label:'Data type',property: templateType, options: templateTypes, optionsText: 'name', helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-checking-accuracy'}
+							}"></div>
+						</div>
 						<div class="control-group">
+							<label>
+								<span class="control-label">Description</span>
+								<div data-bind="visible: !$root.useTemplate()">
+									<div class="controls" data-bind="visible: !$root.useTemplate(), writemaths: description"></div>
+								</div>
+								<div data-bind="visible: $root.useTemplate">
+									<div class="controls" data-bind="mathjaxHTML: description"></div>
+									<div data-bind="if: !description()" class="nothing-here">The author has not written a description for this variable.</div>
+								</div>
+							</label>
+						</div>
+						<div class="control-group" data-bind="visible: $root.useTemplate() && inTemplate()">
 							<label class="control-label">
-								Definition
+								Value
 								<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#variables'}}"></span>
 							</label>
+
 							<div class="controls">
-								<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: definition, codemirrorMode: 'jme'"></textarea>
+								<div data-bind="visible: templateType().id=='anything'">
+									<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: templateTypeValues.anything.definition, codemirrorMode: 'jme'"></textarea>
+								</div>
+								<div data-bind="visible: templateType().id=='number'">
+									<input type="text" data-bind="value: templateTypeValues.number.value, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 30, value: templateTypeValues.number.value}"/> (a number)
+								</div>
+								<div data-bind="visible: templateType().id=='range'">
+									A number between 
+									<input type="text" data-bind="value: templateTypeValues.range.min, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.min}"/>
+									and
+									<input type="text" data-bind="value: templateTypeValues.range.max, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.max}"/>
+									(inclusive)
+								</div>
+								<div data-bind="visible: templateType().id=='string'">
+									<input type="text" data-bind="value: templateTypeValues.string.value, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.string.value}"/> (text string)
+								</div>
+								<div data-bind="visible: templateType().id=='long string'">
+									<div data-bind="writemaths: templateTypeValues['long string'].value"></div>
+								</div>
 							</div>
 						</div>
 					</form>

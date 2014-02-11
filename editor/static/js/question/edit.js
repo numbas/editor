@@ -22,11 +22,16 @@ $(document).ready(function() {
     {
 		var q = this;
 
+		this.useTemplate = ko.observable(false);
+		var notUsingTemplate = ko.computed(function() {
+			return !this.useTemplate();
+		},this);
+
 		this.mainTabs = ko.observableArray([
 			new Editor.Tab('general','General'),
 			new Editor.Tab('statement','Statement'),
 			new Editor.Tab('variables','Variables'),
-			new Editor.Tab('functions','Functions & Rulesets'),
+			new Editor.Tab('functions','Functions & Rulesets',notUsingTemplate),
 			new Editor.Tab(
 				'parts',
 				ko.computed(function() {
@@ -152,6 +157,16 @@ $(document).ready(function() {
 		};
 
         this.variables = ko.observableArray([]);
+		this.editableVariables = ko.computed(function() {
+			return this.variables().filter(function(v) {
+				return v.inTemplate();
+			});
+		},this);
+		this.noneditableVariables = ko.computed(function() {
+			return this.variables().filter(function(v) {
+				return !v.inTemplate();
+			});
+		},this);
 		this.autoCalculateVariables = ko.observable(true);
 		this.currentVariable = ko.observable(null);
 
@@ -700,7 +715,70 @@ $(document).ready(function() {
 
 			return '';
 		},this);
-        this.definition = ko.observable('');
+
+		this.inTemplate = ko.observable(false);
+		this.description = ko.observable('');
+		this.templateType = ko.observable(this.templateTypes[0]);
+
+		this.templateTypeValues = {
+			'anything': {
+				definition: ko.observable('')
+			},
+			'number': {
+				value: ko.observable(0)
+			},
+			'range': {
+				min: ko.observable(0),
+				max: ko.observable(1),
+				step: ko.observable(1)
+			},
+			'string': {
+				value: ko.observable('')
+			},
+			'long string': {
+				value: ko.observable('')
+			},
+			'list of numbers': {
+				values: ko.observableArray([])
+			},
+			'list of strings': {
+				values: ko.observableArray([])
+			}
+		};
+
+		this.definition = ko.computed({
+			read: function() {
+				if(!this.inTemplate()) {
+					return this.templateTypeValues.anything.definition()
+				}
+				else {
+					var templateType = this.templateType().id;
+					var val = this.templateTypeValues[templateType];
+					var TNum = Numbas.jme.types.number;
+					var TString = Numbas.jme.types.string;
+					var treeToJME = Numbas.jme.display.treeToJME;
+					switch(templateType) {
+					case 'anything':
+						return val.definition();
+					case 'number':
+						return treeToJME({tok: new TNum(val.value())});
+					case 'range':
+						var tree = Numbas.jme.compile('range(a..b#c)');
+						tree.args[0].args[0] = {tok: new TNum(val.min())};
+						tree.args[0].args[1] = {tok: new TNum(val.max())};
+						tree.args[0].args[2] = {tok: new TNum(val.step())};
+						return treeToJME(tree);
+					case 'string':
+					case 'long string':
+						return treeToJME({tok: new TString(val.value())});
+					}
+				}
+			},
+			write: function(v) {
+				return this.templateTypeValues.anything.definition(v);
+			}
+		},this);
+
 		this.dependencies = ko.observableArray([]);
 		this.isDependency = ko.computed(function() {
 			var currentVariable = q.currentVariable();
@@ -756,14 +834,27 @@ $(document).ready(function() {
             this.load(data);
     }
     Variable.prototype = {
+		templateTypes: [
+			{id: 'anything', name: 'Anything'},
+			{id: 'number', name: 'Number'},
+			{id: 'range', name: 'Range'},
+			{id: 'string', name: 'Short text string'},
+			{id: 'long string', name: 'Long text string'},
+			{id: 'list of numbers', name: 'List of numbers'},
+			{id: 'list of strings', name: 'List of short text strings'}
+		],
+
         load: function(data) {
-			tryLoad(data,['name','definition'],this);
+			tryLoad(data,['name','definition','inTemplate','description','templateType'],this);
         },
 
 		toJSON: function() {
 			return {
 				name: this.name(),
-				definition: this.definition()
+				definition: this.definition(),
+				inTemplate: this.inTemplate(),
+				description: this.description(),
+				templateType: this.templateType()
 			}
 		}
     }

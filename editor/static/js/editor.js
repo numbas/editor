@@ -297,9 +297,10 @@ $(document).ready(function() {
 		return JSON.parse(content);
 	}
 
-	Editor.Tab = function(id,title) {
+	Editor.Tab = function(id,title,visible) {
 		this.id = id;
 		this.title = title;
+		this.visible = visible === undefined ? true : visible;
 	}
 
 	Editor.contentObservable = function(val) {

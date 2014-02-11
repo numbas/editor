@@ -76,7 +76,7 @@
 				<span data-bind="template: {name: 'helplink', data: {url: $data.helpURL}}"></span>
 			</span>
 			<div class="controls">
-				<select data-bind="options: options, value: property"></select>
+				<select data-bind="options: options, value: property, optionsText: ko.utils.unwrapObservable($data.optionsText===undefined ? options : optionsText)"></select>
 			</div>
 		</label>
 	</script>

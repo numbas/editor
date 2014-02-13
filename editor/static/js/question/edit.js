@@ -739,12 +739,24 @@ $(document).ready(function() {
 				value: ko.observable('')
 			},
 			'list of numbers': {
-				values: ko.observableArray([])
+				valueObservables: ko.observableArray([]),
+				addValue: function() {
+					this.valueObservables.push({value: ko.observable(0)});
+				}
 			},
 			'list of strings': {
-				values: ko.observableArray([])
+				valueObservables: ko.observableArray([]),
+				addValue: function() {
+					this.valueObservables.push({value: ko.observable(0)});
+				}
 			}
 		};
+		this.templateTypeValues['list of numbers'].values = ko.computed(function() {
+			return this.valueObservables().map(function(v){ return parseFloat(v.value()) });
+		},this.templateTypeValues['list of numbers']);
+		this.templateTypeValues['list of strings'].values = ko.computed(function() {
+			return this.valueObservables().map(function(v){ return v.value() });
+		},this.templateTypeValues['list of strings']);
 
 		this.definition = ko.computed({
 			read: function() {
@@ -754,23 +766,25 @@ $(document).ready(function() {
 				else {
 					var templateType = this.templateType().id;
 					var val = this.templateTypeValues[templateType];
-					var TNum = Numbas.jme.types.number;
-					var TString = Numbas.jme.types.string;
 					var treeToJME = Numbas.jme.display.treeToJME;
+					var wrapValue = Numbas.jme.wrapValue;
 					switch(templateType) {
 					case 'anything':
 						return val.definition();
 					case 'number':
-						return treeToJME({tok: new TNum(val.value())});
+						return treeToJME({tok: wrapValue(val.value())});
 					case 'range':
 						var tree = Numbas.jme.compile('range(a..b#c)');
-						tree.args[0].args[0] = {tok: new TNum(val.min())};
-						tree.args[0].args[1] = {tok: new TNum(val.max())};
-						tree.args[0].args[2] = {tok: new TNum(val.step())};
+						tree.args[0].args[0] = {tok: wrapValue(val.min())};
+						tree.args[0].args[1] = {tok: wrapValue(val.max())};
+						tree.args[0].args[2] = {tok: wrapValue(val.step())};
 						return treeToJME(tree);
 					case 'string':
 					case 'long string':
 						return treeToJME({tok: new TString(val.value())});
+					case 'list of numbers':
+					case 'list of strings':
+						return treeToJME({tok: wrapValue(val.values())});
 					}
 				}
 			},
@@ -845,17 +859,52 @@ $(document).ready(function() {
 		],
 
         load: function(data) {
-			tryLoad(data,['name','definition','inTemplate','description','templateType'],this);
+			tryLoad(data,['name','definition','inTemplate','description'],this);
+			if('templateType' in data) {
+				for(var i=0;i<this.templateTypes.length;i++) {
+					if(this.templateTypes[i].id==data.templateType) {
+						this.templateType(templateTypes[i]);
+						break;
+					}
+				}
+			}
         },
 
 		toJSON: function() {
-			return {
+			var obj = {
 				name: this.name(),
 				definition: this.definition(),
 				inTemplate: this.inTemplate(),
 				description: this.description(),
-				templateType: this.templateType()
+				templateType: this.templateType(),
+				templateTypes: {}
 			}
+			switch(this.templateType()) {
+			case 'anything':
+				obj.templateTypes['anything'].definition = this.templateTypes['anything'].definition();
+				break;
+			case 'number':
+				obj.templateTypes['number'].value = this.templateTypes['number'].value();
+				break;
+			case 'range':
+				obj.templateTypes['range'].min = this.templateTypes['range'].min();
+				obj.templateTypes['range'].max = this.templateTypes['range'].max();
+				obj.templateTypes['range'].step = this.templateTypes['range'].step();
+				break;
+			case 'string':
+				obj.templateTypes['string'].value = this.templateTypes['string'].value();
+				break;
+			case 'long string':
+				obj.templateTypes['long string'].value = this.templateTypes['long string'].value();
+				break;
+			case 'list of numbers':
+				obj.templateTypes['list of numbers'].values = this.templateType['list of numbers'].values();
+				break;
+			case 'list of strings':
+				obj.templateTypes['list of strings'].values = this.templateType['list of strings'].values();
+				break;
+			}
+			return obj;
 		}
     }
 

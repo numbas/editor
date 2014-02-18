@@ -739,57 +739,53 @@ $(document).ready(function() {
 				value: ko.observable('')
 			},
 			'list of numbers': {
-				valueObservables: ko.observableArray([]),
-				addValue: function() {
-					this.valueObservables.push({value: ko.observable(0)});
-				}
+				commaValue: ko.observable('')
 			},
 			'list of strings': {
-				valueObservables: ko.observableArray([]),
-				addValue: function() {
-					this.valueObservables.push({value: ko.observable(0)});
-				}
+				values: ko.observableArray([]),
 			}
 		};
 		this.templateTypeValues['list of numbers'].values = ko.computed(function() {
-			return this.valueObservables().map(function(v){ return parseFloat(v.value()) });
+			var commaValue = this.commaValue();
+			if(!commaValue.trim())
+				return [];
+
+			var numbers = commaValue.split(',');
+
+			numbers = numbers.map(function(n) {
+				return parseFloat(n);
+			});
+
+			return numbers;
 		},this.templateTypeValues['list of numbers']);
-		this.templateTypeValues['list of strings'].values = ko.computed(function() {
-			return this.valueObservables().map(function(v){ return v.value() });
-		},this.templateTypeValues['list of strings']);
 
 		this.definition = ko.computed({
 			read: function() {
-				if(!this.inTemplate()) {
-					return this.templateTypeValues.anything.definition()
-				}
-				else {
-					var templateType = this.templateType().id;
-					var val = this.templateTypeValues[templateType];
-					var treeToJME = Numbas.jme.display.treeToJME;
-					var wrapValue = Numbas.jme.wrapValue;
-					switch(templateType) {
-					case 'anything':
-						return val.definition();
-					case 'number':
-						return treeToJME({tok: wrapValue(val.value())});
-					case 'range':
-						var tree = Numbas.jme.compile('range(a..b#c)');
-						tree.args[0].args[0] = {tok: wrapValue(val.min())};
-						tree.args[0].args[1] = {tok: wrapValue(val.max())};
-						tree.args[0].args[2] = {tok: wrapValue(val.step())};
-						return treeToJME(tree);
-					case 'string':
-					case 'long string':
-						return treeToJME({tok: new TString(val.value())});
-					case 'list of numbers':
-					case 'list of strings':
-						return treeToJME({tok: wrapValue(val.values())});
-					}
+				var templateType = this.templateType().id;
+				var val = this.templateTypeValues[templateType];
+				var treeToJME = Numbas.jme.display.treeToJME;
+				var wrapValue = Numbas.jme.wrapValue;
+				switch(templateType) {
+				case 'anything':
+					return val.definition();
+				case 'number':
+					return treeToJME({tok: wrapValue(parseFloat(val.value()))});
+				case 'range':
+					var tree = Numbas.jme.compile('a..b#c');
+					tree.args[0].args[0] = {tok: wrapValue(parseFloat(val.min()))};
+					tree.args[0].args[1] = {tok: wrapValue(parseFloat(val.max()))};
+					tree.args[1] = {tok: wrapValue(parseFloat(val.step()))};
+					return treeToJME(tree);
+				case 'string':
+				case 'long string':
+					return treeToJME({tok: wrapValue(val.value())});
+				case 'list of numbers':
+				case 'list of strings':
+					return treeToJME({tok: wrapValue(val.values())});
 				}
 			},
 			write: function(v) {
-				return this.templateTypeValues.anything.definition(v);
+				this.definitionToTemplate(v);
 			}
 		},this);
 
@@ -876,10 +872,10 @@ $(document).ready(function() {
 				definition: this.definition(),
 				inTemplate: this.inTemplate(),
 				description: this.description(),
-				templateType: this.templateType(),
+				templateType: this.templateType().id,
 				templateTypes: {}
 			}
-			switch(this.templateType()) {
+			switch(this.templateType().id) {
 			case 'anything':
 				obj.templateTypes['anything'].definition = this.templateTypes['anything'].definition();
 				break;
@@ -905,6 +901,37 @@ $(document).ready(function() {
 				break;
 			}
 			return obj;
+		},
+
+		definitionToTemplate: function(definition) {
+			var templateType = this.templateType().id;
+			var templateTypeValues = this.templateTypeValues[templateType];
+
+			try {
+				switch(templateType) {
+				case 'anything':
+					templateTypeValues.definition(definition);
+					break;
+				case 'number':
+					templateTypeValues.value(parseFloat(definition));
+					break;
+				case 'range':
+					var tree = Numbas.jme.compile(definition);
+					var rule = new Numbas.jme.display.Rule('a..b#c',[]);
+					var m = rule.match(tree);
+					templateTypeValues.min(m.a.tok.value);
+					templateTypeValues.max(m.b.tok.value);
+					templateTypeValues.step(m.c.tok.value);
+					break;
+				case 'string':
+					var tree = Numbas.jme.compile(definition);
+					templateTypeValues.value(tree.tok.value);
+					break;
+				}
+			}
+			catch(e) {
+				console.log(e);
+			}
 		}
     }
 

@@ -220,22 +220,12 @@
 									<div data-bind="writemaths: templateTypeValues['long string'].value"></div>
 								</div>
 								<div data-bind="visible: templateType().id=='list of numbers', with: templateTypeValues['list of numbers']">
-									(a list of numbers)
-									<ul class="list-of-numbers" data-bind="foreach: valueObservables">
-										<li>
-											<input type="text" data-bind="value: value, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 30, value: value}"/>
-										</li>
-									</ul>
-									<button type="button" data-bind="click: addValue">Add a value</button>
+									<input type="text" data-bind="value: commaValue, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: commaValue}"/>
+									(comma-separated list of numbers)
 								</div>
 								<div data-bind="visible: templateType().id=='list of strings', with: templateTypeValues['list of strings']">
-									(a list of strings)
-									<ul class="list-of-strings" data-bind="foreach: values">
-										<li>
-											<input type="text" data-bind="value: $data, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 30, value: $data}"/>
-										</li>
-									</ul>
-									<button type="button" data-bind="click: addValue">Add a value</button>
+									<div class="rules" data-bind="listbox:values"></div>
+									(text strings)
 								</div>
 							</div>
 						</div>

@@ -720,6 +720,50 @@ $(document).ready(function() {
 		this.description = ko.observable('');
 		this.templateType = ko.observable(this.templateTypes[0]);
 
+		function InexhaustibleList() {
+			var _arr = ko.observableArray([]);
+			function addValue(v) {
+				v = v || '';
+				var _obs = ko.observable(v);
+				var obj;
+				var obs = ko.computed({
+					read: function() {
+						return _obs();
+					},
+					write: function(v) {
+						var arr = _arr();
+						if(v && obj==arr[arr.length-1]) {
+							addValue('');
+						}
+						return _obs(v);
+					}
+				});
+				function onBlur() {
+					var arr = _arr();
+					if(arr.indexOf(this)<arr.length-1 && !this.value())
+						_arr.remove(obj);
+				}
+				obj = {value: obs, onBlur: onBlur};
+				_arr.push(obj);
+				return obs;
+			}
+			addValue();
+			var arr = ko.computed({
+				read: function() {
+					return _arr().slice(0,-1).map(function(v){return v.value()});
+				},
+				write: function(a) {
+					_arr([]);
+					for(var i=0;i<a.length;i++) {
+						addValue(a[i]);
+					}
+					addValue();
+				}
+			});
+			arr.edit = _arr;
+			return arr;
+		}
+
 		this.templateTypeValues = {
 			'anything': {
 				definition: ko.observable('')
@@ -742,19 +786,25 @@ $(document).ready(function() {
 				commaValue: ko.observable('')
 			},
 			'list of strings': {
-				values: ko.observableArray([]),
+				values: InexhaustibleList(),
 			}
 		};
+		this.editDefinition = this.templateTypeValues['anything'].definition;
 		this.templateTypeValues['list of numbers'].values = ko.computed(function() {
 			var commaValue = this.commaValue();
 			if(!commaValue.trim())
 				return [];
 
-			var numbers = commaValue.split(',');
+			var numbers = commaValue.split(/\s+|\s*,\s*/g);
 
-			numbers = numbers.map(function(n) {
-				return parseFloat(n);
-			});
+			numbers = numbers
+						.map(function(n) {
+							return parseFloat(n);
+						})
+						.filter(function(n) {
+							return !isNaN(n);
+						})
+			;
 
 			return numbers;
 		},this.templateTypeValues['list of numbers']);
@@ -783,9 +833,6 @@ $(document).ready(function() {
 				case 'list of strings':
 					return treeToJME({tok: wrapValue(val.values())});
 				}
-			},
-			write: function(v) {
-				this.definitionToTemplate(v);
 			}
 		},this);
 
@@ -825,7 +872,7 @@ $(document).ready(function() {
 				case 'html':
 					return 'HTML node';
 				default:
-					return '$'+Numbas.jme.display.texify({tok:v})+'$';
+					return Numbas.jme.display.treeToJME({tok:v});
 				}
 			}
 			else
@@ -855,14 +902,17 @@ $(document).ready(function() {
 		],
 
         load: function(data) {
-			tryLoad(data,['name','definition','inTemplate','description'],this);
+			tryLoad(data,['name','inTemplate','description'],this);
 			if('templateType' in data) {
 				for(var i=0;i<this.templateTypes.length;i++) {
 					if(this.templateTypes[i].id==data.templateType) {
-						this.templateType(templateTypes[i]);
+						this.templateType(this.templateTypes[i]);
 						break;
 					}
 				}
+			}
+			if('definition' in data) {
+				this.definitionToTemplate(data.definition);
 			}
         },
 
@@ -873,32 +923,6 @@ $(document).ready(function() {
 				inTemplate: this.inTemplate(),
 				description: this.description(),
 				templateType: this.templateType().id,
-				templateTypes: {}
-			}
-			switch(this.templateType().id) {
-			case 'anything':
-				obj.templateTypes['anything'].definition = this.templateTypes['anything'].definition();
-				break;
-			case 'number':
-				obj.templateTypes['number'].value = this.templateTypes['number'].value();
-				break;
-			case 'range':
-				obj.templateTypes['range'].min = this.templateTypes['range'].min();
-				obj.templateTypes['range'].max = this.templateTypes['range'].max();
-				obj.templateTypes['range'].step = this.templateTypes['range'].step();
-				break;
-			case 'string':
-				obj.templateTypes['string'].value = this.templateTypes['string'].value();
-				break;
-			case 'long string':
-				obj.templateTypes['long string'].value = this.templateTypes['long string'].value();
-				break;
-			case 'list of numbers':
-				obj.templateTypes['list of numbers'].values = this.templateType['list of numbers'].values();
-				break;
-			case 'list of strings':
-				obj.templateTypes['list of strings'].values = this.templateType['list of strings'].values();
-				break;
 			}
 			return obj;
 		},
@@ -908,6 +932,7 @@ $(document).ready(function() {
 			var templateTypeValues = this.templateTypeValues[templateType];
 
 			try {
+				var tree = Numbas.jme.compile(definition);
 				switch(templateType) {
 				case 'anything':
 					templateTypeValues.definition(definition);
@@ -916,7 +941,6 @@ $(document).ready(function() {
 					templateTypeValues.value(parseFloat(definition));
 					break;
 				case 'range':
-					var tree = Numbas.jme.compile(definition);
 					var rule = new Numbas.jme.display.Rule('a..b#c',[]);
 					var m = rule.match(tree);
 					templateTypeValues.min(m.a.tok.value);
@@ -924,9 +948,14 @@ $(document).ready(function() {
 					templateTypeValues.step(m.c.tok.value);
 					break;
 				case 'string':
-					var tree = Numbas.jme.compile(definition);
+				case 'long string':
 					templateTypeValues.value(tree.tok.value);
 					break;
+				case 'list of numbers':
+					templateTypeValues.commaValue(tree.args.map(function(t){return t.tok.value}).join(' , '));
+					break;
+				case 'list of strings':
+					templateTypeValues.values(tree.args.map(function(t){return t.tok.value}));
 				}
 			}
 			catch(e) {

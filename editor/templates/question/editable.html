@@ -134,7 +134,7 @@
 							<tr data-bind="click: $root.currentVariable, css: {noname: !name(), current: $data==$root.currentVariable(), dependency: isDependency, template: inTemplate}" class="variable-selector">
 								<td class="name" data-bind="text: name() ? name() : 'Unnamed'"></td>
 								<td class="value-cell">
-									<div class="value" data-bind="css: {error: error().length>0}, html: display, mathjax: display"></div>
+									<div class="value" data-bind="css: {error: error().length>0}, html: display"></div>
 								</td>
 								<td class="delete-cell" data-bind="if: !$root.useTemplate()">
 									<button type="button" title="Remove this variable" class="delete" data-bind="click:remove"></button>
@@ -145,7 +145,7 @@
 							<label><input class="recalculate-checkbox" type="checkbox" data-bind="checked: autoCalculateVariables"/> Automatically regenerate variables when changes are made.</label>
 						</p>
 					</div>
-					<button type="button" data-bind="click:addVariable, text: variables().length ? 'Add another variable' : 'Add a variable'"></button>
+					<button type="button" data-bind="visible: !useTemplate(), click:addVariable, text: variables().length ? 'Add another variable' : 'Add a variable'"></button>
 					<button type="button" data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button>
 				</div>
 				<div class="span8 variable" data-bind="with: currentVariable">
@@ -169,7 +169,7 @@
 									<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#variables'}}"></span>
 								</label>
 								<div class="controls">
-									<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: definition, codemirrorMode: 'jme'"></textarea>
+									<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: editDefinition, codemirrorMode: 'jme'"></textarea>
 								</div>
 							</div>
 							<div class="control-group" data-bind="template: {
@@ -224,7 +224,11 @@
 									(comma-separated list of numbers)
 								</div>
 								<div data-bind="visible: templateType().id=='list of strings', with: templateTypeValues['list of strings']">
-									<div class="rules" data-bind="listbox:values"></div>
+									<ul data-bind="foreach: values.edit">
+										<li>
+											<input type="text" data-bind="value: value, valueUpdate: 'afterkeydown', event: {blur: onBlur}"/>
+										</li>
+									</ul>
 									(text strings)
 								</div>
 							</div>

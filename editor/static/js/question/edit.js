@@ -229,6 +229,15 @@ $(document).ready(function() {
 			this.computeVariables();
 		},this).extend({throttle:300});
 
+		this.isTemplate = ko.computed(function() {
+			var variables = this.variables();
+			for(var i=0;i<variables.length;i++) {
+				if(variables[i].inTemplate())
+					return true;
+			}
+			return false;
+		},this);
+
         if(data)
 		{
 			this.id = data.id;
@@ -265,6 +274,9 @@ $(document).ready(function() {
 
         if(Editor.editable) {
 			this.firstSave = true;
+
+			if(this.isTemplate())
+				this.useTemplate(true);
 
 			this.deleteResource =  function(res) {
 				$.get(res.deleteURL)

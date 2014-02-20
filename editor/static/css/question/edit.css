@@ -15,6 +15,7 @@
 	font-size: 24px;
     list-style: none;
     margin: 0;
+	line-height: 1.5em;
 }
 #admin li {
     display: inline-block;
@@ -339,4 +340,14 @@ input.recalculate-checkbox {
 }
 .part-edit .header .helplink {
 	margin-top: 0.5em;
+}
+.template-switch {
+    margin: 0.5em 0 1em 0;
+    background-color: #fc0;
+    padding: 0.5em 1em;
+    border-radius: 2px;
+}
+.template-switch input {
+    margin-right: 0.5em;
+    margin-top: 0;
 }

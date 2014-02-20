@@ -92,24 +92,26 @@
 								}">
 								</tbody>
 							</table>
-							<h4>Other variables</h4>
-							<table class="variable-list">
-								<thead>
-									<tr>
-										<th class="name">Name</th>
-										<th class="value">Generated Value</th>
-									</tr>
-								</thead>
-								<tbody data-bind="sortable: {
-									template: 'variable-template',
-									data: noneditableVariables,
-									options: {
-										forcePlaceholderSize: true,
-										placeholder: 'placeholder'
-									}
-								}">
-								</tbody>
-							</table>
+							<div data-bind="visible: noneditableVariables().length">
+								<h4>Other variables</h4>
+								<table class="variable-list">
+									<thead>
+										<tr>
+											<th class="name">Name</th>
+											<th class="value">Generated Value</th>
+										</tr>
+									</thead>
+									<tbody data-bind="sortable: {
+										template: 'variable-template',
+										data: noneditableVariables,
+										options: {
+											forcePlaceholderSize: true,
+											placeholder: 'placeholder'
+										}
+									}">
+									</tbody>
+								</table>
+							</div>
 						</div>
 						<div data-bind="visible: !useTemplate()">
 							<table class="variable-list">

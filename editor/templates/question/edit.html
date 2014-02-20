@@ -56,7 +56,6 @@
                 {% if request.user.is_authenticated %}
                 <button type="button" data-bind="css:{starred: starred}, attr: {title: starred() ? 'This question is starred. Click to unstar it.' : 'Star this question'}, click: toggleStar" class="star" ></button>
                 {% endif %}
-				<input type="checkbox" data-bind="checked: useTemplate"/>
             </h1>
 		</div>
 		<div id="controls">
@@ -93,6 +92,14 @@
 					</span>
 				</li>
 			</ul>
+			<div class="template-switch" data-bind="fadeVisible: isTemplate">
+				<label>
+					<input type="checkbox" data-bind="checked: useTemplate"/>
+					This question is a template. 
+					<span style="display:none" data-bind="visible: !useTemplate()">Tick the box to switch to the simplified editing mode.</span>
+					<span style="display:none" data-bind="visible: useTemplate()">Untick the box to switch back to the complete editing mode.</span>
+				</label>
+			</div>
 		</div>
 
 		<div class="row-fluid">

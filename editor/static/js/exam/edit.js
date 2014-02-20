@@ -438,9 +438,19 @@ $(document).ready(function() {
 	Numbas.loadScript('scripts/editor-extras.js');
 	Numbas.startOK = true;
 	Numbas.init = function() {
-		//create an exam object
-		viewModel = new Exam(Editor.examJSON);
-		ko.applyBindings(viewModel);
+		try {
+			viewModel = new Exam(Editor.examJSON);
+			ko.applyBindings(viewModel);
+		}
+		catch(e) {
+			$('.page-loading').hide();
+			$('.page-error')
+				.show()
+				.find('.trace')
+					.html(e.message)
+			;
+			throw(e);
+		}
 	};
 	Numbas.tryInit();
 

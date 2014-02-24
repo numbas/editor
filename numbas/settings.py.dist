@@ -3,6 +3,7 @@
 # Django settings for numbas project.
 import imp
 import os
+import sys
 from database import DATABASES
 
 SITE_TITLE = 'Numbas'
@@ -182,16 +183,8 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "editor.context_processors.global_settings",
 )
 
-examparser = imp.load_source(
-    'examparser',
-    os.path.join(GLOBAL_SETTINGS['NUMBAS_PATH'],
-                 os.path.normpath('bin/examparser.py')))
-    
-numbasobject = imp.load_source(
-    'numbasobject',
-     os.path.join(GLOBAL_SETTINGS['NUMBAS_PATH'],
-                  os.path.normpath('bin/numbasobject.py')))
-                  
+sys.path.append(os.path.join(GLOBAL_SETTINGS['NUMBAS_PATH'],'bin'))
+
 AUTHENTICATION_BACKENDS = (
     # Uncomment to enable LDAP authentication, then look at ldap_auth.py.dist
     #'django_auth_ldap.backend.LDAPBackend',

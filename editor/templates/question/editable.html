@@ -209,11 +209,12 @@
 									<input type="text" data-bind="value: templateTypeValues.number.value, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 30, value: templateTypeValues.number.value}"/> (a number)
 								</div>
 								<div data-bind="visible: templateType().id=='range'">
-									A number between 
+									Numbers between 
 									<input type="text" data-bind="value: templateTypeValues.range.min, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.min}"/>
 									and
 									<input type="text" data-bind="value: templateTypeValues.range.max, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.max}"/>
-									(inclusive)
+									(inclusive) with step size
+									<input type="text" data-bind="value: templateTypeValues.range.step, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.step}"/>
 								</div>
 								<div data-bind="visible: templateType().id=='string'">
 									<input type="text" data-bind="value: templateTypeValues.string.value, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.string.value}"/> (text string)

@@ -254,7 +254,7 @@
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='functions'}">
 			<div id="functions">
 				<h4>Functions <span data-bind="template: {name: 'helplink', data: {topic: 'functions', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#functions-rulesets'}}"></span></h4>
-				<!-- ko foreach: {data: functions, afterAdd: Editor.afterAdd, beforeRemove: Editor.beforeRemove} -->
+				<!-- ko foreach: {data: functions, afterAdd: Editor.afterAdd} -->
 				<div class="function row-fluid">
 					<div class="span1">
 						<button type="button" class="delete" data-bind="click:remove" title="Delete this function"></button>
@@ -294,7 +294,7 @@
 					</div>
 					<div class="span3">
 						<label>Parameters</label>
-						<!-- ko foreach: {data: parameters, afterAdd: Editor.afterAdd, beforeRemove: Editor.beforeRemove} -->
+						<!-- ko foreach: {data: parameters, afterAdd: Editor.afterAdd} -->
 						<div class="row-fluid parameter">
 							<form class="form-inline">
 								<input class="name" type="text" placeholder="Name" data-bind="value: name, valueUpdate: 'afterkeydown'"/>
@@ -312,7 +312,7 @@
 			<div id="rulesets">
 				<h4>Rulesets <span data-bind="template: {name: 'helplink', data: {topic: 'rulesets', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#rulesets'}}"></span></h4>
 				<form class="form-horizontal">
-					<!-- ko foreach: {data: rulesets, afterAdd: Editor.afterAdd, beforeRemove: Editor.beforeRemove} -->
+					<!-- ko foreach: {data: rulesets, afterAdd: Editor.afterAdd} -->
 						<div class="ruleset control-group">
 							<span class="control-label">
 								<input type="text" placeholder="Name" class="name control-label" data-bind="value:name, valueUpdate: 'afterkeydown'"/>
@@ -354,7 +354,7 @@
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='parts'}">
 			<div class="row-fluid">
 				<div class="span3">
-					<ol class="parts nav nav-list" data-bind="visible: parts().length>0, foreach: {data: parts, afterAdd: Editor.afterAdd, beforeRemove: Editor.beforeRemove}">
+					<ol class="parts nav nav-list" data-bind="visible: parts().length>0, foreach: {data: parts, afterAdd: Editor.afterAdd}">
 						<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
 							<div class="reorder" data-bind="visible: $root.currentPart()==$data && parentList().length>1">
 								<button type="button" class="up" data-bind="click: moveUp, visible: canMove('up')" title="Move this part up one place"></button>
@@ -365,7 +365,7 @@
 							<div class="subparts" data-bind="fadeVisible: meOrChildSelected">
 								<div class="gaps" data-bind="if: type().name=='gapfill'">
 									<h6>Gaps</h6>
-									<ol class="gaps nav nav-list" data-bind="foreach: {data: gapfill.gaps, afterAdd: Editor.afterAdd, beforeRemove: Editor.beforeRemove}">
+									<ol class="gaps nav nav-list" data-bind="foreach: {data: gapfill.gaps, afterAdd: Editor.afterAdd}">
 										<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
 											<div class="reorder" data-bind="visible: $root.currentPart()==$data && parentList().length>1">
 												<button type="button" class="up" data-bind="click: moveUp, visible: canMove('up')" title="Move this part up one place"></button>
@@ -379,7 +379,7 @@
 								</div>
 								<div class="steps clearfix">
 									<h6>Steps <span data-bind="template: {name: 'helplink', data: {topic: 'steps', url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-steps'}}"></span></h6>
-									<ol class="steps nav nav-list" data-bind="foreach: {data: steps, afterAdd: Editor.afterAdd, beforeRemove: Editor.beforeRemove}">
+									<ol class="steps nav nav-list" data-bind="foreach: {data: steps, afterAdd: Editor.afterAdd}">
 										<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
 										<div class="reorder" data-bind="visible: $root.currentPart()==$data && parentList().length>1">
 												<button type="button" class="up" data-bind="click: moveUp, visible: canMove('up')" title="Move this part up one place"></button>
@@ -719,7 +719,7 @@
 							</section>
 							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='choices'}">
 								<ul class="choices">
-									<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
+									<!-- ko foreach: {data: multiplechoice.choices, afterAdd: Editor.afterAdd} -->
 									<li class="choice">
 										<form class="form-inline">
 											<button type="button" type="button" class="delete" data-bind="click:remove" title="Delete this choice"></button>
@@ -783,7 +783,7 @@
 							</section>
 							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='choices'}">
 								<ul class="choices">
-									<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
+									<!-- ko foreach: {data: multiplechoice.choices, afterAdd: Editor.afterAdd} -->
 									<li class="choice">
 										<form class="form-inline">
 											<button type="button" class="delete" data-bind="click:remove" title="Delete this choice"></button>
@@ -859,7 +859,7 @@
 										<thead>
 											<tr>
 												<td></td>
-												<!-- ko foreach: {data: multiplechoice.answers, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
+												<!-- ko foreach: {data: multiplechoice.answers, afterAdd: Editor.afterAdd} -->
 													<th>
 														<input type="text" data-bind="value:content, valueUpdate:'input'">
 														<button type="button" class="delete" data-bind="click:function(){this.remove()}" title="Delete this answer"></button>
@@ -871,7 +871,7 @@
 											</tr>
 										</thead>
 										<tbody>
-											<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
+											<!-- ko foreach: {data: multiplechoice.choices, afterAdd: Editor.afterAdd} -->
 												<tr>
 													<th>
 														<input type="text" data-bind="value:content, valueUpdate:'input'"/>
@@ -953,7 +953,7 @@
 			</form>
 			<h4>Individual access rights</h4>
 			<form class="form-horizontal" data-bind="submit: function(){}">
-				<!-- ko foreach: {data: access_rights, afterAdd: Editor.afterAdd, beforeRemove: Editor.beforeRemove} -->
+				<!-- ko foreach: {data: access_rights, afterAdd: Editor.afterAdd} -->
 				<div class=control-group">
 					<label>
 						<span class="control-label" data-bind="text:name"></span>

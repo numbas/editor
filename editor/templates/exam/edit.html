@@ -92,7 +92,13 @@
 			{% endblock %}
 		</div>
 		<div class="page-loading" data-bind="visible: false">
-			Loading...
+			<h2>Loading...</h2>
+		</div>
+		<div class="page-error">
+			<h2>Error</h2>
+			<p>There was an error loading the page.</p>
+
+			<pre class="trace"></pre>
 		</div>
 	</div>
 {% endblock content %}

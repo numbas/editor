@@ -544,7 +544,7 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 							</section>
 							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='choices'}">
 								<ol class="choices">
-									<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
+									<!-- ko foreach: {data: multiplechoice.choices, afterAdd: Editor.afterAdd} -->
 									<li class="choice">
 										<form class="form-inline">
 											<div class="choice-bits">
@@ -608,7 +608,7 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 							</section>
 							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='choices'}">
 								<ul class="choices">
-									<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
+									<!-- ko foreach: {data: multiplechoice.choices, afterAdd: Editor.afterAdd} -->
 									<li class="choice">
 										<form class="form-inline">
 											<label>
@@ -682,13 +682,13 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 										<thead>
 											<tr>
 												<td></td>
-												<!-- ko foreach: {data: multiplechoice.answers, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
+												<!-- ko foreach: {data: multiplechoice.answers, afterAdd: Editor.afterAdd} -->
 													<th class="answer" data-bind="html:content"></th>
 												<!-- /ko -->
 											</tr>
 										</thead>
 										<tbody>
-											<!-- ko foreach: {data: multiplechoice.choices, beforeRemove: Editor.beforeRemove, afterAdd: Editor.afterAdd} -->
+											<!-- ko foreach: {data: multiplechoice.choices, afterAdd: Editor.afterAdd} -->
 												<tr>
 													<th class="choice" data-bind="html:content"></th>
 													<!-- ko foreach: answers -->

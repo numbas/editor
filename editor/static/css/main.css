@@ -230,5 +230,10 @@ button.search.loading {
 
 .page-loading {
     text-align: center;
-    font-size: 2em;
+}
+.page-error {
+	display: none;
+}
+.page-error h2 {
+	text-align: center;
 }

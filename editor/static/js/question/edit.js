@@ -1679,9 +1679,19 @@ $(document).ready(function() {
 	}
 	Numbas.startOK = true;
 	Numbas.init = function() {
-		//create a question object
-		viewModel = new Question(Editor.questionJSON);
-		ko.applyBindings(viewModel);
+		try {
+			viewModel = new Question(Editor.questionJSON);
+			ko.applyBindings(viewModel);
+		}
+		catch(e) {
+			$('.page-loading').hide();
+			$('.page-error')
+				.show()
+				.find('.trace')
+					.html(e.message)
+			;
+			throw(e);
+		}
 	};
 	Numbas.tryInit();
 

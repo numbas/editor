@@ -345,6 +345,10 @@
 									</div>
 									<div class="control-group" data-bind="template: {
 										name: 'booleanproperty',
+										data: {label:'Show correct answer on reveal?',property:showCorrectAnswer,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal'}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
 										data: {label:'Show preview of student\'s answer?', property:jme.showPreview, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-preview-of-student-s-answer'}
 									}"></div>
 									<div class="control-group" data-bind="template: {
@@ -510,6 +514,10 @@
 										name: 'booleanproperty',
 										data: {label:'Must the answer be an integer?', property:numberentry.integerAnswer, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-must-the-answer-be-an-integer'}
 									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label:'Show correct answer on reveal?',property:showCorrectAnswer,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal'}
+									}"></div>
 									<div class="control-group" data-bind="fadeVisible: numberentry.integerAnswer,
 									template: {
 										name:'percentproperty',
@@ -563,6 +571,10 @@
 										data: {label:'Answer pattern',property:patternmatch.answer, monospace: true, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-answer-pattern'}
 									}"></div>
 									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label:'Show correct answer on reveal?',property:showCorrectAnswer,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal'}
+									}"></div>
+									<div class="control-group" data-bind="fadeVisible: showCorrectAnswer, template: {
 										name: 'property',
 										data: {label:'Display answer',property:patternmatch.displayAnswer, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-display-answer'}
 									}"></div>
@@ -589,6 +601,10 @@
 									<div class="control-group" data-bind="template: {
 										name: 'property',
 										data: {label:'Maximum marks',property:multiplechoice.maxMarks, min:multiplechoice.minMarks, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-maximum-marks'}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label:'Show correct answer on reveal?',property:showCorrectAnswer,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal'}
 									}"></div>
 									<div class="control-group" data-bind="visible: !parent, template: {
 										name: 'property',
@@ -645,6 +661,10 @@
 									<div class="control-group" data-bind="template: {
 										name: 'property',
 										data: {label:'Maximum marks',property:multiplechoice.maxMarks, min:multiplechoice.minMarks}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label:'Show correct answer on reveal?',property:showCorrectAnswer,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal'}
 									}"></div>
 									<div class="control-group" data-bind="visible: !parent, template: {
 										name: 'property',
@@ -709,6 +729,10 @@
 									<div class="control-group" data-bind="template: {
 										name: 'property',
 										data: {label:'Maximum marks',property:multiplechoice.maxMarks, min:multiplechoice.minMarks}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'booleanproperty',
+										data: {label:'Show correct answer on reveal?',property:showCorrectAnswer,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal'}
 									}"></div>
 									<div class="control-group" data-bind="visible: !parent, template: {
 										name: 'property',

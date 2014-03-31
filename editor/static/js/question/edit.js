@@ -882,6 +882,8 @@ $(document).ready(function() {
         this.steps = ko.observableArray([]);
         this.stepsPenalty = ko.observable(0);
 
+		this.showCorrectAnswer = ko.observable(true);
+
         this.jme = {
             answer: ko.observable(''),
             answerSimplification: ko.observable(''),
@@ -1189,7 +1191,8 @@ $(document).ready(function() {
         toJSON: function() {
             var o = {
                 type: this.type().name,
-                marks: this.realMarks()
+                marks: this.realMarks(),
+				showCorrectAnswer: this.showCorrectAnswer()
             };
             if(this.prompt())
                 o.prompt = this.prompt();
@@ -1340,7 +1343,7 @@ $(document).ready(function() {
                 if(this.types[i].name == data.type.toLowerCase())
                     this.type(this.types[i]);
             }
-            tryLoad(data,['marks','prompt','stepsPenalty'],this);
+            tryLoad(data,['marks','prompt','stepsPenalty','showCorrectAnswer'],this);
 
             if(data.steps)
             {

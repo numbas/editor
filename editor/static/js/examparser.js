@@ -33,9 +33,9 @@ ParseError.prototype = new Error();
 ParseError.prototype.constructor = ParseError;
 
 function cleanString(s) {
-	return s.split('\n').map(function(line) {
-		return line.replace(/^( {4}|\t)*/,'');
-	}).join('\n');
+	// used to strip off leading tabs, but that's a bad idea
+	// keeping this around in case any other string cleanup operations need to be done
+	return s;
 };
 
 function ExamParser()

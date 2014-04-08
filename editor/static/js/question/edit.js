@@ -594,7 +594,13 @@ $(document).ready(function() {
         },
         
         insertImage: function(image) {
+            $('#imagePickModal').modal('hide');
+
             var ed = viewModel.currentTinyMCE;
+			if(!ed) {
+				return;
+			}
+
 			var name = image.name();
 			var html;
 
@@ -605,8 +611,7 @@ $(document).ready(function() {
 			default:
 	            html = '<img src="'+image.url()+'">';
 			}
-            ed.execCommand('mceInsertContent',false,html);
-            $('#imagePickModal').modal('hide');
+			ed.execCommand('mceInsertContent',false,html);
         },
 
 		changeImageAttributes: function() {

@@ -134,6 +134,7 @@ class Image( models.Model ):
         return 'resources/%s' % self.image.name
 
     def delete(self,*args,**kwargs):
+        print(">>>>>>>>>>>>>>>>>>>>>>>DELETE "+self.image.name)
         self.image.delete(save=False)
         super(Image,self).delete(*args,**kwargs)
 

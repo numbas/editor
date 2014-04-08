@@ -840,7 +840,7 @@
 					</div>
 					<div data-bind="visible: progress()==1">
 						<a data-bind="attr: {href: url}" target="_blank"><img class="thumbnail" data-bind="visible: filetype()=='img', attr: {src: url, title: name}"/></a>
-						<span data-bind="text: name"></span>
+						<span class="path" data-bind="text: 'resources/'+name()"></span>
 						<button type="button" class="delete" data-bind="click: $root.deleteResource" title="Delete this image"></button>
 					</div>
 				</li>

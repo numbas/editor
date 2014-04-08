@@ -116,7 +116,7 @@ class Extension(models.Model):
 
 class Image( models.Model ):
     title = models.CharField( max_length=255 ) 
-    image = models.ImageField( upload_to='images/', max_length=255) 
+    image = models.ImageField( upload_to='question-resources/', max_length=255) 
 
     @property 
     def data_url( self ):
@@ -140,7 +140,7 @@ class Image( models.Model ):
     def as_json(self):
         return {
             'url': self.resource_url,
-            'name': self.title,
+            'name': self.image.name,
             'pk': self.pk,
             'delete_url': reverse('delete_resource',args=(self.pk,)),
         }

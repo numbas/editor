@@ -595,7 +595,13 @@ $(document).ready(function() {
         },
         
         insertImage: function(image) {
+            $('#imagePickModal').modal('hide');
+
             var ed = viewModel.currentTinyMCE;
+			if(!ed) {
+				return;
+			}
+
 			var name = image.name();
 			var html;
 
@@ -606,8 +612,7 @@ $(document).ready(function() {
 			default:
 	            html = '<img src="'+image.url()+'">';
 			}
-            ed.execCommand('mceInsertContent',false,html);
-            $('#imagePickModal').modal('hide');
+			ed.execCommand('mceInsertContent',false,html);
         },
 
 		changeImageAttributes: function() {
@@ -889,6 +894,8 @@ $(document).ready(function() {
 
         this.steps = ko.observableArray([]);
         this.stepsPenalty = ko.observable(0);
+
+		this.showCorrectAnswer = ko.observable(true);
 
         this.jme = {
             answer: ko.observable(''),
@@ -1197,7 +1204,8 @@ $(document).ready(function() {
         toJSON: function() {
             var o = {
                 type: this.type().name,
-                marks: this.realMarks()
+                marks: this.realMarks(),
+				showCorrectAnswer: this.showCorrectAnswer()
             };
             if(this.prompt())
                 o.prompt = this.prompt();
@@ -1348,7 +1356,7 @@ $(document).ready(function() {
                 if(this.types[i].name == data.type.toLowerCase())
                     this.type(this.types[i]);
             }
-            tryLoad(data,['marks','prompt','stepsPenalty'],this);
+            tryLoad(data,['marks','prompt','stepsPenalty','showCorrectAnswer'],this);
 
             if(data.steps)
             {
@@ -1471,9 +1479,19 @@ $(document).ready(function() {
 	}
 	Numbas.startOK = true;
 	Numbas.init = function() {
-		//create a question object
-		viewModel = new Question(Editor.questionJSON);
-		ko.applyBindings(viewModel);
+		try {
+			viewModel = new Question(Editor.questionJSON);
+			ko.applyBindings(viewModel);
+		}
+		catch(e) {
+			$('.page-loading').hide();
+			$('.page-error')
+				.show()
+				.find('.trace')
+					.html(e.message)
+			;
+			throw(e);
+		}
 	};
 	Numbas.tryInit();
 

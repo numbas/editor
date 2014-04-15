@@ -228,3 +228,12 @@ button.search.loading {
 	height: 16px;
 }
 
+.page-loading {
+    text-align: center;
+}
+.page-error {
+	display: none;
+}
+.page-error h2 {
+	text-align: center;
+}

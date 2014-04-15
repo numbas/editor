@@ -17,6 +17,11 @@ display: block;
     height: 0;
 }
 
+ul.no-bullets, ol.no-bullets {
+	list-style-type: none;
+	margin-left: 10px;
+}
+
 html { 
     height: 100%;
 

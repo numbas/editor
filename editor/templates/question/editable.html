@@ -72,28 +72,16 @@
 			<span data-bind="template: {name: 'helplink', data: {topic: 'variables', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#variables', big: true}}"></span>
 			<div class="row-fluid">
 				<div class="span4">
-					<div data-bind="visible: variables().length>0">
-						<div data-bind="visible: useTemplate">
-							<h4>Editable variables</h4>
-							<table class="variable-list">
-								<thead>
-									<tr>
-										<th class="name">Name</th>
-										<th class="value">Generated Value</th>
-									</tr>
-								</thead>
-								<tbody data-bind="sortable: {
-									template: 'variable-template',
-									data: editableVariables,
-									options: {
-										forcePlaceholderSize: true,
-										placeholder: 'placeholder'
-									}
-								}">
-								</tbody>
-							</table>
-							<div data-bind="visible: noneditableVariables().length">
-								<h4>Other variables</h4>
+					<div>
+						<div data-bind="foreach: allVariableGroups">
+							<div class="variable-group" data-bind="css: {editable: !fixed}">
+								<div class="group-name">
+									<button type="button" title="Remove this group" class="delete" data-bind="visible: !fixed, click:remove"></button>
+									<h4 data-bind="text: displayName,visible: fixed || $root.editVariableGroup()!=$data, event: {focus: fixed ? null : $root.editVariableGroup}, attr: {tabindex: fixed ? undefined : 0}"></h4>
+									<form data-bind="submit: endEdit">
+										<input data-bind="value:name, visible: $root.editVariableGroup()==$data, hasfocus: isEditing, event: {blur: endEdit}"/>
+									</form>
+								</div>
 								<table class="variable-list">
 									<thead>
 										<tr>
@@ -101,9 +89,9 @@
 											<th class="value">Generated Value</th>
 										</tr>
 									</thead>
-									<tbody data-bind="sortable: {
+									<tbody data-bind="css: {empty: variables().length==0}, sortable: {
 										template: 'variable-template',
-										data: noneditableVariables,
+										data: $data.variables,
 										options: {
 											forcePlaceholderSize: true,
 											placeholder: 'placeholder'
@@ -111,34 +99,17 @@
 									}">
 									</tbody>
 								</table>
+
+								<button type="button" class="add-variable" data-bind="click: addVariable, attr: {title: (variables().length ? 'Add another variable' : 'Add a variable')+' to '+name()}"></button>
 							</div>
 						</div>
-						<div data-bind="visible: !useTemplate()">
-							<table class="variable-list">
-								<thead>
-									<tr>
-										<th class="name">Name</th>
-										<th class="value">Generated Value</th>
-									</tr>
-								</thead>
-								<tbody data-bind="sortable: {
-									template: 'variable-template',
-									data: variables,
-									options: {
-										forcePlaceholderSize: true,
-										placeholder: 'placeholder'
-									}
-								}">
-								</tbody>
-							</table>
-						</div>
 						<script type="text/html" id="variable-template">
-							<tr data-bind="click: $root.currentVariable, css: {noname: !name(), current: $data==$root.currentVariable(), dependency: isDependency, template: inTemplate}" class="variable-selector">
+							<tr data-bind="click: $root.currentVariable, css: {noname: !name(), current: $data==$root.currentVariable(), dependency: isDependency}" class="variable-selector">
 								<td class="name" data-bind="text: name() ? name() : 'Unnamed'"></td>
 								<td class="value-cell">
 									<div class="value" data-bind="css: {error: error().length>0}, html: display"></div>
 								</td>
-								<td class="delete-cell" data-bind="if: !$root.useTemplate()">
+								<td class="delete-cell">
 									<button type="button" title="Remove this variable" class="delete" data-bind="click:remove"></button>
 								</td>
 							</tr>
@@ -147,7 +118,7 @@
 							<label><input class="recalculate-checkbox" type="checkbox" data-bind="checked: autoCalculateVariables"/> Automatically regenerate variables when changes are made.</label>
 						</p>
 					</div>
-					<button type="button" data-bind="visible: !useTemplate(), click:addVariable, text: variables().length ? 'Add another variable' : 'Add a variable'"></button>
+					<button type="button" data-bind="click: addVariableGroup">New variable group</button>
 					<button type="button" data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button>
 				</div>
 				<div class="span8 variable" data-bind="with: currentVariable">
@@ -164,38 +135,13 @@
 								</div>
 							</label>
 						</div>
-						<div data-bind="visible: !$root.useTemplate()">
-							<div class="control-group" data-bind="visible: !$root.useTemplate()">
-								<label class="control-label">
-									Definition
-									<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#variables'}}"></span>
-								</label>
-								<div class="controls">
-									<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: editDefinition, codemirrorMode: 'jme'"></textarea>
-								</div>
-							</div>
-							<div class="control-group" data-bind="template: {
-								name: 'booleanproperty',
-								data: {label:'Editable in template?', property:inTemplate, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-preview-of-student-s-answer'}
-							}"></div>
+						<div>
 							<div class="control-group" data-bind="template: {
 								name: 'selectproperty',
 								data: {label:'Data type',property: templateType, options: templateTypes, optionsText: 'name', helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-checking-accuracy'}
 							}"></div>
 						</div>
 						<div class="control-group">
-							<label>
-								<span class="control-label">Description</span>
-								<div data-bind="visible: !$root.useTemplate()">
-									<div class="controls" data-bind="visible: !$root.useTemplate(), writemaths: description"></div>
-								</div>
-								<div data-bind="visible: $root.useTemplate">
-									<div class="controls" data-bind="mathjaxHTML: description"></div>
-									<div data-bind="if: !description()" class="nothing-here">The author has not written a description for this variable.</div>
-								</div>
-							</label>
-						</div>
-						<div class="control-group" data-bind="visible: $root.useTemplate() && inTemplate()">
 							<label class="control-label">
 								Value
 								<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#variables'}}"></span>
@@ -227,14 +173,20 @@
 									(comma-separated list of numbers)
 								</div>
 								<div data-bind="visible: templateType().id=='list of strings', with: templateTypeValues['list of strings']">
-									<ul data-bind="foreach: values.edit">
+									<ul class="no-bullets" data-bind="foreach: values.edit">
 										<li>
-											<input type="text" data-bind="value: value, valueUpdate: 'afterkeydown', event: {blur: onBlur}"/>
+										<input type="text" data-bind="value: value, valueUpdate: 'afterkeydown', event: {blur: onBlur}, autosize: {max: 500, min: 30, padding: 10, value: value}"/>
 										</li>
 									</ul>
 									(text strings)
 								</div>
 							</div>
+						</div>
+						<div class="control-group">
+							<label>
+								<span class="control-label">Description</span>
+								<div class="controls" data-bind="writemaths: description"></div>
+							</label>
 						</div>
 					</form>
 					<div data-bind="visible: dependencies().length>0" class="inline-names">

@@ -22,16 +22,11 @@ $(document).ready(function() {
     {
 		var q = this;
 
-		this.useTemplate = ko.observable(false);
-		var notUsingTemplate = ko.computed(function() {
-			return !this.useTemplate();
-		},this);
-
 		this.mainTabs = ko.observableArray([
 			new Editor.Tab('general','General'),
 			new Editor.Tab('statement','Statement'),
 			new Editor.Tab('variables','Variables'),
-			new Editor.Tab('functions','Functions & Rulesets',notUsingTemplate),
+			new Editor.Tab('functions','Functions & Rulesets'),
 			new Editor.Tab(
 				'parts',
 				ko.computed(function() {
@@ -157,18 +152,17 @@ $(document).ready(function() {
 		};
 
         this.variables = ko.observableArray([]);
-		this.editableVariables = ko.computed(function() {
-			return this.variables().filter(function(v) {
-				return v.inTemplate();
-			});
+		this.variableGroups = ko.observableArray([]);
+		this.baseVariableGroup = new VariableGroup(this,{name:'Ungrouped variables'});
+		this.baseVariableGroup.fixed = true;
+		this.allVariableGroups = ko.computed(function() {
+			var l = this.variableGroups();
+			return l.concat(this.baseVariableGroup);
 		},this);
-		this.noneditableVariables = ko.computed(function() {
-			return this.variables().filter(function(v) {
-				return !v.inTemplate();
-			});
-		},this);
+		this.editVariableGroup = ko.observable(null);
 		this.autoCalculateVariables = ko.observable(true);
 		this.currentVariable = ko.observable(null);
+		this.poop = function(){console.log(arguments);q.currentVariable.apply(q,arguments);}
 
 		this.variableErrors = ko.computed(function() {
 			var variables = this.variables();
@@ -229,15 +223,6 @@ $(document).ready(function() {
 			this.computeVariables();
 		},this).extend({throttle:300});
 
-		this.isTemplate = ko.computed(function() {
-			var variables = this.variables();
-			for(var i=0;i<variables.length;i++) {
-				if(variables[i].inTemplate())
-					return true;
-			}
-			return false;
-		},this);
-
         if(data)
 		{
 			this.id = data.id;
@@ -274,9 +259,6 @@ $(document).ready(function() {
 
         if(Editor.editable) {
 			this.firstSave = true;
-
-			if(this.isTemplate())
-				this.useTemplate(true);
 
 			this.deleteResource =  function(res) {
 				$.get(res.deleteURL)
@@ -413,6 +395,24 @@ $(document).ready(function() {
 			this.currentVariable(v);
 			return v;
         },
+
+		addVariableGroup: function() {
+			var vg = new VariableGroup(this);
+			this.variableGroups.push(vg);
+			return vg;
+		},
+
+		getVariableGroup: function(name) {
+			var groups = this.allVariableGroups();
+			for(var i=0;i<groups.length;i++) {
+				if(groups[i].name()==name) {
+					return groups[i];
+				}
+			}
+			var vg = new VariableGroup(this,{name:name});
+			this.variableGroups.push(vg);
+			return vg;
+		},
 
         addPart: function() {
 			var p = new Part(this,null,this.parts);
@@ -574,7 +574,8 @@ $(document).ready(function() {
             {
                 for(var x in data.variables)
                 {
-                    this.variables.push(new Variable(this,data.variables[x]));
+					var v = new Variable(this,data.variables[x]);
+                    this.variables.push(v);
                 }
 				if(this.variables().length)
 					this.currentVariable(this.variables()[0]);
@@ -710,8 +711,57 @@ $(document).ready(function() {
 
 	var re_name = /^{?((?:(?:[a-zA-Z]+):)*)((?:\$?[a-zA-Z_][a-zA-Z0-9_]*'*)|\?)}?$/i;
 
+	function VariableGroup(q,data) {
+		var vg = this;
+		this.fixed = false;
+		this.name = ko.observable('Unnamed group');
+		this.isEditing = ko.computed({
+			write: function(v) {
+				if(v) {
+					q.editVariableGroup(vg);
+				} else if(q.editVariableGroup()==vg) {
+					q.editVariableGroup(null);
+				}
+			},
+			read: function() {
+				return q.editVariableGroup()==vg;
+			}
+		},this);
+		this.endEdit = function() {
+			vg.isEditing(false);
+		}
+		this.displayName = ko.computed(function() {
+			return this.name() ? this.name() : 'Unnamed group'
+		},this);
+
+		this.variables = ko.observableArray([]);
+		ko.computed(function() {
+			vg.variables().map(function(v) {
+				v.group(vg);
+			});
+		},this);
+
+		this.addVariable = function() {
+			var v = q.addVariable();
+			this.variables.push(v);
+			return v;
+		}
+		if(data) {
+			tryLoad(data,['name'],this);
+		}
+		this.remove = function() {
+			q.variableGroups.remove(this);
+			this.variables().map(function(v) {
+				q.baseVariableGroup.variables.push(v);
+			});
+			this.variables([]);
+		}
+	}
+
     function Variable(q,data) {
+		this.question = q;
         this.name = ko.observable('');
+		this.group = ko.observable(null);
 		this.nameError = ko.computed(function() {
 			var name = this.name();
 			if(name=='')
@@ -733,7 +783,6 @@ $(document).ready(function() {
 			return '';
 		},this);
 
-		this.inTemplate = ko.observable(false);
 		this.description = ko.observable('');
 		this.templateType = ko.observable(this.templateTypes[0]);
 
@@ -897,6 +946,7 @@ $(document).ready(function() {
 		},this);
         this.remove = function() {
             q.variables.remove(this);
+			this.group().variables.remove(this);
 			if(this==q.currentVariable()) {
 				if(q.variables().length)
 					q.currentVariable(q.variables()[0]);
@@ -919,7 +969,7 @@ $(document).ready(function() {
 		],
 
         load: function(data) {
-			tryLoad(data,['name','inTemplate','description'],this);
+			tryLoad(data,['name','description'],this);
 			if('templateType' in data) {
 				for(var i=0;i<this.templateTypes.length;i++) {
 					if(this.templateTypes[i].id==data.templateType) {
@@ -931,13 +981,19 @@ $(document).ready(function() {
 			if('definition' in data) {
 				this.definitionToTemplate(data.definition);
 			}
+			if('group' in data) {
+				var vg = this.question.getVariableGroup(data.group);
+				vg.variables.push(this);
+			} else {
+				this.question.baseVariableGroup.variables.push(this);
+			}
         },
 
 		toJSON: function() {
 			var obj = {
 				name: this.name(),
+				group: this.group().name(),
 				definition: this.definition(),
-				inTemplate: this.inTemplate(),
 				description: this.description(),
 				templateType: this.templateType().id,
 			}

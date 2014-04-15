@@ -24,6 +24,7 @@ class ImageDeleteView(DeleteView):
     model = Image
 
     def render_to_response(self,context):
+        self.get_object().image.delete()
         return HttpResponse('deleted')
 
 def delete_resource(request,**kwargs):

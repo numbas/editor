@@ -332,6 +332,10 @@ input.recalculate-checkbox {
     margin-right: 1em;
 }
 
+.resource .path {
+    font-family: monospace;
+}
+
 .copy-part {
 	float: right;
 	padding-top: 0.1em;

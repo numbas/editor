@@ -285,7 +285,10 @@ class UpdateView(generic.UpdateView):
         context['can_delete'] = self.object.can_be_deleted_by(self.request.user)
         context['navtab'] = 'exams'
 
-        profile = self.request.user.get_profile()
+        if self.request.user.is_authenticated():
+            profile = self.request.user.get_profile()
+        else:
+            profile = None
 
         editor_json = {
             'editable': self.object.can_be_edited_by(self.request.user),
@@ -294,14 +297,21 @@ class UpdateView(generic.UpdateView):
             'locales': sorted([{'name': x[0], 'code': x[1]} for x in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']],key=operator.itemgetter('name')),
             'previewURL': reverse('exam_preview',args=(self.object.pk,self.object.slug)),
             'previewWindow': str(calendar.timegm(time.gmtime())),
-            'starred': self.object.fans.filter(pk=profile.pk).exists(),
         }
+        if profile:
+            editor_json.update({
+                'starred': self.object.fans.filter(pk=profile.pk).exists(),
+            })
+
         if editor_json['editable']:
             editor_json.update({
                 'public_access': self.object.public_access,
                 'access_rights': [{'id': ea.user.pk, 'name': ea.user.get_full_name(), 'access_level': ea.access} for ea in ExamAccess.objects.filter(exam=self.object)],
-                'preferred_locale': profile.language,
             })
+            if profile:
+                editor_json.update({
+                    'preferred_locale': profile.language,
+                })
 
         context['editor_json'] = editor_json
 

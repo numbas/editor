@@ -1,8 +1,8 @@
 Django>=1.6
-MySQL-python>=1.2.5
 Pillow>=2.3.0
 South>=0.8.4
 Unidecode>=0.04.14
+argparse
 bleach>=1.4
 django-html-sanitizer>=0.1.4
 django-registration>=1.0

@@ -897,6 +897,7 @@ $(document).ready(function() {
 
 			$(element).fileupload({
 				dataType: 'json',
+				dropZone: $(element),
 
 				done: function (e, data) {
 					data.res.load(data.result);
@@ -906,12 +907,15 @@ $(document).ready(function() {
 				add: function(e, data) {
 					data.res = new Resource();
 					fileArray.splice(0,0,data.res);
-					data.submit();
+					data.process().done(function() {
+						data.submit();
+					});
 				},
 
 				progress: function(e,data) {
 					data.res.progress(data.loaded/data.total);
 				}
+
 			});
 		}
 	}

@@ -233,7 +233,7 @@
 							Javascript
 						</label>
 						<div class="controls">
-							<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: preamble.js, codemirrorMode: 'javascript'"></textarea>
+							<textarea data-bind="valueUpdate: 'afterkeydown', codemirror: preamble.js, codemirrorMode: 'javascript'"></textarea>
 						</div>
 					</div>
 					<div class="control-group">
@@ -241,7 +241,7 @@
 							CSS
 						</label>
 						<div class="controls">
-							<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: preamble.css, codemirrorMode: 'css'"></textarea>
+							<textarea data-bind="valueUpdate: 'afterkeydown', codemirror: preamble.css, codemirrorMode: 'css'"></textarea>
 						</div>
 					</div>
 				</form>
@@ -810,6 +810,18 @@
 								</div>
 							</section>
 							<!-- /ko -->
+							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='scripts'}">
+								<form class="form-horizontal" data-bind="foreach: scripts">
+									<div class="control-group">
+										<label class="control-label">
+											<span data-bind="text: displayName"></span><span data-bind="if: active"> (active)</span>
+										</label>
+										<div class="controls">
+											<textarea data-bind="valueUpdate: 'afterkeydown', codemirror: script, codemirrorMode: 'javascript'"></textarea>
+										</div>
+									</div>
+								</form>
+							</section>
 						</div>
 					</div>
 				</div>

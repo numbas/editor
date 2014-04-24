@@ -818,6 +818,16 @@ $(document).ready(function() {
 		}
 	};
 
+	function Script(name,displayName) {
+		this.name = name;
+		this.displayName = displayName;
+		this.script = ko.observable('');
+
+		this.active = ko.computed(function() {
+			return this.script().trim().length>0;
+		},this);
+	}
+
     function Part(q,parent,parentList,data) {
 
 		this.q = q;
@@ -858,6 +868,9 @@ $(document).ready(function() {
 				tabs.push(new Editor.Tab('marking','Marking'));
 
 			tabs = tabs.concat(this.type().tabs);
+
+			tabs.push(new Editor.Tab('scripts','Scripts'));
+
 			return tabs;
 		},this);
 		this.realCurrentTab = ko.observable(this.tabs()[0]);
@@ -888,6 +901,11 @@ $(document).ready(function() {
         this.stepsPenalty = ko.observable(0);
 
 		this.showCorrectAnswer = ko.observable(true);
+
+		this.scripts = [
+			new Script('mark','Mark student\'s answer'),
+			new Script('validate','Validate student\'s answer')
+		];
 
         this.jme = {
             answer: ko.observable(''),
@@ -1197,8 +1215,10 @@ $(document).ready(function() {
             var o = {
                 type: this.type().name,
                 marks: this.realMarks(),
-				showCorrectAnswer: this.showCorrectAnswer()
+				showCorrectAnswer: this.showCorrectAnswer(),
+				scripts: {}
             };
+
             if(this.prompt())
                 o.prompt = this.prompt();
             if(this.steps().length)
@@ -1206,6 +1226,13 @@ $(document).ready(function() {
                 o.stepsPenalty = this.stepsPenalty(),
                 o.steps = this.steps().map(function(s){return s.toJSON();});
             }
+
+			this.scripts.map(function(s) {
+				var script = s.script();
+				if(s.active()) {
+					o.scripts[s.name] = script;
+				}
+			});
 
             switch(this.type().name)
             {
@@ -1356,6 +1383,17 @@ $(document).ready(function() {
                     this.steps.push(new Part(this.q,this,this.steps,s));
                 },this);
             }
+
+			if(data.scripts) {
+				for(var name in data.scripts) {
+					for(var i=0;i<this.scripts.length;i++) {
+						if(this.scripts[i].name==name) {
+							this.scripts[i].script(data.scripts[name]);
+							break;
+						}
+					}
+				}
+			}
 
             switch(this.type().name)
             {

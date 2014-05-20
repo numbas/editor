@@ -437,6 +437,17 @@ class HighlightsView(ListView):
         highlights = QuestionHighlight.objects.all()
         return highlights
 
+class RecentQuestionsView(ListView):
+    def get_queryset(self):
+        return [q.summary() for q in Question.objects.filter(author=self.request.user).order_by('-last_modified')]
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.is_ajax():
+            return HttpResponse(json.dumps(context['object_list'][:10]),
+                                content_type='application/json',
+                                **response_kwargs)
+        raise Http404
+
 class JSONSearchView(SearchView):
     
     """Search questions."""

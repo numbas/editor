@@ -113,7 +113,7 @@
     vertical-align: top;
 }
 
-.questions .searchBox .results, .questions .questionList {
+.questions .results, .questions .questionList {
     padding: 0;
     height: 25em;
     overflow-y: auto;

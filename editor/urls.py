@@ -71,6 +71,8 @@ urlpatterns = patterns('',
 
     url(r'^questions/search/(\?q=(?P<query>.+))?$', question.SearchView.as_view(), name='question_search',),
 
+    url(r'^questions/recent/$', question.RecentQuestionsView.as_view(), name='recent_questions',),
+
     url(r'^questions/starred/$', question.FavouritesView.as_view(), name='favourite_questions',),
     
     url(r'^questions/highlights/$', question.HighlightsView.as_view(), name='highlighted_questions',),

@@ -160,38 +160,55 @@
                         "></ul>
                 </div>
                 <div class="span6">
-                    <form class="form-horizontal" data-bind="submit: search.submit">
-                        <div class="control-group">
-                            <label for="questionsearch">
-                                <span class="control-label">Search for questions:</span>
-                                <div class="controls">
-                                    <div class="input-append">
-                                        <input type="text" id="questionsearch" class="search" placeholder="Topic or question name" data-bind="
-                                            value: search.query, 
-                                            valueUpdate: 'afterkeydown'
-                                        "/>
-                                        <span class="add-on"><button type="submit" class="search" data-bind="css: {loading: search.searching}"></button></span>
-                                    </div>
-                                </div>
-                            </label>
-                            <label for="questionsearchtags">
-                                <span class="control-label">Filter by tags:</span>
-                                <div class="controls">
-                                    <input type="text" id="questionsearchtags" class="search" placeholder="Tags separated by commas" data-bind="
-                                        value: search.tags, 
-                                        valueUpdate: 'afterkeydown'
-                                    "/>
-                                </div>
-                            </label>
+                    <ul class="nav nav-tabs" data-bind="foreach: questionTabs">
+                        <li data-bind="css: {active: $root.currentQuestionTab() == $data}">
+                            <a href="#" data-bind="click: $root.currentQuestionTab, text: title"></a>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentQuestionTab().id)=='mine'}">
+                            <ul class="results editlist big" data-bind="
+                                template: {
+                                    name: 'questionResult',
+                                    foreach: recentQuestions,
+                                }
+                            "></ul>
                         </div>
-                    </form>
-                    <div class="searchBox">
-                        <ul class="results editlist big" data-bind="
-                            template: {
-                                name: 'questionResult',
-                                foreach: search.results.all,
-                            }
-                        "></ul>
+                        <div class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentQuestionTab().id)=='search'}">
+                            <form class="form-horizontal" data-bind="submit: search.submit">
+                                <div class="control-group">
+                                    <label for="questionsearch">
+                                        <span class="control-label">Search for questions:</span>
+                                        <div class="controls">
+                                            <div class="input-append">
+                                                <input type="text" id="questionsearch" class="search" placeholder="Topic or question name" data-bind="
+                                                    value: search.query, 
+                                                    valueUpdate: 'afterkeydown'
+                                                "/>
+                                                <span class="add-on"><button type="submit" class="search" data-bind="css: {loading: search.searching}"></button></span>
+                                            </div>
+                                        </div>
+                                    </label>
+                                    <label for="questionsearchtags">
+                                        <span class="control-label">Filter by tags:</span>
+                                        <div class="controls">
+                                            <input type="text" id="questionsearchtags" class="search" placeholder="Tags separated by commas" data-bind="
+                                                value: search.tags, 
+                                                valueUpdate: 'afterkeydown'
+                                            "/>
+                                        </div>
+                                    </label>
+                                </div>
+                            </form>
+                            <div class="searchBox">
+                                <ul class="results editlist big" data-bind="
+                                    template: {
+                                        name: 'questionResult',
+                                        foreach: search.results.all,
+                                    }
+                                "></ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
 			</div>

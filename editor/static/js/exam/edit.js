@@ -93,6 +93,24 @@ $(document).ready(function() {
         this.allowrevealanswer = ko.observable(true);
         this.advicethreshold = ko.observable(0);
 
+		this.questionTabs = ko.observableArray([
+			new Editor.Tab('mine','Recent Questions'),
+			new Editor.Tab('search','Search'),
+		]);
+		this.currentQuestionTab = ko.observable(this.questionTabs()[0]);
+
+        this.recentQuestions = Editor.mappedObservableArray(function(d){ return new Question(d);});
+        this.recentQuestions(data.recentQuestions);
+
+        function getRecentQuestions() {
+            $.get('/questions/recent/',{csrfmiddlewaretoken: getCookie('csrftoken')})
+                .success(function(d) {
+                    e.recentQuestions(d);
+                })
+            ;
+        }
+
+        setInterval(getRecentQuestions,5000);
 
 		this.search = {
 			query: ko.observable(''),

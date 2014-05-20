@@ -152,7 +152,8 @@ $(document).ready(function() {
         },this);
         
         this.output = ko.computed(function() {
-            return prettyData(this.toJSON());
+            var data = JSON.stringify(this.toJSON());
+			return '// Numbas version: '+Editor.numbasVersion+'\n'+data;
         },this);
 
         if(data)

@@ -302,8 +302,8 @@ class Exam(models.Model,NumbasObject,ControlledObject):
     author = models.ForeignKey(User,related_name='own_exams')
     filename = models.CharField(max_length=200, editable=False,default='')
     content = models.TextField(blank=True, validators=[validate_content])
-    created=models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
-    last_modified=models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
+    created = models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
+    last_modified = models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
     metadata = JSONField(blank=True)
 
     public_access = models.CharField(default='view',editable=True,choices=PUBLIC_ACCESS_CHOICES,max_length=6)

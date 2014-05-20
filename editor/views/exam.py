@@ -218,10 +218,6 @@ class UpdateView(generic.UpdateView):
     model = Exam
     template_name = 'exam/edit.html'
     
-#    @method_decorator(login_required)
-#    def dispatch(self, *args, **kwargs):
-#        return super(UpdateView, self).dispatch(*args, **kwargs)
-    
     def get_template_names(self):
         self.object = self.get_object()
         return 'exam/editable.html' if self.object.can_be_edited_by(self.request.user) else 'exam/noneditable.html'

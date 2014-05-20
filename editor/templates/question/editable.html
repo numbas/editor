@@ -73,7 +73,7 @@
 			<div class="row-fluid">
 				<div class="span4">
 					<div>
-						<div data-bind="foreach: allVariableGroups">
+						<div class="variable-groups" data-bind="foreach: allVariableGroups">
 							<div class="variable-group" data-bind="css: {editable: !fixed}">
 								<div class="group-name">
 									<button type="button" title="Remove this group" class="delete" data-bind="visible: !fixed, click:remove"></button>
@@ -100,7 +100,10 @@
 									</tbody>
 								</table>
 
-								<button type="button" class="add-variable" data-bind="click: addVariable, attr: {title: (variables().length ? 'Add another variable' : 'Add a variable')+' to '+name()}"></button>
+								<button type="button" class="add-variable" data-bind="click: addVariable, attr: {title: (variables().length ? 'Add another variable' : 'Add a variable')+' to '+name()}">
+									<span class="icon"></span>
+									Add a variable
+								</button>
 							</div>
 						</div>
 						<script type="text/html" id="variable-template">
@@ -161,6 +164,14 @@
 									<input type="text" data-bind="value: templateTypeValues.range.max, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.max}"/>
 									(inclusive) with step size
 									<input type="text" data-bind="value: templateTypeValues.range.step, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.step}"/>
+								</div>
+								<div data-bind="visible: templateType().id=='randrange'">
+									A random number between 
+									<input type="text" data-bind="value: templateTypeValues.randrange.min, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.min}"/>
+									and
+									<input type="text" data-bind="value: templateTypeValues.randrange.max, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.max}"/>
+									(inclusive) with step size
+									<input type="text" data-bind="value: templateTypeValues.randrange.step, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.step}"/>
 								</div>
 								<div data-bind="visible: templateType().id=='string'">
 									<input type="text" data-bind="value: templateTypeValues.string.value, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.string.value}"/> (text string)

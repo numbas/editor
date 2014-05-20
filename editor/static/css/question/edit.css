@@ -147,6 +147,12 @@
 	padding: 5px;
 }
 
+.variable-groups {
+	margin-bottom: 1em;
+	max-height: 35em;
+	overflow-y: auto;
+}
+
 .variable-group {
 	margin-bottom: 1em;
 	padding-bottom: 1em;
@@ -169,12 +175,21 @@
 	margin: 0;
 }
 
+.variable-group .add-variable:hover {
+	background-color: #f90;
+}
 .variable-group .add-variable {
+	background: none;
+	border: none;
+	padding: 3px;
+}
+.variable-group .add-variable .icon {
 	background: url(../../images/plus_16x16.png);
+	display: inline-block;
+	margin-right: 0.5em;
 	width: 16px;
 	height: 16px;
-	border: none;
-	padding: 0;
+	vertical-align: middle;
 }
 .variable-group .group-name button.delete {
 	float: right;

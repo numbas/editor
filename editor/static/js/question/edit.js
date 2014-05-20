@@ -402,6 +402,16 @@ $(document).ready(function() {
 			return vg;
 		},
 
+		getVariable: function(name) {
+			name = name.toLowerCase();
+			var variables = this.variables();
+			for(var i = 0; i<variables.length;i++) {
+				if(variables[i].name().toLowerCase() == name) {
+					return variables[i];
+				}
+			}
+		},
+
 		getVariableGroup: function(name) {
 			var groups = this.allVariableGroups();
 			for(var i=0;i<groups.length;i++) {
@@ -529,6 +539,13 @@ $(document).ready(function() {
                 variables[v.name()] = v.toJSON();
             });
 
+			var groups = {};
+			this.variableGroups().map(function(g) {
+				groups[g.name()] = g.variables().map(function(v){
+					return v.name()
+				});
+			});
+
 			var functions = {};
 			this.functions().map(function(f) {
 				functions[f.name()] = f.toJSON();
@@ -550,6 +567,7 @@ $(document).ready(function() {
                 advice: this.advice(),
                 rulesets: rulesets,
                 variables: variables,
+				variable_groups: groups,
 				functions: functions,
 				preamble: {
 					js: this.preamble.js(),
@@ -561,6 +579,7 @@ $(document).ready(function() {
         },
 
         load: function(data) {
+			var q = this;
             tryLoad(data,['name','statement','advice'],this);
 
 			if('extensions' in data) {
@@ -579,6 +598,15 @@ $(document).ready(function() {
                 }
 				if(this.variables().length)
 					this.currentVariable(this.variables()[0]);
+
+				for(var group_name in data.variable_groups) {
+					var vg = this.getVariableGroup(group_name);
+					data.variable_groups[group_name].map(function(variable_name) {
+						var v = q.getVariable(variable_name);
+						vg.variables.push(v);
+						q.baseVariableGroup.variables.remove(v);
+					});
+				}
             }
 
 			if('functions' in data)
@@ -842,6 +870,11 @@ $(document).ready(function() {
 				max: ko.observable(1),
 				step: ko.observable(1)
 			},
+			'randrange': {
+				min: ko.observable(0),
+				max: ko.observable(1),
+				step: ko.observable(1)
+			},
 			'string': {
 				value: ko.observable('')
 			},
@@ -891,6 +924,12 @@ $(document).ready(function() {
 					tree.args[0].args[0] = {tok: wrapValue(parseFloat(val.min()))};
 					tree.args[0].args[1] = {tok: wrapValue(parseFloat(val.max()))};
 					tree.args[1] = {tok: wrapValue(parseFloat(val.step()))};
+					return treeToJME(tree);
+				case 'randrange':
+					var tree = Numbas.jme.compile('random(a..b#c)');
+					tree.args[0].args[0].args[0] = {tok: wrapValue(parseFloat(val.min()))};
+					tree.args[0].args[0].args[1] = {tok: wrapValue(parseFloat(val.max()))};
+					tree.args[0].args[1] = {tok: wrapValue(parseFloat(val.step()))};
 					return treeToJME(tree);
 				case 'string':
 				case 'long string':
@@ -959,9 +998,10 @@ $(document).ready(function() {
     }
     Variable.prototype = {
 		templateTypes: [
-			{id: 'anything', name: 'Anything'},
+			{id: 'anything', name: 'JME code'},
 			{id: 'number', name: 'Number'},
-			{id: 'range', name: 'Range'},
+			{id: 'range', name: 'Range of numbers'},
+			{id: 'randrange', name: 'Random number from a range'},
 			{id: 'string', name: 'Short text string'},
 			{id: 'long string', name: 'Long text string'},
 			{id: 'list of numbers', name: 'List of numbers'},
@@ -981,12 +1021,7 @@ $(document).ready(function() {
 			if('definition' in data) {
 				this.definitionToTemplate(data.definition);
 			}
-			if('group' in data) {
-				var vg = this.question.getVariableGroup(data.group);
-				vg.variables.push(this);
-			} else {
-				this.question.baseVariableGroup.variables.push(this);
-			}
+			this.question.baseVariableGroup.variables.push(this);
         },
 
 		toJSON: function() {
@@ -1014,18 +1049,19 @@ $(document).ready(function() {
 					templateTypeValues.value(parseFloat(definition));
 					break;
 				case 'range':
+				case 'randrange':
 					var rule = new Numbas.jme.display.Rule('a..b#c',[]);
 					var m = rule.match(tree);
-					templateTypeValues.min(m.a.tok.value);
-					templateTypeValues.max(m.b.tok.value);
-					templateTypeValues.step(m.c.tok.value);
+					templateTypeValues.min(Numbas.jme.evaluate(m.a,Numbas.jme.builtinScope).value);
+					templateTypeValues.max(Numbas.jme.evaluate(m.b,Numbas.jme.builtinScope).value);
+					templateTypeValues.step(Numbas.jme.evaluate(m.c,Numbas.jme.builtinScope).value);
 					break;
 				case 'string':
 				case 'long string':
 					templateTypeValues.value(tree.tok.value);
 					break;
 				case 'list of numbers':
-					templateTypeValues.commaValue(tree.args.map(function(t){return t.tok.value}).join(' , '));
+					templateTypeValues.commaValue(tree.args.map(function(t){return Numbas.jme.evaluate(t,Numbas.jme.builtinScope).value}).join(' , '));
 					break;
 				case 'list of strings':
 					templateTypeValues.values(tree.args.map(function(t){return t.tok.value}));

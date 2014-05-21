@@ -217,6 +217,7 @@
 	border: 1px dashed #ccc;
 	width: 100%;
 	position: absolute;
+    box-sizing: border-box;
 }
 
 .variable-list .placeholder {

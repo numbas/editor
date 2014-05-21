@@ -46,7 +46,7 @@
 		<label>
 			<span class="control-label" data-bind="html: label"></span>
 			<div class="controls">
-				<span class="value" data-bind="text: property"></span>
+				<span class="value" data-bind="text: $data.optionsText===undefined ? property : ko.utils.unwrapObservable(property)[ko.utils.unwrapObservable($data.optionsText)]"></span>
 			</div>
 		</label>
 	</script>

@@ -16,7 +16,7 @@
 }
 
 .tag {
-    display: inline;
+    display: inline-block;
     margin-right: 0.4em;
 	background: white;
 	padding: 3px;

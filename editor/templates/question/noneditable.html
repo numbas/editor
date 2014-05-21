@@ -70,32 +70,122 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 			<div class="nothing-here" data-bind="if:!statement()">No statement.</div>
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='variables'}">
-			<div class="row-fluid" data-bind="if: variables().length>0">
-				<div data-bind="sortable: {
-							template: 'variable-template',
-							data: variables,
-							options: {handle: '.handle'}
-						}">
-				</div>
-				<script type="text/html" id="variable-template">
-					<div class="row-fluid variable">
-						<div class="span1"><span class="handle"></span></div>
-						<div class="span8">
-							<form>
-								<span class="name" data-bind="text: name"></span>
-								<label class="control-label">Definition</label>
-								<textarea disabled class="def" data-bind="readOnly: true, valueUpdate: 'afterkeydown', codemirror: definition, codemirrorMode: 'jme'"></textarea>
-							</form>
+			<div class="row-fluid">
+				<div data-bind="if: variables().length">
+					<div class="span4">
+						<div>
+							<div class="variable-groups" data-bind="foreach: allVariableGroups">
+								<div class="variable-group" data-bind="css: {editable: !fixed}">
+									<div class="group-name">
+										<h4 data-bind="text: displayName"></h4>
+									</div>
+									<table class="variable-list">
+										<thead>
+											<tr>
+												<th class="name">Name</th>
+												<th class="value">Generated Value</th>
+											</tr>
+										</thead>
+										<tbody data-bind="css: {empty: variables().length==0}, foreach: variables">
+											<tr data-bind="click: $root.currentVariable, css: {noname: !name(), current: $data==$root.currentVariable(), dependency: isDependency}" class="variable-selector">
+												<td class="name" data-bind="text: name() ? name() : 'Unnamed'"></td>
+												<td class="value-cell">
+													<div class="value" data-bind="css: {error: error().length>0}, html: display"></div>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
 						</div>
-						<div class="span3">
-							<div class="value" data-bind="css: {error: error().length>0}, html: display, mathjax: display"></div>
-						</div>
-					</div>
-				</script>
-
-				<div class="row-fluid">
-					<div class="span3 offset9">
 						<button type="button" data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button>
+					</div>
+					<div class="span8 variable" data-bind="with: currentVariable">
+						<form class="form-horizontal">
+							<div class="control-group">
+								<label>
+									<span class="control-label">
+										Name
+										<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/jme-reference.html#variable-names'}}"></span>
+									</span>
+									<div class="controls">
+										<code class="name" data-bind="text: name"></code>
+										<span class="name-error" data-bind="text: nameError, visible: nameError"></span>
+									</div>
+								</label>
+							</div>
+							<div>
+								<div class="control-group" data-bind="template: {
+									name: 'selectproperty',
+									data: {label:'Data type',property: templateType, options: templateTypes, optionsText: 'name', helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-checking-accuracy'}
+								}"></div>
+							</div>
+							<div class="control-group">
+								<label class="control-label">
+									Value
+									<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#variables'}}"></span>
+								</label>
+
+								<div class="controls">
+									<div data-bind="visible: templateType().id=='anything'">
+										<textarea disabled class="def" data-bind="readOnly: true, valueUpdate: 'afterkeydown', codemirror: templateTypeValues.anything.definition, codemirrorMode: 'jme'"></textarea>
+									</div>
+									<div data-bind="visible: templateType().id=='number'">
+										<span data-bind="text: templateTypeValues.number.value"></span>
+									</div>
+									<div data-bind="visible: templateType().id=='range'">
+										Numbers between 
+										<span data-bind="text: templateTypeValues.range.min"></span>
+										and
+										<span data-bind="text: templateTypeValues.range.max"></span>
+										(inclusive) with step size
+										<span data-bind="text: templateTypeValues.range.step"></span>
+									</div>
+									<div data-bind="visible: templateType().id=='randrange'">
+										A random number between 
+										<span data-bind="text: templateTypeValues.randrange.min"></span>
+										and
+										<span data-bind="text: templateTypeValues.randrange.max"></span>
+										(inclusive) with step size
+										<span data-bind="value: templateTypeValues.randrange.step"></span>
+									</div>
+									<div data-bind="visible: templateType().id=='string'">
+										<span data-bind="text: templateTypeValues.string.value"></span>
+									</div>
+									<div data-bind="visible: templateType().id=='long string'">
+										<div data-bind="mathjaxHTML: templateTypeValues['long string'].value"></div>
+									</div>
+									<div data-bind="visible: templateType().id=='list of numbers', with: templateTypeValues['list of numbers']">
+										<span data-bind="text: commaValue"></span>
+									</div>
+									<div data-bind="visible: templateType().id=='list of strings', with: templateTypeValues['list of strings']">
+										<ul class="no-bullets" data-bind="foreach: values.edit">
+											<li>
+												<span data-bind="text: value"></span>
+											</li>
+										</ul>
+									</div>
+								</div>
+							</div>
+							<div class="control-group" data-bind="if: description">
+								<label>
+									<span class="control-label">Description</span>
+									<div class="controls" data-bind="mathjaxHTML: description"></div>
+								</label>
+							</div>
+						</form>
+						<div data-bind="visible: dependencies().length>0" class="inline-names">
+							<strong>Depends on:</strong>
+							<ul data-bind="foreach: dependenciesObjects">
+								<li><!-- ko if: $index()>0 -->, <!-- /ko --><span class="variable" data-bind="click: $root.currentVariable, text: name"></span></li>
+							</ul>.
+						</div>
+						<div data-bind="visible: usedIn().length>0" class="inline-names">
+							<strong>Used by:</strong>
+							<ul data-bind="foreach: usedIn">
+								<li><!-- ko if: $index()>0 -->, <!-- /ko --><span class="variable" data-bind="click: $root.currentVariable, text: name"></span></li>
+							</ul>.
+						</div>
 					</div>
 				</div>
 			</div>
@@ -134,7 +224,7 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 						<label>Parameters</label>
 						<!-- ko foreach: parameters -->
 						<div class="row-fluid parameter">
-							<span class="name" data-bind="text: name"></span>: <span class="type" data-bind="text: type"></span>
+							<code class="name" data-bind="text: name"></code>: <span class="type" data-bind="text: type"></span>
 						</div>
 						<!-- /ko -->
 					</div>
@@ -149,10 +239,10 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 				<form class="form-horizontal">
 					<!-- ko foreach: rulesets -->
 						<div class="ruleset control-group">
-							<span class="control-label" data-bind="text: name"></span>
+							<span class="control-label"><code data-bind="text: name"></code></span>
 							<div class="controls">:
 								<!-- ko foreach: sets -->
-								<span class="ruleset well well-small" data-bind="text: $data"></span >
+								<code class="ruleset" data-bind="text: $data"></code>
 								<!-- /ko -->
 							</div>
 						</div>
@@ -701,6 +791,21 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 								</div>
 							</section>
 							<!-- /ko -->
+							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='scripts'}">
+								<form class="form-horizontal" data-bind="foreach: scripts">
+									<div class="control-group">
+										<label class="control-label">
+											<span data-bind="text: displayName"></span><span data-bind="if: active"> (active)</span>
+										</label>
+										<div class="controls">
+											<div data-bind="visible: active">
+												<textarea data-bind="readOnly: true, valueUpdate: 'afterkeydown', codemirror: script, codemirrorMode: 'javascript'"></textarea>
+											</div>
+											<span data-bind="visible: !active()" class="nothing-here">Not used</span>
+										</div>
+									</div>
+								</form>
+							</section>
 						</div>
 					</div>
 				</div>

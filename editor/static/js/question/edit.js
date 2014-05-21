@@ -1049,8 +1049,14 @@ $(document).ready(function() {
 					templateTypeValues.value(parseFloat(definition));
 					break;
 				case 'range':
-				case 'randrange':
 					var rule = new Numbas.jme.display.Rule('a..b#c',[]);
+					var m = rule.match(tree);
+					templateTypeValues.min(Numbas.jme.evaluate(m.a,Numbas.jme.builtinScope).value);
+					templateTypeValues.max(Numbas.jme.evaluate(m.b,Numbas.jme.builtinScope).value);
+					templateTypeValues.step(Numbas.jme.evaluate(m.c,Numbas.jme.builtinScope).value);
+					break;
+				case 'randrange':
+					var rule = new Numbas.jme.display.Rule('random(a..b#c)',[]);
 					var m = rule.match(tree);
 					templateTypeValues.min(Numbas.jme.evaluate(m.a,Numbas.jme.builtinScope).value);
 					templateTypeValues.max(Numbas.jme.evaluate(m.b,Numbas.jme.builtinScope).value);

@@ -30,8 +30,10 @@
 				<div class="span8">
 					<label for="description"><h4>Description <span data-bind="template: {name: 'helplink', data: {topic: 'description', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-description'}}"></span></h4></label>
 					<div id="description" data-bind="writemaths: description"></div>
+					<div data-bind="if: !description()" class="nothing-here">The author has not written a description.</div>
 					<label for="authors-notes"><h4>Author's Notes <span data-bind="template: {name: 'helplink', data: {topic: 'author\'s notes', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-author-s-notes'}}"></span></h4></label>
 					<div id="authors-notes" data-bind="writemaths: notes"></div>
+					<div data-bind="if:!notes()" class="nothing-here">The author has not made any notes.</div>
 				</div>
 				<div class="span4">
 					<h4>Extensions <span data-bind="template: {name: 'helplink', data: {topic: 'extensions', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-extensions'}}"></span></h4>
@@ -67,6 +69,7 @@
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='statement'}">
 			<span data-bind="template: {name: 'helplink', data: {topic: 'the question statement', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#statement', big: true}}"></span>
 			<div id="statement" data-bind="writemaths: statement, preambleCSS: $root.preamble.css"></div>
+			<div class="nothing-here" data-bind="if:!statement()">No statement.</div>
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='variables'}">
 			<span data-bind="template: {name: 'helplink', data: {topic: 'variables', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#variables', big: true}}"></span>
@@ -133,7 +136,7 @@
 									<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/jme-reference.html#variable-names'}}"></span>
 								</span>
 								<div class="controls">
-									<input type="text" placeholder="Name" class="name" data-bind="value:name, valueUpdate: 'afterkeydown', attr: {disabled: !$parent.isadvanced()}, autosize: name"/>
+									<input type="text" placeholder="Name" class="name" data-bind="value:name, valueUpdate: 'afterkeydown', autosize: name"/>
 									<span class="name-error" data-bind="text: nameError, visible: nameError"></span>
 								</div>
 							</label>
@@ -339,7 +342,7 @@
 											<button type="button" class="delete" data-bind="click: remove" title="Delete this gap"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
 										</li>
 									</ol>
-									<div class="addgap"><button type="button" data-bind="visible: $root.isadvanced, click:addGap, text: gapfill.gaps().length ? 'Add another gap' : 'Add a gap'"></button></div>
+									<div class="addgap"><button type="button" data-bind="click:addGap, text: gapfill.gaps().length ? 'Add another gap' : 'Add a gap'"></button></div>
 								</div>
 								<div class="steps clearfix">
 									<h6>Steps <span data-bind="template: {name: 'helplink', data: {topic: 'steps', url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-steps'}}"></span></h6>
@@ -353,12 +356,12 @@
 											<button type="button" class="delete" data-bind="click: remove" title="Delete this step"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
 										</li>
 									</ol>
-									<div class="addstep"><button type="button" data-bind="visible: $root.isadvanced, click:addStep, text: steps().length ? 'Add another step' : 'Add a step'"></button></div>
+									<div class="addstep"><button type="button" data-bind="click:addStep, text: steps().length ? 'Add another step' : 'Add a step'"></button></div>
 								</div>
 							</div>
 						</li>
 					</ol>
-					<button type="button" data-bind="visible: $root.isadvanced, click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
+					<button type="button" data-bind="click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
 				</div>
 				<div class="span9 part-edit" data-bind="with: currentPart">
 					<h4 class="header">
@@ -715,7 +718,7 @@
 										</form>
 									</li>
 									<!-- /ko -->
-									<li><button type="button" data-bind="visible: $root.isadvanced, click:addChoice">Add a choice</button></li>
+									<li><button type="button" data-bind="click:addChoice">Add a choice</button></li>
 								</ul>
 							</section>
 							<!-- /ko -->
@@ -783,7 +786,7 @@
 										</form>
 									</li>
 									<!-- /ko -->
-									<li><button type="button" data-bind="visible: $root.isadvanced, click:addChoice">Add a choice</button></li>
+									<li><button type="button" data-bind="click:addChoice">Add a choice</button></li>
 								</ul>
 							</section>
 							<!-- /ko -->
@@ -854,7 +857,7 @@
 													</th>
 												<!-- /ko -->
 												<td>
-													<button type="button" data-bind="visible: $root.isadvanced, click:addAnswer">Add Answer</button>
+													<button type="button" data-bind="click:addAnswer">Add Answer</button>
 												</td>
 											</tr>
 										</thead>
@@ -872,7 +875,7 @@
 													<!-- /ko -->
 												</tr>
 											<!-- /ko -->
-											<tr><td><button type="button" data-bind="visible: $root.isadvanced, click:addChoice">Add Choice</button></td></tr>
+											<tr><td><button type="button" data-bind="click:addChoice">Add Choice</button></td></tr>
 										</tbody>
 									</table>
 								</div>

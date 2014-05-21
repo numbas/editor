@@ -162,7 +162,6 @@ $(document).ready(function() {
 		this.editVariableGroup = ko.observable(null);
 		this.autoCalculateVariables = ko.observable(true);
 		this.currentVariable = ko.observable(null);
-		this.poop = function(){console.log(arguments);q.currentVariable.apply(q,arguments);}
 
 		this.variableErrors = ko.computed(function() {
 			var variables = this.variables();
@@ -539,10 +538,11 @@ $(document).ready(function() {
                 variables[v.name()] = v.toJSON();
             });
 
-			var groups = {};
+			var groups = [];
 			this.variableGroups().map(function(g) {
-				groups[g.name()] = g.variables().map(function(v){
-					return v.name()
+				groups.push({
+					name: g.name(),
+					variables: g.variables().map(function(v){return v.name()})
 				});
 			});
 
@@ -596,17 +596,16 @@ $(document).ready(function() {
 					var v = new Variable(this,data.variables[x]);
                     this.variables.push(v);
                 }
-				if(this.variables().length)
-					this.currentVariable(this.variables()[0]);
-
-				for(var group_name in data.variable_groups) {
-					var vg = this.getVariableGroup(group_name);
-					data.variable_groups[group_name].map(function(variable_name) {
+				data.variable_groups.map(function(gdata) {
+					var vg = q.getVariableGroup(gdata.name);
+					gdata.variables.map(function(variable_name) {
 						var v = q.getVariable(variable_name);
 						vg.variables.push(v);
 						q.baseVariableGroup.variables.remove(v);
 					});
-				}
+				});
+
+				this.selectFirstVariable();
             }
 
 			if('functions' in data)
@@ -641,6 +640,19 @@ $(document).ready(function() {
             }
 
         },
+
+		selectFirstVariable: function() {
+			if(this.variables().length) {
+				var groups = this.allVariableGroups();
+				for(var i=0;i<groups.length;i++) {
+					if(groups[i].variables().length) {
+						this.currentVariable(groups[i].variables()[0]);
+						return;
+					}
+				}
+			}
+			this.currentVariable(null);
+		},
 
 		download: function() {
 			window.location = Editor.download_url;
@@ -987,10 +999,7 @@ $(document).ready(function() {
             q.variables.remove(this);
 			this.group().variables.remove(this);
 			if(this==q.currentVariable()) {
-				if(q.variables().length)
-					q.currentVariable(q.variables()[0]);
-				else
-					q.currentVariable(null);
+				q.selectFirstVariable();
 			}
         };
         if(data)

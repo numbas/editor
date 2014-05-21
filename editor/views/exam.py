@@ -274,7 +274,10 @@ class UpdateView(generic.UpdateView):
         self.object.get_parsed_content()
         exam_dict = model_to_dict(self.object)
         exam_dict['questions'] = [q.summary() for q in self.object.get_questions()]
-        exam_dict['recentQuestions'] = [q.summary() for q in Question.objects.filter(author=self.request.user).order_by('-last_modified')[:10]]
+        if self.request.user.is_authenticated():
+            exam_dict['recentQuestions'] = [q.summary() for q in Question.objects.filter(author=self.request.user).order_by('-last_modified')[:10]]
+        else:
+            exam_dict['recentQuestions'] = []
         context['exam_JSON'] = json.dumps(exam_dict)
         context['themes'] = sorted([{'name': x[0], 'path': x[1]} for x in settings.GLOBAL_SETTINGS['NUMBAS_THEMES']],key=operator.itemgetter('name'))
         context['locales'] = sorted([{'name': x[0], 'code': x[1]} for x in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']],key=operator.itemgetter('name'))

@@ -1,5 +1,5 @@
 /*
-Copyright 2011 Newcastle University
+Copyright 2011-14 Newcastle University
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,10 +14,10 @@ Copyright 2011 Newcastle University
    limitations under the License.
 */
 
-// utility.js
-// convenience functions, extensions to javascript built-ins, etc.
+/** @file Convenience functions, extensions to javascript built-ins, etc. Provides {@link Numbas.util}. Includes es5-shim.js */
 
 Numbas.queueScript('scripts/util.js',['math'],function() {
+
 /** @namespace Numbas.util */
 
 var util = Numbas.util = /** @lends Numbas.util */ {
@@ -266,7 +266,7 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	},
 
 	/** Format an amount of currency
-	 * @example currecny(5.3,'£','p') => £5.30
+	 * @example currency(5.3,'Â£','p') => Â£5.30
 	 * @param {number} n
 	 * @param {string} prefix - symbol to use in front of currency if abs(n) >= 1
 	 * @param {string} suffix - symbol to use in front of currency if abs(n) <= 1
@@ -662,7 +662,7 @@ if(!String.prototype.split)
 // -- kriskowal Kris Kowal Copyright (C) 2009-2011 MIT License
 // -- tlrobinson Tom Robinson Copyright (C) 2009-2010 MIT License (Narwhal Project)
 // -- dantman Daniel Friesen Copyright (C) 2010 XXX TODO License or CLA
-// -- fschaefer Florian Schäfer Copyright (C) 2010 MIT License
+// -- fschaefer Florian SchÃ¤fer Copyright (C) 2010 MIT License
 // -- Gozala Irakli Gozalishvili Copyright (C) 2010 MIT License
 // -- kitcambridge Kit Cambridge Copyright (C) 2011 MIT License
 // -- kossnocorp Sasha Koss XXX TODO License or CLA

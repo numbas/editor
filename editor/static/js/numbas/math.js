@@ -19,7 +19,7 @@ Copyright 2011-14 Newcastle University
  * Provides {@link Numbas.math}, {@link Numbas.vectormath} and {@link Numbas.matrixmath}
  */
 
-Numbas.queueScript('math',['base'],function() {
+Numbas.queueScript('scripts/math.js',[],function() {
 
 /** Mathematical functions, providing stuff that the built-in `Math` object doesn't
  * @namespace Numbas.math */

@@ -58,7 +58,6 @@ CodeMirror.defineMode("jme", function(config, parserConfig) {
 			if(bracketsAfter=textAfter.match(/^\s*[\)\]][\)\]\s]*/)) {
 				brackets -= bracketsAfter[0].replace(/\s/,'').length;
 			}
-			console.log(brackets);
 			return brackets*(config.indentUnit || 1);
         }
     }

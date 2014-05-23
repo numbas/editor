@@ -558,14 +558,15 @@ $(document).ready(function() {
 
 			var mc = CodeMirror.fromTextArea(element,{
 				lineNumbers: true,
+				styleActiveLine: true,
 				matchBrackets: true,
                 mode: mode,
 				indentWithTabs: false,
 				indentUnit: 2,
 				extraKeys: { Tab: betterTab },
-				onChange: onChange,
 				readOnly: readOnly
 			});
+			mc.on('change',onChange);
 			ko.utils.domData.set(element,'codemirror',mc);
 		},
 		update: function(element,valueAccessor,allBindingsAccessor) {
@@ -664,8 +665,8 @@ $(document).ready(function() {
 				lineNumbers: true,
 				matchBrackets: true,
                 mode: 'htmlmixed',
-				onChange: onChange
 			});
+			mc.on('change',onChange);
 			ko.utils.domData.set(plaintext[0],'codemirror',mc);
 		},
 		update: function(element, valueAccessor) {

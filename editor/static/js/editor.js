@@ -663,6 +663,7 @@ $(document).ready(function() {
 
 			var mc = CodeMirror.fromTextArea(plaintext[0],{
 				lineNumbers: true,
+				styleActiveLine: true,
 				matchBrackets: true,
                 mode: 'htmlmixed',
 			});

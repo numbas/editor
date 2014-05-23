@@ -596,6 +596,8 @@ $(document).ready(function() {
 					var v = new Variable(this,data.variables[x]);
                     this.variables.push(v);
                 }
+            }
+			if('variable_groups' in data) {
 				data.variable_groups.map(function(gdata) {
 					var vg = q.getVariableGroup(gdata.name);
 					gdata.variables.map(function(variable_name) {
@@ -604,9 +606,9 @@ $(document).ready(function() {
 						q.baseVariableGroup.variables.remove(v);
 					});
 				});
+			}
 
-				this.selectFirstVariable();
-            }
+			this.selectFirstVariable();
 
 			if('functions' in data)
 			{

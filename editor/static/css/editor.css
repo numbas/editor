@@ -169,6 +169,7 @@ button.delete-grey:hover {
 .CodeMirror {
 	border: 1px solid #ccc;
 	height: auto;
+	min-height: 2.8em;
 }
 .CodeMirror-scroll {
 	height: auto;

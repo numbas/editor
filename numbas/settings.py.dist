@@ -114,7 +114,6 @@ INSTALLED_APPS = (
     'sanitizer',
     'django_assets',
     'accounts',
-    'accounts',
     'analytical',
     'editor',
     'registration',

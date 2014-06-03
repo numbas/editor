@@ -112,13 +112,15 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admin',
     'sanitizer',
+	'django_assets',
+	'accounts',
     'accounts',
+	'analytical',
     'editor',
     'registration',
     'django_tables2',
-    #'south', # for database migration
+    'south', # for database migration
     'taggit',
-    # 'django.contrib.admindocs',
 )
 
 # A sample logging configuration. The only tangible logging

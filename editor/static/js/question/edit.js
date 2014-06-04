@@ -1143,10 +1143,11 @@ $(document).ready(function() {
 		}
 	};
 
-	function Script(name,displayName) {
+	function Script(name,displayName,helpURL) {
 		this.name = name;
 		this.displayName = displayName;
 		this.script = ko.observable('');
+		this.helpURL = helpURL;
 
 		this.active = ko.computed(function() {
 			return this.script().trim().length>0;
@@ -1228,8 +1229,8 @@ $(document).ready(function() {
 		this.showCorrectAnswer = ko.observable(true);
 
 		this.scripts = [
-			new Script('mark','Mark student\'s answer'),
-			new Script('validate','Validate student\'s answer')
+			new Script('mark','Mark student\'s answer','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-mark-student-s-answer'),
+			new Script('validate','Validate student\'s answer','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-validate-student-s-answer')
 		];
 
         this.jme = {

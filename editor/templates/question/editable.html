@@ -133,7 +133,7 @@
 							<label>
 								<span class="control-label">
 									Name
-									<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/jme-reference.html#variable-names'}}"></span>
+									<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-name'}}"></span>
 								</span>
 								<div class="controls">
 									<input type="text" placeholder="Name" class="name" data-bind="value:name, valueUpdate: 'afterkeydown', autosize: name"/>
@@ -144,13 +144,13 @@
 						<div>
 							<div class="control-group" data-bind="template: {
 								name: 'selectproperty',
-								data: {label:'Data type',property: templateType, options: templateTypes, optionsText: 'name', helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-checking-accuracy'}
+								data: {label:'Data type',property: templateType, options: templateTypes, optionsText: 'name', helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-data-type'}
 							}"></div>
 						</div>
 						<div class="control-group">
 							<label class="control-label">
 								Value
-								<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#variables'}}"></span>
+								<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-value'}}"></span>
 							</label>
 
 							<div class="controls">
@@ -198,7 +198,10 @@
 						</div>
 						<div class="control-group">
 							<label>
-								<span class="control-label">Description</span>
+								<span class="control-label">
+									Description
+									<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-12'}}"></span>
+								</span>
 								<div class="controls" data-bind="writemaths: description"></div>
 							</label>
 						</div>
@@ -886,6 +889,7 @@
 									<div class="control-group">
 										<label class="control-label">
 											<span data-bind="text: displayName"></span><span data-bind="if: active"> (active)</span>
+											<span data-bind="template: {name: 'helplink', data: {topic: 'the advice section', url: helpURL}}"></span>
 										</label>
 										<div class="controls">
 											<textarea data-bind="valueUpdate: 'afterkeydown', codemirror: script, codemirrorMode: 'javascript'"></textarea>

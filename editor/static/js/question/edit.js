@@ -1217,6 +1217,9 @@ $(document).ready(function() {
 			switch(this.type().name) {
 			case 'information':
 			case 'gapfill':
+			case 'm_n_x':
+			case 'm_n_2':
+			case '1_n_2':
 				return 0;
 			default:
 				return this.marks();

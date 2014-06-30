@@ -13,6 +13,7 @@
 #   limitations under the License.
 from django.contrib import admin
 from django.db.models import Count
+from django.contrib.auth.admin import UserAdmin
 
 from editor.models import Exam, Question, Extension, QuestionHighlight, EditorTag, TaggedQuestion
 
@@ -21,6 +22,10 @@ admin.site.register(Question)
 admin.site.register(QuestionHighlight)
 admin.site.register(Extension)
 
+# allow users to be sorted by date joined
+UserAdmin.list_display += ('date_joined',)
+UserAdmin.list_filter += ('date_joined',)
+UserAdmin.fieldsets += ('date_joined',)
 
 class EditorTagAdmin(admin.ModelAdmin):
     list_display = ['name','show_used_count','official']

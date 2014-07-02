@@ -453,6 +453,9 @@ $(document).ready(function() {
 
         return ko.computed(function() {
             var data = obs();
+			if(data===undefined) {
+				return;
+			}
             if(firstSave) {
                 firstSave = false;
                 return;

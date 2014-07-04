@@ -25,7 +25,6 @@ admin.site.register(Extension)
 # allow users to be sorted by date joined
 UserAdmin.list_display += ('date_joined',)
 UserAdmin.list_filter += ('date_joined',)
-UserAdmin.fieldsets += ('date_joined',)
 
 class EditorTagAdmin(admin.ModelAdmin):
     list_display = ['name','show_used_count','official']

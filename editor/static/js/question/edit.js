@@ -1833,8 +1833,10 @@ $(document).ready(function() {
 	Numbas.loadScript('scripts/jme.js');
 	Numbas.loadScript('scripts/editor-extras.js');
 	for(var i=0;i<Editor.numbasExtensions.length;i++) {
-		var name = Editor.numbasExtensions[i].location;
-		Numbas.loadScript('scripts/extensions/'+name+'/'+name+'.js');
+		if(Editor.numbasExtensions[i].hasScript) {
+			var name = Editor.numbasExtensions[i].location;
+			Numbas.loadScript('scripts/extensions/'+name+'/'+name+'.js');
+		}
 	}
 	Numbas.startOK = true;
 	Numbas.init = function() {

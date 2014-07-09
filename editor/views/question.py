@@ -15,6 +15,8 @@ import json
 import traceback
 from copy import deepcopy
 
+from django.contrib import staticfiles
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db.models import Q
@@ -280,6 +282,9 @@ class UpdateView(generic.UpdateView):
     def get_context_data(self, **kwargs):
         context = super(UpdateView, self).get_context_data(**kwargs)
         context['extensions'] = [model_to_dict(e) for e in Extension.objects.all()]
+        for extension in context['extensions']:
+            if staticfiles.finders.find('js/numbas/extensions/%s/%s.js'):
+                extension.hasScript = True
         context['editable'] = self.editable
         context['can_delete'] = self.can_delete
         context['navtab'] = 'questions'

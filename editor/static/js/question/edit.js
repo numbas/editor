@@ -1232,6 +1232,7 @@ $(document).ready(function() {
 		this.showCorrectAnswer = ko.observable(true);
 
 		this.scripts = [
+			new Script('constructor','When the part is created','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-when-the-part-is-created'),
 			new Script('mark','Mark student\'s answer','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-mark-student-s-answer'),
 			new Script('validate','Validate student\'s answer','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-validate-student-s-answer')
 		];

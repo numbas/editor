@@ -283,8 +283,8 @@ class UpdateView(generic.UpdateView):
         context = super(UpdateView, self).get_context_data(**kwargs)
         context['extensions'] = [model_to_dict(e) for e in Extension.objects.all()]
         for extension in context['extensions']:
-            if staticfiles.finders.find('js/numbas/extensions/%s/%s.js'):
-                extension.hasScript = True
+            if staticfiles.finders.find('js/numbas/extensions/%s/%s.js' % (extension['location'],extension['location'])):
+                extension['hasScript'] = True
         context['editable'] = self.editable
         context['can_delete'] = self.can_delete
         context['navtab'] = 'questions'

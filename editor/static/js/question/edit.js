@@ -264,7 +264,9 @@ $(document).ready(function() {
 					.success(function() {
 						q.resources.remove(res);
 					})
-					.error(function() {
+					.error(function(e) {
+						console.log("Error deleting resource",e);
+						q.resources.remove(res);
 					})
 				;
 			}

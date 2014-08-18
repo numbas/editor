@@ -36,7 +36,7 @@ from django_tables2.config import RequestConfig
 
 from editor.forms import ExamForm, NewExamForm, ExamSearchForm,ExamSetAccessForm, ExamSearchForm, ExamHighlightForm
 from editor.tables import ExamTable, ExamHighlightTable
-from editor.models import Exam, Question, ExamAccess, ExamHighlight
+from editor.models import Exam, Question, ExamAccess, ExamHighlight, Theme
 import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
@@ -231,6 +231,13 @@ class UpdateView(generic.UpdateView):
             return HttpResponseForbidden()
 
         data = json.loads(request.POST['json'])
+        theme = data['theme']
+        if theme['custom']:
+            data['custom_theme'] = theme['path']
+            data['theme'] = ''
+        else:
+            data['custom_theme'] = None
+            data['theme'] = theme['path']
 
         self.questions = data['questions']
         del data['questions']
@@ -265,6 +272,7 @@ class UpdateView(generic.UpdateView):
         status = {
             "result": "error",
             "message": "Something went wrong...",
+            "errors": str(form.errors),
             "traceback": traceback.format_exc(),}
         return HttpResponseServerError(json.dumps(status),
                                        content_type='application/json')
@@ -279,7 +287,10 @@ class UpdateView(generic.UpdateView):
         else:
             exam_dict['recentQuestions'] = []
         context['exam_JSON'] = json.dumps(exam_dict)
-        context['themes'] = sorted([{'name': x[0], 'path': x[1]} for x in settings.GLOBAL_SETTINGS['NUMBAS_THEMES']],key=operator.itemgetter('name'))
+        custom_themes = Theme.objects.filter(public=True) | Theme.objects.filter(author=self.object.author)
+        if self.object.custom_theme:
+            custom_themes |= Theme.objects.filter(pk=self.object.custom_theme.pk)
+        context['themes'] = [{'name': x[0], 'path': x[1], 'custom': False} for x in settings.GLOBAL_SETTINGS['NUMBAS_THEMES']] + [{'name': theme.name, 'path': theme.pk, 'custom': True} for theme in custom_themes]
         context['locales'] = sorted([{'name': x[0], 'code': x[1]} for x in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']],key=operator.itemgetter('name'))
         context['editable'] = self.object.can_be_edited_by(self.request.user)
         context['can_delete'] = self.object.can_be_deleted_by(self.request.user)
@@ -293,8 +304,8 @@ class UpdateView(generic.UpdateView):
         editor_json = {
             'editable': self.object.can_be_edited_by(self.request.user),
             'examJSON': exam_dict,
-            'themes': sorted([{'name': x[0], 'path': x[1]} for x in settings.GLOBAL_SETTINGS['NUMBAS_THEMES']],key=operator.itemgetter('name')),
-            'locales': sorted([{'name': x[0], 'code': x[1]} for x in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']],key=operator.itemgetter('name')),
+            'themes': sorted(context['themes'],key=operator.itemgetter('name')),
+            'locales': context['locales'],
             'previewURL': reverse('exam_preview',args=(self.object.pk,self.object.slug)),
             'previewWindow': str(calendar.timegm(time.gmtime())),
         }

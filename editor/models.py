@@ -13,6 +13,8 @@
 #   limitations under the License.
 import uuid
 import os
+import shutil
+from zipfile import ZipFile
 import json
 from datetime import datetime
 import codecs
@@ -113,6 +115,31 @@ class Extension(models.Model):
         d = model_to_dict(self)
         return json.dumps(d)
 
+class Theme( models.Model ):
+    name = models.CharField(max_length=200)
+    public = models.BooleanField(default=False,help_text='Can this theme be seen by everyone?')
+    slug = models.SlugField(max_length=200,editable=False,unique=False)
+    author = models.ForeignKey(User,related_name='own_themes')
+    last_modified = models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
+    zipfile = models.FileField(upload_to=os.path.join('user-themes','zips'), max_length=255, verbose_name = 'Theme package',help_text='A .zip package containing the theme\'s files')
+
+    def __unicode__(self):
+        return self.name
+
+    @property
+    def extracted_path(self):
+        return os.path.join(settings.MEDIA_ROOT,'user-themes','extracted',str(self.pk))
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.name)
+        super(Theme,self).save(*args,**kwargs)
+
+        if os.path.exists(self.extracted_path):
+            shutil.rmtree(self.extracted_path)
+        os.makedirs(self.extracted_path)
+        z = ZipFile(self.zipfile.file,'r')
+        z.extractall(self.extracted_path)
+
 class Image( models.Model ):
     title = models.CharField( max_length=255 ) 
     image = models.ImageField( upload_to='question-resources/', max_length=255) 
@@ -167,7 +194,7 @@ class Question(models.Model,NumbasObject,ControlledObject):
     objects = QuestionManager()
     
     name = models.CharField(max_length=200,default='Untitled Question')
-    theme = 'question'
+    theme_path = 'question'
     slug = models.SlugField(max_length=200,editable=False,unique=False)
     author = models.ForeignKey(User,related_name='own_questions')
     filename = models.CharField(max_length=200, editable=False,default='')
@@ -296,7 +323,8 @@ class Exam(models.Model,NumbasObject,ControlledObject):
     questions = models.ManyToManyField(Question, through='ExamQuestion',
                                        blank=True, editable=False)
     name = models.CharField(max_length=200,default='Untitled Exam')
-    theme = models.CharField(max_length=200,default='default')
+    theme = models.CharField(max_length=200,default='default',blank=True)  # used if custom_theme is None
+    custom_theme = models.ForeignKey(Theme,null=True,blank=True,related_name='used_in_exams')
     locale = models.CharField(max_length=200,default='en-GB')
     slug = models.SlugField(max_length=200,editable=False,unique=False)
     author = models.ForeignKey(User,related_name='own_exams')
@@ -318,6 +346,14 @@ class Exam(models.Model,NumbasObject,ControlledObject):
     def __unicode__(self):
         return 'Exam "%s"' %self.name
     
+    @property
+    def theme_path(self):
+        if self.custom_theme:
+            return self.custom_theme.extracted_path
+        else:
+            return self.theme
+
+
     def get_questions(self):
         return self.questions.order_by('examquestion')
 

@@ -43,7 +43,7 @@ class CompileObject():
             Construct a temporary exam/question file and compile it.
             Returns the path to the output produced
         """
-        theme = obj.theme if hasattr(obj,'theme') else 'default'
+        theme_path = obj.theme_path if hasattr(obj,'theme') else 'default'
         locale = obj.locale if hasattr(obj,'locale') else 'en-GB'
 
 
@@ -54,7 +54,7 @@ class CompileObject():
             '--pipein',
             '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
             '-o'+output_location,
-            '-t'+theme,
+            '-t'+theme_path,
             '-l'+locale,
         ] + switches
 

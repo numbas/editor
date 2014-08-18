@@ -42,7 +42,12 @@
             {% endif %}
         {% endif %}
     </li>
+
+    {% if is_me %}
+    <li><a href="{% url 'theme_list' %}">Your themes</a>.</li>
+    {% endif %}
 </ul>
+
 
 {% endwith %}
 {% endblock content %}

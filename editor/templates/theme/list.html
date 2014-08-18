@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% load sstatic %}
+
+{% block content %}
+<h2>Your themes</h2>
+
+{% if object_list %}
+<table class="themes">
+    <thead>
+        <th>Name</th>
+        <th>Last modified</th>
+    </thead>
+    <tbody>
+    {% for theme in object_list %}
+    <tr>
+        <td>{{theme.name}}</td>
+        <td>{{theme.last_modified}}</td>
+        <td><a href="{{theme.zipfile.url}}" class="download">Download</a></td>
+        <td><a href="{% url 'theme_delete' theme.pk %}" class="delete" title="Delete">Delete</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<p><a href="{% url 'theme_new' %}">Upload a new theme</a></p>
+{% endblock content %}
+
+{% block stylesheets %}
+	{{ block.super }}
+    <link href="{% sstatic 'css/theme.css' %}" type="text/css" rel="stylesheet" />
+{% endblock stylesheets %}

@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<form action="" method="post">{% csrf_token %}
+    <p>Are you sure you want to delete the theme "{{object.name}}"?
+    {% with object.used_in_exams.all as used_in_exams %}It's used in {{used_in_exams|length}} exam{{used_in_exams|pluralize}}.
+    {% endwith %}</p>
+    <p><button type="submit" >Yes</button> <a href="{% url 'theme_list' %}">No</a></p>
+</form>
+{% endblock content %}

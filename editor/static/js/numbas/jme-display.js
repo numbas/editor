@@ -300,7 +300,7 @@ var texOps = jme.display.texOps = {
 				s+=' ';
 			}
 			//anything times e^(something) or (not number)^(something)
-			else if (thing.args[i].tok.type=='op' && thing.args[i].tok.name=='^' && (thing.args[i].args[0].value==Math.E || thing.args[i].args[0].tok.type!='number'))	
+			else if (jme.isOp(thing.args[i].tok,'^') && (thing.args[i].args[0].value==Math.E || thing.args[i].args[0].tok.type!='number'))	
 			{
 				s+=' ';
 			}
@@ -310,7 +310,7 @@ var texOps = jme.display.texOps = {
 				s+=' ';
 			}
 			//number times a power of i
-			else if (thing.args[i].tok.type=='op' && thing.args[i].tok.name=='^' && thing.args[i].args[0].tok.type=='number' && math.eq(thing.args[i].args[0].tok.value,math.complex(0,1)) && thing.args[i-1].tok.type=='number')	
+			else if (jme.isOp(thing.args[i].tok,'^') && thing.args[i].args[0].tok.type=='number' && math.eq(thing.args[i].args[0].tok.value,math.complex(0,1)) && thing.args[i-1].tok.type=='number')	
 			{
 				s+=' ';
 			}
@@ -320,10 +320,10 @@ var texOps = jme.display.texOps = {
 			}
 			else if ( thing.args[i].tok.type=='number'
 					||
-						thing.args[i].tok.type=='op' && thing.args[i].tok.name=='-u'
+						jme.isOp(thing.args[i].tok,'-u')
 					||
 					(
-						!(thing.args[i-1].tok.type=='op' && thing.args[i-1].tok.name=='-u') 
+						!jme.isOp(thing.args[i].tok,'-u') 
 						&& (thing.args[i].tok.type=='op' && jme.precedence[thing.args[i].tok.name]<=jme.precedence['*'] 
 							&& (thing.args[i].args[0].tok.type=='number' 
 							&& thing.args[i].args[0].tok.value!=Math.E)
@@ -349,7 +349,7 @@ var texOps = jme.display.texOps = {
 			return texArgs[0]+' - '+texb;
 		}
 		else{
-			if(b.tok.type=='op' && b.tok.name=='+')
+			if(jme.isOp(b.tok,'+') || jme.isOp(b.tok,'-'))
 				return texArgs[0]+' - \\left( '+texArgs[1]+' \\right)';
 			else
 				return texArgs[0]+' - '+texArgs[1];
@@ -1166,7 +1166,7 @@ var typeToJME = Numbas.jme.display.typeToJME = {
 		{
 			//number or brackets followed by name or brackets doesn't need a times symbol
 			//except <anything>*(-<something>) does
-			if( (args[0].tok.type=='number' || args[0].bracketed) && (args[1].tok.type == 'name' || args[1].bracketed && !(args[1].tok.type=='op' && args[1].tok.name=='-u')) )	
+			if( (args[0].tok.type=='number' || args[0].bracketed) && (args[1].tok.type == 'name' || args[1].bracketed && !jme.isOp(tree.args[1].tok,'-u')) )	
 			{
 				op = '';
 			}
@@ -1251,7 +1251,7 @@ var opBrackets = Numbas.jme.display.opBrackets = {
 	'+u':[{}],
 	'-u':[{'+':true,'-':true}],
 	'+': [{},{}],
-	'-': [{},{'+':true}],
+	'-': [{},{'+':true,'-':true}],
 	'*': [{'+u':true,'-u':true,'+':true, '-':true, '/':true},{'+u':true,'-u':true,'+':true, '-':true, '/':true}],
 	'/': [{'+u':true,'-u':true,'+':true, '-':true, '*':true},{'+u':true,'-u':true,'+':true, '-':true, '*':true}],
 	'^': [{'+u':true,'-u':true,'+':true, '-':true, '*':true, '/':true},{'+u':true,'-u':true,'+':true, '-':true, '*':true, '/':true}],
@@ -1337,31 +1337,170 @@ Rule.prototype = /** @lends Numbas.jme.display.Rule.prototype */ {
 	}
 }
 
-/** Recursively check whether `exprTree` matches `ruleTree`. Variables in `ruleTree` match any subtree.
+var endTermNames = {
+	'??':true,
+	'm_nothing':true,
+	'm_number': true
+}
+function isEndTerm(term) {
+	while(term.tok.type=='function' && /^m_(?:all|pm|not|commute)$/.test(term.tok.name) || jme.isOp(term.tok,';')) {
+		term = term.args[0];
+	}
+	return term.tok.type=='name' && endTermNames[term.tok.name];
+}
+
+function getCommutingTerms(tree,op,names) {
+	if(names===undefined) {
+		names = [];
+	}
+
+	if(op=='+' && jme.isOp(tree.tok,'-')) {
+		tree = {tok: new jme.types.TOp('+'), args: [tree.args[0],{tok: new jme.types.TOp('-u'), args: [tree.args[1]]}]};
+	}
+
+	if(!tree.args || tree.tok.name!=op) {
+		return {terms: [tree], termnames: names.slice()};
+	}
+
+	var terms = [];
+	var termnames = [];
+	var rest = [];
+	var restnames = [];
+	for(var i=0; i<tree.args.length;i++) {
+		var arg = tree.args[i];
+		var oarg = arg;
+		var argnames = names.slice();
+		while(jme.isOp(arg.tok,';')) {
+			argnames.push(arg.args[1].tok.name);
+			arg = arg.args[0];
+		}
+		if(jme.isOp(arg.tok,op) || (op=='+' && jme.isOp(arg.tok,'-'))) {
+			var sub = getCommutingTerms(arg,op,argnames);
+			terms = terms.concat(sub.terms);
+			termnames = termnames.concat(sub.termnames);
+		} else if(jme.isName(arg.tok,'?') || isEndTerm(arg)) {
+			rest.push(arg);
+			restnames.push(argnames);
+		} else {
+			terms.push(arg);
+			termnames.push(argnames);
+		}
+	}
+	if(rest.length) {
+		terms = terms.concat(rest);
+		termnames = termnames.concat(restnames);
+	}
+	return {terms: terms, termnames: termnames};
+}
+Numbas.jme.display.getCommutingTerms = getCommutingTerms;
+
+/** Recusrively check whether `exprTree` matches `ruleTree`. Variables in `ruleTree` match any subtree.
  * @memberof Numbas.jme.display
- * @private
  *
  * @param {Numbas.jme.tree} ruleTree
  * @param {Numbas.jme.tree} exprTree
+ * @param {boolean} doCommute - take commutativity of operations into account, e.g. terms of a sum can be in any order.
  * @returns {boolean|object} - `false` if no match, otherwise a dictionary of subtrees matched to variable names
  */
-function matchTree(ruleTree,exprTree)
+function matchTree(ruleTree,exprTree,doCommute)
 {
+	if(doCommute===undefined) {
+		doCommute = false;
+	}
 	if(!exprTree)
 		return false;
 
 	var ruleTok = ruleTree.tok;
 	var exprTok = exprTree.tok;
 
-	var d = {};
+	if(jme.isOp(ruleTok,';')) {
+		if(ruleTree.args[1].tok.type!='name') {
+			throw(new Numbas.Error('jme.matchTree.group name not a name'));
+		}
+		var name = ruleTree.args[1].tok.name;
+		var m = matchTree(ruleTree.args[0],exprTree,doCommute);
+		if(m) {
+			m[name] = exprTree;
+			return m;
+		} else {
+			return false;
+		}
+	}
 
 	if(ruleTok.type=='name')
 	{
-		d[ruleTok.name] = exprTree;
-		return d;
+		switch(ruleTok.name) {
+			case '?':
+			case '??':
+				return {};
+			case 'm_number':
+				return exprTok.type=='number' ? {} : false;
+		}
 	}
 
-	if(ruleTok.type != exprTok.type)
+	if(ruleTok.type=='function') {
+		switch(ruleTok.name) {
+			case 'm_any':
+				for(var i=0;i<ruleTree.args.length;i++) {
+					var m;
+					if(m=matchTree(ruleTree.args[i],exprTree,doCommute)) {
+						return m;
+					}
+				}
+				return false;
+
+			case 'm_all':
+				return matchTree(ruleTree.args[0],exprTree,doCommute);
+
+			case 'm_pm':
+				if(jme.isOp(exprTok,'-u')) {
+					return matchTree({tok: new jme.types.TOp('-u'),args: [ruleTree.args[0]]},exprTree,doCommute);
+				} else {
+					return matchTree(ruleTree.args[0],exprTree,doCommute);
+				}
+
+			case 'm_not':
+				if(!matchTree(ruleTree.args[0],exprTree,doCommute)) {
+					return {};
+				} else {
+					return false;
+				}
+
+			case 'm_and':
+				var d = {};
+				for(var i=0;i<ruleTree.args.length;i++) {
+					var m = matchTree(ruleTree.args[i],exprTree,doCommute);
+					if(m) {
+						for(var name in m) {
+							d[name] = m[name];
+						}
+					} else {
+						return false;
+					}
+				}
+				return d;
+
+			case 'm_uses':
+				var vars = jme.findvars(exprTree);
+				for(var i=0;i<ruleTree.args.length;i++) {
+					var name = ruleTree.args[i].tok.name;
+					if(!vars.contains(name)) {
+						return false;
+					}
+				}
+				return {};
+
+			case 'm_commute':
+				return matchTree(ruleTree.args[0],exprTree,true);
+
+
+		}
+	}
+	if(jme.isName(ruleTok,'m_nothing')) {
+		return false;
+	}
+
+	if(ruleTok.type!='op' && ruleTok.type != exprTok.type)
 	{
 		return false;
 	}
@@ -1369,40 +1508,129 @@ function matchTree(ruleTree,exprTree)
 	switch(ruleTok.type)
 	{
 	case 'number':
-		if( !math.eq(ruleTok.value,exprTok.value) )
+		if( !math.eq(ruleTok.value,exprTok.value) ) {
 			return false;
-		return d;
+		} else {
+			return {};
+		}
 
 	case 'string':
 	case 'boolean':
 	case 'special':
 	case 'range':
-		if(ruleTok.value != exprTok.value)
+		if(ruleTok.value != exprTok.value) {
 			return false;
-		return d;
+		} else {
+			return {};
+		}
 
 	case 'function':
 	case 'op':
-		if(ruleTok.name != exprTok.name)
-			return false;
-		
-		for(var i=0;i<ruleTree.args.length;i++)
-		{
-			var m = matchTree(ruleTree.args[i],exprTree.args[i]);
-			if(m==false)
-				return false;
-			else
-			{
-				for(var x in m)	//get matched variables
-				{
-					d[x]=m[x];
+		var d = {};
+
+		if(doCommute && jme.commutative[ruleTok.name]) {
+			var commutingOp = ruleTok.name;
+
+			var ruleTerms = getCommutingTerms(ruleTree,commutingOp);
+			var exprTerms = getCommutingTerms(exprTree,commutingOp);
+			var rest = [];
+
+			var namedTerms = {};
+			var matchedRules = [];
+			var termMatches = [];
+
+			for(var i=0; i<exprTerms.terms.length; i++) {
+				var m = null;
+				var matched = false;
+				for(var j=0; j<ruleTerms.terms.length; j++) {
+					var ruleTerm = ruleTerms.terms[j];
+					m = matchTree(ruleTerm,exprTerms.terms[i],doCommute);
+					if((!matchedRules[j] || ruleTerm.tok.name=='m_all') && m) {
+						matched = true;
+						matchedRules[j] = true;
+						for(var name in m) {
+							if(!namedTerms[name]) {
+								namedTerms[name] = [];
+							}
+							namedTerms[name].push(m[name]);
+						}
+						var names = ruleTerms.termnames[j];
+						if(names) {
+							for(var k=0;k<names.length;k++) {
+								var name = names[k];
+								if(!namedTerms[name]) {
+									namedTerms[name] = [];
+								}
+								namedTerms[name].push(exprTerms.terms[i]);
+							}
+						}
+						break;
+					}
+				}
+				if(!matched) {
+					return false;
 				}
 			}
+			for(var i=0;i<ruleTerms.terms.length;i++) {
+				var term = ruleTerms.terms[i];
+				if(!isEndTerm(term) && !matchedRules[i]) {
+					return false;
+				}
+			}
+			for(var name in namedTerms) {
+				var terms = namedTerms[name];
+				var sub = terms[0];
+				for(var i=1;i<terms.length;i++) {
+					var op = new jme.types.TOp(commutingOp);
+					sub = {tok: op, args: [sub,terms[i]]};
+				}
+				d[name] = sub;
+			}
+			return d;
+		} else {
+			if(ruleTok.type!=exprTok.type || ruleTok.name!=exprTok.name) {
+				return false;
+			}
+			for(var i=0;i<ruleTree.args.length;i++)
+			{
+				var m = matchTree(ruleTree.args[i],exprTree.args[i],doCommute);
+				if(m==false) {
+					return false;
+				} else {
+					for(var x in m) {
+						d[x]=m[x];
+					}
+				}
+			}
+			return d
 		}
-		return d
+	case 'name':
+		if(ruleTok.name.toLowerCase()==exprTok.name.toLowerCase()) {
+			return {};
+		} else {
+			return false;
+		}
 	default:
-		return d;
+		return {};
 	}
+}
+jme.display.matchTree = matchTree;
+
+/** Match expresison against a pattern. Wrapper for {@link Numbas.jme.display.matchTree}
+ *
+ * @memberof Numbas.jme.display
+ * @method
+ *
+ * @param {JME} pattern
+ * @param {JME} expr
+ * @param {boolean} doCommute
+ *
+ * @returns {boolean|object} - `false` if no match, otherwise a dictionary of subtrees matched to variable names
+ */
+var matchExpression = jme.display.matchExpression = function(pattern,expr,doCommute) {
+	pattern = jme.compile(pattern);
+	expr = jme.compile(expr);
+	return matchTree(pattern,expr,doCommute);
 }
 
 /** Built-in simplification rules
@@ -1411,126 +1639,125 @@ function matchTree(ruleTree,exprTree)
  */
 var simplificationRules = jme.display.simplificationRules = {
 	basic: [
-		['+x',[],'x'],					//get rid of unary plus
-		['x+(-y)',[],'x-y'],			//plus minus = minus
-		['x+y',['y<0'],'x-eval(-y)'],
-		['x-y',['y<0'],'x+eval(-y)'],
-		['x-(-y)',[],'x+y'],			//minus minus = plus
-		['-(-x)',[],'x'],				//unary minus minus = plus
-		['-x',['x isa "complex"','re(x)<0'],'eval(-x)'],
-		['x+y',['x isa "number"','y isa "complex"','re(y)=0'],'eval(x+y)'],
-		['-x+y',['x isa "number"','y isa "complex"','re(y)=0'],'-eval(x-y)'],
-		['(-x)/y',[],'-(x/y)'],			//take negation to left of fraction
-		['x/(-y)',[],'-(x/y)'],			
-		['(-x)*y',[],'-(x*y)'],			//take negation to left of multiplication
-		['x*(-y)',[],'-(x*y)'],		
-		['x+(y+z)',[],'(x+y)+z'],		//make sure sums calculated left-to-right
-		['x-(y+z)',[],'(x-y)-z'],
-		['x+(y-z)',[],'(x+y)-z'],
-		['x-(y-z)',[],'(x-y)+z'],
-		['(x*y)*z',[],'x*(y*z)'],		//make sure multiplications go right-to-left
-		['n*i',['n isa "number"'],'eval(n*i)'],			//always collect multiplication by i
-		['i*n',['n isa "number"'],'eval(n*i)']
+		['+(?;x)',[],'x'],					//get rid of unary plus
+		['?;x+(-?;y)',[],'x-y'],			//plus minus = minus
+		['?;x+?;y',['y<0'],'x-eval(-y)'],
+		['?;x-?;y',['y<0'],'x+eval(-y)'],
+		['?;x-(-?;y)',[],'x+y'],			//minus minus = plus
+		['-(-?;x)',[],'x'],				//unary minus minus = plus
+		['-?;x',['x isa "complex"','re(x)<0'],'eval(-x)'],
+		['?;x+?;y',['x isa "number"','y isa "complex"','re(y)=0'],'eval(x+y)'],
+		['-?;x+?;y',['x isa "number"','y isa "complex"','re(y)=0'],'-eval(x-y)'],
+		['(-?;x)/?;y',[],'-(x/y)'],			//take negation to left of fraction
+		['?;x/(-?;y)',[],'-(x/y)'],			
+		['(-?;x)*?;y',[],'-(x*y)'],			//take negation to left of multiplication
+		['?;x*(-?;y)',[],'-(x*y)'],		
+		['?;x+(?;y+?;z)',[],'(x+y)+z'],		//make sure sums calculated left-to-right
+		['?;x-(?;y+?;z)',[],'(x-y)-z'],
+		['?;x+(?;y-?;z)',[],'(x+y)-z'],
+		['?;x-(?;y-?;z)',[],'(x-y)+z'],
+		['(?;x*?;y)*?;z',[],'x*(y*z)'],		//make sure multiplications go right-to-left
+		['?;n*i',['n isa "number"'],'eval(n*i)'],			//always collect multiplication by i
+		['i*?;n',['n isa "number"'],'eval(n*i)']
 	],
 
 	unitFactor: [
-		['1*x',[],'x'],
-		['x*1',[],'x']
+		['1*?;x',[],'x'],
+		['?;x*1',[],'x']
 	],
 
 	unitPower: [
-		['x^1',[],'x']
+		['?;x^1',[],'x']
 	],
 
 	unitDenominator: [
-		['x/1',[],'x']
+		['?;x/1',[],'x']
 	],
 
 	zeroFactor: [
-		['x*0',[],'0'],
-		['0*x',[],'0'],
-		['0/x',[],'0']
+		['?;x*0',[],'0'],
+		['0*?;x',[],'0'],
+		['0/?;x',[],'0']
 	],
 
 	zeroTerm: [
-		['0+x',[],'x'],
-		['x+0',[],'x'],
-		['x-0',[],'x'],
-		['0-x',[],'-x']
+		['0+?;x',[],'x'],
+		['?;x+0',[],'x'],
+		['?;x-0',[],'x'],
+		['0-?;x',[],'-x']
 	],
 
 	zeroPower: [
-		['x^0',[],'1']
+		['?;x^0',[],'1']
 	],
 
 	noLeadingMinus: [
-		['-x+y',[],'y-x']											//don't start with a unary minus
+		['-?;x+?;y',[],'y-x']											//don't start with a unary minus
 	],
 
 	collectNumbers: [
-		['-x-y',['x isa "number"','y isa "number"'],'-(x+y)'],										//collect minuses
-		['n+m',['n isa "number"','m isa "number"'],'eval(n+m)'],	//add numbers
-		['n-m',['n isa "number"','m isa "number"'],'eval(n-m)'],	//subtract numbers
-		['n+x',['n isa "number"','!(x isa "number")'],'x+n'],		//add numbers last
+		['-?;x-?;y',['x isa "number"','y isa "number"'],'-(x+y)'],										//collect minuses
+		['?;n+?;m',['n isa "number"','m isa "number"'],'eval(n+m)'],	//add numbers
+		['?;n-?;m',['n isa "number"','m isa "number"'],'eval(n-m)'],	//subtract numbers
+		['?;n+?;x',['n isa "number"','!(x isa "number")'],'x+n'],		//add numbers last
 
-		['(x+n)+m',['n isa "number"','m isa "number"'],'x+eval(n+m)'],	//collect number sums
-		['(x-n)+m',['n isa "number"','m isa "number"'],'x+eval(m-n)'],	
-		['(x+n)-m',['n isa "number"','m isa "number"'],'x+eval(n-m)'],	
-		['(x-n)-m',['n isa "number"','m isa "number"'],'x-eval(n+m)'],	
-		['(x+n)+y',['n isa "number"'],'(x+y)+n'],						//shift numbers to right hand side
-		['(x+n)-y',['n isa "number"'],'(x-y)+n'],
-		['(x-n)+y',['n isa "number"'],'(x+y)-n'],
-		['(x-n)-y',['n isa "number"'],'(x-y)-n'],
+		['(?;x+?;n)+?;m',['n isa "number"','m isa "number"'],'x+eval(n+m)'],	//collect number sums
+		['(?;x-?;n)+?;m',['n isa "number"','m isa "number"'],'x+eval(m-n)'],	
+		['(?;x+?;n)-?;m',['n isa "number"','m isa "number"'],'x+eval(n-m)'],	
+		['(?;x-?;n)-?;m',['n isa "number"','m isa "number"'],'x-eval(n+m)'],	
+		['(?;x+?;n)+?;y',['n isa "number"'],'(x+y)+n'],						//shift numbers to right hand side
+		['(?;x+?;n)-?;y',['n isa "number"'],'(x-y)+n'],
+		['(?;x-?;n)+?;y',['n isa "number"'],'(x+y)-n'],
+		['(?;x-?;n)-?;y',['n isa "number"'],'(x-y)-n'],
 
-		['n*m',['n isa "number"','m isa "number"'],'eval(n*m)'],		//multiply numbers
-		['x*n',['n isa "number"','!(x isa "number")','n<>i'],'n*x'],			//shift numbers to left hand side
-		['m*(n*x)',['m isa "number"','n isa "number"'],'eval(n*m)*x']
+		['?;n*?;m',['n isa "number"','m isa "number"'],'eval(n*m)'],		//multiply numbers
+		['?;x*?;n',['n isa "number"','!(x isa "number")','n<>i'],'n*x'],			//shift numbers to left hand side
+		['?;m*(?;n*?;x)',['m isa "number"','n isa "number"'],'eval(n*m)*x']
 	],
 
 	simplifyFractions: [
-		['n/m',['n isa "number"','m isa "number"','gcd(n,m)>1'],'eval(n/gcd(n,m))/eval(m/gcd(n,m))'],			//cancel simple fraction
-		['(n*x)/m',['n isa "number"','m isa "number"','gcd(n,m)>1'],'(eval(n/gcd(n,m))*x)/eval(m/gcd(n,m))'],	//cancel algebraic fraction
-		['n/(m*x)',['n isa "number"','m isa "number"','gcd(n,m)>1'],'eval(n/gcd(n,m))/(eval(m/gcd(n,m))*x)'],	
-		['(n*x)/(m*y)',['n isa "number"','m isa "number"','gcd(n,m)>1'],'(eval(n/gcd(n,m))*x)/(eval(m/gcd(n,m))*y)']	
+		['?;n/?;m',['n isa "number"','m isa "number"','gcd(n,m)>1'],'eval(n/gcd(n,m))/eval(m/gcd(n,m))'],			//cancel simple fraction
+		['(?;n*?;x)/m',['n isa "number"','m isa "number"','gcd(n,m)>1'],'(eval(n/gcd(n,m))*x)/eval(m/gcd(n,m))'],	//cancel algebraic fraction
+		['?;n/(?;m*?;x)',['n isa "number"','m isa "number"','gcd(n,m)>1'],'eval(n/gcd(n,m))/(eval(m/gcd(n,m))*x)'],	
+		['(?;n*?;x)/(?;m*?;y)',['n isa "number"','m isa "number"','gcd(n,m)>1'],'(eval(n/gcd(n,m))*x)/(eval(m/gcd(n,m))*y)']	
 	],
 
 	zeroBase: [
-		['0^x',[],'0']
+		['0^?;x',[],'0']
 	],
 
 	constantsFirst: [
-		['x*n',['n isa "number"','!(x isa "number")','n<>i'],'n*x'],
-		['x*(n*y)',['n isa "number"','n<>i','!(x isa "number")'],'n*(x*y)']
+		['?;x*?;n',['n isa "number"','!(x isa "number")','n<>i'],'n*x'],
+		['?;x*(?;n*?;y)',['n isa "number"','n<>i','!(x isa "number")'],'n*(x*y)']
 	],
 
 	sqrtProduct: [
-		['sqrt(x)*sqrt(y)',[],'sqrt(x*y)']
+		['sqrt(?;x)*sqrt(?;y)',[],'sqrt(x*y)']
 	],
 
 	sqrtDivision: [
-		['sqrt(x)/sqrt(y)',[],'sqrt(x/y)']
+		['sqrt(?;x)/sqrt(?;y)',[],'sqrt(x/y)']
 	],
 
 	sqrtSquare: [
-		['sqrt(x^2)',[],'x'],
-		['sqrt(x)^2',[],'x'],
-		['sqrt(n)',['n isa "number"','isint(sqrt(n))'],'eval(sqrt(n))']
+		['sqrt(?;x^2)',[],'x'],
+		['sqrt(?;x)^2',[],'x'],
+		['sqrt(?;n)',['n isa "number"','isint(sqrt(n))'],'eval(sqrt(n))']
 	],
 
 	trig: [
-		['sin(n)',['n isa "number"','isint(2*n/pi)'],'eval(sin(n))'],
-		['cos(n)',['n isa "number"','isint(2*n/pi)'],'eval(cos(n))'],
-		['tan(n)',['n isa "number"','isint(n/pi)'],'0'],
+		['sin(?;n)',['n isa "number"','isint(2*n/pi)'],'eval(sin(n))'],
+		['cos(?;n)',['n isa "number"','isint(2*n/pi)'],'eval(cos(n))'],
+		['tan(?;n)',['n isa "number"','isint(n/pi)'],'0'],
 		['cosh(0)',[],'1'],
 		['sinh(0)',[],'0'],
 		['tanh(0)',[],'0']
 	],
 
 	otherNumbers: [
-		['n^m',['n isa "number"','m isa "number"'],'eval(n^m)']
+		['?;n^?;m',['n isa "number"','m isa "number"'],'eval(n^m)']
 	]
 };
-
 /** Compile an array of rules (in the form `[pattern,conditions[],result]` to {@link Numbas.jme.display.Rule} objects
  * @param {Array} rules
  * @returns {Numbas.jme.Ruleset}

@@ -48,8 +48,8 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 	re: {
 		re_bool: /^true|^false/i,
 		re_number: /^[0-9]+(?:\x2E[0-9]+)?/,
-		re_name: /^{?((?:(?:[a-zA-Z]+):)*)((?:\$?[a-zA-Z_][a-zA-Z0-9_]*'*)|\?)}?/i,
-		re_op: /^(\.\.|#|<=|>=|<>|&&|\|\||[\|*+\-\/\^<>=!&]|(?:(not|and|or|xor|isa|except)([^a-zA-Z0-9]|$)))/i,
+		re_name: /^{?((?:(?:[a-zA-Z]+):)*)((?:\$?[a-zA-Z_][a-zA-Z0-9_]*'*)|\?\??)}?/i,
+		re_op: /^(\.\.|#|<=|>=|<>|&&|\|\||[\|*+\-\/\^<>=!&;]|(?:(not|and|or|xor|isa|except)([^a-zA-Z0-9]|$)))/i,
 		re_punctuation: /^([\(\),\[\]])/,
 		re_string: /^(['"])((?:[^\1\\]|\\.)*?)\1/,
 		re_comment: /^\/\/.*(?:\n|$)/
@@ -778,6 +778,36 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 			}
 			return v;
 		}
+	},
+
+	/** Is a token a TOp?
+	 *
+	 * @param {Numbas.jme.token} 
+	 * 
+	 * @returns {boolean}
+	 */
+	isOp: function(tok,op) {
+		return tok.type=='op' && tok.name==op;
+	},
+
+	/** Is a token a TName?
+	 *
+	 * @param {Numbas.jme.token} 
+	 * 
+	 * @returns {boolean}
+	 */
+	isName: function(tok,name) {
+		return tok.type=='name' && tok.name==name;
+	},
+
+	/** Is a token a TFunction?
+	 *
+	 * @param {Numbas.jme.token} 
+	 * 
+	 * @returns {boolean}
+	 */
+	isFunction: function(tok,name) {
+		return tok.type=='function' && tok.name==name;
 	}
 };
 
@@ -1301,10 +1331,11 @@ var postfixForm = {
  * @readonly
  */
 var precedence = jme.precedence = {
+	';': 0,
 	'fact': 1,
 	'not': 1,
-	'+u': 2.5,
-	'-u': 2.5,
+	'+u': 1.5,
+	'-u': 1.5,
 	'^': 2,
 	'*': 3,
 	'/': 3,
@@ -1349,12 +1380,17 @@ var synonyms = {
  */
 var lazyOps = ['if','switch','repeat','map','isa','satisfy'];
 
+var rightAssociative = {
+	'^': true,
+	'+u': true,
+	'-u': true
+}
 
 function leftAssociative(op)
 {
 	// check for left-associativity because that is the case when you do something more
 	// exponentiation is only right-associative operation at the moment
-	return (op!='^');
+	return !(op in rightAssociative);
 };
 
 /** Operations which commute.
@@ -1366,7 +1402,8 @@ var commutative = jme.commutative =
 {
 	'*': true,
 	'+': true,
-	'and': true
+	'and': true,
+	'=': true
 };
 
 

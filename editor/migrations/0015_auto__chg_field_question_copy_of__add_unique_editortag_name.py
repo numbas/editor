@@ -11,15 +11,9 @@ class Migration(SchemaMigration):
 
         # Changing field 'Question.copy_of'
         db.alter_column(u'editor_question', 'copy_of_id', self.gf('django.db.models.fields.related.ForeignKey')(null=True, on_delete=models.SET_NULL, to=orm['editor.Question']))
-        # Adding unique constraint on 'EditorTag', fields ['name']
-        db.create_unique(u'editor_editortag', ['name'])
 
 
     def backwards(self, orm):
-        # Removing unique constraint on 'EditorTag', fields ['name']
-        db.delete_unique(u'editor_editortag', ['name'])
-
-
         # Changing field 'Question.copy_of'
         db.alter_column(u'editor_question', 'copy_of_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['editor.Question'], null=True))
 

@@ -15,12 +15,13 @@ from django.contrib import admin
 from django.db.models import Count
 from django.contrib.auth.admin import UserAdmin
 
-from editor.models import Exam, Question, Extension, QuestionHighlight, EditorTag, TaggedQuestion
+from editor.models import Exam, Question, Extension, QuestionHighlight, EditorTag, TaggedQuestion, Theme
 
 admin.site.register(Exam)
 admin.site.register(Question)
 admin.site.register(QuestionHighlight)
 admin.site.register(Extension)
+admin.site.register(Theme)
 
 # allow users to be sorted by date joined
 UserAdmin.list_display += ('date_joined',)

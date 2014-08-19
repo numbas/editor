@@ -184,8 +184,24 @@ $(document).ready(function() {
 
             this.load(Editor.parseExam(data.content));
 
-            if('theme' in data)
-                this.theme(data.theme);
+            if('custom_theme' in data && data.custom_theme) {
+                var path = data.custom_theme;
+                for(var i=0;i<Editor.themes.length;i++) {
+                    if(Editor.themes[i].path==path && Editor.themes[i].custom) {
+                        this.theme(Editor.themes[i]);
+                        break;
+                    }
+                }
+            } else if('theme' in data) {
+                var path = data.theme;
+                for(var i=0;i<Editor.themes.length;i++) {
+                    if(Editor.themes[i].path==path && !Editor.themes[i].custom) {
+                        this.theme(Editor.themes[i]);
+                        break;
+                    }
+                }
+            }
+
             if('locale' in data)
                 this.locale(data.locale);
 

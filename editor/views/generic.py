@@ -19,7 +19,7 @@ import traceback
 from django.shortcuts import render,redirect
 from django.conf import settings
 from django.core.servers.basehttp import FileWrapper
-from django.http import HttpResponse, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseServerError, HttpResponseForbidden
 from django.views.generic import DetailView
 from django.template.loader import get_template
 from django.template import RequestContext
@@ -43,7 +43,7 @@ class CompileObject():
             Construct a temporary exam/question file and compile it.
             Returns the path to the output produced
         """
-        theme = obj.theme if hasattr(obj,'theme') else 'default'
+        theme_path = obj.theme_path if hasattr(obj,'theme') else 'default'
         locale = obj.locale if hasattr(obj,'locale') else 'en-GB'
 
 
@@ -54,7 +54,7 @@ class CompileObject():
             '--pipein',
             '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
             '-o'+output_location,
-            '-t'+theme,
+            '-t'+theme_path,
             '-l'+locale,
         ] + switches
 
@@ -122,3 +122,12 @@ class SourceView(DetailView):
         response['Content-Disposition'] = 'attachment; filename=%s.exam' % obj.slug
         response['Cache-Control'] = 'max-age=0,no-cache,no-store'
         return response
+
+# from http://stackoverflow.com/questions/18172102/object-ownership-validation-in-django-updateview
+class AuthorRequiredMixin(object):
+    def dispatch(self, request, *args, **kwargs):
+        result = super(AuthorRequiredMixin, self).dispatch(request, *args, **kwargs)
+        if self.object.author != self.request.user:
+            template = get_template("403.html")
+            return HttpResponseForbidden(template.render(RequestContext(self.request)))
+        return result

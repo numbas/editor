@@ -1,0 +1,25 @@
+.themes .download:after {
+    display: inline-block;
+	background-image: url(../images/download_12x16.png);
+	width: 12px;
+	height: 16px;
+    content: ' ';
+    margin-left: 0.3em;
+}
+.themes .delete {
+    color: red;
+}
+.themes .delete:after {
+    display: inline-block;
+	background-image: url(../images/x_alt_16x16.png);
+	width: 16px;
+	height: 16px;
+    content: ' ';
+    margin-left: 0.3em;
+}
+.themes td {
+    padding: 0.3em 1em;
+}
+.themes {
+    margin: 1em 0;
+}

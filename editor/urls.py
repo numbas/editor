@@ -17,7 +17,7 @@ from django.views.generic import RedirectView, TemplateView
 
 from django.contrib.auth.decorators import login_required
 
-from editor.views import exam, question, HomeView
+from editor.views import exam, question, HomeView, theme
 from editor.views.user import UserSearchView
 from editor.views.resource import upload_resource, ImageDeleteView, media_view
 
@@ -115,4 +115,9 @@ urlpatterns = patterns('',
         question.SourceView.as_view(), name='question_source'),
 
     url(r'^users/search/$',UserSearchView.as_view(),name='user_search'),
+
+    url(r'^theme/new/$', login_required(theme.CreateView.as_view()), name='theme_new'),
+    url(r'^themes/$', login_required(theme.ListView.as_view()), name='theme_list'),
+    url(r'^themes/(?P<pk>\d+)/edit$', login_required(theme.UpdateView.as_view()), name='theme_edit'),
+    url(r'^themes/(?P<pk>\d+)/delete$', login_required(theme.DeleteView.as_view()), name='theme_delete'),
 )

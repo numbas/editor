@@ -16,7 +16,7 @@ from django.forms.models import inlineformset_factory
 from django.forms.widgets import SelectMultiple
 from django.core.exceptions import ValidationError
 
-from editor.models import Exam, Question, ExamQuestion, QuestionAccess, ExamAccess, QuestionHighlight, ExamHighlight
+from editor.models import Exam, Question, ExamQuestion, QuestionAccess, ExamAccess, QuestionHighlight, ExamHighlight, Theme
 from django.contrib.auth.models import User
 
 class FixedSelectMultiple(SelectMultiple):
@@ -171,6 +171,8 @@ class ExamQuestionForm(forms.ModelForm):
     class Meta:
         model = ExamQuestion
 
+ExamQuestionFormSet = inlineformset_factory(Exam, ExamQuestion, form=ExamQuestionForm)
+
 class ExamHighlightForm(forms.ModelForm):
     note = forms.CharField(widget=forms.Textarea(attrs={'data-bind':'text:note'}), label='Write a note explaining why you\'re highlighting this exam.')
 
@@ -187,4 +189,31 @@ class ExamSearchForm(forms.Form):
     author = forms.CharField(initial='', required=False)
         
         
-ExamQuestionFormSet = inlineformset_factory(Exam, ExamQuestion, form=ExamQuestionForm)
+class NewThemeForm(forms.ModelForm):
+    
+    """Form for a new theme."""
+    
+    class Meta:
+        model = Theme
+        fields = ['name','zipfile']
+
+    def __init__(self,*args,**kwargs):
+        self._user= kwargs.pop('author')
+        super(NewThemeForm,self).__init__(*args,**kwargs)
+
+    def save(self, commit=True):
+        theme = super(NewThemeForm,self).save(commit=False)
+        theme.public = False
+        theme.author = self._user
+        if commit:
+            theme.save()
+            self.save_m2m()
+        return theme
+
+class UpdateThemeForm(forms.ModelForm):
+    
+    """Form to edit a theme."""
+    
+    class Meta:
+        model = Theme
+        fields = ['name','zipfile']

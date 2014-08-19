@@ -171,6 +171,8 @@ class ExamQuestionForm(forms.ModelForm):
     class Meta:
         model = ExamQuestion
 
+ExamQuestionFormSet = inlineformset_factory(Exam, ExamQuestion, form=ExamQuestionForm)
+
 class ExamHighlightForm(forms.ModelForm):
     note = forms.CharField(widget=forms.Textarea(attrs={'data-bind':'text:note'}), label='Write a note explaining why you\'re highlighting this exam.')
 
@@ -208,4 +210,10 @@ class NewThemeForm(forms.ModelForm):
             self.save_m2m()
         return theme
 
-ExamQuestionFormSet = inlineformset_factory(Exam, ExamQuestion, form=ExamQuestionForm)
+class UpdateThemeForm(forms.ModelForm):
+    
+    """Form to edit a theme."""
+    
+    class Meta:
+        model = Theme
+        fields = ['name','zipfile']

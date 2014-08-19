@@ -324,7 +324,7 @@ class Exam(models.Model,NumbasObject,ControlledObject):
                                        blank=True, editable=False)
     name = models.CharField(max_length=200,default='Untitled Exam')
     theme = models.CharField(max_length=200,default='default',blank=True)  # used if custom_theme is None
-    custom_theme = models.ForeignKey(Theme,null=True,blank=True,related_name='used_in_exams')
+    custom_theme = models.ForeignKey(Theme,null=True,blank=True,on_delete=models.SET_NULL,related_name='used_in_exams')
     locale = models.CharField(max_length=200,default='en-GB')
     slug = models.SlugField(max_length=200,editable=False,unique=False)
     author = models.ForeignKey(User,related_name='own_exams')

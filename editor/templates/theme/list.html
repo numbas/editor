@@ -14,7 +14,8 @@
     {% for theme in object_list %}
     <tr>
         <td>{{theme.name}}</td>
-        <td>{{theme.last_modified}}</td>
+		<td>{{theme.last_modified}}</td>
+		<td><a href="{% url 'theme_edit' theme.pk %}">Edit</a></td>
         <td><a href="{{theme.zipfile.url}}" class="download">Download</a></td>
         <td><a href="{% url 'theme_delete' theme.pk %}" class="delete" title="Delete">Delete</a></td>
     </tr>

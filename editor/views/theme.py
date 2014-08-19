@@ -16,7 +16,8 @@ from django.views import generic
 from django.core.urlresolvers import reverse
 
 from editor.models import Theme
-from editor.forms import NewThemeForm
+from editor.forms import NewThemeForm, UpdateThemeForm
+from editor.views.generic import AuthorRequiredMixin
 
 class CreateView(generic.CreateView):
     """ Create a theme """
@@ -33,6 +34,16 @@ class CreateView(generic.CreateView):
     def get_success_url(self):
         return reverse('theme_list')
 
+class UpdateView(AuthorRequiredMixin,generic.UpdateView):
+	""" Edit a theme """
+
+	model = Theme
+	form_class = UpdateThemeForm
+	template_name = 'theme/edit.html'
+
+	def get_success_url(self):
+		return reverse('theme_list')
+
 class ListView(generic.ListView):
     """ List all the current user's themes """
     
@@ -42,7 +53,7 @@ class ListView(generic.ListView):
     def get_queryset(self):
         return Theme.objects.filter(author=self.request.user)
 
-class DeleteView(generic.DeleteView):
+class DeleteView(AuthorRequiredMixin,generic.DeleteView):
     model = Theme
     template_name = 'theme/delete.html'
 

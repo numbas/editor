@@ -118,5 +118,6 @@ urlpatterns = patterns('',
 
     url(r'^theme/new/$', login_required(theme.CreateView.as_view()), name='theme_new'),
     url(r'^themes/$', login_required(theme.ListView.as_view()), name='theme_list'),
+    url(r'^themes/(?P<pk>\d+)/edit$', login_required(theme.UpdateView.as_view()), name='theme_edit'),
     url(r'^themes/(?P<pk>\d+)/delete$', login_required(theme.DeleteView.as_view()), name='theme_delete'),
 )

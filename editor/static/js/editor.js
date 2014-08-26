@@ -297,6 +297,18 @@ $(document).ready(function() {
 		return JSON.parse(content);
 	}
 
+	// save the value of a computed observable in history.state
+	Editor.computedReplaceState = function(key,observable) {
+		if(window.history === undefined) {
+			return;
+		}
+		ko.computed(function() {
+			var state = history.state || {};
+			state[key] = observable();
+			history.replaceState(state,window.title);
+		});
+	}
+
 	Editor.Tab = function(id,title,visible) {
 		this.id = id;
 		this.title = title;

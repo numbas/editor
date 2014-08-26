@@ -303,6 +303,20 @@ $(document).ready(function() {
                 e.access_rights.push(new UserAccess(e,data));
             };
 		}
+		if(window.history !== undefined) {
+			var state = window.history.state || {};
+			if('currentTab' in state) {
+				var tabs = this.mainTabs();
+				for(var i=0;i<tabs.length;i++) {
+					var tab = tabs[i];
+					if(tab.id==state.currentTab) {
+						this.currentTab(tab);
+						break;
+					}
+				}
+			}
+			Editor.computedReplaceState('currentTab',ko.computed(function(){return this.currentTab().id},this));
+		}
     }
     Exam.prototype = {
 		deleteExam: function(q,e) {

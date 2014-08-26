@@ -301,7 +301,7 @@ $(document).ready(function() {
                         .success(function(data){
                             var address = location.protocol+'//'+location.host+data.url;
                             if(history.replaceState)
-                                history.replaceState({},q.realName(),address);
+                                history.replaceState(history.state,q.realName(),address);
                         })
                         .error(function(response,type,message) {
                             if(message=='')
@@ -366,6 +366,47 @@ $(document).ready(function() {
                 q.access_rights.push(new UserAccess(q,data));
             };
         }
+
+		if(window.history !== undefined) {
+			var state = window.history.state || {};
+			if('currentTab' in state) {
+				var tabs = this.mainTabs();
+				for(var i=0;i<tabs.length;i++) {
+					var tab = tabs[i];
+					if(tab.id==state.currentTab) {
+						this.currentTab(tab);
+						break;
+					}
+				}
+			}
+			Editor.computedReplaceState('currentTab',ko.computed(function(){return this.currentTab().id},this));
+			if('currentVariable' in state) {
+				var variables = this.variables();
+				for(var i=0;i<variables.length;i++) {
+					var variable = variables[i];
+					if(variable.name()==state.currentVariable) {
+						this.currentVariable(variable);
+						break;
+					}
+				}
+			}
+			Editor.computedReplaceState('currentVariable',ko.computed(function(){return this.currentVariable().name()},this));
+			if('currentPart' in state) {
+				this.currentPart(this.parts()[state.currentPart]);
+			}
+			Editor.computedReplaceState('currentPart',ko.computed(function(){return this.parts().indexOf(this.currentPart())},this));
+			if('currentPartTab' in state) {
+				var tabs = this.currentPart().tabs();
+				for(var i=0;i<tabs.length;i++) {
+					var tab = tabs[i];
+					if(tab.id==state.currentPartTab) {
+						this.currentPart().currentTab(tab);
+						break;
+					}
+				}
+			}
+			Editor.computedReplaceState('currentPartTab',ko.computed(function(){return this.currentPart().currentTab().id},this));
+		}
     }
     Question.prototype = {
 		deleteQuestion: function(q,e) {

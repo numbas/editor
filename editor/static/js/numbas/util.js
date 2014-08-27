@@ -16,7 +16,7 @@ Copyright 2011-14 Newcastle University
 
 /** @file Convenience functions, extensions to javascript built-ins, etc. Provides {@link Numbas.util}. Includes es5-shim.js */
 
-Numbas.queueScript('scripts/util.js',['math'],function() {
+Numbas.queueScript('util',['base','math'],function() {
 
 /** @namespace Numbas.util */
 

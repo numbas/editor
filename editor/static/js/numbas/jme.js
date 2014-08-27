@@ -19,7 +19,7 @@ Copyright 2011-14 Newcastle University
  * Provides {@link Numbas.jme}
  */
 
-Numbas.queueScript('scripts/jme.js',['math','util'],function() {
+Numbas.queueScript('jme',['base','math','util'],function() {
 
 var util = Numbas.util;
 var math = Numbas.math;

@@ -1872,14 +1872,14 @@ $(document).ready(function() {
         }
     };
 
-	Numbas.loadScript('scripts/jme-display.js');
-	Numbas.loadScript('scripts/jme-variables.js');
-	Numbas.loadScript('scripts/jme.js');
-	Numbas.loadScript('scripts/editor-extras.js');
+	Numbas.loadScript('jme-display');
+	Numbas.loadScript('jme-variables');
+	Numbas.loadScript('jme');
+	Numbas.loadScript('editor-extras');
 	for(var i=0;i<Editor.numbasExtensions.length;i++) {
 		if(Editor.numbasExtensions[i].hasScript) {
 			var name = Editor.numbasExtensions[i].location;
-			Numbas.loadScript('scripts/extensions/'+name+'/'+name+'.js');
+			Numbas.loadScript('extensions/'+name+'/'+name+'.js');
 		}
 	}
 	Numbas.startOK = true;

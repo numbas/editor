@@ -57,10 +57,12 @@ var loadScript = Numbas.loadScript = function(file,noreq)
 //load a javascript file. Unless noreq is set, the file's code must be wrapped in a call to Numbas.queueScript with its filename as the first parameter
 {
 	var m;
-	if(m=file.match(/^scripts\/(.+)/))
-		file='/static/js/numbas/'+m[1];
-	if(m=file.match(/^extensions\/(.+)/))
+	if(m=file.match(/^extensions\/(.+)/)) {
 		file='/static/js/numbas/extensions/'+m[1];
+	} else if(!file.match(/\//)) {
+		file = '/static/js/numbas/'+file+'.js';
+	} else {
+	}
 	if(!noreq)
 	{
 		if(scriptreqs[file]!==undefined)
@@ -91,25 +93,30 @@ Numbas.queueScript = function(file, deps, callback)
 //callback is a function wrapping up this file's code
 {
 	var m;
-	if(m=file.match(/^scripts\/(.+)/))
-		file='/static/js/numbas/'+m[1];
-	if(m=file.match(/^extensions\/(.+)/))
+	if(m=file.match(/^extensions\/(.+)/)) {
 		file='/static/js/numbas/extensions/'+m[1];
+	}
+	else if(!file.match(/\//)) {
+		file='/static/js/numbas/'+file+'.js';
+	}
 
 	var req = scriptreqs[file];
 
 	if(typeof(deps)=='string')
 		deps = [deps];
+	req.fdeps = [];
 	for(var i=0;i<deps.length;i++)
 	{
 		var dep = deps[i];
-		if(!dep.match('/'))				//so can refer to built-in scripts just by name
-			dep = '/static/js/numbas/'+deps[i]+'.js';
-		deps[i] = dep;
-		loadScript(dep);
-		scriptreqs[dep].backdeps.push(file);
+		if(dep!='base') {
+			if(!dep.match('/'))				//so can refer to built-in scripts just by name
+				dep = '/static/js/numbas/'+deps[i]+'.js';
+			deps[i] = dep;
+			loadScript(dep);
+			req.fdeps.push(dep);
+			scriptreqs[dep].backdeps.push(file);
+		}
 	}
-	req.fdeps = deps;
 	req.callback = callback;
 	
 	req.loaded = true;

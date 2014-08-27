@@ -21,7 +21,7 @@ Copyright 2011-14 Newcastle University
  * Provides {@link Numbas.jme.variables}
  */
 
-Numbas.queueScript('scripts/jme-variables.js',['jme','util'],function() {
+Numbas.queueScript('jme-variables',['base','jme','util'],function() {
 
 var jme = Numbas.jme;
 var util = Numbas.util;

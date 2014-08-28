@@ -395,7 +395,7 @@ $(document).ready(function() {
 				this.currentPart(this.parts()[state.currentPart]);
 			}
 			Editor.computedReplaceState('currentPart',ko.computed(function(){return this.parts().indexOf(this.currentPart())},this));
-			if('currentPartTab' in state) {
+			if(this.currentPart() && 'currentPartTab' in state) {
 				var tabs = this.currentPart().tabs();
 				for(var i=0;i<tabs.length;i++) {
 					var tab = tabs[i];

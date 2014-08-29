@@ -482,9 +482,9 @@ $(document).ready(function() {
 		}
 	}
 
-	Numbas.loadScript('scripts/jme-display.js');
-	Numbas.loadScript('scripts/jme.js');
-	Numbas.loadScript('scripts/editor-extras.js');
+	Numbas.loadScript('jme-display');
+	Numbas.loadScript('jme');
+	Numbas.loadScript('editor-extras');
 	Numbas.startOK = true;
 	Numbas.init = function() {
 		try {

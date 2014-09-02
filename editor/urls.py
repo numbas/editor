@@ -17,7 +17,7 @@ from django.views.generic import RedirectView, TemplateView
 
 from django.contrib.auth.decorators import login_required
 
-from editor.views import exam, question, HomeView, theme
+from editor.views import exam, question, HomeView, theme, extension
 from editor.views.user import UserSearchView
 from editor.views.resource import upload_resource, ImageDeleteView, media_view
 
@@ -120,4 +120,9 @@ urlpatterns = patterns('',
     url(r'^themes/$', login_required(theme.ListView.as_view()), name='theme_list'),
     url(r'^themes/(?P<pk>\d+)/edit$', login_required(theme.UpdateView.as_view()), name='theme_edit'),
     url(r'^themes/(?P<pk>\d+)/delete$', login_required(theme.DeleteView.as_view()), name='theme_delete'),
+
+    url(r'^extension/new/$', login_required(extension.CreateView.as_view()), name='extension_new'),
+    url(r'^extensions/$', login_required(extension.ListView.as_view()), name='extension_list'),
+    url(r'^extensions/(?P<pk>\d+)/edit$', login_required(extension.UpdateView.as_view()), name='extension_edit'),
+    url(r'^extensions/(?P<pk>\d+)/delete$', login_required(extension.DeleteView.as_view()), name='extension_delete'),
 )

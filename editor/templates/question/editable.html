@@ -41,10 +41,11 @@
 						<li class="extension">
 							<label>
 								<input type="checkbox" data-bind="checked: used">
-								<span data-bind="text:name"></span> <a data-bind="attr: {href:url}" target="_blank">(documentation)</a>
+								<span data-bind="text:name"></span> <a data-bind="if: url, attr: {href:url}" target="_blank">(documentation)</a>
 							</label>
 						</li>
-					</ul>
+                    </ul>
+                    <div class="upload-extension"><a href="{% url 'extension_list' %}">Upload a new extension</a></div>
 					<div class="tags">
 						<h4>Tags <span data-bind="template: {name: 'helplink', data: {topic: 'tags', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-tags'}}"></span></h4>
 						<form data-bind="submit: function(form) {var input = $(form).find('input');$data.tags.push(input.val());input.val('').focus();}">

@@ -24,6 +24,8 @@ from django.views.generic import DetailView
 from django.template.loader import get_template
 from django.template import RequestContext
 
+from editor.models import Extension
+
 class CompileError(Exception):
     def __init__(self, message, stdout='',stderr='',code=0):
         self.message = message
@@ -38,11 +40,16 @@ class CompileObject():
     
     """Compile an exam or question."""
 
-    def compile(self,source,switches,location,obj):
+    def compile(self,numbasobject,switches,location,obj):
         """
             Construct a temporary exam/question file and compile it.
             Returns the path to the output produced
         """
+
+        numbasobject.data['extensions'] = [e.extracted_path for e in Extension.objects.filter(location__in=numbasobject.data.get('extensions',[]))]
+        print(numbasobject.data['extensions'])
+        source = str(numbasobject)
+
         theme_path = obj.theme_path if hasattr(obj,'theme_path') else 'default'
         locale = obj.locale if hasattr(obj,'locale') else 'en-GB'
 
@@ -77,11 +84,11 @@ class CompileObject():
 
 class PreviewView(DetailView,CompileObject):
     def preview(self,obj):
-        source = obj.as_source()    #need to catch errors
+        numbasobject = obj.as_numbasobject()    #need to catch errors
         location = obj.get_filename()
         switches = ['-c']
         try:
-            fsLocation = self.compile(source, switches, location, obj)
+            fsLocation = self.compile(numbasobject, switches, location, obj)
         except CompileError as err:
             return self.get_error_response(err)
         else:
@@ -91,7 +98,7 @@ class PreviewView(DetailView,CompileObject):
         
 class ZipView(DetailView,CompileObject):
     def download(self,obj,scorm=False):
-        source = obj.as_source()    #need to catch errors
+        numbasobject= obj.as_numbasobject()    #need to catch errors
 
         switches = ['-cz']
 
@@ -103,7 +110,7 @@ class ZipView(DetailView,CompileObject):
         location = obj.get_filename() + '.zip'
 
         try:
-            fsLocation = self.compile(source, switches, location, obj)
+            fsLocation = self.compile(numbasobject, switches, location, obj)
         except CompileError as err:
             return self.get_error_response(err)
         else:

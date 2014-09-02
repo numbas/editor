@@ -103,11 +103,14 @@ $(document).ready(function() {
         this.recentQuestions(data.recentQuestions);
 
         function getRecentQuestions() {
-            $.get('/questions/recent/',{csrfmiddlewaretoken: getCookie('csrftoken')})
-                .success(function(d) {
-                    e.recentQuestions(d);
-                })
-            ;
+            var cookie = getCookie('csrftoken');
+            if(cookie!==null) {
+                $.get('/questions/recent/',{csrfmiddlewaretoken: cookie})
+                    .success(function(d) {
+                        e.recentQuestions(d);
+                    })
+                ;
+            }
         }
 
         setInterval(getRecentQuestions,5000);
@@ -482,11 +485,7 @@ $(document).ready(function() {
 		}
 	}
 
-	Numbas.loadScript('jme-display');
-	Numbas.loadScript('jme');
-	Numbas.loadScript('editor-extras');
-	Numbas.startOK = true;
-	Numbas.init = function() {
+    Numbas.queueScript('start-editor',['jme-display','jme-variables','jme','editor-extras'],function() {
 		try {
 			viewModel = new Exam(Editor.examJSON);
 			ko.applyBindings(viewModel);
@@ -500,8 +499,7 @@ $(document).ready(function() {
 			;
 			throw(e);
 		}
-	};
-	Numbas.tryInit();
+	});
 
 	Mousetrap.bind(['ctrl+b','command+b'],function() {
 		window.open(Editor.previewURL,Editor.previewWindow);

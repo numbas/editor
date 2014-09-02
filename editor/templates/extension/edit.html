@@ -1,11 +1,11 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<h2>Upload theme</h2>
+<h2>Edit extension</h2>
 
 {% if error %}<p><strong>{{ error }}</strong></p>{% endif %}
 
-<form action="{% url 'theme_new' %}" method="post" enctype="multipart/form-data">
+<form action="{% url 'extension_edit' form.instance.pk %}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}
     {% for formset in inlines %}
@@ -16,5 +16,7 @@
 {#{{ formset.management_form }}#}
 {{ formset.errors }}
 {#{{ formset.non_form_errors }}#}
-<p><a href="{% url 'theme_list' %}">Cancel</a></p>
+<p><a href="{% url 'extension_list' %}">Cancel</a></p>
 {% endblock content %}
+
+

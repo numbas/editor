@@ -239,6 +239,13 @@ $(document).ready(function() {
 				}
 			}
 
+			if('extensions' in data) {
+				this.extensions().map(function(e) {
+					if(data.extensions.indexOf(e.pk)>=0)
+						e.used(true);
+				});
+			}
+
 			if('resources' in data)
 			{
 				data.resources.map(function(rd) {
@@ -274,6 +281,7 @@ $(document).ready(function() {
 			this.save = ko.computed(function() {
                 return {
                     content: this.output(),
+					extensions: this.usedExtensions().map(function(e){return e.pk}),
                     tags: this.tags(),
 					progress: this.progress()[0],
 					resources: this.saveResources(),
@@ -594,19 +602,12 @@ $(document).ready(function() {
 				functions[f.name()] = f.toJSON();
 			});
 
-			var extensions = [];
-			this.extensions().map(function(e) {
-				if(e.used())
-					extensions.push(e.location);
-			});
-
             return {
                 name: this.realName(),
                 tags: this.tags(),
 				progress: this.progress()[0],
                 metadata: this.metadata(),
                 statement: this.statement(),
-				extensions: extensions,
                 advice: this.advice(),
                 rulesets: rulesets,
                 variables: variables,
@@ -624,13 +625,6 @@ $(document).ready(function() {
         load: function(data) {
 			var q = this;
             tryLoad(data,['name','statement','advice'],this);
-
-			if('extensions' in data) {
-				this.extensions().map(function(e) {
-					if(data.extensions.indexOf(e.location)>=0)
-						e.used(true);
-				});
-			}
 
             if('variables' in data)
             {
@@ -1872,18 +1866,14 @@ $(document).ready(function() {
         }
     };
 
-	Numbas.loadScript('jme-display');
-	Numbas.loadScript('jme-variables');
-	Numbas.loadScript('jme');
-	Numbas.loadScript('editor-extras');
+    var deps = ['jme-display','jme-variables','jme','editor-extras'];
 	for(var i=0;i<Editor.numbasExtensions.length;i++) {
-		if(Editor.numbasExtensions[i].hasScript) {
-			var name = Editor.numbasExtensions[i].location;
-			Numbas.loadScript('extensions/'+name+'/'+name+'.js');
+		var extension = Editor.numbasExtensions[i];
+		if(extension.hasScript) {
+			deps.push('extensions/'+extension.location+'/'+extension.location+'.js');
 		}
 	}
-	Numbas.startOK = true;
-	Numbas.init = function() {
+    Numbas.queueScript('start-editor',deps,function() {
 		try {
 			viewModel = new Question(Editor.questionJSON);
 			ko.applyBindings(viewModel);
@@ -1897,8 +1887,7 @@ $(document).ready(function() {
 			;
 			throw(e);
 		}
-	};
-	Numbas.tryInit();
+	});
 
 	Mousetrap.bind(['ctrl+b','command+b'],function() {
 		window.open(Editor.previewURL,Editor.previewWindow);

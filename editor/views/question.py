@@ -260,6 +260,8 @@ class UpdateView(generic.UpdateView):
     def form_valid(self, form):
         self.object = form.save(commit=False)
         self.object.metadata = json.dumps(self.object.metadata)
+        self.object.extensions.clear()
+        self.object.extensions.add(*form.cleaned_data['extensions'])
 
         self.object.edit_user = self.user
 
@@ -281,10 +283,11 @@ class UpdateView(generic.UpdateView):
     
     def get_context_data(self, **kwargs):
         context = super(UpdateView, self).get_context_data(**kwargs)
-        context['extensions'] = [model_to_dict(e) for e in Extension.objects.all()]
-        for extension in context['extensions']:
-            if staticfiles.finders.find('js/numbas/extensions/%s/%s.js' % (extension['location'],extension['location'])):
-                extension['hasScript'] = True
+        self.object.get_parsed_content()
+        extensions = Extension.objects.filter(public=True) | self.object.extensions.all()
+        if not self.request.user.is_anonymous():
+            extensions |= Extension.objects.filter(author=self.request.user) 
+        context['extensions'] = [e.as_json() for e in Extension.objects.all()]
         context['editable'] = self.editable
         context['can_delete'] = self.can_delete
         context['navtab'] = 'questions'

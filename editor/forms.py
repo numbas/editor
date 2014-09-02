@@ -16,7 +16,7 @@ from django.forms.models import inlineformset_factory
 from django.forms.widgets import SelectMultiple
 from django.core.exceptions import ValidationError
 
-from editor.models import Exam, Question, ExamQuestion, QuestionAccess, ExamAccess, QuestionHighlight, ExamHighlight, Theme
+from editor.models import Exam, Question, ExamQuestion, QuestionAccess, ExamAccess, QuestionHighlight, ExamHighlight, Theme, Extension
 from django.contrib.auth.models import User
 
 class FixedSelectMultiple(SelectMultiple):
@@ -217,3 +217,33 @@ class UpdateThemeForm(forms.ModelForm):
     class Meta:
         model = Theme
         fields = ['name','zipfile']
+
+class UpdateExtensionForm(forms.ModelForm):
+    
+    """Form to edit an extension."""
+    
+    class Meta:
+        model = Extension
+        fields = ['name','location','url','zipfile']
+        widgets = {
+            'zipfile': forms.FileInput()
+        }
+
+class NewExtensionForm(UpdateExtensionForm):
+    
+    """Form for a new extension."""
+    
+    def __init__(self,*args,**kwargs):
+        self._user= kwargs.pop('author')
+        super(NewExtensionForm,self).__init__(*args,**kwargs)
+
+    def save(self, commit=True):
+        extension = super(NewExtensionForm,self).save(commit=False)
+        extension.public = False
+        extension.author = self._user
+        if commit:
+            print("SAVE",extension)
+            extension.save()
+            self.save_m2m()
+        return extension
+

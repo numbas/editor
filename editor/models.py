@@ -27,6 +27,7 @@ except ImportError:
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib import staticfiles
 from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
@@ -80,7 +81,6 @@ class NumbasObject:
         elif self.name:
             self.parsed_content = numbasobject.NumbasObject(data={'name': self.name}, version=NUMBAS_FILE_VERSION)
 
-        self.extensions = self.parsed_content.data.get('extensions',[])
         self.metadata = self.parsed_content.data.get('metadata',self.metadata)
 
         self.content = str(self.parsed_content)
@@ -104,16 +104,65 @@ def validate_content(content):
         raise ValidationError(err)
 
 class Extension(models.Model):
-    name = models.CharField(max_length=200,help_text='A readable name, to be displayed to the user')
-    location = models.CharField(max_length=200,help_text='The location of the extension on disk')
-    url = models.CharField(max_length=300,blank=True,help_text='Address of a page about the extension')
+    name = models.CharField(max_length=200,help_text='A human-readable name for the extension')
+    location = models.CharField(default='',max_length=200,help_text='A unique identifier for this extension',verbose_name='Short name',blank=True,unique=True)
+    url = models.CharField(max_length=300,blank=True,verbose_name='Documentation URL',help_text='Address of a page about the extension')
+    public = models.BooleanField(default=False,help_text='Can this extension be seen by everyone?')
+    slug = models.SlugField(max_length=200,editable=False,unique=False,default='an-extension')
+    author = models.ForeignKey(User,related_name='own_extensions',blank=True,null=True)
+    last_modified = models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
+    zipfile_folder = 'user-extensions'
+    zipfile = models.FileField(upload_to=os.path.join(zipfile_folder,'zips'), blank=True,null=True, max_length=255, verbose_name = 'Extension package',help_text='A .zip package containing the extension\'s files')
 
     def __unicode__(self):
         return self.name
 
     def as_json(self):
-        d = model_to_dict(self)
-        return json.dumps(d)
+        d = {
+            'name': self.name,
+            'url': self.url,
+            'pk': self.pk,
+            'location': self.location,
+        }
+        path = self.script_path
+        if path is not None:
+            d['hasScript'] = True
+            d['scriptURL'] = path
+        return d
+
+    @property
+    def script_path(self):
+        if self.zipfile:
+            filename = self.location+'.js'
+            print(filename)
+            local_path = os.path.join(self.extracted_path,filename)
+            print(local_path)
+            if os.path.exists(local_path):
+                print('exists')
+                return settings.MEDIA_URL+self.zipfile_folder+'/extracted/'+str(self.pk)+'/'+self.location+'/'+filename
+        else:
+            path = 'js/numbas/extensions/%s/%s.js' % (self.location,self.location)
+            if staticfiles.finders.find(path):
+                return settings.STATIC_URL+path
+        return None
+
+    @property
+    def extracted_path(self):
+        if self.zipfile:
+            return os.path.join(settings.MEDIA_ROOT,self.zipfile_folder,'extracted',str(self.pk),self.location)
+        else:
+            return os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'],'extensions',self.location)
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.name)
+        super(Extension,self).save(*args,**kwargs)
+
+        if self.zipfile:
+            if os.path.exists(self.extracted_path):
+                shutil.rmtree(self.extracted_path)
+            os.makedirs(self.extracted_path)
+            z = ZipFile(self.zipfile.file,'r')
+            z.extractall(self.extracted_path)
 
 class Theme( models.Model ):
     name = models.CharField(max_length=200)
@@ -121,14 +170,15 @@ class Theme( models.Model ):
     slug = models.SlugField(max_length=200,editable=False,unique=False)
     author = models.ForeignKey(User,related_name='own_themes')
     last_modified = models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
-    zipfile = models.FileField(upload_to=os.path.join('user-themes','zips'), max_length=255, verbose_name = 'Theme package',help_text='A .zip package containing the theme\'s files')
+    zipfile_folder = 'user-themes'
+    zipfile = models.FileField(upload_to=os.path.join(zipfile_folder,'zips'), max_length=255, verbose_name = 'Theme package',help_text='A .zip package containing the theme\'s files')
 
     def __unicode__(self):
         return self.name
 
     @property
     def extracted_path(self):
-        return os.path.join(settings.MEDIA_ROOT,'user-themes','extracted',str(self.pk))
+        return os.path.join(settings.MEDIA_ROOT,self.zipfile_folder,'extracted',str(self.pk))
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
@@ -204,6 +254,7 @@ class Question(models.Model,NumbasObject,ControlledObject):
     last_modified = models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
     resources = models.ManyToManyField(Image,blank=True)
     copy_of = models.ForeignKey('self',null=True,related_name='copies',on_delete=models.SET_NULL)
+    extensions = models.ManyToManyField(Extension,blank=True)
 
     public_access = models.CharField(default='view',editable=True,choices=PUBLIC_ACCESS_CHOICES,max_length=6)
     access_rights = models.ManyToManyField(User, through='QuestionAccess', blank=True, editable=False,related_name='accessed_questions+')
@@ -246,17 +297,20 @@ class Question(models.Model,NumbasObject,ControlledObject):
     def get_filename(self):
         return 'question-%i-%s' % (self.pk,self.slug)
 
-    def as_source(self):
+    def as_numbasobject(self):
         self.get_parsed_content()
         data = OrderedDict([
             ('name',self.name),
-            ('extensions',self.extensions),
+            ('extensions',[e.location for e in self.extensions.all()]),
             ('resources',[[i.image.name,i.image.path] for i in self.resources.all()]),
             ('navigation',{'allowregen': 'true', 'showfrontpage': 'false', 'preventleave': False}),
             ('questions',[self.parsed_content.data])
         ])
         obj = numbasobject.NumbasObject(data=data,version=self.parsed_content.version)
-        return str(obj)
+        return obj
+
+    def as_source(self):
+        return str(self.as_numbasobject())
 
     def as_json(self):
         self.get_parsed_content()
@@ -353,6 +407,9 @@ class Exam(models.Model,NumbasObject,ControlledObject):
         else:
             return self.theme
 
+    @property
+    def extensions(self):
+        return Extension.objects.filter(question__in=self.questions.all()).distinct()
 
     def get_questions(self):
         return self.questions.order_by('examquestion')
@@ -381,20 +438,23 @@ class Exam(models.Model,NumbasObject,ControlledObject):
     def get_filename(self):
         return 'exam-%i-%s' % (self.pk,self.slug)
         
-    def as_source(self):
+    def as_numbasobject(self):
         obj = numbasobject.NumbasObject(self.content)
         data = obj.data
-        extensions = []
         resources = []
         for q in self.get_questions():
             q.get_parsed_content()
-            extensions += q.extensions
             resources += q.resources.all()
-        data['extensions'] = list(set(extensions))
+        extensions = [e.location for e in self.extensions]
+        data['extensions'] = extensions
         data['name'] = self.name
         data['questions'] = [numbasobject.NumbasObject(q.content).data for q in self.get_questions()]
         data['resources'] = [[i.image.name,i.image.path] for i in set(resources)]
-        return str(obj)
+        
+        return obj
+
+    def as_source(self):
+        return str(self.as_numbasobject())
         
     def summary(self, user=None):
         """return enough to identify an exam and say where to find it, along with a description"""

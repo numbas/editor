@@ -1,5 +1,6 @@
 """ 
 from https://bitbucket.org/ad3w/django-sstatic/src/4401a4bc3058618dfc2eafaee6a23d287a99ede5/sstatic/templatetags/sstatic.py?at=default 
+modified by Christian Perfect, 2014/09/01
 """
 
 import os
@@ -15,12 +16,17 @@ def sstatic(path):
     '''
     Returns absolute URL to static file with versioning.
     '''
-    full_path = os.path.join(settings.STATIC_ROOT, path)
+    if path.startswith(settings.STATIC_URL):
+        full_path = os.path.join(settings.STATIC_ROOT,path[len(settings.STATIC_URL):])
+    elif path.startswith(settings.MEDIA_URL):
+        full_path = os.path.join(settings.MEDIA_ROOT,path[len(settings.MEDIA_URL):])
+    else:
+        full_path = os.path.join(settings.STATIC_ROOT, path)
+        path = settings.STATIC_URL + path
     try:
         # Get file modification time.
         mtime = os.path.getmtime(full_path)
-        return '%s%s?%s' % (settings.STATIC_URL, path, mtime)
+        return '%s?%s' % (path, mtime)
     except OSError as e:
         # Returns normal url if this file was not found in filesystem.
-        return '%s%s' % (settings.STATIC_URL, path)
-
+        return path

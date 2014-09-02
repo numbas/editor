@@ -51,6 +51,11 @@
 	margin-top: 0;
 }
 
+.upload-extension {
+    font-size: small;
+    margin-bottom: 2em;
+}
+
 .tags form {
 	margin-bottom: 0;
 }

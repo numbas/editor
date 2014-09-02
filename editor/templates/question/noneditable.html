@@ -48,7 +48,7 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 					<ul class="extensions" data-bind="foreach: usedExtensions">
 						<li class="extension">
 							<label>
-								<span data-bind="text:name"></span> <a data-bind="attr: {href:url}" target="_blank">(documentation)</a>
+								<span data-bind="text:name"></span> <a data-bind="if: url, attr: {href:url}" target="_blank">(documentation)</a>
 							</label>
 						</li>
 					</ul>

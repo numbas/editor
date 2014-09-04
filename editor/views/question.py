@@ -181,6 +181,7 @@ class CopyView(generic.View, SingleObjectMixin):
             q2.set_name("%s's copy of %s" % (q2.author.first_name,q.name))
             q2.copy_of = q
             q2.resources = q.resources.all()
+            q2.extensions = q.extensions.all()
             q2.save()
         except (Question.DoesNotExist, TypeError) as err:
             status = {

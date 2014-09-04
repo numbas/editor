@@ -45,7 +45,7 @@
 							</label>
 						</li>
                     </ul>
-                    <div class="upload-extension"><a href="{% url 'extension_list' %}">Upload a new extension</a></div>
+                    <div class="upload-extension"><a href="{% url 'extension_new' %}">Upload a new extension</a></div>
 					<div class="tags">
 						<h4>Tags <span data-bind="template: {name: 'helplink', data: {topic: 'tags', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-tags'}}"></span></h4>
 						<form data-bind="submit: function(form) {var input = $(form).find('input');$data.tags.push(input.val());input.val('').focus();}">

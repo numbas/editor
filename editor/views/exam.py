@@ -181,6 +181,7 @@ class CopyView(generic.View, SingleObjectMixin):
             e2.save()
             e2.set_questions(e.questions.all())
             e2.set_name("%s's copy of %s" % (e2.author.first_name,e.name))
+            e2.custom_theme = e.custom_theme
         except (Exam.DoesNotExist, TypeError) as err:
             status = {
                 "result": "error",

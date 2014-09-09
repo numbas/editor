@@ -449,7 +449,9 @@ $(document).ready(function() {
 		},this);
         this.progress = data.progress;
         this.progressDisplay = data.progressDisplay;
-		this.description = $(data.metadata.description).text();
+		var descriptionDiv = document.createElement('div');
+		descriptionDiv.innerHTML = data.metadata.description;
+		this.description = $(descriptionDiv).text();
 		this.parent = parent;
 		this.data = data;
 

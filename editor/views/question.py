@@ -395,7 +395,7 @@ class SearchView(ListView):
         form = self.form = QuestionSearchForm(self.request.GET)
         form.is_valid()
 
-        questions = Question.objects.all()
+        questions = Question.objects.viewable_by(self.request.user)
 
         search_term = form.cleaned_data.get('query')
         if search_term:
@@ -419,7 +419,6 @@ class SearchView(ListView):
             questions = questions.filter(copy_of=None)
 
         questions = questions.distinct()
-        questions = [q for q in questions if q.can_be_viewed_by(self.request.user)]
 
         return questions
         

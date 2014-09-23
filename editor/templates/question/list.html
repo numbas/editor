@@ -9,7 +9,7 @@
 		<div class="list-total">{{ results.page.paginator.count }} questions found.</div>
 		{% include "pagination.html" %}
 		<div class="results">
-			{% if object_list %}
+			{% if object_list.exists %}
 			<table class="search-results" id="question-list">
 				<col span="1" class="name"/>
 				<col span="1" class="author"/>

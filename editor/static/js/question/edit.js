@@ -293,12 +293,6 @@ $(document).ready(function() {
                 function() {
                     var data = q.save();
 
-                    if(q.variableErrors()) {
-                        window.onbeforeunload = function() {
-                            return 'There are errors in one or more variable definitions, so the question can\'t be saved.';
-                        }
-                        return;
-                    }
                     return data;
                 },
                 function(data) {

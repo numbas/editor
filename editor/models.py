@@ -227,15 +227,14 @@ class Image( models.Model ):
 
 class QuestionManager(models.Manager):
     def viewable_by(self,user):
-        mine_or_public_query = Q(public_access__in=['edit','view']) | Q(author=user)
-        mine_or_public = self.all().filter(mine_or_public_query)
-        given_access = QuestionAccess.objects.filter(access__in=['edit','view'],user=user).values_list('question',flat=True)
-        return mine_or_public | self.exclude(mine_or_public_query).filter(pk__in=given_access)
-
         if user.is_superuser:
             return self.all()
         else:
-            return list(self.all().filter(public_view=True)).extend(user.viewable_questions.all())
+            mine_or_public_query = Q(public_access__in=['edit','view']) | Q(author=user)
+            mine_or_public = self.all().filter(mine_or_public_query)
+            given_access = QuestionAccess.objects.filter(access__in=['edit','view'],user=user).values_list('question',flat=True)
+            return mine_or_public | self.exclude(mine_or_public_query).filter(pk__in=given_access)
+
 
 
 class Question(models.Model,NumbasObject,ControlledObject):

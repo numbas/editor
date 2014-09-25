@@ -229,6 +229,8 @@ class QuestionManager(models.Manager):
     def viewable_by(self,user):
         if user.is_superuser:
             return self.all()
+        elif user.is_anonymous:
+            return self.filter(public_access__in=['edit','view'])
         else:
             mine_or_public_query = Q(public_access__in=['edit','view']) | Q(author=user)
             mine_or_public = self.all().filter(mine_or_public_query)

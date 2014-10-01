@@ -1088,7 +1088,7 @@ $(document).ready(function() {
 					templateTypeValues.definition(definition);
 					break;
 				case 'number':
-					templateTypeValues.value(parseFloat(definition));
+					templateTypeValues.value(Numbas.jme.evaluate(definition,Numbas.jme.builtinScope).value);
 					break;
 				case 'range':
 					var rule = new Numbas.jme.display.Rule('?;a..?;b#?;c',[]);

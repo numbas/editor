@@ -492,6 +492,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 			if(tok.name.toLowerCase() in scope.variables)
 				return scope.variables[tok.name.toLowerCase()];
 			else
+				tok.unboundName = true;
 				return tok;
 			break;
 		case 'op':
@@ -531,8 +532,14 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 				}
 				if(tok.fn)
 					return tok.fn.evaluate(tree.args,scope);
-				else
+				else {
+					for(var i=0;i<=tree.args.length;i++) {
+						if(tree.args[i] && tree.args[i].unboundName) {
+							throw(new Numbas.Error('jme.typecheck.no right type unbound name',tree.args[i].name));
+						}
+					}
 					throw(new Numbas.Error('jme.typecheck.no right type definition',op));
+				}
 			}
 		default:
 			return tok;
@@ -733,11 +740,10 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 				var v = jme.evaluate(jme.compile(bits[i],scope),scope);
 				if(v.type=='number')
 				{
-					v = Numbas.math.niceNumber(v.value);
 					if(display)
-						v = ''+v+'';
+						v = ''+Numbas.math.niceNumber(v.value)+'';
 					else
-						v = '('+v+')';
+						v = '('+Numbas.jme.display.treeToJME({tok:v})+')';
 				}
 				else if(v.type=='string')
 				{
@@ -895,7 +901,7 @@ var collectRuleset = jme.collectRuleset = function(set,scopeSets)
 	{
 		if(typeof(set[i])=='string')
 		{
-			var m = /^(!)?(.*)$/.exec(set[i]);
+			var m = /^\s*(!)?(.*)\s*$/.exec(set[i]);
 			var neg = m[1]=='!' ? true : false;
 			var name = m[2].trim().toLowerCase();
 			if(name in displayFlags)
@@ -993,6 +999,9 @@ var Scope = jme.Scope = function(scopes) {
 	}
 }
 Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
+	/** Add a JME function to the scope.
+	 * @param {jme.funcObj} fn - function to add
+	 */
 	addFunction: function(fn) {
 		if(!(fn.name in this.functions))
 			this.functions[fn.name] = [fn];
@@ -1653,6 +1662,7 @@ newBuiltin('capitalise',[TString],TString,function(s) { return util.capitalise(s
 newBuiltin('upper',[TString],TString,function(s) { return s.toUpperCase(); }, {doc: {usage: ['upper(\'hello there\')'], description: 'Change all the letters in a string to capitals.', tags: ['upper-case','case','upper','capitalise','majuscule']}});
 newBuiltin('lower',[TString],TString,function(s) { return s.toLowerCase(); }, {doc: {usage: ['lower(\'HELLO, you!\')'], description: 'Change all the letters in a string to minuscules.', tags: ['lower-case','lower','case']}});
 newBuiltin('pluralise',[TNum,TString,TString],TString,function(n,singular,plural) { return util.pluralise(n,singular,plural); });
+newBuiltin('join',[TList,TString],TString,function(list,delimiter) { return list.join(delimiter); },{unwrapValues:true});
 
 //the next three versions of the `except` operator
 //exclude numbers from a range, given either as a range, a list or a single value
@@ -1757,13 +1767,20 @@ newBuiltin('distinct',[TList],TList,
 		}
 		var out = [list[0]];
 		for(var i=1;i<list.length;i++) {
-			if(!out.contains(list[i])) {
+			var got = false;
+			for(var j=0;j<out.length;j++) {
+				if(util.eq(list[i],out[j])) {
+					got = true;
+					break;
+				}
+			}
+			if(!got) {
 				out.push(list[i]);
 			}
 		}
 		return out;
 	},
-	{unwrapValues: true}
+	{unwrapValues: false}
 );
 
 newBuiltin('<', [TNum,TNum], TBool, math.lt, {doc: {usage: ['x<y','1<2'], description: 'Returns @true@ if the left operand is less than the right operand.', tags: ['comparison','inequality','numbers']}});
@@ -1797,6 +1814,7 @@ newBuiltin('or', [TBool,TBool], TBool, function(a,b){return a||b;}, {doc: {usage
 newBuiltin('xor', [TBool,TBool], TBool, function(a,b){return (a || b) && !(a && b);}, {doc: {usage: 'a xor b', description: 'Logical XOR.', tags: ['exclusive or']}} );
 
 newBuiltin('abs', [TNum], TNum, math.abs, {doc: {usage: 'abs(x)', description: 'Absolute value of a number.', tags: ['norm','length','complex']}} );
+newBuiltin('abs', [TString], TNum, function(s){return s.length}, {doc: {usage: 'abs(x)', description: 'Absolute value of a number.', tags: ['norm','length','complex']}} );
 newBuiltin('abs', [TList], TNum, function(l) { return l.length; }, {doc: {usage: 'abs([1,2,3])', description: 'Length of a list.', tags: ['size','number','elements']}});
 newBuiltin('abs', [TRange], TNum, function(r) { return r[2]==0 ? Math.abs(r[0]-r[1]) : r.length-3; }, {doc: {usage: 'abs(1..5)', description: 'Number of elements in a numerical range.', tags: ['size','length']}});
 newBuiltin('abs', [TVector], TNum, vectormath.abs, {doc: {usage: 'abs(vector(1,2,3))', description: 'Modulus of a vector.', tags: ['size','length','norm']}});
@@ -1900,6 +1918,21 @@ newBuiltin('diff', ['?','?',TNum], '?', null, {doc: {usage: ['diff(f(x),x,n)', '
 newBuiltin('pdiff', ['?',TName,TNum], '?', null, {doc: {usage: ['pdiff(f(x,y),x,n)','pdiff(x+y,x,1)'], description: '$n$<sup>th</sup> partial derivative. Currently for display only - can\'t be evaluated.', tags: ['differentiate','differential','differentiation']}});
 newBuiltin('int', ['?','?'], '?', null, {doc: {usage: 'int(f(x),x)', description: 'Integral. Currently for display only - can\'t be evaluated.'}});
 newBuiltin('defint', ['?','?',TNum,TNum], '?', null, {doc: {usage: 'defint(f(x),y,0,1)', description: 'Definite integral. Currently for display only - can\'t be evaluated.'}});
+
+newBuiltin('sum',[TList],TNum,function(list) {
+	var total = 0;
+	var l = list.length;
+
+	if(l==0) {
+		return 0;
+	}
+
+	for(var i=0;i<l;i++) {
+		total = math.add(total,list[i].value);
+	}
+	
+	return total;
+});
 
 newBuiltin('deal',[TNum],TList, 
 	function(n) {

@@ -292,6 +292,8 @@ $(document).ready(function() {
 			set(data[attr.toLowerCase()]);
 	}
 
+    Editor.numbasVersion = 'variable_groups_as_arrays';
+
 	Editor.parseExam = function(source) {
 		var content = /\/\/(.*?)\n(.*)/.exec(source)[2]
 		return JSON.parse(content);

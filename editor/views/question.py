@@ -15,6 +15,9 @@ import json
 import traceback
 from copy import deepcopy
 
+import time
+import calendar
+
 from django.contrib import staticfiles
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -28,6 +31,7 @@ from django.views import generic
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import FormMixin
 from django.template.loader import render_to_string
+from django.conf import settings
 
 from django_tables2.config import RequestConfig
 
@@ -285,19 +289,39 @@ class UpdateView(generic.UpdateView):
     def get_context_data(self, **kwargs):
         context = super(UpdateView, self).get_context_data(**kwargs)
         self.object.get_parsed_content()
+
         extensions = Extension.objects.filter(public=True) | self.object.extensions.all()
         if not self.request.user.is_anonymous():
             extensions |= Extension.objects.filter(author=self.request.user) 
+
         context['extensions'] = [e.as_json() for e in Extension.objects.all()]
+
         context['editable'] = self.editable
         context['can_delete'] = self.can_delete
         context['navtab'] = 'questions'
+
         if not self.request.user.is_anonymous():
             context['starred'] = self.request.user.get_profile().favourite_questions.filter(pk=self.object.pk).exists()
         else:
             context['starred'] = False
     
         context['access_rights'] = [{'id': qa.user.pk, 'name': qa.user.get_full_name(), 'access_level': qa.access} for qa in QuestionAccess.objects.filter(question=self.object)]
+
+        question_json = context['question_json'] = {
+            'questionJSON': json.loads(self.object.as_json()),
+            'editable': self.editable,
+
+            'progresses': self.object.PROGRESS_CHOICES,
+
+            'numbasExtensions': context['extensions'],
+
+            'previewURL': reverse('question_preview', args=(self.object.pk, self.object.slug)),
+            'previewWindow': str(calendar.timegm(time.gmtime())),
+            'starred': context['starred'],
+        }
+        if self.editable:
+            question_json['public_access'] = self.object.public_access
+            question_json['access_rights'] = context['access_rights']
 
         return context
     

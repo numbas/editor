@@ -28,25 +28,7 @@
 
     <script type="text/javascript">
         (function() {
-            var Editor = window.Editor = {
-			    questionJSON: {{question.as_json|safe}},
-                editable: {{editable|json}},
-
-                {% if editable %}
-				public_access: {{question.public_access|json|safe}},
-				access_rights: {{access_rights|json|safe}},
-                {% endif %}
-
-			    progresses: {{object.PROGRESS_CHOICES|json|safe}},
-
-				numbasExtensions: {{extensions|json|safe}},
-
-				numbasVersion: 'variables_as_objects',
-
-    			previewURL: '{% url 'question_preview' object.pk object.slug %}',
-                previewWindow: '{% now "U" %}',
-                starred: {% if starred %}true{% else %}false{% endif %}
-            };
+			var editor = window.Editor = {{question_json|json|safe}};
         })();
     </script>
 {% endblock javascripts %}

@@ -308,7 +308,7 @@ class UpdateView(generic.UpdateView):
             'themes': sorted(context['themes'],key=operator.itemgetter('name')),
             'locales': context['locales'],
             'previewURL': reverse('exam_preview',args=(self.object.pk,self.object.slug)),
-            'previewWindow': str(calendar.timegm(time.gmtime())),
+            'previewWindow': str(calendar.timegm(time.gmtime()))
         }
         if profile:
             editor_json.update({

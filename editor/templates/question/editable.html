@@ -371,6 +371,7 @@
 					<h4 class="header">
 						Type: <select class="type" data-bind="options: availableTypes, value:type, optionsText: 'niceName'"></select> <span data-bind="template: {name: 'helplink', data: {topic: 'part types', url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html'}}"></span>
 						<button class="copy-part" data-bind="click: copy">Copy this part</button>
+						<button class="copy-part" data-bind="visible: canBeReplacedWithGap, click: replaceWithGapfill">Replace with a gap-fill</button>
 					</h4>
 					<div class="row-fluid">
 						<ul class="nav nav-tabs" data-bind="foreach: tabs">
@@ -391,7 +392,7 @@
 							<!-- ko if: type().name=='gapfill' -->
 							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='marking'}">
 								<form class="form-horizontal">
-									<div class="control-group" data-bind="visible: !parent, template: {
+									<div class="control-group" data-bind="visible: !parent(), template: {
 										name: 'property',
 										data: {label:'Penalty for revealing steps',property:stepsPenalty,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-penalty-for-revealing-steps'}
 									}"></div>
@@ -405,7 +406,7 @@
 										name: 'property',
 										data: {label:'Marks',property:marks,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-marks'}
 									}"></div>
-									<div class="control-group" data-bind="visible: !parent, template: {
+									<div class="control-group" data-bind="visible: !parent(), template: {
 										name: 'property',
 										data: {label:'Penalty for revealing steps',property:stepsPenalty,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-penalty-for-revealing-steps'}
 									}"></div>
@@ -573,7 +574,7 @@
 										name: 'property',
 										data: {label:'Marks',property:marks,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-marks'}
 									}"></div>
-									<div class="control-group" data-bind="visible: !parent, template: {
+									<div class="control-group" data-bind="visible: !parent(), template: {
 										name: 'property',
 										data: {label:'Penalty for revealing steps',property:stepsPenalty,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-penalty-for-revealing-steps'}
 									}"></div>
@@ -637,7 +638,7 @@
 										name: 'property',
 										data: {label:'Marks',property:marks,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-marks'}
 									}"></div>
-									<div class="control-group" data-bind="visible: !parent, template: {
+									<div class="control-group" data-bind="visible: !parent(), template: {
 										name: 'property',
 										data: {label:'Penalty for revealing steps',property:stepsPenalty,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-penalty-for-revealing-steps'}
 									}"></div>
@@ -681,7 +682,7 @@
 										name: 'booleanproperty',
 										data: {label:'Show correct answer on reveal?',property:showCorrectAnswer,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal'}
 									}"></div>
-									<div class="control-group" data-bind="visible: !parent, template: {
+									<div class="control-group" data-bind="visible: !parent(), template: {
 										name: 'property',
 										data: {label:'Penalty for revealing steps',property:stepsPenalty,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-penalty-for-revealing-steps'}
 									}"></div>
@@ -741,7 +742,7 @@
 										name: 'booleanproperty',
 										data: {label:'Show correct answer on reveal?',property:showCorrectAnswer,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal'}
 									}"></div>
-									<div class="control-group" data-bind="visible: !parent, template: {
+									<div class="control-group" data-bind="visible: !parent(), template: {
 										name: 'property',
 										data: {label:'Penalty for revealing steps',property:stepsPenalty,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-penalty-for-revealing-steps'}
 									}"></div>
@@ -809,7 +810,7 @@
 										name: 'booleanproperty',
 										data: {label:'Show correct answer on reveal?',property:showCorrectAnswer,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal'}
 									}"></div>
-									<div class="control-group" data-bind="visible: !parent, template: {
+									<div class="control-group" data-bind="visible: !parent(), template: {
 										name: 'property',
 										data: {label:'Penalty for revealing steps',property:stepsPenalty,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-penalty-for-revealing-steps'}
 									}"></div>

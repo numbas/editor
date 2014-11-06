@@ -1189,11 +1189,11 @@ $(document).ready(function() {
 
 		this.q = q;
         this.prompt = Editor.contentObservable('');
-        this.parent = parent;
+        this.parent = ko.observable(parent);
 		this.parentList = parentList;
 
+		var nonGapTypes = ['information','gapfill'];
 		this.availableTypes = ko.computed(function() {
-			var nonGapTypes = ['information','gapfill'];
 			var nonStepTypes = ['gapfill'];
 			if(this.isGap())
 				return this.types.filter(function(t){return nonGapTypes.indexOf(t.name)==-1});
@@ -1201,6 +1201,10 @@ $(document).ready(function() {
 				return this.types.filter(function(t){return nonStepTypes.indexOf(t.name)==-1});
 			else
 				return this.types;
+		},this);
+
+		this.canBeReplacedWithGap = ko.computed(function() {
+			return !(this.isGap() || this.isStep() || nonGapTypes.indexOf(this.type().name)>=0);
 		},this);
 
         this.type = ko.observable(this.availableTypes()[0]);
@@ -1455,9 +1459,22 @@ $(document).ready(function() {
 
 		copy: function() {
 			var data = this.toJSON();
-			var p = new Part(this.q,this.parent,this.parentList,data);
+			var p = new Part(this.q,this.parent(),this.parentList,data);
 			this.parentList.push(p);
 			this.q.currentPart(p);
+		},
+
+		replaceWithGapfill: function() {
+			var gapFill = new Part(this.q,this.parent(),this.parentList);
+			gapFill.setType('gapfill');
+
+			this.parentList.splice(this.parentList.indexOf(this),1,gapFill);
+			gapFill.gapfill.gaps.push(this);
+			this.parentList = gapFill.gapfill.gaps;
+			this.parent(gapFill);
+			
+			gapFill.prompt(this.prompt()+'\n<p>[[0]]</p>');
+			this.prompt('');
 		},
 
 		canMove: function(direction) {
@@ -1545,7 +1562,7 @@ $(document).ready(function() {
             {
 				this.parentList.remove(this);
 				if(viewModel.currentPart()==this) {
-					viewModel.currentPart(this.parent);
+					viewModel.currentPart(this.parent());
 				}
             }
         },
@@ -1565,11 +1582,22 @@ $(document).ready(function() {
 		},
 
 		isGap: function() {
-			return this.parent && this.parent.type().name=='gapfill' && !this.parent.steps().contains(this);
+			return this.parent() && this.parent().type().name=='gapfill' && !this.parent().steps().contains(this);
 		},
 
 		isStep: function() {
-			return this.parent && this.parent.steps().contains(this);
+			return this.parent() && this.parent().steps().contains(this);
+		},
+
+		setType: function(name) {
+			name = name.toLowerCase();
+            for(var i=0;i<this.types.length;i++)
+            {
+                if(this.types[i].name == name) {
+                    this.type(this.types[i]);
+					return;
+				}
+            }
 		},
 
         toJSON: function() {

@@ -150,6 +150,14 @@
                             name: 'booleanproperty',
                             data: {label: 'Shuffle questions?',property:shuffleQuestions, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-shuffle-questions'}
                         }"></div>
+                        <div class="control-group" data-bind="fadeVisible: shuffleQuestions, template: {
+                            name: 'booleanproperty',
+                            data: {label: 'Use all questions?',property: allQuestions, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-all-questions'}
+                        }"></div>
+                        <div class="control-group" data-bind="fadeVisible: !allQuestions(), template: {
+                            name: 'numberproperty',
+                            data: {label: 'Number of questions to display',property:pickQuestions, min: 0, max: questions().length, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-pick-questions'}
+                        }"></div>
                     </form>
                     <ul class="questionList" data-bind="
                         sortable: {

@@ -75,6 +75,18 @@ $(document).ready(function() {
 		this.allowPause = ko.observable(true);
         this.percentPass = ko.observable(0);
         this.shuffleQuestions = ko.observable(false);
+		var tickAllQuestions = ko.observable(true);
+		this.allQuestions = ko.computed({
+			read: function() {
+				return this.shuffleQuestions() ? tickAllQuestions() : true;
+			},
+			write: function(v) {
+				if(this.shuffleQuestions()) {
+					tickAllQuestions(v);
+				}
+			}
+		},this);
+		this.pickQuestions = ko.observable(0);
         this.showfrontpage = ko.observable(true);
 
         this.allowregen = ko.observable(true);
@@ -340,6 +352,8 @@ $(document).ready(function() {
                 duration: this.duration()*60,
                 percentPass: this.percentPass(),
                 shuffleQuestions: this.shuffleQuestions(),
+				allQuestions: this.allQuestions(),
+				pickQuestions: this.pickQuestions(),
                 navigation: {
 					allowregen: this.allowregen(),
                     reverse: this.reverse(),
@@ -364,7 +378,7 @@ $(document).ready(function() {
         },
 
         load: function(data) {
-            tryLoad(data,['name','percentPass','shuffleQuestions'],this);
+            tryLoad(data,['name','percentPass','shuffleQuestions','allQuestions','pickQuestions'],this);
             this.duration((data.duration||0)/60);
 
             if('navigation' in data)

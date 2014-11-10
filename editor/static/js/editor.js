@@ -292,7 +292,7 @@ $(document).ready(function() {
 			set(data[attr.toLowerCase()]);
 	}
 
-    Editor.numbasVersion = 'variable_groups_as_arrays';
+    Editor.numbasVersion = 'pick_questions';
 
 	Editor.parseExam = function(source) {
 		var content = /\/\/(.*?)\n(.*)/.exec(source)[2]

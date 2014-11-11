@@ -152,11 +152,11 @@
                         }"></div>
                         <div class="control-group" data-bind="fadeVisible: shuffleQuestions, template: {
                             name: 'booleanproperty',
-                            data: {label: 'Use all questions?',property: allQuestions, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-all-questions'}
+                            data: {label: 'Use all questions?',property: allQuestions, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-use-all-questions'}
                         }"></div>
                         <div class="control-group" data-bind="fadeVisible: !allQuestions(), template: {
                             name: 'numberproperty',
-                            data: {label: 'Number of questions to display',property:pickQuestions, min: 0, max: questions().length, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-pick-questions'}
+                            data: {label: 'Number of questions to display',property:pickQuestions, min: 0, max: questions().length, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-number-of-questions-to-display'}
                         }"></div>
                     </form>
                     <ul class="questionList" data-bind="

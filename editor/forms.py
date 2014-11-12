@@ -16,6 +16,8 @@ from django.forms.models import inlineformset_factory
 from django.forms.widgets import SelectMultiple
 from django.core.exceptions import ValidationError
 
+import zipfile
+
 from editor.models import Exam, Question, ExamQuestion, QuestionAccess, ExamAccess, QuestionHighlight, ExamHighlight, Theme, Extension
 from django.contrib.auth.models import User
 
@@ -188,8 +190,15 @@ class ExamSearchForm(forms.Form):
     query = forms.CharField(initial='', required=False)
     author = forms.CharField(initial='', required=False)
         
+class ValidateZipField:
+    def clean_zipfile(self):
+        zip = self.cleaned_data['zipfile']
+        print(type(zip))
+        print(zip)
+        if not zipfile.is_zipfile(zip):
+            raise forms.ValidationError('Uploaded file is not a zip file')
         
-class NewThemeForm(forms.ModelForm):
+class NewThemeForm(forms.ModelForm,ValidateZipField):
     
     """Form for a new theme."""
     
@@ -210,7 +219,7 @@ class NewThemeForm(forms.ModelForm):
             self.save_m2m()
         return theme
 
-class UpdateThemeForm(forms.ModelForm):
+class UpdateThemeForm(forms.ModelForm,ValidateZipField):
     
     """Form to edit a theme."""
     

@@ -202,6 +202,13 @@ button.search.loading {
     color: #666;
 }
 
+.errorlist {
+	background: black;
+	color: white;
+	padding: 5px;
+	border-radius: 3px;
+}
+
 .errorlist, .messages {
     list-style: none;
     display: inline-block;

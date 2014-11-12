@@ -17,6 +17,8 @@ from django.forms.widgets import SelectMultiple
 from django.core.exceptions import ValidationError
 
 import zipfile
+import os
+import tempfile
 
 from editor.models import Exam, Question, ExamQuestion, QuestionAccess, ExamAccess, QuestionHighlight, ExamHighlight, Theme, Extension
 from django.contrib.auth.models import User
@@ -193,8 +195,6 @@ class ExamSearchForm(forms.Form):
 class ValidateZipField:
     def clean_zipfile(self):
         zip = self.cleaned_data['zipfile']
-        print(type(zip))
-        print(zip)
         if not zipfile.is_zipfile(zip):
             raise forms.ValidationError('Uploaded file is not a zip file')
         
@@ -237,6 +237,18 @@ class UpdateExtensionForm(forms.ModelForm):
         widgets = {
             'zipfile': forms.FileInput()
         }
+
+    def clean_zipfile(self):
+        file = self.cleaned_data['zipfile']
+        if not zipfile.is_zipfile(file):
+            name, extension = os.path.splitext(file.name)
+            if extension.lower() == '.js':
+                f = tempfile.TemporaryFile()
+                zip = zipfile.ZipFile(f,'w',zipfile.ZIP_DEFLATED)
+                zip.writestr(file.name,file.read())
+                self.cleaned_data['zipfile'] = f
+            else:
+                raise forms.ValidationError('Uploaded file is not a zip file')
 
 class NewExtensionForm(UpdateExtensionForm):
     

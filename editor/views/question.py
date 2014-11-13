@@ -157,6 +157,8 @@ class UploadView(generic.CreateView):
                 author = self.request.user
             )
             qo.save()
+            extensions = Extension.objects.filter(location__in=exam_object.data['extensions'])
+            qo.extensions.add(*extensions)
             self.qs.append(qo)
 
         return redirect(self.get_success_url())

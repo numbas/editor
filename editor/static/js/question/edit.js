@@ -91,6 +91,7 @@ $(document).ready(function() {
 				return this.realtags().sort();
 			},
             write: function(newtags) {
+				newtags = newtags.slice();
                 for(var i=newtags.length-1;i>=0;i--)
                 {
                     if(newtags.indexOf(newtags[i])<i)
@@ -224,43 +225,7 @@ $(document).ready(function() {
 
         if(data)
 		{
-			this.id = data.id;
-
-			if('metadata' in data) {
-				tryLoad(data.metadata,['notes','description'],this);
-			}
-
-			if('progress' in data) {
-				for(var i=0;i<Editor.progresses.length;i++) {
-					if(Editor.progresses[i][0]==data.progress) {
-						this.progress(Editor.progresses[i]);
-						break;
-					}
-				}
-			}
-
-			if('extensions' in data) {
-				this.extensions().map(function(e) {
-					if(data.extensions.indexOf(e.pk)>=0)
-						e.used(true);
-				});
-			}
-
-			if('resources' in data)
-			{
-				data.resources.map(function(rd) {
-					this.resources.push(new Editor.Resource(rd));
-				},this);
-			}
-
-			this.load(Editor.parseExam(data.content));
-
-			try{
-				this.tags(data.tags);
-			}
-			catch(e) {
-				this.tags([]);
-			}
+			this.load(data);
 		}
 
         if(Editor.editable) {
@@ -616,20 +581,69 @@ $(document).ready(function() {
             }
         },
 
+		reset: function() {
+			this.resources([]);
+			this.realtags([]);
+			this.rulesets([]);
+			this.functions([]);
+			this.variables([]);
+			this.variableGroups([]);
+			this.baseVariableGroup.variables([]);
+			this.parts([]);
+			this.extensions().map(function(e){
+					e.used(false);
+			});
+
+		},
+
         load: function(data) {
 			var q = this;
-            tryLoad(data,['name','statement','advice'],this);
 
-            if('variables' in data)
+			this.reset();
+
+			this.id = data.id;
+
+			if('metadata' in data) {
+				tryLoad(data.metadata,['notes','description'],this);
+			}
+
+			if('progress' in data) {
+				for(var i=0;i<Editor.progresses.length;i++) {
+					if(Editor.progresses[i][0]==data.progress) {
+						this.progress(Editor.progresses[i]);
+						break;
+					}
+				}
+			}
+
+			if('extensions' in data) {
+				this.extensions().map(function(e) {
+					if(data.extensions.indexOf(e.pk)>=0)
+						e.used(true);
+				});
+			}
+
+			if('resources' in data)
+			{
+				data.resources.map(function(rd) {
+					this.resources.push(new Editor.Resource(rd));
+				},this);
+			}
+
+			contentData = Editor.parseExam(data.content);
+
+            tryLoad(contentData,['name','statement','advice'],this);
+
+            if('variables' in contentData)
             {
-                for(var x in data.variables)
+                for(var x in contentData.variables)
                 {
-					var v = new Variable(this,data.variables[x]);
+					var v = new Variable(this,contentData.variables[x]);
                     this.variables.push(v);
                 }
             }
-			if('variable_groups' in data) {
-				data.variable_groups.map(function(gdata) {
+			if('variable_groups' in contentData) {
+				contentData.variable_groups.map(function(gdata) {
 					var vg = q.getVariableGroup(gdata.name);
 					gdata.variables.map(function(variable_name) {
 						var v = q.getVariable(variable_name);
@@ -641,36 +655,43 @@ $(document).ready(function() {
 
 			this.selectFirstVariable();
 
-			if('functions' in data)
+			if('functions' in contentData)
 			{
-				for(var x in data.functions)
+				for(var x in contentData.functions)
 				{
-					data.functions[x].name = x;
-					this.functions.push(new CustomFunction(this,data.functions[x]));
+					contentData.functions[x].name = x;
+					this.functions.push(new CustomFunction(this,contentData.functions[x]));
 				}
 			}
 
-			if('preamble' in data)
+			if('preamble' in contentData)
 			{
-				tryLoad(data.preamble,['css','js'],this.preamble);
+				tryLoad(contentData.preamble,['css','js'],this.preamble);
 			}
 
-            if('rulesets' in data)
+            if('rulesets' in contentData)
             {
-                for(var x in data.rulesets)
+                for(var x in contentData.rulesets)
                 {
-                    this.rulesets.push(new Ruleset(this,{name: x, sets:data.rulesets[x]}));
+                    this.rulesets.push(new Ruleset(this,{name: x, sets:contentData.rulesets[x]}));
                 }
             }
 
-            if('parts' in data)
+            if('parts' in contentData)
             {
-                data.parts.map(function(pd) {
+                contentData.parts.map(function(pd) {
                     this.loadPart(pd);
                 },this);
 				if(this.parts().length) 
 					this.currentPart(this.parts()[0]);
             }
+
+			try{
+				this.tags(data.tags);
+			}
+			catch(e) {
+				this.tags([]);
+			}
 
         },
 

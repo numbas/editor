@@ -197,6 +197,7 @@ class ValidateZipField:
         zip = self.cleaned_data['zipfile']
         if not zipfile.is_zipfile(zip):
             raise forms.ValidationError('Uploaded file is not a zip file')
+        return zip
         
 class NewThemeForm(forms.ModelForm,ValidateZipField):
     
@@ -243,12 +244,11 @@ class UpdateExtensionForm(forms.ModelForm):
         if not zipfile.is_zipfile(file):
             name, extension = os.path.splitext(file.name)
             if extension.lower() == '.js':
-                f = tempfile.TemporaryFile()
-                zip = zipfile.ZipFile(f,'w',zipfile.ZIP_DEFLATED)
-                zip.writestr(file.name,file.read())
-                self.cleaned_data['zipfile'] = f
+                return file
             else:
-                raise forms.ValidationError('Uploaded file is not a zip file')
+                raise forms.ValidationError('Uploaded file is not a .zip file or .js file')
+        else:
+            return file
 
 class NewExtensionForm(UpdateExtensionForm):
     

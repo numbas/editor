@@ -134,11 +134,8 @@ class Extension(models.Model):
     def script_path(self):
         if self.zipfile:
             filename = self.location+'.js'
-            print(filename)
             local_path = os.path.join(self.extracted_path,filename)
-            print(local_path)
             if os.path.exists(local_path):
-                print('exists')
                 return settings.MEDIA_URL+self.zipfile_folder+'/extracted/'+str(self.pk)+'/'+self.location+'/'+filename
         else:
             path = 'js/numbas/extensions/%s/%s.js' % (self.location,self.location)
@@ -161,8 +158,15 @@ class Extension(models.Model):
             if os.path.exists(self.extracted_path):
                 shutil.rmtree(self.extracted_path)
             os.makedirs(self.extracted_path)
-            z = ZipFile(self.zipfile.file,'r')
-            z.extractall(self.extracted_path)
+
+            name,extension = os.path.splitext(self.zipfile.name)
+            if extension.lower() == '.zip':
+                z = ZipFile(self.zipfile.file,'r')
+                z.extractall(self.extracted_path)
+            elif extension.lower() == '.js':
+                file = open(os.path.join(self.extracted_path,self.location+'.js'),'w')
+                file.write(self.zipfile.file.read())
+                file.close()
 
 class Theme( models.Model ):
     name = models.CharField(max_length=200)
@@ -202,7 +206,6 @@ class Image( models.Model ):
             return "data:image/jpg;base64,%s" % codecs.encode(data,'base64')[:-1]
     
         except IOError as e:
-            print(e)
             return self.image.url
 
     @property
@@ -210,7 +213,6 @@ class Image( models.Model ):
         return 'resources/%s' % self.image.name
 
     def delete(self,*args,**kwargs):
-        print(">>>>>>>>>>>>>>>>>>>>>>>DELETE "+self.image.name)
         self.image.delete(save=False)
         super(Image,self).delete(*args,**kwargs)
 

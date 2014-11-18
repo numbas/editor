@@ -321,6 +321,7 @@ class Question(models.Model,NumbasObject,ControlledObject):
     def as_json(self):
         self.get_parsed_content()
         d = model_to_dict(self)
+        d['JSONContent'] = self.parsed_content.data
         d['metadata'] = self.metadata
         d['tags'] = [ti.tag.name for ti in d['tags']]
         d['resources'] = [res.as_json() for res in self.resources.all()]

@@ -45,12 +45,16 @@
 
 	<div id="question" class="{% if not editable %}nonedit{% endif %}">
 		<div class="row-fluid">
-            <h1 id="name-header">
+            <h1 id="name-header" class="span10">
 				<span data-bind="text: name">{{object.name}}</span> 
                 {% if request.user.is_authenticated %}
                 <button type="button" data-bind="css:{starred: starred}, attr: {title: starred() ? 'This question is starred. Click to unstar it.' : 'Star this question'}, click: toggleStar" class="star" ></button>
                 {% endif %}
-            </h1>
+			</h1>
+			<div class="span2" id="edit-history">
+				<button disabled title="Undo" type="button" data-bind="click: rewindVersion, disable: noPreviousVersion">&larr;</button>
+				<button disabled title="Redo" type="button" data-bind="click: forwardVersion, disable: noNextVersion">&rarr;</button>
+			</div>
 		</div>
 		<div id="controls">
 			<div class="row-fluid">

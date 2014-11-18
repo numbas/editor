@@ -18,6 +18,19 @@ var viewModel;
 $(document).ready(function() {
 	var builtinRulesets = ['basic','unitFactor','unitPower','unitDenominator','zeroFactor','zeroTerm','zeroPower','noLeadingMinus','collectNumbers','simplifyFractions','zeroBase','constantsFirst','sqrtProduct','sqrtDivision','sqrtSquare','trig','otherNumbers']
 
+	function Version(data) {
+		this.data = data;
+		this.str = JSON.stringify(data);
+		this.time = new Date();
+		this.author = Editor.questionJSON.author;
+		this.timeSince = ko.observable(moment(this.time).fromNow());
+	}
+	Version.prototype = {
+		restore: function() {
+			console.log(this);
+		}
+	}
+
     function Question(data)
     {
 		var q = this;
@@ -374,8 +387,75 @@ $(document).ready(function() {
 			}
 			Editor.computedReplaceState('currentPartTab',ko.computed(function(){return this.currentPart().currentTab().id},this));
 		}
+
+		this.currentVersion = ko.observable(new Version(this.versionJSON()));
+		this.versions = ko.observableArray([this.currentVersion()]);
+		ko.computed(function() {
+			var v = new Version(this.versionJSON());
+			var currentVersion = this.currentVersion.peek();
+			console.log('version '+v.data.name+(currentVersion ? ' (current '+currentVersion.data.name+')' : ''));
+			if(!currentVersion || currentVersion.str!=v.str) {
+				console.log('new version');
+				var i = viewModel.versions.indexOf(viewModel.currentVersion());
+				if(i!=-1) {
+					viewModel.versions(viewModel.versions.slice(0,i+1));
+				}
+				this.versions.push(v);
+				this.currentVersion(v);
+			}
+		},this).extend({throttle:1000});
+
+		this.noPreviousVersion = ko.computed(function() {
+			return this.versions.indexOf(this.currentVersion())==0;
+		},this);
+		this.noNextVersion = ko.computed(function() {
+			return this.versions.indexOf(this.currentVersion())==this.versions().length-1;
+		},this);
+
+		var q = this;
+		setInterval(function() {
+			q.versions().map(function(v) {
+				v.timeSince(moment(v.time).fromNow());
+			});
+		},100);
     }
     Question.prototype = {
+
+		versionJSON: function() {
+			return {
+				id: this.id,
+				content: this.output(),
+				name: this.name(),
+				author: Editor.questionJSON.author,
+				copy_of: Editor.questionJSON.copy_of,
+				public_access: this.public_access(),
+				extensions: this.usedExtensions().map(function(e){return e.pk}),
+				tags: this.tags(),
+				progress: this.progress()[0],
+				resources: this.saveResources(),
+				metadata: this.metadata()
+			}
+		},
+
+		restoreVersion: function(version) {
+			viewModel.currentVersion(version);
+			viewModel.load(version.data);
+		},
+
+		rewindVersion: function() {
+			var i = this.versions.indexOf(this.currentVersion());
+			if(i>0) {
+				this.restoreVersion(this.versions()[i-1]);
+			}
+		},
+
+		forwardVersion: function() {
+			var i = this.versions.indexOf(this.currentVersion());
+			if(i<this.versions().length-1) {
+				this.restoreVersion(this.versions()[i+1]);
+			}
+		},
+
 		deleteQuestion: function(q,e) {
 			if(window.confirm('Really delete this question?')) {
 				$(e.target).find('form').submit();

@@ -1358,7 +1358,13 @@ $(document).ready(function() {
             displayType:ko.observable(''),
 			customMarking: ko.observable(false),
 			customMatrix: ko.observable(''),
+			warningType: ko.observable(''),
 
+			warningTypes: [
+				{name: 'none', niceName: 'Do nothing'},
+				{name: 'warn', niceName: 'Warn'},
+				{name: 'prevent', niceName: 'Prevent submission'}
+			],
             displayTypes: {
                 'm_n_x': [
                     {name: 'radiogroup', niceName: 'One from each row'},
@@ -1712,6 +1718,7 @@ $(document).ready(function() {
                 o.shuffleChoices = this.multiplechoice.shuffleChoices();
                 o.shuffleAnswers = this.multiplechoice.shuffleAnswers();
                 o.displayType = this.multiplechoice.displayType().name;
+				o.warningType = this.multiplechoice.warningType().name;
 
                 var matrix = [];
                 var choices = this.multiplechoice.choices();
@@ -1736,6 +1743,7 @@ $(document).ready(function() {
                 o.displayColumns = this.multiplechoice.displayColumns();
                 o.minAnswers = this.multiplechoice.minAnswers();
                 o.maxAnswers = this.multiplechoice.maxAnswers();
+				o.warningType = this.multiplechoice.warningType().name;
 
                 var choices = this.multiplechoice.choices();
                 o.choices = choices.map(function(c){return c.content()});
@@ -1835,6 +1843,12 @@ $(document).ready(function() {
 					this.multiplechoice.customMarking(true);
 					this.multiplechoice.customMatrix(data.matrix);
 				}
+                for(var i=0;i<this.multiplechoice.warningTypes.length;i++)
+                {
+                    if(this.multiplechoice.warningTypes[i].name==data.warningType) {
+                        this.multiplechoice.warningType(this.multiplechoice.warningTypes[i]);
+					}
+                }
                 for(var i=0;i<this.multiplechoice.displayTypes.m_n_x.length;i++)
                 {
                     if(this.multiplechoice.displayTypes.m_n_x[i].name==data.displayType)
@@ -1863,6 +1877,13 @@ $(document).ready(function() {
 					this.multiplechoice.customMarking(true);
 					this.multiplechoice.customMatrix(data.matrix);
 				}
+
+                for(var i=0;i<this.multiplechoice.warningTypes.length;i++)
+                {
+                    if(this.multiplechoice.warningTypes[i].name==data.warningType) {
+                        this.multiplechoice.warningType(this.multiplechoice.warningTypes[i]);
+					}
+                }
 
                 var displayTypes = this.multiplechoice.displayTypes[this.type().name];
                 for(var i=0;i<displayTypes.length;i++)

@@ -754,6 +754,14 @@
 										name: 'property',
 										data: {label:'Maximum answers:',property:multiplechoice.maxAnswers, min:multiplechoice.minAnswers}
 									}"></div>
+									<div class="control-group" data-bind="fadeVisible: multiplechoice.minAnswers()!=0 || multiplechoice.maxAnswers()!=0">
+										<label>
+											<span class="control-label">What to do if wrong number of answers selected:</span>
+											<div class="controls">
+												<select data-bind="options: multiplechoice.warningTypes, value: multiplechoice.warningType, optionsText: 'niceName'"></select>
+											</div>
+										</label>
+									</div>
 									<div class="control-group" data-bind="template: {
 										name: 'booleanproperty',
 										data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
@@ -822,6 +830,14 @@
 										name: 'property',
 										data: {label:'Maximum answers:',property:multiplechoice.maxAnswers, min:multiplechoice.minAnswers}
 									}"></div>
+									<div class="control-group" data-bind="fadeVisible: multiplechoice.minAnswers()!=0 || multiplechoice.maxAnswers()!=0">
+										<label>
+											<span class="control-label">What to do if wrong number of answers selected:</span>
+											<div class="controls">
+												<select data-bind="options: multiplechoice.warningTypes, value: multiplechoice.warningType, optionsText: 'niceName'"></select>
+											</div>
+										</label>
+									</div>
 									<div class="control-group" data-bind="template: {
 										name: 'booleanproperty',
 										data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}

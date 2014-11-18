@@ -678,6 +678,10 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 										data: {label:'Maximum answers:',property:multiplechoice.maxAnswers, min:multiplechoice.minAnswers}
 									}"></div>
 									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'What to do if wrong number of choices selected:',property:multiplechoice.warningType().niceName}
+									}"></div>
+									<div class="control-group" data-bind="template: {
 										name: 'booleanproperty',
 										data: {label:'Shuffle order of choices?', property:multiplechoice.shuffleChoices}
 									}"></div>
@@ -738,6 +742,10 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 									<div class="control-group" data-bind="template: {
 										name: 'property',
 										data: {label:'Maximum answers:',property:multiplechoice.maxAnswers, min:multiplechoice.minAnswers}
+									}"></div>
+									<div class="control-group" data-bind="template: {
+										name: 'property',
+										data: {label:'What to do if wrong number of choices selected:',property:multiplechoice.warningType().niceName}
 									}"></div>
 									<div class="control-group" data-bind="template: {
 										name: 'booleanproperty',

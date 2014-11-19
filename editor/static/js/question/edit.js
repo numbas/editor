@@ -18,17 +18,32 @@ var viewModel;
 $(document).ready(function() {
 	var builtinRulesets = ['basic','unitFactor','unitPower','unitDenominator','zeroFactor','zeroTerm','zeroPower','noLeadingMinus','collectNumbers','simplifyFractions','zeroBase','constantsFirst','sqrtProduct','sqrtDivision','sqrtSquare','trig','otherNumbers']
 
-	function Version(data) {
+	function Version(data,author,prev_version) {
 		this.data = data;
-		this.str = JSON.stringify(data);
+		this.author = author;
+
+		this.prev_version = ko.observable(prev_version);
+		this.next_version = ko.observable(null);
+
+		var old_data = {};
+
+		if(prev_version) {
+			old_data = prev_version.data;
+		}
+
+		this.diff = jiff.diff(old_data,data);
+
 		this.time = new Date();
-		this.author = Editor.questionJSON.author;
 		this.timeSince = ko.observable(moment(this.time).fromNow());
+
+		this.hasPrevious = ko.computed(function() {
+			return this.prev_version() != null;
+		},this);
+		this.hasNext = ko.computed(function() {
+			return this.next_version() != null;
+		},this);
 	}
 	Version.prototype = {
-		restore: function() {
-			console.log(this);
-		}
 	}
 
     function Question(data)
@@ -388,43 +403,54 @@ $(document).ready(function() {
 			Editor.computedReplaceState('currentPartTab',ko.computed(function(){return this.currentPart().currentTab().id},this));
 		}
 
-		this.currentVersion = ko.observable(new Version(this.versionJSON()));
-		this.versions = ko.observableArray([this.currentVersion()]);
+		this.currentVersion = ko.observable(new Version(this.versionJSON(),Editor.questionJSON.author));
+
+		// create a new version when the question JSON changes
 		ko.computed(function() {
-			var v = new Version(this.versionJSON());
 			var currentVersion = this.currentVersion.peek();
-			console.log('version '+v.data.name+(currentVersion ? ' (current '+currentVersion.data.name+')' : ''));
-			if(!currentVersion || currentVersion.str!=v.str) {
+			var v = new Version(this.versionJSON(),Editor.questionJSON.author, currentVersion);
+
+			//if the new version is different to the old one, keep the diff
+			if(!currentVersion || v.diff.length!=0) {
 				console.log('new version');
-				var i = viewModel.versions.indexOf(viewModel.currentVersion());
-				if(i!=-1) {
-					viewModel.versions(viewModel.versions.slice(0,i+1));
-				}
-				this.versions.push(v);
+				currentVersion.next_version(v);
 				this.currentVersion(v);
 			}
 		},this).extend({throttle:1000});
 
-		this.noPreviousVersion = ko.computed(function() {
-			return this.versions.indexOf(this.currentVersion())==0;
-		},this);
-		this.noNextVersion = ko.computed(function() {
-			return this.versions.indexOf(this.currentVersion())==this.versions().length-1;
-		},this);
 
-		var q = this;
-		setInterval(function() {
-			q.versions().map(function(v) {
-				v.timeSince(moment(v.time).fromNow());
-			});
-		},100);
+		this.rewindVersion = function() {
+			var currentVersion = q.currentVersion();
+			var prev_version = currentVersion.prev_version();
+			if(!prev_version) {
+				throw(new Error("Can't rewind - this is the first version"));
+			}
+			var data = q.versionJSON();
+			data = jiff.patch(jiff.inverse(currentVersion.diff),data);
+			q.currentVersion(prev_version);
+			q.load(data);
+		};
+
+		this.forwardVersion = function() {
+			var currentVersion = q.currentVersion();
+			var next_version = currentVersion.next_version();
+			if(!currentVersion.next_version()) {
+				throw(new Error("Can't go forward - this is the latest version"));
+			}
+			var data = q.versionJSON();
+			data = jiff.patch(next_version.diff,data);
+			q.currentVersion(next_version);
+			q.load(data);
+		};
+
     }
     Question.prototype = {
 
 		versionJSON: function() {
 			return {
 				id: this.id,
-				content: this.output(),
+				JSONContent: this.toJSON(),
+				numbasVersion: Editor.numbasVersion,
 				name: this.name(),
 				author: Editor.questionJSON.author,
 				copy_of: Editor.questionJSON.copy_of,
@@ -437,23 +463,9 @@ $(document).ready(function() {
 			}
 		},
 
-		restoreVersion: function(version) {
+		applyDiff: function(version) {
 			viewModel.currentVersion(version);
 			viewModel.load(version.data);
-		},
-
-		rewindVersion: function() {
-			var i = this.versions.indexOf(this.currentVersion());
-			if(i>0) {
-				this.restoreVersion(this.versions()[i-1]);
-			}
-		},
-
-		forwardVersion: function() {
-			var i = this.versions.indexOf(this.currentVersion());
-			if(i<this.versions().length-1) {
-				this.restoreVersion(this.versions()[i+1]);
-			}
 		},
 
 		deleteQuestion: function(q,e) {
@@ -710,7 +722,7 @@ $(document).ready(function() {
 				},this);
 			}
 
-			contentData = Editor.parseExam(data.content);
+			contentData = data.JSONContent;
 
             tryLoad(contentData,['name','statement','advice'],this);
 

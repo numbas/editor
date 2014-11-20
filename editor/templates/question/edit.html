@@ -50,12 +50,13 @@
                 {% if request.user.is_authenticated %}
                 <button type="button" data-bind="css:{starred: starred}, attr: {title: starred() ? 'This question is starred. Click to unstar it.' : 'Star this question'}, click: toggleStar" class="star" ></button>
                 {% endif %}
-			</h1>
+            </h1>
+            {% if editable %}
 			<div class="span3" id="edit-history" data-bind="with: currentVersion">
-				Edit history:
 				<button disabled title="Undo" type="button" data-bind="click: $root.rewindVersion, enable: hasPrevious">&larr;</button>
 				<button disabled title="Redo" type="button" data-bind="click: $root.forwardVersion, enable: hasNext">&rarr;</button>
-			</div>
+            </div>
+            {% endif %}
 		</div>
 		<div id="controls">
 			<div class="row-fluid">

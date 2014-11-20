@@ -114,6 +114,7 @@ INSTALLED_APPS = (
     'sanitizer',
     'accounts',
     'analytical',
+    'reversion',
     'editor',
     'registration',
     'django_tables2',

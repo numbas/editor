@@ -14,3 +14,4 @@ python-slugify>=0.0.7
 six>=1.5.2
 wsgiref>=0.1.2
 django-analytical>=0.17.1
+django-reversion==1.8.2

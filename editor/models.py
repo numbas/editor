@@ -36,6 +36,8 @@ from django.db.models import Q
 from django.forms import model_to_dict
 from uuslug import slugify
 
+import reversion
+
 from taggit.managers import TaggableManager
 import taggit.models
 
@@ -134,11 +136,8 @@ class Extension(models.Model):
     def script_path(self):
         if self.zipfile:
             filename = self.location+'.js'
-            print(filename)
             local_path = os.path.join(self.extracted_path,filename)
-            print(local_path)
             if os.path.exists(local_path):
-                print('exists')
                 return settings.MEDIA_URL+self.zipfile_folder+'/extracted/'+str(self.pk)+'/'+self.location+'/'+filename
         else:
             path = 'js/numbas/extensions/%s/%s.js' % (self.location,self.location)
@@ -210,7 +209,6 @@ class Image( models.Model ):
         return 'resources/%s' % self.image.name
 
     def delete(self,*args,**kwargs):
-        print(">>>>>>>>>>>>>>>>>>>>>>>DELETE "+self.image.name)
         self.image.delete(save=False)
         super(Image,self).delete(*args,**kwargs)
 
@@ -238,7 +236,7 @@ class QuestionManager(models.Manager):
             return mine_or_public | self.exclude(mine_or_public_query).filter(pk__in=given_access)
 
 
-
+@reversion.register
 class Question(models.Model,NumbasObject,ControlledObject):
     
     """Model class for a question.

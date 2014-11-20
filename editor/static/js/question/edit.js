@@ -68,10 +68,12 @@ $(document).ready(function() {
                     return 'Resources ('+q.resources().length+')';
                 })
             ),
-			new Editor.Tab('exams','Exams using this question')
+			new Editor.Tab('exams','Exams using this question'),
 		]);
-        if(Editor.editable)
+        if(Editor.editable) {
+			this.mainTabs.push(new Editor.Tab('versions','Editing history'));
             this.mainTabs.push(new Editor.Tab('access','Access'));
+        }
 
 		this.currentTab = ko.observable(this.mainTabs()[0]);
 
@@ -447,20 +449,23 @@ $(document).ready(function() {
     Question.prototype = {
 
 		versionJSON: function() {
-			return {
+			var obj = {
 				id: this.id,
 				JSONContent: this.toJSON(),
 				numbasVersion: Editor.numbasVersion,
 				name: this.name(),
 				author: Editor.questionJSON.author,
 				copy_of: Editor.questionJSON.copy_of,
-				public_access: this.public_access(),
 				extensions: this.usedExtensions().map(function(e){return e.pk}),
 				tags: this.tags(),
 				progress: this.progress()[0],
 				resources: this.saveResources(),
 				metadata: this.metadata()
-			}
+			};
+            if(Editor.editable) {
+                obj.public_access = this.public_access();
+            }
+            return obj;
 		},
 
 		applyDiff: function(version) {

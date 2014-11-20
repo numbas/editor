@@ -82,6 +82,9 @@ urlpatterns = patterns('',
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/$',
         question.UpdateView.as_view(), name='question_edit'),
 
+    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/revert/(?P<version>\d+)$',
+        question.RevertView.as_view(), name='question_revert'),
+
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/upload-resource$',
         upload_resource,name='upload_resource'),
 
@@ -98,7 +101,7 @@ urlpatterns = patterns('',
         login_required(ImageDeleteView.as_view()), name='delete_resource'),
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/resources/(?P<resource>.*)$',
-        media_view, name='question_edit'),
+        media_view, name='view_resource'),
                        
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/copy/$',login_required(question.CopyView.as_view()), name='question_copy',),
                        

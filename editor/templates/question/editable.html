@@ -948,6 +948,14 @@
 				This question is not used in any exams.
 			{% endif %}
 		</section>
+        <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='versions'}">
+        <p>Click on a revision to restore it.</p>
+        <ul class="versions">
+            {% for version in versions %}
+            <li class="version"><a href="{% url 'question_revert' question.pk question.slug version.pk %}">{{version.revision.date_created}} by {{version.revision.user.get_full_name}}</a></li>
+            {% endfor %}
+        </ul>
+        </section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='access'}">
 			<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#access', big: true}}"></span>
 			<form class="form-horizontal">

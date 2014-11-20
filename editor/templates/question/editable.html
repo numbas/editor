@@ -952,7 +952,7 @@
         <p>Click on a revision to restore it.</p>
         <ul class="versions">
             {% for version in versions %}
-            <li class="version"><a href="{% url 'question_revert' question.pk question.slug version.pk %}">{{version.revision.date_created}} by {{version.revision.user.get_full_name}}</a></li>
+            <li class="version"><a href="{% url 'question_revert' question.pk question.slug version.pk %}">{{version.revision.date_created}}{% if version.revision.user %} by {{version.revision.user.get_full_name}}{% endif %}</a></li>
             {% endfor %}
         </ul>
         </section>

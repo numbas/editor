@@ -24,7 +24,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.db import transaction
-import reversion
 from django.forms import model_to_dict
 from django.http import Http404, HttpResponse
 from django import http
@@ -34,6 +33,8 @@ from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import FormMixin
 from django.template.loader import render_to_string
 from django.conf import settings
+
+import reversion
 
 from django_tables2.config import RequestConfig
 
@@ -330,8 +331,7 @@ class UpdateView(generic.UpdateView):
         if self.editable:
             question_json['public_access'] = self.object.public_access
             question_json['access_rights'] = context['access_rights']
-
-        context['versions'] = reversion.get_for_object(self.object)
+            context['versions'] = reversion.get_for_object(self.object)
 
         return context
     
@@ -344,7 +344,6 @@ class RevertView(generic.UpdateView):
     def get(self, request, *args, **kwargs):
         self.user = request.user
         self.question = self.get_object()
-        print("AAAAAAAAAAAAAAA")
 
         if not self.question.can_be_edited_by(self.user):
             return http.HttpResponseForbidden()

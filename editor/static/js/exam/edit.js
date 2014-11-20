@@ -34,8 +34,10 @@ $(document).ready(function() {
 				})
 			)
 		]);
-        if(Editor.editable)
+        if(Editor.editable) {
+			this.mainTabs.push(new Editor.Tab('versions','Editing history'));
             this.mainTabs.push(new Editor.Tab('access','Access'));
+        }
 		this.currentTab = ko.observable(this.mainTabs()[0]);
 
         this.starred = ko.observable(Editor.starred);
@@ -68,7 +70,7 @@ $(document).ready(function() {
 			};
 		},this);
 
-		this.theme = ko.observable('default');
+		this.theme = ko.observable(null);
 		this.locale = ko.observable(Editor.preferred_locale);
 
         this.duration = ko.observable(0);
@@ -191,41 +193,7 @@ $(document).ready(function() {
 
         if(data)
 		{
-			this.id = data.id;
-
-			if('metadata' in data) {
-				tryLoad(data.metadata,['notes','description'],this);
-			}
-
-            this.load(Editor.parseExam(data.content));
-
-            if('custom_theme' in data && data.custom_theme) {
-                var path = data.custom_theme;
-                for(var i=0;i<Editor.themes.length;i++) {
-                    if(Editor.themes[i].path==path && Editor.themes[i].custom) {
-                        this.theme(Editor.themes[i]);
-                        break;
-                    }
-                }
-            } else if('theme' in data) {
-                var path = data.theme;
-                for(var i=0;i<Editor.themes.length;i++) {
-                    if(Editor.themes[i].path==path && !Editor.themes[i].custom) {
-                        this.theme(Editor.themes[i]);
-                        break;
-                    }
-                }
-            }
-
-            if('locale' in data)
-                this.locale(data.locale);
-
-			if('questions' in data)
-			{
-				this.questions(data.questions.map(function(q) {
-					return new Question(q,e.questions)
-				}));
-			}
+            this.load(data);
 		}
 
 		if(Editor.editable) {
@@ -332,8 +300,66 @@ $(document).ready(function() {
 			}
 			Editor.computedReplaceState('currentTab',ko.computed(function(){return this.currentTab().id},this));
 		}
+
+		this.currentVersion = ko.observable(new Editor.Version(this.versionJSON(),Editor.examJSON.author));
+
+		// create a new version when the exam JSON changes
+		ko.computed(function() {
+			var currentVersion = this.currentVersion.peek();
+			var v = new Editor.Version(this.versionJSON(),Editor.examJSON.author, currentVersion);
+
+			//if the new version is different to the old one, keep the diff
+			if(!currentVersion || v.diff.length!=0) {
+				currentVersion.next_version(v);
+				this.currentVersion(v);
+			}
+		},this).extend({throttle:1000});
+
+
+		this.rewindVersion = function() {
+			var currentVersion = e.currentVersion();
+			var prev_version = currentVersion.prev_version();
+			if(!prev_version) {
+				throw(new Error("Can't rewind - this is the first version"));
+			}
+			var data = e.versionJSON();
+			data = jiff.patch(jiff.inverse(currentVersion.diff),data);
+			e.currentVersion(prev_version);
+			e.load(data);
+		};
+
+		this.forwardVersion = function() {
+			var currentVersion = e.currentVersion();
+			var next_version = currentVersion.next_version();
+			if(!currentVersion.next_version()) {
+				throw(new Error("Can't go forward - this is the latest version"));
+			}
+			var data = e.versionJSON();
+			data = jiff.patch(next_version.diff,data);
+			e.currentVersion(next_version);
+			e.load(data);
+		};
+
     }
     Exam.prototype = {
+
+        versionJSON: function() {
+            var obj = {
+                id: this.id,
+                author: Editor.examJSON.author,
+                locale: Editor.examJSON.locale,
+                JSONContent: this.toJSON(),
+                metadata: this.metadata(),
+                name: this.name(),
+                questions: this.questions().map(function(q){return q.toJSON()}),
+                theme: this.theme().path
+            }
+            if(Editor.editable) {
+                obj.public_access = this.public_access()
+            }
+            return obj;
+        },
+
 		deleteExam: function(q,e) {
 			if(window.confirm('Really delete this exam?')) {
 				$(e.target).find('form').submit();
@@ -377,27 +403,70 @@ $(document).ready(function() {
             };
         },
 
+        reset: function() {
+            this.questions([]);
+        },
+
         load: function(data) {
-            tryLoad(data,['name','percentPass','shuffleQuestions','allQuestions','pickQuestions'],this);
-            this.duration((data.duration||0)/60);
+            this.reset();
 
-            if('navigation' in data)
+            var e = this;
+			this.id = data.id;
+
+			if('metadata' in data) {
+				tryLoad(data.metadata,['notes','description'],this);
+			}
+
+            var content = data.JSONContent;
+
+            tryLoad(content,['name','percentPass','shuffleQuestions','allQuestions','pickQuestions'],this);
+            this.duration((content.duration||0)/60);
+
+            if('navigation' in content)
             {
-				tryLoad(data.navigation,['allowregen','reverse','browse','showfrontpage','preventleave'],this);
-                this.onleave.load(data.navigation.onleave);
+				tryLoad(content.navigation,['allowregen','reverse','browse','showfrontpage','preventleave'],this);
+                this.onleave.load(content.navigation.onleave);
             }
 
-            if('timing' in data)
+            if('timing' in content)
             {
-				tryLoad(data.timing,['allowPause'],this);
-                this.timeout.load(data.timing.timeout);
-                this.timedwarning.load(data.timing.timedwarning);
+				tryLoad(content.timing,['allowPause'],this);
+                this.timeout.load(content.timing.timeout);
+                this.timedwarning.load(content.timing.timedwarning);
             }
 
-            if('feedback' in data)
+            if('feedback' in content)
             {
-                tryLoad(data.feedback,['showactualmark','showtotalmark','showanswerstate','allowrevealanswer','advicethreshold'],this);
+                tryLoad(content.feedback,['showactualmark','showtotalmark','showanswerstate','allowrevealanswer','advicethreshold'],this);
             }
+
+            if('custom_theme' in data && data.custom_theme) {
+                var path = data.custom_theme;
+                for(var i=0;i<Editor.themes.length;i++) {
+                    if(Editor.themes[i].path==path && Editor.themes[i].custom) {
+                        this.theme(Editor.themes[i]);
+                        break;
+                    }
+                }
+            } else if('theme' in data) {
+                var path = data.theme;
+                for(var i=0;i<Editor.themes.length;i++) {
+                    if(Editor.themes[i].path==path && !Editor.themes[i].custom) {
+                        this.theme(Editor.themes[i]);
+                        break;
+                    }
+                }
+            }
+
+            if('locale' in data)
+                this.locale(data.locale);
+
+			if('questions' in data)
+			{
+				this.questions(data.questions.map(function(q) {
+					return new Question(q,e.questions)
+				}));
+			}
         },
 
         download: function() {
@@ -456,15 +525,19 @@ $(document).ready(function() {
 		var q = this;
 		this.id = ko.observable(data.id);
 		this.name = ko.observable(data.name);
+        this.created = ko.observable(data.created);
 		this.author = ko.observable(data.author);
 		this.url = ko.observable(data.url);
+        this.deleteURL = ko.observable(data.deleteURL);
+        this.last_modified = ko.observable(data.last_modified);
 		this.previewURL = ko.computed(function() {
 			return q.url()+'preview/';
 		},this);
         this.progress = data.progress;
         this.progressDisplay = data.progressDisplay;
+        this.metadata = ko.observable(data.metadata);
 		var descriptionDiv = document.createElement('div');
-		descriptionDiv.innerHTML = data.metadata.description;
+		descriptionDiv.innerHTML = this.metadata().description;
 		this.description = $(descriptionDiv).text();
 		this.parent = parent;
 		this.data = data;
@@ -486,7 +559,15 @@ $(document).ready(function() {
 		toJSON: function() {
 			return {
 				id: this.id(),
-				name: this.name()
+				name: this.name(),
+                author: this.author(),
+                created: this.created(),
+                deleteURL: this.deleteURL(),
+                last_modified: this.last_modified(),
+                metadata: this.metadata(),
+                progress: this.progress,
+                progressDisplay: this.progressDisplay,
+                url: this.url()
 			};
 		},
 

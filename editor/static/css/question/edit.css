@@ -9,25 +9,6 @@
     margin-top: 0;
 }
 
-.versions .version {
-    margin: 0.5em 0;
-}
-
-#edit-history {
-	text-align: right;
-}
-#edit-history button {
-	border: none;
-	background: none;
-	font-size: 1.3em;
-	padding: 0.5em;
-	margin: 0;
-}
-#edit-history button:hover:enabled {
-	background: #f90;
-	color: white;
-}
-
 #admin {
 	margin-top: 5px;
 	margin-bottom: 15px;

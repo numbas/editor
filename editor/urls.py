@@ -39,6 +39,9 @@ urlpatterns = patterns('',
     
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/$', exam.UpdateView.as_view(),
         name='exam_edit'),
+
+    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/revert/(?P<version>\d+)$',
+        exam.RevertView.as_view(), name='exam_revert'),
                        
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/copy/$',login_required(exam.CopyView.as_view()), name='exam_copy',),
                        

@@ -222,6 +222,14 @@
                 </div>
 			</div>
 		</section>
+        <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='versions'}">
+        <p>Click on a revision to restore it.</p>
+        <ul class="versions">
+            {% for version in versions %}
+            <li class="version"><a href="{% url 'exam_revert' exam.pk exam.slug version.pk %}">{{version.revision.date_created}}{% if version.revision.user %} by {{version.revision.user.get_full_name}}{% endif %}</a></li>
+            {% endfor %}
+        </ul>
+        </section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='access'}">
 			<div data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#access', topic: 'access rights', big: true}}"></div>
 			<form class="form-horizontal">

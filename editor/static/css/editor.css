@@ -227,3 +227,24 @@ button.delete-grey:hover {
 .span4 select, .span4 input {
 	max-width: 170px;
 }
+
+.versions .version {
+    margin: 0.5em 0;
+}
+
+#edit-history {
+	text-align: right;
+}
+#edit-history button {
+	border: none;
+	background: none;
+	font-size: 1.3em;
+	padding: 0.5em;
+	margin: 0;
+    cursor: default;
+}
+#edit-history button:hover:enabled {
+	background: #f90;
+	color: white;
+    cursor: pointer;
+}

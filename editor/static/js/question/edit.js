@@ -18,34 +18,6 @@ var viewModel;
 $(document).ready(function() {
 	var builtinRulesets = ['basic','unitFactor','unitPower','unitDenominator','zeroFactor','zeroTerm','zeroPower','noLeadingMinus','collectNumbers','simplifyFractions','zeroBase','constantsFirst','sqrtProduct','sqrtDivision','sqrtSquare','trig','otherNumbers']
 
-	function Version(data,author,prev_version) {
-		this.data = data;
-		this.author = author;
-
-		this.prev_version = ko.observable(prev_version);
-		this.next_version = ko.observable(null);
-
-		var old_data = {};
-
-		if(prev_version) {
-			old_data = prev_version.data;
-		}
-
-		this.diff = jiff.diff(old_data,data);
-
-		this.time = new Date();
-		this.timeSince = ko.observable(moment(this.time).fromNow());
-
-		this.hasPrevious = ko.computed(function() {
-			return this.prev_version() != null;
-		},this);
-		this.hasNext = ko.computed(function() {
-			return this.next_version() != null;
-		},this);
-	}
-	Version.prototype = {
-	}
-
     function Question(data)
     {
 		var q = this;
@@ -405,16 +377,15 @@ $(document).ready(function() {
 			Editor.computedReplaceState('currentPartTab',ko.computed(function(){return this.currentPart().currentTab().id},this));
 		}
 
-		this.currentVersion = ko.observable(new Version(this.versionJSON(),Editor.questionJSON.author));
+		this.currentVersion = ko.observable(new Editor.Version(this.versionJSON(),Editor.questionJSON.author));
 
 		// create a new version when the question JSON changes
 		ko.computed(function() {
 			var currentVersion = this.currentVersion.peek();
-			var v = new Version(this.versionJSON(),Editor.questionJSON.author, currentVersion);
+			var v = new Editor.Version(this.versionJSON(),Editor.questionJSON.author, currentVersion);
 
 			//if the new version is different to the old one, keep the diff
 			if(!currentVersion || v.diff.length!=0) {
-				console.log('new version');
 				currentVersion.next_version(v);
 				this.currentVersion(v);
 			}

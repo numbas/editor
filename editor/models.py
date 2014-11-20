@@ -371,6 +371,7 @@ class QuestionHighlight(models.Model):
     note = models.TextField(blank=True)
     date = models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
 
+@reversion.register
 class Exam(models.Model,NumbasObject,ControlledObject):
     
     """Model class for an Exam.
@@ -460,7 +461,15 @@ class Exam(models.Model,NumbasObject,ControlledObject):
 
     def as_source(self):
         return str(self.as_numbasobject())
-        
+    
+    def as_json(self):
+        self.get_parsed_content()
+        exam_dict = model_to_dict(self)
+        exam_dict['questions'] = [q.summary() for q in self.get_questions()]
+        exam_dict['JSONContent'] = self.parsed_content.data
+
+        return exam_dict
+
     def summary(self, user=None):
         """return enough to identify an exam and say where to find it, along with a description"""
         obj = {

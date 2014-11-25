@@ -244,6 +244,7 @@ button.delete-grey:hover {
     box-shadow: none;
     font-size: 1em;
     min-width: 10em;
+	color: black;
 }
 .versions .version .comment input:hover {
     background: #acdeff;

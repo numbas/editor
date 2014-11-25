@@ -342,6 +342,14 @@ $(document).ready(function() {
 		};
 
         this.versions = ko.observableArray(Editor.versions.map(function(v){return new Editor.Version(v)}));
+		this.onlyShowCommentedVersions = ko.observable(false);
+		this.versionsToDisplay = ko.computed(function() {
+			if(this.onlyShowCommentedVersions()) {
+				return this.versions().filter(function(v,i){return i==0 || v.comment();});
+			} else {
+				return this.versions();
+			}
+		},this);
 
     }
     Exam.prototype = {

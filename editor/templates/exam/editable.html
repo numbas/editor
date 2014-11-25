@@ -223,7 +223,7 @@
 			</div>
 		</section>
         <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='versions'}">
-            <p>Click on a revision to restore it.</p>
+			<p>Click on a version to restore it.</p>
 			<p><label><input type="checkbox" data-bind="checked: onlyShowCommentedVersions"/> Only show versions with comments</label></p>
             <table class="versions">
                 <thead>
@@ -233,7 +233,7 @@
                 <tbody data-bind="foreach: versionsToDisplay">
                     <tr class="version">
                         <td>
-                            <a data-bind="attr: {href: 'revert/'+version_pk}">
+							<a data-bind="attr: {href: 'revert/'+version_pk}" title="Restore this version">
                                 <span data-bind="text: date_created"></span> by <span data-bind="text: user.name"></span>
                             </a> 
                         </td>

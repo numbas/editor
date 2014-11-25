@@ -949,12 +949,26 @@
 			{% endif %}
 		</section>
         <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='versions'}">
-        <p>Click on a revision to restore it.</p>
-        <ul class="versions">
-            {% for version in versions %}
-            <li class="version"><a href="{% url 'question_revert' question.pk question.slug version.pk %}">{{version.revision.date_created}}{% if version.revision.user %} by {{version.revision.user.get_full_name}}{% endif %}</a></li>
-            {% endfor %}
-        </ul>
+			<p>Click on a revision to restore it.</p>
+			<table class="versions">
+				<thead>
+					<th>Version</th>
+					<th>Comment</th>
+				</thead>
+				<tbody data-bind="foreach: versions">
+					<tr class="version">
+						<td>
+							<a data-bind="attr: {href: 'revert/'+version_pk}">
+								<span data-bind="text: date_created"></span> by <span data-bind="text: user.name"></span>
+							</a> 
+						</td>
+						<td class="comment">
+							<input type="text" data-bind="visible: editable, value: comment, autosize: comment"/>
+							<span data-bind="visible: !editable, text: comment"></span>
+						</td>
+					</tr>
+				</tbody>
+			</table>
         </section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='access'}">
 			<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#access', big: true}}"></span>

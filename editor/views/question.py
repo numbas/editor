@@ -44,6 +44,7 @@ import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
 from editor.tables import QuestionTable, QuestionHighlightTable
+from editor.views.version import version_json
 
 from accounts.models import UserProfile
 
@@ -284,7 +285,9 @@ class UpdateView(generic.UpdateView):
 
             reversion.set_user(self.user)
 
-        status = {"result": "success", "url": self.get_success_url()}
+        version = reversion.get_for_object(self.object)[0]
+
+        status = {"result": "success", "url": self.get_success_url(), "version": version_json(version,self.user)}
         return HttpResponse(json.dumps(status), content_type='application/json')
         
     def form_invalid(self, form):
@@ -316,6 +319,8 @@ class UpdateView(generic.UpdateView):
     
         context['access_rights'] = [{'id': qa.user.pk, 'name': qa.user.get_full_name(), 'access_level': qa.access} for qa in QuestionAccess.objects.filter(question=self.object)]
 
+        versions = [version_json(v,self.user) for v in reversion.get_for_object(self.object)]
+
         question_json = context['question_json'] = {
             'questionJSON': json.loads(self.object.as_json()),
             'editable': self.editable,
@@ -327,6 +332,8 @@ class UpdateView(generic.UpdateView):
             'previewURL': reverse('question_preview', args=(self.object.pk, self.object.slug)),
             'previewWindow': str(calendar.timegm(time.gmtime())),
             'starred': context['starred'],
+
+            'versions': versions,
         }
         if self.editable:
             question_json['public_access'] = self.object.public_access

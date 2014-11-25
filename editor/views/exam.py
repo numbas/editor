@@ -43,6 +43,7 @@ from editor.models import Exam, Question, ExamAccess, ExamHighlight, Theme
 import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
+from editor.views.version import version_json
 
 from numbasobject import NumbasObject
 
@@ -272,7 +273,9 @@ class UpdateView(generic.UpdateView):
 
             reversion.set_user(self.user)
 
-        status = {"result": "success"}
+        version = reversion.get_for_object(self.object)[0]
+
+        status = {"result": "success", "version": version_json(version,self.user)}
         return HttpResponse(json.dumps(status), content_type='application/json')
         
     def form_invalid(self, form):
@@ -307,13 +310,16 @@ class UpdateView(generic.UpdateView):
         else:
             profile = None
 
+        versions = [version_json(v,self.user) for v in reversion.get_for_object(self.object)]
+
         editor_json = {
             'editable': self.object.can_be_edited_by(self.request.user),
             'examJSON': exam_dict,
             'themes': sorted(context['themes'],key=operator.itemgetter('name')),
             'locales': context['locales'],
             'previewURL': reverse('exam_preview',args=(self.object.pk,self.object.slug)),
-            'previewWindow': str(calendar.timegm(time.gmtime()))
+            'previewWindow': str(calendar.timegm(time.gmtime())),
+            'versions': versions,
         }
         if profile:
             editor_json.update({

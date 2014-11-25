@@ -228,8 +228,28 @@ button.delete-grey:hover {
 	max-width: 170px;
 }
 
-.versions .version {
-    margin: 0.5em 0;
+.versions th {
+    text-align: left;
+}
+.versions td {
+    padding: 0.2em 1em 0.2em 0;
+}
+
+.versions .version .comment span {
+	padding: 4px 6px;
+}
+.versions .version .comment input {
+    margin: 0;
+    border: 0;
+    box-shadow: none;
+    font-size: 1em;
+    min-width: 10em;
+}
+.versions .version .comment input:hover {
+    background: #acdeff;
+}
+.versions .version .comment input:focus {
+    background: #eee;
 }
 
 #edit-history {

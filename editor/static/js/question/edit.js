@@ -271,6 +271,7 @@ $(document).ready(function() {
                             var address = location.protocol+'//'+location.host+data.url;
                             if(history.replaceState)
                                 history.replaceState(history.state,q.realName(),address);
+                            q.versions.splice(0,0,new Editor.Version(data.version));
                         })
                         .error(function(response,type,message) {
                             if(message=='')
@@ -377,45 +378,47 @@ $(document).ready(function() {
 			Editor.computedReplaceState('currentPartTab',ko.computed(function(){return this.currentPart().currentTab().id},this));
 		}
 
-		this.currentVersion = ko.observable(new Editor.Version(this.versionJSON(),Editor.questionJSON.author));
+		this.currentChange = ko.observable(new Editor.Change(this.versionJSON(),Editor.questionJSON.author));
 
 		// create a new version when the question JSON changes
 		ko.computed(function() {
-			var currentVersion = this.currentVersion.peek();
-			var v = new Editor.Version(this.versionJSON(),Editor.questionJSON.author, currentVersion);
+			var currentChange = this.currentChange.peek();
+			var v = new Editor.Change(this.versionJSON(),Editor.questionJSON.author, currentChange);
 
 			//if the new version is different to the old one, keep the diff
-			if(!currentVersion || v.diff.length!=0) {
-				currentVersion.next_version(v);
-				this.currentVersion(v);
+			if(!currentChange || v.diff.length!=0) {
+				currentChange.next_version(v);
+				this.currentChange(v);
 			}
 		},this).extend({throttle:1000});
 
 
-		this.rewindVersion = function() {
-			var currentVersion = q.currentVersion();
-			var prev_version = currentVersion.prev_version();
+		this.rewindChange = function() {
+			var currentChange = q.currentChange();
+			var prev_version = currentChange.prev_version();
 			if(!prev_version) {
 				throw(new Error("Can't rewind - this is the first version"));
 			}
 			var data = q.versionJSON();
-			data = jiff.patch(jiff.inverse(currentVersion.diff),data);
-			q.currentVersion(prev_version);
+			data = jiff.patch(jiff.inverse(currentChange.diff),data);
+			q.currentChange(prev_version);
 			q.load(data);
 		};
 
-		this.forwardVersion = function() {
-			var currentVersion = q.currentVersion();
-			var next_version = currentVersion.next_version();
-			if(!currentVersion.next_version()) {
+		this.forwardChange = function() {
+			var currentChange = q.currentChange();
+			var next_version = currentChange.next_version();
+			if(!currentChange.next_version()) {
 				throw(new Error("Can't go forward - this is the latest version"));
 			}
 			var data = q.versionJSON();
 			data = jiff.patch(next_version.diff,data);
-			q.currentVersion(next_version);
+			q.currentChange(next_version);
 			q.load(data);
 		};
 
+        this.versions = ko.observableArray(Editor.versions.map(function(v){return new Editor.Version(v)}));
+        
     }
     Question.prototype = {
 
@@ -440,7 +443,7 @@ $(document).ready(function() {
 		},
 
 		applyDiff: function(version) {
-			viewModel.currentVersion(version);
+			viewModel.currentChange(version);
 			viewModel.load(version.data);
 		},
 

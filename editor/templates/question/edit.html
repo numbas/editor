@@ -52,9 +52,9 @@
                 {% endif %}
             </h1>
             {% if editable %}
-			<div class="span3" id="edit-history" data-bind="with: currentVersion">
-				<button disabled title="Undo" type="button" data-bind="click: $root.rewindVersion, enable: hasPrevious">&larr;</button>
-				<button disabled title="Redo" type="button" data-bind="click: $root.forwardVersion, enable: hasNext">&rarr;</button>
+			<div class="span3" id="edit-history" data-bind="with: currentChange">
+				<button disabled title="Undo" type="button" data-bind="click: $root.rewindChange, enable: hasPrevious">&larr;</button>
+				<button disabled title="Redo" type="button" data-bind="click: $root.forwardChange, enable: hasNext">&rarr;</button>
             </div>
             {% endif %}
 		</div>

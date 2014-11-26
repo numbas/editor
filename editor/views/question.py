@@ -23,6 +23,7 @@ from django.contrib import staticfiles
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db.models import Q
+from django.db import transaction
 from django.forms import model_to_dict
 from django.http import Http404, HttpResponse
 from django import http
@@ -33,6 +34,8 @@ from django.views.generic.edit import FormMixin
 from django.template.loader import render_to_string
 from django.conf import settings
 
+import reversion
+
 from django_tables2.config import RequestConfig
 
 from editor.forms import NewQuestionForm, QuestionForm, QuestionSetAccessForm, QuestionSearchForm, QuestionHighlightForm
@@ -41,6 +44,7 @@ import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
 from editor.tables import QuestionTable, QuestionHighlightTable
+from editor.views.version import version_json
 
 from accounts.models import UserProfile
 
@@ -265,19 +269,25 @@ class UpdateView(generic.UpdateView):
             return super(UpdateView,self).get(request,*args,**kwargs)
 
     def form_valid(self, form):
-        self.object = form.save(commit=False)
-        self.object.metadata = json.dumps(self.object.metadata)
-        self.object.extensions.clear()
-        self.object.extensions.add(*form.cleaned_data['extensions'])
 
-        self.object.edit_user = self.user
+        with transaction.atomic(), reversion.create_revision():
+            self.object = form.save(commit=False)
+            self.object.metadata = json.dumps(self.object.metadata)
+            self.object.extensions.clear()
+            self.object.extensions.add(*form.cleaned_data['extensions'])
 
-        resource_pks = [res['pk'] for res in self.resources]
-        self.object.resources = Image.objects.filter(pk__in=resource_pks)
+            self.object.edit_user = self.user
 
-        self.object.save()
+            resource_pks = [res['pk'] for res in self.resources]
+            self.object.resources = Image.objects.filter(pk__in=resource_pks)
 
-        status = {"result": "success", "url": self.get_success_url()}
+            self.object.save()
+
+            reversion.set_user(self.user)
+
+        version = reversion.get_for_object(self.object)[0]
+
+        status = {"result": "success", "url": self.get_success_url(), "version": version_json(version,self.user)}
         return HttpResponse(json.dumps(status), content_type='application/json')
         
     def form_invalid(self, form):
@@ -309,6 +319,8 @@ class UpdateView(generic.UpdateView):
     
         context['access_rights'] = [{'id': qa.user.pk, 'name': qa.user.get_full_name(), 'access_level': qa.access} for qa in QuestionAccess.objects.filter(question=self.object)]
 
+        versions = [version_json(v,self.user) for v in reversion.get_for_object(self.object)]
+
         question_json = context['question_json'] = {
             'questionJSON': json.loads(self.object.as_json()),
             'editable': self.editable,
@@ -320,15 +332,37 @@ class UpdateView(generic.UpdateView):
             'previewURL': reverse('question_preview', args=(self.object.pk, self.object.slug)),
             'previewWindow': str(calendar.timegm(time.gmtime())),
             'starred': context['starred'],
+
+            'versions': versions,
         }
         if self.editable:
             question_json['public_access'] = self.object.public_access
             question_json['access_rights'] = context['access_rights']
+            context['versions'] = reversion.get_for_object(self.object)
 
         return context
     
     def get_success_url(self):
         return reverse('question_edit', args=(self.object.pk,self.object.slug))
+
+class RevertView(generic.UpdateView):
+    model = Question
+    
+    def get(self, request, *args, **kwargs):
+        self.user = request.user
+        self.question = self.get_object()
+
+        if not self.question.can_be_edited_by(self.user):
+            return http.HttpResponseForbidden()
+
+        try:
+            self.version = reversion.models.Version.objects.get(pk=kwargs['version'])
+        except ObjectDoesNotExist:
+            raise Http404
+
+        self.version.revision.revert()
+
+        return redirect(reverse('question_edit', args=(self.question.pk,self.question.slug)))
 
 class HighlightView(generic.FormView):
     template_name = 'question/highlight.html'

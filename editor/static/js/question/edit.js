@@ -40,10 +40,12 @@ $(document).ready(function() {
                     return 'Resources ('+q.resources().length+')';
                 })
             ),
-			new Editor.Tab('exams','Exams using this question')
+			new Editor.Tab('exams','Exams using this question'),
 		]);
-        if(Editor.editable)
+        if(Editor.editable) {
+			this.mainTabs.push(new Editor.Tab('versions','Editing history'));
             this.mainTabs.push(new Editor.Tab('access','Access'));
+        }
 
 		this.currentTab = ko.observable(this.mainTabs()[0]);
 
@@ -91,6 +93,7 @@ $(document).ready(function() {
 				return this.realtags().sort();
 			},
             write: function(newtags) {
+				newtags = newtags.slice();
                 for(var i=newtags.length-1;i>=0;i--)
                 {
                     if(newtags.indexOf(newtags[i])<i)
@@ -224,43 +227,7 @@ $(document).ready(function() {
 
         if(data)
 		{
-			this.id = data.id;
-
-			if('metadata' in data) {
-				tryLoad(data.metadata,['notes','description'],this);
-			}
-
-			if('progress' in data) {
-				for(var i=0;i<Editor.progresses.length;i++) {
-					if(Editor.progresses[i][0]==data.progress) {
-						this.progress(Editor.progresses[i]);
-						break;
-					}
-				}
-			}
-
-			if('extensions' in data) {
-				this.extensions().map(function(e) {
-					if(data.extensions.indexOf(e.pk)>=0)
-						e.used(true);
-				});
-			}
-
-			if('resources' in data)
-			{
-				data.resources.map(function(rd) {
-					this.resources.push(new Editor.Resource(rd));
-				},this);
-			}
-
-			this.load(Editor.parseExam(data.content));
-
-			try{
-				this.tags(data.tags);
-			}
-			catch(e) {
-				this.tags([]);
-			}
+			this.load(data);
 		}
 
         if(Editor.editable) {
@@ -304,6 +271,7 @@ $(document).ready(function() {
                             var address = location.protocol+'//'+location.host+data.url;
                             if(history.replaceState)
                                 history.replaceState(history.state,q.realName(),address);
+                            q.versions.splice(0,0,new Editor.Version(data.version));
                         })
                         .error(function(response,type,message) {
                             if(message=='')
@@ -409,8 +377,84 @@ $(document).ready(function() {
 			}
 			Editor.computedReplaceState('currentPartTab',ko.computed(function(){return this.currentPart().currentTab().id},this));
 		}
+
+		this.currentChange = ko.observable(new Editor.Change(this.versionJSON(),Editor.questionJSON.author));
+
+		// create a new version when the question JSON changes
+		ko.computed(function() {
+			var currentChange = this.currentChange.peek();
+			var v = new Editor.Change(this.versionJSON(),Editor.questionJSON.author, currentChange);
+
+			//if the new version is different to the old one, keep the diff
+			if(!currentChange || v.diff.length!=0) {
+				currentChange.next_version(v);
+				this.currentChange(v);
+			}
+		},this).extend({throttle:1000});
+
+
+		this.rewindChange = function() {
+			var currentChange = q.currentChange();
+			var prev_version = currentChange.prev_version();
+			if(!prev_version) {
+				throw(new Error("Can't rewind - this is the first version"));
+			}
+			var data = q.versionJSON();
+			data = jiff.patch(jiff.inverse(currentChange.diff),data);
+			q.currentChange(prev_version);
+			q.load(data);
+		};
+
+		this.forwardChange = function() {
+			var currentChange = q.currentChange();
+			var next_version = currentChange.next_version();
+			if(!currentChange.next_version()) {
+				throw(new Error("Can't go forward - this is the latest version"));
+			}
+			var data = q.versionJSON();
+			data = jiff.patch(next_version.diff,data);
+			q.currentChange(next_version);
+			q.load(data);
+		};
+
+        this.versions = ko.observableArray(Editor.versions.map(function(v){return new Editor.Version(v)}));
+		this.onlyShowCommentedVersions = ko.observable(true);
+		this.versionsToDisplay = ko.computed(function() {
+			if(this.onlyShowCommentedVersions()) {
+				return this.versions().filter(function(v,i){return i==0 || v.comment();});
+			} else {
+				return this.versions();
+			}
+		},this);
+        
     }
     Question.prototype = {
+
+		versionJSON: function() {
+			var obj = {
+				id: this.id,
+				JSONContent: this.toJSON(),
+				numbasVersion: Editor.numbasVersion,
+				name: this.name(),
+				author: Editor.questionJSON.author,
+				copy_of: Editor.questionJSON.copy_of,
+				extensions: this.usedExtensions().map(function(e){return e.pk}),
+				tags: this.tags(),
+				progress: this.progress()[0],
+				resources: this.saveResources(),
+				metadata: this.metadata()
+			};
+            if(Editor.editable) {
+                obj.public_access = this.public_access();
+            }
+            return obj;
+		},
+
+		applyDiff: function(version) {
+			viewModel.currentChange(version);
+			viewModel.load(version.data);
+		},
+
 		deleteQuestion: function(q,e) {
 			if(window.confirm('Really delete this question?')) {
 				$(e.target).find('form').submit();
@@ -616,20 +660,69 @@ $(document).ready(function() {
             }
         },
 
+		reset: function() {
+			this.resources([]);
+			this.realtags([]);
+			this.rulesets([]);
+			this.functions([]);
+			this.variables([]);
+			this.variableGroups([]);
+			this.baseVariableGroup.variables([]);
+			this.parts([]);
+			this.extensions().map(function(e){
+					e.used(false);
+			});
+
+		},
+
         load: function(data) {
 			var q = this;
-            tryLoad(data,['name','statement','advice'],this);
 
-            if('variables' in data)
+			this.reset();
+
+			this.id = data.id;
+
+			if('metadata' in data) {
+				tryLoad(data.metadata,['notes','description'],this);
+			}
+
+			if('progress' in data) {
+				for(var i=0;i<Editor.progresses.length;i++) {
+					if(Editor.progresses[i][0]==data.progress) {
+						this.progress(Editor.progresses[i]);
+						break;
+					}
+				}
+			}
+
+			if('extensions' in data) {
+				this.extensions().map(function(e) {
+					if(data.extensions.indexOf(e.pk)>=0)
+						e.used(true);
+				});
+			}
+
+			if('resources' in data)
+			{
+				data.resources.map(function(rd) {
+					this.resources.push(new Editor.Resource(rd));
+				},this);
+			}
+
+			contentData = data.JSONContent;
+
+            tryLoad(contentData,['name','statement','advice'],this);
+
+            if('variables' in contentData)
             {
-                for(var x in data.variables)
+                for(var x in contentData.variables)
                 {
-					var v = new Variable(this,data.variables[x]);
+					var v = new Variable(this,contentData.variables[x]);
                     this.variables.push(v);
                 }
             }
-			if('variable_groups' in data) {
-				data.variable_groups.map(function(gdata) {
+			if('variable_groups' in contentData) {
+				contentData.variable_groups.map(function(gdata) {
 					var vg = q.getVariableGroup(gdata.name);
 					gdata.variables.map(function(variable_name) {
 						var v = q.getVariable(variable_name);
@@ -641,36 +734,43 @@ $(document).ready(function() {
 
 			this.selectFirstVariable();
 
-			if('functions' in data)
+			if('functions' in contentData)
 			{
-				for(var x in data.functions)
+				for(var x in contentData.functions)
 				{
-					data.functions[x].name = x;
-					this.functions.push(new CustomFunction(this,data.functions[x]));
+					contentData.functions[x].name = x;
+					this.functions.push(new CustomFunction(this,contentData.functions[x]));
 				}
 			}
 
-			if('preamble' in data)
+			if('preamble' in contentData)
 			{
-				tryLoad(data.preamble,['css','js'],this.preamble);
+				tryLoad(contentData.preamble,['css','js'],this.preamble);
 			}
 
-            if('rulesets' in data)
+            if('rulesets' in contentData)
             {
-                for(var x in data.rulesets)
+                for(var x in contentData.rulesets)
                 {
-                    this.rulesets.push(new Ruleset(this,{name: x, sets:data.rulesets[x]}));
+                    this.rulesets.push(new Ruleset(this,{name: x, sets:contentData.rulesets[x]}));
                 }
             }
 
-            if('parts' in data)
+            if('parts' in contentData)
             {
-                data.parts.map(function(pd) {
+                contentData.parts.map(function(pd) {
                     this.loadPart(pd);
                 },this);
 				if(this.parts().length) 
 					this.currentPart(this.parts()[0]);
             }
+
+			try{
+				this.tags(data.tags);
+			}
+			catch(e) {
+				this.tags([]);
+			}
 
         },
 

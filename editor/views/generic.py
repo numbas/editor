@@ -138,3 +138,15 @@ class AuthorRequiredMixin(object):
             template = get_template("403.html")
             return HttpResponseForbidden(template.render(RequestContext(self.request)))
         return result
+
+def user_json(user):
+    if user is None:
+        return {
+                'name': 'Anonymous',
+                'pk': None
+        }
+    else:
+        return {
+                'name': user.get_full_name(),
+                'pk': user.pk
+        }

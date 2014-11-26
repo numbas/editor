@@ -17,7 +17,7 @@ from django.views.generic import RedirectView, TemplateView
 
 from django.contrib.auth.decorators import login_required
 
-from editor.views import exam, question, HomeView, theme, extension
+from editor.views import exam, question, HomeView, theme, extension, version
 from editor.views.user import UserSearchView
 from editor.views.resource import upload_resource, ImageDeleteView, media_view
 
@@ -39,6 +39,9 @@ urlpatterns = patterns('',
     
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/$', exam.UpdateView.as_view(),
         name='exam_edit'),
+
+    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/revert/(?P<version>\d+)$',
+        exam.RevertView.as_view(), name='exam_revert'),
                        
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/copy/$',login_required(exam.CopyView.as_view()), name='exam_copy',),
                        
@@ -82,6 +85,9 @@ urlpatterns = patterns('',
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/$',
         question.UpdateView.as_view(), name='question_edit'),
 
+    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/revert/(?P<version>\d+)$',
+        question.RevertView.as_view(), name='question_revert'),
+
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/upload-resource$',
         upload_resource,name='upload_resource'),
 
@@ -98,7 +104,7 @@ urlpatterns = patterns('',
         login_required(ImageDeleteView.as_view()), name='delete_resource'),
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/resources/(?P<resource>.*)$',
-        media_view, name='question_edit'),
+        media_view, name='view_resource'),
                        
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/copy/$',login_required(question.CopyView.as_view()), name='question_copy',),
                        
@@ -125,4 +131,6 @@ urlpatterns = patterns('',
     url(r'^extensions/$', login_required(extension.ListView.as_view()), name='extension_list'),
     url(r'^extensions/(?P<pk>\d+)/edit$', login_required(extension.UpdateView.as_view()), name='extension_edit'),
     url(r'^extensions/(?P<pk>\d+)/delete$', login_required(extension.DeleteView.as_view()), name='extension_delete'),
+
+    url(r'version/(?P<pk>\d+)/update', login_required(version.UpdateView.as_view()), name='edit_version'),
 )

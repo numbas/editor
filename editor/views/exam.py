@@ -21,6 +21,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.db.models import Q
+from django.db import transaction
 from django.forms.models import model_to_dict
 from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django import http
@@ -28,6 +29,8 @@ from django.shortcuts import render,redirect
 from django.utils.decorators import method_decorator
 from django.views import generic
 from django.views.generic.detail import SingleObjectMixin
+
+import reversion
 
 import time
 import calendar
@@ -40,6 +43,7 @@ from editor.models import Exam, Question, ExamAccess, ExamHighlight, Theme
 import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
+from editor.views.version import version_json
 
 from numbasobject import NumbasObject
 
@@ -259,14 +263,19 @@ class UpdateView(generic.UpdateView):
             return super(UpdateView,self).get(request,*args,**kwargs)
 
     def form_valid(self, form):
-        self.object = form.save(commit=False)
+        with transaction.atomic(), reversion.create_revision():
+            self.object = form.save(commit=False)
 
-        self.object.set_questions(question_ids=self.questions)
-        self.object.edit_user = self.user
+            self.object.set_questions(question_ids=self.questions)
+            self.object.edit_user = self.user
 
-        self.object.save()
+            self.object.save()
 
-        status = {"result": "success"}
+            reversion.set_user(self.user)
+
+        version = reversion.get_for_object(self.object)[0]
+
+        status = {"result": "success", "version": version_json(version,self.user)}
         return HttpResponse(json.dumps(status), content_type='application/json')
         
     def form_invalid(self, form):
@@ -281,8 +290,7 @@ class UpdateView(generic.UpdateView):
     def get_context_data(self, **kwargs):
         context = super(UpdateView, self).get_context_data(**kwargs)
         self.object.get_parsed_content()
-        exam_dict = model_to_dict(self.object)
-        exam_dict['questions'] = [q.summary() for q in self.object.get_questions()]
+        exam_dict = self.object.as_json()
         if self.request.user.is_authenticated():
             exam_dict['recentQuestions'] = [q.summary() for q in Question.objects.filter(author=self.request.user).order_by('-last_modified')[:10]]
         else:
@@ -302,13 +310,16 @@ class UpdateView(generic.UpdateView):
         else:
             profile = None
 
+        versions = [version_json(v,self.user) for v in reversion.get_for_object(self.object)]
+
         editor_json = {
             'editable': self.object.can_be_edited_by(self.request.user),
             'examJSON': exam_dict,
             'themes': sorted(context['themes'],key=operator.itemgetter('name')),
             'locales': context['locales'],
             'previewURL': reverse('exam_preview',args=(self.object.pk,self.object.slug)),
-            'previewWindow': str(calendar.timegm(time.gmtime()))
+            'previewWindow': str(calendar.timegm(time.gmtime())),
+            'versions': versions,
         }
         if profile:
             editor_json.update({
@@ -329,10 +340,32 @@ class UpdateView(generic.UpdateView):
 
         context['access_rights'] = [{'id': ea.user.pk, 'name': ea.user.get_full_name(), 'access_level': ea.access} for ea in ExamAccess.objects.filter(exam=self.object)]
 
+        context['versions'] = reversion.get_for_object(self.object)
+
         return context
 
     def get_success_url(self):
         return reverse('exam_edit', args=(self.object.pk,self.object.slug,))
+
+class RevertView(generic.UpdateView):
+    model = Exam
+    
+    def get(self, request, *args, **kwargs):
+        self.user = request.user
+        self.exam = self.get_object()
+
+        if not self.exam.can_be_edited_by(self.user):
+            return http.HttpResponseForbidden()
+
+        try:
+            self.version = reversion.models.Version.objects.get(pk=kwargs['version'])
+        except ObjectDoesNotExist:
+            raise Http404
+
+        self.version.revision.revert()
+
+        return redirect(reverse('exam_edit', args=(self.exam.pk,self.exam.slug)))
+
     
 class HighlightView(generic.FormView):
     template_name = 'exam/highlight.html'

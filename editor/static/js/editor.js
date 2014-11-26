@@ -486,6 +486,63 @@ $(document).ready(function() {
         }).extend({throttle:1000});
     }
 
+    // change applied in the editor
+	Editor.Change = function(data,author,prev_version) {
+		this.data = data;
+		this.author = author;
+
+		this.prev_version = ko.observable(prev_version);
+		this.next_version = ko.observable(null);
+
+		var old_data = {};
+
+		if(prev_version) {
+			old_data = prev_version.data;
+		}
+
+		this.diff = jiff.diff(old_data,data);
+
+		this.time = new Date();
+		this.timeSince = ko.observable(moment(this.time).fromNow());
+
+		this.hasPrevious = ko.computed(function() {
+			return this.prev_version() != null;
+		},this);
+		this.hasNext = ko.computed(function() {
+			return this.next_version() != null;
+		},this);
+	}
+
+    // version saved to the database, ie a reversion.models.Version instance
+    Editor.Version = function(data) {
+        this.date_created = data.date_created;
+        this.user = data.user;
+        this.version_pk = data.version_pk;
+        this.revision_pk = data.revision_pk;
+        this.comment = ko.observable(data.comment);
+        this.editable = data.editable;
+        this.update_url = data.update_url;
+
+        this.editingComment = ko.observable(false);
+        this.editComment = function(v,e) { 
+            if(this.editable) {
+                this.editingComment(true); 
+            }
+        };
+
+        this.firstGo = true;
+        if(this.editable) {
+            ko.computed(function() {
+                var comment = this.comment();
+                if(this.firstGo) {
+                    this.firstGo = false;
+                    return;
+                }
+                $.post(this.update_url,{csrfmiddlewaretoken: getCookie('csrftoken'), comment: comment});
+            },this);
+        }
+    } 
+
 	//represent a JSON-esque object in the Numbas .exam format
 	prettyData = function(data){
 		switch(typeof(data))

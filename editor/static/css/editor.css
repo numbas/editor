@@ -227,3 +227,45 @@ button.delete-grey:hover {
 .span4 select, .span4 input {
 	max-width: 170px;
 }
+
+.versions th {
+    text-align: left;
+}
+.versions td {
+    padding: 0.2em 1em 0.2em 0;
+}
+
+.versions .version .comment span {
+	padding: 4px 6px;
+}
+.versions .version .comment input {
+    margin: 0;
+    border: 0;
+    box-shadow: none;
+    font-size: 1em;
+    min-width: 10em;
+	color: black;
+}
+.versions .version .comment input:hover {
+    background: #acdeff;
+}
+.versions .version .comment input:focus {
+    background: #eee;
+}
+
+#edit-history {
+	text-align: right;
+}
+#edit-history button {
+	border: none;
+	background: none;
+	font-size: 1.3em;
+	padding: 0.5em;
+	margin: 0;
+    cursor: default;
+}
+#edit-history button:hover:enabled {
+	background: #f90;
+	color: white;
+    cursor: pointer;
+}

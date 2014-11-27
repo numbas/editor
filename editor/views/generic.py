@@ -47,7 +47,6 @@ class CompileObject():
         """
 
         numbasobject.data['extensions'] = [e.extracted_path for e in Extension.objects.filter(location__in=numbasobject.data.get('extensions',[]))]
-        print(numbasobject.data['extensions'])
         source = str(numbasobject)
 
         theme_path = obj.theme_path if hasattr(obj,'theme_path') else 'default'

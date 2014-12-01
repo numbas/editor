@@ -155,6 +155,7 @@ $(document).ready(function() {
 		};
 
         this.variables = ko.observableArray([]);
+		this.questionScope = ko.observable();
 		this.variableGroups = ko.observableArray([]);
 		this.baseVariableGroup = new VariableGroup(this,{name:'Ungrouped variables'});
 		this.baseVariableGroup.fixed = true;
@@ -165,6 +166,13 @@ $(document).ready(function() {
 		this.editVariableGroup = ko.observable(null);
 		this.autoCalculateVariables = ko.observable(true);
 		this.currentVariable = ko.observable(null);
+		this.variablesTest = {
+			condition: ko.observable(''),
+			maxRuns: ko.observable(100),
+			totalRuns: ko.observable(0),
+			totalCorrect: ko.observable(0),
+			advice: ko.observable('')
+		};
 
 		this.variableErrors = ko.computed(function() {
 			var variables = this.variables();
@@ -180,6 +188,12 @@ $(document).ready(function() {
 			var v = new Variable(q);
 			q.variables.splice(n,0,v);
 		}
+
+		this.variableTabs = ko.observableArray([
+			new Editor.Tab('definitions','Definitions'),
+			new Editor.Tab('test','Test')
+		]);
+		this.currentVariableTab = ko.observable(this.variableTabs()[0]);
 
         this.parts = ko.observableArray([]);
 		this.currentPart = ko.observable(undefined);
@@ -222,7 +236,7 @@ $(document).ready(function() {
 				v.name();
 				v.definition();
 			});
-			this.computeVariables();
+			this.generateVariablePreview();
 		},this).extend({throttle:300});
 
         if(data)
@@ -361,6 +375,18 @@ $(document).ready(function() {
 				}
 			}
 			Editor.computedReplaceState('currentVariable',ko.computed(function(){return this.currentVariable().name()},this));
+			if('currentVariableTab' in state) {
+				var tabs = this.variableTabs();
+				for(var i=0;i<tabs.length;i++) {
+					var tab = tabs[i];
+					if(tab.id==state.currentVariableTab) {
+						this.currentVariableTab(tab);
+						break;
+					}
+				}
+			}
+			Editor.computedReplaceState('currentVariableTab',ko.computed(function(){return this.currentVariableTab().id},this));
+
 			if('currentPart' in state) {
 				this.currentPart(this.parts()[state.currentPart]);
 			}
@@ -526,15 +552,65 @@ $(document).ready(function() {
 			return p;
 		},
 
-		computeVariables: function() {
+		generateVariablePreview: function() {
 			if(!Numbas.jme)
 			{
 				var q = this;
 				Numbas.init = function() {
-					q.computeVariables();
+					q.generateVariablePreview();
 				};
 				return;
 			}
+
+			this.functions().map(function(f) {
+				f.error('');
+			});
+			this.variables().map(function(v) {
+				v.error('');
+				v.value('');
+			});
+
+			var prep = this.prepareVariables();
+
+			this.variables().map(function(v) {
+				v.dependencies(prep.todo[v.name().toLowerCase()].vars);
+			});
+
+			var condition = Numbas.jme.compile(this.variablesTest.condition());
+			var conditionSatisfied = false;
+			var runs = 0;
+			var maxRuns = this.variablesTest.maxRuns();
+
+			while(runs<maxRuns && !conditionSatisfied) {
+				runs += 1;
+				var results = this.computeVariables(prep);
+
+				if(condition) {
+					conditionSatisfied = Numbas.jme.evaluate(condition,results.scope).value;
+				} else {
+					conditionSatisfied = true;
+				}
+			}
+
+			// fill in observables
+			if(runs<maxRuns) {
+				this.variables().map(function(v) {
+					var name = v.name();
+					var result = results.variables[name];
+					if('value' in result) {
+						v.value(result.value);
+					}
+					if('error' in result) {
+						v.error(result.error);
+					}
+				});
+			}
+
+			this.questionScope(results.scope);
+		},
+
+		// get everything ready to compute variables - make functions, and work out dependency graph
+		prepareVariables: function() {
 			var jme = Numbas.jme;
 
 			var scopes = [jme.builtinScope];
@@ -545,12 +621,11 @@ $(document).ready(function() {
 					scopes.push(Numbas.extensions[extension].scope);
 				}
 			}
+
 			var scope = new jme.Scope(scopes);
 
 			//create functions
-			var tmpFunctions = this.functions().map(function(f) {
-				f.error('');
-
+			this.functions().map(function(f) {
 				try {
 					var fn = {
 						name: f.name(),
@@ -579,11 +654,9 @@ $(document).ready(function() {
 
 			});
 
-
 			//make structure of variables to evaluate
 			var todo = {}
 			this.variables().map(function(v) {
-				v.error('');
 				if(!v.name() || !v.definition())
 					return;
 				try {
@@ -594,8 +667,6 @@ $(document).ready(function() {
 					v.error(e.message);
 					return;
 				}
-				v.value('');
-				v.dependencies(vars);
 				todo[v.name().toLowerCase()] = {
 					v: v,
 					tree: tree,
@@ -603,17 +674,91 @@ $(document).ready(function() {
 				}
 			});
 
+			return {
+					scope: scope,
+					todo: todo
+			};
+		},
+
+		computeVariables: function(prep) {
+			var result = {variables: {}};
+			var jme = Numbas.jme;
+			var scope = result.scope = new jme.Scope([prep.scope]);
+			var todo = prep.todo;
+
 			//evaluate variables
 			for(var x in todo)
 			{
 				try {
 					var value = jme.variables.computeVariable(x,todo,scope);
-					todo[x].v.value(value);
+					result.variables[x] = {value: value};
 				}
 				catch(e) {
-					todo[x].v.error(e.message);
+					result.variables[x] = {error: e.message};
 				}
 			}
+
+			return result;
+		},
+
+		testVariables: function() {
+			var running_time = 3;
+			var start = new Date()
+			var end = start.getTime()+running_time*1000;
+			var runs = 0;
+			var correct = 0;
+			var q = this;
+			var prep = this.prepareVariables();
+			var condition = Numbas.jme.compile(this.variablesTest.condition());
+			this.variablesTest.advice('Running for '+running_time+' seconds...');
+
+			function finish() {
+				var timeTaken = ((new Date())-start)/1000;
+				var timePerRun = timeTaken/runs;
+
+				q.variablesTest.totalRuns(runs);
+				q.variablesTest.totalCorrect(correct);
+
+				var probPass = correct/runs;
+				var probFail = 1-probPass;
+				var suggestedRuns = Math.ceil(Math.log(1/1000)/Math.log(probFail));
+				var probSucceedInTime = 1-Math.pow(probFail,1/timePerRun);
+
+				function round(n,precision) {
+					precision = precision || 2;
+					return Numbas.math.niceNumber(n,{precisionType:'sigfig',precision:3});
+				}
+				q.variablesTest.advice(
+					'<p>The condition was satisfied <strong>'+round(probPass*100)+'%</strong> of the time, over <strong>'+runs+'</strong> runs. The mean computation time for one run was <strong>'+round(timePerRun)+'</strong> seconds.</p>'+
+					'<p>Successfully generating a set of variables will take on average <strong>'+round(timePerRun*(1/probPass))+'</strong> seconds on this device.</p>'+
+					'<p>In order to fail at most 1 in every 1000 times the question is run, you should set the max. runs to <strong>'+suggestedRuns+'</strong>, taking at most <strong>'+round(timePerRun*suggestedRuns)+'</strong> seconds on this device.</p>'+
+					'<p>If you want to allow at most <strong>1 second</strong> to generate a set of variables, i.e. set max. runs to <strong>'+round(1/timePerRun)+'</strong>, this device\'s chance of succeeding is <strong>'+round(probSucceedInTime*100)+'%</strong>.</p>'
+				);
+				return;
+			}
+
+			function test() {
+				var t = new Date();
+				if(t>end) {
+					finish();
+				} else {
+
+					var results = q.computeVariables(prep);
+					runs += 1;
+
+					var conditionSatisfied;
+					if(condition) {
+						conditionSatisfied = Numbas.jme.evaluate(condition,results.scope).value;
+					} else {
+						conditionSatisfied = true;
+					}
+					if(conditionSatisfied) {
+						correct += 1;
+					}
+					setTimeout(test,1);
+				}
+			}
+			test();
 		},
 
         toJSON: function() {
@@ -649,6 +794,10 @@ $(document).ready(function() {
                 advice: this.advice(),
                 rulesets: rulesets,
                 variables: variables,
+				variablesTest: {
+					condition: this.variablesTest.condition(),
+					maxRuns: this.variablesTest.maxRuns()
+				},
 				variable_groups: groups,
 				functions: functions,
 				preamble: {
@@ -733,6 +882,10 @@ $(document).ready(function() {
 			}
 
 			this.selectFirstVariable();
+
+			if('variablesTest' in contentData) {
+				tryLoad(contentData.variablesTest,['condition','maxRuns'],this.variablesTest);
+			}
 
 			if('functions' in contentData)
 			{

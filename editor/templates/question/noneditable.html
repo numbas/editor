@@ -98,7 +98,7 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 								</div>
 							</div>
 						</div>
-						<button type="button" data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button>
+						<button type="button" data-bind="click: generateVariablePreview, visible: variables().length>0">Regenerate values</button>
 					</div>
 					<div class="span8 variable" data-bind="with: currentVariable">
 						<form class="form-horizontal">

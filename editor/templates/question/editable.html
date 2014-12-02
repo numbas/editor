@@ -241,8 +241,12 @@
 
 							<div class="controls">
 								<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: variablesTest.condition, codemirrorMode: 'jme'"></textarea>
-								<p><button type="button" data-bind="click: testVariables">Test condition</button></p>
-								<div class="variable-test-advice" data-bind="html: variablesTest.advice"></div>
+								<div class="variables-test">
+									<div class="error" data-bind="visible: variablesTest.conditionError">Error: <span data-bind="html: variablesTest.conditionError"></span></div>
+									<p data-bind="visible: !variablesTest.running()"><button type="button" data-bind="click: testVariables">Test condition</button> for <input type="number" data-bind="value: variablesTest.running_time, autosize: {value:variablesTest.running_time, max:100, min: 20}"/> seconds</p>
+									<p class="variable-test-running" data-bind="visible: variablesTest.running">Running for <span data-bind="text: variablesTest.time_remaining_display"></span>... <button type="button" data-bind="click: cancelVariablesTest">Cancel</button></p>
+									<div class="variable-test-advice" data-bind="visible: !variablesTest.running(), html: variablesTest.advice"></div>
+								</div>
 							</div>
 						</div>
 						<div class="control-group" data-bind="template: {

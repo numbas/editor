@@ -345,6 +345,20 @@ input.recalculate-checkbox {
     cursor: pointer;
 }
 
+.variables-test {
+	margin: 1em 0;
+}
+
+.variables-test .error {
+    color: red;
+    background: #fcc;
+    display: inline-block;
+    padding: 0.3em 0.5em;
+    vertical-align: middle;
+	margin-bottom: 0.5em;
+}
+
+
 .function {
 	margin-bottom: 1em;
 }

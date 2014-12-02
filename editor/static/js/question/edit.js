@@ -166,13 +166,44 @@ $(document).ready(function() {
 		this.editVariableGroup = ko.observable(null);
 		this.autoCalculateVariables = ko.observable(true);
 		this.currentVariable = ko.observable(null);
+
+		// this changes whenever there's a change to a variable name or definition, or a variables is added or removed (or similar to the functions)
+		this.lastVariableChange = ko.computed(function() {
+			this.variables().map(function(v) {
+				v.definition();
+				v.name();
+			});
+			this.functions().map(function(f) {
+				f.name();
+				f.definition();
+				f.parameters();
+				f.type();
+				f.language();
+			});
+			return new Date();
+		},this);
+
 		this.variablesTest = {
 			condition: ko.observable(''),
+			conditionError: ko.observable(false),
 			maxRuns: ko.observable(100),
 			totalRuns: ko.observable(0),
 			totalCorrect: ko.observable(0),
-			advice: ko.observable('')
+			advice: ko.observable(''),
+			running_time: ko.observable(3),
+			running: ko.observable(false),
+			time_remaining: ko.observable(0)
 		};
+		this.variablesTest.time_remaining_display = ko.computed(function() {
+			return this.time_remaining()+' '+Numbas.util.pluralise(this.time_remaining(),'second','seconds');
+		},this.variablesTest);
+
+		// reset the advice whenever the condition changes or there's a change to the variables
+		ko.computed(function() {
+			this.variablesTest.condition();
+			this.lastVariableChange();
+			this.variablesTest.advice('');
+		},this);
 
 		this.variableErrors = ko.computed(function() {
 			var variables = this.variables();
@@ -191,7 +222,7 @@ $(document).ready(function() {
 
 		this.variableTabs = ko.observableArray([
 			new Editor.Tab('definitions','Definitions'),
-			new Editor.Tab('test','Test')
+			new Editor.Tab('test','Testing')
 		]);
 		this.currentVariableTab = ko.observable(this.variableTabs()[0]);
 
@@ -576,20 +607,26 @@ $(document).ready(function() {
 				v.dependencies(prep.todo[v.name().toLowerCase()].vars);
 			});
 
-			var condition = Numbas.jme.compile(this.variablesTest.condition());
-			var conditionSatisfied = false;
+			var results = this.computeVariables(prep);
 			var runs = 0;
 			var maxRuns = this.variablesTest.maxRuns();
+			try {
+				this.variablesTest.conditionError(false);
+				var condition = Numbas.jme.compile(this.variablesTest.condition());
+				var conditionSatisfied = false;
 
-			while(runs<maxRuns && !conditionSatisfied) {
-				runs += 1;
-				var results = this.computeVariables(prep);
+				while(runs<maxRuns && !conditionSatisfied) {
+					results = this.computeVariables(prep);
+					runs += 1;
 
-				if(condition) {
-					conditionSatisfied = Numbas.jme.evaluate(condition,results.scope).value;
-				} else {
-					conditionSatisfied = true;
+					if(condition) {
+						conditionSatisfied = Numbas.jme.evaluate(condition,results.scope).value;
+					} else {
+						conditionSatisfied = true;
+					}
 				}
+			} catch(e) {
+				this.variablesTest.conditionError(e.message);
 			}
 
 			// fill in observables
@@ -701,18 +738,31 @@ $(document).ready(function() {
 			return result;
 		},
 
+		cancelVariablesTest: function() {
+			this.variablesTest.cancel = true;
+		},
+
 		testVariables: function() {
-			var running_time = 3;
+			var running_time = parseFloat(this.variablesTest.running_time());
 			var start = new Date()
 			var end = start.getTime()+running_time*1000;
 			var runs = 0;
 			var correct = 0;
 			var q = this;
 			var prep = this.prepareVariables();
-			var condition = Numbas.jme.compile(this.variablesTest.condition());
-			this.variablesTest.advice('Running for '+running_time+' seconds...');
+			try {
+				var condition = Numbas.jme.compile(this.variablesTest.condition());
+				this.variablesTest.conditionError(false);
+			} catch(e) {
+				this.variablesTest.conditionError(e.message);
+				return;
+			}
+			this.variablesTest.time_remaining(running_time);
+			this.variablesTest.cancel = false;
+			this.variablesTest.running(true);
 
 			function finish() {
+				q.variablesTest.running(false);
 				var timeTaken = ((new Date())-start)/1000;
 				var timePerRun = timeTaken/runs;
 
@@ -721,6 +771,16 @@ $(document).ready(function() {
 
 				var probPass = correct/runs;
 				var probFail = 1-probPass;
+
+				// calculate 95% confidence interval for probPass
+				var z = 1.9599639845400545;
+				var n = runs;
+				var p = probPass;
+				var confidence = {
+					lower: (1/(1+z*z/n))*(p+z*z/(2*n)-z*Math.sqrt(p*(1-p)/n+z*z/(4*n*n))),
+					upper: (1/(1+z*z/n))*(p+z*z/(2*n)+z*Math.sqrt(p*(1-p)/n+z*z/(4*n*n)))
+				};
+
 				var suggestedRuns = Math.ceil(Math.log(1/1000)/Math.log(probFail));
 				var probSucceedInTime = 1-Math.pow(probFail,1/timePerRun);
 
@@ -728,34 +788,48 @@ $(document).ready(function() {
 					precision = precision || 2;
 					return Numbas.math.niceNumber(n,{precisionType:'sigfig',precision:3});
 				}
-				q.variablesTest.advice(
-					'<p>The condition was satisfied <strong>'+round(probPass*100)+'%</strong> of the time, over <strong>'+runs+'</strong> runs. The mean computation time for one run was <strong>'+round(timePerRun)+'</strong> seconds.</p>'+
-					'<p>Successfully generating a set of variables will take on average <strong>'+round(timePerRun*(1/probPass))+'</strong> seconds on this device.</p>'+
-					'<p>In order to fail at most 1 in every 1000 times the question is run, you should set the max. runs to <strong>'+suggestedRuns+'</strong>, taking at most <strong>'+round(timePerRun*suggestedRuns)+'</strong> seconds on this device.</p>'+
-					'<p>If you want to allow at most <strong>1 second</strong> to generate a set of variables, i.e. set max. runs to <strong>'+round(1/timePerRun)+'</strong>, this device\'s chance of succeeding is <strong>'+round(probSucceedInTime*100)+'%</strong>.</p>'
-				);
-				return;
+
+				if(correct==0) {
+					q.variablesTest.advice('The condition was never satisfied. That means it\'s either really unlikely or impossible.');
+				} else {
+					q.variablesTest.advice(
+						'<p>The condition was satisfied <strong>'+round(probPass*100)+'%</strong> of the time, over <strong>'+runs+'</strong> runs. The mean computation time for one run was <strong>'+round(timePerRun)+'</strong> seconds.</p>'+
+						'<p>Successfully generating a set of variables will take on average <strong>'+round(timePerRun*(1/probPass))+'</strong> seconds on this device.</p>'+
+						'<p>In order to fail at most 1 in every 1000 times the question is run, you should set the max. runs to <strong>'+suggestedRuns+'</strong>, taking at most <strong>'+round(timePerRun*suggestedRuns)+'</strong> seconds on this device.</p>'+
+						'<p>If you want to allow at most <strong>1 second</strong> to generate a set of variables, i.e. set max. runs to <strong>'+round(1/timePerRun)+'</strong>, this device\'s chance of succeeding is <strong>'+round(probSucceedInTime*100)+'%</strong>.</p>'
+					);
+				}
 			}
 
+			var ot = Math.ceil(running_time);
 			function test() {
 				var t = new Date();
-				if(t>end) {
+				if(q.variablesTest.cancel || t>end) {
 					finish();
 				} else {
-
+					var diff = Math.ceil((end-t)/1000);
+					if(diff!=ot) {
+						ot = diff;
+						q.variablesTest.time_remaining(diff);
+					}
 					var results = q.computeVariables(prep);
 					runs += 1;
 
 					var conditionSatisfied;
-					if(condition) {
-						conditionSatisfied = Numbas.jme.evaluate(condition,results.scope).value;
-					} else {
-						conditionSatisfied = true;
+					try {
+						if(condition) {
+							conditionSatisfied = Numbas.jme.evaluate(condition,results.scope).value;
+						} else {
+							conditionSatisfied = true;
+						}
+						if(conditionSatisfied) {
+							correct += 1;
+						}
+						setTimeout(test,1);
+					} catch(e) {
+						q.variablesTest.conditionError(e.message);
+						q.variablesTest.running(false);
 					}
-					if(conditionSatisfied) {
-						correct += 1;
-					}
-					setTimeout(test,1);
 				}
 			}
 			test();

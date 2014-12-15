@@ -329,13 +329,14 @@
 			<div class="controls">
 				<a class="preview" data-bind="attr: {href: previewURL()}" target="_blank" title="Test run this question"></a>
 			</div>
-			<div class="title">
-				<a data-bind="attr:{href: url}, text: name" target="_blank"></a>
+			<div class="details">
+				<div class="title">
+					<a data-bind="attr:{href: url}, text: name" target="_blank"></a>
+				</div>
+				<div class="author">
+					(<span data-bind="text: author"></span>) - <span data-bind="text: moment(last_modified()).fromNow()"></span>
+				</div>
 			</div>
-			<div class="author">
-				(<span data-bind="text: author"></span>)
-            </div>
-            <div data-bind="attr: {class: 'progress-display '+progress}, text: progressDisplay"></div>
 			<div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
 		</li>
 	</script>

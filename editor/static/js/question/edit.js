@@ -846,6 +846,10 @@ $(document).ready(function() {
                 variables[v.name()] = v.toJSON();
             });
 
+			var ungrouped_variables = this.baseVariableGroup.variables().map(function(v){
+				return v.name();
+			});
+
 			var groups = [];
 			this.variableGroups().map(function(g) {
 				groups.push({
@@ -872,6 +876,7 @@ $(document).ready(function() {
 					condition: this.variablesTest.condition(),
 					maxRuns: this.variablesTest.maxRuns()
 				},
+				ungrouped_variables: ungrouped_variables,
 				variable_groups: groups,
 				functions: functions,
 				preamble: {
@@ -952,6 +957,13 @@ $(document).ready(function() {
 						vg.variables.push(v);
 						q.baseVariableGroup.variables.remove(v);
 					});
+				});
+			}
+			if('ungrouped_variables' in contentData) {
+				contentData.ungrouped_variables.map(function(variable_name) {
+					var v = q.getVariable(variable_name);
+					q.baseVariableGroup.variables.remove(v);
+					q.baseVariableGroup.variables.push(v);
 				});
 			}
 

@@ -196,6 +196,16 @@
 	height: 16px;
 	vertical-align: middle;
 }
+
+.variable-group .group-name button.sort {
+	float: left;
+	margin: 0.6em 0.5em;
+	background: transparent url(../../images/sort-ascending-2x.png) no-repeat;
+	width: 16px;
+	height: 16px;
+	border:none;
+	padding: 0;
+}
 .variable-group .group-name button.delete {
 	float: right;
 	margin: 0.6em 0.5em;

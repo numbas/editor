@@ -1169,6 +1169,11 @@ $(document).ready(function() {
 			this.variables([]);
 		}
 	}
+	VariableGroup.prototype = {
+		sort: function() {
+			this.variables(this.variables().sort(function(a,b){return a.name()>b.name()}));
+		}
+	}
 
     function Variable(q,data) {
 		this.question = q;

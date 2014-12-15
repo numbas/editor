@@ -89,6 +89,7 @@
 								<div class="variable-groups" data-bind="foreach: allVariableGroups">
 									<div class="variable-group" data-bind="css: {editable: !fixed}">
 										<div class="group-name">
+											<button type="button" title="Sort variables by name" class="sort" data-bind="click: sort"></button>
 											<button type="button" title="Remove this group" class="delete" data-bind="visible: !fixed, click:remove"></button>
 											<h4 data-bind="text: displayName,visible: fixed || $root.editVariableGroup()!=$data, event: {focus: fixed ? null : $root.editVariableGroup}, attr: {tabindex: fixed ? undefined : 0}"></h4>
 											<form data-bind="submit: endEdit">

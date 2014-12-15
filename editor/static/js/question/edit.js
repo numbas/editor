@@ -1171,7 +1171,11 @@ $(document).ready(function() {
 	}
 	VariableGroup.prototype = {
 		sort: function() {
-			this.variables(this.variables().sort(function(a,b){return a.name()>b.name()}));
+			this.variables(this.variables().sort(function(a,b){
+				a = a.name();
+				b = b.name();
+				return a>b ? 1 : a==b ? 0 : -1;
+			}));
 		}
 	}
 

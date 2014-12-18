@@ -75,151 +75,187 @@
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='variables'}">
 			<span data-bind="template: {name: 'helplink', data: {topic: 'variables', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#variables', big: true}}"></span>
 			<div class="row-fluid">
-				<div class="span4">
-					<div>
-						<div class="variable-groups" data-bind="foreach: allVariableGroups">
-							<div class="variable-group" data-bind="css: {editable: !fixed}">
-								<div class="group-name">
-									<button type="button" title="Remove this group" class="delete" data-bind="visible: !fixed, click:remove"></button>
-									<h4 data-bind="text: displayName,visible: fixed || $root.editVariableGroup()!=$data, event: {focus: fixed ? null : $root.editVariableGroup}, attr: {tabindex: fixed ? undefined : 0}"></h4>
-									<form data-bind="submit: endEdit">
-										<input data-bind="value:name, visible: $root.editVariableGroup()==$data, hasfocus: isEditing, event: {blur: endEdit}"/>
-									</form>
-								</div>
-								<table class="variable-list">
-									<thead>
-										<tr>
-											<th class="name">Name</th>
-											<th class="value">Generated Value</th>
-										</tr>
-									</thead>
-									<tbody data-bind="css: {empty: variables().length==0}, sortable: {
-										template: 'variable-template',
-										data: $data.variables,
-										options: {
-											forcePlaceholderSize: true,
-											placeholder: 'placeholder'
-										}
-									}">
-									</tbody>
-								</table>
+				<ul class="nav nav-tabs" data-bind="foreach: variableTabs">
+					<li data-bind="css: {active: ko.utils.unwrapObservable($parent.currentVariableTab().id) == $data.id}">
+						<a href="#" data-bind="click: $parent.currentVariableTab, text: title"></a>
+					</li>
+				</ul>
+			</div>
+			<div class="tab-content">
+				<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentVariableTab().id)=='definitions'}">
+					<div class="row-fluid">
+						<div class="span4">
+							<div>
+								<div class="variable-groups" data-bind="foreach: allVariableGroups">
+									<div class="variable-group" data-bind="css: {editable: !fixed}">
+										<div class="group-name">
+											<button type="button" title="Sort variables by name" class="sort" data-bind="click: sort"></button>
+											<button type="button" title="Remove this group" class="delete" data-bind="visible: !fixed, click:remove"></button>
+											<h4 data-bind="text: displayName,visible: fixed || $root.editVariableGroup()!=$data, event: {focus: fixed ? null : $root.editVariableGroup}, attr: {tabindex: fixed ? undefined : 0}"></h4>
+											<form data-bind="submit: endEdit">
+												<input data-bind="value:name, visible: $root.editVariableGroup()==$data, hasfocus: isEditing, event: {blur: endEdit}"/>
+											</form>
+										</div>
+										<table class="variable-list">
+											<thead>
+												<tr>
+													<th class="name">Name</th>
+													<th class="value">Generated Value</th>
+												</tr>
+											</thead>
+											<tbody data-bind="css: {empty: variables().length==0}, sortable: {
+												template: 'variable-template',
+												data: $data.variables,
+												options: {
+													forcePlaceholderSize: true,
+													placeholder: 'placeholder'
+												}
+											}">
+											</tbody>
+										</table>
 
-								<button type="button" class="add-variable" data-bind="click: addVariable, attr: {title: (variables().length ? 'Add another variable' : 'Add a variable')+' to '+name()}">
-									<span class="icon"></span>
-									Add a variable
-								</button>
+										<button type="button" class="add-variable" data-bind="click: addVariable, attr: {title: (variables().length ? 'Add another variable' : 'Add a variable')+' to '+name()}">
+											<span class="icon"></span>
+											Add a variable
+										</button>
+									</div>
+								</div>
+								<script type="text/html" id="variable-template">
+									<tr data-bind="click: $root.currentVariable, css: {noname: !name(), current: $data==$root.currentVariable(), dependency: isDependency}" class="variable-selector">
+										<td class="name" data-bind="text: name() ? name() : 'Unnamed'"></td>
+										<td class="value-cell">
+											<div class="value" data-bind="css: {error: error().length>0}, html: display"></div>
+										</td>
+										<td class="delete-cell">
+											<button type="button" title="Remove this variable" class="delete" data-bind="click:remove"></button>
+										</td>
+									</tr>
+								</script>
+								<p>
+									<label><input class="recalculate-checkbox" type="checkbox" data-bind="checked: autoCalculateVariables"/> Automatically regenerate variables when changes are made.</label>
+								</p>
+							</div>
+							<button type="button" data-bind="click: addVariableGroup">New variable group</button>
+							<button type="button" data-bind="click: generateVariablePreview, visible: variables().length>0">Regenerate values</button>
+						</div>
+						<div class="span8 variable" data-bind="with: currentVariable">
+							<form class="form-horizontal">
+								<div class="control-group">
+									<label>
+										<span class="control-label">
+											Name
+											<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-name'}}"></span>
+										</span>
+										<div class="controls">
+											<input type="text" placeholder="Name" class="name" data-bind="value:name, valueUpdate: 'afterkeydown', autosize: name"/>
+											<span class="name-error" data-bind="text: nameError, visible: nameError"></span>
+										</div>
+									</label>
+								</div>
+								<div>
+									<div class="control-group" data-bind="template: {
+										name: 'selectproperty',
+										data: {label:'Data type',property: templateType, options: templateTypes, optionsText: 'name', helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-data-type'}
+									}"></div>
+								</div>
+								<div class="control-group">
+									<label class="control-label">
+										Value
+										<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-value'}}"></span>
+									</label>
+
+									<div class="controls">
+										<div data-bind="visible: templateType().id=='anything'">
+											<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: templateTypeValues.anything.definition, codemirrorMode: 'jme'"></textarea>
+										</div>
+										<div data-bind="visible: templateType().id=='number'">
+											<input type="text" data-bind="value: templateTypeValues.number.value, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 30, value: templateTypeValues.number.value}"/> (a number)
+										</div>
+										<div data-bind="visible: templateType().id=='range'">
+											Numbers between 
+											<input type="text" data-bind="value: templateTypeValues.range.min, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.min}"/>
+											and
+											<input type="text" data-bind="value: templateTypeValues.range.max, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.max}"/>
+											(inclusive) with step size
+											<input type="text" data-bind="value: templateTypeValues.range.step, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.step}"/>
+										</div>
+										<div data-bind="visible: templateType().id=='randrange'">
+											A random number between 
+											<input type="text" data-bind="value: templateTypeValues.randrange.min, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.min}"/>
+											and
+											<input type="text" data-bind="value: templateTypeValues.randrange.max, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.max}"/>
+											(inclusive) with step size
+											<input type="text" data-bind="value: templateTypeValues.randrange.step, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.step}"/>
+										</div>
+										<div data-bind="visible: templateType().id=='string'">
+											<input type="text" data-bind="value: templateTypeValues.string.value, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.string.value}"/> (text string)
+										</div>
+										<div data-bind="visible: templateType().id=='long string'">
+											<div data-bind="writemaths: templateTypeValues['long string'].value"></div>
+										</div>
+										<div data-bind="visible: templateType().id=='list of numbers', with: templateTypeValues['list of numbers']">
+											<input type="text" data-bind="value: commaValue, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: commaValue}"/>
+											(comma-separated list of numbers)
+										</div>
+										<div data-bind="visible: templateType().id=='list of strings', with: templateTypeValues['list of strings']">
+											<ul class="no-bullets" data-bind="foreach: values.edit">
+												<li>
+												<input type="text" data-bind="value: value, valueUpdate: 'afterkeydown', event: {blur: onBlur}, autosize: {max: 500, min: 30, padding: 10, value: value}"/>
+												</li>
+											</ul>
+											(text strings)
+										</div>
+									</div>
+								</div>
+								<div class="control-group">
+									<label>
+										<span class="control-label">
+											Description
+											<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-12'}}"></span>
+										</span>
+										<div class="controls" data-bind="writemaths: description"></div>
+									</label>
+								</div>
+							</form>
+							<div data-bind="visible: dependencies().length>0" class="inline-names">
+								<strong>Depends on:</strong>
+								<ul data-bind="foreach: dependenciesObjects">
+									<li><!-- ko if: $index()>0 -->, <!-- /ko --><span class="variable" data-bind="click: $root.currentVariable, text: name"></span></li>
+								</ul>.
+							</div>
+							<div data-bind="visible: usedIn().length>0" class="inline-names">
+								<strong>Used by:</strong>
+								<ul data-bind="foreach: usedIn">
+									<li><!-- ko if: $index()>0 -->, <!-- /ko --><span class="variable" data-bind="click: $root.currentVariable, text: name"></span></li>
+								</ul>.
 							</div>
 						</div>
-						<script type="text/html" id="variable-template">
-							<tr data-bind="click: $root.currentVariable, css: {noname: !name(), current: $data==$root.currentVariable(), dependency: isDependency}" class="variable-selector">
-								<td class="name" data-bind="text: name() ? name() : 'Unnamed'"></td>
-								<td class="value-cell">
-									<div class="value" data-bind="css: {error: error().length>0}, html: display"></div>
-								</td>
-								<td class="delete-cell">
-									<button type="button" title="Remove this variable" class="delete" data-bind="click:remove"></button>
-								</td>
-							</tr>
-						</script>
-						<p>
-							<label><input class="recalculate-checkbox" type="checkbox" data-bind="checked: autoCalculateVariables"/> Automatically regenerate variables when changes are made.</label>
-						</p>
 					</div>
-					<button type="button" data-bind="click: addVariableGroup">New variable group</button>
-					<button type="button" data-bind="click: computeVariables, visible: variables().length>0">Regenerate values</button>
-				</div>
-				<div class="span8 variable" data-bind="with: currentVariable">
+				</section>
+				<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentVariableTab().id)=='test'}">
 					<form class="form-horizontal">
 						<div class="control-group">
-							<label>
-								<span class="control-label">
-									Name
-									<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-name'}}"></span>
-								</span>
-								<div class="controls">
-									<input type="text" placeholder="Name" class="name" data-bind="value:name, valueUpdate: 'afterkeydown', autosize: name"/>
-									<span class="name-error" data-bind="text: nameError, visible: nameError"></span>
-								</div>
-							</label>
-						</div>
-						<div>
-							<div class="control-group" data-bind="template: {
-								name: 'selectproperty',
-								data: {label:'Data type',property: templateType, options: templateTypes, optionsText: 'name', helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-data-type'}
-							}"></div>
-						</div>
-						<div class="control-group">
 							<label class="control-label">
-								Value
-								<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-value'}}"></span>
+								Condition to satisfy
+								<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-condition-to-satisfy'}}"></span>
 							</label>
 
 							<div class="controls">
-								<div data-bind="visible: templateType().id=='anything'">
-									<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: templateTypeValues.anything.definition, codemirrorMode: 'jme'"></textarea>
-								</div>
-								<div data-bind="visible: templateType().id=='number'">
-									<input type="text" data-bind="value: templateTypeValues.number.value, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 30, value: templateTypeValues.number.value}"/> (a number)
-								</div>
-								<div data-bind="visible: templateType().id=='range'">
-									Numbers between 
-									<input type="text" data-bind="value: templateTypeValues.range.min, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.min}"/>
-									and
-									<input type="text" data-bind="value: templateTypeValues.range.max, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.max}"/>
-									(inclusive) with step size
-									<input type="text" data-bind="value: templateTypeValues.range.step, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.step}"/>
-								</div>
-								<div data-bind="visible: templateType().id=='randrange'">
-									A random number between 
-									<input type="text" data-bind="value: templateTypeValues.randrange.min, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.min}"/>
-									and
-									<input type="text" data-bind="value: templateTypeValues.randrange.max, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.max}"/>
-									(inclusive) with step size
-									<input type="text" data-bind="value: templateTypeValues.randrange.step, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.step}"/>
-								</div>
-								<div data-bind="visible: templateType().id=='string'">
-									<input type="text" data-bind="value: templateTypeValues.string.value, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.string.value}"/> (text string)
-								</div>
-								<div data-bind="visible: templateType().id=='long string'">
-									<div data-bind="writemaths: templateTypeValues['long string'].value"></div>
-								</div>
-								<div data-bind="visible: templateType().id=='list of numbers', with: templateTypeValues['list of numbers']">
-									<input type="text" data-bind="value: commaValue, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: commaValue}"/>
-									(comma-separated list of numbers)
-								</div>
-								<div data-bind="visible: templateType().id=='list of strings', with: templateTypeValues['list of strings']">
-									<ul class="no-bullets" data-bind="foreach: values.edit">
-										<li>
-										<input type="text" data-bind="value: value, valueUpdate: 'afterkeydown', event: {blur: onBlur}, autosize: {max: 500, min: 30, padding: 10, value: value}"/>
-										</li>
-									</ul>
-									(text strings)
+								<textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: variablesTest.condition, codemirrorMode: 'jme'"></textarea>
+								<div class="variables-test">
+									<div class="error" data-bind="visible: variablesTest.conditionError">Error: <span data-bind="html: variablesTest.conditionError"></span></div>
+									<p data-bind="visible: !variablesTest.running()"><button type="button" data-bind="click: testVariables">Test condition</button> for <input type="number" data-bind="value: variablesTest.running_time, autosize: {value:variablesTest.running_time, max:100, min: 20}"/> seconds</p>
+									<p class="variable-test-running" data-bind="visible: variablesTest.running">Running for <span data-bind="text: variablesTest.time_remaining_display"></span>... <button type="button" data-bind="click: cancelVariablesTest">Cancel</button></p>
+									<div class="variable-test-advice" data-bind="visible: !variablesTest.running(), html: variablesTest.advice"></div>
 								</div>
 							</div>
 						</div>
-						<div class="control-group">
-							<label>
-								<span class="control-label">
-									Description
-									<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-12'}}"></span>
-								</span>
-								<div class="controls" data-bind="writemaths: description"></div>
-							</label>
-						</div>
+						<div class="control-group" data-bind="template: {
+							name: 'property',
+							data: {label:'Maximum number of runs',property:variablesTest.maxRuns, min:1, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-maximum-number-of-runs'}
+						}"></div>
 					</form>
-					<div data-bind="visible: dependencies().length>0" class="inline-names">
-						<strong>Depends on:</strong>
-						<ul data-bind="foreach: dependenciesObjects">
-							<li><!-- ko if: $index()>0 -->, <!-- /ko --><span class="variable" data-bind="click: $root.currentVariable, text: name"></span></li>
-						</ul>.
-					</div>
-					<div data-bind="visible: usedIn().length>0" class="inline-names">
-						<strong>Used by:</strong>
-						<ul data-bind="foreach: usedIn">
-							<li><!-- ko if: $index()>0 -->, <!-- /ko --><span class="variable" data-bind="click: $root.currentVariable, text: name"></span></li>
-						</ul>.
-					</div>
-				</div>
+				</section>
 			</div>
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='functions'}">

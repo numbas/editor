@@ -33,7 +33,6 @@ class HighlightTable(ObjectTable):
 class QuestionTable(ObjectTable):
     name = TemplateColumn(template_name='question/name_column.html')
     author = UserColumn()
-    col_progress = Column(verbose_name='Progress',accessor='progress',attrs={'td':{'class':A('progress')}})
     last_modified = Column()
 
     class Meta(ObjectTable.Meta):

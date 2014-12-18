@@ -196,6 +196,16 @@
 	height: 16px;
 	vertical-align: middle;
 }
+
+.variable-group .group-name button.sort {
+	float: left;
+	margin: 0.6em 0.5em;
+	background: transparent url(../../images/sort-ascending-2x.png) no-repeat;
+	width: 16px;
+	height: 16px;
+	border:none;
+	padding: 0;
+}
 .variable-group .group-name button.delete {
 	float: right;
 	margin: 0.6em 0.5em;
@@ -344,6 +354,20 @@ input.recalculate-checkbox {
     background-color: #f90;
     cursor: pointer;
 }
+
+.variables-test {
+	margin: 1em 0;
+}
+
+.variables-test .error {
+    color: red;
+    background: #fcc;
+    display: inline-block;
+    padding: 0.3em 0.5em;
+    vertical-align: middle;
+	margin-bottom: 0.5em;
+}
+
 
 .function {
 	margin-bottom: 1em;

@@ -13,7 +13,6 @@
 			<table class="search-results" id="question-list">
 				<col span="1" class="name"/>
 				<col span="1" class="author"/>
-				<col span="1" class="col-progress"/>
 				<col span="1" class="last_modified"/>
 				<col span="1" class="admin"/>
 				<thead>
@@ -36,7 +35,6 @@
 					<tr class="result question">
 						<td class="name">{{row.name}}</td>
 						<td class="author">{{row.author}}</td>
-						<td class="col_progress progress-display {{question.progress}}">{{row.col_progress}}</td>
 						<td class="last_modified">{{row.last_modified}}</td>
 						<td class="admin">
 							<a class="preview" href="{% url 'question_preview' question.pk question.slug %}" target="_blank" title="Test run"></a>

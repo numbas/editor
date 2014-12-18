@@ -25,6 +25,7 @@ var util = Numbas.util;
 var math = Numbas.math;
 var vectormath = Numbas.vectormath;
 var matrixmath = Numbas.matrixmath;
+var setmath = Numbas.setmath;
 
 /** @typedef Numbas.jme.tree
   * @type {object}
@@ -49,7 +50,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 		re_bool: /^true|^false/i,
 		re_number: /^[0-9]+(?:\x2E[0-9]+)?/,
 		re_name: /^{?((?:(?:[a-zA-Z]+):)*)((?:\$?[a-zA-Z_][a-zA-Z0-9_]*'*)|\?\??)}?/i,
-		re_op: /^(\.\.|#|<=|>=|<>|&&|\|\||[\|*+\-\/\^<>=!&;]|(?:(not|and|or|xor|isa|except)([^a-zA-Z0-9]|$)))/i,
+		re_op: /^(\.\.|#|<=|>=|<>|&&|\|\||[\|*+\-\/\^<>=!&;]|(?:(not|and|or|xor|isa|except|in)([^a-zA-Z0-9]|$)))/i,
 		re_punctuation: /^([\(\),\[\]])/,
 		re_string: /^(['"])((?:[^\1\\]|\\.)*?)\1/,
 		re_comment: /^\/\/.*(?:\n|$)/
@@ -487,7 +488,9 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 			var value = tok.value;
 			if(value.contains('{'))
 				value = jme.contentsubvars(value,scope)
-			return new TString(value);
+			var t = new TString(value);
+			t.latex = tok.latex;
+			return t;
 		case 'name':
 			if(tok.name.toLowerCase() in scope.variables)
 				return scope.variables[tok.name.toLowerCase()];
@@ -1007,6 +1010,14 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
 			this.functions[fn.name] = [fn];
 		else
 			this.functions[fn.name].push(fn);
+	},
+
+	/** Evaluate an expression in this scope - equivalent to `Numbas.jme.evaluate(expr,this)`
+	 * @param {JME} expr
+	 * @returns {token}
+	 */
+	evaluate: function(expr) {
+		return jme.evaluate(expr,this);
 	}
 };
 
@@ -1151,6 +1162,19 @@ TList.doc = {
 	usage: ['[0,1,2,3]','[a,b,c]','[true,false,false]'],
 	description: "A list of elements of any data type."
 };
+
+/** Set type
+ * @memberof Numbas.jme.types
+ * @augments Numbas.jme.token
+ * @property {object[]} value - Array of elements. Constructor assumes all elements are distinct
+ * @property type "set"
+ * @constructor
+ * @param {object[]} value
+ */
+var TSet = types.TSet = types.set = function(value) {
+	this.value = value;
+}
+TSet.prototype.type = 'set';
 
 /** Vector type
  * @memberof Numbas.jme.types
@@ -1372,6 +1396,7 @@ var precedence = jme.precedence = {
 	'..': 5,
 	'#':6,
 	'except': 6.5,
+	'in': 6.5,
 	'<': 7,
 	'>': 7,
 	'<=': 7,
@@ -1463,16 +1488,16 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
 	options = options || {};
 	for(var i=0;i<intype.length;i++)
 	{
-		if(intype[i]!='?')
+		if(intype[i]!='?' && intype[i]!='?*')
 		{
 			if(intype[i][0]=='*')
 			{
 				var type = types[intype[i].slice(1)];
-				intype[i] = '*'+(new type()).type;
+				intype[i] = '*'+type.prototype.type;
 			}
 			else
 			{
-				intype[i]=new intype[i]().type;
+				intype[i]=intype[i].prototype.type;
 			}
 		}
 	}
@@ -1539,6 +1564,10 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
 		}
 		else
 			result = new this.outcons(result);
+
+		if(options.latex) {
+			result.latex = true;
+		}
 
 		return result;
 	}	
@@ -1643,6 +1672,18 @@ newBuiltin('id',[TNum],TMatrix, matrixmath.id, {doc: {usage: 'id(3)', descriptio
 
 newBuiltin('..', [TNum,TNum], TRange, math.defineRange, {doc: {usage: ['a..b','1..2'], description: 'Define a range', tags: ['interval']}});
 newBuiltin('#', [TRange,TNum], TRange, math.rangeSteps, {doc: {usage: ['a..b#c','0..1 # 0.1'], description: 'Set the step size for a range.'}}); 
+
+newBuiltin('in',[TNum,TRange],TBool,function(x,r) {
+	var start = r[0];
+	var end = r[1];
+	var step = r[2];
+	var max_steps = Math.floor(end-start)/step;
+	if(x>end) {
+		return false;
+	}
+	var steps = Math.floor((x-start)/step);
+	return step*steps+start==x && steps <= max_steps;
+});
 
 newBuiltin('html',[TString],THTML,function(html) { return $(html) }, {doc: {usage: ['html(\'<div>things</div>\')'], description: 'Parse HTML from a string', tags: ['element','node']}});
 newBuiltin('image',[TString],THTML,function(url){ return $('<img/>').attr('src',url); }, {doc: {usage: ['image(\'picture.png\')'], description: 'Load an image from the given URL', tags: ['element','image','html']}});
@@ -1760,28 +1801,13 @@ newBuiltin('except',[TList,'?'], TList, null, {
 	}
 });
 
-newBuiltin('distinct',[TList],TList,
-	function(list) {
-		if(list.length==0) {
-			return [];
-		}
-		var out = [list[0]];
-		for(var i=1;i<list.length;i++) {
-			var got = false;
-			for(var j=0;j<out.length;j++) {
-				if(util.eq(list[i],out[j])) {
-					got = true;
-					break;
-				}
-			}
-			if(!got) {
-				out.push(list[i]);
-			}
-		}
-		return out;
-	},
-	{unwrapValues: false}
-);
+newBuiltin('distinct',[TList],TList, util.distinct,{unwrapValues: false});
+
+newBuiltin('in',['?',TList],TBool,null,{
+	evaluate: function(args,scope) {
+		return new TBool(util.contains(args[1].value,args[0]));
+	}
+});
 
 newBuiltin('<', [TNum,TNum], TBool, math.lt, {doc: {usage: ['x<y','1<2'], description: 'Returns @true@ if the left operand is less than the right operand.', tags: ['comparison','inequality','numbers']}});
 newBuiltin('>', [TNum,TNum], TBool, math.gt, {doc: {usage: ['x>y','2>1'], description: 'Returns @true@ if the left operand is greater than the right operand.', tags: ['comparison','inequality','numbers']}} );
@@ -1900,6 +1926,17 @@ newBuiltin('comb', [TNum,TNum], TNum, math.combinations , {doc: {usage: 'comb(6,
 newBuiltin('root', [TNum,TNum], TNum, math.root, {doc: {usage: ['root(8,3)','root(x,n)'], description: '$n$<sup>th</sup> root.', tags: ['cube']}} );
 newBuiltin('award', [TNum,TBool], TNum, function(a,b){return (b?a:0);}, {doc: {usage: ['award(a,b)','award(5,x=y)'], description: 'If @b@ is @true@, returns @a@, otherwise returns @0@.', tags: ['mark']}} );
 newBuiltin('gcd', [TNum,TNum], TNum, math.gcf, {doc: {usage: 'gcd(a,b)', description: 'Greatest common denominator of two integers.', tags: ['highest']}} );
+newBuiltin('gcd_without_pi_or_i', [TNum,TNum], TNum, function(a,b) {	// take out factors of pi or i before working out gcd. Used by the fraction simplification rules
+		if(a.complex && a.re==0) {
+			a = a.im;
+		}
+		if(b.complex && b.re==0) {
+			b = b.im;
+		}
+		a = a/math.pow(Math.PI,math.piDegree(a));
+		b = b/math.pow(Math.PI,math.piDegree(b));
+		return math.gcf(a,b);
+} );
 newBuiltin('lcm', [TNum,TNum], TNum, math.lcm, {doc: {usage: 'lcm(a,b)', description: 'Lowest common multiple of two integers.', tags: ['least']}} );
 newBuiltin('lcm', [TList], TNum, function(l){ 
 		if(l.length==0) {
@@ -2201,6 +2238,56 @@ newBuiltin('listval',[TMatrix,TNum],TVector, null, {
 newBuiltin('map',['?',TName,'?'],TList, null, {
 	evaluate: function(args,scope)
 	{
+		var lambda = args[0];
+
+		var list = jme.evaluate(args[2],scope);
+		switch(list.type) {
+		case 'list':
+		case 'set':
+			list = list.value;
+			break;
+		case 'range':
+			list = list.value.slice(3);
+			for(var i=0;i<list.length;i++) {
+				list[i] = new TNum(list[i]);
+			}
+			break;
+		default:
+			throw(new Numbas.Error('jme.typecheck.map not on enumerable',list.type));
+		}
+		var value = [];
+		scope = new Scope(scope);
+
+		var names_tok = args[1].tok;
+		if(names_tok.type=='name') {
+			var name = names_tok.name;
+			for(var i=0;i<list.length;i++)
+			{
+				scope.variables[name] = list[i];
+				value[i] = jme.evaluate(lambda,scope);
+			}
+		} else if(names_tok.type=='list') {
+			var names = args[1].args.map(function(t){return t.tok.name;});
+			for(var i=0;i<list.length;i++)
+			{
+				names.map(function(name,j) {
+					scope.variables[name] = list[i].value[j];
+				});
+				value[i] = jme.evaluate(lambda,scope);
+			}
+		}
+		return new TList(value);
+	},
+	
+	doc: {
+		usage: ['map(expr,x,list)','map(x^2,x,[0,2,4,6])'],
+		description: 'Apply the given expression to every value in a list.'
+	}
+});
+
+newBuiltin('map',['?',TList,'?'],TList,null, {
+	evaluate: function(args,scope)
+	{
 		var list = jme.evaluate(args[2],scope);
 		switch(list.type) {
 		case 'list':
@@ -2216,41 +2303,18 @@ newBuiltin('map',['?',TName,'?'],TList, null, {
 			throw(new Numbas.Error('jme.typecheck.map not on enumerable',list.type));
 		}
 		var value = [];
-		var name = args[1].tok.name;
+		var names = args[1].tok.args.map(function(t){return t.tok.name;});
 		scope = new Scope(scope);
 		for(var i=0;i<list.length;i++)
 		{
+			names.map(function(name,j) {
+				console.log(name,list[i].value[j]);
+				scope.variables[name] = list[i].value[j];
+			});
 			scope.variables[name] = list[i];
 			value[i] = jme.evaluate(args[0],scope);
 		}
 		return new TList(value);
-	},
-	
-	doc: {
-		usage: ['map(expr,x,list)','map(x^2,x,[0,2,4,6])'],
-		description: 'Apply the given expression to every value in a list.'
-	}
-});
-
-newBuiltin('map',['?',TName,TRange],TList, null, {
-	evaluate: function(args,scope)
-	{
-		var range = jme.evaluate(args[2],scope);
-		var name = args[1].tok.name;
-		var newlist = new TList(range.size);
-		newlist.value = [];
-		scope = new Scope(scope);
-		for(var i=3;i<range.value.length;i++)
-		{
-			scope.variables[name] = new TNum(range.value[i]);
-			newlist.value[i-3] = jme.evaluate(args[0],scope);
-		}
-		return newlist;
-	},
-
-	doc: {
-		usage: ['map(expr,x,range)','map(x^2,x,0..5)'],
-		description: 'Apply the given expression to every value in a range.'
 	}
 });
 
@@ -2273,6 +2337,85 @@ newBuiltin('sort',[TList],TList, null, {
 	doc: {
 		usage: 'sort(list)',
 		description: 'Sort a list.'
+	}
+});
+
+newBuiltin('set',[TList],TSet,function(l) {
+	return util.distinct(l);
+});
+newBuiltin('set',[TRange],TSet,function(r) {
+	return r.slice(3).map(function(n){return new TNum(n)});
+});
+
+newBuiltin('set', ['?'], TSet, null, {
+	evaluate: function(args,scope) {
+		return new TSet(util.distinct(args));
+	},
+	typecheck: function() {
+		return true;
+	}
+
+});
+newBuiltin('list',[TSet],TList,function(set) {
+	var l = [];
+	for(i=0;i<set.length;i++) {
+		l.push(set[i]);
+	}
+	return l;
+});
+
+newBuiltin('union',[TSet,TSet],TSet,setmath.union);
+newBuiltin('intersection',[TSet,TSet],TSet,setmath.intersection);
+newBuiltin('or',[TSet,TSet],TSet,setmath.union);
+newBuiltin('and',[TSet,TSet],TSet,setmath.intersection);
+newBuiltin('-',[TSet,TSet],TSet,setmath.minus);
+
+newBuiltin('in',['?',TSet],TBool,null,{
+	evaluate: function(args,scope) {
+		return new TBool(util.contains(args[1].value,args[0]));
+	}
+});
+
+newBuiltin('product',['?'],TList,function() {
+	var lists = Array.prototype.slice.call(arguments);
+	var prod = util.product(lists);
+	return prod.map(function(l){ return new TList(l); });
+}, {
+	typecheck: function(variables) {
+		for(var i=0;i<variables.length;i++) {
+			var t = variables[i].type;
+			if(!(t=='list' || t=='set')) {
+				return false;
+			}
+		}
+		return true;
+	}
+});
+
+newBuiltin('combinations',['?',TNum],TList,function(list,r) {
+	var prod = util.combinations(list,r);
+	return prod.map(function(l){ return new TList(l); });
+}, {
+	typecheck: function(variables) {
+		return (variables[0].type=='set' || variables[0].type=='list') && variables[1].type=='number';
+	}
+});
+
+newBuiltin('combinations_with_replacement',['?',TNum],TList,function(list,r) {
+	var prod = util.combinations_with_replacement(list,r);
+	return prod.map(function(l){ return new TList(l); });
+}, {
+	typecheck: function(variables) {
+		return (variables[0].type=='set' || variables[0].type=='list') && variables[1].type=='number';
+	}
+});
+
+newBuiltin('permutations',['?',TNum],TList,function(list,r) {
+	var prod = util.permutations(list,r);
+	return prod.map(function(l){ return new TList(l); });
+}, {
+	typecheck: function(variables) {
+		return (variables[0].type=='set' || variables[0].type=='list') && variables[1].type=='number';
 	}
 });
 
@@ -2705,7 +2848,7 @@ function resultsEqual(r1,r2,checkingFunction,checkingAccuracy)
 		}
 		return true;
 	default:
-		return v1 == v2;
+		return util.eq(r1,r2);
 	}
 };
 

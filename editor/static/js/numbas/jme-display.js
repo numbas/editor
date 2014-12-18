@@ -508,7 +508,14 @@ var texOps = jme.display.texOps = {
 	}),
 	'verbatim': (function(thing,texArgs) {
 		return thing.args[0].tok.value;
-	})
+	}),
+	'set': function(thing,texArgs,settings) {
+		if(thing.args.length==1 && thing.args[0].tok.type=='list') {
+			return '\\left\\{ '+texify(thing.args[0],settings)+' \\right\\}';
+		} else {
+			return '\\left\\{ '+texArgs.join(', ')+' \\right\\}';
+		}
+	}
 }
 
 /** Convert a number to TeX, displaying it as a fractionm using {@link Numbas.math.rationalApproximation}
@@ -710,9 +717,17 @@ function texMatrix(m,settings,parens)
 
 	if(m.args)
 	{
+		var all_lists = true;
 		var rows = m.args.map(function(x) {
-			return x.args.map(function(y){ return texify(y,settings); });
+			if(x.tok.type=='list') {
+				return x.args.map(function(y){ return texify(y,settings); });
+			} else {
+				all_lists = false;
+			}
 		})
+		if(!all_lists) {
+			return '\\operatorname{matrix}(' + m.args.map(function(x){return texify(x,settings);}).join(',') +')';
+		}
 	}
 	else
 	{
@@ -871,6 +886,13 @@ var typeToTeX = jme.display.typeToTeX = {
 
 			return texName(texname,tok.annotation)+' \\left ( '+texArgs.join(', ')+' \\right )';
 		}
+	},
+	set: function(thing,tok,texArgs,settings) {
+		texArgs = [];
+		for(var i=0;i<tok.value.length;i++) {
+			texArgs.push(texify(tok.value[i],settings));
+		}
+		return '\\left\\{ '+texArgs.join(', ')+' \\right\\}';
 	}
 }
 /** Turn a syntax tree into a TeX string. Data types can be converted to TeX straightforwardly, but operations and functions need a bit more care.
@@ -908,7 +930,7 @@ var texify = Numbas.jme.display.texify = function(thing,settings)
 	if(tok.type in typeToTeX) {
 		return typeToTeX[tok.type](thing,tok,texArgs,settings);
 	} else {
-		throw(new Numbas.Error('jme.display.unknown token type',tok.type));
+		throw(new Numbas.Error(R('jme.display.unknown token type',tok.type)));
 	}
 }
 
@@ -1146,18 +1168,25 @@ var typeToJME = Numbas.jme.display.typeToJME = {
 
 		for(var i=0;i<l;i++)
 		{
-			if(args[i].tok.type=='op' && op in opBrackets && opBrackets[op][i][args[i].tok.name]==true)
+			var arg_type = args[i].tok.type;
+			var arg_value = args[i].tok.value;
+			var pd;
+
+			if(arg_type=='op' && op in opBrackets && opBrackets[op][i][args[i].tok.name]==true)
 			{
 				bits[i]='('+bits[i]+')';
 				args[i].bracketed=true;
 			}
-			else if(args[i].tok.type=='number' && args[i].tok.value.complex && (op=='*' || op=='-u' || op=='/'))
+			else if(arg_type=='number' && arg_value.complex && (op=='*' || op=='-u' || op=='/'))	// put brackets round a complex number
 			{
-				if(!(args[i].tok.value.re==0 || args[i].tok.value.im==0))
+				if(arg_value.im!=0 && arg_value.im!=1)
 				{
 					bits[i] = '('+bits[i]+')';
 					args[i].bracketed = true;
 				}
+			} else if(arg_type=='number' && (pd = math.piDegree(args[i].tok.value))>0 && arg_value/math.pow(Math.PI,pd)>1 && (op=='*' || op=='-u' || op=='/')) {
+				bits[i] = '('+bits[i]+')';
+				args[i].bracketed = true;
 			}
 		}
 		
@@ -1166,7 +1195,7 @@ var typeToJME = Numbas.jme.display.typeToJME = {
 		{
 			//number or brackets followed by name or brackets doesn't need a times symbol
 			//except <anything>*(-<something>) does
-			if( (args[0].tok.type=='number' || args[0].bracketed) && (args[1].tok.type == 'name' || args[1].bracketed && !jme.isOp(tree.args[1].tok,'-u')) )	
+			if( ((args[0].tok.type=='number' && math.piDegree(args[0].tok.value)==0 && args[0].tok.value!=Math.E) || args[0].bracketed) && (args[1].tok.type == 'name' || args[1].bracketed && !jme.isOp(tree.args[1].tok,'-u')) )	
 			{
 				op = '';
 			}
@@ -1204,6 +1233,9 @@ var typeToJME = Numbas.jme.display.typeToJME = {
 			{return op+bits[0];}
 		else
 			{return bits[0]+op+bits[1];}
+	},
+	set: function(tree,tok,bits,settings) {
+		return 'set('+tok.value.map(function(thing){return treeToJME({tok:thing},settings);}).join(',')+')';
 	}
 }
 
@@ -1235,7 +1267,7 @@ var treeToJME = jme.display.treeToJME = function(tree,settings)
 	if(tok.type in typeToJME) {
 		return typeToJME[tok.type](tree,tok,bits,settings);
 	} else {
-		throw(new Numbas.Error('jme.display.unknown token type',tok.type));
+		throw(new Numbas.Error(R('jme.display.unknown token type',tok.type)));
 	}
 }
 
@@ -1493,11 +1525,23 @@ function matchTree(ruleTree,exprTree,doCommute)
 			case 'm_commute':
 				return matchTree(ruleTree.args[0],exprTree,true);
 
-
+			case 'm_type':
+				var wantedType = ruleTree.args[0].tok.name || ruleTree.args[0].tok.value;
+				if(exprTok.type==wantedType) {
+					return {};
+				} else {
+					return false;
+				}
 		}
 	}
 	if(jme.isName(ruleTok,'m_nothing')) {
 		return false;
+	} else if(jme.isName(ruleTok,'m_number')) {
+		if(exprTok.type=='number') {
+			return {};
+		} else {
+			return false;
+		}
 	}
 
 	if(ruleTok.type!='op' && ruleTok.type != exprTok.type)
@@ -1716,10 +1760,11 @@ var simplificationRules = jme.display.simplificationRules = {
 	],
 
 	simplifyFractions: [
-		['?;n/?;m',['n isa "number"','m isa "number"','gcd(n,m)>1'],'eval(n/gcd(n,m))/eval(m/gcd(n,m))'],			//cancel simple fraction
-		['(?;n*?;x)/m',['n isa "number"','m isa "number"','gcd(n,m)>1'],'(eval(n/gcd(n,m))*x)/eval(m/gcd(n,m))'],	//cancel algebraic fraction
-		['?;n/(?;m*?;x)',['n isa "number"','m isa "number"','gcd(n,m)>1'],'eval(n/gcd(n,m))/(eval(m/gcd(n,m))*x)'],	
-		['(?;n*?;x)/(?;m*?;y)',['n isa "number"','m isa "number"','gcd(n,m)>1'],'(eval(n/gcd(n,m))*x)/(eval(m/gcd(n,m))*y)']	
+		['?;n/?;m',['n isa "number"','m isa "number"','gcd_without_pi_or_i(n,m)>1'],'eval(n/gcd_without_pi_or_i(n,m))/eval(m/gcd_without_pi_or_i(n,m))'],			//cancel simple fraction
+		['(?;n*?;x)/?;m',['n isa "number"','m isa "number"','gcd_without_pi_or_i(n,m)>1'],'(eval(n/gcd_without_pi_or_i(n,m))*x)/eval(m/gcd_without_pi_or_i(n,m))'],	//cancel algebraic fraction
+		['?;n/(?;m*?;x)',['n isa "number"','m isa "number"','gcd_without_pi_or_i(n,m)>1'],'eval(n/gcd_without_pi_or_i(n,m))/(eval(m/gcd_without_pi_or_i(n,m))*x)'],	
+		['(?;n*?;x)/(?;m*?;y)',['n isa "number"','m isa "number"','gcd_without_pi_or_i(n,m)>1'],'(eval(n/gcd_without_pi_or_i(n,m))*x)/(eval(m/gcd_without_pi_or_i(n,m))*y)'],
+		['?;n/?;m',['n isa "complex"','m isa "complex"','re(n)=0','re(m)=0'],'eval(n/i)/eval(m/i)']			// cancel i when numerator and denominator are both purely imaginary
 	],
 
 	zeroBase: [

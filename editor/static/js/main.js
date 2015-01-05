@@ -159,6 +159,19 @@ $(document).ready(function() {
 			$(element).width(w+'px');
 		}
 	}
+
+	ko.bindingHandlers.editableHTML = {
+		init: function(element, valueAccessor) {
+			var initialValue = ko.utils.unwrapObservable(valueAccessor());
+			$(element).attr('contenteditable',true);
+			$(element).html(initialValue);
+			$(element).on('keyup input', function(e) {
+				observable = valueAccessor();
+				observable($(element).html());
+			});
+	  }
+	}
+
 })
 
 function getCookie(name) {

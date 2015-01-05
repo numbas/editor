@@ -238,18 +238,19 @@ button.delete-grey:hover {
 .versions .version .comment span {
 	padding: 4px 6px;
 }
-.versions .version .comment input {
+.versions .version .comment .edit-comment {
     margin: 0;
     border: 0;
     box-shadow: none;
     font-size: 1em;
     min-width: 10em;
 	color: black;
+	padding: 3px;
 }
-.versions .version .comment input:hover {
+.versions .version .comment .edit-comment:hover {
     background: #acdeff;
 }
-.versions .version .comment input:focus {
+.versions .version .comment .edit-comment:focus {
     background: #eee;
 }
 

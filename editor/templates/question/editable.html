@@ -1016,7 +1016,7 @@
 							</a> 
 						</td>
 						<td class="comment">
-							<input type="text" data-bind="visible: editable, value: comment, autosize: comment"/>
+							<div class="edit-comment" data-bind="editableHTML: comment"></div>
 							<span data-bind="visible: !editable, text: comment"></span>
 						</td>
 					</tr>

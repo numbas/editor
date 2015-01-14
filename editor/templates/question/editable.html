@@ -574,11 +574,11 @@
 									<div data-bind="fadeVisible: jme.notallowed.strings().length>0">
 										<div class="control-group" data-bind="template: {
 											name:'percentproperty',
-											data: {label:'Partial credit for not using all required strings:',property:jme.notallowed.partialCredit}
+											data: {label:'Partial credit for using any forbidden string:',property:jme.notallowed.partialCredit}
 										}"></div>
 										<div class="control-group" data-bind="template: {
 											name: 'booleanproperty',
-											data: {label:'Show required strings in warning?', property:jme.notallowed.showStrings}
+											data: {label:'Show forbidden strings in warning?', property:jme.notallowed.showStrings}
 										}"></div>
 										<div class="control-group">
 											<label>
@@ -589,6 +589,7 @@
 									</div>
 								</form>
 
+								<h4>Variables</h4>
 								<form class="form-horizontal">
                                     <div class="control-group" data-bind="template: {
                                         name: 'booleanproperty',

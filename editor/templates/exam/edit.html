@@ -42,7 +42,7 @@
 	<div id="exam">
 		<div class="row-fluid">
             <h1 id="name-header" class="span9">
-                <span data-bind="text: name">{{object.name}}</span>
+                <span data-bind="text: name, mathjax: name">{{object.name}}</span>
                 {% if request.user.is_authenticated %}
                 <button type="button" data-bind="css:{starred: starred}, attr: {title: starred() ? 'This exam is starred. Click to unstar it.' : 'Star this exam'}, click: toggleStar" class="star" ></button>
                 {% endif %}

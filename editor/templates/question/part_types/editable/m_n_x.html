@@ -1,0 +1,98 @@
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking'}">
+<form class="form-horizontal">
+	<div class="control-group" data-bind="template: {
+		name: 'property',
+		data: {label:'Minimum marks',property:minMarks, max:maxMarks }
+		}"></div>
+	<div class="control-group" data-bind="template: {
+		name: 'property',
+		data: {label:'Maximum marks',property:maxMarks, min:minMarks}
+		}"></div>
+	<div class="control-group" data-bind="template: {
+		name: 'booleanproperty',
+		data: {label:'Show correct answer on reveal?',property: $parent.showCorrectAnswer,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal'}
+		}"></div>
+	<div class="control-group" data-bind="visible: !parent(), template: {
+		name: 'property',
+		data: {label:'Penalty for revealing steps',property: $parent.stepsPenalty,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-penalty-for-revealing-steps'}
+		}"></div>
+	<div class="control-group" data-bind="template: {
+		name: 'property',
+		data: {label:'Minimum answers:',property:minAnswers, max:maxAnswers}
+		}"></div>
+	<div class="control-group" data-bind="template: {
+		name: 'property',
+		data: {label:'Maximum answers:',property:maxAnswers, min:minAnswers}
+		}"></div>
+	<div class="control-group" data-bind="fadeVisible: minAnswers()!=0 || maxAnswers()!=0">
+		<label>
+			<span class="control-label">What to do if wrong number of answers selected:</span>
+			<div class="controls">
+				<select data-bind="options: warningTypes, value: warningType, optionsText: 'niceName'"></select>
+			</div>
+		</label>
+	</div>
+	<div class="control-group" data-bind="template: {
+		name: 'booleanproperty',
+		data: {label:'Shuffle order of choices?', property:shuffleChoices}
+		}"></div>
+	<div class="control-group" data-bind="template: {
+		name: 'booleanproperty',
+		data: {label:'Shuffle order of answers?', property:shuffleAnswers}
+		}"></div>
+	<div class="control-group">
+		<label>
+			<span class="control-label">Selection type:</span>
+			<div class="controls">
+				<select data-bind="options: displayTypes, value: displayType, optionsText: 'niceName'"></select>
+			</div>
+		</label>
+	</div>
+	<div class="control-group" data-bind="template: {
+		name: 'booleanproperty',
+		data: {label: 'Custom marking matrix?', property: customMarking}
+		}"></div>
+	<div class="control-group" data-bind="fadeVisible: customMarking, template: {
+		name: 'property',
+		data: {label: 'Custom matrix expression', property: customMatrix}
+		}"></div>
+</form>
+</section>
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='choices'}">
+<div class="matrix">
+	<label>Marking matrix:</label>
+	<table class="multiplechoice">
+		<thead>
+			<tr>
+				<td></td>
+				<!-- ko foreach: {data: answers, afterAdd: Editor.afterAdd} -->
+				<th>
+					<input type="text" data-bind="value:content, valueUpdate:'input'">
+					<button type="button" class="delete" data-bind="click:function(){this.remove()}" title="Delete this answer"></button>
+				</th>
+				<!-- /ko -->
+				<td>
+					<button type="button" data-bind="click:addAnswer">Add Answer</button>
+				</td>
+			</tr>
+		</thead>
+		<tbody>
+			<!-- ko foreach: {data: choices, afterAdd: Editor.afterAdd} -->
+			<tr>
+				<th>
+					<input type="text" data-bind="value:content, valueUpdate:'input'"/>
+					<button type="button" class="delete" data-bind="click:remove" title="Delete this choice"></button>
+				</th> 
+				<!-- ko foreach: answers -->
+				<td>
+					<input type="text" class="marks monospace" data-bind="visible: !$parents[1].customMarking(), value: marks, valueUpdate:'input'"/>
+				</td>
+				<!-- /ko -->
+			</tr>
+			<!-- /ko -->
+			<tr><td><button type="button" data-bind="click:addChoice">Add Choice</button></td></tr>
+		</tbody>
+	</table>
+</div>
+</section>
+

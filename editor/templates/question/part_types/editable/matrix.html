@@ -1,0 +1,12 @@
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking'}">
+<form class="form-horizontal">
+	<div class="control-group">
+		<label class="control-label">
+			Correct answer
+		</label>
+		<div class="controls">
+			<textarea data-bind="valueUpdate: 'afterkeydown', codemirror: correctAnswer, codemirrorMode: 'jme'"></textarea>
+		</div>
+	</div>
+</form>
+</section>

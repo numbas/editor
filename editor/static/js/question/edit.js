@@ -2416,16 +2416,22 @@ $(document).ready(function() {
 			model: function() {
 				var model = {
 					correctAnswer: ko.observable(''),
+					numRows: ko.observable(2),
+					numColumns: ko.observable(2),
+					allowResize: ko.observable(true)
 				}
 				return model;
 			},
 
 			toJSON: function(data) {
 				data.correctAnswer = this.correctAnswer();
+				data.numRows = this.numRows();
+				data.numColumns = this.numColumns();
+				data.allowResize = this.allowResize();
 			},
 
 			load: function(data) {
-				tryLoad(data,['correctAnswer'],this);
+				tryLoad(data,['correctAnswer','numRows','numColumns','allowResize'],this);
 			}
 		}
 	];

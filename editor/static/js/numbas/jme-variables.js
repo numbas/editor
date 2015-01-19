@@ -98,7 +98,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
 			paramNames = [];
 
 		tmpfn.parameters.map(function(p) {
-			intype.push(jme.types[p.type]);
+			intype.push(p.type == '?' ? '?' : jme.types[p.type]);
 			paramNames.push(p.name);
 		});
 

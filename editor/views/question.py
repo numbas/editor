@@ -340,11 +340,11 @@ class UpdateView(generic.UpdateView):
             question_json['access_rights'] = context['access_rights']
             context['versions'] = reversion.get_for_object(self.object)
 
-        partTypePath = 'question/part_types/'+('editable' if self.editable else 'noneditable')
+        part_type_path = 'question/part_types/'+('editable' if self.editable else 'noneditable')
         context['partNames'] = [
-            ( name, '{}/{}.html'.format(partTypePath,name) ) 
+            ( name, '{}/{}.html'.format(part_type_path,name) ) 
             for name in 
-            'jme','gapfill','numberentry','patternmatch','1_n_2','m_n_2','m_n_x'
+            'jme','gapfill','numberentry','patternmatch','1_n_2','m_n_2','m_n_x','matrix'
         ]
 
 

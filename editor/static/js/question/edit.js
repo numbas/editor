@@ -2406,6 +2406,27 @@ $(document).ready(function() {
 					}
                 }
 			}
+		},
+		{
+			name: 'matrix',
+			niceName: 'Matrix entry',
+			has_marks: true,
+			tabs: [],
+
+			model: function() {
+				var model = {
+					correctAnswer: ko.observable(''),
+				}
+				return model;
+			},
+
+			toJSON: function(data) {
+				data.correctAnswer = this.correctAnswer();
+			},
+
+			load: function(data) {
+				tryLoad(data,['correctAnswer'],this);
+			}
 		}
 	];
 

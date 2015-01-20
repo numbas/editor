@@ -632,7 +632,7 @@ $(document).ready(function() {
 			// fill in observables
 			if(runs<maxRuns) {
 				this.variables().map(function(v) {
-					var name = v.name();
+					var name = v.name().toLowerCase();
 					var result = results.variables[name];
 					if('value' in result) {
 						v.value(result.value);

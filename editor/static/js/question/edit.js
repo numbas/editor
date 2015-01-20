@@ -1637,7 +1637,7 @@ $(document).ready(function() {
 			var currentPart = q.currentPart();
 			if(currentPart==this)
 				return true;
-			var children = this.gapfill.gaps().concat(this.steps());
+			var children = this.gaps().concat(this.steps());
 			for(var i=0;i<children.length;i++) {
 				if(currentPart==children[i])
 					return true;
@@ -1662,8 +1662,8 @@ $(document).ready(function() {
 			gapFill.setType('gapfill');
 
 			this.parentList.splice(this.parentList.indexOf(this),1,gapFill);
-			gapFill.gapfill.gaps.push(this);
-			this.parentList = gapFill.gapfill.gaps;
+			gapFill.gaps.push(this);
+			this.parentList = gapFill.gaps;
 			this.parent(gapFill);
 			
 			gapFill.prompt(this.prompt()+'\n<p>[[0]]</p>');

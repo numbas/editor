@@ -2416,8 +2416,8 @@ $(document).ready(function() {
 			model: function() {
 				var model = {
 					correctAnswer: ko.observable(''),
-					numRows: ko.observable(2),
-					numColumns: ko.observable(2),
+					numRows: ko.observable(1),
+					numColumns: ko.observable(1),
 					allowResize: ko.observable(true)
 				}
 				return model;

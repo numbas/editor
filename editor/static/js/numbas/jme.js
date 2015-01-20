@@ -1410,11 +1410,11 @@ var precedence = jme.precedence = {
 };
 
 /** Synonyms of names - keys in this dictionary are translated to their corresponding values after tokenising.
- * @enum {number}
+ * @enum {string}
  * @memberof Numbas.jme
  * @readonly
  */
-var synonyms = {
+var synonyms = jme.synonyms = {
 	'&':'and',
 	'&&':'and',
 	'divides': '|',
@@ -1430,7 +1430,7 @@ var synonyms = {
 /** Operations which evaluate lazily - they don't need to evaluate all of their arguments 
  * @memberof Numbas.jme
  */
-var lazyOps = ['if','switch','repeat','map','isa','satisfy'];
+var lazyOps = jme.lazyOps = ['if','switch','repeat','map','isa','satisfy'];
 
 var rightAssociative = {
 	'^': true,

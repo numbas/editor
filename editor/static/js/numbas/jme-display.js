@@ -23,6 +23,7 @@ Numbas.queueScript('jme-display',['base','math','jme','util'],function() {
 	
 var math = Numbas.math;
 var jme = Numbas.jme;
+var util = Numbas.util;
 
 /** A JME expression
  * @typedef JME
@@ -284,7 +285,7 @@ var texOps = jme.display.texOps = {
 	'^': (function(thing,texArgs) {
 		var tex0 = texArgs[0];
 		//if left operand is an operation, it needs brackets round it. Exponentiation is right-associative, so 2^3^4 won't get any brackets, but (2^3)^4 will.
-		if(thing.args[0].tok.type=='op')
+		if(thing.args[0].tok.type=='op' || (thing.args[0].tok.type=='function' && thing.args[0].tok.name=='exp'))
 			tex0 = '\\left ( ' +tex0+' \\right )';	
 		return (tex0+'^{ '+texArgs[1]+' }');
 	}),
@@ -295,7 +296,11 @@ var texOps = jme.display.texOps = {
 		for(var i=1; i<thing.args.length; i++ )
 		{
 			//specials or subscripts
-			if(thing.args[i-1].tok.type=='special' || thing.args[i].tok.type=='special')	
+			if(util.isInt(texArgs[i-1].charAt(texArgs[i-1].length-1)) && util.isInt(texArgs[i].charAt(0)))
+			{ 
+				s+=' \\times ';
+			}
+			else if(thing.args[i-1].tok.type=='special' || thing.args[i].tok.type=='special')	
 			{
 				s+=' ';
 			}
@@ -785,14 +790,13 @@ texNameAnnotations.m = texNameAnnotations.matrix;
 
 /** Convert a variable name to TeX
  * @memberof Numbas.jme.display
- * @private
  *
  * @param {string} name
  * @param {string[]} annotation - 
  * @returns {TeX}
  */
 
-function texName(name,annotations)
+var texName = jme.display.texName = function(name,annotations)
 {
 	var name = greek.contains(name) ? '\\'+name : name;
 	name = name.replace(/(.*)_(.*)('*)$/g,'$1_{$2}$3');	//make numbers at the end of a variable name subscripts
@@ -1377,6 +1381,14 @@ var endTermNames = {
 function isEndTerm(term) {
 	while(term.tok.type=='function' && /^m_(?:all|pm|not|commute)$/.test(term.tok.name) || jme.isOp(term.tok,';')) {
 		term = term.args[0];
+	}
+	if(term.tok.type=='function' && term.tok.name=='m_any') {
+		for(var i=0;i<term.args.length;i++) {
+			if(isEndTerm(term.args[i])) {
+				return true;
+			}
+		}
+		return false;
 	}
 	return term.tok.type=='name' && endTermNames[term.tok.name];
 }

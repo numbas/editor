@@ -419,9 +419,32 @@ $(document).ready(function() {
 			Editor.computedReplaceState('currentVariableTab',ko.computed(function(){return this.currentVariableTab().id},this));
 
 			if('currentPart' in state) {
-				this.currentPart(this.parts()[state.currentPart]);
+				var path = state.currentPart;
+				var part = this.parts()[path[0]];
+				if(path.length>1) {
+					switch(path[1]) {
+						case 'gap':
+							part = part.gapfill.gaps()[path[2]];
+							break;
+						case 'step':
+							part = part.steps()[path[2]];
+							break;
+					}
+				}
+				this.currentPart(part);
 			}
-			Editor.computedReplaceState('currentPart',ko.computed(function(){return this.parts().indexOf(this.currentPart())},this));
+			Editor.computedReplaceState('currentPart',ko.computed(function(){
+				var p = this.currentPart();
+				if(p.isGap()) {
+					var parentPart = p.parent();
+					return [this.parts().indexOf(parentPart), 'gap', parentPart.gapfill.gaps().indexOf(p)];
+				} else if(p.isStep()) {
+					var parentPart = p.parent();
+					return [this.parts().indexOf(parentPart), 'step', parentPart.steps().indexOf(p)];
+				} else {
+					return [this.parts().indexOf(p)];
+				}
+			},this));
 			if(this.currentPart() && 'currentPartTab' in state) {
 				var tabs = this.currentPart().tabs();
 				for(var i=0;i<tabs.length;i++) {

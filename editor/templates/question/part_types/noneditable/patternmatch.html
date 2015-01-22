@@ -1,0 +1,34 @@
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking'}">
+	<form class="form-horizontal">
+		<div class="control-group" data-bind="template: {
+			name: 'property',
+			data: {label:'Marks',property: $parent.marks, min: 0}
+		}"></div>
+		<div class="control-group" data-bind="template: {
+			name: 'booleanproperty',
+			data: {label:'Show correct answer on reveal?',property:$parent.showCorrectAnswer,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal'}
+		}"></div>
+		<div class="control-group" data-bind="template: {
+			name: 'property',
+			data: {label:'Penalty for revealing steps',property: $parent.stepsPenalty, min:0}
+		}"></div>
+		<div class="control-group " data-bind="template: {
+			name: 'property',
+			data: {label:'Answer pattern',property: answer, monospace: true}
+		}"></div>
+		<div class="control-group" data-bind="template: {
+			name: 'property',
+			data: {label:'Display answer',property: displayAnswer}
+		}"></div>
+		<div class="control-group" data-bind="template: {
+			name: 'booleanproperty',
+			data: {label:'Must the answer be in the correct case?', property: caseSensitive}
+		}"></div>
+		<div class="control-group" data-bind="
+		fadeVisible: caseSensitive,
+		template: {
+			name:'percentproperty',
+			data: {label:'Partial credit for answer not matching case',property: partialCredit}
+		}"></div>
+	</form>
+</section>

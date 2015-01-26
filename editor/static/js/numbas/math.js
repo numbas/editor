@@ -250,6 +250,16 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 		return b;
 	},
 
+	/** a mod b. Always returns a positive number
+	 * @param {number} a
+	 * @param {number} b
+	 * @returns {number}
+	 */
+	mod: function(a,b) {
+		b = math.abs(b);
+		return ((a%b)+b)%b;
+	},
+
 	/** Calculate the `b`-th root of `a`
 	 * @param {number} a
 	 * @param {number} b
@@ -584,11 +594,15 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 			case 1:
 				if(n==1)
 					return 'pi';
+				else if(n==-1)
+					return '-pi';
 				else
 					return out+'*pi';
 			default:
 				if(n==1)
 					return 'pi^'+piD;
+				else if(n==-1)
+					return '-pi^'+piD;
 				else
 					return out+'*pi'+piD;
 			}
@@ -671,23 +685,33 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 			return math.complex(math.precround(a.re,b),math.precround(a.im,b));
 		else
 		{
-			b = Math.pow(10,b);
+			var be = Math.pow(10,b);
 
 			var fracPart = a % 1;
 			var intPart = a - fracPart;
 
 			//test to allow a bit of leeway to account for floating point errors
 			//if a*10^b is less than 1e-9 away from having a five as the last digit of its whole part, round it up anyway
-			var v = fracPart*b*10 % 1;
-			var d = (fracPart>0 ? Math.floor : Math.ceil)(fracPart*b*10 % 10);
-			if(d==4 && 1-v<1e-9) {
-				return intPart + Math.round(fracPart*b+1)/b;
+			var v = fracPart*be*10 % 1;
+			var d = (fracPart>0 ? Math.floor : Math.ceil)(fracPart*be*10 % 10);
+			fracPart *= be;
+			if( (d==4 && 1-v<1e-9) || (d==-5 && v>-1e-9 && v<0)) {
+				fracPart += 1;
 			}
-			else if(d==-5 && v>-1e-9 && v<0) {
-				return intPart + Math.round(fracPart*b+1)/b;
+			fracPart = Math.abs(Math.round(fracPart));
+			if(fracPart==be) {
+				return intPart+math.sign(fracPart);
 			}
-
-			return intPart + Math.round(fracPart*b)/b;
+			var fracPartString = Math.round(fracPart)+'';
+			while(fracPartString.length<b) {
+				fracPartString = '0'+fracPartString;
+			}
+			var out = parseFloat(intPart+'.'+fracPartString);
+			if(intPart==0 && a<0) {
+				return -out;
+			} else {
+				return out;
+			}
 		}
 	},
 

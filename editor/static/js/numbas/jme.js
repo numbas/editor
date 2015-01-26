@@ -1914,7 +1914,7 @@ newBuiltin( 'random',[],'?', null, {
 	}
 });
 
-newBuiltin('mod', [TNum,TNum], TNum, function(a,b){b=math.abs(b);return ((a%b)+b)%b;}, {doc: {usage: 'mod(a,b)', description: 'Modulus, i.e. $a \\bmod{b}.$', tags: ['remainder','modulo']}} );
+newBuiltin('mod', [TNum,TNum], TNum, math.mod, {doc: {usage: 'mod(a,b)', description: 'Modulus, i.e. $a \\bmod{b}.$', tags: ['remainder','modulo']}} );
 newBuiltin('max', [TNum,TNum], TNum, math.max, {doc: {usage: 'max(x,y)', description: 'Maximum of two numbers.', tags: ['supremum','biggest','largest','greatest']}} );
 newBuiltin('min', [TNum,TNum], TNum, math.min, {doc: {usage: 'min(x,y)', description: 'Minimum of two numbers.', tags: ['smallest','least']}} );
 newBuiltin('precround', [TNum,TNum], TNum, math.precround, {doc: {usage: 'precround(x,3)', description: 'Round to given number of decimal places.', tags: ['dp']}} );
@@ -2721,12 +2721,17 @@ var findvarsOps = jme.findvarsOps = {
 	'map': function(tree,boundvars,scope) {
 		boundvars = boundvars.slice();
 		boundvars.push(tree.args[1].tok.name.toLowerCase());
-		return findvars(tree,boundvars,scope);
+		var vars = findvars(tree.args[0],boundvars,scope);
+		vars = vars.merge(findvars(tree.args[2],boundvars));
+		return vars;
 	},
 	'satisfy': function(tree,boundvars,scope) {
 		var names = tree.args[0].args.map(function(t){return t.tok.name});
 		boundvars = boundvars.concat(0,0,names);
-		return findvars(tree,boundvars,scope);
+		var vars = [];
+		for(var i=1;i<tree.args.length;i++)
+			vars = vars.merge(findvars(tree.args[i],boundvars));
+		return vars;
 	}
 }
 

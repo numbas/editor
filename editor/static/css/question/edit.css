@@ -92,6 +92,11 @@
 	position: relative;
 }
 
+.parts.nav > .part:not(:last-child) {
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 1em;
+}
+
 .parts.nav .part .reorder {
     position: absolute;
     right: -2.5em;

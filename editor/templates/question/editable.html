@@ -368,8 +368,9 @@
 								<br/>
 								<button type="button" class="down" data-bind="click: moveDown, visible: canMove('down')" title="Move this part down one place"></button>
 							</div>
-							<button type="button" class="delete" data-bind="click: remove" title="Delete this part"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
-							<div class="subparts" data-bind="fadeVisible: meOrChildSelected">
+							<button type="button" class="delete" data-bind="click: remove" title="Delete this part"></button>
+							<a data-bind="click: $root.showPart" href="#"><strong data-bind="text: header"></strong> <span data-bind="text: type().niceName"></span></a>
+							<div class="subparts" data-bind="fadeVisible: meOrChildSelected() || gaps().length || steps().length">
 								<div class="gaps" data-bind="if: type().name=='gapfill'">
 									<h6>Gaps</h6>
 									<ol class="gaps nav nav-list" data-bind="foreach: {data: gaps, afterAdd: Editor.afterAdd}">
@@ -379,7 +380,8 @@
 												<br/>
 												<button type="button" class="down" data-bind="click: moveDown, visible: canMove('down')" title="Move this part down one place"></button>
 											</div>
-											<button type="button" class="delete" data-bind="click: remove" title="Delete this gap"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
+											<button type="button" class="delete" data-bind="click: remove" title="Delete this gap"></button>
+											<a data-bind="click: $root.showPart" href="#"><strong data-bind="text: header"></strong> <span data-bind="text: type().niceName"></span></a>
 										</li>
 									</ol>
 									<div class="addgap"><button type="button" data-bind="click:addGap, text: gaps().length ? 'Add another gap' : 'Add a gap'"></button></div>
@@ -393,7 +395,8 @@
 												<br/>
 												<button type="button" class="down" data-bind="click: moveDown, visible: canMove('down')" title="Move this part down one place"></button>
 											</div>
-											<button type="button" class="delete" data-bind="click: remove" title="Delete this step"></button><a data-bind="text: header, click: $root.showPart" href="#"></a>
+											<button type="button" class="delete" data-bind="click: remove" title="Delete this step"></button>
+											<a data-bind="click: $root.showPart" href="#"><strong data-bind="text: header"></strong> <span data-bind="text: type().niceName"></span></a>
 										</li>
 									</ol>
 									<div class="addstep"><button type="button" data-bind="click:addStep, text: steps().length ? 'Add another step' : 'Add a step'"></button></div>

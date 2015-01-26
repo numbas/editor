@@ -282,21 +282,22 @@ Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display 
 				<div class="span3">
 					<ol class="parts nav nav-list" data-bind="foreach: parts">
 						<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
-							<a data-bind="text: header, click: $root.showPart" href="#"></a>
-							<div class="subparts" data-bind="fadeVisible: meOrChildSelected">
-								<div class="gaps" data-bind="visible: type().name=='gapfill' && gaps().length>0">
+							<a data-bind="click: $root.showPart" href="#"><strong data-bind="text: header"></strong> <span data-bind="text: type().niceName"></span></a>
+							<div class="subparts" data-bind="fadeVisible: meOrChildSelected() || gaps().length || steps().length">
+								<div class="gaps" data-bind="visible: type().name=='gapfill'">
 									<h6>Gaps</h6>
-									<ol class="gaps nav nav-list" data-bind="foreach: gapfill.gaps">
+									<ol class="gaps nav nav-list" data-bind="visible: gaps().length, foreach: gaps">
 										<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
-											<a data-bind="text: header, click: $root.showPart" href="#"></a>
+											<a data-bind="click: $root.showPart" href="#"><strong data-bind="text: header"></strong> <span data-bind="text: type().niceName"></span></a>
 										</li>
 									</ol>
+									<p class="nothing-here" data-bind="visible: gaps().length==0">No gaps</p>
 								</div>
 								<div class="steps clearfix" data-bind="visible: steps().length>0">
 									<h6>Steps</h6>
 									<ol class="steps nav nav-list" data-bind="foreach: steps">
 										<li class="part clearfix" data-bind="css: {active: $root.currentPart()==$data}">
-											<a data-bind="text: header, click: $root.showPart" href="#"></a>
+											<a data-bind="click: $root.showPart" href="#"><strong data-bind="text: header"></strong> <span data-bind="text: type().niceName"></span></a>
 										</li>
 									</ol>
 								</div>

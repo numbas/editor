@@ -1591,7 +1591,7 @@ $(document).ready(function() {
 			else {
 				i= 'abcdefghijklmnopqrstuvwxyz'[i]+') ';
 			}
-			return i+this.type().niceName;
+			return i;
 		},this);
 
 		this.tabs = ko.computed(function() {

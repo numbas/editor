@@ -418,7 +418,7 @@ $(document).ready(function() {
 			}
 			Editor.computedReplaceState('currentVariableTab',ko.computed(function(){return this.currentVariableTab().id},this));
 
-			if('currentPart' in state) {
+			if('currentPart' in state && state.currentPart!==undefined) {
 				var path = state.currentPart;
 				var part = this.parts()[path[0]];
 				if(path.length>1) {

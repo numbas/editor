@@ -2446,6 +2446,7 @@ $(document).ready(function() {
 					allowResize: ko.observable(true),
 					tolerance: ko.observable(0),
 					markPerCell: ko.observable(false),
+					allowFractions: ko.observable(false),
 					precisionTypes: [
 						{name: 'none', niceName: 'None'},
 						{name: 'dp', niceName: 'Decimal places'},
@@ -2476,6 +2477,7 @@ $(document).ready(function() {
 				data.allowResize = this.allowResize();
 				data.tolerance = this.tolerance();
 				data.markPerCell = this.markPerCell();
+				data.allowFractions = this.allowFractions();
 
 				if(this.precisionType().name!='none') {
 					data.precisionType = this.precisionType().name;
@@ -2487,7 +2489,7 @@ $(document).ready(function() {
 			},
 
 			load: function(data) {
-				tryLoad(data,['correctAnswer','numRows','numColumns','allowResize','tolerance','markPerCell','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision'],this);
+				tryLoad(data,['correctAnswer','numRows','numColumns','allowResize','tolerance','markPerCell','allowFractions','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision'],this);
 				for(var i=0;i<this.precisionTypes.length;i++) {
 					if(this.precisionTypes[i].name == this.precisionType())
 						this.precisionType(this.precisionTypes[i]);

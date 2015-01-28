@@ -21,6 +21,10 @@
 		name: 'booleanproperty',
 		data: {label:'Show correct answer on reveal?',property:$parent.showCorrectAnswer, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal'}
 	}"></div>
+	<div class="control-group" data-bind="fadeVisible: precisionType().name=='none', template: {
+		name: 'booleanproperty',
+		data: {label:'Display numbers in the correct answer as fractions?',property: correctAnswerFractions, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-display-numbers-in-the-correct-answer-as-fractions'}
+		}"></div>
 	<h4>Student's answer</h4>
 	<div class="control-group" data-bind="template: {
 		name: 'property',

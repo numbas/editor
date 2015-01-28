@@ -41,6 +41,10 @@
 			name: 'booleanproperty',
 			data: {label:'Allow the student to enter a fraction?',property: allowFractions, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-allow-the-student-to-enter-a-fraction'}
 		}"></div>
+		<div class="control-group" data-bind="fadeVisible: precisionType().name=='none', template: {
+			name: 'booleanproperty',
+			data: {label:'Display the correct answer as a fraction?',property: correctAnswerFraction, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-display-the-correct-answer-as-a-fraction'}
+		}"></div>
 		<div class="control-group" data-bind="fadeVisible: precisionType().name!='none',
 		template: {
 			name:'property',

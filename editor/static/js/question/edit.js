@@ -1999,6 +1999,7 @@ $(document).ready(function() {
 				var model = {
 					minValue: ko.observable(''),
 					maxValue: ko.observable(''),
+					correctAnswerFraction: ko.observable(false),
 					integerAnswer: ko.observable(false),
 					integerPartialCredit: ko.observable(0),
 					allowFractions: ko.observable(false),
@@ -2028,6 +2029,7 @@ $(document).ready(function() {
 			toJSON: function(data) {
                 data.minValue = this.minValue();
                 data.maxValue = this.maxValue();
+				data.correctAnswerFraction = this.correctAnswerFraction();
                 if(this.integerAnswer())
                 {
                     data.integerAnswer = this.integerAnswer();
@@ -2043,7 +2045,7 @@ $(document).ready(function() {
 				}
 			},
 			load: function(data) {
-                tryLoad(data,['minValue','maxValue','integerAnswer','integerPartialCredit','allowFractions','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision'],this);
+                tryLoad(data,['minValue','maxValue','correctAnswerFraction','integerAnswer','integerPartialCredit','allowFractions','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision'],this);
 				if('answer' in data) {
 					this.minValue(data.answer);
 					this.maxValue(data.answer);
@@ -2441,6 +2443,7 @@ $(document).ready(function() {
 			model: function() {
 				var model = {
 					correctAnswer: ko.observable(''),
+					correctAnswerFractions: ko.observable(false),
 					numRows: ko.observable(1),
 					numColumns: ko.observable(1),
 					allowResize: ko.observable(true),
@@ -2472,6 +2475,7 @@ $(document).ready(function() {
 
 			toJSON: function(data) {
 				data.correctAnswer = this.correctAnswer();
+				data.correctAnswerFractions = this.correctAnswerFractions();
 				data.numRows = this.numRows();
 				data.numColumns = this.numColumns();
 				data.allowResize = this.allowResize();
@@ -2489,7 +2493,7 @@ $(document).ready(function() {
 			},
 
 			load: function(data) {
-				tryLoad(data,['correctAnswer','numRows','numColumns','allowResize','tolerance','markPerCell','allowFractions','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision'],this);
+				tryLoad(data,['correctAnswer','correctAnswerFractions','numRows','numColumns','allowResize','tolerance','markPerCell','allowFractions','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision'],this);
 				for(var i=0;i<this.precisionTypes.length;i++) {
 					if(this.precisionTypes[i].name == this.precisionType())
 						this.precisionType(this.precisionTypes[i]);

@@ -2001,6 +2001,7 @@ $(document).ready(function() {
 					maxValue: ko.observable(''),
 					integerAnswer: ko.observable(false),
 					integerPartialCredit: ko.observable(0),
+					allowFractions: ko.observable(false),
 					precisionTypes: [
 						{name: 'none', niceName: 'None'},
 						{name: 'dp', niceName: 'Decimal places'},
@@ -2032,6 +2033,7 @@ $(document).ready(function() {
                     data.integerAnswer = this.integerAnswer();
                     data.integerPartialCredit= this.integerPartialCredit();
                 }
+				data.allowFractions = this.allowFractions();
 				if(this.precisionType().name!='none') {
 					data.precisionType = this.precisionType().name;
 					data.precision = this.precision();
@@ -2041,7 +2043,7 @@ $(document).ready(function() {
 				}
 			},
 			load: function(data) {
-                tryLoad(data,['minValue','maxValue','integerAnswer','integerPartialCredit','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision'],this);
+                tryLoad(data,['minValue','maxValue','integerAnswer','integerPartialCredit','allowFractions','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision'],this);
 				if('answer' in data) {
 					this.minValue(data.answer);
 					this.maxValue(data.answer);

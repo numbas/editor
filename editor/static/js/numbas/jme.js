@@ -1653,6 +1653,8 @@ newBuiltin('*', [TNum,TMatrix], TMatrix, matrixmath.scalarmul, {doc: {usage: '3*
 newBuiltin('*', [TMatrix,TNum], TMatrix, function(a,b){ return matrixmath.scalarmul(b,a); }, {doc: {usage: 'matrix([1,0],[1,2]) * 3', description: 'Multiply a matrix on the right by a scalar.', tags: ['multiplication','composition','compose','times']}} );
 newBuiltin('*', [TMatrix,TMatrix], TMatrix, matrixmath.mul, {doc: {usage: 'matrix([1,0],[1,1]) * matrix([2,3],[3,4])', description: 'Multiply two matrices.', tags: ['multiplication','composition','compose','times']}});
 newBuiltin('/', [TNum,TNum], TNum, math.div, {doc: {usage: ['x/y','3/2'], description: 'Divide two numbers.', tags: ['division','quotient','fraction']}} );
+newBuiltin('/', [TMatrix,TNum], TMatrix, function(a,b){ return matrixmath.scalarmul(1/b,a); }, {doc: {usage: 'matrix([1,0],[1,2]) * 3', description: 'Multiply a matrix on the right by a scalar.', tags: ['multiplication','composition','compose','times']}} );
+newBuiltin('/', [TVector,TNum], TVector, function(a,b){return vectormath.mul(1/b,a)}, {doc: {usage: 'vector(1,2,3) * 3', description: 'Multiply a vector on the right by a scalar.', tags: ['multiplication','composition','compose','times']}});
 newBuiltin('^', [TNum,TNum], TNum, math.pow, {doc: {usage: ['x^y','x^2','2^x','e^x'], description: 'Exponentiation.', tags: ['power','exponentiate','raise']}} );
 
 newBuiltin('dot',[TVector,TVector],TNum,vectormath.dot, {doc: {usage: 'dot( vector(1,2,3), vector(2,3,4) )', description: 'Dot product of two vectors', tags: ['projection','project']}});
@@ -2161,16 +2163,14 @@ newBuiltin('satisfy', [TList,TList,TList,TNum], TList, null, {
 newBuiltin('listval',[TList,TNum],'?', null, {
 	evaluate: function(args,scope)
 	{
-		var index = args[1].value;
 		var list = args[0];
+		var index = util.wrapListIndex(args[1].value,list.vars);
 		if(list.type!='list') {
 			if(list.type=='name')
 				throw(new Numbas.Error('jme.variables.variable not defined',list.name));
 			else
 				throw(new Numbas.Error('jme.func.listval.not a list'));
 		}
-		if(index<0)
-			index += list.vars;
 		if(index in list.value)
 			return list.value[index];
 		else
@@ -2189,13 +2189,9 @@ newBuiltin('listval',[TList,TRange],TList, null, {
 	{
 		var range = args[1].value;
 		var list = args[0];
-		var start = range[0];
-		var end = range[1];
 		var size = list.vars;
-		if(start<0)
-			start += size;
-		if(end<0)
-			end += size;
+		var start = util.wrapListIndex(range[0],size);
+		var end = util.wrapListIndex(range[1]),size;
 		var value = list.value.slice(start,end);
 		return new TList(value);
 	},
@@ -2210,9 +2206,9 @@ newBuiltin('listval',[TList,TRange],TList, null, {
 newBuiltin('listval',[TVector,TNum],TNum, null, {
 	evaluate: function(args,scope)
 	{
-		var index = args[1].value;
-		var vector = args[0];
-		return new TNum(vector.value[index] || 0);
+		var vector = args[0].value;
+		var index = util.wrapListIndex(args[1].value,vector.length);
+		return new TNum(vector[index] || 0);
 	},
 
 	doc: {
@@ -2222,18 +2218,45 @@ newBuiltin('listval',[TVector,TNum],TNum, null, {
 	}
 });
 
+newBuiltin('listval',[TVector,TRange],TVector,null, {
+	evaluate: function(args,scope)
+	{
+		var range = args[1].value;
+		var vector = args[0].value;
+		var start = util.wrapListIndex(range[0],vector.length);
+		var end = util.wrapListIndex(range[1],vector.length);
+		var v = [];
+		for(var i=start;i<end;i++) {
+			v.push(vector[i] || 0);
+		}
+		return new TVector(v);
+	}
+});
+
 newBuiltin('listval',[TMatrix,TNum],TVector, null, {
 	evaluate: function(args,scope)
 	{
-		var index = args[1].value;
-		var matrix = args[0];
-		return new TVector(matrix.value[index] || []);
+		var matrix = args[0].value;
+		var index = util.wrapListIndex(args[1].value,matrix.length);
+		return new TVector(matrix[index] || []);
 	},
 
 	doc: {
 		usage: ['mat[1]','matrix([1,0],[0,1])[1]'],
 		description: 'Return a particular row of a matrix.',
 		tags: ['index','item','access','element','cell']
+	}
+});
+
+newBuiltin('listval',[TMatrix,TRange],TMatrix,null, {
+	evaluate: function(args,scope)
+	{
+		var range = args[1].value;
+		var matrix = args[0].value;
+		var start = util.wrapListIndex(range[0],matrix.length);
+		var end = util.wrapListIndex(range[1],matrix.length);
+		var v = [];
+		return new TMatrix(matrix.slice(start,end));
 	}
 });
 

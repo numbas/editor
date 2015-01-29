@@ -2057,6 +2057,72 @@ $(document).ready(function() {
 			}
 		},
 		{
+			name: 'matrix',
+			niceName: 'Matrix entry',
+			has_marks: true,
+			tabs: [],
+
+			model: function() {
+				var model = {
+					correctAnswer: ko.observable(''),
+					correctAnswerFractions: ko.observable(false),
+					numRows: ko.observable(1),
+					numColumns: ko.observable(1),
+					allowResize: ko.observable(true),
+					tolerance: ko.observable(0),
+					markPerCell: ko.observable(false),
+					allowFractions: ko.observable(false),
+					precisionTypes: [
+						{name: 'none', niceName: 'None'},
+						{name: 'dp', niceName: 'Decimal places'},
+						{name: 'sigfig', niceName: 'Significant figures'}
+					],
+					precision: ko.observable(0),
+					precisionPartialCredit: ko.observable(0),
+					precisionMessage: ko.observable('You have not given your answer to the correct precision.'),
+					strictPrecision: ko.observable(true)
+				}
+				model.precisionType = ko.observable(model.precisionTypes[0]);
+				model.precisionWord = ko.computed(function() {
+					switch(this.precisionType().name) {
+					case 'dp':
+						return 'Digits';
+					case 'sigfig':
+						return 'Significant figures';
+					}
+				},model);
+
+				return model;
+			},
+
+			toJSON: function(data) {
+				data.correctAnswer = this.correctAnswer();
+				data.correctAnswerFractions = this.correctAnswerFractions();
+				data.numRows = this.numRows();
+				data.numColumns = this.numColumns();
+				data.allowResize = this.allowResize();
+				data.tolerance = this.tolerance();
+				data.markPerCell = this.markPerCell();
+				data.allowFractions = this.allowFractions();
+
+				if(this.precisionType().name!='none') {
+					data.precisionType = this.precisionType().name;
+					data.precision = this.precision();
+					data.precisionPartialCredit = this.precisionPartialCredit();
+					data.precisionMessage = this.precisionMessage();
+					data.strictPrecision = this.strictPrecision();
+				}
+			},
+
+			load: function(data) {
+				tryLoad(data,['correctAnswer','correctAnswerFractions','numRows','numColumns','allowResize','tolerance','markPerCell','allowFractions','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision'],this);
+				for(var i=0;i<this.precisionTypes.length;i++) {
+					if(this.precisionTypes[i].name == this.precisionType())
+						this.precisionType(this.precisionTypes[i]);
+				}
+			}
+		},
+		{
 			name:'patternmatch', 
 			niceName: 'Match text pattern', 
 			has_marks: true,
@@ -2432,72 +2498,6 @@ $(document).ready(function() {
 						}
 					}
                 }
-			}
-		},
-		{
-			name: 'matrix',
-			niceName: 'Matrix entry',
-			has_marks: true,
-			tabs: [],
-
-			model: function() {
-				var model = {
-					correctAnswer: ko.observable(''),
-					correctAnswerFractions: ko.observable(false),
-					numRows: ko.observable(1),
-					numColumns: ko.observable(1),
-					allowResize: ko.observable(true),
-					tolerance: ko.observable(0),
-					markPerCell: ko.observable(false),
-					allowFractions: ko.observable(false),
-					precisionTypes: [
-						{name: 'none', niceName: 'None'},
-						{name: 'dp', niceName: 'Decimal places'},
-						{name: 'sigfig', niceName: 'Significant figures'}
-					],
-					precision: ko.observable(0),
-					precisionPartialCredit: ko.observable(0),
-					precisionMessage: ko.observable('You have not given your answer to the correct precision.'),
-					strictPrecision: ko.observable(true)
-				}
-				model.precisionType = ko.observable(model.precisionTypes[0]);
-				model.precisionWord = ko.computed(function() {
-					switch(this.precisionType().name) {
-					case 'dp':
-						return 'Digits';
-					case 'sigfig':
-						return 'Significant figures';
-					}
-				},model);
-
-				return model;
-			},
-
-			toJSON: function(data) {
-				data.correctAnswer = this.correctAnswer();
-				data.correctAnswerFractions = this.correctAnswerFractions();
-				data.numRows = this.numRows();
-				data.numColumns = this.numColumns();
-				data.allowResize = this.allowResize();
-				data.tolerance = this.tolerance();
-				data.markPerCell = this.markPerCell();
-				data.allowFractions = this.allowFractions();
-
-				if(this.precisionType().name!='none') {
-					data.precisionType = this.precisionType().name;
-					data.precision = this.precision();
-					data.precisionPartialCredit = this.precisionPartialCredit();
-					data.precisionMessage = this.precisionMessage();
-					data.strictPrecision = this.strictPrecision();
-				}
-			},
-
-			load: function(data) {
-				tryLoad(data,['correctAnswer','correctAnswerFractions','numRows','numColumns','allowResize','tolerance','markPerCell','allowFractions','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision'],this);
-				for(var i=0;i<this.precisionTypes.length;i++) {
-					if(this.precisionTypes[i].name == this.precisionType())
-						this.precisionType(this.precisionTypes[i]);
-				}
 			}
 		}
 	];

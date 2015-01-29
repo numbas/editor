@@ -282,7 +282,7 @@ class Question(models.Model,NumbasObject,ControlledObject):
     class Meta:
         ordering = ['name']
         permissions = (
-              ('highlight', 'Can pick questions to be featured on the front page.'),
+              ('highlight', 'Can pick questions to feature on the front page.'),
         )
 
     def __unicode__(self):
@@ -406,7 +406,7 @@ class Exam(models.Model,NumbasObject,ControlledObject):
     class Meta:
         ordering = ['name']
         permissions = (
-              ('highlight', 'Can pick exams to be featured on the front page.'),
+              ('highlight', 'Can pick exams to feature on the front page.'),
         )
 
     def __unicode__(self):

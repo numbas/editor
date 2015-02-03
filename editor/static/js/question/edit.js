@@ -1083,16 +1083,20 @@ $(document).ready(function() {
 				.css({
 					width: this.imageModal.width(), 
 					height: this.imageModal.height()
-				})
+				});
+			
+			$(this.imageModal.selectedNode)
                 .removeAttr('data-mce-style')
+			$(this.imageModal.selectedNode)
 				.attr('alt',this.imageModal.alt())
+			$(this.imageModal.selectedNode)
 				.attr('title',this.imageModal.title())
 			;
 
 			$('#imageAttributeModal').modal('hide');
 
             var ed = viewModel.currentTinyMCE;
-			ed.onChange.dispatch();
+			ed.fire('change');
 		},
 
 		changeIframeAttributes: function() {

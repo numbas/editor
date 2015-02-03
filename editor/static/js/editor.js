@@ -696,20 +696,25 @@ $(document).ready(function() {
             ;
 
 			//tinyMCE
-			function onMCEChange(ed) {
-				valueAccessor(ed.getContent());
-			}
-
             t
                 .tinymce({
-                    theme: 'numbas',
-					plugins: 'media',
+                    theme: 'modern',
+					skin: 'light',
+					plugins: ['media','noneditable','searchreplace','autoresize','fullscreen','link','paste','table','image'],
+					statusbar: false,
 					media_strict: false,
+					width: width,
+					verify_html: false,
+					autoresize_bottom_margin: 0,
+
 					init_instance_callback: function(ed) { 
 						$(element).writemaths({iFrame: true, position: 'center top', previewPosition: 'center bottom'}); 
-						ed.onChange.add(onMCEChange);
-						ed.onKeyUp.add(onMCEChange);
-						ed.onPaste.add(onMCEChange);
+						function onMCEChange() {
+							valueAccessor(ed.getContent());
+						}
+						ed.on('change',onMCEChange);
+						ed.on('keyup',onMCEChange);
+						ed.on('paste',onMCEChange);
 						if(preambleCSSAccessor !== undefined) {
 							var s = ed.dom.create('style',{type:'text/css',id:'preamblecss'});
 							ed.dom.doc.head.appendChild(s);
@@ -717,14 +722,30 @@ $(document).ready(function() {
 								s.textContent = ko.utils.unwrapObservable(preambleCSSAccessor);
 							});
 						}
-					},
-                    theme_advanced_resizing: true,
-					theme_advanced_resize_horizontal: false,
-					height: height,
-					width: width,
-					verify_html: false
+
+						function replaceGapfills(content) {
+							return content.replace(/\[\[(\d+)\]\]/g,function(m,n) {
+								return '<gapfill class="mceNonEditable">'+n+'</gapfill>';
+							});
+						}
+						function restoreGapfills(content) {
+							return content.replace(/<gapfill class="mceNonEditable">(\d+)<\/gapfill>/g,function(t,n) {
+								return '[['+n+']]';
+							});
+						}
+
+						ed.on('BeforeSetcontent', function(event){ 
+							event.content = replaceGapfills( event.content );
+						});
+
+						//replace from placeholder image to shortcode
+						ed.on('GetContent', function(event){
+							event.content = restoreGapfills(event.content);
+						});
+
+						ed.setContent(value);
+					}
                 })
-				.val(value);
             ;
 
 

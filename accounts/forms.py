@@ -4,6 +4,7 @@ from django import forms
 from django.forms.widgets import PasswordInput, Textarea
 from django.utils.translation import ugettext_lazy as _
 from accounts.models import UserProfile
+from django.contrib.auth.models import User
 from sanitizer.forms import SanitizedCharField
 
 class NumbasRegistrationForm(RegistrationForm):
@@ -43,6 +44,9 @@ class UserProfileForm(forms.ModelForm):
         super(UserProfileForm,self).save(self,*args,**kwargs)
 
 class ChangePasswordForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = []
     password1 = forms.CharField(widget=PasswordInput,label='New password')
     password2 = forms.CharField(widget=PasswordInput,label='Type new password again')
 

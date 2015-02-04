@@ -423,7 +423,7 @@
 									name: 'helplink', 
 									data: {topic: 'part prompt', url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-prompt', big: true}
 								}"></span>
-								<div data-bind="writemaths: prompt, preambleCSS: $root.preamble.css"></div>
+								<div data-bind="writemaths: prompt, preambleCSS: $root.preamble.css, tinymce_plugins: (type().name=='gapfill' ? ['gapfill'] : [])"></div>
 							</section>
 							<!-- ko if: type().name=='gapfill' -->
 							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='marking'}">

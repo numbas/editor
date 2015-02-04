@@ -667,6 +667,8 @@ $(document).ready(function() {
 
 			var preambleCSSAccessor = allBindingsAccessor.preambleCSS;
 
+			var tinymce_plugins = ko.utils.unwrapObservable(allBindingsAccessor.tinymce_plugins) || [];
+
 			var d = $('<div style="text-align:right"/>');
 			var toggle = $('<button type="button" class="wmToggle on">Toggle rich text editor</button>');
 			d.append(toggle);
@@ -700,7 +702,7 @@ $(document).ready(function() {
                 .tinymce({
                     theme: 'modern',
 					skin: 'light',
-					plugins: ['media','noneditable','searchreplace','autoresize','fullscreen','link','paste','table','image'],
+					plugins: ['media','noneditable','searchreplace','autoresize','fullscreen','link','paste','table','image'].concat(tinymce_plugins),
 					statusbar: false,
 					media_strict: false,
 					width: width,
@@ -722,26 +724,6 @@ $(document).ready(function() {
 								s.textContent = ko.utils.unwrapObservable(preambleCSSAccessor);
 							});
 						}
-
-						function replaceGapfills(content) {
-							return content.replace(/\[\[(\d+)\]\]/g,function(m,n) {
-								return '<gapfill class="mceNonEditable">'+n+'</gapfill>';
-							});
-						}
-						function restoreGapfills(content) {
-							return content.replace(/<gapfill class="mceNonEditable">(\d+)<\/gapfill>/g,function(t,n) {
-								return '[['+n+']]';
-							});
-						}
-
-						ed.on('BeforeSetcontent', function(event){ 
-							event.content = replaceGapfills( event.content );
-						});
-
-						//replace from placeholder image to shortcode
-						ed.on('GetContent', function(event){
-							event.content = restoreGapfills(event.content);
-						});
 
 						ed.setContent(value);
 					}

@@ -1,0 +1,177 @@
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking'}">
+	<form class="form-horizontal">
+		<div class="control-group" data-bind="template: {
+			name: 'property',
+			data: {label:'Marks', property: $parent.marks, min: 0}
+		}"></div>
+		<div class="control-group" data-bind="template: {
+			name: 'booleanproperty',
+			data: {label:'Show correct answer on reveal?',property:$parent.showCorrectAnswer,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal'}
+		}"></div>
+		<div class="control-group" data-bind="template: {
+			name: 'property',
+			data: {label:'Penalty for revealing steps', property: $parent.stepsPenalty, min: 0}
+		}"></div>
+		<div class="control-group">
+			<label>
+				<span class="control-label">Correct answer</span>
+				<div class="controls">
+					<span data-bind="JME: answer" class="jme-answer"></span>
+				</div>
+			</label>
+		</div>
+		<div class="control-group" data-bind="template: {
+			name: 'booleanproperty',
+			data: {label:'Show preview of student\'s answer?', property: showPreview}
+		}"></div>
+		<div class="control-group" data-bind="template: {
+			name: 'property',
+			data: {label:'Answer simplification rules',property: answerSimplification}
+		}"></div>
+	</form>
+</section>
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='restrictions'}">
+	<form class="form-horizontal">
+		<h4>Checking accuracy</h4>
+		<div class="control-group">
+			<label>
+				<span class="control-label">Checking type</span>
+				<div class="controls">
+					<span data-bind="text: checkingType().niceName"></span>
+				</div>
+			</label>
+		</div>
+		<div class="control-group" data-bind="template: {
+			name: 'property',
+			data: {label:'Checking accuracy',property: checkingType().accuracy, min: 0}
+		}"></div>
+		<div class="control-group" data-bind="template: {
+			name: 'property',
+			data: {label:'Points to check',property: vset.points, min: 0}
+		}"></div>
+		<div class="control-group" data-bind="template: {
+			name: 'property',
+			data: {label:'Maximum no. of failures',property: failureRate, min:0, max: vset.points}
+		}"></div>
+		<div class="control-group" data-bind="template: {
+			name: 'property',
+			data: {label:'Checking range start',property: vset.start, max: vset.end}
+		}"></div>
+		<div class="control-group" data-bind="template: {
+			name: 'property',
+			data: {label:'Checking range end',property: vset.end, min: vset.start}
+		}"></div>
+	</form>
+	<h4>Length restriction</h4>
+	<form class="form-horizontal">
+		<div class="control-group" data-bind="template: {
+			name: 'property',
+			data: {label:'Maximum length',property: maxlength.length, min: 0}
+		}"></div>
+		<div data-bind="fadeVisible: maxlength.length()>0">
+			<div class="control-group" data-bind="template: {
+				name:'percentproperty',
+				data: {label:'Partial credit for long answer',property: maxlength.partialCredit}
+			}"></div>
+			<div class="control-group">
+				<label>
+					<span class="control-label">Warning message</span>
+					<div class="controls" data-bind="mathjaxHTML: maxlength.message"></div>
+				</label>
+			</div>
+		</div>
+	</form>
+	<form class="form-horizontal">
+		<div class="control-group" data-bind="template: {
+			name: 'property',
+			data: {label:'Minimum length',property: minlength.length, min: 0}
+		}"></div>
+		<div data-bind="fadeVisible: minlength.length()>0">
+			<div class="control-group" data-bind="template: {
+				name:'percentproperty',
+				data: {label:'Partial credit for short answer',property: minlength.partialCredit}
+			}"></div>
+			<div class="control-group">
+				<label>
+					<span class="control-label">Warning message</span>
+					<div class="controls" data-bind="mathjaxHTML: minlength.message"></div>
+				</label>
+			</div>
+		</div>
+	</form>
+	<h4>String restriction</h4>
+	<form class="form-horizontal">
+		<div class="control-group">
+			<label>
+				<span class="control-label">Required strings:</span>
+				<div class="controls">
+					<!-- ko foreach: musthave.strings-->
+					<span class="well well-small" data-bind="text: $data"></span >
+					<!-- /ko -->
+				</div>
+			</label>
+		</div>
+		<div data-bind="fadeVisible: musthave.strings().length>0">
+			<div class="control-group" data-bind="template: {
+				name:'percentproperty',
+				data: {label:'Partial credit for not using all required strings:',property: musthave.partialCredit}
+			}"></div>
+			<div class="control-group" data-bind="template: {
+				name: 'booleanproperty',
+				data: {label:'Show required strings in warning?', property:musthave.showStrings}
+			}"></div>
+			<div class="control-group">
+				<label>
+					<span class="control-label">Warning message</span>
+					<div class="controls" data-bind="mathjaxHTML: musthave.message"></div>
+				</label>
+			</div>
+		</div>
+	</form>
+
+	<form class="form-horizontal">
+		<div class="control-group">
+			<label>
+				<span class="control-label">Forbidden strings:</span>
+				<div class="controls">
+					<!-- ko foreach: notallowed.strings-->
+					<span class="well well-small" data-bind="text: $data"></span >
+					<!-- /ko -->
+				</div>
+			</label>
+		</div>
+		<div data-bind="fadeVisible: notallowed.strings().length>0">
+			<div class="control-group" data-bind="template: {
+				name:'percentproperty',
+				data: {label:'Partial credit for not using all required strings:',property: notallowed.partialCredit}
+			}"></div>
+			<div class="control-group" data-bind="template: {
+				name: 'booleanproperty',
+				data: {label:'Show required strings in warning?', property: notallowed.showStrings}
+			}"></div>
+			<div class="control-group">
+				<label>
+					<span class="control-label">Warning message</span>
+					<div class="controls" data-bind="mathjaxHTML: notallowed.message"></div>
+				</label>
+			</div>
+		</div>
+	</form>
+
+	<form class="form-horizontal">
+		<div class="control-group" data-bind="template: {
+			name: 'booleanproperty',
+			data: {label: 'Warn if student uses an unexpected variable name?', property: checkVariableNames}
+		}"></div>
+		<div class="control-group" data-bind="fadeVisible: checkVariableNames">
+			<label>
+				<span class="control-label">Expected variable names:</span>
+				<div class="controls">
+					<!-- ko foreach: expectedVariableNames -->
+					<span class="well well-small" data-bind="text: $data"></span >
+					<!-- /ko -->
+				</div>
+			</label>
+		</div>
+	</form>
+</section>

@@ -340,6 +340,14 @@ class UpdateView(generic.UpdateView):
             question_json['access_rights'] = context['access_rights']
             context['versions'] = reversion.get_for_object(self.object)
 
+        part_type_path = 'question/part_types/'+('editable' if self.editable else 'noneditable')
+        context['partNames'] = [
+            ( name, '{}/{}.html'.format(part_type_path,name) ) 
+            for name in 
+            'jme','gapfill','numberentry','patternmatch','1_n_2','m_n_2','m_n_x','matrix'
+        ]
+
+
         return context
     
     def get_success_url(self):

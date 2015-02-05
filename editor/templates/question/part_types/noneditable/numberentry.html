@@ -1,0 +1,70 @@
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking'}">
+	<form class="form-horizontal">
+		<div class="control-group" data-bind="template: {
+			name: 'property',
+			data: {label:'Marks', property: $parent.marks, min: 0}
+		}"></div>
+		<div class="control-group" data-bind="template: {
+			name: 'booleanproperty',
+			data: {label:'Show correct answer on reveal?',property:$parent.showCorrectAnswer,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal'}
+		}"></div>
+		<div class="control-group" data-bind="template: {
+			name: 'property',
+			data: {label:'Penalty for revealing steps', property: $parent.stepsPenalty, min: 0}
+		}"></div>
+		<div class="control-group" data-bind="template: {
+			name: 'property',
+			data: {label:'Minimum accepted value',property: minValue}
+		}"></div>
+		<div class="control-group" data-bind="template: {
+			name: 'property',
+			data: {label:'Maximum accepted value',property: maxValue}
+		}"></div>
+		<div class="control-group" data-bind="template: {
+			name: 'booleanproperty',
+			data: {label:'Must the answer be an integer?', property: integerAnswer}
+		}"></div>
+		<div class="control-group" data-bind="fadeVisible: integerAnswer,
+		template: {
+			name:'percentproperty',
+			data: {label:'Partial credit for non-integer answer',property: integerPartialCredit}
+		}"></div>
+		<div class="control-group">
+			<label>
+				<span class="control-label">Precision restriction</span>
+				<div class="controls">
+					<span data-bind="text: precisionType().niceName"></span>
+				</div>
+			</label>
+		</div>
+		<div class="control-group" data-bind="fadeVisible: precisionType().name=='none', template: {
+			name: 'booleanproperty',
+			data: {label:'Allow the student to enter a fraction?',property: allowFractions, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-allow-the-student-to-enter-a-fraction'}
+		}"></div>
+		<div class="control-group" data-bind="fadeVisible: precisionType().name=='none', template: {
+			name: 'booleanproperty',
+			data: {label:'Display the correct answer as a fraction?',property: correctAnswerFraction, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-display-the-correct-answer-as-a-fraction'}
+		}"></div>
+		<div class="control-group" data-bind="fadeVisible: precisionType().name!='none',
+		template: {
+			name:'property',
+			data: {label:precisionWord,property: precision}
+		}"></div>
+		<div class="control-group" data-bind="fadeVisible: precisionType().name!='none',
+		template: {
+			name:'booleanproperty',
+			data: {label:'Require trailing zeroes?',property: strictPrecision}
+		}"></div>
+		<div class="control-group" data-bind="fadeVisible: precisionType().name!='none',
+		template: {
+			name:'percentproperty',
+			data: {label:'Partial credit for wrong precision',property: precisionPartialCredit}
+		}"></div>
+		<div class="control-group" data-bind="fadeVisible: precisionType().name!='none'">
+			<label>
+				<span class="control-label">Message if wrong precision</span>
+				<div class="controls" data-bind="mathjaxHTML: precisionMessage"></div>
+			</label>
+		</div>
+	</form>
+</section>

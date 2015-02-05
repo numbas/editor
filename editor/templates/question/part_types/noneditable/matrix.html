@@ -1,0 +1,85 @@
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking'}">
+<form class="form-horizontal">
+	<div class="control-group" data-bind="template: {
+		name: 'property',
+		data: {label:'Marks',property: $parent.marks,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-marks'}
+	}"></div>
+	<div class="control-group" data-bind="visible: !parent(), template: {
+		name: 'property',
+		data: {label:'Penalty for revealing steps',property: $parent.stepsPenalty,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-penalty-for-revealing-steps'}
+	}"></div>
+	<h4>Correct answer</h4>
+	<div class="control-group">
+		<label class="control-label">
+			Correct answer
+		</label>
+		<div class="controls">
+			<textarea disabled data-bind="readOnly: true, valueUpdate: 'afterkeydown', codemirror: correctAnswer, codemirrorMode: 'jme'"></textarea>
+		</div>
+	</div>
+	<div class="control-group" data-bind="template: {
+		name: 'booleanproperty',
+		data: {label:'Show correct answer on reveal?',property:$parent.showCorrectAnswer, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal'}
+	}"></div>
+	<div class="control-group" data-bind="fadeVisible: precisionType().name=='none', template: {
+		name: 'booleanproperty',
+		data: {label:'Display numbers in the correct answer as fractions?',property: correctAnswerFractions, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-display-numbers-in-the-correct-answer-as-fractions'}
+		}"></div>
+	<h4>Student's answer</h4>
+	<div class="control-group" data-bind="template: {
+		name: 'property',
+		data: {label:'Number of rows',property: numRows, min: 1, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-number-of-rows'}
+	}"></div>
+	<div class="control-group" data-bind="template: {
+		name: 'property',
+		data: {label:'Number of columns',property: numColumns, min: 1, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-number-of-columns'}
+	}"></div>
+	<div class="control-group" data-bind="template: {
+		name: 'booleanproperty',
+		data: {label:'Allow student to change size of matrix?',property: allowResize, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-allow-student-to-change-size-of-matrix'}
+	}"></div>
+	<div class="control-group" data-bind="template: {
+		name: 'property',
+		data: {label:'Margin of error allowed in each cell',property: tolerance, min: 0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-margin-of-error-allowed-in-each-cell'}
+	}"></div>
+	<div class="control-group" data-bind="template: {
+		name: 'booleanproperty',
+		data: {label:'Gain marks for each correct cell?',property: markPerCell, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-gain-marks-for-each-cell'}
+	}"></div>
+	<h4>Precision restriction</h4>
+	<div class="control-group">
+		<label>
+			<span class="control-label">Precision restriction <span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-precision-restriction'}}"></span></span>
+			<div class="controls">
+				<span data-bind="text: precisionType().niceName"></span>
+			</div>
+		</label>
+	</div>
+	<div class="control-group" data-bind="fadeVisible: precisionType().name=='none', template: {
+		name: 'booleanproperty',
+		data: {label:'Allow the student to enter fractions?',property: allowFractions, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-allow-the-student-to-enter-a-fraction'}
+		}"></div>
+	<div class="control-group" data-bind="fadeVisible: precisionType().name!='none',
+		template: {
+		name:'property',
+		data: {label:precisionWord,property:precision}
+		}"></div>
+	<div class="control-group" data-bind="fadeVisible: precisionType().name!='none',
+		template: {
+		name:'booleanproperty',
+		data: {label:'Require trailing zeroes?',property:strictPrecision, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-require-trailing-zeroes'}
+		}"></div>
+	<div class="control-group" data-bind="fadeVisible: precisionType().name!='none',
+		template: {
+		name:'percentproperty',
+		data: {label:'Partial credit for wrong precision',property:precisionPartialCredit}
+		}"></div>
+	<div class="control-group" data-bind="fadeVisible: precisionType().name!='none'">
+		<label>
+			<span class="control-label">Message if wrong precision</span>
+			<div class="controls" data-bind="mathjaxHTML: precisionMessage"></div>
+		</label>
+	</div>
+</form>
+</section>
+

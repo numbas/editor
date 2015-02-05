@@ -1,0 +1,8 @@
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking'}">
+	<form class="form-horizontal">
+		<div class="control-group" data-bind="template: {
+			name: 'property',
+			data: {label:'Penalty for revealing steps',property: $parent.stepsPenalty,min:0}
+		}"></div>
+	</form>
+</section>

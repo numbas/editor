@@ -91,6 +91,7 @@ class ExamSearchForm(forms.Form):
 class ExamAccessForm(forms.ModelForm):
     class Meta:
         model = ExamAccess
+        exclude = []
 
 class ExamSetAccessForm(forms.ModelForm):
     class Meta:
@@ -175,6 +176,7 @@ class ExamQuestionForm(forms.ModelForm):
     
     class Meta:
         model = ExamQuestion
+        exclude = []
 
 ExamQuestionFormSet = inlineformset_factory(Exam, ExamQuestion, form=ExamQuestionForm)
 

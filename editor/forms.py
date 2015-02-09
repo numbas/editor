@@ -48,6 +48,7 @@ class QuestionSearchForm(forms.Form):
 class QuestionAccessForm(forms.ModelForm):
     class Meta:
         model = QuestionAccess
+        exclude = []
 
 class QuestionSetAccessForm(forms.ModelForm):
     class Meta:

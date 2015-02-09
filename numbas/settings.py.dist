@@ -118,7 +118,6 @@ INSTALLED_APPS = (
     'editor',
     'registration',
     'django_tables2',
-    'south', # for database migration
     'taggit',
 )
 

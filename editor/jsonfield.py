@@ -5,15 +5,15 @@ from django.db import models
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.translation import ugettext_lazy as _
 
-from django.forms.fields import Field
-from django.forms.util import ValidationError as FormValidationError
+from django.forms.fields import CharField
+from django.forms.utils import ValidationError as FormValidationError
 
 try:
 	from south.modelsinspector import add_introspection_rules
 except ImportError:
 	pass
 
-class JSONFormField(Field):
+class JSONFormField(CharField):
     def clean(self, value):
 
         if not value and not self.required:

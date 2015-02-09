@@ -121,7 +121,7 @@ class CreateView(generic.CreateView):
     def get(self, request, *args, **kwargs):
         self.object = Exam()
         self.object.author = request.user
-        self.object.locale = request.user.get_profile().language
+        self.object.locale = request.user.userprofile.language
         self.object.save()
         return redirect(self.get_success_url())
 
@@ -306,7 +306,7 @@ class UpdateView(generic.UpdateView):
         context['navtab'] = 'exams'
 
         if self.request.user.is_authenticated():
-            profile = self.request.user.get_profile()
+            profile = self.request.user.userprofile
         else:
             profile = None
 
@@ -411,7 +411,7 @@ class IndexView(generic.TemplateView):
         context = super(IndexView, self).get_context_data(**kwargs)
 
         if self.request.user.is_authenticated():
-            profile = self.request.user.get_profile()
+            profile = self.request.user.userprofile
             context['favourites'] = profile.favourite_exams.all()
             context['recents'] = Exam.objects.filter(author=self.request.user).order_by('-last_modified')
         
@@ -475,7 +475,7 @@ class FavouritesView(ListView):
     template_name = 'exam/favourites.html'
 
     def get_queryset(self):
-        return self.request.user.get_profile().favourite_exams.all()
+        return self.request.user.userprofile.favourite_exams.all()
 
 class HighlightsView(ListView):
     model = ExamHighlight
@@ -514,7 +514,7 @@ class SetStarView(generic.UpdateView):
     def post(self, request, *args, **kwargs):
         exam = self.get_object()
 
-        profile = request.user.get_profile()
+        profile = request.user.userprofile
         starred = request.POST.get('starred') == 'true'
         if starred:
             profile.favourite_exams.add(exam)

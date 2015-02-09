@@ -8,6 +8,8 @@ from database import DATABASES
 
 SITE_TITLE = 'Numbas'
 
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 

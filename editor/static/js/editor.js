@@ -724,6 +724,11 @@ $(document).ready(function() {
 								s.textContent = ko.utils.unwrapObservable(preambleCSSAccessor);
 							});
 						}
+						ed.on('keyup',function(e) {
+							if(e.which==27 && ed.plugins.fullscreen.isFullscreen()) {
+								ed.execCommand('mceFullScreen');
+							}
+						});
 
 						if(allBindingsAccessor.showButtons) {
 							for(var button in allBindingsAccessor.showButtons) {

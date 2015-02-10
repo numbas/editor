@@ -27,7 +27,7 @@ except ImportError:
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib import staticfiles
+from django.contrib.staticfiles import finders
 from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
@@ -151,7 +151,7 @@ class Extension(models.Model):
                 return settings.MEDIA_URL+self.zipfile_folder+'/extracted/'+str(self.pk)+'/'+self.location+'/'+filename
         else:
             path = 'js/numbas/extensions/%s/%s.js' % (self.location,self.location)
-            if staticfiles.finders.find(path):
+            if finders.find(path):
                 return settings.STATIC_URL+path
         return None
 

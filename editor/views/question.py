@@ -18,8 +18,6 @@ from copy import deepcopy
 import time
 import calendar
 
-from django.contrib import staticfiles
-
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db.models import Q
@@ -255,7 +253,7 @@ class UpdateView(generic.UpdateView):
         del self.data['resources']
         question_form = QuestionForm(self.data, instance=self.object)
 
-        if question_form.is_valid():
+        if question_form.is_valid()
             return self.form_valid(question_form)
         else:
             return self.form_invalid(question_form)

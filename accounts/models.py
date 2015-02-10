@@ -15,6 +15,7 @@ from operator import itemgetter
 from editor.models import Question, Exam, EditorTag
 
 class RegistrationManager(regmodels.RegistrationManager):
+    @transaction.atomic
     def create_inactive_user(self, username, first_name, last_name, email, password,
                              site, send_email=True):
         """
@@ -40,7 +41,6 @@ class RegistrationManager(regmodels.RegistrationManager):
             registration_profile.send_activation_email(site)
 
         return new_user
-    create_inactive_user = transaction.commit_on_success(create_inactive_user)
 
 class RegistrationProfile(regmodels.RegistrationProfile):
     objects = RegistrationManager()

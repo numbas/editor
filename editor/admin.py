@@ -31,7 +31,7 @@ class EditorTagAdmin(admin.ModelAdmin):
     list_display = ['name','show_used_count','official']
     actions = ['make_tag_official','merge_tags']
 
-    def queryset(self,request):
+    def get_queryset(self,request):
         return EditorTag.objects.annotate(used_count=Count('tagged_items'))
 
     def show_used_count(self,instance):

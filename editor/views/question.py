@@ -18,8 +18,6 @@ from copy import deepcopy
 import time
 import calendar
 
-from django.contrib import staticfiles
-
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db.models import Q
@@ -313,7 +311,7 @@ class UpdateView(generic.UpdateView):
         context['navtab'] = 'questions'
 
         if not self.request.user.is_anonymous():
-            context['starred'] = self.request.user.get_profile().favourite_questions.filter(pk=self.object.pk).exists()
+            context['starred'] = self.request.user.userprofile.favourite_questions.filter(pk=self.object.pk).exists()
         else:
             context['starred'] = False
     
@@ -416,7 +414,7 @@ class IndexView(generic.TemplateView):
         context = super(IndexView, self).get_context_data(**kwargs)
 
         if self.request.user.is_authenticated():
-            profile = self.request.user.get_profile()
+            profile = self.request.user.userprofile
             context['favourites'] = profile.favourite_questions.all()
             context['recents'] = Question.objects.filter(author=self.request.user).order_by('-last_modified')
         
@@ -501,7 +499,7 @@ class FavouritesView(ListView):
     template_name = 'question/favourites.html'
 
     def get_queryset(self):
-        return self.request.user.get_profile().favourite_questions.all()
+        return self.request.user.userprofile.favourite_questions.all()
 
 class HighlightsView(ListView):
     model = QuestionHighlight
@@ -571,7 +569,7 @@ class SetStarView(generic.UpdateView):
     def post(self, request, *args, **kwargs):
         question = self.get_object()
 
-        profile = request.user.get_profile()
+        profile = request.user.userprofile
         starred = request.POST.get('starred') == 'true'
         if starred:
             profile.favourite_questions.add(question)

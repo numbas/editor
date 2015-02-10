@@ -8,6 +8,8 @@ from database import DATABASES
 
 SITE_TITLE = 'Numbas'
 
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -118,7 +120,6 @@ INSTALLED_APPS = (
     'editor',
     'registration',
     'django_tables2',
-    'south', # for database migration
     'taggit',
 )
 

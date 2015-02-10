@@ -27,13 +27,14 @@ except ImportError:
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib import staticfiles
+from django.contrib.staticfiles import finders
 from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q
 from django.forms import model_to_dict
+from django.utils.deconstruct import deconstructible
 from uuslug import slugify
 
 import reversion
@@ -61,7 +62,8 @@ class EditorTag(taggit.models.TagBase):
 class TaggedQuestion(taggit.models.GenericTaggedItemBase):
     tag = models.ForeignKey(EditorTag,related_name='tagged_items')
 
-class ControlledObject:
+@deconstructible
+class ControlledObject(object):
 
     def can_be_viewed_by(self,user):
         accept_levels = ('view','edit')
@@ -73,8 +75,13 @@ class ControlledObject:
     def can_be_edited_by(self, user):
         return self.public_access=='edit' or (user.is_superuser) or (self.author==user) or self.get_access_for(user)=='edit'
 
+    def __eq__(self,other):
+        return True
+
 NUMBAS_FILE_VERSION = 'variables_as_objects'
-class NumbasObject:
+
+@deconstructible
+class NumbasObject(object):
 
     def get_parsed_content(self):
         if self.content:
@@ -95,6 +102,9 @@ class NumbasObject:
             self.parsed_content.data['name'] = name
             self.content = str(self.parsed_content)
         self.save()
+
+    def __eq__(self,other):
+        return self.content==other.content
 
 #check that the .exam file for an object is valid and defines at the very least a name
 def validate_content(content):
@@ -141,7 +151,7 @@ class Extension(models.Model):
                 return settings.MEDIA_URL+self.zipfile_folder+'/extracted/'+str(self.pk)+'/'+self.location+'/'+filename
         else:
             path = 'js/numbas/extensions/%s/%s.js' % (self.location,self.location)
-            if staticfiles.finders.find(path):
+            if finders.find(path):
                 return settings.STATIC_URL+path
         return None
 

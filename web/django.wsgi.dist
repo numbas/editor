@@ -16,6 +16,5 @@ site.addsitedir('/path/to/virtualenv/lib/python2.7/site-packages')
 sys.path.append('/srv/www/numbas_editor')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'numbas.settings'
 
-import django.core.handlers.wsgi
-
-application = django.core.handlers.wsgi.WSGIHandler()
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()

@@ -7,7 +7,7 @@
 {% endblock stylesheets %}
 
 {% block content %}
-{% with object.get_profile as profile %}
+{% with object.userprofile as profile %}
 {% if is_me %}<div class="pull-right" id="edit-profile"><a href="{% url 'edit_profile' %}">Edit your profile</a></div>{% endif %}
 
 <h2 class="big-name">{{object.get_full_name}}</h2>

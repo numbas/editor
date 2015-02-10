@@ -48,6 +48,7 @@ class QuestionSearchForm(forms.Form):
 class QuestionAccessForm(forms.ModelForm):
     class Meta:
         model = QuestionAccess
+        exclude = []
 
 class QuestionSetAccessForm(forms.ModelForm):
     class Meta:
@@ -90,6 +91,7 @@ class ExamSearchForm(forms.Form):
 class ExamAccessForm(forms.ModelForm):
     class Meta:
         model = ExamAccess
+        exclude = []
 
 class ExamSetAccessForm(forms.ModelForm):
     class Meta:
@@ -131,7 +133,7 @@ class QuestionForm(forms.ModelForm):
 
     class Meta:
         model = Question
-        exclude = ('name','author','tags','public_access','copy_of')
+        exclude = ('name','author','tags','public_access','copy_of','metadata')
 
 class QuestionHighlightForm(forms.ModelForm):
     note = forms.CharField(widget=forms.Textarea(attrs={'data-bind':'text:note'}), label='Write a note explaining why you\'re highlighting this question.')
@@ -155,7 +157,7 @@ class ExamForm(forms.ModelForm):
     
     class Meta:
         model = Exam
-        exclude = ('name','author','public_access')
+        exclude = ('name','author','public_access','metadata')
         
         
 class NewExamForm(forms.ModelForm):
@@ -174,6 +176,7 @@ class ExamQuestionForm(forms.ModelForm):
     
     class Meta:
         model = ExamQuestion
+        exclude = []
 
 ExamQuestionFormSet = inlineformset_factory(Exam, ExamQuestion, form=ExamQuestionForm)
 

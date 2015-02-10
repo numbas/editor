@@ -725,6 +725,23 @@ $(document).ready(function() {
 							});
 						}
 
+						if(allBindingsAccessor.showButtons) {
+							for(var button in allBindingsAccessor.showButtons) {
+								ko.computed(function() {
+									var v = ko.utils.unwrapObservable(allBindingsAccessor.showButtons[button]);
+									if(typeof(v)=="function") {
+										v = v();
+									}
+									var buttons = ed.theme.panel.find('button.'+button);
+									if(v) {
+										buttons.show();
+									} else {
+										buttons.hide();
+									}
+								});
+							}
+						}
+
 						ed.setContent(value);
 					}
                 })

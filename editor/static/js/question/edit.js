@@ -18,6 +18,15 @@ var viewModel;
 $(document).ready(function() {
 	var builtinRulesets = ['basic','unitFactor','unitPower','unitDenominator','zeroFactor','zeroTerm','zeroPower','noLeadingMinus','collectNumbers','simplifyFractions','zeroBase','constantsFirst','sqrtProduct','sqrtDivision','sqrtSquare','trig','otherNumbers']
 
+	var jmeTypes = [];
+	var forbiddenJmeTypes = ['op','name','function'];
+	for(var type in Numbas.jme.types) {
+		var t = Numbas.jme.types[type].prototype.type;
+		if(t && jmeTypes.indexOf(t)==-1 && forbiddenJmeTypes.indexOf(t)==-1) {
+			jmeTypes.push(t);
+		}
+	}
+
     function Question(data)
     {
 		var q = this;
@@ -1494,7 +1503,7 @@ $(document).ready(function() {
 
     function CustomFunction(q,data) {
         this.name = ko.observable('');
-        this.types = ['number','string','boolean','vector','matrix','list','name','function','op','range','html','?'];
+        this.types = jmeTypes;
         this.parameters = ko.observableArray([])
         this.type = ko.observable('number');
         this.definition = ko.observable('');

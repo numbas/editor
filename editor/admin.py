@@ -15,24 +15,29 @@ from django.contrib import admin
 from django.db.models import Count
 from django.contrib.auth.admin import UserAdmin
 
-from editor.models import Exam, Question, Extension, QuestionHighlight, EditorTag, TaggedQuestion, Theme
+import editor.models
 
-admin.site.register(Exam)
-admin.site.register(Question)
-admin.site.register(QuestionHighlight)
-admin.site.register(Extension)
-admin.site.register(Theme)
+admin.site.register(editor.models.Exam)
+admin.site.register(editor.models.Question)
+admin.site.register(editor.models.QuestionHighlight)
+admin.site.register(editor.models.Extension)
+admin.site.register(editor.models.Theme)
 
 # allow users to be sorted by date joined
 UserAdmin.list_display += ('date_joined',)
 UserAdmin.list_filter += ('date_joined',)
+
+class LicenceAdmin(admin.ModelAdmin):
+    list_display = ['name','short_name','can_reuse','can_modify','can_sell']
+
+admin.site.register(editor.models.Licence,LicenceAdmin)
 
 class EditorTagAdmin(admin.ModelAdmin):
     list_display = ['name','show_used_count','official']
     actions = ['make_tag_official','merge_tags']
 
     def get_queryset(self,request):
-        return EditorTag.objects.annotate(used_count=Count('tagged_items'))
+        return editor.models.EditorTag.objects.annotate(used_count=Count('tagged_items'))
 
     def show_used_count(self,instance):
         return instance.used_count
@@ -48,7 +53,7 @@ class EditorTagAdmin(admin.ModelAdmin):
             return
 
         tags = list(queryset)
-        tags.sort(key=EditorTag.used_count,reverse=True)
+        tags.sort(key=editor.models.EditorTag.used_count,reverse=True)
         merged_tag = tags[0]
 
         TaggedQuestion.objects.filter(tag__in=tags[1:]).update(tag=merged_tag)
@@ -62,4 +67,4 @@ class EditorTagAdmin(admin.ModelAdmin):
         self.message_user(request,"Tags %s merged into '%s'" % (', '.join("'%s'" % t.name for t in tags),merged_tag.name))
     merge_tags.short_description = 'Merge tags'
 
-admin.site.register(EditorTag,EditorTagAdmin)
+admin.site.register(editor.models.EditorTag,EditorTagAdmin)

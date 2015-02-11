@@ -71,6 +71,16 @@ $(document).ready(function() {
 
 		this.exams = data.exams;
 
+        Editor.licences.sort(function(a,b){a=a.short_name;b=b.short_name; return a<b ? -1 : a>b ? 1 : 0 });
+        this.licence = ko.observable();
+        this.licence_name = ko.computed(function() {
+            if(this.licence()) {
+                return this.licence().name;
+            } else {
+                return 'None specified';
+            }
+        },this);
+
 		this.resources = ko.observableArray([]);
 		this.saveResources = ko.computed(function() {
 			var resources = this.resources();
@@ -134,7 +144,8 @@ $(document).ready(function() {
 		this.metadata = ko.computed(function() {
 			return {
 				notes: this.notes(),
-				description: this.description()
+				description: this.description(),
+                licence: this.licence_name()
 			};
 		},this);
 
@@ -944,6 +955,13 @@ $(document).ready(function() {
 
 			if('metadata' in data) {
 				tryLoad(data.metadata,['notes','description'],this);
+                var licence_name = data.metadata.licence;
+                for(var i=0;i<Editor.licences.length;i++) {
+                    if(Editor.licences[i].name==licence_name) {
+                        this.licence(Editor.licences[i]);
+                        break;
+                    }
+                }
 			}
 
 			if('progress' in data) {

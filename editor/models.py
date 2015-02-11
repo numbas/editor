@@ -251,12 +251,37 @@ class QuestionManager(models.Manager):
             given_access = QuestionAccess.objects.filter(access__in=['edit','view'],user=user).values_list('question',flat=True)
             return mine_or_public | self.exclude(mine_or_public_query).filter(pk__in=given_access)
 
+class Licence(models.Model):
+    name = models.CharField(max_length=80,unique=True)
+    short_name = models.CharField(max_length=20,unique=True)
+    can_reuse = models.BooleanField(default=True)
+    can_modify = models.BooleanField(default=True)
+    can_sell = models.BooleanField(default=True)
+    url = models.URLField(blank=True)
+    full_text = models.TextField(blank=True)
 
-class Meta:
-    abstract = True
+    def __unicode__(self):
+        return self.name
+
+    def as_json(self):
+        return {
+                'name': self.name,
+                'short_name': self.short_name,
+                'can_reuse': self.can_reuse,
+                'can_modify': self.can_modify,
+                'can_sell': self.can_sell,
+                'url': self.url,
+                'pk': self.pk,
+        }
+
+class EditorModel(models.Model):
+    class Meta:
+        abstract = True
+
+    licence = models.ForeignKey(Licence,null=True)
 
 @reversion.register
-class Question(models.Model,NumbasObject,ControlledObject):
+class Question(EditorModel,NumbasObject,ControlledObject):
     
     """Model class for a question.
     
@@ -307,6 +332,9 @@ class Question(models.Model,NumbasObject,ControlledObject):
         self.slug = slugify(self.name)
 
         self.progress = self.parsed_content.data.get('progress','in-progress')
+
+        licence_name = self.parsed_content.data['metadata'].get('licence',None)
+        self.licence = Licence.objects.filter(name=licence_name).first()
 
         super(Question, self).save(*args, **kwargs)
 
@@ -391,7 +419,7 @@ class QuestionHighlight(models.Model):
     date = models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
 
 @reversion.register
-class Exam(models.Model,NumbasObject,ControlledObject):
+class Exam(EditorModel,NumbasObject,ControlledObject):
     
     """Model class for an Exam.
     

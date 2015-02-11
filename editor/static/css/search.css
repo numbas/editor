@@ -108,6 +108,19 @@
 	margin: 0;
 }
 
+.result .licence {
+    margin-top: 0.8em;
+    font-size: 0.8em;
+    text-align: right;
+}
+.result .licence a {
+    color: hsl(200,70%,40%);
+}
+.result .licence .no-licence {
+    font-style: italic;
+    color: #888;
+}
+
 .pagination {
 	margin-top: 1em;
 	vertical-align: center;

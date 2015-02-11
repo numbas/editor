@@ -31,13 +31,14 @@ from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import FormMixin
 from django.template.loader import render_to_string
 from django.conf import settings
+from django.core import serializers
 
 import reversion
 
 from django_tables2.config import RequestConfig
 
 from editor.forms import NewQuestionForm, QuestionForm, QuestionSetAccessForm, QuestionSearchForm, QuestionHighlightForm
-from editor.models import Question,Extension,Image,QuestionAccess,QuestionHighlight,EditorTag
+from editor.models import Question,Extension,Image,QuestionAccess,QuestionHighlight,EditorTag,Licence
 import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
@@ -289,6 +290,7 @@ class UpdateView(generic.UpdateView):
         return HttpResponse(json.dumps(status), content_type='application/json')
         
     def form_invalid(self, form):
+        print(form.errors)
         status = {
             "result": "error",
             "message": "Something went wrong...",
@@ -319,11 +321,14 @@ class UpdateView(generic.UpdateView):
 
         versions = [version_json(v,self.user) for v in reversion.get_for_object(self.object)]
 
+        licences = [licence.as_json() for licence in Licence.objects.all()]
+
         question_json = context['question_json'] = {
             'questionJSON': json.loads(self.object.as_json()),
             'editable': self.editable,
 
             'progresses': self.object.PROGRESS_CHOICES,
+            'licences': licences,
 
             'numbasExtensions': context['extensions'],
 
@@ -344,7 +349,6 @@ class UpdateView(generic.UpdateView):
             for name in 
             'jme','gapfill','numberentry','patternmatch','1_n_2','m_n_2','m_n_x','matrix'
         ]
-
 
         return context
     

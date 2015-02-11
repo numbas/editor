@@ -1,3 +1,15 @@
 <a href="{% url 'exam_edit' record.pk record.slug %}">{{ record.name }}</a>
 <div class="description">{{ record.metadata.description|safe }}</div>
-
+<div class="licence">
+    {% if record.licence %}
+    {% with record.licence as licence %}
+        {% if licence.url %}
+            <a href="{{licence.url}}" target="_blank" title="{{licence.name}}">{{licence.short_name}}</a>
+        {% else %}
+            <abbr title="{{licence.name}}">{{licence.short_name}}</abbr>
+        {% endif %}
+    {% endwith %}
+    {% else %}
+        <span class="no-licence">No licence specified</span>
+    {% endif %}
+</div>

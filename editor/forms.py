@@ -133,7 +133,7 @@ class QuestionForm(forms.ModelForm):
 
     class Meta:
         model = Question
-        exclude = ('name','author','tags','public_access','copy_of','metadata')
+        exclude = ('name','author','tags','public_access','copy_of','metadata','licence')
 
 class QuestionHighlightForm(forms.ModelForm):
     note = forms.CharField(widget=forms.Textarea(attrs={'data-bind':'text:note'}), label='Write a note explaining why you\'re highlighting this question.')

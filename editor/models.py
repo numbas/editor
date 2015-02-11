@@ -124,7 +124,7 @@ class Extension(models.Model):
     author = models.ForeignKey(User,related_name='own_extensions',blank=True,null=True)
     last_modified = models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
     zipfile_folder = 'user-extensions'
-    zipfile = models.FileField(upload_to=os.path.join(zipfile_folder,'zips'), blank=True,null=True, max_length=255, verbose_name = 'Extension package',help_text='A .zip package containing the extension\'s files')
+    zipfile = models.FileField(upload_to=zipfile_folder+'/zips', blank=True,null=True, max_length=255, verbose_name = 'Extension package',help_text='A .zip package containing the extension\'s files')
 
     def __unicode__(self):
         return self.name
@@ -187,7 +187,7 @@ class Theme( models.Model ):
     author = models.ForeignKey(User,related_name='own_themes')
     last_modified = models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
     zipfile_folder = 'user-themes'
-    zipfile = models.FileField(upload_to=os.path.join(zipfile_folder,'zips'), max_length=255, verbose_name = 'Theme package',help_text='A .zip package containing the theme\'s files')
+    zipfile = models.FileField(upload_to=zipfile_folder+'/zips', max_length=255, verbose_name = 'Theme package',help_text='A .zip package containing the theme\'s files')
 
     def __unicode__(self):
         return self.name
@@ -251,6 +251,9 @@ class QuestionManager(models.Manager):
             given_access = QuestionAccess.objects.filter(access__in=['edit','view'],user=user).values_list('question',flat=True)
             return mine_or_public | self.exclude(mine_or_public_query).filter(pk__in=given_access)
 
+
+class Meta:
+    abstract = True
 
 @reversion.register
 class Question(models.Model,NumbasObject,ControlledObject):

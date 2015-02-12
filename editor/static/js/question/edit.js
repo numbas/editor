@@ -1700,6 +1700,13 @@ $(document).ready(function() {
 			
 			gapFill.prompt(this.prompt()+'\n<p>[[0]]</p>');
 			this.prompt('');
+
+			gapFill.steps(this.steps());
+			gapFill.steps().map(function(step){ 
+				step.parent(gapFill);
+				step.parentList = gapFill.steps;
+			});
+			this.steps([]);
 		},
 
 		canMove: function(direction) {

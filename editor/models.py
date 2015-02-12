@@ -128,7 +128,7 @@ class Extension(models.Model):
     public = models.BooleanField(default=False,help_text='Can this extension be seen by everyone?')
     slug = models.SlugField(max_length=200,editable=False,unique=False,default='an-extension')
     author = models.ForeignKey(User,related_name='own_extensions',blank=True,null=True)
-    last_modified = models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
+    last_modified = models.DateTimeField(auto_now=True,default=datetime.utcfromtimestamp(0))
     zipfile_folder = 'user-extensions'
     zipfile = models.FileField(upload_to=zipfile_folder+'/zips', blank=True,null=True, max_length=255, verbose_name = 'Extension package',help_text='A .zip package containing the extension\'s files')
 
@@ -191,7 +191,7 @@ class Theme( models.Model ):
     public = models.BooleanField(default=False,help_text='Can this theme be seen by everyone?')
     slug = models.SlugField(max_length=200,editable=False,unique=False)
     author = models.ForeignKey(User,related_name='own_themes')
-    last_modified = models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
+    last_modified = models.DateTimeField(auto_now=True,default=datetime.utcfromtimestamp(0))
     zipfile_folder = 'user-themes'
     zipfile = models.FileField(upload_to=zipfile_folder+'/zips', max_length=255, verbose_name = 'Theme package',help_text='A .zip package containing the theme\'s files')
 
@@ -304,8 +304,8 @@ class Question(EditorModel,NumbasObject,ControlledObject):
     filename = models.CharField(max_length=200, editable=False,default='')
     content = models.TextField(blank=True,validators=[validate_content])
     metadata = JSONField(blank=True)
-    created = models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
-    last_modified = models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
+    created = models.DateTimeField(auto_now_add=True,default=datetime.utcfromtimestamp(0))
+    last_modified = models.DateTimeField(auto_now=True,default=datetime.utcfromtimestamp(0))
     resources = models.ManyToManyField(Image,blank=True)
     copy_of = models.ForeignKey('self',null=True,related_name='copies',on_delete=models.SET_NULL)
     extensions = models.ManyToManyField(Extension,blank=True)
@@ -413,7 +413,7 @@ class QuestionHighlight(models.Model):
     question = models.ForeignKey(Question)
     picked_by = models.ForeignKey(User)
     note = models.TextField(blank=True)
-    date = models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
+    date = models.DateTimeField(auto_now_add=True,default=datetime.utcfromtimestamp(0))
 
 @reversion.register
 class Exam(EditorModel,NumbasObject,ControlledObject):
@@ -434,8 +434,8 @@ class Exam(EditorModel,NumbasObject,ControlledObject):
     author = models.ForeignKey(User,related_name='own_exams')
     filename = models.CharField(max_length=200, editable=False,default='')
     content = models.TextField(blank=True, validators=[validate_content])
-    created = models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
-    last_modified = models.DateTimeField(auto_now=True,default=datetime.fromtimestamp(0))
+    created = models.DateTimeField(auto_now_add=True,default=datetime.utcfromtimestamp(0))
+    last_modified = models.DateTimeField(auto_now=True,default=datetime.utcfromtimestamp(0))
     metadata = JSONField(blank=True)
 
     public_access = models.CharField(default='view',editable=True,choices=PUBLIC_ACCESS_CHOICES,max_length=6)
@@ -556,7 +556,7 @@ class ExamHighlight(models.Model):
     exam = models.ForeignKey(Exam)
     picked_by = models.ForeignKey(User)
     note = models.TextField(blank=True)
-    date = models.DateTimeField(auto_now_add=True,default=datetime.fromtimestamp(0))
+    date = models.DateTimeField(auto_now_add=True,default=datetime.utcfromtimestamp(0))
 
 class ExamAccess(models.Model):
     exam = models.ForeignKey(Exam)

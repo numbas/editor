@@ -307,14 +307,6 @@ class Question(EditorModel,NumbasObject,ControlledObject):
     public_access = models.CharField(default='view',editable=True,choices=PUBLIC_ACCESS_CHOICES,max_length=6)
     access_rights = models.ManyToManyField(User, through='QuestionAccess', blank=True, editable=False,related_name='accessed_questions+')
 
-    PROGRESS_CHOICES = [
-        ('in-progress','Writing in progress'),
-        ('not-for-use','Not for general use'),
-        ('testing','Undergoing testing'),
-        ('ready','Tested and ready to use'),
-    ]
-    progress = models.CharField(max_length=15,editable=True,default='in-progress',choices=PROGRESS_CHOICES)
-
     tags = TaggableManager(through=TaggedQuestion)
 
     class Meta:
@@ -330,8 +322,6 @@ class Question(EditorModel,NumbasObject,ControlledObject):
         NumbasObject.get_parsed_content(self)
 
         self.slug = slugify(self.name)
-
-        self.progress = self.parsed_content.data.get('progress','in-progress')
 
         if 'metadata' in self.parsed_content.data:
             licence_name = self.parsed_content.data['metadata'].get('licence',None)
@@ -380,8 +370,6 @@ class Question(EditorModel,NumbasObject,ControlledObject):
         obj = {
             'id': self.id, 
             'name': self.name, 
-            'progress': self.progress,
-            'progressDisplay': self.get_progress_display(),
             'metadata': self.metadata,
             'created': str(self.created),
             'last_modified': str(self.last_modified), 

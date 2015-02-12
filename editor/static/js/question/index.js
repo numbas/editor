@@ -57,7 +57,7 @@ $(document).ready(function() {
 		})
 	;
 
-	$('#id_progress,#id_filter_copies').on('change',function() {
+	$('#id_filter_copies').on('change',function() {
 		$(this).parents('form').submit();
 	});
 

@@ -9,10 +9,6 @@
 
 {% block editable_message %}{% endblock editable_message %}
 
-{% block progress %}
-Progress: <span data-bind="text: progress()[1], attr: {class: 'progress-display '+progress()[0]}"></span>
-{% endblock progress %}
-
 {% block editor %}
 	{% include "noneditable.html" %}
 	<div class="tab-content">

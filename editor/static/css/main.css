@@ -189,19 +189,6 @@ button.search.loading {
 	font-family: monospace;
 }
 
-.progress-display.ready {
-    font-weight: bold;
-}
-
-.progress-display.not-for-use {
-    color: red;
-    font-style: italic;
-}
-
-.progress-display.testing {
-    color: #666;
-}
-
 .errorlist {
 	background: black;
 	color: white;

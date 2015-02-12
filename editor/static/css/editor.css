@@ -8,10 +8,6 @@
 	margin-bottom: 1em;
 }
 
-#controls #progress select {
-	width: 200px;
-}
-
 .controlbox a:before {
 	margin-right: 4px;
 }

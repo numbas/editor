@@ -327,7 +327,6 @@ class UpdateView(generic.UpdateView):
             'questionJSON': json.loads(self.object.as_json()),
             'editable': self.editable,
 
-            'progresses': self.object.PROGRESS_CHOICES,
             'licences': licences,
 
             'numbasExtensions': context['extensions'],
@@ -475,10 +474,6 @@ class SearchView(ListView):
         if author:
             questions = questions.filter(author__in=find_users(author))
 
-        progress = form.cleaned_data.get('progress')
-        if progress:
-            questions = questions.filter(progress=progress)
-
         tags = form.cleaned_data.get('tags')
         if len(tags):
             for tag in tags:
@@ -494,7 +489,6 @@ class SearchView(ListView):
         
     def get_context_data(self, **kwargs):
         context = super(SearchView, self).get_context_data(**kwargs)
-        context['progresses'] = Question.PROGRESS_CHOICES
         context['form'] = self.form
 
         return context

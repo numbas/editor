@@ -46,10 +46,6 @@
 					by author: 	
 					<input id="search_author" data-autocomplete-url="{% url 'user_search' %}" name="author" type="text" size="30" value="{{ data.author }}" placeholder="User name"/>
 				</label>
-				<label for="id_progress">
-					by progress:
-					{{ form.progress }}
-                </label>
                 <label for="id_filter_copies">
                     filter out copied questions: 
                     {{form.filter_copies}}

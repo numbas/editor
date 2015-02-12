@@ -96,8 +96,6 @@ $(document).ready(function() {
 			return out;
 		},this);
 
-		this.progress = ko.observable(Editor.progresses[0]);
-
 		var isadvanced = this.isadvanced = ko.observable(true);
 
         this.name = ko.observable('Untitled Question');
@@ -315,7 +313,6 @@ $(document).ready(function() {
                     content: this.output(),
 					extensions: this.usedExtensions().map(function(e){return e.pk}),
                     tags: this.tags(),
-					progress: this.progress()[0],
 					resources: this.saveResources(),
                     metadata: this.metadata()
                 };
@@ -540,7 +537,6 @@ $(document).ready(function() {
 				copy_of: Editor.questionJSON.copy_of,
 				extensions: this.usedExtensions().map(function(e){return e.pk}),
 				tags: this.tags(),
-				progress: this.progress()[0],
 				resources: this.saveResources(),
 				metadata: this.metadata()
 			};
@@ -909,7 +905,6 @@ $(document).ready(function() {
             return {
                 name: this.realName(),
                 tags: this.tags(),
-				progress: this.progress()[0],
                 metadata: this.metadata(),
                 statement: this.statement(),
                 advice: this.advice(),
@@ -962,15 +957,6 @@ $(document).ready(function() {
                         break;
                     }
                 }
-			}
-
-			if('progress' in data) {
-				for(var i=0;i<Editor.progresses.length;i++) {
-					if(Editor.progresses[i][0]==data.progress) {
-						this.progress(Editor.progresses[i]);
-						break;
-					}
-				}
 			}
 
 			if('extensions' in data) {

@@ -41,7 +41,6 @@ class TagField(forms.CharField):
 class QuestionSearchForm(forms.Form):
     query = forms.CharField(initial='', required=False)
     author = forms.CharField(initial='', required=False)
-    progress = forms.ChoiceField(initial='',choices = [('','Any')]+Question.PROGRESS_CHOICES, required=False)
     filter_copies = forms.BooleanField(initial=False)
     tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
 

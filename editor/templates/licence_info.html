@@ -1,0 +1,13 @@
+<div class="licence">
+    {% if record.licence %}
+    {% with record.licence as licence %}
+        {% if licence.url %}
+            <a href="{{licence.url}}" target="_blank"><abbr title="{{licence.name}}">{{licence.short_name}}</abbr></a>
+        {% else %}
+            <abbr title="{{licence.name}}">{{licence.short_name}}</abbr>
+        {% endif %}
+    {% endwith %}
+    {% else %}
+        <span class="no-licence">No licence specified</span>
+    {% endif %}
+</div>

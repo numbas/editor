@@ -105,7 +105,7 @@
 }
 
 .result .licence {
-    margin-top: 0.8em;
+	float: right;
     font-size: 0.8em;
     text-align: right;
 }

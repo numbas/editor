@@ -290,7 +290,6 @@ class UpdateView(generic.UpdateView):
         return HttpResponse(json.dumps(status), content_type='application/json')
         
     def form_invalid(self, form):
-        print(form.errors)
         status = {
             "result": "error",
             "message": "Something went wrong...",

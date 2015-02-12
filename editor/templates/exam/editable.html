@@ -20,6 +20,19 @@
 				<div class="span8">
 					<p><span class="exam-author">Exam Author:</span> {% user_link object.author %}</p>
 					<p class="editable-message">You can edit this exam.</p>
+                    <form class="form-inline">
+                        <div class="control-group">
+                            <label>
+                                <span class="control-label">Licence: </span>
+                                <span class="controls">
+                                    <select data-bind="options: Editor.licences, value: licence, optionsText: 'short_name', optionsCaption: 'None specified'"></select>
+                                    <span data-bind="visible: licence, with: licence">
+                                        <a target="_blank" data-bind="visible: url, attr:{href:url}">Licence information</a>
+                                    </span>
+                                </span>
+                            </label>
+                        </div>
+                    </form>
 				</div>
 				<div class="span4">
 					{% if perms.editor.exam_highlight %}

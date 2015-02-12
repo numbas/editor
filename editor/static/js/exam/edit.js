@@ -61,12 +61,23 @@ $(document).ready(function() {
 			owner: this
 		});
 
+        Editor.licences.sort(function(a,b){a=a.short_name;b=b.short_name; return a<b ? -1 : a>b ? 1 : 0 });
+        this.licence = ko.observable();
+        this.licence_name = ko.computed(function() {
+            if(this.licence()) {
+                return this.licence().name;
+            } else {
+                return 'None specified';
+            }
+        },this);
+
         this.notes = ko.observable('');
 		this.description = ko.observable('');
 		this.metadata = ko.computed(function() {
 			return {
 				notes: this.notes(),
-				description: this.description()
+				description: this.description(),
+                licence: this.licence_name()
 			};
 		},this);
 
@@ -426,6 +437,13 @@ $(document).ready(function() {
 
 			if('metadata' in data) {
 				tryLoad(data.metadata,['notes','description'],this);
+                var licence_name = data.metadata.licence;
+                for(var i=0;i<Editor.licences.length;i++) {
+                    if(Editor.licences[i].name==licence_name) {
+                        this.licence(Editor.licences[i]);
+                        break;
+                    }
+                }
 			}
 
             var content = data.JSONContent;

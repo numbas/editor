@@ -39,7 +39,7 @@ from django_tables2.config import RequestConfig
 
 from editor.forms import ExamForm, NewExamForm, ExamSearchForm,ExamSetAccessForm, ExamSearchForm, ExamHighlightForm
 from editor.tables import ExamTable, ExamHighlightTable
-from editor.models import Exam, Question, ExamAccess, ExamHighlight, Theme
+from editor.models import Exam, Question, ExamAccess, ExamHighlight, Theme, Licence
 import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
@@ -312,11 +312,14 @@ class UpdateView(generic.UpdateView):
 
         versions = [version_json(v,self.user) for v in reversion.get_for_object(self.object)]
 
+        licences = [licence.as_json() for licence in Licence.objects.all()]
+
         editor_json = {
             'editable': self.object.can_be_edited_by(self.request.user),
             'examJSON': exam_dict,
             'themes': sorted(context['themes'],key=operator.itemgetter('name')),
             'locales': context['locales'],
+            'licences': licences,
             'previewURL': reverse('exam_preview',args=(self.object.pk,self.object.slug)),
             'previewWindow': str(calendar.timegm(time.gmtime())),
             'versions': versions,

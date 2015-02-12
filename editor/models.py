@@ -476,6 +476,12 @@ class Exam(EditorModel,NumbasObject,ControlledObject):
         NumbasObject.get_parsed_content(self)
         
         self.slug = slugify(self.name)
+
+        if 'metadata' in self.parsed_content.data:
+            licence_name = self.parsed_content.data['metadata'].get('licence',None)
+        else:
+            licence_name = None
+        self.licence = Licence.objects.filter(name=licence_name).first()
             
         super(Exam, self).save(*args, **kwargs)
 

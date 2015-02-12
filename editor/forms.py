@@ -156,7 +156,7 @@ class ExamForm(forms.ModelForm):
     
     class Meta:
         model = Exam
-        exclude = ('name','author','public_access','metadata')
+        exclude = ('name','author','public_access','metadata','licence')
         
         
 class NewExamForm(forms.ModelForm):

@@ -478,6 +478,17 @@ class SearchView(ListView):
             for tag in tags:
                 questions = questions.filter(tags__name__in=[tag])
 
+        usage = form.cleaned_data.get('usage')
+        usage_filters = {
+            "any": Q(),
+            "reuse": Q(licence__can_reuse=True),
+            "modify": Q(licence__can_reuse=True, licence__can_modify=True),
+            "sell": Q(licence__can_reuse=True, licence__can_sell=True),
+            "modify-sell": Q(licence__can_reuse=True, licence__can_modify=True, licence__can_sell=True),
+        }
+        if usage in usage_filters:
+            questions = questions.filter(usage_filters[usage])
+
         filter_copies = form.cleaned_data.get('filter_copies')
         if filter_copies:
             questions = questions.filter(copy_of=None)

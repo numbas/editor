@@ -34,6 +34,10 @@
                     by author: 	
                     <input id="search_author" data-autocomplete-url="{% url 'user_search' %}" name="author" type="text" size="30" value="{{ data.author }}" placeholder="User name"/>
                 </label>
+                <label for="id_usage">
+                    by usage rights:
+                    {{form.usage}}
+                </label>
 			</div>
 			{% endwith %}
 		</form>

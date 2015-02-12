@@ -464,6 +464,17 @@ class SearchView(ListView):
             authors = find_users(author_term)
             exams = exams.filter(author__in=authors).distinct()
 
+        usage = form.cleaned_data.get('usage')
+        usage_filters = {
+            "any": Q(),
+            "reuse": Q(licence__can_reuse=True),
+            "modify": Q(licence__can_reuse=True, licence__can_modify=True),
+            "sell": Q(licence__can_reuse=True, licence__can_sell=True),
+            "modify-sell": Q(licence__can_reuse=True, licence__can_modify=True, licence__can_sell=True),
+        }
+        if usage in usage_filters:
+            exams = exams.filter(usage_filters[usage])
+
         exams = [e for e in exams if e.can_be_viewed_by(self.request.user)]
 
         return exams

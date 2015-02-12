@@ -17,21 +17,22 @@ class ObjectTable(tables.Table):
     class Meta:
         attrs = {'class': 'search-results'}
 
-        fields = ('name', 'author')
+        fields = ('name', 'licence', 'author')
         order_by = ('-last_modified')
 
     def render_last_modified(self,record):
         return record.last_modified.strftime('%d/%m/%Y %H:%M')
 
 class HighlightTable(ObjectTable):
-	name = Column()
-	
-	class Meta:
-		fields = ('name','date')
-		order_by = ('date')
+    name = Column()
+    
+    class Meta:
+        fields = ('name','date')
+        order_by = ('date')
 
 class QuestionTable(ObjectTable):
     name = TemplateColumn(template_name='question/name_column.html')
+    licence = TemplateColumn(template_name='licence_column.html')
     author = UserColumn()
     last_modified = Column()
 
@@ -39,11 +40,12 @@ class QuestionTable(ObjectTable):
         model = Question
 
 class QuestionHighlightTable(HighlightTable):
-	class Meta(HighlightTable.Meta):
-		model = QuestionHighlight
+    class Meta(HighlightTable.Meta):
+        model = QuestionHighlight
 
 class ExamTable(ObjectTable):
     name = TemplateColumn(template_name='exam/name_column.html')
+    licence = TemplateColumn(template_name='licence_column.html')
     author = UserColumn()
     last_modified = Column()
 
@@ -51,6 +53,6 @@ class ExamTable(ObjectTable):
         model = Exam
 
 class ExamHighlightTable(HighlightTable):
-	class Meta(HighlightTable.Meta):
-		model = ExamHighlight
+    class Meta(HighlightTable.Meta):
+        model = ExamHighlight
 

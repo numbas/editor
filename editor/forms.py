@@ -38,9 +38,18 @@ class TagField(forms.CharField):
         else:
             return []
 
+USAGE_OPTIONS = (
+    ('any','Any'),
+    ('reuse','Free to reuse'),
+    ('modify','Free to reuse with modification'),
+    ('sell','Free to reuse commercially'),
+    ('modify-sell','Free to reuse commercially with modification'),
+)
+
 class QuestionSearchForm(forms.Form):
     query = forms.CharField(initial='', required=False)
     author = forms.CharField(initial='', required=False)
+    usage = forms.ChoiceField(choices=USAGE_OPTIONS, required=False)
     filter_copies = forms.BooleanField(initial=False)
     tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
 
@@ -82,10 +91,6 @@ class QuestionSetAccessForm(forms.ModelForm):
         for f in self.user_access_forms:
             f.save()
         return super(QuestionSetAccessForm,self).save()
-
-class ExamSearchForm(forms.Form):
-    query = forms.CharField(initial='', required=False)
-    author = forms.CharField(initial='', required=False)
 
 class ExamAccessForm(forms.ModelForm):
     class Meta:
@@ -193,6 +198,7 @@ class ExamSearchForm(forms.Form):
     
     query = forms.CharField(initial='', required=False)
     author = forms.CharField(initial='', required=False)
+    usage = forms.ChoiceField(choices=USAGE_OPTIONS, required=False)
         
 class ValidateZipField:
     def clean_zipfile(self):

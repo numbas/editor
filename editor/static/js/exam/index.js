@@ -98,6 +98,10 @@ $(document).ready(function() {
 			$('#uploadForm').submit();
 	});
 
+	$('#id_usage').on('change',function() {
+		$(this).parents('form').submit();
+	});
+
 	if($('.pagination .previous[href]').length) {
 		Mousetrap.bind(['left','k'],function() {
 			window.location = $('.pagination .previous').attr('href');

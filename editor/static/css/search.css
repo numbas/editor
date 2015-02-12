@@ -74,6 +74,10 @@
 	width: 300px;
 }
 
+.search-results col.licence {
+    width: 100px;
+}
+
 .search-results col.author {
 	width: 150px;
 }
@@ -105,9 +109,7 @@
 }
 
 .result .licence {
-	float: right;
     font-size: 0.8em;
-    text-align: right;
 }
 .result .licence a {
     color: hsl(200,70%,40%);

@@ -19,6 +19,22 @@
 					<p class="editable-message">
 						You may only view this question. {% if user.is_authenticated %}If you want to change something, make a copy.{% endif %}
 					</p>
+                    <form class="form-inline">
+                        <div class="control-group">
+                            <label>
+                                <span class="control-label">Licence: </span>
+								<span class="controls">
+                                    <span data-bind="visible: licence, with: licence">
+										<a target="_blank" data-bind="visible: url, attr:{href:url}"><abbr data-bind="text: short_name, attr: {title: name}"></abbr></a>
+										<abbr data-bind="visible: !url, text: short_name, attr: {title: name}"></abbr>
+									</span>
+									<span data-bind="visible: !licence()">
+										None specified
+									</span>
+                                </span>
+                            </label>
+                        </div>
+                    </form>
                     {% if object.copy_of %}
                     <p>This question is based on <a href="{% url 'question_edit' object.copy_of.pk object.copy_of.slug %}">{{object.copy_of.name}}</a> by <a href="{% url 'view_profile' object.copy_of.author.pk %}">{{object.copy_of.author.get_full_name}}</a>.</p>
                     {% endif %}

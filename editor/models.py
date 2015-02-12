@@ -286,6 +286,12 @@ class EditorModel(models.Model):
 
     licence = models.ForeignKey(Licence,null=True)
 
+    def set_licence(self,licence):
+        NumbasObject.get_parsed_content(self)
+        metadata = self.parsed_content.data.setdefault(u'metadata',{})
+        metadata['licence'] = licence.name
+        self.content = str(self.parsed_content)
+
 @reversion.register
 class Question(EditorModel,NumbasObject,ControlledObject):
     

@@ -1092,16 +1092,20 @@ $(document).ready(function() {
 				.css({
 					width: this.imageModal.width(), 
 					height: this.imageModal.height()
-				})
+				});
+			
+			$(this.imageModal.selectedNode)
                 .removeAttr('data-mce-style')
+			$(this.imageModal.selectedNode)
 				.attr('alt',this.imageModal.alt())
+			$(this.imageModal.selectedNode)
 				.attr('title',this.imageModal.title())
 			;
 
 			$('#imageAttributeModal').modal('hide');
 
             var ed = viewModel.currentTinyMCE;
-			ed.onChange.dispatch();
+			ed.fire('change');
 		},
 
 		changeIframeAttributes: function() {
@@ -1575,6 +1579,14 @@ $(document).ready(function() {
 
 		this.types = partTypes.map(function(data){return new PartType(p,data);});
 
+		this.isGap = ko.computed(function(){
+			return this.parent() && this.parent().type().name=='gapfill' && !this.parent().steps().contains(this);
+		},this);
+
+		this.isStep = ko.computed(function() {
+			return this.parent() && this.parent().steps().contains(this);
+		},this);
+
 		var nonGapTypes = ['information','gapfill'];
 		this.availableTypes = ko.computed(function() {
 			var nonStepTypes = ['gapfill'];
@@ -1747,14 +1759,6 @@ $(document).ready(function() {
 			var i = this.parentList.indexOf(this);
 			this.parentList.remove(this);
 			this.parentList.splice(i+1,0,this);
-		},
-
-		isGap: function() {
-			return this.parent() && this.parent().type().name=='gapfill' && !this.parent().steps().contains(this);
-		},
-
-		isStep: function() {
-			return this.parent() && this.parent().steps().contains(this);
 		},
 
 		setType: function(name) {

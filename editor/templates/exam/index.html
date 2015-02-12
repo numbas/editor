@@ -39,17 +39,7 @@
                         <ol>
                         {% for exam in recents|slice:":3" %}
                             <li class="exam">
-                                <div class="header">
-                                    <span class="name"><a href="{% url 'exam_edit' exam.pk exam.slug %}">{{ exam.name }}</a></span>
-                                    <span class="admin">
-                                        <a class="preview" href="{% url 'exam_preview' exam.pk exam.slug %}" target="_blank" title="Test run"></a>
-                                        {% if user.is_authenticated %}
-                                        <a class="copy" href="{% url 'exam_copy' exam.pk exam.slug %}" title="Make a copy"></a>
-                                        {% endif %}
-                                        {% if exam|can_be_edited_by:user %}<a class="delete" href="{% url 'exam_delete' exam.pk exam.slug %}" title="Delete"></a>{% endif %}
-                                    </span>
-                                </div>
-                                <div class="description">{{ exam.metadata.description|safe }}</div>
+                                {% include "exam/index_exam_entry.html" %}
                             </li>
                         {% endfor %}
                         </ol>
@@ -68,17 +58,7 @@
                         <ol>
                         {% for exam in favourites|slice:":5" %}
                             <li class="exam">
-                                <div class="header">
-                                    <span class="name"><a href="{% url 'exam_edit' exam.pk exam.slug %}">{{ exam.name }}</a></span>
-                                    <span class="admin">
-                                        <a class="preview" href="{% url 'exam_preview' exam.pk exam.slug %}" target="_blank" title="Test run"></a>
-                                        {% if user.is_authenticated %}
-                                        <a class="copy" href="{% url 'exam_copy' exam.pk exam.slug %}" title="Make a copy"></a>
-                                        {% endif %}
-                                        {% if exam|can_be_edited_by:user %}<a class="delete" href="{% url 'exam_delete' exam.pk exam.slug %}" title="Delete"></a>{% endif %}
-                                    </span>
-                                </div>
-                                <div class="description">{{ exam.metadata.description|safe }}</div>
+                                {% include "exam/index_exam_entry.html" %}
                             </li>
                         {% endfor %}s
                         </ol>
@@ -102,19 +82,7 @@
 					{% for highlight in highlights|slice:":5" %}
 						{% with exam=highlight.exam %}
 						<li class="exam">
-							<div class="header">
-								<span class="name"><a href="{% url 'exam_edit' exam.pk exam.slug %}">{{ exam.name }}</a></span>
-								<span class="admin">
-									<a class="preview" href="{% url 'exam_preview' exam.pk exam.slug %}" target="_blank" title="Test run"></a>
-									{% if user.is_authenticated %}
-									<a class="copy" href="{% url 'exam_copy' exam.pk exam.slug %}" title="Make a copy"></a>
-									{% if exam|can_be_edited_by:user %}<a class="delete" href="{% url 'exam_delete' exam.pk exam.slug %}" title="Delete"></a>{% endif %}
-									{% endif %}
-								</span>
-							</div>
-							<div class="description">
-								{{ exam.metadata.description|safe }}
-							</div>
+                            {% include "exam/index_exam_entry.html" %}
 							<blockquote class="note well well-small">
 								<cite class="picked-by">Picked by {% user_link highlight.picked_by %}</cite>
 								{{highlight.note|safe}}

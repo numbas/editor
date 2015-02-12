@@ -8,7 +8,7 @@
 	<link rel="stylesheet" type="text/css" href="{% sstatic 'css/exam/noneditable.css' %}">
 {% endblock stylesheets %}
 
-{% block editable_message %}You may only view this question. {% if user.is_authenticated %}If you want to change something, make a copy.{% endif %}{% endblock editable_message %}
+{% block editable_message %}You may only view this exam. {% if user.is_authenticated %}If you want to change something, make a copy.{% endif %}{% endblock editable_message %}
 
 {% block editor %}
 	{{ block.super }}
@@ -23,11 +23,27 @@
 					<p class="editable-message">
 						You may only view this exam. {% if user.is_authenticated %}If you want to change something, make a copy.{% endif %}
 					</p>
+                    <form class="form-inline licence">
+                        <div class="control-group">
+                            <label>
+                                <span class="control-label">Licence: </span>
+								<span class="controls">
+                                    <span data-bind="visible: licence, with: licence">
+										<a target="_blank" data-bind="visible: url, attr:{href:url}"><abbr data-bind="text: short_name, attr: {title: name}"></abbr></a>
+										<abbr data-bind="visible: !url, text: short_name, attr: {title: name}"></abbr>
+									</span>
+									<span data-bind="visible: !licence()">
+										None specified
+									</span>
+                                </span>
+                            </label>
+                        </div>
+                    </form>
 				</div>
 				<div class="span4">
 
-					{% if perms.editor.question_highlight %}
-					<a href="{% url 'highlight_question' object.pk object.slug %}">Highlight this question on the front page.</a>
+					{% if perms.editor.exam_highlight %}
+					<a href="{% url 'highlight_exam' object.pk object.slug %}">Highlight this exam on the front page.</a>
 					{% endif %}
 				</div>
 			</div>

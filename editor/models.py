@@ -69,6 +69,12 @@ class ControlledObject(object):
         accept_levels = ('view','edit')
         return (self.public_access in accept_levels) or (user.is_superuser) or (self.author==user) or (self.get_access_for(user) in accept_levels)
 
+    def can_be_copied_by(self,user):
+        if not self.licence or user.is_superuser or self.author==user or self.get_access_for(user)=='edit':
+            return True
+        else:
+            return self.licence.can_reuse and self.licence.can_modify
+
     def can_be_deleted_by(self,user):
         return user == self.author
 

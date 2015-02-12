@@ -75,9 +75,9 @@
 						</form>
 					</a>
 				</li>
-				{% endif %}
+                {% endif %}
 
-				{% if user.is_authenticated %}
+				{% if user.is_authenticated and can_copy %}
 				<li>
 				<a id="copy" href="{% url 'question_copy' object.pk object.slug %}" target="_blank" title="Create your own copy of this question">Make a Copy</a>
 				</li>

@@ -1,0 +1,13 @@
+{% load can_edit %}
+{% load user_link %}
+<div class="header">
+    <span class="name"><a href="{% url 'question_edit' question.pk question.slug %}">{{ question.name }}</a></span>
+    <span class="admin">
+        <a class="preview" href="{% url 'question_preview' question.pk question.slug %}" target="_blank" title="Test run"></a>
+        {% if user.is_authenticated and question|can_be_copied_by:user %}
+        <a class="copy" href="{% url 'question_copy' question.pk question.slug %}" title="Make a copy"></a>
+        {% endif %}
+        {% if question|can_be_edited_by:user %}<a class="delete" href="{% url 'question_delete' question.pk question.slug %}" title="Delete"></a>{% endif %}
+    </span>
+</div>
+<div class="description">{{ question.metadata.description|safe }}</div>

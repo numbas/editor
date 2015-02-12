@@ -23,7 +23,7 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.db import transaction
 from django.forms.models import model_to_dict
-from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError
+from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError, HttpResponseForbidden
 from django import http
 from django.shortcuts import render,redirect
 from django.utils.decorators import method_decorator
@@ -179,6 +179,8 @@ class CopyView(generic.View, SingleObjectMixin):
     def get(self, request, *args, **kwargs):
         try:
             e = self.get_object()
+            if not e.can_be_copied_by(request.user):
+                return HttpResponseForbidden("You may not copy this exam.")
             e2 = deepcopy(e)
             e2.id = None
             e2.author = request.user
@@ -303,6 +305,7 @@ class UpdateView(generic.UpdateView):
         context['locales'] = sorted([{'name': x[0], 'code': x[1]} for x in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']],key=operator.itemgetter('name'))
         context['editable'] = self.object.can_be_edited_by(self.request.user)
         context['can_delete'] = self.object.can_be_deleted_by(self.request.user)
+        context['can_copy'] = self.object.can_be_copied_by(self.request.user)
         context['navtab'] = 'exams'
 
         if self.request.user.is_authenticated():

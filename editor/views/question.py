@@ -183,6 +183,8 @@ class CopyView(generic.View, SingleObjectMixin):
     def get(self, request, *args, **kwargs):
         try:
             q = self.get_object()
+            if not q.can_be_copied_by(request.user):
+                return http.HttpResponseForbidden("You may not copy this question.")
             q2 = deepcopy(q)
             q2.id = None
             q2.author = request.user
@@ -235,6 +237,7 @@ class UpdateView(generic.UpdateView):
         obj = super(UpdateView,self).get_object()
         self.editable = obj.can_be_edited_by(self.request.user)
         self.can_delete = obj.can_be_deleted_by(self.request.user)
+        self.can_copy = obj.can_be_copied_by(self.request.user)
         return obj
 
     def get_template_names(self):
@@ -309,6 +312,7 @@ class UpdateView(generic.UpdateView):
 
         context['editable'] = self.editable
         context['can_delete'] = self.can_delete
+        context['can_copy'] = self.can_copy
         context['navtab'] = 'questions'
 
         if not self.request.user.is_anonymous():

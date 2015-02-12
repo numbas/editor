@@ -1,0 +1,14 @@
+{% load can_edit %}
+{% load user_link %}
+<div class="header">
+    <span class="name"><a href="{% url 'exam_edit' exam.pk exam.slug %}">{{ exam.name }}</a></span>
+    <span class="admin">
+        <a class="preview" href="{% url 'exam_preview' exam.pk exam.slug %}" target="_blank" title="Test run"></a>
+        {% if user.is_authenticated and exam|can_be_copied_by:user %}
+        <a class="copy" href="{% url 'exam_copy' exam.pk exam.slug %}" title="Make a copy"></a>
+        {% endif %}
+        {% if exam|can_be_edited_by:user %}<a class="delete" href="{% url 'exam_delete' exam.pk exam.slug %}" title="Delete"></a>{% endif %}
+    </span>
+</div>
+<div class="description">{{ exam.metadata.description|safe }}</div>
+

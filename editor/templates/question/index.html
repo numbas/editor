@@ -51,17 +51,7 @@
                         <ol>
                         {% for question in recents|slice:":3" %}
                             <li class="question">
-                                <div class="header">
-                                    <span class="name"><a href="{% url 'question_edit' question.pk question.slug %}">{{ question.name }}</a></span>
-                                    <span class="admin">
-                                        <a class="preview" href="{% url 'question_preview' question.pk question.slug %}" target="_blank" title="Test run"></a>
-                                        {% if user.is_authenticated %}
-                                        <a class="copy" href="{% url 'question_copy' question.pk question.slug %}" title="Make a copy"></a>
-                                        {% endif %}
-                                        {% if question|can_be_edited_by:user %}<a class="delete" href="{% url 'question_delete' question.pk question.slug %}" title="Delete"></a>{% endif %}
-                                    </span>
-                                </div>
-                                <div class="description">{{ question.metadata.description|safe }}</div>
+                                {% include "question/index_question_entry.html" %}
                             </li>
                         {% endfor %}
                         </ol>
@@ -80,17 +70,7 @@
                         <ol>
                         {% for question in favourites|slice:":3" %}
                             <li class="question">
-                                <div class="header">
-                                    <span class="name"><a href="{% url 'question_edit' question.pk question.slug %}">{{ question.name }}</a></span>
-                                    <span class="admin">
-                                        <a class="preview" href="{% url 'question_preview' question.pk question.slug %}" target="_blank" title="Test run"></a>
-                                        {% if user.is_authenticated %}
-                                        <a class="copy" href="{% url 'question_copy' question.pk question.slug %}" title="Make a copy"></a>
-                                        {% endif %}
-                                        {% if question|can_be_edited_by:user %}<a class="delete" href="{% url 'question_delete' question.pk question.slug %}" title="Delete"></a>{% endif %}
-                                    </span>
-                                </div>
-                                <div class="description">{{ question.metadata.description|safe }}</div>
+                                {% include "question/index_question_entry.html" %}
                             </li>
                         {% endfor %}
                         </ol>
@@ -113,25 +93,13 @@
 					<ol>
 					{% for highlight in highlights|slice:":5" %}
 						{% with question=highlight.question %}
-						<li class="question">
-							<div class="header">
-								<span class="name"><a href="{% url 'question_edit' question.pk question.slug %}">{{ question.name }}</a></span>
-								<span class="admin">
-									<a class="preview" href="{% url 'question_preview' question.pk question.slug %}" target="_blank" title="Test run"></a>
-									{% if user.is_authenticated %}
-									<a class="copy" href="{% url 'question_copy' question.pk question.slug %}" title="Make a copy"></a>
-									{% endif %}
-									{% if question|can_be_edited_by:user %}<a class="delete" href="{% url 'question_delete' question.pk question.slug %}" title="Delete"></a>{% endif %}
-								</span>
-							</div>
-							<div class="description">
-								{{ question.metadata.description|safe }}
-							</div>
-							<blockquote class="note well well-small">
-								<cite class="picked-by">Picked by {% user_link highlight.picked_by %}</cite>
-								{{highlight.note|safe}}
-							</blockquote>
-						</li>
+                            <li class="question">
+                                {% include "question/index_question_entry.html" %}
+                                <blockquote class="note well well-small">
+                                    <cite class="picked-by">Picked by {% user_link highlight.picked_by %}</cite>
+                                    {{highlight.note|safe}}
+                                </blockquote>
+                            </li>
 						{% endwith %}
 					{% endfor %}
 					</ol>

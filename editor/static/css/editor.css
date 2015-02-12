@@ -48,6 +48,9 @@
     content: url(../images/plus_alt_16x16.png);
 }
 
+form.licence {
+    margin-bottom: 0;
+}
 
 #preview-error {
 	max-height: 15em;

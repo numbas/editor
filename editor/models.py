@@ -333,7 +333,10 @@ class Question(EditorModel,NumbasObject,ControlledObject):
 
         self.progress = self.parsed_content.data.get('progress','in-progress')
 
-        licence_name = self.parsed_content.data['metadata'].get('licence',None)
+        if 'metadata' in self.parsed_content.data:
+            licence_name = self.parsed_content.data['metadata'].get('licence',None)
+        else:
+            licence_name = None
         self.licence = Licence.objects.filter(name=licence_name).first()
 
         super(Question, self).save(*args, **kwargs)

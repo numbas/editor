@@ -26,7 +26,10 @@
                     <form class="form-inline licence">
                         <div class="control-group">
                             <label>
-                                <span class="control-label">Licence: </span>
+                                <span class="control-label">
+                                    Licence: 
+                                    <span data-bind="template: {name: 'helplink', data: {topic: 'licence', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-licence'}}"></span>
+                                </span>
 								<span class="controls">
                                     <span data-bind="visible: licence, with: licence">
 										<a target="_blank" data-bind="visible: url, attr:{href:url}"><abbr data-bind="text: short_name, attr: {title: name}"></abbr></a>

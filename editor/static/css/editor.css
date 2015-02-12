@@ -186,6 +186,10 @@ button.delete-grey:hover {
     margin-top: 0;
 }
 
+.form-inline .control-label .helplink.small {
+    vertical-align: middle;
+}
+
 .helplink.small {
     background: #ddd;
     width: 14px;
@@ -217,7 +221,7 @@ button.delete-grey:hover {
     position: relative;
     padding-right: 30px;
 }
-.control-label .helplink {
+.form-horizontal .control-label .helplink {
     position: absolute;
     top: 7px;
     right: 10px;

@@ -465,6 +465,21 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 		return Math.max(a,b);
 	},
 
+	/** Greatest of a list of numbers
+	 * @throws {Numbas.Error} `math.order complex numbers` if any element of the list is complex.
+	 * @param {Array} numbers
+	 * @returns {number}
+	 */
+	listmax: function(numbers) {
+		if(numbers.length==0) {
+			return;
+		}
+		var best = numbers[0];
+		for(var i=1;i<numbers.length;i++) {
+			best = math.max(best,numbers[i]);
+		}
+		return best;
+	},
 
 	/** Least of two numbers - wraps `Math.min`
 	 * @throws {Numbas.Error} `math.order complex numbers` if `a` or `b` are complex numbers.
@@ -479,6 +494,22 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 		return Math.min(a,b);
 	},
 	
+	/** Least of a list of numbers
+	 * @throws {Numbas.Error} `math.order complex numbers` if any element of the list is complex.
+	 * @param {Array} numbers
+	 * @returns {number}
+	 */
+	listmin: function(numbers) {
+		if(numbers.length==0) {
+			return;
+		}
+		var best = numbers[0];
+		for(var i=1;i<numbers.length;i++) {
+			best = math.min(best,numbers[i]);
+		}
+		return best;
+	},
+
 	/** Are `a` and `b` unequal?
 	 * @param {number} a
 	 * @param {number} b
@@ -779,6 +810,57 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 			return 0;
 		var sigFigs = m[1] || m[2] || m[3] || m[4] || m[5];
 		return sigFigs.replace('.','').length;
+	},
+
+	/** Is n given to the desired precision?
+	 * @param {number|string} n
+	 * @param {string} precisionType - either 'dp' or 'sigfig'
+	 * @param {number} precision - number of desired digits of precision
+	 * @param {boolean} strictPrecision - must trailing zeroes be used to get to the desired precision (true), or is it allowed to give fewer digits in that case (false)?
+	 * @returns {boolean}
+	 */
+	toGivenPrecision: function(n,precisionType,precision,strictPrecision) {
+		if(precisionType=='none') {
+			return true;
+		}
+
+		n += '';
+
+		var precisionOK = false;
+
+		var counters = {'dp': math.countDP, 'sigfig': math.countSigFigs};
+		var counter = counters[precisionType];
+		var digits = counter(n);
+
+		if(strictPrecision)
+			precisionOK = digits == precision;
+		else
+			precisionOK = digits <= precision;
+
+		if(precisionType=='sigfig' && !precisionOK && digits < precision && /[1-9]\d*0+$/.test(n)) {	// in cases like 2070, which could be to either 3 or 4 sig figs
+			var trailingZeroes = n.match(/0*$/)[0].length;
+			if(sigFigs + trailingZeroes >= precision) {
+				precisionOK = true;
+			}
+		}
+
+		return precisionOK;
+	},
+
+	/** Is a within +/- tolerance of b?
+	 * @param {number} a
+	 * @param {number} b
+	 * @param {number} tolerance
+	 * @returns {boolean}
+	 */
+	withinTolerance: function(a,b,tolerance) {
+		if(tolerance==0) {
+			return math.eq(a,b);
+		} else {
+			var upper = math.add(b,tolerance);
+			var lower = math.sub(b,tolerance);
+			return math.geq(a,lower) && math.leq(a,upper);
+		}
 	},
 
 	/** Factorial, or Gamma(n+1) if n is not a positive integer.
@@ -1631,6 +1713,17 @@ var vectormath = Numbas.vectormath = {
 		matrix.rows = 1;
 		matrix.columns = v.length;
 		return matrix;
+	},
+
+	/** Convert a vector to a 1-column matrix
+	 * @param {vector} v
+	 * @returns {matrix}
+	 */
+	toMatrix: function(v) {
+		var m = v.map(function(n){return [n]});
+		m.rows = m.length;
+		m.columns = 1;
+		return m;
 	}
 }
 
@@ -1843,6 +1936,38 @@ var matrixmath = Numbas.matrixmath = {
 			}
 		}
 		return out;
+	},
+
+	/** Apply given function to each element
+	 * @param {matrix}
+	 * @param {function}
+	 * @returns {matrix}
+	 */
+	map: function(m,fn) {
+		var out = m.map(function(row){
+			return row.map(fn);
+		});
+		out.rows = m.rows;
+		out.columns = m.columns;
+		return out;
+	},
+
+	/** Round each element to given number of decimal places
+	 * @param {matrix}
+	 * @param {number} - number of decimal places
+	 * @returns {matrix}
+	 */
+	precround: function(m,dp) {
+		return matrixmath.map(m,function(n){return math.precround(n,dp);});
+	},
+
+	/** Round each element to given number of significant figures
+	 * @param {matrix}
+	 * @param {number} - number of decimal places
+	 * @returns {matrix}
+	 */
+	siground: function(m,sf) {
+		return matrixmath.map(m,function(n){return math.siground(n,sf);});
 	}
 }
 
@@ -1865,6 +1990,11 @@ var setmath = Numbas.setmath = {
 		}
 	},
 
+	/** Union of two sets
+	 * @param {set} a
+	 * @param {set} b
+	 * @returns {set}
+	 */
 	union: function(a,b) {
 		var out = a.slice();
 		for(var i=0,l=b.length;i<l;i++) {
@@ -1875,16 +2005,31 @@ var setmath = Numbas.setmath = {
 		return out;
 	},
 	
+	/** Intersection of two sets
+	 * @param {set} a
+	 * @param {set} b
+	 * @returns {set}
+	 */
 	intersection: function(a,b) {
 		return a.filter(function(v) {
 			return setmath.contains(b,v);
 		});
 	},
 
+	/** Are two sets equal? Yes if a,b and (a intersect b) all have the same length
+	 * @param {set} a
+	 * @param {set} b
+	 * @returns {bool}
+	 */
 	eq: function(a,b) {	
 		return a.length==b.length && setmath.intersection(a,b).length==a.length;
 	},
 
+	/** Set minus - remove b's elements from a
+	 * @param {set} a
+	 * @param {set} b
+	 * @returns {set}
+	 */
 	minus: function(a,b) {
 		return a.filter(function(v){ return !setmath.contains(b,v); });
 	}

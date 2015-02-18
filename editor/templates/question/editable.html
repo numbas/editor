@@ -442,7 +442,7 @@
 									name: 'helplink', 
 									data: {topic: 'part prompt', url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-prompt', big: true}
 								}"></span>
-								<div data-bind="writemaths: prompt, preambleCSS: $root.preamble.css"></div>
+							<div data-bind="writemaths: prompt, preambleCSS: $root.preamble.css, tinymce_plugins: ['gapfill'], showButtons: {gapfill: function(){return $data.type().name=='gapfill'}}"></div>
 							</section>
 							{% for name,template in partNames %}
                                 <!-- ko if: type().name=='{{name}}' -->

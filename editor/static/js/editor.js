@@ -667,6 +667,8 @@ $(document).ready(function() {
 
 			var preambleCSSAccessor = allBindingsAccessor.preambleCSS;
 
+			var tinymce_plugins = ko.utils.unwrapObservable(allBindingsAccessor.tinymce_plugins) || [];
+
 			var d = $('<div style="text-align:right"/>');
 			var toggle = $('<button type="button" class="wmToggle on">Toggle rich text editor</button>');
 			d.append(toggle);
@@ -696,20 +698,25 @@ $(document).ready(function() {
             ;
 
 			//tinyMCE
-			function onMCEChange(ed) {
-				valueAccessor(ed.getContent());
-			}
-
             t
                 .tinymce({
-                    theme: 'numbas',
-					plugins: 'media',
+                    theme: 'modern',
+					skin: 'light',
+					plugins: ['media','noneditable','searchreplace','autoresize','fullscreen','link','paste','table','image'].concat(tinymce_plugins),
+					statusbar: false,
 					media_strict: false,
+					width: width,
+					verify_html: false,
+					autoresize_bottom_margin: 0,
+
 					init_instance_callback: function(ed) { 
 						$(element).writemaths({iFrame: true, position: 'center top', previewPosition: 'center bottom'}); 
-						ed.onChange.add(onMCEChange);
-						ed.onKeyUp.add(onMCEChange);
-						ed.onPaste.add(onMCEChange);
+						function onMCEChange() {
+							valueAccessor(ed.getContent());
+						}
+						ed.on('change',onMCEChange);
+						ed.on('keyup',onMCEChange);
+						ed.on('paste',onMCEChange);
 						if(preambleCSSAccessor !== undefined) {
 							var s = ed.dom.create('style',{type:'text/css',id:'preamblecss'});
 							ed.dom.doc.head.appendChild(s);
@@ -717,14 +724,32 @@ $(document).ready(function() {
 								s.textContent = ko.utils.unwrapObservable(preambleCSSAccessor);
 							});
 						}
-					},
-                    theme_advanced_resizing: true,
-					theme_advanced_resize_horizontal: false,
-					height: height,
-					width: width,
-					verify_html: false
+						ed.on('keyup',function(e) {
+							if(e.which==27 && ed.plugins.fullscreen.isFullscreen()) {
+								ed.execCommand('mceFullScreen');
+							}
+						});
+
+						if(allBindingsAccessor.showButtons) {
+							for(var button in allBindingsAccessor.showButtons) {
+								ko.computed(function() {
+									var v = ko.utils.unwrapObservable(allBindingsAccessor.showButtons[button]);
+									if(typeof(v)=="function") {
+										v = v();
+									}
+									var buttons = ed.theme.panel.find('button.'+button);
+									if(v) {
+										buttons.show();
+									} else {
+										buttons.hide();
+									}
+								});
+							}
+						}
+
+						ed.setContent(value);
+					}
                 })
-				.val(value);
             ;
 
 

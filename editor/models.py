@@ -290,6 +290,7 @@ class EditorModel(models.Model):
         NumbasObject.get_parsed_content(self)
         metadata = self.parsed_content.data.setdefault(u'metadata',{})
         metadata['licence'] = licence.name
+        self.licence = licence
         self.content = str(self.parsed_content)
 
 @reversion.register

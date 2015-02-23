@@ -240,7 +240,9 @@ $(document).ready(function() {
 
 		this.variableTabs = ko.observableArray([
 			new Editor.Tab('definitions','Definitions'),
-			new Editor.Tab('test','Testing')
+			new Editor.Tab('test',ko.computed(function() {
+				return 'Testing' + (q.variablesTest.condition().trim() ? ' (active)' : '');
+			}))
 		]);
 		this.currentVariableTab = ko.observable(this.variableTabs()[0]);
 

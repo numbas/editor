@@ -1351,7 +1351,7 @@ $(document).ready(function() {
 				var wrapValue = Numbas.jme.wrapValue;
 				switch(templateType) {
 				case 'anything':
-					return val.definition();
+					return val.definition()+'';
 				case 'number':
 					return treeToJME({tok: wrapValue(parseFloat(val.value()))});
 				case 'range':

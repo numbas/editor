@@ -551,6 +551,25 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 		return out;
 	},
 
+	/** Zip lists together: given lists [a,b,c,...], [x,y,z,...], return [[a,x],[b,y],[c,z], ...]
+	 * @param {array} lists - list of arrays
+	 * @returns {array}
+	 */
+	zip: function(lists) {
+		var out = [];
+		for(var i=0;true;i++) {
+			var z = [];
+			for(var j=0;j<lists.length;j++) {
+				if(i<lists[j].length) {
+					z.push(lists[j][i]);
+				} else {
+					return out;
+				}
+			}
+			out.push(z);
+		}
+	},
+
 	/** All combinations of r items from given array, without replacement
 	 * @param {array} list
 	 * @param {number} r
@@ -667,7 +686,7 @@ var endDelimiters = {
     '$$': /[^\\]\$\$/,
     '\\[': /[^\\]\\\]/
 }
-var re_startMaths = /(?:^|[^\\])\$\$|(?:^|[^\\])\$|\\\(|\\\[|\\begin\{(\w+)\}/;
+var re_startMaths = /(^|[^\\])(?:\$\$|\$)|\\\(|\\\[|\\begin\{(\w+)\}/;
 
 /** Split a string up by TeX delimiters (`$`, `\[`, `\]`)
  *
@@ -704,6 +723,10 @@ var contentsplitbrackets = util.contentsplitbrackets = function(txt,re_end) {
 			
 			startChop = start+startDelimiter.length;
 			startText = txt.slice(0,start);
+			if(m[1]) {
+				startText += m[1];
+				startDelimiter = startDelimiter.slice(m[1].length);
+			}
 			txt = txt.slice(startChop);
 
 			if(startDelimiter.match(/^\\begin/m)) {    //if this is an environment, construct a regexp to find the corresponding \end{} command.

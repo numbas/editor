@@ -823,6 +823,9 @@ $(document).ready(function() {
 				};
 
 				var suggestedRuns = Math.ceil(Math.log(1/1000)/Math.log(probFail));
+				if(suggestedRuns<1) {
+					suggestedRuns = 1;
+				}
 				var probSucceedInTime = 1-Math.pow(probFail,1/timePerRun);
 
 				function round(n,precision) {

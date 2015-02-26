@@ -263,6 +263,18 @@ jQuery(function() {
 
 			updatePreview = $.throttle(100,updatePreview);
 
+
+			// periodically check the iFrame still exists 
+			if(options.iFrame) {
+				function still_there() {
+					if(!jQuery(iframe).parents('html').length) {
+						previewElement.remove();
+						clearInterval(still_there_interval);
+					}
+				}
+				var still_there_interval = setInterval(still_there,100);
+			}
+
             el
 			.on('blur',function(e) {
 				previewElement.hide();

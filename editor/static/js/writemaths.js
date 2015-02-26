@@ -270,6 +270,7 @@ jQuery(function() {
 					if(!jQuery(iframe).parents('html').length) {
 						previewElement.remove();
 						clearInterval(still_there_interval);
+						el.off();
 					}
 				}
 				var still_there_interval = setInterval(still_there,100);

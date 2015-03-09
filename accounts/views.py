@@ -40,6 +40,8 @@ class RegistrationView(registration.views.RegistrationView):
         return settings.ALLOW_REGISTRATION
 
 class ActivationView(registration.views.ActivationView):
+    template_name = 'registration/activation_complete.html'
+
     def activate(self,request,activation_key):
         activated_user = RegistrationProfile.objects.activate_user(activation_key)
         if activated_user:

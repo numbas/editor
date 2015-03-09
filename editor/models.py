@@ -32,6 +32,8 @@ from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
 from django.db import models
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.forms import model_to_dict
 from django.utils.deconstruct import deconstructible
@@ -245,18 +247,6 @@ class Image( models.Model ):
     def summary(self):
         return json.dumps(self.as_json()),
 
-class QuestionManager(models.Manager):
-    def viewable_by(self,user):
-        if user.is_superuser:
-            return self.all()
-        elif user.is_anonymous():
-            return self.filter(public_access__in=['edit','view'])
-        else:
-            mine_or_public_query = Q(public_access__in=['edit','view']) | Q(author=user)
-            mine_or_public = self.all().filter(mine_or_public_query)
-            given_access = QuestionAccess.objects.filter(access__in=['edit','view'],user=user).values_list('question',flat=True)
-            return mine_or_public | self.exclude(mine_or_public_query).filter(pk__in=given_access)
-
 class Licence(models.Model):
     name = models.CharField(max_length=80,unique=True)
     short_name = models.CharField(max_length=20,unique=True)
@@ -292,6 +282,36 @@ class EditorModel(models.Model):
         metadata['licence'] = licence.name
         self.licence = licence
         self.content = str(self.parsed_content)
+    
+    @property
+    def stamps(self):
+        return StampOfApproval.objects.filter(object_content_type=ContentType.objects.get_for_model(self.__class__),object_id=self.pk).order_by('-date')
+
+STAMP_STATUS_CHOICES = (
+    ('ok','Ready to use'),
+    ('problem','Not ready to use'),
+)
+
+class StampOfApproval(models.Model):
+    object_content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    object = GenericForeignKey('object_content_type','object_id')
+
+    user = models.ForeignKey(User, related_name='stamps')
+    status = models.CharField(choices = STAMP_STATUS_CHOICES, max_length=20)
+    date = models.DateTimeField(auto_now_add=True,default=datetime.utcfromtimestamp(0))
+
+class QuestionManager(models.Manager):
+    def viewable_by(self,user):
+        if user.is_superuser:
+            return self.all()
+        elif user.is_anonymous():
+            return self.filter(public_access__in=['edit','view'])
+        else:
+            mine_or_public_query = Q(public_access__in=['edit','view']) | Q(author=user)
+            mine_or_public = self.all().filter(mine_or_public_query)
+            given_access = QuestionAccess.objects.filter(access__in=['edit','view'],user=user).values_list('question',flat=True)
+            return mine_or_public | self.exclude(mine_or_public_query).filter(pk__in=given_access)
 
 @reversion.register
 class Question(EditorModel,NumbasObject,ControlledObject):
@@ -330,7 +350,7 @@ class Question(EditorModel,NumbasObject,ControlledObject):
 
     def __unicode__(self):
         return 'Question "%s"' % self.name
-    
+
     def save(self, *args, **kwargs):
         NumbasObject.get_parsed_content(self)
 

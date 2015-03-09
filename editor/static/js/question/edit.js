@@ -58,6 +58,18 @@ $(document).ready(function() {
 
 		this.currentTab = ko.observable(this.mainTabs()[0]);
 
+        this.showStampForm = ko.observable(false);
+        this.doPreview = function() {
+            q.showStampForm(true);
+            return true;
+        }
+        this.stamp = function(status_code) {
+            return function() {
+                console.log('stamped',status_code);
+                q.showStampForm(false);
+            }
+        }
+
         this.starred = ko.observable(Editor.starred);
         this.toggleStar = function() {
             q.starred(!q.starred());
@@ -880,6 +892,8 @@ $(document).ready(function() {
 		},
 
         toJSON: function() {
+            this.showStampForm(false);
+
             var rulesets = {};
             this.rulesets().map(function(r){
                 rulesets[r.name()] = r.sets();

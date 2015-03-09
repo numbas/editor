@@ -17,9 +17,10 @@
     margin: 0;
 	line-height: 1.5em;
 }
-#admin li {
+#admin > li {
     display: inline-block;
     margin-right: 2em;
+    vertical-align: top;
 }
 
 #question-name {

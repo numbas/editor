@@ -25,6 +25,25 @@
     background: url(../images/star_24x24_yellow.png);
 }
 
+.controlbox .preview-li {
+    width: 10em;
+}
+
+.controlbox .stamp-of-approval-box {
+    font-size: 0.7em;
+    display: none;
+    padding: 3px;
+    margin-top: 0.5em;
+}
+
+.stamp-buttons .stamp-yes {
+    float: left;
+}
+
+.stamp-buttons .stamp-no {
+    float: right;
+}
+
 .controlbox #download a {
 	font-size: 18px;
 }

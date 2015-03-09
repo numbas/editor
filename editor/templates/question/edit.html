@@ -64,8 +64,17 @@
 			{% endblock controls %}
 			</div>
 			<ul class="controlbox" id="admin">
-				<li>
-					<a id="preview" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this question in a new window (Ctrl+B)">Test Run</a>
+				<li class="preview-li">
+                    <a id="preview" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}, click: doPreview" title="Run this question in a new window (Ctrl+B)">Test Run</a>
+                    {% if user.is_authenticated %}
+                        <div class="stamp-of-approval-box well clearfix" data-bind="fadeVisible: showStampForm">
+                            Is this question ready to use? 
+                            <div class="stamp-buttons">
+                                <button type="button" class="stamp-yes" data-bind="click: stamp('ok')" title="This question is ready to be used by students">Yes</button> 
+                                <button type="button" class="stamp-no" data-bind="click: stamp('problem')" title="This question still has some problems">No</button> 
+                            </div>
+                        </div>
+                    {% endif %}
 				</li>			
 				{% if can_delete %}
 				<li>
@@ -86,9 +95,16 @@
 				<li>
 					<span id="download">
 						Download: 
-						<a href="{% url 'question_download' object.pk object.slug %}">standalone .zip</a>,
-						<a href="{% url 'question_download' object.pk object.slug %}?scorm">SCORM package</a>,
-						<a href="{% url 'question_source' object.pk object.slug %}">source</a>
+                        <div class="btn-group">
+                          <a class="btn" href="{% url 'question_download' object.pk object.slug %}?scorm">SCORM package</a>
+                          <button class="btn dropdown-toggle" data-toggle="dropdown">
+                            <span class="caret"></span>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <li><a tabindex="-1" href="{% url 'question_download' object.pk object.slug %}">standalone .zip</a></li>
+                            <li><a tabindex="-1" href="{% url 'question_source' object.pk object.slug %}">source</a></li>
+                          </ul>
+                        </div>
 					</span>
 				</li>
 			</ul>

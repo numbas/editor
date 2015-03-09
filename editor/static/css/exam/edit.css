@@ -16,7 +16,7 @@
     list-style: none;
     margin: 0;
 }
-#admin li {
+#admin > li {
     display: inline-block;
     margin-right: 2em;
 }

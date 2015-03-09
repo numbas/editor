@@ -69,15 +69,18 @@ th a:hover {
 }
 
 
-button {
-	margin: 0.1em 0.3em;
+button, .btn {
 	background: #acdeff;
 	border: 1px solid #999;
 	border-radius: 2px;
+    text-shadow: none;
+}
+button {
+	margin: 0.1em 0.3em;
 	padding: 0.3em 0.5em;
 }
 
-button:hover, button:focus {
+button:hover, button:focus, .btn:hover, .btn:focus {
 	background: #f90;
 }
 

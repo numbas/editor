@@ -515,7 +515,7 @@
 		</section>
         <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='versions'}">
             <h4>Editing history</h4>
-            <p><label><input type="checkbox" data-bind="checked: onlyShowCommentedVersions"/> Only show versions with comments</label></p>
+            <p><label><input type="checkbox" data-bind="checked: showCondensedTimeline"/> Show condensed editing history</label></p>
             <table class="timeline">
                 <tbody data-bind="foreach: timelineToDisplay">
                     <tr class="timeline-event" data-bind="addClass: type">
@@ -529,7 +529,7 @@
                     </tr>
                     <script type="text/html" id="timeline-version-template">
                         <p>
-                            Edited (<a data-bind="attr: {href: 'revert/'+version_pk}" title="Restore this version">Restore</a>)
+                            Made some changes (<a data-bind="attr: {href: 'revert/'+version_pk}" title="Restore this version">Restore</a>)
                         </p>
                         <div class="comment well">
                             <div class="edit-comment" data-bind="visible: editable, editableHTML: comment"></div>
@@ -537,7 +537,7 @@
                         </div>
                     </script>
                     <script type="text/html" id="timeline-stamp-template">
-                        This question is <span class="status" data-bind="text: status_display, addClass: status"></span>.
+                        Gave some feedback: <span class="status" data-bind="text: status_display, addClass: status"></span>.
                     </script>
                 </tbody>
             </table>

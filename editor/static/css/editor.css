@@ -30,12 +30,8 @@
 	position: relative;
 }
 
-.controlbox .stamp-of-approval-box {
-    font-size: 0.7em;
-    display: none;
-    padding: 3px;
-    margin-top: 0.5em;
-	position: absolute;
+.controlbox .stamp-of-approval-dropdown {
+	margin-left: 6px;
 }
 
 .stamp-buttons .stamp-yes {
@@ -290,18 +286,23 @@ button.delete-grey:hover {
     background: #eee;
 }
 
-.timeline-event.stamp .status {
+.stamp .status {
 	font-weight: bold;
-	padding: 2px;
+	padding: 2px 4px;
 	border-radius: 2px;
 }
 
-.timeline-event.stamp .status.ok {
+.stamp .status.ok {
 	background-color: green;
 	color: white;
 }
 
-.timeline-event.stamp .status.problem {
+.stamp .status.problem {
+	background-color: #888;
+	color: white;
+}
+
+.stamp .status.broken {
 	background-color: red;
 	color: white;
 }

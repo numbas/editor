@@ -270,6 +270,22 @@ class Licence(models.Model):
                 'pk': self.pk,
         }
 
+class TimelineEvent(object):
+    def __init__(self,user,date,type,data):
+        self.user = user
+        self.date = date
+        self.type = type
+        self.data = data
+
+class StampTimelineEvent(TimelineEvent):
+    def __init__(self,stamp):
+        super(StampTimelineEvent,self).__init__(user=stamp.user, date=stamp.date, type='stamp', data=stamp)
+
+class VersionTimelineEvent(TimelineEvent):
+    def __init__(self,version):
+        revision = version.revision
+        super(VersionTimelineEvent,self).__init__(user=revision.user, date=revision.date_created, type='version', data=version)
+
 class EditorModel(models.Model):
     class Meta:
         abstract = True
@@ -282,6 +298,12 @@ class EditorModel(models.Model):
         metadata['licence'] = licence.name
         self.licence = licence
         self.content = str(self.parsed_content)
+
+    @property
+    def timeline(self):
+        events = [StampTimelineEvent(stamp) for stamp in self.stamps] + [VersionTimelineEvent(version) for version in reversion.get_for_object(self)]
+        events.sort(key=lambda x:x.data, reverse=True)
+        return events
     
     @property
     def stamps(self):
@@ -289,7 +311,8 @@ class EditorModel(models.Model):
 
 STAMP_STATUS_CHOICES = (
     ('ok','Ready to use'),
-    ('problem','Not ready to use'),
+    ('problem','Has some problems'),
+    ('broken','Doesn\'t work'),
 )
 
 class StampOfApproval(models.Model):
@@ -302,7 +325,7 @@ class StampOfApproval(models.Model):
     date = models.DateTimeField(auto_now_add=True,default=datetime.utcfromtimestamp(0))
 
     def __unicode__(self):
-        return '{} said {} was {} on {}'.format(self.user.username,self.object.name,self.get_status_display(),self.date)
+        return '{} stamped {} as "{}" on {}'.format(self.user.username,self.object.name,self.get_status_display(),self.date)
 
 class QuestionManager(models.Manager):
     def viewable_by(self,user):

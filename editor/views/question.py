@@ -44,6 +44,7 @@ from editor.views.errors import forbidden
 from editor.views.user import find_users
 from editor.tables import QuestionTable, QuestionHighlightTable
 from editor.views.version import version_json
+from editor.views.timeline import timeline_json
 from editor.views.generic import stamp_json, user_json
 
 from accounts.models import UserProfile
@@ -325,14 +326,6 @@ class UpdateView(generic.UpdateView):
 
         versions = [version_json(v,self.user) for v in reversion.get_for_object(self.object)]
 
-        stamps = [stamp_json(stamp) for stamp in self.object.stamps]
-
-        timeline = [{'date': stamp.date, 'type': 'stamp', 'data': stamp_json(stamp), 'user': user_json(stamp.user)} for stamp in self.object.stamps] + [{'date': version.revision.date_created, 'type': 'version', 'user': user_json(version.revision.user), 'data': version_json(version,self.user)} for version in reversion.get_for_object(self.object)]
-        for o in timeline:
-            o['date'] = o['date'].strftime('%Y-%m-%d %H:%M:%S')
-
-        timeline.sort(key=lambda x:x['date'],reverse=True)
-
         licences = [licence.as_json() for licence in Licence.objects.all()]
 
         question_json = context['question_json'] = {
@@ -348,8 +341,7 @@ class UpdateView(generic.UpdateView):
             'starred': context['starred'],
 
             'versions': versions,
-            'stamps': stamps,
-            'timeline': timeline
+            'timeline': timeline_json(self.object.timeline,self.user),
         }
         if self.editable:
             question_json['public_access'] = self.object.public_access

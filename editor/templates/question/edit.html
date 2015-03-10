@@ -65,14 +65,18 @@
 			</div>
 			<ul class="controlbox" id="admin">
 				<li class="preview-li">
-                    <a id="preview" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}, click: doPreview" title="Run this question in a new window (Ctrl+B)">Test Run</a>
+                    <a id="preview" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this question in a new window (Ctrl+B)">Test Run</a>
                     {% if user.is_authenticated %}
-                        <div class="stamp-of-approval-box well clearfix" data-bind="fadeVisible: showStampForm">
-                            Is this question ready to use? 
-                            <div class="stamp-buttons">
-                                <button type="button" class="stamp-yes" data-bind="click: stamp('ok')" title="This question is ready to be used by students">Yes</button> 
-                                <button type="button" class="stamp-no" data-bind="click: stamp('problem')" title="This question still has some problems">No</button> 
-                            </div>
+                        <div class="btn-group stamp-of-approval-dropdown">
+                          <button class="btn dropdown-toggle" data-toggle="dropdown">
+                            Feedback
+                            <span class="caret"></span>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <li><a tabindex="-1" href="#" data-bind="click: stamp('ok')">This is ready to use</a></li>
+                            <li><a tabindex="-1" href="#" data-bind="click: stamp('problem')">This has some problems</a></li>
+                            <li><a tabindex="-1" href="#" data-bind="click: stamp('broken')">This doesn't work</a></li>
+                          </ul>
                         </div>
                     {% endif %}
 				</li>			

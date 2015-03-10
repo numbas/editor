@@ -58,11 +58,6 @@ $(document).ready(function() {
 
 		this.currentTab = ko.observable(this.mainTabs()[0]);
 
-        this.showStampForm = ko.observable(false);
-        this.doPreview = function() {
-            q.showStampForm(true);
-            return true;
-        }
         this.stamp = function(status_code) {
             return function() {
                 $.post('stamp',{'status': status_code, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(stamp) {
@@ -71,7 +66,7 @@ $(document).ready(function() {
                 noty({
                     text: 'Thanks for your feedback!',
                     type: 'success',
-                    layout: 'topLeft'
+                    layout: 'topCenter'
                 });
                 q.showStampForm(false);
             }
@@ -536,34 +531,32 @@ $(document).ready(function() {
 		};
 
         this.timeline = ko.observableArray(Editor.timeline.map(function(t){return new Editor.TimelineItem(t)}));
+
+		this.showCondensedTimeline = ko.observable(true);
         
         this.timelineToDisplay = ko.computed(function() {
-			if(this.onlyShowCommentedVersions()) {
+			if(this.showCondensedTimeline()) {
                 var firstVersion = true;
-				return this.timeline().filter(function(e,i){
+                var out = [];
+				this.timeline().map(function(e){
                     if(e.type=='version') {
                         if(!(firstVersion || e.data.comment())) {
                             return false;
                         }
                         firstVersion = false;
+                    } else if(e.type=='stamp') {
+                        if(out.length!=0 && out[out.length-1].type=='stamp') {
+                            return false;
+                        }
                     }
-                    return true;
+                    out.push(e);
                 });
+                return out;
 			} else {
 				return this.timeline();
 			}
         },this);
 
-        this.versions = ko.observableArray(Editor.versions.map(function(v){return new Editor.Version(v)}));
-		this.onlyShowCommentedVersions = ko.observable(true);
-		this.versionsToDisplay = ko.computed(function() {
-			if(this.onlyShowCommentedVersions()) {
-				return this.versions().filter(function(v,i){return i==0 || v.comment();});
-			} else {
-				return this.versions();
-			}
-		},this);
-        
     }
     Question.prototype = {
 
@@ -918,8 +911,6 @@ $(document).ready(function() {
 		},
 
         toJSON: function() {
-            this.showStampForm(false);
-
             var rulesets = {};
             this.rulesets().map(function(r){
                 rulesets[r.name()] = r.sets();

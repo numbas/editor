@@ -514,27 +514,33 @@
 			{% endif %}
 		</section>
         <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='versions'}">
-			<p>Click on a version to restore it.</p>
-			<p><label><input type="checkbox" data-bind="checked: onlyShowCommentedVersions"/> Only show versions with comments</label></p>
-			<table class="versions">
-				<thead>
-					<th>Version</th>
-					<th>Comment</th>
-				</thead>
-				<tbody data-bind="foreach: versionsToDisplay">
-					<tr class="version">
-						<td>
-							<a data-bind="attr: {href: 'revert/'+version_pk}" title="Restore this version">
-								<span data-bind="text: date_created"></span> by <span data-bind="text: user.name"></span>
-							</a> 
-						</td>
-						<td class="comment">
-							<div class="edit-comment" data-bind="editableHTML: comment"></div>
-							<span data-bind="visible: !editable, text: comment"></span>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+            <h4>Editing history</h4>
+            <p><label><input type="checkbox" data-bind="checked: onlyShowCommentedVersions"/> Only show versions with comments</label></p>
+            <table class="timeline">
+                <tbody data-bind="foreach: timelineToDisplay">
+                    <tr class="timeline-event" data-bind="addClass: type">
+                        <td>
+                            <a data-bind="attr: {href: user.profile_url}" target="_blank"><span data-bind="text: user.name"></span></a>
+                        </td>
+                        <td>
+                            <span data-bind="fromNow: date, attr: {title: date}"></span>
+                        </td>
+                        <td data-bind="template: {name: 'timeline-'+type+'-template', data: data}"></td>
+                    </tr>
+                    <script type="text/html" id="timeline-version-template">
+                        <p>
+                            Edited (<a data-bind="attr: {href: 'revert/'+version_pk}" title="Restore this version">Restore</a>)
+                        </p>
+                        <div class="comment well">
+                            <div class="edit-comment" data-bind="visible: editable, editableHTML: comment"></div>
+                            <span data-bind="visible: !editable, text: comment"></span>
+                        </div>
+                    </script>
+                    <script type="text/html" id="timeline-stamp-template">
+                        This question is <span class="status" data-bind="text: status_display, addClass: status"></span>.
+                    </script>
+                </tbody>
+            </table>
         </section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='access'}">
 			<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#access', big: true}}"></span>

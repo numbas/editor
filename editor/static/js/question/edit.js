@@ -65,7 +65,14 @@ $(document).ready(function() {
         }
         this.stamp = function(status_code) {
             return function() {
-                console.log('stamped',status_code);
+                $.post('stamp',{'status': status_code, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(stamp) {
+                    q.timeline.splice(0,0,new Editor.TimelineItem({date: stamp.date, user: stamp.user, data: stamp, type: 'stamp'}));
+                });
+                noty({
+                    text: 'Thanks for your feedback!',
+                    type: 'success',
+                    layout: 'topLeft'
+                });
                 q.showStampForm(false);
             }
         }
@@ -347,7 +354,7 @@ $(document).ready(function() {
                             var address = location.protocol+'//'+location.host+data.url;
                             if(history.replaceState)
                                 history.replaceState(history.state,q.realName(),address);
-                            q.versions.splice(0,0,new Editor.Version(data.version));
+                            q.timeline.splice(0,0,new Editor.TimelineItem({date: data.version.date_created, user: data.version.user, type: 'version', data: data.version}));
                         })
                         .error(function(response,type,message) {
                             if(message=='')
@@ -527,6 +534,25 @@ $(document).ready(function() {
 			q.currentChange(next_version);
 			q.load(data);
 		};
+
+        this.timeline = ko.observableArray(Editor.timeline.map(function(t){return new Editor.TimelineItem(t)}));
+        
+        this.timelineToDisplay = ko.computed(function() {
+			if(this.onlyShowCommentedVersions()) {
+                var firstVersion = true;
+				return this.timeline().filter(function(e,i){
+                    if(e.type=='version') {
+                        if(!(firstVersion || e.data.comment())) {
+                            return false;
+                        }
+                        firstVersion = false;
+                    }
+                    return true;
+                });
+			} else {
+				return this.timeline();
+			}
+        },this);
 
         this.versions = ko.observableArray(Editor.versions.map(function(v){return new Editor.Version(v)}));
 		this.onlyShowCommentedVersions = ko.observable(true);

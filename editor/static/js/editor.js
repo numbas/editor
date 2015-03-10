@@ -513,6 +513,29 @@ $(document).ready(function() {
 		},this);
 	}
 
+    Editor.TimelineItem = function(data) {
+        this.user = data.user;
+        this.date = data.date;
+
+        this.type = data.type;
+
+        switch(this.type) {
+        case 'version':
+            this.data = new Editor.Version(data.data);
+            break;
+        case 'stamp':
+            this.data = new Editor.Stamp(data.data);
+            break;
+        }
+    }
+
+    Editor.Stamp = function(data) {
+        this.status = data.status;
+        this.status_display = data.status_display;
+        this.user = data.user;
+        this.date = data.date;
+    }
+
     // version saved to the database, ie a reversion.models.Version instance
     Editor.Version = function(data) {
         this.date_created = data.date_created;

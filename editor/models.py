@@ -301,6 +301,9 @@ class StampOfApproval(models.Model):
     status = models.CharField(choices = STAMP_STATUS_CHOICES, max_length=20)
     date = models.DateTimeField(auto_now_add=True,default=datetime.utcfromtimestamp(0))
 
+    def __unicode__(self):
+        return '{} said {} was {} on {}'.format(self.user.username,self.object.name,self.get_status_display(),self.date)
+
 class QuestionManager(models.Manager):
     def viewable_by(self,user):
         if user.is_superuser:

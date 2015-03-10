@@ -97,6 +97,9 @@ urlpatterns = patterns('',
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/set-star$',
         login_required(question.SetStarView.as_view()),name='set_question_star'),
 
+    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/stamp$',
+        login_required(question.StampView.as_view()),name='stamp_question'),
+
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/highlight$',
         login_required(question.HighlightView.as_view()),name='highlight_question'),
 

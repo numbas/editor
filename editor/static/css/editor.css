@@ -27,6 +27,7 @@
 
 .controlbox .preview-li {
     width: 10em;
+	position: relative;
 }
 
 .controlbox .stamp-of-approval-box {
@@ -34,6 +35,7 @@
     display: none;
     padding: 3px;
     margin-top: 0.5em;
+	position: absolute;
 }
 
 .stamp-buttons .stamp-yes {
@@ -250,17 +252,29 @@ button.delete-grey:hover {
 	max-width: 170px;
 }
 
-.versions th {
+.timeline th {
     text-align: left;
 }
-.versions td {
-    padding: 0.2em 1em 0.2em 0;
+.timeline td {
+    padding: 0.5em 1em 0.8em 0;
+	vertical-align: top;
+}
+.timeline tr:not(:last-child) td {
+	border-bottom: 1px solid #eee;
 }
 
-.versions .version .comment span {
-	padding: 4px 6px;
+.timeline td:not(:last-child) {
+	white-space: nowrap;
 }
-.versions .version .comment .edit-comment {
+.timeline td:last-child {
+	width: 95%;
+}
+
+.timeline-event.version .comment {
+	padding: 4px 6px;
+	margin: 0;
+}
+.timeline-event.version .comment .edit-comment {
     margin: 0;
     border: 0;
     box-shadow: none;
@@ -269,11 +283,27 @@ button.delete-grey:hover {
 	color: black;
 	padding: 3px;
 }
-.versions .version .comment .edit-comment:hover {
+.timeline-event.version .comment .edit-comment:hover {
     background: #acdeff;
 }
-.versions .version .comment .edit-comment:focus {
+.timeline-event.version .comment .edit-comment:focus {
     background: #eee;
+}
+
+.timeline-event.stamp .status {
+	font-weight: bold;
+	padding: 2px;
+	border-radius: 2px;
+}
+
+.timeline-event.stamp .status.ok {
+	background-color: green;
+	color: white;
+}
+
+.timeline-event.stamp .status.problem {
+	background-color: red;
+	color: white;
 }
 
 #edit-history {

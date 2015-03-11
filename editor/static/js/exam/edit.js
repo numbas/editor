@@ -35,10 +35,23 @@ $(document).ready(function() {
 			)
 		]);
         if(Editor.editable) {
-			this.mainTabs.push(new Editor.Tab('versions','Editing history'));
+			this.mainTabs.splice(1,0,new Editor.Tab('versions','Editing history'));
             this.mainTabs.push(new Editor.Tab('access','Access'));
         }
 		this.currentTab = ko.observable(this.mainTabs()[0]);
+
+        this.stamp = function(status_code) {
+            return function() {
+                $.post('stamp',{'status': status_code, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(stamp) {
+                    e.timeline.splice(0,0,new Editor.TimelineItem({date: stamp.date, user: stamp.user, data: stamp, type: 'stamp'}));
+                });
+                noty({
+                    text: 'Thanks for your feedback!',
+                    type: 'success',
+                    layout: 'topCenter'
+                });
+            }
+        }
 
         this.starred = ko.observable(Editor.starred);
         this.toggleStar = function() {
@@ -233,7 +246,7 @@ $(document).ready(function() {
 							var address = location.protocol+'//'+location.host+'/exam/'+Editor.examJSON.id+'/'+slugify(e.name())+'/';
 							if(history.replaceState)
 								history.replaceState({},e.name(),address);
-                            e.versions.splice(0,0,new Editor.Version(data.version));
+                            e.timeline.splice(0,0,new Editor.TimelineItem({date: data.version.date_created, user: data.version.user, type: 'version', data: data.version}));
 						})
 						.error(function(response,type,message) {
                             if(message=='')
@@ -352,15 +365,32 @@ $(document).ready(function() {
 			q.load(data);
 		};
 
-        this.versions = ko.observableArray(Editor.versions.map(function(v){return new Editor.Version(v)}));
-		this.onlyShowCommentedVersions = ko.observable(true);
-		this.versionsToDisplay = ko.computed(function() {
-			if(this.onlyShowCommentedVersions()) {
-				return this.versions().filter(function(v,i){return i==0 || v.comment();});
+        this.timeline = ko.observableArray(Editor.timeline.map(function(t){return new Editor.TimelineItem(t)}));
+
+		this.showCondensedTimeline = ko.observable(true);
+        
+        this.timelineToDisplay = ko.computed(function() {
+			if(this.showCondensedTimeline()) {
+                var out = [];
+				this.timeline().map(function(ev){
+					var last = out[out.length-1];
+                    if(ev.type=='version') {
+                        if(!ev.data.comment() && last && last.type=='version') {
+                            return false;
+                        }
+                        firstVersion = false;
+                    } else if(ev.type=='stamp') {
+                        if(last && last.type=='stamp' && last.user.pk==ev.user.pk) {
+                            return false;
+                        }
+                    }
+                    out.push(ev);
+                });
+                return out;
 			} else {
-				return this.versions();
+				return this.timeline();
 			}
-		},this);
+        },this);
 
     }
     Exam.prototype = {

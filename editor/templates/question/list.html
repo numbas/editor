@@ -6,7 +6,7 @@
 
 {% block content %}
 	<div>
-		<div class="list-total">{{ results.page.paginator.count }} questions found.</div>
+		<div class="list-total">{{ results.page.paginator.count }} question{{results.page.paginator.count|pluralize}} found.</div>
 		{% include "pagination.html" %}
 		<div class="results">
 			{% if object_list.exists %}
@@ -61,7 +61,7 @@
 			</table>
 
 			{% else %}
-			<div class="none">No questions found.</div>
+			<div class="none">No questions found matching your query.</div>
 			{% endif %}
 		</div>
 		{% include "pagination.html" %}

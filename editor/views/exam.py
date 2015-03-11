@@ -480,6 +480,10 @@ class SearchView(ListView):
         if usage in usage_filters:
             exams = exams.filter(usage_filters[usage])
 
+        only_ready_to_use = form.cleaned_data.get('only_ready_to_use')
+        if only_ready_to_use:
+            exams = exams.filter(current_stamp__status='ok')
+
         exams = [e for e in exams if e.can_be_viewed_by(self.request.user)]
 
         return exams
@@ -545,3 +549,6 @@ class SetStarView(generic.UpdateView):
 
     def get(self, request, *args, **kwargs):
         return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
+
+class StampView(editor.views.generic.StampView):
+    model = Exam

@@ -47,6 +47,9 @@ class QuestionHighlightTable(HighlightTable):
 
 class ExamTable(ObjectTable):
     name = TemplateColumn(template_name='exam/name_column.html')
+    current_stamp = TemplateColumn(template_name='stamp_column.html', verbose_name='Status',orderable=False)
+    licence = TemplateColumn(template_name='licence_column.html')
+    author = UserColumn()
 
     class Meta(ObjectTable.Meta):
         model = Exam

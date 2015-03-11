@@ -63,6 +63,9 @@ urlpatterns = patterns('',
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/highlight$',
         login_required(exam.HighlightView.as_view()),name='highlight_exam'),
 
+    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/stamp$',
+        login_required(exam.StampView.as_view()),name='stamp_exam'),
+
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/set-star$',
         login_required(exam.SetStarView.as_view()),name='set_exam_star'),
 

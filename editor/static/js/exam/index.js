@@ -98,7 +98,7 @@ $(document).ready(function() {
 			$('#uploadForm').submit();
 	});
 
-	$('#id_usage').on('change',function() {
+	$('#id_usage,#id_only_ready_to_use').on('change',function() {
 		$(this).parents('form').submit();
 	});
 

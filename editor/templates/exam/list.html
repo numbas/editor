@@ -6,12 +6,13 @@
 
 {% block content %}
 	<div>
-		<div class="list-total">{{ results.page.paginator.count }} exams found.</div>
+        <div class="list-total">{{ results.page.paginator.count }} exam{{results.page.paginator.count|pluralize}} found.</div>
 		{% include "pagination.html" %}
 		<div class="results">
 			{% if object_list %}
 			<table class="search-results" id="exam-list">
                 <col span="1" class="name"/>
+                <col span="1" class="stamp"/>
                 <col span="1" class="licence"/>
 				<col span="1" class="author"/>
 				<col span="1" class="last_modified"/>
@@ -58,7 +59,7 @@
 			</table>
 
 			{% else %}
-			<div class="none">No exams found.</div>
+			<div class="none">No exams found matching your query.</div>
 			{% endif %}
 		</div>
 		{% include "pagination.html" %}

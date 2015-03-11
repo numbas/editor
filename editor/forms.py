@@ -138,14 +138,14 @@ class QuestionForm(forms.ModelForm):
 
     class Meta:
         model = Question
-        exclude = ('name','author','tags','public_access','copy_of','metadata','licence')
+        fields = ('content','resources','extensions')
 
 class QuestionHighlightForm(forms.ModelForm):
     note = forms.CharField(widget=forms.Textarea(attrs={'data-bind':'text:note'}), label='Write a note explaining why you\'re highlighting this question.')
 
     class Meta:
         model = QuestionHighlight
-        fields = ['note']
+        fields = ('note',)
         
 class NewQuestionForm(forms.ModelForm):
     
@@ -162,8 +162,7 @@ class ExamForm(forms.ModelForm):
     
     class Meta:
         model = Exam
-        exclude = ('name','author','public_access','metadata','licence')
-        
+        fields = ('content','theme','custom_theme','locale')
         
 class NewExamForm(forms.ModelForm):
     
@@ -200,6 +199,7 @@ class ExamSearchForm(forms.Form):
     query = forms.CharField(initial='', required=False)
     author = forms.CharField(initial='', required=False)
     usage = forms.ChoiceField(choices=USAGE_OPTIONS, required=False)
+    only_ready_to_use = forms.BooleanField(initial=False)
         
 class ValidateZipField:
     def clean_zipfile(self):

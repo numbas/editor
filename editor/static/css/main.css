@@ -239,3 +239,10 @@ button.search.loading {
 .page-error h2 {
 	text-align: center;
 }
+
+[contenteditable=true]:empty:before {
+	content: attr(placeholder);
+	display: block;
+	font-style: italic;
+	opacity: 0.6;
+}

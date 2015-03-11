@@ -302,7 +302,7 @@ class EditorModel(models.Model):
     @property
     def timeline(self):
         events = [StampTimelineEvent(stamp) for stamp in self.stamps] + [VersionTimelineEvent(version) for version in reversion.get_for_object(self)]
-        events.sort(key=lambda x:x.data, reverse=True)
+        events.sort(key=lambda x:x.date, reverse=True)
         return events
     
     @property

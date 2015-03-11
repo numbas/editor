@@ -161,9 +161,12 @@ $(document).ready(function() {
 	}
 
 	ko.bindingHandlers.editableHTML = {
-		init: function(element, valueAccessor) {
+		init: function(element, valueAccessor,allBindingsAccessor) {
 			var initialValue = ko.utils.unwrapObservable(valueAccessor());
 			$(element).attr('contenteditable',true);
+			allBindingsAccessor = allBindingsAccessor();
+			var placeholder = ko.utils.unwrapObservable(allBindingsAccessor.placeholder) || '';
+			$(element).attr('placeholder',placeholder);
 			$(element).html(initialValue);
 			$(element).on('keyup input', function(e) {
 				observable = valueAccessor();

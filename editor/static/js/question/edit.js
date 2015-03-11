@@ -536,11 +536,10 @@ $(document).ready(function() {
         
         this.timelineToDisplay = ko.computed(function() {
 			if(this.showCondensedTimeline()) {
-                var firstVersion = true;
                 var out = [];
 				this.timeline().map(function(e){
                     if(e.type=='version') {
-                        if(!(firstVersion || e.data.comment())) {
+                        if(!e.data.comment() && out.length!=0 && out[out.length-1].type=='version') {
                             return false;
                         }
                         firstVersion = false;

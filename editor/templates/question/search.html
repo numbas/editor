@@ -43,17 +43,21 @@
 			<div class="search-filter">
 				<strong>Filter results</strong> 
 				<label for="id_author">
-					by author: 	
+					Author: 	
 					<input id="search_author" data-autocomplete-url="{% url 'user_search' %}" name="author" type="text" size="30" value="{{ data.author }}" placeholder="User name"/>
                 </label>
                 <label for="id_usage">
-                    by usage rights:
+                    Usage rights:
                     {{form.usage}}
                 </label>
+				<label for="id_only_ready_to_use">
+					Only show ready-to-use questions:
+					{{form.only_ready_to_use}}
+				</label>
                 <label for="id_filter_copies">
-                    filter out copied questions: 
+                    Exclude copied questions: 
                     {{form.filter_copies}}
-                </label>
+				</label>
 			</div>
 			{% endwith %}
 		</form>

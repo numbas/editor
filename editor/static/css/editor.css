@@ -286,27 +286,6 @@ button.delete-grey:hover {
     background: #eee;
 }
 
-.stamp .status {
-	font-weight: bold;
-	padding: 2px 4px;
-	border-radius: 2px;
-}
-
-.stamp .status.ok {
-	background-color: green;
-	color: white;
-}
-
-.stamp .status.problem {
-	background-color: #888;
-	color: white;
-}
-
-.stamp .status.broken {
-	background-color: red;
-	color: white;
-}
-
 #edit-history {
 	text-align: right;
 }

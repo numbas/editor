@@ -74,6 +74,7 @@
                           </button>
                           <ul class="dropdown-menu">
                             <li><a tabindex="-1" href="#" data-bind="click: stamp('ok')">This is ready to use</a></li>
+                            <li><a tabindex="-1" href="#" data-bind="click: stamp('dontuse')">This should not be used</a></li>
                             <li><a tabindex="-1" href="#" data-bind="click: stamp('problem')">This has some problems</a></li>
                             <li><a tabindex="-1" href="#" data-bind="click: stamp('broken')">This doesn't work</a></li>
                           </ul>
@@ -101,7 +102,7 @@
 						Download: 
                         <div class="btn-group">
                           <a class="btn" href="{% url 'question_download' object.pk object.slug %}?scorm">SCORM package</a>
-                          <button class="btn dropdown-toggle" data-toggle="dropdown">
+                          <button class="btn dropdown-toggle" data-toggle="dropdown" title="More download options">
                             <span class="caret"></span>
                           </button>
                           <ul class="dropdown-menu">

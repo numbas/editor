@@ -68,6 +68,12 @@ th a:hover {
 
 }
 
+[contenteditable=true]:empty:before {
+	content: attr(placeholder);
+	display: block;
+	font-style: italic;
+	opacity: 0.6;
+}
 
 button, .btn {
 	background: #acdeff;
@@ -240,9 +246,28 @@ button.search.loading {
 	text-align: center;
 }
 
-[contenteditable=true]:empty:before {
-	content: attr(placeholder);
-	display: block;
-	font-style: italic;
-	opacity: 0.6;
+.stamp-status {
+	font-weight: bold;
+	padding: 2px 4px;
+	border-radius: 2px;
+}
+
+.stamp-status.ok {
+	background-color: green;
+	color: white;
+}
+
+.stamp-status.problem {
+	background-color: #888;
+	color: white;
+}
+
+.stamp-status.broken {
+	background-color: red;
+	color: white;
+}
+
+.stamp-status.dontuse {
+	background-color: black;
+	color: yellow;
 }

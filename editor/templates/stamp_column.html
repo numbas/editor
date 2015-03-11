@@ -1,0 +1,6 @@
+{% load humanize %}
+{% if record.current_stamp %}
+	{% with record.current_stamp as stamp %}
+	<span class="stamp-status {{stamp.status}}" title="by {{stamp.user.get_full_name}}, {{stamp.date|naturaltime}}">{{stamp.get_status_display}}</span>
+	{% endwith %}
+{% endif %}

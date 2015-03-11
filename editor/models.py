@@ -32,6 +32,8 @@ from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
 from django.db import models
+from django.db.models import signals
+from django.dispatch import receiver
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
@@ -286,11 +288,32 @@ class VersionTimelineEvent(TimelineEvent):
         revision = version.revision
         super(VersionTimelineEvent,self).__init__(user=revision.user, date=revision.date_created, type='version', data=version)
 
+STAMP_STATUS_CHOICES = (
+    ('ok','Ready to use'),
+    ('dontuse','Should not be used'),
+    ('problem','Has some problems'),
+    ('broken','Doesn\'t work'),
+)
+
+class StampOfApproval(models.Model):
+    object_content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    object = GenericForeignKey('object_content_type','object_id')
+
+    user = models.ForeignKey(User, related_name='stamps')
+    status = models.CharField(choices = STAMP_STATUS_CHOICES, max_length=20)
+    date = models.DateTimeField(auto_now_add=True,default=datetime.utcfromtimestamp(0))
+
+    def __unicode__(self):
+        return '{} stamped {} as "{}" on {}'.format(self.user.username,self.object.name,self.get_status_display(),self.date)
+
 class EditorModel(models.Model):
     class Meta:
         abstract = True
 
     licence = models.ForeignKey(Licence,null=True)
+
+    current_stamp = models.ForeignKey(StampOfApproval,null=True)
 
     def set_licence(self,licence):
         NumbasObject.get_parsed_content(self)
@@ -309,23 +332,10 @@ class EditorModel(models.Model):
     def stamps(self):
         return StampOfApproval.objects.filter(object_content_type=ContentType.objects.get_for_model(self.__class__),object_id=self.pk).order_by('-date')
 
-STAMP_STATUS_CHOICES = (
-    ('ok','Ready to use'),
-    ('problem','Has some problems'),
-    ('broken','Doesn\'t work'),
-)
-
-class StampOfApproval(models.Model):
-    object_content_type = models.ForeignKey(ContentType)
-    object_id = models.PositiveIntegerField()
-    object = GenericForeignKey('object_content_type','object_id')
-
-    user = models.ForeignKey(User, related_name='stamps')
-    status = models.CharField(choices = STAMP_STATUS_CHOICES, max_length=20)
-    date = models.DateTimeField(auto_now_add=True,default=datetime.utcfromtimestamp(0))
-
-    def __unicode__(self):
-        return '{} stamped {} as "{}" on {}'.format(self.user.username,self.object.name,self.get_status_display(),self.date)
+@receiver(signals.post_save,sender=StampOfApproval)
+def set_current_stamp(instance,**kwargs):
+    instance.object.current_stamp = instance
+    instance.object.save()
 
 class QuestionManager(models.Manager):
     def viewable_by(self,user):

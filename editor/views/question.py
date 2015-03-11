@@ -45,7 +45,6 @@ from editor.views.user import find_users
 from editor.tables import QuestionTable, QuestionHighlightTable
 from editor.views.version import version_json
 from editor.views.timeline import timeline_json
-from editor.views.generic import stamp_json, user_json
 
 from accounts.models import UserProfile
 
@@ -499,6 +498,10 @@ class SearchView(ListView):
         filter_copies = form.cleaned_data.get('filter_copies')
         if filter_copies:
             questions = questions.filter(copy_of=None)
+
+        only_ready_to_use = form.cleaned_data.get('only_ready_to_use')
+        if only_ready_to_use:
+            questions = questions.filter(current_stamp__status='ok')
 
         questions = questions.distinct()
 

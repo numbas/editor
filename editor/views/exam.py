@@ -44,6 +44,7 @@ import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
 from editor.views.version import version_json
+from editor.views.timeline import timeline_json
 
 from numbasobject import NumbasObject
 
@@ -326,6 +327,7 @@ class UpdateView(generic.UpdateView):
             'previewURL': reverse('exam_preview',args=(self.object.pk,self.object.slug)),
             'previewWindow': str(calendar.timegm(time.gmtime())),
             'versions': versions,
+            'timeline': timeline_json(self.object.timeline,self.user),
         }
         if profile:
             editor_json.update({

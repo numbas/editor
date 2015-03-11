@@ -51,6 +51,7 @@ class QuestionSearchForm(forms.Form):
     author = forms.CharField(initial='', required=False)
     usage = forms.ChoiceField(choices=USAGE_OPTIONS, required=False)
     filter_copies = forms.BooleanField(initial=False)
+    only_ready_to_use = forms.BooleanField(initial=False)
     tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
 
 class QuestionAccessForm(forms.ModelForm):

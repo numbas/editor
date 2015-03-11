@@ -52,7 +52,7 @@ $(document).ready(function() {
 			new Editor.Tab('exams','Exams using this question'),
 		]);
         if(Editor.editable) {
-			this.mainTabs.push(new Editor.Tab('versions','Editing history'));
+			this.mainTabs.splice(1,0,new Editor.Tab('versions','Editing history'));
             this.mainTabs.push(new Editor.Tab('access','Access'));
         }
 
@@ -68,7 +68,6 @@ $(document).ready(function() {
                     type: 'success',
                     layout: 'topCenter'
                 });
-                q.showStampForm(false);
             }
         }
 
@@ -538,13 +537,14 @@ $(document).ready(function() {
 			if(this.showCondensedTimeline()) {
                 var out = [];
 				this.timeline().map(function(e){
+					var last = out[out.length-1];
                     if(e.type=='version') {
-                        if(!e.data.comment() && out.length!=0 && out[out.length-1].type=='version') {
+                        if(!e.data.comment() && last && last.type=='version') {
                             return false;
                         }
                         firstVersion = false;
                     } else if(e.type=='stamp') {
-                        if(out.length!=0 && out[out.length-1].type=='stamp') {
+                        if(last && last.type=='stamp' && last.user.pk==e.user.pk) {
                             return false;
                         }
                     }

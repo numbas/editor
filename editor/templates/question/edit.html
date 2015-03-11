@@ -48,7 +48,7 @@
             <h1 id="name-header" class="span9">
 				<span data-bind="text: name, mathjax: name">{{object.name}}</span> 
                 {% if request.user.is_authenticated %}
-                <button type="button" data-bind="css:{starred: starred}, attr: {title: starred() ? 'This question is starred. Click to unstar it.' : 'Star this question'}, click: toggleStar" class="star" ></button>
+                <button type="button" style="display:none" data-bind="visible: true" data-bind="css:{starred: starred}, attr: {title: starred() ? 'This question is starred. Click to unstar it.' : 'Star this question'}, click: toggleStar" class="star" ></button>
                 {% endif %}
             </h1>
             {% if editable %}
@@ -63,7 +63,7 @@
 			{% block controls %}
 			{% endblock controls %}
 			</div>
-			<ul class="controlbox" id="admin">
+			<ul class="controlbox" id="admin" style="display:none" data-bind="visible: true">
 				<li class="preview-li">
                     <a id="preview" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this question in a new window (Ctrl+B)">Test Run</a>
                     {% if user.is_authenticated %}

@@ -145,7 +145,7 @@
 					"HTML-CSS": {
 						mtextFontInherit: true
 					},
-					skipStartupTypeset: true
+                    skipStartupTypeset: {% block skipMathJaxStartup %}false{% endblock %}
 				});
 				MathJax.Hub.processSectionDelay = 0;
 			</script>

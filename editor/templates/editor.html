@@ -17,6 +17,8 @@
     <script src="{% sstatic 'js/jiff.js' %}" type="text/javascript"></script>
 {% endblock javascripts %}
 
+{% block skipMathJaxStartup %}true{% endblock %}
+
 {% block stylesheets %}
     {{ block.super }}
 

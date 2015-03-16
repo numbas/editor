@@ -379,10 +379,6 @@ $(document).ready(function() {
                             return false;
                         }
                         firstVersion = false;
-                    } else if(ev.type=='stamp') {
-                        if(last && last.type=='stamp' && last.user.pk==ev.user.pk) {
-                            return false;
-                        }
                     }
                     out.push(ev);
                 });

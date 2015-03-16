@@ -530,11 +530,7 @@ $(document).ready(function() {
                             return false;
                         }
                         firstVersion = false;
-                    } else if(e.type=='stamp') {
-                        if(last && last.type=='stamp' && last.user.pk==e.user.pk) {
-                            return false;
-                        }
-                    }
+					}
                     out.push(e);
                 });
                 return out;

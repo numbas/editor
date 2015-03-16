@@ -288,6 +288,10 @@ class VersionTimelineEvent(TimelineEvent):
         revision = version.revision
         super(VersionTimelineEvent,self).__init__(user=revision.user, date=revision.date_created, type='version', data=version)
 
+class CommentTimelineEvent(TimelineEvent):
+    def __init__(self,comment):
+        super(CommentTimelineEvent,self).__init__(user=comment.user, date=comment.date, type='comment', data=comment)
+
 STAMP_STATUS_CHOICES = (
     ('ok','Ready to use'),
     ('dontuse','Should not be used'),
@@ -295,7 +299,11 @@ STAMP_STATUS_CHOICES = (
     ('broken','Doesn\'t work'),
 )
 
-class StampOfApproval(models.Model):
+class TimelineMixin:
+    def can_be_deleted_by(self,user):
+        return user==self.user or user==self.object.author
+
+class StampOfApproval(models.Model,TimelineMixin):
     object_content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
     object = GenericForeignKey('object_content_type','object_id')
@@ -307,13 +315,25 @@ class StampOfApproval(models.Model):
     def __unicode__(self):
         return '{} stamped {} as "{}" on {}'.format(self.user.username,self.object.name,self.get_status_display(),self.date)
 
+class Comment(models.Model,TimelineMixin):
+    object_content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    object = GenericForeignKey('object_content_type','object_id')
+
+    user = models.ForeignKey(User, related_name='comments')
+    text = models.TextField()
+    date = models.DateTimeField(auto_now_add=True,default=datetime.utcfromtimestamp(0))
+
+    def __unicode__(self):
+        return 'Comment by {} on {}: "{}"'.format(self.user.get_full_name(), str(self.object), self.text[:47]+'...' if len(self.text)>50 else self.text)
+
 class EditorModel(models.Model):
     class Meta:
         abstract = True
 
     licence = models.ForeignKey(Licence,null=True)
 
-    current_stamp = models.ForeignKey(StampOfApproval,null=True)
+    current_stamp = models.ForeignKey(StampOfApproval, blank=True, null=True, on_delete=models.SET_NULL)
 
     def set_licence(self,licence):
         NumbasObject.get_parsed_content(self)
@@ -324,13 +344,17 @@ class EditorModel(models.Model):
 
     @property
     def timeline(self):
-        events = [StampTimelineEvent(stamp) for stamp in self.stamps] + [VersionTimelineEvent(version) for version in reversion.get_for_object(self)]
+        events = [StampTimelineEvent(stamp) for stamp in self.stamps] + [VersionTimelineEvent(version) for version in reversion.get_for_object(self)] + [CommentTimelineEvent(comment) for comment in self.comments]
         events.sort(key=lambda x:x.date, reverse=True)
         return events
     
     @property
     def stamps(self):
         return StampOfApproval.objects.filter(object_content_type=ContentType.objects.get_for_model(self.__class__),object_id=self.pk).order_by('-date')
+
+    @property
+    def comments(self):
+        return Comment.objects.filter(object_content_type=ContentType.objects.get_for_model(self.__class__),object_id=self.pk).order_by('-date')
 
 @receiver(signals.post_save,sender=StampOfApproval)
 def set_current_stamp(instance,**kwargs):

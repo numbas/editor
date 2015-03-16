@@ -552,3 +552,6 @@ class SetStarView(generic.UpdateView):
 
 class StampView(editor.views.generic.StampView):
     model = Exam
+
+class CommentView(editor.views.generic.CommentView):
+    model = Question

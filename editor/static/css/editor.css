@@ -273,22 +273,41 @@ button.delete-grey:hover {
 	max-width: 170px;
 }
 
-.timeline th {
-    text-align: left;
+.timeline-write-comment {
+    margin: 1em 0;
 }
-.timeline td {
-    padding: 0.5em 1em 0.8em 0;
+.timeline-write-comment h4 {
+    margin: 0;
+}
+
+.timeline-write-comment form {
+    padding: 0 1em;
+}
+.timeline-write-comment form .buttons {
+    margin-top: 0.5em;
+}
+
+.timeline-event td {
+    padding: 0.5em 0.3em 0.8em 0.3em;
 	vertical-align: top;
 }
-.timeline tr:not(:last-child) td {
+.timeline-event .action {
+    border-right: 1px solid  #eee;
+    /* border-left: 1px solid #eee; */
+}
+.timeline-event:not(:last-child) td {
 	border-bottom: 1px solid #eee;
 }
 
-.timeline td:not(:last-child) {
+.timeline-event td:not(:last-child) {
 	white-space: nowrap;
 }
-.timeline td:last-child {
+.timeline-event td:last-child {
 	width: 95%;
+}
+
+.timeline-event.deleting {
+    opacity: 0.5;
 }
 
 .timeline-event.version .comment {
@@ -327,3 +346,4 @@ button.delete-grey:hover {
 	color: white;
     cursor: pointer;
 }
+

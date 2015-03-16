@@ -5,7 +5,7 @@ from reversion.models import Version
 from django import http
 
 # JSON representation of a reversion.models.Version object
-def version_json(version,viewing_user):
+def version_json(version,viewed_by):
     revision = version.revision
     return {
         'version_pk': version.pk,
@@ -13,7 +13,7 @@ def version_json(version,viewing_user):
         'user': user_json(revision.user),
         'date_created': revision.date_created.strftime('%Y-%m-%d %H:%M:%S'),
         'comment': revision.comment,
-        'editable': (viewing_user == revision.user) or viewing_user.is_superuser,
+        'editable': (viewed_by == revision.user) or viewed_by.is_superuser,
         'update_url': reverse('edit_version',args=(version.pk,)),
     }
 

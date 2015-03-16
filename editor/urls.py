@@ -17,7 +17,7 @@ from django.views.generic import RedirectView, TemplateView
 
 from django.contrib.auth.decorators import login_required
 
-from editor.views import exam, question, HomeView, theme, extension, version
+from editor.views import exam, question, HomeView, theme, extension, version, generic
 from editor.views.user import UserSearchView
 from editor.views.resource import upload_resource, ImageDeleteView, media_view
 
@@ -66,6 +66,9 @@ urlpatterns = patterns('',
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/stamp$',
         login_required(exam.StampView.as_view()),name='stamp_exam'),
 
+    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/comment$',
+        login_required(exam.CommentView.as_view()),name='comment_on_exam'),
+
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/set-star$',
         login_required(exam.SetStarView.as_view()),name='set_exam_star'),
 
@@ -100,6 +103,9 @@ urlpatterns = patterns('',
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/set-star$',
         login_required(question.SetStarView.as_view()),name='set_question_star'),
 
+    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/comment$',
+        login_required(question.CommentView.as_view()),name='comment_on_question'),
+
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/stamp$',
         login_required(question.StampView.as_view()),name='stamp_question'),
 
@@ -125,6 +131,12 @@ urlpatterns = patterns('',
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+).exam$',
         question.SourceView.as_view(), name='question_source'),
+
+    url(r'^comment/(?P<pk>\d+)/delete$',
+        generic.DeleteCommentView.as_view(), name='delete_comment'),
+
+    url(r'^stamp/(?P<pk>\d+)/delete$',
+        generic.DeleteStampView.as_view(), name='delete_stamp'),
 
     url(r'^users/search/$',UserSearchView.as_view(),name='user_search'),
 

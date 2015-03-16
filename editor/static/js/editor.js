@@ -513,27 +513,19 @@ $(document).ready(function() {
 		},this);
 	}
 
-    Editor.TimelineItem = function(data) {
-        this.user = data.user;
-        this.date = data.date;
-
-        this.type = data.type;
-
-        switch(this.type) {
-        case 'version':
-            this.data = new Editor.Version(data.data);
-            break;
-        case 'stamp':
-            this.data = new Editor.Stamp(data.data);
-            break;
-        }
-    }
-
     Editor.Stamp = function(data) {
         this.status = data.status;
         this.status_display = data.status_display;
         this.user = data.user;
         this.date = data.date;
+        this.delete_url = data.delete_url;
+    }
+
+    Editor.Comment = function(data) {
+        this.text = data.text;
+        this.user = data.user;
+        this.date = data.date;
+        this.delete_url = data.delete_url;
     }
 
     // version saved to the database, ie a reversion.models.Version instance
@@ -565,6 +557,27 @@ $(document).ready(function() {
             },this);
         }
     } 
+
+    var timeline_item_constructors = {
+        'version': Editor.Version,
+        'stamp': Editor.Stamp,
+        'comment': Editor.Comment
+    }
+
+    Editor.TimelineItem = function(data) {
+        this.user = data.user;
+        this.date = data.date;
+
+        this.type = data.type;
+        this.delete_url = data.data.delete_url;
+    
+        if(!(data.type in timeline_item_constructors)) {
+            throw(new Error("Unrecognised timeline item "+data.type));
+        }
+        this.data = new timeline_item_constructors[data.type](data.data);
+
+        this.deleting = ko.observable(false);
+    }
 
 	//represent a JSON-esque object in the Numbas .exam format
 	prettyData = function(data){

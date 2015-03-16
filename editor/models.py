@@ -299,7 +299,7 @@ STAMP_STATUS_CHOICES = (
     ('broken','Doesn\'t work'),
 )
 
-class TimelineMixin:
+class TimelineMixin(object):
     def can_be_deleted_by(self,user):
         return user==self.user or user==self.object.author
 

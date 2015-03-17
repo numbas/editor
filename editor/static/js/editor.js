@@ -1056,4 +1056,19 @@ $(document).ready(function() {
 			});
 		}
 	}
+
+    $('#notifications .mark-all-as-read').on('click',function(e) {
+        var url = $(this).attr('href');
+        $.post(url,{csrfmiddlewaretoken: getCookie('csrftoken')})
+            .success(function() {
+                $('#notifications .unread-count').text('0');
+                $('#notifications').removeClass('unread');
+                $('#notifications .dropdown-toggle').attr('title','0 unread notifications');
+                $('#notifications .dropdown-menu').remove();
+            })
+        ;
+        $('#notifications').removeClass('open');
+        e.stopPropagation();
+        return false;
+    });
 });

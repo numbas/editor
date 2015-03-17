@@ -17,7 +17,7 @@ from django.views.generic import RedirectView, TemplateView
 
 from django.contrib.auth.decorators import login_required
 
-from editor.views import exam, question, HomeView, theme, extension, version, generic
+from editor.views import exam, question, HomeView, theme, extension, version, generic, notification
 from editor.views.user import UserSearchView
 from editor.views.resource import upload_resource, ImageDeleteView, media_view
 
@@ -151,4 +151,6 @@ urlpatterns = patterns('',
     url(r'^extensions/(?P<pk>\d+)/delete$', login_required(extension.DeleteView.as_view()), name='extension_delete'),
 
     url(r'version/(?P<pk>\d+)/update', login_required(version.UpdateView.as_view()), name='edit_version'),
+
+	url(r'notification/(?P<pk>\d+)/open', notification.OpenNotification.as_view(), name='open_notification'),
 )

@@ -14,6 +14,7 @@
 from django.conf.urls import patterns, include, url
 from django.conf.urls.static import static
 import settings
+import notifications
 
 from django.contrib import admin,auth
 admin.autodiscover()
@@ -28,4 +29,5 @@ urlpatterns = patterns('',
 	url(r'^accounts/', include('accounts.urls')),
     
     url(r'', include('editor.urls')),
+	url(r'^notifications/', include(notifications.urls)),
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

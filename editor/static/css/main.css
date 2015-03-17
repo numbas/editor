@@ -90,6 +90,10 @@ button:hover, button:focus, .btn:hover, .btn:focus {
 	background: #f90;
 }
 
+.dropdown-menu li>a:hover {
+    background: #f90;
+}
+
 #header {
 	padding-top: 1em;
 	padding-bottom: 1em;
@@ -135,6 +139,56 @@ button:hover, button:focus, .btn:hover, .btn:focus {
 #session .account-links {
 	font-size: 0.8em;
 	margin-left: 2em;
+}
+
+#notifications {
+    font-size: 1em;
+    margin-left: 1em;
+}
+
+#notifications .dropdown-menu {
+    width: 280px;
+}
+
+#notifications .dropdown-toggle {
+    border: none;
+    background: white;
+    cursor: default;
+}
+
+#notifications.open .dropdown-toggle:active {
+    box-shadow: none;
+}
+
+#notifications.unread .dropdown-toggle {
+    background-color: red;
+    color: white;
+}
+
+#notifications a {
+    text-decoration: none;
+}
+
+#notifications .notification, #notifications .notification a {
+	white-space: normal;
+}
+
+#notifications .notification .target {
+    font-weight: bold;
+}
+
+#notifications .notification .time {
+    font-size: 0.9em;
+    color: #888;
+}
+
+#notifications .dropdown-menu a:hover {
+    background: rgba(255,153,0,0.3);
+}
+
+#notifications .mark-all-as-read {
+    font-weight: bold;
+    color: #08c;
 }
 
 ul#menu li {

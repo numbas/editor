@@ -75,7 +75,7 @@ class CompileObject():
     
     def get_error_response(self,error):
         template = get_template("compile/error.html")
-        return HttpResponseServerError(template.render(RequestContext(self.request,{
+        return http.HttpResponseServerError(template.render(RequestContext(self.request,{
             'message': error.message,
             'stdout': error.stdout,
             'stderr': error.stderr,
@@ -115,7 +115,7 @@ class ZipView(generic.DetailView,CompileObject):
             return self.get_error_response(err)
         else:
             wrapper = FileWrapper(file(fsLocation,'rb'))
-            response = HttpResponse(wrapper, content_type='application/zip')
+            response = http.HttpResponse(wrapper, content_type='application/zip')
             response['Content-Disposition'] = 'attachment; filename=%s.zip' % obj.slug
             response['Content-Length'] = os.path.getsize(fsLocation)
             response['Cache-Control'] = 'max-age=0,no-cache,no-store'
@@ -125,7 +125,7 @@ class ZipView(generic.DetailView,CompileObject):
 class SourceView(generic.DetailView):
     def source(self,obj):
         source = obj.as_source()
-        response = HttpResponse(source, 'text/plain')
+        response = http.HttpResponse(source, 'text/plain')
         response['Content-Disposition'] = 'attachment; filename=%s.exam' % obj.slug
         response['Cache-Control'] = 'max-age=0,no-cache,no-store'
         return response
@@ -136,7 +136,7 @@ class AuthorRequiredMixin(object):
         result = super(AuthorRequiredMixin, self).dispatch(request, *args, **kwargs)
         if self.object.author != self.request.user:
             template = get_template("403.html")
-            return HttpResponseForbidden(template.render(RequestContext(self.request)))
+            return http.HttpResponseForbidden(template.render(RequestContext(self.request)))
         return result
 
 class StampView(generic.UpdateView):

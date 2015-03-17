@@ -3,6 +3,7 @@ from django.views import generic
 from editor.views.generic import user_json
 from reversion.models import Version
 from django import http
+from editor.notify_watching import notify_watching
 
 # JSON representation of a reversion.models.Version object
 def version_json(version,viewed_by):
@@ -27,6 +28,9 @@ class UpdateView(generic.UpdateView):
 
         if not (request.user == revision.user or request.user.is_superuser):
             return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
+
+        if not version.revision.comment:
+            notify_watching(request.user,verb='made changes to',target=version.object)
 
         version.revision.comment = request.POST['comment']
 

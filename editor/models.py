@@ -43,6 +43,8 @@ from uuslug import slugify
 
 import reversion
 
+from editor.notify_watching import notify_watching
+
 from taggit.managers import TaggableManager
 import taggit.models
 
@@ -313,7 +315,7 @@ class StampOfApproval(models.Model,TimelineMixin):
     date = models.DateTimeField(auto_now_add=True,default=datetime.utcfromtimestamp(0))
 
     def __unicode__(self):
-        return '{} stamped {} as "{}" on {}'.format(self.user.username,self.object.name,self.get_status_display(),self.date)
+        return '{} as "{}"'.format(self.user.username,self.object.name,self.get_status_display(),self.date)
 
 class Comment(models.Model,TimelineMixin):
     object_content_type = models.ForeignKey(ContentType)
@@ -356,10 +358,23 @@ class EditorModel(models.Model):
     def comments(self):
         return Comment.objects.filter(object_content_type=ContentType.objects.get_for_model(self.__class__),object_id=self.pk).order_by('-date')
 
+    @property
+    def watching_users(self):
+        """ Users who should be notified when something happens to this object. """
+        return [self.author] + list(self.access_rights.all())
+
 @receiver(signals.post_save,sender=StampOfApproval)
 def set_current_stamp(instance,**kwargs):
     instance.object.current_stamp = instance
     instance.object.save()
+
+@receiver(signals.post_save,sender=StampOfApproval)
+def notify_stamp(instance,**kwargs):
+    notify_watching(instance.user,target=instance.object,verb='gave feedback on',action_object=instance)
+
+@receiver(signals.post_save,sender=Comment)
+def notify_comment(instance,**kwargs):
+    notify_watching(instance.user,target=instance.object,verb='commented on',action_object=instance)
 
 class QuestionManager(models.Manager):
     def viewable_by(self,user):
@@ -409,7 +424,7 @@ class Question(EditorModel,NumbasObject,ControlledObject):
         )
 
     def __unicode__(self):
-        return 'Question "%s"' % self.name
+        return '%s' % self.name
 
     def save(self, *args, **kwargs):
         NumbasObject.get_parsed_content(self)
@@ -535,7 +550,7 @@ class Exam(EditorModel,NumbasObject,ControlledObject):
         )
 
     def __unicode__(self):
-        return 'Exam "%s"' %self.name
+        return '%s' %self.name
     
     @property
     def theme_path(self):

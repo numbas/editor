@@ -55,11 +55,19 @@ class QuestionSearchForm(forms.Form):
     tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
 
 class QuestionAccessForm(forms.ModelForm):
+    given_by = forms.ModelChoiceField(queryset=User.objects.all())
+
     class Meta:
         model = QuestionAccess
         exclude = []
 
+    def save(self,commit=True):
+        self.instance.given_by = self.cleaned_data.get('given_by')
+        super(QuestionAccessForm,self).save(commit)
+
 class QuestionSetAccessForm(forms.ModelForm):
+    given_by = forms.ModelChoiceField(queryset=User.objects.all())
+
     class Meta:
         model = Question
         fields = ['public_access']
@@ -74,12 +82,12 @@ class QuestionSetAccessForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super(QuestionSetAccessForm,self).clean()
 
-        user_ids = self.data.getlist('user_ids[]')
-        access_levels = self.data.getlist('access_levels[]')
+        self.user_ids = self.data.getlist('user_ids[]')
+        self.access_levels = self.data.getlist('access_levels[]')
         self.user_access_forms = []
 
-        for i,(user,access_level) in enumerate(zip(user_ids,access_levels)):
-            f = QuestionAccessForm({'user':user,'access':access_level,'question':self.instance.pk})
+        for i,(user,access_level) in enumerate(zip(self.user_ids,self.access_levels)):
+            f = QuestionAccessForm({'user':user,'access':access_level,'question':self.instance.pk,'given_by':cleaned_data.get('given_by').pk}, instance=QuestionAccess.objects.filter(question=self.instance,user=user).first())
             f.full_clean()
             self.user_access_forms.append(f)
             for key,messages in f.errors.items():
@@ -88,17 +96,26 @@ class QuestionSetAccessForm(forms.ModelForm):
         return cleaned_data
 
     def save(self):
-        self.instance.access_rights.clear()
+        access_to_remove = QuestionAccess.objects.filter(question=self.instance).exclude(user__in=self.user_ids)
+        access_to_remove.delete()
         for f in self.user_access_forms:
             f.save()
         return super(QuestionSetAccessForm,self).save()
 
 class ExamAccessForm(forms.ModelForm):
+    given_by = forms.ModelChoiceField(queryset=User.objects.all())
+
     class Meta:
         model = ExamAccess
         exclude = []
 
+    def save(self,commit=True):
+        self.instance.given_by = self.cleaned_data.get('given_by')
+        super(ExamAccessForm,self).save(commit)
+
 class ExamSetAccessForm(forms.ModelForm):
+    given_by = forms.ModelChoiceField(queryset=User.objects.all())
+
     class Meta:
         model = Exam
         fields = ['public_access']
@@ -113,12 +130,12 @@ class ExamSetAccessForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super(ExamSetAccessForm,self).clean()
 
-        user_ids = self.data.getlist('user_ids[]')
-        access_levels = self.data.getlist('access_levels[]')
+        self.user_ids = self.data.getlist('user_ids[]')
+        self.access_levels = self.data.getlist('access_levels[]')
         self.user_access_forms = []
 
-        for i,(user,access_level) in enumerate(zip(user_ids,access_levels)):
-            f = ExamAccessForm({'user':user,'access':access_level,'exam':self.instance.pk})
+        for i,(user,access_level) in enumerate(zip(self.user_ids,self.access_levels)):
+            f = ExamAccessForm({'user':user,'access':access_level,'exam':self.instance.pk,'given_by':self.cleaned_data.get('given_by').pk})
             f.full_clean()
             self.user_access_forms.append(f)
             for key,messages in f.errors.items():
@@ -127,7 +144,8 @@ class ExamSetAccessForm(forms.ModelForm):
         return cleaned_data
 
     def save(self):
-        self.instance.access_rights.clear()
+        access_to_remove = ExamAccess.objects.filter(exam=self.instance).exclude(user__in=self.user_ids)
+        access_to_remove.delete()
         for f in self.user_access_forms:
             f.save()
         return super(ExamSetAccessForm,self).save()

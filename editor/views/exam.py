@@ -517,6 +517,12 @@ class SetAccessView(generic.UpdateView):
     model = Exam
     form_class = ExamSetAccessForm
 
+    def get_form_kwargs(self):
+        kwargs = super(SetAccessView,self).get_form_kwargs()
+        kwargs['data'] = self.request.POST.copy()
+        kwargs['data'].update({'given_by':self.request.user.pk})
+        return kwargs
+
     def form_valid(self, form):
         exam = self.get_object()
 

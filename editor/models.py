@@ -43,6 +43,7 @@ from uuslug import slugify
 
 import reversion
 
+from notifications import notify
 from editor.notify_watching import notify_watching
 
 from taggit.managers import TaggableManager
@@ -508,6 +509,11 @@ class QuestionAccess(models.Model):
     user = models.ForeignKey(User)
     access = models.CharField(default='view',editable=True,choices=USER_ACCESS_CHOICES,max_length=6)
 
+@receiver(signals.post_save,sender=QuestionAccess)
+def notify_given_question_access(instance,created,**kwargs):
+    if created:
+        notify.send(instance.given_by,verb='gave you access to',target=instance.question,recipient=instance.user)
+
 class QuestionHighlight(models.Model):
     class Meta:
         ordering = ['-date']
@@ -664,6 +670,11 @@ class ExamAccess(models.Model):
     exam = models.ForeignKey(Exam)
     user = models.ForeignKey(User)
     access = models.CharField(default='view',editable=True,choices=USER_ACCESS_CHOICES,max_length=6)
+
+@receiver(signals.post_save,sender=ExamAccess)
+def notify_given_exam_access(instance,created,**kwargs):
+    if created:
+        notify.send(instance.given_by,verb='gave you access to',target=instance.exam,recipient=instance.user)
         
         
 class ExamQuestion(models.Model):

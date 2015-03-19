@@ -1,7 +1,6 @@
 {% load sstatic %}
 {% load analytical %}
 {% load notifications_tags %}
-{% load humanize %}
 {% notifications_unread as unread_notifications %}
 
 <!DOCTYPE html>
@@ -70,23 +69,14 @@
                         {% if user.is_authenticated %}
 						Hi, {{ user.get_short_name }}! 
                         <div id="notifications" class="btn-group {% if unread_notifications %}unread{% endif %}">
-                            <a class="btn dropdown-toggle" {% if unread_notifications %}data-toggle="dropdown" href="#"{% endif %} title="{{unread_notifications}} unread notifications">
-                                <span class="unread-count">{{unread_notifications}}</span>
+							<a class="btn dropdown-toggle {% if not unread_notifications %}disabled{% endif %}" data-toggle="dropdown" href="#" title="{{unread_notifications}} unread notification{{unread_notifications|pluralize}}">
+								<svg viewbox="0 0 8 8" class="icon" style="width: 15px; height: 15px">
+									<use xlink:href="{% sstatic 'images/open-iconic.svg#bell' %}"></use>
+								</svg>
                             </a>
-                            {% if unread_notifications %}
-                            <ul class="dropdown-menu pull-right">
-								{% for notification in user.notifications.unread %}
-                                    <li class="notification">
-                                    <a tabindex="-1" href="{% url 'open_notification' notification.pk %}">
-                                        <div class="description">{{notification.actor.get_full_name}} {{notification.verb}} <span class="target">{{notification.target}}</span></div>
-                                        <div class="time">{{notification.timestamp|naturaltime}}</div>
-                                    </a>
-                                    </li>
-								{% endfor %}
-                                <li class="divider"></li>
-                                <li><a tabindex="-1" class="mark-all-as-read" href="{% url 'notifications:mark_all_as_read' %}">Mark all as read</a></li>
+							<ul class="dropdown-menu pull-right">
+								{% include "notifications/list.html" %}
                             </ul>
-                            {% endif %}
 						</div>
 						<span class="account-links"><a tabindex="2" href="{% url 'view_profile' user.pk %}">Your profile</a> ⋅ <a tabindex="2" href="{% url 'exam_search' %}?author={{user.get_full_name|urlencode}}">Your exams</a> ⋅ <a tabindex="2" href="{% url 'question_search' %}?author={{user.get_full_name|urlencode}}">Your questions</a>{% if CAN_LOGOUT %} ⋅ <a tabindex="2" id="logout" href="{% url 'logout' %}?next={{request.path|escape}}">Log out</a>{% endif %}</span>
                         {% else %}

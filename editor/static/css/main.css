@@ -148,12 +148,20 @@ button:hover, button:focus, .btn:hover, .btn:focus {
 
 #notifications .dropdown-menu {
     width: 280px;
+	max-height: 30em;
+	overflow-y: auto;
 }
 
 #notifications .dropdown-toggle {
     border: none;
     background: white;
     cursor: default;
+    padding: 3px;
+    width: 15px;
+    height: 15px;
+}
+#notifications .dropdown-toggle.disabled {
+	opacity: 1;
 }
 
 #notifications.open .dropdown-toggle:active {
@@ -162,7 +170,10 @@ button:hover, button:focus, .btn:hover, .btn:focus {
 
 #notifications.unread .dropdown-toggle {
     background-color: red;
-    color: white;
+}
+
+#notifications.unread .dropdown-toggle .icon use {
+    fill: white;
 }
 
 #notifications a {

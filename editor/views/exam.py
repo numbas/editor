@@ -263,6 +263,8 @@ class UpdateView(generic.UpdateView):
         if not self.object.can_be_viewed_by(request.user):
             return forbidden(request)
         else:
+            self.user.notifications.filter(target_object_id=self.object.pk).mark_all_as_read()
+
             return super(UpdateView,self).get(request,*args,**kwargs)
 
     def form_valid(self, form):

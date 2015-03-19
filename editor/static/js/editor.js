@@ -1057,18 +1057,38 @@ $(document).ready(function() {
 		}
 	}
 
-    $('#notifications .mark-all-as-read').on('click',function(e) {
+	function update_notifications() {
+		var num_notifications = $('#notifications .dropdown-menu .notification').length;
+		$('#notifications .dropdown-toggle').attr('title',num_notifications+' unread '+(num_notifications==1 ? 'notification' : 'notifications'));
+		if(num_notifications) {
+			$('#notifications').addClass('unread');
+			$('#notifications .dropdown-toggle').removeClass('disabled');
+		} else {
+			$('#notifications').removeClass('unread open');
+			$('#notifications .dropdown-toggle').addClass('disabled');
+		}
+	}
+
+    $('#notifications').on('click','.mark-all-as-read',function(e) {
+		$('#notifications .dropdown-menu').html('');
+		update_notifications();
+
         var url = $(this).attr('href');
-        $.post(url,{csrfmiddlewaretoken: getCookie('csrftoken')})
-            .success(function() {
-                $('#notifications .unread-count').text('0');
-                $('#notifications').removeClass('unread');
-                $('#notifications .dropdown-toggle').attr('title','0 unread notifications');
-                $('#notifications .dropdown-menu').remove();
-            })
-        ;
-        $('#notifications').removeClass('open');
+        $.post(url,{csrfmiddlewaretoken: getCookie('csrftoken')});
         e.stopPropagation();
         return false;
     });
+
+	var old_notifications = $('#notifications .dropdown-menu').html()
+	setInterval(function() {
+		$.get('/notifications/unread').success(function(response) {
+			if(response!=old_notifications) {
+				old_notifications = response;
+				$('#notifications .dropdown-menu').html(response);
+				update_notifications();
+			}
+		});
+	},5000);
+
+	update_notifications();
 });

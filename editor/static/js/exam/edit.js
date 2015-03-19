@@ -35,10 +35,15 @@ $(document).ready(function() {
 			)
 		]);
         if(Editor.editable) {
-			this.mainTabs.splice(1,0,new Editor.Tab('versions','Editing history'));
+            var editingHistoryTab = new Editor.Tab('versions','Editing history');
+			this.mainTabs.splice(1,0,editingHistoryTab);
             this.mainTabs.push(new Editor.Tab('access','Access'));
         }
 		this.currentTab = ko.observable(this.mainTabs()[0]);
+
+		if(Editor.editable && window.location.hash=='#editing-history') {
+			this.currentTab(editingHistoryTab);
+		}
 
         this.stamp = function(status_code) {
             return function() {

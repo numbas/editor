@@ -12,6 +12,6 @@ class OpenNotification(generic.RedirectView):
         target = notification.target
 
         if type(target) is Question:
-            return reverse('question_edit', args=(target.pk,target.slug,))
+            return reverse('question_edit', args=(target.pk,target.slug,))+'#editing-history'
         elif type(target) is Exam:
-            return reverse('exam_edit', args=(target.pk,target.slug,))
+            return reverse('exam_edit', args=(target.pk,target.slug,))+'#editing-history'

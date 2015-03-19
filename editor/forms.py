@@ -135,7 +135,7 @@ class ExamSetAccessForm(forms.ModelForm):
         self.user_access_forms = []
 
         for i,(user,access_level) in enumerate(zip(self.user_ids,self.access_levels)):
-            f = ExamAccessForm({'user':user,'access':access_level,'exam':self.instance.pk,'given_by':self.cleaned_data.get('given_by').pk})
+            f = ExamAccessForm({'user':user,'access':access_level,'exam':self.instance.pk,'given_by':self.cleaned_data.get('given_by').pk}, instance=ExamAccess.objects.filter(exam=self.instance,user=user).first())
             f.full_clean()
             self.user_access_forms.append(f)
             for key,messages in f.errors.items():

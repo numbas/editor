@@ -44,6 +44,7 @@ from uuslug import slugify
 import reversion
 
 from notifications import notify
+from notifications.models import Notification
 from editor.notify_watching import notify_watching
 
 from taggit.managers import TaggableManager
@@ -503,6 +504,9 @@ class Question(EditorModel,NumbasObject,ControlledObject):
         except QuestionAccess.DoesNotExist:
             return 'none'
 
+@receiver(signals.post_delete,sender=Question)
+def remove_deleted_question_notifications(instance,**kwargs):
+    Notification.objects.filter(target_object_id=instance.pk).delete()
 
 class QuestionAccess(models.Model):
     question = models.ForeignKey(Question)
@@ -656,6 +660,10 @@ class Exam(EditorModel,NumbasObject,ControlledObject):
             return exam_access.access
         except ExamAccess.DoesNotExist:
             return 'none'
+
+@receiver(signals.post_delete,sender=Exam)
+def remove_deleted_exam_notifications(instance,**kwargs):
+    Notification.objects.filter(target_object_id=instance.pk).delete()
 
 class ExamHighlight(models.Model):
     class Meta:

@@ -504,10 +504,6 @@ class Question(EditorModel,NumbasObject,ControlledObject):
         except QuestionAccess.DoesNotExist:
             return 'none'
 
-@receiver(signals.post_delete,sender=Question)
-def remove_deleted_question_notifications(instance,**kwargs):
-    Notification.objects.filter(target_object_id=instance.pk).delete()
-
 class QuestionAccess(models.Model):
     question = models.ForeignKey(Question)
     user = models.ForeignKey(User)
@@ -661,9 +657,11 @@ class Exam(EditorModel,NumbasObject,ControlledObject):
         except ExamAccess.DoesNotExist:
             return 'none'
 
-@receiver(signals.post_delete,sender=Exam)
-def remove_deleted_exam_notifications(instance,**kwargs):
-    Notification.objects.filter(target_object_id=instance.pk).delete()
+@receiver(signals.post_delete)
+def remove_deleted_notifications(sender, instance=None,**kwargs):
+    if sender in [Question,Exam,StampOfApproval,Comment]:
+        Notification.objects.filter(target_object_id=instance.pk).delete()
+        Notification.objects.filter(action_object_object_id=instance.pk).delete()
 
 class ExamHighlight(models.Model):
     class Meta:

@@ -534,7 +534,10 @@ class HighlightsView(ListView):
 
 class RecentQuestionsView(ListView):
     def get_queryset(self):
-        return [q.summary() for q in Question.objects.filter(author=self.request.user).order_by('-last_modified')]
+        if self.request.user.is_anonymous():
+            return []
+        else:
+            return [q.summary() for q in Question.objects.filter(author=self.request.user).order_by('-last_modified')]
 
     def render_to_response(self, context, **response_kwargs):
         if self.request.is_ajax():

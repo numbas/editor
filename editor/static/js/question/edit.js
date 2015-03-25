@@ -51,9 +51,9 @@ $(document).ready(function() {
             ),
 			new Editor.Tab('exams','Exams using this question'),
 		]);
+        var editingHistoryTab = new Editor.Tab('versions','Editing history');
+        this.mainTabs.splice(1,0,editingHistoryTab);
         if(Editor.editable) {
-			var editingHistoryTab = new Editor.Tab('versions','Editing history');
-			this.mainTabs.splice(1,0,editingHistoryTab);
             this.mainTabs.push(new Editor.Tab('access','Access'));
         }
 

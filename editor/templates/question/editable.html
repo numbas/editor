@@ -514,6 +514,7 @@
 			{% endif %}
 		</section>
         <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='versions'}">
+			<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#editing-history', big: true}}"></span>
             <h4>Editing history</h4>
             <p><label><input type="checkbox" data-bind="checked: showCondensedTimeline"/> Show condensed editing history</label></p>
             <div class="timeline-write-comment">

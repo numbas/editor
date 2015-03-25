@@ -34,9 +34,9 @@ $(document).ready(function() {
 				})
 			)
 		]);
+        var editingHistoryTab = new Editor.Tab('versions','Editing history');
+        this.mainTabs.splice(1,0,editingHistoryTab);
         if(Editor.editable) {
-            var editingHistoryTab = new Editor.Tab('versions','Editing history');
-			this.mainTabs.splice(1,0,editingHistoryTab);
             this.mainTabs.push(new Editor.Tab('access','Access'));
         }
 		this.currentTab = ko.observable(this.mainTabs()[0]);

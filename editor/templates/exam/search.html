@@ -28,16 +28,20 @@
                     </div>
                 </label>
 			</div>
-			<div>
-                <strong>Filter results</strong> 
+			<div class="search-filter">
+                <strong>Filter results:</strong> 
                 <label for="search_author">
-                    by author: 	
+                    Author: 	
                     <input id="search_author" data-autocomplete-url="{% url 'user_search' %}" name="author" type="text" size="30" value="{{ data.author }}" placeholder="User name"/>
                 </label>
                 <label for="id_usage">
-                    by usage rights:
+                    Usage rights:
                     {{form.usage}}
                 </label>
+				<label for="id_only_ready_to_use">
+					Only show ready-to-use exams:
+					{{form.only_ready_to_use}}
+				</label>
 			</div>
 			{% endwith %}
 		</form>

@@ -82,6 +82,59 @@
 				</div>
 			</div>
 		</section>
+        <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='versions'}">
+			<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#editing-history', big: true}}"></span>
+            <h4>Editing history</h4>
+            <p><label><input type="checkbox" data-bind="checked: showCondensedTimeline"/> Show condensed editing history</label></p>
+            <div class="timeline-write-comment">
+                <button data-bind="visible: !writingComment(), click: writingComment" type="button">Write a comment</button>
+                <form data-bind="fadeVisible: writingComment, submit: submitComment">
+                    <h4>Comment</h4>
+                    <div data-bind="writemaths: commentText"></div>
+                    <div class="buttons">
+                        <button type="Submit" data-bind="attr: {disabled: commentIsEmpty}">Submit</button>
+                        <button type="button" data-bind="click: cancelComment">Cancel</button>
+                    </div>
+                </form>
+            </div>
+            <table class="timeline">
+                <tbody data-bind="foreach: timelineToDisplay">
+                    <tr class="timeline-event" data-bind="addClass: type, css: {deleting: deleting}">
+                        <td>
+                            <a data-bind="attr: {href: user.profile_url}" target="_blank"><span data-bind="text: user.name"></span></a>
+                        </td>
+                        <td>
+                            <span data-bind="fromNow: date, attr: {title: date}"></span>
+                        </td>
+                        <!-- ko template: {name: 'timeline-'+type+'-template', data: data} --><!-- /ko -->
+                    </tr>
+                    <script type="text/html" id="timeline-version-template">
+                        <td class="action">
+                            Made some changes 
+                        </td>
+                        <td>
+                            <div class="comment">
+                                <div class="edit-comment" data-bind="visible: editable, editableHTML: comment, placeholder: 'Write a comment'"></div>
+                                <span data-bind="visible: !editable, text: comment"></span>
+                            </div>
+                        </td>
+                    </td>
+                    </script>
+                    <script type="text/html" id="timeline-stamp-template">
+                        <td class="action">Gave some feedback</td>
+                        <td>
+                            <span class="stamp-status" data-bind="text: status_display, addClass: status"></span>.
+                        </td>
+                    </script>
+                    <script type="text/html" id="timeline-comment-template">
+                        <td class="action">Commented</td>
+                        <td>
+                            <div data-bind="mathjaxHTML: text"></div>
+                        </td>
+                    </script>
+                </tbody>
+            </table>
+        </section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='navigation'}">
 			<form class="form-horizontal">
 				<div class="control-group" data-bind="template: {

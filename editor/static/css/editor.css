@@ -1,4 +1,29 @@
-﻿.row-fluid.section:not(:last-child) {
+﻿.nothing-here {
+	font-style: italic;
+}
+
+#name-header {
+    padding: 0;
+    min-height: 1.2em;
+    font-size: 2em;
+    margin-top: 0;
+}
+
+#admin {
+	margin-top: 5px;
+	margin-bottom: 15px;
+	font-size: 24px;
+    list-style: none;
+    margin: 0;
+	line-height: 1.5em;
+}
+#admin > li {
+    display: inline-block;
+    margin-right: 2em;
+    vertical-align: top;
+}
+
+.row-fluid.section:not(:last-child) {
 	margin-bottom: 1em;
 	padding-bottom: 1em;
 	border-bottom: 1px solid #eee;
@@ -23,6 +48,23 @@
 
 .star.starred, .star:hover {
     background: url(../images/star_24x24_yellow.png);
+}
+
+.controlbox .preview-li {
+    width: 10em;
+	position: relative;
+}
+
+.controlbox .stamp-of-approval-dropdown {
+	margin-left: 6px;
+}
+
+.stamp-buttons .stamp-yes {
+    float: left;
+}
+
+.stamp-buttons .stamp-no {
+    float: right;
 }
 
 .controlbox #download a {
@@ -231,17 +273,48 @@ button.delete-grey:hover {
 	max-width: 170px;
 }
 
-.versions th {
-    text-align: left;
+.timeline-write-comment {
+    margin: 1em 0;
 }
-.versions td {
-    padding: 0.2em 1em 0.2em 0;
+.timeline-write-comment h4 {
+    margin: 0;
 }
 
-.versions .version .comment span {
-	padding: 4px 6px;
+.timeline-write-comment form {
+    padding: 0 1em;
 }
-.versions .version .comment .edit-comment {
+.timeline-write-comment form .buttons {
+    margin-top: 0.5em;
+}
+
+.timeline-event td {
+    padding: 0.5em 0.3em 0.8em 0.3em;
+	vertical-align: top;
+}
+.timeline-event .action {
+    border-right: 1px solid  #eee;
+    /* border-left: 1px solid #eee; */
+}
+.timeline-event:not(:last-child) td {
+	border-bottom: 1px solid #eee;
+}
+
+.timeline-event td:not(:last-child) {
+	white-space: nowrap;
+}
+.timeline-event td:last-child {
+	width: 95%;
+}
+
+.timeline-event.deleting {
+    opacity: 0.5;
+}
+
+.timeline-event.version .comment {
+	padding: 4px 6px;
+	margin: 0;
+}
+.timeline-event.version .comment .edit-comment {
     margin: 0;
     border: 0;
     box-shadow: none;
@@ -250,10 +323,10 @@ button.delete-grey:hover {
 	color: black;
 	padding: 3px;
 }
-.versions .version .comment .edit-comment:hover {
+.timeline-event.version .comment .edit-comment:hover {
     background: #acdeff;
 }
-.versions .version .comment .edit-comment:focus {
+.timeline-event.version .comment .edit-comment:focus {
     background: #eee;
 }
 
@@ -273,3 +346,4 @@ button.delete-grey:hover {
 	color: white;
     cursor: pointer;
 }
+

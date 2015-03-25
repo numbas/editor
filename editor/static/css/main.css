@@ -68,17 +68,30 @@ th a:hover {
 
 }
 
+[contenteditable=true]:empty:before {
+	content: attr(placeholder);
+	display: block;
+	font-style: italic;
+	opacity: 0.6;
+}
 
-button {
-	margin: 0.1em 0.3em;
+button, .btn {
 	background: #acdeff;
 	border: 1px solid #999;
 	border-radius: 2px;
+    text-shadow: none;
+}
+button {
+	margin: 0.1em 0.3em;
 	padding: 0.3em 0.5em;
 }
 
-button:hover, button:focus {
+button:hover, button:focus, .btn:hover, .btn:focus {
 	background: #f90;
+}
+
+.dropdown-menu li>a:hover {
+    background: #f90;
 }
 
 #header {
@@ -126,6 +139,67 @@ button:hover, button:focus {
 #session .account-links {
 	font-size: 0.8em;
 	margin-left: 2em;
+}
+
+#notifications {
+    font-size: 1em;
+    margin-left: 1em;
+}
+
+#notifications .dropdown-menu {
+    width: 280px;
+	max-height: 30em;
+	overflow-y: auto;
+}
+
+#notifications .dropdown-toggle {
+    border: none;
+    background: white;
+    cursor: default;
+    padding: 3px;
+    width: 15px;
+    height: 15px;
+}
+#notifications .dropdown-toggle.disabled {
+	opacity: 1;
+}
+
+#notifications.open .dropdown-toggle:active {
+    box-shadow: none;
+}
+
+#notifications.unread .dropdown-toggle {
+    background-color: red;
+}
+
+#notifications.unread .dropdown-toggle .icon use {
+    fill: white;
+}
+
+#notifications a {
+    text-decoration: none;
+}
+
+#notifications .notification, #notifications .notification a {
+	white-space: normal;
+}
+
+#notifications .notification .target {
+    font-weight: bold;
+}
+
+#notifications .notification .time {
+    font-size: 0.9em;
+    color: #888;
+}
+
+#notifications .dropdown-menu a:hover {
+    background: rgba(255,153,0,0.3);
+}
+
+#notifications .mark-all-as-read {
+    font-weight: bold;
+    color: #08c;
 }
 
 ul#menu li {
@@ -235,4 +309,30 @@ button.search.loading {
 }
 .page-error h2 {
 	text-align: center;
+}
+
+.stamp-status {
+	font-weight: bold;
+	padding: 2px 4px;
+	border-radius: 2px;
+}
+
+.stamp-status.ok {
+	background-color: green;
+	color: white;
+}
+
+.stamp-status.problem {
+	background-color: #888;
+	color: white;
+}
+
+.stamp-status.broken {
+	background-color: red;
+	color: white;
+}
+
+.stamp-status.dontuse {
+	background-color: black;
+	color: yellow;
 }

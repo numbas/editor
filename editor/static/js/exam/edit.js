@@ -34,11 +34,29 @@ $(document).ready(function() {
 				})
 			)
 		]);
+        var editingHistoryTab = new Editor.Tab('versions','Editing history');
+        this.mainTabs.splice(1,0,editingHistoryTab);
         if(Editor.editable) {
-			this.mainTabs.push(new Editor.Tab('versions','Editing history'));
             this.mainTabs.push(new Editor.Tab('access','Access'));
         }
 		this.currentTab = ko.observable(this.mainTabs()[0]);
+
+		if(Editor.editable && window.location.hash=='#editing-history') {
+			this.currentTab(editingHistoryTab);
+		}
+
+        this.stamp = function(status_code) {
+            return function() {
+                $.post('stamp',{'status': status_code, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(stamp) {
+                    e.timeline.splice(0,0,new Editor.TimelineItem({date: stamp.date, user: stamp.user, data: stamp, type: 'stamp'}));
+                });
+                noty({
+                    text: 'Thanks for your feedback!',
+                    type: 'success',
+                    layout: 'topCenter'
+                });
+            }
+        }
 
         this.starred = ko.observable(Editor.starred);
         this.toggleStar = function() {
@@ -233,7 +251,7 @@ $(document).ready(function() {
 							var address = location.protocol+'//'+location.host+'/exam/'+Editor.examJSON.id+'/'+slugify(e.name())+'/';
 							if(history.replaceState)
 								history.replaceState({},e.name(),address);
-                            e.versions.splice(0,0,new Editor.Version(data.version));
+                            e.timeline.splice(0,0,new Editor.TimelineItem({date: data.version.date_created, user: data.version.user, type: 'version', data: data.version}));
 						})
 						.error(function(response,type,message) {
                             if(message=='')
@@ -352,16 +370,95 @@ $(document).ready(function() {
 			q.load(data);
 		};
 
-        this.versions = ko.observableArray(Editor.versions.map(function(v){return new Editor.Version(v)}));
-		this.onlyShowCommentedVersions = ko.observable(true);
-		this.versionsToDisplay = ko.computed(function() {
-			if(this.onlyShowCommentedVersions()) {
-				return this.versions().filter(function(v,i){return i==0 || v.comment();});
-			} else {
-				return this.versions();
-			}
-		},this);
+        this.timeline = ko.observableArray(Editor.timeline.map(function(t){return new Editor.TimelineItem(t)}));
 
+		this.showCondensedTimeline = ko.observable(true);
+        
+        this.timelineToDisplay = ko.computed(function() {
+			if(this.showCondensedTimeline()) {
+                var out = [];
+				this.timeline().map(function(ev){
+					var last = out[out.length-1];
+                    if(ev.type=='version') {
+                        if(!ev.data.comment() && last && last.type=='version') {
+                            return false;
+                        }
+                        firstVersion = false;
+                    }
+                    out.push(ev);
+                });
+                return out;
+			} else {
+				return this.timeline();
+			}
+        },this);
+
+        this.stamp = function(status_code) {
+            return function() {
+                $.post('stamp',{'status': status_code, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(stamp) {
+                    e.timeline.splice(0,0,new Editor.TimelineItem({date: stamp.date, user: stamp.user, data: stamp, type: 'stamp'}));
+                });
+                noty({
+                    text: 'Thanks for your feedback!',
+                    type: 'success',
+                    layout: 'topCenter'
+                });
+            }
+        }
+
+        this.writingComment = ko.observable(false);
+        this.commentText = ko.observable('');
+        this.commentIsEmpty = ko.computed(function() {
+            return $(this.commentText()).text().trim()=='';
+        },this);
+        this.submitComment = function() {
+            if(this.commentIsEmpty()) {
+                return;
+            }
+
+            var text = this.commentText();
+            $.post('comment',{'text': text, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(comment) {
+                e.timeline.splice(0,0,new Editor.TimelineItem({date: comment.date, user: comment.user, data: comment, type: 'comment'}));
+            });
+
+            this.commentText('');
+            this.writingComment(false);
+        }
+        this.cancelComment = function() {
+            this.commentText('');
+            this.writingComment(false);
+        }
+
+        this.deleteTimelineItem = function(item) {
+            if(item.deleting()) {
+                return;
+            }
+            item.deleting(true);
+            $.post(item.data.delete_url,{csrfmiddlewaretoken: getCookie('csrftoken')})
+                .success(function() {
+                    e.timeline.remove(item);
+                })
+                .error(function(response,type,message) {
+                    if(message=='')
+                        message = 'Server did not respond.';
+
+                    noty({
+                        text: 'Error deleting timeline item:\n\n'+message,
+                        layout: "topLeft",
+                        type: "error",
+                        textAlign: "center",
+                        animateOpen: {"height":"toggle"},
+                        animateClose: {"height":"toggle"},
+                        speed: 200,
+                        timeout: 5000,
+                        closable:true,
+                        closeOnSelfClick: true
+                    });
+
+                    item.deleting(false);
+                })
+            ;
+        }
     }
     Exam.prototype = {
 

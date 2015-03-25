@@ -44,6 +44,7 @@ from editor.views.errors import forbidden
 from editor.views.user import find_users
 from editor.tables import QuestionTable, QuestionHighlightTable
 from editor.views.version import version_json
+from editor.views.timeline import timeline_json
 
 from accounts.models import UserProfile
 
@@ -268,6 +269,9 @@ class UpdateView(generic.UpdateView):
         if not self.object.can_be_viewed_by(request.user):
             return forbidden(request)
         else:
+            if not self.user.is_anonymous():
+                self.user.notifications.filter(target_object_id=self.object.pk).mark_all_as_read()
+
             return super(UpdateView,self).get(request,*args,**kwargs)
 
     def form_valid(self, form):
@@ -339,6 +343,7 @@ class UpdateView(generic.UpdateView):
             'starred': context['starred'],
 
             'versions': versions,
+            'timeline': timeline_json(self.object.timeline,self.user),
         }
         if self.editable:
             question_json['public_access'] = self.object.public_access
@@ -497,6 +502,10 @@ class SearchView(ListView):
         if filter_copies:
             questions = questions.filter(copy_of=None)
 
+        only_ready_to_use = form.cleaned_data.get('only_ready_to_use')
+        if only_ready_to_use:
+            questions = questions.filter(current_stamp__status='ok')
+
         questions = questions.distinct()
 
         return questions
@@ -525,7 +534,10 @@ class HighlightsView(ListView):
 
 class RecentQuestionsView(ListView):
     def get_queryset(self):
-        return [q.summary() for q in Question.objects.filter(author=self.request.user).order_by('-last_modified')]
+        if self.request.user.is_anonymous():
+            return []
+        else:
+            return [q.summary() for q in Question.objects.filter(author=self.request.user).order_by('-last_modified')]
 
     def render_to_response(self, context, **response_kwargs):
         if self.request.is_ajax():
@@ -558,6 +570,12 @@ class JSONSearchView(SearchView):
 class SetAccessView(generic.UpdateView):
     model = Question
     form_class = QuestionSetAccessForm
+
+    def get_form_kwargs(self):
+        kwargs = super(SetAccessView,self).get_form_kwargs()
+        kwargs['data'] = self.request.POST.copy()
+        kwargs['data'].update({'given_by':self.request.user.pk})
+        return kwargs
 
     def form_valid(self, form):
         question = self.get_object()
@@ -593,3 +611,9 @@ class SetStarView(generic.UpdateView):
 
     def get(self, request, *args, **kwargs):
         return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
+
+class StampView(editor.views.generic.StampView):
+    model = Question
+
+class CommentView(editor.views.generic.CommentView):
+    model = Question

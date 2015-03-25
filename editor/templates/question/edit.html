@@ -48,11 +48,11 @@
             <h1 id="name-header" class="span9">
 				<span data-bind="text: name, mathjax: name">{{object.name}}</span> 
                 {% if request.user.is_authenticated %}
-                <button type="button" data-bind="css:{starred: starred}, attr: {title: starred() ? 'This question is starred. Click to unstar it.' : 'Star this question'}, click: toggleStar" class="star" ></button>
+                <button type="button" style="display:none" data-bind="visible: true, css:{starred: starred}, attr: {title: starred() ? 'This question is starred. Click to unstar it.' : 'Star this question'}, click: toggleStar" class="star" ></button>
                 {% endif %}
             </h1>
             {% if editable %}
-			<div class="span3" id="edit-history" data-bind="with: currentChange">
+			<div class="span3" id="edit-history" style="display:none" data-bind="visible: true, with: currentChange">
 				<button disabled title="Undo" type="button" data-bind="click: $root.rewindChange, enable: hasPrevious">&larr;</button>
 				<button disabled title="Redo" type="button" data-bind="click: $root.forwardChange, enable: hasNext">&rarr;</button>
             </div>
@@ -63,9 +63,23 @@
 			{% block controls %}
 			{% endblock controls %}
 			</div>
-			<ul class="controlbox" id="admin">
-				<li>
-					<a id="preview" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this question in a new window (Ctrl+B)">Test Run</a>
+			<ul class="controlbox" id="admin" style="display:none" data-bind="visible: true">
+				<li class="preview-li">
+                    <a id="preview" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this question in a new window (Ctrl+B)">Test Run</a>
+                    {% if user.is_authenticated %}
+                        <div class="btn-group stamp-of-approval-dropdown">
+                          <button class="btn dropdown-toggle" data-toggle="dropdown">
+                            Feedback
+                            <span class="caret"></span>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <li><a tabindex="-1" href="#" data-bind="click: stamp('ok')">This is ready to use</a></li>
+                            <li><a tabindex="-1" href="#" data-bind="click: stamp('dontuse')">This should not be used</a></li>
+                            <li><a tabindex="-1" href="#" data-bind="click: stamp('problem')">This has some problems</a></li>
+                            <li><a tabindex="-1" href="#" data-bind="click: stamp('broken')">This doesn't work</a></li>
+                          </ul>
+                        </div>
+                    {% endif %}
 				</li>			
 				{% if can_delete %}
 				<li>
@@ -86,9 +100,16 @@
 				<li>
 					<span id="download">
 						Download: 
-						<a href="{% url 'question_download' object.pk object.slug %}">standalone .zip</a>,
-						<a href="{% url 'question_download' object.pk object.slug %}?scorm">SCORM package</a>,
-						<a href="{% url 'question_source' object.pk object.slug %}">source</a>
+                        <div class="btn-group">
+                          <a class="btn" href="{% url 'question_download' object.pk object.slug %}?scorm">SCORM package</a>
+                          <button class="btn dropdown-toggle" data-toggle="dropdown" title="More download options">
+                            <span class="caret"></span>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <li><a tabindex="-1" href="{% url 'question_download' object.pk object.slug %}">standalone .zip</a></li>
+                            <li><a tabindex="-1" href="{% url 'question_source' object.pk object.slug %}">source</a></li>
+                          </ul>
+                        </div>
 					</span>
 				</li>
 			</ul>

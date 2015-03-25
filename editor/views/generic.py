@@ -18,13 +18,14 @@ import traceback
 
 from django.shortcuts import render,redirect
 from django.conf import settings
+from django.core.urlresolvers import reverse
 from django.core.servers.basehttp import FileWrapper
-from django.http import HttpResponse, HttpResponseServerError, HttpResponseForbidden
-from django.views.generic import DetailView
+from django import http
+from django.views import generic
 from django.template.loader import get_template
 from django.template import RequestContext
 
-from editor.models import Extension
+from editor.models import Extension,StampOfApproval,Comment
 
 class CompileError(Exception):
     def __init__(self, message, stdout='',stderr='',code=0):
@@ -74,14 +75,14 @@ class CompileObject():
     
     def get_error_response(self,error):
         template = get_template("compile/error.html")
-        return HttpResponseServerError(template.render(RequestContext(self.request,{
+        return http.HttpResponseServerError(template.render(RequestContext(self.request,{
             'message': error.message,
             'stdout': error.stdout,
             'stderr': error.stderr,
             'code': error.code,
         })))
 
-class PreviewView(DetailView,CompileObject):
+class PreviewView(generic.DetailView,CompileObject):
     def preview(self,obj):
         numbasobject = obj.as_numbasobject()    #need to catch errors
         location = obj.get_filename()
@@ -95,7 +96,7 @@ class PreviewView(DetailView,CompileObject):
             return redirect(url)
         
         
-class ZipView(DetailView,CompileObject):
+class ZipView(generic.DetailView,CompileObject):
     def download(self,obj,scorm=False):
         numbasobject= obj.as_numbasobject()    #need to catch errors
 
@@ -114,17 +115,17 @@ class ZipView(DetailView,CompileObject):
             return self.get_error_response(err)
         else:
             wrapper = FileWrapper(file(fsLocation,'rb'))
-            response = HttpResponse(wrapper, content_type='application/zip')
+            response = http.HttpResponse(wrapper, content_type='application/zip')
             response['Content-Disposition'] = 'attachment; filename=%s.zip' % obj.slug
             response['Content-Length'] = os.path.getsize(fsLocation)
             response['Cache-Control'] = 'max-age=0,no-cache,no-store'
             return response
 
 
-class SourceView(DetailView):
+class SourceView(generic.DetailView):
     def source(self,obj):
         source = obj.as_source()
-        response = HttpResponse(source, 'text/plain')
+        response = http.HttpResponse(source, 'text/plain')
         response['Content-Disposition'] = 'attachment; filename=%s.exam' % obj.slug
         response['Cache-Control'] = 'max-age=0,no-cache,no-store'
         return response
@@ -135,8 +136,36 @@ class AuthorRequiredMixin(object):
         result = super(AuthorRequiredMixin, self).dispatch(request, *args, **kwargs)
         if self.object.author != self.request.user:
             template = get_template("403.html")
-            return HttpResponseForbidden(template.render(RequestContext(self.request)))
+            return http.HttpResponseForbidden(template.render(RequestContext(self.request)))
         return result
+
+class StampView(generic.UpdateView):
+    def post(self, request, *args, **kwargs):
+        object = self.get_object()
+
+        status = request.POST.get('status')
+
+        stamp = StampOfApproval(user=request.user,object=object,status=status)
+        stamp.save()
+
+        return http.HttpResponse(json.dumps(stamp_json(stamp)),content_type='application/json')
+
+    def get(self, request, *args, **kwargs):
+        return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
+
+class CommentView(generic.UpdateView):
+    def post(self, request, *args, **kwargs):
+        object = self.get_object()
+
+        text = request.POST.get('text')
+
+        comment = Comment(user=request.user,object=object,text=text)
+        comment.save()
+
+        return http.HttpResponse(json.dumps(comment_json(comment)),content_type='application/json')
+
+    def get(self, request, *args, **kwargs):
+        return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
 
 def user_json(user):
     if user is None:
@@ -147,5 +176,49 @@ def user_json(user):
     else:
         return {
                 'name': user.get_full_name(),
-                'pk': user.pk
+                'pk': user.pk,
+                'profile_url': reverse('view_profile',args=(user.pk,))
         }
+
+# JSON representation of a editor.models.StampOfApproval object
+def stamp_json(stamp,**kwargs):
+    return {
+        'pk': stamp.pk,
+        'date': stamp.date.strftime('%Y-%m-%d %H:%M:%S'),
+        'status': stamp.status,
+        'status_display': stamp.get_status_display(),
+        'user': user_json(stamp.user),
+        'delete_url': reverse('delete_stamp',args=(stamp.pk,))
+    }
+
+# JSON representation of a editor.models.StampOfApproval object
+def comment_json(comment,**kwargs):
+    return {
+        'pk': comment.pk,
+        'date': comment.date.strftime('%Y-%m-%d %H:%M:%S'),
+        'text': comment.text,
+        'user': user_json(comment.user),
+        'delete_url': reverse('delete_comment',args=(comment.pk,))
+    }
+
+class DeleteCommentView(generic.DeleteView):
+    model = Comment
+    def delete(self,request,*args,**kwargs):
+        self.object = self.get_object()
+        if self.object.can_be_deleted_by(self.request.user):
+            pk = self.object.pk
+            self.object.delete()
+            return http.HttpResponse('stamp {} deleted'.format(pk))
+        else:
+            return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
+
+class DeleteStampView(generic.DeleteView):
+    model = StampOfApproval
+    def delete(self,request,*args,**kwargs):
+        self.object = self.get_object()
+        if self.object.can_be_deleted_by(self.request.user):
+            pk = self.object.pk
+            self.object.delete()
+            return http.HttpResponse('stamp {} deleted'.format(pk))
+        else:
+            return http.HttpResponseForbidden('You don\'t have the necessary access rights.')

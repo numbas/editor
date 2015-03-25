@@ -33,6 +33,13 @@
 	margin-top: 0.3em;
 }
 
+.search-filter {
+    font-size: 0.8em;
+}
+.search-filter label, .search-filter select, .search-filter input {
+    font-size: 1em;
+}
+
 .results {
     margin: 0.5em 0 0 0;
 }
@@ -42,9 +49,11 @@
 }
 
 .search-results th {
-    cursor: pointer;
 	text-align: left;
 	padding: 0 0.4em;
+}
+.search-results th.sortable {
+    cursor: pointer;
 }
 
 .search-results th.sortable:after {
@@ -72,6 +81,10 @@
 
 .search-results col.name {
 	width: 300px;
+}
+
+.search-results col.stamp {
+    width: 150px;
 }
 
 .search-results col.licence {

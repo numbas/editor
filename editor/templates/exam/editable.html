@@ -239,25 +239,57 @@
 			</div>
 		</section>
         <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='versions'}">
-			<p>Click on a version to restore it.</p>
-			<p><label><input type="checkbox" data-bind="checked: onlyShowCommentedVersions"/> Only show versions with comments</label></p>
-            <table class="versions">
-                <thead>
-                    <th>Version</th>
-                    <th>Comment</th>
-                </thead>
-                <tbody data-bind="foreach: versionsToDisplay">
-                    <tr class="version">
+            <h4>Editing history</h4>
+            <p><label><input type="checkbox" data-bind="checked: showCondensedTimeline"/> Show condensed editing history</label></p>
+            <div class="timeline-write-comment">
+                <button data-bind="visible: !writingComment(), click: writingComment" type="button">Write a comment</button>
+                <form data-bind="fadeVisible: writingComment, submit: submitComment">
+                    <h4>Comment</h4>
+                    <div data-bind="writemaths: commentText"></div>
+                    <div class="buttons">
+                        <button type="Submit" data-bind="attr: {disabled: commentIsEmpty}">Submit</button>
+                        <button type="button" data-bind="click: cancelComment">Cancel</button>
+                    </div>
+                </form>
+            </div>
+            <table class="timeline">
+                <tbody data-bind="foreach: timelineToDisplay">
+                    <tr class="timeline-event" data-bind="addClass: type, css: {deleting: deleting}">
                         <td>
-							<a data-bind="attr: {href: 'revert/'+version_pk}" title="Restore this version">
-                                <span data-bind="text: date_created"></span> by <span data-bind="text: user.name"></span>
-                            </a> 
+                            <a data-bind="attr: {href: user.profile_url}" target="_blank"><span data-bind="text: user.name"></span></a>
                         </td>
-                        <td class="comment">
-                            <input type="text" data-bind="visible: editable, value: comment, autosize: comment"/>
-                            <span data-bind="visible: !editable, text: comment"></span>
+                        <td>
+                            <span data-bind="fromNow: date, attr: {title: date}"></span>
+                            <button type="button" class="delete" title="Delete this item" data-bind="visible: delete_url, click: $root.deleteTimelineItem"></button>
                         </td>
+                        <!-- ko template: {name: 'timeline-'+type+'-template', data: data} --><!-- /ko -->
                     </tr>
+                    <script type="text/html" id="timeline-version-template">
+                        <td class="action">
+                            Made some changes 
+                            <br/>
+                            (<a data-bind="attr: {href: 'revert/'+version_pk}" title="Restore this version">Restore</a>)
+                        </td>
+                        <td>
+                            <div class="comment">
+                                <div class="edit-comment" data-bind="visible: editable, editableHTML: comment, placeholder: 'Write a comment'"></div>
+                                <span data-bind="visible: !editable, text: comment"></span>
+                            </div>
+                        </td>
+                    </td>
+                    </script>
+                    <script type="text/html" id="timeline-stamp-template">
+                        <td class="action">Gave some feedback</td>
+                        <td>
+                            <span class="stamp-status" data-bind="text: status_display, addClass: status"></span>.
+                        </td>
+                    </script>
+                    <script type="text/html" id="timeline-comment-template">
+                        <td class="action">Commented</td>
+                        <td>
+                            <div data-bind="mathjaxHTML: text"></div>
+                        </td>
+                    </script>
                 </tbody>
             </table>
         </section>

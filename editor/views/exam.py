@@ -44,6 +44,7 @@ import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
 from editor.views.version import version_json
+from editor.views.timeline import timeline_json
 
 from numbasobject import NumbasObject
 
@@ -262,6 +263,9 @@ class UpdateView(generic.UpdateView):
         if not self.object.can_be_viewed_by(request.user):
             return forbidden(request)
         else:
+            if not self.user.is_anonymous():
+                self.user.notifications.filter(target_object_id=self.object.pk).mark_all_as_read()
+
             return super(UpdateView,self).get(request,*args,**kwargs)
 
     def form_valid(self, form):
@@ -326,6 +330,7 @@ class UpdateView(generic.UpdateView):
             'previewURL': reverse('exam_preview',args=(self.object.pk,self.object.slug)),
             'previewWindow': str(calendar.timegm(time.gmtime())),
             'versions': versions,
+            'timeline': timeline_json(self.object.timeline,self.user),
         }
         if profile:
             editor_json.update({
@@ -478,6 +483,10 @@ class SearchView(ListView):
         if usage in usage_filters:
             exams = exams.filter(usage_filters[usage])
 
+        only_ready_to_use = form.cleaned_data.get('only_ready_to_use')
+        if only_ready_to_use:
+            exams = exams.filter(current_stamp__status='ok')
+
         exams = [e for e in exams if e.can_be_viewed_by(self.request.user)]
 
         return exams
@@ -508,6 +517,12 @@ class HighlightsView(ListView):
 class SetAccessView(generic.UpdateView):
     model = Exam
     form_class = ExamSetAccessForm
+
+    def get_form_kwargs(self):
+        kwargs = super(SetAccessView,self).get_form_kwargs()
+        kwargs['data'] = self.request.POST.copy()
+        kwargs['data'].update({'given_by':self.request.user.pk})
+        return kwargs
 
     def form_valid(self, form):
         exam = self.get_object()
@@ -543,3 +558,9 @@ class SetStarView(generic.UpdateView):
 
     def get(self, request, *args, **kwargs):
         return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
+
+class StampView(editor.views.generic.StampView):
+    model = Exam
+
+class CommentView(editor.views.generic.CommentView):
+    model = Question

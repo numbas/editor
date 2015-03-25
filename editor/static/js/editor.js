@@ -513,6 +513,21 @@ $(document).ready(function() {
 		},this);
 	}
 
+    Editor.Stamp = function(data) {
+        this.status = data.status;
+        this.status_display = data.status_display;
+        this.user = data.user;
+        this.date = data.date;
+        this.delete_url = data.delete_url;
+    }
+
+    Editor.Comment = function(data) {
+        this.text = data.text;
+        this.user = data.user;
+        this.date = data.date;
+        this.delete_url = data.delete_url;
+    }
+
     // version saved to the database, ie a reversion.models.Version instance
     Editor.Version = function(data) {
         this.date_created = data.date_created;
@@ -542,6 +557,27 @@ $(document).ready(function() {
             },this);
         }
     } 
+
+    var timeline_item_constructors = {
+        'version': Editor.Version,
+        'stamp': Editor.Stamp,
+        'comment': Editor.Comment
+    }
+
+    Editor.TimelineItem = function(data) {
+        this.user = data.user;
+        this.date = data.date;
+
+        this.type = data.type;
+        this.delete_url = data.data.delete_url;
+    
+        if(!(data.type in timeline_item_constructors)) {
+            throw(new Error("Unrecognised timeline item "+data.type));
+        }
+        this.data = new timeline_item_constructors[data.type](data.data);
+
+        this.deleting = ko.observable(false);
+    }
 
 	//represent a JSON-esque object in the Numbas .exam format
 	prettyData = function(data){
@@ -1020,4 +1056,39 @@ $(document).ready(function() {
 			});
 		}
 	}
+
+	function update_notifications() {
+		var num_notifications = $('#notifications .dropdown-menu .notification').length;
+		$('#notifications .dropdown-toggle').attr('title',num_notifications+' unread '+(num_notifications==1 ? 'notification' : 'notifications'));
+		if(num_notifications) {
+			$('#notifications').addClass('unread');
+			$('#notifications .dropdown-toggle').removeClass('disabled');
+		} else {
+			$('#notifications').removeClass('unread open');
+			$('#notifications .dropdown-toggle').addClass('disabled');
+		}
+	}
+
+    $('#notifications').on('click','.mark-all-as-read',function(e) {
+		$('#notifications .dropdown-menu').html('');
+		update_notifications();
+
+        var url = $(this).attr('href');
+        $.post(url,{csrfmiddlewaretoken: getCookie('csrftoken')});
+        e.stopPropagation();
+        return false;
+    });
+
+	var old_notifications = $('#notifications .dropdown-menu').html()
+	setInterval(function() {
+		$.get('/notifications/unread').success(function(response) {
+			if(response!=old_notifications) {
+				old_notifications = response;
+				$('#notifications .dropdown-menu').html(response);
+				update_notifications();
+			}
+		});
+	},5000);
+
+	update_notifications();
 });

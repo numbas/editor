@@ -32,12 +32,20 @@ from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
 from django.db import models
+from django.db.models import signals
+from django.dispatch import receiver
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.forms import model_to_dict
 from django.utils.deconstruct import deconstructible
 from uuslug import slugify
 
 import reversion
+
+from notifications import notify
+from notifications.models import Notification
+from editor.notify_watching import notify_watching
 
 from taggit.managers import TaggableManager
 import taggit.models
@@ -245,18 +253,6 @@ class Image( models.Model ):
     def summary(self):
         return json.dumps(self.as_json()),
 
-class QuestionManager(models.Manager):
-    def viewable_by(self,user):
-        if user.is_superuser:
-            return self.all()
-        elif user.is_anonymous():
-            return self.filter(public_access__in=['edit','view'])
-        else:
-            mine_or_public_query = Q(public_access__in=['edit','view']) | Q(author=user)
-            mine_or_public = self.all().filter(mine_or_public_query)
-            given_access = QuestionAccess.objects.filter(access__in=['edit','view'],user=user).values_list('question',flat=True)
-            return mine_or_public | self.exclude(mine_or_public_query).filter(pk__in=given_access)
-
 class Licence(models.Model):
     name = models.CharField(max_length=80,unique=True)
     short_name = models.CharField(max_length=20,unique=True)
@@ -280,11 +276,68 @@ class Licence(models.Model):
                 'pk': self.pk,
         }
 
+class TimelineEvent(object):
+    def __init__(self,user,date,type,data):
+        self.user = user
+        self.date = date
+        self.type = type
+        self.data = data
+
+class StampTimelineEvent(TimelineEvent):
+    def __init__(self,stamp):
+        super(StampTimelineEvent,self).__init__(user=stamp.user, date=stamp.date, type='stamp', data=stamp)
+
+class VersionTimelineEvent(TimelineEvent):
+    def __init__(self,version):
+        revision = version.revision
+        super(VersionTimelineEvent,self).__init__(user=revision.user, date=revision.date_created, type='version', data=version)
+
+class CommentTimelineEvent(TimelineEvent):
+    def __init__(self,comment):
+        super(CommentTimelineEvent,self).__init__(user=comment.user, date=comment.date, type='comment', data=comment)
+
+STAMP_STATUS_CHOICES = (
+    ('ok','Ready to use'),
+    ('dontuse','Should not be used'),
+    ('problem','Has some problems'),
+    ('broken','Doesn\'t work'),
+)
+
+class TimelineMixin(object):
+    def can_be_deleted_by(self,user):
+        return user==self.user or user==self.object.author
+
+class StampOfApproval(models.Model,TimelineMixin):
+    object_content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    object = GenericForeignKey('object_content_type','object_id')
+
+    user = models.ForeignKey(User, related_name='stamps')
+    status = models.CharField(choices = STAMP_STATUS_CHOICES, max_length=20)
+    date = models.DateTimeField(auto_now_add=True,default=datetime.utcfromtimestamp(0))
+
+    def __unicode__(self):
+        return '{} as "{}"'.format(self.user.username,self.object.name,self.get_status_display(),self.date)
+
+class Comment(models.Model,TimelineMixin):
+    object_content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    object = GenericForeignKey('object_content_type','object_id')
+
+    user = models.ForeignKey(User, related_name='comments')
+    text = models.TextField()
+    date = models.DateTimeField(auto_now_add=True,default=datetime.utcfromtimestamp(0))
+
+    def __unicode__(self):
+        return 'Comment by {} on {}: "{}"'.format(self.user.get_full_name(), str(self.object), self.text[:47]+'...' if len(self.text)>50 else self.text)
+
 class EditorModel(models.Model):
     class Meta:
         abstract = True
 
     licence = models.ForeignKey(Licence,null=True)
+
+    current_stamp = models.ForeignKey(StampOfApproval, blank=True, null=True, on_delete=models.SET_NULL)
 
     def set_licence(self,licence):
         NumbasObject.get_parsed_content(self)
@@ -292,6 +345,50 @@ class EditorModel(models.Model):
         metadata['licence'] = licence.name
         self.licence = licence
         self.content = str(self.parsed_content)
+
+    @property
+    def timeline(self):
+        events = [StampTimelineEvent(stamp) for stamp in self.stamps] + [VersionTimelineEvent(version) for version in reversion.get_for_object(self)] + [CommentTimelineEvent(comment) for comment in self.comments]
+        events.sort(key=lambda x:x.date, reverse=True)
+        return events
+    
+    @property
+    def stamps(self):
+        return StampOfApproval.objects.filter(object_content_type=ContentType.objects.get_for_model(self.__class__),object_id=self.pk).order_by('-date')
+
+    @property
+    def comments(self):
+        return Comment.objects.filter(object_content_type=ContentType.objects.get_for_model(self.__class__),object_id=self.pk).order_by('-date')
+
+    @property
+    def watching_users(self):
+        """ Users who should be notified when something happens to this object. """
+        return [self.author] + list(self.access_rights.all())
+
+@receiver(signals.post_save,sender=StampOfApproval)
+def set_current_stamp(instance,**kwargs):
+    instance.object.current_stamp = instance
+    instance.object.save()
+
+@receiver(signals.post_save,sender=StampOfApproval)
+def notify_stamp(instance,**kwargs):
+    notify_watching(instance.user,target=instance.object,verb='gave feedback on',action_object=instance)
+
+@receiver(signals.post_save,sender=Comment)
+def notify_comment(instance,**kwargs):
+    notify_watching(instance.user,target=instance.object,verb='commented on',action_object=instance)
+
+class QuestionManager(models.Manager):
+    def viewable_by(self,user):
+        if user.is_superuser:
+            return self.all()
+        elif user.is_anonymous():
+            return self.filter(public_access__in=['edit','view'])
+        else:
+            mine_or_public_query = Q(public_access__in=['edit','view']) | Q(author=user)
+            mine_or_public = self.all().filter(mine_or_public_query)
+            given_access = QuestionAccess.objects.filter(access__in=['edit','view'],user=user).values_list('question',flat=True)
+            return mine_or_public | self.exclude(mine_or_public_query).filter(pk__in=given_access)
 
 @reversion.register
 class Question(EditorModel,NumbasObject,ControlledObject):
@@ -329,8 +426,8 @@ class Question(EditorModel,NumbasObject,ControlledObject):
         )
 
     def __unicode__(self):
-        return 'Question "%s"' % self.name
-    
+        return '%s' % self.name
+
     def save(self, *args, **kwargs):
         NumbasObject.get_parsed_content(self)
 
@@ -407,11 +504,15 @@ class Question(EditorModel,NumbasObject,ControlledObject):
         except QuestionAccess.DoesNotExist:
             return 'none'
 
-
 class QuestionAccess(models.Model):
     question = models.ForeignKey(Question)
     user = models.ForeignKey(User)
     access = models.CharField(default='view',editable=True,choices=USER_ACCESS_CHOICES,max_length=6)
+
+@receiver(signals.post_save,sender=QuestionAccess)
+def notify_given_question_access(instance,created,**kwargs):
+    if created:
+        notify.send(instance.given_by,verb='gave you access to',target=instance.question,recipient=instance.user)
 
 class QuestionHighlight(models.Model):
     class Meta:
@@ -455,7 +556,7 @@ class Exam(EditorModel,NumbasObject,ControlledObject):
         )
 
     def __unicode__(self):
-        return 'Exam "%s"' %self.name
+        return '%s' %self.name
     
     @property
     def theme_path(self):
@@ -556,6 +657,12 @@ class Exam(EditorModel,NumbasObject,ControlledObject):
         except ExamAccess.DoesNotExist:
             return 'none'
 
+@receiver(signals.post_delete)
+def remove_deleted_notifications(sender, instance=None,**kwargs):
+    if sender in [Question,Exam,StampOfApproval,Comment]:
+        Notification.objects.filter(target_object_id=instance.pk).delete()
+        Notification.objects.filter(action_object_object_id=instance.pk).delete()
+
 class ExamHighlight(models.Model):
     class Meta:
         ordering = ['-date']
@@ -569,6 +676,11 @@ class ExamAccess(models.Model):
     exam = models.ForeignKey(Exam)
     user = models.ForeignKey(User)
     access = models.CharField(default='view',editable=True,choices=USER_ACCESS_CHOICES,max_length=6)
+
+@receiver(signals.post_save,sender=ExamAccess)
+def notify_given_exam_access(instance,created,**kwargs):
+    if created:
+        notify.send(instance.given_by,verb='gave you access to',target=instance.exam,recipient=instance.user)
         
         
 class ExamQuestion(models.Model):

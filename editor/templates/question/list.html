@@ -6,12 +6,13 @@
 
 {% block content %}
 	<div>
-		<div class="list-total">{{ results.page.paginator.count }} questions found.</div>
+		<div class="list-total">{{ results.page.paginator.count }} question{{results.page.paginator.count|pluralize}} found.</div>
 		{% include "pagination.html" %}
 		<div class="results">
 			{% if object_list.exists %}
 			<table class="search-results" id="question-list">
                 <col span="1" class="name"/>
+                <col span="1" class="stamp"/>
                 <col span="1" class="licence"/>
 				<col span="1" class="author"/>
 				<col span="1" class="last_modified"/>
@@ -35,6 +36,7 @@
 					{% block results.tbody.row %}
 					<tr class="result question">
                         <td class="name">{{row.name}}</td>
+                        <td class="stamp">{{row.current_stamp}}</td>
                         <td class="licence">{{row.licence}}</td>
 						<td class="author">{{row.author}}</td>
 						<td class="last_modified">{{row.last_modified}}</td>
@@ -59,7 +61,7 @@
 			</table>
 
 			{% else %}
-			<div class="none">No questions found.</div>
+			<div class="none">No questions found matching your query.</div>
 			{% endif %}
 		</div>
 		{% include "pagination.html" %}

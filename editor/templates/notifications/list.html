@@ -1,0 +1,17 @@
+{% load humanize %}
+{% load notifications_tags %}
+{% notifications_unread as unread_notifications %}
+{% for notification in user.notifications.unread %}
+	<li class="notification">
+	<a tabindex="-1" href="{% url 'open_notification' notification.pk %}">
+		<div class="description">{{notification.actor.get_full_name}} {{notification.verb}} <span class="target">{{notification.target}}</span></div>
+		<div class="time">{{notification.timestamp|naturaltime}}</div>
+	</a>
+	</li>
+{% endfor %}
+{% if unread_notifications %}
+<li class="divider"></li>
+<li><a tabindex="-1" class="mark-all-as-read" href="{% url 'notifications:mark_all_as_read' %}">Mark all as read</a></li>
+{% else %}
+<li>No unread notifications</li>
+{% endif %}

@@ -13,11 +13,12 @@ class UserColumn(columns.linkcolumn.BaseLinkColumn):
         return self.render_link(uri,text)
 
 class ObjectTable(tables.Table):
+    last_modified = Column()
 
     class Meta:
         attrs = {'class': 'search-results'}
 
-        fields = ('name', 'licence', 'author')
+        fields = ('name', 'current_stamp', 'licence', 'author')
         order_by = ('-last_modified')
 
     def render_last_modified(self,record):
@@ -32,12 +33,13 @@ class HighlightTable(ObjectTable):
 
 class QuestionTable(ObjectTable):
     name = TemplateColumn(template_name='question/name_column.html')
+    current_stamp = TemplateColumn(template_name='stamp_column.html', verbose_name='Status',orderable=False)
     licence = TemplateColumn(template_name='licence_column.html')
     author = UserColumn()
-    last_modified = Column()
 
     class Meta(ObjectTable.Meta):
         model = Question
+        sequence = ('name','current_stamp','licence','author','last_modified')
 
 class QuestionHighlightTable(HighlightTable):
     class Meta(HighlightTable.Meta):
@@ -45,12 +47,13 @@ class QuestionHighlightTable(HighlightTable):
 
 class ExamTable(ObjectTable):
     name = TemplateColumn(template_name='exam/name_column.html')
+    current_stamp = TemplateColumn(template_name='stamp_column.html', verbose_name='Status',orderable=False)
     licence = TemplateColumn(template_name='licence_column.html')
     author = UserColumn()
-    last_modified = Column()
 
     class Meta(ObjectTable.Meta):
         model = Exam
+        sequence = ('name','current_stamp','licence','author','last_modified')
 
 class ExamHighlightTable(HighlightTable):
     class Meta(HighlightTable.Meta):

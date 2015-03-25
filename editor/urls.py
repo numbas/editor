@@ -17,7 +17,7 @@ from django.views.generic import RedirectView, TemplateView
 
 from django.contrib.auth.decorators import login_required
 
-from editor.views import exam, question, HomeView, theme, extension, version
+from editor.views import exam, question, HomeView, theme, extension, version, generic, notification
 from editor.views.user import UserSearchView
 from editor.views.resource import upload_resource, ImageDeleteView, media_view
 
@@ -63,6 +63,12 @@ urlpatterns = patterns('',
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/highlight$',
         login_required(exam.HighlightView.as_view()),name='highlight_exam'),
 
+    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/stamp$',
+        login_required(exam.StampView.as_view()),name='stamp_exam'),
+
+    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/comment$',
+        login_required(exam.CommentView.as_view()),name='comment_on_exam'),
+
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/set-star$',
         login_required(exam.SetStarView.as_view()),name='set_exam_star'),
 
@@ -97,6 +103,12 @@ urlpatterns = patterns('',
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/set-star$',
         login_required(question.SetStarView.as_view()),name='set_question_star'),
 
+    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/comment$',
+        login_required(question.CommentView.as_view()),name='comment_on_question'),
+
+    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/stamp$',
+        login_required(question.StampView.as_view()),name='stamp_question'),
+
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/highlight$',
         login_required(question.HighlightView.as_view()),name='highlight_question'),
 
@@ -120,6 +132,12 @@ urlpatterns = patterns('',
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+).exam$',
         question.SourceView.as_view(), name='question_source'),
 
+    url(r'^comment/(?P<pk>\d+)/delete$',
+        generic.DeleteCommentView.as_view(), name='delete_comment'),
+
+    url(r'^stamp/(?P<pk>\d+)/delete$',
+        generic.DeleteStampView.as_view(), name='delete_stamp'),
+
     url(r'^users/search/$',UserSearchView.as_view(),name='user_search'),
 
     url(r'^theme/new/$', login_required(theme.CreateView.as_view()), name='theme_new'),
@@ -133,4 +151,6 @@ urlpatterns = patterns('',
     url(r'^extensions/(?P<pk>\d+)/delete$', login_required(extension.DeleteView.as_view()), name='extension_delete'),
 
     url(r'version/(?P<pk>\d+)/update', login_required(version.UpdateView.as_view()), name='edit_version'),
+
+	url(r'notification/(?P<pk>\d+)/open', notification.OpenNotification.as_view(), name='open_notification'),
 )

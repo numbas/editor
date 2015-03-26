@@ -98,13 +98,13 @@
                     <span id="download">
 						Download: 
                         <div class="btn-group">
-                          <a class="btn" href="{% url 'question_download' object.pk object.slug %}?scorm">SCORM package</a>
+                          <a class="btn" href="{% url 'exam_download' object.pk object.slug %}?scorm">SCORM package</a>
                           <button class="btn dropdown-toggle" data-toggle="dropdown" title="More download options">
                             <span class="caret"></span>
                           </button>
                           <ul class="dropdown-menu">
-                            <li><a tabindex="-1" href="{% url 'question_download' object.pk object.slug %}">standalone .zip</a></li>
-                            <li><a tabindex="-1" href="{% url 'question_source' object.pk object.slug %}">source</a></li>
+                            <li><a tabindex="-1" href="{% url 'exam_download' object.pk object.slug %}">standalone .zip</a></li>
+                            <li><a tabindex="-1" href="{% url 'exam_source' object.pk object.slug %}">source</a></li>
                           </ul>
                         </div>
 					</span>

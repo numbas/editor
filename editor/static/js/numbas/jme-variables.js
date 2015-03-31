@@ -75,7 +75,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
 				if(val===undefined) {
 					throw(new Numbas.Error('jme.user javascript.returned undefined',fn.name));
 				}
-				val = jme.wrapValue(val);
+				val = jme.wrapValue(val,fn.outtype);
 				if(!val.type)
 					val = new fn.outcons(val);
 				return val;
@@ -98,7 +98,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
 			paramNames = [];
 
 		tmpfn.parameters.map(function(p) {
-			intype.push(p.type == '?' ? '?' : jme.types[p.type]);
+			intype.push(jme.types[p.type]);
 			paramNames.push(p.name);
 		});
 

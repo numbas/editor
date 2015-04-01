@@ -423,13 +423,13 @@ $(document).ready(function() {
 				var variables = this.variables();
 				for(var i=0;i<variables.length;i++) {
 					var variable = variables[i];
-					if(variable.name()==state.currentVariable) {
+					if(variable.name().toLowerCase()==state.currentVariable) {
 						this.currentVariable(variable);
 						break;
 					}
 				}
 			}
-			Editor.computedReplaceState('currentVariable',ko.computed(function(){return this.currentVariable().name()},this));
+			Editor.computedReplaceState('currentVariable',ko.computed(function(){return this.currentVariable().name().toLowerCase()},this));
 			if('currentVariableTab' in state) {
 				var tabs = this.variableTabs();
 				for(var i=0;i<tabs.length;i++) {
@@ -1301,8 +1301,8 @@ $(document).ready(function() {
 	VariableGroup.prototype = {
 		sort: function() {
 			this.variables(this.variables().sort(function(a,b){
-				a = a.name();
-				b = b.name();
+				a = a.name().toLowerCase();
+				b = b.name().toLowerCase();
 				return a>b ? 1 : a==b ? 0 : -1;
 			}));
 		}
@@ -1326,7 +1326,7 @@ $(document).ready(function() {
 					return 'There\'s already a variable with this name.';
 			}
 
-			if(!re_name.test(this.name())) {
+			if(!re_name.test(name)) {
 				return 'This variable name is invalid.';
 			}
 
@@ -1468,18 +1468,18 @@ $(document).ready(function() {
 			var currentVariable = q.currentVariable();
 			if(!currentVariable)
 				return false;
-			return currentVariable.dependencies().contains(this.name());
+			return currentVariable.dependencies().contains(this.name().toLowerCase());
 		},this);
 		this.dependenciesObjects = ko.computed(function() {
 			var deps = this.dependencies();
 			return q.variables().filter(function(v2) {
-				return deps.contains(v2.name());
+				return deps.contains(v2.name().toLowerCase());
 			});
 		},this);
 		this.usedIn = ko.computed(function() {
 			var v = this;
 			return q.variables().filter(function(v2) {
-				return v2.dependencies().contains(v.name());
+				return v2.dependencies().contains(v.name().toLowerCase());
 			});
 		},this);
 		this.value = ko.observable('');

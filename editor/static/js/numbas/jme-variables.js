@@ -199,6 +199,9 @@ jme.variables = /** @lends Numbas.jme.variables */ {
 			}
 		}
 
+		if(!v.tree) {
+			throw(new Numbas.Error('jme.variables.empty definition',name));
+		}
 		try {
 			scope.variables[name] = jme.evaluate(v.tree,scope);
 		} catch(e) {

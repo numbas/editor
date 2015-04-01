@@ -137,10 +137,10 @@
 									</div>
 								</div>
 								<script type="text/html" id="variable-template">
-									<tr data-bind="click: $root.currentVariable, css: {noname: !name(), current: $data==$root.currentVariable(), dependency: isDependency}" class="variable-selector">
-										<td class="name" data-bind="text: name() ? name() : 'Unnamed'"></td>
+									<tr data-bind="click: $root.currentVariable, css: {noname: !name(), current: $data==$root.currentVariable(), dependency: isDependency, error: error().length>0}" class="variable-selector">
+										<td class="name" data-bind="text: name() ? name() : 'Unnamed', css: {'name-error': nameError()!=''}"></td>
 										<td class="value-cell">
-											<div class="value" data-bind="css: {error: error().length>0}, html: display"></div>
+											<div class="value" data-bind="html: display"></div>
 										</td>
 										<td class="delete-cell">
 											<button type="button" title="Remove this variable" class="delete" data-bind="click:remove"></button>
@@ -220,6 +220,8 @@
 												</li>
 											</ul>
 											(text strings)
+										</div>
+										<div class="value-error alert alert-danger" data-bind="visible: error().length>0, html: error">
 										</div>
 									</div>
 								</div>

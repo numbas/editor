@@ -268,6 +268,13 @@ input.recalculate-checkbox {
 	font-weight: bold;
 }
 
+.variable-selector .name-error {
+	text-decoration: underline;
+	color: red;
+	font-style: italic;
+	font-weight: bold;
+}
+
 .variable-selector.noname .name {
     font-family: inherit;
     font-weight: bold;
@@ -287,9 +294,10 @@ input.recalculate-checkbox {
 	overflow-x: hidden;
 }
 
-.variable-selector .value.error {
+.variable-selector.error .value {
 	color: red;
 	font-weight: bold;
+	max-height: none;
 }
 
 .variable {
@@ -310,6 +318,10 @@ input.recalculate-checkbox {
 .variable .name-error {
 	color: red;
 	font-style: italic;
+}
+
+.variable .value-error {
+	margin-top: 1em;
 }
 
 .variable .inline-names {

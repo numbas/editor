@@ -729,7 +729,12 @@ $(document).ready(function() {
 			var prep = this.prepareVariables();
 
 			this.variables().map(function(v) {
-				v.dependencies(prep.todo[v.name().toLowerCase()].vars);
+				var name = v.name().toLowerCase();
+				if(prep.todo[name]) {
+					v.dependencies(prep.todo[name].vars);
+				} else {
+					v.dependencies([]);
+				}
 			});
 
 			var results = this.computeVariables(prep);
@@ -759,6 +764,11 @@ $(document).ready(function() {
 				this.variables().map(function(v) {
 					var name = v.name().toLowerCase();
 					var result = results.variables[name];
+					if(!result) {
+						v.value(null);
+						v.error('');
+						return;
+					}
 					if('value' in result) {
 						v.value(result.value);
 					}
@@ -819,8 +829,18 @@ $(document).ready(function() {
 			//make structure of variables to evaluate
 			var todo = {}
 			this.variables().map(function(v) {
-				if(!v.name() || !v.definition())
+				var name = v.name().toLowerCase();
+				if(!v.name()) {
 					return;
+				}
+				if(!v.definition()) {
+					todo[name] = {
+						v: v,
+						tree: null,
+						vars: []
+					};
+					return;
+				}
 				try {
 					var tree = jme.compile(v.definition(),scope,true);
 					var vars = jme.findvars(tree);
@@ -829,7 +849,7 @@ $(document).ready(function() {
 					v.error(e.message);
 					return;
 				}
-				todo[v.name().toLowerCase()] = {
+				todo[name] = {
 					v: v,
 					tree: tree,
 					vars: vars
@@ -1320,9 +1340,7 @@ $(document).ready(function() {
 			var variables = q.variables();
 			for(var i=0;i<variables.length;i++) {
 				var v = variables[i];
-				if(v==this)
-					break;
-				else if(v.name().toLowerCase()==name.toLowerCase())
+				if(v!=this && v.name().toLowerCase()==name.toLowerCase())
 					return 'There\'s already a variable with this name.';
 			}
 

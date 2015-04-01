@@ -17,6 +17,8 @@ R.registerLocale('en-GB',{
 	'page.loading': "Loading...",
 	'page.saving': "<p>Saving.</p>\n<p>This might take a few seconds.</p>",
 
+	'mathjax.math processing error': "MathJax processing error: \"%s\" when texifying <code>%s</code>",
+
 	'die.numbas failed': "Numbas has failed",
 	'die.sorry': "Sorry, Numbas has encountered an error which means it can't continue. Below is a description of the error.",
 	'die.error': "Error",
@@ -95,10 +97,10 @@ R.registerLocale('en-GB',{
 	'jme.shunt.no right square bracket': "No matching right square bracket to end list",
 	'jme.shunt.missing operator': "Expression can't be evaluated -- missing an operator.",
 
-	'jme.typecheck.function maybe implicit multiplication': "Operation %s is not defined. Did you mean <br/><code>%s*%s(...)</code>?",
-	'jme.typecheck.function not defined': "Operation '%s' is not defined. Did you mean <br/><code>%s*(...)</code>?",
-	'jme.typecheck.op not defined': "Operation '%s' is not defined.",
-	'jme.typecheck.no right type definition': "No definition of '%s' of correct type found.",
+	'jme.typecheck.function maybe implicit multiplication': "Operation <code>%s</code> is not defined. Did you mean <br/><code>%s*%s(...)</code>?",
+	'jme.typecheck.function not defined': "Operation <code>%s</code> is not defined. Did you mean <br/><code>%s*(...)</code>?",
+	'jme.typecheck.op not defined': "Operation <code>%s</code> is not defined.",
+	'jme.typecheck.no right type definition': "No definition of <code>%s</code> of correct type found.",
 	'jme.typecheck.no right type unbound name': "Variable <code>%s</code> is not defined.",
 	'jme.typecheck.map not on enumerable': "<code>map</code> operation must work over a list or a range, not %s",
 
@@ -120,10 +122,11 @@ R.registerLocale('en-GB',{
 	'jme.variables.error making function': "Error making function <code>%s</code>: %s",
 	'jme.variables.syntax error in function definition': "Syntax error in function definition",
 	'jme.variables.variable not defined': "Variable <code>%s</code> is not defined.",
-	'jme.variables.empty definition': "Definition of variable %s is empty.",
-	'jme.variables.circular reference': "Circular variable reference in definition of %s",
+	'jme.variables.empty definition': "Definition of variable <code>%s</code> is empty.",
+	'jme.variables.circular reference': "Circular variable reference in definition of <code>%s</code>",
 	'jme.variables.error computing dependency': "Error computing referenced variable <code>%s</code>",
-	'jme.variables.error evaluating variable': "Error evaluating variable %s: %s",
+	'jme.variables.error evaluating variable': "Error evaluating variable <code>%s</code>: %s",
+	'jme.variables.question took too many runs to generate variables': "A valid set of question variables was not generated in time.",
 
 	'jme.display.unknown token type': "Can't texify token type %s",
 	'jme.display.collectRuleset.no sets': 'No sets given to collectRuleset!',
@@ -203,6 +206,11 @@ R.registerLocale('en-GB',{
 	'part.mcq.matrix wrong size': "Marking matrix is the wrong size.",
 	'part.mcq.correct choice': "You chose the correct answer.",
 
+	'part.matrix.invalid cell': "One or more of the cells in your answer is empty or invalid.",
+	'part.matrix.some incorrect': "One or more of the cells in your answer is incorrect, but you have been awarded marks for the rest.",
+	'part.matrix.empty': "You have not entered an answer.",
+	'part.matrix.empty cell': "One or more of the cells in your answer is empty.",
+
 	'part.gapfill.feedback header': '<strong>Gap %i</strong>',
 	
 	'question.loaded name mismatch': "Can't resume this attempt - the package has changed since the last session.",
@@ -249,7 +257,7 @@ R.registerLocale('en-GB',{
 	'xml.error in variable definition': "Error in definition of variable <code>%s</code>",
 
 	'scorm.error initialising': "Error initialising SCORM protocol: %s",
-	'scorm.failed save': "<p>The request to save data to the server failed. Press <b>OK</b> to try again.</p>\n<p>If you get this message repeatedly, check your internet connection or use a different computer. Your previously submitted answers have been successfully saved and will be restored if you resume this session on a different computer.</p>\n<p>If this message appears persistently and you can't save <em>any</em> answers, please email <a href=\"mailto:numbas@ncl.ac.uk\">numbas@ncl.ac.uk</a>.</p>",
+	'scorm.failed save': "<p>The request to save data to the server failed. Press <b>OK</b> to try again.</p>\n<p>If you get this message repeatedly, check your internet connection or use a different computer. Your previously submitted answers have been successfully saved and will be restored if you resume this session on a different computer.</p>\n<p>If this message appears persistently and you can't save <em>any</em> answers, please contact your lecturer or teacher.</p>",
 	'scorm.no exam suspend data': "Failed to resume: no exam suspend data.",
 	'scorm.error loading suspend data': "Error loading suspend data: %s",
 	'scorm.error loading question': "Error loading question %s: %s",

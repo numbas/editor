@@ -135,7 +135,7 @@
 
 .variable-groups {
 	margin-bottom: 1em;
-	max-height: 35em;
+	height: 30em;
 	overflow-y: auto;
 }
 

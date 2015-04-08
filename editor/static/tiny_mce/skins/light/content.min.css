@@ -18,8 +18,11 @@ th,td {
 [data-jme-visible] {
   border: 1px dotted red;
   margin: 0.2em 0;
-  padding-top: 0.6em;
+  padding-top: 0.5em;
   position: relative;
+}
+span[data-jme-visible] {
+    line-height: 2em;
 }
 [data-jme-visible]::before {
   content: "Visible if "attr(data-jme-visible);
@@ -28,5 +31,10 @@ th,td {
   top: 0;
   font-family: monospace;
   position:absolute;
-  overflow-x: hidden;
+  overflow: hidden;
+  line-height: 1em;
+  min-width: 100%;
+  height: 1em;
+  display: block;
+  left: 0;
 }

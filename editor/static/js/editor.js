@@ -738,7 +738,7 @@ $(document).ready(function() {
                 .tinymce({
                     theme: 'modern',
 					skin: 'light',
-					plugins: ['media','noneditable','searchreplace','autoresize','fullscreen','link','paste','table','image'].concat(tinymce_plugins),
+					plugins: ['media','noneditable','searchreplace','autoresize','fullscreen','link','paste','table','image','jmevisible'].concat(tinymce_plugins),
 					statusbar: false,
 					media_strict: false,
 					width: width,

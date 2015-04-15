@@ -59,7 +59,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
 	makeJavascriptFunction: function(fn) {
 		var paramNames = fn.paramNames.slice();
 		paramNames.push('scope');
-		var preamble='fn.jfn=(function('+paramNames.join(',')+'){';
+		var preamble='fn.jfn=(function('+paramNames.join(',')+'){\n';
 		var math = Numbas.math;
 		var util = Numbas.util;
 		try {
@@ -213,16 +213,29 @@ jme.variables = /** @lends Numbas.jme.variables */ {
 	/** Evaluate dictionary of variables
 	 * @param {object} todo - dictionary of variables mapped to their definitions
 	 * @param {Numbas.jme.Scope} scope
-	 * @returns {object} - dictionary of evaluated variables
+	 * @param {Numbas.jme.tree} condition - condition on the values of the variables which must be satisfied
+	 * @returns {object} - {variables: dictionary of evaluated variables, conditionSatisfied: was the condition satisfied?}
 	 */
-	makeVariables: function(todo,scope)
+	makeVariables: function(todo,scope,condition)
 	{
 		scope = new jme.Scope(scope);
-		for(var x in todo)
-		{
-			jme.variables.computeVariable(x,todo,scope);
+
+		var conditionSatisfied = true;
+		if(condition) {
+			var condition_vars = jme.findvars(condition);
+			condition_vars.map(function(v) {
+				jme.variables.computeVariable(v,todo,scope);
+			});
+			conditionSatisfied = jme.evaluate(condition,scope).value;
 		}
-		return scope.variables;
+
+		if(conditionSatisfied) {
+			for(var x in todo)
+			{
+				jme.variables.computeVariable(x,todo,scope);
+			}
+		}
+		return {variables: scope.variables, conditionSatisfied: conditionSatisfied};
 	},
 
 	/** Substitute variables into a DOM element (works recursively on the element's children)
@@ -236,6 +249,14 @@ jme.variables = /** @lends Numbas.jme.variables */ {
 			return element;
 		if(element.hasAttribute('nosubvars'))
 			return element;
+
+		if(element.hasAttribute('data-jme-visible')) {
+			var condition = element.getAttribute('data-jme-visible');
+			var result = scope.evaluate(condition);
+			if(!(result.type=='boolean' && result.value==true)) {
+				$(element).css('display','none');
+			}
+		}
 
 		var re_end;
 		$(element).contents().each(function() {

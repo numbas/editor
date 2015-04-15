@@ -97,10 +97,10 @@ R.registerLocale('en-GB',{
 	'jme.shunt.no right square bracket': "No matching right square bracket to end list",
 	'jme.shunt.missing operator': "Expression can't be evaluated -- missing an operator.",
 
-	'jme.typecheck.function maybe implicit multiplication': "Operation <code>%s</code> is not defined. Did you mean <br/><code>%s*%s(...)</code>?",
-	'jme.typecheck.function not defined': "Operation <code>%s</code> is not defined. Did you mean <br/><code>%s*(...)</code>?",
-	'jme.typecheck.op not defined': "Operation <code>%s</code> is not defined.",
-	'jme.typecheck.no right type definition': "No definition of <code>%s</code> of correct type found.",
+	'jme.typecheck.function maybe implicit multiplication': "Operation %s is not defined. Did you mean <br/><code>%s*%s(...)</code>?",
+	'jme.typecheck.function not defined': "Operation '%s' is not defined. Did you mean <br/><code>%s*(...)</code>?",
+	'jme.typecheck.op not defined': "Operation '%s' is not defined.",
+	'jme.typecheck.no right type definition': "No definition of '%s' of correct type found.",
 	'jme.typecheck.no right type unbound name': "Variable <code>%s</code> is not defined.",
 	'jme.typecheck.map not on enumerable': "<code>map</code> operation must work over a list or a range, not %s",
 
@@ -117,15 +117,15 @@ R.registerLocale('en-GB',{
 	'jme.texsubvars.no right brace': "No matching <code>}</code> in %s",
 
 	'jme.user javascript.error': "Error in user-defined javascript function <code>%s</code><br/>%s",
-	'jme.user javascript.error': "User-defined javascript function <code>%s</code> didn't return anything",
+	'jme.user javascript.error': "Error in user-defined javascript function <code>%s</code>: %s",
 
 	'jme.variables.error making function': "Error making function <code>%s</code>: %s",
 	'jme.variables.syntax error in function definition': "Syntax error in function definition",
 	'jme.variables.variable not defined': "Variable <code>%s</code> is not defined.",
-	'jme.variables.empty definition': "Definition of variable <code>%s</code> is empty.",
-	'jme.variables.circular reference': "Circular variable reference in definition of <code>%s</code>",
+	'jme.variables.empty definition': "Definition of variable %s is empty.",
+	'jme.variables.circular reference': "Circular variable reference in definition of %s",
 	'jme.variables.error computing dependency': "Error computing referenced variable <code>%s</code>",
-	'jme.variables.error evaluating variable': "Error evaluating variable <code>%s</code>: %s",
+	'jme.variables.error evaluating variable': "Error evaluating variable %s: %s",
 	'jme.variables.question took too many runs to generate variables': "A valid set of question variables was not generated in time.",
 
 	'jme.display.unknown token type': "Can't texify token type %s",

@@ -292,7 +292,7 @@ $(document).ready(function() {
 			set(data[attr.toLowerCase()]);
 	}
 
-    Editor.numbasVersion = 'pick_questions';
+    Editor.numbasVersion = 'custom_script_order';
 
 	Editor.parseExam = function(source) {
 		var content = /\/\/(.*?)\n(.*)/.exec(source)[2]

@@ -128,6 +128,15 @@
 	text-align: center;
 }
 
+.part-edit .script .order {
+	margin-top: 0.3em;
+	margin-left: 1em;
+	font-size: 0.8em;
+}
+.part-edit .script .order select {
+	width: 9em;
+}
+
 .jme-answer {
 	display: inline-block;
 	padding: 5px;

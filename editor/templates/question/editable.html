@@ -455,13 +455,15 @@
 							{% endfor %}
 							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='scripts'}">
 								<form class="form-horizontal" data-bind="foreach: scripts">
-									<div class="control-group">
+									<div class="script control-group">
 										<label class="control-label">
 											<span data-bind="text: displayName"></span><span data-bind="if: active"> (active)</span>
-											<span data-bind="template: {name: 'helplink', data: {topic: 'the advice section', url: helpURL}}"></span>
+											<span data-bind="template: {name: 'helplink', data: {topic: 'the '+name+' script', url: helpURL}}"></span>
 										</label>
 										<div class="controls">
 											<textarea data-bind="valueUpdate: 'afterkeydown', codemirror: script, codemirrorMode: 'javascript'"></textarea>
+											<p class="order" data-bind="visible: name!='constructor'">Run this script <select data-bind="options: orderOptions, value: orderItem, optionsText: 'niceName'"></select> the built-in script.</p>
+											<p class="order" data-bind="visible: name=='constructor'">This script runs after the built-in script.</p>
 										</div>
 									</div>
 								</form>

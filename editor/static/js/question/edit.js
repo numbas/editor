@@ -1677,8 +1677,28 @@ $(document).ready(function() {
 		}
 	};
 
-	function Script(name,displayName,helpURL) {
+	function Script(name,displayName,defaultOrder,helpURL) {
 		this.name = name;
+		this.orderOptions = [
+			{niceName: 'instead of', value: 'instead'},
+			{niceName: 'after', value: 'after'},
+			{niceName: 'before', value: 'before'}
+		];
+		this.orderItem = ko.observable(this.orderOptions[0]);
+		this.order = ko.computed({
+			read: function() {
+				return this.orderItem().value;
+			},
+			write: function(value) {
+				for(var i=0;i<this.orderOptions.length;i++) {
+					if(this.orderOptions[i].value==value) {
+						return this.orderItem(this.orderOptions[i]);
+					}
+				}
+			}
+		},this);
+		this.order(defaultOrder);
+
 		this.displayName = displayName;
 		this.script = ko.observable('');
 		this.helpURL = helpURL;
@@ -1789,9 +1809,9 @@ $(document).ready(function() {
 		this.showCorrectAnswer = ko.observable(true);
 
 		this.scripts = [
-			new Script('constructor','When the part is created','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-when-the-part-is-created'),
-			new Script('mark','Mark student\'s answer','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-mark-student-s-answer'),
-			new Script('validate','Validate student\'s answer','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-validate-student-s-answer')
+			new Script('constructor','When the part is created','after','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-when-the-part-is-created'),
+			new Script('mark','Mark student\'s answer','instead','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-mark-student-s-answer'),
+			new Script('validate','Validate student\'s answer','instead','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-validate-student-s-answer')
 		];
 
 		this.types.map(function(t){p[t.name] = t.model});
@@ -1908,9 +1928,11 @@ $(document).ready(function() {
             }
 
 			this.scripts.map(function(s) {
-				var script = s.script();
 				if(s.active()) {
-					o.scripts[s.name] = script;
+					o.scripts[s.name] = {
+						script: s.script(),
+						order: s.order()
+					};
 				}
 			});
 
@@ -1943,7 +1965,7 @@ $(document).ready(function() {
 				for(var name in data.scripts) {
 					for(var i=0;i<this.scripts.length;i++) {
 						if(this.scripts[i].name==name) {
-							this.scripts[i].script(data.scripts[name]);
+							tryLoad(data.scripts[name],['script','order'],this.scripts[i]);
 							break;
 						}
 					}

@@ -1433,7 +1433,7 @@ $(document).ready(function() {
 				commaValue: ko.observable('')
 			},
 			'list of strings': {
-				values: InexhaustibleList(),
+				values: InexhaustibleList()
 			}
 		};
 		this.editDefinition = this.templateTypeValues['anything'].definition;

@@ -800,7 +800,7 @@ $(document).ready(function() {
 				lineNumbers: true,
 				styleActiveLine: true,
 				matchBrackets: true,
-                mode: 'htmlmixed',
+                mode: 'htmlmixed'
 			});
 			mc.on('change',onChange);
 			ko.utils.domData.set(plaintext[0],'codemirror',mc);

@@ -12,7 +12,7 @@
 }
 
 
-.question {
+#content .question {
 	line-height: 1.5em !important;
 	padding: 0 2em 0.5em 44px !important;
 	clear: both;
@@ -22,16 +22,16 @@
 	position: relative;
 }
 
-.question .details {
+#content .question .details {
 	margin-bottom: 1em;
 }
 
-.question .author {
+#content .question .author {
     font-size: smaller;
     line-height: 1em;
 }
 
-.question .handle {
+#content .question .handle {
 	margin-left: -44px;
 	height: 100%;
 	position: absolute;
@@ -39,15 +39,15 @@
 	padding-bottom: 0;
 }
 
-.question .number {
+#content .question .number {
 	font-weight: bold;
 }
 
-.questions {
+#content .questions {
 	padding-bottom: 1em;
     overflow-x: hidden;
 }
-.questions .questionList {
+#content .questions .questionList {
     width: 100%;
     display: inline-block;
     padding-left: 0;
@@ -55,41 +55,41 @@
 	list-style-type: none;
 }
 
-.question .controls {
+#content .question .controls {
 	float: right;
 	margin-top: 0.5em;
 	margin-left: 1em;
 	margin-right: -1em;
 	width: 16px;
 }
-.question .controls .delete {
+#content .question .controls .delete {
 	margin: 0;
 }
 
-.question .title {
+#content .question .title {
 }
 
-.question .number {
+#content .question .number {
 	font-weight: bold;
 }
 
-.question .description {
+#content .question .description {
 	line-height: 1.2em;
 	font-size: 80%;
 	padding-bottom: 0.5em;
 	overflow-y: hidden;
 }
 
-.question .description p {
+#content .question .description p {
 	margin: 0;
 }
 
-.questions .searchBox {
+#content .questions .searchBox {
     display: inline-block;
     vertical-align: top;
 }
 
-.questions .results, .questions .questionList {
+#content .questions .results, #content .questions .questionList {
     padding: 0;
     height: 25em;
     overflow-y: auto;
@@ -106,19 +106,19 @@
 	cursor: pointer;
 }
 
-.question .preview {
+#content .question .preview {
 	background-image: url(../../images/play_alt_16x16.png);
 	width: 16px;
 	height: 16px;
 	display: inline-block;
 }
 
-.question .preview:hover {
+#content .question .preview:hover {
 	background-color: #06f;
 	border-radius: 50%;
 }
 
-.question .copy {
+#content .question .copy {
 	background-image: url(../../images/loop_alt1_16x12.png);
 	width: 16px;
 	height: 12px;
@@ -129,15 +129,15 @@
     background-color: transparent;
 }
 
-.question .copy:hover {
+#content .question .copy:hover {
     background-color: #f90;
 }
 
-.question.ui-sortable-helper {
+#content .question.ui-sortable-helper {
 	background: white;
 	opacity: 0.8;
 }
-.question.ui-sortable-helper .number {
+#content .question.ui-sortable-helper .number {
 	display: none;
 }
 

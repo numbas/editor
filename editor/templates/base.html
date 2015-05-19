@@ -1,6 +1,7 @@
 {% load sstatic %}
 {% load analytical %}
 {% load notifications_tags %}
+{% load icon %}
 {% notifications_unread as unread_notifications %}
 
 <!DOCTYPE html>
@@ -68,19 +69,29 @@
 						<!-- login message or profile link -->
                         {% if user.is_authenticated %}
 						Hi, {{ user.get_short_name }}! 
-                        <div id="notifications" class="btn-group {% if unread_notifications %}unread{% endif %}">
-							<a class="btn dropdown-toggle {% if not unread_notifications %}disabled{% endif %}" data-toggle="dropdown" href="#" title="{{unread_notifications}} unread notification{{unread_notifications|pluralize}}">
-								<svg viewbox="0 0 8 8" class="icon" style="width: 15px; height: 15px">
-									<use xlink:href="{% sstatic 'images/open-iconic.svg#bell' %}"></use>
-								</svg>
+                        <div id="notifications" class="top-dropdown btn-group {% if unread_notifications %}active{% endif %}">
+                            <a class="btn dropdown-toggle {% if not unread_notifications %}disabled{% endif %}" data-toggle="dropdown" href="#" title="{{unread_notifications}} unread notification{{unread_notifications|pluralize}}">
+                                {% icon "bell" %}
                             </a>
+							<div class="counter noselect">{{unread_notifications}}</div>
 							<ul class="dropdown-menu pull-right">
 								{% include "notifications/list.html" %}
                             </ul>
-						</div>
+                        </div>
+                        {% with basket_size=user.userprofile.question_basket.count %}
+                        <div id="question_basket" class="btn-group top-dropdown {% if basket_size %}active{% endif %}">
+                            <a class="btn dropdown-toggle {% if not basket_size %}disabled{% endif %}" data-toggle="dropdown" href="#" title="{{basket_size}} question{{basket_size|pluralize}} in your basket">
+                                {% icon "basket" %}
+							</a>
+							<div class="counter noselect">{{basket_size}}</div>
+							<ul class="dropdown-menu pull-right">
+								{% include "basket/list.html" %}
+                            </ul>
+                        </div>
+                        {% endwith %}
 						<span class="account-links"><a tabindex="2" href="{% url 'view_profile' user.pk %}">Your profile</a> ⋅ <a tabindex="2" href="{% url 'exam_search' %}?author={{user.get_full_name|urlencode}}">Your exams</a> ⋅ <a tabindex="2" href="{% url 'question_search' %}?author={{user.get_full_name|urlencode}}">Your questions</a>{% if CAN_LOGOUT %} ⋅ <a tabindex="2" id="logout" href="{% url 'logout' %}?next={{request.path|escape}}">Log out</a>{% endif %}</span>
                         {% else %}
-						<a tabindex="2" href="{% url 'login' %}?next={{request.path|escape}}">Log in</a>{% if ALLOW_REGISTRATION %} or <a tabindex="2" href="{% url 'registration_register' %}">create an account</a>{%endif%}.
+                        <span class="account-links"><a tabindex="2" href="{% url 'login' %}?next={{request.path|escape}}">Log in</a>{% if ALLOW_REGISTRATION %} or <a tabindex="2" href="{% url 'registration_register' %}">create an account</a>{%endif%}.</span>
                         {% endif %}
 					</div>
 				</div>

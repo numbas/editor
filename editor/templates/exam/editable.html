@@ -199,6 +199,14 @@
                                 }
                             "></ul>
                         </div>
+                        <div class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentQuestionTab().id)=='basket'}">
+                            <ul class="results editlist big" data-bind="
+                                template: {
+                                    name: 'questionResult',
+                                    foreach: basketQuestions,
+                                }
+                            "></ul>
+                        </div>
                         <div class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentQuestionTab().id)=='search'}">
                             <form class="form-horizontal" data-bind="submit: search.submit">
                                 <div class="control-group">

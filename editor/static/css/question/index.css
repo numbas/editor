@@ -14,27 +14,27 @@
 	margin-bottom: 2em;
 }
 
-.question:not(:last-child) {
+#content .question:not(:last-child) {
 	border-bottom: 1px solid #eee;
 }
 
-.question .admin {
+#content .question .admin {
 	float: right;
 }
 
-.question .name {
+#content .question .name {
     font-weight: bold;
 }
-.question .note {
+#content .question .note {
     padding-left: 2em;
 }
-.question .picked-by {
+#content .question .picked-by {
     font-style: italic;
     font-size: 0.9em;
     margin-left: -1.5em;
 	display: block;
 }
-.question .header {
+#content .question .header {
     margin: 1em 0;
 }
 

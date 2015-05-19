@@ -43,6 +43,15 @@ th a:hover {
     text-decoration: none;
 }
 
+.noselect {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
 #container-fluid {
 	max-width: 1200px;
 	margin-left: auto;
@@ -87,7 +96,7 @@ button {
 }
 
 button:hover, button:focus, .btn:hover, .btn:focus {
-	background: #f90;
+	background-color: #f90;
 }
 
 .dropdown-menu li>a:hover {
@@ -132,27 +141,26 @@ button:hover, button:focus, .btn:hover, .btn:focus {
     text-align: right;
 }
 
-#session a {
+#session .account-links a {
 	text-decoration: underline;
 }
 
 #session .account-links {
-	font-size: 0.8em;
 	margin-left: 2em;
 }
 
-#notifications {
+.top-dropdown {
     font-size: 1em;
     margin-left: 1em;
 }
 
-#notifications .dropdown-menu {
+.top-dropdown .dropdown-menu {
     width: 280px;
 	max-height: 30em;
 	overflow-y: auto;
 }
 
-#notifications .dropdown-toggle {
+.top-dropdown .dropdown-toggle {
     border: none;
     background: white;
     cursor: default;
@@ -160,28 +168,40 @@ button:hover, button:focus, .btn:hover, .btn:focus {
     width: 15px;
     height: 15px;
 }
-#notifications .dropdown-toggle.disabled {
+.top-dropdown .dropdown-toggle.disabled {
 	opacity: 1;
 }
 
-#notifications.open .dropdown-toggle:active {
+.top-dropdown.open .dropdown-toggle:active {
     box-shadow: none;
 }
 
-#notifications.unread .dropdown-toggle {
+.top-dropdown.active .dropdown-toggle {
     background-color: red;
 }
 
-#notifications.unread .dropdown-toggle .icon use {
+.top-dropdown.active .dropdown-toggle .icon use {
     fill: white;
 }
 
-#notifications a {
+.top-dropdown a {
     text-decoration: none;
 }
 
-#notifications .notification, #notifications .notification a {
+.top-dropdown .dropdown-menu a:hover {
+    background: none;
+}
+.top-dropdown .dropdown-menu li:hover {
+	background: rgba(255,153,0,0.3);
+}
+
+.top-dropdown .dropdown-menu li>a {
 	white-space: normal;
+}
+
+.top-dropdown a.action {
+    font-weight: bold;
+    color: #08c;
 }
 
 #notifications .notification .target {
@@ -193,13 +213,50 @@ button:hover, button:focus, .btn:hover, .btn:focus {
     color: #888;
 }
 
-#notifications .dropdown-menu a:hover {
-    background: rgba(255,153,0,0.3);
+#question_basket {
+    position: relative;
 }
 
-#notifications .mark-all-as-read {
-    font-weight: bold;
-    color: #08c;
+.top-dropdown .counter {
+	display: none;
+    position: absolute;
+    top: -0.5em;
+    right: -0.5em;
+    background: white;
+    border-radius: 50%;
+    width: 1em;
+    font-size: 0.7em;
+    height: 1em;
+    line-height: 1em;
+	z-index: 3;
+	text-align: center;
+}
+.top-dropdown.active .counter {
+	display: block;
+}
+
+#question_basket .question-list {
+	list-style: none;
+}
+
+#question_basket .question {
+	position: relative;
+}
+
+#question_basket .question .remove {
+	position: absolute;
+	left: -1em;
+	top: 4px;
+	border: none;
+	padding: 0;
+	margin: 0;
+	width: 14px;
+	height: 14px;
+	line-height: 14px;
+	background: none;
+}
+#question_basket .question .remove .icon use {
+	fill: red;
 }
 
 ul#menu li {
@@ -280,25 +337,33 @@ button.search.loading {
 	margin-right: 0.5em;
 	background-color: white;
 	border-radius: 50%;
+	width: 16px;
+	height: 16px;
+	position: relative;
+}
+.admin a svg.icon {
+	position: absolute;
+	top: 3px;
+	left: 3px;
+}
+.admin a svg.icon use {
+	fill: white;
 }
 
 .admin .delete {
-	background-image: url(../images/x_alt_16x16.png);
-	width: 16px;
-	height: 16px;
 	margin-left: 0.5em;
+	background-color: red;
 }
 
 .admin .copy {
-	background-image: url(../images/plus_alt_16x16.png);
-	width: 16px;
-	height: 16px;
+	background-color: black;
+}
+.admin .basket {
+	background-color: black;
 }
 
 .admin .preview {
-	background-image: url(../images/play_alt_16x16.png);
-	width: 16px;
-	height: 16px;
+	background-color: rgb(133,196,63);
 }
 
 .page-loading {

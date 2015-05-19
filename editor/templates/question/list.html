@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% load icon %}
 {% load sstatic %}
 {% load django_tables2 %}
 {% load render_table from django_tables2 %}
@@ -41,11 +42,7 @@
 						<td class="author">{{row.author}}</td>
 						<td class="last_modified">{{row.last_modified}}</td>
 						<td class="admin">
-							<a class="preview" href="{% url 'question_preview' question.pk question.slug %}" target="_blank" title="Test run"></a>
-							{% if user.is_authenticated and question|can_be_copied_by:user %}
-							<a class="copy" href="{% url 'question_copy' question.pk question.slug %}" title="Make a copy"></a>
-							{% endif %}
-							{% if question|can_be_deleted_by:user %}<a class="delete" href="{% url 'question_delete' question.pk question.slug %}" title="Delete"></a>{% endif %}
+							{% include "question/admin_buttons.html" %}
 						</td>
 					</tr>
 					{% endblock results.tbody.row %}

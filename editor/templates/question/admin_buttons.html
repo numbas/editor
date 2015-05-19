@@ -1,0 +1,10 @@
+{% load icon %}
+{% load can_edit %}
+<a class="preview" href="{% url 'question_preview' question.pk question.slug %}" target="_blank" title="Test run">{% icon "media-play" 10 %}</a>
+{% if user.is_authenticated %}
+	{% if question|can_be_copied_by:user %}
+	<a class="copy" href="{% url 'question_copy' question.pk question.slug %}" title="Make a copy">{% icon "plus" 10 %}</a>
+	{% endif %}
+	<a class="add-to-basket basket" href="#" title="Add this to your basket" data-id="{{question.pk}}">{% icon "basket" 10 %}</a>
+{% endif %}
+{% if question|can_be_deleted_by:user %}<a class="delete" href="{% url 'question_delete' question.pk question.slug %}" title="Delete">{% icon "x" 10 %}</a>{% endif %}

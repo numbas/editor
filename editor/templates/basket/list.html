@@ -1,0 +1,20 @@
+{% load icon %}
+{% with basket=user.userprofile.question_basket nonempty=user.userprofile.question_basket.exists %}
+{% if nonempty %}
+<li><a tabindex="-1" class="empty-basket action" href="{% url 'empty_question_basket' %}">Clear</a></li>
+{% endif %}
+<ol class="question-list">
+{% for question in user.userprofile.question_basket.all %}
+	<li class="question">
+        <a tabindex="-1" href="{% url 'question_edit' question.pk question.slug %}">
+            {{question.name}}
+		</a>
+		<button type="button" class="remove" data-id="{{question.pk}}" title="Remove this question from the basket">{% icon "x" 8 %}</button>
+	</li>
+{% endfor %}
+</ol>
+{% if nonempty %}
+<li class="divider"></li>
+<li><a tabindex="-1" class="create-exam-from-basket action" href="{% url 'create_exam_from_basket' %}">Create an exam from these questions</a></li>
+{% endif %}
+{% endwith %}

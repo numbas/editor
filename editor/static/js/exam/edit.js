@@ -138,6 +138,7 @@ $(document).ready(function() {
 
 		this.questionTabs = ko.observableArray([
 			new Editor.Tab('mine','Recent Questions'),
+			new Editor.Tab('basket','Basket'),
 			new Editor.Tab('search','Search'),
 		]);
 		this.currentQuestionTab = ko.observable(this.questionTabs()[0]);
@@ -145,18 +146,22 @@ $(document).ready(function() {
         this.recentQuestions = Editor.mappedObservableArray(function(d){ return new Question(d);});
         this.recentQuestions(data.recentQuestions);
 
-        function getRecentQuestions() {
+        this.basketQuestions = Editor.mappedObservableArray(function(d){ return new Question(d);});
+        this.basketQuestions(data.basketQuestions);
+
+        function getQuestions() {
             var cookie = getCookie('csrftoken');
             if(cookie!==null) {
-                $.get('/questions/recent/',{csrfmiddlewaretoken: cookie})
+                $.get('/exam/question-lists/')
                     .success(function(d) {
-                        e.recentQuestions(d);
+                        e.recentQuestions(d.recent);
+						e.basketQuestions(d.basket);
                     })
                 ;
             }
         }
 
-        setInterval(getRecentQuestions,5000);
+        setInterval(getQuestions,5000);
 
 		this.search = {
 			query: ko.observable(''),

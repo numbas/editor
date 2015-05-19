@@ -61,7 +61,7 @@ urlpatterns = patterns('',
                        url(r'^profile/backup/all-questions$',
                            login_required(AllQuestionsView.as_view()),
                            name='all_questions_download'),
-                       )
+                    )
 
 if settings.CAN_CHANGE_PASSWORD:
     urlpatterns += patterns('',

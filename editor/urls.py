@@ -20,6 +20,7 @@ from django.contrib.auth.decorators import login_required
 from editor.views import exam, question, HomeView, theme, extension, version, generic, notification
 from editor.views.user import UserSearchView
 from editor.views.resource import upload_resource, ImageDeleteView, media_view
+from editor.views.basket import BasketView,add_question_to_basket,create_exam_from_basket,remove_question_from_basket,empty_question_basket
 
 
 urlpatterns = patterns('',
@@ -71,6 +72,10 @@ urlpatterns = patterns('',
 
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/set-star$',
         login_required(exam.SetStarView.as_view()),name='set_exam_star'),
+
+	url(r'exam/question-lists/$',
+		exam.question_lists,
+		name='question_lists'),
 
     url(r'^questions/$', question.IndexView.as_view(), name='question_index',),
 
@@ -153,4 +158,20 @@ urlpatterns = patterns('',
     url(r'version/(?P<pk>\d+)/update', login_required(version.UpdateView.as_view()), name='edit_version'),
 
 	url(r'notification/(?P<pk>\d+)/open', notification.OpenNotification.as_view(), name='open_notification'),
+
+	url(r'question_basket/$',
+		BasketView.as_view(),
+		name='basket'),
+    url(r'question_basket/add/$',
+        login_required(add_question_to_basket),
+        name='add_question_to_basket'),
+    url(r'question_basket/remove/$',
+        login_required(remove_question_from_basket),
+        name='remove_question_from_basket'),
+    url(r'question_basket/create_exam/$',
+        login_required(create_exam_from_basket),
+        name='create_exam_from_basket'),
+    url(r'question_basket/empty/$',
+        login_required(empty_question_basket),
+        name='empty_question_basket'),
 )

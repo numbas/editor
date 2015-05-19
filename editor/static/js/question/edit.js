@@ -74,6 +74,10 @@ $(document).ready(function() {
             return $.post('set-star',data);
         });
 
+        this.add_to_basket = function() {
+            Editor.add_question_to_basket(Editor.questionJSON.id);
+        }
+
 		this.exams = data.exams;
 
         Editor.licences.sort(function(a,b){a=a.short_name;b=b.short_name; return a<b ? -1 : a>b ? 1 : 0 });

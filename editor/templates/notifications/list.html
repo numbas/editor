@@ -11,7 +11,7 @@
 {% endfor %}
 {% if unread_notifications %}
 <li class="divider"></li>
-<li><a tabindex="-1" class="mark-all-as-read" href="{% url 'notifications:mark_all_as_read' %}">Mark all as read</a></li>
+<li><a tabindex="-1" class="mark-all-as-read action" href="{% url 'notifications:mark_all_as_read' %}">Mark all as read</a></li>
 {% else %}
 <li>No unread notifications</li>
 {% endif %}

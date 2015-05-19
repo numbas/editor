@@ -1,4 +1,5 @@
 {% extends "editor.html" %}
+{% load icon %}
 {% load sstatic %}
 {% load verbatim %}
 {% load json_filter %}
@@ -48,7 +49,10 @@
             <h1 id="name-header" class="span9">
 				<span data-bind="text: name, mathjax: name">{{object.name}}</span> 
                 {% if request.user.is_authenticated %}
-                <button type="button" style="display:none" data-bind="visible: true, css:{starred: starred}, attr: {title: starred() ? 'This question is starred. Click to unstar it.' : 'Star this question'}, click: toggleStar" class="star" ></button>
+                <span style="display:none" data-bind="visible: true">
+                    <button type="button" data-bind="css:{starred: starred}, attr: {title: starred() ? 'This question is starred. Click to unstar it.' : 'Star this question'}, click: toggleStar" class="star icon-button" ></button>
+					<button type="button" data-bind="click: add_to_basket" class="add-to-basket icon-button" title="Add this question to your basket">{% icon "basket" size=24 %}</button>
+				</span>
                 {% endif %}
             </h1>
             {% if editable %}

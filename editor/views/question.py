@@ -537,11 +537,11 @@ class RecentQuestionsView(ListView):
         if self.request.user.is_anonymous():
             return []
         else:
-            return [q.summary() for q in Question.objects.filter(author=self.request.user).order_by('-last_modified')]
+            return [q.summary() for q in self.request.user.userprofile.recent_questions]
 
     def render_to_response(self, context, **response_kwargs):
         if self.request.is_ajax():
-            return HttpResponse(json.dumps(context['object_list'][:10]),
+            return HttpResponse(json.dumps(context['object_list']),
                                 content_type='application/json',
                                 **response_kwargs)
         raise Http404

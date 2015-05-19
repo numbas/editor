@@ -299,8 +299,10 @@ class UpdateView(generic.UpdateView):
         exam_dict = self.object.as_json()
         if self.request.user.is_authenticated():
             exam_dict['recentQuestions'] = [q.summary() for q in Question.objects.filter(author=self.request.user).order_by('-last_modified')[:10]]
+            exam_dict['basketQuestions'] = [q.summary() for q in self.request.user.userprofile.question_basket.all()]
         else:
             exam_dict['recentQuestions'] = []
+            exam_dict['basketQuestions'] = []
         context['exam_JSON'] = json.dumps(exam_dict)
         custom_themes = Theme.objects.filter(public=True) | Theme.objects.filter(author=self.object.author)
         if self.object.custom_theme:
@@ -564,3 +566,23 @@ class StampView(editor.views.generic.StampView):
 
 class CommentView(editor.views.generic.CommentView):
     model = Question
+
+def question_lists(request):
+    if not request.is_ajax():
+        raise Http404
+
+    user = request.user
+    if user.is_anonymous():
+        recent, basket = [], []
+    else:
+        recent = user.userprofile.recent_questions
+        basket = user.userprofile.question_basket.all()
+
+    lists = {
+        'recent': recent,
+        'basket': basket
+    }
+    out = {k: [q.summary() for q in qs] for k,qs in lists.items()}
+
+    return HttpResponse(json.dumps(out),
+                        content_type='application/json')

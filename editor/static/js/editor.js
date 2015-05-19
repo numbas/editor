@@ -1060,11 +1060,12 @@ $(document).ready(function() {
 	function update_notifications() {
 		var num_notifications = $('#notifications .dropdown-menu .notification').length;
 		$('#notifications .dropdown-toggle').attr('title',num_notifications+' unread '+(num_notifications==1 ? 'notification' : 'notifications'));
+		$('#notifications .counter').text(num_notifications);
 		if(num_notifications) {
-			$('#notifications').addClass('unread');
+			$('#notifications').addClass('active');
 			$('#notifications .dropdown-toggle').removeClass('disabled');
 		} else {
-			$('#notifications').removeClass('unread open');
+			$('#notifications').removeClass('active open');
 			$('#notifications .dropdown-toggle').addClass('disabled');
 		}
 	}
@@ -1081,7 +1082,7 @@ $(document).ready(function() {
 
 	var old_notifications = $('#notifications .dropdown-menu').html()
 	setInterval(function() {
-		$.get('/notifications/unread').success(function(response) {
+		$.get('/notifications/unread/').success(function(response) {
 			if(response!=old_notifications) {
 				old_notifications = response;
 				$('#notifications .dropdown-menu').html(response);
@@ -1091,4 +1092,58 @@ $(document).ready(function() {
 	},5000);
 
 	update_notifications();
+
+    function update_basket(response) {
+		var num_questions = $('#question_basket .dropdown-menu .question').length;
+		$('#question_basket .dropdown-toggle').attr('title',num_questions+' '+(num_questions==1 ? 'question' : 'questions')+' in your basket');
+		$('#question_basket .counter').text(num_questions);
+		if(num_questions) {
+			$('#question_basket').addClass('active');
+			$('#question_basket .dropdown-toggle').removeClass('disabled');
+		} else {
+			$('#question_basket').removeClass('active open');
+			$('#question_basket .dropdown-toggle').addClass('disabled');
+		}
+    }
+
+    Editor.add_question_to_basket = function(id) {
+        $.post('/question_basket/add/',{csrfmiddlewaretoken: getCookie('csrftoken'), id: id})
+            .success(function(response) {
+				$('#question_basket .dropdown-menu').html(response);
+				update_basket();
+            })
+        ;
+    }
+	Editor.remove_question_from_basket = function(id) {
+        $.post('/question_basket/remove/',{csrfmiddlewaretoken: getCookie('csrftoken'), id: id})
+            .success(function(response) {
+				$('#question_basket .dropdown-menu').html(response);
+				update_basket();
+            })
+        ;
+	}
+    Editor.empty_basket = function() {
+        $.post('/question_basket/empty/',{csrfmiddlewaretoken: getCookie('csrftoken')})
+            .success(function(response) {
+				$('#question_basket .dropdown-menu').html(response);
+				update_basket();
+            })
+        ;
+    }
+    $('#question_basket').on('click','.empty-basket',function(e) {
+        e.preventDefault();
+		e.stopPropagation();
+        Editor.empty_basket();
+    });
+	$('#question_basket').on('click','.question .remove',function(e) {
+		e.preventDefault();
+		e.stopPropagation();
+		Editor.remove_question_from_basket($(this).attr('data-id'));
+		$(this).parent('.question').remove();
+	});
+	$('body').on('click','.add-to-basket',function(e) {
+		e.preventDefault();
+		e.stopPropagation();
+		Editor.add_question_to_basket($(this).attr('data-id'));
+	});
 });

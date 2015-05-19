@@ -52,6 +52,7 @@ class UserProfile(models.Model):
     bio = SanitizedTextField(default='',allowed_tags=settings.SANITIZER_ALLOWED_TAGS,allowed_attributes=settings.SANITIZER_ALLOWED_ATTRIBUTES)
     favourite_questions = models.ManyToManyField(Question,blank=True,related_name='fans')
     favourite_exams = models.ManyToManyField(Exam,blank=True,related_name='fans')
+    question_basket = models.ManyToManyField(Question,blank=True,related_name='baskets')
 
     def sorted_tags(self):
         qs = self.user.own_questions
@@ -60,6 +61,10 @@ class UserProfile(models.Model):
         tag_counts.sort(key=itemgetter(1),reverse=True)
 
         return tag_counts
+
+    @property
+    def recent_questions(self):
+        return Question.objects.filter(author=self.user).order_by('-last_modified')[:10]
 
 def createUserProfile(sender, instance, created, **kwargs):
     """Create a UserProfile object each time a User is created ; and link it.

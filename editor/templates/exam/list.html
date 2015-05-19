@@ -39,11 +39,7 @@
 						{% endfor %}
 						<td class="admin">
 							{% with row.record as exam %}
-							<a class="preview" href="{% url 'exam_preview' exam.pk exam.slug %}" target="_blank" title="Test run"></a>
-							{% if user.is_authenticated %}
-							<a class="copy" href="{% url 'exam_copy' exam.pk exam.slug %}" title="Make a copy"></a>
-							{% endif %}
-							{% if exam|can_be_deleted_by:user %}<a class="delete" href="{% url 'exam_delete' exam.pk exam.slug %}" title="Delete"></a>{% endif %}
+                                {% include "exam/admin_buttons.html" %}
 							{% endwith %}
 						</td>
 					</tr>

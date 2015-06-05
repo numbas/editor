@@ -744,6 +744,7 @@ $(document).ready(function() {
 					width: width,
 					verify_html: false,
 					autoresize_bottom_margin: 0,
+					relative_urls: false,
 
 					init_instance_callback: function(ed) { 
 						$(element).writemaths({iFrame: true, position: 'center top', previewPosition: 'center bottom'}); 

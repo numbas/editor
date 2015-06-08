@@ -16,7 +16,7 @@ class NumbasRegistrationForm(RegistrationForm):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        exclude = ('user','favourite_questions','favourite_exams',)
+        exclude = ('user','favourite_questions','favourite_exams','question_basket')
     first_name = forms.CharField(max_length=30)
     last_name = forms.CharField(max_length=30)
     email = forms.EmailField()

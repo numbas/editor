@@ -2541,7 +2541,16 @@ $(document).ready(function() {
 					],
 
 					choices: ko.observableArray([]),
-					answers: ko.observableArray([])
+					answers: ko.observableArray([]),
+
+					layoutType: ko.observable('all'),
+					layoutTypes: [
+						{name: 'all', niceName: 'Show all options'},
+						{name: 'lowertriangle', niceName: 'Lower triangle'},
+						{name: 'uppertriangle', niceName: 'Upper triangle'},
+						{name: 'expression', niceName: 'Custom expression'}
+					],
+					layoutExpression: ko.observable('')
 				};
 
 				model.addChoice = function() {
@@ -2626,6 +2635,8 @@ $(document).ready(function() {
 					data.matrix = matrix;
 				}
 
+				data.layout = {type: this.layoutType().name, expression: this.layoutExpression()}
+
                 var answers = this.answers();
                 data.answers = answers.map(function(a){return a.content()});
 			},
@@ -2647,6 +2658,15 @@ $(document).ready(function() {
                         this.displayType(this.displayTypes[i]);
 					}
                 }
+				if(data.layout) {
+					for(var i=0;i<this.layoutTypes.length;i++)
+					{
+						if(this.layoutTypes[i].name==data.layout.type) {
+							this.layoutType(this.layoutTypes[i]);
+						}
+					}
+					tryLoad(data.layout,['expression'],this,['layoutExpression']);
+				}
 
                 for(var i=0;i<data.answers.length;i++)
                 {

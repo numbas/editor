@@ -2547,7 +2547,9 @@ $(document).ready(function() {
 					layoutTypes: [
 						{name: 'all', niceName: 'Show all options'},
 						{name: 'lowertriangle', niceName: 'Lower triangle'},
+						{name: 'strictlowertriangle', niceName: 'Lower triangle (no diagonal)'},
 						{name: 'uppertriangle', niceName: 'Upper triangle'},
+						{name: 'strict uppertriangle', niceName: 'Upper triangle (no diagonal)'},
 						{name: 'expression', niceName: 'Custom expression'}
 					],
 					layoutExpression: ko.observable('')

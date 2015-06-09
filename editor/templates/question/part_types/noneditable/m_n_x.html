@@ -48,6 +48,18 @@
 			name: 'property',
 			data: {label: 'Custom matrix expression', property: customMatrix, monospace: true}
 		}"></div>
+		<div class="control-group">
+			<label>
+				<span class="control-label">Layout:</span>
+				<div class="controls">
+					<span data-bind="text: layoutType().niceName"></span>
+				</div>
+			</label>
+		</div>
+		<div class="control-group" data-bind="fadeVisible: layoutType().name=='expression', template: {
+			name: 'property',
+			data: {label: 'Custom layout expression', property: layoutExpression}
+			}"></div>
 	</form>
 </section>
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='choices'}">

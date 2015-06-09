@@ -2,39 +2,39 @@
 	<form class="form-horizontal">
 		<div class="control-group" data-bind="template: {
 			name: 'property',
-			data: {label:'Minimum marks',property: minMarks, max: maxMarks }
-		}"></div>
+			data: {label:'Minimum marks',property:minMarks, max:maxMarks, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-minimum-marks' }
+			}"></div>
 		<div class="control-group" data-bind="template: {
 			name: 'property',
-			data: {label:'Maximum marks',property: maxMarks, min: minMarks}
-		}"></div>
+			data: {label:'Maximum marks',property:maxMarks, min:minMarks, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-maximum-marks' }
+			}"></div>
 		<div class="control-group" data-bind="template: {
 			name: 'booleanproperty',
-			data: {label:'Show correct answer on reveal?',property:$parent.showCorrectAnswer,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal'}
-		}"></div>
+			data: {label:'Show correct answer on reveal?',property: $parent.showCorrectAnswer,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal'}
+			}"></div>
+		<div class="control-group" data-bind="visible: !$parent.parent(), template: {
+			name: 'property',
+			data: {label:'Penalty for revealing steps',property: $parent.stepsPenalty,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-penalty-for-revealing-steps'}
+			}"></div>
 		<div class="control-group" data-bind="template: {
 			name: 'property',
-			data: {label:'Penalty for revealing steps',property: $parent.stepsPenalty,min:0}
-		}"></div>
+			data: {label:'Minimum answers:',property:minAnswers, max:maxAnswers, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-minimum-answers' }
+			}"></div>
 		<div class="control-group" data-bind="template: {
 			name: 'property',
-			data: {label:'Minimum answers:',property: minAnswers, max: maxAnswers}
-		}"></div>
-		<div class="control-group" data-bind="template: {
-			name: 'property',
-			data: {label:'Maximum answers:',property: maxAnswers, min: minAnswers}
-		}"></div>
+			data: {label:'Maximum answers:',property:maxAnswers, min:minAnswers, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-maximum-answers' }
+			}"></div>
 		<div class="control-group" data-bind="template: {
 			name: 'booleanproperty',
-			data: {label:'Shuffle order of choices?', property: shuffleChoices}
-		}"></div>
+			data: {label:'Shuffle order of choices?', property:shuffleChoices, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-shuffle-order-of-choices' }
+			}"></div>
 		<div class="control-group" data-bind="template: {
 			name: 'booleanproperty',
-			data: {label:'Shuffle order of answers?', property: shuffleAnswers}
-		}"></div>
+			data: {label:'Shuffle order of answers?', property:shuffleAnswers, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-shuffle-order-of-answers' }
+			}"></div>
 		<div class="control-group">
 			<label>
-				<span class="control-label">Selection type:</span>
+				<span class="control-label">Selection type: <span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-what-to-do-if-wrong-number-of-answers-selected'}}"></span></span>
 				<div class="controls">
 					<span data-bind="text: displayType().niceName"></span>
 				</div>
@@ -42,11 +42,11 @@
 		</div>
 		<div class="control-group" data-bind="template: {
 			name: 'booleanproperty',
-			data: {label: 'Custom marking matrix?', property: customMarking}
+			data: {label: 'Custom marking matrix?', property: customMarking, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-marking-matrix' }
 		}"></div>
 		<div class="control-group" data-bind="fadeVisible: customMarking, template: {
 			name: 'property',
-			data: {label: 'Custom matrix expression', property: customMatrix, monospace: true}
+			data: {label: 'Custom matrix expression', property: customMatrix, monospace: true, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-matrix-expression' }
 		}"></div>
 		<div class="control-group">
 			<label>
@@ -58,7 +58,7 @@
 		</div>
 		<div class="control-group" data-bind="fadeVisible: layoutType().name=='expression', template: {
 			name: 'property',
-			data: {label: 'Custom layout expression', property: layoutExpression}
+			data: {label: 'Custom layout expression', property: layoutExpression, monospace: true}
 			}"></div>
 	</form>
 </section>

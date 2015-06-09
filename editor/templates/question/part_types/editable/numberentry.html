@@ -4,7 +4,7 @@
 		name: 'property',
 		data: {label:'Marks',property: $parent.marks,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-marks'}
 		}"></div>
-	<div class="control-group" data-bind="visible: !parent(), template: {
+	<div class="control-group" data-bind="visible: !$parent.parent(), template: {
 		name: 'property',
 		data: {label:'Penalty for revealing steps',property: $parent.stepsPenalty,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-penalty-for-revealing-steps'}
 		}"></div>

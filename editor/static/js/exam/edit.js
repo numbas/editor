@@ -119,6 +119,7 @@ $(document).ready(function() {
 		},this);
 		this.pickQuestions = ko.observable(0);
         this.showfrontpage = ko.observable(true);
+        this.showresultspage = ko.observable(true);
 
         this.allowregen = ko.observable(true);
         this.reverse = ko.observable(true);
@@ -509,6 +510,7 @@ $(document).ready(function() {
                     reverse: this.reverse(),
                     browse: this.browse(),
                     showfrontpage: this.showfrontpage(),
+                    showresultspage: this.showresultspage(),
                     onleave: this.onleave.toJSON(),
 					preventleave: this.preventleave()
                 },
@@ -555,7 +557,7 @@ $(document).ready(function() {
 
             if('navigation' in content)
             {
-				tryLoad(content.navigation,['allowregen','reverse','browse','showfrontpage','preventleave'],this);
+				tryLoad(content.navigation,['allowregen','reverse','browse','showfrontpage','showresultspage','preventleave'],this);
                 this.onleave.load(content.navigation.onleave);
             }
 

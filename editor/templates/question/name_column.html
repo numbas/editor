@@ -1,2 +1,3 @@
+{% load sanitizer %}
 <a href="{% url 'question_edit' record.pk record.slug %}">{{ record.name }}</a>
-<div class="description">{{ record.metadata.description|safe }}</div>
+<div class="description">{{ record.metadata.description|strip_html|safe }}</div>

@@ -1,10 +1,11 @@
 {% load can_edit %}
 {% load user_link %}
+{% load sanitizer %}
 <div class="header">
     <span class="name"><a href="{% url 'exam_edit' exam.pk exam.slug %}">{{ exam.name }}</a></span>
     <span class="admin">
 		{% include "exam/admin_buttons.html" %}
     </span>
 </div>
-<div class="description">{{ exam.metadata.description|safe }}</div>
+<div class="description">{{ exam.metadata.description|strip_html|safe }}</div>
 

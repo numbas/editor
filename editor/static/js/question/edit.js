@@ -261,6 +261,15 @@ $(document).ready(function() {
 			q.currentPart(part);
 		};
 
+		// all parts in this question, including child parts such as gaps and steps
+		this.allParts = ko.computed(function() {
+			var o = [];
+			this.parts().map(function(p) {
+				o = o.concat(p,p.gaps(),p.steps())
+			});
+			return o
+		},this);
+
         this.output = ko.computed(function() {
             var data = JSON.stringify(q.toJSON());
 			return '// Numbas version: '+Editor.numbasVersion+'\n'+data;
@@ -299,8 +308,7 @@ $(document).ready(function() {
 			this.generateVariablePreview();
 		},this).extend({throttle:300});
 
-        if(data)
-		{
+        if(data) {
 			this.load(data);
 		}
 
@@ -710,6 +718,23 @@ $(document).ready(function() {
             this.parts.push(p);
 			this.currentPart(p);
 			return p;
+		},
+
+		getPart: function(path) {
+			return this.parts()[0];
+			var re_path = /^p(\d+)(?:g(\d+)|s(\d+))?$/;
+			var m = re_path.exec(path);
+			var i = parseInt(m[1]);
+			var p = this.parts()[i];
+			if(m[2]) {
+				var g = parseInt(m[2]);
+				return p.gaps()[g];
+			} else if(m[3]) {
+				var s = parseInt(m[3]);
+				return p.steps()[s];
+			} else {
+				return p;
+			}
 		},
 
 		generateVariablePreview: function() {
@@ -1747,15 +1772,43 @@ $(document).ready(function() {
 
         this.type = ko.observable(this.availableTypes()[0]);
 
-		this.header = ko.computed(function() {
+		this.indexLabel = ko.computed(function() {
 			var i = this.parentList.indexOf(this);
 			if(this.isGap() || this.isStep()) {
-				i = i+'. ';
+				i = i;
 			}
 			else {
-				i= 'abcdefghijklmnopqrstuvwxyz'[i]+') ';
+				i= 'abcdefghijklmnopqrstuvwxyz'[i];
 			}
 			return i;
+		},this);
+		this.header = ko.computed(function() {
+			if(this.isGap() || this.isStep()) {
+				return this.indexLabel()+'. ';
+			} else {
+				return this.indexLabel()+') ';
+			}
+		},this);
+
+		this.path = ko.computed(function() {
+			var i = this.parentList.indexOf(this);
+			if(this.isGap()) {
+				return this.parent().path()+'g'+i;
+			} else if(this.isStep()) {
+				return this.parent().path()+'s'+i;
+			} else {
+				return 'p'+i;
+			}
+		},this);
+		this.nicePath = ko.computed(function() {
+			var l = this.indexLabel();
+			if(this.isGap()) {
+				return this.parent().nicePath()+' gap '+l;
+			} else if(this.isStep()) {
+				return this.parent().path()+' step '+l;
+			} else {
+				return 'Part '+l;
+			}
 		},this);
 
 		this.tabs = ko.computed(function() {
@@ -1769,6 +1822,8 @@ $(document).ready(function() {
 			tabs = tabs.concat(this.type().tabs);
 
 			tabs.push(new Editor.Tab('scripts','Scripts'));
+
+			tabs.push(new Editor.Tab('adaptivemarking','Adaptive marking'));
 
 			return tabs;
 		},this);
@@ -1809,8 +1864,15 @@ $(document).ready(function() {
 			p.q.currentPart(gap);
 		}
 
-
 		this.showCorrectAnswer = ko.observable(true);
+
+		this.variableReplacements = ko.observableArray([]);
+		this.addVariableReplacement = function() {
+			p.variableReplacements.push(new VariableReplacement(p));
+		}
+		this.deleteVariableReplacement = function(vr) {
+			p.variableReplacements.remove(vr);
+		}
 
 		this.scripts = [
 			new Script('constructor','When the part is created','after','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-when-the-part-is-created'),
@@ -1920,7 +1982,8 @@ $(document).ready(function() {
                 type: this.type().name,
                 marks: this.realMarks(),
 				showCorrectAnswer: this.showCorrectAnswer(),
-				scripts: {}
+				scripts: {},
+				variableReplacements: this.variableReplacements().map(function(vr){return vr.toJSON()})
             };
 
             if(this.prompt())
@@ -1951,6 +2014,7 @@ $(document).ready(function() {
         },
 
         load: function(data) {
+			var p = this;
             for(var i=0;i<this.types.length;i++)
             {
                 if(this.types[i].name == data.type.toLowerCase())
@@ -1976,6 +2040,13 @@ $(document).ready(function() {
 				}
 			}
 
+			if(data.variableReplacements) {
+				data.variableReplacements.map(function(d) {
+					var vr = new VariableReplacement(p,d);
+					p.variableReplacements.push(vr);
+				});
+			}
+
 			try{
 				this.type().load(data);
 			}catch(e){
@@ -1985,6 +2056,28 @@ $(document).ready(function() {
 			}
         }
     };
+
+	function VariableReplacement(part,data) {
+		this.part = part;
+		this.variable = ko.observable('');
+		this.replacement = ko.observable(null);
+		if(data) {
+			this.load(data);
+		}
+	}
+	VariableReplacement.prototype = {
+		toJSON: function() {
+			return {
+				variable: this.variable(),
+				part: this.replacement()
+			}
+		},
+		load: function(data) {
+			tryLoad(data,['variable'],this);
+			var path = data.part;
+			this.replacement(data.part);
+		}
+	}
 
 	function PartType(part,data) {
 		this.name = data.name;

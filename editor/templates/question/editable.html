@@ -468,6 +468,29 @@
 									</div>
 								</form>
 							</section>
+							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='adaptivemarking'}">
+								<h4>Variable replacement</h4>
+								<table class="variable-replacements" data-bind="fadeVisible: variableReplacements().length">
+									<thead>
+										<tr>
+											<th>Variable</th>
+											<th>Answer to use</th>
+										</th>
+									</thead>
+									<tbody data-bind="foreach: variableReplacements">
+										<tr>
+											<td><input class="monospace" data-bind="value: variable"/></td>
+											<td>
+												<select data-bind="options: $root.allParts, optionsText: 'nicePath', optionsValue: 'path', value: replacement"/>
+											</td>
+											<td>
+												<button type="button" class="delete" data-bind="click: part.deleteVariableReplacement" title="Delete this replacement"></button>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+								<button data-bind="click: addVariableReplacement, text: variableReplacements().length? 'Add another replacement' : 'Add a variable replacement'">Add a variable replacement</button>
+							</section>
 						</div>
 					</div>
 				</div>

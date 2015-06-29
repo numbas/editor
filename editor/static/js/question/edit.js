@@ -1805,7 +1805,7 @@ $(document).ready(function() {
 			if(this.isGap()) {
 				return this.parent().nicePath()+' gap '+l;
 			} else if(this.isStep()) {
-				return this.parent().path()+' step '+l;
+				return this.parent().nicePath()+' step '+l;
 			} else {
 				return 'Part '+l;
 			}

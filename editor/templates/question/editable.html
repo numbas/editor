@@ -470,37 +470,39 @@
 							</section>
 							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='adaptivemarking'}">
 								<h4>Variable replacement</h4>
-								<table class="variable-replacements" data-bind="fadeVisible: variableReplacements().length">
-									<thead>
-										<tr>
-											<th>Variable</th>
-											<th>Answer to use</th>
-										</th>
-									</thead>
-									<tbody data-bind="foreach: variableReplacements">
-										<tr>
-											<td><input class="monospace" data-bind="value: variable"/></td>
-											<td>
-												<select data-bind="options: $root.allParts, optionsText: 'nicePath', optionsValue: 'path', value: replacement"/>
-											</td>
-											<td>
-												<button type="button" class="delete" data-bind="click: part.deleteVariableReplacement" title="Delete this replacement"></button>
-											</td>
-										</tr>
-									</tbody>
-								</table>
-								<button data-bind="click: addVariableReplacement, text: variableReplacements().length? 'Add another replacement' : 'Add a variable replacement'">Add a variable replacement</button>
+								<div class="variable-replacements">
+									<table data-bind="fadeVisible: variableReplacements().length">
+										<thead>
+											<tr>
+												<th>Variable</th>
+												<th>Answer to use</th>
+											</th>
+										</thead>
+										<tbody data-bind="foreach: variableReplacements">
+											<tr>
+												<td><input class="monospace" data-bind="value: variable"/></td>
+												<td>
+													<select data-bind="options: $root.allParts, optionsText: 'nicePath', optionsValue: 'path', value: replacement"/>
+												</td>
+												<td>
+													<button type="button" class="delete" data-bind="click: part.deleteVariableReplacement" title="Delete this replacement"></button>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+									<button class="add-variable-replacement" data-bind="click: addVariableReplacement, text: variableReplacements().length? 'Add another replacement' : 'Add a variable replacement'">Add a variable replacement</button>
 
-								<form class="form-horizontal" data-bind="fadeVisible: variableReplacementStrategies().length">
-									<div class="control-group">
-										<label class="control-label">
-											Variable replacement strategy:
-										</label>
-										<div class="controls">
-											<select data-bind="options: variableReplacementStrategies, value: variableReplacementStrategy, optionsText: 'niceName', optionsValue: 'name'"></select>
+									<form class="form-horizontal" data-bind="fadeVisible: variableReplacementStrategies().length">
+										<div class="control-group">
+											<label class="control-label">
+												Variable replacement strategy:
+											</label>
+											<div class="controls">
+												<select data-bind="options: variableReplacementStrategies, value: variableReplacementStrategy, optionsText: 'niceName', optionsValue: 'name'"></select>
+											</div>
 										</div>
-									</div>
-								</form>
+									</form>
+								</div>
 							</section>
 						</div>
 					</div>

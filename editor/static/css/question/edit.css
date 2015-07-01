@@ -437,3 +437,18 @@ input.recalculate-checkbox {
 .part-edit .header .helplink {
 	margin-top: 0.5em;
 }
+
+
+.variable-replacements table {
+	margin: 1em 0;
+}
+.variable-replacements table td, .variable-replacements table th {
+	padding: 0.5em 1em;
+}
+.variable-replacements table td:first-child, .variable-replacements table th:first-child {
+	padding-right: 0.
+}
+
+.variable-replacements button.add-variable-replacement {
+	margin-bottom: 1em;
+}

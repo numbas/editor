@@ -446,7 +446,7 @@ input.recalculate-checkbox {
 	padding: 0.5em 1em;
 }
 .variable-replacements table td:first-child, .variable-replacements table th:first-child {
-	padding-right: 0;
+	padding-left: 0;
 }
 
 .variable-replacements .replace-with {

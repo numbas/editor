@@ -1874,6 +1874,12 @@ $(document).ready(function() {
 			p.variableReplacements.remove(vr);
 		}
 
+		this.variableReplacementStrategies = [
+			{name: 'originalfirst', niceName: 'Try without replacements first'},
+			{name: 'alwaysreplace', niceName: 'Always replace variables'}
+		];
+		this.variableReplacementStrategy = ko.observable(this.variableReplacementStrategies[0].name)
+
 		this.scripts = [
 			new Script('constructor','When the part is created','after','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-when-the-part-is-created'),
 			new Script('mark','Mark student\'s answer','instead','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-mark-student-s-answer'),
@@ -1983,7 +1989,8 @@ $(document).ready(function() {
                 marks: this.realMarks(),
 				showCorrectAnswer: this.showCorrectAnswer(),
 				scripts: {},
-				variableReplacements: this.variableReplacements().map(function(vr){return vr.toJSON()})
+				variableReplacements: this.variableReplacements().map(function(vr){return vr.toJSON()}),
+				variableReplacementStrategy: this.variableReplacementStrategy()
             };
 
             if(this.prompt())
@@ -2020,7 +2027,7 @@ $(document).ready(function() {
                 if(this.types[i].name == data.type.toLowerCase())
                     this.type(this.types[i]);
             }
-            tryLoad(data,['marks','prompt','stepsPenalty','showCorrectAnswer'],this);
+            tryLoad(data,['marks','prompt','stepsPenalty','showCorrectAnswer','variableReplacementStrategy'],this);
 
             if(data.steps)
             {

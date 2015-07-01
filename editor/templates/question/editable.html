@@ -490,6 +490,17 @@
 									</tbody>
 								</table>
 								<button data-bind="click: addVariableReplacement, text: variableReplacements().length? 'Add another replacement' : 'Add a variable replacement'">Add a variable replacement</button>
+
+								<form class="form-horizontal" data-bind="fadeVisible: variableReplacementStrategies().length">
+									<div class="control-group">
+										<label class="control-label">
+											Variable replacement strategy:
+										</label>
+										<div class="controls">
+											<select data-bind="options: variableReplacementStrategies, value: variableReplacementStrategy, optionsText: 'niceName', optionsValue: 'name'"></select>
+										</div>
+									</div>
+								</form>
 							</section>
 						</div>
 					</div>

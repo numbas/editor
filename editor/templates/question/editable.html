@@ -480,9 +480,9 @@
 										</thead>
 										<tbody data-bind="foreach: variableReplacements">
 											<tr>
-												<td><input class="monospace" data-bind="value: variable"/></td>
+												<td><input class="variable-name" class="monospace" data-bind="value: variable"/></td>
 												<td>
-													<select data-bind="options: $root.allParts, optionsText: 'nicePath', optionsValue: 'path', value: replacement"/>
+													<select class="replace-with" data-bind="options: $root.allParts, optionsText: 'nicePath', optionsValue: 'path', value: replacement"/>
 												</td>
 												<td>
 													<button type="button" class="delete" data-bind="click: part.deleteVariableReplacement" title="Delete this replacement"></button>

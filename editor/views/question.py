@@ -312,7 +312,9 @@ class UpdateView(generic.UpdateView):
         if not self.request.user.is_anonymous():
             extensions |= Extension.objects.filter(author=self.request.user) 
 
-        context['extensions'] = [e.as_json() for e in Extension.objects.all()]
+        extensions = extensions.distinct()
+
+        context['extensions'] = [e.as_json() for e in extensions]
 
         context['editable'] = self.editable
         context['can_delete'] = self.can_delete

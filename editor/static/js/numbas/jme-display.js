@@ -1197,7 +1197,7 @@ var typeToJME = Numbas.jme.display.typeToJME = {
 			}
 			else if(arg_type=='number' && arg_value.complex && (op=='*' || op=='-u' || op=='/'))	// put brackets round a complex number
 			{
-				if(arg_value.im!=0 && arg_value.im!=1)
+				if(arg_value.im!=0 && !(arg_value.im==1 && arg_value.re==0))
 				{
 					bits[i] = '('+bits[i]+')';
 					args[i].bracketed = true;
@@ -1319,7 +1319,9 @@ var opBrackets = Numbas.jme.display.opBrackets = {
  * @param {JME[]} conditions - conditions as expressions in JME expressions on the matched variables, which must all evaluate to true for the rule to match.
  * @param {JME} result - expression pattern to rewrite to.
  * 
- * @property {JME} patternString
+ * @property {JME} patternString - the JME string defining the pattern to match
+ * @property {JME} resultString - the JME string defining the result of the rule
+ * @property {JME} conditionStrings - JME strings defining the conditions
  * @property {Numbas.jme.tree} tree - `patternString` compiled to a syntax tree
  * @property {Numbas.jme.tree} result - `result` compiled to a syntax tree
  * @property {Numbas.jme.tree[]} conditions `conditions` compiled to syntax trees
@@ -1329,8 +1331,10 @@ var Rule = jme.display.Rule = function(pattern,conditions,result)
 	this.patternString = pattern;
 	this.tree = jme.compile(pattern,{},true);
 
+	this.resultString = result;
 	this.result = jme.compile(result,{},true);
 
+	this.conditionStrings = conditions.slice();
 	this.conditions = [];
 	for(var i=0;i<conditions.length;i++)
 	{
@@ -1762,7 +1766,8 @@ var simplificationRules = jme.display.simplificationRules = {
 	],
 
 	noLeadingMinus: [
-		['-?;x+?;y',[],'y-x']											//don't start with a unary minus
+		['-?;x+?;y',[],'y-x'],											//don't start with a unary minus
+		['-0',[],'0']
 	],
 
 	collectNumbers: [
@@ -1837,9 +1842,9 @@ var compileRules = jme.display.compileRules = function(rules)
 {
 	for(var i=0;i<rules.length;i++)
 	{
-		pattern = rules[i][0];
-		conditions = rules[i][1];
-		result = rules[i][2];
+		var pattern = rules[i][0];
+		var conditions = rules[i][1];
+		var result = rules[i][2];
 		rules[i] = new Rule(pattern,conditions,result);
 	}
 	return new jme.Ruleset(rules,{});

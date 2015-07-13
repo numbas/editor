@@ -489,6 +489,9 @@ class SearchView(ListView):
             for tag in tags:
                 questions = questions.filter(tags__name__in=[tag])
 
+        exclude_tags = form.cleaned_data.get('exclude_tags')
+        questions = questions.exclude(tags__name__in=exclude_tags)
+
         usage = form.cleaned_data.get('usage')
         usage_filters = {
             "any": Q(),

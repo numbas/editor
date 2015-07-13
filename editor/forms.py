@@ -53,6 +53,7 @@ class QuestionSearchForm(forms.Form):
     filter_copies = forms.BooleanField(initial=False)
     only_ready_to_use = forms.BooleanField(initial=False)
     tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
+    exclude_tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
 
 class QuestionAccessForm(forms.ModelForm):
     given_by = forms.ModelChoiceField(queryset=User.objects.all())

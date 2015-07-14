@@ -731,6 +731,32 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 		return out;
 	},
 
+	/** Dictionary of functions 
+	 * type: function(value,display:boolean) -> string 
+	 * which convert a JME token to a string for display
+	 */
+	typeToDisplayString: {
+		'number': function(v) {
+			return ''+Numbas.math.niceNumber(v.value)+'';
+		},
+		'string': function(v,display) {
+			return v.value;
+		},
+	},
+
+	/** Produce a string representation of the given token, for display
+	 * @param {Numbas.jme.token} v
+	 * @see Numbas.jme.typeToDisplayString
+	 * @returns {string}
+	 */
+	tokenToDisplayString: function(v) {
+		if(v.type in jme.typeToDisplayString) {
+			return jme.typeToDisplayString[v.type](v);
+		} else {
+			return jme.display.treeToJME({tok:v});
+		}
+	},
+
 	/** Substitute variables into a text string (not maths).
 	 * @param {string} str
 	 * @param {Numbas.jme.Scope} scope
@@ -749,25 +775,16 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 			if(i % 2)
 			{
 				var v = jme.evaluate(jme.compile(bits[i],scope),scope);
-				if(v.type=='number')
-				{
-					if(display)
-						v = ''+Numbas.math.niceNumber(v.value)+'';
-					else
+				if(display) {
+					v = jme.tokenToDisplayString(v);
+				} else {
+					if(v.type=='number') {
 						v = '('+Numbas.jme.display.treeToJME({tok:v})+')';
-				}
-				else if(v.type=='string')
-				{
-					if(display) {
-						v = v.value;
-					}
-					else {
+					} else if(v.type=='string') {
 						v = "'"+v.value+"'";
+					} else {
+						v = jme.display.treeToJME({tok:v});
 					}
-				}
-				else
-				{
-					v = jme.display.treeToJME({tok:v});
 				}
 
 				out += v;
@@ -1744,7 +1761,9 @@ newBuiltin('capitalise',[TString],TString,function(s) { return util.capitalise(s
 newBuiltin('upper',[TString],TString,function(s) { return s.toUpperCase(); }, {doc: {usage: ['upper(\'hello there\')'], description: 'Change all the letters in a string to capitals.', tags: ['upper-case','case','upper','capitalise','majuscule']}});
 newBuiltin('lower',[TString],TString,function(s) { return s.toLowerCase(); }, {doc: {usage: ['lower(\'HELLO, you!\')'], description: 'Change all the letters in a string to minuscules.', tags: ['lower-case','lower','case']}});
 newBuiltin('pluralise',[TNum,TString,TString],TString,function(n,singular,plural) { return util.pluralise(n,singular,plural); });
-newBuiltin('join',[TList,TString],TString,function(list,delimiter) { return list.join(delimiter); },{unwrapValues:true});
+newBuiltin('join',[TList,TString],TString,function(list,delimiter) { 
+	return list.map(jme.tokenToDisplayString).join(delimiter);
+});
 
 //the next three versions of the `except` operator
 //exclude numbers from a range, given either as a range, a list or a single value
@@ -2788,6 +2807,36 @@ newBuiltin('table',[TList,TList],THTML,
 			usage: ['table([ [1,2,3], [4,5,6] ], [\'Header 1\', \'Header 2\'])', 'table(data,headers)'],
 			tags: ['table','tabular','data','html'],
 			description: 'Create a table to display a list of rows of data, with the given headers.'
+		}
+	}
+);
+
+newBuiltin('table',[TList],THTML,
+	function(data) {
+		var table = $('<table/>');
+
+		var tbody=$('<tbody/>');
+		table.append(tbody);
+		for(var i=0;i<data.length;i++) {
+			var row = $('<tr/>');
+			tbody.append(row);
+			for(var j=0;j<data[i].length;j++) {
+				var cell = data[i][j];
+				if(typeof cell=='number')
+					cell = Numbas.math.niceNumber(cell);
+				row.append($('<td/>').html(cell));
+			}
+		}
+
+		return table;
+	},
+	{
+		unwrapValues: true,
+
+		doc: {
+			usage: ['table([ [1,2,3], [4,5,6] ])', 'table(data)'],
+			tags: ['table','tabular','data','html'],
+			description: 'Create a table to display a list of rows of data.'
 		}
 	}
 );

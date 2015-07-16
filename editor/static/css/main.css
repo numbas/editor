@@ -401,3 +401,7 @@ button.search.loading {
 	background-color: black;
 	color: yellow;
 }
+
+.stamp-status.pleasetest {
+	background-color: #ffbf00;
+}

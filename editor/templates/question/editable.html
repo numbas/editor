@@ -476,6 +476,7 @@
 											<tr>
 												<th>Variable</th>
 												<th>Answer to use</th>
+												<th>Must be answered?</th>
 											</th>
 										</thead>
 										<tbody data-bind="foreach: variableReplacements">
@@ -483,6 +484,9 @@
 												<td><input class="variable-name" class="monospace" data-bind="value: variable"/></td>
 												<td>
 													<select class="replace-with" data-bind="options: $root.allParts, optionsText: 'nicePath', optionsValue: 'path', value: replacement"/>
+												</td>
+												<td>
+													<input type="checkbox" data-bind="checked: must_go_first"/>
 												</td>
 												<td>
 													<button type="button" class="delete" data-bind="click: part.deleteVariableReplacement" title="Delete this replacement"></button>

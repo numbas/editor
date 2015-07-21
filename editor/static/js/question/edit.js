@@ -2068,6 +2068,7 @@ $(document).ready(function() {
 		this.part = part;
 		this.variable = ko.observable('');
 		this.replacement = ko.observable(null);
+		this.must_go_first = ko.observable(false);
 		if(data) {
 			this.load(data);
 		}
@@ -2076,11 +2077,12 @@ $(document).ready(function() {
 		toJSON: function() {
 			return {
 				variable: this.variable(),
-				part: this.replacement()
+				part: this.replacement(),
+				must_go_first: this.must_go_first()
 			}
 		},
 		load: function(data) {
-			tryLoad(data,['variable'],this);
+			tryLoad(data,['variable','must_go_first'],this);
 			var path = data.part;
 			this.replacement(data.part);
 		}

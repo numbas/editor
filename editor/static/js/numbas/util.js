@@ -542,17 +542,23 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	},
 
 	/** Create a comparison function which sorts objects by a particular property
-	 * @param {string} prop - name of the property to sort by
+	 * @param {string[]|string} prop - name of the property (or list of names of properties) to sort by
 	 * @returns {function}
 	 */
-	sortBy: function(prop) {
+	sortBy: function(props) {
+		if(typeof props=='string') {
+			props = [props];
+		}
+		var l = props.length;
 		return function(a,b) {
-			if(a[prop]>b[prop])
-				return 1;
-			else if(a[prop]<b[prop])
-				return -1;
-			else
-				return 0;
+			for(var i=0;i<l;i++) {
+				var prop = props[i];
+				if(a[prop]>b[prop])
+					return 1;
+				else if(a[prop]<b[prop])
+					return -1;
+			}
+			return 0;
 		}
 	},
 
@@ -730,6 +736,46 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 				return out;
 			}
 		}
+	},
+
+	/** Get the letter format of an ordinal
+	 * e.g. the Nth element in the sequence a,b,c,...z,aa,ab,..,az,ba,...
+	 * @param {number} n
+	 * @returns {string}
+	 */
+	letterOrdinal: function(n) {
+		var alphabet = 'abcdefghijklmnopqrstuvwxyz';
+		var b = alphabet.length;
+		if(n==0) {
+			return alphabet[0];
+		}
+		var s = '';
+		while(n>0) {
+			if(s) {
+				n -= 1;
+			}
+			var m = n%b;
+			s = alphabet[m]+s;
+			n = (n-m)/b;
+		}
+		return s;
+	},
+
+	/** Get a human-sensible name of a part, given its path
+	 * @param {string} path
+	 * @returns {string}
+	 */
+	nicePartName: function(path) {
+		var re_path = /^p(\d+)(?:g(\d+)|s(\d+))?$/;
+		var m = re_path.exec(path);
+		var s = R('part')+' '+util.letterOrdinal(m[1]);
+		if(m[2]) {
+			s += ' '+R('gap')+' '+m[2];
+		}
+		if(m[3]) {
+			s += ' '+R('step')+' '+m[3];
+		}
+		return s;
 	}
 	
 };

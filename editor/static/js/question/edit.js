@@ -1778,7 +1778,7 @@ $(document).ready(function() {
 				i = i;
 			}
 			else {
-				i= 'abcdefghijklmnopqrstuvwxyz'[i];
+				i = Numbas.util.letterOrdinal(i);
 			}
 			return i;
 		},this);
@@ -1801,14 +1801,7 @@ $(document).ready(function() {
 			}
 		},this);
 		this.nicePath = ko.computed(function() {
-			var l = this.indexLabel();
-			if(this.isGap()) {
-				return this.parent().nicePath()+' gap '+l;
-			} else if(this.isStep()) {
-				return this.parent().nicePath()+' step '+l;
-			} else {
-				return 'Part '+l;
-			}
+			return Numbas.util.capitalise(Numbas.util.nicePartName(this.path()));
 		},this);
 
 		this.tabs = ko.computed(function() {

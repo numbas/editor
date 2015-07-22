@@ -70,10 +70,9 @@
                             <span class="caret"></span>
                           </button>
                           <ul class="dropdown-menu">
-                            <li><a tabindex="-1" href="#" data-bind="click: stamp('ok')">This is ready to use</a></li>
-                            <li><a tabindex="-1" href="#" data-bind="click: stamp('dontuse')">This should not be used</a></li>
-                            <li><a tabindex="-1" href="#" data-bind="click: stamp('problem')">This has some problems</a></li>
-                            <li><a tabindex="-1" href="#" data-bind="click: stamp('broken')">This doesn't work</a></li>
+						  {% for name,description in stamp_choices %}
+							<li><a tabindex="-1" href="#" data-bind="click: stamp('{{name}}')">{{description}}</a></li>
+						  {% endfor %}
                           </ul>
                         </div>
                     {% endif %}

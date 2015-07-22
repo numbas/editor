@@ -116,7 +116,11 @@ $(document).ready(function() {
 		var realtags = this.realtags = ko.observableArray([]);
         this.tags = ko.computed({
             read: function() {
-				return this.realtags().sort();
+				return this.realtags().sort(function(a,b) {
+					a = a.toLowerCase();
+					b = b.toLowerCase();
+					return a>b ? 1 : a<b ? -1 : 0;
+				});
 			},
             write: function(newtags) {
 				newtags = newtags.slice();

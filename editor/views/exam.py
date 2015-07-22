@@ -39,7 +39,7 @@ from django_tables2.config import RequestConfig
 
 from editor.forms import ExamForm, NewExamForm, ExamSearchForm,ExamSetAccessForm, ExamSearchForm, ExamHighlightForm
 from editor.tables import ExamTable, ExamHighlightTable
-from editor.models import Exam, Question, ExamAccess, ExamHighlight, Theme, Licence
+from editor.models import Exam, Question, ExamAccess, ExamHighlight, Theme, Licence, STAMP_STATUS_CHOICES
 import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
@@ -354,6 +354,8 @@ class UpdateView(generic.UpdateView):
         context['access_rights'] = [{'id': ea.user.pk, 'name': ea.user.get_full_name(), 'access_level': ea.access} for ea in ExamAccess.objects.filter(exam=self.object)]
 
         context['versions'] = reversion.get_for_object(self.object)
+
+        context['stamp_choices'] = STAMP_STATUS_CHOICES
 
         return context
 

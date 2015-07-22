@@ -38,7 +38,7 @@ import reversion
 from django_tables2.config import RequestConfig
 
 from editor.forms import NewQuestionForm, QuestionForm, QuestionSetAccessForm, QuestionSearchForm, QuestionHighlightForm
-from editor.models import Question,Extension,Image,QuestionAccess,QuestionHighlight,EditorTag,Licence
+from editor.models import Question,Extension,Image,QuestionAccess,QuestionHighlight,EditorTag,Licence,STAMP_STATUS_CHOICES
 import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
@@ -312,7 +312,9 @@ class UpdateView(generic.UpdateView):
         if not self.request.user.is_anonymous():
             extensions |= Extension.objects.filter(author=self.request.user) 
 
-        context['extensions'] = [e.as_json() for e in Extension.objects.all()]
+        extensions = extensions.distinct()
+
+        context['extensions'] = [e.as_json() for e in extensions]
 
         context['editable'] = self.editable
         context['can_delete'] = self.can_delete
@@ -356,6 +358,8 @@ class UpdateView(generic.UpdateView):
             for name in 
             'jme','gapfill','numberentry','patternmatch','1_n_2','m_n_2','m_n_x','matrix'
         ]
+
+        context['stamp_choices'] = STAMP_STATUS_CHOICES
 
         return context
     
@@ -486,6 +490,9 @@ class SearchView(ListView):
         if len(tags):
             for tag in tags:
                 questions = questions.filter(tags__name__in=[tag])
+
+        exclude_tags = form.cleaned_data.get('exclude_tags')
+        questions = questions.exclude(tags__name__in=exclude_tags)
 
         usage = form.cleaned_data.get('usage')
         usage_filters = {

@@ -733,6 +733,23 @@ $(document).ready(function() {
 				.append(plaintext)
             ;
 
+			function remove_empty_spans(node) {
+				if(node.nodeType==1) {
+					for(var i=0;i<node.childNodes.length;i++) {
+						var child = node.childNodes[i];
+						if(child.nodeType==1) {
+							remove_empty_spans(child);
+							if(child.nodeName=='SPAN' && child.attributes.length==0) {
+								for(var j=0;j<child.childNodes.length;j++) {
+									node.insertBefore(child.childNodes[j],child);
+								}
+								node.removeChild(child);
+							}
+						}
+					}
+				}
+			}
+
 			//tinyMCE
             t
                 .tinymce({
@@ -745,6 +762,10 @@ $(document).ready(function() {
 					verify_html: false,
 					autoresize_bottom_margin: 0,
 					relative_urls: false,
+
+					paste_postprocess: function(ed,args) {
+						remove_empty_spans(args.node);
+					},
 
 					init_instance_callback: function(ed) { 
 						$(element).writemaths({iFrame: true, position: 'center top', previewPosition: 'center bottom'}); 

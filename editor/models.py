@@ -301,6 +301,7 @@ STAMP_STATUS_CHOICES = (
     ('dontuse','Should not be used'),
     ('problem','Has some problems'),
     ('broken','Doesn\'t work'),
+	('pleasetest','Needs to be tested'),
 )
 
 class TimelineMixin(object):

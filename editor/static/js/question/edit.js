@@ -2066,6 +2066,12 @@ $(document).ready(function() {
 		this.variable = ko.observable('');
 		this.replacement = ko.observable(null);
 		this.must_go_first = ko.observable(false);
+		this.availableParts = ko.computed(function() {
+			var p = this.part
+			return p.q.parts().filter(function(p2){
+				return p!=p2;
+			});
+		},this);
 		if(data) {
 			this.load(data);
 		}

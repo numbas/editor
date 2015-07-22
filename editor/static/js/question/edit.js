@@ -1875,7 +1875,7 @@ $(document).ready(function() {
 			{name: 'originalfirst', niceName: 'Try without replacements first'},
 			{name: 'alwaysreplace', niceName: 'Always replace variables'}
 		];
-		this.variableReplacementStrategy = ko.observable(this.variableReplacementStrategies[0].name)
+		this.variableReplacementStrategy = ko.observable(this.variableReplacementStrategies[0])
 
 		this.scripts = [
 			new Script('constructor','When the part is created','after','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-when-the-part-is-created'),
@@ -1987,7 +1987,7 @@ $(document).ready(function() {
 				showCorrectAnswer: this.showCorrectAnswer(),
 				scripts: {},
 				variableReplacements: this.variableReplacements().map(function(vr){return vr.toJSON()}),
-				variableReplacementStrategy: this.variableReplacementStrategy()
+				variableReplacementStrategy: this.variableReplacementStrategy().name
             };
 
             if(this.prompt())
@@ -2024,7 +2024,7 @@ $(document).ready(function() {
                 if(this.types[i].name == data.type.toLowerCase())
                     this.type(this.types[i]);
             }
-            tryLoad(data,['marks','prompt','stepsPenalty','showCorrectAnswer','variableReplacementStrategy'],this);
+            tryLoad(data,['marks','prompt','stepsPenalty','showCorrectAnswer'],this);
 
             if(data.steps)
             {
@@ -2043,6 +2043,12 @@ $(document).ready(function() {
 					}
 				}
 			}
+
+			p.variableReplacementStrategies.map(function(s) {
+				if(s.name==data.variableReplacementStrategy) {
+					p.variableReplacementStrategy(s);
+				}
+			});
 
 			if(data.variableReplacements) {
 				data.variableReplacements.map(function(d) {

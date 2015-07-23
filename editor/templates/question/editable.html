@@ -469,6 +469,7 @@
 								</form>
 							</section>
 							<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='adaptivemarking'}">
+								<span data-bind="template: {name: 'helplink', data: {topic: 'adaptive marking', url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#adaptive-marking', big: true}}"></span>
 								<h4>Variable replacement</h4>
 								<div class="variable-replacements">
 									<table data-bind="fadeVisible: variableReplacements().length">

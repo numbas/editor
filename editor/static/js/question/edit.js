@@ -821,7 +821,7 @@ $(document).ready(function() {
 			this.functions().map(function(f) {
 				try {
 					var fn = {
-						name: f.name(),
+						name: f.name().toLowerCase(),
 						definition: f.definition(),
 						language: f.language(),
 						outtype: f.type(),

@@ -2074,7 +2074,7 @@ $(document).ready(function() {
 		this.must_go_first = ko.observable(false);
 		this.availableParts = ko.computed(function() {
 			var p = this.part
-			return p.q.parts().filter(function(p2){
+			return p.q.allParts().filter(function(p2){
 				return p!=p2;
 			});
 		},this);

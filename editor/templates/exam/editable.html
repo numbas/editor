@@ -2,7 +2,7 @@
 {% load verbatim %}
 {% load user_link %}
 
-{% block editable_message %}You can edit this question.{% endblock %}
+{% block editable_message %}You can edit this exam.{% endblock %}
 
 {% block editor %}
 	{{ block.super }}
@@ -25,7 +25,7 @@
                             <label>
                                 <span class="control-label">
                                     Licence: 
-                                    <span data-bind="template: {name: 'helplink', data: {topic: 'licence', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-licence'}}"></span>
+                                    <span data-bind="template: {name: 'helplink', data: {topic: 'licence', url: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-licence'}}"></span>
                                 </span>
                                 <span class="controls">
                                     <select data-bind="options: Editor.licences, value: licence, optionsText: 'short_name', optionsCaption: 'None specified'"></select>
@@ -377,7 +377,7 @@
 			</div>
 			<div class="title">
 				<span class="number" data-bind="text: ($index()+1)+'.'"/>
-				<a data-bind="attr:{href: url}, text: name" target="_blank"></a>
+				<a data-bind="attr:{href: url}, text: name, mathjax: name" target="_blank"></a>
 			</div>
 			<div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
 		</li>
@@ -391,7 +391,7 @@
 			</div>
 			<div class="details">
 				<div class="title">
-					<a data-bind="attr:{href: url}, text: name" target="_blank"></a>
+					<a data-bind="attr:{href: url}, text: name, mathjax: name" target="_blank"></a>
 				</div>
 				<div class="author">
 					(<span data-bind="text: author"></span>) - <span data-bind="text: moment(last_modified()).fromNow()"></span>

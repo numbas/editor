@@ -762,6 +762,7 @@ $(document).ready(function() {
 					verify_html: false,
 					autoresize_bottom_margin: 0,
 					convert_urls: false,
+					verify_html: false,
 
 					paste_postprocess: function(ed,args) {
 						remove_empty_spans(args.node);

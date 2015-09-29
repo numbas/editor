@@ -39,7 +39,7 @@ from django_tables2.config import RequestConfig
 
 from editor.forms import ExamForm, NewExamForm, ExamSearchForm,ExamSetAccessForm, ExamSearchForm, ExamHighlightForm
 from editor.tables import ExamTable, ExamHighlightTable
-from editor.models import Exam, Question, ExamAccess, ExamHighlight, Theme, Licence, STAMP_STATUS_CHOICES
+from editor.models import Exam, Question, ExamAccess, ExamHighlight, Theme, Licence, Extension, STAMP_STATUS_CHOICES
 import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
@@ -159,6 +159,8 @@ class UploadView(generic.CreateView):
                     author = self.object.author
                 )
                 qo.save()
+                extensions = Extension.objects.filter(location__in=exam_object.data['extensions'])
+                qo.extensions.add(*extensions)
                 qs.append(qo)
             self.object.set_questions(qs)
 

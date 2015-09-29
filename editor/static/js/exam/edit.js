@@ -581,8 +581,9 @@ $(document).ready(function() {
                         break;
                     }
                 }
-            } else if('theme' in data) {
-                var path = data.theme;
+            } else  {
+                var path = 'theme' in data ? data.theme : '';
+				path = path || 'default';
                 for(var i=0;i<Editor.themes.length;i++) {
                     if(Editor.themes[i].path==path && !Editor.themes[i].custom) {
                         this.theme(Editor.themes[i]);
@@ -590,6 +591,9 @@ $(document).ready(function() {
                     }
                 }
             }
+			if(!this.theme()) {
+				this.theme(Editor.themes[0]);
+			}
 
             if('locale' in data)
                 this.locale(data.locale);

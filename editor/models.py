@@ -39,6 +39,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.forms import model_to_dict
 from django.utils.deconstruct import deconstructible
+from django.db.models.signals import pre_delete
 from uuslug import slugify
 
 import reversion
@@ -219,6 +220,14 @@ class Theme( models.Model ):
         os.makedirs(self.extracted_path)
         z = ZipFile(self.zipfile.file,'r')
         z.extractall(self.extracted_path)
+
+@receiver(pre_delete, sender=Theme)
+def reset_theme_on_delete(sender,instance,**kwargs):
+	default_theme = settings.GLOBAL_SETTINGS['NUMBAS_THEMES'][0][1]
+	for exam in instance.used_in_exams.all():
+		exam.custom_theme = None
+		exam.theme = default_theme
+		exam.save()
 
 class Image( models.Model ):
     title = models.CharField( max_length=255 ) 

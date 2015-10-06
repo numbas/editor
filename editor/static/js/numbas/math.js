@@ -813,13 +813,13 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	countSigFigs: function(n,max) {
 		var m;
 		if(max) {
-			m = n.match(/^-?(?:(\d0*)$|(?:([1-9]\d*[1-9]0*)$)|([1-9]\d*\.\d+$)|(0\.0+$)|(?:0\.0*([1-9]\d*))$)/);
+			m = n.match(/^-?(?:(\d0*)$|(?:([1-9]\d*[1-9]0*)$)|([1-9]\d*\.\d+$)|(0\.0+$)|(?:0\.0*([1-9]\d*))|(?:(\d*(?:\.\d+)?)[Ee][+\-]?\d+)$)/i);
 		} else {
-			m = n.match(/^-?(?:(\d)0*$|(?:([1-9]\d*[1-9])0*$)|([1-9]\d*\.\d+$)|(0\.0+$)|(?:0\.0*([1-9]\d*))$)/);
+			m = n.match(/^-?(?:(\d)0*$|(?:([1-9]\d*[1-9])0*$)|([1-9]\d*\.\d+$)|(0\.0+$)|(?:0\.0*([1-9]\d*))|(?:(\d*(?:\.\d+)?)[Ee][+\-]?\d+)$)/i);
 		}
 		if(!m)
 			return 0;
-		var sigFigs = m[1] || m[2] || m[3] || m[4] || m[5];
+		var sigFigs = m[1] || m[2] || m[3] || m[4] || m[5] || m[6];
 		return sigFigs.replace('.','').length;
 	},
 
@@ -850,7 +850,7 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 
 		if(precisionType=='sigfig' && !precisionOK && digits < precision && /[1-9]\d*0+$/.test(n)) {	// in cases like 2070, which could be to either 3 or 4 sig figs
 			var trailingZeroes = n.match(/0*$/)[0].length;
-			if(sigFigs + trailingZeroes >= precision) {
+			if(digits + trailingZeroes >= precision) {
 				precisionOK = true;
 			}
 		}
@@ -1527,6 +1527,26 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 			}
 		}
 		return factors;
+	},
+
+	/** Sum the elements in the given list
+	 *
+	 * @param {list} list
+	 * @returns {number}
+	 */
+	sum: function(list) {
+		var total = 0;
+		var l = list.length;
+
+		if(l==0) {
+			return 0;
+		}
+
+		for(var i=0;i<l;i++) {
+			total = math.add(total,list[i]);
+		}
+		
+		return total;
 	}
 
 };
@@ -2064,6 +2084,14 @@ var setmath = Numbas.setmath = {
 	 */
 	minus: function(a,b) {
 		return a.filter(function(v){ return !setmath.contains(b,v); });
+	},
+
+	/** Size of a set
+	 * @param {set} set
+	 * @returns {number}
+	 */
+	size: function(set) {
+		return set.length;
 	}
 }
 

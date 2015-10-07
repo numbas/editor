@@ -223,11 +223,11 @@ class Theme( models.Model ):
 
 @receiver(pre_delete, sender=Theme)
 def reset_theme_on_delete(sender,instance,**kwargs):
-	default_theme = settings.GLOBAL_SETTINGS['NUMBAS_THEMES'][0][1]
-	for exam in instance.used_in_exams.all():
-		exam.custom_theme = None
-		exam.theme = default_theme
-		exam.save()
+    default_theme = settings.GLOBAL_SETTINGS['NUMBAS_THEMES'][0][1]
+    for exam in instance.used_in_exams.all():
+        exam.custom_theme = None
+        exam.theme = default_theme
+        exam.save()
 
 class Image( models.Model ):
     title = models.CharField( max_length=255 ) 
@@ -310,7 +310,7 @@ STAMP_STATUS_CHOICES = (
     ('dontuse','Should not be used'),
     ('problem','Has some problems'),
     ('broken','Doesn\'t work'),
-	('pleasetest','Needs to be tested'),
+    ('pleasetest','Needs to be tested'),
 )
 
 class TimelineMixin(object):
@@ -513,6 +513,16 @@ class Question(EditorModel,NumbasObject,ControlledObject):
             return question_access.access
         except QuestionAccess.DoesNotExist:
             return 'none'
+
+    @property
+    def network(self):
+        q = self
+        while q.copy_of:
+            q = q.copy_of
+        return q.descendants()
+
+    def descendants(self):
+        return (self,[q2.descendants() for q2 in self.copies.all()])
 
 class QuestionAccess(models.Model):
     question = models.ForeignKey(Question)

@@ -50,6 +50,7 @@ $(document).ready(function() {
                 })
             ),
 			new Editor.Tab('exams','Exams using this question'),
+			new Editor.Tab('network','Network'),
 		]);
         var editingHistoryTab = new Editor.Tab('versions','Editing history');
         this.mainTabs.splice(1,0,editingHistoryTab);

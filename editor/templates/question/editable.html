@@ -1,5 +1,6 @@
 {% extends "question/edit.html" %}
 {% load user_link %}
+{% load list_through_template %}
 
 
 {% block editor %}
@@ -83,11 +84,13 @@
 				</div>
 			</div>
 		</section>
+
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='statement'}">
 			<span data-bind="template: {name: 'helplink', data: {topic: 'the question statement', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#statement', big: true}}"></span>
 			<div id="statement" data-bind="writemaths: statement, preambleCSS: $root.preamble.css"></div>
 			<div class="nothing-here" data-bind="if:!statement()">No statement.</div>
 		</section>
+
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='variables'}">
 			<span data-bind="template: {name: 'helplink', data: {topic: 'variables', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#variables', big: true}}"></span>
 			<div class="row-fluid">
@@ -276,6 +279,7 @@
 				</section>
 			</div>
 		</section>
+
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='functions'}">
 			<div id="functions">
 				<h4>Functions <span data-bind="template: {name: 'helplink', data: {topic: 'functions', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#functions-rulesets'}}"></span></h4>
@@ -376,6 +380,7 @@
 				</form>
 			</div>
 		</section>
+
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='parts'}">
 			<div class="row-fluid">
 				<div class="span3">
@@ -514,10 +519,12 @@
 				</div>
 			</div>
 		</section>
+
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='advice'}">
 			<span data-bind="template: {name: 'helplink', data: {topic: 'the advice section', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#advice', big: true}}"></span>
 			<div data-bind="writemaths:advice, preambleCSS: $root.preamble.css"></div>
 		</section>
+
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='resources'}">
 			<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#resources', big: true}}"></span>
 			<form data-bind="fileupload: resources" data-url="{% url 'upload_resource' object.pk object.slug %}">
@@ -545,6 +552,7 @@
 				</li>
 			</ul>
 		</section>
+
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='exams'}">
 			{% if object.exam_set.count %}
 				<ul class="exams-list">
@@ -558,6 +566,7 @@
 				This question is not used in any exams.
 			{% endif %}
 		</section>
+
         <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='versions'}">
 			<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#editing-history', big: true}}"></span>
             <h4>Editing history</h4>
@@ -614,6 +623,7 @@
                 </tbody>
             </table>
         </section>
+
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='access'}">
 			<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#access', big: true}}"></span>
 			<form class="form-horizontal">
@@ -653,6 +663,12 @@
 					</label>
 				</div>
 			</form>
+		</section>
+
+		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='network'}">
+			<ul class="network">
+				{% list_through_template "question/network_question.html" object.network object %}
+			</ul>
 		</section>
 	</div>
 

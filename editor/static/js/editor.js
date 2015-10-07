@@ -1105,6 +1105,9 @@ $(document).ready(function() {
 
 	var old_notifications = $('#notifications .dropdown-menu').html()
 	setInterval(function() {
+		if(!document.hasFocus()) {
+			return;
+		}
 		$.get('/notifications/unread/').success(function(response) {
 			if(response!=old_notifications) {
 				old_notifications = response;

@@ -238,7 +238,7 @@
 							<div data-bind="visible: dependencies().length>0" class="inline-names">
 								<strong>Depends on:</strong>
 								<ul data-bind="foreach: dependenciesObjects">
-									<li><!-- ko if: $index()>0 -->, <!-- /ko --><span class="variable" data-bind="click: $root.currentVariable, text: name"></span></li>
+									<li><!-- ko if: $index()>0 -->, <!-- /ko --><span class="variable" data-bind="click: setCurrent, text: name, css: {notdefined: notdefined}, attr: {title: title}"></span></li>
 								</ul>.
 							</div>
 							<div data-bind="visible: usedIn().length>0" class="inline-names">

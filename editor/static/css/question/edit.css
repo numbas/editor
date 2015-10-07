@@ -357,6 +357,12 @@ input.recalculate-checkbox {
     cursor: pointer;
 }
 
+.variable .inline-names .variable.notdefined {
+    background-color: red;
+    color: white;
+    border: 1px solid #d00;
+}
+
 .variables-test {
 	margin: 1em 0;
 }

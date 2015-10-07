@@ -1531,8 +1531,27 @@ $(document).ready(function() {
 		},this);
 		this.dependenciesObjects = ko.computed(function() {
 			var deps = this.dependencies();
-			return q.variables().filter(function(v2) {
-				return deps.contains(v2.name().toLowerCase());
+			return this.dependencies().map(function(name) {
+				var obj = q.getVariable(name);
+				if(obj) {
+					name = obj.name();
+				}
+				var out = {
+					name: name,
+					obj: obj, 
+					notdefined: !obj, 
+					title: !obj ? 'Not defined. Click to add this variable.' : '',
+					setCurrent: function() {
+						if(obj) {
+							q.currentVariable(obj);
+						} else {
+							var v = q.addVariable();
+							v.name(name);
+							q.baseVariableGroup.variables.push(v);
+						}
+					}
+				};
+				return out;
 			});
 		},this);
 		this.usedIn = ko.computed(function() {

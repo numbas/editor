@@ -219,6 +219,7 @@ $(document).ready(function() {
 			conditionError: ko.observable(false),
 			maxRuns: ko.observable(100),
 			totalRuns: ko.observable(0),
+			totalErrors: ko.observable(0),
 			totalCorrect: ko.observable(0),
 			advice: ko.observable(''),
 			running_time: ko.observable(3),
@@ -902,10 +903,11 @@ $(document).ready(function() {
 			function computeVariable(name) {
 				try {
 					var value = jme.variables.computeVariable(name,todo,scope);
-					result.variables[x] = {value: value};
+					result.variables[name] = {value: value};
 				}
 				catch(e) {
-					result.variables[x] = {error: e.message};
+					result.variables[name] = {error: e.message};
+					result.error = true;
 				}
 			}
 
@@ -945,6 +947,7 @@ $(document).ready(function() {
 			var start = new Date()
 			var end = start.getTime()+running_time*1000;
 			var runs = 0;
+			var errors = 0;
 			var correct = 0;
 			var q = this;
 			var prep = this.prepareVariables();
@@ -959,10 +962,12 @@ $(document).ready(function() {
 				var timePerRun = timeTaken/runs;
 
 				q.variablesTest.totalRuns(runs);
+				q.variablesTest.totalErrors(errors);
 				q.variablesTest.totalCorrect(correct);
 
 				var probPass = correct/runs;
 				var probFail = 1-probPass;
+				var probError = errors/runs;
 
 				// calculate 95% confidence interval for probPass
 				var z = 1.9599639845400545;
@@ -988,7 +993,7 @@ $(document).ready(function() {
 					q.variablesTest.advice('The condition was never satisfied. That means it\'s either really unlikely or impossible.');
 				} else {
 					q.variablesTest.advice(
-						'<p>The condition was satisfied <strong>'+round(probPass*100)+'%</strong> of the time, over <strong>'+runs+'</strong> runs. The mean computation time for one run was <strong>'+round(timePerRun)+'</strong> seconds.</p>'+
+						'<p>The condition was satisfied <strong>'+round(probPass*100)+'%</strong> of the time, over <strong>'+runs+'</strong> runs, with <strong>'+round(probError*100)+'%</strong> of runs aborted due to errors. The mean computation time for one run was <strong>'+round(timePerRun)+'</strong> seconds.</p>'+
 						'<p>Successfully generating a set of variables will take on average <strong>'+round(timePerRun*(1/probPass))+'</strong> seconds on this device.</p>'+
 						'<p>In order to fail at most 1 in every 1000 times the question is run, you should set the max. runs to <strong>'+suggestedRuns+'</strong>, taking at most <strong>'+round(timePerRun*suggestedRuns)+'</strong> seconds on this device.</p>'+
 						'<p>If you want to allow at most <strong>1 second</strong> to generate a set of variables, i.e. set max. runs to <strong>'+round(1/timePerRun)+'</strong>, this device\'s chance of succeeding is <strong>'+round(probSucceedInTime*100)+'%</strong>.</p>'
@@ -1017,6 +1022,9 @@ $(document).ready(function() {
 
 					if(run.conditionSatisfied) {
 						correct += 1;
+					}
+					if(run.error) {
+						errors += 1;
 					}
 					setTimeout(test,1);
 				}

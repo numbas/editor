@@ -1,7 +1,7 @@
 {% extends "question/edit.html" %}
 {% load user_link %}
-{% load list_through_template %}
-
+{% load icon %}
+{% load can_edit %}
 
 {% block editor %}
 	{% include "editable.html" %}
@@ -665,10 +665,53 @@
 			</form>
 		</section>
 
-		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='network'}">
-			<ul class="network">
-				{% list_through_template "question/network_question.html" object.network object %}
-			</ul>
+        <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='network'}">
+            <h2>Network</h2>
+            <table class="network">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Author</th>
+                        <th>Last Modified</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for q2 in object.network %}
+                    <tr class="network-question{% if q2 == object %} current{% endif %}">
+                        <td><a href="{% url 'question_edit' q2.pk q2.slug %}">{{q2.name}}</a></td>
+                        <td>{% include "stamp_column.html" with record=q2 %}</td>
+                        <td><a href="{% url 'view_profile' q2.author.pk %}">{{q2.author.get_full_name}}</a></td>
+                        <td>{{ q2.last_modified|date:"d/m/Y H:i" }}</td>
+                        <td class="admin"><a class="preview" href="{% url 'question_preview' q2.pk q2.slug %}" target="_blank" title="Test run">{% icon "media-play" 10 %}</a></td>
+                        <td>
+                            {% if q2 != object %}
+                            <a href="{% url 'question_compare' object.pk q2.pk %}">Compare</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% with object.incoming_pull_requests.open as pull_requests %}
+            {% if pull_requests.exists %}
+            <h2>Pull requests</h2>
+            <ul>
+                {% for pr in pull_requests %}
+                <li class="pull-request">
+                    <a href="{% url 'view_profile' pr.owner.pk %}">{{pr.owner.get_full_name}}</a> would like you to replace this question with <a href="{% url 'question_edit' pr.source.pk pr.source.slug %}">{{pr.source.name}}</a>.
+                    <div class="responses">
+                        <a href="{% url 'question_pullrequest_accept' pr.pk %}">Accept</a>
+                        <button type="button" class="reject" data-bind="click: rejectPR" data-pr="{{pr.pk}}">Reject</button>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {% endwith %}
 		</section>
 	</div>
 

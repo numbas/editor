@@ -1,0 +1,6 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<p>A request to merge {{source.name}} with {{destination.name}} has been sent to {{destination.author.get_full_name}}.</p>
+<p>You'll be notified when they respond to the request.</p>
+{% endblock content %}

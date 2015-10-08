@@ -1,0 +1,55 @@
+{% extends "layout.html" %}
+{% load icon %}
+
+{% block content %}
+<p>You are comparing 
+<table>
+    <thead>
+        <tr>
+            <td></td>
+            <th>Version A</th>
+            <th>Version B</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th>Name</th>
+            <td>
+                <a href="{% url "question_edit" q1.pk q1.slug %}" target="_blank">{{q1.name}}</a>
+                <a class="preview" href="{% url 'question_preview' q1.pk q1.slug %}" target="_blank" title="Test run">{% icon "media-play" 10 %}</a>
+            </td>
+            <td>
+                <a href="{% url "question_edit" q2.pk q2.slug %}" target="_blank">{{q2.name}}</a>
+                <a class="preview" href="{% url 'question_preview' q2.pk q2.slug %}" target="_blank" title="Test run">{% icon "media-play" 10 %}</a>
+            </td>
+        </tr>
+        <tr>
+            <th>Author</th>
+            <td>{{q1.author.get_full_name}}</td>
+            <td>{{q2.author.get_full_name}}</td>
+        </tr>
+        <tr>
+            <th>Last modified</th>
+            <td>{{q1.last_modified|date:"d/m/Y H:i"}}</td>
+            <td>{{q2.last_modified|date:"d/m/Y H:i"}}</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                {% if not pr1_exists %}
+                <a href="{% url 'question_pullrequest' q1.pk q2.pk %}">Merge into B</a>
+                {% else %}
+                Request outstanding
+                {% endif %}
+            </td>
+            <td>
+                {% if not pr2_exists %}
+                <a href="{% url 'question_pullrequest' q2.pk q1.pk %}">Merge into A</a>
+                {% else %}
+                Request outstanding
+                {% endif %}
+            </td>
+        </tr>
+    </tbody>
+</table>
+{% endblock content %}

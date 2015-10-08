@@ -18,7 +18,7 @@ from copy import deepcopy
 import time
 import calendar
 
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist,ValidationError
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.db import transaction
@@ -38,7 +38,7 @@ import reversion
 from django_tables2.config import RequestConfig
 
 from editor.forms import NewQuestionForm, QuestionForm, QuestionSetAccessForm, QuestionSearchForm, QuestionHighlightForm
-from editor.models import Question,Extension,Image,QuestionAccess,QuestionHighlight,EditorTag,Licence,STAMP_STATUS_CHOICES
+from editor.models import Question, Extension, Image, QuestionAccess, QuestionHighlight, QuestionPullRequest, EditorTag, Licence, STAMP_STATUS_CHOICES
 import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
@@ -384,6 +384,56 @@ class RevertView(generic.UpdateView):
         self.version.revision.revert()
 
         return redirect(reverse('question_edit', args=(self.question.pk,self.question.slug)))
+
+class CompareView(generic.TemplateView):
+
+    template_name = "question/compare.html"
+
+    def get_context_data(self, pk1,pk2, **kwargs):
+        context = super(CompareView, self).get_context_data(**kwargs)
+        pk1 = int(pk1)
+        pk2 = int(pk2)
+        q1 = context['q1'] = Question.objects.get(pk=pk1)
+        q2 = context['q2'] = Question.objects.get(pk=pk2)
+        context['pr1_exists'] = QuestionPullRequest.objects.open().filter(source=q1,destination=q2).exists()
+        context['pr2_exists'] = QuestionPullRequest.objects.open().filter(source=q2,destination=q1).exists()
+        return context
+
+class CreatePullRequestView(generic.TemplateView):
+    template_name = "question/pullrequest.html"
+
+    def dispatch(self, request, source, destination, *args, **kwargs):
+        source = self.source = Question.objects.get(pk=int(source))
+        destination = self.destination = Question.objects.get(pk=int(destination))
+
+        self.pr = QuestionPullRequest(owner=self.request.user,source=source,destination=destination)
+        try:
+            self.pr.full_clean()
+        except ValidationError as e:
+            print("OOOPS",e)
+            return redirect('question_compare',args=(source.pk,destination.pk))
+
+        print("OK")
+        self.pr.save()
+
+        return super(CreatePullRequestView,self).dispatch(request,source,destination,*args,**kwargs)
+
+    def get_context_data(self,*args,**kwargs):
+        context = super(CreatePullRequestView, self).get_context_data(**kwargs)
+
+        context['source'] = self.source
+        context['destination'] = self.destination
+
+        context['pr'] = self.pr
+
+        return context
+
+def accept_pull_request(request,pk):
+    pr = QuestionPullRequest.objects.get(pk=int(pk))
+    pr.merge()
+    pr.open = False
+    pr.save()
+    return redirect('question_edit',pr.destination.pk,pr.destination.slug)
 
 class HighlightView(generic.FormView):
     template_name = 'question/highlight.html'

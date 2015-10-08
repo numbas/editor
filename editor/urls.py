@@ -73,9 +73,9 @@ urlpatterns = patterns('',
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/set-star$',
         login_required(exam.SetStarView.as_view()),name='set_exam_star'),
 
-	url(r'exam/question-lists/$',
-		exam.question_lists,
-		name='question_lists'),
+    url(r'exam/question-lists/$',
+        exam.question_lists,
+        name='question_lists'),
 
     url(r'^questions/$', question.IndexView.as_view(), name='question_index',),
 
@@ -137,6 +137,15 @@ urlpatterns = patterns('',
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+).exam$',
         question.SourceView.as_view(), name='question_source'),
 
+    url(r'^questions/compare/(?P<pk1>\d+)/(?P<pk2>\d+)$',
+        question.CompareView.as_view(), name='question_compare'),
+
+    url(r'^questions/merge/(?P<source>\d+)/(?P<destination>\d+)$',
+        question.CreatePullRequestView.as_view(), name='question_pullrequest'),
+
+    url(r'^pullrequest/(?P<pk>\d+)/accept$',
+        question.accept_pull_request, name='question_pullrequest_accept'),
+
     url(r'^comment/(?P<pk>\d+)/delete$',
         generic.DeleteCommentView.as_view(), name='delete_comment'),
 
@@ -157,11 +166,11 @@ urlpatterns = patterns('',
 
     url(r'version/(?P<pk>\d+)/update', login_required(version.UpdateView.as_view()), name='edit_version'),
 
-	url(r'notification/(?P<pk>\d+)/open', notification.OpenNotification.as_view(), name='open_notification'),
+    url(r'notification/(?P<pk>\d+)/open', notification.OpenNotification.as_view(), name='open_notification'),
 
-	url(r'question_basket/$',
-		BasketView.as_view(),
-		name='basket'),
+    url(r'question_basket/$',
+        BasketView.as_view(),
+        name='basket'),
     url(r'question_basket/add/$',
         login_required(add_question_to_basket),
         name='add_question_to_basket'),

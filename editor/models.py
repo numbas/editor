@@ -31,7 +31,7 @@ from django.contrib.staticfiles import finders
 from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
-from django.db import models
+from django.db import models,transaction
 from django.db.models import signals
 from django.dispatch import receiver
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -522,7 +522,7 @@ class Question(EditorModel,NumbasObject,ControlledObject):
         return q.descendants()
 
     def descendants(self):
-        return (self,[q2.descendants() for q2 in self.copies.all()])
+        return [self]+sum([q2.descendants() for q2 in self.copies.all()],[])
 
 class QuestionAccess(models.Model):
     question = models.ForeignKey(Question)
@@ -542,6 +542,54 @@ class QuestionHighlight(models.Model):
     picked_by = models.ForeignKey(User)
     note = models.TextField(blank=True)
     date = models.DateTimeField(auto_now_add=True,default=datetime.utcfromtimestamp(0))
+
+class PullRequestManager(models.Manager):
+    def open(self):
+        return self.filter(open=True)
+
+class QuestionPullRequest(models.Model):
+    objects = PullRequestManager()
+
+    owner = models.ForeignKey(User)
+    source = models.ForeignKey(Question,related_name='outgoing_pull_requests')
+    destination = models.ForeignKey(Question,related_name='incoming_pull_requests')
+    open = models.BooleanField(default=True)
+    created = models.DateTimeField(auto_now_add=True,default=datetime.utcfromtimestamp(0))
+
+    def clean(self):
+        if self.source==self.destination:
+            raise ValidationError({'source': "Source and destination are the same."})
+
+    def validate_unique(self,exclude=None):
+        if self.open and QuestionPullRequest.objects.filter(source=self.source,destination=self.destination,open=True).exists():
+            raise ValidationError("There's already an open pull request between these questions.")
+
+    def merge(self):
+        source, destination = self.source, self.destination
+        with transaction.atomic(), reversion.create_revision():
+            oname = destination.name
+            destination.content = source.content
+            destination.metadata = source.metadata
+            
+            destination.extensions.clear()
+            destination.extensions.add(*source.extensions.all())
+            
+            destination.resources.clear()
+            destination.resources.add(*source.resources.all())
+
+            destination.save()
+            destination.set_name(oname)
+            reversion.set_user(self.owner)
+            reversion.set_comment("Merged with {}".format(source.name))
+
+@receiver(signals.pre_save,sender=QuestionPullRequest)
+def clean_pull_request_pre_save(sender,instance, *args, **kwargs):
+    instance.full_clean()
+
+@receiver(signals.post_save,sender=QuestionPullRequest)
+def notify_pull_request(instance,created,**kwargs):
+    if created:
+        notify.send(instance.owner,verb='has sent you a pull request for',target=instance.destination,recipient=instance.destination.author)
 
 @reversion.register
 class Exam(EditorModel,NumbasObject,ControlledObject):

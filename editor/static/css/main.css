@@ -380,6 +380,7 @@ button.search.loading {
 	font-weight: bold;
 	padding: 2px 4px;
 	border-radius: 2px;
+    display: inline-block;
 }
 
 .stamp-status.ok {

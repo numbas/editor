@@ -1,32 +1,47 @@
 {% extends "layout.html" %}
 {% load icon %}
+{% load sstatic %}
+{% load links %}
+{% load user_link %}
+
+{% block stylesheets %}
+	{{ block.super }}
+	<link rel="stylesheet" type="text/css" href="{% sstatic 'css/question/compare.css' %}"/>
+{% endblock stylesheets %}
 
 {% block content %}
 <p>You are comparing 
-<table>
+<table class="comparison-table">
     <thead>
         <tr>
             <td></td>
-            <th>Version A</th>
-            <th>Version B</th>
+            <th>Your Version</th>
+            <th>Other Version</th>
         </tr>
     </thead>
     <tbody>
         <tr>
             <th>Name</th>
             <td>
-                <a href="{% url "question_edit" q1.pk q1.slug %}" target="_blank">{{q1.name}}</a>
-                <a class="preview" href="{% url 'question_preview' q1.pk q1.slug %}" target="_blank" title="Test run">{% icon "media-play" 10 %}</a>
+                {% question_link q1 %}
             </td>
             <td>
-                <a href="{% url "question_edit" q2.pk q2.slug %}" target="_blank">{{q2.name}}</a>
-                <a class="preview" href="{% url 'question_preview' q2.pk q2.slug %}" target="_blank" title="Test run">{% icon "media-play" 10 %}</a>
+                {% question_link q2 %}
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                <a class="preview" href="{% url 'question_preview' q1.pk q1.slug %}" target="_blank" title="Test run">{% icon "media-play" 10 %} Test Run</a>
+            </td>
+            <td>
+                <a class="preview" href="{% url 'question_preview' q2.pk q2.slug %}" target="_blank" title="Test run">{% icon "media-play" 10 %} Test Run</a>
             </td>
         </tr>
         <tr>
             <th>Author</th>
-            <td>{{q1.author.get_full_name}}</td>
-            <td>{{q2.author.get_full_name}}</td>
+            <td>{% user_link q1.author %}</td>
+            <td>{% user_link q2.author %}</td>
         </tr>
         <tr>
             <th>Last modified</th>
@@ -37,14 +52,14 @@
             <td></td>
             <td>
                 {% if not pr1_exists %}
-                <a href="{% url 'question_pullrequest' q1.pk q2.pk %}">Merge into B</a>
+                <a class="btn" href="{% url 'question_pullrequest' q1.pk q2.pk %}">Offer to merge your version into the other</a>
                 {% else %}
                 Request outstanding
                 {% endif %}
             </td>
             <td>
                 {% if not pr2_exists %}
-                <a href="{% url 'question_pullrequest' q2.pk q1.pk %}">Merge into A</a>
+                <a class="btn" href="{% url 'question_pullrequest' q2.pk q1.pk %}">Merge this version into yours</a>
                 {% else %}
                 Request outstanding
                 {% endif %}

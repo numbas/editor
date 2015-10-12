@@ -1,6 +1,8 @@
 {% extends "layout.html" %}
+{% load links %}
+{% load user_link %}
 
 {% block content %}
-<p>A request to merge {{source.name}} with {{destination.name}} has been sent to {{destination.author.get_full_name}}.</p>
+<p>A request to replace {% question_link source %} with {% question_link destination %} has been sent to {% user_link destination.author %}.</p>
 <p>You'll be notified when they respond to the request.</p>
 {% endblock content %}

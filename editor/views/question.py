@@ -32,6 +32,7 @@ from django.views.generic.edit import FormMixin
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.core import serializers
+from django.contrib import messages
 
 import reversion
 
@@ -428,12 +429,38 @@ class CreatePullRequestView(generic.TemplateView):
 
         return context
 
-def accept_pull_request(request,pk):
-    pr = QuestionPullRequest.objects.get(pk=int(pk))
-    pr.merge()
-    pr.open = False
-    pr.save()
-    return redirect('question_edit',pr.destination.pk,pr.destination.slug)
+class AcceptPullRequestView(generic.UpdateView):
+
+    model = QuestionPullRequest
+
+    def dispatch(self,request,*args,**kwargs):
+        pr = self.get_object()
+
+        if not pr.can_be_merged_by(request.user):
+            return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
+
+        messages.add_message(request, messages.SUCCESS, render_to_string('question/pullrequest_accepted_message.html',{'pr':pr}))
+
+        pr.merge()
+        pr.open = False
+        pr.save()
+        return redirect('question_edit',pr.destination.pk,pr.destination.slug)
+
+class RejectPullRequestView(generic.DeleteView):
+    
+    model = QuestionPullRequest
+    
+    def delete(self,request,*args,**kwargs):
+        pr = self.object = self.get_object()
+        if pr.can_be_deleted_by(self.request.user):
+            pr.reject(self.request.user)
+
+            messages.add_message(request, messages.INFO, render_to_string('question/pullrequest_rejected_message.html',{'pr':pr}))
+            return redirect('question_edit',pr.destination.pk,pr.destination.slug)
+
+        else:
+            return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
+    
 
 class HighlightView(generic.FormView):
     template_name = 'question/highlight.html'

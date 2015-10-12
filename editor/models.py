@@ -519,7 +519,7 @@ class Question(EditorModel,NumbasObject,ControlledObject):
         q = self
         while q.copy_of:
             q = q.copy_of
-        return q.descendants()
+        return sorted(q.descendants(), key=lambda x: x.created)
 
     def descendants(self):
         return [self]+sum([q2.descendants() for q2 in self.copies.all()],[])
@@ -582,13 +582,24 @@ class QuestionPullRequest(models.Model):
             reversion.set_user(self.owner)
             reversion.set_comment("Merged with {}".format(source.name))
 
+    def reject(self,user):
+        self.delete()
+        if(user!=self.owner):
+            notify.send(user,verb='has rejected your pull request for',target=self.source,recipient=self.owner)
+
+    def can_be_merged_by(self,user):
+        return self.destination.can_be_edited_by(user)
+
+    def can_be_deleted_by(self,user):
+        return user==self.owner or self.destination.can_be_edited_by(user)
+
 @receiver(signals.pre_save,sender=QuestionPullRequest)
 def clean_pull_request_pre_save(sender,instance, *args, **kwargs):
     instance.full_clean()
 
 @receiver(signals.post_save,sender=QuestionPullRequest)
 def notify_pull_request(instance,created,**kwargs):
-    if created:
+    if created and instance.owner!=instance.destination.author:
         notify.send(instance.owner,verb='has sent you a pull request for',target=instance.destination,recipient=instance.destination.author)
 
 @reversion.register

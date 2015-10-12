@@ -1,6 +1,7 @@
 {% extends "question/edit.html" %}
 {% load sstatic %}
 {% load user_link %}
+{% load links %}
 
 {% block stylesheets %}
 	{{ block.super }}
@@ -39,7 +40,7 @@
                         </div>
                     </form>
                     {% if object.copy_of %}
-                    <p>This question is based on <a href="{% url 'question_edit' object.copy_of.pk object.copy_of.slug %}">{{object.copy_of.name}}</a> by <a href="{% url 'view_profile' object.copy_of.author.pk %}">{{object.copy_of.author.get_full_name}}</a>.</p>
+                    <p>This question is based on {% question_link object.copy_of %} by {% user_link object.copy_of.author %}.</p>
                     {% endif %}
 				</div>
 				<div class="span4">

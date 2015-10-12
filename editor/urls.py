@@ -140,11 +140,14 @@ urlpatterns = patterns('',
     url(r'^questions/compare/(?P<pk1>\d+)/(?P<pk2>\d+)$',
         question.CompareView.as_view(), name='question_compare'),
 
-    url(r'^questions/merge/(?P<source>\d+)/(?P<destination>\d+)$',
+    url(r'^questions/merge/(?P<source>\d+)/into/(?P<destination>\d+)$',
         question.CreatePullRequestView.as_view(), name='question_pullrequest'),
 
     url(r'^pullrequest/(?P<pk>\d+)/accept$',
-        question.accept_pull_request, name='question_pullrequest_accept'),
+        question.AcceptPullRequestView.as_view(), name='question_pullrequest_accept'),
+
+    url(r'^pullrequest/(?P<pk>\d+)/reject$',
+        question.RejectPullRequestView.as_view(), name='question_pullrequest_reject'),
 
     url(r'^comment/(?P<pk>\d+)/delete$',
         generic.DeleteCommentView.as_view(), name='delete_comment'),

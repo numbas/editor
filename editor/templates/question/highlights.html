@@ -4,6 +4,7 @@
 {% load render_table from django_tables2 %}
 {% load can_edit %}
 {% load user_link %}
+{% load links %}
 
 {% block content %}
 
@@ -18,7 +19,7 @@
 				{% with highlight=row.record question=row.record.question %}
 					<li class="question">
 						<div class="header">
-                            <span class="name"><a href="{% url 'question_edit' question.pk question.slug %}">{{ question.name }}</a></span> by {% user_link question.author %}
+                            <span class="name">{% question_link question %}</span> by {% user_link question.author %}
 							<span class="admin">
 								<a class="preview" href="{% url 'question_preview' question.pk question.slug %}" target="_blank" title="Test run"></a>
 								{% if user.is_authenticated %}

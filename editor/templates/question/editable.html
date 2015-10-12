@@ -2,6 +2,7 @@
 {% load user_link %}
 {% load icon %}
 {% load can_edit %}
+{% load links %}
 
 {% block editor %}
 	{% include "editable.html" %}
@@ -34,7 +35,7 @@
                         </div>
                     </form>
                     {% if object.copy_of %}
-                    <p>This question is based on <a href="{% url 'question_edit' object.copy_of.pk object.copy_of.slug %}">{{object.copy_of.name}}</a> by <a href="{% url 'view_profile' object.copy_of.author.pk %}">{{object.copy_of.author.get_full_name}}</a>.</p>
+                    <p>This question is based on {% question_link object.copy_of %} by {% user_link object.copy_of.author %}.</p>
                     {% endif %}
 				</div>
 				<div class="span4">
@@ -666,7 +667,6 @@
 		</section>
 
         <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='network'}">
-            <h2>Network</h2>
             <table class="network">
                 <thead>
                     <tr>
@@ -681,9 +681,9 @@
                 <tbody>
                     {% for q2 in object.network %}
                     <tr class="network-question{% if q2 == object %} current{% endif %}">
-                        <td><a href="{% url 'question_edit' q2.pk q2.slug %}">{{q2.name}}</a></td>
+                        <td>{% question_link q2 %}</td>
                         <td>{% include "stamp_column.html" with record=q2 %}</td>
-                        <td><a href="{% url 'view_profile' q2.author.pk %}">{{q2.author.get_full_name}}</a></td>
+                        <td>{% user_link q2.author %}</td>
                         <td>{{ q2.last_modified|date:"d/m/Y H:i" }}</td>
                         <td class="admin"><a class="preview" href="{% url 'question_preview' q2.pk q2.slug %}" target="_blank" title="Test run">{% icon "media-play" 10 %}</a></td>
                         <td>
@@ -698,14 +698,14 @@
 
             {% with object.incoming_pull_requests.open as pull_requests %}
             {% if pull_requests.exists %}
-            <h2>Pull requests</h2>
+            <h2>Request{{pull_requests.count|pluralize}} to merge</h2>
             <ul>
                 {% for pr in pull_requests %}
                 <li class="pull-request">
-                    <a href="{% url 'view_profile' pr.owner.pk %}">{{pr.owner.get_full_name}}</a> would like you to replace this question with <a href="{% url 'question_edit' pr.source.pk pr.source.slug %}">{{pr.source.name}}</a>.
+                    {% user_link pr.owner %} would like you to replace this question with {% question_link pr.source %}.
                     <div class="responses">
-                        <a href="{% url 'question_pullrequest_accept' pr.pk %}">Accept</a>
-                        <button type="button" class="reject" data-bind="click: rejectPR" data-pr="{{pr.pk}}">Reject</button>
+                        <form method="post" action="{% url 'question_pullrequest_accept' pr.pk %}">{% csrf_token %}<button class="btn accept-pr">Accept</button></form>
+                        <form method="post" action="{% url 'question_pullrequest_reject' pr.pk %}">{% csrf_token %}<button class="btn reject-pr">Reject</button></form>
                     </div>
                 </li>
                 {% endfor %}

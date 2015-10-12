@@ -462,3 +462,15 @@ input.recalculate-checkbox {
 .variable-replacements button.add-variable-replacement {
 	margin-bottom: 1em;
 }
+
+.network td, .network th {
+    padding: 0.5em 1em;
+}
+
+.network tbody tr:nth-child(odd) td {
+    background:  #eee;
+}
+
+.pull-request .responses form {
+    display: inline;
+}

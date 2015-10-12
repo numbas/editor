@@ -1,6 +1,7 @@
 {% load sanitizer %}
+{% load links %}
 <div class="header">
-    <span class="name"><a href="{% url 'question_edit' question.pk question.slug %}">{{ question.name }}</a></span>
+	<span class="name">{% question_link question %}</span>
 	<span class="admin">
 		{% include "question/admin_buttons.html" %}
     </span>

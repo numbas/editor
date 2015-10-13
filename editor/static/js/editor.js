@@ -223,10 +223,11 @@ $(document).ready(function() {
 			{
 				expr += j%2 ? ' subvar('+sbits[j]+')' : sbits[j]; //subvar here instead of \\color because we're still in JME
 			}
-			expr = Numbas.jme.display.exprToLaTeX(expr,[],scope);
+			expr = {tex: Numbas.jme.display.exprToLaTeX(expr,[],scope), error: false};
 			return expr;
 		} catch(e) {
-			return '\\color{red}{\\textrm{'+e.message+'}}';
+            var tex = e.message.replace(/<\/?(code|em|strong)>/g,'');
+			return {message: e.message, tex: '\\color{red}{\\text{'+tex+'}}', error: true};
 		}
 	}
 	MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
@@ -241,7 +242,8 @@ $(document).ready(function() {
 		TEX.Parse.Augment({
 			JMEvar: function(name) {
 				var expr = this.GetArgument(name);
-				expr = texJMEBit(expr);
+				var res = texJMEBit(expr);
+                expr = res.tex || res.message;
 				var tex = '\\class{jme-var}{\\left\\{'+expr+'\\right\\}}';
 				var mml = TEX.Parse(tex,this.stack.env).mml();
 				this.Push(mml);
@@ -250,7 +252,8 @@ $(document).ready(function() {
 			JMEsimplify: function(name) {
 				var rules = this.GetBrackets(name);
 				var expr = this.GetArgument(name);
-				expr = texJMEBit(expr);
+				var res = texJMEBit(expr);
+                expr = res.tex || res.message;
 				var tex = ' \\class{jme-simplify}{\\left\\{'+expr+'\\right\\}}'
 				var mml = TEX.Parse(tex,this.stack.env).mml();
 				this.Push(mml);
@@ -981,11 +984,17 @@ $(document).ready(function() {
 	ko.bindingHandlers.JME = {
 		update: function(element,valueAccessor) {
 			var value = ko.utils.unwrapObservable(valueAccessor());
-			var tex = texJMEBit(value);
-			if(tex.length>0)
-				$(element).html('$'+tex+'$').mathjax();
-			else
-				$(element).html('');
+			var res = texJMEBit(value);
+            $(element).toggleClass('jme-error',res.error);
+            if(res.error) {
+                $(element).html(res.message);
+            } else {
+				var tex = res.tex;
+                if(tex.length>0)
+                    $(element).html('$'+tex+'$').mathjax();
+                else
+                    $(element).html('');
+            }
 		}
 	};
 

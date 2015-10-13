@@ -150,6 +150,10 @@ body .wm_preview {
 	color: gray;
 }
 
+.jme-error {
+    color: red;
+}
+
 button.delete {
 	background: transparent url(../images/x_alt_16x16.png) no-repeat;
 	width: 16px;

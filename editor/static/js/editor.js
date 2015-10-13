@@ -989,6 +989,7 @@ $(document).ready(function() {
             if(res.error) {
                 $(element).html(res.message);
             } else {
+				var tex = res.tex;
                 if(tex.length>0)
                     $(element).html('$'+tex+'$').mathjax();
                 else

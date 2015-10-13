@@ -564,7 +564,7 @@ class QuestionPullRequest(models.Model):
         if self.open and QuestionPullRequest.objects.filter(source=self.source,destination=self.destination,open=True).exists():
             raise ValidationError("There's already an open pull request between these questions.")
 
-    def merge(self):
+    def merge(self,user):
         source, destination = self.source, self.destination
         with transaction.atomic(), reversion.create_revision():
             oname = destination.name
@@ -582,10 +582,12 @@ class QuestionPullRequest(models.Model):
             reversion.set_user(self.owner)
             reversion.set_comment("Merged with {}".format(source.name))
 
+        notify.send(user,verb='has accepted your request to merge into',target=self.destination,recipient=self.owner, action_object=self)
+
     def reject(self,user):
         self.delete()
         if(user!=self.owner):
-            notify.send(user,verb='has rejected your pull request for',target=self.source,recipient=self.owner)
+            notify.send(user,verb='has rejected your request to merge',target=self.source,recipient=self.owner,action_object=self)
 
     def can_be_merged_by(self,user):
         return self.destination.can_be_edited_by(user)
@@ -600,7 +602,7 @@ def clean_pull_request_pre_save(sender,instance, *args, **kwargs):
 @receiver(signals.post_save,sender=QuestionPullRequest)
 def notify_pull_request(instance,created,**kwargs):
     if created and instance.owner!=instance.destination.author:
-        notify.send(instance.owner,verb='has sent you a pull request for',target=instance.destination,recipient=instance.destination.author)
+        notify.send(instance.owner,verb='has sent you a request to merge',target=instance.destination,recipient=instance.destination.author,action_object=instance)
 
 @reversion.register
 class Exam(EditorModel,NumbasObject,ControlledObject):

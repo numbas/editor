@@ -50,8 +50,9 @@ $(document).ready(function() {
                 })
             ),
 			new Editor.Tab('exams','Exams using this question'),
-			new Editor.Tab('network','Other versions'),
 		]);
+		var networkTab = new Editor.Tab('network','Other versions');
+        this.mainTabs.push(networkTab);
         var editingHistoryTab = new Editor.Tab('versions','Editing history');
         this.mainTabs.splice(1,0,editingHistoryTab);
         if(Editor.editable) {
@@ -60,8 +61,14 @@ $(document).ready(function() {
 
 		this.currentTab = ko.observable(this.mainTabs()[0]);
 
-		if(Editor.editable && window.location.hash=='#editing-history') {
-			this.currentTab(editingHistoryTab);
+		if(Editor.editable) {
+            switch(window.location.hash.slice(1)) {
+                case 'editing-history':
+        			this.currentTab(editingHistoryTab);
+                    break;
+                case 'network':
+                    this.currentTab(networkTab);
+            } 
 		}
 
         this.starred = ko.observable(Editor.starred);

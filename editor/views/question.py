@@ -441,7 +441,7 @@ class AcceptPullRequestView(generic.UpdateView):
 
         messages.add_message(request, messages.SUCCESS, render_to_string('question/pullrequest_accepted_message.html',{'pr':pr}))
 
-        pr.merge()
+        pr.merge(request.user)
         pr.open = False
         pr.save()
         return redirect('question_edit',pr.destination.pk,pr.destination.slug)

@@ -2,7 +2,7 @@ from django.core.urlresolvers import reverse
 from django.views import generic
 from django.shortcuts import get_object_or_404
 from notifications.models import Notification
-from editor.models import Question,Exam
+from editor.models import Question,Exam,QuestionPullRequest
 
 class OpenNotification(generic.RedirectView):
     def get_redirect_url(self,*args,**kwargs):
@@ -12,6 +12,10 @@ class OpenNotification(generic.RedirectView):
         target = notification.target
 
         if type(target) is Question:
-            return reverse('question_edit', args=(target.pk,target.slug,))+'#editing-history'
+            if type(notification.action_object) is QuestionPullRequest:
+                tab = 'network'
+            else:
+                tab = 'editing-history'
+            return reverse('question_edit', args=(target.pk,target.slug,))+'#'+tab
         elif type(target) is Exam:
             return reverse('exam_edit', args=(target.pk,target.slug,))+'#editing-history'

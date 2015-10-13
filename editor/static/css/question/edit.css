@@ -463,12 +463,24 @@ input.recalculate-checkbox {
 	margin-bottom: 1em;
 }
 
+.network {
+	margin-bottom: 2em;
+}
+
 .network td, .network th {
     padding: 0.5em 1em;
 }
 
 .network tbody tr:nth-child(odd) td {
     background:  #eee;
+}
+
+.pull-request:not(:last-child) {
+    margin-bottom: 2em;
+}
+
+.pull-request .responses {
+    margin: 1em 0;
 }
 
 .pull-request .responses form {

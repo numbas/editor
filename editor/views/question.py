@@ -456,7 +456,7 @@ class RejectPullRequestView(generic.DeleteView):
             pr.reject(self.request.user)
 
             messages.add_message(request, messages.INFO, render_to_string('question/pullrequest_rejected_message.html',{'pr':pr}))
-            return redirect('question_edit',pr.destination.pk,pr.destination.slug)
+            return redirect(reverse('question_edit',args=(pr.destination.pk,pr.destination.slug))+'#network')
 
         else:
             return http.HttpResponseForbidden('You don\'t have the necessary access rights.')

@@ -333,36 +333,42 @@ button.search.loading {
 }
 
 .admin a {
-	display: inline-block;
 	margin-right: 0.5em;
+}
+
+.admin-icon {
+	display: inline-block;
 	background-color: white;
 	border-radius: 50%;
 	width: 16px;
 	height: 16px;
 	position: relative;
 }
-.admin a svg.icon {
+
+.admin-icon svg.icon {
 	position: absolute;
 	top: 3px;
 	left: 3px;
 }
-.admin a svg.icon use {
+.admin-icon svg.icon use {
 	fill: white;
 }
 
 .admin .delete {
 	margin-left: 0.5em;
+}
+.admin-icon.delete {
 	background-color: red;
 }
 
-.admin .copy {
+.admin-icon.copy {
 	background-color: black;
 }
-.admin .basket {
+.admin-icon.basket {
 	background-color: black;
 }
 
-.admin .preview {
+.admin-icon.preview {
 	background-color: rgb(133,196,63);
 }
 

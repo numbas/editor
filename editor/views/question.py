@@ -398,6 +398,8 @@ class CompareView(generic.TemplateView):
         q2 = context['q2'] = Question.objects.get(pk=pk2)
         context['pr1_exists'] = QuestionPullRequest.objects.open().filter(source=q1,destination=q2).exists()
         context['pr2_exists'] = QuestionPullRequest.objects.open().filter(source=q2,destination=q1).exists()
+        context['pr1_auto'] = q2.can_be_edited_by(self.request.user)
+        context['pr2_auto'] = q1.can_be_edited_by(self.request.user)
         return context
 
 class CreatePullRequestView(generic.TemplateView):
@@ -411,11 +413,14 @@ class CreatePullRequestView(generic.TemplateView):
         try:
             self.pr.full_clean()
         except ValidationError as e:
-            print("OOOPS",e)
             return redirect('question_compare',args=(source.pk,destination.pk))
 
-        print("OK")
-        self.pr.save()
+        if self.pr.destination.can_be_edited_by(request.user):
+            self.pr.merge(request.user)
+            messages.add_message(request, messages.SUCCESS, render_to_string('question/pullrequest_accepted_message.html',{'pr':self.pr}))
+            return redirect('question_edit',self.pr.destination.pk, self.pr.destination.slug)
+        else:
+            self.pr.save()
 
         return super(CreatePullRequestView,self).dispatch(request,source,destination,*args,**kwargs)
 

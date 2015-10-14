@@ -10,13 +10,16 @@
 {% endblock stylesheets %}
 
 {% block content %}
-<p>You are comparing 
+<p>You are comparing two versions of a question. You can test run either question, and offer to merge one into the other. Merging a question into another effectively replaces the second question with the first one.</p>
 <table class="comparison-table">
+    <colgroup>
+        <col>
+        <col class="question">
+        <col class="question">
+    </colgroup>
     <thead>
         <tr>
             <td></td>
-            <th>Your Version</th>
-            <th>Other Version</th>
         </tr>
     </thead>
     <tbody>
@@ -52,14 +55,14 @@
             <td></td>
             <td>
                 {% if not pr1_exists %}
-                <a class="btn" href="{% url 'question_pullrequest' q1.pk q2.pk %}">Offer to merge your version into the other</a>
+                <a class="btn" href="{% url 'question_pullrequest' q1.pk q2.pk %}">{% if pr1_auto %}Merge this version into the other{% else %}Offer to merge this version into the other{% endif %} &rarr;</a>
                 {% else %}
                 Request outstanding
                 {% endif %}
             </td>
             <td>
                 {% if not pr2_exists %}
-                <a class="btn" href="{% url 'question_pullrequest' q2.pk q1.pk %}">Merge this version into yours</a>
+                <a class="btn" href="{% url 'question_pullrequest' q1.pk q2.pk %}">&larr; {% if pr2_auto %}Merge this version into the other{% else %}Offer to merge this version into the other{% endif %}</a>
                 {% else %}
                 Request outstanding
                 {% endif %}

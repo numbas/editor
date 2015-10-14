@@ -41,6 +41,7 @@ from django.forms import model_to_dict
 from django.utils.deconstruct import deconstructible
 from django.db.models.signals import pre_delete
 from uuslug import slugify
+from django.contrib import messages
 
 import reversion
 
@@ -582,7 +583,9 @@ class QuestionPullRequest(models.Model):
             reversion.set_user(self.owner)
             reversion.set_comment("Merged with {}".format(source.name))
 
-        notify.send(user,verb='has accepted your request to merge into',target=self.destination,recipient=self.owner, action_object=self)
+        if user!=self.owner:
+            notify.send(user,verb='has accepted your request to merge into',target=self.destination,recipient=self.owner, action_object=self)
+
 
     def reject(self,user):
         self.delete()

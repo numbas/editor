@@ -1,6 +1,7 @@
 {% extends "exam/edit.html" %}
 {% load verbatim %}
 {% load user_link %}
+{% load icon %}
 
 {% block editable_message %}You can edit this exam.{% endblock %}
 
@@ -205,11 +206,15 @@
                         </div>
                         <div class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentQuestionTab().id)=='basket'}">
                             <ul class="results editlist big" data-bind="
+								visible: basketQuestions().length>0,
                                 template: {
                                     name: 'questionResult',
                                     foreach: basketQuestions,
                                 }
                             "></ul>
+							<div data-bind="visible: basketQuestions().length==0">
+								<p class="nothing-here">There's nothing in your basket at the moment. Find questions you'd like to use, and click on the basket icon. They'll show up here so you can easily add them to this exam.</p>
+							</div>
                         </div>
                         <div class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentQuestionTab().id)=='search'}">
                             <form class="form-horizontal" data-bind="submit: search.submit">

@@ -525,6 +525,10 @@ class Question(EditorModel,NumbasObject,ControlledObject):
     def descendants(self):
         return [self]+sum([q2.descendants() for q2 in self.copies.all()],[])
 
+    @property
+    def exams_using_this(self):
+        return self.exam_set.distinct()
+
 class QuestionAccess(models.Model):
     question = models.ForeignKey(Question)
     user = models.ForeignKey(User)

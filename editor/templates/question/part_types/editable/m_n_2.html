@@ -42,7 +42,7 @@
 			}"></div>
 		<div class="control-group" data-bind="template: {
 			name: 'booleanproperty',
-			data: {label: 'Custom marking matrix?', property: customMarking, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-marking-matrix' }
+			data: {label: 'Custom marking matrix?', property: customMarking, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-marking-matrix', disable: customChoices }
 			}"></div>
 		<div class="control-group" data-bind="fadeVisible: customMarking, template: {
 			name: 'property',
@@ -52,6 +52,17 @@
 </section>
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='choices'}">
 	<span data-bind="template: {name: 'helplink', data: {topic: 'choices', url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#choices', big: true}}"></span>
+	<form class="form-horizontal">
+		<div class="control-group" data-bind="template: {
+			name: 'booleanproperty',
+			data: {label: 'Variable list of choices?', property: customChoices, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-list-of-choices' }
+		}"></div>
+		<div class="control-group" data-bind="fadeVisible: customChoices, template: {
+			name: 'property',
+			data: {label: 'List of choices', property: customChoicesExpression, monospace: true, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-choices-expression' }
+		}"></div>
+	</form>
+	<ul class="choices" data-bind="fadeVisible: !customChoices()">
 	<ul class="choices">
 		<!-- ko foreach: {data: choices, afterAdd: Editor.afterAdd} -->
 		<li class="choice">

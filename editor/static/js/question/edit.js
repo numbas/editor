@@ -2467,11 +2467,22 @@ $(document).ready(function() {
 					maxMarks: ko.observable(0),
 					shuffleChoices: ko.observable(false),
 					displayColumns: ko.observable(0),
-					customMarking: ko.observable(false),
 					customMatrix: ko.observable(''),
+
+					customChoices: ko.observable(false),
+					customChoicesExpression: ko.observable(''),
 
 					choices: ko.observableArray([])
 				};
+				var _customMarking = ko.observable(false);
+				model.customMarking = ko.computed({
+					read: function() {
+						return _customMarking() || this.customChoices();
+					},
+					write: function(v) {
+						return _customMarking(v);
+					}
+				},model);
 
 				model.addChoice = function() {
 					var c = {
@@ -2502,19 +2513,23 @@ $(document).ready(function() {
                 data.displayType = 'radiogroup';
                 data.displayColumns = this.displayColumns();
 
-                var choices = this.choices();
-                data.choices = choices.map(function(c){return c.content()});
-                var matrix = [];
-                var distractors = [];
-                for(var i=0;i<choices.length;i++)
-                {
-                    matrix.push(choices[i].marks());
-                    distractors.push(choices[i].distractor());
-                }
-
+				if(this.customChoices()) {
+					data.choices = this.customChoicesExpression();
+				} else {
+	                var choices = this.choices();
+    	            data.choices = choices.map(function(c){return c.content()});
+				}
 				if(this.customMarking()) {
 					data.matrix = this.customMatrix();
 				} else {
+					var matrix = [];
+					var distractors = [];
+					for(var i=0;i<choices.length;i++)
+					{
+						matrix.push(choices[i].marks());
+						distractors.push(choices[i].distractor());
+					}
+
 					data.matrix = matrix;
 				}
 
@@ -2527,18 +2542,24 @@ $(document).ready(function() {
 					this.customMatrix(data.matrix);
 				}
 
-                for(var i=0;i<data.choices.length;i++)
-                {
-                    var c = this.addChoice(data.choices[i]);
-                    c.content(data.choices[i] || '');
-					if(!this.customMarking()) {
-	                    c.marks(data.matrix[i] || 0);
+				if(typeof data.choices == 'string') {
+					this.customChoices(true);
+					this.customChoicesExpression(data.choices);
+				} else {
+					for(var i=0;i<data.choices.length;i++)
+					{
+						var c = this.addChoice(data.choices[i]);
+						c.content(data.choices[i] || '');
+						if(!this.customMarking()) {
+							c.marks(data.matrix[i] || 0);
+						}
+						if('distractors' in data)
+						{
+							c.distractor(data.distractors[i] || '');
+						}
 					}
-					if('distractors' in data)
-                    {
-	                    c.distractor(data.distractors[i] || '');
-                    }
-                }
+				}
+
 			}
 		},
 		{
@@ -2557,7 +2578,6 @@ $(document).ready(function() {
 					maxAnswers: ko.observable(0),
 					shuffleChoices: ko.observable(false),
 					displayColumns: ko.observable(0),
-					customMarking: ko.observable(false),
 					customMatrix: ko.observable(''),
 					warningType: ko.observable(''),
 
@@ -2567,8 +2587,20 @@ $(document).ready(function() {
 						{name: 'prevent', niceName: 'Prevent submission'}
 					],
 
+					customChoices: ko.observable(false),
+					customChoicesExpression: ko.observable(''),
+
 					choices: ko.observableArray([]),
 				};
+				var _customMarking = ko.observable(false);
+				model.customMarking = ko.computed({
+					read: function() {
+						return _customMarking() || this.customChoices();
+					},
+					write: function(v) {
+						return _customMarking(v);
+					}
+				},model);
 
 				model.addChoice = function() {
 					var c = {
@@ -2602,19 +2634,23 @@ $(document).ready(function() {
                 data.maxAnswers = this.maxAnswers();
 				data.warningType = this.warningType().name;
 
-                var choices = this.choices();
-                data.choices = choices.map(function(c){return c.content()});
-                var matrix = [];
-                var distractors = [];
-                for(var i=0;i<choices.length;i++)
-                {
-                    matrix.push(choices[i].marks());
-                    distractors.push(choices[i].distractor());
-                }
-
+				if(this.customChoices()) {
+					data.choices = this.customChoicesExpression();
+				} else {
+	                var choices = this.choices();
+    	            data.choices = choices.map(function(c){return c.content()});
+				}
 				if(this.customMarking()) {
 					data.matrix = this.customMatrix();
 				} else {
+					var matrix = [];
+					var distractors = [];
+					for(var i=0;i<choices.length;i++)
+					{
+						matrix.push(choices[i].marks());
+						distractors.push(choices[i].distractor());
+					}
+
 					data.matrix = matrix;
 				}
 
@@ -2634,17 +2670,23 @@ $(document).ready(function() {
 					}
                 }
 
-                for(var i=0;i<data.choices.length;i++)
-                {
-                    var c = this.addChoice(data.choices[i]);
-                    c.content(data.choices[i] || '');
-					if(!this.customMarking())
-	                    c.marks(data.matrix[i] || 0);
-					if('distractors' in data)
-                    {
-	                    c.distractor(data.distractors[i] || '');
-                    }
-                }
+				if(typeof data.choices == 'string') {
+					this.customChoices(true);
+					this.customChoicesExpression(data.choices);
+				} else {
+					for(var i=0;i<data.choices.length;i++)
+					{
+						var c = this.addChoice(data.choices[i]);
+						c.content(data.choices[i] || '');
+						if(!this.customMarking()) {
+							c.marks(data.matrix[i] || 0);
+						}
+						if('distractors' in data)
+						{
+							c.distractor(data.distractors[i] || '');
+						}
+					}
+				}
 			}
 		},
 		{

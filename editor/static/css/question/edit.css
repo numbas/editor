@@ -465,6 +465,7 @@ input.recalculate-checkbox {
 
 .network {
 	margin-bottom: 2em;
+    width: 100%;
 }
 
 .network td, .network th {

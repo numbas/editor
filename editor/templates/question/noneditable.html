@@ -2,6 +2,7 @@
 {% load sstatic %}
 {% load user_link %}
 {% load links %}
+{% load icon %}
 
 {% block stylesheets %}
 	{{ block.super }}
@@ -81,10 +82,12 @@
 				</div>
 			</div>
 		</section>
+
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='statement'}">
 			<div id="statement" data-bind="mathjaxHTML: statement"></div>
 			<div class="nothing-here" data-bind="if:!statement()">No statement.</div>
 		</section>
+
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='variables'}">
 			<div class="row-fluid">
 				<div data-bind="if: variables().length">
@@ -209,6 +212,7 @@
 				This question doesn't use any variables.
 			</div>
 		</section>
+
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='functions'}">
 			<div id="functions">
 				<h4>Functions</h4>
@@ -293,6 +297,7 @@
 				</form>
 			</div>
 		</section>
+
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='parts'}">
 			<div class="row-fluid">
 				<div class="span3">
@@ -403,14 +408,17 @@
 				</div>
 			</div>
 		</section>
+
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='advice'}">
 			<div data-bind="mathjaxHTML: advice"></div>
 		</section>
+
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='resources'}">
 			<ul class="unstyled resources-list" data-bind="foreach: resources">
 				<li class="resource clearfix"><img class="thumbnail" data-bind="attr: {src: url, title: name}"/><span data-bind="text: name"></span></li>
 			</ul>
 		</section>
+
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='exams'}">
 			{% if object.exam_set.count %}
 				<ul class="exams-list">
@@ -424,6 +432,7 @@
 				This question is not used in any exams.
 			{% endif %}
 		</section>
+
         <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='versions'}">
 			<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#editing-history', big: true}}"></span>
             <h4>Editing history</h4>
@@ -477,6 +486,7 @@
                 </tbody>
             </table>
         </section>
+
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='access'}">
 			<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#access', big: true}}"></span>
 			<form class="form-horizontal">
@@ -516,6 +526,31 @@
 					</label>
 				</div>
 			</form>
+		</section>
+
+        <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='network'}">
+            <table class="network">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Author</th>
+                        <th>Last Modified</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for q2 in object.network %}
+                    <tr class="network-question{% if q2 == object %} current{% endif %}">
+                        <td>{% question_link q2 %}</td>
+                        <td>{% include "stamp_column.html" with record=q2 %}</td>
+                        <td>{% user_link q2.author %}</td>
+                        <td>{{ q2.last_modified|date:"d/m/Y H:i" }}</td>
+                        <td class="admin"><a class="preview" href="{% url 'question_preview' q2.pk q2.slug %}" target="_blank" title="Test run">{% admin_icon "preview" %}</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
 		</section>
 	</div>
 

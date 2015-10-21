@@ -546,9 +546,9 @@
 			</ul>
 		</section>
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='exams'}">
-			{% if object.exam_set.count %}
+			{% if object.exams_using_this.count %}
 				<ul class="exams-list">
-				{% for exam in object.exam_set.all %}
+				{% for exam in object.exams_using_this.all %}
 					<li class="exam">
 						<a href="{% url 'exam_edit' exam.pk exam.slug %}">{{exam.name}}</a> ({{ exam.author.get_full_name }})
 					</li>

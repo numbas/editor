@@ -23,7 +23,14 @@ $.textMetrics = function(el) {
 	});
 
 	var val = $(el).val();
-	val = val.replace(/ /g,'&nbsp;');
+	var replacements = {
+		'&nbsp': / /g,
+		'&lt;': /</g,
+		'&gt;': />/g
+	}
+	for(var rep in replacements) {
+		val = val.replace(replacements[rep],rep);
+	}
 	$(div).html(val);
 	var styles = ['font-size','font-style', 'font-weight', 'font-family','line-height', 'text-transform', 'letter-spacing'];
 	$(styles).each(function() {

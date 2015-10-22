@@ -2693,7 +2693,9 @@ $(document).ready(function() {
 			name:'m_n_x', 
 			niceName: 'Match choices with answers',
 			tabs: [
-				new Editor.Tab('choices','Marking matrix'),
+				new Editor.Tab('choices','Choices'),
+				new Editor.Tab('answers','Answers'),
+				new Editor.Tab('matrix','Marking matrix'),
 				new Editor.Tab('marking','Marking options')
 			],
 
@@ -2706,7 +2708,6 @@ $(document).ready(function() {
 					shuffleChoices: ko.observable(false),
 					shuffleAnswers: ko.observable(false),
 					displayType:ko.observable(''),
-					customMarking: ko.observable(false),
 					customMatrix: ko.observable(''),
 					warningType: ko.observable(''),
 
@@ -2719,6 +2720,11 @@ $(document).ready(function() {
 						{name: 'radiogroup', niceName: 'One from each row'},
 						{name: 'checkbox', niceName: 'Checkboxes'}
 					],
+
+					customChoices: ko.observable(false),
+					customChoicesExpression: ko.observable(''),
+					customAnswers: ko.observable(false),
+					customAnswersExpression: ko.observable(''),
 
 					choices: ko.observableArray([]),
 					answers: ko.observableArray([]),
@@ -2735,24 +2741,39 @@ $(document).ready(function() {
 					layoutExpression: ko.observable('')
 				};
 
+				model.matrix = Editor.editableGrid(
+					ko.computed(function() {
+						return model.choices().length;
+					}), 
+					ko.computed(function() {
+						return model.answers().length;
+					}),
+					function() {
+						return {
+							marks: ko.observable(0),
+							distractor: ko.observable('')
+						}
+					}
+				);
+
+				var _customMarking = ko.observable(false);
+				model.customMarking = ko.computed({
+					read: function() {
+						return _customMarking() || this.customChoices() || this.customAnswers();
+					},
+					write: function(v) {
+						return _customMarking(v);
+					}
+				},model);
+
 				model.addChoice = function() {
 					var c = {
 						content: Editor.contentObservable('Choice '+(model.choices().length+1)),
 						marks: ko.observable(0),
-						distractor: Editor.contentObservable(''),
-						answers: ko.observableArray([])
+						distractor: Editor.contentObservable('')
 					};
 					c.remove = function() {
 						model.removeChoice(c);
-					}
-
-					//add a marks observable for each answer
-					for(var i=0;i<model.answers().length;i++)
-					{
-						c.answers.push({
-							marks: ko.observable(0),
-							distractor: ko.observable('')
-						});
 					}
 
 					model.choices.push(c);
@@ -2771,23 +2792,12 @@ $(document).ready(function() {
 						model.removeAnswer(a);
 					}
 
-					for(var i=0;i<model.choices().length;i++)
-					{
-						model.choices()[i].answers.push({
-							marks: ko.observable(0),
-							distractor: ko.observable('')
-						});
-					}
 					model.answers.push(a);
 					return a;
 				};
 
 				model.removeAnswer = function(answer) {
 					var n = model.answers.indexOf(answer);
-					for(var i=0;i<model.choices().length;i++)
-					{
-						model.choices()[i].answers.splice(n,1);
-					}
 					model.answers.remove(answer);
 				};
 
@@ -2804,30 +2814,30 @@ $(document).ready(function() {
                 data.displayType = this.displayType().name;
 				data.warningType = this.warningType().name;
 
-                var matrix = [];
-                var choices = this.choices();
-                data.choices = choices.map(function(c){return c.content()});
-				for(var i=0;i<choices.length;i++) {
-					matrix.push(choices[i].answers().map(function(a){return a.marks();}));
+				if(this.customChoices()) {
+					data.choices = this.customChoicesExpression();
+				} else {
+	                var choices = this.choices();
+    	            data.choices = choices.map(function(c){return c.content()});
 				}
 
 				if(this.customMarking()) {
 					data.matrix = this.customMatrix();
 				} else {
-					data.matrix = matrix;
+					data.matrix = this.matrix().map(function(r){ return r().map(function(c) { return c.marks() }) });
 				}
 
 				data.layout = {type: this.layoutType().name, expression: this.layoutExpression()}
 
-                var answers = this.answers();
-                data.answers = answers.map(function(a){return a.content()});
+				if(this.customAnswers()) {
+					data.answers = this.customAnswersExpression();
+				} else {
+	                var answers = this.answers();
+    	            data.answers = answers.map(function(a){return a.content()});
+				}
 			},
 			load: function(data) {
                 tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','shuffleAnswers'],this);
-				if(typeof data.matrix == 'string') {
-					this.customMarking(true);
-					this.customMatrix(data.matrix);
-				}
                 for(var i=0;i<this.warningTypes.length;i++)
                 {
                     if(this.warningTypes[i].name==data.warningType) {
@@ -2850,21 +2860,36 @@ $(document).ready(function() {
 					tryLoad(data.layout,['expression'],this,['layoutExpression']);
 				}
 
-                for(var i=0;i<data.answers.length;i++)
-                {
-                    var a = this.addAnswer();
-                    a.content(data.answers[i]);
-                }
-                for(var i=0;i<data.choices.length;i++)
-                {
-                    var c = this.addChoice(data.choices[i]);
-                    c.content(data.choices[i]);
-					if(!this.customMarking()) {
-						for(var j=0;j<data.answers.length;j++) {
-							this.choices()[i].answers()[j].marks(data.matrix[i][j] || 0);
+				if(typeof data.answers == 'string') {
+					this.customAnswers(true);
+					this.customAnswersExpression(data.answers);
+				} else {
+					for(var i=0;i<data.answers.length;i++)
+					{
+						var a = this.addAnswer();
+						a.content(data.answers[i]);
+					}
+				}
+				if(typeof data.choices == 'string') {
+					this.customChoices(true);
+					this.customChoicesExpression(data.choices);
+				} else {
+					for(var i=0;i<data.choices.length;i++)
+					{
+						var c = this.addChoice(data.choices[i]);
+						c.content(data.choices[i]);
+					}
+				}
+				if(typeof data.matrix == 'string') {
+					this.customMarking(true);
+					this.customMatrix(data.matrix);
+				} else {
+					for(var i=0;i<data.matrix.length;i++) {
+						for(var j=0;j<data.matrix[i].length;j++) {
+							this.matrix()[i]()[j].marks(data.matrix[i][j]);
 						}
 					}
-                }
+				}
 			}
 		}
 	];

@@ -48,14 +48,6 @@
 				</div>
 			</label>
 		</div>
-		<div class="control-group" data-bind="template: {
-			name: 'booleanproperty',
-			data: {label: 'Custom marking matrix?', property: customMarking, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-marking-matrix' }
-			}"></div>
-		<div class="control-group" data-bind="fadeVisible: customMarking, template: {
-			name: 'property',
-			data: {label: 'Custom matrix expression', property: customMatrix, monospace: true, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-matrix-expression' }
-			}"></div>
 
 		<div class="control-group">
 			<label>
@@ -70,41 +62,109 @@
 			data: {label: 'Custom layout expression', property: layoutExpression, monospace: true}
 			}"></div>
 	</form>
-	</section>
-	<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='choices'}">
-	<div class="matrix">
+</section>
+
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='choices'}">
+	<span data-bind="template: {name: 'helplink', data: {topic: 'choices', url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#choices', big: true}}"></span>
+	<form class="form-horizontal">
+		<div class="control-group" data-bind="template: {
+			name: 'booleanproperty',
+			data: {label: 'Variable list of choices?', property: customChoices, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-list-of-choices' }
+		}"></div>
+		<div class="control-group" data-bind="fadeVisible: customChoices, template: {
+			name: 'property',
+			data: {label: 'List of choices', property: customChoicesExpression, monospace: true, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-choices-expression' }
+		}"></div>
+	</form>
+	<ul class="choices" data-bind="fadeVisible: !customChoices()">
+		<!-- ko foreach: {data: choices, afterAdd: Editor.afterAdd} -->
+		<li class="choice">
+		<form class="form-inline">
+			<button type="button" class="delete" data-bind="click:remove" title="Delete this choice"></button>
+			<label>
+				Marks:
+				<input class="marks" type="text" data-bind="value:marks, valueUpdate:'input', autosize: {max: 500, min: 30, padding: 10, value: marks}"/>
+			</label>
+			<label>
+				Distractor Message:
+				<input type="text" data-bind="value:distractor, valueUpdate:'input', autosize: {max: 500, min: 100, padding: 10, value: distractor}"/>
+			</label>
+			<div id="description" data-bind="writemaths: content, wmHeight: 100, wmWidth: 500, preambleCSS: $root.preamble.css"></div>
+		</form>
+		</li>
+		<!-- /ko -->
+		<li><button type="button" data-bind="click:addChoice">Add a choice</button></li>
+	</ul>
+</section>
+
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='answers'}">
+	<span data-bind="template: {name: 'helplink', data: {topic: 'answers', url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#answers', big: true}}"></span>
+	<form class="form-horizontal">
+		<div class="control-group" data-bind="template: {
+			name: 'booleanproperty',
+			data: {label: 'Variable list of answers?', property: customAnswers, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-list-of-answers' }
+		}"></div>
+		<div class="control-group" data-bind="fadeVisible: customAnswers, template: {
+			name: 'property',
+			data: {label: 'List of answers', property: customAnswersExpression, monospace: true, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-answers-expression' }
+		}"></div>
+	</form>
+	<ul class="answers" data-bind="fadeVisible: !customAnswers()">
+		<!-- ko foreach: {data: answers, afterAdd: Editor.afterAdd} -->
+		<li class="answer">
+		<form class="form-inline">
+			<button type="button" class="delete" data-bind="click:remove" title="Delete this answer"></button>
+			<label>
+				Marks:
+				<input class="marks" type="text" data-bind="value:marks, valueUpdate:'input', autosize: {max: 500, min: 30, padding: 10, value: marks}"/>
+			</label>
+			<label>
+				Distractor Message:
+				<input type="text" data-bind="value:distractor, valueUpdate:'input', autosize: {max: 500, min: 100, padding: 10, value: distractor}"/>
+			</label>
+			<div id="description" data-bind="writemaths: content, wmHeight: 100, wmWidth: 500, preambleCSS: $root.preamble.css"></div>
+		</form>
+		</li>
+		<!-- /ko -->
+		<li><button type="button" data-bind="click:addAnswer">Add a answer</button></li>
+	</ul>
+</section>
+
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='matrix'}">
+	<form class="form-horizontal">
+		<div class="control-group" data-bind="template: {
+			name: 'booleanproperty',
+			data: {label: 'Custom marking matrix?', property: customMarking, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-marking-matrix', disable: customChoices() || customAnswers() }
+		}"></div>
+		<div class="control-group" data-bind="fadeVisible: customMarking, template: {
+			name: 'property',
+			data: {label: 'Custom matrix expression', property: customMatrix, monospace: true, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-matrix-expression' }
+		}"></div>
+	</form>
+
+	<div class="matrix" data-bind="fadeVisible: !customMarking()">
 		<span data-bind="template: {name: 'helplink', data: {topic: 'the marking matrix', url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#marking-matrix', big: true}}"></span>
-		<label>Marking matrix:</label>
-		<table class="multiplechoice">
+		<table class="marking-matrix">
 			<thead>
 				<tr>
 					<td></td>
-					<!-- ko foreach: {data: answers, afterAdd: Editor.afterAdd} -->
-					<th>
-						<input type="text" data-bind="value:content, valueUpdate:'input'">
-						<button type="button" class="delete" data-bind="click:function(){this.remove()}" title="Delete this answer"></button>
-					</th>
-					<!-- /ko -->
-					<td>
-						<button type="button" data-bind="click:addAnswer">Add Answer</button>
-					</td>
+					<th data-bind="attr: {colspan: answers().length}">Answers</th>
 				</tr>
 			</thead>
 			<tbody>
-				<!-- ko foreach: {data: choices, afterAdd: Editor.afterAdd} -->
+				<!-- ko foreach: matrix -->
 				<tr>
-					<th>
-						<input type="text" data-bind="value:content, valueUpdate:'input'"/>
-						<button type="button" class="delete" data-bind="click:remove" title="Delete this choice"></button>
-					</th> 
-					<!-- ko foreach: answers -->
+					<!-- ko if: $index()==0 -->
+					<th data-bind="attr: {rowspan: $parent.choices().length}">Choices</th>
+					<!-- /ko -->
+
+					<!-- ko foreach: $data -->
 					<td>
-						<input type="text" class="marks monospace" data-bind="visible: !$parents[1].customMarking(), value: marks, valueUpdate:'input'"/>
+						<input type="text" class="marks monospace" data-bind="value: marks, valueUpdate:'input'"/>
 					</td>
 					<!-- /ko -->
 				</tr>
 				<!-- /ko -->
-				<tr><td><button type="button" data-bind="click:addChoice">Add Choice</button></td></tr>
 			</tbody>
 		</table>
 	</div>

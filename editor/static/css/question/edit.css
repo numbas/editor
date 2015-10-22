@@ -119,13 +119,14 @@
 	margin: 4px 0;
 }
 
-.part-edit .choices {
+.part-edit .choices, .part-edit .answers {
 	list-style-type: none;
 	margin-left: 0;
 }
 
-.part-edit .multiplechoice .marks {
+.part-edit .marking-matrix .marks {
 	text-align: center;
+	width: 3em;
 }
 
 .part-edit .script .order {

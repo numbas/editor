@@ -45,7 +45,7 @@
 
     {% block property_templates %}{% endblock %}
 
-	<div id="question" class="{% if not editable %}nonedit{% endif %}">
+	<div id="question" class="{% if editable %}edit{% else %}nonedit{% endif %}">
 		<div class="row-fluid">
             <h1 id="name-header" class="span9">
 				<span data-bind="text: name, mathjax: name">{{object.name}}</span> 

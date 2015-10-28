@@ -119,7 +119,7 @@
 	margin: 4px 0;
 }
 
-.part-edit .choices, .part-edit .answers {
+#question.edit .part-edit ul.choices, #question.edit .part-edit ul.answers {
 	list-style-type: none;
 	margin-left: 0;
 }
@@ -127,6 +127,14 @@
 .part-edit .marking-matrix .marks {
 	text-align: center;
 	width: 3em;
+}
+
+.part-edit .marking-matrix th.choices {
+    padding-right: 1em;
+}
+
+.part-edit .marking-matrix th.answers {
+    padding-bottom: 0.5em;
 }
 
 .part-edit .script .order {

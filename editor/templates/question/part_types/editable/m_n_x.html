@@ -85,10 +85,6 @@
 				Marks:
 				<input class="marks" type="text" data-bind="value:marks, valueUpdate:'input', autosize: {max: 500, min: 30, padding: 10, value: marks}"/>
 			</label>
-			<label>
-				Distractor Message:
-				<input type="text" data-bind="value:distractor, valueUpdate:'input', autosize: {max: 500, min: 100, padding: 10, value: distractor}"/>
-			</label>
 			<div id="description" data-bind="writemaths: content, wmHeight: 100, wmWidth: 500, preambleCSS: $root.preamble.css"></div>
 		</form>
 		</li>
@@ -118,15 +114,11 @@
 				Marks:
 				<input class="marks" type="text" data-bind="value:marks, valueUpdate:'input', autosize: {max: 500, min: 30, padding: 10, value: marks}"/>
 			</label>
-			<label>
-				Distractor Message:
-				<input type="text" data-bind="value:distractor, valueUpdate:'input', autosize: {max: 500, min: 100, padding: 10, value: distractor}"/>
-			</label>
 			<div id="description" data-bind="writemaths: content, wmHeight: 100, wmWidth: 500, preambleCSS: $root.preamble.css"></div>
 		</form>
 		</li>
 		<!-- /ko -->
-		<li><button type="button" data-bind="click:addAnswer">Add a answer</button></li>
+		<li><button type="button" data-bind="click:addAnswer">Add an answer</button></li>
 	</ul>
 </section>
 
@@ -148,14 +140,14 @@
 			<thead>
 				<tr>
 					<td></td>
-					<th data-bind="attr: {colspan: answers().length}">Answers</th>
+					<th data-bind="attr: {colspan: answers().length}" class="answers">Answers</th>
 				</tr>
 			</thead>
 			<tbody>
 				<!-- ko foreach: matrix -->
 				<tr>
 					<!-- ko if: $index()==0 -->
-					<th data-bind="attr: {rowspan: $parent.choices().length}">Choices</th>
+					<th data-bind="attr: {rowspan: $parent.choices().length}" class="choices">Choices</th>
 					<!-- /ko -->
 
 					<!-- ko foreach: $data -->

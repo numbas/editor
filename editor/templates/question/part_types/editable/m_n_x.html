@@ -69,11 +69,11 @@
 	<form class="form-horizontal">
 		<div class="control-group" data-bind="template: {
 			name: 'booleanproperty',
-			data: {label: 'Variable list of choices?', property: customChoices, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-list-of-choices' }
+			data: {label: 'Variable list of choices?', property: customChoices, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-variable-list-of-choices' }
 		}"></div>
 		<div class="control-group" data-bind="fadeVisible: customChoices, template: {
 			name: 'property',
-			data: {label: 'List of choices', property: customChoicesExpression, monospace: true, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-choices-expression' }
+			data: {label: 'List of choices', property: customChoicesExpression, monospace: true, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-list-of-choices' }
 		}"></div>
 	</form>
 	<ul class="choices" data-bind="fadeVisible: !customChoices()">
@@ -98,11 +98,11 @@
 	<form class="form-horizontal">
 		<div class="control-group" data-bind="template: {
 			name: 'booleanproperty',
-			data: {label: 'Variable list of answers?', property: customAnswers, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-list-of-answers' }
+			data: {label: 'Variable list of answers?', property: customAnswers, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-variable-list-of-answers' }
 		}"></div>
 		<div class="control-group" data-bind="fadeVisible: customAnswers, template: {
 			name: 'property',
-			data: {label: 'List of answers', property: customAnswersExpression, monospace: true, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-answers-expression' }
+			data: {label: 'List of answers', property: customAnswersExpression, monospace: true, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-list-of-answers' }
 		}"></div>
 	</form>
 	<ul class="answers" data-bind="fadeVisible: !customAnswers()">
@@ -123,6 +123,7 @@
 </section>
 
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='matrix'}">
+	<span data-bind="template: {name: 'helplink', data: {topic: 'marking matrix', url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#marking-matrix', big: true}}"></span>
 	<form class="form-horizontal">
 		<div class="control-group" data-bind="template: {
 			name: 'booleanproperty',

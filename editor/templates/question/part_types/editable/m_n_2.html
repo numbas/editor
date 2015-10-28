@@ -55,11 +55,11 @@
 	<form class="form-horizontal">
 		<div class="control-group" data-bind="template: {
 			name: 'booleanproperty',
-			data: {label: 'Variable list of choices?', property: customChoices, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-list-of-choices' }
+			data: {label: 'Variable list of choices?', property: customChoices, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-variable-list-of-choices' }
 		}"></div>
 		<div class="control-group" data-bind="fadeVisible: customChoices, template: {
 			name: 'property',
-			data: {label: 'List of choices', property: customChoicesExpression, monospace: true, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-choices-expression' }
+			data: {label: 'List of choices', property: customChoicesExpression, monospace: true, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-list-of-choices' }
 		}"></div>
 	</form>
 	<ul class="choices" data-bind="fadeVisible: !customChoices()">

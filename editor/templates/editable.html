@@ -88,7 +88,7 @@
 				<span data-bind="template: {name: 'helplink', data: {url: $data.helpURL}}"></span>
 			</span>
 			<div class="controls">
-				<input data-bind="checked: property" type="checkbox"/>
+				<input data-bind="checked: property, disable: $data.disable" type="checkbox"/>
 			</div>
 		</label>
 	</script>

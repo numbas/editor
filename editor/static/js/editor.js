@@ -582,6 +582,51 @@ $(document).ready(function() {
         this.deleting = ko.observable(false);
     }
 
+	/* Resizable 2d grid of observables.
+	 * Returns a 2d array of objects, each created by calling cell(row,column)
+	 */
+	Editor.editableGrid = function(rows,cols,cell) {
+		var grid = [];
+		var outGrid = ko.computed(function() {
+			var numRows = parseInt(rows());
+			var numCols = parseInt(cols());
+			if(numRows==0 || numCols==0) {
+				grid = [];
+				return grid;
+			}
+			var rowsNow = grid.length;
+			var colsNow = rowsNow>0 ? grid[0]().length : 0;
+			if(numCols<colsNow) {
+				for(var i=0;i<rowsNow;i++) {
+					grid[i](grid[i]().slice(0,numCols));
+				}
+			} else if(numCols>colsNow) {
+				for(var i=0;i<rowsNow;i++) {
+					for(var j=colsNow;j<numCols;j++) {
+						grid[i].push(cell(i,j));
+					}
+				}
+			}
+			if(numRows<rowsNow) {
+				grid = grid.slice(0,numRows);
+			} else if(numRows>rowsNow) {
+				for(var i=rowsNow;i<numRows;i++) {
+					var row = ko.observableArray([]);
+					for(var j=0;j<numCols;j++) {
+						row.push(cell(i,j));
+					}
+					grid.push(row);
+				}
+			}
+
+			return grid;
+		})
+		
+		return outGrid;
+	}
+
+
+
 	//represent a JSON-esque object in the Numbas .exam format
 	prettyData = function(data){
 		switch(typeof(data))

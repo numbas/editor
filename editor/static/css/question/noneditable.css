@@ -67,3 +67,7 @@ li.choice  {
     padding-right: 2em;
 }
 
+.part-edit ul.choices, .part-edit ul.answers {
+	list-style-type: decimal;
+	margin-left: 25px;
+}

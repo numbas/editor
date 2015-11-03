@@ -214,7 +214,8 @@ ko.bindingHandlers.sortable = {
 
 $(document).ready(function() {
 
-	function texJMEBit(expr) {
+	function texJMEBit(expr,rules) {
+		rules = rules || [];
 		var scope = new Numbas.jme.Scope(Numbas.jme.builtinScope,{rulesets: Numbas.jme.display.simplificationRules});
 		try{
 			var sbits = Numbas.util.splitbrackets(expr,'{','}');
@@ -223,7 +224,7 @@ $(document).ready(function() {
 			{
 				expr += j%2 ? ' subvar('+sbits[j]+')' : sbits[j]; //subvar here instead of \\color because we're still in JME
 			}
-			expr = {tex: Numbas.jme.display.exprToLaTeX(expr,[],scope), error: false};
+			expr = {tex: Numbas.jme.display.exprToLaTeX(expr,rules,scope), error: false};
 			return expr;
 		} catch(e) {
             var tex = e.message.replace(/<\/?(code|em|strong)>/g,'');
@@ -241,8 +242,10 @@ $(document).ready(function() {
 
 		TEX.Parse.Augment({
 			JMEvar: function(name) {
+				var rules = this.GetBrackets(name);
 				var expr = this.GetArgument(name);
-				var res = texJMEBit(expr);
+
+				var res = texJMEBit(expr,rules);
                 expr = res.tex || res.message;
 				var tex = '\\class{jme-var}{\\left\\{'+expr+'\\right\\}}';
 				var mml = TEX.Parse(tex,this.stack.env).mml();
@@ -252,7 +255,7 @@ $(document).ready(function() {
 			JMEsimplify: function(name) {
 				var rules = this.GetBrackets(name);
 				var expr = this.GetArgument(name);
-				var res = texJMEBit(expr);
+				var res = texJMEBit(expr,rules);
                 expr = res.tex || res.message;
 				var tex = ' \\class{jme-simplify}{\\left\\{'+expr+'\\right\\}}'
 				var mml = TEX.Parse(tex,this.stack.env).mml();

@@ -542,11 +542,15 @@
                 <tbody>
                     {% for q2 in object.network %}
                     <tr class="network-question{% if q2 == object %} current{% endif %}">
-                        <td>{% question_link q2 %}</td>
+						<td>{% if q2 != object %}{% question_link q2 %}{% else %}{{q2.name}}{% endif %}</td>
                         <td>{% include "stamp_column.html" with record=q2 %}</td>
                         <td>{% user_link q2.author %}</td>
                         <td>{{ q2.last_modified|date:"d/m/Y H:i" }}</td>
-                        <td class="admin"><a class="preview" href="{% url 'question_preview' q2.pk q2.slug %}" target="_blank" title="Test run">{% admin_icon "preview" %}</a></td>
+						<td class="admin">
+							{% if q2 != object %}
+							<a class="preview" href="{% url 'question_preview' q2.pk q2.slug %}" target="_blank" title="Test run">{% admin_icon "preview" %}</a>
+							{% endif %}
+						</td>
                     </tr>
                     {% endfor %}
                 </tbody>

@@ -3,6 +3,7 @@
 {% load icon %}
 {% load can_edit %}
 {% load links %}
+{% load sanitizer %}
 
 {% block editor %}
 	{% include "editable.html" %}
@@ -667,6 +668,7 @@
 		</section>
 
         <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='network'}">
+			<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#other-versions', big: true}}"></span>
             <table class="network">
                 <thead>
                     <tr>
@@ -681,11 +683,14 @@
                 <tbody>
                     {% for q2 in object.network %}
                     <tr class="network-question{% if q2 == object %} current{% endif %}">
-                        <td>{% question_link q2 %}</td>
+						<td>{% if q2 != object %}{% question_link q2 %}{% else %}{{q2.name}}{% endif %}</td>
                         <td>{% include "stamp_column.html" with record=q2 %}</td>
                         <td>{% user_link q2.author %}</td>
                         <td>{{ q2.last_modified|date:"d/m/Y H:i" }}</td>
-                        <td class="admin"><a class="preview" href="{% url 'question_preview' q2.pk q2.slug %}" target="_blank" title="Test run">{% admin_icon "preview" %}</a></td>
+						<td class="admin">
+							{% if q2 != object %}
+							<a class="preview" href="{% url 'question_preview' q2.pk q2.slug %}" target="_blank" title="Test run">{% admin_icon "preview" %}</a>
+							{% endif %}</td>
                         <td>
                             {% if q2 != object %}
                             <a href="{% url 'question_compare' object.pk q2.pk %}">Compare</a>
@@ -702,7 +707,9 @@
             <ul>
                 {% for pr in pull_requests %}
                 <li class="pull-request">
-                    {% user_link pr.owner %} would like you to replace this question with {% question_link pr.source %}.
+					<p>{% user_link pr.owner %} would like you to replace this question with {% question_link pr.source %}.</p>
+					<p>Here's what's changed:</p>
+					<blockquote class="comment">{{ pr.comment|strip_html|safe }}</blockquote>
                     <div class="responses">
                         <form method="post" action="{% url 'question_pullrequest_accept' pr.pk %}">{% csrf_token %}<button class="btn accept-pr">Accept</button></form>
                         <form method="post" action="{% url 'question_pullrequest_reject' pr.pk %}">{% csrf_token %}<button class="btn reject-pr">Reject</button></form>

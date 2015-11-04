@@ -20,7 +20,7 @@ import zipfile
 import os
 import tempfile
 
-from editor.models import Exam, Question, ExamQuestion, QuestionAccess, ExamAccess, QuestionHighlight, ExamHighlight, Theme, Extension
+from editor.models import Exam, Question, ExamQuestion, QuestionAccess, ExamAccess, QuestionHighlight, ExamHighlight, Theme, Extension, QuestionPullRequest
 from django.contrib.auth.models import User
 
 class FixedSelectMultiple(SelectMultiple):
@@ -295,4 +295,3 @@ class NewExtensionForm(UpdateExtensionForm):
             extension.save()
             self.save_m2m()
         return extension
-

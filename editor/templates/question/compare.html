@@ -62,7 +62,7 @@
             </td>
             <td>
                 {% if not pr2_exists %}
-                <a class="btn" href="{% url 'question_pullrequest' q1.pk q2.pk %}">&larr; {% if pr2_auto %}Merge this version into the other{% else %}Offer to merge this version into the other{% endif %}</a>
+                <a class="btn" href="{% url 'question_pullrequest' q2.pk q1.pk %}">&larr; {% if pr2_auto %}Merge this version into the other{% else %}Offer to merge this version into the other{% endif %}</a>
                 {% else %}
                 Request outstanding
                 {% endif %}

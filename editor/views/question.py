@@ -402,35 +402,37 @@ class CompareView(generic.TemplateView):
         context['pr2_auto'] = q1.can_be_edited_by(self.request.user)
         return context
 
-class CreatePullRequestView(generic.TemplateView):
+class CreatePullRequestView(generic.CreateView):
+    model = QuestionPullRequest
     template_name = "question/pullrequest.html"
+    fields = ['source','destination','comment']
 
-    def dispatch(self, request, source, destination, *args, **kwargs):
-        source = self.source = Question.objects.get(pk=int(source))
-        destination = self.destination = Question.objects.get(pk=int(destination))
+    def form_valid(self, form):
+        owner = self.request.user
 
-        self.pr = QuestionPullRequest(owner=self.request.user,source=source,destination=destination)
+        source = form.instance.source
+        destination = form.instance.destination
+
+        self.pr = QuestionPullRequest(owner=owner,source=source,destination=destination,comment=form.instance.comment)
         try:
             self.pr.full_clean()
         except ValidationError as e:
             return redirect('question_compare',args=(source.pk,destination.pk))
 
-        if self.pr.destination.can_be_edited_by(request.user):
-            self.pr.merge(request.user)
-            messages.add_message(request, messages.SUCCESS, render_to_string('question/pullrequest_accepted_message.html',{'pr':self.pr}))
+        if self.pr.destination.can_be_edited_by(owner):
+            self.pr.merge(owner)
+            messages.add_message(self.request, messages.SUCCESS, render_to_string('question/pullrequest_accepted_message.html',{'pr':self.pr}))
             return redirect('question_edit',self.pr.destination.pk, self.pr.destination.slug)
         else:
             self.pr.save()
-
-        return super(CreatePullRequestView,self).dispatch(request,source,destination,*args,**kwargs)
+            messages.add_message(self.request, messages.INFO, render_to_string('question/pullrequest_created_message.html',{'pr':self.pr}))
+            return redirect('question_edit',self.pr.source.pk,self.pr.source.slug)
 
     def get_context_data(self,*args,**kwargs):
         context = super(CreatePullRequestView, self).get_context_data(**kwargs)
 
-        context['source'] = self.source
-        context['destination'] = self.destination
-
-        context['pr'] = self.pr
+        context['source'] = Question.objects.get(pk=self.kwargs['source'])
+        context['destination'] = Question.objects.get(pk=self.kwargs['destination'])
 
         return context
 

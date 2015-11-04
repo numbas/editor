@@ -560,6 +560,7 @@ class QuestionPullRequest(models.Model):
     destination = models.ForeignKey(Question,related_name='incoming_pull_requests')
     open = models.BooleanField(default=True)
     created = models.DateTimeField(auto_now_add=True,default=datetime.utcfromtimestamp(0))
+    comment = models.TextField(blank=True)
 
     def clean(self):
         if self.source==self.destination:
@@ -585,7 +586,7 @@ class QuestionPullRequest(models.Model):
             destination.save()
             destination.set_name(oname)
             reversion.set_user(self.owner)
-            reversion.set_comment("Merged with {}".format(source.name))
+            reversion.set_comment("Merged with {}:\n{}".format(source.name,self.comment))
 
         if user!=self.owner:
             notify.send(user,verb='has accepted your request to merge into',target=self.destination,recipient=self.owner, action_object=self)

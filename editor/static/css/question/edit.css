@@ -485,6 +485,10 @@ input.recalculate-checkbox {
     background:  #eee;
 }
 
+.network .network-question.current {
+	font-style: italic;
+}
+
 .pull-request:not(:last-child) {
     margin-bottom: 2em;
 }

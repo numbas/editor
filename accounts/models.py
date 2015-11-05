@@ -52,8 +52,7 @@ class UserProfile(models.Model):
     bio = SanitizedTextField(default='',allowed_tags=settings.SANITIZER_ALLOWED_TAGS,allowed_attributes=settings.SANITIZER_ALLOWED_ATTRIBUTES)
     favourite_questions = models.ManyToManyField(Question,blank=True,related_name='fans')
     favourite_exams = models.ManyToManyField(Exam,blank=True,related_name='fans')
-    question_basket = models.ManyToManyField(Question,blank=True,related_name='baskets_old')
-    question_basket2 = models.ManyToManyField(Question,blank=True,related_name='baskets',through='BasketQuestion')
+    question_basket = models.ManyToManyField(Question,blank=True,related_name='baskets',through='BasketQuestion')
 
     def sorted_tags(self):
         qs = self.user.own_questions
@@ -71,6 +70,7 @@ class BasketQuestion(models.Model):
     
     class Meta:
         ordering = ['qn_order']
+        unique_together = ('profile','question')
         
     profile = models.ForeignKey(UserProfile)
     question = models.ForeignKey(Question)

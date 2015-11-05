@@ -4,13 +4,15 @@
 <li><a tabindex="-1" class="empty-basket action" href="{% url 'empty_question_basket' %}">Clear</a></li>
 {% endif %}
 <ol class="question-list">
-{% for question in user.userprofile.question_basket.all %}
+{% for bq in user.userprofile.basketquestion_set.all %}
+{% with question=bq.question %}
 	<li class="question">
         <a tabindex="-1" href="{% url 'question_edit' question.pk question.slug %}">
             {{question.name}}
 		</a>
 		<button type="button" class="remove" data-id="{{question.pk}}" title="Remove this question from the basket">{% icon "x" 8 %}</button>
-	</li>
+    </li>
+{% endwith %}
 {% endfor %}
 </ol>
 {% if nonempty %}

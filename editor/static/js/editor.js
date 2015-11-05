@@ -218,6 +218,11 @@ $(document).ready(function() {
 		rules = rules || [];
 		var scope = new Numbas.jme.Scope(Numbas.jme.builtinScope,{rulesets: Numbas.jme.display.simplificationRules});
 		try{
+			if(viewModel && viewModel.rulesets) {
+				viewModel.rulesets().map(function(r) {
+					scope.rulesets[r.name()] = Numbas.jme.collectRuleset(r.sets(),scope.rulesets);
+				});
+			}
 			var sbits = Numbas.util.splitbrackets(expr,'{','}');
 			var expr = '';
 			for(var j=0;j<sbits.length;j+=1)

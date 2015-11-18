@@ -19,6 +19,8 @@ import operator
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.template.loader import render_to_string
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.db import transaction
@@ -29,6 +31,7 @@ from django.shortcuts import render,redirect
 from django.utils.decorators import method_decorator
 from django.views import generic
 from django.views.generic.detail import SingleObjectMixin
+from examparser import ParseError
 
 import reversion
 
@@ -140,14 +143,21 @@ class UploadView(generic.CreateView):
     def post(self, request, *args, **kwargs):
         self.files = request.FILES.getlist('file')
         for file in self.files:
-            content = file.read().decode('utf-8')
+            try:
+                content = file.read().decode('utf-8')
+            except UnicodeDecodeError:
+                return self.not_exam_file()
             self.object = Exam(content=content)
 
             if not self.object.content:
                 return
 
             self.object.author = self.request.user
-            self.object.save()
+
+            try:
+                self.object.save()
+            except ParseError:
+                return self.not_exam_file()
 
             exam_object = NumbasObject(source=self.object.content)
 
@@ -165,6 +175,10 @@ class UploadView(generic.CreateView):
             self.object.set_questions(qs)
 
         return HttpResponseRedirect(self.get_success_url())
+
+    def not_exam_file(self):
+        messages.add_message(self.request, messages.ERROR, render_to_string('notexamfile.html'))
+        return HttpResponseRedirect(reverse('exam_index'))
 
     def get_success_url(self):
         if len(self.files)==1:

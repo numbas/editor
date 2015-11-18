@@ -23,7 +23,7 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.db import transaction
 from django.forms import model_to_dict
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django import http
 from django.shortcuts import redirect
 from django.views import generic
@@ -50,6 +50,7 @@ from editor.views.timeline import timeline_json
 from accounts.models import UserProfile
 
 from numbasobject import NumbasObject
+from examparser import ParseError
 
 class PreviewView(editor.views.generic.PreviewView):
     
@@ -151,9 +152,15 @@ class UploadView(generic.CreateView):
     model = Question
 
     def post(self, request, *args, **kwargs):
-        content = request.FILES['file'].read()
+        try:
+            content = request.FILES['file'].read().decode('utf-8')
+        except UnicodeDecodeError:
+            return self.not_exam_file()
 
-        exam_object = NumbasObject(content)
+        try:
+            exam_object = NumbasObject(content)
+        except ParseError:
+            return self.not_exam_file()
         self.qs = []
         for q in exam_object.data['questions']:
             question = NumbasObject(data=q,version=exam_object.version)
@@ -161,12 +168,21 @@ class UploadView(generic.CreateView):
                 content = str(question), 
                 author = self.request.user
             )
-            qo.save()
+
+            try:
+                qo.save()
+            except ParseError:
+                return self.not_exam_file()
+
             extensions = Extension.objects.filter(location__in=exam_object.data['extensions'])
             qo.extensions.add(*extensions)
             self.qs.append(qo)
 
         return redirect(self.get_success_url())
+
+    def not_exam_file(self):
+        messages.add_message(self.request, messages.ERROR, render_to_string('notexamfile.html'))
+        return HttpResponseRedirect(reverse('question_index'))
 
     def get_success_url(self):
         if len(self.qs)==1:

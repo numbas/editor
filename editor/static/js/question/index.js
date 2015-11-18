@@ -7,7 +7,7 @@ $(document).ready(function() {
         $('#uploadForm').submit();
     });
        
-    $('.question .delete').on('click',function(e) {
+    $('.question a.delete').on('click',function(e) {
         e.preventDefault();
         e.stopPropagation();
         if(window.confirm('Really delete this question? You won\'t be able to get it back.')) {

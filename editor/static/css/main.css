@@ -412,3 +412,7 @@ button.search.loading {
 .stamp-status.pleasetest {
 	background-color: #ffbf00;
 }
+
+.alert > p:last-child {
+    margin-bottom: 0;
+}

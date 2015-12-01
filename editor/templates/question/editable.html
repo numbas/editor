@@ -631,7 +631,8 @@
         </section>
 
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='access'}">
-			<span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#access', big: true}}"></span>
+        <span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#access', big: true}}"></span>
+            <h4>Public access</h4>
 			<form class="form-horizontal">
 				<div class="control-group">
 					<label>
@@ -668,7 +669,14 @@
 						</div>
 					</label>
 				</div>
-			</form>
+            </form>
+
+            <h4>Access Links</h4>
+            <p>Share these links to give automatic access to this question. Be careful about who you share these with - whoever clicks on the link will be given access.</p>
+            <ul class="share-links">
+                <li>View: <span class="share-link">{{SITE_ROOT}}{% url 'share_question' 'view' object.share_uuid %}</span></li>
+                <li>Edit: <span class="share-link">{{SITE_ROOT}}{% url 'share_question' 'edit' object.share_uuid %}</span></li>
+            </ul>
 		</section>
 
         <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='network'}">

@@ -701,6 +701,33 @@ class SetAccessView(generic.UpdateView):
     def get(self, request, *args, **kwargs):
         return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
 
+class ShareLinkView(generic.RedirectView):
+    permanent = False
+
+    def get_redirect_url(self, *args,**kwargs):
+        try:
+            q = Question.objects.get(share_uuid=kwargs['share_uuid'])
+        except ValueError,Question.DoesNotExist:
+            raise Http404
+
+        access = kwargs['access']
+
+        user = self.request.user
+        if access=='view':
+            has_access = q.can_be_viewed_by(user)
+        elif access=='edit':
+            has_access = q.can_be_edited_by(user)
+            
+        if not has_access:
+            try:
+                qa = QuestionAccess.objects.get(question=q,user=user)
+            except QuestionAccess.DoesNotExist:
+                qa = QuestionAccess(question=q, user=user,access=access)
+            qa.access = access
+            qa.save()
+
+        return reverse('question_edit',args=(q.pk,q.slug))
+
 class SetStarView(generic.UpdateView):
     model = Question
 

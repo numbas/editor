@@ -359,3 +359,9 @@ button.delete-grey:hover {
     cursor: pointer;
 }
 
+.share-link {
+    font-family: monospace;
+}
+.share-links li {
+    margin: 1em 0;
+}

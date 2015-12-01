@@ -61,6 +61,9 @@ urlpatterns = patterns('',
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/set-access$',
         exam.SetAccessView.as_view(),name='set_exam_access'),
 
+    url(r'^exam/share/(?P<access>(view|edit))/(?P<share_uuid>.*)$',
+        login_required(exam.ShareLinkView.as_view()),name='share_exam'),
+
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/highlight$',
         login_required(exam.HighlightView.as_view()),name='highlight_exam'),
 
@@ -104,6 +107,9 @@ urlpatterns = patterns('',
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/set-access$',
         question.SetAccessView.as_view(),name='set_question_access'),
+
+    url(r'^question/share/(?P<access>(view|edit))/(?P<share_uuid>.*)$',
+        login_required(question.ShareLinkView.as_view()),name='share_question'),
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/set-star$',
         login_required(question.SetStarView.as_view()),name='set_question_star'),

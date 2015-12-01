@@ -350,6 +350,8 @@ class EditorModel(models.Model):
 
     current_stamp = models.ForeignKey(StampOfApproval, blank=True, null=True, on_delete=models.SET_NULL)
 
+    share_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique = True)
+
     def set_licence(self,licence):
         NumbasObject.get_parsed_content(self)
         metadata = self.parsed_content.data.setdefault(u'metadata',{})
@@ -536,7 +538,7 @@ class QuestionAccess(models.Model):
 
 @receiver(signals.post_save,sender=QuestionAccess)
 def notify_given_question_access(instance,created,**kwargs):
-    if created:
+    if created and hasattr(instance,'given_by'):
         notify.send(instance.given_by,verb='gave you access to',target=instance.question,recipient=instance.user)
 
 class QuestionHighlight(models.Model):
@@ -768,7 +770,7 @@ class ExamAccess(models.Model):
 
 @receiver(signals.post_save,sender=ExamAccess)
 def notify_given_exam_access(instance,created,**kwargs):
-    if created:
+    if created and hasattr(instance,'given_by'):
         notify.send(instance.given_by,verb='gave you access to',target=instance.exam,recipient=instance.user)
         
         

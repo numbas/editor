@@ -185,6 +185,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.request",
     "django.contrib.messages.context_processors.messages",
     "editor.context_processors.global_settings",
+    "editor.context_processors.site_root",
 )
 
 sys.path.append(os.path.join(GLOBAL_SETTINGS['NUMBAS_PATH'],'bin'))

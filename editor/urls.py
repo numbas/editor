@@ -169,7 +169,7 @@ urlpatterns = patterns('',
 
     url(r'version/(?P<pk>\d+)/update', login_required(version.UpdateView.as_view()), name='edit_version'),
 
-    url(r'notification/(?P<pk>\d+)/open', notification.OpenNotification.as_view(), name='open_notification'),
+    url(r'notification/(?P<pk>\d+)/open', notification.OpenNotification.as_view(permanent=False), name='open_notification'),
 
     url(r'question_basket/$',
         BasketView.as_view(),

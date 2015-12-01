@@ -250,6 +250,7 @@ class UpdateView(generic.UpdateView):
     """Edit a question or view as non-editable if not author."""
     
     model = Question
+    form_class = QuestionForm
     
     def get_object(self):
         obj = super(UpdateView,self).get_object()

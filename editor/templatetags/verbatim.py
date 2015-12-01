@@ -34,13 +34,13 @@ def verbatim(parser, token):
         token = parser.tokens.pop(0)
         if token.contents == 'endverbatim':
             break
-        if token.token_type == template.TOKEN_VAR:
+        if token.token_type == template.base.TOKEN_VAR:
             text.append('{{')
-        elif token.token_type == template.TOKEN_BLOCK:
+        elif token.token_type == template.base.TOKEN_BLOCK:
             text.append('{%')
         text.append(token.contents)
-        if token.token_type == template.TOKEN_VAR:
+        if token.token_type == template.base.TOKEN_VAR:
             text.append('}}')
-        elif token.token_type == template.TOKEN_BLOCK:
+        elif token.token_type == template.base.TOKEN_BLOCK:
             text.append('%}')
     return VerbatimNode(''.join(text))

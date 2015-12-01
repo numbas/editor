@@ -241,6 +241,7 @@ class UpdateView(generic.UpdateView):
     
     model = Exam
     template_name = 'exam/edit.html'
+    form_class = ExamForm
     
     def get_template_names(self):
         self.object = self.get_object()

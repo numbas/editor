@@ -13,6 +13,7 @@
 #   limitations under the License.
 import json
 import traceback
+import uuid
 from copy import deepcopy
 
 import time
@@ -206,6 +207,7 @@ class CopyView(generic.View, SingleObjectMixin):
             q2 = deepcopy(q)
             q2.id = None
             q2.author = request.user
+            q2.share_uuid = uuid.uuid4()
             q2.save()
             q2.set_name("%s's copy of %s" % (q2.author.first_name,q.name))
             q2.copy_of = q

@@ -23,6 +23,9 @@ admin.site.register(editor.models.QuestionHighlight)
 admin.site.register(editor.models.Extension)
 admin.site.register(editor.models.Theme)
 
+admin.site.register(editor.models.AbilityFramework)
+admin.site.register(editor.models.AbilityLevel)
+
 # allow users to be sorted by date joined
 UserAdmin.list_display += ('date_joined',)
 UserAdmin.list_filter += ('date_joined',)

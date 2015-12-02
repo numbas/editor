@@ -352,6 +352,9 @@ class EditorModel(models.Model):
 
     share_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique = True)
 
+    published = models.BooleanField(default=False)
+    published_date = models.DateTimeField(null=True)
+
     def set_licence(self,licence):
         NumbasObject.get_parsed_content(self)
         metadata = self.parsed_content.data.setdefault(u'metadata',{})
@@ -402,6 +405,25 @@ class QuestionManager(models.Manager):
             mine_or_public = self.all().filter(mine_or_public_query)
             given_access = QuestionAccess.objects.filter(access__in=['edit','view'],user=user).values_list('question',flat=True)
             return mine_or_public | self.exclude(mine_or_public_query).filter(pk__in=given_access)
+
+class AbilityFramework(models.Model):
+    name = models.CharField(max_length=200,blank=False,unique=True)
+    description = models.TextField(blank=False)
+
+    def __unicode__(self):
+        return self.name
+
+ABILITY_PRECISION = 10
+
+class AbilityLevel(models.Model):
+    name = models.CharField(max_length=200,blank=False,unique=True)
+    description = models.TextField(blank=False)
+    start = models.DecimalField(max_digits=ABILITY_PRECISION+1,decimal_places=ABILITY_PRECISION)
+    end = models.DecimalField(max_digits=ABILITY_PRECISION+1,decimal_places=ABILITY_PRECISION)
+    framework = models.ForeignKey(AbilityFramework,related_name='levels')
+
+    def __unicode__(self):
+        return self.name
 
 @reversion.register
 class Question(EditorModel,NumbasObject,ControlledObject):

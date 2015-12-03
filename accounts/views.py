@@ -19,9 +19,10 @@ from registration import signals
 class RegistrationView(registration.views.RegistrationView):
     form_class = NumbasRegistrationForm
 
-    def register(self,request,*args,**kwargs):
-        username, email, password = kwargs['username'], kwargs['email'], kwargs['password1']
-        first_name, last_name = kwargs['first_name'], kwargs['last_name']
+    def register(self,request,form,*args,**kwargs):
+        d = form.cleaned_data
+        username, email, password = d['username'], d['email'], d['password1']
+        first_name, last_name = d['first_name'], d['last_name']
         if Site._meta.installed:
             site = Site.objects.get_current()
         else:

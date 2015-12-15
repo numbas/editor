@@ -42,6 +42,7 @@ from django.utils.deconstruct import deconstructible
 from django.db.models.signals import pre_delete
 from uuslug import slugify
 from django.contrib import messages
+from django.utils.translation import ugettext_lazy as _
 
 import reversion
 
@@ -62,15 +63,12 @@ USER_ACCESS_CHOICES = (('view','Public can view'),('edit','Public can edit'))
 class EditorTag(taggit.models.TagBase):
     official = models.BooleanField(default=False)
 
-    def used_count(self):
-        return self.tagged_items.count()
-
     class Meta:
         verbose_name = 'tag'
         ordering = ['name']
 
-class TaggedQuestion(taggit.models.GenericTaggedItemBase):
-    tag = models.ForeignKey(EditorTag,related_name='tagged_items')
+    def used_count(self):
+        return self.tagged_items.count()
 
 @deconstructible
 class ControlledObject(object):
@@ -342,6 +340,174 @@ class Comment(models.Model,TimelineMixin):
     def __unicode__(self):
         return 'Comment by {} on {}: "{}"'.format(self.user.get_full_name(), str(self.object), self.text[:47]+'...' if len(self.text)>50 else self.text)
 
+class AbilityFramework(models.Model):
+    name = models.CharField(max_length=200,blank=False,unique=True)
+    description = models.TextField(blank=False)
+
+    def __unicode__(self):
+        return self.name
+
+ABILITY_PRECISION = 10
+
+class AbilityLevel(models.Model):
+    name = models.CharField(max_length=200,blank=False,unique=True)
+    description = models.TextField(blank=False)
+    start = models.DecimalField(max_digits=ABILITY_PRECISION+1,decimal_places=ABILITY_PRECISION)
+    end = models.DecimalField(max_digits=ABILITY_PRECISION+1,decimal_places=ABILITY_PRECISION)
+    framework = models.ForeignKey(AbilityFramework,related_name='levels')
+
+    def __unicode__(self):
+        return self.name
+
+class Subject(models.Model):
+    name = models.CharField(max_length=200,blank=False,unique=True)
+    description = models.TextField(blank=False)
+
+class Topic(models.Model):
+    name = models.CharField(max_length=200,blank=False,unique=True)
+    description = models.TextField(blank=False)
+
+class AbilityLevelField(models.FloatField):
+    pass
+
+class TaggedItem(taggit.models.GenericTaggedItemBase):
+    tag = models.ForeignKey(EditorTag,related_name='tagged_editoritems')
+
+class TaggedQuestion(taggit.models.GenericTaggedItemBase):
+    tag = models.ForeignKey(EditorTag,related_name='tagged_items')
+
+class Access(models.Model):
+    item = models.ForeignKey('EditorItem')
+    user = models.ForeignKey(User)
+    access = models.CharField(default='view',editable=True,choices=USER_ACCESS_CHOICES,max_length=6)
+
+class Highlight(models.Model):
+    class Meta:
+        ordering = ['-date']
+
+    item = models.ForeignKey('EditorItem')
+    picked_by = models.ForeignKey(User)
+    note = models.TextField(blank=True)
+    date = models.DateTimeField(auto_now_add=True)
+
+class EditorItem(models.Model,NumbasObject,ControlledObject):
+    """
+        Base model for exams and questions - each exam or question has a reference to an instance of this
+    """
+    name = models.CharField(max_length=200,default='Untitled Question')
+    slug = models.SlugField(max_length=200,editable=False,unique=False)
+    filename = models.CharField(max_length=200, editable=False,default='')
+
+    author = models.ForeignKey(User,related_name='own_items')
+    public_access = models.CharField(default='view',editable=True,choices=PUBLIC_ACCESS_CHOICES,max_length=6)
+    access_rights = models.ManyToManyField(User, through='Access', blank=True, editable=False,related_name='accessed_questions+')
+    licence = models.ForeignKey(Licence,null=True)
+
+    content = models.TextField(blank=True,validators=[validate_content])
+    metadata = JSONField(blank=True)
+
+    created = models.DateTimeField(auto_now_add=True)
+    last_modified = models.DateTimeField(auto_now=True)
+
+    copy_of = models.ForeignKey('self',null=True,related_name='copies',on_delete=models.SET_NULL)
+
+    tags = TaggableManager(through=TaggedItem)
+
+    current_stamp = models.ForeignKey('NewStampOfApproval', blank=True, null=True, on_delete=models.SET_NULL)
+
+    share_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique = True)
+
+    published = models.BooleanField(default=False)
+    published_date = models.DateTimeField(null=True)
+
+    ability_level_start = AbilityLevelField(null=True)
+    ability_level_end = AbilityLevelField(null=True)
+    ability_levels = models.ManyToManyField(AbilityLevel)
+
+    subjects = models.ManyToManyField(Subject)
+    topics = models.ManyToManyField(Topic)
+
+    watching_users = models.ManyToManyField(User,related_name='watched_items')
+
+    def __unicode__(self):
+        return self.name
+
+    def set_licence(self,licence):
+        NumbasObject.get_parsed_content(self)
+        metadata = self.parsed_content.data.setdefault(u'metadata',{})
+        metadata['licence'] = licence.name
+        self.licence = licence
+        self.content = str(self.parsed_content)
+
+    @property
+    def timeline(self):
+        events = [StampTimelineEvent(stamp) for stamp in self.stamps] + [VersionTimelineEvent(version) for version in reversion.get_for_object(self)] + [CommentTimelineEvent(comment) for comment in self.comments]
+        events.sort(key=lambda x:x.date, reverse=True)
+        return events
+
+class NewStampOfApproval(models.Model,TimelineMixin):
+    object = models.ForeignKey(EditorItem,related_name='stamps')
+
+    user = models.ForeignKey(User, related_name='newstamps')
+    status = models.CharField(choices = STAMP_STATUS_CHOICES, max_length=20)
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __unicode__(self):
+        return '{} as "{}"'.format(self.user.username,self.object.name,self.get_status_display(),self.date)
+
+class NewComment(models.Model,TimelineMixin):
+    object = models.ForeignKey(EditorItem,related_name='comments')
+
+    user = models.ForeignKey(User, related_name='newcomments')
+    text = models.TextField()
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __unicode__(self):
+        return 'Comment by {} on {}: "{}"'.format(self.user.get_full_name(), str(self.object), self.text[:47]+'...' if len(self.text)>50 else self.text)
+
+@reversion.register
+class NewQuestion(models.Model):
+    editoritem = models.OneToOneField(EditorItem,on_delete=models.CASCADE)
+
+    resources = models.ManyToManyField(Image,blank=True)
+    extensions = models.ManyToManyField(Extension,blank=True)
+
+    class Meta:
+        ordering = ['editoritem__name']
+        permissions = (
+              ('highlight', 'Can pick questions to feature on the front page.'),
+        )
+
+    def __unicode__(self):
+        return '%s' % self.name
+
+@reversion.register
+class NewExam(models.Model):
+    editoritem = models.OneToOneField(EditorItem,on_delete=models.CASCADE)
+
+    questions = models.ManyToManyField(NewQuestion, through='NewExamQuestion', blank=True, editable=False)
+
+    theme = models.CharField(max_length=200,default='default',blank=True)  # used if custom_theme is None
+    custom_theme = models.ForeignKey(Theme,null=True,blank=True,on_delete=models.SET_NULL,related_name='used_in_newexams')
+    locale = models.CharField(max_length=200,default='en-GB')
+
+    def __unicode__(self):
+        return '%s' % self.editoritem.name
+
+class NewExamQuestion(models.Model):
+    
+    """
+        Through model for a question belonging to an exam.
+        Specifies position the question should appear in.
+    """
+    
+    class Meta:
+        ordering = ['qn_order']
+        
+    exam = models.ForeignKey(NewExam)
+    question = models.ForeignKey(NewQuestion)
+    qn_order = models.PositiveIntegerField()
+
 class EditorModel(models.Model):
     class Meta:
         abstract = True
@@ -354,6 +520,13 @@ class EditorModel(models.Model):
 
     published = models.BooleanField(default=False)
     published_date = models.DateTimeField(null=True)
+
+    ability_level_start = AbilityLevelField(null=True)
+    ability_level_end = AbilityLevelField(null=True)
+    ability_levels = models.ManyToManyField(AbilityLevel)
+
+    subjects = models.ManyToManyField(Subject)
+    topics = models.ManyToManyField(Topic)
 
     def set_licence(self,licence):
         NumbasObject.get_parsed_content(self)
@@ -405,25 +578,6 @@ class QuestionManager(models.Manager):
             mine_or_public = self.all().filter(mine_or_public_query)
             given_access = QuestionAccess.objects.filter(access__in=['edit','view'],user=user).values_list('question',flat=True)
             return mine_or_public | self.exclude(mine_or_public_query).filter(pk__in=given_access)
-
-class AbilityFramework(models.Model):
-    name = models.CharField(max_length=200,blank=False,unique=True)
-    description = models.TextField(blank=False)
-
-    def __unicode__(self):
-        return self.name
-
-ABILITY_PRECISION = 10
-
-class AbilityLevel(models.Model):
-    name = models.CharField(max_length=200,blank=False,unique=True)
-    description = models.TextField(blank=False)
-    start = models.DecimalField(max_digits=ABILITY_PRECISION+1,decimal_places=ABILITY_PRECISION)
-    end = models.DecimalField(max_digits=ABILITY_PRECISION+1,decimal_places=ABILITY_PRECISION)
-    framework = models.ForeignKey(AbilityFramework,related_name='levels')
-
-    def __unicode__(self):
-        return self.name
 
 @reversion.register
 class Question(EditorModel,NumbasObject,ControlledObject):
@@ -806,4 +960,3 @@ class ExamQuestion(models.Model):
     exam = models.ForeignKey(Exam)
     question = models.ForeignKey(Question)
     qn_order = models.PositiveIntegerField()
-

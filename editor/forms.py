@@ -21,6 +21,7 @@ import os
 import tempfile
 
 from editor.models import Exam, Question, ExamQuestion, QuestionAccess, ExamAccess, QuestionHighlight, ExamHighlight, Theme, Extension, QuestionPullRequest
+import editor.models
 from django.contrib.auth.models import User
 
 class FixedSelectMultiple(SelectMultiple):
@@ -45,6 +46,19 @@ USAGE_OPTIONS = (
     ('sell','Free to reuse commercially'),
     ('modify-sell','Free to reuse commercially with modification'),
 )
+
+class EditorItemSearchForm(forms.Form):
+    query = forms.CharField(initial='', required=False)
+    item_types = forms.ChoiceField(initial='all',choices=(('all','All content'),('questions','Questions'),('exams','Exams')))
+    author = forms.CharField(initial='', required=False)
+    usage = forms.ChoiceField(choices=USAGE_OPTIONS, required=False, widget=forms.RadioSelect)
+    filter_copies = forms.BooleanField(initial=False)
+    only_ready_to_use = forms.BooleanField(initial=False)
+    tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
+    exclude_tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
+    subjects = forms.ModelMultipleChoiceField(queryset=editor.models.Subject.objects.all())
+    ability_framework = forms.ModelChoiceField(queryset=editor.models.AbilityFramework.objects.all())
+    ability_levels = forms.ModelMultipleChoiceField(queryset=editor.models.AbilityLevel.objects.all(), widget=forms.CheckboxSelectMultiple)
 
 class QuestionSearchForm(forms.Form):
     query = forms.CharField(initial='', required=False)

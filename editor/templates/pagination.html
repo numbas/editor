@@ -1,15 +1,14 @@
 {% load django_tables2 %}
-<div class="pagination">
-	
-	<a class="move previous" {% if results.page.has_previous %}href="{% querystring results.prefixed_page_field=results.page.previous_page_number %}" title="Previous page"{% endif %}></a></li>
-    
+<nav>
+    <ul class="pager">
+        {% if results.page.has_previous or results.page.has_next %}
+        <li class="previous {% if not results.page.has_previous %}disabled{% endif %}"><a {% if results.page.has_previous %}href="{% querystring results.prefixed_page_field=results.page.previous_page_number %}" title="Previous page"{% endif %}><span aria-hidden="true">&larr;</span> Previous</a></li>
+        {% endif %}
 
-    {% if results.page.has_previous or results.page.has_next %}
-	<span class="current">Page {{ results.page.number }} of {{ results.paginator.num_pages }}</span>
-    {% endif %}
+        <li>Page {{ results.page.number }} of {{ results.paginator.num_pages }}</li>
 
-    {% if results.page.has_next %}
-	<a title="Next page" class="move next" href="{% querystring results.prefixed_page_field=results.page.next_page_number %}"></a></li>
-    {% endif %}
-</div>
-
+        {% if results.page.has_next %}
+        <li class="next"><a href="{% querystring results.prefixed_page_field=results.page.next_page_number %}">Next <span aria-hidden="true">&rarr;</span></a></li>
+        {% endif %}
+    </ul>
+</nav>

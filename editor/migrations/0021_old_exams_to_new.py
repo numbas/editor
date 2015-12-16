@@ -70,7 +70,7 @@ def old_exams_to_new(apps, schema_editor):
     
         for eq in ExamQuestion.objects.all():
             neq = NewExamQuestion()
-            neq.exam = ne
+            neq.exam = NewExam.objects.get(pk=eq.exam.pk)
             neq.question = NewQuestion.objects.get(pk=eq.question.pk)
             neq.qn_order = eq.qn_order
             neq.save()

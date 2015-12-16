@@ -1,22 +1,36 @@
 {% load icon %}
+
 {% with basket=user.userprofile.question_basket nonempty=user.userprofile.question_basket.exists %}
-{% if nonempty %}
-<li><a tabindex="-1" class="empty-basket action" href="{% url 'empty_question_basket' %}">Clear</a></li>
-{% endif %}
-<ol class="question-list">
-{% for bq in user.userprofile.basketquestion_set.all %}
-{% with question=bq.question %}
-	<li class="question">
-        <a tabindex="-1" href="{% url 'question_edit' question.pk question.slug %}">
-            {{question.name}}
-		</a>
-		<button type="button" class="remove" data-id="{{question.pk}}" title="Remove this question from the basket">{% icon "x" 8 %}</button>
-    </li>
-{% endwith %}
-{% endfor %}
-</ol>
-{% if nonempty %}
-<li class="divider"></li>
-<li><a tabindex="-1" class="create-exam-from-basket action" href="{% url 'create_exam_from_basket' %}">Create an exam from these questions</a></li>
-{% endif %}
+    {% if nonempty %}
+        <li>
+            <a tabindex="-1" class="empty-basket action" href="{% url 'empty_question_basket' %}">
+                <button role="button" class="btn btn-xs btn-link btn-remove"><span class="glyphicon glyphicon-remove"></span></button>
+                Clear
+            </a>
+        </li>
+        <li role="separator" class="divider"></li>
+    {% endif %}
+
+    <ol class="question-list">
+        {% for bq in user.userprofile.basketquestion_set.all %}
+            {% with question=bq.question %}
+                <li class="question">
+                    <a tabindex="-1" href="{% url 'question_edit' question.pk question.slug %}">
+                        {{question.name}}
+                    </a>
+                    <button role="button" class="btn btn-xs btn-link btn-remove" data-id="{{question.pk}}" title="Remove this question from the basket"><span class="glyphicon glyphicon-remove"></span></button>
+                </li>
+            {% endwith %}
+        {% endfor %}
+    </ol>
+
+    {% if nonempty %}
+        <li role="separator" class="divider"></li>
+        <li>
+            <a tabindex="-1" class="create-exam-from-basket action" href="{% url 'create_exam_from_basket' %}">
+                <button role="button" class="btn btn-xs btn-link"><span class="glyphicon glyphicon-plus"></span></button>
+                Create an exam from these questions
+            </a>
+        </li>
+    {% endif %}
 {% endwith %}

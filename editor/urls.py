@@ -17,7 +17,7 @@ from django.views.generic import RedirectView, TemplateView
 
 from django.contrib.auth.decorators import login_required
 
-from editor.views import exam, question, HomeView, theme, extension, version, generic, notification
+from editor.views import editoritem, exam, question, HomeView, theme, extension, version, generic, notification
 from editor.views.user import UserSearchView
 from editor.views.resource import upload_resource, ImageDeleteView, media_view
 from editor.views.basket import BasketView,add_question_to_basket,create_exam_from_basket,remove_question_from_basket,empty_question_basket
@@ -25,6 +25,8 @@ from editor.views.basket import BasketView,add_question_to_basket,create_exam_fr
 
 urlpatterns = patterns('',
     url(r'^$', HomeView.as_view(), name='editor_index'),
+
+    url(r'^search/$', editoritem.SearchView.as_view(), name='search'),
 
     url(r'^exams/$',exam.IndexView.as_view(), name='exam_index',),
                        

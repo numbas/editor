@@ -32,7 +32,7 @@ from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
 from django.db import models,transaction
-from django.db.models import signals
+from django.db.models import signals, Max, Min
 from django.dispatch import receiver
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -363,9 +363,15 @@ class Subject(models.Model):
     name = models.CharField(max_length=200,blank=False,unique=True)
     description = models.TextField(blank=False)
 
+    def __unicode__(self):
+        return self.name
+
 class Topic(models.Model):
     name = models.CharField(max_length=200,blank=False,unique=True)
     description = models.TextField(blank=False)
+
+    def __unicode__(self):
+        return self.name
 
 class AbilityLevelField(models.FloatField):
     pass
@@ -445,6 +451,19 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
         events.sort(key=lambda x:x.date, reverse=True)
         return events
 
+    @property
+    def item_type(self):
+        if hasattr(self,'exam'):
+            return 'exam'
+        elif hasattr(self,'question'):
+            return 'question'
+
+@receiver(signals.pre_save,sender=EditorItem)
+def set_ability_level_limits(instance,**kwargs):
+    ends = instance.ability_levels.aggregate(Min('start'),Max('end'))
+    instance.ability_level_start = ends.get('start__min',None)
+    instance.ability_level_end = ends.get('end__max',None)
+
 class NewStampOfApproval(models.Model,TimelineMixin):
     object = models.ForeignKey(EditorItem,related_name='stamps')
 
@@ -467,7 +486,7 @@ class NewComment(models.Model,TimelineMixin):
 
 @reversion.register
 class NewQuestion(models.Model):
-    editoritem = models.OneToOneField(EditorItem,on_delete=models.CASCADE)
+    editoritem = models.OneToOneField(EditorItem,on_delete=models.CASCADE,related_name='question')
 
     resources = models.ManyToManyField(Image,blank=True)
     extensions = models.ManyToManyField(Extension,blank=True)
@@ -479,11 +498,11 @@ class NewQuestion(models.Model):
         )
 
     def __unicode__(self):
-        return '%s' % self.name
+        return '%s' % self.editoritem.name
 
 @reversion.register
 class NewExam(models.Model):
-    editoritem = models.OneToOneField(EditorItem,on_delete=models.CASCADE)
+    editoritem = models.OneToOneField(EditorItem,on_delete=models.CASCADE,related_name='exam')
 
     questions = models.ManyToManyField(NewQuestion, through='NewExamQuestion', blank=True, editable=False)
 

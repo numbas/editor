@@ -15,6 +15,12 @@ from django import forms
 from django.forms.models import inlineformset_factory
 from django.forms.widgets import SelectMultiple
 from django.core.exceptions import ValidationError
+from django.utils.html import conditional_escape, format_html, html_safe
+from django.utils.safestring import mark_safe
+from django.utils.encoding import (
+    force_str, force_text, python_2_unicode_compatible,
+)
+
 
 import zipfile
 import os
@@ -47,18 +53,89 @@ USAGE_OPTIONS = (
     ('modify-sell','Free to reuse commercially with modification'),
 )
 
+class ShowMoreCheckboxRenderer(forms.widgets.CheckboxFieldRenderer):
+    outer_html = """
+    <div{id_attr}>
+        <ul class="initial-list list-unstyled">{first_content}</ul>
+        {more}
+    </div>
+    """
+    inner_html = '<li class="checkbox">{choice_value}{sub_widgets}</li>'
+    more_html = """
+        <div class="show-more collapse" id="{collapse_id}">
+            <ul class="list-unstyled">
+                {more_content}
+            </ul>
+        </div>
+        <div>
+            <a role="button" class="btn btn-link" data-toggle="collapse" href="#{collapse_id}">Show more</a>
+        </div>
+    """
+
+    def render(self):
+        """
+        Outputs a <ul> for this set of choice fields.
+        If an id was given to the field, it is applied to the <ul> (each
+        item in the list will get an id of `$id_$i`).
+        """
+        id_ = self.attrs.get('id')
+        first_output = []
+        more_output = []
+        for i, choice in enumerate(self.choices):
+            choice_value, choice_label = choice
+            output = first_output if i<3 or force_text(choice_value) in self.value else more_output
+
+            if isinstance(choice_label, (tuple, list)):
+                attrs_plus = self.attrs.copy()
+                if id_:
+                    attrs_plus['id'] += '_{}'.format(i)
+                sub_ul_renderer = self.__class__(
+                    name=self.name,
+                    value=self.value,
+                    attrs=attrs_plus,
+                    choices=choice_label,
+                )
+                sub_ul_renderer.choice_input_class = self.choice_input_class
+                output.append(format_html(self.inner_html, choice_value=choice_value,
+                                          sub_widgets=sub_ul_renderer.render()))
+            else:
+                w = self.choice_input_class(self.name, self.value,
+                                            self.attrs.copy(), choice, i)
+                output.append(format_html(self.inner_html,
+                                          choice_value=force_text(w), sub_widgets=''))
+        if len(more_output):
+            more = format_html(self.more_html,
+                    collapse_id='{}-show-more'.format(id_) if id_ else 'show-more',
+                    more_content=mark_safe('\n'.join(more_output))
+            )
+        else:
+            more = ''
+        return format_html(self.outer_html,
+                           id_attr=format_html(' id="{}"', id_) if id_ else '',
+                           first_content=mark_safe('\n'.join(first_output)), more=more)
+
+class ShowMoreCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
+    renderer = ShowMoreCheckboxRenderer
+
+class BootstrapRadioFieldRenderer(forms.widgets.RadioFieldRenderer):
+    outer_html = """<div{id_attr}>{content}</div>"""
+    inner_html = """<div class="radio">{choice_value}{sub_widgets}</div>"""
+
+class BootstrapRadioSelect(forms.RadioSelect):
+    renderer = BootstrapRadioFieldRenderer
+
 class EditorItemSearchForm(forms.Form):
     query = forms.CharField(initial='', required=False)
-    item_types = forms.ChoiceField(initial='all',choices=(('all','All content'),('questions','Questions'),('exams','Exams')))
+    item_types = forms.ChoiceField(initial='all',choices=(('all','All content'),('questions','Questions'),('exams','Exams')), required=False)
     author = forms.CharField(initial='', required=False)
-    usage = forms.ChoiceField(choices=USAGE_OPTIONS, required=False, widget=forms.RadioSelect)
-    filter_copies = forms.BooleanField(initial=False)
-    only_ready_to_use = forms.BooleanField(initial=False)
+    usage = forms.ChoiceField(initial='any',choices=USAGE_OPTIONS, required=False, widget=BootstrapRadioSelect)
+    subjects = forms.ModelMultipleChoiceField(queryset=editor.models.Subject.objects.all(), required=False, widget=ShowMoreCheckboxSelectMultiple)
+    ability_framework = forms.ModelChoiceField(queryset=editor.models.AbilityFramework.objects.all(), required=False, widget=forms.Select(attrs={'class':'form-control input-sm'}),empty_label=None)
+    ability_levels = forms.ModelMultipleChoiceField(queryset=editor.models.AbilityLevel.objects.all(), widget=forms.CheckboxSelectMultiple, required=False)
+    status = forms.ChoiceField(choices=[('any','Any status')]+list(editor.models.STAMP_STATUS_CHOICES),required=False, widget=BootstrapRadioSelect)
+
     tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
     exclude_tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
-    subjects = forms.ModelMultipleChoiceField(queryset=editor.models.Subject.objects.all())
-    ability_framework = forms.ModelChoiceField(queryset=editor.models.AbilityFramework.objects.all())
-    ability_levels = forms.ModelMultipleChoiceField(queryset=editor.models.AbilityLevel.objects.all(), widget=forms.CheckboxSelectMultiple)
 
 class QuestionSearchForm(forms.Form):
     query = forms.CharField(initial='', required=False)

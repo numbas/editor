@@ -1,0 +1,253 @@
+{% extends "layout.html" %}
+
+{% load sstatic %}
+{% load django_tables2 %}
+{% load render_table from django_tables2 %}
+{% load can_edit %}
+{% load sanitizer %}
+{% load stamp %}
+
+{% block content %}
+    <!-- new -->
+    <div class="container-fluid">
+        <div class="row results-header">
+            <div class="col-md-9 col-sm-8">
+                <p>{{ results.page.paginator.count}} result{{results.page.paginator.count|pluralize}}</p>
+            </div>
+            <div class="col-md-3 col-sm-4">
+                <form class="form-inline text-right">
+                    <label>
+                        Sort by
+                        <select class="form-control input-sm">
+                            <option>Last modified</option>
+                            <option>Name</option>
+                            <option>Usage rights</option>
+                            <option>Author</option>
+                        </select>
+                    </label>
+                </form>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-2 col-md-3 col-sm-3 col-xs-12" id="search-refine">
+                <form method="GET" action="{% url 'search' %}" id="search-form">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">
+                                <a class="visible-xs-inline" role="button" data-toggle="collapse" href="#collapse-refine" aria-expanded="true" aria-controls="collapse-refine">
+                                    Show results for <span class="caret"></span> 
+                                </a>
+                                <span class="hidden-xs">Show results for</span></span>
+                            </h3>
+                        </div>
+                        <!-- List group -->
+                        <div class="panel-collapse collapse-in" id="collapse-types">
+                            <ul class="list-group">
+                                <li class="list-group-item">
+                                    <ul id="id_item_types" class="initial-list list-unstyled">
+                                        <li class="checkbox">
+                                            <label>
+                                                <input type="checkbox" {% if item_types == "all" or item_types == "exams" %}checked{% endif %}> Exams</small>
+                                            </label>
+                                        </li>
+                                        <li class="checkbox">
+                                            <label>
+                                                <input type="checkbox" {% if item_types == "all" or item_types == "questions" %}checked{% endif %}> Questions</small>
+                                            </label>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="panel-heading">
+                            <h3 class="panel-title">
+                                <a class="visible-xs-inline" role="button" data-toggle="collapse" href="#collapse-refine" aria-expanded="true" aria-controls="collapse-refine">
+                                    Refine by <span class="caret"></span> 
+                                </a>
+                                <span class="hidden-xs">Refine by</span></span>
+                            </h3>
+                        </div>
+                        <!-- List group -->
+                        <div class="panel-collapse collapse-in" id="collapse-refine">
+                        <ul class="list-group">
+                            <li class="list-group-item">
+                            <h4>Subject</h4>
+                                {{form.subjects}}
+                            </li>
+                            <li class="list-group-item">
+                                <h4>Topic</h4>
+                                {{form.topics}}
+                            </li>
+                            <li class="list-group-item">
+                                <h4>Ability Level</h4>
+                                {{form.ability_framework}}
+                                <div id="ability_levels">
+                                    {% for level,choice in ability_level_field %}
+                                    <div class="checkbox" data-framework="{{level.framework.pk}}" {% if level.framework.pk != form.ability_framework.value|add:"0" %}style="display:none"{% endif %}>
+                                        <label>
+                                            {{choice.tag}}
+                                            {{choice.choice_label}} <small class="num-hits">(12)</small>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </li>
+                            <li id="radio" class="list-group-item">
+                                <h4>Usage rights</h4>
+                                {{form.usage}}
+                            </li>
+                            <li class="list-group-item">
+                                <h4>Status</h4>
+                                {{ form.status }}
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="status" value="none" checked>
+                                        Any status <small class="num-hits">(12)</small>
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="status" value="ready">
+                                        {% stamp "ok" %}
+                                        <span class="label label-default label-ready">Ready to use</span> <small class="num-hits">(12)</small>
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="status" value="ready">
+                                        <span class="label label-info label-needs-testing">Needs testing</span> <small class="num-hits">(12)</small>
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="status" value="ready">
+                                        <span class="label label-warning label-hasproblems">Has problems</span> <small class="num-hits">(12)</small>
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="status" value="ready">
+                                        <span class="label label-danger label-dontuse">Don't use</span> <small class="num-hits">(12)</small>
+                                    </label>
+                                </div>
+                            </li>
+                        </ul>
+                        </div>
+                    </div>
+
+                    {{form.query.as_hidden}}
+                </form>
+            </div>
+
+            <div class="col-lg-10 col-md-9 col-sm-9 col-xs-12" id="results">
+                {% if object_list %}
+                <ul class="list-unstyled">
+                    {% for row in results.page.object_list|default:results.rows %}
+                    {% with row.record as item %}
+                    <li class="result">
+                        <div class="row">
+                            <div class="col-lg-7 col-md-10 col-sm-10">
+                            </div>
+                            <div class="col-lg-3 col-md-2 col-sm-2">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-7 col-md-8 col-sm-7 col-xs-8">
+                                <h4>{{item.name}} {{item.pk}}</h4>
+                                <div class="fields">
+                                </div>
+                                <div class="description">
+                                    {{item.metadata.description|strip_html|safe}}
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-4 col-sm-5 col-xs-4 info">
+                                <h4 class="text-left item-type {{item.item_type}}">
+                                    <small>
+                                        {% if item.item_type == 'question' %}
+                                        <span class="glyphicon glyphicon-file"></span> Question
+                                        {% elif item.item_type == 'exam' %}
+                                        <span class="glyphicon glyphicon-book"></span> Exam (<span class="num-questions">{{item.exam.questions.count}}</span> question{{item.exam.questions.count|pluralize}})
+                                        {% endif %}
+                                        {% if item.current_stamp %}{% stamp item.current_stamp.status %}{% endif %}
+                                    </small>
+                                </h4>
+                                <ul class="list-inline controls">
+                                    <li>
+                                        <a class="btn btn-link btn-sm test-run"><span class="glyphicon glyphicon-play" title="Test run" aria-hidden="true"></span></a>
+                                    </li>
+                                    <li>
+                                        <a class="btn btn-link btn-sm copy"><span class="glyphicon glyphicon-plus" title="Make a copy of this question" aria-hidden="true"></span></a>
+                                    </li>
+                                    <li>
+                                        <a class="btn btn-link btn-sm basket"><span class="glyphicon glyphicon-shopping-cart" title="Add this to your basket" aria-hidden="true"></span></a>
+                                    </li>
+                                    <li>
+                                        <A class="btn btn-link btn-sm delete"><span class="glyphicon glyphicon-remove" title="Delete this question" aria-hidden="true"></span></a>
+                                    </li>
+                                </ul>
+                                <p class="status">
+                                    {% if item.current_stamp %}
+                                    {% with item.current_stamp as stamp %}
+                                        {% include "stamp_column.html" %}
+                                    {% endwith %}
+                                    {% endif %}
+                                </p>
+                                <p class="author">
+                                <span class="glyphicon glyphicon-user"></span> <a href="{% url 'view_profile' item.author.pk %}">{{item.author.get_full_name}}</a>
+                                </p>
+                                <p class="licence">
+                                    <span class="glyphicon glyphicon-copyright-mark"></span> 
+                                    {% if item.licence %}
+                                        {% with item.licence as licence %}
+                                            {% if licence.url %}
+                                                <a href="{{licence.url}}" target="_blank"><abbr title="{{licence.name}}">{{licence.short_name}}</abbr></a>
+                                            {% else %}
+                                                <abbr title="{{licence.name}}">{{licence.short_name}}</abbr>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% else %}
+                                        <span class="no-licence">No licence specified</span>
+                                    {% endif %}
+                                </p>
+                                <p class="last-modified">
+                                    <span class="glyphicon glyphicon-time"></span> Last modified {{item.last_modified|date:"d/m/Y h:m"}}
+                                </p>
+                                <p class="subjects">
+                                    <span class="glyphicon glyphicon-education"></span>
+                                    {% for subject in item.subjects.all %}
+                                        <span class="subject">{{subject.name}}</span>{% if not forloop.last %},{% endif %}
+                                    {% endfor %}
+                                </p>
+                                <p class="ability-levels">
+                                    <span class="glyphicon glyphicon-sort-by-attributes"></span>
+                                    {% for level in item.ability_levels.all %}
+                                    <span class="ability-level">{{level.name}}</span>{% if not forloop.last %},{% endif %}
+                                    {% endfor %}
+                                </p>
+                            </div>
+                        </div>
+                    </li>
+                    {% endwith %}
+                    {% endfor %}
+                </ul>
+                {% include "pagination.html" %}
+                {% else %}
+                <div class="none">No exams found matching your query.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+
+{% endblock content %}
+
+{% block javascripts %}
+    {{block.super}}
+    <script type="text/javascript" src="{% sstatic 'js/editoritem/search.js' %}"></script>
+{% endblock javascripts %}
+
+{% block stylesheets %}
+    {{ block.super }}
+    <link href="{% sstatic 'css/search.css' %}" type="text/css" rel="stylesheet" />
+{% endblock stylesheets %}

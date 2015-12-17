@@ -92,6 +92,15 @@ class ControlledObject(object):
     def __eq__(self,other):
         return True
 
+    @classmethod
+    def filter_can_be_viewed_by(self,user):
+        if user.is_superuser:
+            return Q()
+        elif user.is_anonymous():
+            return Q(public_access__in=('edit','view'))
+        else:
+            return Q(access__user=user) | Q(public_access__in=('edit','view')) | Q(author=user)
+
 NUMBAS_FILE_VERSION = 'variables_as_objects'
 
 @deconstructible

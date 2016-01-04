@@ -69,7 +69,7 @@ $(document).ready(function() {
         form_change_timeout = setTimeout(submit,500);
 	}
 
-	$('#id_item_types, #id_subjects input, #id_topics input, #id_usage input').on('change',form_changed);
+	$('#id_item_types, #id_subjects input, #id_topics input, #id_usage input, #id_status').on('change',form_changed);
     $('#ability_levels').on('change','input',form_changed);
 
 	if($('.pagination .previous[href]').length) {

@@ -66,6 +66,9 @@ class ListView(generic.ListView):
 
         return context
 
+filter_exam = Q(exam__isnull=False)
+filter_question = Q(question__isnull=False)
+
 class SearchView(ListView):
     
     """Search exams."""
@@ -79,49 +82,49 @@ class SearchView(ListView):
             form.data.setdefault(field,form.fields[field].initial)
         form.is_valid()
 
-        items = EditorItem.objects.filter(EditorItem.filter_can_be_viewed_by(self.request.user))
+        items = self.viewable_items = EditorItem.objects.filter(EditorItem.filter_can_be_viewed_by(self.request.user))
+
+        # filter based on query
+        query = self.query = form.cleaned_data.get('query')
+        self.filter_query = Q()
+        if query:
+            words = [w for w in re.split(r'\s+',query) if w!='']
+            for word in words:
+                self.filter_query = self.filter_query & (Q(name__icontains=word) | Q(metadata__icontains=word) )
+            print(filter_query)
+            items = items.filter(self.filter_query)
 
         # filter based on item type
         item_types = self.item_types = form.cleaned_data.get('item_types')
         if item_types=='exams':
-            items = items.filter(exam__isnull=False)
+            items = items.filter(filter_exam)
         elif item_types=='questions':
-            items = items.filter(question__isnull=False)
-
-        # filter based on query
-        query = self.query = form.cleaned_data.get('query')
-        filter_query = Q()
-        if query:
-            words = [w for w in re.split(r'\s+',query) if w!='']
-            for word in words:
-                filter_query = filter_query & (Q(name__icontains=word) | Q(metadata__icontains=word) )
-            print(filter_query)
-            items = items.filter(filter_query)
+            items = items.filter(filter_question)
 
         # filter based on author
         author_term = form.cleaned_data.get('author')
         if author_term:
             authors = find_users(author_term)
-            filter_authors = Q(author__in=authors)
-            items = items.filter(filter_authors)
+            self.filter_authors = Q(author__in=authors)
+            items = items.filter(self.filter_authors)
         else:
-            filter_authors = Q()
+            self.filter_authors = Q()
 
         # filter based on subject
         subjects = form.cleaned_data.get('subjects')
         if subjects and len(subjects):
-            filter_subjects = Q(subjects__in=subjects)
-            items = items.filter(filter_subjects)
+            self.filter_subjects = Q(subjects__in=subjects)
+            items = items.filter(self.filter_subjects)
         else:
-            filter_subjects = Q()
+            self.filter_subjects = Q()
 
         # filter based on topic
         topics = form.cleaned_data.get('topics')
         if topics and len(topics):
-            filter_topics = Q(topics__in=topics)
-            items = items.filter(filter_topics)
+            self.filter_topics = Q(topics__in=topics)
+            items = items.filter(self.filter_topics)
         else:
-            filter_topics = Q()
+            self.filter_topics = Q()
 
         # filter based on usage
         usage = form.cleaned_data.get('usage')
@@ -133,18 +136,18 @@ class SearchView(ListView):
             "modify-sell": Q(licence__can_reuse=True, licence__can_modify=True, licence__can_sell=True),
         }
         if usage in usage_filters:
-            filter_usage = usage_filters[usage]
-            items = items.filter(filter_usage)
+            self.filter_usage = usage_filters[usage]
+            items = items.filter(self.filter_usage)
         else:
-            filter_usage = Q()
+            self.filter_usage = Q()
 
         #filter based on status
         status = form.cleaned_data.get('status')
         if status and status!='any':
-            filter_status = Q(current_stamp__status=status)
-            items = items.filter(filter_status)
+            self.filter_status = Q(current_stamp__status=status)
+            items = items.filter(self.filter_status)
         else:
-            filter_status = Q()
+            self.filter_status = Q()
 
         items = items.distinct()
 

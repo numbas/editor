@@ -26,7 +26,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.template.loader import render_to_string
 from django.core.urlresolvers import reverse
-from django.db.models import Q
+from django.db.models import Q,Min,Max
 from django.db import transaction
 from django import http
 from django.shortcuts import render,redirect
@@ -141,7 +141,18 @@ class SearchView(ListView):
         else:
             self.filter_usage = Q()
 
-        #filter based on status
+        # filter based on ability level
+        ability_levels = form.cleaned_data.get('ability_levels')
+        if ability_levels.exists():
+            d = ability_levels.aggregate(Min('start'),Max('end'))
+            start = d['start__min']
+            end = d['end__max']
+            self.filter_ability_level = Q(ability_level_start__lt=end,ability_level_end__gt=start)
+            items = items.filter(self.filter_ability_level)
+        else:
+            self.filter_ability_level = Q()
+
+        # filter based on status
         status = form.cleaned_data.get('status')
         if status and status!='any':
             self.filter_status = Q(current_stamp__status=status)

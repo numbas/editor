@@ -467,6 +467,17 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
         elif hasattr(self,'question'):
             return 'question'
 
+    @property
+    def as_numbasobject(self):
+        if self.item_type=='exam':
+            return self.exam.as_numbasobject
+        elif self.item_type=='question':
+            return self.question.as_numbasobject
+
+    @property
+    def filename(self):
+        return '{}-{}-{}'.format(self.item_type,self.pk,self.slug)
+
 @receiver(signals.pre_save,sender=EditorItem)
 def set_ability_level_limits(instance,**kwargs):
     ends = instance.ability_levels.aggregate(Min('start'),Max('end'))
@@ -509,6 +520,23 @@ class NewQuestion(models.Model):
     def __unicode__(self):
         return '%s' % self.editoritem.name
 
+    @property
+    def resource_paths(self):
+        return [(i.image.name,i.image.path) for i in self.resources.all()]
+
+    @property
+    def as_numbasobject(self):
+        self.editoritem.get_parsed_content()
+        data = OrderedDict([
+            ('name',self.editoritem.name),
+            ('extensions',[e.location for e in self.extensions.all()]),
+            ('resources',[(i.image.name,i.image.path) for i in self.resources.all()]),
+            ('navigation',{'allowregen': True, 'showfrontpage': False, 'preventleave': False}),
+            ('questions',[self.editoritem.parsed_content.data])
+        ])
+        obj = numbasobject.NumbasObject(data=data,version=self.editoritem.parsed_content.version)
+        return obj
+
 @reversion.register
 class NewExam(models.Model):
     editoritem = models.OneToOneField(EditorItem,on_delete=models.CASCADE,related_name='exam')
@@ -521,6 +549,32 @@ class NewExam(models.Model):
 
     def __unicode__(self):
         return '%s' % self.editoritem.name
+
+    @property
+    def as_numbasobject(self):
+        obj = numbasobject.NumbasObject(self.editoritem.content)
+        data = obj.data
+        resources = []
+        questions = self.ordered_questions
+        data['extensions'] = [e.location for e in self.extensions]
+        data['name'] = self.editoritem.name
+        data['questions'] = [numbasobject.NumbasObject(q.editoritem.content).data for q in questions]
+        data['resources'] = [(i.image.name,i.image.path) for i in Image.objects.filter(newquestion__in=self.questions.all()).distinct()]
+        
+        return obj
+
+    @property
+    def as_source(self):
+        return str(self.as_numbasobject())
+    
+    @property
+    def ordered_questions(self):
+        return self.questions.order_by('newexamquestion')
+
+    @property
+    def extensions(self):
+        return Extension.objects.filter(newquestion__in=self.questions.all()).distinct()
+
 
 class NewExamQuestion(models.Model):
     

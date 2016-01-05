@@ -13,7 +13,7 @@
 <h2 class="big-name">{{object.get_full_name}}</h2>
 
 {% if profile.bio %}
-<div class="bio well">{{profile.bio|escape_html|safe }}</div>
+<blockquote class="bio">{{profile.bio|escape_html|safe }}</blockquote>
 {% endif %}
 
 <ul>

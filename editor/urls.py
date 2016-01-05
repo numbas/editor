@@ -28,6 +28,8 @@ urlpatterns = patterns('',
 
     url(r'^search/$', editoritem.SearchView.as_view(), name='search'),
 
+    url(r'^item/(?P<pk>\d+)/preview/$', editoritem.PreviewView.as_view(), name='item_preview'),
+
     url(r'^exams/$',exam.IndexView.as_view(), name='exam_index',),
                        
     url(r'^exam/new/$', login_required(exam.CreateView.as_view()), name='exam_new'),

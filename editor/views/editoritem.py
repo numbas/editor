@@ -91,7 +91,6 @@ class SearchView(ListView):
             words = [w for w in re.split(r'\s+',query) if w!='']
             for word in words:
                 self.filter_query = self.filter_query & (Q(name__icontains=word) | Q(metadata__icontains=word) )
-            print(filter_query)
             items = items.filter(self.filter_query)
 
         # filter based on item type
@@ -172,3 +171,26 @@ class SearchView(ListView):
         context['ability_level_field'] = zip(self.form.fields['ability_levels'].queryset,self.form['ability_levels'])
 
         return context
+
+class PreviewView(editor.views.generic.PreviewView):
+    model = EditorItem
+
+    def get(self, request, *args, **kwargs):
+        try:
+            ei = self.get_object()
+        except (EditorItem.DoesNotExist, TypeError) as err:
+            status = {
+                "result": "error",
+                "message": str(err),
+                "traceback": traceback.format_exc(),}
+            return http.HttpResponseServerError(json.dumps(status),
+                                           content_type='application/json')
+        else:
+            if ei.item_type=='question':
+                try:
+                    profile = UserProfile.objects.get(user=request.user)
+                    q.locale = profile.language
+                except Exception:
+                    pass
+            return self.preview(ei)
+

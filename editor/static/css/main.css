@@ -9,6 +9,11 @@ header
 display: block;
 }
 
+.navbar-brand img {
+	max-height: 100%;
+}
+
+/*
 .clearAfter::after {
     clear: both;
     content: '.';
@@ -416,3 +421,4 @@ button.search.loading {
 .alert > p:last-child {
     margin-bottom: 0;
 }
+*/

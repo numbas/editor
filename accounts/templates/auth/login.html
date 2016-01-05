@@ -3,10 +3,6 @@
 {% block stylesheets %}
 {{block.super}}
 <style type="text/css">
-	#loginForm label {
-		display: inline-block;
-		width: 5em;
-	}
 </style>
 {% endblock stylesheets %}
 
@@ -17,30 +13,32 @@
 
 <form id="loginForm" class="form-horizontal" method="post" action="{% url 'login' %}" autocomplete="off">
 	{% csrf_token %}
-	<div class="control-group">
-		<label>
-			<span class="control-label">Username:</span>
-			<div class="controls">
-				<input type="text" id="id_username" name="username" maxlength="30">
-			</div>
-		</label>
+	<div class="form-group">
+		<label for="id_username" class="col-sm-2 control-label">Username</label>
+		<div class="col-sm-5">
+			<input type="text" class="form-control" id="id_username" name="username" maxlength="30">
+		</div>
 	</div>
 
-	<div class="control-group">
-		<label>
-			<span class="control-label">Password:</span>
-			<div class="controls">
-				<input type="password" id="id_password" name="password">
-			</div>
-		</label>
+	<div class="form-group">
+		<label for="id_password" class="col-sm-2 control-label">Password</label>
+		<div class="col-sm-5">
+			<input type="password" class="form-control" id="id_password" name="password"/>
+		</div>
 	</div>
-	<div class="control-group">
-		<div class="controls">
-			<button type="submit">Log in</button>
+
+	<div class="form-group">
+		<div class="col-sm-offset-2 col-sm-10">
+			<button type="submit" class="btn btn-primary">Log in</button>
+			<a href="{% url 'auth_password_reset' %}" class="btn btn-link">Forgotten your password?</a>
+			{% if ALLOW_REGISTRATION %}<a href="{% url 'registration_register' %}" class="btn btn-link">Register for your own account</a>{% endif %}
 		</div>
 	</div>
 	<input type="hidden" name="next" value="{{ next }}" />
-    <p><a href="{% url 'auth_password_reset' %}">Forgotten your password?</a></p>
-	{% if ALLOW_REGISTRATION %}<p><a href="{% url 'registration_register' %}">Register for your own account</a></p>{% endif %}
+
+	<div class="form-group">
+		<div class="controls">
+		</div>
+	</div>
 </form>
 {% endblock content %}

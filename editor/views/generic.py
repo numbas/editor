@@ -84,8 +84,8 @@ class CompileObject():
 
 class PreviewView(generic.DetailView,CompileObject):
     def preview(self,obj):
-        numbasobject = obj.as_numbasobject()    #need to catch errors
-        location = obj.get_filename()
+        numbasobject = obj.as_numbasobject    #need to catch errors
+        location = obj.filename
         switches = ['-c']
         try:
             fsLocation = self.compile(numbasobject, switches, location, obj)

@@ -92,7 +92,7 @@
                                     <li><a href="{% url 'exam_new' %}">Exam</a></li>
                                 </ul>
                             </li>
-                            <li id="notifications" class="{% if unread_notifications %}unread{% endif %}">
+                            <li id="notifications" class="counter-icon {% if unread_notifications %}unread{% endif %}">
                                 <a role="button" class="dropdown-toggle {% if not unread_notifications %}disabled{% endif %}" data-toggle="dropdown" title="{{unread_notifications}} unread notification{{unread_notifications|pluralize}}">
                                     <span class="glyphicon glyphicon-bell"></span>
                                 </a>
@@ -102,7 +102,7 @@
                                 </ul>
                             </li>
                             {% with basket_size=user.userprofile.question_basket.count %}
-                            <li id="question_basket" class="{% if basket_size %}nonempty{% endif %}">
+                            <li id="question_basket" class="counter-icon {% if basket_size %}nonempty{% endif %}">
                                     <a role="button" class="dropdown-toggle {% if not basket_size %}disabled{% endif %}" data-toggle="dropdown" title="{{basket_size}} question{{basket_size|pluralize}} in your basket">
                                         <span class="glyphicon glyphicon-shopping-cart"></span>
                                     </a>

@@ -13,6 +13,26 @@ display: block;
 	max-height: 100%;
 }
 
+.counter-icon {
+    position: relative;
+}
+
+.counter {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    font-weight: bold;
+    display: none;
+}
+
+.counter-icon.nonempty .counter {
+    display: block;
+}
+
+.counter-icon.nonempty > .counter, .counter-icon.nonempty > a {
+    color: red !important;
+}
+
 /*
 .clearAfter::after {
     clear: both;

@@ -722,7 +722,8 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 		return bits.join('');
 	},
 
-	/** Split up a string along TeX delimiters (`$`, `\[`, `\]`)
+	/** Split up a TeX expression, finding the \var and \simplify commands.
+	 * Returns an array [normal tex,var or simplify,options,argument,normal tex,...]a
 	 * @param {string} s
 	 * @returns {string[]}
 	 */
@@ -1798,26 +1799,39 @@ var findvars = jme.findvars = function(tree,boundvars,scope)
 				return [];
 			break;
 		case 'string':
-			var bits = jme.texsplit(tree.tok.value);
+			var bits = util.contentsplitbrackets(tree.tok.value);
 			var out = [];
-			for(var i=0;i<bits.length-3;i+=4)
+			for(var i=0;i<bits.length;i+=4)
 			{
-				var cmd = bits[i+1];
-				var expr = bits[i+3];
-				switch(cmd)
+				var plain = bits[i];
+				var sbits = util.splitbrackets(plain,'{','}');
+				for(var k=1;k<sbits.length-1;k+=2)
 				{
-				case 'var':
-					var tree2 = jme.compile(expr,scope,true);
+					var tree2 = jme.compile(sbits[k],scope,true);
 					out = out.merge(findvars(tree2,boundvars));
-					break;
-				case 'simplify':
-					var sbits = util.splitbrackets(expr,'{','}');
-					for(var i=1;i<sbits.length-1;i+=2)
-					{
-						var tree2 = jme.compile(sbits[i],scope,true);
-						out = out.merge(findvars(tree2,boundvars));
+				}
+				if(i<=bits.length-3) {
+					var tex = bits[i+2];
+					var tbits = jme.texsplit(tex);
+					for(var j=0;j<tbits.length;j+=4) {
+						var cmd = tbits[j+1];
+						var expr = tbits[j+3];
+						switch(cmd)
+						{
+						case 'var':
+							var tree2 = jme.compile(expr,scope,true);
+							out = out.merge(findvars(tree2,boundvars));
+							break;
+						case 'simplify':
+							var sbits = util.splitbrackets(expr,'{','}');
+							for(var k=1;k<sbits.length-1;k+=2)
+							{
+								var tree2 = jme.compile(sbits[k],scope,true);
+								out = out.merge(findvars(tree2,boundvars));
+							}
+							break;
+						}
 					}
-					break;
 				}
 			}
 			return out;

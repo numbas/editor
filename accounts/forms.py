@@ -12,7 +12,7 @@ class NumbasRegistrationForm(RegistrationForm):
     first_name = forms.CharField(label=_('First Name(s)'))
     last_name = forms.CharField(label=_('Surname'))
     if apps.registry.apps.is_installed('numbasmailing'):
-        subscribe = forms.BooleanField(label=_('Subscribe to the Numbas newsletter (3-4 emails a year)'),required=False)
+        subscribe = forms.BooleanField(label=_('Subscribe to the Numbas newsletter'),required=False)
 
     register_button = _('Register')
 

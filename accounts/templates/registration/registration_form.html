@@ -70,7 +70,18 @@
         		    {{ form.password2.errors }}
 				</div>
 			</label>
-		</div>
+        </div>
+        {% if form.subscribe %}
+        <div class="control-group">
+			<label>
+				<span class="control-label">{{form.subscribe.label}}:</span>
+				<div class="controls">
+		            {{ form.subscribe }} (3-4 emails a year, your address won't be passed on for any other purpose)
+        		    {{ form.subscribe.errors }}
+				</div>
+			</label>
+        </div>
+        {% endif %}
 		<div class="control-group">
 			<div class="controls">
 				<button type="submit">{{ form.register_button }}</button>

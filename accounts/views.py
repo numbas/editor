@@ -31,7 +31,9 @@ class RegistrationView(registration.views.RegistrationView):
                                                                     password, site)
         signals.user_registered.send(sender=self.__class__,
                                      user=new_user,
-                                     request=request)
+                                     request=request,
+                                     subscribe=form.cleaned_data.get('subscribe')
+                                     )
         return new_user
 
     def get_success_url(self,*args,**kwargs):

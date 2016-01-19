@@ -764,8 +764,10 @@ $(document).ready(function() {
 				f.error('');
 			});
 			this.variables().map(function(v) {
-				v.error('');
-				v.value('');
+				if(!v.locked.peek()) {
+					v.error('');
+					v.value('');
+				}
 			});
 
 			var prep = this.prepareVariables();
@@ -792,6 +794,9 @@ $(document).ready(function() {
 			// fill in observables
 			if(conditionSatisfied) {
 				this.variables().map(function(v) {
+					if(v.locked.peek()) {
+						return;
+					}
 					var name = v.name().toLowerCase();
 					var result = results.variables[name];
 					if(!result) {
@@ -871,6 +876,9 @@ $(document).ready(function() {
 					};
 					return;
 				}
+				if(v.locked.peek()) {
+					scope.variables[v.name()] = v.value();
+				} 
 				try {
 					var tree = jme.compile(v.definition(),scope,true);
 					var vars = jme.findvars(tree);
@@ -1577,6 +1585,10 @@ $(document).ready(function() {
 			});
 		},this);
 		this.value = ko.observable('');
+		this.thisLocked = ko.observable(false);
+		this.locked = ko.computed(function() {
+			return this.usedIn().some(function(v){return v.locked()}) || this.thisLocked();
+		},this);
 		this.error = ko.observable('');
 		this.display = ko.computed(function() {
 			var v;
@@ -1689,6 +1701,11 @@ $(document).ready(function() {
 			catch(e) {
 				console.log(e);
 			}
+		},
+
+		toggleLocked: function(v,e) {
+			this.thisLocked(!this.thisLocked());
+			e.preventDefault();
 		}
     }
 

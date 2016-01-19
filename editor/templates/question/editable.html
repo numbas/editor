@@ -120,6 +120,7 @@
 										<table class="variable-list">
 											<thead>
 												<tr>
+													<th></th>
 													<th class="name">Name</th>
 													<th class="value">Generated Value</th>
 												</tr>
@@ -142,10 +143,21 @@
 									</div>
 								</div>
 								<script type="text/html" id="variable-template">
-									<tr data-bind="click: $root.currentVariable, css: {noname: !name(), current: $data==$root.currentVariable(), dependency: isDependency, error: error().length>0}" class="variable-selector">
-										<td class="name" data-bind="text: name() ? name() : 'Unnamed', css: {'name-error': nameError()!=''}"></td>
-										<td class="value-cell">
+									<tr data-bind="css: {noname: !name(), current: $data==$root.currentVariable(), dependency: isDependency, error: error().length>0}" class="variable-selector">
+										<td class="lock-cell">
+											<button class="lock" data-bind="click: toggleLocked, css: {locked: locked}" title="Lock the value of this variable (editor only)">
+												<span data-bind="visible: thisLocked">
+													{% icon "lock-locked" size=12 %}
+												</span>
+												<span data-bind="visible: !thisLocked()">
+													{% icon "lock-unlocked" size=12 %}
+												</span>
+											</button>
+										</td>
+										<td class="name" data-bind="click: $root.currentVariable, text: name() ? name() : 'Unnamed', css: {'name-error': nameError()!=''}"></td>
+										<td class="value-cell" data-bind="click: $root.currentVariable">
 											<div class="value" data-bind="html: display"></div>
+										</td>
 										</td>
 										<td class="delete-cell">
 											<button type="button" title="Remove this variable" class="delete" data-bind="click:remove"></button>

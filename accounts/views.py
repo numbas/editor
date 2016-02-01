@@ -19,9 +19,10 @@ from registration import signals
 class RegistrationView(registration.views.RegistrationView):
     form_class = NumbasRegistrationForm
 
-    def register(self,request,*args,**kwargs):
-        username, email, password = kwargs['username'], kwargs['email'], kwargs['password1']
-        first_name, last_name = kwargs['first_name'], kwargs['last_name']
+    def register(self,request,form,*args,**kwargs):
+        d = form.cleaned_data
+        username, email, password = d['username'], d['email'], d['password1']
+        first_name, last_name = d['first_name'], d['last_name']
         if Site._meta.installed:
             site = Site.objects.get_current()
         else:
@@ -30,7 +31,9 @@ class RegistrationView(registration.views.RegistrationView):
                                                                     password, site)
         signals.user_registered.send(sender=self.__class__,
                                      user=new_user,
-                                     request=request)
+                                     request=request,
+                                     subscribe=form.cleaned_data.get('subscribe')
+                                     )
         return new_user
 
     def get_success_url(self,*args,**kwargs):

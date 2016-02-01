@@ -12,6 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 import json
+import uuid
 import traceback
 from copy import deepcopy
 import operator
@@ -201,6 +202,7 @@ class CopyView(generic.View, SingleObjectMixin):
             e2 = deepcopy(e)
             e2.id = None
             e2.author = request.user
+            e2.share_uuid = uuid.uuid4()
             e2.save()
             e2.set_questions(e.questions.all())
             e2.set_name("%s's copy of %s" % (e2.author.first_name,e.name))

@@ -6,10 +6,13 @@ from django.utils.translation import ugettext_lazy as _
 from accounts.models import UserProfile
 from django.contrib.auth.models import User
 from sanitizer.forms import SanitizedCharField
+from django import apps
 
 class NumbasRegistrationForm(RegistrationForm):
     first_name = forms.CharField(label=_('First Name(s)'))
     last_name = forms.CharField(label=_('Surname'))
+    if apps.registry.apps.is_installed('numbasmailing'):
+        subscribe = forms.BooleanField(label=_('Subscribe to the Numbas newsletter'),required=False)
 
     register_button = _('Register')
 

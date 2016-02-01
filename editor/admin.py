@@ -20,7 +20,6 @@ import editor.models
 admin.site.register(editor.models.NewExam)
 admin.site.register(editor.models.NewQuestion)
 admin.site.register(editor.models.Highlight)
-admin.site.register(editor.models.Extension)
 admin.site.register(editor.models.Theme)
 
 admin.site.register(editor.models.Subject)
@@ -36,6 +35,10 @@ class LicenceAdmin(admin.ModelAdmin):
     list_display = ['name','short_name','can_reuse','can_modify','can_sell']
 
 admin.site.register(editor.models.Licence,LicenceAdmin)
+
+class ExtensionAdmin(admin.ModelAdmin):
+	list_display = ['name','location','public','author']
+admin.site.register(editor.models.Extension,ExtensionAdmin)
 
 class EditorTagAdmin(admin.ModelAdmin):
     list_display = ['name','show_used_count','official']

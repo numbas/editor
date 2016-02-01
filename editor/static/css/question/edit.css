@@ -261,6 +261,24 @@ input.recalculate-checkbox {
 	border-bottom: 1px dashed #bbb;
 }
 
+.variable-selector td.lock-cell {
+	padding: 0;
+}
+
+.variable-selector button.lock {
+	margin: 0;
+	padding: 0;
+	width: 20px;
+	height: 20px;
+	background: none;
+	border: none;
+	fill: #ccc;
+}
+
+.variable-selector button.lock.locked {
+	fill: black;
+}
+
 .variable-selector.current {
 	background-color: #08c;
 	color: #fff;

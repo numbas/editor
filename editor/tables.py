@@ -41,10 +41,11 @@ class HighlightTable(ObjectTable):
         order_by = ('date')
 
 class QuestionTable(ObjectTable):
-    name = TemplateColumn(template_name='question/name_column.html')
+    name = TemplateColumn(template_name='question/name_column.html',verbose_name='Name')
     current_stamp = TemplateColumn(template_name='stamp_column.html', verbose_name='Status',orderable=False)
-    licence = TemplateColumn(template_name='licence_column.html')
-    author = UserColumn()
+    licence = TemplateColumn(template_name='licence_column.html',verbose_name='Licence')
+    author = UserColumn(verbose_name='Author')
+    last_modified = Column(verbose_name='Last modified')
 
     class Meta(ObjectTable.Meta):
         model = Question
@@ -62,10 +63,11 @@ class EditorItemTable(ObjectTable):
         sequence = ('name','current_stamp','licence','author','last_modified')
 
 class ExamTable(ObjectTable):
-    name = TemplateColumn(template_name='exam/name_column.html')
+    name = TemplateColumn(template_name='exam/name_column.html',verbose_name='Name')
     current_stamp = TemplateColumn(template_name='stamp_column.html', verbose_name='Status',orderable=False)
-    licence = TemplateColumn(template_name='licence_column.html')
-    author = UserColumn()
+    licence = TemplateColumn(template_name='licence_column.html',verbose_name='Licence')
+    author = UserColumn(verbose_name='Author')
+    last_modified = Column(verbose_name='Last modified')
 
     class Meta(ObjectTable.Meta):
         model = Exam

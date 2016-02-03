@@ -15,35 +15,35 @@ Copyright 2012 Newcastle University
 */
 
 $(document).ready(function() {
-	var Ruleset = Editor.Ruleset;
+    var Ruleset = Editor.Ruleset;
     function Exam(data)
     {
-		var e = this;
+        var e = this;
 
-		this.questions = ko.observableArray([]);
+        this.questions = ko.observableArray([]);
 
-		this.mainTabs = ko.observableArray([
-			new Editor.Tab('general','General'),
-			new Editor.Tab('navigation','Navigation'),
-			new Editor.Tab('timing','Timing'),
-			new Editor.Tab('feedback','Feedback'),
-			new Editor.Tab(
-				'questions',
-				ko.computed(function() {
-					return 'Questions ('+e.questions().length+')';
-				})
-			)
-		]);
+        this.mainTabs = ko.observableArray([
+            new Editor.Tab('general','General'),
+            new Editor.Tab('navigation','Navigation'),
+            new Editor.Tab('timing','Timing'),
+            new Editor.Tab('feedback','Feedback'),
+            new Editor.Tab(
+                'questions',
+                ko.computed(function() {
+                    return 'Questions ('+e.questions().length+')';
+                })
+            )
+        ]);
         var editingHistoryTab = new Editor.Tab('versions','Editing history');
         this.mainTabs.splice(1,0,editingHistoryTab);
         if(Editor.editable) {
             this.mainTabs.push(new Editor.Tab('access','Access'));
         }
-		this.currentTab = ko.observable(this.mainTabs()[0]);
+        this.currentTab = ko.observable(this.mainTabs()[0]);
 
-		if(Editor.editable && window.location.hash=='#editing-history') {
-			this.currentTab(editingHistoryTab);
-		}
+        if(Editor.editable && window.location.hash=='#editing-history') {
+            this.currentTab(editingHistoryTab);
+        }
 
         this.stamp = function(status_code) {
             return function() {
@@ -70,14 +70,14 @@ $(document).ready(function() {
         });
 
         this.realName = ko.observable('An Exam');
-		this.name = ko.computed({
-			read: this.realName,
-			write: function(value) {
-				if(value.length)
-						this.realName(value);
-			},
-			owner: this
-		});
+        this.name = ko.computed({
+            read: this.realName,
+            write: function(value) {
+                if(value.length)
+                        this.realName(value);
+            },
+            owner: this
+        });
 
         Editor.licences.sort(function(a,b){a=a.short_name;b=b.short_name; return a<b ? -1 : a>b ? 1 : 0 });
         this.licence = ko.observable();
@@ -90,41 +90,41 @@ $(document).ready(function() {
         },this);
 
         this.notes = ko.observable('');
-		this.description = ko.observable('');
-		this.metadata = ko.computed(function() {
-			return {
-				notes: this.notes(),
-				description: this.description(),
+        this.description = ko.observable('');
+        this.metadata = ko.computed(function() {
+            return {
+                notes: this.notes(),
+                description: this.description(),
                 licence: this.licence_name()
-			};
-		},this);
+            };
+        },this);
 
-		this.theme = ko.observable(null);
-		this.locale = ko.observable(Editor.preferred_locale);
+        this.theme = ko.observable(null);
+        this.locale = ko.observable(Editor.preferred_locale);
 
         this.duration = ko.observable(0);
-		this.allowPause = ko.observable(true);
+        this.allowPause = ko.observable(true);
         this.percentPass = ko.observable(0);
         this.shuffleQuestions = ko.observable(false);
-		var tickAllQuestions = ko.observable(true);
-		this.allQuestions = ko.computed({
-			read: function() {
-				return this.shuffleQuestions() ? tickAllQuestions() : true;
-			},
-			write: function(v) {
-				if(this.shuffleQuestions()) {
-					tickAllQuestions(v);
-				}
-			}
-		},this);
-		this.pickQuestions = ko.observable(0);
+        var tickAllQuestions = ko.observable(true);
+        this.allQuestions = ko.computed({
+            read: function() {
+                return this.shuffleQuestions() ? tickAllQuestions() : true;
+            },
+            write: function(v) {
+                if(this.shuffleQuestions()) {
+                    tickAllQuestions(v);
+                }
+            }
+        },this);
+        this.pickQuestions = ko.observable(0);
         this.showfrontpage = ko.observable(true);
         this.showresultspage = ko.observable(true);
 
         this.allowregen = ko.observable(true);
         this.reverse = ko.observable(true);
         this.browse = ko.observable(true);
-		this.preventleave = ko.observable(true);
+        this.preventleave = ko.observable(true);
 
         this.onleave = ko.observable(null);
 
@@ -137,12 +137,12 @@ $(document).ready(function() {
         this.allowrevealanswer = ko.observable(true);
         this.advicethreshold = ko.observable(0);
 
-		this.questionTabs = ko.observableArray([
-			new Editor.Tab('mine','Recent Questions'),
-			new Editor.Tab('basket','Basket'),
-			new Editor.Tab('search','Search'),
-		]);
-		this.currentQuestionTab = ko.observable(this.questionTabs()[0]);
+        this.questionTabs = ko.observableArray([
+            new Editor.Tab('mine','Recent Questions'),
+            new Editor.Tab('basket','Basket'),
+            new Editor.Tab('search','Search'),
+        ]);
+        this.currentQuestionTab = ko.observable(this.questionTabs()[0]);
 
         this.recentQuestions = Editor.mappedObservableArray(function(d){ return new Question(d);});
         this.recentQuestions(data.recentQuestions);
@@ -156,7 +156,7 @@ $(document).ready(function() {
                 $.get('/exam/question-lists/')
                     .success(function(d) {
                         e.recentQuestions(d.recent);
-						e.basketQuestions(d.basket);
+                        e.basketQuestions(d.basket);
                     })
                 ;
             }
@@ -164,33 +164,33 @@ $(document).ready(function() {
 
         setInterval(getQuestions,5000);
 
-		this.search = {
-			query: ko.observable(''),
+        this.search = {
+            query: ko.observable(''),
             tags: ko.observable(''),
-			results: {
-				raw: ko.observableArray([]),
-				all: Editor.mappedObservableArray(function(d) {return new Question(d,e.questionSearchResults);})
-			}
-		};
+            results: {
+                raw: ko.observableArray([]),
+                all: Editor.mappedObservableArray(function(d) {return new Question(d,e.questionSearchResults);})
+            }
+        };
 
-		function makeQuery() {
-			if(e.search.query().length>0 || e.search.tags().length>0)
-				return {
+        function makeQuery() {
+            if(e.search.query().length>0 || e.search.tags().length>0)
+                return {
                     query: e.search.query(), 
                     tags: e.search.tags()
                 }
-		}
+        }
 
-		Editor.searchBinding(this.search,'/questions/search/json',makeQuery);
+        Editor.searchBinding(this.search,'/questions/search/json',makeQuery);
 
-		ko.computed(function() {
-			e.search.results.all(e.search.results.raw());
-		});
+        ko.computed(function() {
+            e.search.results.all(e.search.results.raw());
+        });
 
         this.onleave = new Event(
             'onleave',
             'On leaving a question',
-			'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-on-leaving-a-question',
+            'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-on-leaving-a-question',
             [
                 {name:'none', niceName:'None'},
                 {name:'warnifunattempted', niceName:'Warn if unattempted'},
@@ -201,7 +201,7 @@ $(document).ready(function() {
         this.timeout = new Event(
             'timeout',
             'On timeout',
-			'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-on-timeout-event',
+            'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-on-timeout-event',
             [
                 {name:'none', niceName:'None'},
                 {name:'warn', niceName:'Warn'}
@@ -210,7 +210,7 @@ $(document).ready(function() {
         this.timedwarning = new Event(
             'timedwarning',
             '5 minutes before timeout',
-			'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-minutes-before-timeout-event',
+            'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-minutes-before-timeout-event',
             [
                 {name:'none', niceName:'None'},
                 {name:'warn', niceName:'Warn'}
@@ -223,61 +223,61 @@ $(document).ready(function() {
         
         this.output = ko.computed(function() {
             var data = JSON.stringify(this.toJSON());
-			return '// Numbas version: '+Editor.numbasVersion+'\n'+data;
+            return '// Numbas version: '+Editor.numbasVersion+'\n'+data;
         },this);
 
         if(data)
-		{
+        {
             this.load(data);
-		}
+        }
 
-		if(Editor.editable) {
-			this.firstSave = true;
+        if(Editor.editable) {
+            this.firstSave = true;
 
-			this.save = ko.computed(function() {
-				return {
-					content: this.output(),
-					theme: this.theme(),
-					locale: this.locale(),
-					metadata: this.metadata(),
-					questions: this.questions()
-								.filter(function(q){return q.id()>0})
-								.map(function(q){ return q.id(); })
-				};
-			},this);
+            this.save = ko.computed(function() {
+                return {
+                    content: this.output(),
+                    theme: this.theme(),
+                    locale: this.locale(),
+                    metadata: this.metadata(),
+                    questions: this.questions()
+                                .filter(function(q){return q.id()>0})
+                                .map(function(q){ return q.id(); })
+                };
+            },this);
 
-			this.autoSave = Editor.saver(
-				this.save,
-				function(data) {
-					return $.post(
-						'/exam/'+e.id+'/'+slugify(e.name())+'/',
-						{json: JSON.stringify(data), csrfmiddlewaretoken: getCookie('csrftoken')}
-					)
-						.success(function(data){
-							var address = location.protocol+'//'+location.host+'/exam/'+Editor.examJSON.id+'/'+slugify(e.name())+'/';
-							if(history.replaceState)
-								history.replaceState({},e.name(),address);
+            this.autoSave = Editor.saver(
+                this.save,
+                function(data) {
+                    return $.post(
+                        '/exam/'+e.id+'/'+slugify(e.name())+'/',
+                        {json: JSON.stringify(data), csrfmiddlewaretoken: getCookie('csrftoken')}
+                    )
+                        .success(function(data){
+                            var address = location.protocol+'//'+location.host+'/exam/'+Editor.examJSON.id+'/'+slugify(e.name())+'/';
+                            if(history.replaceState)
+                                history.replaceState({},e.name(),address);
                             e.timeline.splice(0,0,new Editor.TimelineItem({date: data.version.date_created, user: data.version.user, type: 'version', data: data.version}));
-						})
-						.error(function(response,type,message) {
+                        })
+                        .error(function(response,type,message) {
                             if(message=='')
                                 message = 'Server did not respond.';
 
-							noty({
-								text: 'Error saving exam:\n\n'+message,
-								layout: "topLeft",
-								type: "error",
-								textAlign: "center",
-								animateOpen: {"height":"toggle"},
-								animateClose: {"height":"toggle"},
-								speed: 200,
-								timeout: 5000,
-								closable:true,
-								closeOnSelfClick: true
-							});
-						})
-				}
-			);
+                            noty({
+                                text: 'Error saving exam:\n\n'+message,
+                                layout: "topLeft",
+                                type: "error",
+                                textAlign: "center",
+                                animateOpen: {"height":"toggle"},
+                                animateClose: {"height":"toggle"},
+                                speed: 200,
+                                timeout: 5000,
+                                closable:true,
+                                closeOnSelfClick: true
+                            });
+                        })
+                }
+            );
 
             //access control stuff
             this.public_access = ko.observable(Editor.public_access);
@@ -321,70 +321,70 @@ $(document).ready(function() {
                 }
                 e.access_rights.push(new UserAccess(e,data));
             };
-		}
-		if(window.history !== undefined) {
-			var state = window.history.state || {};
-			if('currentTab' in state) {
-				var tabs = this.mainTabs();
-				for(var i=0;i<tabs.length;i++) {
-					var tab = tabs[i];
-					if(tab.id==state.currentTab) {
-						this.currentTab(tab);
-						break;
-					}
-				}
-			}
-			Editor.computedReplaceState('currentTab',ko.computed(function(){return this.currentTab().id},this));
-		}
+        }
+        if(window.history !== undefined) {
+            var state = window.history.state || {};
+            if('currentTab' in state) {
+                var tabs = this.mainTabs();
+                for(var i=0;i<tabs.length;i++) {
+                    var tab = tabs[i];
+                    if(tab.id==state.currentTab) {
+                        this.currentTab(tab);
+                        break;
+                    }
+                }
+            }
+            Editor.computedReplaceState('currentTab',ko.computed(function(){return this.currentTab().id},this));
+        }
 
-		this.currentChange = ko.observable(new Editor.Change(this.versionJSON(),Editor.examJSON.author));
+        this.currentChange = ko.observable(new Editor.Change(this.versionJSON(),Editor.examJSON.author));
 
-		// create a new version when the question JSON changes
-		ko.computed(function() {
-			var currentChange = this.currentChange.peek();
-			var v = new Editor.Change(this.versionJSON(),Editor.examJSON.author, currentChange);
+        // create a new version when the question JSON changes
+        ko.computed(function() {
+            var currentChange = this.currentChange.peek();
+            var v = new Editor.Change(this.versionJSON(),Editor.examJSON.author, currentChange);
 
-			//if the new version is different to the old one, keep the diff
-			if(!currentChange || v.diff.length!=0) {
-				currentChange.next_version(v);
-				this.currentChange(v);
-			}
-		},this).extend({throttle:1000});
+            //if the new version is different to the old one, keep the diff
+            if(!currentChange || v.diff.length!=0) {
+                currentChange.next_version(v);
+                this.currentChange(v);
+            }
+        },this).extend({throttle:1000});
 
 
-		this.rewindChange = function() {
-			var currentChange = q.currentChange();
-			var prev_version = currentChange.prev_version();
-			if(!prev_version) {
-				throw(new Error("Can't rewind - this is the first version"));
-			}
-			var data = q.versionJSON();
-			data = jiff.patch(jiff.inverse(currentChange.diff),data);
-			q.currentChange(prev_version);
-			q.load(data);
-		};
+        this.rewindChange = function() {
+            var currentChange = q.currentChange();
+            var prev_version = currentChange.prev_version();
+            if(!prev_version) {
+                throw(new Error("Can't rewind - this is the first version"));
+            }
+            var data = q.versionJSON();
+            data = jiff.patch(jiff.inverse(currentChange.diff),data);
+            q.currentChange(prev_version);
+            q.load(data);
+        };
 
-		this.forwardChange = function() {
-			var currentChange = q.currentChange();
-			var next_version = currentChange.next_version();
-			if(!currentChange.next_version()) {
-				throw(new Error("Can't go forward - this is the latest version"));
-			}
-			var data = q.versionJSON();
-			data = jiff.patch(next_version.diff,data);
-			q.currentChange(next_version);
-			q.load(data);
-		};
+        this.forwardChange = function() {
+            var currentChange = q.currentChange();
+            var next_version = currentChange.next_version();
+            if(!currentChange.next_version()) {
+                throw(new Error("Can't go forward - this is the latest version"));
+            }
+            var data = q.versionJSON();
+            data = jiff.patch(next_version.diff,data);
+            q.currentChange(next_version);
+            q.load(data);
+        };
 
         this.timeline = ko.observableArray(Editor.timeline.map(function(t){return new Editor.TimelineItem(t)}));
 
-		this.showCondensedTimeline = ko.observable(true);
+        this.showCondensedTimeline = ko.observable(true);
         
         this.timelineToDisplay = ko.computed(function() {
-			if(this.showCondensedTimeline()) {
+            if(this.showCondensedTimeline()) {
                 var out = [];
-				this.timeline().map(function(ev){
-					var last = out[out.length-1];
+                this.timeline().map(function(ev){
+                    var last = out[out.length-1];
                     if(ev.type=='version') {
                         if(!ev.data.comment() && last && last.type=='version') {
                             return false;
@@ -394,9 +394,9 @@ $(document).ready(function() {
                     out.push(ev);
                 });
                 return out;
-			} else {
-				return this.timeline();
-			}
+            } else {
+                return this.timeline();
+            }
         },this);
 
         this.stamp = function(status_code) {
@@ -485,15 +485,15 @@ $(document).ready(function() {
             return obj;
         },
 
-		deleteExam: function(q,e) {
-			if(window.confirm('Really delete this exam?')) {
-				$(e.target).find('form').submit();
-			}
-		},
+        deleteExam: function(q,e) {
+            if(window.confirm('Really delete this exam?')) {
+                $(e.target).find('form').submit();
+            }
+        },
 
-		dropQuestion: function(data) {
+        dropQuestion: function(data) {
             data.item.parent = data.targetParent;
-		},
+        },
 
         //returns a JSON-y object representing the exam
         toJSON: function() {
@@ -503,19 +503,19 @@ $(document).ready(function() {
                 duration: this.duration()*60,
                 percentPass: this.percentPass(),
                 shuffleQuestions: this.shuffleQuestions(),
-				allQuestions: this.allQuestions(),
-				pickQuestions: this.pickQuestions(),
+                allQuestions: this.allQuestions(),
+                pickQuestions: this.pickQuestions(),
                 navigation: {
-					allowregen: this.allowregen(),
+                    allowregen: this.allowregen(),
                     reverse: this.reverse(),
                     browse: this.browse(),
                     showfrontpage: this.showfrontpage(),
                     showresultspage: this.showresultspage(),
                     onleave: this.onleave.toJSON(),
-					preventleave: this.preventleave()
+                    preventleave: this.preventleave()
                 },
                 timing: {
-					allowPause: this.allowPause(),
+                    allowPause: this.allowPause(),
                     timeout: this.timeout.toJSON(),
                     timedwarning: this.timedwarning.toJSON()
                 },
@@ -537,10 +537,10 @@ $(document).ready(function() {
             this.reset();
 
             var e = this;
-			this.id = data.id;
+            this.id = data.id;
 
-			if('metadata' in data) {
-				tryLoad(data.metadata,['notes','description'],this);
+            if('metadata' in data) {
+                tryLoad(data.metadata,['notes','description'],this);
                 var licence_name = data.metadata.licence;
                 for(var i=0;i<Editor.licences.length;i++) {
                     if(Editor.licences[i].name==licence_name) {
@@ -548,7 +548,7 @@ $(document).ready(function() {
                         break;
                     }
                 }
-			}
+            }
 
             var content = data.JSONContent;
 
@@ -557,13 +557,13 @@ $(document).ready(function() {
 
             if('navigation' in content)
             {
-				tryLoad(content.navigation,['allowregen','reverse','browse','showfrontpage','showresultspage','preventleave'],this);
+                tryLoad(content.navigation,['allowregen','reverse','browse','showfrontpage','showresultspage','preventleave'],this);
                 this.onleave.load(content.navigation.onleave);
             }
 
             if('timing' in content)
             {
-				tryLoad(content.timing,['allowPause'],this);
+                tryLoad(content.timing,['allowPause'],this);
                 this.timeout.load(content.timing.timeout);
                 this.timedwarning.load(content.timing.timedwarning);
             }
@@ -583,7 +583,7 @@ $(document).ready(function() {
                 }
             } else  {
                 var path = 'theme' in data ? data.theme : '';
-				path = path || 'default';
+                path = path || 'default';
                 for(var i=0;i<Editor.themes.length;i++) {
                     if(Editor.themes[i].path==path && !Editor.themes[i].custom) {
                         this.theme(Editor.themes[i]);
@@ -591,19 +591,19 @@ $(document).ready(function() {
                     }
                 }
             }
-			if(!this.theme()) {
-				this.theme(Editor.themes[0]);
-			}
+            if(!this.theme()) {
+                this.theme(Editor.themes[0]);
+            }
 
             if('locale' in data)
                 this.locale(data.locale);
 
-			if('questions' in data)
-			{
-				this.questions(data.questions.map(function(q) {
-					return new Question(q,e.questions)
-				}));
-			}
+            if('questions' in data)
+            {
+                this.questions(data.questions.map(function(q) {
+                    return new Question(q,e.questions)
+                }));
+            }
         },
 
         download: function() {
@@ -628,7 +628,7 @@ $(document).ready(function() {
     {
         this.name = name;
         this.niceName = niceName;
-		this.helpURL = helpURL;
+        this.helpURL = helpURL;
         this.actions = actions;
 
         this.action = ko.observable(this.actions[0]);
@@ -657,46 +657,46 @@ $(document).ready(function() {
         }
     };
 
-	function Question(data,parent)
-	{
-		var q = this;
-		this.id = ko.observable(data.id);
-		this.name = ko.observable(data.name);
+    function Question(data,parent)
+    {
+        var q = this;
+        this.id = ko.observable(data.id);
+        this.name = ko.observable(data.name);
         this.created = ko.observable(data.created);
-		this.author = ko.observable(data.author);
-		this.url = ko.observable(data.url);
+        this.author = ko.observable(data.author);
+        this.url = ko.observable(data.url);
         this.deleteURL = ko.observable(data.deleteURL);
         this.last_modified = ko.observable(data.last_modified);
-		this.previewURL = ko.computed(function() {
-			return q.url()+'preview/';
-		},this);
+        this.previewURL = ko.computed(function() {
+            return q.url()+'preview/';
+        },this);
         this.progress = data.progress;
         this.progressDisplay = data.progressDisplay;
         this.metadata = ko.observable(data.metadata);
-		var descriptionDiv = document.createElement('div');
-		descriptionDiv.innerHTML = this.metadata().description;
-		this.description = $(descriptionDiv).text();
-		this.parent = parent;
-		this.data = data;
+        var descriptionDiv = document.createElement('div');
+        descriptionDiv.innerHTML = this.metadata().description;
+        this.description = $(descriptionDiv).text();
+        this.parent = parent;
+        this.data = data;
 
-		this.replaceWithCopy = function() {
-			$.get(this.url()+'copy/',{csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(data) {
-				var newq = new Question(data,q.parent);
-				var i = q.parent.indexOf(q)
-				q.parent.splice(i,1,newq);
-			})
-		}
+        this.replaceWithCopy = function() {
+            $.get(this.url()+'copy/',{csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(data) {
+                var newq = new Question(data,q.parent);
+                var i = q.parent.indexOf(q)
+                q.parent.splice(i,1,newq);
+            })
+        }
 
-	}
-	Question.prototype = {
-		remove: function() {
-			this.parent.remove(this);
-		},
+    }
+    Question.prototype = {
+        remove: function() {
+            this.parent.remove(this);
+        },
 
-		toJSON: function() {
-			return {
-				id: this.id(),
-				name: this.name(),
+        toJSON: function() {
+            return {
+                id: this.id(),
+                name: this.name(),
                 author: this.author(),
                 created: this.created(),
                 deleteURL: this.deleteURL(),
@@ -705,38 +705,38 @@ $(document).ready(function() {
                 progress: this.progress,
                 progressDisplay: this.progressDisplay,
                 url: this.url()
-			};
-		},
+            };
+        },
 
         clone: function() {
             return new Question(this.data,this.parent);
         },
 
-		add: function() {
-			var newQ = this.clone();
-			newQ.parent = viewModel.questions;
-			viewModel.questions.push(newQ);
-		}
-	}
+        add: function() {
+            var newQ = this.clone();
+            newQ.parent = viewModel.questions;
+            viewModel.questions.push(newQ);
+        }
+    }
 
     Numbas.queueScript('start-editor',['jme-display','jme-variables','jme','editor-extras'],function() {
-		try {
-			viewModel = new Exam(Editor.examJSON);
-			ko.applyBindings(viewModel);
-		}
-		catch(e) {
-			$('.page-loading').hide();
-			$('.page-error')
-				.show()
-				.find('.trace')
-					.html(e.message)
-			;
-			throw(e);
-		}
-	});
+        try {
+            viewModel = new Exam(Editor.examJSON);
+            ko.applyBindings(viewModel);
+        }
+        catch(e) {
+            $('.page-loading').hide();
+            $('.page-error')
+                .show()
+                .find('.trace')
+                    .html(e.message)
+            ;
+            throw(e);
+        }
+    });
 
-	Mousetrap.bind(['ctrl+b','command+b'],function() {
-		window.open(Editor.previewURL,Editor.previewWindow);
-	});
+    Mousetrap.bind(['ctrl+b','command+b'],function() {
+        window.open(Editor.previewURL,Editor.previewWindow);
+    });
 
 });

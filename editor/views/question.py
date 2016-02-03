@@ -42,6 +42,7 @@ from django_tables2.config import RequestConfig
 from editor.forms import NewQuestionForm, QuestionForm, QuestionSetAccessForm, QuestionSearchForm, QuestionHighlightForm
 from editor.models import Question, Extension, Image, QuestionAccess, QuestionHighlight, QuestionPullRequest, EditorTag, Licence, STAMP_STATUS_CHOICES
 import editor.views.generic
+import editor.views.editoritem
 from editor.views.errors import forbidden
 from editor.views.user import find_users
 from editor.tables import QuestionTable, QuestionHighlightTable
@@ -53,7 +54,7 @@ from accounts.models import UserProfile
 from numbasobject import NumbasObject
 from examparser import ParseError
 
-class PreviewView(editor.views.generic.PreviewView):
+class PreviewView(editor.views.editoritem.PreviewView):
     
     """Compile question as a preview and return its URL."""
     
@@ -79,7 +80,7 @@ class PreviewView(editor.views.generic.PreviewView):
             return self.preview(q)
 
 
-class ZipView(editor.views.generic.ZipView):
+class ZipView(editor.views.editoritem.ZipView):
 
     """Compile a question as a SCORM package and return the .zip file"""
 
@@ -106,7 +107,7 @@ class ZipView(editor.views.generic.ZipView):
             return self.download(q,scorm)
 
 
-class SourceView(editor.views.generic.SourceView):
+class SourceView(editor.views.editoritem.SourceView):
 
     """Compile a question as a SCORM package and return the .zip file"""
 

@@ -43,7 +43,9 @@ from django_tables2.config import RequestConfig
 
 from editor.forms import ExamForm, NewExamForm, ExamSearchForm,ExamSetAccessForm, ExamSearchForm, ExamHighlightForm
 from editor.tables import ExamTable, ExamHighlightTable
+from editor.models import NewExam, EditorItem, Access
 from editor.models import Exam, Question, ExamAccess, ExamHighlight, Theme, Licence, Extension, STAMP_STATUS_CHOICES
+import editor.views.editoritem
 import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
@@ -52,17 +54,16 @@ from editor.views.timeline import timeline_json
 
 from numbasobject import NumbasObject
 
-class PreviewView(editor.views.generic.PreviewView):
+class PreviewView(editor.views.editoritem.PreviewView):
     
     """Compile an exam as a preview and return its URL."""
     
-    model = Exam
-    operation = None
+    model = NewExam
     
     def get(self, request, *args, **kwargs):
         try:
             e = self.get_object()
-        except (Exam.DoesNotExist, TypeError) as err:
+        except (NewExam.DoesNotExist, TypeError) as err:
             status = {
                 "result": "error",
                 "message": str(err),
@@ -70,15 +71,14 @@ class PreviewView(editor.views.generic.PreviewView):
             return HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
         else:
-            return self.preview(e)
+            return self.preview(e.editoritem)
 
 
-class ZipView(editor.views.generic.ZipView):
+class ZipView(editor.views.editoritem.ZipView):
 
     """Compile an exam as a SCORM package and return the .zip file"""
 
-    model = Exam
-    operation = None
+    model = NewExam
 
     def get(self, request, *args, **kwargs):
         try:
@@ -92,15 +92,14 @@ class ZipView(editor.views.generic.ZipView):
             return HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
         else:
-            return self.download(e,scorm)
+            return self.download(e.editoritem,scorm)
 
 
-class SourceView(editor.views.generic.SourceView):
+class SourceView(editor.views.editoritem.SourceView):
 
     """Return the .exam version of an exam"""
 
-    model = Exam
-    operation = None
+    model = NewExam
 
     def get(self, request, *args, **kwargs):
         try:
@@ -113,26 +112,31 @@ class SourceView(editor.views.generic.SourceView):
             return HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
         else:
-            return self.source(e)
+            return self.source(e.editoritem)
     
     
 class CreateView(generic.CreateView):
     
     """Create an exam."""
     
-    model = Exam
+    model = NewExam
     form_class = NewExamForm
 
     def get(self, request, *args, **kwargs):
-        self.object = Exam()
-        self.object.author = request.user
+        ei = EditorItem()
+        ei.author = request.user
+        ei.name = 'Unititled Exam'
+        ei.save()
+        self.object = NewExam()
+        self.object.editoritem = ei
         self.object.locale = request.user.userprofile.language
         self.object.save()
+
         return redirect(self.get_success_url())
 
     def get_success_url(self):
         return reverse('exam_edit', args=(self.object.pk,
-                                          self.object.slug,))
+                                          self.object.editoritem.slug,))
     
     
 class UploadView(generic.CreateView):
@@ -192,21 +196,28 @@ class CopyView(generic.View, SingleObjectMixin):
 
     """ Copy an exam and redirect to to the copy's edit page. """
 
-    model = Exam
+    model = NewExam
 
     def get(self, request, *args, **kwargs):
         try:
             e = self.get_object()
-            if not e.can_be_copied_by(request.user):
+            if not e.editoritem.can_be_copied_by(request.user):
                 return HttpResponseForbidden("You may not copy this exam.")
+
             e2 = deepcopy(e)
             e2.id = None
-            e2.author = request.user
-            e2.share_uuid = uuid.uuid4()
+
+            ei2 = e.editoritem.copy()
+            ei2.author = request.user
+            ei2.set_name("%s's copy of %s" % (e2.editoritem.author.first_name,e.editoritem.name))
+            ei2.save()
+
+            e2.editoritem = ei2
             e2.save()
+
             e2.set_questions(e.questions.all())
-            e2.set_name("%s's copy of %s" % (e2.author.first_name,e.name))
             e2.custom_theme = e.custom_theme
+
         except (Exam.DoesNotExist, TypeError) as err:
             status = {
                 "result": "error",
@@ -215,46 +226,46 @@ class CopyView(generic.View, SingleObjectMixin):
             return HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
         else:
-            return HttpResponseRedirect(reverse('exam_edit', args=(e2.pk,e2.slug)))
+            return HttpResponseRedirect(reverse('exam_edit', args=(e2.pk,e2.editoritem.slug)))
 
 
 class DeleteView(generic.DeleteView):
     
     """Delete an exam."""
     
-    model = Exam
+    model = NewExam
     template_name = 'exam/delete.html'
     
     def delete(self,request,*args,**kwargs):
         self.object = self.get_object()
-        if self.object.can_be_deleted_by(self.request.user):
+        if self.object.editoritem.can_be_deleted_by(self.request.user):
             self.object.delete()
             return http.HttpResponseRedirect(self.get_success_url())
         else:
             return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
     
     def get_success_url(self):
-        return reverse('exam_index')
+        return reverse('editor_index')
     
     
 class UpdateView(generic.UpdateView):
     
     """Edit an exam."""
     
-    model = Exam
+    model = NewExam
     template_name = 'exam/edit.html'
     form_class = ExamForm
     
     def get_template_names(self):
         self.object = self.get_object()
-        return 'exam/editable.html' if self.object.can_be_edited_by(self.request.user) else 'exam/noneditable.html'
+        return 'exam/editable.html' if self.object.editoritem.can_be_edited_by(self.request.user) else 'exam/noneditable.html'
 
     def post(self, request, *args, **kwargs):
         self.user = request.user
 
         self.object = self.get_object()
 
-        if not self.object.can_be_edited_by(self.user):
+        if not self.object.editoritem.can_be_edited_by(self.user):
             return HttpResponseForbidden()
 
         data = json.loads(request.POST['json'])
@@ -279,7 +290,7 @@ class UpdateView(generic.UpdateView):
     def get(self, request, *args, **kwargs):
         self.user = request.user
         self.object = self.get_object()
-        if not self.object.can_be_viewed_by(request.user):
+        if not self.object.editoritem.can_be_viewed_by(request.user):
             return forbidden(request)
         else:
             if not self.user.is_anonymous():
@@ -314,8 +325,8 @@ class UpdateView(generic.UpdateView):
         
     def get_context_data(self, **kwargs):
         context = super(UpdateView, self).get_context_data(**kwargs)
-        self.object.get_parsed_content()
-        exam_dict = self.object.as_json()
+        self.object.editoritem.get_parsed_content()
+        exam_dict = self.object.edit_dict()
         if self.request.user.is_authenticated():
             exam_dict['recentQuestions'] = [q.summary() for q in Question.objects.filter(author=self.request.user).order_by('-last_modified')[:10]]
             exam_dict['basketQuestions'] = [q.summary() for q in self.request.user.userprofile.question_basket.all()]
@@ -323,14 +334,14 @@ class UpdateView(generic.UpdateView):
             exam_dict['recentQuestions'] = []
             exam_dict['basketQuestions'] = []
         context['exam_JSON'] = json.dumps(exam_dict)
-        custom_themes = Theme.objects.filter(public=True) | Theme.objects.filter(author=self.object.author)
+        custom_themes = Theme.objects.filter(public=True) | Theme.objects.filter(author=self.object.editoritem.author)
         if self.object.custom_theme:
             custom_themes |= Theme.objects.filter(pk=self.object.custom_theme.pk)
         context['themes'] = [{'name': x[0], 'path': x[1], 'custom': False} for x in settings.GLOBAL_SETTINGS['NUMBAS_THEMES']] + [{'name': theme.name, 'path': theme.pk, 'custom': True} for theme in custom_themes]
         context['locales'] = sorted([{'name': x[0], 'code': x[1]} for x in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']],key=operator.itemgetter('name'))
-        context['editable'] = self.object.can_be_edited_by(self.request.user)
-        context['can_delete'] = self.object.can_be_deleted_by(self.request.user)
-        context['can_copy'] = self.object.can_be_copied_by(self.request.user)
+        context['editable'] = self.object.editoritem.can_be_edited_by(self.request.user)
+        context['can_delete'] = self.object.editoritem.can_be_deleted_by(self.request.user)
+        context['can_copy'] = self.object.editoritem.can_be_copied_by(self.request.user)
         context['navtab'] = 'exams'
 
         if self.request.user.is_authenticated():
@@ -343,15 +354,15 @@ class UpdateView(generic.UpdateView):
         licences = [licence.as_json() for licence in Licence.objects.all()]
 
         editor_json = {
-            'editable': self.object.can_be_edited_by(self.request.user),
+            'editable': self.object.editoritem.can_be_edited_by(self.request.user),
             'examJSON': exam_dict,
             'themes': sorted(context['themes'],key=operator.itemgetter('name')),
             'locales': context['locales'],
             'licences': licences,
-            'previewURL': reverse('exam_preview',args=(self.object.pk,self.object.slug)),
+            'previewURL': reverse('exam_preview',args=(self.object.pk,self.object.editoritem.slug)),
             'previewWindow': str(calendar.timegm(time.gmtime())),
             'versions': versions,
-            'timeline': timeline_json(self.object.timeline,self.user),
+            'timeline': timeline_json(self.object.editoritem.timeline,self.user),
         }
         if profile:
             editor_json.update({
@@ -360,8 +371,8 @@ class UpdateView(generic.UpdateView):
 
         if editor_json['editable']:
             editor_json.update({
-                'public_access': self.object.public_access,
-                'access_rights': [{'id': ea.user.pk, 'name': ea.user.get_full_name(), 'access_level': ea.access} for ea in ExamAccess.objects.filter(exam=self.object)],
+                'public_access': self.object.editoritem.public_access,
+                'access_rights': [{'id': ea.user.pk, 'name': ea.user.get_full_name(), 'access_level': ea.access} for ea in Access.objects.filter(item=self.object.editoritem)],
             })
             if profile:
                 editor_json.update({
@@ -370,7 +381,7 @@ class UpdateView(generic.UpdateView):
 
         context['editor_json'] = editor_json
 
-        context['access_rights'] = [{'id': ea.user.pk, 'name': ea.user.get_full_name(), 'access_level': ea.access} for ea in ExamAccess.objects.filter(exam=self.object)]
+        context['access_rights'] = [{'id': ea.user.pk, 'name': ea.user.get_full_name(), 'access_level': ea.access} for ea in Access.objects.filter(item=self.object.editoritem)]
 
         context['versions'] = reversion.get_for_object(self.object)
 
@@ -388,7 +399,7 @@ class RevertView(generic.UpdateView):
         self.user = request.user
         self.exam = self.get_object()
 
-        if not self.exam.can_be_edited_by(self.user):
+        if not self.exam.editoritem.can_be_edited_by(self.user):
             return http.HttpResponseForbidden()
 
         try:
@@ -510,7 +521,7 @@ class SearchView(ListView):
         if only_ready_to_use:
             exams = exams.filter(current_stamp__status='ok')
 
-        exams = [e for e in exams if e.can_be_viewed_by(self.request.user)]
+        exams = [e for e in exams if e.editoritem.can_be_viewed_by(self.request.user)]
 
         return exams
 
@@ -550,7 +561,7 @@ class SetAccessView(generic.UpdateView):
     def form_valid(self, form):
         exam = self.get_object()
 
-        if not exam.can_be_edited_by(self.request.user):
+        if not exam.editoritem.can_be_edited_by(self.request.user):
             return http.HttpResponseForbidden("You don't have permission to edit this exam.")
 
         self.object = form.save()
@@ -576,9 +587,9 @@ class ShareLinkView(generic.RedirectView):
 
         user = self.request.user
         if access=='view':
-            has_access = e.can_be_viewed_by(user)
+            has_access = e.editoritem.can_be_viewed_by(user)
         elif access=='edit':
-            has_access = e.can_be_edited_by(user)
+            has_access = e.editoritem.can_be_edited_by(user)
             
         if not has_access:
             try:

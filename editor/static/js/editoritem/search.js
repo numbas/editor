@@ -1,38 +1,38 @@
 $(document).ready(function() {
-	var user_search_url = $('#search_author').attr('data-autocomplete-url');
-	function parseUser(user) { 
-		return {label: user.name, value: user.name} 
-	}
-	var author_source = function(req,callback) {
-		$(this).addClass('loading');
-		$.getJSON(user_search_url,{q:req.term})
-			.success(function(data) {
-				var things = [];
-				for(var i=0;i<data.length;i++) {
-					var thing = parseUser(data[i]);
-					things.push(thing);
-				}
-				callback(things);
-			})
-			.error(function() {
-			})
-			.complete(function() {
-				$(this).removeClass('loading');
-			})
-		;
-	}
-	$('#search_author')
-		.autocomplete({
-			source: author_source,
-			select: function(e,ui) {
-				$(this).val(ui.item.value);
-				$(this).parents('form').submit();
-				e.stopPropagation();
-				e.preventDefault();
-				return false;
-			}
-		})
-	;
+    var user_search_url = $('#search_author').attr('data-autocomplete-url');
+    function parseUser(user) { 
+        return {label: user.name, value: user.name} 
+    }
+    var author_source = function(req,callback) {
+        $(this).addClass('loading');
+        $.getJSON(user_search_url,{q:req.term})
+            .success(function(data) {
+                var things = [];
+                for(var i=0;i<data.length;i++) {
+                    var thing = parseUser(data[i]);
+                    things.push(thing);
+                }
+                callback(things);
+            })
+            .error(function() {
+            })
+            .complete(function() {
+                $(this).removeClass('loading');
+            })
+        ;
+    }
+    $('#search_author')
+        .autocomplete({
+            source: author_source,
+            select: function(e,ui) {
+                $(this).val(ui.item.value);
+                $(this).parents('form').submit();
+                e.stopPropagation();
+                e.preventDefault();
+                return false;
+            }
+        })
+    ;
 
     var ability_level_checkboxes = $('#ability_levels .checkbox');
 
@@ -67,25 +67,25 @@ $(document).ready(function() {
             clearTimeout(form_change_timeout);
         }
         form_change_timeout = setTimeout(submit,500);
-	}
+    }
 
-	$('#id_item_types, #id_subjects input, #id_topics input, #id_usage input, #id_status').on('change',form_changed);
+    $('#id_item_types, #id_subjects input, #id_topics input, #id_usage input, #id_status').on('change',form_changed);
     $('#ability_levels').on('change','input',form_changed);
 
-	if($('.pagination .previous[href]').length) {
-		Mousetrap.bind(['left','k'],function() {
-			window.location = $('.pagination .previous').attr('href');
-		});
-	}
-	if($('.pagination .next[href]').length) {
-		Mousetrap.bind(['right','j'],function() {
-			window.location = $('.pagination .next').attr('href');
-		});
-	}
-	Mousetrap.bind(['/','?'],function() {
-		$('#search_query').focus();
-		return false;
-	});
+    if($('.pagination .previous[href]').length) {
+        Mousetrap.bind(['left','k'],function() {
+            window.location = $('.pagination .previous').attr('href');
+        });
+    }
+    if($('.pagination .next[href]').length) {
+        Mousetrap.bind(['right','j'],function() {
+            window.location = $('.pagination .next').attr('href');
+        });
+    }
+    Mousetrap.bind(['/','?'],function() {
+        $('#search_query').focus();
+        return false;
+    });
 
 });
 

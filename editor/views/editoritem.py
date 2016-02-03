@@ -20,6 +20,11 @@ import time
 import calendar
 import re
 
+import os
+import subprocess
+import traceback
+
+from django.core.servers.basehttp import FileWrapper
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -31,6 +36,8 @@ from django.db import transaction
 from django import http
 from django.shortcuts import render,redirect
 from django.views import generic
+from django.template.loader import get_template
+from django.template import RequestContext
 
 import reversion
 
@@ -94,10 +101,12 @@ class SearchView(ListView):
             items = items.filter(self.filter_query)
 
         # filter based on item type
-        item_types = self.item_types = form.cleaned_data.get('item_types')
-        if item_types=='exams':
-            items = items.filter(filter_exam)
-        elif item_types=='questions':
+        item_types = self.item_types = form.cleaned_data.get('item_types',[])
+        print(item_types)
+        if 'exams' in item_types:
+            if 'questions' not in item_types:
+                items = items.filter(filter_exam)
+        elif 'questions' in item_types:
             items = items.filter(filter_question)
 
         # filter based on author
@@ -172,25 +181,108 @@ class SearchView(ListView):
 
         return context
 
-class PreviewView(editor.views.generic.PreviewView):
-    model = EditorItem
+class CompileError(Exception):
+    def __init__(self, message, stdout='',stderr='',code=0):
+        self.message = message
+        self.stdout = stdout
+        self.stderr = stderr
+        self.code = code
+    def __str__(self):
+        return 'Compilation failed: {}\n Stdout: {}\nStderr: {}\nExit code: {}'.format(self.message, self.stderr, self.stdout, self.code)
+    
+class CompileObject():
+    
+    """Compile an exam or question."""
 
-    def get(self, request, *args, **kwargs):
-        try:
-            ei = self.get_object()
-        except (EditorItem.DoesNotExist, TypeError) as err:
-            status = {
-                "result": "error",
-                "message": str(err),
-                "traceback": traceback.format_exc(),}
-            return http.HttpResponseServerError(json.dumps(status),
-                                           content_type='application/json')
+    def compile(self,numbasobject,switches,location,obj):
+        """
+            Construct a temporary exam/question file and compile it.
+            Returns the path to the output produced
+        """
+
+        numbasobject.data['extensions'] = [e.extracted_path for e in editor.models.Extension.objects.filter(location__in=numbasobject.data.get('extensions',[]))]
+        source = str(numbasobject)
+
+        theme_path = obj.theme_path if hasattr(obj,'theme_path') else 'default'
+        locale = obj.locale if hasattr(obj,'locale') else 'en-GB'
+
+
+        output_location = os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'], location)
+        numbas_command = [
+            settings.GLOBAL_SETTINGS['PYTHON_EXEC'],
+            os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'],'bin','numbas.py'),
+            '--pipein',
+            '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
+            '-o'+output_location,
+            '-t'+theme_path,
+            '-l'+locale,
+        ] + switches
+
+        process = subprocess.Popen(numbas_command, stdout = subprocess.PIPE, stdin=subprocess.PIPE, stderr = subprocess.PIPE)
+        stdout,stderr = process.communicate(source.encode('utf-8'))
+        code = process.poll()
+        if code != 0:
+            raise CompileError('Compilation failed.',stdout=stdout,stderr=stderr,code=code)
         else:
-            if ei.item_type=='question':
-                try:
-                    profile = UserProfile.objects.get(user=request.user)
-                    q.locale = profile.language
-                except Exception:
-                    pass
-            return self.preview(ei)
+            return output_location
+    
+    def get_error_response(self,error):
+        template = get_template("compile/error.html")
+        return http.HttpResponseServerError(template.render(RequestContext(self.request,{
+            'message': error.message,
+            'stdout': error.stdout,
+            'stderr': error.stderr,
+            'code': error.code,
+        })))
+
+class PreviewView(generic.DetailView,CompileObject):
+    def preview(self,obj):
+        numbasobject = obj.as_numbasobject    #need to catch errors
+        location = obj.filename
+        switches = ['-c']
+        try:
+            fsLocation = self.compile(numbasobject, switches, location, obj)
+        except CompileError as err:
+            return self.get_error_response(err)
+        else:
+            url = settings.GLOBAL_SETTINGS['PREVIEW_URL'] + location + '/index.html'
+            return redirect(url)
+        
+        
+class ZipView(generic.DetailView,CompileObject):
+    def download(self,obj,scorm=False):
+        numbasobject= obj.as_numbasobject    #need to catch errors
+
+        switches = ['-cz']
+
+        if settings.GLOBAL_SETTINGS.get('MINIFIER_PATH'):
+            switches+=['--minify',settings.GLOBAL_SETTINGS['MINIFIER_PATH']]
+        if scorm:
+            switches.append('-s')
+
+        location = obj.filename + '.zip'
+
+        try:
+            fsLocation = self.compile(numbasobject, switches, location, obj)
+        except CompileError as err:
+            return self.get_error_response(err)
+        else:
+            wrapper = FileWrapper(file(fsLocation,'rb'))
+            response = http.HttpResponse(wrapper, content_type='application/zip')
+            response['Content-Disposition'] = 'attachment; filename={}.zip'.format(obj.filename)
+            response['Content-Length'] = os.path.getsize(fsLocation)
+            response['Cache-Control'] = 'max-age=0,no-cache,no-store'
+            return response
+
+
+class SourceView(generic.DetailView):
+    def source(self,obj):
+        source = str(obj.as_numbasobject)
+        response = http.HttpResponse(source, 'text/plain')
+        response['Content-Disposition'] = 'attachment; filename={}.exam'.format(obj.filename)
+        response['Cache-Control'] = 'max-age=0,no-cache,no-store'
+        return response
+
+
+
 

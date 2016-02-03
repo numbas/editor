@@ -13,6 +13,7 @@
 #   limitations under the License.
 import uuid
 import os
+from copy import deepcopy
 import shutil
 from zipfile import ZipFile
 import json
@@ -409,9 +410,8 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
     """
         Base model for exams and questions - each exam or question has a reference to an instance of this
     """
-    name = models.CharField(max_length=200,default='Untitled Question')
+    name = models.CharField(max_length=200,default='Untitled')
     slug = models.SlugField(max_length=200,editable=False,unique=False)
-    filename = models.CharField(max_length=200, editable=False,default='')
 
     author = models.ForeignKey(User,related_name='own_items')
     public_access = models.CharField(default='view',editable=True,choices=PUBLIC_ACCESS_CHOICES,max_length=6)
@@ -454,9 +454,15 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
         self.licence = licence
         self.content = str(self.parsed_content)
 
+    def copy(self):
+        e2 = deepcopy(self)
+        e2.id = None
+        e2.share_uuid = uuid.uuid4()
+        return e2
+
     @property
     def timeline(self):
-        events = [StampTimelineEvent(stamp) for stamp in self.stamps] + [VersionTimelineEvent(version) for version in reversion.get_for_object(self)] + [CommentTimelineEvent(comment) for comment in self.comments]
+        events = [StampTimelineEvent(stamp) for stamp in self.stamps.all()] + [VersionTimelineEvent(version) for version in reversion.get_for_object(self)] + [CommentTimelineEvent(comment) for comment in self.comments.all()]
         events.sort(key=lambda x:x.date, reverse=True)
         return events
 
@@ -468,18 +474,66 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
             return 'question'
 
     @property
+    def rel_obj(self):
+        """ the exam/question object corresponding to this item (to make contructing the URLs easier, mainly) """
+        if hasattr(self,'exam'):
+            return self.exam
+        elif hasattr(self,'question'):
+            return self.question
+
+    @property
     def as_numbasobject(self):
         if self.item_type=='exam':
             return self.exam.as_numbasobject
         elif self.item_type=='question':
             return self.question.as_numbasobject
 
+    def edit_dict(self):
+        """
+            Dictionary of information passed to edit view
+        """
+        self.get_parsed_content()
+        return {
+            'author': self.author_id,
+            'metadata': self.metadata
+        }
+
     @property
     def filename(self):
         return '{}-{}-{}'.format(self.item_type,self.pk,self.slug)
 
+    def summary(self,user=None):
+        obj = {
+            'editoritem_id': self.id, 
+            'name': self.name, 
+            'metadata': self.metadata,
+            'created': str(self.created),
+            'last_modified': str(self.last_modified), 
+            'author': self.author.get_full_name(), 
+        }
+        if self.item_type=='exam':
+            obj['id'] = self.exam.id
+        elif self.item_type=='question':
+            obj['id'] = self.question.id
+
+        if user:
+            obj['canEdit'] = self.can_be_edited_by(user) 
+        return obj
+
+@receiver(signals.pre_save,sender=EditorItem)
+def set_editoritem_name(instance,**kwargs):
+    NumbasObject.get_parsed_content(instance)
+    instance.slug = slugify(instance.name)
+    if 'metadata' in instance.parsed_content.data:
+        licence_name = instance.parsed_content.data['metadata'].get('licence',None)
+    else:
+        licence_name = None
+    instance.licence = Licence.objects.filter(name=licence_name).first()
+
 @receiver(signals.pre_save,sender=EditorItem)
 def set_ability_level_limits(instance,**kwargs):
+    if instance.pk is None:
+        return
     ends = instance.ability_levels.aggregate(Min('start'),Max('end'))
     instance.ability_level_start = ends.get('start__min',None)
     instance.ability_level_end = ends.get('end__max',None)
@@ -537,6 +591,13 @@ class NewQuestion(models.Model):
         obj = numbasobject.NumbasObject(data=data,version=self.editoritem.parsed_content.version)
         return obj
 
+    def summary(self, user=None):
+        obj = self.editoritem.summary(user)
+        obj['url'] = reverse('question_edit', args=(self.pk,self.editoritem.slug,))
+        obj['deleteURL'] = reverse('question_delete', args=(self.pk,self.editoritem.slug))
+        return obj
+
+
 @reversion.register
 class NewExam(models.Model):
     editoritem = models.OneToOneField(EditorItem,on_delete=models.CASCADE,related_name='exam')
@@ -563,9 +624,20 @@ class NewExam(models.Model):
         
         return obj
 
-    @property
-    def as_source(self):
-        return str(self.as_numbasobject())
+    def edit_dict(self):
+        """ 
+            Dictionary of information passed to update view 
+        """
+        exam_dict = self.editoritem.edit_dict()
+        exam_dict['local'] = self.locale
+        exam_dict['custom_theme'] = self.custom_theme_id
+        exam_dict['theme'] = self.theme
+        exam_dict['id'] = self.id
+        exam_dict['questions'] = [q.summary() for q in self.ordered_questions]
+        exam_dict['JSONContent'] = self.editoritem.parsed_content.data
+
+        return exam_dict
+
     
     @property
     def ordered_questions(self):
@@ -574,6 +646,21 @@ class NewExam(models.Model):
     @property
     def extensions(self):
         return Extension.objects.filter(newquestion__in=self.questions.all()).distinct()
+
+    def set_questions(self,question_list=None,**kwargs):
+        """ 
+            Set the list of questions for this exam. 
+            question_list is an ordered list of question IDs
+        """
+
+        if 'question_ids' in kwargs:
+            question_list = [NewQuestion.objects.get(pk=pk) for pk in kwargs['question_ids']]
+
+        self.questions.clear()
+        for order,question in enumerate(question_list):
+            exam_question = NewExamQuestion(exam=self,question=question, qn_order=order)
+            exam_question.save()
+    
 
 
 class NewExamQuestion(models.Model):

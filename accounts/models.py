@@ -12,7 +12,7 @@ from sanitizer.models import SanitizedTextField
 
 from operator import itemgetter
 
-from editor.models import Question, Exam, EditorTag
+from editor.models import NewQuestion, NewExam, Question, Exam, EditorTag
 
 class RegistrationManager(regmodels.RegistrationManager):
     @transaction.atomic
@@ -50,9 +50,9 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User)
     language = models.CharField(max_length=100,default='en-GB')
     bio = SanitizedTextField(default='',allowed_tags=settings.SANITIZER_ALLOWED_TAGS,allowed_attributes=settings.SANITIZER_ALLOWED_ATTRIBUTES)
-    favourite_questions = models.ManyToManyField(Question,blank=True,related_name='fans')
-    favourite_exams = models.ManyToManyField(Exam,blank=True,related_name='fans')
-    question_basket = models.ManyToManyField(Question,blank=True,related_name='baskets',through='BasketQuestion')
+    favourite_questions = models.ManyToManyField(NewQuestion,blank=True,related_name='fans')
+    favourite_exams = models.ManyToManyField(NewExam,blank=True,related_name='fans')
+    question_basket = models.ManyToManyField(NewQuestion,blank=True,related_name='baskets',through='BasketQuestion')
 
     def sorted_tags(self):
         qs = self.user.own_questions
@@ -67,14 +67,15 @@ class UserProfile(models.Model):
         return Question.objects.filter(author=self.user).order_by('-last_modified')[:10]
         
 class BasketQuestion(models.Model):
-    
     class Meta:
         ordering = ['qn_order']
         unique_together = ('profile','question')
         
     profile = models.ForeignKey(UserProfile)
-    question = models.ForeignKey(Question)
+    question = models.ForeignKey(NewQuestion)
     qn_order = models.PositiveIntegerField()
+
+
 
 def createUserProfile(sender, instance, created, **kwargs):
     """Create a UserProfile object each time a User is created ; and link it.

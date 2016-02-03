@@ -126,7 +126,7 @@ class BootstrapRadioSelect(forms.RadioSelect):
 
 class EditorItemSearchForm(forms.Form):
     query = forms.CharField(initial='', required=False)
-    item_types = forms.ChoiceField(initial='all',choices=(('all','All content'),('questions','Questions'),('exams','Exams')), required=False)
+    item_types = forms.MultipleChoiceField(initial=('questions','exams'),choices=(('questions','Questions'),('exams','Exams')), widget=ShowMoreCheckboxSelectMultiple, required=False)
     author = forms.CharField(initial='', required=False)
     usage = forms.ChoiceField(initial='any',choices=USAGE_OPTIONS, required=False, widget=BootstrapRadioSelect)
     subjects = forms.ModelMultipleChoiceField(queryset=editor.models.Subject.objects.all(), required=False, widget=ShowMoreCheckboxSelectMultiple)
@@ -269,10 +269,18 @@ class NewQuestionForm(forms.ModelForm):
 class ExamForm(forms.ModelForm):
     
     """Form for an exam."""
+
+    content = forms.CharField()
     
     class Meta:
         model = Exam
-        fields = ('content','theme','custom_theme','locale')
+        fields = ('theme','custom_theme','locale')
+
+    def save(self,commit=True):
+        exam = super(ExamForm,self).save(commit=commit)
+        exam.editoritem.content = self.cleaned_data['content']
+        exam.editoritem.save()
+        return exam
         
 class NewExamForm(forms.ModelForm):
     

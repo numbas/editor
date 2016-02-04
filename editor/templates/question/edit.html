@@ -30,7 +30,7 @@
 
     <script type="text/javascript">
         (function() {
-            var editor = window.Editor = {{question_json|json|safe}};
+            window.Editor = {{question_json|json|safe}};
         })();
     </script>
 {% endblock javascripts %}
@@ -87,8 +87,8 @@
 				</li>			
 				{% if can_delete %}
 				<li>
-                    <a id="delete" data-bind="click: deleteQuestion" href="{% url 'question_delete' object.pk object.slug %}" title="Delete this question permanently">Delete
-						<form action="{% url 'question_delete' object.pk object.slug %}" method="post">{% csrf_token %}
+                    <a id="delete" data-bind="click: deleteQuestion" href="{% url 'question_delete' object.pk object.editoritem.slug %}" title="Delete this question permanently">Delete
+						<form action="{% url 'question_delete' object.pk object.editoritem.slug %}" method="post">{% csrf_token %}
 							<input type="submit" value="Submit" />
 						</form>
 					</a>
@@ -97,7 +97,7 @@
 
 				{% if user.is_authenticated and can_copy %}
 				<li>
-				<a id="copy" href="{% url 'question_copy' object.pk object.slug %}" target="_blank" title="Create your own copy of this question">Make a Copy</a>
+				<a id="copy" href="{% url 'question_copy' object.pk object.editoritem.slug %}" target="_blank" title="Create your own copy of this question">Make a Copy</a>
 				</li>
 				{% endif %}
 
@@ -105,13 +105,13 @@
 					<span id="download">
 						Download: 
                         <div class="btn-group">
-                          <a class="btn" href="{% url 'question_download' object.pk object.slug %}?scorm">SCORM package</a>
+                          <a class="btn" href="{% url 'question_download' object.pk object.editoritem.slug %}?scorm">SCORM package</a>
                           <button class="btn dropdown-toggle" data-toggle="dropdown" title="More download options">
                             <span class="caret"></span>
                           </button>
                           <ul class="dropdown-menu">
-                            <li><a tabindex="-1" href="{% url 'question_download' object.pk object.slug %}">standalone .zip (no SCORM)</a></li>
-                            <li><a tabindex="-1" href="{% url 'question_source' object.pk object.slug %}">source</a></li>
+                            <li><a tabindex="-1" href="{% url 'question_download' object.pk object.editoritem.slug %}">standalone .zip (no SCORM)</a></li>
+                            <li><a tabindex="-1" href="{% url 'question_source' object.pk object.editoritem.slug %}">source</a></li>
                           </ul>
                         </div>
 					</span>

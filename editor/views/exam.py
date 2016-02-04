@@ -125,7 +125,7 @@ class CreateView(generic.CreateView):
     def get(self, request, *args, **kwargs):
         ei = EditorItem()
         ei.author = request.user
-        ei.name = 'Unititled Exam'
+        ei.name = 'Untitled Exam'
         ei.save()
         self.object = NewExam()
         self.object.editoritem = ei
@@ -210,6 +210,7 @@ class CopyView(generic.View, SingleObjectMixin):
             ei2 = e.editoritem.copy()
             ei2.author = request.user
             ei2.set_name("%s's copy of %s" % (e2.editoritem.author.first_name,e.editoritem.name))
+            ei2.copy_of = e.editoritem
             ei2.save()
 
             e2.editoritem = ei2
@@ -218,7 +219,7 @@ class CopyView(generic.View, SingleObjectMixin):
             e2.set_questions(e.questions.all())
             e2.custom_theme = e.custom_theme
 
-        except (Exam.DoesNotExist, TypeError) as err:
+        except (NewExam.DoesNotExist, TypeError) as err:
             status = {
                 "result": "error",
                 "message": str(err),
@@ -239,7 +240,7 @@ class DeleteView(generic.DeleteView):
     def delete(self,request,*args,**kwargs):
         self.object = self.get_object()
         if self.object.editoritem.can_be_deleted_by(self.request.user):
-            self.object.delete()
+            self.object.editoritem.delete()
             return http.HttpResponseRedirect(self.get_success_url())
         else:
             return http.HttpResponseForbidden('You don\'t have the necessary access rights.')

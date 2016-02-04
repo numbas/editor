@@ -494,8 +494,11 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
         """
         self.get_parsed_content()
         return {
+            'id': self.rel_obj.id,
             'author': self.author_id,
-            'metadata': self.metadata
+            'metadata': self.metadata,
+            'JSONContent': self.parsed_content.data,
+            'tags': [t.name for t in self.tags.all()],
         }
 
     @property
@@ -591,6 +594,11 @@ class NewQuestion(models.Model):
         obj = numbasobject.NumbasObject(data=data,version=self.editoritem.parsed_content.version)
         return obj
 
+    def edit_dict(self):
+        d = self.editoritem.edit_dict()
+        d['resources'] = [res.as_json() for res in self.resources.all()]
+        return d
+
     def summary(self, user=None):
         obj = self.editoritem.summary(user)
         obj['url'] = reverse('question_edit', args=(self.pk,self.editoritem.slug,))
@@ -632,9 +640,7 @@ class NewExam(models.Model):
         exam_dict['local'] = self.locale
         exam_dict['custom_theme'] = self.custom_theme_id
         exam_dict['theme'] = self.theme
-        exam_dict['id'] = self.id
         exam_dict['questions'] = [q.summary() for q in self.ordered_questions]
-        exam_dict['JSONContent'] = self.editoritem.parsed_content.data
 
         return exam_dict
 

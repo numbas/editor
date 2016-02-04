@@ -26,7 +26,7 @@ import zipfile
 import os
 import tempfile
 
-from editor.models import Exam, Question, ExamQuestion, QuestionAccess, ExamAccess, QuestionHighlight, ExamHighlight, Theme, Extension, QuestionPullRequest
+from editor.models import NewExam, NewQuestion, Exam, Question, ExamQuestion, QuestionAccess, ExamAccess, QuestionHighlight, ExamHighlight, Theme, Extension, QuestionPullRequest
 import editor.models
 from django.contrib.auth.models import User
 
@@ -246,9 +246,17 @@ class QuestionForm(forms.ModelForm):
     
     """Form for a question."""
 
+    content = forms.CharField()
+
     class Meta:
-        model = Question
-        fields = ('content','resources','extensions')
+        model = NewQuestion
+        fields = ('resources','extensions')
+
+    def save(self,commit=True):
+        question = super(QuestionForm,self).save(commit=commit)
+        question.editoritem.content = self.cleaned_data['content']
+        question.editoritem.save()
+        return question
 
 class QuestionHighlightForm(forms.ModelForm):
     note = forms.CharField(widget=forms.Textarea(attrs={'data-bind':'text:note'}), label='Write a note explaining why you\'re highlighting this question.')
@@ -262,9 +270,8 @@ class NewQuestionForm(forms.ModelForm):
     """Form for a new question only, not including some fields."""
     
     class Meta:
-        model = Question
-        fields = ('name','author')
-        
+        model = NewQuestion
+        fields = []
         
 class ExamForm(forms.ModelForm):
     
@@ -273,7 +280,7 @@ class ExamForm(forms.ModelForm):
     content = forms.CharField()
     
     class Meta:
-        model = Exam
+        model = NewExam
         fields = ('theme','custom_theme','locale')
 
     def save(self,commit=True):

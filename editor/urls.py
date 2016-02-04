@@ -88,8 +88,6 @@ urlpatterns = patterns('',
 
     url(r'^question/new/$', login_required(question.CreateView.as_view()), name='question_new'),
 
-    url(r'^question/upload/$', question.UploadView.as_view(), name='question_upload'),
-
     url(r'^questions/search/(\?q=(?P<query>.+))?$', question.SearchView.as_view(), name='question_search',),
 
     url(r'^questions/recent/$', question.RecentQuestionsView.as_view(), name='recent_questions',),

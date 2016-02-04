@@ -19,7 +19,6 @@ import editor.models
 
 admin.site.register(editor.models.NewExam)
 admin.site.register(editor.models.NewQuestion)
-admin.site.register(editor.models.Highlight)
 admin.site.register(editor.models.Theme)
 
 admin.site.register(editor.models.Subject)

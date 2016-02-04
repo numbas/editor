@@ -117,8 +117,6 @@
                                 <ul class="dropdown-menu">
                                 <li><a tabindex="2" href="{% url 'view_profile' user.pk %}">Profile</a></li>
                                 <li role="separator" class="divider"></li>
-                                <li><a tabindex="2" href="{% url 'question_search' %}?author={{user.get_full_name|urlencode}}">Questions</a></li>
-                                <li><a tabindex="2" href="{% url 'exam_search' %}?author={{user.get_full_name|urlencode}}">Exams</a></li>
                                 <li><a tabindex="2" href="{% url 'theme_list' %}">Themes</a></li>
                                 <li><a tabindex="2" href="{% url 'extension_list' %}">Extensions</a></li>
                                 <li role="separator" class="divider"></li>

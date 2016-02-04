@@ -26,7 +26,7 @@ import zipfile
 import os
 import tempfile
 
-from editor.models import NewExam, NewQuestion, Exam, Question, ExamQuestion, QuestionAccess, ExamAccess, QuestionHighlight, ExamHighlight, Theme, Extension, QuestionPullRequest
+from editor.models import NewExam, NewQuestion, EditorItem, Access, Exam, Question, ExamQuestion, QuestionAccess, ExamAccess, QuestionHighlight, ExamHighlight, Theme, Extension, QuestionPullRequest
 import editor.models
 from django.contrib.auth.models import User
 
@@ -194,40 +194,40 @@ class QuestionSetAccessForm(forms.ModelForm):
             f.save()
         return super(QuestionSetAccessForm,self).save()
 
-class ExamAccessForm(forms.ModelForm):
+class AccessForm(forms.ModelForm):
     given_by = forms.ModelChoiceField(queryset=User.objects.all())
 
     class Meta:
-        model = ExamAccess
+        model = Access
         exclude = []
 
     def save(self,commit=True):
         self.instance.given_by = self.cleaned_data.get('given_by')
-        super(ExamAccessForm,self).save(commit)
+        super(AccessForm,self).save(commit)
 
-class ExamSetAccessForm(forms.ModelForm):
+class SetAccessForm(forms.ModelForm):
     given_by = forms.ModelChoiceField(queryset=User.objects.all())
 
     class Meta:
-        model = Exam
+        model = EditorItem
         fields = ['public_access']
 
     def is_valid(self):
-        v = super(ExamSetAccessForm,self).is_valid()
+        v = super(SetAccessForm,self).is_valid()
         for f in self.user_access_forms:
             if not f.is_valid():
                 return False
         return v
     
     def clean(self):
-        cleaned_data = super(ExamSetAccessForm,self).clean()
+        cleaned_data = super(SetAccessForm,self).clean()
 
         self.user_ids = self.data.getlist('user_ids[]')
         self.access_levels = self.data.getlist('access_levels[]')
         self.user_access_forms = []
 
         for i,(user,access_level) in enumerate(zip(self.user_ids,self.access_levels)):
-            f = ExamAccessForm({'user':user,'access':access_level,'exam':self.instance.pk,'given_by':self.cleaned_data.get('given_by').pk}, instance=ExamAccess.objects.filter(exam=self.instance,user=user).first())
+            f = AccessForm({'user':user,'access':access_level,'item':self.instance.pk,'given_by':self.cleaned_data.get('given_by').pk}, instance=Access.objects.filter(item=self.instance,user=user).first())
             f.full_clean()
             self.user_access_forms.append(f)
             for key,messages in f.errors.items():
@@ -236,11 +236,11 @@ class ExamSetAccessForm(forms.ModelForm):
         return cleaned_data
 
     def save(self):
-        access_to_remove = ExamAccess.objects.filter(exam=self.instance).exclude(user__in=self.user_ids)
+        access_to_remove = Access.objects.filter(item=self.instance).exclude(user__in=self.user_ids)
         access_to_remove.delete()
         for f in self.user_access_forms:
             f.save()
-        return super(ExamSetAccessForm,self).save()
+        return super(SetAccessForm,self).save()
         
 class QuestionForm(forms.ModelForm):
     

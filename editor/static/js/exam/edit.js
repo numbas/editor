@@ -297,7 +297,7 @@ $(document).ready(function() {
                 }
             });
             this.saveAccess = Editor.saver(this.access_data,function(data) {
-                return $.post('set-access',data);
+                return $.post(Editor.accessURL,data);
             });
             this.userAccessSearch=ko.observable('');
 

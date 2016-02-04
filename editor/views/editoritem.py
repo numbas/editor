@@ -248,7 +248,6 @@ class PreviewView(generic.DetailView,CompileObject):
             url = settings.GLOBAL_SETTINGS['PREVIEW_URL'] + location + '/index.html'
             return redirect(url)
         
-        
 class ZipView(generic.DetailView,CompileObject):
     def download(self,obj,scorm=False):
         numbasobject= obj.as_numbasobject    #need to catch errors
@@ -274,7 +273,6 @@ class ZipView(generic.DetailView,CompileObject):
             response['Cache-Control'] = 'max-age=0,no-cache,no-store'
             return response
 
-
 class SourceView(generic.DetailView):
     def source(self,obj):
         source = str(obj.as_numbasobject)
@@ -283,6 +281,29 @@ class SourceView(generic.DetailView):
         response['Cache-Control'] = 'max-age=0,no-cache,no-store'
         return response
 
+class SetAccessView(generic.UpdateView):
+    model = EditorItem
+    form_class = editor.forms.SetAccessForm
 
+    def get_form_kwargs(self):
+        kwargs = super(SetAccessView,self).get_form_kwargs()
+        kwargs['data'] = self.request.POST.copy()
+        kwargs['data'].update({'given_by':self.request.user.pk})
+        return kwargs
 
+    def form_valid(self, form):
+        item = self.get_object()
+
+        if not item.can_be_edited_by(self.request.user):
+            return http.HttpResponseForbidden("You don't have permission to edit this item.")
+
+        self.object = form.save()
+
+        return http.HttpResponse('ok!')
+
+    def form_invalid(self,form):
+        return HttpResponse(form.errors.as_text())
+
+    def get(self, request, *args, **kwargs):
+        return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
 

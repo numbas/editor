@@ -30,18 +30,13 @@ urlpatterns = patterns('',
 
     url(r'^item/(?P<pk>\d+)/preview/$', editoritem.PreviewView.as_view(), name='item_preview'),
 
-    url(r'^exams/$',exam.IndexView.as_view(), name='exam_index',),
-                       
+    url(r'^item/(?P<pk>\d+)/set-access$',
+        editoritem.SetAccessView.as_view(),name='set_access'),
+
     url(r'^exam/new/$', login_required(exam.CreateView.as_view()), name='exam_new'),
     
     url(r'^exam/upload/$', exam.UploadView.as_view(), name='exam_upload'),
                        
-    url(r'^exams/search/$', exam.SearchView.as_view(), name='exam_search'),
-
-    url(r'^exams/starred/$', exam.FavouritesView.as_view(), name='favourite_exams',),
-    
-    url(r'^exams/highlights/$', exam.HighlightsView.as_view(), name='highlighted_exams',),
-    
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/$', exam.UpdateView.as_view(),
         name='exam_edit'),
 
@@ -62,14 +57,8 @@ urlpatterns = patterns('',
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+).exam$',
         exam.SourceView.as_view(), name='exam_source'),
                        
-    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/set-access$',
-        exam.SetAccessView.as_view(),name='set_exam_access'),
-
     url(r'^exam/share/(?P<access>(view|edit))/(?P<share_uuid>.*)$',
         login_required(exam.ShareLinkView.as_view()),name='share_exam'),
-
-    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/highlight$',
-        login_required(exam.HighlightView.as_view()),name='highlight_exam'),
 
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/stamp$',
         login_required(exam.StampView.as_view()),name='stamp_exam'),
@@ -84,18 +73,10 @@ urlpatterns = patterns('',
         exam.question_lists,
         name='question_lists'),
 
-    url(r'^questions/$', question.IndexView.as_view(), name='question_index',),
-
     url(r'^question/new/$', login_required(question.CreateView.as_view()), name='question_new'),
-
-    url(r'^questions/search/(\?q=(?P<query>.+))?$', question.SearchView.as_view(), name='question_search',),
 
     url(r'^questions/recent/$', question.RecentQuestionsView.as_view(), name='recent_questions',),
 
-    url(r'^questions/starred/$', question.FavouritesView.as_view(), name='favourite_questions',),
-    
-    url(r'^questions/highlights/$', question.HighlightsView.as_view(), name='highlighted_questions',),
-    
     url(r'^questions/search/json$', question.JSONSearchView.as_view(), name='question_search_json',),
     
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/$',
@@ -121,9 +102,6 @@ urlpatterns = patterns('',
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/stamp$',
         login_required(question.StampView.as_view()),name='stamp_question'),
-
-    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/highlight$',
-        login_required(question.HighlightView.as_view()),name='highlight_question'),
 
     url(r'^resources/(?P<pk>\d+)/delete$',
         login_required(ImageDeleteView.as_view()), name='delete_resource'),

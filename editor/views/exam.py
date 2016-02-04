@@ -41,7 +41,7 @@ import calendar
 
 from django_tables2.config import RequestConfig
 
-from editor.forms import ExamForm, NewExamForm, ExamSearchForm,ExamSetAccessForm, ExamSearchForm, ExamHighlightForm
+from editor.forms import ExamForm, NewExamForm, ExamSearchForm, ExamSearchForm, ExamHighlightForm
 from editor.tables import ExamTable, ExamHighlightTable
 from editor.models import NewExam, EditorItem, Access
 from editor.models import Exam, Question, ExamAccess, ExamHighlight, Theme, Licence, Extension, STAMP_STATUS_CHOICES
@@ -361,6 +361,7 @@ class UpdateView(generic.UpdateView):
             'locales': context['locales'],
             'licences': licences,
             'previewURL': reverse('exam_preview',args=(self.object.pk,self.object.editoritem.slug)),
+            'accessURL': reverse('set_access',args=(self.object.editoritem.pk,)),
             'previewWindow': str(calendar.timegm(time.gmtime())),
             'versions': versions,
             'timeline': timeline_json(self.object.editoritem.timeline,self.user),
@@ -394,13 +395,14 @@ class UpdateView(generic.UpdateView):
         return reverse('exam_edit', args=(self.object.pk,self.object.slug,))
 
 class RevertView(generic.UpdateView):
-    model = Exam
+    model = EditorItem
     
     def get(self, request, *args, **kwargs):
         self.user = request.user
         self.exam = self.get_object()
+        item = exam.editoritem
 
-        if not self.exam.editoritem.can_be_edited_by(self.user):
+        if not self.item.can_be_edited_by(self.user):
             return http.HttpResponseForbidden()
 
         try:
@@ -410,170 +412,9 @@ class RevertView(generic.UpdateView):
 
         self.version.revision.revert()
 
-        return redirect(reverse('exam_edit', args=(self.exam.pk,self.exam.slug)))
+        exam = NewExam.objects.get(pk=self.exam.pk)
 
-    
-class HighlightView(generic.FormView):
-    template_name = 'exam/highlight.html'
-    form_class = ExamHighlightForm
-
-    def get_initial(self):
-        initial = super(HighlightView,self).get_initial()
-
-        self.exam = Exam.objects.get(pk=self.kwargs.get('pk'))
-
-        try:
-            eh = ExamHighlight.objects.get(exam=self.exam, picked_by=self.request.user)
-            initial['note'] = eh.note
-        except ObjectDoesNotExist:
-            initial['note'] = u''
-
-        return initial
-
-    def form_valid(self, form):
-        note = form.cleaned_data.get('note')
-
-        self.object, new = ExamHighlight.objects.get_or_create(exam=self.exam, picked_by=self.request.user)
-        self.object.note = note
-        self.object.save()
-
-        return super(HighlightView,self).form_valid(form)
-
-    def get_success_url(self):
-        return reverse('exam_edit', args=(self.exam.pk,self.exam.slug))
-
-    def get_context_data(self, **kwargs):
-        context = super(HighlightView, self).get_context_data(**kwargs)
-        
-        context['exam'] = self.exam
-
-        return context
-
-class IndexView(generic.TemplateView):
-
-    template_name = 'exam/index.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(IndexView, self).get_context_data(**kwargs)
-
-        if self.request.user.is_authenticated():
-            profile = self.request.user.userprofile
-            context['favourites'] = profile.favourite_exams.all()
-            context['recents'] = Exam.objects.filter(author=self.request.user).order_by('-last_modified')
-        
-        context['highlights'] = ExamHighlight.objects.all().order_by('-date')
-
-        context['navtab'] = 'exams'
-
-        return context
-    
-    
-class ListView(generic.ListView):
-    model=Exam
-    table_class = ExamTable
-
-    def make_table(self):
-        config = RequestConfig(self.request, paginate={'per_page': 10})
-        results = self.table_class(self.object_list)
-        config.configure(results)
-
-        return results
-
-    def get_context_data(self, **kwargs):
-        context = super(ListView, self).get_context_data(**kwargs)
-        context['navtab'] = 'exams'
-        context['results'] = self.make_table()
-
-        return context
-
-class SearchView(ListView):
-    
-    """Search exams."""
-    template_name='exam/search.html'
-
-    def get_queryset(self):
-
-        form = self.form = ExamSearchForm(self.request.GET)
-        form.is_valid()
-
-        exams = Exam.objects.all()
-
-        search_term = form.cleaned_data.get('query')
-        if search_term:
-            exams = exams.filter(Q(name__icontains=search_term) | Q(metadata__icontains=search_term)).distinct()
-
-        author_term = form.cleaned_data.get('author')
-        if author_term:
-            authors = find_users(author_term)
-            exams = exams.filter(author__in=authors).distinct()
-
-        usage = form.cleaned_data.get('usage')
-        usage_filters = {
-            "any": Q(),
-            "reuse": Q(licence__can_reuse=True),
-            "modify": Q(licence__can_reuse=True, licence__can_modify=True),
-            "sell": Q(licence__can_reuse=True, licence__can_sell=True),
-            "modify-sell": Q(licence__can_reuse=True, licence__can_modify=True, licence__can_sell=True),
-        }
-        if usage in usage_filters:
-            exams = exams.filter(usage_filters[usage])
-
-        only_ready_to_use = form.cleaned_data.get('only_ready_to_use')
-        if only_ready_to_use:
-            exams = exams.filter(current_stamp__status='ok')
-
-        exams = [e for e in exams if e.editoritem.can_be_viewed_by(self.request.user)]
-
-        return exams
-
-    def get_context_data(self, **kwargs):
-        context = super(SearchView,self).get_context_data(**kwargs)
-        context['form'] = self.form
-
-        return context
-
-class FavouritesView(ListView):
-    template_name = 'exam/favourites.html'
-
-    def get_queryset(self):
-        return self.request.user.userprofile.favourite_exams.all()
-
-class HighlightsView(ListView):
-    model = ExamHighlight
-    template_name = 'exam/highlights.html'
-    table_class = ExamHighlightTable
-    per_page = 5
-
-    def get_queryset(self):
-        highlights = ExamHighlight.objects.all()
-        return highlights
-
-    
-class SetAccessView(generic.UpdateView):
-    model = Exam
-    form_class = ExamSetAccessForm
-
-    def get_form_kwargs(self):
-        kwargs = super(SetAccessView,self).get_form_kwargs()
-        kwargs['data'] = self.request.POST.copy()
-        kwargs['data'].update({'given_by':self.request.user.pk})
-        return kwargs
-
-    def form_valid(self, form):
-        exam = self.get_object()
-
-        if not exam.editoritem.can_be_edited_by(self.request.user):
-            return http.HttpResponseForbidden("You don't have permission to edit this exam.")
-
-        self.object = form.save()
-
-        return HttpResponse('ok!')
-
-    def form_invalid(self,form):
-        return HttpResponse(form.errors.as_text())
-
-    def get(self, request, *args, **kwargs):
-        return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
+        return redirect(reverse('exam_edit', args=(exam.pk,exam.editoritem.slug)))
 
 class ShareLinkView(generic.RedirectView):
     permanent = False

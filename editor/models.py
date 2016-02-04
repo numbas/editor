@@ -397,15 +397,7 @@ class Access(models.Model):
     user = models.ForeignKey(User)
     access = models.CharField(default='view',editable=True,choices=USER_ACCESS_CHOICES,max_length=6)
 
-class Highlight(models.Model):
-    class Meta:
-        ordering = ['-date']
-
-    item = models.ForeignKey('EditorItem')
-    picked_by = models.ForeignKey(User)
-    note = models.TextField(blank=True)
-    date = models.DateTimeField(auto_now_add=True)
-
+@reversion.register
 class EditorItem(models.Model,NumbasObject,ControlledObject):
     """
         Base model for exams and questions - each exam or question has a reference to an instance of this
@@ -462,7 +454,7 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
 
     @property
     def timeline(self):
-        events = [StampTimelineEvent(stamp) for stamp in self.stamps.all()] + [VersionTimelineEvent(version) for version in reversion.get_for_object(self)] + [CommentTimelineEvent(comment) for comment in self.comments.all()]
+        events = [StampTimelineEvent(stamp) for stamp in self.stamps.all()] + [VersionTimelineEvent(version) for version in reversion.get_for_object(self.rel_obj)] + [CommentTimelineEvent(comment) for comment in self.comments.all()]
         events.sort(key=lambda x:x.date, reverse=True)
         return events
 

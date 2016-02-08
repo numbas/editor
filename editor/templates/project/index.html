@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% load user_link %}
+
+{% block content %}
+<h1>{{project.name}}</h1>
+
+<div class="description">{{project.description}}</div>
+
+<h2>Members</h2>
+<ul class="members">
+    {% for user in project.members %}
+    <li class="member">{% user_link user %} {% if user == project.owner %}<span class="owner">(owner)</span>{% endif %}</li>
+    {% endfor %}
+</ul>
+{% endblock content %}

@@ -59,7 +59,64 @@ import numbasobject
 from jsonfield import JSONField
 
 PUBLIC_ACCESS_CHOICES = (('hidden','Hidden'),('view','Public can view'),('edit','Public can edit'))
-USER_ACCESS_CHOICES = (('view','Public can view'),('edit','Public can edit'))
+USER_ACCESS_CHOICES = (('view','Can view'),('edit','Can edit'))
+
+@deconstructible
+class ControlledObject(object):
+
+    def can_be_viewed_by(self,user):
+        accept_levels = ('view','edit')
+        return (self.public_access in accept_levels) or (user.is_superuser) or (self.author==user) or (self.has_access(user,accept_levels))
+
+    def can_be_copied_by(self,user):
+        if not self.licence or user.is_superuser or self.author==user or self.has_access(user,('edit',)):
+            return True
+        else:
+            return self.licence.can_reuse and self.licence.can_modify
+
+    def can_be_deleted_by(self,user):
+        return user == self.author
+
+    def can_be_edited_by(self, user):
+        return self.public_access=='edit' or (user.is_superuser) or (self.author==user) or self.has_access(user,('edit',))
+
+    def __eq__(self,other):
+        return True
+
+    @classmethod
+    def filter_can_be_viewed_by(self,user):
+        view_perms = ('edit','view')
+        if user.is_superuser:
+            return Q()
+        elif user.is_anonymous():
+            return Q(public_access__in=view_perms)
+        else:
+            return Q(access__user=user,access__access__in=view_perms) | Q(public_access__in=view_perms) | Q(author=user)
+
+class Project(models.Model,ControlledObject):
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    owner = models.ForeignKey(User,related_name='own_projects')
+    permissions = models.ManyToManyField(User,through='ProjectAccess')
+
+    def has_access(self,levels):
+        if user.is_anonymous():
+            return False
+        return ProjectAccess.objects.filter(item=self,user=user,access__in=levels).exists()
+
+    def members(self):
+        return [self.owner]+list(User.objects.filter(project_memberships__project=self).exclude(pk=self.owner.pk))
+
+    def __unicode__(self):
+        return self.name
+
+class ProjectAccess(models.Model):
+    project = models.ForeignKey(Project)
+    user = models.ForeignKey(User,related_name='project_memberships')
+    access = models.CharField(default='view',editable=True,choices=USER_ACCESS_CHOICES,max_length=6)
+
+    class Meta:
+        unique_together = (("project","user"),)
 
 class EditorTag(taggit.models.TagBase):
     official = models.BooleanField(default=False)
@@ -70,65 +127,6 @@ class EditorTag(taggit.models.TagBase):
 
     def used_count(self):
         return self.tagged_items.count()
-
-@deconstructible
-class ControlledObject(object):
-
-    def can_be_viewed_by(self,user):
-        accept_levels = ('view','edit')
-        return (self.public_access in accept_levels) or (user.is_superuser) or (self.author==user) or (self.get_access_for(user) in accept_levels)
-
-    def can_be_copied_by(self,user):
-        if not self.licence or user.is_superuser or self.author==user or self.get_access_for(user)=='edit':
-            return True
-        else:
-            return self.licence.can_reuse and self.licence.can_modify
-
-    def can_be_deleted_by(self,user):
-        return user == self.author
-
-    def can_be_edited_by(self, user):
-        return self.public_access=='edit' or (user.is_superuser) or (self.author==user) or self.get_access_for(user)=='edit'
-
-    def __eq__(self,other):
-        return True
-
-    @classmethod
-    def filter_can_be_viewed_by(self,user):
-        if user.is_superuser:
-            return Q()
-        elif user.is_anonymous():
-            return Q(public_access__in=('edit','view'))
-        else:
-            return Q(access__user=user) | Q(public_access__in=('edit','view')) | Q(author=user)
-
-NUMBAS_FILE_VERSION = 'variables_as_objects'
-
-@deconstructible
-class NumbasObject(object):
-
-    def get_parsed_content(self):
-        if self.content:
-            self.parsed_content = numbasobject.NumbasObject(self.content)
-            self.name = self.parsed_content.data['name']
-        elif self.name:
-            self.parsed_content = numbasobject.NumbasObject(data={'name': self.name}, version=NUMBAS_FILE_VERSION)
-
-        self.metadata = self.parsed_content.data.get('metadata',self.metadata)
-
-        self.content = str(self.parsed_content)
-        return self.parsed_content
-
-    def set_name(self,name):
-        self.name = name
-        if self.content:
-            self.get_parsed_content()
-            self.parsed_content.data['name'] = name
-            self.content = str(self.parsed_content)
-        self.save()
-
-    def __eq__(self,other):
-        return self.content==other.content
 
 #check that the .exam file for an object is valid and defines at the very least a name
 def validate_content(content):
@@ -397,6 +395,34 @@ class Access(models.Model):
     user = models.ForeignKey(User)
     access = models.CharField(default='view',editable=True,choices=USER_ACCESS_CHOICES,max_length=6)
 
+NUMBAS_FILE_VERSION = 'variables_as_objects'
+
+@deconstructible
+class NumbasObject(object):
+
+    def get_parsed_content(self):
+        if self.content:
+            self.parsed_content = numbasobject.NumbasObject(self.content)
+            self.name = self.parsed_content.data['name']
+        elif self.name:
+            self.parsed_content = numbasobject.NumbasObject(data={'name': self.name}, version=NUMBAS_FILE_VERSION)
+
+        self.metadata = self.parsed_content.data.get('metadata',self.metadata)
+
+        self.content = str(self.parsed_content)
+        return self.parsed_content
+
+    def set_name(self,name):
+        self.name = name
+        if self.content:
+            self.get_parsed_content()
+            self.parsed_content.data['name'] = name
+            self.content = str(self.parsed_content)
+        self.save()
+
+    def __eq__(self,other):
+        return self.content==other.content
+
 @reversion.register
 class EditorItem(models.Model,NumbasObject,ControlledObject):
     """
@@ -409,6 +435,7 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
     public_access = models.CharField(default='view',editable=True,choices=PUBLIC_ACCESS_CHOICES,max_length=6)
     access_rights = models.ManyToManyField(User, through='Access', blank=True, editable=False,related_name='accessed_questions+')
     licence = models.ForeignKey(Licence,null=True)
+    project = models.ForeignKey(Project,null=True)
 
     content = models.TextField(blank=True,validators=[validate_content])
     metadata = JSONField(blank=True)
@@ -438,6 +465,11 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
 
     def __unicode__(self):
         return self.name
+
+    def has_access(self,levels):
+        if user.is_anonymous():
+            return False
+        return Access.objects.filter(item=self,user=user,access__in=levels).exists()
 
     def set_licence(self,licence):
         NumbasObject.get_parsed_content(self)

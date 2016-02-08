@@ -17,21 +17,36 @@ from django.views.generic import RedirectView, TemplateView
 
 from django.contrib.auth.decorators import login_required
 
-from editor.views import editoritem, exam, question, HomeView, theme, extension, version, generic, notification
+from editor.views import project, editoritem, exam, question, HomeView, theme, extension, version, generic, notification
 from editor.views.user import UserSearchView
 from editor.views.resource import upload_resource, ImageDeleteView, media_view
 from editor.views.basket import BasketView,add_question_to_basket,create_exam_from_basket,remove_question_from_basket,empty_question_basket
 
 
 urlpatterns = patterns('',
+
+    # Home
+
     url(r'^$', HomeView.as_view(), name='editor_index'),
 
+    # Search
+
     url(r'^search/$', editoritem.SearchView.as_view(), name='search'),
+
+    url(r'^users/search/$',UserSearchView.as_view(),name='user_search'),
+
+    # Projects
+
+    url(r'^project/(?P<pk>\d+)/$', project.IndexView.as_view(), name='project_index'),
+
+    # Editor items
 
     url(r'^item/(?P<pk>\d+)/preview/$', editoritem.PreviewView.as_view(), name='item_preview'),
 
     url(r'^item/(?P<pk>\d+)/set-access$',
         editoritem.SetAccessView.as_view(),name='set_access'),
+
+    # Exams
 
     url(r'^exam/new/$', login_required(exam.CreateView.as_view()), name='exam_new'),
     
@@ -73,6 +88,8 @@ urlpatterns = patterns('',
         exam.question_lists,
         name='question_lists'),
 
+    # Questions
+
     url(r'^question/new/$', login_required(question.CreateView.as_view()), name='question_new'),
 
     url(r'^questions/recent/$', question.RecentQuestionsView.as_view(), name='recent_questions',),
@@ -103,9 +120,6 @@ urlpatterns = patterns('',
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/stamp$',
         login_required(question.StampView.as_view()),name='stamp_question'),
 
-    url(r'^resources/(?P<pk>\d+)/delete$',
-        login_required(ImageDeleteView.as_view()), name='delete_resource'),
-
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/resources/(?P<resource>.*)$',
         media_view, name='view_resource'),
                        
@@ -129,33 +143,52 @@ urlpatterns = patterns('',
     url(r'^questions/merge/(?P<source>\d+)/into/(?P<destination>\d+)$',
         question.CreatePullRequestView.as_view(), name='question_pullrequest'),
 
+    # Resources
+
+    url(r'^resources/(?P<pk>\d+)/delete$',
+        login_required(ImageDeleteView.as_view()), name='delete_resource'),
+
+    # Pull requests
+
     url(r'^pullrequest/(?P<pk>\d+)/accept$',
         question.AcceptPullRequestView.as_view(), name='question_pullrequest_accept'),
 
     url(r'^pullrequest/(?P<pk>\d+)/reject$',
         question.RejectPullRequestView.as_view(), name='question_pullrequest_reject'),
 
+    # Comments
+
     url(r'^comment/(?P<pk>\d+)/delete$',
         generic.DeleteCommentView.as_view(), name='delete_comment'),
+
+    # Stamps
 
     url(r'^stamp/(?P<pk>\d+)/delete$',
         generic.DeleteStampView.as_view(), name='delete_stamp'),
 
-    url(r'^users/search/$',UserSearchView.as_view(),name='user_search'),
+    # Versions
+
+    url(r'version/(?P<pk>\d+)/update', login_required(version.UpdateView.as_view()), name='edit_version'),
+
+    # Themes
 
     url(r'^theme/new/$', login_required(theme.CreateView.as_view()), name='theme_new'),
     url(r'^themes/$', login_required(theme.ListView.as_view()), name='theme_list'),
     url(r'^themes/(?P<pk>\d+)/edit$', login_required(theme.UpdateView.as_view()), name='theme_edit'),
     url(r'^themes/(?P<pk>\d+)/delete$', login_required(theme.DeleteView.as_view()), name='theme_delete'),
 
+    # Extensions
+
     url(r'^extension/new/$', login_required(extension.CreateView.as_view()), name='extension_new'),
     url(r'^extensions/$', login_required(extension.ListView.as_view()), name='extension_list'),
     url(r'^extensions/(?P<pk>\d+)/edit$', login_required(extension.UpdateView.as_view()), name='extension_edit'),
     url(r'^extensions/(?P<pk>\d+)/delete$', login_required(extension.DeleteView.as_view()), name='extension_delete'),
 
-    url(r'version/(?P<pk>\d+)/update', login_required(version.UpdateView.as_view()), name='edit_version'),
+    # Notifications
 
     url(r'notification/(?P<pk>\d+)/open', notification.OpenNotification.as_view(permanent=False), name='open_notification'),
+
+    # Question basket
 
     url(r'question_basket/$',
         BasketView.as_view(),
@@ -172,4 +205,5 @@ urlpatterns = patterns('',
     url(r'question_basket/empty/$',
         login_required(empty_question_basket),
         name='empty_question_basket'),
+
 )

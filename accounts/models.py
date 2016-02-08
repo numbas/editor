@@ -12,7 +12,7 @@ from sanitizer.models import SanitizedTextField
 
 from operator import itemgetter
 
-from editor.models import NewQuestion, NewExam, Question, Exam, EditorTag
+from editor.models import NewQuestion, NewExam, Question, Exam, EditorTag, Project
 
 class RegistrationManager(regmodels.RegistrationManager):
     @transaction.atomic
@@ -53,6 +53,7 @@ class UserProfile(models.Model):
     favourite_questions = models.ManyToManyField(NewQuestion,blank=True,related_name='fans')
     favourite_exams = models.ManyToManyField(NewExam,blank=True,related_name='fans')
     question_basket = models.ManyToManyField(NewQuestion,blank=True,related_name='baskets',through='BasketQuestion')
+    personal_project = models.ForeignKey(Project,null=True,on_delete=models.SET_NULL)
 
     def sorted_tags(self):
         qs = self.user.own_questions
@@ -81,6 +82,8 @@ def createUserProfile(sender, instance, created, **kwargs):
     """Create a UserProfile object each time a User is created ; and link it.
     """
     if created:
-        UserProfile.objects.create(user=instance)
+        profile = UserProfile.objects.create(user=instance)
+        profile.personal_project = Project.objects.create(name="{}'s workspace".format(sender.first_name),owner=sender)
+        profile.save()
 
 post_save.connect(createUserProfile, sender=User)

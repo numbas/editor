@@ -12,7 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 from django import forms
-from django.forms.models import inlineformset_factory
+from django.forms.models import inlineformset_factory,modelformset_factory
 from django.forms.widgets import SelectMultiple
 from django.core.exceptions import ValidationError
 from django.utils.html import conditional_escape, format_html, html_safe
@@ -29,6 +29,7 @@ import tempfile
 from editor.models import NewExam, NewQuestion, EditorItem, Access, Exam, Question, ExamQuestion, QuestionAccess, ExamAccess, QuestionHighlight, ExamHighlight, Theme, Extension, QuestionPullRequest
 import editor.models
 from django.contrib.auth.models import User
+from accounts.util import find_users
 
 class FixedSelectMultiple(SelectMultiple):
     def value_from_datadict(self,data,files,name):
@@ -397,7 +398,54 @@ class NewExtensionForm(UpdateExtensionForm):
         extension.public = False
         extension.author = self._user
         if commit:
-            print("SAVE",extension)
             extension.save()
             self.save_m2m()
         return extension
+
+class UserField(forms.Field):
+    def from_db_value(self,value,expression,connection,context):
+        return value.get_full_name()
+
+    def to_python(self, value):
+        if value is None:
+            return None
+        return find_users(value).first()
+
+class UserSearchMixin(object):
+    user_search = UserField()
+    user_attr = 'user'
+
+    def __init__(self,*args,**kwargs):
+        super(UserSearchMixin,self).__init__(*args,**kwargs)
+        self.fields['user_search'] = UserField()
+
+    def save(self, force_insert=False, force_update=False, commit=True):
+        m = super(UserSearchMixin, self).save(commit=False)
+        setattr(m,self.user_attr,self.cleaned_data['user_search'])
+        if commit:
+            m.save()
+        return m
+
+class AddMemberForm(UserSearchMixin,forms.ModelForm):
+    class Meta:
+        model = editor.models.ProjectAccess
+        fields = ('project','access')
+
+    def save(self, force_insert=False, force_update=False, commit=True):
+        m = super(AddMemberForm, self).save(commit=False)
+        if commit:
+            pa = editor.models.ProjectAccess.objects.filter(project=m.project,user=m.user).first()
+            if pa is not None:
+                print("Override {} {}".format(pa.access,m.access))
+                pa.access = m.access
+                m = pa
+            m.save()
+        return m
+
+class TransferOwnershipForm(UserSearchMixin,forms.ModelForm):
+    user_attr = 'owner'
+    class Meta:
+        model = editor.models.Project 
+        fields = []
+
+ProjectAccessFormset = inlineformset_factory(editor.models.Project,editor.models.ProjectAccess,fields=('access',),extra=0,can_delete=True)

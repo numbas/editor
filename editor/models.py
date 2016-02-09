@@ -93,11 +93,19 @@ class ControlledObject(object):
         else:
             return Q(access__user=user,access__access__in=view_perms) | Q(public_access__in=view_perms) | Q(author=user)
 
+LOCALE_CHOICES = [(y,x) for x,y in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']]
+
 class Project(models.Model,ControlledObject):
     name = models.CharField(max_length=200)
-    description = models.TextField(blank=True)
     owner = models.ForeignKey(User,related_name='own_projects')
     permissions = models.ManyToManyField(User,through='ProjectAccess')
+
+    description = models.TextField(blank=True)
+    default_locale = models.CharField(choices=LOCALE_CHOICES,max_length=10,editable=True,default='en-GB')
+    default_licence = models.ForeignKey('Licence',null=True)
+
+    def get_absolute_url(self):
+        return reverse('project_index',args=(self.pk,))
 
     def has_access(self,levels):
         if user.is_anonymous():

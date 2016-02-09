@@ -1,15 +1,25 @@
-{% extends "layout.html" %}
+{% extends "project/project_base.html" %}
 {% load user_link %}
 
-{% block content %}
-<h1>{{project.name}}</h1>
+{% block project_content %}
 
-<div class="description">{{project.description}}</div>
-
-<h2>Members</h2>
-<ul class="members">
-    {% for user in project.members %}
-    <li class="member">{% user_link user %} {% if user == project.owner %}<span class="owner">(owner)</span>{% endif %}</li>
-    {% endfor %}
-</ul>
-{% endblock content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-8">
+            <div class="well well-lg description">{{project.description}}</div>
+        </div>
+        <div class="col-sm-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h2 class="panel-title">Members</h2>
+                </div>
+                <ul class="members list-group">
+                    {% for user in project.members %}
+                    <li class="list-group-item member">{% user_link user %} {% if user == project.owner %}<span class="owner">(owner)</span>{% endif %}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock project_content %}

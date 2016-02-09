@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Create a new project</h1>
+</div>
+
+<form method="post" class="form-horizontal">
+    <div class="form-group">
+        <label class="col-sm-2 control-label" for="{{form.name.auto_id}}">Name</label>
+        <div class="col-sm-10">
+            <ul class="error-list list-unstyled">
+                {% for error in form.name.errors %}
+                    <li class="alert alert-danger">{{error}}</li>
+                {% endfor %}
+            </ul>
+            <input type="text" id="{{form.name.auto_id}}" name="name" class="form-control">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label" for="{{form.description.auto_id}}">Description</label>
+        <div class="col-sm-10">
+            <ul class="error-list list-unstyled">
+                {% for error in form.description.errors %}
+                    <li class="alert alert-danger">{{error}}</li>
+                {% endfor %}
+            </ul>
+            <textarea id="{{form.description.auto_id}}" name="description" class="form-control"></textarea>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label" for="{{form.default_locale.auto_id}}">Default language</label>
+        <div class="col-sm-10">
+            <ul class="error-list list-unstyled">
+                {% for error in form.default_locale.errors %}
+                    <li class="alert alert-danger">{{error}}</li>
+                {% endfor %}
+            </ul>
+            <select id="{{form.default_locale.auto_id}}" name="default_locale" class="form-control">
+                {% for value,name in form.default_locale.field.choices %}
+                <option value="{{value}}">{{name}}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label" for="{{form.default_licence.auto_id}}">Default language</label>
+        <div class="col-sm-10">
+            <ul class="error-list list-unstyled">
+                {% for error in form.default_licence.errors %}
+                    <li class="alert alert-danger">{{error}}</li>
+                {% endfor %}
+            </ul>
+            <select id="{{form.default_licence.auto_id}}" name="default_licence" class="form-control">
+                {% for value,name in form.default_licence.field.choices %}
+                <option value="{{value}}">{{name}}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="col-sm-offset-2 col-sm-10">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">Create</button>
+    </div>
+</form>
+{% endblock content %}

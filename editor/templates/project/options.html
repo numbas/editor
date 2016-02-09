@@ -1,0 +1,71 @@
+{% extends "project/settings_base.html" %}
+
+{% block settings_content %}
+<form method="post">
+    <div class="form-group">
+        <label for="{{form.name.auto_id}}">Name</label>
+        <ul class="error-list list-unstyled">
+            {% for error in form.name.errors %}
+                <li class="alert alert-danger">{{error}}</li>
+            {% endfor %}
+        </ul>
+        <input type="text" id="{{form.name.auto_id}}" name="name" class="form-control" value="{{form.name.value}}">
+    </div>
+
+    <div class="form-group">
+        <label for="{{form.description.auto_id}}">Description</label>
+        <ul class="error-list list-unstyled">
+            {% for error in form.description.errors %}
+                <li class="alert alert-danger">{{error}}</li>
+            {% endfor %}
+        </ul>
+        <textarea id="{{form.description.auto_id}}" name="description" class="form-control">{{form.description.value}}</textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="{{form.default_locale.auto_id}}">Default language</label>
+        <ul class="error-list list-unstyled">
+            {% for error in form.default_locale.errors %}
+                <li class="alert alert-danger">{{error}}</li>
+            {% endfor %}
+        </ul>
+        <select id="{{form.default_locale.auto_id}}" name="default_locale" class="form-control">
+            {% for value,name in form.default_locale.field.choices %}
+            <option value="{{value}}" {% if form.default_locale.value == value %}selected{% endif %}>{{name}}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="{{form.default_licence.auto_id}}">Default language</label>
+        <ul class="error-list list-unstyled">
+            {% for error in form.default_licence.errors %}
+                <li class="alert alert-danger">{{error}}</li>
+            {% endfor %}
+        </ul>
+        <select id="{{form.default_licence.auto_id}}" name="default_licence" class="form-control">
+            {% for value,name in form.default_licence.field.choices %}
+            <option value="{{value}}" {% if form.default_licence.value == value %}selected{% endif %}>{{name}}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary">Save changes</button>
+</form>
+
+<div class="panel panel-danger">
+    <div class="panel-heading">
+        <h3 class="panel-title">Admin actions</h3>
+    </div>
+    <ul class="list-group">
+        {% if project != project.owner.userprofile.personal_project %}
+        <li class="list-group-item">
+            <a class="btn btn-danger pull-right" href="{% url 'project_delete' project.pk %}">Delete this project</a>
+            <p>Deleting this project will 
+        </li>
+        {% endif %}
+    </ul>
+</div>
+{% endblock settings_content %}
+

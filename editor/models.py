@@ -102,7 +102,7 @@ class Project(models.Model,ControlledObject):
 
     description = models.TextField(blank=True)
     default_locale = models.CharField(choices=LOCALE_CHOICES,max_length=10,editable=True,default='en-GB')
-    default_licence = models.ForeignKey('Licence',null=True)
+    default_licence = models.ForeignKey('Licence',null=True,blank=True)
 
     def get_absolute_url(self):
         return reverse('project_index',args=(self.pk,))
@@ -439,11 +439,12 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
     name = models.CharField(max_length=200,default='Untitled')
     slug = models.SlugField(max_length=200,editable=False,unique=False)
 
+
     author = models.ForeignKey(User,related_name='own_items')
     public_access = models.CharField(default='view',editable=True,choices=PUBLIC_ACCESS_CHOICES,max_length=6)
     access_rights = models.ManyToManyField(User, through='Access', blank=True, editable=False,related_name='accessed_questions+')
     licence = models.ForeignKey(Licence,null=True)
-    project = models.ForeignKey(Project,null=True)
+    project = models.ForeignKey(Project,null=True,related_name='items')
 
     content = models.TextField(blank=True,validators=[validate_content])
     metadata = JSONField(blank=True)

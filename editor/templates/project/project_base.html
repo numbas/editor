@@ -1,5 +1,7 @@
 {% extends "layout.html" %}
 
+{% block search_url %}{% url 'project_search' project.pk %}{% endblock search_url %}
+
 {% block content %}
 <div class="page-header">
     <span class="pull-right">
@@ -7,7 +9,7 @@
     </span>
     <h1><a href="{% url 'project_index' project.pk %}">{{project.name}}</a></h1>
 </div>
-<div class="container">
+<div class="{% block project_container %}container{% endblock project_container %}">
     {% block project_content %}{% endblock project_content %}
 </div>
 {% endblock content %}

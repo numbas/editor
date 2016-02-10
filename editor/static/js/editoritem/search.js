@@ -56,21 +56,27 @@ $(document).ready(function() {
 
     $('#id_ability_framework').on('change',show_ability_levels);
 
-    var form_change_timeout;
+    var form_change_timeouts = {};
 
     function submit() {
         $('#search-form').submit();
     }
 
-    function form_changed() {
-        if(form_change_timeout) {
-            clearTimeout(form_change_timeout);
+    function form_changed(form_id) {
+        return function() {
+            if(form_change_timeouts[form_id]) {
+                clearTimeout(form_change_timeouts[form_id]);
+            }
+            form_change_timeouts[form_id] = setTimeout(function() {
+                document.getElementById(form_id).submit();
+            },500);
         }
-        form_change_timeout = setTimeout(submit,500);
     }
 
-    $('#id_item_types, #id_subjects input, #id_topics input, #id_usage input, #id_status').on('change',form_changed);
+    $('#id_item_types, #id_subjects input, #id_topics input, #id_usage input, #id_status').on('change',form_changed('search-panel-form'));
     $('#ability_levels').on('change','input',form_changed);
+
+    $('#id_order_by').on('change',form_changed('order_by-form'));
 
     if($('.pagination .previous[href]').length) {
         Mousetrap.bind(['left','k'],function() {

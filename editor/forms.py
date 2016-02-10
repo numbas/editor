@@ -125,6 +125,12 @@ class BootstrapRadioFieldRenderer(forms.widgets.RadioFieldRenderer):
 class BootstrapRadioSelect(forms.RadioSelect):
     renderer = BootstrapRadioFieldRenderer
 
+class BootstrapSelect(forms.Select):
+    def build_attrs(self,extra_attrs=None,**kwargs):
+        attrs = super(BootstrapSelect,self).build_attrs(extra_attrs,**kwargs)
+        attrs['class'] = 'form-control input-sm'
+        return attrs
+
 class EditorItemSearchForm(forms.Form):
     query = forms.CharField(initial='', required=False)
     item_types = forms.MultipleChoiceField(initial=('questions','exams'),choices=(('questions','Questions'),('exams','Exams')), widget=ShowMoreCheckboxSelectMultiple, required=False)
@@ -134,6 +140,7 @@ class EditorItemSearchForm(forms.Form):
     ability_framework = forms.ModelChoiceField(queryset=editor.models.AbilityFramework.objects.all(), required=False, widget=forms.Select(attrs={'class':'form-control input-sm'}),empty_label=None)
     ability_levels = forms.ModelMultipleChoiceField(queryset=editor.models.AbilityLevel.objects.all(), widget=forms.CheckboxSelectMultiple, required=False)
     status = forms.ChoiceField(choices=[('any','Any status')]+list(editor.models.STAMP_STATUS_CHOICES),required=False, widget=BootstrapRadioSelect)
+    order_by = forms.ChoiceField(choices=[('last_modified','Last modified'),('name','Name'),('licence','Usage rights'),('author','Author')],required=False, widget=BootstrapSelect)
 
     tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
     exclude_tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
@@ -431,12 +438,16 @@ class AddMemberForm(UserSearchMixin,forms.ModelForm):
         model = editor.models.ProjectAccess
         fields = ('project','access')
 
+    def clean(self):
+        cleaned_data = super(AddMemberForm,self).clean()
+        if cleaned_data['user_search'] == cleaned_data['project'].owner:
+            raise forms.ValidationError("Can't give separate access to the project owner")
+
     def save(self, force_insert=False, force_update=False, commit=True):
         m = super(AddMemberForm, self).save(commit=False)
         if commit:
             pa = editor.models.ProjectAccess.objects.filter(project=m.project,user=m.user).first()
             if pa is not None:
-                print("Override {} {}".format(pa.access,m.access))
                 pa.access = m.access
                 m = pa
             m.save()

@@ -63,7 +63,12 @@ class ListView(generic.ListView):
     def make_table(self):
         config = RequestConfig(self.request, paginate={'per_page': 10})
         results = self.table_class(self.object_list)
+        order_by = self.form.cleaned_data.get('order_by','last_modified')
+        if order_by in ('last_modified','licence'):
+            order_by = '-'+order_by
+        results.order_by = order_by
         config.configure(results)
+
 
         return results
 
@@ -81,6 +86,9 @@ class SearchView(ListView):
     """Search exams."""
     template_name = 'editoritem/search.html'
 
+    def base_queryset(self):
+        return EditorItem.objects.filter(EditorItem.filter_can_be_viewed_by(self.request.user))
+
     def get_queryset(self):
 
         data = deepcopy(self.request.GET)
@@ -89,7 +97,7 @@ class SearchView(ListView):
             form.data.setdefault(field,form.fields[field].initial)
         form.is_valid()
 
-        items = self.viewable_items = EditorItem.objects.filter(EditorItem.filter_can_be_viewed_by(self.request.user))
+        items = self.viewable_items = self.base_queryset()
 
         # filter based on query
         query = self.query = form.cleaned_data.get('query')

@@ -7,6 +7,7 @@ from django.core.exceptions import PermissionDenied
 
 from editor.models import Project, ProjectAccess
 import editor.forms
+import editor.views.editoritem
 
 class MustBeOwnerMixin(object):
     def dispatch(self,request,*args,**kwargs):
@@ -88,3 +89,18 @@ class TransferOwnershipView(ProjectContextMixin,MustBeOwnerMixin,generic.UpdateV
             ProjectAccess.objects.create(project=project,user=project.owner,access='edit')
         
         return super(TransferOwnershipView,self).form_valid(form)
+
+class SearchView(editor.views.editoritem.SearchView):
+    template_name = 'project/search.html'
+    def dispatch(self,request,pk,*args,**kwargs):
+        self.project = Project.objects.get(pk=pk)
+        return super(SearchView,self).dispatch(request,pk,*args,**kwargs)
+
+    def base_queryset(self):
+        return self.project.items.all()
+
+    def get_context_data(self,**kwargs):
+        context = super(SearchView,self).get_context_data(**kwargs)
+        context['in_project'] = True
+        context['project'] = self.project
+        return context

@@ -33,6 +33,22 @@ display: block;
     color: red !important;
 }
 
+@media screen and (min-width: 768px) {
+    #search-bar {
+        width: 20em;
+    }
+}
+@media screen and (min-width: 992px) {
+    #search-bar {
+        width: 38em;
+    }
+}
+@media screen and (min-width: 1200px) {
+    #search-bar {
+        width: 53em;
+    }
+}
+
 /*
 .clearAfter::after {
     clear: both;

@@ -2,6 +2,7 @@
 {% load analytical %}
 {% load notifications_tags %}
 {% load icon %}
+{% load django_tables2 %}
 {% notifications_unread as unread_notifications %}
 
 <!DOCTYPE html>
@@ -57,7 +58,7 @@
         <nav class="navbar navbar-default navbar-static-top">
             <div class="container-fluid">
                 <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse" aria-expanded="false">
                         <span class="sr-only">Toggle navigation</span>
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
@@ -66,13 +67,18 @@
 					<a class="navbar-brand" href="{% url 'editor_index' %}"><img id="numbas-logo" src="{% sstatic 'images/numbas_logo.png' %}"></a>
                 </div>
 
-                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <div class="collapse navbar-collapse" id="navbar-collapse">
 
-                    <form class="navbar-form navbar-left" role="search" method="get" action="{% url 'search' %}">
-                        <div class="form-group">
-                            <div class="input-group">
-                                <input name="query" type="text" class="form-control" id="top-search-bar" placeholder="Search by name or keyword{% if in_project %} in this project{% endif %}" value="{{search_query}}"/>
+					<form id="search-bar" class="navbar-form navbar-left" role="search" method="get" action="{% block search_url %}{% url 'search' %}{% endblock search_url %}">
+                        <div class="form-group col-xs-12">
+                            <div class="input-group col-xs-12">
+								<input name="query" type="text" class="form-control" id="top-search-bar" placeholder="Search by name or keyword{% if in_project %} in this project{% endif %}" value="{{search_query}}"/>
                                 <div class="input-group-btn">
+								{% if search_query %}
+									<a class="btn btn-default" href="{% querystring "query"="" %}">
+                                        <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                                    </a>
+								{% endif %}
                                     <button type="submit" class="btn btn-default" aria-label="Search">
                                         <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
                                     </button>
@@ -90,6 +96,8 @@
                                 <ul class="dropdown-menu">
                                     <li><a href="{% url 'question_new' %}">Question</a></li>
                                     <li><a href="{% url 'exam_new' %}">Exam</a></li>
+									<li role="separator" class="divider"></li>
+                                    <li><a href="{% url 'project_new' %}">Project</a></li>
                                 </ul>
                             </li>
                             <li id="notifications" class="counter-icon {% if unread_notifications %}unread{% endif %}">
@@ -113,7 +121,7 @@
                                 </li>
                             {% endwith %}
                             <li class="dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{user.get_full_name}}<span class="caret"></span></a>
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">You<span class="caret"></span></a>
                                 <ul class="dropdown-menu">
                                 <li><a tabindex="2" href="{% url 'view_profile' user.pk %}">Profile</a></li>
                                 <li role="separator" class="divider"></li>
@@ -144,7 +152,7 @@
             </div>
         </nav>
 
-        <div id="content" role="main" class="container-fluid">
+		<div id="content" role="main" class="{% block content_container %}container{% endblock content_container %}">
             {% if messages %}
             <ul class="messages alert">
                 {% for message in messages %}

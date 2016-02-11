@@ -436,7 +436,7 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
     """
         Base model for exams and questions - each exam or question has a reference to an instance of this
     """
-    name = models.CharField(max_length=200,default='Untitled')
+    name = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200,editable=False,unique=False)
 
 
@@ -483,7 +483,7 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
     def set_licence(self,licence):
         NumbasObject.get_parsed_content(self)
         metadata = self.parsed_content.data.setdefault(u'metadata',{})
-        metadata['licence'] = licence.name
+        metadata['licence'] = licence.name if licence is not None else None
         self.licence = licence
         self.content = str(self.parsed_content)
 
@@ -751,27 +751,27 @@ class EditorModel(models.Model):
     
     @property
     def stamps(self):
-        return StampOfApproval.objects.filter(object_content_type=ContentType.objects.get_for_model(self.__class__),object_id=self.pk).order_by('-date')
+        return NewStampOfApproval.objects.filter(object_content_type=ContentType.objects.get_for_model(self.__class__),object_id=self.pk).order_by('-date')
 
     @property
     def comments(self):
-        return Comment.objects.filter(object_content_type=ContentType.objects.get_for_model(self.__class__),object_id=self.pk).order_by('-date')
+        return NewComment.objects.filter(object_content_type=ContentType.objects.get_for_model(self.__class__),object_id=self.pk).order_by('-date')
 
     @property
     def watching_users(self):
         """ Users who should be notified when something happens to this object. """
         return [self.author] + list(self.access_rights.all())
 
-@receiver(signals.post_save,sender=StampOfApproval)
+@receiver(signals.post_save,sender=NewStampOfApproval)
 def set_current_stamp(instance,**kwargs):
     instance.object.current_stamp = instance
     instance.object.save()
 
-@receiver(signals.post_save,sender=StampOfApproval)
+@receiver(signals.post_save,sender=NewStampOfApproval)
 def notify_stamp(instance,**kwargs):
     notify_watching(instance.user,target=instance.object,verb='gave feedback on',action_object=instance)
 
-@receiver(signals.post_save,sender=Comment)
+@receiver(signals.post_save,sender=NewComment)
 def notify_comment(instance,**kwargs):
     notify_watching(instance.user,target=instance.object,verb='commented on',action_object=instance)
 
@@ -1134,7 +1134,7 @@ class Exam(EditorModel,NumbasObject,ControlledObject):
 
 @receiver(signals.post_delete)
 def remove_deleted_notifications(sender, instance=None,**kwargs):
-    if sender in [Question,Exam,StampOfApproval,Comment]:
+    if sender in [NewQuestion,NewExam,NewStampOfApproval,NewComment]:
         Notification.objects.filter(target_object_id=instance.pk).delete()
         Notification.objects.filter(action_object_object_id=instance.pk).delete()
 

@@ -44,7 +44,7 @@ import reversion
 from django_tables2.config import RequestConfig
 
 from editor.tables import EditorItemTable
-from editor.models import EditorItem
+from editor.models import EditorItem, Project
 import editor.models
 import editor.views.generic
 from editor.views.errors import forbidden
@@ -56,6 +56,23 @@ import editor.forms
 from numbasobject import NumbasObject
 from examparser import ParseError
 
+class CreateView(generic.CreateView):
+    model = EditorItem
+
+    def get_initial(self):
+        data = self.initial.copy()
+        data['author'] = self.request.user
+        if 'project' in self.request.GET:
+            data['project'] = Project.objects.get(pk=int(self.request.GET['project']))
+        else:
+            data['project'] = self.request.user.userprofile.personal_project
+        return data
+
+    def get_form(self):
+        form = super(CreateView,self).get_form()
+        form.fields['project'].queryset = self.request.user.userprofile.projects()
+        return form
+
 class ListView(generic.ListView):
     model = EditorItem
     table_class = EditorItemTable
@@ -63,12 +80,13 @@ class ListView(generic.ListView):
     def make_table(self):
         config = RequestConfig(self.request, paginate={'per_page': 10})
         results = self.table_class(self.object_list)
-        order_by = self.form.cleaned_data.get('order_by','last_modified')
+
+        order_by = self.form.cleaned_data.get('order_by')
         if order_by in ('last_modified','licence'):
             order_by = '-'+order_by
         results.order_by = order_by
-        config.configure(results)
 
+        config.configure(results)
 
         return results
 
@@ -93,7 +111,7 @@ class SearchView(ListView):
 
         data = deepcopy(self.request.GET)
         form = self.form = editor.forms.EditorItemSearchForm(data)
-        for field in ('usage','item_types'):
+        for field in ('usage','item_types','order_by'):
             form.data.setdefault(field,form.fields[field].initial)
         form.is_valid()
 

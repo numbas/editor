@@ -1,19 +1,33 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<h2>New exam</h2>
+<div class="page-header">
+    <h2>Create a new exam</h2>
+</div>
 
-{% if error %}<p><strong>{{ error }}</strong></p>{% endif %}
+<form action="" method="post" class="form-horizontal">
+    {% csrf_token %}
+    {% for field in form.hidden_fields %}{{field}}{% endfor %}
 
-<form action="{% url 'exam_new' %}" method="post">
-{% csrf_token %}
-{{ form.as_p }}
-{% for formset in inlines %}
-	{{ formset.as_p }}
-{% endfor %}
-<input type="submit" value="Submit" />
+    {% for field in form.visible_fields %}
+    <div class="form-group {% if field.errors %}has-error{% endif %}">
+        <label class="col-sm-2 control-label">{{field.label}}</label>
+        <div class="col-sm-10">
+            {{field.as_widget}}
+            {% if field.errors %}
+            <ul class="errorlist list-unstyled">
+                {% for error in field.errors %}
+                <li>{{error}}</li>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="col-sm-offset-2 col-sm-10">
+        <button type="submit" class="btn btn-primary">Create</button></p>
+    </div>
 </form>
-{#{{ formset.management_form }}#}
-{{ formset.errors }}
-{#{{ formset.non_form_errors }}#}
+
 {% endblock content %}
+

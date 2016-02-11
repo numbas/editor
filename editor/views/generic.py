@@ -24,7 +24,7 @@ from django.views import generic
 from django.template.loader import get_template
 from django.template import RequestContext
 
-from editor.models import Extension,StampOfApproval,Comment
+from editor.models import Extension,NewStampOfApproval,Comment
 
 # from http://stackoverflow.com/questions/18172102/object-ownership-validation-in-django-updateview
 class AuthorRequiredMixin(object):
@@ -41,8 +41,7 @@ class StampView(generic.UpdateView):
 
         status = request.POST.get('status')
 
-        stamp = StampOfApproval(user=request.user,object=object,status=status)
-        stamp.save()
+        stamp = NewStampOfApproval.objects.create(user=request.user,object=object.editoritem,status=status)
 
         return http.HttpResponse(json.dumps(stamp_json(stamp)),content_type='application/json')
 
@@ -109,7 +108,7 @@ class DeleteCommentView(generic.DeleteView):
             return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
 
 class DeleteStampView(generic.DeleteView):
-    model = StampOfApproval
+    model = NewStampOfApproval
     def delete(self,request,*args,**kwargs):
         self.object = self.get_object()
         if self.object.can_be_deleted_by(self.request.user):

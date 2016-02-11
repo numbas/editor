@@ -31,35 +31,98 @@ $(document).ready(function() {
     {
 		var q = this;
 
+        this.starred = ko.observable(Editor.starred);
+        this.current_stamp = ko.observable(Editor.current_stamp);
+        this.licence = ko.observable();
+		this.resources = ko.observableArray([]);
+        this.name = ko.observable('Untitled Question');
+		this.realtags = ko.observableArray([]);
+		this.notes = ko.observable('');
+		this.description = ko.observable('');
+		this.extensions = ko.observableArray([]);
+        this.statement = Editor.contentObservable('');
+        this.advice = Editor.contentObservable('');
+        var rulesets = this.rulesets = ko.observableArray([]);
+        this.functions = ko.observableArray([]);
+        this.variables = ko.observableArray([]);
+		this.questionScope = ko.observable();
+		this.variableGroups = ko.observableArray([]);
+		this.editVariableGroup = ko.observable(null);
+		this.autoCalculateVariables = ko.observable(true);
+		this.currentVariable = ko.observable(null);
+		this.variablesTest = {
+			condition: ko.observable(''),
+			conditionError: ko.observable(false),
+			maxRuns: ko.observable(100),
+			totalRuns: ko.observable(0),
+			totalErrors: ko.observable(0),
+			totalCorrect: ko.observable(0),
+			advice: ko.observable(''),
+			running_time: ko.observable(3),
+			running: ko.observable(false),
+			time_remaining: ko.observable(0)
+		};
+        this.parts = ko.observableArray([]);
+		this.currentPart = ko.observable(undefined);
+
+		//for image attribute modal
+		this.imageModal = {
+			width: ko.observable(0),
+			height: ko.observable(0),
+			title: ko.observable(''),
+			alt: ko.observable('')
+		}
+		//for iframe attribute modal
+		this.iframeModal = {
+			width: ko.observable(0),
+			height: ko.observable(0)
+		}
+
+
 		this.mainTabs = ko.observableArray([
-			new Editor.Tab('general','General'),
-			new Editor.Tab('statement','Statement'),
-			new Editor.Tab('variables','Variables'),
-			new Editor.Tab('functions','Functions & Rulesets'),
+			new Editor.Tab('settings','Settings','cog'),
+			new Editor.Tab('statement','Statement','blackboard'),
+			new Editor.Tab('variables','Variables','th-list'),
 			new Editor.Tab(
 				'parts',
 				ko.computed(function() {
 					return 'Parts ('+q.parts().length+')';
-				})
+				}),
+                'list'
 			),
-			new Editor.Tab('advice','Advice'),
+			new Editor.Tab('advice','Advice','blackboard'),
+			new Editor.Tab('extensions','Extensions & scripts','wrench'),
 			new Editor.Tab(
                 'resources',
                 ko.computed(function() {
                     return 'Resources ('+q.resources().length+')';
-                })
+                }),
+                'picture'
             ),
-			new Editor.Tab('exams','Exams using this question'),
+			new Editor.Tab('exams','Exams using this question','book'),
 		]);
-		var networkTab = new Editor.Tab('network','Other versions');
+		var networkTab = new Editor.Tab('network','Other versions','link');
         this.mainTabs.push(networkTab);
-        var editingHistoryTab = new Editor.Tab('versions','Editing history');
-        this.mainTabs.splice(1,0,editingHistoryTab);
+        var editingHistoryTab = new Editor.Tab('versions','Editing history','time');
+        this.mainTabs.push(editingHistoryTab);
         if(Editor.editable) {
-            this.mainTabs.push(new Editor.Tab('access','Access'));
+            var adviceTab = new Editor.Tab('access','Access','lock');
+            this.mainTabs.splice(5,0,adviceTab);
         }
 
 		this.currentTab = ko.observable(this.mainTabs()[0]);
+
+        this.setTab = function(id) {
+            return function() {
+                var completed_obs = this.section_completed[this.currentTab().id];
+                if(completed_obs !==undefined && !ko.unwrap(completed_obs)) {
+                    return;
+                }
+                var tab = q.mainTabs().find(function(t){return t.id==id});
+
+                q.currentTab(tab);
+            }
+        }
 
 		if(Editor.editable) {
             switch(window.location.hash.slice(1)) {
@@ -71,7 +134,6 @@ $(document).ready(function() {
             } 
 		}
 
-        this.starred = ko.observable(Editor.starred);
         this.toggleStar = function() {
             q.starred(!q.starred());
         }
@@ -89,7 +151,6 @@ $(document).ready(function() {
 		this.exams = data.exams;
 
         Editor.licences.sort(function(a,b){a=a.short_name;b=b.short_name; return a<b ? -1 : a>b ? 1 : 0 });
-        this.licence = ko.observable();
         this.licence_name = ko.computed(function() {
             if(this.licence()) {
                 return this.licence().name;
@@ -98,7 +159,6 @@ $(document).ready(function() {
             }
         },this);
 
-		this.resources = ko.observableArray([]);
 		this.saveResources = ko.computed(function() {
 			var resources = this.resources();
 			var out = [];
@@ -113,15 +173,11 @@ $(document).ready(function() {
 			return out;
 		},this);
 
-		var isadvanced = this.isadvanced = ko.observable(true);
-
-        this.name = ko.observable('Untitled Question');
 		this.realName = ko.computed(function() {
 			var name = this.name()
 			return name.length>0 ? name : 'Untitled Question';
 		},this);
 
-		var realtags = this.realtags = ko.observableArray([]);
         this.tags = ko.computed({
             read: function() {
 				return this.realtags().sort(function(a,b) {
@@ -145,21 +201,20 @@ $(document).ready(function() {
             thing = thing.trim();
 			if(thing.length==0)
 				return;
-            if(realtags().indexOf(thing)==-1)
-                realtags.push(thing);
+            if(q.realtags().indexOf(thing)==-1) {
+                q.realtags.push(thing);
+            }
         }
         this.tags.pop = function(thing) {
-            return realtags.pop();
+            return q.realtags.pop();
         }
         this.tags.splice = function(i,n) {
-            return realtags.splice(i,n);
+            return q.realtags.splice(i,n);
         }
 		this.tags.remove = function(q) {
-			return realtags.remove(q);
+			return q.realtags.remove(q);
 		}
 
-		this.notes = ko.observable('');
-		this.description = ko.observable('');
 		this.metadata = ko.computed(function() {
 			return {
 				notes: this.notes(),
@@ -168,7 +223,6 @@ $(document).ready(function() {
 			};
 		},this);
 
-		this.extensions = ko.observableArray([]);
 		for(var i=0;i<Editor.numbasExtensions.length;i++) {
 			var ext = Editor.numbasExtensions[i];
 			ext.used = ko.observable(false);
@@ -178,33 +232,21 @@ $(document).ready(function() {
 			return this.extensions().filter(function(e){return e.used()});
 		},this);
 
-        this.statement = Editor.contentObservable('');
-        this.advice = Editor.contentObservable('');
-
-        var rulesets = this.rulesets = ko.observableArray([]);
         this.allsets = ko.computed(function() {
-            return builtinRulesets.concat(rulesets().map(function(r){return r.name()})).sort();
-        });
-
-        this.functions = ko.observableArray([]);
+            return builtinRulesets.concat(this.rulesets().map(function(r){return r.name()})).sort();
+        },this);
 
 		this.preamble = {
 			css: ko.observable(''),
 			js: ko.observable('')
 		};
 
-        this.variables = ko.observableArray([]);
-		this.questionScope = ko.observable();
-		this.variableGroups = ko.observableArray([]);
 		this.baseVariableGroup = new VariableGroup(this,{name:'Ungrouped variables'});
 		this.baseVariableGroup.fixed = true;
 		this.allVariableGroups = ko.computed(function() {
 			var l = this.variableGroups();
 			return l.concat(this.baseVariableGroup);
 		},this);
-		this.editVariableGroup = ko.observable(null);
-		this.autoCalculateVariables = ko.observable(true);
-		this.currentVariable = ko.observable(null);
 
 		// this changes whenever there's a change to a variable name or definition, or a variables is added or removed (or similar to the functions)
 		this.lastVariableChange = ko.computed(function() {
@@ -222,18 +264,6 @@ $(document).ready(function() {
 			return new Date();
 		},this);
 
-		this.variablesTest = {
-			condition: ko.observable(''),
-			conditionError: ko.observable(false),
-			maxRuns: ko.observable(100),
-			totalRuns: ko.observable(0),
-			totalErrors: ko.observable(0),
-			totalCorrect: ko.observable(0),
-			advice: ko.observable(''),
-			running_time: ko.observable(3),
-			running: ko.observable(false),
-			time_remaining: ko.observable(0)
-		};
 		this.variablesTest.time_remaining_display = ko.computed(function() {
 			return this.time_remaining()+' '+Numbas.util.pluralise(this.time_remaining(),'second','seconds');
 		},this.variablesTest);
@@ -268,8 +298,6 @@ $(document).ready(function() {
 		]);
 		this.currentVariableTab = ko.observable(this.variableTabs()[0]);
 
-        this.parts = ko.observableArray([]);
-		this.currentPart = ko.observable(undefined);
 		this.showPart = function(part) {
 			q.currentPart(part);
 		};
@@ -288,18 +316,6 @@ $(document).ready(function() {
 			return '// Numbas version: '+Editor.numbasVersion+'\n'+data;
         },this);
 
-		//for image attribute modal
-		this.imageModal = {
-			width: ko.observable(0),
-			height: ko.observable(0),
-			title: ko.observable(''),
-			alt: ko.observable('')
-		}
-		//for iframe attribute modal
-		this.iframeModal = {
-			width: ko.observable(0),
-			height: ko.observable(0)
-		}
 
         ko.computed(function() {
             document.title = this.name() ? this.name()+' - Numbas Editor' : 'Numbas Editor';
@@ -429,6 +445,12 @@ $(document).ready(function() {
                 }
                 q.access_rights.push(new UserAccess(q,data));
             };
+
+            this.section_completed = {
+                'settings': ko.computed(function() {
+                    return this.name()!='' && this.description()!='' && this.licence()!==undefined;
+                },this),
+            };
         }
 
 		if(window.history !== undefined) {
@@ -454,7 +476,14 @@ $(document).ready(function() {
 					}
 				}
 			}
-			Editor.computedReplaceState('currentVariable',ko.computed(function(){return this.currentVariable().name().toLowerCase()},this));
+			Editor.computedReplaceState('currentVariable',ko.computed(function(){
+                var v = this.currentVariable();
+                if(v) {
+                    return v.name().toLowerCase();
+                } else {
+                    return undefined;
+                }
+            },this));
 			if('currentVariableTab' in state) {
 				var tabs = this.variableTabs();
 				for(var i=0;i<tabs.length;i++) {
@@ -484,6 +513,9 @@ $(document).ready(function() {
 			}
 			Editor.computedReplaceState('currentPart',ko.computed(function(){
 				var p = this.currentPart();
+                if(!p) {
+                    return undefined;
+                }
 				if(p.isGap()) {
 					var parentPart = p.parent();
 					return [this.parts().indexOf(parentPart), 'gap', parentPart.gaps().indexOf(p)];
@@ -504,7 +536,14 @@ $(document).ready(function() {
 					}
 				}
 			}
-			Editor.computedReplaceState('currentPartTab',ko.computed(function(){return this.currentPart().currentTab().id},this));
+			Editor.computedReplaceState('currentPartTab',ko.computed(function(){
+                var p = this.currentPart();
+                if(p) {
+                    return p.currentTab().id;
+                } else {
+                    return undefined;
+                }
+            },this));
 		}
 
 		this.currentChange = ko.observable(new Editor.Change(this.versionJSON(),Editor.questionJSON.author));
@@ -569,7 +608,7 @@ $(document).ready(function() {
 			}
         },this);
 
-        this.stamp = function(status_code) {
+        this.addStamp = function(status_code) {
             return function() {
                 $.post('stamp',{'status': status_code, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(stamp) {
                     q.timeline.splice(0,0,new Editor.TimelineItem({date: stamp.date, user: stamp.user, data: stamp, type: 'stamp'}));
@@ -1240,10 +1279,6 @@ $(document).ready(function() {
 			window.location = Editor.download_url;
 		},
         
-        changeEditLevel: function() {
-            this.isadvanced(!this.isadvanced());
-        },
-        
         insertImage: function(image) {
             $('#imagePickModal').modal('hide');
 
@@ -1652,7 +1687,7 @@ $(document).ready(function() {
 		toJSON: function() {
 			var obj = {
 				name: this.name(),
-				group: this.group().name(),
+				group: this.group() ? this.group().name() : null,
 				definition: this.definition(),
 				description: this.description(),
 				templateType: this.templateType().id,
@@ -1821,12 +1856,11 @@ $(document).ready(function() {
 			else
 				return this.types;
 		},this);
+        this.type = ko.observable(this.availableTypes()[0]);
 
 		this.canBeReplacedWithGap = ko.computed(function() {
 			return !(this.isGap() || this.isStep() || nonGapTypes.indexOf(this.type().name)>=0);
 		},this);
-
-        this.type = ko.observable(this.availableTypes()[0]);
 
 		this.indexLabel = ko.computed(function() {
 			var i = this.parentList.indexOf(this);
@@ -1847,7 +1881,7 @@ $(document).ready(function() {
 		},this);
 
 		this.path = ko.computed(function() {
-			var i = this.parentList.indexOf(this);
+			var i = Math.max(this.parentList.indexOf(this),0);
 			if(this.isGap()) {
 				return this.parent().path()+'g'+i;
 			} else if(this.isStep()) {

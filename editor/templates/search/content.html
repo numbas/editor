@@ -135,9 +135,6 @@
                                     <a class="btn btn-link btn-sm basket"><span class="glyphicon glyphicon-shopping-cart" title="Add this to your basket" aria-hidden="true"></span></a>
                                 </li>
                                 {% endif %}
-                                <li>
-                                    <a class="btn btn-link btn-sm delete" href="{% url item.item_type|add:'_delete' item.rel_obj.pk item.slug %}"><span class="glyphicon glyphicon-remove" title="Delete this question" aria-hidden="true"></span></a>
-                                </li>
                             </ul>
                             <p class="status">
                                 {% if item.current_stamp %}

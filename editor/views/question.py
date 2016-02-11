@@ -40,7 +40,7 @@ import reversion
 from django_tables2.config import RequestConfig
 
 from editor.forms import NewQuestionForm, QuestionForm, QuestionSetAccessForm, QuestionSearchForm, QuestionHighlightForm
-from editor.models import EditorItem, NewQuestion, Access, Question, Extension, Image, QuestionAccess, QuestionHighlight, QuestionPullRequest, EditorTag, Licence, STAMP_STATUS_CHOICES
+from editor.models import Project, EditorItem, NewQuestion, Access, Question, Extension, Image, QuestionAccess, QuestionHighlight, QuestionPullRequest, EditorTag, Licence, STAMP_STATUS_CHOICES
 import editor.views.generic
 import editor.views.editoritem
 from editor.views.errors import forbidden
@@ -127,28 +127,26 @@ class SourceView(editor.views.editoritem.SourceView):
             return self.source(q.editoritem)
 
 
-class CreateView(generic.CreateView):
+class CreateView(editor.views.editoritem.CreateView):
     
     """Create a question."""
     
-    model = NewQuestion
     form_class = NewQuestionForm
     template_name = 'question/new.html'
 
-    def get(self, request, *args, **kwargs):
-        ei = EditorItem()
-        ei.author = request.user
-        ei.name = 'Untitled Question'
+    def form_valid(self, form):
+        ei = form.save()
+        ei.set_licence(ei.project.default_licence)
         ei.save()
-        self.object = NewQuestion()
-        self.object.editoritem = ei
-        self.object.save()
+        self.question = NewQuestion()
+        self.question.editoritem = ei
+        self.question.save()
 
         return redirect(self.get_success_url())
     
     def get_success_url(self):
-        return reverse('question_edit', args=(self.object.pk,
-                                              self.object.editoritem.slug,))
+        return reverse('question_edit', args=(self.question.pk,
+                                              self.question.editoritem.slug,))
  
  
 class CopyView(generic.View, SingleObjectMixin):
@@ -309,6 +307,7 @@ class UpdateView(generic.UpdateView):
             context['starred'] = self.request.user.userprofile.favourite_questions.filter(pk=self.object.pk).exists()
         else:
             context['starred'] = False
+
     
         context['access_rights'] = [{'id': a.user.pk, 'name': a.user.get_full_name(), 'access_level': a.access} for a in Access.objects.filter(item=self.object.editoritem)]
 
@@ -327,6 +326,7 @@ class UpdateView(generic.UpdateView):
             'previewURL': reverse('question_preview', args=(self.object.pk, self.object.editoritem.slug)),
             'previewWindow': str(calendar.timegm(time.gmtime())),
             'starred': context['starred'],
+            'current_stamp': editor.views.generic.stamp_json(self.object.editoritem.current_stamp) if self.object.editoritem.current_stamp else None,
 
             'versions': versions,
             'timeline': timeline_json(self.object.editoritem.timeline,self.user),
@@ -714,7 +714,7 @@ class SetStarView(generic.UpdateView):
         return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
 
 class StampView(editor.views.generic.StampView):
-    model = Question
+    model = NewQuestion
 
 class CommentView(editor.views.generic.CommentView):
     model = Question

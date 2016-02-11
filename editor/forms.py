@@ -140,7 +140,7 @@ class EditorItemSearchForm(forms.Form):
     ability_framework = forms.ModelChoiceField(queryset=editor.models.AbilityFramework.objects.all(), required=False, widget=forms.Select(attrs={'class':'form-control input-sm'}),empty_label=None)
     ability_levels = forms.ModelMultipleChoiceField(queryset=editor.models.AbilityLevel.objects.all(), widget=forms.CheckboxSelectMultiple, required=False)
     status = forms.ChoiceField(choices=[('any','Any status')]+list(editor.models.STAMP_STATUS_CHOICES),required=False, widget=BootstrapRadioSelect)
-    order_by = forms.ChoiceField(choices=[('last_modified','Last modified'),('name','Name'),('licence','Usage rights'),('author','Author')],required=False, widget=BootstrapSelect)
+    order_by = forms.ChoiceField(choices=[('last_modified','Last modified'),('name','Name'),('licence','Usage rights'),('author','Author')],required=False, widget=BootstrapSelect,initial='last_modified')
 
     tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
     exclude_tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
@@ -274,12 +274,14 @@ class QuestionHighlightForm(forms.ModelForm):
         fields = ('note',)
         
 class NewQuestionForm(forms.ModelForm):
-    
-    """Form for a new question only, not including some fields."""
-    
     class Meta:
-        model = NewQuestion
-        fields = []
+        model = EditorItem
+        fields = ('name','author','project')
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control','placeholder':'e.g. "Solve an equation in two variables"'}),
+            'author': forms.HiddenInput(),
+            'project': BootstrapSelect,
+        }
         
 class ExamForm(forms.ModelForm):
     
@@ -298,12 +300,14 @@ class ExamForm(forms.ModelForm):
         return exam
         
 class NewExamForm(forms.ModelForm):
-    
-    """Form for a new exam only, not including some fields."""
-    
     class Meta:
-        model = Exam
-        fields = ('name','author')
+        model = EditorItem
+        fields = ('name','author','project')
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control','placeholder':'e.g. "Week 4 homework"'}),
+            'author': forms.HiddenInput(),
+            'project': BootstrapSelect,
+        }
 
 class ExamQuestionForm(forms.ModelForm):
     

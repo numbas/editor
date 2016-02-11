@@ -7,7 +7,7 @@
     <span class="pull-right">
         <a href="{% url 'project_settings_options' project.pk %}" title="Project settings" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-cog"></span></a>
     </span>
-    <h1><a href="{% url 'project_index' project.pk %}">{{project.name}}</a></h1>
+    <h1><span class="glyphicon glyphicon-briefcase"></span> <a href="{% url 'project_index' project.pk %}">{{project.name}}</a></h1>
 </div>
 <div class="{% block project_container %}container{% endblock project_container %}">
     {% block project_content %}{% endblock project_content %}

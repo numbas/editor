@@ -115,29 +115,24 @@ class SourceView(editor.views.editoritem.SourceView):
             return self.source(e.editoritem)
     
     
-class CreateView(generic.CreateView):
-    
-    """Create an exam."""
-    
-    model = NewExam
+class CreateView(editor.views.editoritem.CreateView):
     form_class = NewExamForm
+    template_name = 'exam/new.html'
 
-    def get(self, request, *args, **kwargs):
-        ei = EditorItem()
-        ei.author = request.user
-        ei.name = 'Untitled Exam'
+    def form_valid(self, form):
+        ei = form.save()
+        ei.set_licence(ei.project.default_licence)
+        ei.locale = ei.project.default_locale
         ei.save()
-        self.object = NewExam()
-        self.object.editoritem = ei
-        self.object.locale = request.user.userprofile.language
-        self.object.save()
+        self.exam = NewExam()
+        self.exam.editoritem = ei
+        self.exam.save()
 
         return redirect(self.get_success_url())
 
     def get_success_url(self):
-        return reverse('exam_edit', args=(self.object.pk,
-                                          self.object.editoritem.slug,))
-    
+        return reverse('exam_edit', args=(self.exam.pk,
+                                          self.exam.editoritem.slug,))
     
 class UploadView(generic.CreateView):
     

@@ -46,13 +46,6 @@
     <body>
         {% analytical_body_top %}
 
-        <!-- get satisfaction -->
-        <div id="getsat-widget-4240"></div>
-        <script type="text/javascript" src="https://loader.engage.gsfn.us/loader.js"></script>
-        <script type="text/javascript">
-        if (typeof GSFN !== "undefined") { GSFN.loadWidget(4240,{"containerId":"getsat-widget-4240"}); }
-        </script>
-
         <!-- main body -->
         {% block body %}
         <nav class="navbar navbar-default navbar-static-top">
@@ -94,10 +87,10 @@
                                 <span class="glyphicon glyphicon-plus"></span> New <span class="caret"></span>
                                 </a>
                                 <ul class="dropdown-menu">
-                                    <li><a href="{% url 'question_new' %}">Question</a></li>
-                                    <li><a href="{% url 'exam_new' %}">Exam</a></li>
+                                    <li><a href="{% url 'question_new' %}{% if project %}?project={{project.pk}}{% endif %}"><span class="glyphicon glyphicon-file"><span> Question</a></li>
+                                    <li><a href="{% url 'exam_new' %}{% if project %}?project={{project.pk}}{% endif %}"><span class="glyphicon glyphicon-book"><span> Exam</a></li>
 									<li role="separator" class="divider"></li>
-                                    <li><a href="{% url 'project_new' %}">Project</a></li>
+                                    <li><a href="{% url 'project_new' %}"><span class="glyphicon glyphicon-briefcase"><span> Project</a></li>
                                 </ul>
                             </li>
                             <li id="notifications" class="counter-icon {% if unread_notifications %}unread{% endif %}">
@@ -121,7 +114,7 @@
                                 </li>
                             {% endwith %}
                             <li class="dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">You<span class="caret"></span></a>
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-user"></span><span class="caret"></span></a>
                                 <ul class="dropdown-menu">
                                 <li><a tabindex="2" href="{% url 'view_profile' user.pk %}">Profile</a></li>
                                 <li role="separator" class="divider"></li>

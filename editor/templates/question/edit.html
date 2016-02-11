@@ -7,8 +7,8 @@
 {% block javascripts %}
     {{ block.super }}
 
-	<!-- numbas -->
-	<script src="{% sstatic 'js/numbas/R/R.js' %}" type="text/javascript"></script>
+    <!-- numbas -->
+    <script src="{% sstatic 'js/numbas/R/R.js' %}" type="text/javascript"></script>
     <script src="{% sstatic 'js/numbas/R/en-gb.js' %}" type="text/javascript"></script>
     <script src="{% sstatic 'js/numbas/numbas.js' %}" type="text/javascript"></script>
     <script src="{% sstatic 'js/numbas/jme-display.js' %}" type="text/javascript"></script>
@@ -25,7 +25,7 @@
         {% endif %}
     {% endfor %}
 
-	<!-- question editor -->
+    <!-- question editor -->
     <script src="{% sstatic 'js/question/edit.js' %}" type="text/javascript"></script>
 
     <script type="text/javascript">
@@ -36,40 +36,100 @@
 {% endblock javascripts %}
 
 {% block stylesheets %}
-	{{ block.super }}
-	<link rel="stylesheet" type="text/css" href="{% sstatic 'css/question/edit.css' %}"/>
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% sstatic 'css/question/edit.css' %}"/>
 {% endblock stylesheets %}
-	
+
+{% block content_container %}container-fluid{% endblock %}
+
 {% block content %}
-	{{block.super }}
+<div class="page-header">
+    <h1 class="name-header">
+        <span class="glyphicon glyphicon-file"></span> <span data-bind="mathjaxHTML: name">{{object.name}}</span>
+    </h1>
+</div>
+<div class="row">
+    <div class="col-sm-3 col-md-2 tabs">
+        <ul id="controls" class="nav nav-pills nav-stacked">
+            <li data-bind="if: current_stamp">
+                <a class="label label-default stamp" data-bind="text: current_stamp().status_display"></a>
+            </li>
+            <li id="preview">
+                <a data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this question in a new window (Ctrl+B)">
+                    <span class="glyphicon glyphicon-play"></span>
+                    Test Run
+                </a>
+            </li>
+            {% if user.is_authenticated %}
+            <li id="stamp-dropdown" class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                    <span class="glyphicon glyphicon-comment"></span>
+                    Feedback
+                    <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                {% for name,description in stamp_choices %}
+                    <li><a tabindex="-1" href="#" data-bind="click: addStamp('{{name}}')">{{description}}</a></li>
+                {% endfor %}
+                </ul>
+            </li>
+            {% endif %}
+            <li id="download" class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                    <span class="glyphicon glyphicon-cloud-download"></span>
+                    Download
+                    <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="{% url 'question_download' object.pk object.editoritem.slug %}">SCORM package</a></li>
+                    <li><a href="{% url 'question_download' object.pk object.editoritem.slug %}">standalone .zip (no SCORM)</a></li>
+                    <li><a href="{% url 'question_source' object.pk object.editoritem.slug %}">source</a></li>
+                </ul>
+        </ul>
+        <hr>
+        <ul class="nav nav-pills nav-stacked" data-bind="foreach: mainTabs">
+            <li data-bind="visible: visible, css: {active: $root.currentTab() == $data}">
+                <a href="#" data-bind="click: $root.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon}"></span> <span data-bind="text: title"></span></a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="col-sm-9 col-md-10 editing">
+    {% block editor %}{% endblock %}
+    </div>
+</div>
+{% endblock content %}
+
+{% block oldcontent %}
+    {{block.super }}
 
     {% block property_templates %}{% endblock %}
 
-	<div id="question" class="{% if editable %}edit{% else %}nonedit{% endif %}">
-		<div class="row-fluid">
+    <div id="question" class="{% if editable %}edit{% else %}nonedit{% endif %}">
+        <div class="row-fluid">
             <h1 id="name-header" class="span9">
-				<span data-bind="text: name, mathjax: name">{{object.name}}</span> 
+                <span data-bind="text: name, mathjax: name">{{object.name}}</span> 
                 {% if request.user.is_authenticated %}
                 <span style="display:none" data-bind="visible: true">
                     <button type="button" data-bind="css:{starred: starred}, attr: {title: starred() ? 'This question is starred. Click to unstar it.' : 'Star this question'}, click: toggleStar" class="star icon-button" ></button>
-					<button type="button" data-bind="click: add_to_basket" class="add-to-basket icon-button" title="Add this question to your basket">{% icon "basket" size=24 %}</button>
-				</span>
+                    <button type="button" data-bind="click: add_to_basket" class="add-to-basket icon-button" title="Add this question to your basket">{% icon "basket" size=24 %}</button>
+                </span>
                 {% endif %}
             </h1>
             {% if editable %}
-			<div class="span3" id="edit-history" style="display:none" data-bind="visible: true, with: currentChange">
-				<button disabled title="Undo" type="button" data-bind="click: $root.rewindChange, enable: hasPrevious">&larr;</button>
-				<button disabled title="Redo" type="button" data-bind="click: $root.forwardChange, enable: hasNext">&rarr;</button>
+            <div class="span3" id="edit-history" style="display:none" data-bind="visible: true, with: currentChange">
+                <button disabled title="Undo" type="button" data-bind="click: $root.rewindChange, enable: hasPrevious">&larr;</button>
+                <button disabled title="Redo" type="button" data-bind="click: $root.forwardChange, enable: hasNext">&rarr;</button>
             </div>
             {% endif %}
-		</div>
-		<div id="controls">
-			<div class="row-fluid">
-			{% block controls %}
-			{% endblock controls %}
-			</div>
-			<ul class="controlbox" id="admin" style="display:none" data-bind="visible: true">
-				<li class="preview-li">
+        </div>
+        <div id="controls">
+            <div class="row-fluid">
+            {% block controls %}
+            {% endblock controls %}
+            </div>
+            <ul class="controlbox" id="admin" style="display:none" data-bind="visible: true">
+                <li class="preview-li">
                     <a id="preview" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this question in a new window (Ctrl+B)">Test Run</a>
                     {% if user.is_authenticated %}
                         <div class="btn-group stamp-of-approval-dropdown">
@@ -77,33 +137,33 @@
                             Feedback
                             <span class="caret"></span>
                           </button>
-						  <ul class="dropdown-menu">
-						  {% for name,description in stamp_choices %}
-							<li><a tabindex="-1" href="#" data-bind="click: stamp('{{name}}')">{{description}}</a></li>
-						  {% endfor %}
+                          <ul class="dropdown-menu">
+                          {% for name,description in stamp_choices %}
+                            <li><a tabindex="-1" href="#" data-bind="click: stamp('{{name}}')">{{description}}</a></li>
+                          {% endfor %}
                           </ul>
                         </div>
                     {% endif %}
-				</li>			
-				{% if can_delete %}
-				<li>
+                </li>            
+                {% if can_delete %}
+                <li>
                     <a id="delete" data-bind="click: deleteQuestion" href="{% url 'question_delete' object.pk object.editoritem.slug %}" title="Delete this question permanently">Delete
-						<form action="{% url 'question_delete' object.pk object.editoritem.slug %}" method="post">{% csrf_token %}
-							<input type="submit" value="Submit" />
-						</form>
-					</a>
-				</li>
+                        <form action="{% url 'question_delete' object.pk object.editoritem.slug %}" method="post">{% csrf_token %}
+                            <input type="submit" value="Submit" />
+                        </form>
+                    </a>
+                </li>
                 {% endif %}
 
-				{% if user.is_authenticated and can_copy %}
-				<li>
-				<a id="copy" href="{% url 'question_copy' object.pk object.editoritem.slug %}" target="_blank" title="Create your own copy of this question">Make a Copy</a>
-				</li>
-				{% endif %}
+                {% if user.is_authenticated and can_copy %}
+                <li>
+                <a id="copy" href="{% url 'question_copy' object.pk object.editoritem.slug %}" target="_blank" title="Create your own copy of this question">Make a Copy</a>
+                </li>
+                {% endif %}
 
-				<li>
-					<span id="download">
-						Download: 
+                <li>
+                    <span id="download">
+                        Download: 
                         <div class="btn-group">
                           <a class="btn" href="{% url 'question_download' object.pk object.editoritem.slug %}?scorm">SCORM package</a>
                           <button class="btn dropdown-toggle" data-toggle="dropdown" title="More download options">
@@ -114,32 +174,32 @@
                             <li><a tabindex="-1" href="{% url 'question_source' object.pk object.editoritem.slug %}">source</a></li>
                           </ul>
                         </div>
-					</span>
-				</li>
-			</ul>
-		</div>
+                    </span>
+                </li>
+            </ul>
+        </div>
 
-		<div style="display:none" data-bind="visible: true">
-			<div class="row-fluid">
-				<ul class="nav nav-tabs" data-bind="foreach: mainTabs">
-					<li data-bind="visible: visible, css: {active: $root.currentTab() == $data}">
-						<a href="#" data-bind="click: $root.currentTab, text: title"></a>
-					</li>
-				</ul>
-			</div>
+        <div style="display:none" data-bind="visible: true">
+            <div class="row-fluid">
+                <ul class="nav nav-tabs" data-bind="foreach: mainTabs">
+                    <li data-bind="visible: visible, css: {active: $root.currentTab() == $data}">
+                        <a href="#" data-bind="click: $root.currentTab, text: title"></a>
+                    </li>
+                </ul>
+            </div>
 
-			{% block editor %}
-			{% endblock %}
-		</div>
-		<div class="page-loading" data-bind="visible: false">
-			<h2>Loading...</h2>
-		</div>
-		<div class="page-error">
-			<h2>Error</h2>
-			<p>There was an error loading the page.</p>
+            {% block old_editor %}
+            {% endblock %}
+        </div>
+        <div class="page-loading" data-bind="visible: false">
+            <h2>Loading...</h2>
+        </div>
+        <div class="page-error">
+            <h2>Error</h2>
+            <p>There was an error loading the page.</p>
 
-			<pre class="trace"></pre>
-		</div>
-	</div>
+            <pre class="trace"></pre>
+        </div>
+    </div>
 
-{% endblock content %}
+{% endblock oldcontent %}

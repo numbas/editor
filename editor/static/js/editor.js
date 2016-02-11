@@ -322,9 +322,10 @@ $(document).ready(function() {
 		});
 	}
 
-	Editor.Tab = function(id,title,visible) {
+	Editor.Tab = function(id,title,icon,visible) {
 		this.id = id;
 		this.title = title;
+        this.icon = icon;
 		this.visible = visible === undefined ? true : visible;
 	}
 

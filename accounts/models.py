@@ -27,11 +27,7 @@ class RegistrationManager(regmodels.RegistrationManager):
         user. To disable this, pass ``send_email=False``.
         
         """
-        new_user = User.objects.create_user(username, email, password)
-        if first_name:
-            new_user.first_name = first_name
-        if last_name:
-            new_user.last_name = last_name
+        new_user = User.objects.create_user(username, email, password,first_name=first_name,last_name=last_name)
         new_user.is_active = False
         new_user.save()
 
@@ -86,7 +82,7 @@ def createUserProfile(sender, instance, created, **kwargs):
     """
     if created:
         profile = UserProfile.objects.create(user=instance)
-        profile.personal_project = Project.objects.create(name="{}'s workspace".format(sender.first_name),owner=sender)
+        profile.personal_project = Project.objects.create(name="{}'s workspace".format(instance.first_name),owner=instance)
         profile.save()
 
 post_save.connect(createUserProfile, sender=User)

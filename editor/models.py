@@ -107,10 +107,10 @@ class Project(models.Model,ControlledObject):
     def get_absolute_url(self):
         return reverse('project_index',args=(self.pk,))
 
-    def has_access(self,levels):
+    def has_access(self,user,levels):
         if user.is_anonymous():
             return False
-        return ProjectAccess.objects.filter(item=self,user=user,access__in=levels).exists()
+        return ProjectAccess.objects.filter(project=self,user=user,access__in=levels).exists()
 
     def members(self):
         return [self.owner]+list(User.objects.filter(project_memberships__project=self).exclude(pk=self.owner.pk))
@@ -458,7 +458,8 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
 
     current_stamp = models.ForeignKey('NewStampOfApproval', blank=True, null=True, on_delete=models.SET_NULL)
 
-    share_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique = True)
+    share_uuid_view = models.UUIDField(default=uuid.uuid4, editable=False, unique = True)
+    share_uuid_edit = models.UUIDField(default=uuid.uuid4, editable=False, unique = True)
 
     published = models.BooleanField(default=False)
     published_date = models.DateTimeField(null=True)
@@ -475,10 +476,10 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
     def __unicode__(self):
         return self.name
 
-    def has_access(self,levels):
+    def has_access(self,user,levels):
         if user.is_anonymous():
             return False
-        return Access.objects.filter(item=self,user=user,access__in=levels).exists()
+        return self.project.has_access(user,levels) or Access.objects.filter(item=self,user=user,access__in=levels).exists()
 
     def publish(self):
         self.published = True

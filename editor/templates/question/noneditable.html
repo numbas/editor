@@ -17,7 +17,7 @@
 		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='general'}">
 			<div class="row-fluid section">
 				<div class="span8">
-					<p><span class="question-author">Question Author:</span> {% user_link object.author %}</p>
+					<p><span class="question-author">Question Author:</span> {% user_link object.editoritem.author %}</p>
 					<p class="editable-message">
 						You may only view this question. {% if user.is_authenticated %}If you want to change something, make a copy.{% endif %}
 					</p>
@@ -41,7 +41,7 @@
                         </div>
                     </form>
                     {% if object.copy_of %}
-                    <p>This question is based on {% question_link object.copy_of %} by {% user_link object.copy_of.author %}.</p>
+                    <p>This question is based on {% question_link object.copy_of %} by {% user_link object.editoritem.copy_of.author %}.</p>
                     {% endif %}
 				</div>
 				<div class="span4">

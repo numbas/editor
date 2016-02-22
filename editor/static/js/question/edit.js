@@ -420,7 +420,7 @@ $(document).ready(function() {
                 }
             });
             this.saveAccess = Editor.saver(this.access_data,function(data) {
-                return $.post('/item/'+Editor.editoritem_id+'/set-access',data);
+                return $.post('/item/'+q.editoritem_id+'/set-access',data);
             });
             this.userAccessSearch=ko.observable('');
 
@@ -1190,6 +1190,7 @@ $(document).ready(function() {
 			this.reset();
 
 			this.id = data.id;
+            this.editoritem_id = data.editoritem_id;
 
             this.published(data.published);
 

@@ -436,11 +436,11 @@
                 <ul class="share-links list-group">
                     <li class="list-group-item">
                         <label>View</label>
-                        <input class="share-link form-control" readonly value="{{SITE_ROOT}}{% url 'share_question' 'view' object.editoritem.share_uuid %}">
+                        <input class="share-link form-control" readonly value="{{SITE_ROOT}}{% url 'share_question' 'view' object.editoritem.share_uuid_view %}">
                     </li>
                     <li class="list-group-item">
                         <label>Edit</label>
-                        <input class="share-link form-control" readonly value="{{SITE_ROOT}}{% url 'share_question' 'edit' object.editoritem.share_uuid %}">
+                        <input class="share-link form-control" readonly value="{{SITE_ROOT}}{% url 'share_question' 'edit' object.editoritem.share_uuid_edit %}">
                     </li>
                 </ul>
             </div>
@@ -1132,8 +1132,8 @@
             <h4>Access Links</h4>
             <p>Share these links to give automatic access to this question. Be careful about who you share these with - whoever clicks on the link will be given access.</p>
             <ul class="share-links">
-                <li>View: <span class="share-link">{{SITE_ROOT}}{% url 'share_question' 'view' object.share_uuid %}</span></li>
-                <li>Edit: <span class="share-link">{{SITE_ROOT}}{% url 'share_question' 'edit' object.share_uuid %}</span></li>
+                <li>View: <span class="share-link">{{SITE_ROOT}}{% url 'share_question' 'view' object.share_uuid_edit %}</span></li>
+                <li>Edit: <span class="share-link">{{SITE_ROOT}}{% url 'share_question' 'edit' object.share_uuid_view %}</span></li>
             </ul>
         </section>
 

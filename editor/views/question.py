@@ -646,12 +646,14 @@ class ShareLinkView(generic.RedirectView):
     permanent = False
 
     def get_redirect_url(self, *args,**kwargs):
+        access = kwargs['access']
         try:
-            q = Question.objects.get(share_uuid=kwargs['share_uuid'])
+            if access == 'edit':
+                q = NewQuestion.objects.get(editoritem__share_uuid_edit=kwargs['share_uuid'])
+            elif access == 'view':
+                q = NewQuestion.objects.get(editoritem__share_uuid_view=kwargs['share_uuid'])
         except ValueError,Question.DoesNotExist:
             raise Http404
-
-        access = kwargs['access']
 
         user = self.request.user
         if access=='view':
@@ -661,11 +663,11 @@ class ShareLinkView(generic.RedirectView):
             
         if not has_access:
             try:
-                qa = QuestionAccess.objects.get(question=q,user=user)
-            except QuestionAccess.DoesNotExist:
-                qa = QuestionAccess(question=q, user=user,access=access)
-            qa.access = access
-            qa.save()
+                ea = Access.objects.get(item=q.editoritem,user=user)
+            except Access.DoesNotExist:
+                ea = Access(item=q.editoritem, user=user,access=access)
+            ea.access = access
+            ea.save()
 
         return reverse('question_edit',args=(q.pk,q.editoritem.slug))
 

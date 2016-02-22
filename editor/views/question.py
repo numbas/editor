@@ -39,7 +39,7 @@ import reversion
 
 from django_tables2.config import RequestConfig
 
-from editor.forms import NewQuestionForm, QuestionForm, QuestionSetAccessForm, QuestionSearchForm, QuestionHighlightForm
+from editor.forms import NewQuestionForm, QuestionForm, SetAccessForm, QuestionSearchForm, QuestionHighlightForm
 from editor.models import Project, EditorItem, NewQuestion, Access, Question, Extension, Image, QuestionAccess, QuestionHighlight, QuestionPullRequest, EditorTag, Licence, STAMP_STATUS_CHOICES
 import editor.views.generic
 import editor.views.editoritem
@@ -309,7 +309,7 @@ class UpdateView(generic.UpdateView):
             context['starred'] = False
 
     
-        context['access_rights'] = [{'id': a.user.pk, 'name': a.user.get_full_name(), 'access_level': a.access} for a in Access.objects.filter(item=self.object.editoritem)]
+        context['access_rights'] = [{'id': a.user.pk, 'profile': reverse('view_profile',args=(a.user.pk,)), 'name': a.user.get_full_name(), 'access_level': a.access} for a in Access.objects.filter(item=self.object.editoritem)]
 
         versions = [version_json(v,self.user) for v in reversion.get_for_object(self.object)]
 
@@ -349,6 +349,7 @@ class UpdateView(generic.UpdateView):
     
     def get_success_url(self):
         return reverse('question_edit', args=(self.object.pk,self.object.editoritem.slug))
+
 
 class RevertView(generic.UpdateView):
     model = Question
@@ -641,32 +642,6 @@ class JSONSearchView(SearchView):
         context['id'] = self.request.GET.get('id',None)
         return context
     
-class SetAccessView(generic.UpdateView):
-    model = Question
-    form_class = QuestionSetAccessForm
-
-    def get_form_kwargs(self):
-        kwargs = super(SetAccessView,self).get_form_kwargs()
-        kwargs['data'] = self.request.POST.copy()
-        kwargs['data'].update({'given_by':self.request.user.pk})
-        return kwargs
-
-    def form_valid(self, form):
-        question = self.get_object()
-
-        if not question.editoritem.can_be_edited_by(self.request.user):
-            return http.HttpResponseForbidden("You don't have permission to edit this question.")
-
-        self.object = form.save()
-
-        return HttpResponse('ok!')
-
-    def form_invalid(self,form):
-        return HttpResponse(form.errors.as_text())
-
-    def get(self, request, *args, **kwargs):
-        return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
-
 class ShareLinkView(generic.RedirectView):
     permanent = False
 

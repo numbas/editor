@@ -307,6 +307,19 @@ class SourceView(generic.DetailView):
         response['Cache-Control'] = 'max-age=0,no-cache,no-store'
         return response
 
+class PublishView(generic.UpdateView):
+    model = EditorItem
+    fields = ['published']
+    
+    def get(self):
+        return redirect(reverse('{}_edit'.format(ei.item_type), args=(ei.rel_obj.pk,ei.slug,)))
+
+    def post(self,request, *args, **kwargs):
+        ei = self.get_object()
+        ei.publish()
+        ei.save()
+        return redirect(reverse('{}_edit'.format(ei.item_type), args=(ei.rel_obj.pk,ei.slug,)))
+
 class SetAccessView(generic.UpdateView):
     model = EditorItem
     form_class = editor.forms.SetAccessForm

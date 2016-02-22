@@ -92,7 +92,7 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-sm-8" data-bind="with: currentVariable">
-                        <form class="">
+                        <form>
                             <div class="form-group">
                                 <label>
                                     <span class="control-label">
@@ -167,8 +167,8 @@
                                     <span class="control-label">
                                         Description
                                     </span>
-                                    <div data-bind="writemaths: description"></div>
                                 </label>
+                                    <div data-bind="writemaths: description"></div>
                             </div>
                         </form>
                         <div data-bind="visible: dependencies().length>0" class="inline-names">
@@ -305,7 +305,7 @@
         <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='advice'}">
             <div class="form-group">
                 <label>Advice</label>
-                <div data-bind="writemaths: statement"></div>
+                <div data-bind="writemaths: advice"></div>
                 <p class="help-block">
                     {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#advice' 'the advice section' %}
                     Give a worked solution to the whole question. 
@@ -320,6 +320,135 @@
                     </li>
                     <li class="next" data-bind="css: {ready: section_completed.advice}">
                         <a title="Proceed to the next section" href="#" data-bind="click: setTab('access')">Access →</a>
+                    </li>
+                </ul>
+            </nav>
+        </section>
+
+        <!-- Access -->
+        <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='access'}">
+            <div class="panel panel-warning" data-bind="visible: !published() && !all_sections_completed()">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Publish</h3>
+                </div>
+                <div class="panel-body">
+                    <p>At the moment, access to this question is restricted to members of the project this question belongs to and any other users you've explicitly granted access to.</p>
+                    <p>Complete each of the following tasks before you publish this question:</p>
+                    <ul class="list-unstyled" data-bind="foreach: mainTabs">
+                        <li data-bind="visible: $root.section_completed[id]!==undefined">
+                        <h4><a href="#" data-bind="text: title, click: $root.setTab(id), css: {'text-success': $root.section_completed[id], 'text-danger': !ko.unwrap($root.section_completed[id])}"></a></h4>
+                            <ul data-bind="foreach: $root.section_tasks[id]">
+                                <li data-bind="css: {'text-success': done, 'text-danger': !done()}">
+                                    <span data-bind="text: text"></span> 
+                                    <span class="glyphicon" data-bind="css:{'glyphicon-ok':done, 'glyphicon-remove':!done()}"></span>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="panel panel-warning" data-bind="visible: !published() && all_sections_completed()">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Publish</h3>
+                </div>
+                <div class="panel-body">
+                    <p>At the moment, this question is restricted to members of the project this question belongs to and any other users you've explicitly granted access to.</p>
+                    <p>Publish your question so that others can see it.</p>
+                    <form method="POST" action="{% url 'item_publish' object.editoritem.pk %}">
+                        <button class="btn btn-danger" type="submit">Publish</button>
+                        {% csrf_token %}
+                    </form>
+                </div>
+            </div>
+            <div class="panel panel-success" data-bind="visible: published">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Publish</h3>
+                </div>
+                <div class="panel-body">
+                    <p>This question has been published to the public question database.</p>
+                </div>
+            </div>
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Access rights</h3>
+                </div>
+                <table class="table">
+                    <thead>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="glyphicon glyphicon-globe"></span> Public access</td>
+                            <td>
+                                <select class="form-control" data-bind="visible: published, value: public_access, options: access_options, optionsText:'text',optionsValue:'value'"></select>
+                                <em data-bind="visible: !ko.unwrap(published)">This question has not been published</em>
+                            </td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td><span class="glyphicon glyphicon-user"></span> {% user_link object.editoritem.author new_window=True%}</td>
+                            <td>
+                                Owner
+                            </td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td><span class="glyphicon glyphicon-briefcase"></span> Members of <a href="{% url 'project_index' object.editoritem.project.pk %}">{{object.editoritem.project.name}}</a></td>
+                            <td>
+                                Access granted by project owner
+                            </td>
+                            <td></td>
+                        </tr>
+                        <!-- ko foreach: {data: access_rights, afterAdd: Editor.afterAdd} -->
+                        <tr>
+                            <td>
+                                <span class="glyphicon glyphicon-user"></span> 
+                                <a class="control-label" target="_blank" data-bind="text:name, attr: {href: profile}"></a>
+                            </td>
+                            <td>
+                                <select class="form-control" data-bind="hasfocus: true, value: access_level, options: access_options, optionsText:'text',optionsValue:'value'"></select>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-link" data-bind="click: remove" title="Remove this user's access"><span class="glyphicon glyphicon-remove"></span></button>
+                            </td>
+                        </tr>
+                        <!-- /ko -->
+                    </tbody>
+                </table>
+                <div class="panel-body">
+                    <label>Give access to</label>
+                    <input class="form-control" id="search_author" type="text" placeholder="Full name or username" size="30" data-bind="
+                        value: userAccessSearch,
+                        autocomplete: '{% url 'user_search' %}', 
+                        autocompleteCallback: function(user) { return {label: user.name, value: user.name} },
+                        autocompleteSelect: addUserAccess
+                        "
+                    />
+                </div>
+            </div>
+
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Access Links</h3>
+                </div>
+                <div class="panel-body">
+                    <p>Share these links to give automatic access to this question. Be careful about who you share these with - whoever clicks on the link will be given access.</p>
+                </div>
+                <ul class="share-links list-group">
+                    <li class="list-group-item">
+                        <label>View</label>
+                        <input class="share-link form-control" readonly value="{{SITE_ROOT}}{% url 'share_question' 'view' object.editoritem.share_uuid %}">
+                    </li>
+                    <li class="list-group-item">
+                        <label>Edit</label>
+                        <input class="share-link form-control" readonly value="{{SITE_ROOT}}{% url 'share_question' 'edit' object.editoritem.share_uuid %}">
+                    </li>
+                </ul>
+            </div>
+
+            <nav>
+                <ul class="pager">
+                    <li class="previous">
+                        <a title="Back to the previous section" href="#" data-bind="click: setTab('advice')">← Advice</a>
                     </li>
                 </ul>
             </nav>

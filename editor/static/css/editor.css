@@ -2,6 +2,48 @@
 	font-style: italic;
 }
 
+.share-link {
+    font-family: monospace;
+}
+
+.CodeMirror {
+	border: 1px solid #ccc;
+	height: auto;
+	min-height: 2.8em;
+}
+.CodeMirror-scroll {
+	height: auto;
+	max-height: 20em;
+}
+
+.writemathsContainer textarea.wmTextArea {
+	display: none;
+}
+
+.writemathsContainer .CodeMirror {
+	display: inherit;
+	width: 100%;
+}
+.writemathsContainer.on .CodeMirror {
+	display: none;
+}
+
+.writemathsContainer .wmToggle {
+	border: none;
+	background: none;
+	padding: 0;
+}
+
+.writemathsContainer .wmToggle:before {
+	content: url(../images/x_14x14.png);
+	padding-left: 4px;
+}
+
+.writemathsContainer.on .wmToggle:before {
+	content: url(../images/check_16x13.png);
+}
+
+/*
 #name-header {
     padding: 0;
     min-height: 1.2em;
@@ -29,7 +71,6 @@
 	border-bottom: 1px solid #eee;
 }
 #controls {
-	font-size: 14px;
 	margin-bottom: 1em;
 }
 
@@ -75,29 +116,6 @@
     float: right;
 }
 
-.controlbox #download a {
-	font-size: 18px;
-}
-
-.controlbox #download:before {
-	content: url(../images/download_12x16.png);
-}
-
-.controlbox #preview:before {
-    content: url(../images/play_alt_16x16.png);
-}
-
-.controlbox #delete:before {
-    content: url(../images/x_alt_16x16.png);
-}
-.controlbox #delete form {
-	display:none;
-}
-
-.controlbox #copy:before {
-    content: url(../images/plus_alt_16x16.png);
-}
-
 form.licence {
     margin-bottom: 0;
 }
@@ -105,33 +123,6 @@ form.licence {
 #preview-error {
 	max-height: 15em;
 	overflow-y:scroll;
-}
-
-.writemathsContainer textarea.wmTextArea {
-	display: none;
-}
-
-.writemathsContainer .CodeMirror {
-	display: inherit;
-	width: 100%;
-}
-.writemathsContainer.on .CodeMirror {
-	display: none;
-}
-
-.writemathsContainer .wmToggle {
-	border: none;
-	background: none;
-	padding: 0;
-}
-
-.writemathsContainer .wmToggle:before {
-	content: url(../images/x_14x14.png);
-	padding-left: 4px;
-}
-
-.writemathsContainer.on .wmToggle:before {
-	content: url(../images/check_16x13.png);
 }
 
 body .wm_preview {
@@ -217,16 +208,6 @@ button.delete-grey:hover {
 
 .ui-effects-wrapper {
 	display: inline-block;
-}
-
-.CodeMirror {
-	border: 1px solid #ccc;
-	height: auto;
-	min-height: 2.8em;
-}
-.CodeMirror-scroll {
-	height: auto;
-	max-height: 20em;
 }
 
 .nav-list {
@@ -359,9 +340,4 @@ button.delete-grey:hover {
     cursor: pointer;
 }
 
-.share-link {
-    font-family: monospace;
-}
-.share-links li {
-    margin: 1em 0;
-}
+*/

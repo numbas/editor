@@ -51,6 +51,9 @@ urlpatterns = patterns('',
 
     url(r'^item/(?P<pk>\d+)/preview/$', editoritem.PreviewView.as_view(), name='item_preview'),
 
+    url(r'^item/(?P<pk>\d+)/publish$',
+        editoritem.PublishView.as_view(),name='item_publish'),
+
     url(r'^item/(?P<pk>\d+)/set-access$',
         editoritem.SetAccessView.as_view(),name='set_access'),
 
@@ -112,9 +115,6 @@ urlpatterns = patterns('',
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/upload-resource$',
         upload_resource,name='upload_resource'),
-
-    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/set-access$',
-        question.SetAccessView.as_view(),name='set_question_access'),
 
     url(r'^question/share/(?P<access>(view|edit))/(?P<share_uuid>.*)$',
         login_required(question.ShareLinkView.as_view()),name='share_question'),

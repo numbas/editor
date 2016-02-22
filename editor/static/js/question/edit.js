@@ -27,10 +27,15 @@ $(document).ready(function() {
 		}
 	}
 
+    function nonempty_task(text,observable) {
+        return {text: text, done: ko.computed(function() {return observable() && true})};
+    }
+
     function Question(data)
     {
 		var q = this;
 
+        this.published = ko.observable(false);
         this.starred = ko.observable(Editor.starred);
         this.current_stamp = ko.observable(Editor.current_stamp);
         this.licence = ko.observable();
@@ -85,9 +90,7 @@ $(document).ready(function() {
 			new Editor.Tab('variables','Variables','th-list'),
 			new Editor.Tab(
 				'parts',
-				ko.computed(function() {
-					return 'Parts ('+q.parts().length+')';
-				}),
+                'Parts',
                 'list'
 			),
 			new Editor.Tab('advice','Advice','blackboard'),
@@ -114,11 +117,7 @@ $(document).ready(function() {
 
         this.setTab = function(id) {
             return function() {
-                var completed_obs = this.section_completed[this.currentTab().id];
-                if(completed_obs !==undefined && !ko.unwrap(completed_obs)) {
-                    return;
-                }
-                var tab = q.mainTabs().find(function(t){return t.id==id});
+                var tab = q.getTab(id);
 
                 q.currentTab(tab);
             }
@@ -421,7 +420,7 @@ $(document).ready(function() {
                 }
             });
             this.saveAccess = Editor.saver(this.access_data,function(data) {
-                return $.post('set-access',data);
+                return $.post('/item/'+Editor.editoritem_id+'/set-access',data);
             });
             this.userAccessSearch=ko.observable('');
 
@@ -446,11 +445,38 @@ $(document).ready(function() {
                 q.access_rights.push(new UserAccess(q,data));
             };
 
-            this.section_completed = {
-                'settings': ko.computed(function() {
-                    return this.name()!='' && this.description()!='' && this.licence()!==undefined;
-                },this),
-            };
+            this.section_tasks = {
+                'settings': [
+                    nonempty_task('Give the question a name.',this.name),
+                    nonempty_task('Fill out the question description.',this.description),
+                    nonempty_task('Select a licence defining usage rights.',this.licence)
+                ],
+                'statement': [
+                    nonempty_task('Write a question statement.',this.statement)
+                ],
+                'parts': [
+                    {text: 'Create at least one part.', done: ko.computed(function(){ return this.parts().length>0 },this)}
+                ],
+                'advice': [
+                    nonempty_task('Write a worked solution to the question.',this.advice)
+                ]
+            }
+
+            this.section_completed = {};
+            for(var section in this.section_tasks) {
+                this.section_completed[section] = ko.computed(function() {
+                    return this.section_tasks[section].every(function(t){return ko.unwrap(t.done)});
+                },this);
+            }
+            
+            this.all_sections_completed = ko.computed(function() {
+                for(var key in this.section_completed) {
+                    if(!this.section_completed[key]()) {
+                        return false;
+                    }
+                }
+                return true;
+            },this);
         }
 
 		if(window.history !== undefined) {
@@ -706,6 +732,10 @@ $(document).ready(function() {
 				$(e.target).find('form').submit();
 			}
 		},
+
+        getTab: function(id) {
+            return this.mainTabs().find(function(t){return t.id==id});
+        },
 
         addRuleset: function() {
             this.rulesets.push(new Ruleset(this));
@@ -1161,6 +1191,8 @@ $(document).ready(function() {
 
 			this.id = data.id;
 
+            this.published(data.published);
+
 			if('metadata' in data) {
 				tryLoad(data.metadata,['notes','description'],this);
                 var licence_name = data.metadata.licence;
@@ -1342,6 +1374,7 @@ $(document).ready(function() {
         this.id = data.id;
         this.name = data.name;
         this.access_level = ko.observable(data.access_level || 'view');
+        this.profile = data.profile;
         this.remove = function() {
             question.access_rights.remove(ua);
         }
@@ -2964,6 +2997,7 @@ $(document).ready(function() {
 		try {
 			viewModel = new Question(Editor.questionJSON);
 			ko.applyBindings(viewModel);
+            document.body.classList.add('loaded');
 		}
 		catch(e) {
 			$('.page-loading').hide();
@@ -2980,5 +3014,9 @@ $(document).ready(function() {
 		window.open(Editor.previewURL,Editor.previewWindow);
 	});
 
+
+    ko.onError = function(e) {
+        console.log(e);
+    }
 
 });

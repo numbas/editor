@@ -480,6 +480,10 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
             return False
         return Access.objects.filter(item=self,user=user,access__in=levels).exists()
 
+    def publish(self):
+        self.published = True
+        self.published_date = datetime.now()
+
     def set_licence(self,licence):
         NumbasObject.get_parsed_content(self)
         metadata = self.parsed_content.data.setdefault(u'metadata',{})
@@ -528,8 +532,10 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
         self.get_parsed_content()
         return {
             'id': self.rel_obj.id,
+            'editoritem_id': self.id,
             'author': self.author_id,
             'metadata': self.metadata,
+            'published': self.published,
             'JSONContent': self.parsed_content.data,
             'tags': [t.name for t in self.tags.all()],
         }

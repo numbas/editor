@@ -15,21 +15,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
         <title>{% block title %}{{SITE_TITLE}}{% endblock %}</title>
-        <!--[if lt IE 9]>
-        <script>
-        document.createElement('header');
-        document.createElement('nav');
-        document.createElement('section');
-        document.createElement('article');
-        document.createElement('aside');
-        document.createElement('footer');
-        document.createElement('hgroup');
-        </script>
-        <![endif]-->
 
         {% block head %}{% endblock %}
 
         {% block stylesheets %}
+            <link href="{% sstatic 'source-sans-pro/source-sans-pro.css' %}" rel="stylesheet">
+
             <link href="{% sstatic 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet" media="screen">
             <!-- <link href="{% sstatic 'bootstrap/css/bootstrap-theme.min.css' %}" rel="stylesheet" media="screen"> -->
 
@@ -87,10 +78,10 @@
                                 <span class="glyphicon glyphicon-plus"></span> New <span class="caret"></span>
                                 </a>
                                 <ul class="dropdown-menu">
-                                    <li><a href="{% url 'question_new' %}{% if project %}?project={{project.pk}}{% endif %}"><span class="glyphicon glyphicon-file"><span> Question</a></li>
-                                    <li><a href="{% url 'exam_new' %}{% if project %}?project={{project.pk}}{% endif %}"><span class="glyphicon glyphicon-book"><span> Exam</a></li>
+                                    <li><a href="{% url 'question_new' %}{% if project %}?project={{project.pk}}{% endif %}"><span class="glyphicon glyphicon-file"></span> Question</a></li>
+                                    <li><a href="{% url 'exam_new' %}{% if project %}?project={{project.pk}}{% endif %}"><span class="glyphicon glyphicon-book"></span> Exam</a></li>
 									<li role="separator" class="divider"></li>
-                                    <li><a href="{% url 'project_new' %}"><span class="glyphicon glyphicon-briefcase"><span> Project</a></li>
+                                    <li><a href="{% url 'project_new' %}"><span class="glyphicon glyphicon-briefcase"></span> Project</a></li>
                                 </ul>
                             </li>
                             <li id="notifications" class="counter-icon {% if unread_notifications %}unread{% endif %}">
@@ -159,9 +150,9 @@
         {% endblock body %}
 
         {% block javascripts %}
-        <!-- jQuery -->
+            <!-- jQuery -->
             <script src="{% sstatic 'js/jquery.js' %}"></script>
-            <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.13/jquery-ui.min.js" type="text/javascript"></script>
+            <script src="{% sstatic 'js/jquery-ui.min.js' %}" type="text/javascript"></script>
 
             <!-- bootstrap -->
             <script src="{% sstatic 'bootstrap/js/bootstrap.min.js' %}"></script>

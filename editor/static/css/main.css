@@ -1,12 +1,5 @@
-header
-,nav
-,section
-,article
-,aside
-,footer
-,hgroup 
-{ 
-display: block;
+body {
+    font-family: 'Source Sans Pro',"Helvetica Neue",Helvetica,Arial,sans-serif;
 }
 
 .navbar-brand img {
@@ -47,6 +40,13 @@ display: block;
     #search-bar {
         width: 53em;
     }
+}
+
+.page-error {
+	display: none;
+}
+body:not(.loaded) .loaded-content {
+    display: none;
 }
 
 /*
@@ -411,16 +411,6 @@ button.search.loading {
 
 .admin-icon.preview {
 	background-color: rgb(133,196,63);
-}
-
-.page-loading {
-    text-align: center;
-}
-.page-error {
-	display: none;
-}
-.page-error h2 {
-	text-align: center;
 }
 
 .stamp-status {

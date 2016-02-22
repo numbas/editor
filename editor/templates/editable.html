@@ -10,20 +10,18 @@
 				<span data-bind="html: label"></span>
 				<span data-bind="template: {name: 'helplink', data: {url: $data.helpURL}}"></span>
 			</span>
-			<div class="controls">
-				<input data-bind="
-					value: property, 
-					valueUpdate: 'afterkeydown', 
-					attr: {
-						type: $data.type || 'text', 
-						min: $data.min, 
-						max: $data.max
-					}, 
-					css: {monospace: 'monospace' in $data ? monospace : false},
-					autosize: {max: 500, min: 30, padding: 10, value: property}
-				"/>
-			</div>
 		</label>
+		<input class="form-control" data-bind="
+			value: property, 
+			valueUpdate: 'afterkeydown', 
+			attr: {
+				type: $data.type || 'text', 
+				min: $data.min, 
+				max: $data.max
+			}, 
+			css: {monospace: 'monospace' in $data ? monospace : false},
+			autosize: {max: 500, min: 30, padding: 10, value: property}
+		"/>
 	</script>
 
     <script type="text/html" id="numberproperty">
@@ -32,19 +30,17 @@
 				<span data-bind="html: label"></span>
 				<span data-bind="template: {name: 'helplink', data: {url: $data.helpURL}}"></span>
 			</span>
-			<div class="controls">
-				<input type="number" data-bind="
-					value: property, 
-					valueUpdate: 'afterkeydown', 
-					attr: {
-						min: $data.min, 
-						max: $data.max
-					}, 
-					css: {monospace: 'monospace' in $data ? monospace : false},
-					autosize: {max: 500, min: 30, padding: 25, value: property}
-				"/>
-			</div>
 		</label>
+		<input class="form-control" type="number" data-bind="
+			value: property, 
+			valueUpdate: 'afterkeydown', 
+			attr: {
+				min: $data.min, 
+				max: $data.max
+			}, 
+			css: {monospace: 'monospace' in $data ? monospace : false},
+			autosize: {max: 500, min: 30, padding: 25, value: property}
+		"/>
 	</script>
 
 	<script type="text/html" id="percentproperty">
@@ -53,20 +49,18 @@
 				<span data-bind="html: label"></span>
 				<span data-bind="template: {name: 'helplink', data: {url: $data.helpURL}}"></span>
 			</span>
-			<div class="controls">
-				<input 
-					data-bind="
-						value: property, 
-						valueUpdate: 'afterkeydown'
-					"
-					type="range"
-					step="5"
-					min="0"
-					max="100"
-					/>
-				<span class="percentproperty value" data-bind="text: property()+'%'"></span>
-			</div>
 		</label>
+		<input class="form-control"
+			data-bind="
+				value: property, 
+				valueUpdate: 'afterkeydown'
+			"
+			type="range"
+			step="5"
+			min="0"
+			max="100"
+			/>
+		<span class="percentproperty value" data-bind="text: property()+'%'"></span>
 	</script>
 
 	<script type="text/html" id="selectproperty">
@@ -75,10 +69,8 @@
 				<span data-bind="html: label"></span>
 				<span data-bind="template: {name: 'helplink', data: {url: $data.helpURL}}"></span>
 			</span>
-			<div class="controls">
-				<select data-bind="options: options, value: property, optionsText: ko.utils.unwrapObservable($data.optionsText===undefined ? options : optionsText)"></select>
-			</div>
 		</label>
+		<select class="form-control" data-bind="options: options, value: property, optionsText: ko.utils.unwrapObservable($data.optionsText===undefined ? options : optionsText)"></select>
 	</script>
 
 	<script type="text/html" id="booleanproperty">
@@ -87,10 +79,8 @@
 				<span data-bind="html: label"></span>
 				<span data-bind="template: {name: 'helplink', data: {url: $data.helpURL}}"></span>
 			</span>
-			<div class="controls">
-				<input data-bind="checked: property, disable: $data.disable" type="checkbox"/>
-			</div>
 		</label>
+		<input data-bind="checked: property, disable: $data.disable" type="checkbox"/>
 	</script>
 {% endverbatim %}
 

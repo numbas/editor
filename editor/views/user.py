@@ -2,6 +2,7 @@
 from django.contrib.auth.models import User
 from django.views.generic import ListView
 from django.http import Http404, HttpResponse
+from django.core.urlresolvers import reverse
 
 from accounts.util import find_users
 
@@ -24,5 +25,5 @@ class UserSearchView(ListView):
             users = find_users(name=search_term)
         except KeyError:
             users = User.objects.all()
-        return [{"name": u.get_full_name(), "id": u.id} for u in users]
+        return [{"name": u.get_full_name(), "id": u.id, "profile": reverse('view_profile',args=(u.pk,))} for u in users]
     

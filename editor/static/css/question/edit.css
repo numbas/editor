@@ -1,4 +1,27 @@
-﻿/*
+﻿.part-tabs {
+	margin-bottom: 1em;
+}
+
+.part .form-horizontal .form-control {
+	display: inline;
+}
+
+.jme-answer {
+	display: inline-block;
+	padding: 5px;
+}
+
+.variable-selector button.lock.locked {
+	color: black;
+}
+
+.panel.variable-groups {
+    max-height: 40em;
+    overflow-y: auto;
+}
+
+
+/*
 #question-name {
 	font-size: 2em;
 	height: 1.5em;
@@ -147,11 +170,6 @@
 	width: 9em;
 }
 
-.jme-answer {
-	display: inline-block;
-	padding: 5px;
-}
-
 .variable-groups {
 	margin-bottom: 1em;
 	height: 30em;
@@ -274,10 +292,6 @@ input.recalculate-checkbox {
 	background: none;
 	border: none;
 	fill: #ccc;
-}
-
-.variable-selector button.lock.locked {
-	fill: black;
 }
 
 .variable-selector.current {

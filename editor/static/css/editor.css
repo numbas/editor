@@ -43,6 +43,12 @@
 	content: url(../images/check_16x13.png);
 }
 
+.transparent-input:not(:focus):not(:hover), .transparent-input[readonly] {
+    background: none;
+    border: none;
+    padding: 3px 2px;
+}
+
 /*
 #name-header {
     padding: 0;

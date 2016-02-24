@@ -385,6 +385,7 @@ class Subject(models.Model):
 class Topic(models.Model):
     name = models.CharField(max_length=200,blank=False,unique=True)
     description = models.TextField(blank=False)
+    subjects = models.ManyToManyField(Subject)
 
     def __unicode__(self):
         return self.name

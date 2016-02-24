@@ -1,5 +1,22 @@
-﻿.part-tabs {
+﻿.parts > .part + .part.root {
+    margin-top: 1em;
+}
+
+.part.gap, .part.step {
+    margin-left: 2em;
+    margin-right: 1em;
+}
+
+.part-tabs {
 	margin-bottom: 1em;
+}
+
+.part-header-controls .btn {
+    color: inherit;
+}
+
+.part select.type {
+    margin-left: 1em;
 }
 
 .part .form-horizontal .form-control {

@@ -301,13 +301,29 @@ $(document).ready(function() {
 			q.currentPart(part);
 		};
 
+        this.expand_all_parts = function() {
+            q.allParts().map(function(p) {
+                p.open(true);
+            });
+        }
+
+        this.collapse_all_parts = function() {
+            q.allParts().map(function(p) {
+                p.open(false);
+            });
+        }
+
 		// all parts in this question, including child parts such as gaps and steps
 		this.allParts = ko.computed(function() {
 			var o = [];
 			this.parts().map(function(p) {
-				o = o.concat(p,p.gaps(),p.steps())
+                o.push(p);
+                if(p.type().name=='gapfill') {
+                    o = o.concat(p.gaps());
+                }
+				o = o.concat(p.steps());
 			});
-			return o
+			return o;
 		},this);
 
         this.output = ko.computed(function() {
@@ -1870,7 +1886,16 @@ $(document).ready(function() {
         this.parent = ko.observable(parent);
 		this.parentList = parentList;
 
+        this.open = ko.observable(true);
+        this.toggleOpen = function() {
+            p.open(!p.open());
+        }
+
 		this.types = partTypes.map(function(data){return new PartType(p,data);});
+
+        this.isRootPart = ko.computed(function() {
+            return !this.parent();
+        },this);
 
 		this.isGap = ko.computed(function(){
 			return this.parent() && this.parent().type().name=='gapfill' && !this.parent().steps().contains(this);
@@ -1907,10 +1932,12 @@ $(document).ready(function() {
 			return i;
 		},this);
 		this.header = ko.computed(function() {
-			if(this.isGap() || this.isStep()) {
-				return this.indexLabel()+'. ';
-			} else {
-				return this.indexLabel()+') ';
+			if(this.isGap()) {
+                return 'Gap '+this.indexLabel()+'. ';
+            } else if(this.isStep()) {
+				return 'Step '+this.indexLabel()+'. ';
+			} else if(this.isRootPart()) {
+				return 'Part '+this.indexLabel()+') ';
 			}
 		},this);
 

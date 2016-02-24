@@ -1,0 +1,16 @@
+{% load helplink %}
+<div class="form-group">
+    <label class="label-block">
+        <div class="{{form_label_class}} control-label">
+            {{label}}
+            {% if help_url %}{% helplink help_url %}{% endif %}
+        </div>
+        <div class="{{form_control_class}}">
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" data-bind="checked: {{property}}, disable: {{disable}}"/>
+                </label>
+            </div>
+        </div>
+    </label>
+</div>

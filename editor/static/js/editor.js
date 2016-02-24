@@ -13,7 +13,7 @@ Copyright 2012 Newcastle University
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-var prettyData,tryLoad,makeContent,slugify;
+var prettyData,tryLoad,slugify;
 if(!window.Editor)
 	window.Editor = {};
 
@@ -914,6 +914,20 @@ $(document).ready(function() {
 			console.log(value,ko.utils.unwrapObservable(value));
 		}
 	}
+
+    ko.bindingHandlers.restrictedClick = {
+        init: function(element,valueAccessor, allBindings, viewModel, bindingContext) {
+            var fn = valueAccessor();
+            $(element).click(function(e) {
+                if(e.target.hasAttribute('clickable')) {
+                    // Take all the event args, and prefix with the viewmodel
+                    viewModel = bindingContext['$data'];
+                    var argsForHandler = [viewModel].concat(arguments);
+                    fn.apply(viewModel, argsForHandler);
+                }
+            });
+        }
+    }
 
 	ko.bindingHandlers.foldlist = {
 		init: function(element,valueAccessor,allBindingsAccessor,viewModel)

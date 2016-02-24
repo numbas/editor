@@ -1,161 +1,125 @@
+{% load editor_controls %}
+{% load helplink %}
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking'}">
-	<form class="form-horizontal">
-		<div class="form-group" data-bind="template: {
-			name: 'property',
-			data: {label:'Minimum marks',property:minMarks, max:maxMarks, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-minimum-marks' }
-			}"></div>
-		<div class="form-group" data-bind="template: {
-			name: 'property',
-			data: {label:'Maximum marks',property:maxMarks, min:minMarks, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-maximum-marks' }
-			}"></div>
-		<div class="form-group" data-bind="template: {
-			name: 'booleanproperty',
-			data: {label:'Show correct answer on reveal?',property: $parent.showCorrectAnswer,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal'}
-			}"></div>
-		<div class="form-group" data-bind="visible: !$parent.parent(), template: {
-			name: 'property',
-			data: {label:'Penalty for revealing steps',property: $parent.stepsPenalty,min:0, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-penalty-for-revealing-steps'}
-			}"></div>
-		<div class="form-group" data-bind="template: {
-			name: 'property',
-			data: {label:'Minimum answers:',property:minAnswers, max:maxAnswers, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-minimum-answers' }
-			}"></div>
-		<div class="form-group" data-bind="template: {
-			name: 'property',
-			data: {label:'Maximum answers:',property:maxAnswers, min:minAnswers, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-maximum-answers' }
-			}"></div>
-		<div class="form-group" data-bind="template: {
-			name: 'booleanproperty',
-			data: {label:'Shuffle order of choices?', property:shuffleChoices, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-shuffle-order-of-choices' }
-			}"></div>
-		<div class="form-group" data-bind="template: {
-			name: 'booleanproperty',
-			data: {label:'Shuffle order of answers?', property:shuffleAnswers, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-shuffle-order-of-answers-match-choices-with-answers-only' }
-			}"></div>
-		<div class="form-group" data-bind="fadeVisible: minAnswers()!=0 || maxAnswers()!=0">
-			<label class="col-sm-3 control-label">
-				What to do if wrong number of answers selected: <span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-what-to-do-if-wrong-number-of-answers-selected'}}"></span>
-			</label>
-			<div class="col-sm-9">
-				<select class="form-control" data-bind="options: warningTypes, value: warningType, optionsText: 'niceName'"></select>
-			</div>
-		</div>
-		<div class="form-group">
-			<label class="col-sm-3 control-label">
-				Selection type: <span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-selection-type'}}"></span>
-			</label>
-			<div class="col-sm-9">
-				<select class="form-control" data-bind="options: displayTypes, value: displayType, optionsText: 'niceName'"></select>
-			</div>
-		</div>
+    <form class="form-horizontal">
+        {% property 'minMarks' 'Minimum marks' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-minimum-marks' %}
+        {% property 'maxMarks' 'Maximum marks' min='minMarks' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-maximum-marks' %}
+        {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal' %}
+        <div data-bind="visible: $parent.steps().length">
+            {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-penalty-for-revealing-steps' %}
+        </div>
+        {% property 'minAnswers' 'Minimum answers' max='maxAnswers' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-minimum-answers' %}
+        {% property 'maxAnswers' 'Maximum answers' min=minAnswers help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-maximum-answers' %}
+        {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-shuffle-order-of-choices' %}
+        {% booleanproperty 'shuffleAnswers' 'Shuffle order of answers?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-shuffle-order-of-answers' %}
+        <div class="form-group" data-bind="fadeVisible: minAnswers()!=0 || maxAnswers()!=0">
+            <label class="{{form_label_class}} control-label">
+                What to do if wrong number of answers selected: {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-what-to-do-if-wrong-number-of-answers-selected' %}
+            </label>
+            <div class="{{form_control_class}}">
+                <select class="form-control" data-bind="options: warningTypes, value: warningType, optionsText: 'niceName'"></select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="{{form_label_class}} control-label">
+                Selection type {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-selection-type' %}
+            </label>
+            <div class="{{form_control_class}}">
+                <select class="form-control" data-bind="options: displayTypes, value: displayType, optionsText: 'niceName'"></select>
+            </div>
+        </div>
 
-		<div class="form-group">
-			<label class="col-sm-3 control-label">
-				Layout: <span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-layout-match-choices-with-answers-only'}}"></span>
-			</label>
-			<div class="col-sm-9">
-				<select class="form-control" data-bind="options: layoutTypes, value: layoutType, optionsText: 'niceName'"></select>
-			</div>
-		</div>
-		<div class="form-group" data-bind="fadeVisible: layoutType().name=='expression', template: {
-			name: 'property',
-			data: {label: 'Custom layout expression', property: layoutExpression, monospace: true}
-			}"></div>
-	</form>
+        <div class="form-group">
+            <label class="{{form_label_class}} control-label">
+                Layout {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-layout-match-choices-with-answers-only' %}
+            </label>
+            <div class="{{form_control_class}}">
+                <select class="form-control" data-bind="options: layoutTypes, value: layoutType, optionsText: 'niceName'"></select>
+            </div>
+        </div>
+
+        <div data-bind="fadeVisible: layoutType().name=='expression'">
+            {% property 'layoutExpression' 'Custom layout expression' monospace=True %}
+        </div>
+    </form>
 </section>
 
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='choices'}">
-	<span data-bind="template: {name: 'helplink', data: {topic: 'choices', url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#choices', big: true}}"></span>
-	<form class="form-horizontal">
-		<div class="form-group" data-bind="template: {
-			name: 'booleanproperty',
-			data: {label: 'Variable list of choices?', property: customChoices, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-variable-list-of-choices' }
-		}"></div>
-		<div class="form-group" data-bind="fadeVisible: customChoices, template: {
-			name: 'property',
-			data: {label: 'List of choices', property: customChoicesExpression, monospace: true, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-list-of-choices' }
-		}"></div>
+    <form class="form-horizontal">
+        {% booleanproperty 'customChoices' 'Variable list of choices?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-variable-list-of-choices' %}
+        <div data-bind="fadeVisible: customChoices">
+            {% property 'customChoicesExpression' 'List of choices' monospace=True help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-list-of-choices' %}
+		</div>
 	</form>
-	<ul class="choices list-unstyled list-group" data-bind="fadeVisible: !customChoices()">
-		<!-- ko foreach: {data: choices, afterAdd: Editor.afterAdd} -->
-		<li class="choice form-inline list-group-item clearfix">
-			<div class="col-sm-9">
-				<div id="description" data-bind="writemaths: content, wmHeight: 100, preambleCSS: $root.preamble.css"></div>
-			</div>
-			<div class="col-sm-3">
-				<button type="button" type="button" class="delete btn btn-sm btn-danger btn-block" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this choice</button>
-			</div>
-		</li>
-		<!-- /ko -->
-	</ul>
-	<button type="button" class="btn btn-primary" data-bind="click:addChoice"><span class="glyphicon glyphicon-plus"></span> Add a choice</button>
+    <ul class="choices list-unstyled list-group" data-bind="fadeVisible: !customChoices()">
+        <!-- ko foreach: {data: choices, afterAdd: Editor.afterAdd} -->
+        <li class="choice form-inline list-group-item clearfix">
+            <div class="col-sm-9">
+                <div id="description" data-bind="writemaths: content, wmHeight: 100, preambleCSS: $root.preamble.css"></div>
+            </div>
+            <div class="col-sm-3">
+                <button type="button" type="button" class="delete btn btn-sm btn-danger btn-block" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this choice</button>
+            </div>
+        </li>
+        <!-- /ko -->
+    </ul>
+    <button type="button" class="btn btn-primary" data-bind="click:addChoice"><span class="glyphicon glyphicon-plus"></span> Add a choice</button>
 </section>
 
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='answers'}">
-	<span data-bind="template: {name: 'helplink', data: {topic: 'answers', url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#answers', big: true}}"></span>
-	<form class="form-horizontal">
-		<div class="form-group" data-bind="template: {
-			name: 'booleanproperty',
-			data: {label: 'Variable list of answers?', property: customAnswers, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-variable-list-of-answers' }
-		}"></div>
-		<div class="form-group" data-bind="fadeVisible: customAnswers, template: {
-			name: 'property',
-			data: {label: 'List of answers', property: customAnswersExpression, monospace: true, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-list-of-answers' }
-		}"></div>
+    <form class="form-horizontal">
+        {% booleanproperty 'customAnswers' 'Variable list of answers?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-variable-list-of-answers' %}
+        <div data-bind="fadeVisible: customAnswers">
+            {% property 'customAnswersExpression' 'List of answers' monospace=True help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-list-of-answers' %}
+		</div>
 	</form>
-	<ul class="answers list-unstyled list-group" data-bind="fadeVisible: !customAnswers()">
-		<!-- ko foreach: {data: answers, afterAdd: Editor.afterAdd} -->
-		<li class="answer form-inline list-group-item clearfix">
-			<div class="col-sm-9">
-				<div id="description" data-bind="writemaths: content, wmHeight: 100, preambleCSS: $root.preamble.css"></div>
-			</div>
-			<div class="col-sm-3">
-				<button type="button" type="button" class="delete btn btn-sm btn-danger btn-block" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this answer</button>
-			</div>
-		</li>
-		<!-- /ko -->
-	</ul>
-	<button type="button" class="btn btn-primary" data-bind="click:addAnswer"><span class="glyphicon glyphicon-plus"></span> Add a answer</button>
+    <ul class="answers list-unstyled list-group" data-bind="fadeVisible: !customAnswers()">
+        <!-- ko foreach: {data: answers, afterAdd: Editor.afterAdd} -->
+        <li class="answer form-inline list-group-item clearfix">
+            <div class="col-sm-9">
+                <div id="description" data-bind="writemaths: content, wmHeight: 100, preambleCSS: $root.preamble.css"></div>
+            </div>
+            <div class="col-sm-3">
+                <button type="button" type="button" class="delete btn btn-sm btn-danger btn-block" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this answer</button>
+            </div>
+        </li>
+        <!-- /ko -->
+    </ul>
+    <button type="button" class="btn btn-primary" data-bind="click:addAnswer"><span class="glyphicon glyphicon-plus"></span> Add a answer</button>
 </section>
 
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='matrix'}">
-	<span data-bind="template: {name: 'helplink', data: {topic: 'marking matrix', url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#marking-matrix', big: true}}"></span>
-	<form class="form-horizontal">
-		<div class="form-group" data-bind="template: {
-			name: 'booleanproperty',
-			data: {label: 'Custom marking matrix?', property: customMarking, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-marking-matrix', disable: customChoices() || customAnswers() }
-		}"></div>
-		<div class="form-group" data-bind="fadeVisible: customMarking, template: {
-			name: 'property',
-			data: {label: 'Custom matrix expression', property: customMatrix, monospace: true, helpURL: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-matrix-expression' }
-		}"></div>
-	</form>
+    <form class="form-horizontal">
+        {% booleanproperty 'customMarking' 'Custom marking matrix?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-marking-matrix' disable='customChoices() || customAnswers()' %}
+        <div data-bind="fadeVisible: customMarking">
+            {% property 'customMatrix' 'Custom matrix expression' monospace=True help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-matrix-expression' %}
+        </div>
+    </form>
 
-	<div class="matrix" data-bind="fadeVisible: !customMarking()">
-		<span data-bind="template: {name: 'helplink', data: {topic: 'the marking matrix', url: 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#marking-matrix', big: true}}"></span>
-		<table class="marking-matrix table">
-			<thead>
-				<tr>
-					<td></td>
-					<th data-bind="attr: {colspan: answers().length}" class="answers">Answers</th>
-				</tr>
-			</thead>
-			<tbody>
-				<!-- ko foreach: matrix -->
-				<tr>
-					<!-- ko if: $index()==0 -->
-					<th data-bind="attr: {rowspan: $parent.choices().length}" class="choices">Choices</th>
-					<!-- /ko -->
+    <div class="matrix" data-bind="fadeVisible: !customMarking()">
+        <table class="marking-matrix table form-inline">
+            <thead>
+                <tr>
+                    <td></td>
+                    <th data-bind="attr: {colspan: answers().length}" class="answers">Answers</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ko foreach: matrix -->
+                <tr>
+                    <!-- ko if: $index()==0 -->
+                    <th data-bind="attr: {rowspan: $parent.choices().length}" class="choices">Choices</th>
+                    <!-- /ko -->
 
-					<!-- ko foreach: $data -->
-					<td>
-						<input class="form-control" type="text" class="marks monospace" data-bind="value: marks, valueUpdate:'input'"/>
-					</td>
-					<!-- /ko -->
-				</tr>
-				<!-- /ko -->
-			</tbody>
-		</table>
-	</div>
+                    <!-- ko foreach: $data -->
+                    <td>
+                        <input class="form-control" type="text" class="marks monospace" data-bind="value: marks, valueUpdate:'input'"/>
+                    </td>
+                    <!-- /ko -->
+                </tr>
+                <!-- /ko -->
+            </tbody>
+        </table>
+    </div>
 </section>
 

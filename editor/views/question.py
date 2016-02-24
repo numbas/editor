@@ -243,7 +243,7 @@ class UpdateView(generic.UpdateView):
             return self.form_valid(question_form)
         else:
             return self.form_invalid(question_form)
-        
+       
     def get(self, request, *args, **kwargs):
         self.user = request.user
         self.object = self.get_object()
@@ -311,7 +311,7 @@ class UpdateView(generic.UpdateView):
     
         context['access_rights'] = [{'id': a.user.pk, 'profile': reverse('view_profile',args=(a.user.pk,)), 'name': a.user.get_full_name(), 'access_level': a.access} for a in Access.objects.filter(item=self.object.editoritem)]
 
-        versions = [version_json(v,self.user) for v in reversion.get_for_object(self.object)]
+        #versions = [version_json(v,self.user) for v in reversion.get_for_object(self.object)]
 
         licences = [licence.as_json() for licence in Licence.objects.all()]
 
@@ -328,13 +328,14 @@ class UpdateView(generic.UpdateView):
             'starred': context['starred'],
             'current_stamp': editor.views.generic.stamp_json(self.object.editoritem.current_stamp) if self.object.editoritem.current_stamp else None,
 
-            'versions': versions,
-            'timeline': timeline_json(self.object.editoritem.timeline,self.user),
+            'versions': [], # versions,
+            'timeline': [], # timeline_json(self.object.editoritem.timeline,self.user),
         }
+
         if self.editable:
             question_json['public_access'] = self.object.editoritem.public_access
             question_json['access_rights'] = context['access_rights']
-            context['versions'] = reversion.get_for_object(self.object)
+            context['versions'] = [] # reversion.get_for_object(self.object)
 
         part_type_path = 'question/part_types/'+('editable' if self.editable else 'noneditable')
         context['partNames'] = [

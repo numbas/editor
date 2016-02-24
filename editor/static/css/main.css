@@ -53,6 +53,10 @@ body:not(.loaded) .loaded-content {
     display: none;
 }
 
+.label-block {
+    display: block;
+}
+
 /*
 .clearAfter::after {
     clear: both;

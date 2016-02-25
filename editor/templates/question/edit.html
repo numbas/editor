@@ -98,6 +98,18 @@
                         <li><a href="{% url 'question_download' object.pk object.editoritem.slug %}">standalone .zip (no SCORM)</a></li>
                         <li><a href="{% url 'question_source' object.pk object.editoritem.slug %}">source</a></li>
                     </ul>
+                 </li>
+                 <li>
+                    <a class="text-warning" href="{% url 'question_copy' object.pk object.editoritem.slug %}" target="_blank" title="Create your own copy of this question"><span class="glyphicon glyphicon-duplicate"></span> Make a copy</a>
+                </li>
+                <li>
+                    <a href="#" class="text-danger" data-bind="click: deleteQuestion" title="Delete this question permanently">
+                        <span class="glyphicon glyphicon-remove"></span> Delete
+                        <form class="hidden" action="{% url 'question_delete' object.pk object.editoritem.slug %}" method="POST">
+                            {% csrf_token %}
+                        </form>
+                    </a>
+                </li>
             </ul>
             <hr>
             <ul class="nav nav-pills nav-stacked" data-bind="foreach: mainTabs">

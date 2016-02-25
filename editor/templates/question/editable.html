@@ -252,6 +252,32 @@
             </nav>
         </section>
 
+        <!-- Variable testing -->
+        <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='variabletesting'}">
+            <form class="form-horizontal">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">
+                        Condition to satisfy
+                        {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-condition-to-satisfy' %}
+                    </label>
+                    <div class="col-sm-9">
+                        <textarea class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: variablesTest.condition, codemirrorMode: 'jme'"></textarea>
+                        <p class="alert alert-danger" data-bind="visible: variablesTest.conditionError">Error: <span data-bind="html: variablesTest.conditionError"></span></p>
+                    </div>
+                </div>
+                {% with form_label_class="col-sm-3" form_control_class="col-sm-9" %}
+                {% property 'variablesTest.maxRuns' 'Maximum number of runs' min=1 help_url='http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-maximum-number-of-runs' %}
+                {% endwith %}
+                <div class="form-group form-inline">
+                    <div class="col-sm-offset-3">
+                        <p data-bind="visible: !variablesTest.running()"><button class="btn btn-primary" type="button" data-bind="click: testVariables">Test condition</button> for <input class="form-control" type="number" data-bind="textInput: variablesTest.running_time, autosize: {value:variablesTest.running_time, max:100, min: 20}"/> seconds</p>
+                        <p class="variable-test-running" data-bind="visible: variablesTest.running">Running for <span data-bind="text: variablesTest.time_remaining_display"></span>... <button type="button" data-bind="click: cancelVariablesTest">Cancel</button></p>
+                    </div>
+                </div>
+            </form>
+            <div class="variable-test-advice alert alert-info" data-bind="visible: !variablesTest.running() && variablesTest.advice(), html: variablesTest.advice"></div>
+        </section>
+
         <!-- Parts -->
         <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='parts'}">
 
@@ -281,7 +307,7 @@
                         <div class="panel-body">
                             <ul class="col-sm-3 nav nav-pills nav-stacked part-tabs" data-bind="foreach: tabs">
                                 <li data-bind="css: {active: ko.unwrap($parent.currentTab().id) == $data.id}">
-                                    <a href="#" data-bind="click: $parent.currentTab, text: title"></a>
+                                    <a href="#" data-bind="click: $parent.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon}"></span> <span data-bind="text: title"></span></a>
                                 </li>
                             </ul>
                             <div class="col-sm-9 tab-content">
@@ -433,8 +459,8 @@
                         <h4><a href="#" data-bind="text: title, click: $root.setTab(id), css: {'text-success': $root.section_completed[id], 'text-danger': !ko.unwrap($root.section_completed[id])}"></a></h4>
                             <ul data-bind="foreach: $root.section_tasks[id]">
                                 <li data-bind="css: {'text-success': done, 'text-danger': !done()}">
+                                    <span class="glyphicon" data-bind="css:{'glyphicon-ok':done, 'glyphicon-alert':!done()}"></span>
                                     <span data-bind="text: text"></span> 
-                                    <span class="glyphicon" data-bind="css:{'glyphicon-ok':done, 'glyphicon-remove':!done()}"></span>
                                 </li>
                             </ul>
                         </li>
@@ -547,6 +573,217 @@
                 </ul>
             </nav>
         </section>
+
+        <!-- Extensions and scripts -->
+        <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='extensions'}">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="panel panel-info">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">Extensions {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-extensions' %}</h4>
+                            </div>
+                            <div class="panel-body">
+                                <ul class="extensions" data-bind="foreach: extensions">
+                                    <li class="extension">
+                                        <label>
+                                            <span class="checkbox"><input type="checkbox" data-bind="checked: used"></span>
+                                            <span data-bind="text:name"></span> <a data-bind="if: url, attr: {href:url, title: 'Documentation on the '+name+' extension'}" target="_blank"><small class="glyphicon glyphicon-book"></small></a>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="panel-footer">
+                                <a class="btn btn-link btn-block" href="{% url 'extension_new' %}"><span class="glyphicon glyphicon-cloud-upload"></span> Upload a new extension</a>
+                            </div>
+                        </div>
+                        <div class="panel panel-info">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">Rulesets {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#rulesets' subject='rulesets' %}</h4>
+                            </div>
+                            <ul class="list-group">
+                                <!-- ko foreach: {data: rulesets, afterAdd: Editor.afterAdd} -->
+                                <li class="list-group-item ruleset">
+                                    <button type="button" class="pull-right btn btn-link btn-sm" data-bind="click:remove" title="Delete this ruleset"><span class="glyphicon glyphicon-remove"></span></button>
+                                    <div class="form-group">
+                                        <label>Name</label>
+                                        <input type="text" placeholder="Name" class="name form-control" data-bind="textInput: name"/>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Definition</label>
+                                        <listbox params="items: sets"></listbox>
+                                    </div>
+                                </li>
+                                <!-- /ko -->
+                            </ul>
+                            <div class="panel-footer">
+                                <button type="button" class="btn btn-primary" data-bind="click:addRuleset"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></span></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-8">
+                        <div id="functions" class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Functions {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#functions-rulesets' subject='functions' %}</h3>
+                            </div>
+                            <ul class="list-group">
+                                <!-- ko foreach: {data: functions, afterAdd: Editor.afterAdd} -->
+                                <li class="function list-group-item">
+                                    <div class="row">
+                                        <div class="form-group col-sm-8">
+                                            <label>
+                                                Name {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-name' %}
+                                            </label>
+                                            <input class="form-control" placeholder="Name" type="text" data-bind="value: name, valueUpdate: 'afterkeydown'">
+                                        </div>
+                                        <div class="form-group col-sm-3">
+                                            <label>
+                                                Language {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-language' subject='languages' %}
+                                            </label>
+                                            <select class="form-control" data-bind="options: languages, value: language"></select>
+                                        </div>
+                                        <div class="col-sm-1">
+                                            <button type="button" class="delete btn btn-sm btn-link pull-right" data-bind="click:remove" title="Delete this function"><span class="glyphicon glyphicon-remove"></span></button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-inline">
+                                        <label>Type</label>
+                                        <ul class="list-inline parameters">
+                                            <!-- ko foreach: parameters -->
+                                            <li class="parameter">
+                                                <div class="input-group">
+                                                    <input placeholder="Name" type="text" class="form-control" data-bind="textInput: name, autosize: name">
+                                                    <span class="input-group-btn">
+                                                        <select class="btn btn-info" data-bind="options: $parent.types, value: type" title"Type of this parameter"></select>
+                                                        <button type="button" class="btn btn-danger" title="Remove this parameter" data-bind="click: remove"><span class="glyphicon glyphicon-remove"></span></button>
+                                                    </span>
+                                                </div>
+                                            </li>
+                                            <!-- /ko -->
+                                            <li>
+                                                <button type="button" class="btn btn-xs btn-info" title="Add a parameter" data-bind="click: addParameter"><span class="glyphicon glyphicon-plus"></span></button>
+                                            </li>
+                                            <li class="output">
+                                                <select class="form-control btn-info" data-bind="options: types, value: type" title="Output type"></select>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div clas="form-group">
+                                        <label>
+                                            Definition:
+                                        </label>
+                                        <textarea data-bind="codemirror: definition, codemirrorMode: language, valueUpdate: 'afterkeydown'"></textarea>
+                                        <div class="alert alert-danger" data-bind="visible: error().length>0">
+                                            <span class="glyphicon glyphicon-alert"></span> <span class="errortext" data-bind="html: error"></span>
+                                        </div>
+                                    </div>
+                                </li>
+                                <!-- /ko -->
+                            </ul>
+                            <div class="panel-footer">
+                                <button type="button" class="btn btn-primary" data-bind="click:addFunction"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: functions().length ? 'Add another function' : 'Add a function'"></span></button>
+                            </div>
+                        </div>
+                        <div id="preamble" class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">
+                                    Preamble
+                                    {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#preamble' %}
+                                </h3>
+                            </div>
+                            <div class="panel-body">
+                                <form>
+                                    <div class="form-group">
+                                        <label>Javascript</label>
+                                        <textarea data-bind="valueUpdate: 'afterkeydown', codemirror: preamble.js, codemirrorMode: 'javascript'"></textarea>
+                                        <div class="help-block">
+                                            This script will run after the question's variable have been generated but before the HTML is attached.
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>CSS</label>
+                                        <textarea data-bind="valueUpdate: 'afterkeydown', codemirror: preamble.css, codemirrorMode: 'css'"></textarea>
+                                        <div class="help-block">
+                                            Apply styling rules to the question's content.
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='exams'}">
+            {% if object.exams_using_this.count %}
+            <p>This question is used in the following exam{{object.exams_using_this.count|pluralize}}:</p>
+                <ul class="exams-list">
+                {% for exam in object.exams_using_this.all %}
+                    <li class="exam">
+                        <a href="{% url 'exam_edit' exam.pk exam.editoritem.slug %}">{{exam.editoritem.name}}</a> by {% user_link exam.editoritem.author %}
+                    </li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                This question is not used in any exams.
+            {% endif %}
+        </section>
+
+        <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='network'}">
+            {% if object.editoritem.network|length == 1 %}
+                <p>There is only one version of this question.<p>
+            {% else %}
+                <table class="network table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th><span class="glyphicon glyphicon-comment"></span> Status</th>
+                            <th><span class="glyphicon glyphicon-user"></span> Author</th>
+                            <th><span class="glyphicon glyphicon-time"></span> Last Modified</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ei2 in object.editoritem.network %}
+                        <tr class="network-item{% if ei2 == object %} active{% endif %}">
+                            <td>{% if ei2 != object.editoritem %}{% question_link ei2.rel_obj %}{% else %}{{ei2.name}}{% endif %}</td>
+                            <td>{% include "stamp_column.html" with record=ei2 %}</td>
+                            <td>{% user_link ei2.author %}</td>
+                            <td>{{ ei2.last_modified|date:"d/m/Y H:i" }}</td>
+
+                            <td class="admin">
+                                {% if ei2 != object.editoritem %}
+                                <a class="btn btn-link" href="{% url 'question_preview' ei2.rel_obj.pk ei2.slug %}" target="_blank" title="Preview this version"><span class="glyphicon glyphicon-play"></span></a>
+                                <a class="btn btn-link" href="{% url 'question_compare' object.pk ei2.rel_obj.pk %}" title="Compare with this version"><span class="glyphicon glyphicon-transfer"></span></a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+
+            {% with object.incoming_pull_requests.open as pull_requests %}
+            {% if pull_requests.exists %}
+            <h2>Request{{pull_requests.count|pluralize}} to merge</h2>
+            <ul>
+                {% for pr in pull_requests %}
+                <li class="pull-request">
+                    <p>{% user_link pr.owner %} would like you to replace this question with {% question_link pr.source %}.</p>
+                    <p>Here's what's changed:</p>
+                    <blockquote class="comment">{{ pr.comment|strip_html|safe }}</blockquote>
+                    <div class="responses">
+                        <form method="post" action="{% url 'question_pullrequest_accept' pr.pk %}">{% csrf_token %}<button class="btn accept-pr">Accept</button></form>
+                        <form method="post" action="{% url 'question_pullrequest_reject' pr.pk %}">{% csrf_token %}<button class="btn reject-pr">Reject</button></form>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {% endwith %}
+        </section>
     </div>
 {% endblock editor %}
 
@@ -635,13 +872,6 @@
 
         <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='variables'}">
             <span data-bind="template: {name: 'helplink', data: {topic: 'variables', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#variables', big: true}}"></span>
-            <div class="row-fluid">
-                <ul class="nav nav-tabs" data-bind="foreach: variableTabs">
-                    <li data-bind="css: {active: ko.utils.unwrapObservable($parent.currentVariableTab().id) == $data.id}">
-                        <a href="#" data-bind="click: $parent.currentVariableTab, text: title"></a>
-                    </li>
-                </ul>
-            </div>
             <div class="tab-content">
                 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentVariableTab().id)=='definitions'}">
                     <div class="row-fluid">
@@ -829,107 +1059,6 @@
                         {% property 'variablesTest.maxRuns' 'Maximum number of runs' min=1 help_url='http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-maximum-number-of-runs' %}
                     </form>
                 </section>
-            </div>
-        </section>
-
-        <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='functions'}">
-            <div id="functions">
-                <h4>Functions <span data-bind="template: {name: 'helplink', data: {topic: 'functions', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#functions-rulesets'}}"></span></h4>
-                <!-- ko foreach: {data: functions, afterAdd: Editor.afterAdd} -->
-                <div class="function row-fluid">
-                    <div class="span1">
-                        <button type="button" class="delete" data-bind="click:remove" title="Delete this function"></button>
-                    </div>
-                    <div class="span8">
-                        <div class="row-fluid">
-                            <div class="span4">
-                                <label>
-                                    Name <span data-bind="template: {name: 'helplink', data: {topic: 'function names', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-name'}}"></span>
-                                    <div>
-                                        <input placeholder="Name" type="text" data-bind="value: name, valueUpdate: 'afterkeydown', autosize: {value: name, max: 220}">
-                                    </div>
-                                </label>
-                            </div>
-                            <div class="span4">
-                                <label>
-                                    Language <span data-bind="template: {name: 'helplink', data: {topic: 'languages', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-language'}}"></span>
-                                    <select data-bind="options: languages, value: language"></select>
-                                </label>
-                            </div>
-                            <div class="span4">
-                                <label>
-                                    Output type <span data-bind="template: {name: 'helplink', data: {topic: 'output data types', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-output-type'}}"></span>
-                                    <select data-bind="options: types, value:type"></select>
-                                </label>
-                            </div>
-                            <div>
-                                <label>
-                                    Definition:
-                                    <textarea data-bind="codemirror: definition, codemirrorMode: language, valueUpdate: 'afterkeydown'"></textarea>
-                                </label>
-                                <div class="error" data-bind="visible: error().length>0">
-                                    Error: <span class="errortext" data-bind="html: error"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="span3">
-                        <label>Parameters</label>
-                        <!-- ko foreach: {data: parameters, afterAdd: Editor.afterAdd} -->
-                        <div class="row-fluid parameter">
-                            <form class="form-inline">
-                                <input class="name" type="text" placeholder="Name" data-bind="value: name, valueUpdate: 'afterkeydown'"/>
-                                <select class="type" data-bind="options: $parent.types, value: type"></select>
-                                <button type="button" class="delete" data-bind="click: remove" title="Remove this parameter"></button>
-                            </form>
-                        </div>
-                        <!-- /ko -->
-                        <button type="button" class="addparameter" data-bind="click:addParameter, text: parameters().length ? 'Add another parameter' : 'Add a parameter'"></button>
-                    </div>
-                </div>
-                <!-- /ko -->
-                <button type="button" data-bind="click:addFunction, text: functions().length ? 'Add another function' : 'Add a function'"></button>
-            </div>
-            <div id="rulesets">
-                <h4>Rulesets <span data-bind="template: {name: 'helplink', data: {topic: 'rulesets', url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#rulesets'}}"></span></h4>
-                <form class="form-horizontal">
-                    <!-- ko foreach: {data: rulesets, afterAdd: Editor.afterAdd} -->
-                        <div class="ruleset control-group">
-                            <span class="control-label">
-                                <input type="text" placeholder="Name" class="name control-label" data-bind="value:name, valueUpdate: 'afterkeydown'"/>
-                            </span>
-                            <div class="controls">:
-                                <div class="rules" data-bind="listbox:sets, rulesetcomplete: allsets"></div>
-                                <button type="button" class="delete" data-bind="click:remove" title="Delete this ruleset"></button>
-                            </div>
-                        </div>
-                    <!-- /ko -->
-                    <button type="button" data-bind="click:addRuleset, text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></button>
-                </form>
-            </div>
-            <div id="preamble">
-                <h4>
-                    Preamble
-                    <span data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#preamble'}}"></span>
-                </h4>
-                <form class="form-horizontal">
-                    <div class="control-group">
-                        <label class="control-label">
-                            Javascript
-                        </label>
-                        <div class="controls">
-                            <textarea data-bind="valueUpdate: 'afterkeydown', codemirror: preamble.js, codemirrorMode: 'javascript'"></textarea>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">
-                            CSS
-                        </label>
-                        <div class="controls">
-                            <textarea data-bind="valueUpdate: 'afterkeydown', codemirror: preamble.css, codemirrorMode: 'css'"></textarea>
-                        </div>
-                    </div>
-                </form>
             </div>
         </section>
 

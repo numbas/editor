@@ -88,6 +88,7 @@ $(document).ready(function() {
 			new Editor.Tab('settings','Settings','cog'),
 			new Editor.Tab('statement','Statement','blackboard'),
 			new Editor.Tab('variables','Variables','th-list'),
+			new Editor.Tab('variabletesting','Variable testing','dashboard'),
 			new Editor.Tab(
 				'parts',
                 'Parts',
@@ -288,14 +289,6 @@ $(document).ready(function() {
 			var v = new Variable(q);
 			q.variables.splice(n,0,v);
 		}
-
-		this.variableTabs = ko.observableArray([
-			new Editor.Tab('definitions','Definitions'),
-			new Editor.Tab('test',ko.computed(function() {
-				return 'Testing' + (q.variablesTest.condition().trim() ? ' (active)' : '');
-			}))
-		]);
-		this.currentVariableTab = ko.observable(this.variableTabs()[0]);
 
 		this.showPart = function(part) {
 			q.currentPart(part);
@@ -526,17 +519,6 @@ $(document).ready(function() {
                     return undefined;
                 }
             },this));
-			if('currentVariableTab' in state) {
-				var tabs = this.variableTabs();
-				for(var i=0;i<tabs.length;i++) {
-					var tab = tabs[i];
-					if(tab.id==state.currentVariableTab) {
-						this.currentVariableTab(tab);
-						break;
-					}
-				}
-			}
-			Editor.computedReplaceState('currentVariableTab',ko.computed(function(){return this.currentVariableTab().id},this));
 
 			if('currentPart' in state && state.currentPart!==undefined) {
 				var path = state.currentPart;
@@ -1168,6 +1150,7 @@ $(document).ready(function() {
                 statement: this.statement(),
                 advice: this.advice(),
                 rulesets: rulesets,
+                extensions: this.extensions().filter(function(e){return e.used()}).map(function(e){return e.location}),
                 variables: variables,
 				variablesTest: {
 					condition: this.variablesTest.condition(),
@@ -1195,7 +1178,7 @@ $(document).ready(function() {
 			this.baseVariableGroup.variables([]);
 			this.parts([]);
 			this.extensions().map(function(e){
-					e.used(false);
+                e.used(false);
 			});
 
 		},
@@ -1223,7 +1206,7 @@ $(document).ready(function() {
 
 			if('extensions' in data) {
 				this.extensions().map(function(e) {
-					if(data.extensions.indexOf(e.pk)>=0)
+					if(data.extensions.indexOf(e.location)>=0)
 						e.used(true);
 				});
 			}
@@ -1402,12 +1385,11 @@ $(document).ready(function() {
 
     function Ruleset(exam,data)
     {
-        this.name = ko.observable('ruleset'+exam.rulesets().length);
+        this.name = ko.observable('');
         this.sets = ko.observableArray([]);
         this.allsets = exam.allsets;
         this.remove = function() {
-            if(confirm("Remove this ruleset?"))
-                exam.rulesets.remove(this);
+            exam.rulesets.remove(this);
         };
         if(data)
             this.load(data);
@@ -1958,16 +1940,16 @@ $(document).ready(function() {
 		this.tabs = ko.computed(function() {
 			var tabs = [];
 			if(!this.isGap())
-				tabs.push(new Editor.Tab('prompt','Prompt'));
+				tabs.push(new Editor.Tab('prompt','Prompt','blackboard'));
 
 			if(this.type().has_marks)
-				tabs.push(new Editor.Tab('marking','Marking'));
+				tabs.push(new Editor.Tab('marking','Marking','pencil'));
 
 			tabs = tabs.concat(this.type().tabs);
 
-			tabs.push(new Editor.Tab('scripts','Scripts'));
+			tabs.push(new Editor.Tab('scripts','Scripts','wrench'));
 
-			tabs.push(new Editor.Tab('adaptivemarking','Adaptive marking'));
+			tabs.push(new Editor.Tab('adaptivemarking','Adaptive marking','transfer'));
 
 			return tabs;
 		},this);
@@ -2296,7 +2278,7 @@ $(document).ready(function() {
 			niceName: 'Mathematical expression', 
 			has_marks: true, 
 			tabs: [
-				new Editor.Tab('restrictions','Accuracy and string restrictions')
+				new Editor.Tab('restrictions','Accuracy and string restrictions','scale')
 			],
 
 			model: function() {
@@ -2577,8 +2559,8 @@ $(document).ready(function() {
 			name:'1_n_2', 
 			niceName: 'Choose one from a list',
 			tabs: [
-				new Editor.Tab('marking','Marking'),
-				new Editor.Tab('choices','Choices')
+				new Editor.Tab('marking','Marking','pencil'),
+				new Editor.Tab('choices','Choices','list')
 			],
 
 			model: function(part) {
@@ -2686,8 +2668,8 @@ $(document).ready(function() {
 			name:'m_n_2', 
 			niceName: 'Choose several from a list',
 			tabs: [
-				new Editor.Tab('marking','Marking'),
-				new Editor.Tab('choices','Choices')
+				new Editor.Tab('marking','Marking','pencil'),
+				new Editor.Tab('choices','Choices','list')
 			],
 
 			model: function() {
@@ -2813,10 +2795,10 @@ $(document).ready(function() {
 			name:'m_n_x', 
 			niceName: 'Match choices with answers',
 			tabs: [
-				new Editor.Tab('choices','Choices'),
-				new Editor.Tab('answers','Answers'),
-				new Editor.Tab('matrix','Marking matrix'),
-				new Editor.Tab('marking','Marking options')
+				new Editor.Tab('choices','Choices','list'),
+				new Editor.Tab('answers','Answers','list'),
+				new Editor.Tab('matrix','Marking matrix','th'),
+				new Editor.Tab('marking','Marking options','pencil')
 			],
 
 			model: function() {

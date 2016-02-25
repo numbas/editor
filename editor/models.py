@@ -496,7 +496,8 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
     def copy(self):
         e2 = deepcopy(self)
         e2.id = None
-        e2.share_uuid = uuid.uuid4()
+        e2.share_uuid_view = uuid.uuid4()
+        e2.share_uuid_edit = uuid.uuid4()
         return e2
 
     @property
@@ -545,6 +546,16 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
     @property
     def filename(self):
         return '{}-{}-{}'.format(self.item_type,self.pk,self.slug)
+
+    @property
+    def network(self):
+        ei = self
+        while ei.copy_of:
+            ei = ei.copy_of
+        return sorted(ei.descendants(), key=lambda x: x.created)
+
+    def descendants(self):
+        return [self]+sum([ei2.descendants() for ei2 in self.copies.all()],[])
 
     def summary(self,user=None):
         obj = {
@@ -637,6 +648,7 @@ class NewQuestion(models.Model):
 
     def edit_dict(self):
         d = self.editoritem.edit_dict()
+        d['extensions'] = [e.location for e in self.extensions.all()]
         d['resources'] = [res.as_json() for res in self.resources.all()]
         return d
 
@@ -646,12 +658,15 @@ class NewQuestion(models.Model):
         obj['deleteURL'] = reverse('question_delete', args=(self.pk,self.editoritem.slug))
         return obj
 
+    @property
+    def exams_using_this(self):
+        return self.exams.distinct()
 
 @reversion.register
 class NewExam(models.Model):
     editoritem = models.OneToOneField(EditorItem,on_delete=models.CASCADE,related_name='exam')
 
-    questions = models.ManyToManyField(NewQuestion, through='NewExamQuestion', blank=True, editable=False)
+    questions = models.ManyToManyField(NewQuestion, through='NewExamQuestion', blank=True, editable=False, related_name='exams')
 
     theme = models.CharField(max_length=200,default='default',blank=True)  # used if custom_theme is None
     custom_theme = models.ForeignKey(Theme,null=True,blank=True,on_delete=models.SET_NULL,related_name='used_in_newexams')

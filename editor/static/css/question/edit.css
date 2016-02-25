@@ -37,6 +37,20 @@
     overflow-y: auto;
 }
 
+.function .parameters li {
+    margin-bottom: 0.5em;
+}
+
+.function .parameter + .parameter::before {
+    content: ',';
+    margin-right: 0.5em;
+}
+
+.function .output::before {
+    content: '⇒';
+    margin-right: 0.5em;
+}
+
 
 /*
 #question-name {

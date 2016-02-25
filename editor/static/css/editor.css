@@ -10,6 +10,7 @@
 	border: 1px solid #ccc;
 	height: auto;
 	min-height: 2.8em;
+    margin-bottom: 1em;
 }
 .CodeMirror-scroll {
 	height: auto;

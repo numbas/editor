@@ -955,80 +955,63 @@ $(document).ready(function() {
 		}
 	};
 
-	ko.bindingHandlers.listbox = {
-		init: function(element,valueAccessor) {
-			var value = valueAccessor();
-			$(element).addClass('listbox');
-
-			var i = $('<input type="text"/>');
-			i.keydown(function(e){
-				switch(e.which)
-				{
-				case 13:
-				case 188:
-					var val = $(this).val().slice(0,this.selectionStart);
-					if(val.length)
-						value.push(val);
-					e.preventDefault();
-					e.stopPropagation();
-					$(this).val($(this).val().slice(val.length));
-					break;
-				case 8:
-					if(this.selectionStart==0 && this.selectionEnd==0)
-					{
-						var oval = $(this).val();
-						var val = (value.pop() || '');
-						$(this).val(val+oval);
-						this.setSelectionRange(val.length,val.length);
-						e.preventDefault();
-						e.stopPropagation();
-					}
-					break;
+    ko.components.register('listbox', {
+        viewModel: function(params) {
+            var lb = this;
+            this.value = ko.observable('');
+            this.items = params.items;
+            this.edit_item = function(item,e) {
+                var input = e.target.parentElement.nextElementSibling;
+                var i = $(e.target).index();
+                lb.items.splice(i,1);
+                if(input.value) {
+                    lb.items.push(input.value);
+                }
+                input.value = item;
+                input.focus();
+            }
+            this.blur = function(lb,e) {
+                var item = e.target.value.trim();
+                if(item) {
+                    lb.items.push(item);
+                }
+                e.target.value = '';
+            }
+            this.keydown = function(lb,e) {
+                var input = e.target;
+				switch(e.which) {
+                    case 13:
+                    case 188:
+                        // enter or comma
+                        var val = input.value.slice(0,input.selectionStart).trim();
+                        if(val.length) {
+                            lb.items.push(val);
+                        }
+                        input.value = input.value.slice(val.length);
+                        break;
+                    case 8:
+                        // backspace
+                        if(input.selectionStart==0 && input.selectionEnd==0) {
+                            var oval = input.value;
+                            var val = (lb.items.pop() || '');
+                            input.value = val+oval;
+                            input.setSelectionRange(val.length,val.length);
+                        } else {
+                            return true;
+                        }
+                        break;
+                    default:
+                        return true;
 				}
-			});
-			i.blur(function(e){
-				var val = $(this).val();
-				if(val.length)
-					value.push(val);
-				$(this).val('');
-			});
-
-			var d = $('<div class="input-prepend"/>')
-			$(element).append(d);
-			$(d).append('<ul class="add-on"/>');
-			$(d).append(i);
-			function selectItem() {
-				var n = $(this).index();
-				i.val(value()[n]).focus();
-				value.splice(n,1);
-			};
-
-			$(element).on('click',function() {
-				i.focus();
-			});
-
-
-			$(element).delegate('li',{
-				click: selectItem,
-				keypress: function(e) {
-					if($(this).is(':focus') && e.which==32)
-					{
-						selectItem.call(this);
-						e.preventDefault();
-						e.stopPropagation();
-					}
-				}
-			});
-		},
-		update: function(element,valueAccessor) {
-			var value = ko.utils.unwrapObservable(valueAccessor());
-			$(element).find('ul li').remove();
-			for(var i=0;i<value.length;i++)
-			{
-				$(element).find('ul').append($('<li tabindex="0"/>').html(value[i]));
-			}
-		}
-	}
+            }
+        },
+        template: '\
+            <ul class="list-inline" data-bind="foreach: items">\
+                <button type="button" class="btn btn-default btn-sm" data-bind="click: $parent.edit_item, text: $data"></button>\
+            </ul>\
+            <input type="text" class="form-control" data-bind="textInput: value, event: {blur: blur, keydown: keydown}">\
+        '
+    });
 
 	ko.bindingHandlers.dragOut = {
 		init: function(element, valueAccessor) {

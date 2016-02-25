@@ -68,12 +68,12 @@ def old_exams_to_new(apps, schema_editor):
         ei.save()
         ne.save()
     
-        for eq in ExamQuestion.objects.all():
-            neq = NewExamQuestion()
-            neq.exam = NewExam.objects.get(pk=eq.exam.pk)
-            neq.question = NewQuestion.objects.get(pk=eq.question.pk)
-            neq.qn_order = eq.qn_order
-            neq.save()
+    for eq in ExamQuestion.objects.all():
+        neq = NewExamQuestion()
+        neq.exam = NewExam.objects.get(pk=eq.exam.pk)
+        neq.question = NewQuestion.objects.get(pk=eq.question.pk)
+        neq.qn_order = eq.qn_order
+        neq.save()
 
 
 def remove_new_exams(apps,schema_editor):

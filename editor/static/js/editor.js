@@ -343,6 +343,12 @@ $(document).ready(function() {
         });
 	};
 
+
+    Editor.nonempty_task = function(text,observable) {
+        return {text: text, done: ko.computed(function() {return observable() && true})};
+    }
+
+
     Editor.searchBinding = function(search,url,makeQuery) {
 		search.results.error = ko.observable('');
 		search.searching = ko.observable(false);

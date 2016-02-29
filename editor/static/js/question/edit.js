@@ -27,10 +27,6 @@ $(document).ready(function() {
 		}
 	}
 
-    function nonempty_task(text,observable) {
-        return {text: text, done: ko.computed(function() {return observable() && true})};
-    }
-
     function Question(data)
     {
 		var q = this;
@@ -460,18 +456,18 @@ $(document).ready(function() {
 
             this.section_tasks = {
                 'settings': [
-                    nonempty_task('Give the question a name.',this.name),
-                    nonempty_task('Fill out the question description.',this.description),
-                    nonempty_task('Select a licence defining usage rights.',this.licence)
+                    Editor.nonempty_task('Give the question a name.',this.name),
+                    Editor.nonempty_task('Fill out the question description.',this.description),
+                    Editor.nonempty_task('Select a licence defining usage rights.',this.licence)
                 ],
                 'statement': [
-                    nonempty_task('Write a question statement.',this.statement)
+                    Editor.nonempty_task('Write a question statement.',this.statement)
                 ],
                 'parts': [
                     {text: 'Create at least one part.', done: ko.computed(function(){ return this.parts().length>0 },this)}
                 ],
                 'advice': [
-                    nonempty_task('Write a worked solution to the question.',this.advice)
+                    Editor.nonempty_task('Write a worked solution to the question.',this.advice)
                 ]
             }
 

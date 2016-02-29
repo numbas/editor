@@ -36,10 +36,93 @@
     </script>
 {% endblock javascripts %}
 
+{% block content_container %}container-fluid{% endblock %}
+
 {% block content %}
-    {{ block.super }}
+<div class="page-loading" data-bind="visible: false">
+    <h1>Loading...</h1>
+</div>
+<div class="page-error">
+    <div class="page-header text-danger">
+        <h2>Error</h2>
+    </div>
+    <p class="text-lg">There was an error loading the page.</p>
 
+    <pre class="trace"></pre>
+</div>
 
+<div class="loaded-content">
+    <div class="page-header">
+        <h1 class="name-header">
+            <span class="glyphicon glyphicon-book"></span> <span data-bind="mathjaxHTML: name">{{object.name}}</span>
+        </h1>
+    </div>
+    <div class="row">
+        <div class="col-sm-3 col-md-2 tabs">
+            <ul id="controls" class="nav nav-pills nav-stacked">
+                <li data-bind="if: current_stamp">
+                    <a class="label label-default stamp" data-bind="text: current_stamp().status_display"></a>
+                </li>
+                <li id="preview">
+                    <a data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this question in a new window (Ctrl+B)">
+                        <span class="glyphicon glyphicon-play"></span>
+                        Test Run
+                    </a>
+                </li>
+                {% if user.is_authenticated %}
+                <li id="stamp-dropdown" class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span class="glyphicon glyphicon-flag"></span>
+                        Feedback
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                    {% for name,description in stamp_choices %}
+                        <li><a tabindex="-1" href="#" data-bind="click: addStamp('{{name}}')">{{description}}</a></li>
+                    {% endfor %}
+                    </ul>
+                </li>
+                {% endif %}
+                <li id="download" class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span class="glyphicon glyphicon-cloud-download"></span>
+                        Download
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{% url 'exam_download' object.pk object.editoritem.slug %}">SCORM package</a></li>
+                        <li><a href="{% url 'exam_download' object.pk object.editoritem.slug %}">standalone .zip (no SCORM)</a></li>
+                        <li><a href="{% url 'exam_source' object.pk object.editoritem.slug %}">source</a></li>
+                    </ul>
+                 </li>
+                 <li>
+                    <a class="text-warning" href="{% url 'exam_copy' object.pk object.editoritem.slug %}" target="_blank" title="Create your own copy of this exam"><span class="glyphicon glyphicon-duplicate"></span> Make a copy</a>
+                </li>
+                <li>
+                    <a href="#" class="text-danger" data-bind="click: deleteExam" title="Delete this exam permanently">
+                        <span class="glyphicon glyphicon-remove"></span> Delete
+                        <form class="hidden" action="{% url 'exam_delete' object.pk object.editoritem.slug %}" method="POST">
+                            {% csrf_token %}
+                        </form>
+                    </a>
+                </li>
+            </ul>
+            <hr>
+            <ul class="nav nav-pills nav-stacked" data-bind="foreach: mainTabs">
+                <li data-bind="visible: visible, css: {active: $root.currentTab() == $data}">
+                    <a href="#" data-bind="click: $root.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon}"></span> <span data-bind="text: title"></span></a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="col-sm-9 col-md-10 editing">
+			{% block editor %}
+			{% endblock %}
+        </div>
+    </div>
+{% endblock content %}
+
+{% block old_content %}
 	<div id="exam">
 		<div class="row-fluid">
             <h1 id="name-header" class="span9">
@@ -115,8 +198,6 @@
 				</ul>
 			</div>
 
-			{% block editor %}
-			{% endblock %}
 		</div>
 		<div class="page-loading" data-bind="visible: false">
 			<h2>Loading...</h2>
@@ -128,8 +209,4 @@
 			<pre class="trace"></pre>
 		</div>
 	</div>
-{% endblock content %}
-
-{% block sidebar %}
-{% endblock sidebar %}
-
+{% endblock old_content %}

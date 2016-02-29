@@ -216,6 +216,7 @@ class UpdateView(generic.UpdateView):
     
     model = NewQuestion
     form_class = QuestionForm
+    template_name = 'question/edit.html'
     
     def get_object(self):
         obj = super(UpdateView,self).get_object()
@@ -223,10 +224,6 @@ class UpdateView(generic.UpdateView):
         self.can_delete = obj.editoritem.can_be_deleted_by(self.request.user)
         self.can_copy = obj.editoritem.can_be_copied_by(self.request.user)
         return obj
-
-    def get_template_names(self):
-        self.object = self.get_object()
-        return 'question/editable.html' if self.editable else 'question/noneditable.html'
 
     def post(self, request, *args, **kwargs):
         self.user = request.user

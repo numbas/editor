@@ -21,25 +21,30 @@ $(document).ready(function() {
         var e = this;
 
         this.questions = ko.observableArray([]);
+        this.current_stamp = ko.observable(Editor.current_stamp);
+        this.published = ko.observable(false);
 
         this.mainTabs = ko.observableArray([
-            new Editor.Tab('general','General'),
-            new Editor.Tab('navigation','Navigation'),
-            new Editor.Tab('timing','Timing'),
-            new Editor.Tab('feedback','Feedback'),
-            new Editor.Tab(
-                'questions',
-                ko.computed(function() {
-                    return 'Questions ('+e.questions().length+')';
-                })
-            )
+            new Editor.Tab('settings','Settings','cog'),
+            new Editor.Tab('questions','Questions','file'),
+            new Editor.Tab('navigation','Navigation','tasks'),
+            new Editor.Tab('timing','Timing','time'),
+            new Editor.Tab('feedback','Feedback','comment'),
+            new Editor.Tab('versions','Editing history','time')
         ]);
-        var editingHistoryTab = new Editor.Tab('versions','Editing history');
-        this.mainTabs.splice(1,0,editingHistoryTab);
         if(Editor.editable) {
-            this.mainTabs.push(new Editor.Tab('access','Access'));
+            this.mainTabs.splice(5,0,new Editor.Tab('access','Access','lock'));
         }
         this.currentTab = ko.observable(this.mainTabs()[0]);
+
+        this.setTab = function(id) {
+            return function() {
+                var tab = e.getTab(id);
+
+                e.currentTab(tab);
+            }
+        }
+
 
         if(Editor.editable && window.location.hash=='#editing-history') {
             this.currentTab(editingHistoryTab);
@@ -321,6 +326,33 @@ $(document).ready(function() {
                 }
                 e.access_rights.push(new UserAccess(e,data));
             };
+
+            this.section_tasks = {
+                'settings': [
+                    Editor.nonempty_task('Give the question a name.',this.name),
+                    Editor.nonempty_task('Fill out the question description.',this.description),
+                    Editor.nonempty_task('Select a licence defining usage rights.',this.licence)
+                ],
+                'questions': [
+                    {text: 'Add at least one question.', done: ko.computed(function(){ return this.questions().length>0 },this)}
+                ]
+            }
+
+            this.section_completed = {};
+            for(var section in this.section_tasks) {
+                this.section_completed[section] = ko.computed(function() {
+                    return this.section_tasks[section].every(function(t){return ko.unwrap(t.done)});
+                },this);
+            }
+            
+            this.all_sections_completed = ko.computed(function() {
+                for(var key in this.section_completed) {
+                    if(!this.section_completed[key]()) {
+                        return false;
+                    }
+                }
+                return true;
+            },this);
         }
         if(window.history !== undefined) {
             var state = window.history.state || {};
@@ -336,45 +368,6 @@ $(document).ready(function() {
             }
             Editor.computedReplaceState('currentTab',ko.computed(function(){return this.currentTab().id},this));
         }
-
-        this.currentChange = ko.observable(new Editor.Change(this.versionJSON(),Editor.examJSON.author));
-
-        // create a new version when the question JSON changes
-        ko.computed(function() {
-            var currentChange = this.currentChange.peek();
-            var v = new Editor.Change(this.versionJSON(),Editor.examJSON.author, currentChange);
-
-            //if the new version is different to the old one, keep the diff
-            if(!currentChange || v.diff.length!=0) {
-                currentChange.next_version(v);
-                this.currentChange(v);
-            }
-        },this).extend({throttle:1000});
-
-
-        this.rewindChange = function() {
-            var currentChange = q.currentChange();
-            var prev_version = currentChange.prev_version();
-            if(!prev_version) {
-                throw(new Error("Can't rewind - this is the first version"));
-            }
-            var data = q.versionJSON();
-            data = jiff.patch(jiff.inverse(currentChange.diff),data);
-            q.currentChange(prev_version);
-            q.load(data);
-        };
-
-        this.forwardChange = function() {
-            var currentChange = q.currentChange();
-            var next_version = currentChange.next_version();
-            if(!currentChange.next_version()) {
-                throw(new Error("Can't go forward - this is the latest version"));
-            }
-            var data = q.versionJSON();
-            data = jiff.patch(next_version.diff,data);
-            q.currentChange(next_version);
-            q.load(data);
-        };
 
         this.timeline = ko.observableArray(Editor.timeline.map(function(t){return new Editor.TimelineItem(t)}));
 
@@ -465,6 +458,19 @@ $(document).ready(function() {
                 })
             ;
         }
+
+        this.addStamp = function(status_code) {
+            return function() {
+                $.post('stamp',{'status': status_code, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(stamp) {
+                    q.timeline.splice(0,0,new Editor.TimelineItem({date: stamp.date, user: stamp.user, data: stamp, type: 'stamp'}));
+                });
+                noty({
+                    text: 'Thanks for your feedback!',
+                    type: 'success',
+                    layout: 'topCenter'
+                });
+            }
+        }
     }
     Exam.prototype = {
 
@@ -483,6 +489,10 @@ $(document).ready(function() {
                 obj.public_access = this.public_access()
             }
             return obj;
+        },
+
+        getTab: function(id) {
+            return this.mainTabs().find(function(t){return t.id==id});
         },
 
         deleteExam: function(q,e) {
@@ -538,6 +548,7 @@ $(document).ready(function() {
 
             var e = this;
             this.id = data.id;
+            this.editoritem_id = data.editoritem_id;
 
             if('metadata' in data) {
                 tryLoad(data.metadata,['notes','description'],this);
@@ -551,6 +562,8 @@ $(document).ready(function() {
             }
 
             var content = data.JSONContent;
+
+            this.published(data.published);
 
             tryLoad(content,['name','percentPass','shuffleQuestions','allQuestions','pickQuestions'],this);
             this.duration((content.duration||0)/60);
@@ -615,6 +628,7 @@ $(document).ready(function() {
         var ua = this;
         this.id = data.id;
         this.name = data.name;
+        this.link = data.link;
         this.access_level = ko.observable(data.access_level || 'view');
         this.remove = function() {
             question.access_rights.remove(ua);
@@ -723,6 +737,7 @@ $(document).ready(function() {
         try {
             viewModel = new Exam(Editor.examJSON);
             ko.applyBindings(viewModel);
+            document.body.classList.add('loaded');
         }
         catch(e) {
             $('.page-loading').hide();

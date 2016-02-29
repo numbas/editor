@@ -53,3 +53,14 @@ def booleanproperty(context,property,label,*args,**kwargs):
         'form_control_class': context.get('form_control_class','col-sm-9'),
     })
     return context
+
+@register.inclusion_tag('editor-controls/exam_event.html',takes_context=True)
+def exam_event(context,property,name,*args,**kwargs):
+    context = context.update({
+        'property': property,
+        'name': name,
+        'help_url': kwargs.get('help_url'),
+        'form_label_class': context.get('form_label_class','col-sm-3'),
+        'form_control_class': context.get('form_control_class','col-sm-9'),
+    })
+    return context

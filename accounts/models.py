@@ -62,7 +62,7 @@ class UserProfile(models.Model):
 
     @property
     def recent_questions(self):
-        return Question.objects.filter(author=self.user).order_by('-last_modified')[:10]
+        return NewQuestion.objects.filter(editoritem__author=self.user).order_by('-editoritem__last_modified')[:10]
 
     def projects(self):
         return (Project.objects.filter(owner=self.user) | Project.objects.filter(projectaccess__user=self.user)).distinct()

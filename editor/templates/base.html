@@ -4,6 +4,7 @@
 {% load icon %}
 {% load django_tables2 %}
 {% notifications_unread as unread_notifications %}
+{% load user_link %}
 
 <!DOCTYPE html>
 <html>
@@ -105,10 +106,11 @@
                                 </li>
                             {% endwith %}
                             <li class="dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-user"></span><span class="caret"></span></a>
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% user_thumbnail user 20 15 %}<span class="caret"></span></a>
                                 <ul class="dropdown-menu">
-                                <li><a tabindex="2" href="{% url 'view_profile' user.pk %}">Profile</a></li>
+                                <li class="readonly"><a tabindex="2">Logged in as <strong>{{user.get_full_name}}</strong></a></li>
                                 <li role="separator" class="divider"></li>
+                                <li><a tabindex="2" href="{% url 'view_profile' user.pk %}">Profile</a></li>
                                 <li><a tabindex="2" href="{% url 'theme_list' %}">Themes</a></li>
                                 <li><a tabindex="2" href="{% url 'extension_list' %}">Extensions</a></li>
                                 <li role="separator" class="divider"></li>

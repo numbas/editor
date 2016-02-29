@@ -419,7 +419,11 @@ $(document).ready(function() {
                 {value:'view',text:'Anyone can view this'},
                 {value:'edit',text:'Anyone can edit this'}
             ];
-            this.access_rights = ko.observableArray(Editor.access_rights.map(function(d){return new UserAccess(q,d)}));
+            this.access_rights = ko.observableArray(Editor.access_rights.map(function(d){
+                var access = new UserAccess(q,d.user)
+                access.access_level(d.access_level);
+                return access;
+            }));
 
             this.access_data = ko.computed(function() {
                 return {
@@ -1372,6 +1376,7 @@ $(document).ready(function() {
     function UserAccess(question,data) {
         var ua = this;
         this.id = data.id;
+        this.link = data.link;
         this.name = data.name;
         this.access_level = ko.observable(data.access_level || 'view');
         this.profile = data.profile;

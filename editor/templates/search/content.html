@@ -3,6 +3,7 @@
 {% load can_edit %}
 {% load sanitizer %}
 {% load stamp %}
+{% load user_link %}
 
 <!-- new -->
 <div class="container-fluid">
@@ -144,7 +145,7 @@
                                 {% endif %}
                             </p>
                             <p class="author">
-                            <span class="glyphicon glyphicon-user"></span> <a href="{% url 'view_profile' item.author.pk %}">{{item.author.get_full_name}}</a>
+                            {% user_thumbnail item.author 20 15 %} {% user_link item.author %}
                             </p>
                             <p class="licence">
                                 <span class="glyphicon glyphicon-copyright-mark"></span> 

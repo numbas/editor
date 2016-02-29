@@ -35,7 +35,14 @@
                             <div class="panel-body">
                                 <div class="form-group">
                                     <label><span class="glyphicon glyphicon-user"></span> Author</label>
-                                    <p class="form-control-static">{% user_link object.editoritem.author %}</p>
+                                    <div class="media">
+                                        <div class="media-left">
+                                            {% user_thumbnail object.editoritem.author 40 36 %}
+                                        </div>
+                                        <div class="media-body">
+                                            <p class="form-control-static">{% user_link object.editoritem.author %}</p>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="form-group">
                                     <label><span class="glyphicon glyphicon-briefcase"></span> Project</label>
@@ -505,7 +512,7 @@
                             <td></td>
                         </tr>
                         <tr>
-                            <td><span class="glyphicon glyphicon-user"></span> {% user_link object.editoritem.author new_window=True%}</td>
+                            <td>{% user_thumbnail object.editoritem.author 20 15 %} {% user_link object.editoritem.author new_window=True%}</td>
                             <td>
                                 Owner
                             </td>
@@ -520,10 +527,7 @@
                         </tr>
                         <!-- ko foreach: {data: access_rights, afterAdd: Editor.afterAdd} -->
                         <tr>
-                            <td>
-                                <span class="glyphicon glyphicon-user"></span> 
-                                <a class="control-label" target="_blank" data-bind="text:name, attr: {href: profile}"></a>
-                            </td>
+                            <td data-bind="html: link"></td>
                             <td>
                                 <select class="form-control" data-bind="hasfocus: true, value: access_level, options: access_options, optionsText:'text',optionsValue:'value'"></select>
                             </td>

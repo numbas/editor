@@ -26,4 +26,3 @@ class UserSearchView(ListView):
         except KeyError:
             users = User.objects.all()
         return [{"name": u.get_full_name(), "id": u.id, "profile": reverse('view_profile',args=(u.pk,))} for u in users]
-    

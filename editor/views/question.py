@@ -50,6 +50,7 @@ from editor.views.version import version_json
 from editor.views.timeline import timeline_json
 
 from accounts.models import UserProfile
+from accounts.util import user_json
 
 from numbasobject import NumbasObject
 from examparser import ParseError
@@ -303,13 +304,7 @@ class UpdateView(generic.UpdateView):
         context['can_copy'] = self.can_copy
         context['navtab'] = 'questions'
 
-        if not self.request.user.is_anonymous():
-            context['starred'] = self.request.user.userprofile.favourite_questions.filter(pk=self.object.pk).exists()
-        else:
-            context['starred'] = False
-
-    
-        context['access_rights'] = [{'id': a.user.pk, 'profile': reverse('view_profile',args=(a.user.pk,)), 'name': a.user.get_full_name(), 'access_level': a.access} for a in Access.objects.filter(item=self.object.editoritem)]
+        context['access_rights'] = [{'user': user_json(a.user), 'access_level': a.access} for a in Access.objects.filter(item=self.object.editoritem)]
 
         #versions = [version_json(v,self.user) for v in reversion.get_for_object(self.object)]
 
@@ -325,7 +320,6 @@ class UpdateView(generic.UpdateView):
 
             'previewURL': reverse('question_preview', args=(self.object.pk, self.object.editoritem.slug)),
             'previewWindow': str(calendar.timegm(time.gmtime())),
-            'starred': context['starred'],
             'current_stamp': editor.views.generic.stamp_json(self.object.editoritem.current_stamp) if self.object.editoritem.current_stamp else None,
 
             'versions': [], # versions,
@@ -353,7 +347,7 @@ class UpdateView(generic.UpdateView):
 
 
 class RevertView(generic.UpdateView):
-    model = Question
+    model = NewQuestion
     
     def get(self, request, *args, **kwargs):
         self.user = request.user
@@ -454,175 +448,7 @@ class RejectPullRequestView(generic.DeleteView):
             return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
     
 
-class HighlightView(generic.FormView):
-    template_name = 'question/highlight.html'
-    form_class = QuestionHighlightForm
-
-    def get_initial(self):
-        initial = super(HighlightView,self).get_initial()
-
-        self.question = Question.objects.get(pk=self.kwargs.get('pk'))
-
-        try:
-            qh = QuestionHighlight.objects.get(question=self.question, picked_by=self.request.user)
-            initial['note'] = qh.note
-        except ObjectDoesNotExist:
-            initial['note'] = u''
-
-        return initial
-
-    def form_valid(self, form):
-        note = form.cleaned_data.get('note')
-
-        self.object, new = QuestionHighlight.objects.get_or_create(question=self.question, picked_by=self.request.user)
-        self.object.note = note
-        self.object.save()
-
-        return super(HighlightView,self).form_valid(form)
-
-    def get_success_url(self):
-        return reverse('question_edit', args=(self.question.pk,self.question.editoritem.slug))
-
-    def get_context_data(self, **kwargs):
-        context = super(HighlightView, self).get_context_data(**kwargs)
-        
-        context['question'] = self.question
-
-        return context
-
-class IndexView(generic.TemplateView):
-
-    template_name = 'question/index.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(IndexView, self).get_context_data(**kwargs)
-
-        if self.request.user.is_authenticated():
-            profile = self.request.user.userprofile
-            context['favourites'] = profile.favourite_questions.all()
-            context['recents'] = Question.objects.filter(author=self.request.user).order_by('-last_modified')
-        
-        context['highlights'] = QuestionHighlight.objects.all().order_by('-date')
-
-        context['navtab'] = 'questions'
-
-        tags = list(EditorTag.objects.filter(official=True))
-        tags.sort(key=EditorTag.used_count)
-        numtags = len(tags)
-        #mad magic to get approximate quartiles
-        tag_counts = [(t,(4*s)//numtags) for t,s in zip(tags,range(numtags))]
-        tag_counts.sort(key=lambda x:x[0].name.upper())
-
-        context['officialtags'] = tag_counts
-
-        return context
-    
-class ListView(generic.ListView):
-    
-    """List of questions."""
-    model = Question
-    table_class = QuestionTable
-    per_page = 10
-
-    def make_table(self):
-        config = RequestConfig(self.request, paginate={'per_page': self.per_page})
-        results = self.table_class(self.object_list)
-        config.configure(results)
-
-        return results
-
-    def get_context_data(self, **kwargs):
-        context = super(ListView, self).get_context_data(**kwargs)
-        context['navtab'] = 'questions'
-        context['results'] = self.make_table()
-
-        return context
-    
-class SearchView(ListView):
-    template_name = 'question/search.html'
-
-    def get_queryset(self):
-        form = self.form = QuestionSearchForm(self.request.GET)
-        form.is_valid()
-
-        questions = Question.objects.viewable_by(self.request.user)
-
-        search_term = form.cleaned_data.get('query')
-        if search_term:
-            questions = questions.filter(Q(name__icontains=search_term) | Q(metadata__icontains=search_term) | Q(tags__name__istartswith=search_term)).distinct()
-
-        author = form.cleaned_data.get('author')
-        if author:
-            questions = questions.filter(author__in=find_users(author))
-
-        tags = form.cleaned_data.get('tags')
-        if len(tags):
-            for tag in tags:
-                questions = questions.filter(tags__name__in=[tag])
-
-        exclude_tags = form.cleaned_data.get('exclude_tags')
-        questions = questions.exclude(tags__name__in=exclude_tags)
-
-        usage = form.cleaned_data.get('usage')
-        usage_filters = {
-            "any": Q(),
-            "reuse": Q(licence__can_reuse=True),
-            "modify": Q(licence__can_reuse=True, licence__can_modify=True),
-            "sell": Q(licence__can_reuse=True, licence__can_sell=True),
-            "modify-sell": Q(licence__can_reuse=True, licence__can_modify=True, licence__can_sell=True),
-        }
-        if usage in usage_filters:
-            questions = questions.filter(usage_filters[usage])
-
-        filter_copies = form.cleaned_data.get('filter_copies')
-        if filter_copies:
-            questions = questions.filter(copy_of=None)
-
-        only_ready_to_use = form.cleaned_data.get('only_ready_to_use')
-        if only_ready_to_use:
-            questions = questions.filter(current_stamp__status='ok')
-
-        questions = questions.distinct()
-
-        return questions
-        
-    def get_context_data(self, **kwargs):
-        context = super(SearchView, self).get_context_data(**kwargs)
-        context['form'] = self.form
-
-        return context
-
-class FavouritesView(ListView):
-    template_name = 'question/favourites.html'
-
-    def get_queryset(self):
-        return self.request.user.userprofile.favourite_questions.all()
-
-class HighlightsView(ListView):
-    model = QuestionHighlight
-    template_name = 'question/highlights.html'
-    table_class = QuestionHighlightTable
-    per_page = 5
-
-    def get_queryset(self):
-        highlights = QuestionHighlight.objects.all()
-        return highlights
-
-class RecentQuestionsView(ListView):
-    def get_queryset(self):
-        if self.request.user.is_anonymous():
-            return []
-        else:
-            return [q.summary() for q in self.request.user.userprofile.recent_questions]
-
-    def render_to_response(self, context, **response_kwargs):
-        if self.request.is_ajax():
-            return HttpResponse(json.dumps(context['object_list']),
-                                content_type='application/json',
-                                **response_kwargs)
-        raise Http404
-
-class JSONSearchView(SearchView):
+class JSONSearchView(editor.views.editoritem.SearchView):
     
     """Search questions."""
     
@@ -671,25 +497,6 @@ class ShareLinkView(generic.RedirectView):
             ea.save()
 
         return reverse('question_edit',args=(q.pk,q.editoritem.slug))
-
-class SetStarView(generic.UpdateView):
-    model = Question
-
-    def post(self, request, *args, **kwargs):
-        question = self.get_object()
-
-        profile = request.user.userprofile
-        starred = request.POST.get('starred') == 'true'
-        if starred:
-            profile.favourite_questions.add(question)
-        else:
-            profile.favourite_questions.remove(question)
-        profile.save()
-
-        return HttpResponse('ok!')
-
-    def get(self, request, *args, **kwargs):
-        return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
 
 class StampView(editor.views.generic.StampView):
     model = NewQuestion

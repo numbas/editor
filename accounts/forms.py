@@ -19,7 +19,8 @@ class NumbasRegistrationForm(RegistrationForm):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        exclude = ('user','favourite_questions','favourite_exams','question_basket')
+        fields = ('first_name','last_name','email','bio','language','avatar')
+
     first_name = forms.CharField(max_length=30)
     last_name = forms.CharField(max_length=30)
     email = forms.EmailField()
@@ -43,6 +44,8 @@ class UserProfileForm(forms.ModelForm):
     def save(self,*args,**kwargs):
         self.profile.language = self.cleaned_data.get('language')
         self.profile.bio = self.cleaned_data.get('bio')
+        if self.cleaned_data.get('avatar'):
+            self.profile.avatar = self.cleaned_data.get('avatar')
         self.profile = self.profile.save()
         super(UserProfileForm,self).save(self,*args,**kwargs)
 

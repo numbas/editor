@@ -18,7 +18,6 @@ from django.views.generic import RedirectView, TemplateView
 from django.contrib.auth.decorators import login_required
 
 from editor.views import project, editoritem, exam, question, HomeView, theme, extension, version, generic, notification
-from editor.views.user import UserSearchView
 from editor.views.resource import upload_resource, ImageDeleteView, media_view
 from editor.views.basket import BasketView,add_question_to_basket,create_exam_from_basket,remove_question_from_basket,empty_question_basket
 
@@ -32,8 +31,6 @@ urlpatterns = patterns('',
     # Search
 
     url(r'^search/$', editoritem.SearchView.as_view(), name='search'),
-
-    url(r'^users/search/$',UserSearchView.as_view(),name='user_search'),
 
     # Projects
 
@@ -103,30 +100,23 @@ urlpatterns = patterns('',
 
     url(r'^question/new/$', login_required(question.CreateView.as_view()), name='question_new'),
 
-    url(r'^questions/recent/$', question.RecentQuestionsView.as_view(), name='recent_questions',),
-
-    url(r'^questions/search/json$', question.JSONSearchView.as_view(), name='question_search_json',),
-    
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/$',
         question.UpdateView.as_view(), name='question_edit'),
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/revert/(?P<version>\d+)$',
         question.RevertView.as_view(), name='question_revert'),
 
-    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/upload-resource$',
-        upload_resource,name='upload_resource'),
-
     url(r'^question/share/(?P<access>(view|edit))/(?P<share_uuid>.*)$',
         login_required(question.ShareLinkView.as_view()),name='share_question'),
-
-    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/set-star$',
-        login_required(question.SetStarView.as_view()),name='set_question_star'),
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/comment$',
         login_required(question.CommentView.as_view()),name='comment_on_question'),
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/stamp$',
         login_required(question.StampView.as_view()),name='stamp_question'),
+
+    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/upload-resource$',
+        upload_resource,name='upload_resource'),
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/resources/(?P<resource>.*)$',
         media_view, name='view_resource'),

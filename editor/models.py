@@ -91,7 +91,12 @@ class ControlledObject(object):
         elif user.is_anonymous():
             return Q(public_access__in=view_perms)
         else:
-            return Q(access__user=user,access__access__in=view_perms) | Q(public_access__in=view_perms) | Q(author=user)
+            return (  Q(access__user=user,access__access__in=view_perms) 
+                    | Q(public_access__in=view_perms) 
+                    | Q(author=user)
+                    | Q(project__projectaccess__user=user)
+                    | Q(project__owner=user)
+                   )
 
 LOCALE_CHOICES = [(y,x) for x,y in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']]
 

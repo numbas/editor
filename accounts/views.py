@@ -1,12 +1,12 @@
 from accounts.forms import NumbasRegistrationForm
 import registration.views
 from django.conf import settings
-from django.views.generic import UpdateView, DetailView
+from django.views.generic import UpdateView, DetailView, ListView
 from django.contrib.auth.models import User
 from django.shortcuts import redirect
 from django.core.urlresolvers import reverse
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.template.defaultfilters import slugify
 from accounts.forms import UserProfileForm,ChangePasswordForm
 from editor.models import Question, Exam
@@ -15,6 +15,8 @@ from cStringIO import StringIO
 from django.contrib.sites.models import Site
 from accounts.models import RegistrationProfile
 from registration import signals
+from accounts.util import find_users, user_json
+import json
 
 class RegistrationView(registration.views.RegistrationView):
     form_class = NumbasRegistrationForm
@@ -93,6 +95,7 @@ class UserProfileView(DetailView):
     template_name = 'profile/view.html'
 
     model = User
+    context_object_name = 'view_user'
 
     def get_context_data(self,*args,**kwargs):
         context = super(UserProfileView,self).get_context_data(*args,**kwargs)
@@ -135,3 +138,24 @@ class AllQuestionsView(ZipView):
         files = [('%s.exam' % q.slug, q.as_source()) for q in questions]
 
         return files, '%s-questions.zip' % slugify(user.get_full_name())
+
+class UserSearchView(ListView):
+    
+    """Search users."""
+    
+    model=User
+    
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.is_ajax():
+            return HttpResponse(json.dumps(context['object_list']),
+                                content_type='application/json',
+                                **response_kwargs)
+        raise Http404
+    
+    def get_queryset(self):
+        try:
+            search_term = self.request.GET['q']
+            users = find_users(name=search_term)
+        except KeyError:
+            users = User.objects.all()
+        return [user_json(u) for u in users]

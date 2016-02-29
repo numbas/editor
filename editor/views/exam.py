@@ -361,10 +361,6 @@ class UpdateView(generic.UpdateView):
             'versions': versions,
             'timeline': timeline_json(self.object.editoritem.timeline,self.user),
         }
-        if profile:
-            editor_json.update({
-                'starred': self.object.fans.filter(pk=profile.pk).exists(),
-            })
 
         if editor_json['editable']:
             editor_json.update({

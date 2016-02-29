@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% load escape_html from sanitizer %}
+{% load user_link %}
 
 {% block stylesheets %}
 {{block.super}}
@@ -8,17 +9,33 @@
 
 {% block content %}
 {% with object.userprofile as profile %}
-{% if is_me %}<div class="pull-right" id="edit-profile"><a href="{% url 'edit_profile' %}">Edit your profile</a></div>{% endif %}
 
-<h2 class="big-name">{{object.get_full_name}}</h2>
+<div class="page-header">
+    {% if is_me %}<div class="pull-right" id="edit-profile"><a href="{% url 'edit_profile' %}"><span class="glyphicon glyphicon-pencil"></span> Edit your profile</a></div>{% endif %}
+    <h2 class="big-name">
+        {{view_user.get_full_name}}
+    </h2>
+</div>
 
-{% if profile.bio %}
-<blockquote class="bio">{{profile.bio|escape_html|safe }}</blockquote>
-{% endif %}
+<div class="media jumbotron">
+    <div class="media-body">
+        <div class="media-left pull-left">
+            {% user_thumbnail view_user 150 %}
+        </div>
+        <div class="bio">
+            {% if profile.bio %}
+            {{profile.bio|escape_html|safe }}
+            {% else %}
+            <p><em>This user hasn't written a bio yet.</em></p>
+            {% endif %}
+        </div>
 
-<h3><span class="glyphicon glyphicon-briefcase"></span> {% if object == request.user %}Your{% else %}{{object.first_name}}'s{% endif %} projects</h3>
+    </div>
+</div>
+
+<h3><span class="glyphicon glyphicon-briefcase"></span> {% if view_user == request.user %}Your{% else %}{{view_user.first_name}}'s{% endif %} projects</h3>
 <ul>
-    {% for project in object.userprofile.projects.all %}
+    {% for project in view_user.userprofile.projects.all %}
     <li><a href="{% url 'project_index' project.pk %}">{{project.name}}</a></li>
     {% endfor %}
 </ul>

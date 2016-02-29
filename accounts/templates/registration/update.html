@@ -19,23 +19,23 @@ tinymce.init({
 {% block content %}
 	<h1>Your user profile</h1>
 
-    <form method="post" action="" class="form-horizontal">
+    <form method="post" action="" enctype="multipart/form-data">
 		{% csrf_token %} 
 		{{form.non_field_errors}}
 		{% for field in form %}
-        <div class="control-group">
+        <div class="form-group">
 			<label>
-				<span class="control-label">{{field.label}}:</span>
-				<div class="controls">
-					{{ field }}
-        		    {{ field.errors }}
-				</div>
-			</label>
+                {{field.label}}
+            </label>
+            <div class="controls">
+                {{ field }}
+                {{ field.errors }}
+            </div>
 		</div>
 		{% endfor %}
-		<div class="control-group">
+		<div class="form-group">
 			<div class="controls">
-				<button type="submit">Update</button>
+				<button type="submit" class="btn btn-primary">Update</button>
 			</div>
 		</div>
 		{% if CAN_CHANGE_PASSWORD %}<div><a href="{% url 'change_password' %}">Change your password</a></div>{% endif %}

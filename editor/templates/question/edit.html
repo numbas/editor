@@ -1,6 +1,5 @@
 {% extends "editor.html" %}
 {% load user_link %}
-{% load icon %}
 {% load can_edit %}
 {% load links %}
 {% load sanitizer %}
@@ -74,7 +73,7 @@
                     <a class="label label-default stamp" data-bind="text: current_stamp().status_display"></a>
                 </li>
                 <li id="preview">
-                    <a data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this question in a new window (Ctrl+B)">
+                    <a class="text-success" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this question in a new window (Ctrl+B)">
                         <span class="glyphicon glyphicon-play"></span>
                         Test Run
                     </a>
@@ -869,7 +868,7 @@
                             </thead>
                             <tbody>
                                 {% for ei2 in object.editoritem.network %}
-                                <tr class="network-item{% if ei2 == object %} active{% endif %}">
+                                <tr class="network-item{% if ei2 == object.editoritem %} active{% endif %}">
                                     <td>{% if ei2 != object.editoritem %}{% question_link ei2.rel_obj %}{% else %}{{ei2.name}}{% endif %}</td>
                                     <td>{% include "stamp_column.html" with record=ei2 %}</td>
                                     <td>{% user_link ei2.author %}</td>
@@ -924,7 +923,6 @@
                 {% if request.user.is_authenticated %}
                 <span style="display:none" data-bind="visible: true">
                     <button type="button" data-bind="css:{starred: starred}, attr: {title: starred() ? 'This question is starred. Click to unstar it.' : 'Star this question'}, click: toggleStar" class="star icon-button" ></button>
-                    <button type="button" data-bind="click: add_to_basket" class="add-to-basket icon-button" title="Add this question to your basket">{% icon "basket" size=24 %}</button>
                 </span>
                 {% endif %}
             </h1>

@@ -10,26 +10,6 @@ body {
 	font-family: monospace;
 }
 
-.counter-icon {
-    position: relative;
-}
-
-.counter {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    font-weight: bold;
-    display: none;
-}
-
-.counter-icon.nonempty .counter {
-    display: block;
-}
-
-.counter-icon.nonempty > .counter, .counter-icon.nonempty > a {
-    color: red !important;
-}
-
 @media screen and (min-width: 768px) {
     #search-bar {
         width: 19em;
@@ -58,14 +38,6 @@ body:not(.loaded) .loaded-content {
 }
 
 /*
-.clearAfter::after {
-    clear: both;
-    content: '.';
-    display: block;
-    visibility: hidden;
-    height: 0;
-}
-
 ul.no-bullets, ol.no-bullets {
 	list-style-type: none;
 	margin-left: 10px;
@@ -375,46 +347,6 @@ button.search.loading {
 .errorlist, .messages {
     list-style: none;
     display: inline-block;
-}
-
-.admin a {
-	margin-right: 0.5em;
-}
-
-.admin-icon {
-	display: inline-block;
-	background-color: white;
-	border-radius: 50%;
-	width: 16px;
-	height: 16px;
-	position: relative;
-}
-
-.admin-icon svg.icon {
-	position: absolute;
-	top: 3px;
-	left: 3px;
-}
-.admin-icon svg.icon use {
-	fill: white;
-}
-
-.admin .delete {
-	margin-left: 0.5em;
-}
-.admin-icon.delete {
-	background-color: red;
-}
-
-.admin-icon.copy {
-	background-color: black;
-}
-.admin-icon.basket {
-	background-color: black;
-}
-
-.admin-icon.preview {
-	background-color: rgb(133,196,63);
 }
 
 .stamp-status {

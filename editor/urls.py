@@ -89,8 +89,8 @@ urlpatterns = patterns('',
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/comment$',
         login_required(exam.CommentView.as_view()),name='comment_on_exam'),
 
-    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/set-star$',
-        login_required(exam.SetStarView.as_view()),name='set_exam_star'),
+    url(r'^exams/compare/(?P<pk1>\d+)/(?P<pk2>\d+)$',
+        exam.CompareView.as_view(), name='exam_compare'),
 
     url(r'exam/question-lists/$',
         exam.question_lists,

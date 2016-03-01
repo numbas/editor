@@ -30,6 +30,7 @@ $(document).ready(function() {
             new Editor.Tab('navigation','Navigation','tasks'),
             new Editor.Tab('timing','Timing','time'),
             new Editor.Tab('feedback','Feedback','comment'),
+            new Editor.Tab('network','Other versions','link'),
             new Editor.Tab('versions','Editing history','time')
         ]);
         if(Editor.editable) {
@@ -143,9 +144,8 @@ $(document).ready(function() {
         this.advicethreshold = ko.observable(0);
 
         this.questionTabs = ko.observableArray([
-            new Editor.Tab('mine','Recent Questions'),
-            new Editor.Tab('basket','Basket'),
-            new Editor.Tab('search','Search'),
+            new Editor.Tab('basket','Basket','shopping-cart'),
+            new Editor.Tab('mine','Recent Questions','time')
         ]);
         this.currentQuestionTab = ko.observable(this.questionTabs()[0]);
 
@@ -155,42 +155,35 @@ $(document).ready(function() {
         this.basketQuestions = Editor.mappedObservableArray(function(d){ return new Question(d);});
         this.basketQuestions(data.basketQuestions);
 
+        function update_question_list(list,data) {
+            var odata = list();
+            var changed = data.length!=list.length;
+            if(!changed) {
+                for(var i=0;i<odata.length;i++) {
+                    if(JSON.stringify(odata[i].data)!=JSON.stringify(data[i])) {
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+            if(changed) {
+                list(data);
+            }
+        }
+
         function getQuestions() {
             var cookie = getCookie('csrftoken');
             if(cookie!==null) {
                 $.get('/exam/question-lists/')
                     .success(function(d) {
-                        e.recentQuestions(d.recent);
-                        e.basketQuestions(d.basket);
+                        update_question_list(e.recentQuestions,d.recent);
+                        update_question_list(e.basketQuestions,d.basket);
                     })
                 ;
             }
         }
 
         setInterval(getQuestions,5000);
-
-        this.search = {
-            query: ko.observable(''),
-            tags: ko.observable(''),
-            results: {
-                raw: ko.observableArray([]),
-                all: Editor.mappedObservableArray(function(d) {return new Question(d,e.questionSearchResults);})
-            }
-        };
-
-        function makeQuery() {
-            if(e.search.query().length>0 || e.search.tags().length>0)
-                return {
-                    query: e.search.query(), 
-                    tags: e.search.tags()
-                }
-        }
-
-        Editor.searchBinding(this.search,'/questions/search/json',makeQuery);
-
-        ko.computed(function() {
-            e.search.results.all(e.search.results.raw());
-        });
 
         this.onleave = new Event(
             'onleave',
@@ -291,7 +284,11 @@ $(document).ready(function() {
                 {value:'view',text:'Anyone can view this'},
                 {value:'edit',text:'Anyone can edit this'}
             ];
-            this.access_rights = ko.observableArray(Editor.access_rights.map(function(d){return new UserAccess(e,d)}));
+            this.access_rights = ko.observableArray(Editor.access_rights.map(function(d){
+                var access = new UserAccess(e,d.user)
+                access.access_level(d.access_level);
+                return access;
+            }));
 
             this.access_data = ko.computed(function() {
                 return {

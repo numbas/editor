@@ -26,7 +26,7 @@ import zipfile
 import os
 import tempfile
 
-from editor.models import NewExam, NewQuestion, EditorItem, Access, Exam, Question, ExamQuestion, QuestionAccess, ExamAccess, QuestionHighlight, ExamHighlight, Theme, Extension, QuestionPullRequest
+from editor.models import NewExam, NewQuestion, EditorItem, Access, ExamQuestion, Theme, Extension, QuestionPullRequest
 import editor.models
 from django.contrib.auth.models import User
 from accounts.util import find_users
@@ -145,63 +145,6 @@ class EditorItemSearchForm(forms.Form):
     tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
     exclude_tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
 
-class QuestionSearchForm(forms.Form):
-    query = forms.CharField(initial='', required=False)
-    author = forms.CharField(initial='', required=False)
-    usage = forms.ChoiceField(choices=USAGE_OPTIONS, required=False)
-    filter_copies = forms.BooleanField(initial=False)
-    only_ready_to_use = forms.BooleanField(initial=False)
-    tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
-    exclude_tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
-
-class QuestionAccessForm(forms.ModelForm):
-    given_by = forms.ModelChoiceField(queryset=User.objects.all())
-
-    class Meta:
-        model = QuestionAccess
-        exclude = []
-
-    def save(self,commit=True):
-        self.instance.given_by = self.cleaned_data.get('given_by')
-        super(QuestionAccessForm,self).save(commit)
-
-class QuestionSetAccessForm(forms.ModelForm):
-    given_by = forms.ModelChoiceField(queryset=User.objects.all())
-
-    class Meta:
-        model = Question
-        fields = ['public_access']
-
-    def is_valid(self):
-        v = super(QuestionSetAccessForm,self).is_valid()
-        for f in self.user_access_forms:
-            if not f.is_valid():
-                return False
-        return v
-    
-    def clean(self):
-        cleaned_data = super(QuestionSetAccessForm,self).clean()
-
-        self.user_ids = self.data.getlist('user_ids[]')
-        self.access_levels = self.data.getlist('access_levels[]')
-        self.user_access_forms = []
-
-        for i,(user,access_level) in enumerate(zip(self.user_ids,self.access_levels)):
-            f = QuestionAccessForm({'user':user,'access':access_level,'question':self.instance.pk,'given_by':cleaned_data.get('given_by').pk}, instance=QuestionAccess.objects.filter(question=self.instance,user=user).first())
-            f.full_clean()
-            self.user_access_forms.append(f)
-            for key,messages in f.errors.items():
-                self._errors[('user %i: ' % i)+key]=messages
-
-        return cleaned_data
-
-    def save(self):
-        access_to_remove = QuestionAccess.objects.filter(question=self.instance).exclude(user__in=self.user_ids)
-        access_to_remove.delete()
-        for f in self.user_access_forms:
-            f.save()
-        return super(QuestionSetAccessForm,self).save()
-
 class AccessForm(forms.ModelForm):
     given_by = forms.ModelChoiceField(queryset=User.objects.all())
 
@@ -266,13 +209,6 @@ class QuestionForm(forms.ModelForm):
         question.editoritem.save()
         return question
 
-class QuestionHighlightForm(forms.ModelForm):
-    note = forms.CharField(widget=forms.Textarea(attrs={'data-bind':'text:note'}), label='Write a note explaining why you\'re highlighting this question.')
-
-    class Meta:
-        model = QuestionHighlight
-        fields = ('note',)
-        
 class NewQuestionForm(forms.ModelForm):
     class Meta:
         model = EditorItem
@@ -309,35 +245,6 @@ class NewExamForm(forms.ModelForm):
             'project': BootstrapSelect,
         }
 
-class ExamQuestionForm(forms.ModelForm):
-    
-    """Form linking exams and questions."""
-    
-    qn_order = forms.IntegerField(label='Order')
-    
-    class Meta:
-        model = ExamQuestion
-        exclude = []
-
-ExamQuestionFormSet = inlineformset_factory(Exam, ExamQuestion, form=ExamQuestionForm)
-
-class ExamHighlightForm(forms.ModelForm):
-    note = forms.CharField(widget=forms.Textarea(attrs={'data-bind':'text:note'}), label='Write a note explaining why you\'re highlighting this exam.')
-
-    class Meta:
-        model = ExamHighlight
-        fields = ['note']
-        
-
-class ExamSearchForm(forms.Form):
-    
-    """Search form for an exam."""
-    
-    query = forms.CharField(initial='', required=False)
-    author = forms.CharField(initial='', required=False)
-    usage = forms.ChoiceField(choices=USAGE_OPTIONS, required=False)
-    only_ready_to_use = forms.BooleanField(initial=False)
-        
 class ValidateZipField:
     def clean_zipfile(self):
         zip = self.cleaned_data['zipfile']

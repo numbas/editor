@@ -41,8 +41,7 @@ import calendar
 
 from django_tables2.config import RequestConfig
 
-from editor.forms import ExamForm, NewExamForm, ExamSearchForm, ExamSearchForm, ExamHighlightForm
-from editor.tables import ExamTable, ExamHighlightTable
+from editor.forms import ExamForm, NewExamForm
 from editor.models import NewExam, EditorItem, Access
 from editor.models import Exam, Question, ExamAccess, ExamHighlight, Theme, Licence, Extension, STAMP_STATUS_CHOICES
 import editor.views.editoritem
@@ -51,6 +50,8 @@ from editor.views.errors import forbidden
 from editor.views.user import find_users
 from editor.views.version import version_json
 from editor.views.timeline import timeline_json
+
+from accounts.util import user_json
 
 from numbasobject import NumbasObject
 
@@ -362,10 +363,12 @@ class UpdateView(generic.UpdateView):
             'timeline': timeline_json(self.object.editoritem.timeline,self.user),
         }
 
+        context['access_rights'] = [{'user': user_json(a.user), 'access_level': a.access} for a in Access.objects.filter(item=self.object.editoritem)]
+
         if editor_json['editable']:
             editor_json.update({
                 'public_access': self.object.editoritem.public_access,
-                'access_rights': [{'id': ea.user.pk, 'name': ea.user.get_full_name(), 'access_level': ea.access} for ea in Access.objects.filter(item=self.object.editoritem)],
+                'access_rights': context['access_rights'],
             })
             if profile:
                 editor_json.update({
@@ -373,8 +376,6 @@ class UpdateView(generic.UpdateView):
                 })
 
         context['editor_json'] = editor_json
-
-        context['access_rights'] = [{'id': ea.user.pk, 'name': ea.user.get_full_name(), 'access_level': ea.access} for ea in Access.objects.filter(item=self.object.editoritem)]
 
         context['versions'] = reversion.get_for_object(self.object)
 
@@ -407,6 +408,24 @@ class RevertView(generic.UpdateView):
 
         return redirect(reverse('exam_edit', args=(exam.pk,exam.editoritem.slug)))
 
+class CompareView(generic.TemplateView):
+
+    template_name = "exam/compare.html"
+
+    def get_context_data(self, pk1,pk2, **kwargs):
+        context = super(CompareView, self).get_context_data(**kwargs)
+        """
+        pk1 = int(pk1)
+        pk2 = int(pk2)
+        q1 = context['q1'] = Question.objects.get(pk=pk1)
+        q2 = context['q2'] = Question.objects.get(pk=pk2)
+        context['pr1_exists'] = QuestionPullRequest.objects.open().filter(source=q1,destination=q2).exists()
+        context['pr2_exists'] = QuestionPullRequest.objects.open().filter(source=q2,destination=q1).exists()
+        context['pr1_auto'] = q2.editoritem.can_be_edited_by(self.request.user)
+        context['pr2_auto'] = q1.editoritem.can_be_edited_by(self.request.user)
+        """
+        return context
+
 class ShareLinkView(generic.RedirectView):
     permanent = False
 
@@ -433,25 +452,6 @@ class ShareLinkView(generic.RedirectView):
             ea.save()
 
         return reverse('exam_edit',args=(e.pk,e.slug))
-
-class SetStarView(generic.UpdateView):
-    model = Exam
-
-    def post(self, request, *args, **kwargs):
-        exam = self.get_object()
-
-        profile = request.user.userprofile
-        starred = request.POST.get('starred') == 'true'
-        if starred:
-            profile.favourite_exams.add(exam)
-        else:
-            profile.favourite_exams.remove(exam)
-        profile.save()
-
-        return HttpResponse('ok!')
-
-    def get(self, request, *args, **kwargs):
-        return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
 
 class StampView(editor.views.generic.StampView):
     model = Exam

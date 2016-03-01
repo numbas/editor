@@ -1,9 +1,10 @@
 {% extends "exam/edit.html" %}
 {% load verbatim %}
 {% load user_link %}
-{% load icon %}
 {% load helplink %}
 {% load editor_controls %}
+{% load links %}
+{% load sanitizer %}
 
 {% block editable_message %}You can edit this exam.{% endblock %}
 
@@ -11,7 +12,7 @@
     <div class="tab-content">
 
         <!-- Settings tab -->
-		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='settings'}">
+		<section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='settings'}">
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-sm-8">
@@ -19,6 +20,7 @@
                             <label>Name</label>
                             <input class="form-control input-lg" data-bind="textInput: name">
                         </div>
+
                         <div class="form-group description">
                             <label>Description</label>
                             <div data-bind="writemaths: description"></div>
@@ -26,6 +28,23 @@
                                 {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#description' subject='the description field' %}
                                 Describe what this exam assesses, or how it is going to be used.
                             </p>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Interface theme {% helplink 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-theme' %}</label>
+                            <select class="form-control" data-bind="options: Editor.themes, value: theme, optionsText: 'name'"></select>
+                            <div class="help-block upload-theme"><a href="{% url 'theme_new' %}">Upload a new theme</a></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Interface language {% helplink 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-interface-language' %}</label>
+                            <select class="form-control" data-bind="options: Editor.locales, value: locale, optionsValue: 'code', optionsText: 'name'"></select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Pass threshold {% helplink 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-pass-threshold' %}</label>
+                            <input type="range" min="0" max="100" data-bind="value: percentPass, valueUpdate: 'input'">
+                            <span class="percentproperty value" data-bind="text: ko.unwrap(percentPass)+'%'">0%</span>
                         </div>
                     </div>
                     <div class="col-sm-4">
@@ -72,7 +91,7 @@
         </section>
 
         <!-- Questions -->
-		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='questions'}">
+		<section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='questions'}">
             <div class="questions row">
                 <div class="col-sm-6">
                     <div class="panel panel-primary">
@@ -104,66 +123,34 @@
                     </div>
                 </div>
                 <div class="col-sm-6">
-                    <ul class="nav nav-tabs" data-bind="foreach: questionTabs">
-                        <li data-bind="css: {active: $root.currentQuestionTab() == $data}">
-                            <a href="#" data-bind="click: $root.currentQuestionTab, text: title"></a>
-                        </li>
-                    </ul>
-                    <div class="tab-content">
-                        <div class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentQuestionTab().id)=='mine'}">
-                            <ul class="results editlist big" data-bind="
-                                template: {
-                                    name: 'questionResult',
-                                    foreach: recentQuestions,
-                                }
-                            "></ul>
+                    <div class="panel panel-default tab-content">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">Add questions to this exam</h4>
                         </div>
-                        <div class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentQuestionTab().id)=='basket'}">
-                            <ul class="results editlist big" data-bind="
-								visible: basketQuestions().length>0,
-                                template: {
-                                    name: 'questionResult',
-                                    foreach: basketQuestions,
-                                }
-                            "></ul>
-							<div data-bind="visible: basketQuestions().length==0">
-								<p class="nothing-here">There's nothing in your basket at the moment. Find questions you'd like to use, and click on the basket icon. They'll show up here so you can easily add them to this exam.</p>
-							</div>
+                        <div class="panel-body">
+                            <ul class="nav nav-pills nav-justified" data-bind="foreach: questionTabs">
+                                <li data-bind="css: {active: $root.currentQuestionTab() == $data}">
+                                    <a href="#" data-bind="click: $root.currentQuestionTab, text: title"></a>
+                                </li>
+                            </ul>
                         </div>
-                        <div class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentQuestionTab().id)=='search'}">
-                            <form class="form-horizontal" data-bind="submit: search.submit">
-                                <div class="control-group">
-                                    <label for="questionsearch">
-                                        <span class="control-label">Search for questions:</span>
-                                        <div class="controls">
-                                            <div class="input-append">
-                                                <input type="text" id="questionsearch" class="search" placeholder="Topic or question name" data-bind="
-                                                    value: search.query, 
-                                                    valueUpdate: 'afterkeydown'
-                                                "/>
-                                                <span class="add-on"><button type="submit" class="search" data-bind="css: {loading: search.searching}"></button></span>
-                                            </div>
-                                        </div>
-                                    </label>
-                                    <label for="questionsearchtags">
-                                        <span class="control-label">Filter by tags:</span>
-                                        <div class="controls">
-                                            <input type="text" id="questionsearchtags" class="search" placeholder="Tags separated by commas" data-bind="
-                                                value: search.tags, 
-                                                valueUpdate: 'afterkeydown'
-                                            "/>
-                                        </div>
-                                    </label>
-                                </div>
-                            </form>
-                            <div class="searchBox">
-                                <ul class="results editlist big" data-bind="
-                                    template: {
-                                        name: 'questionResult',
-                                        foreach: search.results.all,
-                                    }
-                                "></ul>
-                            </div>
+                        <ul class="results list-group tab-pane" data-bind="
+                            css: {active: ko.unwrap($root.currentQuestionTab().id)=='mine'},
+                            template: {
+                                name: 'questionResult',
+                                foreach: recentQuestions,
+                            }
+                        "></ul>
+                        <ul class="results list-group tab-pane" data-bind="
+                            css: {active: ko.unwrap($root.currentQuestionTab().id)=='basket'},
+                            template: {
+                                name: 'questionResult',
+                                foreach: basketQuestions,
+                            }
+                        "></ul>
+                        <div class="panel-body nothing-here" data-bind="visible: ko.unwrap($root.currentQuestionTab().id)=='basket' && basketQuestions().length==0">
+                            <p>There's nothing in your basket at the moment.</p>
+                            <p><a target="_blank" href="{% url 'search' %}">Search for questions you'd like to use</a>, and click on the basket icon. They'll show up here so you can easily add them to this exam.</p>
                         </div>
                     </div>
                 </div>
@@ -171,7 +158,7 @@
 		</section>
 
         <!-- Navigation -->
-        <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='navigation'}">
+        <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='navigation'}">
             <form class="form-horizontal">
                 {% booleanproperty 'allowregen' 'Allow user to regenerate questions?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-allow-user-to-regenerate-questions' %}
                 {% booleanproperty 'reverse' 'Allow move to previous question?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-allow-move-to-previous-question' %}
@@ -184,7 +171,7 @@
         </section>
 
         <!-- Timing -->
-        <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='timing'}">
+        <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='timing'}">
             <form class="form-horizontal">
                 {% property 'duration' 'Exam duration (minutes)' min=0 help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-exam-duration' %}
                 {% booleanproperty 'allowPause' 'Allow pausing?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-allow-pausing' %}
@@ -194,7 +181,7 @@
         </section>
 
         <!-- Feedback -->
-        <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='feedback'}">
+        <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='feedback'}">
             <form class="form-horizontal">
                 {% booleanproperty 'showactualmark' 'Show current score?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-show-current-score' %}
                 {% booleanproperty 'showtotalmark' 'Show maximum score?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-show-maximum-score' %}
@@ -205,7 +192,7 @@
         </section>
 
         <!-- Access -->
-        <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='access'}">
+        <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='access'}">
             <div class="panel panel-warning" data-bind="visible: !published() && !all_sections_completed()">
                 <div class="panel-heading">
                     <h3 class="panel-title">Publish</h3>
@@ -330,6 +317,61 @@
                 </ul>
             </nav>
         </section>
+
+        <!-- Other versions -->
+        <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='network'}">
+            {% if object.editoritem.network|length == 1 %}
+                <p>There is only one version of this exam.<p>
+            {% else %}
+                <table class="network table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th><span class="glyphicon glyphicon-comment"></span> Status</th>
+                            <th><span class="glyphicon glyphicon-user"></span> Author</th>
+                            <th><span class="glyphicon glyphicon-time"></span> Last Modified</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ei2 in object.editoritem.network %}
+                        <tr class="network-item{% if ei2 == object.editoritem %} active{% endif %}">
+                            <td>{% if ei2 != object.editoritem %}{% exam_link ei2.rel_obj %}{% else %}{{ei2.name}}{% endif %}</td>
+                            <td>{% include "stamp_column.html" with record=ei2 %}</td>
+                            <td>{% user_link ei2.author %}</td>
+                            <td>{{ ei2.last_modified|date:"d/m/Y H:i" }}</td>
+
+                            <td class="admin">
+                                {% if ei2 != object.editoritem %}
+                                <a class="btn btn-link" href="{% url 'exam_preview' ei2.rel_obj.pk ei2.slug %}" target="_blank" title="Preview this version"><span class="glyphicon glyphicon-play"></span></a>
+                                <a class="btn btn-link" href="{% url 'exam_compare' object.pk ei2.rel_obj.pk %}" title="Compare with this version"><span class="glyphicon glyphicon-transfer"></span></a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+
+            {% with object.incoming_pull_requests.open as pull_requests %}
+            {% if pull_requests.exists %}
+            <h2>Request{{pull_requests.count|pluralize}} to merge</h2>
+            <ul>
+                {% for pr in pull_requests %}
+                <li class="pull-request">
+                    <p>{% user_link pr.owner %} would like you to replace this exam with {% exam_link pr.source %}.</p>
+                    <p>Here's what's changed:</p>
+                    <blockquote class="comment">{{ pr.comment|strip_html|safe }}</blockquote>
+                    <div class="responses">
+                        <form method="post" action="{% url 'exam_pullrequest_accept' pr.pk %}">{% csrf_token %}<button class="btn accept-pr">Accept</button></form>
+                        <form method="post" action="{% url 'exam_pullrequest_reject' pr.pk %}">{% csrf_token %}<button class="btn reject-pr">Reject</button></form>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {% endwith %}
+        </section>
     </div>
 
 	{% verbatim %}
@@ -375,7 +417,7 @@
 	{% include "editable.html" %}
 
 	<div class="tab-content">
-		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='settings'}">
+		<section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='settings'}">
 
 
 
@@ -450,7 +492,7 @@
                 </div>
 			</div>
 		</section>
-		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='navigation'}">
+		<section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='navigation'}">
 			<form class="form-horizontal">
 				<div class="control-group" data-bind="template: {
 					name: 'booleanproperty',
@@ -482,7 +524,7 @@
 				}"></div>
 			</form>
 		</section>
-		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='timing'}">
+		<section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='timing'}">
 			<form class="form-horizontal">
 				<div class="control-group" data-bind="template: {
 					name: 'numberproperty',
@@ -502,7 +544,7 @@
 				}"></div>
 			</form>
 		</section>
-		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='feedback'}">
+		<section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='feedback'}">
 			<form class="form-horizontal">
 				<div class="control-group" data-bind="template: {
 					name: 'booleanproperty',
@@ -526,7 +568,7 @@
 				}"></div>
 			</form>
 		</section>
-		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='questions'}">
+		<section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='questions'}">
 			<div class="row-fluid">
 			</div>
             <div class="questions row-fluid">
@@ -561,7 +603,7 @@
                         </li>
                     </ul>
                     <div class="tab-content">
-                        <div class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentQuestionTab().id)=='mine'}">
+                        <div class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentQuestionTab().id)=='mine'}">
                             <ul class="results editlist big" data-bind="
                                 template: {
                                     name: 'questionResult',
@@ -569,7 +611,7 @@
                                 }
                             "></ul>
                         </div>
-                        <div class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentQuestionTab().id)=='basket'}">
+                        <div class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentQuestionTab().id)=='basket'}">
                             <ul class="results editlist big" data-bind="
 								visible: basketQuestions().length>0,
                                 template: {
@@ -581,7 +623,7 @@
 								<p class="nothing-here">There's nothing in your basket at the moment. Find questions you'd like to use, and click on the basket icon. They'll show up here so you can easily add them to this exam.</p>
 							</div>
                         </div>
-                        <div class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentQuestionTab().id)=='search'}">
+                        <div class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentQuestionTab().id)=='search'}">
                             <form class="form-horizontal" data-bind="submit: search.submit">
                                 <div class="control-group">
                                     <label for="questionsearch">
@@ -620,7 +662,7 @@
                 </div>
 			</div>
 		</section>
-        <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='versions'}">
+        <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='versions'}">
             <h4>Editing history</h4>
             <p><label><input type="checkbox" data-bind="checked: showCondensedTimeline"/> Show condensed editing history</label></p>
             <div class="timeline-write-comment">
@@ -674,7 +716,7 @@
                 </tbody>
             </table>
         </section>
-		<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='access'}">
+		<section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='access'}">
         <div data-bind="template: {name: 'helplink', data: {url: 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#access', topic: 'access rights', big: true}}"></div>
             <h4>Public access</h4>
 			<form class="form-horizontal">
@@ -745,7 +787,7 @@
 	</script>
 
 	<script type="text/html" id="question">
-		<li class="question clearAfter">
+		<li class="question">
 			<span class="handle"></span>
 			<div class="controls">
 				<a class="preview" data-bind="attr: {href: previewURL()}" target="_blank" title="Test run this question"></a>

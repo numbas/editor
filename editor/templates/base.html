@@ -1,7 +1,6 @@
 {% load sstatic %}
 {% load analytical %}
 {% load notifications_tags %}
-{% load icon %}
 {% load django_tables2 %}
 {% notifications_unread as unread_notifications %}
 {% load user_link %}
@@ -192,18 +191,6 @@
             <script src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
             <script src="{% sstatic 'js/es5-shim.js' %}" type="text/javascript"></script>
-
-            <!-- SVG injector to make icons work in IE -->
-            <img src="{% sstatic 'images/open-iconic.svg' %}" class="iconic-sprite" style="display:none;" />    
-            <script src="{% sstatic 'js/svg-injector.min.js' %}"></script>
-
-            <script>
-                // Elements to inject
-                var mySVGsToInject = document.querySelectorAll('.iconic-sprite');
-    
-                // Do the injection
-                SVGInjector(mySVGsToInject);
-            </script>
 
             <!-- editor -->
             <script src="{% sstatic 'js/main.js' %}" type="text/javascript"></script>

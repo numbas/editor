@@ -100,11 +100,9 @@ $(document).ready(function() {
                 'picture'
             ),
 			new Editor.Tab('exams','Exams using this question','book'),
+            new Editor.Tab('network','Other versions','link'),
+            new Editor.Tab('versions','Editing history','time')
 		]);
-		var networkTab = new Editor.Tab('network','Other versions','link');
-        this.mainTabs.push(networkTab);
-        var editingHistoryTab = new Editor.Tab('versions','Editing history','time');
-        this.mainTabs.push(editingHistoryTab);
         if(Editor.editable) {
             var adviceTab = new Editor.Tab('access','Access','lock');
             this.mainTabs.splice(5,0,adviceTab);
@@ -436,7 +434,7 @@ $(document).ready(function() {
             this.addUserAccess = function(data) {
                 var access_rights = q.access_rights();
                 for(var i=0;i<access_rights.length;i++) {
-                    if(access_rights[i].id==data.id) {
+                    if(access_rights[i].id==data.user.id) {
                         noty({
                             text: "That user is already in the access list.",
                             layout: "center",
@@ -451,7 +449,9 @@ $(document).ready(function() {
                         return;
                     }
                 }
-                q.access_rights.push(new UserAccess(q,data));
+                var access = new UserAccess(q,data.user);
+                access.access_level(d.access_level);
+                q.access_rights.push(access);
             };
 
             this.section_tasks = {

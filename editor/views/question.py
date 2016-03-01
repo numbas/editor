@@ -39,13 +39,12 @@ import reversion
 
 from django_tables2.config import RequestConfig
 
-from editor.forms import NewQuestionForm, QuestionForm, SetAccessForm, QuestionSearchForm, QuestionHighlightForm
+from editor.forms import NewQuestionForm, QuestionForm, SetAccessForm
 from editor.models import Project, EditorItem, NewQuestion, Access, Question, Extension, Image, QuestionAccess, QuestionHighlight, QuestionPullRequest, EditorTag, Licence, STAMP_STATUS_CHOICES
 import editor.views.generic
 import editor.views.editoritem
 from editor.views.errors import forbidden
 from editor.views.user import find_users
-from editor.tables import QuestionTable, QuestionHighlightTable
 from editor.views.version import version_json
 from editor.views.timeline import timeline_json
 

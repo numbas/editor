@@ -1965,8 +1965,13 @@ $(document).ready(function() {
 			var data = this.toJSON();
 			var p = new Part(this.q,this.parent(),this.parentList,data);
 			this.parentList.push(p);
-            setTimeout(function() {window.scrollTo(0,$('.part[data-path="'+p.path()+'"]').offset().top);},0);
+            p.scrollTo();
 		},
+
+        scrollTo: function() {
+            var p = this;
+            setTimeout(function() {window.scrollTo(0,$('.part[data-path="'+p.path()+'"]').offset().top-10)},0);
+        },
 
 		replaceWithGapfill: function() {
 			var gapFill = new Part(this.q,this.parent(),this.parentList);
@@ -2015,6 +2020,7 @@ $(document).ready(function() {
 			if(i>0) {
 				this.parentList.remove(this);
 				this.parentList.splice(i-1,0,this);
+                this.scrollTo();
 			}
 		},
 
@@ -2022,6 +2028,7 @@ $(document).ready(function() {
 			var i = this.parentList.indexOf(this);
 			this.parentList.remove(this);
 			this.parentList.splice(i+1,0,this);
+            this.scrollTo();
 		},
 
 		setType: function(name) {

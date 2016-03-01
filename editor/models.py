@@ -35,7 +35,7 @@ from django.core.urlresolvers import reverse
 from django.db import models,transaction
 from django.db.models import signals, Max, Min
 from django.dispatch import receiver
-from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.forms import model_to_dict
@@ -305,26 +305,6 @@ class Licence(models.Model):
                 'pk': self.pk,
         }
 
-class TimelineEvent(object):
-    def __init__(self,user,date,type,data):
-        self.user = user
-        self.date = date
-        self.type = type
-        self.data = data
-
-class StampTimelineEvent(TimelineEvent):
-    def __init__(self,stamp):
-        super(StampTimelineEvent,self).__init__(user=stamp.user, date=stamp.date, type='stamp', data=stamp)
-
-class VersionTimelineEvent(TimelineEvent):
-    def __init__(self,version):
-        revision = version.revision
-        super(VersionTimelineEvent,self).__init__(user=revision.user, date=revision.date_created, type='version', data=version)
-
-class CommentTimelineEvent(TimelineEvent):
-    def __init__(self,comment):
-        super(CommentTimelineEvent,self).__init__(user=comment.user, date=comment.date, type='comment', data=comment)
-
 STAMP_STATUS_CHOICES = (
     ('ok','Ready to use'),
     ('dontuse','Should not be used'),
@@ -336,6 +316,10 @@ STAMP_STATUS_CHOICES = (
 class TimelineMixin(object):
     def can_be_deleted_by(self,user):
         return user==self.user or user==self.object.author
+
+    @property
+    def timelineitem(self):
+        return self.timelineitems.get()
 
 class StampOfApproval(models.Model,TimelineMixin):
     object_content_type = models.ForeignKey(ContentType)
@@ -445,6 +429,7 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
     name = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200,editable=False,unique=False)
 
+    timeline = GenericRelation('TimelineItem',related_query_name='editoritems',content_type_field='timeline_content_type',object_id_field='timeline_id')
 
     author = models.ForeignKey(User,related_name='own_items')
     public_access = models.CharField(default='view',editable=True,choices=PUBLIC_ACCESS_CHOICES,max_length=6)
@@ -504,12 +489,6 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
         e2.share_uuid_view = uuid.uuid4()
         e2.share_uuid_edit = uuid.uuid4()
         return e2
-
-    @property
-    def timeline(self):
-        events = [StampTimelineEvent(stamp) for stamp in self.stamps.all()] + [VersionTimelineEvent(version) for version in reversion.get_for_object(self.rel_obj)] + [CommentTimelineEvent(comment) for comment in self.comments.all()]
-        events.sort(key=lambda x:x.date, reverse=True)
-        return events
 
     @property
     def item_type(self):
@@ -598,25 +577,62 @@ def set_ability_level_limits(instance,**kwargs):
     instance.ability_level_start = ends.get('start__min',None)
     instance.ability_level_end = ends.get('end__max',None)
 
+class TimelineItem(models.Model):
+    # Object whose timeline this item belongs to
+    timeline_content_type = models.ForeignKey(ContentType,related_name='timelineitem_timeline')
+    timeline_id = models.PositiveIntegerField()
+    timeline = GenericForeignKey('timeline_content_type','timeline_id')
+
+    # Reference to an object representing this item (e.g. a Comment)
+    object_content_type = models.ForeignKey(ContentType,related_name='timelineitem_object')
+    object_id = models.PositiveIntegerField()
+    object = GenericForeignKey('object_content_type','object_id')
+
+    date = models.DateTimeField(auto_now_add=True)
+
+    def can_be_deleted_by(self,user):
+        try:
+            return self.object.can_be_deleted_by(user)
+        except AttributeError:
+            return False
+
+    class Meta:
+        unique_together = (('object_id','object_content_type'),)
+        ordering = ('-date',)
+
+@receiver(signals.post_delete,sender=TimelineItem)
+def delete_timelineitem_object(instance,*args,**kwargs):
+    instance.object.delete()
+
 class NewStampOfApproval(models.Model,TimelineMixin):
     object = models.ForeignKey(EditorItem,related_name='stamps')
 
+    timelineitems = GenericRelation(TimelineItem,related_query_name='stamps',content_type_field='object_content_type',object_id_field='object_id')
+    timelineitem_template = 'timeline/stamp.html'
+
     user = models.ForeignKey(User, related_name='newstamps')
     status = models.CharField(choices = STAMP_STATUS_CHOICES, max_length=20)
-    date = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
-        return '{} as "{}"'.format(self.user.username,self.object.name,self.get_status_display(),self.date)
+        return '{} said "{}"'.format(self.user.username,self.get_status_display())
 
 class NewComment(models.Model,TimelineMixin):
     object = models.ForeignKey(EditorItem,related_name='comments')
 
+    timelineitems = GenericRelation(TimelineItem,related_query_name='comments',content_type_field='object_content_type',object_id_field='object_id')
+    timelineitem_template = 'timeline/comment.html'
+
     user = models.ForeignKey(User, related_name='newcomments')
     text = models.TextField()
-    date = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
         return 'Comment by {} on {}: "{}"'.format(self.user.get_full_name(), str(self.object), self.text[:47]+'...' if len(self.text)>50 else self.text)
+
+@receiver(signals.post_save,sender=NewStampOfApproval)
+@receiver(signals.post_save,sender=NewComment)
+def stamp_timeline_event(instance,created,**kwargs):
+    if created:
+        TimelineItem.objects.create(object=instance,timeline=instance.object)
 
 @reversion.register
 class NewQuestion(models.Model):
@@ -773,9 +789,7 @@ class EditorModel(models.Model):
 
     @property
     def timeline(self):
-        events = [StampTimelineEvent(stamp) for stamp in self.stamps] + [VersionTimelineEvent(version) for version in reversion.get_for_object(self)] + [CommentTimelineEvent(comment) for comment in self.comments]
-        events.sort(key=lambda x:x.date, reverse=True)
-        return events
+        return []
     
     @property
     def stamps(self):
@@ -1184,7 +1198,6 @@ class ExamAccess(models.Model):
 def notify_given_exam_access(instance,created,**kwargs):
     if created and hasattr(instance,'given_by'):
         notify.send(instance.given_by,verb='gave you access to',target=instance.exam,recipient=instance.user)
-        
         
 class ExamQuestion(models.Model):
     

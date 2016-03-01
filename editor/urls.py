@@ -159,10 +159,10 @@ urlpatterns = patterns('',
     url(r'^comment/(?P<pk>\d+)/delete$',
         generic.DeleteCommentView.as_view(), name='delete_comment'),
 
-    # Stamps
+    # Timeline items
 
-    url(r'^stamp/(?P<pk>\d+)/delete$',
-        generic.DeleteStampView.as_view(), name='delete_stamp'),
+    url(r'^timelineitem/(?P<pk>\d+)/delete$',
+        generic.DeleteTimelineItemView.as_view(), name='timelineitem_delete'),
 
     # Versions
 

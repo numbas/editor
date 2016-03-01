@@ -16,7 +16,7 @@ import os
 import subprocess
 import traceback
 
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect,render_to_response
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django import http
@@ -24,7 +24,7 @@ from django.views import generic
 from django.template.loader import get_template
 from django.template import RequestContext
 
-from editor.models import Extension,NewStampOfApproval,Comment
+from editor.models import Extension,NewStampOfApproval,NewComment,TimelineItem
 
 # from http://stackoverflow.com/questions/18172102/object-ownership-validation-in-django-updateview
 class AuthorRequiredMixin(object):
@@ -35,7 +35,11 @@ class AuthorRequiredMixin(object):
             return http.HttpResponseForbidden(template.render(RequestContext(self.request)))
         return result
 
-class StampView(generic.UpdateView):
+class TimelineItemViewMixin(object):
+    def response(self,object):
+        return render_to_response(object.timelineitem_template,RequestContext(self.request,{'item':object.timelineitem,'can_delete': object.can_be_deleted_by(self.request.user)}))
+
+class StampView(generic.UpdateView,TimelineItemViewMixin):
     def post(self, request, *args, **kwargs):
         object = self.get_object()
 
@@ -43,21 +47,21 @@ class StampView(generic.UpdateView):
 
         stamp = NewStampOfApproval.objects.create(user=request.user,object=object.editoritem,status=status)
 
-        return http.HttpResponse(json.dumps(stamp_json(stamp)),content_type='application/json')
+        return self.response(stamp)
 
     def get(self, request, *args, **kwargs):
         return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
 
-class CommentView(generic.UpdateView):
+class CommentView(generic.UpdateView,TimelineItemViewMixin):
     def post(self, request, *args, **kwargs):
         object = self.get_object()
 
         text = request.POST.get('text')
 
-        comment = Comment(user=request.user,object=object,text=text)
+        comment = NewComment(user=request.user,object=object.editoritem,text=text)
         comment.save()
 
-        return http.HttpResponse(json.dumps(comment_json(comment)),content_type='application/json')
+        return self.response(comment)
 
     def get(self, request, *args, **kwargs):
         return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
@@ -79,11 +83,10 @@ def user_json(user):
 def stamp_json(stamp,**kwargs):
     return {
         'pk': stamp.pk,
-        'date': stamp.date.strftime('%Y-%m-%d %H:%M:%S'),
+        'date': stamp.timelineitem.date.strftime('%Y-%m-%d %H:%M:%S'),
         'status': stamp.status,
         'status_display': stamp.get_status_display(),
         'user': user_json(stamp.user),
-        'delete_url': reverse('delete_stamp',args=(stamp.pk,))
     }
 
 # JSON representation of a editor.models.StampOfApproval object
@@ -96,8 +99,19 @@ def comment_json(comment,**kwargs):
         'delete_url': reverse('delete_comment',args=(comment.pk,))
     }
 
+class DeleteTimelineItemView(generic.DeleteView):
+    model = TimelineItem
+
+    def delete(self,request,*args,**kwargs):
+        self.object = self.get_object()
+        if self.object.can_be_deleted_by(self.request.user):
+            self.object.delete()
+            return http.HttpResponse('timeline item {} deleted'.format(self.object.pk))
+        else:
+            return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
+
 class DeleteCommentView(generic.DeleteView):
-    model = Comment
+    model = NewComment
     def delete(self,request,*args,**kwargs):
         self.object = self.get_object()
         if self.object.can_be_deleted_by(self.request.user):

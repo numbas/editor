@@ -9,11 +9,11 @@ def user_link(user,text=None,new_window=False):
     return {'user': user, 'text': text, 'new_window': new_window}
 
 @register.inclusion_tag('links/user_thumbnail.html')
-def user_thumbnail(user,size=None,glyphicon_size=None):
+def user_thumbnail(user,size=None,glyphicon_size=None,link=False):
     avatar = user.userprofile.avatar
     if glyphicon_size is None:
         glyphicon_size = size
-    context = {'user': user, 'size': size, 'glyphicon_size': glyphicon_size}
+    context = {'user': user, 'size': size, 'glyphicon_size': glyphicon_size, 'link': link}
     if not avatar:
         context['has_avatar'] = False
     else:

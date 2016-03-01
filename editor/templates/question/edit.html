@@ -64,14 +64,14 @@
     <div class="page-header">
         <h1 class="name-header">
             <span class="glyphicon glyphicon-file"></span> <span data-bind="mathjaxHTML: name">{{object.name}}</span>
+            <small class="pull-right" data-bind="if: current_stamp">
+                <a class="label label-default stamp" data-bind="text: current_stamp().status_display"></a>
+            </small>
         </h1>
     </div>
     <div class="row">
         <div class="col-sm-3 col-md-2 tabs">
             <ul id="controls" class="nav nav-pills nav-stacked">
-                <li data-bind="if: current_stamp">
-                    <a class="label label-default stamp" data-bind="text: current_stamp().status_display"></a>
-                </li>
                 <li id="preview">
                     <a class="text-success" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this question in a new window (Ctrl+B)">
                         <span class="glyphicon glyphicon-play"></span>
@@ -127,7 +127,7 @@
         <div class="col-sm-9 col-md-10 editing">
             <div class="tab-content">
                 <!-- Settings tab -->
-                <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='settings'}">
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='settings'}">
                     <div class="container-fluid">
                         <div class="row">
                             <div class="col-sm-8">
@@ -188,7 +188,7 @@
                 </section>
 
                 <!-- Question statement -->
-                <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='statement'}">
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='statement'}">
                     <div class="form-group">
                         <label>Question statement</label>
                         <div data-bind="writemaths: statement"></div>
@@ -212,7 +212,7 @@
                 </section>
 
                 <!-- Variables -->
-                <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='variables'}">
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='variables'}">
                     <div class="container-fluid">
                         <div class="row">
                             <div class="col-sm-12 col-md-6 col-lg-7" data-bind="with: currentVariable">
@@ -377,7 +377,7 @@
                 </section>
 
                 <!-- Variable testing -->
-                <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='variabletesting'}">
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='variabletesting'}">
                     <form class="form-horizontal">
                         <div class="form-group">
                             <label class="col-sm-3 control-label">
@@ -403,7 +403,7 @@
                 </section>
 
                 <!-- Parts -->
-                <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='parts'}">
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='parts'}">
 
                     <p class="text-right">
                         <button type="button" class="btn btn-link" data-bind="click: expand_all_parts"><span class="glyphicon glyphicon-expand"></span> Expand every part</button>
@@ -439,7 +439,7 @@
                                         </li>
                                     </ul>
                                     <div class="col-sm-9 tab-content">
-                                        <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='prompt'}">
+                                        <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='prompt'}">
                                             <div data-bind="writemaths: prompt, preambleCSS: $root.preamble.css, tinymce_plugins: ['gapfill'], showButtons: {gapfill: function(){return $data.type().name=='gapfill'}}"></div>
 
                                             <p class="help-block">
@@ -458,7 +458,7 @@
                                             {% endfor %}
                                         {% endwith %}
 
-                                        <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='scripts'}">
+                                        <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='scripts'}">
                                             <form class="form-inline" data-bind="foreach: scripts">
                                                 <div class="script control-group">
                                                     <label class="control-label">
@@ -474,7 +474,7 @@
                                                 </div>
                                             </form>
                                         </section>
-                                        <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable(currentTab().id)=='adaptivemarking'}">
+                                        <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='adaptivemarking'}">
                                             <h4>Variable replacement</h4>
                                             <div class="variable-replacements">
                                                 <table class="table" data-bind="fadeVisible: variableReplacements().length">
@@ -550,7 +550,7 @@
 
 
                 <!-- Advice -->
-                <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='advice'}">
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='advice'}">
                     <div class="form-group">
                         <label>Advice</label>
                         <div data-bind="writemaths: advice"></div>
@@ -574,7 +574,7 @@
                 </section>
 
                 <!-- Access -->
-                <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='access'}">
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='access'}">
                     <div class="panel panel-warning" data-bind="visible: !published() && !all_sections_completed()">
                         <div class="panel-heading">
                             <h3 class="panel-title">Publish</h3>
@@ -700,7 +700,7 @@
                 </section>
 
                 <!-- Extensions and scripts -->
-                <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='extensions'}">
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='extensions'}">
                     <div class="container-fluid">
                         <div class="row">
                             <div class="col-sm-4">
@@ -841,7 +841,8 @@
 
                 </section>
 
-                <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='exams'}">
+                <!-- Exams using this question -->
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='exams'}">
                     {% if object.exams_using_this.count %}
                     <p>This question is used in the following exam{{object.exams_using_this.count|pluralize}}:</p>
                         <ul class="exams-list">
@@ -856,7 +857,8 @@
                     {% endif %}
                 </section>
 
-                <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='network'}">
+                <!-- Other versions -->
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='network'}">
                     {% if object.editoritem.network|length == 1 %}
                         <p>There is only one version of this question.<p>
                     {% else %}
@@ -908,6 +910,28 @@
                     </ul>
                     {% endif %}
                     {% endwith %}
+                </section>
+
+                <!-- Editing history -->
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='history'}">
+
+                    <div class="timeline-write-comment">
+                        <button class="btn btn-primary" data-bind="visible: !writingComment(), click: writingComment" type="button"><span class="glyphicon glyphicon-comment"></span> Write a comment</button>
+                        <form data-bind="fadeVisible: writingComment, submit: submitComment">
+                            <h4>Comment</h4>
+                            <div data-bind="writemaths: commentText"></div>
+                            <div class="buttons">
+                                <button type="Submit" class="btn btn-primary" data-bind="attr: {disabled: commentIsEmpty}">Submit</button>
+                                <button type="button" class="btn btn-default" data-bind="click: cancelComment">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="timeline">
+                        {% for item in object.editoritem.timeline.all %}
+                            {% include item.object.timelineitem_template %}
+                        {% endfor %}
+                    </div>
                 </section>
             </div>
         </div>

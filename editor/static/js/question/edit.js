@@ -100,7 +100,7 @@ $(document).ready(function() {
             ),
 			new Editor.Tab('exams','Exams using this question','book'),
             new Editor.Tab('network','Other versions','link'),
-            new Editor.Tab('versions','Editing history','time')
+            new Editor.Tab('history','Editing history','time')
 		]);
         if(Editor.editable) {
             var adviceTab = new Editor.Tab('access','Access','lock');
@@ -581,6 +581,7 @@ $(document).ready(function() {
         this.addStamp = function(status_code) {
             return function() {
                 $.post('stamp',{'status': status_code, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(stamp) {
+                    $('.timeline').prepend(stamp).mathjax();
                     q.timeline.splice(0,0,new Editor.TimelineItem({date: stamp.date, user: stamp.user, data: stamp, type: 'stamp'}));
                 });
                 noty({
@@ -603,7 +604,7 @@ $(document).ready(function() {
 
             var text = this.commentText();
             $.post('comment',{'text': text, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(comment) {
-                q.timeline.splice(0,0,new Editor.TimelineItem({date: comment.date, user: comment.user, data: comment, type: 'comment'}));
+                $('.timeline').prepend(comment).mathjax();
             });
 
             this.commentText('');
@@ -2942,6 +2943,7 @@ $(document).ready(function() {
             ko.options.deferUpdates = true;
 			ko.applyBindings(viewModel);
             document.body.classList.add('loaded');
+            $('.timeline').mathjax();
 		}
 		catch(e) {
 			$('.page-loading').hide();

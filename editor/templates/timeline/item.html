@@ -1,0 +1,14 @@
+{% load humanize %}
+<div class="media timeline-item">
+    <div class="media-left">
+        {% block thumbnail %}{% endblock %}
+    </div>
+    <div class="media-body">
+        <h4 class="media-heading">
+            {% block heading %}{% endblock %} 
+            <small>{{item.date|naturaltime}}</small>
+        </h4>
+        {% if can_delete %}<a class="btn btn-link text-danger delete" href="{% url 'timelineitem_delete' item.pk %}" title="Delete this item"><span class="glyphicon glyphicon-remove"></span></a>{% endif %}
+        {% block content %}{% endblock %}
+    </div>
+</div>

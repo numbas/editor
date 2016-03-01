@@ -17,6 +17,10 @@
 	max-height: 20em;
 }
 
+.writemathsContainer {
+    margin-bottom: 1em;
+}
+
 .writemathsContainer textarea.wmTextArea {
 	display: none;
 }
@@ -48,6 +52,10 @@
     background: none;
     border: none;
     padding: 3px 2px;
+}
+
+.timeline-write-comment {
+    margin-bottom: 2em;
 }
 
 /*

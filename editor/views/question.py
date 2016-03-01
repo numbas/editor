@@ -498,4 +498,4 @@ class StampView(editor.views.generic.StampView):
     model = NewQuestion
 
 class CommentView(editor.views.generic.CommentView):
-    model = Question
+    model = NewQuestion

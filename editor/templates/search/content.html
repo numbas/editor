@@ -106,7 +106,7 @@
                     </div>
                     <div class="row">
                         <div class="col-lg-7 col-md-8 col-sm-7 col-xs-8">
-                            <h4><a href="{% url item.item_type|add:'_edit' item.rel_obj.pk item.slug %}">{{item.name}}</a> {{item.pk}} </h4>
+                            <h4><a href="{% url item.item_type|add:'_edit' item.rel_obj.pk item.slug %}">{{item.name}}</a></h4>
                             <div class="fields">
                             </div>
                             <div class="description">
@@ -133,7 +133,7 @@
                                 </li>
                                 {% if item.item_type == 'question' %}
                                 <li>
-                                    <a class="btn btn-link btn-sm basket"><span class="glyphicon glyphicon-shopping-cart" title="Add this to your basket" aria-hidden="true"></span></a>
+                                <a class="btn btn-link btn-sm basket add-to-basket" data-question-id="{{item.question.id}}"><span class="glyphicon glyphicon-shopping-cart" title="Add this to your basket" aria-hidden="true"></span></a>
                                 </li>
                                 {% endif %}
                             </ul>

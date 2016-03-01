@@ -4,32 +4,30 @@
     {% if nonempty %}
         <li>
             <a tabindex="-1" class="empty-basket action" href="{% url 'empty_question_basket' %}">
-                <button role="button" class="btn btn-xs btn-link btn-remove"><span class="glyphicon glyphicon-remove"></span></button>
-                Clear
+                <button role="button" class="btn btn-xs btn-link btn-remove text-warning"><span class="glyphicon glyphicon-remove"></span></button>
+                Clear your basket
             </a>
         </li>
         <li role="separator" class="divider"></li>
     {% endif %}
 
-    <ol class="question-list">
-        {% for bq in user.userprofile.basketquestion_set.all %}
-            {% with question=bq.question %}
-                <li class="question">
-                    <a tabindex="-1" href="{% url 'question_edit' question.pk question.slug %}">
-                        {{question.name}}
-                    </a>
-                    <button role="button" class="btn btn-xs btn-link btn-remove" data-id="{{question.pk}}" title="Remove this question from the basket"><span class="glyphicon glyphicon-remove"></span></button>
-                </li>
-            {% endwith %}
-        {% endfor %}
-    </ol>
+    {% for bq in user.userprofile.basketquestion_set.all %}
+        {% with question=bq.question %}
+            <li class="question">
+                <a tabindex="-1" href="{% url 'question_edit' question.pk question.editoritem.slug %}">
+                    {{question.editoritem.name}}
+                    <button role="button" class="btn btn-xs btn-link btn-remove pull-right text-warning" data-id="{{question.pk}}" title="Remove this question from the basket"><span class="glyphicon glyphicon-remove"></span></button>
+                </a>
+            </li>
+        {% endwith %}
+    {% endfor %}
 
     {% if nonempty %}
         <li role="separator" class="divider"></li>
         <li>
             <a tabindex="-1" class="create-exam-from-basket action" href="{% url 'create_exam_from_basket' %}">
                 <button role="button" class="btn btn-xs btn-link"><span class="glyphicon glyphicon-plus"></span></button>
-                Create an exam from these questions
+                <strong>Create an exam from these questions</strong>
             </a>
         </li>
     {% endif %}

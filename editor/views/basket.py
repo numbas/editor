@@ -5,7 +5,7 @@ from django.db import IntegrityError,transaction
 from django.shortcuts import redirect
 from django.http import HttpResponse
 from django.template.loader import render_to_string
-from editor.models import Question,Exam
+from editor.models import NewQuestion,NewExam
 from accounts.models import BasketQuestion
 from django.views import generic
 
@@ -18,7 +18,7 @@ def add_question_to_basket(request):
     profile = request.user.userprofile
     try:
         with transaction.atomic():
-            BasketQuestion(profile=profile,question=Question.objects.get(pk=id),qn_order=profile.question_basket.count()).save()
+            BasketQuestion(profile=profile,question=NewQuestion.objects.get(pk=id),qn_order=profile.question_basket.count()).save()
     except IntegrityError:
         pass
     return HttpResponse(render_basket(request.user))
@@ -32,10 +32,10 @@ def remove_question_from_basket(request):
     return HttpResponse(render_basket(request.user))
 
 def create_exam_from_basket(request):
-    e = Exam(author=request.user)
+    e = NewExam(author=request.user)
     e.save()
     e.set_questions([bq.question for bq in request.user.userprofile.basketquestion_set.all()])
-    return redirect(reverse('exam_edit', args=(e.pk,e.slug)))
+    return redirect(reverse('exam_edit', args=(e.pk,e.editoritem.slug)))
 
 @require_POST
 def empty_question_basket(request):
@@ -44,7 +44,7 @@ def empty_question_basket(request):
 
 
 class BasketView(generic.ListView):
-    model = Question
+    model = NewQuestion
 
     def get_queryset(self):
         if self.request.user.is_anonymous():

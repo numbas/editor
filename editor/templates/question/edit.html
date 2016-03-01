@@ -412,7 +412,11 @@
 
                     <div class="panel-group parts" role="tablist" aria-multiselectable="true">
                         <!-- ko foreach: allParts-->
-                        <div class="panel part" data-bind="visible: isRootPart() || parent().open(), css: {'open': open, 'panel-primary': isRootPart, 'panel-success': isGap, 'panel-info': isStep, 'root': isRootPart, 'gap': isGap, 'step': isStep}">
+                        <div class="panel part" data-bind="
+                                visible: isRootPart() || parent().open(), 
+                                attr: {'data-path': path},
+                                css: {'open': open, 'panel-primary': isRootPart, 'panel-success': isGap, 'panel-info': isStep, 'root': isRootPart, 'gap': isGap, 'step': isStep}
+                            ">
                             <div class="panel-heading" data-bind="restrictedClick: toggleOpen" clickable>
                                 <div class="pull-right">
                                     <div class="btn-group part-header-controls">

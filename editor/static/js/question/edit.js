@@ -64,7 +64,6 @@ $(document).ready(function() {
 			time_remaining: ko.observable(0)
 		};
         this.parts = ko.observableArray([]);
-		this.currentPart = ko.observable(undefined);
 
 		//for image attribute modal
 		this.imageModal = {
@@ -283,10 +282,6 @@ $(document).ready(function() {
 			var v = new Variable(q);
 			q.variables.splice(n,0,v);
 		}
-
-		this.showPart = function(part) {
-			q.currentPart(part);
-		};
 
         this.expand_all_parts = function() {
             q.allParts().map(function(p) {
@@ -519,55 +514,6 @@ $(document).ready(function() {
                     return undefined;
                 }
             },this));
-
-			if('currentPart' in state && state.currentPart!==undefined) {
-				var path = state.currentPart;
-				var part = this.parts()[path[0]];
-				if(path.length>1) {
-					switch(path[1]) {
-						case 'gap':
-							part = part.gaps()[path[2]];
-							break;
-						case 'step':
-							part = part.steps()[path[2]];
-							break;
-					}
-				}
-				this.currentPart(part);
-			}
-			Editor.computedReplaceState('currentPart',ko.computed(function(){
-				var p = this.currentPart();
-                if(!p) {
-                    return undefined;
-                }
-				if(p.isGap()) {
-					var parentPart = p.parent();
-					return [this.parts().indexOf(parentPart), 'gap', parentPart.gaps().indexOf(p)];
-				} else if(p.isStep()) {
-					var parentPart = p.parent();
-					return [this.parts().indexOf(parentPart), 'step', parentPart.steps().indexOf(p)];
-				} else {
-					return [this.parts().indexOf(p)];
-				}
-			},this));
-			if(this.currentPart() && 'currentPartTab' in state) {
-				var tabs = this.currentPart().tabs();
-				for(var i=0;i<tabs.length;i++) {
-					var tab = tabs[i];
-					if(tab.id==state.currentPartTab) {
-						this.currentPart().currentTab(tab);
-						break;
-					}
-				}
-			}
-			Editor.computedReplaceState('currentPartTab',ko.computed(function(){
-                var p = this.currentPart();
-                if(p) {
-                    return p.currentTab().id;
-                } else {
-                    return undefined;
-                }
-            },this));
 		}
 
 		this.currentChange = ko.observable(new Editor.Change(this.versionJSON(),Editor.questionJSON.author));
@@ -789,14 +735,12 @@ $(document).ready(function() {
         addPart: function() {
 			var p = new Part(this,null,this.parts);
             this.parts.push(p);
-			this.currentPart(p);
 			return p;
         },
 
 		loadPart: function(data) {
 			var p = new Part(this,null,this.parts,data);
             this.parts.push(p);
-			this.currentPart(p);
 			return p;
 		},
 
@@ -1281,8 +1225,6 @@ $(document).ready(function() {
                 contentData.parts.map(function(pd) {
                     this.loadPart(pd);
                 },this);
-				if(this.parts().length) 
-					this.currentPart(this.parts()[0]);
             }
 
 			try{
@@ -1988,7 +1930,6 @@ $(document).ready(function() {
 		this.addGap = function() {
 			var gap = new Part(p.q,p,p.gaps);
 			p.gaps.push(gap);
-			p.q.currentPart(gap);
 		}
 
 		this.showCorrectAnswer = ko.observable(true);
@@ -2015,18 +1956,6 @@ $(document).ready(function() {
 
 		this.types.map(function(t){p[t.name] = t.model});
 
-		this.meOrChildSelected = ko.computed(function() {
-			var currentPart = q.currentPart();
-			if(currentPart==this)
-				return true;
-			var children = this.gaps().concat(this.steps());
-			for(var i=0;i<children.length;i++) {
-				if(currentPart==children[i])
-					return true;
-			}
-			return false;
-		},this);
-
         if(data)
             this.load(data);
     }
@@ -2036,7 +1965,7 @@ $(document).ready(function() {
 			var data = this.toJSON();
 			var p = new Part(this.q,this.parent(),this.parentList,data);
 			this.parentList.push(p);
-			this.q.currentPart(p);
+            setTimeout(function() {window.scrollTo(0,$('.part[data-path="'+p.path()+'"]').offset().top);},0);
 		},
 
 		replaceWithGapfill: function() {
@@ -2072,16 +2001,12 @@ $(document).ready(function() {
         addStep: function() {
 			var step = new Part(this.q,this,this.steps);
             this.steps.push(step);
-			this.q.currentPart(step);
         },
 
 		remove: function() {
             if(confirm("Remove this part?"))
             {
 				this.parentList.remove(this);
-				if(viewModel.currentPart()==this) {
-					viewModel.currentPart(this.parent());
-				}
             }
         },
 
@@ -3007,6 +2932,7 @@ $(document).ready(function() {
     Numbas.queueScript('start-editor',deps,function() {
 		try {
 			viewModel = new Question(Editor.questionJSON);
+            ko.options.deferUpdates = true;
 			ko.applyBindings(viewModel);
             document.body.classList.add('loaded');
 		}

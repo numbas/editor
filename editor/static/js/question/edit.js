@@ -378,7 +378,6 @@ $(document).ready(function() {
                             var address = location.protocol+'//'+location.host+data.url;
                             if(history.replaceState)
                                 history.replaceState(history.state,q.realName(),address);
-                            q.timeline.splice(0,0,new Editor.TimelineItem({date: data.version.date_created, user: data.version.user, type: 'version', data: data.version}));
                         })
                         .error(function(response,type,message) {
                             if(message=='')
@@ -554,29 +553,6 @@ $(document).ready(function() {
 			q.currentChange(next_version);
 			q.load(data);
 		};
-
-        this.timeline = ko.observableArray(Editor.timeline.map(function(t){return new Editor.TimelineItem(t)}));
-
-		this.showCondensedTimeline = ko.observable(true);
-        
-        this.timelineToDisplay = ko.computed(function() {
-			if(this.showCondensedTimeline()) {
-                var out = [];
-				this.timeline().map(function(e){
-					var last = out[out.length-1];
-                    if(e.type=='version') {
-                        if(!e.data.comment() && last && last.type=='version') {
-                            return false;
-                        }
-                        firstVersion = false;
-					}
-                    out.push(e);
-                });
-                return out;
-			} else {
-				return this.timeline();
-			}
-        },this);
 
         this.addStamp = function(status_code) {
             return function() {

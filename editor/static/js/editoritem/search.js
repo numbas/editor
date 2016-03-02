@@ -37,7 +37,7 @@ $(document).ready(function() {
     var ability_level_checkboxes = $('#ability_levels .checkbox');
 
     function show_ability_levels() {
-        var v = $('#id_ability_framework').val();
+        var v = $('#search-panel-form #id_ability_framework').val();
         ability_level_checkboxes.each(function() {
             if(!this.hasAttribute('data-framework')) {
                 return;
@@ -54,7 +54,7 @@ $(document).ready(function() {
     }
     show_ability_levels();
 
-    $('#id_ability_framework').on('change',show_ability_levels);
+    $('#search-panel-form #id_ability_framework').on('change',show_ability_levels);
 
     var form_change_timeouts = {};
 

@@ -38,7 +38,7 @@
                 </div>
                 <div class="timeline">
                     {% with include_object_link=True %}
-                    {% for item in project.all_timeline %}
+                    {% for item in project.all_timeline|slice:":20" %}
                         {% include item.object.timelineitem_template %}
                     {% endfor %}
                     {% endwith %}

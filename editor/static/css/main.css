@@ -37,6 +37,11 @@ body:not(.loaded) .loaded-content {
     display: block;
 }
 
+.timeline-item {
+    border-top: 1px solid #eee;
+    padding-top: 1em;
+}
+
 /*
 ul.no-bullets, ol.no-bullets {
 	list-style-type: none;

@@ -55,15 +55,15 @@
                     <div class="panel-collapse collapse-in" id="collapse-refine">
                     <ul class="list-group">
                         <li class="list-group-item">
-                        <h4>Subject</h4>
+                            <h4><span class="glyphicon glyphicon-education"></span> Subject</h4>
                             {{form.subjects}}
                         </li>
                         <li class="list-group-item">
-                            <h4>Topic</h4>
+                            <h4><span class="glyphicon glyphicon-asterisk"></span> Topic</h4>
                             {{form.topics}}
                         </li>
                         <li class="list-group-item">
-                            <h4>Ability Level</h4>
+                            <h4><span class="glyphicon glyphicon-sort-by-attributes"></span> Ability Level</h4>
                             {{form.ability_framework}}
                             <div id="ability_levels">
                                 {% for level,choice in ability_level_field %}
@@ -77,7 +77,7 @@
                             </div>
                         </li>
                         <li id="radio" class="list-group-item">
-                            <h4>Usage rights</h4>
+                            <h4><span class="glyphicon glyphicon-copyright-mark"></span> Usage rights</h4>
                             {{form.usage}}
                         </li>
                         <li class="list-group-item">
@@ -99,21 +99,22 @@
                 {% with item=row.record edit_view=item.type|add:'_edit' %}
                 <li class="result">
                     <div class="row">
-                        <div class="col-lg-7 col-md-10 col-sm-10">
-                        </div>
-                        <div class="col-lg-3 col-md-2 col-sm-2">
-                        </div>
-                    </div>
-                    <div class="row">
                         <div class="col-lg-7 col-md-8 col-sm-7 col-xs-8">
                             <h4><a href="{% url item.item_type|add:'_edit' item.rel_obj.pk item.slug %}">{{item.name}}</a></h4>
                             <div class="fields">
+                                <p class="author">
+                                {% user_thumbnail item.author 20 15 %} {% user_link item.author %}
+                                </p>
                             </div>
-                            <div class="description">
+                            <div class="description well">
+                                {% if item.metadata.description %}
                                 {{item.metadata.description|strip_html|safe}}
+                                {% else %}
+                                <p class="nothing-here">No description given</p>
+                                {% endif %}
                             </div>
                         </div>
-                        <div class="col-lg-3 col-md-4 col-sm-5 col-xs-4 info">
+                        <div class="col-lg-5 col-md-4 col-sm-5 col-xs-4 info">
                             <h4 class="text-left item-type {{item.item_type}}">
                                 <small>
                                     {% if item.item_type == 'question' %}
@@ -121,7 +122,7 @@
                                     {% elif item.item_type == 'exam' %}
                                     <span class="glyphicon glyphicon-book"></span> Exam (<span class="num-questions">{{item.exam.questions.count}}</span> question{{item.exam.questions.count|pluralize}})
                                     {% endif %}
-                                    {% if item.current_stamp %}<div>{% stamp item.current_stamp.status %}</div>{% endif %}
+                                    {% if item.current_stamp %}<span>{% stamp item.current_stamp.status %}</span>{% endif %}
                                 </small>
                             </h4>
                             <ul class="list-inline controls">
@@ -144,9 +145,6 @@
                                 {% endwith %}
                                 {% endif %}
                             </p>
-                            <p class="author">
-                            {% user_thumbnail item.author 20 15 %} {% user_link item.author %}
-                            </p>
                             <p class="licence">
                                 <span class="glyphicon glyphicon-copyright-mark"></span> 
                                 {% if item.licence %}
@@ -158,23 +156,42 @@
                                         {% endif %}
                                     {% endwith %}
                                 {% else %}
-                                    <span class="no-licence">No licence specified</span>
+                                    <span class="no-licence nothing-here">No licence specified</span>
                                 {% endif %}
                             </p>
                             <p class="last-modified">
                                 <span class="glyphicon glyphicon-time"></span> Last modified {{item.last_modified|date:"d/m/Y h:m"}}
                             </p>
-                            <p class="subjects">
-                                <span class="glyphicon glyphicon-education"></span>
-                                {% for subject in item.subjects.all %}
-                                    <span class="subject">{{subject.name}}</span>{% if not forloop.last %},{% endif %}
-                                {% endfor %}
+                            <p>
+                                <ul class="list-inline">
+                                    <span class="glyphicon glyphicon-education"></span>
+                                    {% if item.subjects.count %}
+                                        {% for subject in item.subjects.all %}
+                                            <li class="subject">{{subject.name}}</li>{% if not forloop.last %},{% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <li class="nothing-here">No subjects selected</li>
+                                    {% endif %}
+
+                                    <span class="glyphicon glyphicon-asterisk"></span>
+                                    {% if item.topics.count %}
+                                        {% for topic in item.topics.all %}
+                                            <li class="topic">{{topic.name}}</li>{% if not forloop.last %},{% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <li class="nothing-here">No topics selected</li>
+                                    {% endif %}
+                                </ul>
                             </p>
                             <p class="ability-levels">
                                 <span class="glyphicon glyphicon-sort-by-attributes"></span>
-                                {% for level in item.ability_levels.all %}
-                                <span class="ability-level">{{level.name}}</span>{% if not forloop.last %},{% endif %}
-                                {% endfor %}
+                                {% if item.ability_levels.count %}
+                                    {% for level in item.ability_levels.all %}
+                                    <span class="ability-level">{{level.name}}</span>{% if not forloop.last %},{% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="nothing-here">No ability levels selected</span>
+                                {% endif %}
                             </p>
                         </div>
                     </div>

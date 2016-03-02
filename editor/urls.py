@@ -154,15 +154,13 @@ urlpatterns = patterns('',
     url(r'^pullrequest/(?P<pk>\d+)/reject$',
         question.RejectPullRequestView.as_view(), name='question_pullrequest_reject'),
 
-    # Comments
-
-    url(r'^comment/(?P<pk>\d+)/delete$',
-        generic.DeleteCommentView.as_view(), name='delete_comment'),
-
     # Timeline items
 
     url(r'^timelineitem/(?P<pk>\d+)/delete$',
         generic.DeleteTimelineItemView.as_view(), name='timelineitem_delete'),
+
+    url(r'^stamp/(?P<pk>\d+)/delete$',
+        generic.DeleteStampView.as_view(), name='stamp_delete'),
 
     # Versions
 

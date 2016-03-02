@@ -1250,8 +1250,11 @@ $(document).ready(function() {
         e.preventDefault();
         e.stopPropagation();
         $.post(element.getAttribute('href'),{csrfmiddlewaretoken: getCookie('csrftoken')})
-            .success(function() {
+            .success(function(data) {
                 $(element).parents('.timeline-item').first().slideUp(150,function(){$(this).remove()});
+                if(viewModel && 'current_stamp' in data) {
+                    viewModel.current_stamp(data.current_stamp);
+                }
             })
             .error(function(response,type,message) {
                 if(message=='')

@@ -805,9 +805,11 @@ class EditorModel(models.Model):
         return [self.author] + list(self.access_rights.all())
 
 @receiver(signals.post_save,sender=NewStampOfApproval)
+@receiver(signals.post_delete,sender=NewStampOfApproval)
 def set_current_stamp(instance,**kwargs):
-    instance.object.current_stamp = instance
+    instance.object.current_stamp = NewStampOfApproval.objects.filter(object=instance.object).last()
     instance.object.save()
+
 
 @receiver(signals.post_save,sender=NewStampOfApproval)
 def notify_stamp(instance,**kwargs):

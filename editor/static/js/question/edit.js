@@ -580,9 +580,9 @@ $(document).ready(function() {
 
         this.addStamp = function(status_code) {
             return function() {
-                $.post('stamp',{'status': status_code, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(stamp) {
-                    $('.timeline').prepend(stamp).mathjax();
-                    q.timeline.splice(0,0,new Editor.TimelineItem({date: stamp.date, user: stamp.user, data: stamp, type: 'stamp'}));
+                $.post('stamp',{'status': status_code, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(response) {
+                    $('.timeline').prepend(response.html).mathjax();
+                    q.current_stamp(response.object_json);
                 });
                 noty({
                     text: 'Thanks for your feedback!',
@@ -603,8 +603,8 @@ $(document).ready(function() {
             }
 
             var text = this.commentText();
-            $.post('comment',{'text': text, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(comment) {
-                $('.timeline').prepend(comment).mathjax();
+            $.post('comment',{'text': text, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(response) {
+                $('.timeline').prepend(response.html).mathjax();
             });
 
             this.commentText('');
@@ -621,7 +621,10 @@ $(document).ready(function() {
             }
             item.deleting(true);
             $.post(item.data.delete_url,{csrfmiddlewaretoken: getCookie('csrftoken')})
-                .success(function() {
+                .success(function(data) {
+                    if('current_stamp' in data) {
+                        q.current_stamp(data.current_stamp);
+                    }
                     q.timeline.remove(item);
                 })
                 .error(function(response,type,message) {

@@ -8,7 +8,7 @@
             {% block heading %}{% endblock %} 
             <small>{{item.date|naturaltime}}</small>
         </h4>
-        {% if can_delete %}<a class="btn btn-link text-danger delete" href="{% url 'timelineitem_delete' item.pk %}" title="Delete this item"><span class="glyphicon glyphicon-remove"></span></a>{% endif %}
+        {% if can_delete %}<a class="btn btn-link text-danger delete" href="{% block delete_url %}{% url 'timelineitem_delete' item.pk %}{% endblock %}" title="Delete this item"><span class="glyphicon glyphicon-remove"></span></a>{% endif %}
         {% block content %}{% endblock %}
     </div>
 </div>

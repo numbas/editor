@@ -24,7 +24,9 @@ from django.views import generic
 from django.template.loader import get_template
 from django.template import RequestContext
 
-from editor.models import Extension,NewStampOfApproval,NewComment,TimelineItem
+from editor.models import Extension,NewStampOfApproval,NewComment,TimelineItem,EditorItem
+
+from accounts.util import user_json
 
 # from http://stackoverflow.com/questions/18172102/object-ownership-validation-in-django-updateview
 class AuthorRequiredMixin(object):
@@ -36,8 +38,17 @@ class AuthorRequiredMixin(object):
         return result
 
 class TimelineItemViewMixin(object):
-    def response(self,object):
-        return render_to_response(object.timelineitem_template,RequestContext(self.request,{'item':object.timelineitem,'can_delete': object.can_be_deleted_by(self.request.user)}))
+    def response(self):
+        data = {
+            'object_json': self.object_json(),
+            'html': self.object_html(),
+        }
+        return http.HttpResponse(json.dumps(data),content_type='application/json')
+
+    def object_html(self):
+        template = get_template(self.item.timelineitem_template)
+        html = template.render(RequestContext(self.request,{'item': self.item.timelineitem, 'can_delete': self.item.can_be_deleted_by(self.request.user)}))
+        return html
 
 class StampView(generic.UpdateView,TimelineItemViewMixin):
     def post(self, request, *args, **kwargs):
@@ -45,9 +56,12 @@ class StampView(generic.UpdateView,TimelineItemViewMixin):
 
         status = request.POST.get('status')
 
-        stamp = NewStampOfApproval.objects.create(user=request.user,object=object.editoritem,status=status)
+        stamp = self.item = NewStampOfApproval.objects.create(user=request.user,object=object.editoritem,status=status)
 
-        return self.response(stamp)
+        return self.response()
+
+    def object_json(self):
+        return stamp_json(self.item)
 
     def get(self, request, *args, **kwargs):
         return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
@@ -61,23 +75,13 @@ class CommentView(generic.UpdateView,TimelineItemViewMixin):
         comment = NewComment(user=request.user,object=object.editoritem,text=text)
         comment.save()
 
-        return self.response(comment)
+        return self.response()
+
+    def object_json(self):
+        return comment_json(self.item)
 
     def get(self, request, *args, **kwargs):
         return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
-
-def user_json(user):
-    if user is None:
-        return {
-                'name': 'Anonymous',
-                'pk': None
-        }
-    else:
-        return {
-                'name': user.get_full_name(),
-                'pk': user.pk,
-                'profile_url': reverse('view_profile',args=(user.pk,))
-        }
 
 # JSON representation of a editor.models.StampOfApproval object
 def stamp_json(stamp,**kwargs):
@@ -89,7 +93,7 @@ def stamp_json(stamp,**kwargs):
         'user': user_json(stamp.user),
     }
 
-# JSON representation of a editor.models.StampOfApproval object
+# JSON representation of a editor.models.Comment object
 def comment_json(comment,**kwargs):
     return {
         'pk': comment.pk,
@@ -110,24 +114,17 @@ class DeleteTimelineItemView(generic.DeleteView):
         else:
             return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
 
-class DeleteCommentView(generic.DeleteView):
-    model = NewComment
-    def delete(self,request,*args,**kwargs):
-        self.object = self.get_object()
-        if self.object.can_be_deleted_by(self.request.user):
-            pk = self.object.pk
-            self.object.delete()
-            return http.HttpResponse('stamp {} deleted'.format(pk))
-        else:
-            return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
-
 class DeleteStampView(generic.DeleteView):
     model = NewStampOfApproval
+
     def delete(self,request,*args,**kwargs):
         self.object = self.get_object()
         if self.object.can_be_deleted_by(self.request.user):
             pk = self.object.pk
             self.object.delete()
-            return http.HttpResponse('stamp {} deleted'.format(pk))
+            ei = self.object.object
+            now_current_stamp = EditorItem.objects.get(pk=ei.pk).current_stamp
+            data = stamp_json(now_current_stamp) if now_current_stamp else None
+            return http.HttpResponse(json.dumps({'current_stamp':data}),content_type='application/json')
         else:
             return http.HttpResponseForbidden('You don\'t have the necessary access rights.')

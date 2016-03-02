@@ -46,7 +46,6 @@ import editor.views.editoritem
 from editor.views.errors import forbidden
 from editor.views.user import find_users
 from editor.views.version import version_json
-from editor.views.timeline import timeline_json
 
 from accounts.models import UserProfile
 from accounts.util import user_json
@@ -319,7 +318,6 @@ class UpdateView(generic.UpdateView):
             'current_stamp': editor.views.generic.stamp_json(self.object.editoritem.current_stamp) if self.object.editoritem.current_stamp else None,
 
             'versions': [], # versions,
-            'timeline': [], # timeline_json(self.object.editoritem.timeline,self.user),
         }
 
         if self.editable:
@@ -499,3 +497,6 @@ class StampView(editor.views.generic.StampView):
 
 class CommentView(editor.views.generic.CommentView):
     model = NewQuestion
+
+    def get_comment_object(self):
+        return self.get_object().editoritem

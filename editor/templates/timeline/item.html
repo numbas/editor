@@ -1,4 +1,5 @@
 {% load humanize %}
+{% load timeline %}
 <div class="media timeline-item">
     <div class="media-left">
         {% block thumbnail %}{% endblock %}
@@ -6,9 +7,10 @@
     <div class="media-body">
         <h4 class="media-heading">
             {% block heading %}{% endblock %} 
+            {% if include_object_link %}on <a href="{{item.timeline.get_absolute_url}}">{{item.timeline.name}}</a>{% endif %}
             <small>{{item.date|naturaltime}}</small>
         </h4>
-        {% if can_delete %}<a class="btn btn-link text-danger delete" href="{% block delete_url %}{% url 'timelineitem_delete' item.pk %}{% endblock %}" title="Delete this item"><span class="glyphicon glyphicon-remove"></span></a>{% endif %}
+        {% if request.user|can_delete_timeline_item:item %}<a class="btn btn-link text-danger delete" href="{% block delete_url %}{% url 'timelineitem_delete' item.pk %}{% endblock %}" title="Delete this item"><span class="glyphicon glyphicon-remove"></span></a>{% endif %}
         {% block content %}{% endblock %}
     </div>
 </div>

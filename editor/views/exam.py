@@ -49,7 +49,6 @@ import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
 from editor.views.version import version_json
-from editor.views.timeline import timeline_json
 
 from accounts.util import user_json
 
@@ -359,8 +358,8 @@ class UpdateView(generic.UpdateView):
             'previewURL': reverse('exam_preview',args=(self.object.pk,self.object.editoritem.slug)),
             'accessURL': reverse('set_access',args=(self.object.editoritem.pk,)),
             'previewWindow': str(calendar.timegm(time.gmtime())),
+            'current_stamp': editor.views.generic.stamp_json(self.object.editoritem.current_stamp) if self.object.editoritem.current_stamp else None,
             'versions': versions,
-            'timeline': timeline_json(self.object.editoritem.timeline,self.user),
         }
 
         context['access_rights'] = [{'user': user_json(a.user), 'access_level': a.access} for a in Access.objects.filter(item=self.object.editoritem)]
@@ -454,10 +453,13 @@ class ShareLinkView(generic.RedirectView):
         return reverse('exam_edit',args=(e.pk,e.slug))
 
 class StampView(editor.views.generic.StampView):
-    model = Exam
+    model = NewExam
 
 class CommentView(editor.views.generic.CommentView):
-    model = Question
+    model = NewExam
+
+    def get_comment_object(self):
+        return self.get_object().editoritem
 
 def question_lists(request):
     if not request.is_ajax():

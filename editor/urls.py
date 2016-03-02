@@ -44,6 +44,10 @@ urlpatterns = patterns('',
 
     url(r'^project/(?P<pk>\d+)/search/$', project.SearchView.as_view(), name='project_search'),
 
+    url(r'^project/(?P<pk>\d+)/comment$',
+        login_required(project.CommentView.as_view()),name='comment_on_project'),
+
+
     # Editor items
 
     url(r'^item/(?P<pk>\d+)/preview/$', editoritem.PreviewView.as_view(), name='item_preview'),

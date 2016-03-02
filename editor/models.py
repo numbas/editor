@@ -105,9 +105,14 @@ class Project(models.Model,ControlledObject):
     owner = models.ForeignKey(User,related_name='own_projects')
     permissions = models.ManyToManyField(User,through='ProjectAccess')
 
+    timeline = GenericRelation('TimelineItem',related_query_name='projects',content_type_field='timeline_content_type',object_id_field='timeline_id')
+
     description = models.TextField(blank=True)
     default_locale = models.CharField(choices=LOCALE_CHOICES,max_length=10,editable=True,default='en-GB')
     default_licence = models.ForeignKey('Licence',null=True,blank=True)
+
+    def can_be_edited_by(self, user):
+        return (user.is_superuser) or (self.owner==user) or self.has_access(user,('edit',))
 
     def get_absolute_url(self):
         return reverse('project_index',args=(self.pk,))
@@ -119,6 +124,15 @@ class Project(models.Model,ControlledObject):
 
     def members(self):
         return [self.owner]+list(User.objects.filter(project_memberships__project=self).exclude(pk=self.owner.pk))
+
+    def all_timeline(self):
+        items = self.timeline.all() | TimelineItem.objects.filter(editoritems__project=self)
+        items.order_by('-date')
+        return items
+
+    @property
+    def watching_users(self):
+        return (User.objects.filter(pk=self.owner.pk) | User.objects.filter(project_memberships__project=self)).distinct()
 
     def __unicode__(self):
         return self.name
@@ -333,18 +347,6 @@ class StampOfApproval(models.Model,TimelineMixin):
     def __unicode__(self):
         return '{} as "{}"'.format(self.user.username,self.object.name,self.get_status_display(),self.date)
 
-class Comment(models.Model,TimelineMixin):
-    object_content_type = models.ForeignKey(ContentType)
-    object_id = models.PositiveIntegerField()
-    object = GenericForeignKey('object_content_type','object_id')
-
-    user = models.ForeignKey(User, related_name='comments')
-    text = models.TextField()
-    date = models.DateTimeField(auto_now_add=True)
-
-    def __unicode__(self):
-        return 'Comment by {} on {}: "{}"'.format(self.user.get_full_name(), str(self.object), self.text[:47]+'...' if len(self.text)>50 else self.text)
-
 class AbilityFramework(models.Model):
     name = models.CharField(max_length=200,blank=False,unique=True)
     description = models.TextField(blank=False)
@@ -392,6 +394,10 @@ class Access(models.Model):
     item = models.ForeignKey('EditorItem')
     user = models.ForeignKey(User)
     access = models.CharField(default='view',editable=True,choices=USER_ACCESS_CHOICES,max_length=6)
+
+@receiver(signals.post_save,sender=Access)
+def add_watching_user_for_access(instance,**kwargs):
+    instance.item.watching_users.add(instance.user)
 
 NUMBAS_FILE_VERSION = 'variables_as_objects'
 
@@ -490,6 +496,12 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
         e2.share_uuid_edit = uuid.uuid4()
         return e2
 
+    def get_absolute_url(self):
+        if self.item_type=='exam':
+            return reverse('exam_edit',args=(self.exam.pk,self.slug))
+        elif self.item_type=='question':
+            return reverse('question_edit',args=(self.question.pk,self.slug))
+
     @property
     def item_type(self):
         if hasattr(self,'exam'):
@@ -559,6 +571,11 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
             obj['canEdit'] = self.can_be_edited_by(user) 
         return obj
 
+@receiver(signals.post_save,sender=EditorItem)
+def author_watches_editoritem(instance,created,**kwargs):
+    if created:
+        instance.watching_users.add(instance.author)
+
 @receiver(signals.pre_save,sender=EditorItem)
 def set_editoritem_name(instance,**kwargs):
     NumbasObject.get_parsed_content(instance)
@@ -616,20 +633,24 @@ class NewStampOfApproval(models.Model,TimelineMixin):
     def __unicode__(self):
         return '{} said "{}"'.format(self.user.username,self.get_status_display())
 
-class NewComment(models.Model,TimelineMixin):
-    object = models.ForeignKey(EditorItem,related_name='comments')
+class Comment(models.Model,TimelineMixin):
+    object_content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    object = GenericForeignKey('object_content_type','object_id')
 
     timelineitems = GenericRelation(TimelineItem,related_query_name='comments',content_type_field='object_content_type',object_id_field='object_id')
     timelineitem_template = 'timeline/comment.html'
 
-    user = models.ForeignKey(User, related_name='newcomments')
+    user = models.ForeignKey(User, related_name='comments')
     text = models.TextField()
+    date = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
         return 'Comment by {} on {}: "{}"'.format(self.user.get_full_name(), str(self.object), self.text[:47]+'...' if len(self.text)>50 else self.text)
 
+
 @receiver(signals.post_save,sender=NewStampOfApproval)
-@receiver(signals.post_save,sender=NewComment)
+@receiver(signals.post_save,sender=Comment)
 def stamp_timeline_event(instance,created,**kwargs):
     if created:
         TimelineItem.objects.create(object=instance,timeline=instance.object)
@@ -795,15 +816,6 @@ class EditorModel(models.Model):
     def stamps(self):
         return NewStampOfApproval.objects.filter(object_content_type=ContentType.objects.get_for_model(self.__class__),object_id=self.pk).order_by('-date')
 
-    @property
-    def comments(self):
-        return NewComment.objects.filter(object_content_type=ContentType.objects.get_for_model(self.__class__),object_id=self.pk).order_by('-date')
-
-    @property
-    def watching_users(self):
-        """ Users who should be notified when something happens to this object. """
-        return [self.author] + list(self.access_rights.all())
-
 @receiver(signals.post_save,sender=NewStampOfApproval)
 @receiver(signals.post_delete,sender=NewStampOfApproval)
 def set_current_stamp(instance,**kwargs):
@@ -815,7 +827,7 @@ def set_current_stamp(instance,**kwargs):
 def notify_stamp(instance,**kwargs):
     notify_watching(instance.user,target=instance.object,verb='gave feedback on',action_object=instance)
 
-@receiver(signals.post_save,sender=NewComment)
+@receiver(signals.post_save,sender=Comment)
 def notify_comment(instance,**kwargs):
     notify_watching(instance.user,target=instance.object,verb='commented on',action_object=instance)
 
@@ -1178,7 +1190,7 @@ class Exam(EditorModel,NumbasObject,ControlledObject):
 
 @receiver(signals.post_delete)
 def remove_deleted_notifications(sender, instance=None,**kwargs):
-    if sender in [NewQuestion,NewExam,NewStampOfApproval,NewComment]:
+    if sender in [NewQuestion,NewExam,NewStampOfApproval,Comment]:
         Notification.objects.filter(target_object_id=instance.pk).delete()
         Notification.objects.filter(action_object_object_id=instance.pk).delete()
 

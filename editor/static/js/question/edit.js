@@ -592,62 +592,7 @@ $(document).ready(function() {
             }
         }
 
-        this.writingComment = ko.observable(false);
-        this.commentText = ko.observable('');
-        this.commentIsEmpty = ko.computed(function() {
-            return $(this.commentText()).text().trim()=='';
-        },this);
-        this.submitComment = function() {
-            if(this.commentIsEmpty()) {
-                return;
-            }
-
-            var text = this.commentText();
-            $.post('comment',{'text': text, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(response) {
-                $('.timeline').prepend(response.html).mathjax();
-            });
-
-            this.commentText('');
-            this.writingComment(false);
-        }
-        this.cancelComment = function() {
-            this.commentText('');
-            this.writingComment(false);
-        }
-
-        this.deleteTimelineItem = function(item) {
-            if(item.deleting()) {
-                return;
-            }
-            item.deleting(true);
-            $.post(item.data.delete_url,{csrfmiddlewaretoken: getCookie('csrftoken')})
-                .success(function(data) {
-                    if('current_stamp' in data) {
-                        q.current_stamp(data.current_stamp);
-                    }
-                    q.timeline.remove(item);
-                })
-                .error(function(response,type,message) {
-                    if(message=='')
-                        message = 'Server did not respond.';
-
-                    noty({
-                        text: 'Error deleting timeline item:\n\n'+message,
-                        layout: "topLeft",
-                        type: "error",
-                        textAlign: "center",
-                        animateOpen: {"height":"toggle"},
-                        animateClose: {"height":"toggle"},
-                        speed: 200,
-                        timeout: 5000,
-                        closable:true,
-                        closeOnSelfClick: true
-                    });
-
-                    item.deleting(false);
-                })
-            ;
-        }
+        this.commentwriter = new Editor.CommentWriter();
     }
     Question.prototype = {
 

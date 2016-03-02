@@ -24,7 +24,7 @@ from django.views import generic
 from django.template.loader import get_template
 from django.template import RequestContext
 
-from editor.models import Extension,NewStampOfApproval,NewComment,TimelineItem,EditorItem
+from editor.models import Extension,NewStampOfApproval,Comment,TimelineItem,EditorItem
 
 from accounts.util import user_json
 
@@ -68,12 +68,11 @@ class StampView(generic.UpdateView,TimelineItemViewMixin):
 
 class CommentView(generic.UpdateView,TimelineItemViewMixin):
     def post(self, request, *args, **kwargs):
-        object = self.get_object()
+        object = self.get_comment_object()
 
         text = request.POST.get('text')
 
-        comment = NewComment(user=request.user,object=object.editoritem,text=text)
-        comment.save()
+        self.item = Comment.objects.create(user=request.user,object=object,text=text)
 
         return self.response()
 
@@ -97,10 +96,9 @@ def stamp_json(stamp,**kwargs):
 def comment_json(comment,**kwargs):
     return {
         'pk': comment.pk,
-        'date': comment.date.strftime('%Y-%m-%d %H:%M:%S'),
+        'date': comment.timelineitem.date.strftime('%Y-%m-%d %H:%M:%S'),
         'text': comment.text,
         'user': user_json(comment.user),
-        'delete_url': reverse('delete_comment',args=(comment.pk,))
     }
 
 class DeleteTimelineItemView(generic.DeleteView):

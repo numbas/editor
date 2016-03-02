@@ -55,14 +55,14 @@
     <div class="page-header">
         <h1 class="name-header">
             <span class="glyphicon glyphicon-book"></span> <span data-bind="mathjaxHTML: name">{{object.name}}</span>
+            <small class="pull-right" data-bind="if: current_stamp">
+                <span class="label label-default stamp" data-bind="text: current_stamp().status_display"></span>
+            </small>
         </h1>
     </div>
     <div class="row">
         <div class="col-sm-3 col-md-2 tabs">
             <ul id="controls" class="nav nav-pills nav-stacked">
-                <li data-bind="if: current_stamp">
-                    <a class="label label-default stamp" data-bind="text: current_stamp().status_display"></a>
-                </li>
                 <li id="preview">
                     <a class="text-success" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this question in a new window (Ctrl+B)">
                         <span class="glyphicon glyphicon-play"></span>

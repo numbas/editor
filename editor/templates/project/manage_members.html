@@ -23,7 +23,7 @@
                 <tr class="member">
                     <td>{% user_link uform.instance.user %}{{uform.id}}</td>
                     <td>
-                        <select id="{{uform.access.auto_id}}" name="access" class="form-control">
+                        <select id="{{uform.access.auto_id}}" name="{{uform.access.html_name}}" class="form-control">
                             {% for value,name in uform.access.field.choices %}
                             <option {% if value == uform.access.value %}selected{% endif %} value="{{value}}">{{name}}</option>
                             {% endfor %}

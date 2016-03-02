@@ -4,6 +4,7 @@ from django.db.models.signals import post_save
 from django.contrib.sites.models import RequestSite
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models import Q
 
 from django_thumbs.db.models import ImageWithThumbsField
 
@@ -14,7 +15,7 @@ from sanitizer.models import SanitizedTextField
 
 from operator import itemgetter
 
-from editor.models import NewQuestion, NewExam, Question, Exam, EditorTag, Project
+from editor.models import NewQuestion, NewExam, Question, Exam, EditorTag, Project, TimelineItem
 
 class RegistrationManager(regmodels.RegistrationManager):
     @transaction.atomic
@@ -66,6 +67,15 @@ class UserProfile(models.Model):
 
     def projects(self):
         return (Project.objects.filter(owner=self.user) | Project.objects.filter(projectaccess__user=self.user)).distinct()
+
+    def all_timeline(self):
+        items = TimelineItem.objects.filter(
+            Q(editoritems__in=self.user.watched_items.all()) | 
+            Q(projects__in=self.user.own_projects.all()) | 
+            Q(projects__projectaccess__in=self.user.project_memberships.all())
+        )
+
+        return items.order_by('-date')
         
 class BasketQuestion(models.Model):
     class Meta:

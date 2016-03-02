@@ -1115,6 +1115,62 @@ $(document).ready(function() {
 		}
 	};
 
+    var CommentWriter = Editor.CommentWriter = function() {
+        this.writingComment = ko.observable(false);
+        this.commentText = ko.observable('');
+        this.commentIsEmpty = ko.computed(function() {
+            return $(this.commentText()).text().trim()=='';
+        },this);
+        this.submitComment = function(form) {
+            if(this.commentIsEmpty()) {
+                return;
+            }
+
+            var text = this.commentText();
+            $.post(form.getAttribute('action'),{'text': text, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(response) {
+                $('.timeline').prepend(response.html).mathjax();
+            });
+
+            this.commentText('');
+            this.writingComment(false);
+        }
+        this.cancelComment = function() {
+            this.commentText('');
+            this.writingComment(false);
+        }
+
+        $('body').on('click','.timeline-item .delete',function(e) {
+            var element = this;
+            e.preventDefault();
+            e.stopPropagation();
+            $.post(element.getAttribute('href'),{csrfmiddlewaretoken: getCookie('csrftoken')})
+                .success(function(data) {
+                    $(element).parents('.timeline-item').first().slideUp(150,function(){$(this).remove()});
+                    if(window.viewModel && data.current_stamp!==undefined) {
+                        viewModel.current_stamp(data.current_stamp);
+                    }
+                })
+                .error(function(response,type,message) {
+                    if(message=='')
+                        message = 'Server did not respond.';
+
+                    noty({
+                        text: 'Error deleting timeline item:\n\n'+message,
+                        layout: "topLeft",
+                        type: "error",
+                        textAlign: "center",
+                        animateOpen: {"height":"toggle"},
+                        animateClose: {"height":"toggle"},
+                        speed: 200,
+                        timeout: 5000,
+                        closable:true,
+                        closeOnSelfClick: true
+                    });
+                })
+            ;
+        });
+    }
+
 	ko.bindingHandlers.fileupload = {
 		init: function(element, valueAccessor, allBindingsAccessor) {
 			var fileArray = valueAccessor();
@@ -1245,36 +1301,6 @@ $(document).ready(function() {
 		Editor.add_question_to_basket($(this).attr('data-question-id'));
 	});
 
-    $('body').on('click','.timeline-item .delete',function(e) {
-        var element = this;
-        e.preventDefault();
-        e.stopPropagation();
-        $.post(element.getAttribute('href'),{csrfmiddlewaretoken: getCookie('csrftoken')})
-            .success(function(data) {
-                $(element).parents('.timeline-item').first().slideUp(150,function(){$(this).remove()});
-                if(viewModel && 'current_stamp' in data) {
-                    viewModel.current_stamp(data.current_stamp);
-                }
-            })
-            .error(function(response,type,message) {
-                if(message=='')
-                    message = 'Server did not respond.';
-
-                noty({
-                    text: 'Error deleting timeline item:\n\n'+message,
-                    layout: "topLeft",
-                    type: "error",
-                    textAlign: "center",
-                    animateOpen: {"height":"toggle"},
-                    animateClose: {"height":"toggle"},
-                    speed: 200,
-                    timeout: 5000,
-                    closable:true,
-                    closeOnSelfClick: true
-                });
-            })
-        ;
-    });
 
 
 });

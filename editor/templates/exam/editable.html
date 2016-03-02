@@ -372,6 +372,28 @@
             {% endif %}
             {% endwith %}
         </section>
+
+        <!-- Editing history -->
+        <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='history'}">
+
+            <div class="timeline-write-comment" data-bind="with: commentwriter">
+                <button class="btn btn-primary" data-bind="visible: !writingComment(), click: writingComment" type="button"><span class="glyphicon glyphicon-comment"></span> Write a comment</button>
+                <form action="{% url 'comment_on_question' object.pk object.editoritem.slug %}" data-bind="fadeVisible: writingComment, submit: submitComment">
+                    <h4>Comment</h4>
+                    <div data-bind="writemaths: commentText"></div>
+                    <div class="buttons">
+                        <button type="Submit" class="btn btn-primary" data-bind="attr: {disabled: commentIsEmpty}">Submit</button>
+                        <button type="button" class="btn btn-default" data-bind="click: cancelComment">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="timeline">
+                {% for item in object.editoritem.timeline.all %}
+                    {% include item.object.timelineitem_template %}
+                {% endfor %}
+            </div>
+        </section>
     </div>
 
 	{% verbatim %}
@@ -665,7 +687,7 @@
         <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='versions'}">
             <h4>Editing history</h4>
             <p><label><input type="checkbox" data-bind="checked: showCondensedTimeline"/> Show condensed editing history</label></p>
-            <div class="timeline-write-comment">
+            <div class="timeline-write-comment" data-bind="with: commentwriter">
                 <button data-bind="visible: !writingComment(), click: writingComment" type="button">Write a comment</button>
                 <form data-bind="fadeVisible: writingComment, submit: submitComment">
                     <h4>Comment</h4>

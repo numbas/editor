@@ -1,12 +1,49 @@
 {% extends "project/project_base.html" %}
 {% load user_link %}
+{% load sstatic %}
+
+{% block javascripts %}
+{{ block.super }}
+<script src="{% sstatic 'js/project/index.js' %}"></script>
+{% endblock %}
 
 {% block project_content %}
 
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-8">
-            <div class="well well-lg description">{{project.description}}</div>
+            <div class="well well-lg description">
+                {% if project.description %}
+                {{project.description}}
+                {% else %}
+                <div class="nothing-here">
+                    <p>This project doesn't have a description.</p>
+                    {% if editable %}<p>Go to the <a href="{% url 'project_settings_options' project.pk %}">project settings page</a> to write one.</p>{% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div id="project-timeline">
+                <h2>Project activity</h2>
+                <div class="timeline-write-comment" data-bind="with: commentwriter">
+                    <button class="btn btn-primary" data-bind="visible: !writingComment(), click: writingComment" type="button"><span class="glyphicon glyphicon-comment"></span> Write a comment</button>
+                    <form action="{% url 'comment_on_project' project.pk %}" data-bind="fadeVisible: writingComment, submit: submitComment">
+                        <h4>Comment</h4>
+                        <div data-bind="writemaths: commentText"></div>
+                        <div class="buttons">
+                            <button type="Submit" class="btn btn-primary" data-bind="attr: {disabled: commentIsEmpty}">Submit</button>
+                            <button type="button" class="btn btn-default" data-bind="click: cancelComment">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="timeline">
+                    {% with include_object_link=True %}
+                    {% for item in project.all_timeline %}
+                        {% include item.object.timelineitem_template %}
+                    {% endfor %}
+                    {% endwith %}
+                </div>
+            </div>
         </div>
         <div class="col-sm-4">
             <div class="panel panel-default">
@@ -15,7 +52,10 @@
                 </div>
                 <ul class="members list-group">
                     {% for user in project.members %}
-                    <li class="list-group-item member">{% user_link user %} {% if user == project.owner %}<span class="owner">(owner)</span>{% endif %}</li>
+                    <li class="list-group-item member">
+                    {% user_thumbnail user 40 36 link=True %} {% user_link user %} 
+                    {% if user == project.owner %}<span class="owner">(owner)</span>{% endif %}
+                    </li>
                     {% endfor %}
                 </ul>
             </div>

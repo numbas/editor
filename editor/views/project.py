@@ -22,6 +22,7 @@ class ProjectContextMixin(object):
     def get_context_data(self,**kwargs):
         context = super(ProjectContextMixin,self).get_context_data(**kwargs)
         context['in_project'] = self.get_object()
+        context['project_editable'] = self.get_object().can_be_edited_by(self.request.user)
         return context
 
 class SettingsPageMixin(object):
@@ -43,6 +44,7 @@ class DeleteView(ProjectContextMixin,MustBeOwnerMixin,generic.DeleteView):
     template_name = 'project/delete.html'
     success_url = reverse_lazy('editor_index')
 
+
 class IndexView(ProjectContextMixin,generic.DetailView):
     template_name = 'project/index.html'
 
@@ -60,9 +62,23 @@ class ManageMembersView(ProjectContextMixin,SettingsPageMixin,generic.UpdateView
     form_class = editor.forms.ProjectAccessFormset
 
     def get_context_data(self,**kwargs):
-        context = super(ProjectContextMixin,self).get_context_data(**kwargs)
+        context = super(ManageMembersView,self).get_context_data(**kwargs)
         context['add_member_form'] = editor.forms.AddMemberForm({'project':self.object.pk})
         return context
+
+    def post(self,request,*args,**kwargs):
+        print("POST")
+        return super(ManageMembersView,self).post(request,*args,**kwargs)
+
+
+    def form_invalid(self, form):
+        print("INVALID")
+        print(form)
+        return super(ManageMembersView,self).form_invalid(form)
+
+    def form_valid(self, form):
+        print(form)
+        return super(ManageMembersView,self).form_valid(form)
 
     def get_success_url(self):
         return reverse('project_settings_members',args=(self.get_object().pk,))
@@ -104,3 +120,9 @@ class SearchView(editor.views.editoritem.SearchView):
         context['in_project'] = True
         context['project'] = self.project
         return context
+
+class CommentView(editor.views.generic.CommentView):
+    model = Project
+
+    def get_comment_object(self):
+        return self.get_object()

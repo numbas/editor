@@ -1,9 +1,25 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% if request.user.is_anonymous %}
+<div class="jumbotron">
+    {% include "index_message.html" %}
+    <div class="text-center">
+        <p><strong>Get started by creating an account.</strong></p>
+        <p>
+            <a class="btn btn-success btn-lg" href="{% url 'registration_register' %}">Sign up</a>
+            <a class="btn btn-primary btn-lg" href="{% url 'login' %}">Log in</a>
+        </p>
+        <p>
+            <a class="btn btn-info btn-lg" href="http://www.numbas.org.uk">Learn about Numbas</a>
+        </p>
+    </div>
+</div>
+{% endif %}
+
+{% if not request.user.is_anonymous %}
 <div class="row">
     <div class="col-sm-8">
-        {% include "index_message.html" %}
         <div id="personal-timeline">
             <div class="timeline">
                 {% with include_object_link=True %}
@@ -29,4 +45,5 @@
 </div>
 <ul>
 </ul>
+{% endif %}
 {% endblock content %}

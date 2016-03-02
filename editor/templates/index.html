@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-sm-8">
+        {% include "index_message.html" %}
+        <div id="personal-timeline">
+            <div class="timeline">
+                {% with include_object_link=True %}
+                {% for item in request.user.userprofile.all_timeline %}
+                    {% include item.object.timelineitem_template %}
+                {% endfor %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h2 class="panel-title"><span class="glyphicon glyphicon-briefcase"></span> Your projects</h2>
+            </div>
+            <ul class="members list-group">
+                {% for project in request.user.userprofile.projects.all %}
+                <li class="list-group-item"><a href="{% url 'project_index' project.pk %}">{{project.name}}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+<ul>
+</ul>
+{% endblock content %}

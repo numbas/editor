@@ -20,7 +20,7 @@ from django.utils.safestring import mark_safe
 from django.utils.encoding import (
     force_str, force_text, python_2_unicode_compatible,
 )
-
+from django.db.models import Q, Count
 
 import zipfile
 import os
@@ -82,9 +82,18 @@ class ShowMoreCheckboxRenderer(forms.widgets.CheckboxFieldRenderer):
         id_ = self.attrs.get('id')
         first_output = []
         more_output = []
+        num_in = len([1 for choice_value, choice_label in self.choices if force_text(choice_value) in self.value])
+        num_unchecked_to_show = max(0,3-num_in)
+        unchecked_shown = 0
         for i, choice in enumerate(self.choices):
             choice_value, choice_label = choice
-            output = first_output if i<3 or force_text(choice_value) in self.value else more_output
+            if force_text(choice_value) in self.value:
+                output = first_output
+            elif unchecked_shown < num_unchecked_to_show:
+                output = first_output
+                unchecked_shown += 1
+            else:
+                output = more_output
 
             if isinstance(choice_label, (tuple, list)):
                 attrs_plus = self.attrs.copy()
@@ -145,6 +154,14 @@ class EditorItemSearchForm(forms.Form):
 
     tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
     exclude_tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
+
+    def __init__(self,data,*args,**kwargs):
+        super(EditorItemSearchForm,self).__init__(data,*args,**kwargs)
+        subjects = data.getlist('subjects')
+        if len(subjects):
+            self.fields['topics'].queryset = editor.models.Topic.objects.filter( Q(subjects__pk__in=subjects) | Q(pk__in=data.getlist('topics')) ).distinct()
+        else:
+            self.fields['topics'].queryset = editor.models.Topic.objects.annotate(num_editoritems=Count('editoritem')).order_by('-num_editoritems')
 
 class AccessForm(forms.ModelForm):
     given_by = forms.ModelChoiceField(queryset=User.objects.all())

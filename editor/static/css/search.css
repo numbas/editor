@@ -23,6 +23,10 @@
   color: #888;
 }
 
+.result .info .list-inline {
+    margin-left: 0;
+}
+
 /*
 #newExamForm, #newQuestionForm {
 	display: none;

@@ -351,6 +351,9 @@ class AbilityFramework(models.Model):
     name = models.CharField(max_length=200,blank=False,unique=True)
     description = models.TextField(blank=False)
 
+    class Meta:
+        ordering = ('name',)
+
     def __unicode__(self):
         return self.name
 
@@ -363,12 +366,18 @@ class AbilityLevel(models.Model):
     end = models.DecimalField(max_digits=ABILITY_PRECISION+1,decimal_places=ABILITY_PRECISION)
     framework = models.ForeignKey(AbilityFramework,related_name='levels')
 
+    class Meta:
+        ordering = ('name',)
+
     def __unicode__(self):
         return self.name
 
 class Subject(models.Model):
     name = models.CharField(max_length=200,blank=False,unique=True)
     description = models.TextField(blank=False)
+
+    class Meta:
+        ordering = ('name',)
 
     def __unicode__(self):
         return self.name
@@ -377,6 +386,9 @@ class Topic(models.Model):
     name = models.CharField(max_length=200,blank=False,unique=True)
     description = models.TextField(blank=False)
     subjects = models.ManyToManyField(Subject)
+
+    class Meta:
+        ordering = ('name',)
 
     def __unicode__(self):
         return self.name
@@ -469,6 +481,9 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
     topics = models.ManyToManyField(Topic)
 
     watching_users = models.ManyToManyField(User,related_name='watched_items')
+
+    class Meta:
+        ordering = ('name',)
 
     def __unicode__(self):
         return self.name
@@ -643,7 +658,6 @@ class Comment(models.Model,TimelineMixin):
 
     user = models.ForeignKey(User, related_name='comments')
     text = models.TextField()
-    date = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
         return 'Comment by {} on {}: "{}"'.format(self.user.get_full_name(), str(self.object), self.text[:47]+'...' if len(self.text)>50 else self.text)

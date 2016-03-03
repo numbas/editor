@@ -106,7 +106,7 @@
                                 {% user_thumbnail item.author 20 15 %} {% user_link item.author %}
                                 </p>
                             </div>
-                            <div class="description well">
+                            <div class="description">
                                 {% if item.metadata.description %}
                                 {{item.metadata.description|strip_html|safe}}
                                 {% else %}

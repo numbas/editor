@@ -35,7 +35,7 @@
 
     <script type="text/javascript">
         (function() {
-            window.Editor = {{question_json|json|safe}};
+            window.item_json = {{item_json|json|safe}};
         })();
     </script>
 {% endblock javascripts %}
@@ -73,7 +73,7 @@
         <div class="col-sm-3 col-md-2 tabs">
             <ul id="controls" class="nav nav-pills nav-stacked">
                 <li id="preview">
-                    <a class="text-success" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this question in a new window (Ctrl+B)">
+                    <a class="text-success" data-bind="attr: {href: item_json.previewURL, target: item_json.previewWindow}" title="Run this question in a new window (Ctrl+B)">
                         <span class="glyphicon glyphicon-play"></span>
                         Test Run
                     </a>
@@ -167,7 +167,7 @@
                                         </div>
                                         <div class="form-group">
                                             <label><span class="glyphicon glyphicon-copyright-mark"></span> Licence</label>
-                                            <select class="form-control" data-bind="options: Editor.licences, value: licence, optionsText: 'short_name', optionsCaption: 'None specified'"></select>
+                                            <select class="form-control" data-bind="options: item_json.licences, value: licence, optionsText: 'short_name', optionsCaption: 'None specified'"></select>
                                             <p class="help-block">
                                                 <small data-bind="visible: licence, with: licence"><a target="_blank" data-bind="visible: url, attr:{href:url}">Licence information</a></small>
                                             </p>
@@ -938,106 +938,3 @@
     </div>
 </div>
 {% endblock content %}
-
-{% block oldcontent %}
-    {{block.super }}
-
-    {% block property_templates %}{% endblock %}
-
-    <div id="question" class="{% if editable %}edit{% else %}nonedit{% endif %}">
-        <div class="row-fluid">
-            <h1 id="name-header" class="span9">
-                <span data-bind="text: name, mathjax: name">{{object.name}}</span> 
-                {% if request.user.is_authenticated %}
-                <span style="display:none" data-bind="visible: true">
-                    <button type="button" data-bind="css:{starred: starred}, attr: {title: starred() ? 'This question is starred. Click to unstar it.' : 'Star this question'}, click: toggleStar" class="star icon-button" ></button>
-                </span>
-                {% endif %}
-            </h1>
-            {% if editable %}
-            <div class="span3" id="edit-history" style="display:none" data-bind="visible: true, with: currentChange">
-                <button disabled title="Undo" type="button" data-bind="click: $root.rewindChange, enable: hasPrevious">&larr;</button>
-                <button disabled title="Redo" type="button" data-bind="click: $root.forwardChange, enable: hasNext">&rarr;</button>
-            </div>
-            {% endif %}
-        </div>
-        <div id="controls">
-            <div class="row-fluid">
-            {% block controls %}
-            {% endblock controls %}
-            </div>
-            <ul class="controlbox" id="admin" style="display:none" data-bind="visible: true">
-                <li class="preview-li">
-                    <a id="preview" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this question in a new window (Ctrl+B)">Test Run</a>
-                    {% if user.is_authenticated %}
-                        <div class="btn-group stamp-of-approval-dropdown">
-                          <button class="btn dropdown-toggle" data-toggle="dropdown">
-                            Feedback
-                            <span class="caret"></span>
-                          </button>
-                          <ul class="dropdown-menu">
-                          {% for name,description in stamp_choices %}
-                            <li><a tabindex="-1" href="#" data-bind="click: stamp('{{name}}')">{{description}}</a></li>
-                          {% endfor %}
-                          </ul>
-                        </div>
-                    {% endif %}
-                </li>            
-                {% if can_delete %}
-                <li>
-                    <a id="delete" data-bind="click: deleteQuestion" href="{% url 'question_delete' object.pk object.editoritem.slug %}" title="Delete this question permanently">Delete
-                        <form action="{% url 'question_delete' object.pk object.editoritem.slug %}" method="post">{% csrf_token %}
-                            <input type="submit" value="Submit" />
-                        </form>
-                    </a>
-                </li>
-                {% endif %}
-
-                {% if user.is_authenticated and can_copy %}
-                <li>
-                <a id="copy" href="{% url 'question_copy' object.pk object.editoritem.slug %}" target="_blank" title="Create your own copy of this question">Make a Copy</a>
-                </li>
-                {% endif %}
-
-                <li>
-                    <span id="download">
-                        Download: 
-                        <div class="btn-group">
-                          <a class="btn" href="{% url 'question_download' object.pk object.editoritem.slug %}?scorm">SCORM package</a>
-                          <button class="btn dropdown-toggle" data-toggle="dropdown" title="More download options">
-                            <span class="caret"></span>
-                          </button>
-                          <ul class="dropdown-menu">
-                            <li><a tabindex="-1" href="{% url 'question_download' object.pk object.editoritem.slug %}">standalone .zip (no SCORM)</a></li>
-                            <li><a tabindex="-1" href="{% url 'question_source' object.pk object.editoritem.slug %}">source</a></li>
-                          </ul>
-                        </div>
-                    </span>
-                </li>
-            </ul>
-        </div>
-
-        <div style="display:none" data-bind="visible: true">
-            <div class="row-fluid">
-                <ul class="nav nav-tabs" data-bind="foreach: mainTabs">
-                    <li data-bind="visible: visible, css: {active: $root.currentTab() == $data}">
-                        <a href="#" data-bind="click: $root.currentTab, text: title"></a>
-                    </li>
-                </ul>
-            </div>
-
-            {% block old_editor %}
-            {% endblock %}
-        </div>
-        <div class="page-loading" data-bind="visible: false">
-            <h2>Loading...</h2>
-        </div>
-        <div class="page-error">
-            <h2>Error</h2>
-            <p>There was an error loading the page.</p>
-
-            <pre class="trace"></pre>
-        </div>
-    </div>
-
-{% endblock oldcontent %}

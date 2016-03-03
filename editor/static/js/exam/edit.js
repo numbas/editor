@@ -21,7 +21,7 @@ $(document).ready(function() {
         var e = this;
 
         this.questions = ko.observableArray([]);
-        this.current_stamp = ko.observable(Editor.current_stamp);
+        this.current_stamp = ko.observable(item_json.current_stamp);
         this.published = ko.observable(false);
 
         this.mainTabs = ko.observableArray([
@@ -33,7 +33,7 @@ $(document).ready(function() {
             new Editor.Tab('network','Other versions','link'),
             new Editor.Tab('history','Editing history','time')
         ]);
-        if(Editor.editable) {
+        if(item_json.editable) {
             this.mainTabs.splice(5,0,new Editor.Tab('access','Access','lock'));
         }
         this.currentTab = ko.observable(this.mainTabs()[0]);
@@ -47,20 +47,9 @@ $(document).ready(function() {
         }
 
 
-        if(Editor.editable && window.location.hash=='#editing-history') {
+        if(item_json.editable && window.location.hash=='#editing-history') {
             this.currentTab(editingHistoryTab);
         }
-
-        this.starred = ko.observable(Editor.starred);
-        this.toggleStar = function() {
-            e.starred(!e.starred());
-        }
-        this.starData = ko.computed(function() {
-            return {starred: this.starred()}
-        },this);
-        this.saveStar = Editor.saver(this.starData,function(data) {
-            return $.post('set-star',data);
-        });
 
         this.realName = ko.observable('An Exam');
         this.name = ko.computed({
@@ -72,7 +61,7 @@ $(document).ready(function() {
             owner: this
         });
 
-        Editor.licences.sort(function(a,b){a=a.short_name;b=b.short_name; return a<b ? -1 : a>b ? 1 : 0 });
+        item_json.licences.sort(function(a,b){a=a.short_name;b=b.short_name; return a<b ? -1 : a>b ? 1 : 0 });
         this.licence = ko.observable();
         this.licence_name = ko.computed(function() {
             if(this.licence()) {
@@ -93,7 +82,7 @@ $(document).ready(function() {
         },this);
 
         this.theme = ko.observable(null);
-        this.locale = ko.observable(Editor.preferred_locale);
+        this.locale = ko.observable(item_json.preferred_locale);
 
         this.duration = ko.observable(0);
         this.allowPause = ko.observable(true);
@@ -216,7 +205,7 @@ $(document).ready(function() {
             this.load(data);
         }
 
-        if(Editor.editable) {
+        if(item_json.editable) {
             this.firstSave = true;
 
             this.save = ko.computed(function() {
@@ -239,7 +228,7 @@ $(document).ready(function() {
                         {json: JSON.stringify(data), csrfmiddlewaretoken: getCookie('csrftoken')}
                     )
                         .success(function(data){
-                            var address = location.protocol+'//'+location.host+'/exam/'+Editor.examJSON.id+'/'+slugify(e.name())+'/';
+                            var address = location.protocol+'//'+location.host+'/exam/'+item_json.itemJSON.id+'/'+slugify(e.name())+'/';
                             if(history.replaceState)
                                 history.replaceState({},e.name(),address);
                         })
@@ -264,13 +253,13 @@ $(document).ready(function() {
             );
 
             //access control stuff
-            this.public_access = ko.observable(Editor.public_access);
+            this.public_access = ko.observable(item_json.public_access);
             this.access_options = [
                 {value:'hidden',text:'Hidden'},
                 {value:'view',text:'Anyone can view this'},
                 {value:'edit',text:'Anyone can edit this'}
             ];
-            this.access_rights = ko.observableArray(Editor.access_rights.map(function(d){
+            this.access_rights = ko.observableArray(item_json.access_rights.map(function(d){
                 var access = new UserAccess(e,d.user)
                 access.access_level(d.access_level);
                 return access;
@@ -285,7 +274,7 @@ $(document).ready(function() {
                 }
             });
             this.saveAccess = Editor.saver(this.access_data,function(data) {
-                return $.post(Editor.accessURL,data);
+                return $.post(item_json.accessURL,data);
             });
             this.userAccessSearch=ko.observable('');
 
@@ -373,15 +362,15 @@ $(document).ready(function() {
         versionJSON: function() {
             var obj = {
                 id: this.id,
-                author: Editor.examJSON.author,
-                locale: Editor.examJSON.locale,
+                author: item_json.itemJSON.author,
+                locale: item_json.itemJSON.locale,
                 JSONContent: this.toJSON(),
                 metadata: this.metadata(),
                 name: this.name(),
                 questions: this.questions().map(function(q){return q.toJSON()}),
                 theme: this.theme().path
             }
-            if(Editor.editable) {
+            if(item_json.editable) {
                 obj.public_access = this.public_access()
             }
             return obj;
@@ -449,9 +438,9 @@ $(document).ready(function() {
             if('metadata' in data) {
                 tryLoad(data.metadata,['notes','description'],this);
                 var licence_name = data.metadata.licence;
-                for(var i=0;i<Editor.licences.length;i++) {
-                    if(Editor.licences[i].name==licence_name) {
-                        this.licence(Editor.licences[i]);
+                for(var i=0;i<item_json.licences.length;i++) {
+                    if(item_json.licences[i].name==licence_name) {
+                        this.licence(item_json.licences[i]);
                         break;
                     }
                 }
@@ -484,24 +473,24 @@ $(document).ready(function() {
 
             if('custom_theme' in data && data.custom_theme) {
                 var path = data.custom_theme;
-                for(var i=0;i<Editor.themes.length;i++) {
-                    if(Editor.themes[i].path==path && Editor.themes[i].custom) {
-                        this.theme(Editor.themes[i]);
+                for(var i=0;i<item_json.themes.length;i++) {
+                    if(item_json.themes[i].path==path && item_json.themes[i].custom) {
+                        this.theme(item_json.themes[i]);
                         break;
                     }
                 }
             } else  {
                 var path = 'theme' in data ? data.theme : '';
                 path = path || 'default';
-                for(var i=0;i<Editor.themes.length;i++) {
-                    if(Editor.themes[i].path==path && !Editor.themes[i].custom) {
-                        this.theme(Editor.themes[i]);
+                for(var i=0;i<item_json.themes.length;i++) {
+                    if(item_json.themes[i].path==path && !item_json.themes[i].custom) {
+                        this.theme(item_json.themes[i]);
                         break;
                     }
                 }
             }
             if(!this.theme()) {
-                this.theme(Editor.themes[0]);
+                this.theme(item_json.themes[0]);
             }
 
             if('locale' in data)
@@ -513,10 +502,6 @@ $(document).ready(function() {
                     return new Question(q,e.questions)
                 }));
             }
-        },
-
-        download: function() {
-            window.location = Editor.download_url;
         }
     };
 
@@ -631,7 +616,7 @@ $(document).ready(function() {
 
     Numbas.queueScript('start-editor',['jme-display','jme-variables','jme','editor-extras'],function() {
         try {
-            viewModel = new Exam(Editor.examJSON);
+            viewModel = new Exam(item_json.itemJSON);
             ko.applyBindings(viewModel);
             document.body.classList.add('loaded');
         }
@@ -647,7 +632,7 @@ $(document).ready(function() {
     });
 
     Mousetrap.bind(['ctrl+b','command+b'],function() {
-        window.open(Editor.previewURL,Editor.previewWindow);
+        window.open(item_json.previewURL,item_json.previewWindow);
     });
 
 });

@@ -40,7 +40,7 @@ import reversion
 from django_tables2.config import RequestConfig
 
 from editor.forms import NewQuestionForm, QuestionForm, SetAccessForm
-from editor.models import Project, EditorItem, NewQuestion, Access, Question, Extension, Image, QuestionAccess, QuestionHighlight, QuestionPullRequest, EditorTag, Licence, STAMP_STATUS_CHOICES
+from editor.models import Project, EditorItem, NewQuestion, Access, Question, Extension, Image, QuestionAccess, QuestionPullRequest
 import editor.views.generic
 import editor.views.editoritem
 from editor.views.errors import forbidden
@@ -208,29 +208,15 @@ class DeleteView(generic.DeleteView):
         return reverse('editor_index')
 
 
-class UpdateView(generic.UpdateView):
-    
-    """Edit a question or view as non-editable if not author."""
-    
+class UpdateView(editor.views.editoritem.BaseUpdateView):
+
     model = NewQuestion
     form_class = QuestionForm
     template_name = 'question/edit.html'
     
-    def get_object(self):
-        obj = super(UpdateView,self).get_object()
-        self.editable = obj.editoritem.can_be_edited_by(self.request.user)
-        self.can_delete = obj.editoritem.can_be_deleted_by(self.request.user)
-        self.can_copy = obj.editoritem.can_be_copied_by(self.request.user)
-        return obj
-
     def post(self, request, *args, **kwargs):
-        self.user = request.user
-        self.object = self.get_object()
+        super(UpdateView,self).post(request,*args,**kwargs)
 
-        if not self.object.editoritem.can_be_edited_by(self.user):
-            return http.HttpResponseForbidden()
-
-        self.data = json.loads(request.POST['json'])
         self.resources = self.data['resources']
         del self.data['resources']
         question_form = QuestionForm(self.data, instance=self.object)
@@ -239,51 +225,18 @@ class UpdateView(generic.UpdateView):
             return self.form_valid(question_form)
         else:
             return self.form_invalid(question_form)
-       
-    def get(self, request, *args, **kwargs):
-        self.user = request.user
-        self.object = self.get_object()
-        if not self.object.editoritem.can_be_viewed_by(request.user):
-            return forbidden(request)
-        else:
-            if not self.user.is_anonymous():
-                self.user.notifications.filter(target_object_id=self.object.pk).mark_all_as_read()
+    
+    def pre_save(self,form):
+        self.object.editoritem.metadata = json.dumps(self.object.editoritem.metadata)
+        self.object.extensions.clear()
+        self.object.extensions.add(*form.cleaned_data['extensions'])
 
-            return super(UpdateView,self).get(request,*args,**kwargs)
+        resource_pks = [res['pk'] for res in self.resources]
+        self.object.resources = Image.objects.filter(pk__in=resource_pks)
 
-    def form_valid(self, form):
-
-        with transaction.atomic(), reversion.create_revision():
-            self.object = form.save(commit=False)
-            self.object.editoritem.metadata = json.dumps(self.object.editoritem.metadata)
-            self.object.extensions.clear()
-            self.object.extensions.add(*form.cleaned_data['extensions'])
-
-            self.object.edit_user = self.user
-
-            resource_pks = [res['pk'] for res in self.resources]
-            self.object.resources = Image.objects.filter(pk__in=resource_pks)
-
-            self.object.save()
-
-            reversion.set_user(self.user)
-
-        version = reversion.get_for_object(self.object)[0]
-
-        status = {"result": "success", "url": self.get_success_url(), "version": version_json(version,self.user)}
-        return HttpResponse(json.dumps(status), content_type='application/json')
-        
-    def form_invalid(self, form):
-        status = {
-            "result": "error",
-            "message": "Something went wrong...",
-            "traceback": traceback.format_exc(),}
-        return http.HttpResponseServerError(json.dumps(status),
-                                       content_type='application/json')
     
     def get_context_data(self, **kwargs):
         context = super(UpdateView, self).get_context_data(**kwargs)
-        self.object.editoritem.get_parsed_content()
 
         extensions = Extension.objects.filter(public=True) | self.object.extensions.all()
 
@@ -292,38 +245,7 @@ class UpdateView(generic.UpdateView):
 
         extensions = extensions.distinct()
 
-        context['extensions'] = [e.as_json() for e in extensions]
-
-        context['editable'] = self.editable
-        context['can_delete'] = self.can_delete
-        context['can_copy'] = self.can_copy
-        context['navtab'] = 'questions'
-
-        context['access_rights'] = [{'user': user_json(a.user), 'access_level': a.access} for a in Access.objects.filter(item=self.object.editoritem)]
-
-        #versions = [version_json(v,self.user) for v in reversion.get_for_object(self.object)]
-
-        licences = [licence.as_json() for licence in Licence.objects.all()]
-
-        question_json = context['question_json'] = {
-            'questionJSON': self.object.edit_dict(),
-            'editable': self.editable,
-
-            'licences': licences,
-
-            'numbasExtensions': context['extensions'],
-
-            'previewURL': reverse('question_preview', args=(self.object.pk, self.object.editoritem.slug)),
-            'previewWindow': str(calendar.timegm(time.gmtime())),
-            'current_stamp': editor.views.generic.stamp_json(self.object.editoritem.current_stamp) if self.object.editoritem.current_stamp else None,
-
-            'versions': [], # versions,
-        }
-
-        if self.editable:
-            question_json['public_access'] = self.object.editoritem.public_access
-            question_json['access_rights'] = context['access_rights']
-            context['versions'] = [] # reversion.get_for_object(self.object)
+        self.item_json['numbasExtensions'] = context['extensions'] = [e.as_json() for e in extensions]
 
         part_type_path = 'question/part_types/'+('editable' if self.editable else 'noneditable')
         context['partNames'] = [
@@ -331,8 +253,6 @@ class UpdateView(generic.UpdateView):
             for name in 
             'jme','gapfill','numberentry','patternmatch','1_n_2','m_n_2','m_n_x','matrix'
         ]
-
-        context['stamp_choices'] = STAMP_STATUS_CHOICES
 
         return context
     

@@ -44,7 +44,7 @@ import reversion
 from django_tables2.config import RequestConfig
 
 from editor.tables import EditorItemTable
-from editor.models import EditorItem, Project
+from editor.models import EditorItem, Project, Access, Licence
 import editor.models
 import editor.views.generic
 from editor.views.errors import forbidden
@@ -52,6 +52,7 @@ from editor.views.user import find_users
 from editor.views.version import version_json
 from editor.views.timeline import timeline_json
 import editor.forms
+from accounts.util import user_json
 
 from numbasobject import NumbasObject
 from examparser import ParseError
@@ -72,6 +73,98 @@ class CreateView(generic.CreateView):
         form = super(CreateView,self).get_form()
         form.fields['project'].queryset = self.request.user.userprofile.projects()
         return form
+
+
+class BaseUpdateView(generic.UpdateView):
+
+    """ Base update view for an EditorItem wrapper (i.e. Question or Exam) """
+
+    def get_object(self):
+        obj = super(BaseUpdateView,self).get_object()
+        self.editable = obj.editoritem.can_be_edited_by(self.request.user)
+        self.can_delete = obj.editoritem.can_be_deleted_by(self.request.user)
+        self.can_copy = obj.editoritem.can_be_copied_by(self.request.user)
+        return obj
+
+    def dispatch(self,request,*args,**kwargs):
+        self.user = request.user
+        self.object = self.get_object()
+
+        return super(BaseUpdateView,self).dispatch(request,*args,**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        if not self.object.editoritem.can_be_viewed_by(request.user):
+            return forbidden(request)
+        else:
+            if not self.user.is_anonymous():
+                self.user.notifications.filter(target_object_id=self.object.pk).mark_all_as_read()
+
+            return super(BaseUpdateView,self).get(request,*args,**kwargs)
+
+    def post(self, request, *args, **kwargs):
+        if not self.object.editoritem.can_be_edited_by(self.user):
+            return http.HttpResponseForbidden()
+
+        self.data = json.loads(request.POST['json'])
+
+    def pre_save(self):
+        """ Do anything that needs to be done before saving the object, after creating self.object from the form """
+        raise NotImplementedError
+
+    def form_valid(self, form):
+        with transaction.atomic(), reversion.create_revision():
+            self.object = form.save(commit=False)
+            self.pre_save(form)
+
+            self.object.save()
+
+            reversion.set_user(self.user)
+
+        version = reversion.get_for_object(self.object)[0]
+
+        status = {"result": "success", "url": self.get_success_url(), "version": version_json(version,self.user)}
+        return http.HttpResponse(json.dumps(status), content_type='application/json')
+
+    def form_invalid(self, form):
+        status = {
+            "result": "error",
+            "message": "Something went wrong...",
+            "traceback": traceback.format_exc(),}
+        return http.HttpResponseServerError(json.dumps(status),
+                                       content_type='application/json')
+
+    def get_context_data(self, **kwargs):
+        context = super(BaseUpdateView, self).get_context_data(**kwargs)
+        self.object.editoritem.get_parsed_content()
+
+        context['editable'] = self.editable
+        context['can_delete'] = self.can_delete
+        context['can_copy'] = self.can_copy
+
+        context['access_rights'] = [{'user': user_json(a.user), 'access_level': a.access} for a in Access.objects.filter(item=self.object.editoritem)]
+
+        licences = [licence.as_json() for licence in Licence.objects.all()]
+
+        self.item_json = context['item_json'] = {
+            'itemJSON': self.object.edit_dict(),
+            'editable': self.editable,
+
+            'licences': licences,
+
+            'previewURL': reverse('{}_preview'.format(self.object.editoritem.item_type), args=(self.object.pk, self.object.editoritem.slug)),
+            'previewWindow': str(calendar.timegm(time.gmtime())),
+            'current_stamp': editor.views.generic.stamp_json(self.object.editoritem.current_stamp) if self.object.editoritem.current_stamp else None,
+        }
+
+        if self.editable:
+            self.item_json['public_access'] = self.object.editoritem.public_access
+            self.item_json['access_rights'] = context['access_rights']
+            context['versions'] = [] # reversion.get_for_object(self.object)
+
+        context['stamp_choices'] = editor.models.STAMP_STATUS_CHOICES
+
+        return context
+
 
 class ListView(generic.ListView):
     model = EditorItem

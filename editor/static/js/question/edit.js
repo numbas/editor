@@ -32,8 +32,7 @@ $(document).ready(function() {
 		var q = this;
 
         this.published = ko.observable(false);
-        this.starred = ko.observable(Editor.starred);
-        this.current_stamp = ko.observable(Editor.current_stamp);
+        this.current_stamp = ko.observable(item_json.current_stamp);
         this.licence = ko.observable();
 		this.resources = ko.observableArray([]);
         this.name = ko.observable('Untitled Question');
@@ -102,7 +101,7 @@ $(document).ready(function() {
             new Editor.Tab('network','Other versions','link'),
             new Editor.Tab('history','Editing history','time')
 		]);
-        if(Editor.editable) {
+        if(item_json.editable) {
             var adviceTab = new Editor.Tab('access','Access','lock');
             this.mainTabs.splice(5,0,adviceTab);
         }
@@ -117,7 +116,7 @@ $(document).ready(function() {
             }
         }
 
-		if(Editor.editable) {
+		if(item_json.editable) {
             switch(window.location.hash.slice(1)) {
                 case 'editing-history':
         			this.currentTab(editingHistoryTab);
@@ -127,23 +126,13 @@ $(document).ready(function() {
             } 
 		}
 
-        this.toggleStar = function() {
-            q.starred(!q.starred());
-        }
-        this.starData = ko.computed(function() {
-            return {starred: this.starred()}
-        },this);
-        this.saveStar = Editor.saver(this.starData,function(data) {
-            return $.post('set-star',data);
-        });
-
         this.add_to_basket = function() {
-            Editor.add_question_to_basket(Editor.questionJSON.id);
+            Editor.add_question_to_basket(item_json.itemJSON.id);
         }
 
 		this.exams = data.exams;
 
-        Editor.licences.sort(function(a,b){a=a.short_name;b=b.short_name; return a<b ? -1 : a>b ? 1 : 0 });
+        item_json.licences.sort(function(a,b){a=a.short_name;b=b.short_name; return a<b ? -1 : a>b ? 1 : 0 });
         this.licence_name = ko.computed(function() {
             if(this.licence()) {
                 return this.licence().name;
@@ -216,8 +205,8 @@ $(document).ready(function() {
 			};
 		},this);
 
-		for(var i=0;i<Editor.numbasExtensions.length;i++) {
-			var ext = Editor.numbasExtensions[i];
+		for(var i=0;i<item_json.numbasExtensions.length;i++) {
+			var ext = item_json.numbasExtensions[i];
 			ext.used = ko.observable(false);
 			this.extensions.push(ext);
 		}
@@ -338,7 +327,7 @@ $(document).ready(function() {
 			this.load(data);
 		}
 
-        if(Editor.editable) {
+        if(item_json.editable) {
 			this.firstSave = true;
 
 			this.deleteResource =  function(res) {
@@ -401,13 +390,13 @@ $(document).ready(function() {
             );
 
             //access control stuff
-            this.public_access = ko.observable(Editor.public_access);
+            this.public_access = ko.observable(item_json.public_access);
             this.access_options = [
                 {value:'hidden',text:'Hidden'},
                 {value:'view',text:'Anyone can view this'},
                 {value:'edit',text:'Anyone can edit this'}
             ];
-            this.access_rights = ko.observableArray(Editor.access_rights.map(function(d){
+            this.access_rights = ko.observableArray(item_json.access_rights.map(function(d){
                 var access = new UserAccess(q,d.user)
                 access.access_level(d.access_level);
                 return access;
@@ -515,12 +504,12 @@ $(document).ready(function() {
             },this));
 		}
 
-		this.currentChange = ko.observable(new Editor.Change(this.versionJSON(),Editor.questionJSON.author));
+		this.currentChange = ko.observable(new Editor.Change(this.versionJSON(),item_json.itemJSON.author));
 
 		// create a new version when the question JSON changes
 		ko.computed(function() {
 			var currentChange = this.currentChange.peek();
-			var v = new Editor.Change(this.versionJSON(),Editor.questionJSON.author, currentChange);
+			var v = new Editor.Change(this.versionJSON(),item_json.itemJSON.author, currentChange);
 
 			//if the new version is different to the old one, keep the diff
 			if(!currentChange || v.diff.length!=0) {
@@ -578,14 +567,14 @@ $(document).ready(function() {
 				JSONContent: this.toJSON(),
 				numbasVersion: Editor.numbasVersion,
 				name: this.name(),
-				author: Editor.questionJSON.author,
-				copy_of: Editor.questionJSON.copy_of,
+				author: item_json.itemJSON.author,
+				copy_of: item_json.itemJSON.copy_of,
 				extensions: this.usedExtensions().map(function(e){return e.pk}),
 				tags: this.tags(),
 				resources: this.saveResources(),
 				metadata: this.metadata()
 			};
-            if(Editor.editable) {
+            if(item_json.editable) {
                 obj.public_access = this.public_access();
             }
             return obj;
@@ -1065,9 +1054,9 @@ $(document).ready(function() {
 			if('metadata' in data) {
 				tryLoad(data.metadata,['notes','description'],this);
                 var licence_name = data.metadata.licence;
-                for(var i=0;i<Editor.licences.length;i++) {
-                    if(Editor.licences[i].name==licence_name) {
-                        this.licence(Editor.licences[i]);
+                for(var i=0;i<item_json.licences.length;i++) {
+                    if(item_json.licences[i].name==licence_name) {
+                        this.licence(item_json.licences[i]);
                         break;
                     }
                 }
@@ -1174,10 +1163,6 @@ $(document).ready(function() {
 			this.currentVariable(null);
 		},
 
-		download: function() {
-			window.location = Editor.download_url;
-		},
-        
         insertImage: function(image) {
             $('#imagePickModal').modal('hide');
 
@@ -2855,15 +2840,15 @@ $(document).ready(function() {
 	];
 
     var deps = ['jme-display','jme-variables','jme','editor-extras'];
-	for(var i=0;i<Editor.numbasExtensions.length;i++) {
-		var extension = Editor.numbasExtensions[i];
+	for(var i=0;i<item_json.numbasExtensions.length;i++) {
+		var extension = item_json.numbasExtensions[i];
 		if(extension.hasScript) {
 			deps.push('extensions/'+extension.location+'/'+extension.location+'.js');
 		}
 	}
     Numbas.queueScript('start-editor',deps,function() {
 		try {
-			viewModel = new Question(Editor.questionJSON);
+			viewModel = new Question(item_json.itemJSON);
             ko.options.deferUpdates = true;
 			ko.applyBindings(viewModel);
             document.body.classList.add('loaded');
@@ -2881,7 +2866,7 @@ $(document).ready(function() {
 	});
 
 	Mousetrap.bind(['ctrl+b','command+b'],function() {
-		window.open(Editor.previewURL,Editor.previewWindow);
+		window.open(item_json.previewURL,item_json.previewWindow);
 	});
 
 

@@ -244,146 +244,77 @@ class DeleteView(generic.DeleteView):
         return reverse('editor_index')
     
     
-class UpdateView(generic.UpdateView):
-    
-    """Edit an exam."""
-    
+class UpdateView(editor.views.editoritem.BaseUpdateView):
+
     model = NewExam
-    template_name = 'exam/edit.html'
     form_class = ExamForm
-    
-    def get_template_names(self):
-        self.object = self.get_object()
-        return 'exam/editable.html' if self.object.editoritem.can_be_edited_by(self.request.user) else 'exam/noneditable.html'
+    template_name = 'exam/edit.html'
+
+    def pre_save(self,form):
+        pass
 
     def post(self, request, *args, **kwargs):
-        self.user = request.user
+        super(UpdateView,self).post(request,*args,**kwargs)
 
-        self.object = self.get_object()
-
-        if not self.object.editoritem.can_be_edited_by(self.user):
-            return HttpResponseForbidden()
-
-        data = json.loads(request.POST['json'])
-        theme = data['theme']
+        theme = self.data['theme']
         if theme['custom']:
-            data['custom_theme'] = theme['path']
-            data['theme'] = ''
+            self.data['custom_theme'] = theme['path']
+            self.data['theme'] = ''
         else:
-            data['custom_theme'] = None
-            data['theme'] = theme['path']
+            self.data['custom_theme'] = None
+            self.data['theme'] = theme['path']
 
-        self.questions = data['questions']
-        del data['questions']
+        self.questions = self.data['questions']
+        del self.data['questions']
 
-        exam_form = ExamForm(data, instance=self.object)
+        exam_form = ExamForm(self.data, instance=self.object)
 
         if exam_form.is_valid():
             return self.form_valid(exam_form)
         else:
             return self.form_invalid(exam_form)
-    
-    def get(self, request, *args, **kwargs):
-        self.user = request.user
-        self.object = self.get_object()
-        if not self.object.editoritem.can_be_viewed_by(request.user):
-            return forbidden(request)
-        else:
-            if not self.user.is_anonymous():
-                self.user.notifications.filter(target_object_id=self.object.pk).mark_all_as_read()
+ 
+    def pre_save(self,form):
+        self.object.set_questions(question_ids=self.questions)
 
-            return super(UpdateView,self).get(request,*args,**kwargs)
-
-    def form_valid(self, form):
-        with transaction.atomic(), reversion.create_revision():
-            self.object = form.save(commit=False)
-
-            self.object.set_questions(question_ids=self.questions)
-            self.object.edit_user = self.user
-
-            self.object.save()
-
-            reversion.set_user(self.user)
-
-        version = reversion.get_for_object(self.object)[0]
-
-        status = {"result": "success", "version": version_json(version,self.user)}
-        return HttpResponse(json.dumps(status), content_type='application/json')
-        
-    def form_invalid(self, form):
-        status = {
-            "result": "error",
-            "message": "Something went wrong...",
-            "errors": str(form.errors),
-            "traceback": traceback.format_exc(),}
-        return HttpResponseServerError(json.dumps(status),
-                                       content_type='application/json')
-        
     def get_context_data(self, **kwargs):
         context = super(UpdateView, self).get_context_data(**kwargs)
-        self.object.editoritem.get_parsed_content()
-        exam_dict = self.object.edit_dict()
+
+        exam_dict = self.item_json['itemJSON']
         if self.request.user.is_authenticated():
             exam_dict['recentQuestions'] = [q.summary() for q in Question.objects.filter(author=self.request.user).order_by('-last_modified')[:10]]
             exam_dict['basketQuestions'] = [q.summary() for q in self.request.user.userprofile.question_basket.all()]
         else:
             exam_dict['recentQuestions'] = []
             exam_dict['basketQuestions'] = []
-        context['exam_JSON'] = json.dumps(exam_dict)
+
         custom_themes = Theme.objects.filter(public=True) | Theme.objects.filter(author=self.object.editoritem.author)
         if self.object.custom_theme:
             custom_themes |= Theme.objects.filter(pk=self.object.custom_theme.pk)
-        context['themes'] = [{'name': x[0], 'path': x[1], 'custom': False} for x in settings.GLOBAL_SETTINGS['NUMBAS_THEMES']] + [{'name': theme.name, 'path': theme.pk, 'custom': True} for theme in custom_themes]
+        context['themes'] = ([{'name': x[0], 'path': x[1], 'custom': False} for x in settings.GLOBAL_SETTINGS['NUMBAS_THEMES']] + 
+                             [{'name': theme.name, 'path': theme.pk, 'custom': True} for theme in custom_themes])
+
         context['locales'] = sorted([{'name': x[0], 'code': x[1]} for x in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']],key=operator.itemgetter('name'))
-        context['editable'] = self.object.editoritem.can_be_edited_by(self.request.user)
-        context['can_delete'] = self.object.editoritem.can_be_deleted_by(self.request.user)
-        context['can_copy'] = self.object.editoritem.can_be_copied_by(self.request.user)
-        context['navtab'] = 'exams'
 
         if self.request.user.is_authenticated():
             profile = self.request.user.userprofile
         else:
             profile = None
 
-        versions = [version_json(v,self.user) for v in reversion.get_for_object(self.object)]
-
-        licences = [licence.as_json() for licence in Licence.objects.all()]
-
-        editor_json = {
-            'editable': self.object.editoritem.can_be_edited_by(self.request.user),
-            'examJSON': exam_dict,
+        self.item_json.update({
             'themes': sorted(context['themes'],key=operator.itemgetter('name')),
             'locales': context['locales'],
-            'licences': licences,
-            'previewURL': reverse('exam_preview',args=(self.object.pk,self.object.editoritem.slug)),
-            'accessURL': reverse('set_access',args=(self.object.editoritem.pk,)),
-            'previewWindow': str(calendar.timegm(time.gmtime())),
-            'current_stamp': editor.views.generic.stamp_json(self.object.editoritem.current_stamp) if self.object.editoritem.current_stamp else None,
-            'versions': versions,
-        }
+        })
 
-        context['access_rights'] = [{'user': user_json(a.user), 'access_level': a.access} for a in Access.objects.filter(item=self.object.editoritem)]
-
-        if editor_json['editable']:
-            editor_json.update({
-                'public_access': self.object.editoritem.public_access,
-                'access_rights': context['access_rights'],
+        if self.item_json['editable'] and profile:
+            self.item_json.update({
+                'preferred_locale': profile.language,
             })
-            if profile:
-                editor_json.update({
-                    'preferred_locale': profile.language,
-                })
-
-        context['editor_json'] = editor_json
-
-        context['versions'] = reversion.get_for_object(self.object)
-
-        context['stamp_choices'] = STAMP_STATUS_CHOICES
 
         return context
 
     def get_success_url(self):
-        return reverse('exam_edit', args=(self.object.pk,self.object.slug,))
+        return reverse('exam_edit', args=(self.object.pk,self.object.editoritem.slug,))
 
 class RevertView(generic.UpdateView):
     model = EditorItem

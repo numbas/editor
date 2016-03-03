@@ -230,6 +230,10 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         self.object.editoritem.metadata = json.dumps(self.object.editoritem.metadata)
         self.object.extensions.clear()
         self.object.extensions.add(*form.cleaned_data['extensions'])
+        self.object.editoritem.subjects.clear()
+        self.object.editoritem.subjects.add(*form.cleaned_data['subjects'])
+        self.object.editoritem.topics.clear()
+        self.object.editoritem.topics.add(*form.cleaned_data['topics'])
 
         resource_pks = [res['pk'] for res in self.resources]
         self.object.resources = Image.objects.filter(pk__in=resource_pks)
@@ -278,22 +282,6 @@ class RevertView(generic.UpdateView):
         self.version.revision.revert()
 
         return redirect(reverse('question_edit', args=(self.question.pk,self.question.editoritem.slug)))
-
-class CompareView(generic.TemplateView):
-
-    template_name = "question/compare.html"
-
-    def get_context_data(self, pk1,pk2, **kwargs):
-        context = super(CompareView, self).get_context_data(**kwargs)
-        pk1 = int(pk1)
-        pk2 = int(pk2)
-        q1 = context['q1'] = Question.objects.get(pk=pk1)
-        q2 = context['q2'] = Question.objects.get(pk=pk2)
-        context['pr1_exists'] = QuestionPullRequest.objects.open().filter(source=q1,destination=q2).exists()
-        context['pr2_exists'] = QuestionPullRequest.objects.open().filter(source=q2,destination=q1).exists()
-        context['pr1_auto'] = q2.editoritem.can_be_edited_by(self.request.user)
-        context['pr2_auto'] = q1.editoritem.can_be_edited_by(self.request.user)
-        return context
 
 class CreatePullRequestView(generic.CreateView):
     model = QuestionPullRequest

@@ -504,6 +504,352 @@ $(document).ready(function() {
         }).extend({throttle:1000});
     }
 
+    Editor.EditorItem = function() {
+        var ei = this;
+
+        this.published = ko.observable(false);
+        this.name = ko.observable('Untitled Question');
+        this.current_stamp = ko.observable(item_json.current_stamp);
+        this.licence = ko.observable();
+        this.subjects = ko.observableArray([]);
+        this.topics = ko.observableArray([]);
+        this.ability_frameworks = ko.observableArray([]);
+		this.realtags = ko.observableArray([]);
+		this.description = ko.observable('');
+
+		this.mainTabs = ko.observableArray([]);
+
+		this.currentTab = ko.observable();
+
+        this.setTab = function(id) {
+            return function() {
+                var tab = ei.getTab(id);
+
+                ei.currentTab(tab);
+            }
+        }
+
+		if(item_json.editable) {
+            switch(window.location.hash.slice(1)) {
+                case 'editing-history':
+        			this.currentTab(editingHistoryTab);
+                    break;
+                case 'network':
+                    this.currentTab(networkTab);
+            } 
+		}
+
+        this.subjects(item_json.subjects.map(function(d) {
+            return new Editor.Subject(d);
+        }));
+
+        this.topics(item_json.topics.map(function(d) {
+            return new Editor.Topic(d,ei.subjects);
+        }));
+
+        this.any_subjects_selected = ko.computed(function() {
+            return this.subjects().some(function(s){return s.used()});
+        },this);
+
+        this.ability_frameworks(item_json.ability_frameworks.map(function(d) {
+            return new Editor.AbilityFramework(d);
+        }));
+
+        this.used_ability_levels = ko.computed(function() {
+            var o = [];
+            this.ability_frameworks().map(function(af) {
+                o = o.concat(af.levels.filter(function(al){return al.used()}));
+            });
+            return o;
+        },this);
+
+        item_json.licences.sort(function(a,b){a=a.short_name;b=b.short_name; return a<b ? -1 : a>b ? 1 : 0 });
+        this.licence_name = ko.computed(function() {
+            if(this.licence()) {
+                return this.licence().name;
+            } else {
+                return 'None specified';
+            }
+        },this);
+
+		this.realName = ko.computed(function() {
+			var name = this.name()
+			return name.length>0 ? name : 'Untitled Question';
+		},this);
+
+        this.tags = ko.computed({
+            read: function() {
+				return this.realtags().sort(function(a,b) {
+					a = a.toLowerCase();
+					b = b.toLowerCase();
+					return a>b ? 1 : a<b ? -1 : 0;
+				});
+			},
+            write: function(newtags) {
+				newtags = newtags.slice();
+                for(var i=newtags.length-1;i>=0;i--)
+                {
+                    if(newtags.indexOf(newtags[i])<i)
+                        newtags.splice(i,1);
+                }
+                this.realtags(newtags);
+            }
+        },this);
+
+        this.tags.push = function(thing) {
+            thing = thing.trim();
+			if(thing.length==0)
+				return;
+            if(ei.realtags().indexOf(thing)==-1) {
+                ei.realtags.push(thing);
+            }
+        }
+        this.tags.pop = function(thing) {
+            return ei.realtags.pop();
+        }
+        this.tags.splice = function(i,n) {
+            return ei.realtags.splice(i,n);
+        }
+		this.tags.remove = function(q) {
+			return ei.realtags.remove(q);
+		}
+
+		this.metadata = ko.computed(function() {
+			return {
+				description: this.description(),
+                licence: this.licence_name()
+			};
+		},this);
+
+        ko.computed(function() {
+            document.title = this.name() ? this.name()+' - Numbas Editor' : 'Numbas Editor';
+        },this);
+
+        if(item_json.editable) {
+            //access control stuff
+            this.public_access = ko.observable(item_json.public_access);
+            this.access_options = [
+                {value:'hidden',text:'Hidden'},
+                {value:'view',text:'Anyone can view this'},
+                {value:'edit',text:'Anyone can edit this'}
+            ];
+            this.access_rights = ko.observableArray(item_json.access_rights.map(function(d){
+                var access = new UserAccess(ei,d.user)
+                access.access_level(d.access_level);
+                return access;
+            }));
+
+            this.access_data = ko.computed(function() {
+                return {
+                    public_access: ei.public_access(),
+                    user_ids: ei.access_rights().map(function(u){return u.id}),
+                    access_levels: ei.access_rights().map(function(u){return u.access_level()})
+                }
+            });
+            this.saveAccess = Editor.saver(this.access_data,function(data) {
+                return $.post('/item/'+ei.editoritem_id+'/set-access',data);
+            });
+            this.userAccessSearch=ko.observable('');
+
+            this.addUserAccess = function(data) {
+                var access_rights = ei.access_rights();
+                for(var i=0;i<access_rights.length;i++) {
+                    if(access_rights[i].id==data.user.id) {
+                        noty({
+                            text: "That user is already in the access list.",
+                            layout: "center",
+                            speed: 100,
+                            type: 'error',
+                            timeout: 2000,
+                            closable: true,
+                            animateOpen: {"height":"toggle"},
+                            animateClose: {"height":"toggle"},
+                            closeOnSelfClick: true
+                        });
+                        return;
+                    }
+                }
+                var access = new UserAccess(ei,data.user);
+                access.access_level(d.access_level);
+                ei.access_rights.push(access);
+            };
+        }
+
+		if(window.history !== undefined) {
+			var state = window.history.state || {};
+			if('currentTab' in state) {
+				var tabs = this.mainTabs();
+				for(var i=0;i<tabs.length;i++) {
+					var tab = tabs[i];
+					if(tab.id==state.currentTab) {
+						this.currentTab(tab);
+						break;
+					}
+				}
+			}
+			Editor.computedReplaceState('currentTab',ko.computed(function() {
+                var tab = this.currentTab();
+                return tab ? tab.id : '';
+            },this));
+        }
+
+        this.addStamp = function(status_code) {
+            return function() {
+                $.post('stamp',{'status': status_code, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(response) {
+                    $('.timeline').prepend(response.html).mathjax();
+                    ei.current_stamp(response.object_json);
+                });
+                noty({
+                    text: 'Thanks for your feedback!',
+                    type: 'success',
+                    layout: 'topCenter'
+                });
+            }
+        }
+
+        this.commentwriter = new Editor.CommentWriter();
+    }
+    Editor.EditorItem.prototype = {
+        init_tasks: function() {
+            this.section_completed = {};
+            for(var section in this.section_tasks) {
+                this.section_completed[section] = ko.computed(function() {
+                    return this.section_tasks[section].every(function(t){return ko.unwrap(t.done)});
+                },this);
+            }
+            
+            this.all_sections_completed = ko.computed(function() {
+                for(var key in this.section_completed) {
+                    if(!this.section_completed[key]()) {
+                        return false;
+                    }
+                }
+                return true;
+            },this);
+        },
+
+        init_output: function() {
+            this.output = ko.computed(function() {
+                var data = JSON.stringify(this.toJSON());
+                return '// Numbas version: '+Editor.numbasVersion+'\n'+data;
+            },this);
+        },
+
+        init_save: function() {
+            var ei = this;
+			this.firstSave = true;
+            this.autoSave = Editor.saver(
+                function() {
+                    var data = ei.save();
+
+                    return data;
+                },
+                function(data) {
+                    return $.post(
+                        '/question/'+ei.id+'/'+slugify(ei.realName())+'/',
+                        {json: JSON.stringify(data), csrfmiddlewaretoken: getCookie('csrftoken')}
+                    )
+                        .success(function(data){
+                            var address = location.protocol+'//'+location.host+data.url;
+                            if(history.replaceState)
+                                history.replaceState(history.state,ei.realName(),address);
+                        })
+                        .error(function(response,type,message) {
+                            if(message=='')
+                                message = 'Server did not respond.';
+
+                            noty({
+                                text: 'Error saving question:\n\n'+message,
+                                layout: "topLeft",
+                                type: "error",
+                                textAlign: "center",
+                                animateOpen: {"height":"toggle"},
+                                animateClose: {"height":"toggle"},
+                                speed: 200,
+                                timeout: 5000,
+                                closable:true,
+                                closeOnSelfClick: true
+                            });
+                        })
+                    ;
+                }
+            );
+
+            this.currentChange = ko.observable(new Editor.Change(this.versionJSON(),item_json.itemJSON.author));
+
+            // create a new version when the question JSON changes
+            ko.computed(function() {
+                var currentChange = this.currentChange.peek();
+                var v = new Editor.Change(this.versionJSON(),item_json.itemJSON.author, currentChange);
+
+                //if the new version is different to the old one, keep the diff
+                if(!currentChange || v.diff.length!=0) {
+                    currentChange.next_version(v);
+                    this.currentChange(v);
+                }
+            },this).extend({throttle:1000});
+
+
+            this.rewindChange = function() {
+                var currentChange = ei.currentChange();
+                var prev_version = currentChange.prev_version();
+                if(!prev_version) {
+                    throw(new Error("Can't rewind - this is the first version"));
+                }
+                var data = ei.versionJSON();
+                data = jiff.patch(jiff.inverse(currentChange.diff),data);
+                ei.currentChange(prev_version);
+                ei.load(data);
+            };
+
+            this.forwardChange = function() {
+                var currentChange = ei.currentChange();
+                var next_version = currentChange.next_version();
+                if(!currentChange.next_version()) {
+                    throw(new Error("Can't go forward - this is the latest version"));
+                }
+                var data = ei.versionJSON();
+                data = jiff.patch(next_version.diff,data);
+                ei.currentChange(next_version);
+                ei.load(data);
+            };
+
+        },
+
+		applyDiff: function(version) {
+			viewModel.currentChange(version);
+			viewModel.load(version.data);
+		},
+
+        getTab: function(id) {
+            return this.mainTabs().find(function(t){return t.id==id});
+        },
+
+        get_topic: function(pk) {
+            return this.topics().find(function(t){return t.pk==pk});
+        },
+
+        get_subject: function(pk) {
+            return this.subjects().find(function(s){return s.pk==pk});
+        },
+
+    }
+
+    var UserAccess = Editor.UserAccess = function(question,data) {
+        var ua = this;
+        this.id = data.id;
+        this.link = data.link;
+        this.name = data.name;
+        this.access_level = ko.observable(data.access_level || 'view');
+        this.profile = data.profile;
+        this.remove = function() {
+            question.access_rights.remove(ua);
+        }
+    }
+    UserAccess.prototype = {
+        access_options: [{value:'view',text:'Can view this'},{value:'edit',text:'Can edit this'}]
+    }
+
     // change applied in the editor
 	Editor.Change = function(data,author,prev_version) {
 		this.data = data;
@@ -530,14 +876,6 @@ $(document).ready(function() {
 			return this.next_version() != null;
 		},this);
 	}
-
-    Editor.Stamp = function(data) {
-        this.status = data.status;
-        this.status_display = data.status_display;
-        this.user = data.user;
-        this.date = data.date;
-        this.delete_url = data.delete_url;
-    }
 
     Editor.Comment = function(data) {
         this.text = data.text;
@@ -1082,6 +1420,51 @@ $(document).ready(function() {
             clearInterval(ko.utils.domData.get(element,'calendarTime'));
             ko.bindingHandlers.calendarTime.init(element,valueAccessor);
         }
+    }
+
+    var Subject = Editor.Subject = function(data) {
+        this.pk = data.pk;
+        this.name = data.name;
+        this.description = data.description;
+        this.used = ko.observable(false);
+    }
+
+    var Topic = Editor.Topic = function(data,subject_list) {
+        this.pk = data.pk;
+        this.name = data.name;
+        this.description = data.description;
+        this.subjects = ko.computed(function() {
+            return subject_list().filter(function(s){ return data.subjects.contains(s.pk) });
+        },this);
+        this.visible = ko.computed(function() {
+            var subjects = this.subjects();
+            for(var i=0;i<subjects.length;i++) {
+                if(subjects[i].used()) {
+                    return true;
+                }
+            }
+        },this);
+        var _used = ko.observable(false);
+        this.used = ko.computed({
+            read: function() { return this.visible() && _used(); },
+            write: function(v) { return _used(v); }
+        },this);
+    }
+
+    var AbilityFramework = Editor.AbilityFramework = function(data) {
+        this.name = data.name;
+        this.description = data.description;
+        this.pk = data.pk;
+        this.levels = data.levels.map(function(ld) {return new AbilityLevel(ld)});
+    }
+
+    var AbilityLevel = Editor.AbilityLevel = function(data) {
+        this.name = data.name;
+        this.description = data.description;
+        this.pk = data.pk;
+        this.start = data.start;
+        this.end = data.end;
+        this.used = ko.observable(false);
     }
 
 	var Resource = Editor.Resource = function(data) {

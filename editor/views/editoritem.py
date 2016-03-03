@@ -115,6 +115,12 @@ class BaseUpdateView(generic.UpdateView):
         with transaction.atomic(), reversion.create_revision():
             self.object = form.save(commit=False)
             self.pre_save(form)
+            self.object.editoritem.subjects.clear()
+            self.object.editoritem.subjects.add(*form.cleaned_data['subjects'])
+            self.object.editoritem.topics.clear()
+            self.object.editoritem.topics.add(*form.cleaned_data['topics'])
+            self.object.editoritem.ability_levels.clear()
+            self.object.editoritem.ability_levels.add(*form.cleaned_data['ability_levels'])
 
             self.object.save()
 
@@ -137,6 +143,8 @@ class BaseUpdateView(generic.UpdateView):
         context = super(BaseUpdateView, self).get_context_data(**kwargs)
         self.object.editoritem.get_parsed_content()
 
+        context['item_type'] = self.object.editoritem.item_type
+
         context['editable'] = self.editable
         context['can_delete'] = self.can_delete
         context['can_copy'] = self.can_copy
@@ -150,6 +158,10 @@ class BaseUpdateView(generic.UpdateView):
             'editable': self.editable,
 
             'licences': licences,
+
+            'subjects': [editor.views.generic.subject_json(subject) for subject in editor.models.Subject.objects.all()],
+            'topics': [editor.views.generic.topic_json(topic) for topic in editor.models.Topic.objects.all()],
+            'ability_frameworks': [editor.views.generic.ability_framework_json(af) for af in editor.models.AbilityFramework.objects.all()],
 
             'previewURL': reverse('{}_preview'.format(self.object.editoritem.item_type), args=(self.object.pk, self.object.editoritem.slug)),
             'previewWindow': str(calendar.timegm(time.gmtime())),
@@ -438,4 +450,20 @@ class SetAccessView(generic.UpdateView):
 
     def get(self, request, *args, **kwargs):
         return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
+
+class CompareView(generic.TemplateView):
+
+    template_name = "editoritem/compare.html"
+
+    def get_context_data(self, pk1,pk2, **kwargs):
+        context = super(CompareView, self).get_context_data(**kwargs)
+        pk1 = int(pk1)
+        pk2 = int(pk2)
+        ei1 = context['ei1'] = EditorItem.objects.get(pk=pk1)
+        ei2 = context['ei2'] = EditorItem.objects.get(pk=pk2)
+        context['pr1_exists'] = QuestionPullRequest.objects.open().filter(source=ei1,destination=ei2).exists()
+        context['pr2_exists'] = QuestionPullRequest.objects.open().filter(source=ei2,destination=ei1).exists()
+        context['pr1_auto'] = ei2.can_be_edited_by(self.request.user)
+        context['pr2_auto'] = ei1.can_be_edited_by(self.request.user)
+        return context
 

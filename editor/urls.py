@@ -58,6 +58,9 @@ urlpatterns = patterns('',
     url(r'^item/(?P<pk>\d+)/set-access$',
         editoritem.SetAccessView.as_view(),name='set_access'),
 
+    url(r'^items/compare/(?P<pk1>\d+)/(?P<pk2>\d+)$',
+        editoritem.CompareView.as_view(), name='editoritem_compare'),
+
     # Exams
 
     url(r'^exam/new/$', login_required(exam.CreateView.as_view()), name='exam_new'),
@@ -92,9 +95,6 @@ urlpatterns = patterns('',
 
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/comment$',
         login_required(exam.CommentView.as_view()),name='comment_on_exam'),
-
-    url(r'^exams/compare/(?P<pk1>\d+)/(?P<pk2>\d+)$',
-        exam.CompareView.as_view(), name='exam_compare'),
 
     url(r'exam/question-lists/$',
         exam.question_lists,
@@ -138,9 +138,6 @@ urlpatterns = patterns('',
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+).exam$',
         question.SourceView.as_view(), name='question_source'),
-
-    url(r'^questions/compare/(?P<pk1>\d+)/(?P<pk2>\d+)$',
-        question.CompareView.as_view(), name='question_compare'),
 
     url(r'^questions/merge/(?P<source>\d+)/into/(?P<destination>\d+)$',
         question.CreatePullRequestView.as_view(), name='question_pullrequest'),

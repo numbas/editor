@@ -1,0 +1,420 @@
+{% extends "editor.html" %}
+{% load user_link %}
+{% load can_edit %}
+{% load links %}
+{% load sanitizer %}
+{% load helplink %}
+{% load editor_controls %}
+{% load sstatic %}
+{% load verbatim %}
+{% load json_filter %}
+
+{% block skipMathJaxStartup %}true{% endblock %}
+
+{% block javascripts %}
+    {{ block.super }}
+
+    <!-- numbas -->
+    <script src="{% sstatic 'js/numbas/R/R.js' %}" type="text/javascript"></script>
+    <script src="{% sstatic 'js/numbas/R/en-gb.js' %}" type="text/javascript"></script>
+    <script src="{% sstatic 'js/numbas/numbas.js' %}" type="text/javascript"></script>
+    <script src="{% sstatic 'js/numbas/jme-display.js' %}" type="text/javascript"></script>
+    <script src="{% sstatic 'js/numbas/jme-builtins.js' %}" type="text/javascript"></script>
+    <script src="{% sstatic 'js/numbas/jme-variables.js' %}" type="text/javascript"></script>
+    <script src="{% sstatic 'js/numbas/jme.js' %}" type="text/javascript"></script>
+    <script src="{% sstatic 'js/numbas/editor-extras.js' %}" type="text/javascript"></script>
+    <script src="{% sstatic 'js/numbas/math.js' %}" type="text/javascript"></script>
+    <script src="{% sstatic 'js/numbas/util.js' %}" type="text/javascript"></script>
+
+	<!-- jsonpatch -->
+    <script src="{% sstatic 'js/jiff.js' %}" type="text/javascript"></script>
+
+    <script type="text/javascript">
+        {% autoescape off %}
+        {% endautoescape %}
+        (function() {
+            window.item_json = {{item_json|json|safe}};
+        })();
+    </script>
+{% endblock javascripts %}
+
+{% block content_container %}container-fluid{% endblock %}
+
+
+{% block content %}
+
+<div class="page-loading" data-bind="visible: false">
+    <h1>Loading...</h1>
+</div>
+
+<div class="page-error">
+    <div class="page-header text-danger">
+        <h2>Error</h2>
+    </div>
+    <p class="text-lg">There was an error loading the page.</p>
+
+    <pre class="trace"></pre>
+</div>
+
+<div class="loaded-content">
+    <div class="page-header">
+        {% block page_header %}
+        <h1 class="name-header">
+            <span class="glyphicon glyphicon-book"></span> <span data-bind="mathjaxHTML: name">{{object.name}}</span>
+            <small class="pull-right" data-bind="if: current_stamp">
+                <span class="label label-default stamp" data-bind="text: current_stamp().status_display"></span>
+            </small>
+        </h1>
+        {% endblock page_header %}
+    </div>
+    <div class="row">
+        <div class="col-sm-3 col-md-2 tabs">
+            <ul id="controls" class="nav nav-pills nav-stacked">
+                {% block admin_controls %}
+                <li id="preview">
+                    <a class="text-success" data-bind="attr: {href: item_json.previewURL, target: item_json.previewWindow}" title="Run this question in a new window (Ctrl+B)">
+                        <span class="glyphicon glyphicon-play"></span>
+                        Test Run
+                    </a>
+                </li>
+                {% if user.is_authenticated %}
+                <li id="stamp-dropdown" class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span class="glyphicon glyphicon-flag"></span>
+                        Feedback
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                    {% for name,description in stamp_choices %}
+                        <li><a tabindex="-1" href="#" data-bind="click: addStamp('{{name}}')">{{description}}</a></li>
+                    {% endfor %}
+                    </ul>
+                </li>
+                {% endif %}
+                <li id="download" class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span class="glyphicon glyphicon-cloud-download"></span>
+                        Download
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{% editoritem_url 'download' object %}">SCORM package</a></li>
+                        <li><a href="{% editoritem_url 'download' object %}">standalone .zip (no SCORM)</a></li>
+                        <li><a href="{% editoritem_url 'source' object %}">source</a></li>
+                    </ul>
+                 </li>
+                 <li>
+                    <a class="text-warning" href="{% editoritem_url 'copy' object %}" target="_blank" title="Create your own copy of this {{item_type}}"><span class="glyphicon glyphicon-duplicate"></span> Make a copy</a>
+                </li>
+                <li>
+                    <a href="#" class="text-danger" data-bind="click: deleteItem" title="Delete this {{item_type}} permanently">
+                        <span class="glyphicon glyphicon-remove"></span> Delete
+                        <form class="hidden" action="{% editoritem_url 'delete' object %}" method="POST">
+                            {% csrf_token %}
+                        </form>
+                    </a>
+                </li>
+                {% endblock admin_controls %}
+            </ul>
+            <hr>
+            <ul class="nav nav-pills nav-stacked" data-bind="foreach: mainTabs">
+                <li data-bind="visible: visible, css: {active: $root.currentTab() == $data}">
+                    <a href="#" data-bind="click: $root.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon}"></span> <span data-bind="text: title"></span></a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="col-sm-9 col-md-10 editing">
+            <div class="tab-content">
+            {% block main_tab_content %}
+                <!-- Settings tab -->
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='settings'}">
+                    <div class="container-fluid">
+                        {% block settings %}
+                        <div class="row">
+                            <div class="col-sm-8">
+                                {% block settings_main %}
+                                <div class="form-group name">
+                                    <label>Name</label>
+                                    <input class="form-control input-lg" data-bind="textInput: name">
+                                </div>
+
+                                <div class="form-group description">
+                                    <label>Description</label>
+                                    <div data-bind="writemaths: description"></div>
+                                    <p class="help-block">
+                                        {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#description' subject='the description field' %}
+                                        Describe what this {{item_type}} assesses, or how it is going to be used.
+                                    </p>
+                                </div>
+                                {% endblock settings_main %}
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="panel panel-info">
+                                    {% block settings_metadata %}
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title">Metadata</h3>
+                                    </div>
+                                    <div class="panel-body">
+                                        <div class="form-group">
+                                            <label><span class="glyphicon glyphicon-user"></span> Author</label>
+                                            <div class="media">
+                                                <div class="media-left">
+                                                    {% user_thumbnail object.editoritem.author 40 36 %}
+                                                </div>
+                                                <div class="media-body">
+                                                    <p class="form-control-static">{% user_link object.editoritem.author %}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label><span class="glyphicon glyphicon-briefcase"></span> Project</label>
+                                            <p class="form-control-static"><a target="_blank" href="{% url 'project_index' object.editoritem.project.pk %}">{{object.editoritem.project.name}}</a></p>
+                                        </div>
+                                        <div class="form-group">
+                                            <label><span class="glyphicon glyphicon-copyright-mark"></span> Licence</label>
+                                            <select class="form-control" data-bind="options: item_json.licences, value: licence, optionsText: 'short_name', optionsCaption: 'None specified'"></select>
+                                            <p class="help-block">
+                                                <small data-bind="visible: licence, with: licence"><a target="_blank" data-bind="visible: url, attr:{href:url}">Licence information</a></small>
+                                            </p>
+                                        </div>
+                                        <div class="form-group subjects">
+                                            <label><span class="glyphicon glyphicon-education"></span> Subjects</label>
+                                            <ul class="list-inline" data-bind="foreach: subjects">
+                                                <li><label data-bind="attr: {title: description}"><input type="checkbox" data-bind="checked: used"> <span data-bind="text: name"></span></label></li>
+                                            </ul>
+                                        </div>
+                                        <div class="form-group topics" data-bind="fadeVisible: any_subjects_selected">
+                                            <label><span class="glyphicon glyphicon-asterisk"></span> Topics</label>
+                                            <ul class="list-inline" data-bind="foreach: topics">
+                                                <li data-bind="visible: visible"><label data-bind="attr: {title: description}"><input type="checkbox" data-bind="checked: used"> <span data-bind="text: name"></span></label></li>
+                                            </ul>
+                                        </div>
+                                        <div class="form-group ability-levels">
+                                            <label><span class="glyphicon glyphicon-sort-by-attributes"></span> Ability levels</label>
+                                            <ul data-bind="foreach: ability_frameworks">
+                                                <li>
+                                                    <span data-bind="text: name"></span>
+                                                    <ul class="list-inline" data-bind="foreach: levels">
+                                                        <li><label data-bind="attr: {title: description}"><input type="checkbox" data-bind="checked: used"> <span data-bind="text: name"></span></label></li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    {% endblock settings_metadata %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endblock settings %}
+                    </div>
+                </section>
+
+                <!-- Editing history -->
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='history'}">
+
+                    <div class="timeline-write-comment" data-bind="with: commentwriter">
+                        <button class="btn btn-primary" data-bind="visible: !writingComment(), click: writingComment" type="button"><span class="glyphicon glyphicon-comment"></span> Write a comment</button>
+                        <form action="{% url 'comment_on_question' object.pk object.editoritem.slug %}" data-bind="fadeVisible: writingComment, submit: submitComment">
+                            <h4>Comment</h4>
+                            <div data-bind="writemaths: commentText"></div>
+                            <div class="buttons">
+                                <button type="Submit" class="btn btn-primary" data-bind="attr: {disabled: commentIsEmpty}">Submit</button>
+                                <button type="button" class="btn btn-default" data-bind="click: cancelComment">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="timeline">
+                        {% for item in object.editoritem.timeline.all %}
+                            {% include item.object.timelineitem_template %}
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <!-- Access -->
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='access'}">
+                    <div class="panel panel-warning" data-bind="visible: !published() && !all_sections_completed()">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Publish</h3>
+                        </div>
+                        <div class="panel-body">
+                            <p>At the moment, access to this {{item_type}} is restricted to members of the project this {{item_type}} belongs to and any other users you've explicitly granted access to.</p>
+                            <p>Complete each of the following tasks before you publish this {{item_type}}:</p>
+                            <ul class="list-unstyled" data-bind="foreach: mainTabs">
+                                <li data-bind="visible: $root.section_completed[id]!==undefined">
+                                <h4><a href="#" data-bind="text: title, click: $root.setTab(id), css: {'text-success': $root.section_completed[id], 'text-danger': !ko.unwrap($root.section_completed[id])}"></a></h4>
+                                    <ul data-bind="foreach: $root.section_tasks[id]">
+                                        <li data-bind="css: {'text-success': done, 'text-danger': !done()}">
+                                            <span class="glyphicon" data-bind="css:{'glyphicon-ok':done, 'glyphicon-alert':!done()}"></span>
+                                            <span data-bind="text: text"></span> 
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="panel panel-warning" data-bind="visible: !published() && all_sections_completed()">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Publish</h3>
+                        </div>
+                        <div class="panel-body">
+                            <p>At the moment, this {{item_type}} is restricted to members of the project this {{item_type}} belongs to and any other users you've explicitly granted access to.</p>
+                            <p>Publish your {{item_type}} so that others can see it.</p>
+                            <form method="POST" action="{% url 'item_publish' object.editoritem.pk %}">
+                                <button class="btn btn-danger" type="submit">Publish</button>
+                                {% csrf_token %}
+                            </form>
+                        </div>
+                    </div>
+                    <div class="panel panel-success" data-bind="visible: published">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Publish</h3>
+                        </div>
+                        <div class="panel-body">
+                            <p>This {{item_type}} has been published to the public {{item_type}} database.</p>
+                        </div>
+                    </div>
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Access rights</h3>
+                        </div>
+                        <table class="table">
+                            <thead>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="glyphicon glyphicon-globe"></span> Public access</td>
+                                    <td>
+                                        <select class="form-control" data-bind="visible: published, value: public_access, options: access_options, optionsText:'text',optionsValue:'value'"></select>
+                                        <em data-bind="visible: !ko.unwrap(published)">This {{item_type}} has not been published</em>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>{% user_thumbnail object.editoritem.author 20 15 %} {% user_link object.editoritem.author new_window=True%}</td>
+                                    <td>
+                                        Owner
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="glyphicon glyphicon-briefcase"></span> Members of <a href="{% url 'project_index' object.editoritem.project.pk %}">{{object.editoritem.project.name}}</a></td>
+                                    <td>
+                                        Access granted by project owner
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <!-- ko foreach: {data: access_rights, afterAdd: Editor.afterAdd} -->
+                                <tr>
+                                    <td data-bind="html: link"></td>
+                                    <td>
+                                        <select class="form-control" data-bind="hasfocus: true, value: access_level, options: access_options, optionsText:'text',optionsValue:'value'"></select>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-link" data-bind="click: remove" title="Remove this user's access"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                                    </td>
+                                </tr>
+                                <!-- /ko -->
+                            </tbody>
+                        </table>
+                        <div class="panel-body">
+                            <label>Give access to</label>
+                            <input class="form-control" id="search_author" type="text" placeholder="Full name or username" size="30" data-bind="
+                                value: userAccessSearch,
+                                autocomplete: '{% url 'user_search' %}', 
+                                autocompleteCallback: function(user) { return {label: user.name, value: user.name} },
+                                autocompleteSelect: addUserAccess
+                                "
+                            />
+                        </div>
+                    </div>
+
+
+                    <div class="panel panel-info">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Access Links</h3>
+                        </div>
+                        <div class="panel-body">
+                            <p>Share these links to give automatic access to this {{item_type}}. Be careful about who you share these with - whoever clicks on the link will be given access.</p>
+                        </div>
+                        <ul class="share-links list-group">
+                            <li class="list-group-item">
+                                <label>View</label>
+                                <input class="share-link form-control" readonly value="{{SITE_ROOT}}{% url 'share_'|add:item_type 'view' object.editoritem.share_uuid_view %}">
+                            </li>
+                            <li class="list-group-item">
+                                <label>Edit</label>
+                                <input class="share-link form-control" readonly value="{{SITE_ROOT}}{% url 'share_'|add:item_type 'edit' object.editoritem.share_uuid_edit %}">
+                            </li>
+                        </ul>
+                    </div>
+
+                    <nav>
+                        <ul class="pager">
+                            <li class="previous">
+                                <a title="Back to the previous section" href="#" data-bind="click: setTab('advice')">← Advice</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </section>
+
+                <!-- Other versions -->
+                <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='network'}">
+                    {% if object.editoritem.network|length == 1 %}
+                        <p>There is only one version of this {{item_type}}.<p>
+                    {% else %}
+                        <table class="network table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th><span class="glyphicon glyphicon-comment"></span> Status</th>
+                                    <th><span class="glyphicon glyphicon-user"></span> Author</th>
+                                    <th><span class="glyphicon glyphicon-time"></span> Last Modified</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ei2 in object.editoritem.network %}
+                                <tr class="network-item{% if ei2 == object.editoritem %} active{% endif %}">
+                                    <td>{% if ei2 != object.editoritem %}{% editoritem_link ei2.rel_obj %}{% else %}{{ei2.name}}{% endif %}</td>
+                                    <td>{% include "stamp_column.html" with record=ei2 %}</td>
+                                    <td>{% user_link ei2.author %}</td>
+                                    <td>{{ ei2.last_modified|date:"d/m/Y H:i" }}</td>
+
+                                    <td class="admin">
+                                        {% if ei2 != object.editoritem %}
+                                        <a class="btn btn-link" href="{% editoritem_url 'preview' ei2.rel_obj %}" target="_blank" title="Preview this version"><span class="glyphicon glyphicon-play"></span></a>
+                                        <a class="btn btn-link" href="{% url 'editoritem_compare' object.editoritem.pk ei2.pk %}" title="Compare with this version"><span class="glyphicon glyphicon-transfer"></span></a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
+
+                    {% with object.incoming_pull_requests.open as pull_requests %}
+                    {% if pull_requests.exists %}
+                    <h2>Request{{pull_requests.count|pluralize}} to merge</h2>
+                    <ul>
+                        {% for pr in pull_requests %}
+                        <li class="pull-request">
+                            <p>{% user_link pr.owner %} would like you to replace this {{item_type}} with {% editoritem_link pr.source %}.</p>
+                            <p>Here's what's changed:</p>
+                            <blockquote class="comment">{{ pr.comment|strip_html|safe }}</blockquote>
+                            <div class="responses">
+                                <form method="post" action="{% url 'pullrequest_accept' pr.pk %}">{% csrf_token %}<button class="btn accept-pr">Accept</button></form>
+                                <form method="post" action="{% url 'pullrequest_reject' pr.pk %}">{% csrf_token %}<button class="btn reject-pr">Reject</button></form>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    {% endwith %}
+                </section>
+            {% endblock main_tab_content %}
+            </div>
+        </div>
+    </div>
+{% endblock content %}

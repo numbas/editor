@@ -367,7 +367,7 @@ class AbilityLevel(models.Model):
     framework = models.ForeignKey(AbilityFramework,related_name='levels')
 
     class Meta:
-        ordering = ('name',)
+        ordering = ('framework','start',)
 
     def __unicode__(self):
         return self.name
@@ -552,6 +552,9 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
             'published': self.published,
             'JSONContent': self.parsed_content.data,
             'tags': [t.name for t in self.tags.all()],
+            'subjects': [s.pk for s in self.subjects.all()],
+            'topics': [t.pk for t in self.topics.all()],
+            'ability_levels': [a.pk for a in self.ability_levels.all()],
         }
 
     @property

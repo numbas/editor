@@ -31,14 +31,9 @@ $(document).ready(function() {
     {
 		var q = this;
 
-        this.published = ko.observable(false);
-        this.current_stamp = ko.observable(item_json.current_stamp);
-        this.licence = ko.observable();
+        Editor.EditorItem.apply(this);
+
 		this.resources = ko.observableArray([]);
-        this.name = ko.observable('Untitled Question');
-		this.realtags = ko.observableArray([]);
-		this.notes = ko.observable('');
-		this.description = ko.observable('');
 		this.extensions = ko.observableArray([]);
         this.statement = Editor.contentObservable('');
         this.advice = Editor.contentObservable('');
@@ -78,7 +73,7 @@ $(document).ready(function() {
 		}
 
 
-		this.mainTabs = ko.observableArray([
+		this.mainTabs([
 			new Editor.Tab('settings','Settings','cog'),
 			new Editor.Tab('statement','Statement','blackboard'),
 			new Editor.Tab('variables','Variables','th-list'),
@@ -105,41 +100,11 @@ $(document).ready(function() {
             var adviceTab = new Editor.Tab('access','Access','lock');
             this.mainTabs.splice(5,0,adviceTab);
         }
-
-		this.currentTab = ko.observable(this.mainTabs()[0]);
-
-        this.setTab = function(id) {
-            return function() {
-                var tab = q.getTab(id);
-
-                q.currentTab(tab);
-            }
-        }
-
-		if(item_json.editable) {
-            switch(window.location.hash.slice(1)) {
-                case 'editing-history':
-        			this.currentTab(editingHistoryTab);
-                    break;
-                case 'network':
-                    this.currentTab(networkTab);
-            } 
-		}
+        this.currentTab(this.mainTabs()[0]);
 
         this.add_to_basket = function() {
             Editor.add_question_to_basket(item_json.itemJSON.id);
         }
-
-		this.exams = data.exams;
-
-        item_json.licences.sort(function(a,b){a=a.short_name;b=b.short_name; return a<b ? -1 : a>b ? 1 : 0 });
-        this.licence_name = ko.computed(function() {
-            if(this.licence()) {
-                return this.licence().name;
-            } else {
-                return 'None specified';
-            }
-        },this);
 
 		this.saveResources = ko.computed(function() {
 			var resources = this.resources();
@@ -153,56 +118,6 @@ $(document).ready(function() {
 				}
 			}
 			return out;
-		},this);
-
-		this.realName = ko.computed(function() {
-			var name = this.name()
-			return name.length>0 ? name : 'Untitled Question';
-		},this);
-
-        this.tags = ko.computed({
-            read: function() {
-				return this.realtags().sort(function(a,b) {
-					a = a.toLowerCase();
-					b = b.toLowerCase();
-					return a>b ? 1 : a<b ? -1 : 0;
-				});
-			},
-            write: function(newtags) {
-				newtags = newtags.slice();
-                for(var i=newtags.length-1;i>=0;i--)
-                {
-                    if(newtags.indexOf(newtags[i])<i)
-                        newtags.splice(i,1);
-                }
-                this.realtags(newtags);
-            }
-        },this);
-
-        this.tags.push = function(thing) {
-            thing = thing.trim();
-			if(thing.length==0)
-				return;
-            if(q.realtags().indexOf(thing)==-1) {
-                q.realtags.push(thing);
-            }
-        }
-        this.tags.pop = function(thing) {
-            return q.realtags.pop();
-        }
-        this.tags.splice = function(i,n) {
-            return q.realtags.splice(i,n);
-        }
-		this.tags.remove = function(q) {
-			return q.realtags.remove(q);
-		}
-
-		this.metadata = ko.computed(function() {
-			return {
-				notes: this.notes(),
-				description: this.description(),
-                licence: this.licence_name()
-			};
 		},this);
 
 		for(var i=0;i<item_json.numbasExtensions.length;i++) {
@@ -297,15 +212,6 @@ $(document).ready(function() {
 			return o;
 		},this);
 
-        this.output = ko.computed(function() {
-            var data = JSON.stringify(q.toJSON());
-			return '// Numbas version: '+Editor.numbasVersion+'\n'+data;
-        },this);
-
-
-        ko.computed(function() {
-            document.title = this.name() ? this.name()+' - Numbas Editor' : 'Numbas Editor';
-        },this);
 
 		ko.computed(function() {
 			if(!this.autoCalculateVariables())
@@ -328,8 +234,6 @@ $(document).ready(function() {
 		}
 
         if(item_json.editable) {
-			this.firstSave = true;
-
 			this.deleteResource =  function(res) {
 				$.get(res.deleteURL)
 					.success(function() {
@@ -342,100 +246,23 @@ $(document).ready(function() {
 				;
 			}
 
+            this.init_output();
+
 			this.save = ko.computed(function() {
                 return {
                     content: this.output(),
 					extensions: this.usedExtensions().map(function(e){return e.pk}),
                     tags: this.tags(),
+                    subjects: this.subjects().filter(function(s){return s.used()}).map(function(s){return s.pk}),
+                    topics: this.topics().filter(function(t){return t.used()}).map(function(t){return t.pk}),
+                    ability_levels: this.used_ability_levels().map(function(al){return al.pk}),
 					resources: this.saveResources(),
                     metadata: this.metadata()
                 };
 			},this);
 
-            this.autoSave = Editor.saver(
-                function() {
-                    var data = q.save();
+            this.init_save();
 
-                    return data;
-                },
-                function(data) {
-                    return $.post(
-                        '/question/'+q.id+'/'+slugify(q.realName())+'/',
-                        {json: JSON.stringify(data), csrfmiddlewaretoken: getCookie('csrftoken')}
-                    )
-                        .success(function(data){
-                            var address = location.protocol+'//'+location.host+data.url;
-                            if(history.replaceState)
-                                history.replaceState(history.state,q.realName(),address);
-                        })
-                        .error(function(response,type,message) {
-                            if(message=='')
-                                message = 'Server did not respond.';
-
-                            noty({
-                                text: 'Error saving question:\n\n'+message,
-                                layout: "topLeft",
-                                type: "error",
-                                textAlign: "center",
-                                animateOpen: {"height":"toggle"},
-                                animateClose: {"height":"toggle"},
-                                speed: 200,
-                                timeout: 5000,
-                                closable:true,
-                                closeOnSelfClick: true
-                            });
-                        })
-                    ;
-                }
-            );
-
-            //access control stuff
-            this.public_access = ko.observable(item_json.public_access);
-            this.access_options = [
-                {value:'hidden',text:'Hidden'},
-                {value:'view',text:'Anyone can view this'},
-                {value:'edit',text:'Anyone can edit this'}
-            ];
-            this.access_rights = ko.observableArray(item_json.access_rights.map(function(d){
-                var access = new UserAccess(q,d.user)
-                access.access_level(d.access_level);
-                return access;
-            }));
-
-            this.access_data = ko.computed(function() {
-                return {
-                    public_access: q.public_access(),
-                    user_ids: q.access_rights().map(function(u){return u.id}),
-                    access_levels: q.access_rights().map(function(u){return u.access_level()})
-                }
-            });
-            this.saveAccess = Editor.saver(this.access_data,function(data) {
-                return $.post('/item/'+q.editoritem_id+'/set-access',data);
-            });
-            this.userAccessSearch=ko.observable('');
-
-            this.addUserAccess = function(data) {
-                var access_rights = q.access_rights();
-                for(var i=0;i<access_rights.length;i++) {
-                    if(access_rights[i].id==data.user.id) {
-                        noty({
-                            text: "That user is already in the access list.",
-                            layout: "center",
-                            speed: 100,
-                            type: 'error',
-                            timeout: 2000,
-                            closable: true,
-                            animateOpen: {"height":"toggle"},
-                            animateClose: {"height":"toggle"},
-                            closeOnSelfClick: true
-                        });
-                        return;
-                    }
-                }
-                var access = new UserAccess(q,data.user);
-                access.access_level(d.access_level);
-                q.access_rights.push(access);
-            };
 
             this.section_tasks = {
                 'settings': [
@@ -454,36 +281,11 @@ $(document).ready(function() {
                 ]
             }
 
-            this.section_completed = {};
-            for(var section in this.section_tasks) {
-                this.section_completed[section] = ko.computed(function() {
-                    return this.section_tasks[section].every(function(t){return ko.unwrap(t.done)});
-                },this);
-            }
-            
-            this.all_sections_completed = ko.computed(function() {
-                for(var key in this.section_completed) {
-                    if(!this.section_completed[key]()) {
-                        return false;
-                    }
-                }
-                return true;
-            },this);
+            this.init_tasks();
         }
 
 		if(window.history !== undefined) {
 			var state = window.history.state || {};
-			if('currentTab' in state) {
-				var tabs = this.mainTabs();
-				for(var i=0;i<tabs.length;i++) {
-					var tab = tabs[i];
-					if(tab.id==state.currentTab) {
-						this.currentTab(tab);
-						break;
-					}
-				}
-			}
-			Editor.computedReplaceState('currentTab',ko.computed(function(){return this.currentTab().id},this));
 			if('currentVariable' in state) {
 				var variables = this.variables();
 				for(var i=0;i<variables.length;i++) {
@@ -504,63 +306,8 @@ $(document).ready(function() {
             },this));
 		}
 
-		this.currentChange = ko.observable(new Editor.Change(this.versionJSON(),item_json.itemJSON.author));
-
-		// create a new version when the question JSON changes
-		ko.computed(function() {
-			var currentChange = this.currentChange.peek();
-			var v = new Editor.Change(this.versionJSON(),item_json.itemJSON.author, currentChange);
-
-			//if the new version is different to the old one, keep the diff
-			if(!currentChange || v.diff.length!=0) {
-				currentChange.next_version(v);
-				this.currentChange(v);
-			}
-		},this).extend({throttle:1000});
-
-
-		this.rewindChange = function() {
-			var currentChange = q.currentChange();
-			var prev_version = currentChange.prev_version();
-			if(!prev_version) {
-				throw(new Error("Can't rewind - this is the first version"));
-			}
-			var data = q.versionJSON();
-			data = jiff.patch(jiff.inverse(currentChange.diff),data);
-			q.currentChange(prev_version);
-			q.load(data);
-		};
-
-		this.forwardChange = function() {
-			var currentChange = q.currentChange();
-			var next_version = currentChange.next_version();
-			if(!currentChange.next_version()) {
-				throw(new Error("Can't go forward - this is the latest version"));
-			}
-			var data = q.versionJSON();
-			data = jiff.patch(next_version.diff,data);
-			q.currentChange(next_version);
-			q.load(data);
-		};
-
-        this.addStamp = function(status_code) {
-            return function() {
-                $.post('stamp',{'status': status_code, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(response) {
-                    $('.timeline').prepend(response.html).mathjax();
-                    q.current_stamp(response.object_json);
-                });
-                noty({
-                    text: 'Thanks for your feedback!',
-                    type: 'success',
-                    layout: 'topCenter'
-                });
-            }
-        }
-
-        this.commentwriter = new Editor.CommentWriter();
     }
     Question.prototype = {
-
 		versionJSON: function() {
 			var obj = {
 				id: this.id,
@@ -580,20 +327,11 @@ $(document).ready(function() {
             return obj;
 		},
 
-		applyDiff: function(version) {
-			viewModel.currentChange(version);
-			viewModel.load(version.data);
-		},
-
-		deleteQuestion: function(q,e) {
+		deleteItem: function(q,e) {
 			if(window.confirm('Really delete this question?')) {
 				$(e.target).find('form').submit();
 			}
 		},
-
-        getTab: function(id) {
-            return this.mainTabs().find(function(t){return t.id==id});
-        },
 
         addRuleset: function() {
             this.rulesets.push(new Ruleset(this));
@@ -1052,7 +790,7 @@ $(document).ready(function() {
             this.published(data.published);
 
 			if('metadata' in data) {
-				tryLoad(data.metadata,['notes','description'],this);
+				tryLoad(data.metadata,['description'],this);
                 var licence_name = data.metadata.licence;
                 for(var i=0;i<item_json.licences.length;i++) {
                     if(item_json.licences[i].name==licence_name) {
@@ -1069,12 +807,23 @@ $(document).ready(function() {
 				});
 			}
 
-			if('resources' in data)
-			{
+			if('resources' in data) {
 				data.resources.map(function(rd) {
 					this.resources.push(new Editor.Resource(rd));
 				},this);
 			}
+
+            if('topics' in data) {
+                data.topics.map(function(pk) {
+                    this.get_topic(pk).used(true);
+                },this);
+            }
+
+            if('subjects' in data) {
+                data.subjects.map(function(pk) {
+                    this.get_subject(pk).used(true);
+                },this);
+            }
 
 			contentData = data.JSONContent;
 
@@ -1220,21 +969,7 @@ $(document).ready(function() {
 			ed.onChange.dispatch();
 		}
     };
-
-    function UserAccess(question,data) {
-        var ua = this;
-        this.id = data.id;
-        this.link = data.link;
-        this.name = data.name;
-        this.access_level = ko.observable(data.access_level || 'view');
-        this.profile = data.profile;
-        this.remove = function() {
-            question.access_rights.remove(ua);
-        }
-    }
-    UserAccess.prototype = {
-        access_options: [{value:'view',text:'Can view this'},{value:'edit',text:'Can edit this'}]
-    }
+    Question.prototype.__proto__ = Editor.EditorItem.prototype;
 
     function Ruleset(exam,data)
     {
@@ -2868,10 +2603,4 @@ $(document).ready(function() {
 	Mousetrap.bind(['ctrl+b','command+b'],function() {
 		window.open(item_json.previewURL,item_json.previewWindow);
 	});
-
-
-    ko.onError = function(e) {
-        console.log(e);
-    }
-
 });

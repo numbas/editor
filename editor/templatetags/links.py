@@ -1,4 +1,5 @@
 from django import template
+from django.core.urlresolvers import reverse
 
 register = template.Library()
 
@@ -9,3 +10,11 @@ def question_link(q):
 @register.inclusion_tag('links/exam.html')
 def exam_link(e):
     return {'e': e}
+
+@register.inclusion_tag('links/editoritem.html')
+def editoritem_link(item):
+    return {'item': item}
+
+@register.simple_tag
+def editoritem_url(link,item):
+    return reverse('{}_{}'.format(item.editoritem.item_type,link),args=(item.pk,item.editoritem.slug))

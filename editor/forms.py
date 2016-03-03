@@ -217,6 +217,10 @@ class QuestionForm(forms.ModelForm):
 
     content = forms.CharField()
 
+    subjects = forms.ModelMultipleChoiceField(queryset=editor.models.Subject.objects.all(),required=False)
+    topics = forms.ModelMultipleChoiceField(queryset=editor.models.Topic.objects.all(),required=False)
+    ability_levels = forms.ModelMultipleChoiceField(queryset=editor.models.AbilityLevel.objects.all(),required=False)
+
     class Meta:
         model = NewQuestion
         fields = ('resources','extensions')

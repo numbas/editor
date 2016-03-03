@@ -101,6 +101,39 @@ def comment_json(comment,**kwargs):
         'user': user_json(comment.user),
     }
 
+def topic_json(topic):
+    return {
+        'pk': topic.pk,
+        'name': topic.name,
+        'description': topic.description,
+        'subjects': [s.pk for s in topic.subjects.all()],
+    }
+
+def subject_json(subject):
+    return {
+        'pk': subject.pk,
+        'name': subject.name,
+        'description': subject.description,
+    }
+
+def ability_framework_json(ability_framework):
+    return {
+        'pk': ability_framework.pk,
+        'name': ability_framework.name,
+        'description': ability_framework.description,
+        'levels': [ability_level_json(l) for l in ability_framework.levels.all()],
+    }
+
+def ability_level_json(ability_level):
+    return {
+        'pk': ability_level.pk,
+        'name': ability_level.name,
+        'description': ability_level.description,
+        'framework': ability_level.framework.pk,
+        'start': float(ability_level.start),
+        'end': float(ability_level.end),
+    }
+
 class DeleteTimelineItemView(generic.DeleteView):
     model = TimelineItem
 

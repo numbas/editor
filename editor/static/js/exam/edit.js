@@ -20,11 +20,11 @@ $(document).ready(function() {
     {
         var e = this;
 
-        this.questions = ko.observableArray([]);
-        this.current_stamp = ko.observable(item_json.current_stamp);
-        this.published = ko.observable(false);
+        Editor.EditorItem.apply(this);
 
-        this.mainTabs = ko.observableArray([
+        this.questions = ko.observableArray([]);
+
+        this.mainTabs([
             new Editor.Tab('settings','Settings','cog'),
             new Editor.Tab('questions','Questions','file'),
             new Editor.Tab('navigation','Navigation','tasks'),
@@ -36,50 +36,7 @@ $(document).ready(function() {
         if(item_json.editable) {
             this.mainTabs.splice(5,0,new Editor.Tab('access','Access','lock'));
         }
-        this.currentTab = ko.observable(this.mainTabs()[0]);
-
-        this.setTab = function(id) {
-            return function() {
-                var tab = e.getTab(id);
-
-                e.currentTab(tab);
-            }
-        }
-
-
-        if(item_json.editable && window.location.hash=='#editing-history') {
-            this.currentTab(editingHistoryTab);
-        }
-
-        this.realName = ko.observable('An Exam');
-        this.name = ko.computed({
-            read: this.realName,
-            write: function(value) {
-                if(value.length)
-                        this.realName(value);
-            },
-            owner: this
-        });
-
-        item_json.licences.sort(function(a,b){a=a.short_name;b=b.short_name; return a<b ? -1 : a>b ? 1 : 0 });
-        this.licence = ko.observable();
-        this.licence_name = ko.computed(function() {
-            if(this.licence()) {
-                return this.licence().name;
-            } else {
-                return 'None specified';
-            }
-        },this);
-
-        this.notes = ko.observable('');
-        this.description = ko.observable('');
-        this.metadata = ko.computed(function() {
-            return {
-                notes: this.notes(),
-                description: this.description(),
-                licence: this.licence_name()
-            };
-        },this);
+        this.currentTab(this.mainTabs()[0]);
 
         this.theme = ko.observable(null);
         this.locale = ko.observable(item_json.preferred_locale);
@@ -191,14 +148,7 @@ $(document).ready(function() {
             ]
         );
 
-        ko.computed(function() {
-            document.title = this.name() ? this.name()+' - Numbas Editor' : 'Numbas Editor';
-        },this);
-        
-        this.output = ko.computed(function() {
-            var data = JSON.stringify(this.toJSON());
-            return '// Numbas version: '+Editor.numbasVersion+'\n'+data;
-        },this);
+        this.init_output();
 
         if(data)
         {
@@ -206,8 +156,6 @@ $(document).ready(function() {
         }
 
         if(item_json.editable) {
-            this.firstSave = true;
-
             this.save = ko.computed(function() {
                 return {
                     content: this.output(),
@@ -220,84 +168,7 @@ $(document).ready(function() {
                 };
             },this);
 
-            this.autoSave = Editor.saver(
-                this.save,
-                function(data) {
-                    return $.post(
-                        '/exam/'+e.id+'/'+slugify(e.name())+'/',
-                        {json: JSON.stringify(data), csrfmiddlewaretoken: getCookie('csrftoken')}
-                    )
-                        .success(function(data){
-                            var address = location.protocol+'//'+location.host+'/exam/'+item_json.itemJSON.id+'/'+slugify(e.name())+'/';
-                            if(history.replaceState)
-                                history.replaceState({},e.name(),address);
-                        })
-                        .error(function(response,type,message) {
-                            if(message=='')
-                                message = 'Server did not respond.';
-
-                            noty({
-                                text: 'Error saving exam:\n\n'+message,
-                                layout: "topLeft",
-                                type: "error",
-                                textAlign: "center",
-                                animateOpen: {"height":"toggle"},
-                                animateClose: {"height":"toggle"},
-                                speed: 200,
-                                timeout: 5000,
-                                closable:true,
-                                closeOnSelfClick: true
-                            });
-                        })
-                }
-            );
-
-            //access control stuff
-            this.public_access = ko.observable(item_json.public_access);
-            this.access_options = [
-                {value:'hidden',text:'Hidden'},
-                {value:'view',text:'Anyone can view this'},
-                {value:'edit',text:'Anyone can edit this'}
-            ];
-            this.access_rights = ko.observableArray(item_json.access_rights.map(function(d){
-                var access = new UserAccess(e,d.user)
-                access.access_level(d.access_level);
-                return access;
-            }));
-
-            this.access_data = ko.computed(function() {
-                return {
-                    public_access: e.public_access(),
-                    user_ids: e.access_rights().map(function(u){return u.id}),
-                    access_levels: e.access_rights().map(function(u){return u.access_level()}),
-                    csrfmiddlewaretoken: getCookie('csrftoken')
-                }
-            });
-            this.saveAccess = Editor.saver(this.access_data,function(data) {
-                return $.post(item_json.accessURL,data);
-            });
-            this.userAccessSearch=ko.observable('');
-
-            this.addUserAccess = function(data) {
-                var access_rights = e.access_rights();
-                for(var i=0;i<access_rights.length;i++) {
-                    if(access_rights[i].id==data.id) {
-                        noty({
-                            text: "That user is already in the access list.",
-                            layout: "center",
-                            speed: 100,
-                            type: 'error',
-                            timeout: 2000,
-                            closable: true,
-                            animateOpen: {"height":"toggle"},
-                            animateClose: {"height":"toggle"},
-                            closeOnSelfClick: true
-                        });
-                        return;
-                    }
-                }
-                e.access_rights.push(new UserAccess(e,data));
-            };
+            this.init_save();
 
             this.section_tasks = {
                 'settings': [
@@ -309,53 +180,9 @@ $(document).ready(function() {
                     {text: 'Add at least one question.', done: ko.computed(function(){ return this.questions().length>0 },this)}
                 ]
             }
-
-            this.section_completed = {};
-            for(var section in this.section_tasks) {
-                this.section_completed[section] = ko.computed(function() {
-                    return this.section_tasks[section].every(function(t){return ko.unwrap(t.done)});
-                },this);
-            }
-            
-            this.all_sections_completed = ko.computed(function() {
-                for(var key in this.section_completed) {
-                    if(!this.section_completed[key]()) {
-                        return false;
-                    }
-                }
-                return true;
-            },this);
-        }
-        if(window.history !== undefined) {
-            var state = window.history.state || {};
-            if('currentTab' in state) {
-                var tabs = this.mainTabs();
-                for(var i=0;i<tabs.length;i++) {
-                    var tab = tabs[i];
-                    if(tab.id==state.currentTab) {
-                        this.currentTab(tab);
-                        break;
-                    }
-                }
-            }
-            Editor.computedReplaceState('currentTab',ko.computed(function(){return this.currentTab().id},this));
+            this.init_tasks();
         }
 
-        this.commentwriter = new Editor.CommentWriter();
-
-        this.addStamp = function(status_code) {
-            return function() {
-                $.post('stamp',{'status': status_code, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(response) {
-                    $('.timeline').prepend(response.html).mathjax();
-                    e.current_stamp(response.object_json);
-                });
-                noty({
-                    text: 'Thanks for your feedback!',
-                    type: 'success',
-                    layout: 'topCenter'
-                });
-            }
-        }
     }
     Exam.prototype = {
 
@@ -380,7 +207,7 @@ $(document).ready(function() {
             return this.mainTabs().find(function(t){return t.id==id});
         },
 
-        deleteExam: function(q,e) {
+        deleteItem: function(q,e) {
             if(window.confirm('Really delete this exam?')) {
                 $(e.target).find('form').submit();
             }
@@ -436,7 +263,7 @@ $(document).ready(function() {
             this.editoritem_id = data.editoritem_id;
 
             if('metadata' in data) {
-                tryLoad(data.metadata,['notes','description'],this);
+                tryLoad(data.metadata,['description'],this);
                 var licence_name = data.metadata.licence;
                 for(var i=0;i<item_json.licences.length;i++) {
                     if(item_json.licences[i].name==licence_name) {
@@ -504,20 +331,7 @@ $(document).ready(function() {
             }
         }
     };
-
-    function UserAccess(question,data) {
-        var ua = this;
-        this.id = data.id;
-        this.name = data.name;
-        this.link = data.link;
-        this.access_level = ko.observable(data.access_level || 'view');
-        this.remove = function() {
-            question.access_rights.remove(ua);
-        }
-    }
-    UserAccess.prototype = {
-        access_options: [{value:'view',text:'Can view this'},{value:'edit',text:'Can edit this'}]
-    }
+    Exam.prototype.__proto__ = Editor.EditorItem.prototype;
 
     function Event(name,niceName,helpURL,actions)
     {

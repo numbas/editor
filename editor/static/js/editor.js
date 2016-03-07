@@ -914,27 +914,6 @@ $(document).ready(function() {
         }
     } 
 
-    var timeline_item_constructors = {
-        'version': Editor.Version,
-        'stamp': Editor.Stamp,
-        'comment': Editor.Comment
-    }
-
-    Editor.TimelineItem = function(data) {
-        this.user = data.user;
-        this.date = data.date;
-
-        this.type = data.type;
-        this.delete_url = data.data.delete_url;
-    
-        if(!(data.type in timeline_item_constructors)) {
-            throw(new Error("Unrecognised timeline item "+data.type));
-        }
-        this.data = new timeline_item_constructors[data.type](data.data);
-
-        this.deleting = ko.observable(false);
-    }
-
 	/* Resizable 2d grid of observables.
 	 * Returns a 2d array of objects, each created by calling cell(row,column)
 	 */
@@ -1522,37 +1501,37 @@ $(document).ready(function() {
             this.writingComment(false);
         }
 
-        $('body').on('click','.timeline-item .delete',function(e) {
-            var element = this;
-            e.preventDefault();
-            e.stopPropagation();
-            $.post(element.getAttribute('href'),{csrfmiddlewaretoken: getCookie('csrftoken')})
-                .success(function(data) {
-                    $(element).parents('.timeline-item').first().slideUp(150,function(){$(this).remove()});
-                    if(window.viewModel && data.current_stamp!==undefined) {
-                        viewModel.current_stamp(data.current_stamp);
-                    }
-                })
-                .error(function(response,type,message) {
-                    if(message=='')
-                        message = 'Server did not respond.';
-
-                    noty({
-                        text: 'Error deleting timeline item:\n\n'+message,
-                        layout: "topLeft",
-                        type: "error",
-                        textAlign: "center",
-                        animateOpen: {"height":"toggle"},
-                        animateClose: {"height":"toggle"},
-                        speed: 200,
-                        timeout: 5000,
-                        closable:true,
-                        closeOnSelfClick: true
-                    });
-                })
-            ;
-        });
     }
+    $('body').on('click','.timeline-item .delete',function(e) {
+        var element = this;
+        e.preventDefault();
+        e.stopPropagation();
+        $.post(element.getAttribute('href'),{csrfmiddlewaretoken: getCookie('csrftoken')})
+            .success(function(data) {
+                $(element).parents('.timeline-item').first().slideUp(150,function(){$(this).remove()});
+                if(window.viewModel && data.current_stamp!==undefined) {
+                    viewModel.current_stamp(data.current_stamp);
+                }
+            })
+            .error(function(response,type,message) {
+                if(message=='')
+                    message = 'Server did not respond.';
+
+                noty({
+                    text: 'Error deleting timeline item:\n\n'+message,
+                    layout: "topLeft",
+                    type: "error",
+                    textAlign: "center",
+                    animateOpen: {"height":"toggle"},
+                    animateClose: {"height":"toggle"},
+                    speed: 200,
+                    timeout: 5000,
+                    closable:true,
+                    closeOnSelfClick: true
+                });
+            })
+        ;
+    });
 
 	ko.bindingHandlers.fileupload = {
 		init: function(element, valueAccessor, allBindingsAccessor) {

@@ -46,6 +46,18 @@
             </div>
         </div>
         <div class="col-sm-4">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h2 class="panel-title">Browse</h2>
+                </div>
+                <div class="panel-body browse">
+                    <a href="{% url 'project_search' project.pk %}?item_types=questions" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-file"></span> Questions</a> 
+                    <br>
+                    <a href="{% url 'project_search' project.pk %}?item_types=exams" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-book"></span> Exams</a> 
+                    </p>
+                </div>
+            </div>
+
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h2 class="panel-title">Members</h2>

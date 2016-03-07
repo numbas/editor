@@ -13,7 +13,7 @@
 			Correct answer
 		</label>
 		<div class="{{form_control_class}}">
-			<textarea data-bind="valueUpdate: 'afterkeydown', codemirror: correctAnswer, codemirrorMode: 'jme'"></textarea>
+			<textarea {% if not editable %}disabled{% endif %} data-bind="valueUpdate: 'afterkeydown', codemirror: correctAnswer, codemirrorMode: 'jme'"></textarea>
 		</div>
 	</div>
     {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal' %}
@@ -34,7 +34,7 @@
             Precision restriction {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-precision-restriction' %}
 		</label>
 		<div class="{{form_control_class}}">
-			<select class="form-control" data-bind="options: precisionTypes, value: precisionType, optionsText: 'niceName'"></select>
+			<select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: precisionTypes, value: precisionType, optionsText: 'niceName'"></select>
 		</div>
 	</div>
     {% booleanproperty 'allowFractions' 'Allow the student to enter fractions?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-allow-the-student-to-enter-a-fraction' %}
@@ -46,7 +46,7 @@
             <label class="{{form_label_class}} control-label">
                 Message if wrong precision
             </label>
-            <div class="{{form_control_class}}" data-bind="writemaths: precisionMessage, preambleCSS: $root.preamble.css"></div>
+            <div {% if not editable %}disabled{% endif %} class="{{form_control_class}}" data-bind="writemaths: precisionMessage, preambleCSS: $root.preamble.css"></div>
         </div>
     </div>
 </form>

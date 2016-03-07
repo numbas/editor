@@ -19,7 +19,7 @@
             Precision restriction {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-precision-restriction' %}
 		</label>
 		<div class="{{form_control_class}}">
-			<select class="form-control" data-bind="options: precisionTypes, value: precisionType, optionsText: 'niceName'"></select>
+			<select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: precisionTypes, value: precisionType, optionsText: 'niceName'"></select>
 		</div>
 	</div>
     {% booleanproperty 'allowFractions' 'Allow the student to enter a fraction?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-allow-the-student-to-enter-a-fraction' %}
@@ -32,7 +32,7 @@
             <label class="{{form_label_class}} control-label">
                 Message if wrong precision
             </label>
-            <div class="{{form_control_class}}" data-bind="writemaths: precisionMessage, preambleCSS: $root.preamble.css"></div>
+            <div {% if not editable %}disabled{% endif %} class="{{form_control_class}}" data-bind="writemaths: precisionMessage, preambleCSS: $root.preamble.css"></div>
         </div>
     </div>
 </form>

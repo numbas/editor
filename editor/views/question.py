@@ -251,7 +251,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
 
         self.item_json['numbasExtensions'] = context['extensions'] = [e.as_json() for e in extensions]
 
-        part_type_path = 'question/part_types/'+('editable' if self.editable else 'noneditable')
+        part_type_path = 'question/part_types/'
         context['partNames'] = [
             ( name, '{}/{}.html'.format(part_type_path,name) ) 
             for name in 

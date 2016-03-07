@@ -6,7 +6,7 @@
             {% if help_url %}{% helplink help_url %}{% endif %}
         </div>
         <div class="{{form_control_class}}">
-            <input class="form-control {% if monospace %}monospace{% endif %}" type="{{type}}" data-bind="
+            <input {% if not editable %}disabled{% endif%} class="form-control {% if monospace %}monospace{% endif %}" type="{{type}}" data-bind="
                 textInput: {{property}}, 
                 attr: {
                     {% if min %}min: {{min}},{% endif %}

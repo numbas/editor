@@ -637,7 +637,8 @@ class TimelineItem(models.Model):
 
 @receiver(signals.post_delete,sender=TimelineItem)
 def delete_timelineitem_object(instance,*args,**kwargs):
-    instance.object.delete()
+    if instance.object is not None:
+        instance.object.delete()
 
 class NewStampOfApproval(models.Model,TimelineMixin):
     object = models.ForeignKey(EditorItem,related_name='stamps')

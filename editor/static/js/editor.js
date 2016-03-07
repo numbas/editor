@@ -1028,7 +1028,7 @@ $(document).ready(function() {
 			$(element).val(ko.utils.unwrapObservable(value));
 			
 			var mode = ko.utils.unwrapObservable(allBindings.codemirrorMode) || 'javascript';
-			var readOnly = ko.utils.unwrapObservable(allBindings.readOnly) || false;
+			var readOnly = ko.utils.unwrapObservable(allBindings.readOnly) || element.hasAttribute('disabled') || false;
 
 			function onChange(editor,change) {
 				if(typeof value=='function') {
@@ -1077,6 +1077,12 @@ $(document).ready(function() {
 			allBindingsAccessor = allBindingsAccessor();
 
 			var value = ko.utils.unwrapObservable(valueAccessor) || '';
+
+            if(element.hasAttribute('disabled')) {
+                element.classList.add('well');
+                element.classList.add('content-area');
+                return;
+            }
 
 			var height = allBindingsAccessor.hasOwnProperty('wmHeight') ? allBindingsAccessor.wmHeight : 200;
 			var width = allBindingsAccessor.hasOwnProperty('wmWidth') ? allBindingsAccessor.wmWidth : '';
@@ -1209,10 +1215,16 @@ $(document).ready(function() {
 			ko.utils.domData.set(plaintext[0],'codemirror',mc);
 		},
 		update: function(element, valueAccessor) {
+			var value = ko.utils.unwrapObservable(valueAccessor()) || '';
+
+            if(element.hasAttribute('disabled')) {
+                $(element).html(value).mathjax();
+                return;
+            }
+
 			var tinymce = $(element).find('iframe').contents().find('body');
 			var plaintext = $(element).children('.plaintext');
 
-			var value = ko.utils.unwrapObservable(valueAccessor()) || '';
             if (!tinymce.is(':focus')) {
 				var ed = $(element).children('.wmTextArea').tinymce();
 				if(ed)
@@ -1281,6 +1293,8 @@ $(document).ready(function() {
     ko.components.register('listbox', {
         viewModel: function(params) {
             var lb = this;
+            this.disabled = params.disabled;
+            console.log(this.disabled);
             this.value = ko.observable('');
             this.items = params.items;
             this.edit_item = function(item,e) {
@@ -1332,7 +1346,7 @@ $(document).ready(function() {
             <ul class="list-inline" data-bind="foreach: items">\
                 <button type="button" class="btn btn-default btn-sm" data-bind="click: $parent.edit_item, text: $data"></button>\
             </ul>\
-            <input type="text" class="form-control" data-bind="textInput: value, event: {blur: blur, keydown: keydown}">\
+            <input type="text" class="form-control" data-bind="visible: !disabled, textInput: value, event: {blur: blur, keydown: keydown}">\
         '
     });
 

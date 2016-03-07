@@ -87,6 +87,20 @@
                 </div>
             </div>
         </div>
+
+        {% if editable %}
+        <hr>
+        <nav>
+            <ul class="pager">
+                <li class="previous">
+                    <a title="Back to the previous section" href="#" data-bind="click: setTab('settings')">← Settings</a>
+                </li>
+                <li class="next" data-bind="css: {ready: section_completed.settings}">
+                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('navigation')">Navigation →</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
     </section>
 
     <!-- Navigation -->
@@ -100,6 +114,20 @@
             {% booleanproperty 'preventleave' 'Confirm before leaving the exam while it\'s running?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-confirm-before-leaving-the-exam-while-it-s-running' %}
             {% exam_event 'onleave' 'On leaving a question' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-on-leaving-a-question' %}
         </form>
+
+        {% if editable %}
+        <hr>
+        <nav>
+            <ul class="pager">
+                <li class="previous">
+                    <a title="Back to the previous section" href="#" data-bind="click: setTab('questions')">← Questions</a>
+                </li>
+                <li class="next" data-bind="css: {ready: section_completed.settings}">
+                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('timing')">Timing →</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
     </section>
 
     <!-- Timing -->
@@ -110,6 +138,20 @@
             {% exam_event 'timeout' 'On timeout' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-on-timeout-event' %}
             {% exam_event 'timedwarning' '5 minutes before timeout' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-minutes-before-timeout-event' %}
         </form>
+
+        {% if editable %}
+        <hr>
+        <nav>
+            <ul class="pager">
+                <li class="previous">
+                    <a title="Back to the previous section" href="#" data-bind="click: setTab('navigation')">← Navigation</a>
+                </li>
+                <li class="next" data-bind="css: {ready: section_completed.settings}">
+                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('feedback')">Feedback →</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
     </section>
 
     <!-- Feedback -->
@@ -121,6 +163,20 @@
             {% booleanproperty 'allowrevealanswer' 'Allow reveal answer?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-allow-reveal-answer' %}
             {% percentproperty 'advicethreshold' 'Advice threshold' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-advice-threshold' %}
         </form>
+
+        {% if editable %}
+        <hr>
+        <nav>
+            <ul class="pager">
+                <li class="previous">
+                    <a title="Back to the previous section" href="#" data-bind="click: setTab('timing')">← Timing</a>
+                </li>
+                <li class="next" data-bind="css: {ready: section_completed.settings}">
+                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('access')">Access →</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
     </section>
 
 {% endblock main_tab_content %}
@@ -131,11 +187,11 @@
 
     <script type="text/html" id="question">
         <li class="question list-group-item clearfix">
-            <span class="handle btn btn-link btn-lg pull-left"><span class="glyphicon glyphicon-move"></span></span>
+            <span class="handle btn btn-link btn-lg pull-left" data-bind="visible: item_json.editable"><span class="glyphicon glyphicon-move"></span></span>
             <div class="controls pull-right">
                 <a class="preview btn btn-link" data-bind="attr: {href: previewURL()}" target="_blank" title="Preview this question"><span class="glyphicon glyphicon-play text-success"></span></a>
-                <button type="button" class="copy btn btn-link" data-bind="click:replaceWithCopy" title="Replace this question with a copy"><span class="glyphicon glyphicon-duplicate text-warning"></span></button>
-                <button type="button" class="delete btn btn-link" data-bind="click:remove" title="Delete this question"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                <button type="button" class="copy btn btn-link" data-bind="click:replaceWithCopy, visible: item_json.editable" title="Replace this question with a copy"><span class="glyphicon glyphicon-duplicate text-warning"></span></button>
+                <button type="button" class="delete btn btn-link" data-bind="click:remove, visible: item_json.editable" title="Delete this question"><span class="glyphicon glyphicon-remove text-danger"></span></button>
             </div>
             <div class="title">
                 <strong class="number" data-bind="text: ($index()+1)+'.'"></strong>
@@ -147,7 +203,7 @@
 
     <script type="text/html" id="questionResult">
         <li class="question question-result list-group-item">
-            <span class="handle btn btn-link pull-left" data-bind="click: add"><span class="glyphicon glyphicon-plus"></span></span>
+            <span class="handle btn btn-link pull-left" data-bind="click: add, visible: item_json.editable"><span class="glyphicon glyphicon-plus"></span></span>
             <div class="controls pull-right">
                 <a class="preview btn btn-link" data-bind="attr: {href: previewURL()}" target="_blank" title="Preview this question"><span class="glyphicon glyphicon-play text-success"></span></a>
             </div>
@@ -167,6 +223,7 @@
 
 {% block settings %}
 {{ block.super }}
+    {% if editable %}
     <hr>
     <nav>
         <ul class="pager">
@@ -175,24 +232,25 @@
             </li>
         </ul>
     </nav>
+    {% endif %}
 {%endblock settings %}
 
 {% block settings_main %}
 {{ block.super }}
     <div class="form-group">
         <label>Interface theme {% helplink 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-theme' %}</label>
-        <select class="form-control" data-bind="options: item_json.themes, value: theme, optionsText: 'name'"></select>
+        <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.themes, value: theme, optionsText: 'name'"></select>
         <div class="help-block upload-theme"><a href="{% url 'theme_new' %}">Upload a new theme</a></div>
     </div>
 
     <div class="form-group">
         <label>Interface language {% helplink 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-interface-language' %}</label>
-        <select class="form-control" data-bind="options: item_json.locales, value: locale, optionsValue: 'code', optionsText: 'name'"></select>
+        <select c{% if not editable %}disabled{% endif %} lass="form-control" data-bind="options: item_json.locales, value: locale, optionsValue: 'code', optionsText: 'name'"></select>
     </div>
 
     <div class="form-group">
         <label>Pass threshold {% helplink 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-pass-threshold' %}</label>
-        <input type="range" min="0" max="100" data-bind="value: percentPass, valueUpdate: 'input'">
+        <input {% if not editable %}disabled{% endif %} type="range" min="0" max="100" data-bind="value: percentPass, valueUpdate: 'input'">
         <span class="percentproperty value" data-bind="text: ko.unwrap(percentPass)+'%'">0%</span>
     </div>
 {% endblock settings_main %}

@@ -16,7 +16,7 @@
                 What to do if wrong number of answers selected: {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-what-to-do-if-wrong-number-of-answers-selected' %}
             </label>
             <div class="{{form_control_class}}">
-                <select class="form-control" data-bind="options: warningTypes, value: warningType, optionsText: 'niceName'"></select>
+                <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: warningTypes, value: warningType, optionsText: 'niceName'"></select>
             </div>
         </div>
         {% property 'displayColumns' 'Number of display columns' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-number-of-display-columns' %}
@@ -37,22 +37,22 @@
 		<!-- ko foreach: {data: choices, afterAdd: Editor.afterAdd} -->
 		<li class="choice form-inline list-group-item clearfix">
 			<div class="col-sm-9">
-				<div id="description" data-bind="writemaths: content, wmHeight: 100, preambleCSS: $root.preamble.css"></div>
+				<div {% if not editable %}disabled{% endif %} id="description" data-bind="writemaths: content, wmHeight: 100, preambleCSS: $root.preamble.css"></div>
 			</div>
 			<div class="col-sm-3">
-				<button type="button" type="button" class="delete btn btn-sm btn-danger btn-block" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this choice</button>
+                {% if editable %}<button type="button" type="button" class="delete btn btn-sm btn-danger btn-block" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this choice</button>{% endif %}
 
 				<label data-bind="visible: !$parent.customMarking()">
 					Marks:
-					<input class="marks monospace form-control" type="text" data-bind="value:marks, valueUpdate:'input'"/>
+					<input {% if not editable %}disabled{% endif %} class="marks monospace form-control" type="text" data-bind="value:marks, valueUpdate:'input'"/>
 				</label>
 				<label>
 					Distractor Message:
-					<input class="form-control" type="text" data-bind="value:distractor, valueUpdate:'input'"/>
+					<input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value:distractor, valueUpdate:'input'"/>
 				</label>
 			</div>
 		</li>
 		<!-- /ko -->
 	</ul>
-	<button type="button" class="btn btn-primary" data-bind="click:addChoice"><span class="glyphicon glyphicon-plus"></span> Add a choice</button>
+    {% if editable %}<button type="button" class="btn btn-primary" data-bind="click:addChoice"><span class="glyphicon glyphicon-plus"></span> Add a choice</button>{% endif %}
 </section>

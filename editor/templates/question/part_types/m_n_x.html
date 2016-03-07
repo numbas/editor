@@ -17,7 +17,7 @@
                 What to do if wrong number of answers selected: {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-what-to-do-if-wrong-number-of-answers-selected' %}
             </label>
             <div class="{{form_control_class}}">
-                <select class="form-control" data-bind="options: warningTypes, value: warningType, optionsText: 'niceName'"></select>
+                <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: warningTypes, value: warningType, optionsText: 'niceName'"></select>
             </div>
         </div>
         <div class="form-group">
@@ -25,7 +25,7 @@
                 Selection type {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-selection-type' %}
             </label>
             <div class="{{form_control_class}}">
-                <select class="form-control" data-bind="options: displayTypes, value: displayType, optionsText: 'niceName'"></select>
+                <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: displayTypes, value: displayType, optionsText: 'niceName'"></select>
             </div>
         </div>
 
@@ -34,7 +34,7 @@
                 Layout {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-layout-match-choices-with-answers-only' %}
             </label>
             <div class="{{form_control_class}}">
-                <select class="form-control" data-bind="options: layoutTypes, value: layoutType, optionsText: 'niceName'"></select>
+                <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: layoutTypes, value: layoutType, optionsText: 'niceName'"></select>
             </div>
         </div>
 
@@ -55,15 +55,15 @@
         <!-- ko foreach: {data: choices, afterAdd: Editor.afterAdd} -->
         <li class="choice form-inline list-group-item clearfix">
             <div class="col-sm-9">
-                <div id="description" data-bind="writemaths: content, wmHeight: 100, preambleCSS: $root.preamble.css"></div>
+                <div {% if not editable %}disabled{% endif %} id="description" data-bind="writemaths: content, wmHeight: 100, preambleCSS: $root.preamble.css"></div>
             </div>
             <div class="col-sm-3">
-                <button type="button" type="button" class="delete btn btn-sm btn-danger btn-block" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this choice</button>
+                {% if editable %}<button type="button" type="button" class="delete btn btn-sm btn-danger btn-block" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this choice</button>{% endif %}
             </div>
         </li>
         <!-- /ko -->
     </ul>
-    <button type="button" class="btn btn-primary" data-bind="click:addChoice"><span class="glyphicon glyphicon-plus"></span> Add a choice</button>
+    {% if editable %}<button type="button" class="btn btn-primary" data-bind="click:addChoice"><span class="glyphicon glyphicon-plus"></span> Add a choice</button>{% endif %}
 </section>
 
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='answers'}">
@@ -77,15 +77,15 @@
         <!-- ko foreach: {data: answers, afterAdd: Editor.afterAdd} -->
         <li class="answer form-inline list-group-item clearfix">
             <div class="col-sm-9">
-                <div id="description" data-bind="writemaths: content, wmHeight: 100, preambleCSS: $root.preamble.css"></div>
+                <div {% if not editable %}disabled{% endif %} id="description" data-bind="writemaths: content, wmHeight: 100, preambleCSS: $root.preamble.css"></div>
             </div>
             <div class="col-sm-3">
-                <button type="button" type="button" class="delete btn btn-sm btn-danger btn-block" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this answer</button>
+                {% if editable %}<button type="button" type="button" class="delete btn btn-sm btn-danger btn-block" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this answer</button>{% endif %}
             </div>
         </li>
         <!-- /ko -->
     </ul>
-    <button type="button" class="btn btn-primary" data-bind="click:addAnswer"><span class="glyphicon glyphicon-plus"></span> Add a answer</button>
+    {% if editable %}<button type="button" class="btn btn-primary" data-bind="click:addAnswer"><span class="glyphicon glyphicon-plus"></span> Add a answer</button>{% endif %}
 </section>
 
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='matrix'}">
@@ -113,7 +113,7 @@
 
                     <!-- ko foreach: $data -->
                     <td>
-                        <input class="form-control" type="text" class="marks monospace" data-bind="value: marks, valueUpdate:'input'"/>
+                        <input {% if not editable %}disabled{% endif %} class="form-control" type="text" class="marks monospace" data-bind="value: marks, valueUpdate:'input'"/>
                     </td>
                     <!-- /ko -->
                 </tr>

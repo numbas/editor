@@ -161,6 +161,9 @@ $(document).ready(function() {
                     content: this.output(),
                     theme: this.theme(),
                     locale: this.locale(),
+                    subjects: this.subjects().filter(function(s){return s.used()}).map(function(s){return s.pk}),
+                    topics: this.topics().filter(function(t){return t.used()}).map(function(t){return t.pk}),
+                    ability_levels: this.used_ability_levels().map(function(al){return al.pk}),
                     metadata: this.metadata(),
                     questions: this.questions()
                                 .filter(function(q){return q.id()>0})
@@ -272,6 +275,19 @@ $(document).ready(function() {
                     }
                 }
             }
+
+            if('topics' in data) {
+                data.topics.map(function(pk) {
+                    this.get_topic(pk).used(true);
+                },this);
+            }
+
+            if('subjects' in data) {
+                data.subjects.map(function(pk) {
+                    this.get_subject(pk).used(true);
+                },this);
+            }
+
 
             var content = data.JSONContent;
 

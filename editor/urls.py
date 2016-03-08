@@ -17,8 +17,7 @@ from django.views.generic import RedirectView, TemplateView
 
 from django.contrib.auth.decorators import login_required
 
-from editor.views import project, editoritem, exam, question, HomeView, theme, extension, version, generic, notification
-from editor.views.resource import upload_resource, ImageDeleteView, media_view
+from editor.views import project, editoritem, exam, question, HomeView, theme, extension, generic, notification, resource
 from editor.views.basket import BasketView,add_question_to_basket,create_exam_from_basket,remove_question_from_basket,empty_question_basket
 
 
@@ -70,9 +69,6 @@ urlpatterns = patterns('',
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/$', exam.UpdateView.as_view(),
         name='exam_edit'),
 
-    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/revert/(?P<version>\d+)$',
-        exam.RevertView.as_view(), name='exam_revert'),
-                       
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/copy/$',login_required(exam.CopyView.as_view()), name='exam_copy',),
                        
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/delete/$',
@@ -110,9 +106,6 @@ urlpatterns = patterns('',
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/$',
         question.UpdateView.as_view(), name='question_edit'),
 
-    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/revert/(?P<version>\d+)$',
-        question.RevertView.as_view(), name='question_revert'),
-
     url(r'^question/share/(?P<access>(view|edit))/(?P<share_uuid>.*)$',
         login_required(question.ShareLinkView.as_view()),name='share_question'),
 
@@ -125,11 +118,8 @@ urlpatterns = patterns('',
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/restore-point$',
         login_required(question.SetRestorePointView.as_view()),name='set_restore_point_on_question'),
 
-    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/upload-resource$',
-        upload_resource,name='upload_resource'),
-
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/resources/(?P<resource>.*)$',
-        media_view, name='view_resource'),
+        resource.view_resource, name='view_resource'),
                        
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/copy/$',login_required(question.CopyView.as_view()), name='question_copy',),
                        
@@ -150,16 +140,8 @@ urlpatterns = patterns('',
 
     # Resources
 
-    url(r'^resources/(?P<pk>\d+)/delete$',
-        login_required(ImageDeleteView.as_view()), name='delete_resource'),
-
-    # Pull requests
-
-    url(r'^pullrequest/(?P<pk>\d+)/accept$',
-        question.AcceptPullRequestView.as_view(), name='question_pullrequest_accept'),
-
-    url(r'^pullrequest/(?P<pk>\d+)/reject$',
-        question.RejectPullRequestView.as_view(), name='question_pullrequest_reject'),
+    url(r'^resource/upload',
+        login_required(resource.upload_resource),name='upload_resource'),
 
     # Timeline items
 
@@ -171,10 +153,6 @@ urlpatterns = patterns('',
 
     url(r'^restore_point/(?P<pk>\d+)/revert$',
         generic.RevertRestorePointView.as_view(),name='restore_point_revert'),
-
-    # Versions
-
-    url(r'version/(?P<pk>\d+)/update', login_required(version.UpdateView.as_view()), name='edit_version'),
 
     # Themes
 
@@ -211,5 +189,13 @@ urlpatterns = patterns('',
     url(r'question_basket/empty/$',
         login_required(empty_question_basket),
         name='empty_question_basket'),
+
+    # Pull requests
+
+    url(r'^pullrequest/(?P<pk>\d+)/accept$',
+        question.AcceptPullRequestView.as_view(), name='question_pullrequest_accept'),
+
+    url(r'^pullrequest/(?P<pk>\d+)/reject$',
+        question.RejectPullRequestView.as_view(), name='question_pullrequest_reject'),
 
 )

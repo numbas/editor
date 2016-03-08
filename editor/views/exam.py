@@ -42,7 +42,7 @@ import calendar
 from django_tables2.config import RequestConfig
 
 from editor.forms import ExamForm, NewExamForm
-from editor.models import NewExam, EditorItem, Access
+from editor.models import NewExam, NewQuestion, EditorItem, Access
 import editor.models
 from editor.models import Exam, Question, ExamAccess, ExamHighlight, Theme, Licence, Extension, STAMP_STATUS_CHOICES
 import editor.views.editoritem
@@ -130,8 +130,6 @@ class CreateView(editor.views.editoritem.CreateView):
             self.exam.editoritem = ei
             self.exam.save()
 
-        editor.models.ItemChangedTimelineItem.objects.create(user=self.request.user,object=ei,verb='created')
-
         return redirect(self.get_success_url())
 
     def get_success_url(self):
@@ -168,7 +166,7 @@ class UploadView(generic.CreateView):
             qs = []
             for q in exam_object.data['questions']:
                 question = NumbasObject(data=q,version=exam_object.version)
-                qo = Question(
+                qo = NewQuestion(
                     content = str(question), 
                     author = self.object.author
                 )
@@ -286,7 +284,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
 
         exam_dict = self.item_json['itemJSON']
         if self.request.user.is_authenticated():
-            exam_dict['recentQuestions'] = [q.summary() for q in Question.objects.filter(author=self.request.user).order_by('-last_modified')[:10]]
+            exam_dict['recentQuestions'] = [q.summary() for q in NewQuestion.objects.filter(editoritem__author=self.request.user).order_by('-editoritem__last_modified')[:10]]
             exam_dict['basketQuestions'] = [q.summary() for q in self.request.user.userprofile.question_basket.all()]
         else:
             exam_dict['recentQuestions'] = []

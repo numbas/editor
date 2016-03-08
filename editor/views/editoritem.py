@@ -49,7 +49,6 @@ import editor.models
 import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
-from editor.views.version import version_json
 from editor.views.timeline import timeline_json
 import editor.forms
 from accounts.util import user_json
@@ -128,7 +127,7 @@ class BaseUpdateView(generic.UpdateView):
 
         version = reversion.get_for_object(self.object)[0]
 
-        status = {"result": "success", "url": self.get_success_url(), "version": version_json(version,self.user)}
+        status = {"result": "success", "url": self.get_success_url()}
         return http.HttpResponse(json.dumps(status), content_type='application/json')
 
     def form_invalid(self, form):
@@ -156,6 +155,7 @@ class BaseUpdateView(generic.UpdateView):
         self.item_json = context['item_json'] = {
             'itemJSON': self.object.edit_dict(),
             'editable': self.editable,
+            'item_type': self.object.editoritem.item_type,
 
             'licences': licences,
 

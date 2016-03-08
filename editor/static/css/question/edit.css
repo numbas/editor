@@ -51,6 +51,11 @@
     margin-right: 0.5em;
 }
 
+.resource img.thumbnail {
+    max-width: 200px;
+    max-height: 200px;
+}
+
 
 /*
 #question-name {

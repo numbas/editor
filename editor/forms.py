@@ -245,6 +245,10 @@ class ExamForm(forms.ModelForm):
     
     """Form for an exam."""
 
+    subjects = forms.ModelMultipleChoiceField(queryset=editor.models.Subject.objects.all(),required=False)
+    topics = forms.ModelMultipleChoiceField(queryset=editor.models.Topic.objects.all(),required=False)
+    ability_levels = forms.ModelMultipleChoiceField(queryset=editor.models.AbilityLevel.objects.all(),required=False)
+
     content = forms.CharField()
     
     class Meta:

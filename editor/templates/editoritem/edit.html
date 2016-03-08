@@ -60,7 +60,7 @@
     <div class="page-header">
         {% block page_header %}
         <h1 class="name-header">
-            <span class="glyphicon glyphicon-book"></span> <span data-bind="mathjaxHTML: name">{{object.name}}</span>
+            <span class="glyphicon glyphicon-{{object.icon}}"></span> <span data-bind="mathjaxHTML: name">{{object.name}}</span>
             <small class="pull-right" data-bind="if: current_stamp">
                 <span class="label label-default stamp" data-bind="text: current_stamp().status_display"></span>
             </small>

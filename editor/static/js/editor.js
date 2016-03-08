@@ -507,6 +507,8 @@ $(document).ready(function() {
     Editor.EditorItem = function() {
         var ei = this;
 
+        this.item_type = item_json.item_type;
+
         this.published = ko.observable(false);
         this.name = ko.observable('Untitled Question');
         this.current_stamp = ko.observable(item_json.current_stamp);
@@ -747,7 +749,7 @@ $(document).ready(function() {
                 },
                 function(data) {
                     return $.post(
-                        '/question/'+ei.id+'/'+slugify(ei.realName())+'/',
+                        '/'+ei.item_type+'/'+ei.id+'/'+slugify(ei.realName())+'/',
                         {json: JSON.stringify(data), csrfmiddlewaretoken: getCookie('csrftoken')}
                     )
                         .success(function(data){
@@ -1489,7 +1491,11 @@ $(document).ready(function() {
 				if(this.filePatterns[type].test(name))
 					return type;
 			}
-		}
+		},
+        can_embed: function() {
+            var type = this.filetype();
+            return type=='img' || type=='html';
+        }
 	};
 
     var CommentWriter = Editor.CommentWriter = function() {

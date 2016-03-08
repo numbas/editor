@@ -85,13 +85,7 @@ $(document).ready(function() {
 			),
 			new Editor.Tab('advice','Advice','blackboard'),
 			new Editor.Tab('extensions','Extensions & scripts','wrench'),
-			new Editor.Tab(
-                'resources',
-                ko.computed(function() {
-                    return 'Resources ('+q.resources().length+')';
-                }),
-                'picture'
-            ),
+			new Editor.Tab('resources','Resources','picture'),
 			new Editor.Tab('exams','Exams using this question','book'),
             new Editor.Tab('network','Other versions','link'),
             new Editor.Tab('history','Editing history','time')
@@ -235,15 +229,7 @@ $(document).ready(function() {
 
         if(item_json.editable) {
 			this.deleteResource =  function(res) {
-				$.get(res.deleteURL)
-					.success(function() {
-						q.resources.remove(res);
-					})
-					.error(function(e) {
-						console.log("Error deleting resource",e);
-						q.resources.remove(res);
-					})
-				;
+                q.resources.remove(res);
 			}
 
             this.init_output();

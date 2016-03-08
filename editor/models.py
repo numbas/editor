@@ -265,38 +265,25 @@ def reset_theme_on_delete(sender,instance,**kwargs):
         exam.theme = default_theme
         exam.save()
 
-class Image( models.Model ):
-    title = models.CharField( max_length=255 ) 
-    image = models.ImageField( upload_to='question-resources/', max_length=255) 
-
-    @property 
-    def data_url( self ):
-        try:
-            img = open( self.image.path, "rb") 
-            data = img.read() 
-            return "data:image/jpg;base64,%s" % codecs.encode(data,'base64')[:-1]
-    
-        except IOError as e:
-            return self.image.url
+class Resource( models.Model ):
+    owner = models.ForeignKey(User,related_name='resources')
+    date_created = models.DateTimeField(auto_now_add=True)
+    file = models.FileField( upload_to='question-resources/', max_length=255) 
 
     @property
     def resource_url(self):
-        return 'resources/%s' % self.image.name
+        return 'resources/%s' % self.file.name
 
     def delete(self,*args,**kwargs):
-        self.image.delete(save=False)
+        self.file.delete(save=False)
         super(Image,self).delete(*args,**kwargs)
 
     def as_json(self):
         return {
             'url': self.resource_url,
-            'name': self.image.name,
+            'name': self.file.name,
             'pk': self.pk,
-            'delete_url': reverse('delete_resource',args=(self.pk,)),
         }
-
-    def summary(self):
-        return json.dumps(self.as_json()),
 
 class Licence(models.Model):
     name = models.CharField(max_length=80,unique=True)
@@ -341,18 +328,6 @@ class TimelineMixin(object):
     @property
     def timelineitem(self):
         return self.timelineitems.get()
-
-class StampOfApproval(models.Model,TimelineMixin):
-    object_content_type = models.ForeignKey(ContentType)
-    object_id = models.PositiveIntegerField()
-    object = GenericForeignKey('object_content_type','object_id')
-
-    user = models.ForeignKey(User, related_name='stamps')
-    status = models.CharField(choices = STAMP_STATUS_CHOICES, max_length=20)
-    date = models.DateTimeField(auto_now_add=True)
-
-    def __unicode__(self):
-        return '{} as "{}"'.format(self.user.username,self.object.name,self.get_status_display(),self.date)
 
 class AbilityFramework(models.Model):
     name = models.CharField(max_length=200,blank=False,unique=True)
@@ -723,7 +698,7 @@ def create_timelineitem(sender,instance,created,**kwargs):
 class NewQuestion(models.Model):
     editoritem = models.OneToOneField(EditorItem,on_delete=models.CASCADE,related_name='question')
 
-    resources = models.ManyToManyField(Image,blank=True)
+    resources = models.ManyToManyField(Resource,blank=True)
     extensions = models.ManyToManyField(Extension,blank=True)
 
     icon = 'file'
@@ -739,7 +714,7 @@ class NewQuestion(models.Model):
 
     @property
     def resource_paths(self):
-        return [(i.image.name,i.image.path) for i in self.resources.all()]
+        return [(r.file.name,r.file.path) for r in self.resources.all()]
 
     @property
     def as_numbasobject(self):
@@ -747,7 +722,7 @@ class NewQuestion(models.Model):
         data = OrderedDict([
             ('name',self.editoritem.name),
             ('extensions',[e.location for e in self.extensions.all()]),
-            ('resources',[(i.image.name,i.image.path) for i in self.resources.all()]),
+            ('resources',self.resource_paths),
             ('navigation',{'allowregen': True, 'showfrontpage': False, 'preventleave': False}),
             ('questions',[self.editoritem.parsed_content.data])
         ])
@@ -786,6 +761,14 @@ class NewExam(models.Model):
         return '%s' % self.editoritem.name
 
     @property
+    def resources(self):
+        return Resource.objects.filter(newquestion__in=self.questions.all()).distinct()
+
+    @property
+    def resource_paths(self):
+        return [(r.file.name,r.file.path) for r in self.resources.all()]
+
+    @property
     def as_numbasobject(self):
         obj = numbasobject.NumbasObject(self.editoritem.content)
         data = obj.data
@@ -794,7 +777,7 @@ class NewExam(models.Model):
         data['extensions'] = [e.location for e in self.extensions]
         data['name'] = self.editoritem.name
         data['questions'] = [numbasobject.NumbasObject(q.editoritem.content).data for q in questions]
-        data['resources'] = [(i.image.name,i.image.path) for i in Image.objects.filter(newquestion__in=self.questions.all()).distinct()]
+        data['resources'] = self.resource_paths
         
         return obj
 
@@ -832,8 +815,6 @@ class NewExam(models.Model):
         for order,question in enumerate(question_list):
             exam_question = NewExamQuestion(exam=self,question=question, qn_order=order)
             exam_question.save()
-    
-
 
 class NewExamQuestion(models.Model):
     
@@ -849,13 +830,39 @@ class NewExamQuestion(models.Model):
     question = models.ForeignKey(NewQuestion)
     qn_order = models.PositiveIntegerField()
 
+@receiver(signals.post_save,sender=NewQuestion)
+@receiver(signals.post_save,sender=NewExam)
+def item_created_timeline_event(instance,created,**kwargs):
+    if created:
+        ItemChangedTimelineItem.objects.create(user=instance.editoritem.author,object=instance.editoritem,verb='created')
+
+@receiver(signals.post_save,sender=NewStampOfApproval)
+@receiver(signals.post_delete,sender=NewStampOfApproval)
+def set_current_stamp(instance,**kwargs):
+    instance.object.current_stamp = NewStampOfApproval.objects.filter(object=instance.object).last()
+    instance.object.save()
+
+
+@receiver(signals.post_save,sender=NewStampOfApproval)
+def notify_stamp(instance,**kwargs):
+    notify_watching(instance.user,target=instance.object,verb='gave feedback on',action_object=instance)
+
+@receiver(signals.post_save,sender=Comment)
+def notify_comment(instance,**kwargs):
+    notify_watching(instance.user,target=instance.object,verb='commented on',action_object=instance)
+
+
+"""
+    Everything below is to be deleted in Numbas 2.0
+"""
+
 class EditorModel(models.Model):
     class Meta:
         abstract = True
 
     licence = models.ForeignKey(Licence,null=True)
 
-    current_stamp = models.ForeignKey(StampOfApproval, blank=True, null=True, on_delete=models.SET_NULL)
+    current_stamp = models.ForeignKey('StampOfApproval', blank=True, null=True, on_delete=models.SET_NULL)
 
     share_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique = True)
 
@@ -883,21 +890,6 @@ class EditorModel(models.Model):
     @property
     def stamps(self):
         return NewStampOfApproval.objects.filter(object_content_type=ContentType.objects.get_for_model(self.__class__),object_id=self.pk).order_by('-date')
-
-@receiver(signals.post_save,sender=NewStampOfApproval)
-@receiver(signals.post_delete,sender=NewStampOfApproval)
-def set_current_stamp(instance,**kwargs):
-    instance.object.current_stamp = NewStampOfApproval.objects.filter(object=instance.object).last()
-    instance.object.save()
-
-
-@receiver(signals.post_save,sender=NewStampOfApproval)
-def notify_stamp(instance,**kwargs):
-    notify_watching(instance.user,target=instance.object,verb='gave feedback on',action_object=instance)
-
-@receiver(signals.post_save,sender=Comment)
-def notify_comment(instance,**kwargs):
-    notify_watching(instance.user,target=instance.object,verb='commented on',action_object=instance)
 
 class QuestionManager(models.Manager):
     def viewable_by(self,user):
@@ -931,7 +923,7 @@ class Question(EditorModel,NumbasObject,ControlledObject):
     metadata = JSONField(blank=True)
     created = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
-    resources = models.ManyToManyField(Image,blank=True)
+    resources = models.ManyToManyField('Image',blank=True)
     copy_of = models.ForeignKey('self',null=True,related_name='copies',on_delete=models.SET_NULL)
     extensions = models.ManyToManyField(Extension,blank=True)
 
@@ -1122,6 +1114,8 @@ def notify_pull_request(instance,created,**kwargs):
     if created and instance.owner!=instance.destination.author:
         notify.send(instance.owner,verb='has sent you a request to merge',target=instance.destination,recipient=instance.destination.author,action_object=instance)
 
+
+
 @reversion.register
 class Exam(EditorModel,NumbasObject,ControlledObject):
     
@@ -1291,3 +1285,50 @@ class ExamQuestion(models.Model):
     exam = models.ForeignKey(Exam)
     question = models.ForeignKey(Question)
     qn_order = models.PositiveIntegerField()
+
+class Image( models.Model ):
+    # on its way out as of Numbas editor 2.0
+    title = models.CharField( max_length=255 ) 
+    image = models.ImageField( upload_to='question-resources/', max_length=255) 
+
+    @property 
+    def data_url( self ):
+        try:
+            img = open( self.image.path, "rb") 
+            data = img.read() 
+            return "data:image/jpg;base64,%s" % codecs.encode(data,'base64')[:-1]
+    
+        except IOError as e:
+            return self.image.url
+
+    @property
+    def resource_url(self):
+        return 'resources/%s' % self.image.name
+
+    def delete(self,*args,**kwargs):
+        self.image.delete(save=False)
+        super(Image,self).delete(*args,**kwargs)
+
+    def as_json(self):
+        return {
+            'url': self.resource_url,
+            'name': self.image.name,
+            'pk': self.pk,
+            'delete_url': reverse('delete_resource',args=(self.pk,)),
+        }
+
+    def summary(self):
+        return json.dumps(self.as_json()),
+
+class StampOfApproval(models.Model,TimelineMixin):
+    object_content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    object = GenericForeignKey('object_content_type','object_id')
+
+    user = models.ForeignKey(User, related_name='stamps')
+    status = models.CharField(choices = STAMP_STATUS_CHOICES, max_length=20)
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __unicode__(self):
+        return '{} as "{}"'.format(self.user.username,self.object.name,self.get_status_display(),self.date)
+

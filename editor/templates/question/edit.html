@@ -27,6 +27,119 @@
     <link rel="stylesheet" type="text/css" href="{% sstatic 'css/question/edit.css' %}"/>
 {% endblock stylesheets %}
 
+{% block content %}
+{{block.super}}
+    <div class="modal fade" id="imagePickModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h3 class="modal-title">Insert image</h3>
+                </div>
+                <div class="modal-body">
+                    <form data-bind="fileupload: resources, afterupload: $root.insertImage" data-url="{% url 'upload_resource' %}">
+                        {% csrf_token %}
+                        <span class="control-label">Upload a file</span>
+                        <input id="fileupload" type="file" name="files[]">
+                    </form>
+
+
+                    <ul class="list-unstyled resources-list" data-bind="foreach: resources">
+                        <li class="resource clearfix" data-bind="visible: can_embed, click: $root.insertImage">
+                            <img class="thumbnail" data-bind="visible: filetype()=='img', attr: {src: url, title: name}"/>
+                            <span data-bind="text: name"></span><span data-bind="visible: filetype()=='html'"> (will be embedded as an iframe)</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="imageAttributeModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h3 class="modal-title">Image attributes</h3>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="label-block">
+                                <span class="col-sm-3 control-label">Width</span>
+                                <div class="col-sm-9 controls">
+                                    <input type="text" class="form-control" data-bind="value: imageModal.width">
+                                </div>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="label-block">
+                                <span class="col-sm-3 control-label">Height</span>
+                                <div class="col-sm-9 controls">
+                                    <input type="text" class="form-control" data-bind="value: imageModal.height">
+                                </div>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="label-block">
+                                <span class="col-sm-3 control-label">Title text</span>
+                                <div class="col-sm-9 controls">
+                                    <input type="text" class="form-control" data-bind="value: imageModal.title">
+                                </div>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="label-block">
+                                <span class="col-sm-3 control-label">Alt text</span>
+                                <div class="col-sm-9 controls">
+                                    <input type="text" class="form-control" data-bind="value: imageModal.alt">
+                                </div>
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bind="click: function(){$('#imageAttributeModal').modal('hide');}">Cancel</button>
+                    <button type="button" class="btn btn-primary" data-bind="click: $root.changeImageAttributes">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="iframeAttributeModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h3 class="modal-title">Embedded page attributes</h3>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="label-block">
+                                <span class="col-sm-3 control-label">Width</span>
+                                <div class="col-sm-9 controls">
+                                    <input type="text" class="form-control" data-bind="value: iframeModal.width">
+                                </div>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="label-block">
+                                <span class="col-sm-3 control-label">Height</span>
+                                <div class="col-sm-9 controls">
+                                    <input type="text" class="form-control" data-bind="value: iframeModal.height">
+                                </div>
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bind="click: function(){$('#iframeAttributeModal').modal('hide');}">Cancel</button>
+                    <button type="button" class="btn btn-primary" data-bind="click: $root.changeIframeAttributes">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+
 {% block settings %}
 {{ block.super }}
 {% if editable %}
@@ -601,7 +714,34 @@
                 </div>
             </div>
         </div>
+    </section>
 
+    <!-- Resources -->
+    <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='resources'}">
+        {% if editable %}
+        <form class="alert alert-info" data-bind="fileupload: resources" data-url="{% url 'upload_resource' %}">
+            {% csrf_token %}
+            <h4 class="control-label">Upload a file</h4>
+            <p><input id="fileupload" type="file" name="files[]"></p>
+        </form>
+        {% endif %}
+        <ul class="media-list" data-bind="foreach: resources">
+            <li class="media resource">
+                {% if editable %}<button type="button" class="pull-left btn btn-lg btn-link text-warning delete" data-bind="click: $root.deleteResource" title="Delete this resource"><span class="glyphicon glyphicon-remove"></span></button>{% endif %}
+                <div class="media-left">
+                    <div data-bind="visible: progress()<1" class="progress progress-striped active">
+                        <div class="bar" data-bind="style: {width: progress()+'%'}"></div>
+                    </div>
+                    <div data-bind="visible: progress()==1">
+                        <a data-bind="attr: {href: url}" target="_blank"><img class="thumbnail" data-bind="visible: filetype()=='img', attr: {src: url, title: name}"/></a>
+                    </div>
+                </div>
+                <div class="media-body">
+                    <label>URL:</label>
+                    <code class="path monospace" data-bind="visible: progress()==1, text: 'resources/'+name()"></code>
+                </div>
+            </li>
+        </ul>
     </section>
 
     <!-- Exams using this question -->

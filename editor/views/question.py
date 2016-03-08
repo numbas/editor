@@ -40,7 +40,7 @@ import reversion
 from django_tables2.config import RequestConfig
 
 from editor.forms import NewQuestionForm, QuestionForm, SetAccessForm
-from editor.models import Project, EditorItem, NewQuestion, Access, Question, Extension, Image, QuestionAccess, QuestionPullRequest
+from editor.models import Project, EditorItem, NewQuestion, Access, Question, Extension, Resource, QuestionAccess, QuestionPullRequest
 import editor.views.generic
 import editor.views.editoritem
 from editor.views.errors import forbidden
@@ -142,8 +142,6 @@ class CreateView(editor.views.editoritem.CreateView):
             self.question.editoritem = ei
             self.question.save()
 
-        editor.models.ItemChangedTimelineItem.objects.create(user=self.request.user,object=ei,verb='created')
-
         return redirect(self.get_success_url())
     
     def get_success_url(self):
@@ -239,7 +237,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         self.object.editoritem.topics.add(*form.cleaned_data['topics'])
 
         resource_pks = [res['pk'] for res in self.resources]
-        self.object.resources = Image.objects.filter(pk__in=resource_pks)
+        self.object.resources = Resource.objects.filter(pk__in=resource_pks)
 
     
     def get_context_data(self, **kwargs):
@@ -253,6 +251,8 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         extensions = extensions.distinct()
 
         self.item_json['numbasExtensions'] = context['extensions'] = [e.as_json() for e in extensions]
+
+        self.item_json['resources'] = [r.as_json() for r in self.object.resources.all()]
 
         part_type_path = 'question/part_types/'
         context['partNames'] = [

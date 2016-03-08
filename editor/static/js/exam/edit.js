@@ -259,39 +259,11 @@ $(document).ready(function() {
         },
 
         load: function(data) {
-            this.reset();
+            Editor.EditorItem.prototype.load.apply(this,[data]);
 
             var e = this;
-            this.id = data.id;
-            this.editoritem_id = data.editoritem_id;
-
-            if('metadata' in data) {
-                tryLoad(data.metadata,['description'],this);
-                var licence_name = data.metadata.licence;
-                for(var i=0;i<item_json.licences.length;i++) {
-                    if(item_json.licences[i].name==licence_name) {
-                        this.licence(item_json.licences[i]);
-                        break;
-                    }
-                }
-            }
-
-            if('topics' in data) {
-                data.topics.map(function(pk) {
-                    this.get_topic(pk).used(true);
-                },this);
-            }
-
-            if('subjects' in data) {
-                data.subjects.map(function(pk) {
-                    this.get_subject(pk).used(true);
-                },this);
-            }
-
 
             var content = data.JSONContent;
-
-            this.published(data.published);
 
             tryLoad(content,['name','percentPass','shuffleQuestions','allQuestions','pickQuestions'],this);
             this.duration((content.duration||0)/60);

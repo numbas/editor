@@ -510,7 +510,7 @@ $(document).ready(function() {
         this.item_type = item_json.item_type;
 
         this.published = ko.observable(false);
-        this.name = ko.observable('Untitled Question');
+        this.name = ko.observable('Loading');
         this.current_stamp = ko.observable(item_json.current_stamp);
         this.licence = ko.observable();
         this.subjects = ko.observableArray([]);
@@ -557,12 +557,16 @@ $(document).ready(function() {
             return new Editor.AbilityFramework(d);
         }));
 
-        this.used_ability_levels = ko.computed(function() {
+        this.ability_levels = ko.computed(function() {
             var o = [];
             this.ability_frameworks().map(function(af) {
-                o = o.concat(af.levels.filter(function(al){return al.used()}));
+                o = o.concat(af.levels);
             });
             return o;
+        },this);
+
+        this.used_ability_levels = ko.computed(function() {
+            return this.ability_levels().filter(function(al){return al.used()});
         },this);
 
         item_json.licences.sort(function(a,b){a=a.short_name;b=b.short_name; return a<b ? -1 : a>b ? 1 : 0 });
@@ -762,7 +766,7 @@ $(document).ready(function() {
                                 message = 'Server did not respond.';
 
                             noty({
-                                text: 'Error saving question:\n\n'+message,
+                                text: 'Error saving item:\n\n'+message,
                                 layout: "topLeft",
                                 type: "error",
                                 textAlign: "center",
@@ -780,7 +784,7 @@ $(document).ready(function() {
 
             this.currentChange = ko.observable(new Editor.Change(this.versionJSON(),item_json.itemJSON.author));
 
-            // create a new version when the question JSON changes
+            // create a new version when the JSON changes
             ko.computed(function() {
                 var currentChange = this.currentChange.peek();
                 var v = new Editor.Change(this.versionJSON(),item_json.itemJSON.author, currentChange);
@@ -819,6 +823,46 @@ $(document).ready(function() {
 
         },
 
+        load: function(data) {
+            this.reset();
+
+            this.id = data.id;
+            this.editoritem_id = data.editoritem_id;
+
+            if('metadata' in data) {
+                tryLoad(data.metadata,['description'],this);
+                var licence_name = data.metadata.licence;
+                for(var i=0;i<item_json.licences.length;i++) {
+                    if(item_json.licences[i].name==licence_name) {
+                        this.licence(item_json.licences[i]);
+                        break;
+                    }
+                }
+            }
+
+            if('topics' in data) {
+                data.topics.map(function(pk) {
+                    this.get_topic(pk).used(true);
+                },this);
+            }
+
+            if('subjects' in data) {
+                data.subjects.map(function(pk) {
+                    this.get_subject(pk).used(true);
+                },this);
+            }
+
+            if('ability_levels' in data) {
+                data.ability_levels.map(function(pk) {
+                    this.get_ability_level(pk).used(true);
+                },this);
+            }
+
+            var content = data.JSONContent;
+
+            this.published(data.published);
+        },
+
 		applyDiff: function(version) {
 			viewModel.currentChange(version);
 			viewModel.load(version.data);
@@ -835,6 +879,10 @@ $(document).ready(function() {
         get_subject: function(pk) {
             return this.subjects().find(function(s){return s.pk==pk});
         },
+
+        get_ability_level: function(pk) {
+            return this.ability_levels().find(function(l){return l.pk==pk});
+        }
 
     }
 

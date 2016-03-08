@@ -134,12 +134,15 @@ class CreateView(editor.views.editoritem.CreateView):
     template_name = 'question/new.html'
 
     def form_valid(self, form):
-        ei = form.save()
-        ei.set_licence(ei.project.default_licence)
-        ei.save()
-        self.question = NewQuestion()
-        self.question.editoritem = ei
-        self.question.save()
+        with transaction.atomic(), reversion.create_revision():
+            ei = form.save()
+            ei.set_licence(ei.project.default_licence)
+            ei.save()
+            self.question = NewQuestion()
+            self.question.editoritem = ei
+            self.question.save()
+
+        editor.models.ItemChangedTimelineItem.objects.create(user=self.request.user,object=ei,verb='created')
 
         return redirect(self.get_success_url())
     
@@ -408,3 +411,6 @@ class CommentView(editor.views.generic.CommentView):
 
     def get_comment_object(self):
         return self.get_object().editoritem
+
+class SetRestorePointView(editor.views.generic.SetRestorePointView):
+    model = NewQuestion

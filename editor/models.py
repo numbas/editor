@@ -107,6 +107,8 @@ class Project(models.Model,ControlledObject):
 
     timeline = GenericRelation('TimelineItem',related_query_name='projects',content_type_field='timeline_content_type',object_id_field='timeline_id')
 
+    icon = 'briefcase'
+
     description = models.TextField(blank=True)
     default_locale = models.CharField(choices=LOCALE_CHOICES,max_length=10,editable=True,default='en-GB')
     default_licence = models.ForeignKey('Licence',null=True,blank=True)
@@ -329,7 +331,12 @@ STAMP_STATUS_CHOICES = (
 
 class TimelineMixin(object):
     def can_be_deleted_by(self,user):
-        return user==self.user or user==self.object.author
+        try:
+            if self.object.author==user:
+                return True
+        except AttributeError:
+            pass
+        return user==self.user
 
     @property
     def timelineitem(self):
@@ -539,6 +546,10 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
         elif self.item_type=='question':
             return self.question.as_numbasobject
 
+    @property
+    def icon(self):
+        return self.rel_obj.icon
+
     def edit_dict(self):
         """
             Dictionary of information passed to edit view
@@ -664,12 +675,47 @@ class Comment(models.Model,TimelineMixin):
     text = models.TextField()
 
     def __unicode__(self):
-        return 'Comment by {} on {}: "{}"'.format(self.user.get_full_name(), str(self.object), self.text[:47]+'...' if len(self.text)>50 else self.text)
+        return 'Comment by {}: "{}"'.format(self.user.get_full_name(), str(self.object), self.text[:47]+'...' if len(self.text)>50 else self.text)
 
+class RestorePoint(models.Model,TimelineMixin):
+    object = models.ForeignKey(EditorItem,related_name='restore_points')
 
-@receiver(signals.post_save,sender=NewStampOfApproval)
-@receiver(signals.post_save,sender=Comment)
-def stamp_timeline_event(instance,created,**kwargs):
+    timelineitems = GenericRelation(TimelineItem,related_query_name='restore_points',content_type_field='object_content_type',object_id_field='object_id')
+    timelineitem_template = 'timeline/restore_point.html'
+
+    user = models.ForeignKey(User, related_name='restore_points')
+    description = models.TextField()
+
+    revision = models.ForeignKey(reversion.models.Revision)
+    
+    def __unicode__(self):
+        return 'Restore point set by {}: "{}"'.format(self.user.get_full_name(), str(self.object), self.description[:47]+'...' if len(self.description)>50 else self.description)
+
+ITEM_CHANGED_VERBS = [('created','created')]
+class ItemChangedTimelineItem(models.Model,TimelineMixin):
+    object = models.ForeignKey(EditorItem)
+    verb = models.CharField(choices=ITEM_CHANGED_VERBS,editable=False,max_length=10)
+    user = models.ForeignKey(User)
+
+    timelineitems = GenericRelation(TimelineItem,related_query_name='item_changes',content_type_field='object_content_type',object_id_field='object_id')
+    timelineitem_template = 'timeline/change.html'
+    
+    def can_be_deleted_by(self,user):
+        return False
+
+    def icon(self):
+        return {
+            'created': 'plus',
+            'deleted': 'remove',
+        }[self.verb]
+
+    def __unicode__(self):
+        return '{} {} {}'.format(self.user.get_full_name(),self.verb,str(self.object))
+
+@receiver(signals.post_save)
+def create_timelineitem(sender,instance,created,**kwargs):
+    if not issubclass(sender,TimelineMixin):
+        return
     if created:
         TimelineItem.objects.create(object=instance,timeline=instance.object)
 
@@ -679,6 +725,8 @@ class NewQuestion(models.Model):
 
     resources = models.ManyToManyField(Image,blank=True)
     extensions = models.ManyToManyField(Extension,blank=True)
+
+    icon = 'file'
 
     class Meta:
         ordering = ['editoritem__name']
@@ -731,6 +779,8 @@ class NewExam(models.Model):
     theme = models.CharField(max_length=200,default='default',blank=True)  # used if custom_theme is None
     custom_theme = models.ForeignKey(Theme,null=True,blank=True,on_delete=models.SET_NULL,related_name='used_in_newexams')
     locale = models.CharField(max_length=200,default='en-GB')
+
+    icon = 'book'
 
     def __unicode__(self):
         return '%s' % self.editoritem.name

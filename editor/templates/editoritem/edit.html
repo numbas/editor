@@ -72,7 +72,7 @@
             <ul id="controls" class="nav nav-pills nav-stacked">
                 {% block admin_controls %}
                 <li id="preview">
-                    <a class="text-success" data-bind="attr: {href: item_json.previewURL, target: item_json.previewWindow}" title="Run this question in a new window (Ctrl+B)">
+                <a class="text-success" data-bind="attr: {href: item_json.previewURL, target: item_json.previewWindow}" title="Run this {{item_type}} in a new window (Ctrl+B)">
                         <span class="glyphicon glyphicon-play"></span>
                         Test Run
                     </a>
@@ -213,9 +213,12 @@
                 <!-- Editing history -->
                 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='history'}">
 
+                    <div data-bind="visible: !commentwriter.writingComment() && !restorepointwriter.writingComment()">
+                        <button class="btn btn-primary" data-bind="click: commentwriter.writingComment" type="button"><span class="glyphicon glyphicon-comment"></span> Write a comment</button>
+                        <button class="btn btn-primary" data-bind="click: restorepointwriter.writingComment" type="button"><span class="glyphicon glyphicon-save"></span> Set a checkpoint</button>
+                    </div>
                     <div class="timeline-write-comment" data-bind="with: commentwriter">
-                        <button class="btn btn-primary" data-bind="visible: !writingComment(), click: writingComment" type="button"><span class="glyphicon glyphicon-comment"></span> Write a comment</button>
-                        <form action="{% url 'comment_on_question' object.pk object.editoritem.slug %}" data-bind="fadeVisible: writingComment, submit: submitComment">
+                        <form action="{% url 'comment_on_'|add:item_type object.pk object.editoritem.slug %}" data-bind="fadeVisible: writingComment, submit: submitComment">
                             <h4>Comment</h4>
                             <div data-bind="writemaths: commentText"></div>
                             <div class="buttons">
@@ -224,11 +227,24 @@
                             </div>
                         </form>
                     </div>
+                    <div class="timeline-write-comment" data-bind="with: restorepointwriter">
+                        <form action="{% url 'set_restore_point_on_'|add:item_type object.pk object.editoritem.slug %}" data-bind="fadeVisible: writingComment, submit: submitComment">
+                            <h4>Checkpoint description</h4>
+                            <div data-bind="writemaths: commentText"></div>
+                            <p class="help-block">Describe what's changed since the last checkpoint.</p>
+                            <div class="buttons">
+                                <button type="Submit" class="btn btn-primary" data-bind="attr: {disabled: commentIsEmpty}">Submit</button>
+                                <button type="button" class="btn btn-default" data-bind="click: cancelComment">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
 
                     <div class="timeline">
+                        {% with current_timeline=object %}
                         {% for item in object.editoritem.timeline.all %}
                             {% include item.object.timelineitem_template %}
                         {% endfor %}
+                        {% endwith %}
                     </div>
                 </section>
 

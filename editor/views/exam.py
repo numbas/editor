@@ -43,6 +43,7 @@ from django_tables2.config import RequestConfig
 
 from editor.forms import ExamForm, NewExamForm
 from editor.models import NewExam, EditorItem, Access
+import editor.models
 from editor.models import Exam, Question, ExamAccess, ExamHighlight, Theme, Licence, Extension, STAMP_STATUS_CHOICES
 import editor.views.editoritem
 import editor.views.generic
@@ -120,13 +121,16 @@ class CreateView(editor.views.editoritem.CreateView):
     template_name = 'exam/new.html'
 
     def form_valid(self, form):
-        ei = form.save()
-        ei.set_licence(ei.project.default_licence)
-        ei.locale = ei.project.default_locale
-        ei.save()
-        self.exam = NewExam()
-        self.exam.editoritem = ei
-        self.exam.save()
+        with transaction.atomic(), reversion.create_revision():
+            ei = form.save()
+            ei.set_licence(ei.project.default_licence)
+            ei.locale = ei.project.default_locale
+            ei.save()
+            self.exam = NewExam()
+            self.exam.editoritem = ei
+            self.exam.save()
+
+        editor.models.ItemChangedTimelineItem.objects.create(user=self.request.user,object=ei,verb='created')
 
         return redirect(self.get_success_url())
 
@@ -391,6 +395,9 @@ class CommentView(editor.views.generic.CommentView):
 
     def get_comment_object(self):
         return self.get_object().editoritem
+
+class SetRestorePointView(editor.views.generic.SetRestorePointView):
+    model = NewExam
 
 def question_lists(request):
     if not request.is_ajax():

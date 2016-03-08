@@ -466,4 +466,3 @@ class CompareView(generic.TemplateView):
         context['pr1_auto'] = ei2.can_be_edited_by(self.request.user)
         context['pr2_auto'] = ei1.can_be_edited_by(self.request.user)
         return context
-

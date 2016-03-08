@@ -708,6 +708,7 @@ $(document).ready(function() {
         }
 
         this.commentwriter = new Editor.CommentWriter();
+        this.restorepointwriter = new Editor.CommentWriter();
     }
     Editor.EditorItem.prototype = {
         init_tasks: function() {

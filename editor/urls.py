@@ -96,6 +96,9 @@ urlpatterns = patterns('',
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/comment$',
         login_required(exam.CommentView.as_view()),name='comment_on_exam'),
 
+    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/restore-point$',
+        login_required(exam.SetRestorePointView.as_view()),name='set_restore_point_on_exam'),
+
     url(r'exam/question-lists/$',
         exam.question_lists,
         name='question_lists'),
@@ -118,6 +121,9 @@ urlpatterns = patterns('',
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/stamp$',
         login_required(question.StampView.as_view()),name='stamp_question'),
+
+    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/restore-point$',
+        login_required(question.SetRestorePointView.as_view()),name='set_restore_point_on_question'),
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/upload-resource$',
         upload_resource,name='upload_resource'),
@@ -162,6 +168,9 @@ urlpatterns = patterns('',
 
     url(r'^stamp/(?P<pk>\d+)/delete$',
         generic.DeleteStampView.as_view(), name='stamp_delete'),
+
+    url(r'^restore_point/(?P<pk>\d+)/revert$',
+        generic.RevertRestorePointView.as_view(),name='restore_point_revert'),
 
     # Versions
 

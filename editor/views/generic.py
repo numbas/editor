@@ -23,8 +23,9 @@ from django import http
 from django.views import generic
 from django.template.loader import get_template
 from django.template import RequestContext
+import reversion
 
-from editor.models import Extension,NewStampOfApproval,Comment,TimelineItem,EditorItem
+from editor.models import Extension,NewStampOfApproval,Comment,RestorePoint,TimelineItem,EditorItem
 
 from accounts.util import user_json
 
@@ -82,6 +83,36 @@ class CommentView(generic.UpdateView,TimelineItemViewMixin):
     def get(self, request, *args, **kwargs):
         return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
 
+class SetRestorePointView(generic.UpdateView,TimelineItemViewMixin):
+    def post(self, request, *args, **kwargs):
+        object = self.get_object()
+    
+        print(request.POST)
+        description = request.POST.get('text')
+        print(reversion.get_for_object(object))
+        revision = reversion.get_for_object(object).first().revision
+
+        restore_point = self.item = RestorePoint.objects.create(user=request.user,object=object.editoritem,description=description,revision=revision)
+
+        return self.response()
+
+    def object_json(self):
+        return restore_point_json(self.item)
+
+    def get(self, request, *args, **kwargs):
+        return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
+
+class RevertRestorePointView(generic.UpdateView):
+    model = RestorePoint
+    def get(self,request, *args, **kwargs):
+        self.restore_point = self.get_object()
+        if not self.restore_point.object.can_be_edited_by(request.user):
+            return http.HttpResponseForbidden()
+
+        self.restore_point.revision.revert()
+
+        return redirect(self.restore_point.object.get_absolute_url())
+
 # JSON representation of a editor.models.StampOfApproval object
 def stamp_json(stamp,**kwargs):
     return {
@@ -99,6 +130,14 @@ def comment_json(comment,**kwargs):
         'date': comment.timelineitem.date.strftime('%Y-%m-%d %H:%M:%S'),
         'text': comment.text,
         'user': user_json(comment.user),
+    }
+
+def restore_point_json(restore_point,**kwargs):
+    return {
+        'pk': restore_point.pk,
+        'date': restore_point.timelineitem.date.strftime('%Y-%m-%d %H:%M:%S'),
+        'description': restore_point.description,
+        'user': user_json(restore_point.user),
     }
 
 def topic_json(topic):

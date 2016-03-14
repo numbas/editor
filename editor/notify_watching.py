@@ -1,4 +1,4 @@
-from notifications import notify
+from notifications.signals import notify
 
 def notify_watching(actor,target,**kwargs):
     for user in target.watching_users:

@@ -1,8 +1,6 @@
 from editor.views.generic import user_json,stamp_json,comment_json
-from editor.views.version import version_json
 
 event_json_views = {
-    'version': version_json,
     'stamp': stamp_json,
     'comment': comment_json,
 }

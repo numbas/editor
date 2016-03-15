@@ -49,7 +49,6 @@ import editor.views.editoritem
 import editor.views.generic
 from editor.views.errors import forbidden
 from editor.views.user import find_users
-from editor.views.version import version_json
 
 from accounts.util import user_json
 

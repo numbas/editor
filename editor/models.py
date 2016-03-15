@@ -47,7 +47,7 @@ from django.utils.translation import ugettext_lazy as _
 
 import reversion
 
-from notifications import notify
+from notifications.signals import notify
 from notifications.models import Notification
 from editor.notify_watching import notify_watching
 

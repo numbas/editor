@@ -7,6 +7,10 @@ from django.template import Context
 def find_users(name=''):
     q = Q()
 
+    user = User.objects.filter(username=name)
+    if user.exists():
+        return user
+
     #first part - search on full name
     for word in name.split(' '):
         q &= (Q(first_name__icontains=word) | Q(last_name__icontains=word))

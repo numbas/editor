@@ -54,8 +54,8 @@
                 <div class="collapse navbar-collapse" id="navbar-collapse">
 
 					<form id="search-bar" class="navbar-form navbar-left" role="search" method="get" action="{% block search_url %}{% url 'search' %}{% endblock search_url %}">
-                        <div class="form-group col-xs-12">
-                            <div class="input-group col-xs-12">
+                        <div class="form-group">
+                            <div class="input-group">
 								<input name="query" type="text" class="form-control" id="top-search-bar" placeholder="Search by name or keyword{% if in_project %} in this project{% endif %}" value="{{search_query}}"/>
                                 <div class="input-group-btn">
 								{% if search_query %}
@@ -88,6 +88,7 @@
                                 <a role="button" class="dropdown-toggle {% if not unread_notifications %}disabled{% endif %}" data-toggle="dropdown" title="{{unread_notifications}} unread notification{{unread_notifications|pluralize}}">
                                     <span class="glyphicon glyphicon-bell"></span>
                                     <span class="badge noselect">{% if unread_notifications %}{{unread_notifications}}{% endif %}</span>
+                                    <span class="visible-xs-inline">Notifications</span>
                                 </a>
                                 <ul class="dropdown-menu">
                                     {% include "notifications/list.html" %}
@@ -98,6 +99,7 @@
                                     <a role="button" class="dropdown-toggle {% if not basket_size %}disabled{% endif %}" data-toggle="dropdown" title="{{basket_size}} question{{basket_size|pluralize}} in your basket">
                                         <span class="glyphicon glyphicon-shopping-cart"></span>
                                         <span class="badge noselect">{% if basket_size %}{{basket_size}}{% endif %}</span>
+                                        <span class="visible-xs-inline">Question Basket</span>
                                     </a>
                                     <ul class="dropdown-menu basket">
                                         {% include "basket/list.html" %}
@@ -105,22 +107,26 @@
                                 </li>
                             {% endwith %}
                             <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% user_thumbnail user 20 15 %}<span class="caret"></span></a>
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% user_thumbnail user 20 15 %} <span class="visible-xs-inline">Logged in as <strong>{{user.get_full_name}}</strong></span> <span class="caret"></span></a>
                                 <ul class="dropdown-menu">
-                                <li class="readonly"><a tabindex="2">Logged in as <strong>{{user.get_full_name}}</strong></a></li>
+                                <li class="readonly hidden-xs"><a tabindex="2">Logged in as <strong>{{user.get_full_name}}</strong></a></li>
+                                <li role="separator" class="divider hidden-xs"></li>
+                                <li><a tabindex="2" href="{% url 'view_profile' user.pk %}"><span class="glyphicon glyphicon-user"></span> Profile</a></li>
+                                <li><a tabindex="2" href="{% url 'theme_list' %}"><span class="glyphicon glyphicon-sunglasses"></span> Themes</a></li>
+                                <li><a tabindex="2" href="{% url 'extension_list' %}"><span class="glyphicon glyphicon-edit"></span> Extensions</a></li>
                                 <li role="separator" class="divider"></li>
-                                <li><a tabindex="2" href="{% url 'view_profile' user.pk %}">Profile</a></li>
-                                <li><a tabindex="2" href="{% url 'theme_list' %}">Themes</a></li>
-                                <li><a tabindex="2" href="{% url 'extension_list' %}">Extensions</a></li>
-                                <li role="separator" class="divider"></li>
-                                <li><a tabindex="2" href="{% url 'edit_profile' %}">Settings</a></li>
+                                <li><a tabindex="2" href="{% url 'edit_profile' %}"><span class="glyphicon glyphicon-cog"></span> Settings</a></li>
                                 {% if CAN_LOGOUT %}
-                                <li><a tabindex="2" href="{% url 'logout' %}?next={{request.path|escape}}">Log out</a></li>
+                                <li><a tabindex="2" href="{% url 'logout' %}?next={{request.path|escape}}"><span class="glyphicon glyphicon-log-out"></span> Log out</a></li>
                                 {% endif %}
                                 </ul>
                             </li>
                             <li>
-                                <a class="bg-info" href="http://numbas-editor.readthedocs.org/" target="_blank">Help</a>
+                                <a href="http://numbas-editor.readthedocs.org/" target="_blank">
+                                    <span class="text-info">
+                                        <span class="glyphicon glyphicon-question-sign"></span> <strong>Help</strong>
+                                    </span>
+                                </a>
                             </li>
                         {% else %}
                             <li>

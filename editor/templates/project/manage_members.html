@@ -16,12 +16,12 @@
             </thead>
             <tbody>
                 <tr class="member owner">
-                    <td>{% user_link project.owner %}</td>
+                    <td>{% user_thumbnail project.owner 20 15 link=True %}{% user_link project.owner %}</td>
                     <td>Owner</td>
                 </tr>
                 {% for uform in form %}
                 <tr class="member">
-                    <td>{% user_link uform.instance.user %}{{uform.id}}</td>
+                    <td>{% user_thumbnail uform.instance.user 20 15 link=True %}{% user_link uform.instance.user %}{{uform.id}}</td>
                     <td>
                         <select id="{{uform.access.auto_id}}" name="{{uform.access.html_name}}" class="form-control">
                             {% for value,name in uform.access.field.choices %}

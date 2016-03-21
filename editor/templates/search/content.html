@@ -25,6 +25,7 @@
     <div class="row">
         <div class="col-lg-2 col-md-3 col-sm-3 col-xs-12" id="search-refine">
             <form method="GET" action="{% url 'search' %}" id="search-panel-form">
+                {{form.tags.as_hidden}}
                 {{form.order_by.as_hidden}}
                 <div class="panel panel-primary">
                     <div class="panel-heading">
@@ -83,6 +84,17 @@
                         <li class="list-group-item">
                             <h4>Status</h4>
                             {{ form.status }}
+                        </li>
+                        <li class="list-group-item">
+                            <h4>Tags</h4>
+                            {% if form.tags.value %}<div class="input-group">{% endif %}
+                                <input type="text" class="form-control" id="{{form.tags.auto_id}}" name="tags" value="{{form.tags.value}}" placeholder="Tags separated by commas">
+                                {% if form.tags.value %}
+                                    <div class="input-group-btn">
+                                        <a class="btn btn-default" href="{% querystring "tags"="" %}"><span class="glyphicon glyphicon-remove"></span></a>
+                                    </div>
+                                {% endif %}
+                            {% if form.tags.value %}</div>{% endif %}
                         </li>
                     </ul>
                     </div>

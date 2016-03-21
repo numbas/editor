@@ -211,25 +211,24 @@ class SetAccessForm(forms.ModelForm):
             f.save()
         return super(SetAccessForm,self).save()
         
-class QuestionForm(forms.ModelForm):
-    
-    """Form for a question."""
-
+class EditorItemForm(forms.ModelForm):
     content = forms.CharField()
 
     subjects = forms.ModelMultipleChoiceField(queryset=editor.models.Subject.objects.all(),required=False)
     topics = forms.ModelMultipleChoiceField(queryset=editor.models.Topic.objects.all(),required=False)
     ability_levels = forms.ModelMultipleChoiceField(queryset=editor.models.AbilityLevel.objects.all(),required=False)
 
+    def save(self,commit=True):
+        obj = super(EditorItemForm,self).save(commit=commit)
+        obj.editoritem.content = self.cleaned_data['content']
+        obj.editoritem.save()
+        return obj
+
+class QuestionForm(EditorItemForm):
+    
     class Meta:
         model = NewQuestion
         fields = ('resources','extensions')
-
-    def save(self,commit=True):
-        question = super(QuestionForm,self).save(commit=commit)
-        question.editoritem.content = self.cleaned_data['content']
-        question.editoritem.save()
-        return question
 
 class NewQuestionForm(forms.ModelForm):
     class Meta:
@@ -241,25 +240,10 @@ class NewQuestionForm(forms.ModelForm):
             'project': BootstrapSelect,
         }
         
-class ExamForm(forms.ModelForm):
-    
-    """Form for an exam."""
-
-    subjects = forms.ModelMultipleChoiceField(queryset=editor.models.Subject.objects.all(),required=False)
-    topics = forms.ModelMultipleChoiceField(queryset=editor.models.Topic.objects.all(),required=False)
-    ability_levels = forms.ModelMultipleChoiceField(queryset=editor.models.AbilityLevel.objects.all(),required=False)
-
-    content = forms.CharField()
-    
+class ExamForm(EditorItemForm):
     class Meta:
         model = NewExam
         fields = ('theme','custom_theme','locale')
-
-    def save(self,commit=True):
-        exam = super(ExamForm,self).save(commit=commit)
-        exam.editoritem.content = self.cleaned_data['content']
-        exam.editoritem.save()
-        return exam
         
 class NewExamForm(forms.ModelForm):
     class Meta:

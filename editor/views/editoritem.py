@@ -120,6 +120,7 @@ class BaseUpdateView(generic.UpdateView):
             self.object.editoritem.topics.add(*form.cleaned_data['topics'])
             self.object.editoritem.ability_levels.clear()
             self.object.editoritem.ability_levels.add(*form.cleaned_data['ability_levels'])
+            self.object.editoritem.tags.set(*[t.strip() for t in self.data.get('tags',[])])
 
             self.object.save()
 
@@ -221,6 +222,14 @@ class SearchView(ListView):
         form.is_valid()
 
         items = self.viewable_items = self.base_queryset()
+
+        # filter based on tags
+        tags = self.tags = form.cleaned_data.get('tags')
+        self.filter_tags = Q()
+        if tags:
+            for tag in tags:
+                self.filter_tags = self.filter_tags & Q( tags__name__in=tag )
+            items = items.filter(self.filter_tags)
 
         # filter based on query
         query = self.query = form.cleaned_data.get('query')

@@ -1345,7 +1345,6 @@ $(document).ready(function() {
         viewModel: function(params) {
             var lb = this;
             this.disabled = params.disabled;
-            console.log(this.disabled);
             this.value = ko.observable('');
             this.items = params.items;
             this.edit_item = function(item,e) {

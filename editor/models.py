@@ -494,10 +494,7 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
         return e2
 
     def get_absolute_url(self):
-        if self.item_type=='exam':
-            return reverse('exam_edit',args=(self.exam.pk,self.slug))
-        elif self.item_type=='question':
-            return reverse('question_edit',args=(self.question.pk,self.slug))
+        return self.rel_obj.get_absolute_url()
 
     @property
     def item_type(self):
@@ -712,6 +709,9 @@ class NewQuestion(models.Model):
     def __unicode__(self):
         return '%s' % self.editoritem.name
 
+    def get_absolute_url(self):
+        return reverse('question_edit',args=(self.pk,self.editoritem.slug))
+
     @property
     def resource_paths(self):
         return [(r.file.name,r.file.path) for r in self.resources.all()]
@@ -759,6 +759,9 @@ class NewExam(models.Model):
 
     def __unicode__(self):
         return '%s' % self.editoritem.name
+
+    def get_absolute_url(self):
+        return reverse('exam_edit',args=(self.pk,self.editoritem.slug))
 
     @property
     def resources(self):

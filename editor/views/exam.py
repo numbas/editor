@@ -41,7 +41,7 @@ import calendar
 
 from django_tables2.config import RequestConfig
 
-from editor.forms import ExamForm, NewExamForm
+from editor.forms import ExamForm, NewExamForm, UploadExamForm
 from editor.models import NewExam, NewQuestion, EditorItem, Access
 import editor.models
 from editor.models import Exam, Question, ExamAccess, ExamHighlight, Theme, Licence, Extension, STAMP_STATUS_CHOICES
@@ -135,45 +135,54 @@ class CreateView(editor.views.editoritem.CreateView):
         return reverse('exam_edit', args=(self.exam.pk,
                                           self.exam.editoritem.slug,))
     
-class UploadView(generic.CreateView):
+class UploadView(editor.views.editoritem.CreateView):
     
     """Upload a .exam file representing an exam"""
 
-    model = Exam
+    model = NewExam
+    form_class = UploadExamForm
+    template_name = 'exam/upload.html'
 
-    def post(self, request, *args, **kwargs):
-        self.files = request.FILES.getlist('file')
-        for file in self.files:
-            try:
-                content = file.read().decode('utf-8')
-            except UnicodeDecodeError:
-                return self.not_exam_file()
-            self.object = Exam(content=content)
+    def form_valid(self, form):
+        exam_file = form.cleaned_data.get('file')
 
-            if not self.object.content:
-                return
+        content = exam_file.read().decode('utf-8')
+        project = form.cleaned_data.get('project')
 
-            self.object.author = self.request.user
+        ei = EditorItem(content=content,author=self.request.user,project=project)
+        ei.locale = project.default_locale
 
-            try:
-                self.object.save()
-            except ParseError:
-                return self.not_exam_file()
+        ei.save()
+        ei.set_licence(project.default_licence)
 
-            exam_object = NumbasObject(source=self.object.content)
+        exam = NewExam()
+        exam.editoritem = ei
+        exam.save()
 
-            qs = []
-            for q in exam_object.data['questions']:
-                question = NumbasObject(data=q,version=exam_object.version)
-                qo = NewQuestion(
-                    content = str(question), 
-                    author = self.object.author
-                )
-                qo.save()
-                extensions = Extension.objects.filter(location__in=exam_object.data['extensions'])
-                qo.extensions.add(*extensions)
-                qs.append(qo)
-            self.object.set_questions(qs)
+        exam_object = NumbasObject(source=content)
+
+        qs = []
+        for q in exam_object.data['questions']:
+            question_object = NumbasObject(data=q,version=exam_object.version)
+
+            qei = EditorItem(
+                content = str(question_object),
+                author = ei.author
+            )
+            qei.set_licence(ei.licence)
+            qei.project = ei.project
+            qei.save()
+
+            qo = NewQuestion()
+            qo.editoritem = qei
+            qo.save()
+
+            extensions = Extension.objects.filter(location__in=exam_object.data['extensions'])
+            qo.extensions.add(*extensions)
+            qs.append(qo)
+        exam.set_questions(qs)
+
+        self.exam = exam
 
         return HttpResponseRedirect(self.get_success_url())
 
@@ -182,11 +191,7 @@ class UploadView(generic.CreateView):
         return HttpResponseRedirect(reverse('exam_index'))
 
     def get_success_url(self):
-        if len(self.files)==1:
-            return reverse('exam_edit', args=(self.object.pk, self.object.slug) )
-        else:
-            return reverse('exam_index')
-
+        return self.exam.get_absolute_url() 
 
 class CopyView(generic.View, SingleObjectMixin):
 

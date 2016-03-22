@@ -2,10 +2,10 @@
 
 {% block content %}
 <div class="page-header">
-    <h1><span class="glyphicon glyphicon-plus"></span> Create a new question</h1>
+    <h1><span class="glyphicon glyphicon-upload"></span> Upload an exam</h1>
 </div>
 
-<form action="" method="post" class="form-horizontal">
+<form action="" method="post" class="form-horizontal" enctype="multipart/form-data">
     {% csrf_token %}
     {% for field in form.hidden_fields %}{{field}}{% endfor %}
 
@@ -25,8 +25,9 @@
     {% endfor %}
 
     <div class="col-sm-offset-2 col-sm-10">
-        <button type="submit" class="btn btn-primary">Create</button></p>
+        <button type="submit" class="btn btn-primary">Upload</button></p>
     </div>
 </form>
 
 {% endblock content %}
+

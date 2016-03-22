@@ -21,6 +21,7 @@ from django.utils.encoding import (
     force_str, force_text, python_2_unicode_compatible,
 )
 from django.db.models import Q, Count
+from django.core.exceptions import ValidationError
 
 import zipfile
 import os
@@ -251,6 +252,25 @@ class NewExamForm(forms.ModelForm):
         fields = ('name','author','project')
         widgets = {
             'name': forms.TextInput(attrs={'class':'form-control','placeholder':'e.g. "Week 4 homework"'}),
+            'author': forms.HiddenInput(),
+            'project': BootstrapSelect,
+        }
+
+def validate_exam_file(f):
+    try:
+        content = f.read().decode('utf-8')
+        editor.models.validate_content(content)
+        f.seek(0)
+    except (UnicodeDecodeError,ValidationError):
+        raise ValidationError("Not a valid .exam file")
+
+class UploadExamForm(forms.ModelForm):
+    file = forms.FileField(required=True,validators=[validate_exam_file])
+
+    class Meta:
+        model = EditorItem
+        fields = ('project',)
+        widgets = {
             'author': forms.HiddenInput(),
             'project': BootstrapSelect,
         }

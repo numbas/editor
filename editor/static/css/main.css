@@ -34,8 +34,12 @@ body:not(.loaded) .loaded-content {
 }
 
 .timeline-item {
-    border-top: 1px solid #eee;
-    padding-top: 1em;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1em;
+}
+.timeline-item.less-important .media-heading {
+    font-size: 1em;
+    color: #888;
 }
 
 /*

@@ -96,11 +96,35 @@ class UserProfileView(DetailView):
 
     model = User
     context_object_name = 'view_user'
+    profile_page = 'bio'
 
     def get_context_data(self,*args,**kwargs):
         context = super(UserProfileView,self).get_context_data(*args,**kwargs)
         context['is_me'] = self.request.user == self.object
+        context['profile_page'] = self.profile_page
         return context
+
+class UserTimelineView(UserProfileView):
+    template_name = 'profile/timeline.html'
+    profile_page = 'activity'
+
+class UserProjectsView(UserProfileView):
+    template_name = 'profile/projects.html'
+    profile_page = 'projects'
+
+    def get_context_data(self,*args,**kwargs):
+        context = super(UserProjectsView,self).get_context_data(*args,**kwargs)
+        context['projects'] = [p for p in self.object.userprofile.projects() if p.can_be_viewed_by(self.request.user)]
+
+        return context
+
+class UserThemesView(UserProfileView):
+    template_name = 'profile/themes.html'
+    profile_page = 'themes'
+
+class UserExtensionsView(UserProfileView):
+    template_name = 'profile/extensions.html'
+    profile_page = 'extensions'
 
 class ZipView(DetailView):
     def get(self,request,*args,**kwargs):

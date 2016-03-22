@@ -17,8 +17,8 @@
 		<td>{{extension.name}}</td>
 		<td>{{extension.location}}</td>
 		<td>{{extension.last_modified}}</td>
-		<td><a href="{% url 'extension_edit' extension.pk %}">Edit</a></td>
-        <td><a href="{{extension.zipfile.url}}" class="download">Download</a></td>
+        <td><a href="{% url 'extension_edit' extension.pk %}"><span class="glyphicon glyphicon-pencil"></span> Edit</a></td>
+        <td>{% if extension.zipfile %}<a href="{{extension.zipfile.url}}">Download</a>{% else %}<i>No download</i>{% endif %}</td>
         <td><a href="{% url 'extension_delete' extension.pk %}" class="delete" title="Delete">Delete</a></td>
     </tr>
     {% endfor %}

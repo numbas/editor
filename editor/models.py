@@ -66,19 +66,24 @@ class ControlledObject(object):
 
     def can_be_viewed_by(self,user):
         accept_levels = ('view','edit')
-        return (self.public_access in accept_levels) or (user.is_superuser) or (self.author==user) or (self.has_access(user,accept_levels))
+        try:
+            if self.public_access in accept_levels:
+                return True
+        except AttributeError:
+            pass
+        return (user.is_superuser) or (self.owner==user) or (self.has_access(user,accept_levels))
 
     def can_be_copied_by(self,user):
-        if not self.licence or user.is_superuser or self.author==user or self.has_access(user,('edit',)):
+        if not self.licence or user.is_superuser or self.owner==user or self.has_access(user,('edit',)):
             return True
         else:
             return self.licence.can_reuse and self.licence.can_modify
 
     def can_be_deleted_by(self,user):
-        return user == self.author
+        return user == self.owner
 
     def can_be_edited_by(self, user):
-        return self.public_access=='edit' or (user.is_superuser) or (self.author==user) or self.has_access(user,('edit',))
+        return self.public_access=='edit' or (user.is_superuser) or (self.owner==user) or self.has_access(user,('edit',))
 
     def __eq__(self,other):
         return True
@@ -93,7 +98,7 @@ class ControlledObject(object):
         else:
             return (  Q(access__user=user,access__access__in=view_perms) 
                     | Q(public_access__in=view_perms) 
-                    | Q(author=user)
+                    | Q(owner=user)
                     | Q(project__projectaccess__user=user)
                     | Q(project__owner=user)
                    )
@@ -103,6 +108,7 @@ LOCALE_CHOICES = [(y,x) for x,y in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']]
 class Project(models.Model,ControlledObject):
     name = models.CharField(max_length=200)
     owner = models.ForeignKey(User,related_name='own_projects')
+
     permissions = models.ManyToManyField(User,through='ProjectAccess')
 
     timeline = GenericRelation('TimelineItem',related_query_name='projects',content_type_field='timeline_content_type',object_id_field='timeline_id')
@@ -470,6 +476,10 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
     def __unicode__(self):
         return self.name
 
+    @property
+    def owner(self):
+        return self.author
+
     def has_access(self,user,levels):
         if user.is_anonymous():
             return False
@@ -606,6 +616,8 @@ class TimelineItem(models.Model):
     object_id = models.PositiveIntegerField()
     object = GenericForeignKey('object_content_type','object_id')
 
+    user = models.ForeignKey(User,related_name='timelineitems',null=True)
+
     date = models.DateTimeField(auto_now_add=True)
 
     def can_be_deleted_by(self,user):
@@ -689,7 +701,11 @@ def create_timelineitem(sender,instance,created,**kwargs):
     if not issubclass(sender,TimelineMixin):
         return
     if created:
-        TimelineItem.objects.create(object=instance,timeline=instance.object)
+        try:
+            user = instance.user
+        except AttributeError:
+            user = None
+        TimelineItem.objects.create(object=instance,timeline=instance.object,user=user)
 
 @reversion.register
 class NewQuestion(models.Model):

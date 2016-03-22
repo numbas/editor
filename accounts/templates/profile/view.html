@@ -1,52 +1,23 @@
-{% extends "layout.html" %}
+{% extends "profile/base.html" %}
 {% load escape_html from sanitizer %}
 {% load user_link %}
 
-{% block stylesheets %}
-{{block.super}}
-<link href="{{ STATIC_URL }}css/profile-view.css" type="text/css" rel="stylesheet" />
-{% endblock stylesheets %}
-
-{% block content %}
+{% block profile_content %}
 {% with object.userprofile as profile %}
 
-<div class="page-header">
-    {% if is_me %}<div class="pull-right" id="edit-profile"><a href="{% url 'edit_profile' %}"><span class="glyphicon glyphicon-pencil"></span> Edit your profile</a></div>{% endif %}
-    <h2 class="big-name">
-        {{view_user.get_full_name}}
-    </h2>
-</div>
-
-<div class="media jumbotron">
-    <div class="media-body">
-        <div class="media-left pull-left">
-            {% user_thumbnail view_user 150 %}
-        </div>
-        <div class="bio">
-            {% if profile.bio %}
-            {{profile.bio|escape_html|safe }}
-            {% else %}
-            <p><em>This user hasn't written a bio yet.</em></p>
-            {% endif %}
-        </div>
-
-    </div>
-</div>
-
-<h3><span class="glyphicon glyphicon-briefcase"></span> {% if view_user == request.user %}Your{% else %}{{view_user.first_name}}'s{% endif %} projects</h3>
-<ul>
-    {% for project in view_user.userprofile.projects.all %}
-    <li><a href="{% url 'project_index' project.pk %}">{{project.name}}</a></li>
-    {% endfor %}
-</ul>
-
-<ul class="list-unstyled">
-    {% if is_me %}
-    <li><a href="{% url 'theme_list' %}">Your themes</a></li>
-    <li><a href="{% url 'extension_list' %}">Your extensions</a></li>
+<div class="bio jumbotron">
+    {% if profile.bio %}
+    {{profile.bio|escape_html|safe }}
+    {% else %}
+    <p><em>This user hasn't written a bio yet.</em></p>
     {% endif %}
-</ul>
+</div>
 
+{% if is_me %}
+<div class="text-right" id="edit-profile">
+    <a class="btn btn-link" href="{% url 'edit_profile' %}"><span class="glyphicon glyphicon-pencil"></span> Edit your profile</a>
+</div>
+{% endif %}
 
 {% endwith %}
-{% endblock content %}
+{% endblock profile_content %}

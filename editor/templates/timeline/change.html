@@ -2,13 +2,15 @@
 {% load user_link %}
 
 {% block thumbnail %}
-{% user_thumbnail item.object.user 40 36 link=True %}
 {% endblock thumbnail %}
 
 {% block heading %}<span class="glyphicon glyphicon-{{item.object.icon}}"></span> {% user_link item.object.user %}{% endblock %}
 
+{% block on_object %}{{item.object.verb}} <a href="{{item.timeline.get_absolute_url}}"><span class="glyphicon glyphicon-{{item.timeline.icon}}"></span> {{item.timeline.name}}</a>{% endblock on_object %}
+
+{% block timelineitem_class %}less-important{% endblock %}
+
 {% block content %}
-{{item.object.verb|capfirst}} a new {{item.object.object.item_type}}.
 {% endblock content %}
 
 {% block delete_url %}{% url 'stamp_delete' item.object.pk %}{% endblock %}

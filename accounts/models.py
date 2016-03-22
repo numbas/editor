@@ -76,6 +76,9 @@ class UserProfile(models.Model):
         )
 
         return items.order_by('-date')
+
+    def public_timeline(self):
+        return self.user.timelineitems.order_by('-date')
         
 class BasketQuestion(models.Model):
     class Meta:

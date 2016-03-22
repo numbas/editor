@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% load user_link %}
+
+{% block stylesheets %}
+{{block.super}}
+<link href="{{ STATIC_URL }}css/profile-view.css" type="text/css" rel="stylesheet" />
+{% endblock stylesheets %}
+
+{% block content %}
+{% with object.userprofile as profile %}
+
+<div class="page-header">
+    <h1 class="big-name">
+        {{view_user.get_full_name}}
+    </h1>
+</div>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-3">
+            <div class="thumbnail thumbnail-no-border">{% user_thumbnail view_user 150 %}</div>
+            <div class="nav nav-pills nav-stacked">
+                <li class="{% if profile_page == "bio" %}active{% endif %}"><a href="{% url 'view_profile' object.pk %}"><span class="glyphicon glyphicon-user"></span> Profile</a></li>
+                <li class="{% if profile_page == "activity" %}active{% endif %}"><a href="{% url 'profile_activity' object.pk %}"><span class="glyphicon glyphicon-dashboard"></span> Activity</a></li>
+                <li class="{% if profile_page == "projects" %}active{% endif %}"><a href="{% url 'profile_projects' object.pk %}"><span class="glyphicon glyphicon-briefcase"></span> Projects</a></li>
+                <li class="{% if profile_page == "themes" %}active{% endif %}"><a href="{% url 'profile_themes' object.pk %}"><span class="glyphicon glyphicon-sunglasses"></span> Themes</a></li>
+                <li class="{% if profile_page == "extensions" %}active{% endif %}"><a href="{% url 'profile_extensions' object.pk %}"><span class="glyphicon glyphicon-wrench"></span> Extensions</a></li>
+            </div>
+        </div>
+        <div class="col-sm-9">
+            {% block profile_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+
+{% endwith %}
+{% endblock content %}

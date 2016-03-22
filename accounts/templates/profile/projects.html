@@ -1,0 +1,15 @@
+{% extends "profile/base.html" %}
+{% load can_edit %}
+
+{% block profile_content %}
+<ul>
+    {% for project in projects %}
+    {% if project|can_be_viewed_by:request.user %}
+    <li><a href="{% url 'project_index' project.pk %}">{{project.name}}</a></li>
+    {% endif %}
+    {% endfor %}
+    {% if not projects|length %}
+    <p class="nothing-here">{{view_user.first_name}} is not a member of any projects you're allowed to view.</p>
+    {% endif %}
+</ul>
+{% endblock profile_content %}

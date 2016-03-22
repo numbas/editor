@@ -25,6 +25,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import views as auth_views
 
 from accounts.views import ActivationView,RegistrationView,UserUpdateView,ChangePasswordView,UserProfileView,AllExamsView, AllQuestionsView, UserSearchView
+import accounts.views
 
 from numbas import settings
 
@@ -51,6 +52,18 @@ urlpatterns = patterns('',
         url(r'^accounts/profile/(?P<pk>\d+)/$',
             UserProfileView.as_view(),
             name='view_profile'),
+        url(r'^accounts/profile/(?P<pk>\d+)/activity$',
+            accounts.views.UserTimelineView.as_view(),
+            name='profile_activity'),
+        url(r'^accounts/profile/(?P<pk>\d+)/projects$',
+            accounts.views.UserProjectsView.as_view(),
+            name='profile_projects'),
+        url(r'^accounts/profile/(?P<pk>\d+)/themes$',
+            accounts.views.UserThemesView.as_view(),
+            name='profile_themes'),
+        url(r'^accounts/profile/(?P<pk>\d+)/extensions$',
+            accounts.views.UserExtensionsView.as_view(),
+            name='profile_extensions'),
         url(r'^accounts/profile/edit$',
             login_required(UserUpdateView.as_view()),
             name='edit_profile'),

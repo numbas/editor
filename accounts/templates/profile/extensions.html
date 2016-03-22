@@ -1,0 +1,59 @@
+{% extends "profile/base.html" %}
+{% load sstatic %}
+
+{% block stylesheets %}
+	{{ block.super }}
+    <link href="{% sstatic 'css/extension.css' %}" type="text/css" rel="stylesheet" />
+{% endblock stylesheets %}
+
+{% block profile_content %}
+
+{% if view_user.own_extensions.exists %}
+<table class="extensions table">
+    <thead>
+		<th>Name</th>
+		<th>Short name</th>
+        {% if is_me %}<th></th><!-- control links -->{% endif %}
+        <th>Last modified</th>
+    </thead>
+    <tbody>
+    {% for extension in view_user.own_extensions.all %}
+    <tr>
+        <td>{{extension.name}}</td>
+		<td class="monospace">{{extension.location}}</td>
+        {% if is_me %}
+        <td class="text-center">
+            <a class="btn btn-link" href="{% url 'extension_edit' extension.pk %}" title="Edit this extension"><span class="glyphicon glyphicon-pencil text-warning"></span></a>
+            {% if extension.zipfile %}
+            <a class="btn btn-link" href="{{extension.zipfile.url}}" title="Download this extension"><span class="glyphicon glyphicon-download text-info"></span></a>
+            {% else %}
+            <span class="btn btn-link disabled" title="This extension can't be downloaded"><span class="glyphicon glyphicon-hdd"></span></span>
+            {% endif %}
+            <a class="btn btn-link" href="{% url 'extension_delete' extension.pk %}" title="Delete this extension"><span class="glyphicon glyphicon-remove text-danger"></span></a>
+        </td>
+        {% endif %}
+		<td>{{extension.last_modified}}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+    {% if is_me %}
+    <tfoot>
+        <tr>
+            <td colspan="4">
+                <a class="btn btn-primary" href="{% url 'extension_new' %}"><span class="glyphicon glyphicon-upload"></span> Upload a new extension</a>
+            </td>
+        </tr>
+    </tfoot>
+    {% endif %}
+</table>
+{% else %}
+{% if is_me %}
+<p><a class="btn btn-primary" href="{% url 'extension_new' %}"><span class="glyphicon glyphicon-upload"></span> Upload a new extension</a></p>
+{% else %}
+<p class="nothing-here">{{view_user.first_name}} hasn't uploaded any extensions yet.</p>
+{% endif %}
+{% endif %}
+
+<p><a target="numbasquickhelp" href="http://numbas-editor.readthedocs.org/en/latest/extensions.html"><span class="glyphicon glyphicon-question-sign"></span> Help with extensions</a></p>
+
+{% endblock profile_content %}

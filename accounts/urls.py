@@ -33,9 +33,6 @@ from numbas import settings
 urlpatterns = patterns('',
         url(r'^users/search/$',UserSearchView.as_view(),name='user_search'),
 
-        url(r'^accounts/password/change/$',
-            auth_views.password_change,
-            name='auth_password_change'),
         url(r'^accounts/password/change/done/$',
             auth_views.password_change_done,
             name='auth_password_change_done'),
@@ -67,10 +64,11 @@ urlpatterns = patterns('',
 
 if settings.CAN_CHANGE_PASSWORD:
     urlpatterns += patterns('',
-            url(r'^accounts/profile/change-password$',
-                login_required(ChangePasswordView.as_view()),
-                name='change_password'),
-            )
+        url(r'^accounts/profile/change-password$',
+            login_required(ChangePasswordView.as_view()),
+            name='change_password'
+        ),
+    )
 
     if settings.ALLOW_REGISTRATION:
         urlpatterns += patterns('',

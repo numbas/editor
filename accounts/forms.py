@@ -21,10 +21,10 @@ class UserProfileForm(forms.ModelForm):
         model = UserProfile
         fields = ('first_name','last_name','email','bio','language','avatar')
 
-    first_name = forms.CharField(max_length=30)
-    last_name = forms.CharField(max_length=30)
-    email = forms.EmailField()
-    language = forms.ChoiceField(choices=[(x,y) for y,x in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']])
+    first_name = forms.CharField(max_length=30,widget=forms.TextInput(attrs={'class':'form-control'}))
+    last_name = forms.CharField(max_length=30,widget=forms.TextInput(attrs={'class':'form-control'}))
+    email = forms.EmailField(widget=forms.TextInput(attrs={'class':'form-control'}))
+    language = forms.ChoiceField(choices=[(x,y) for y,x in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']],widget=forms.Select(attrs={'class':'form-control'}))
     bio = SanitizedCharField(
             widget=Textarea, 
             allowed_tags=settings.SANITIZER_ALLOWED_TAGS, 
@@ -53,8 +53,8 @@ class ChangePasswordForm(forms.ModelForm):
     class Meta:
         model = User
         fields = []
-    password1 = forms.CharField(widget=PasswordInput,label='New password')
-    password2 = forms.CharField(widget=PasswordInput,label='Type new password again')
+    password1 = forms.CharField(widget=PasswordInput(attrs={'class':'form-control'}),label='New password')
+    password2 = forms.CharField(widget=PasswordInput(attrs={'class':'form-control'}),label='Type new password again')
 
     def clean(self):
         cleaned_data = super(forms.ModelForm,self).clean()

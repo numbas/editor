@@ -660,7 +660,7 @@ $(document).ready(function() {
             this.addUserAccess = function(data) {
                 var access_rights = ei.access_rights();
                 for(var i=0;i<access_rights.length;i++) {
-                    if(access_rights[i].id==data.user.id) {
+                    if(access_rights[i].id==data.id) {
                         noty({
                             text: "That user is already in the access list.",
                             layout: "center",
@@ -675,8 +675,7 @@ $(document).ready(function() {
                         return;
                     }
                 }
-                var access = new UserAccess(ei,data.user);
-                access.access_level(d.access_level);
+                var access = new UserAccess(ei,data);
                 ei.access_rights.push(access);
             };
         }

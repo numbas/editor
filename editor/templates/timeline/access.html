@@ -1,0 +1,20 @@
+{% extends "timeline/item.html" %}
+{% load user_link %}
+
+{% block thumbnail %}
+{% endblock thumbnail %}
+
+{% block heading %}
+    <span class="glyphicon glyphicon-{{item.object.icon}}"></span> {% user_link item.object.user %}
+    was given access
+    {% if include_object_link %}to <a href="{{item.timeline.get_absolute_url}}"><span class="glyphicon glyphicon-{{item.timeline.icon}}"></span> {{item.timeline.name}}</a>{% endif %}
+{% endblock %}
+
+{% block on_object %}{% endblock on_object %}
+
+{% block timelineitem_class %}less-important{% endblock %}
+
+{% block delete_text %}Remove this user's access{% endblock %}
+
+{% block content %}
+{% endblock content %}

@@ -103,6 +103,22 @@ class ControlledObject(object):
                     | Q(project__owner=user)
                    )
 
+class TimelineMixin(object):
+    def can_be_deleted_by(self,user):
+        try:
+            if self.object.author==user:
+                return True
+        except AttributeError:
+            pass
+        return user==self.user
+
+    def timeline_object(self):
+        return self.object
+
+    @property
+    def timelineitem(self):
+        return self.timelineitems.get()
+
 LOCALE_CHOICES = [(y,x) for x,y in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']]
 
 class Project(models.Model,ControlledObject):
@@ -145,10 +161,22 @@ class Project(models.Model,ControlledObject):
     def __unicode__(self):
         return self.name
 
-class ProjectAccess(models.Model):
+class ProjectAccess(models.Model,TimelineMixin):
     project = models.ForeignKey(Project)
     user = models.ForeignKey(User,related_name='project_memberships')
     access = models.CharField(default='view',editable=True,choices=USER_ACCESS_CHOICES,max_length=6)
+
+    timelineitems = GenericRelation('TimelineItem',related_query_name='project_accesses',content_type_field='object_content_type',object_id_field='object_id')
+    timelineitem_template = 'timeline/access.html'
+
+    def can_be_deleted_by(self,user):
+        return self.project.can_be_edited_by(user)
+
+    def timeline_object(self):
+        return self.project
+
+    def icon(self):
+        return 'eye-open'
 
     class Meta:
         unique_together = (("project","user"),)
@@ -322,19 +350,6 @@ STAMP_STATUS_CHOICES = (
     ('pleasetest','Needs to be tested'),
 )
 
-class TimelineMixin(object):
-    def can_be_deleted_by(self,user):
-        try:
-            if self.object.author==user:
-                return True
-        except AttributeError:
-            pass
-        return user==self.user
-
-    @property
-    def timelineitem(self):
-        return self.timelineitems.get()
-
 class AbilityFramework(models.Model):
     name = models.CharField(max_length=200,blank=False,unique=True)
     description = models.TextField(blank=False)
@@ -390,10 +405,22 @@ class TaggedItem(taggit.models.GenericTaggedItemBase):
 class TaggedQuestion(taggit.models.GenericTaggedItemBase):
     tag = models.ForeignKey(EditorTag,related_name='tagged_items')
 
-class Access(models.Model):
+class Access(models.Model,TimelineMixin):
     item = models.ForeignKey('EditorItem')
     user = models.ForeignKey(User)
     access = models.CharField(default='view',editable=True,choices=USER_ACCESS_CHOICES,max_length=6)
+
+    timelineitems = GenericRelation('TimelineItem',related_query_name='item_accesses',content_type_field='object_content_type',object_id_field='object_id')
+    timelineitem_template = 'timeline/access.html'
+
+    def can_be_deleted_by(self,user):
+        return self.item.can_be_deleted_by(user)
+
+    def timeline_object(self):
+        return self.item
+
+    def icon(self):
+        return 'eye-open'
 
 @receiver(signals.post_save,sender=Access)
 def add_watching_user_for_access(instance,**kwargs):
@@ -705,7 +732,7 @@ def create_timelineitem(sender,instance,created,**kwargs):
             user = instance.user
         except AttributeError:
             user = None
-        TimelineItem.objects.create(object=instance,timeline=instance.object,user=user)
+        TimelineItem.objects.create(object=instance,timeline=instance.timeline_object(),user=user)
 
 @reversion.register
 class NewQuestion(models.Model):

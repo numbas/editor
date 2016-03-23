@@ -114,8 +114,7 @@
                                 <li class="readonly hidden-xs"><a tabindex="2">Logged in as <strong>{{user.get_full_name}}</strong></a></li>
                                 <li role="separator" class="divider hidden-xs"></li>
                                 <li><a tabindex="2" href="{% url 'view_profile' user.pk %}"><span class="glyphicon glyphicon-user"></span> Profile</a></li>
-                                <li><a tabindex="2" href="{% url 'theme_list' %}"><span class="glyphicon glyphicon-sunglasses"></span> Themes</a></li>
-                                <li><a tabindex="2" href="{% url 'extension_list' %}"><span class="glyphicon glyphicon-edit"></span> Extensions</a></li>
+                                <li><a tabindex="2" href="{% url 'profile_projects' user.pk %}"><span class="glyphicon glyphicon-briefcase"></span> Projects</a></li>
                                 <li role="separator" class="divider"></li>
                                 <li><a tabindex="2" href="{% url 'edit_profile' %}"><span class="glyphicon glyphicon-cog"></span> Settings</a></li>
                                 {% if CAN_LOGOUT %}

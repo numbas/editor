@@ -426,18 +426,20 @@
                     {% endif %}
 
                     {% if editable %}
-                    {% with object.incoming_pull_requests.open as pull_requests %}
+                    {% with object.editoritem.incoming_pull_requests.open as pull_requests %}
                     {% if pull_requests.exists %}
                     <h2>Request{{pull_requests.count|pluralize}} to merge</h2>
                     <ul>
                         {% for pr in pull_requests %}
                         <li class="pull-request">
-                            <p>{% user_link pr.owner %} would like you to replace this {{item_type}} with {% editoritem_link pr.source %}.</p>
+                            <p>{% user_link pr.owner %} would like you to replace this {{item_type}} with {% editoritem_link pr.source.rel_obj %}.</p>
                             <p>Here's what's changed:</p>
                             <blockquote class="comment">{{ pr.comment|strip_html|safe }}</blockquote>
                             <div class="responses">
-                                <form method="post" action="{% url 'pullrequest_accept' pr.pk %}">{% csrf_token %}<button class="btn accept-pr">Accept</button></form>
-                                <form method="post" action="{% url 'pullrequest_reject' pr.pk %}">{% csrf_token %}<button class="btn reject-pr">Reject</button></form>
+                                <form method="post" action="">{% csrf_token %}
+                                    <button class="btn btn-danger accept-pr" value="accept" title="Replace this {{item_type}} with the propsed version">Accept</button>
+                                    <button class="btn btn-default accept-pr" value="reject" title="Close this request and keep this {{item_type}} as it is">Reject</button>
+                                </form>
                             </div>
                         </li>
                         {% endfor %}

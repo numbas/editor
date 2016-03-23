@@ -64,6 +64,13 @@ USER_ACCESS_CHOICES = (('view','Can view'),('edit','Can edit'))
 @deconstructible
 class ControlledObject(object):
 
+    @property
+    def owner(self):
+        raise NotImplementedError
+
+    def has_access(self,user,accept_levels):
+        raise NotImplementedError
+
     def can_be_viewed_by(self,user):
         accept_levels = ('view','edit')
         try:
@@ -609,6 +616,25 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
             obj['canEdit'] = self.can_be_edited_by(user) 
         return obj
 
+    def merge(self,other):
+        oname = self.name
+        self.content = other.content
+        self.metadata = other.metadata
+
+        self.tags.set(*other.tags.all())
+
+        self.ability_levels.clear()
+        self.ability_levels.add(*other.ability_levels.all())
+        self.subjects.clear()
+        self.subjects.add(*other.subjects.all())
+        self.topics.clear()
+        self.topics.add(*other.topics.all())
+
+        self.set_name(oname)
+
+        self.rel_obj.merge(other.rel_obj)
+        self.save()
+
 @receiver(signals.post_save,sender=EditorItem)
 def author_watches_editoritem(instance,created,**kwargs):
     if created:
@@ -631,6 +657,59 @@ def set_ability_level_limits(instance,**kwargs):
     ends = instance.ability_levels.aggregate(Min('start'),Max('end'))
     instance.ability_level_start = ends.get('start__min',None)
     instance.ability_level_end = ends.get('end__max',None)
+
+class PullRequestManager(models.Manager):
+    def open(self):
+        return self.filter(open=True)
+
+class PullRequest(models.Model,ControlledObject):
+    objects = PullRequestManager()
+
+    # user who created this request
+    owner = models.ForeignKey(User,related_name='pullrequests_created')
+    # user who accepted or rejected this request
+    closed_by = models.ForeignKey(User,related_name='pullrequests_closed',null=True)
+
+    source = models.ForeignKey(EditorItem,related_name='outgoing_pull_requests')
+    destination = models.ForeignKey(EditorItem,related_name='incoming_pull_requests')
+
+    open = models.BooleanField(default=True)
+    accepted = models.BooleanField(default=False)
+
+    created = models.DateTimeField(auto_now_add=True)
+    comment = models.TextField(blank=True)
+
+    def has_access(self,user,accept_levels):
+        return self.destination.has_access(user,accept_levels) or user==self.owner
+
+    def can_be_merged_by(self,user):
+        return self.destination.can_be_edited_by(user)
+
+    def can_be_deleted_by(self,user):
+        return user==self.owner or self.destination.can_be_edited_by(user)
+
+    def clean(self):
+        if self.source==self.destination:
+            raise ValidationError({'source': "Source and destination are the same."})
+
+    def validate_unique(self,exclude=None):
+        if self.open and PullRequest.objects.filter(source=self.source,destination=self.destination,open=True).exists():
+            raise ValidationError("There's already an open pull request between these items.")
+
+    def accept(self,user):
+        self.accepted = True
+        self.destination.merge(self.source)
+        self.close(user)
+        self.save()
+
+    def reject(self,user):
+        self.accepted = False
+        self.close(user)
+        self.save()
+
+    def close(self,user):
+        self.open = False
+        self.closed_by = user
 
 class TimelineItem(models.Model):
     # Object whose timeline this item belongs to
@@ -788,6 +867,13 @@ class NewQuestion(models.Model):
     def exams_using_this(self):
         return self.exams.distinct()
 
+    def merge(self,other):
+        self.resources.clear()
+        self.resources.add(*other.resources.all())
+        self.extensions.clear()
+        self.extensions.add(*other.extensions.all())
+        self.save()
+
 @reversion.register
 class NewExam(models.Model):
     editoritem = models.OneToOneField(EditorItem,on_delete=models.CASCADE,related_name='exam')
@@ -861,6 +947,13 @@ class NewExam(models.Model):
         for order,question in enumerate(question_list):
             exam_question = NewExamQuestion(exam=self,question=question, qn_order=order)
             exam_question.save()
+
+    def merge(self,other):
+        self.set_questions(other.questions.all())
+        self.theme = other.theme
+        self.custom_theme = other.custom_theme
+        self.locale = other.locale
+        self.save()
 
 class NewExamQuestion(models.Model):
     
@@ -1095,10 +1188,6 @@ class QuestionHighlight(models.Model):
     picked_by = models.ForeignKey(User)
     note = models.TextField(blank=True)
     date = models.DateTimeField(auto_now_add=True)
-
-class PullRequestManager(models.Manager):
-    def open(self):
-        return self.filter(open=True)
 
 class QuestionPullRequest(models.Model):
     objects = PullRequestManager()

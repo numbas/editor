@@ -17,7 +17,9 @@ tinymce.init({
 {% endblock javascripts %}
 
 {% block content %}
-	<h1>Your user profile</h1>
+    <div class="page-header">
+	    <h1>Update your profile</h1>
+    </div>
 
     <form method="post" action="" enctype="multipart/form-data">
 		{% csrf_token %} 
@@ -37,9 +39,14 @@ tinymce.init({
             {{form.email}}
             {{form.email.errors}}
         </div>
+        {% if CAN_CHANGE_PASSWORD %}
+        <div class="form-group">
+            <a class="btn btn-warning" href="{% url 'change_password' %}"><span class="glyphicon glyphicon-pencil"></span> Change your password</a>
+        </div>
+        {% endif %}
         <div class="form-group">
             <label>{{form.bio.label}}</label>
-            {{form.bio}}
+            <p>{{form.bio}}</p>
         </div>
         <div class="form-group">
             <label>{{form.language.label}}</label>
@@ -52,6 +59,5 @@ tinymce.init({
 		<div class="form-group">
             <button type="submit" class="btn btn-primary">Update</button>
 		</div>
-        {% if CAN_CHANGE_PASSWORD %}<div class="form-group"><a href="{% url 'change_password' %}">Change your password</a></div>{% endif %}
     </form>
 {% endblock content %}

@@ -1,5 +1,21 @@
 {% extends "layout.html" %}
 
+{% block javascripts %}
+{{block.super}}
+<script type="text/javascript">
+tinymce.init({
+    selector: "#id_description",
+    theme: 'modern',
+	skin: 'light',
+	statusbar: false,
+	autoresize_bottom_margin: 0,
+	relative_urls: false,
+    theme_advanced_resizing: true,
+    theme_advanced_resize_horizontal: false
+ });
+</script>
+{% endblock javascripts %}
+
 {% block content %}
 <div class="page-header">
     <h1>Create a new project</h1>

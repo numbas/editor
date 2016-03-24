@@ -154,14 +154,12 @@ urlpatterns = patterns('',
     # Themes
 
     url(r'^theme/new/$', login_required(theme.CreateView.as_view()), name='theme_new'),
-    url(r'^themes/$', login_required(theme.ListView.as_view()), name='theme_list'),
     url(r'^themes/(?P<pk>\d+)/edit$', login_required(theme.UpdateView.as_view()), name='theme_edit'),
     url(r'^themes/(?P<pk>\d+)/delete$', login_required(theme.DeleteView.as_view()), name='theme_delete'),
 
     # Extensions
 
     url(r'^extension/new/$', login_required(extension.CreateView.as_view()), name='extension_new'),
-    url(r'^extensions/$', login_required(extension.ListView.as_view()), name='extension_list'),
     url(r'^extensions/(?P<pk>\d+)/edit$', login_required(extension.UpdateView.as_view()), name='extension_edit'),
     url(r'^extensions/(?P<pk>\d+)/delete$', login_required(extension.DeleteView.as_view()), name='extension_delete'),
 

@@ -9,8 +9,11 @@
 
 {% block content %}
 
-    <div class="row">
+    <div class="page-header">
         <h1>Create an account</h1>
+    </div>
+
+    <div class="row">
         
         {% if form.errors %}
             <p id="errorheader">There were errors with the details you provided. Please correct them and resubmit. {{ form.non_field_errors }}</p>

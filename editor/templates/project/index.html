@@ -1,6 +1,7 @@
 {% extends "project/project_base.html" %}
 {% load user_link %}
 {% load sstatic %}
+{% load sanitizer %}
 
 {% block javascripts %}
 {{ block.super }}
@@ -14,7 +15,7 @@
         <div class="col-sm-8">
             <div class="well well-lg description">
                 {% if project.description %}
-                {{project.description}}
+                {{project.description|escape_html|safe}}
                 {% else %}
                 <div class="nothing-here">
                     <p>This project doesn't have a description.</p>

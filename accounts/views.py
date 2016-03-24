@@ -41,7 +41,7 @@ class RegistrationView(registration.views.RegistrationView):
     def get_success_url(self,*args,**kwargs):
         return reverse('registration_complete')
 
-    def registration_allowed(self, request):
+    def registration_allowed(self):
         return settings.ALLOW_REGISTRATION
 
 class ActivationView(registration.views.ActivationView):

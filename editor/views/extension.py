@@ -32,7 +32,7 @@ class CreateView(generic.CreateView):
         return kwargs
 
     def get_success_url(self):
-        return reverse('extension_list')
+        return reverse('profile_extensions',args=(self.request.user.pk))
 
 class UpdateView(AuthorRequiredMixin,generic.UpdateView):
 	""" Edit an extension """
@@ -42,21 +42,11 @@ class UpdateView(AuthorRequiredMixin,generic.UpdateView):
 	template_name = 'extension/edit.html'
 
 	def get_success_url(self):
-		return reverse('extension_list')
-
-class ListView(generic.ListView):
-    """ List all the current user's extensions """
-    
-    model = Extension
-    template_name = 'extension/list.html'
-
-    def get_queryset(self):
-        return Extension.objects.filter(author=self.request.user)
+		return reverse('profile_extensions',args=(self.request.user.pk))
 
 class DeleteView(AuthorRequiredMixin,generic.DeleteView):
     model = Extension
     template_name = 'extension/delete.html'
 
     def get_success_url(self):
-        return reverse('extension_list')
-
+        return reverse('profile_extensions',args=(self.request.user.pk))

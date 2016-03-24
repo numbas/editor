@@ -290,15 +290,23 @@ class ValidateZipField:
         if not zipfile.is_zipfile(zip):
             raise forms.ValidationError('Uploaded file is not a zip file')
         return zip
-        
-class NewThemeForm(forms.ModelForm,ValidateZipField):
+
+class UpdateThemeForm(forms.ModelForm,ValidateZipField):
     
-    """Form for a new theme."""
+    """Form to edit a theme."""
     
     class Meta:
         model = Theme
         fields = ['name','zipfile']
-
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control'}),
+            'zipfile': forms.FileInput()
+        }
+        
+class NewThemeForm(UpdateThemeForm):
+    
+    """Form for a new theme."""
+    
     def __init__(self,*args,**kwargs):
         self._user= kwargs.pop('author')
         super(NewThemeForm,self).__init__(*args,**kwargs)
@@ -312,14 +320,6 @@ class NewThemeForm(forms.ModelForm,ValidateZipField):
             self.save_m2m()
         return theme
 
-class UpdateThemeForm(forms.ModelForm,ValidateZipField):
-    
-    """Form to edit a theme."""
-    
-    class Meta:
-        model = Theme
-        fields = ['name','zipfile']
-
 class UpdateExtensionForm(forms.ModelForm):
     
     """Form to edit an extension."""
@@ -328,6 +328,9 @@ class UpdateExtensionForm(forms.ModelForm):
         model = Extension
         fields = ['name','location','url','zipfile']
         widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control'}),
+            'location': forms.TextInput(attrs={'class':'form-control'}),
+            'url': forms.TextInput(attrs={'class':'form-control'}),
             'zipfile': forms.FileInput()
         }
 

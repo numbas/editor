@@ -32,7 +32,7 @@ class CreateView(generic.CreateView):
         return kwargs
 
     def get_success_url(self):
-        return reverse('theme_list')
+        return reverse('profile_themes',args=(self.request.user.pk,))
 
 class UpdateView(AuthorRequiredMixin,generic.UpdateView):
 	""" Edit a theme """
@@ -42,20 +42,11 @@ class UpdateView(AuthorRequiredMixin,generic.UpdateView):
 	template_name = 'theme/edit.html'
 
 	def get_success_url(self):
-		return reverse('theme_list')
-
-class ListView(generic.ListView):
-    """ List all the current user's themes """
-    
-    model = Theme
-    template_name = 'theme/list.html'
-
-    def get_queryset(self):
-        return Theme.objects.filter(author=self.request.user)
+		return reverse('profile_themes',args=(self.request.user.pk,))
 
 class DeleteView(AuthorRequiredMixin,generic.DeleteView):
     model = Theme
     template_name = 'theme/delete.html'
 
     def get_success_url(self):
-        return reverse('theme_list')
+        return reverse('profile_themes',args=(self.request.user.pk,))

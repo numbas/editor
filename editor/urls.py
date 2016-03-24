@@ -135,9 +135,6 @@ urlpatterns = patterns('',
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+).exam$',
         question.SourceView.as_view(), name='question_source'),
 
-    url(r'^questions/merge/(?P<source>\d+)/into/(?P<destination>\d+)$',
-        question.CreatePullRequestView.as_view(), name='question_pullrequest'),
-
     # Resources
 
     url(r'^resource/upload',
@@ -192,10 +189,10 @@ urlpatterns = patterns('',
 
     # Pull requests
 
-    url(r'^pullrequest/(?P<pk>\d+)/accept$',
-        question.AcceptPullRequestView.as_view(), name='question_pullrequest_accept'),
+    url(r'^pullrequest/create$',
+        editoritem.CreatePullRequestView.as_view(), name='pullrequest_new'),
 
-    url(r'^pullrequest/(?P<pk>\d+)/reject$',
-        question.RejectPullRequestView.as_view(), name='question_pullrequest_reject'),
+    url(r'^pullrequest/(?P<pk>\d+)/close$',
+        editoritem.ClosePullRequestView.as_view(), name='pullrequest_close'),
 
 )

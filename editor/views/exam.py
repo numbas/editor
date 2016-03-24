@@ -193,43 +193,11 @@ class UploadView(editor.views.editoritem.CreateView):
     def get_success_url(self):
         return self.exam.get_absolute_url() 
 
-class CopyView(generic.View, SingleObjectMixin):
+class CopyView(editor.views.editoritem.CopyView):
 
-    """ Copy an exam and redirect to to the copy's edit page. """
+    """ Copy an exam """
 
     model = NewExam
-
-    def get(self, request, *args, **kwargs):
-        try:
-            e = self.get_object()
-            if not e.editoritem.can_be_copied_by(request.user):
-                return HttpResponseForbidden("You may not copy this exam.")
-
-            e2 = deepcopy(e)
-            e2.id = None
-
-            ei2 = e.editoritem.copy()
-            ei2.author = request.user
-            ei2.set_name("%s's copy of %s" % (e2.editoritem.author.first_name,e.editoritem.name))
-            ei2.copy_of = e.editoritem
-            ei2.save()
-
-            e2.editoritem = ei2
-            e2.save()
-
-            e2.set_questions(e.questions.all())
-            e2.custom_theme = e.custom_theme
-
-        except (NewExam.DoesNotExist, TypeError) as err:
-            status = {
-                "result": "error",
-                "message": str(err),
-                "traceback": traceback.format_exc(),}
-            return HttpResponseServerError(json.dumps(status),
-                                           content_type='application/json')
-        else:
-            return HttpResponseRedirect(reverse('exam_edit', args=(e2.pk,e2.editoritem.slug)))
-
 
 class DeleteView(generic.DeleteView):
     

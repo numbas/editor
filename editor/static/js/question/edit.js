@@ -2542,6 +2542,7 @@ $(document).ready(function() {
     Numbas.queueScript('start-editor',deps,function() {
 		try {
 			viewModel = new Question(item_json.itemJSON);
+            viewModel.set_tab_from_hash();
             ko.options.deferUpdates = true;
 			ko.applyBindings(viewModel);
             document.body.classList.add('loaded');

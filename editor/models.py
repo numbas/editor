@@ -81,7 +81,9 @@ class ControlledObject(object):
         return (user.is_superuser) or (self.owner==user) or (self.has_access(user,accept_levels))
 
     def can_be_copied_by(self,user):
-        if not self.licence or user.is_superuser or self.owner==user or self.has_access(user,('edit',)):
+        if not self.licence:
+            return False
+        if user.is_superuser or self.owner==user or self.has_access(user,('edit',)):
             return True
         else:
             return self.licence.can_reuse and self.licence.can_modify
@@ -535,6 +537,7 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
         e2.id = None
         e2.share_uuid_view = uuid.uuid4()
         e2.share_uuid_edit = uuid.uuid4()
+        e2.copy_of = self
         return e2
 
     def get_absolute_url(self):
@@ -662,13 +665,13 @@ class PullRequestManager(models.Manager):
     def open(self):
         return self.filter(open=True)
 
-class PullRequest(models.Model,ControlledObject):
+class PullRequest(models.Model,ControlledObject,TimelineMixin):
     objects = PullRequestManager()
 
     # user who created this request
     owner = models.ForeignKey(User,related_name='pullrequests_created')
     # user who accepted or rejected this request
-    closed_by = models.ForeignKey(User,related_name='pullrequests_closed',null=True)
+    closed_by = models.ForeignKey(User,related_name='pullrequests_closed',null=True,blank=True,on_delete=models.SET_NULL)
 
     source = models.ForeignKey(EditorItem,related_name='outgoing_pull_requests')
     destination = models.ForeignKey(EditorItem,related_name='incoming_pull_requests')
@@ -678,6 +681,19 @@ class PullRequest(models.Model,ControlledObject):
 
     created = models.DateTimeField(auto_now_add=True)
     comment = models.TextField(blank=True)
+
+    timelineitems = GenericRelation('TimelineItem',related_query_name='pull_requests',content_type_field='object_content_type',object_id_field='object_id')
+    timelineitem_template = 'timeline/pull_request.html'
+
+    @property
+    def object(self):
+        return self.destination
+
+    def timeline_user(self):
+        if self.open:
+            return self.owner
+        else:
+            return self.closed_by
 
     def has_access(self,user,accept_levels):
         return self.destination.has_access(user,accept_levels) or user==self.owner
@@ -867,6 +883,22 @@ class NewQuestion(models.Model):
     def exams_using_this(self):
         return self.exams.distinct()
 
+    def copy(self):
+        q2 = deepcopy(self)
+        q2.id = None
+
+        ei2 = self.editoritem.copy()
+        ei2.save()
+
+        q2.editoritem = ei2
+        q2.save()
+
+        q2.resources = self.resources.all()
+        q2.extensions = self.extensions.all()
+        q2.save()
+
+        return q2
+
     def merge(self,other):
         self.resources.clear()
         self.resources.add(*other.resources.all())
@@ -947,6 +979,22 @@ class NewExam(models.Model):
         for order,question in enumerate(question_list):
             exam_question = NewExamQuestion(exam=self,question=question, qn_order=order)
             exam_question.save()
+
+    def copy(self):
+        e2 = deepcopy(self)
+        e2.id = None
+
+        ei2 = self.editoritem.copy()
+        ei2.save()
+
+        e2.editoritem = ei2
+        e2.save()
+
+        e2.set_questions(self.questions.all())
+        e2.custom_theme = self.custom_theme
+        e2.save()
+
+        return e2
 
     def merge(self,other):
         self.set_questions(other.questions.all())

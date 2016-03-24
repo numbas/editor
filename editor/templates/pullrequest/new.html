@@ -19,16 +19,18 @@ tinymce.init({
 {% endblock javascripts %}
 
 {% block content %}
-<form action="{% url 'question_pullrequest' source.pk destination.pk %}" method="POST">
+<form action="{% url 'pullrequest_new' %}" method="POST">
     {% csrf_token %}
     {{ form.errors}}
 
-    <p>You're about to create a request to replace {% question_link destination %} with {% question_link source %}.</p>
+    <p>You're about to create a request to replace {% editoritem_link destination.rel_obj %} with {% editoritem_link source.rel_obj %}.</p>
     <p>What's changed in this version?</p>
 
-    <textarea name="comment" id="comment"></textarea>
+    <div class="form-group">
+        <textarea name="comment" id="comment"></textarea>
+    </div>
 
     <input type="hidden" name="source" value="{{source.pk}}">
     <input type="hidden" name="destination" value="{{destination.pk}}">
-    <button type="submit">Submit</button>
+    <button class="btn btn-primary" type="submit">Submit</button>
 {% endblock content %}

@@ -29,7 +29,6 @@ from django import http
 from django.shortcuts import redirect
 from django.views import generic
 from django.views.generic.detail import SingleObjectMixin
-from django.views.generic.edit import FormMixin
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.core import serializers
@@ -40,7 +39,7 @@ import reversion
 from django_tables2.config import RequestConfig
 
 from editor.forms import NewQuestionForm, QuestionForm, SetAccessForm
-from editor.models import Project, EditorItem, NewQuestion, Access, Question, Extension, Resource, QuestionAccess, QuestionPullRequest
+from editor.models import Project, EditorItem, NewQuestion, Access, Question, Extension, Resource, QuestionAccess
 import editor.views.generic
 import editor.views.editoritem
 from editor.views.errors import forbidden
@@ -148,46 +147,11 @@ class CreateView(editor.views.editoritem.CreateView):
                                               self.question.editoritem.slug,))
  
  
-class CopyView(generic.View, SingleObjectMixin):
+class CopyView(editor.views.editoritem.CopyView):
 
-    """ Copy a question and redirect to its edit page. """
+    """ Copy a question """
 
     model = NewQuestion
-
-    def get(self, request, *args, **kwargs):
-        try:
-            q = self.get_object()
-            if not q.editoritem.can_be_copied_by(request.user):
-                return http.HttpResponseForbidden("You may not copy this question.")
-            q2 = deepcopy(q)
-            q2.id = None
-
-            ei2 = q.editoritem.copy()
-            ei2.author = request.user
-            ei2.set_name("%s's copy of %s" % (ei2.author.first_name,q.editoritem.name))
-            ei2.copy_of = q.editoritem
-            ei2.save()
-
-            q2.editoritem = ei2
-            q2.save()
-
-            q2.resources = q.resources.all()
-            q2.extensions = q.extensions.all()
-            q2.save()
-
-        except (NewQuestion.DoesNotExist, TypeError) as err:
-            status = {
-                "result": "error",
-                "message": str(err),
-                "traceback": traceback.format_exc(),}
-            return http.HttpResponseServerError(json.dumps(status),
-                                           content_type='application/json')
-        else:
-            if self.request.is_ajax():
-                return HttpResponse(json.dumps(q2.summary()),content_type='application/json')
-            else:
-                return redirect(reverse('question_edit', args=(q2.pk,q2.editoritem.slug)))
-
 
 class DeleteView(generic.DeleteView):
     
@@ -284,73 +248,6 @@ class RevertView(generic.UpdateView):
         self.version.revision.revert()
 
         return redirect(reverse('question_edit', args=(self.question.pk,self.question.editoritem.slug)))
-
-class CreatePullRequestView(generic.CreateView):
-    model = QuestionPullRequest
-    template_name = "question/pullrequest.html"
-    fields = ['source','destination','comment']
-
-    def form_valid(self, form):
-        owner = self.request.user
-
-        source = form.instance.source
-        destination = form.instance.destination
-
-        self.pr = QuestionPullRequest(owner=owner,source=source,destination=destination,comment=form.instance.comment)
-        try:
-            self.pr.full_clean()
-        except ValidationError as e:
-            return redirect('question_compare',args=(source.pk,destination.pk))
-
-        if self.pr.destination.editoritem.can_be_edited_by(owner):
-            self.pr.merge(owner)
-            messages.add_message(self.request, messages.SUCCESS, render_to_string('question/pullrequest_accepted_message.html',{'pr':self.pr}))
-            return redirect('question_edit',self.pr.destination.pk, self.pr.destination.editoritem.slug)
-        else:
-            self.pr.save()
-            messages.add_message(self.request, messages.INFO, render_to_string('question/pullrequest_created_message.html',{'pr':self.pr}))
-            return redirect('question_edit',self.pr.source.pk,self.pr.source.editoritem.slug)
-
-    def get_context_data(self,*args,**kwargs):
-        context = super(CreatePullRequestView, self).get_context_data(**kwargs)
-
-        context['source'] = Question.objects.get(pk=self.kwargs['source'])
-        context['destination'] = Question.objects.get(pk=self.kwargs['destination'])
-
-        return context
-
-class AcceptPullRequestView(generic.UpdateView):
-
-    model = QuestionPullRequest
-
-    def dispatch(self,request,*args,**kwargs):
-        pr = self.get_object()
-
-        if not pr.editoritem.can_be_merged_by(request.user):
-            return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
-
-        messages.add_message(request, messages.SUCCESS, render_to_string('question/pullrequest_accepted_message.html',{'pr':pr}))
-
-        pr.merge(request.user)
-        pr.open = False
-        pr.save()
-        return redirect('question_edit',pr.destination.pk,pr.destination.editoritem.slug)
-
-class RejectPullRequestView(generic.DeleteView):
-    
-    model = QuestionPullRequest
-    
-    def delete(self,request,*args,**kwargs):
-        pr = self.object = self.get_object()
-        if pr.editoritem.can_be_deleted_by(self.request.user):
-            pr.reject(self.request.user)
-
-            messages.add_message(request, messages.INFO, render_to_string('question/pullrequest_rejected_message.html',{'pr':pr}))
-            return redirect(reverse('question_edit',args=(pr.destination.pk,pr.destination.editoritem.slug))+'#network')
-
-        else:
-            return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
-    
 
 class JSONSearchView(editor.views.editoritem.SearchView):
     

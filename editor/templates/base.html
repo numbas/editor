@@ -146,9 +146,9 @@
 
 		<div id="content" role="main" class="{% block content_container %}container{% endblock content_container %}">
             {% if messages %}
-            <ul class="messages alert">
+            <ul class="messages list-unstyled">
                 {% for message in messages %}
-                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                <li class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">{{ message }}</li>
                 {% endfor %}
             </ul>
             {% endif %}

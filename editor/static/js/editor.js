@@ -531,16 +531,6 @@ $(document).ready(function() {
             }
         }
 
-		if(item_json.editable) {
-            switch(window.location.hash.slice(1)) {
-                case 'editing-history':
-        			this.currentTab(editingHistoryTab);
-                    break;
-                case 'network':
-                    this.currentTab(networkTab);
-            } 
-		}
-
         this.subjects(item_json.subjects.map(function(d) {
             return new Editor.Subject(d);
         }));
@@ -860,6 +850,17 @@ $(document).ready(function() {
             var content = data.JSONContent;
 
             this.published(data.published);
+        },
+
+        set_tab_from_hash: function() {
+            switch(window.location.hash.slice(1)) {
+                case 'editing-history':
+                    this.currentTab(this.getTab('history'));
+                    break;
+                case 'network':
+                    this.currentTab(this.getTab('network'));
+                    break;
+            } 
         },
 
 		applyDiff: function(version) {

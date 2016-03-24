@@ -1,0 +1,85 @@
+{% extends "layout.html" %}
+{% load sstatic %}
+{% load links %}
+{% load user_link %}
+
+{% block stylesheets %}
+	{{ block.super }}
+	<link rel="stylesheet" type="text/css" href="{% sstatic 'css/editoritem/compare.css' %}"/>
+{% endblock stylesheets %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Compare versions</h1>
+</div>
+
+<p>You are comparing two versions of an item. You can test run either item, and offer to merge one into the other. Merging an item into another effectively replaces the destination item with the source item.</p>
+<p>After a merge, the destination item's name, licence and project are retained; everything else is copied from the source item.</p>
+<table class="comparison-table">
+    <colgroup>
+        <col>
+        <col class="editoritem">
+        <col class="editoritem">
+    </colgroup>
+    <thead>
+        <tr>
+            <td></td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th>Name</th>
+            <td>
+                {% editoritem_link ei1.rel_obj %}
+            </td>
+            <td>
+                {% editoritem_link ei2.rel_obj %}
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                <a href="{% url ei1.item_type|add:'_preview' ei1.pk ei1.slug %}" target="_blank" title="Test run"><span class="glyphicon glyphicon-play"></span> Test Run</a>
+            </td>
+            <td>
+                <a href="{% url ei2.item_type|add:'_preview' ei2.pk ei2.slug %}" target="_blank" title="Test run"><span class="glyphicon glyphicon-play"></span> Test Run</a>
+            </td>
+        </tr>
+        <tr>
+            <th>Author</th>
+            <td>{% user_link ei1.author %}</td>
+            <td>{% user_link ei2.author %}</td>
+        </tr>
+        <tr>
+            <th>Last modified</th>
+            <td>{{ei1.last_modified|date:"d/m/Y H:i"}}</td>
+            <td>{{ei2.last_modified|date:"d/m/Y H:i"}}</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                {% if not pr1_exists %}
+                <form method="GET" action="{% url 'pullrequest_new'%}">
+                    <input type="hidden" name="source" value="{{ei1.pk}}">
+                    <input type="hidden" name="destination" value="{{ei2.pk}}">
+                    <button type="submit" class="btn btn-primary">{% if pr1_auto %}Merge this version into the other{% else %}Offer to merge this version into the other{% endif %} &rarr;</button>
+                </form>
+                {% else %}
+                Request outstanding
+                {% endif %}
+            </td>
+            <td>
+                {% if not pr2_exists %}
+                <form method="GET" action="{% url 'pullrequest_new'%}">
+                    <input type="hidden" name="source" value="{{ei2.pk}}">
+                    <input type="hidden" name="destination" value="{{ei1.pk}}">
+                    <button type="submit" class="btn btn-primary">&larr; {% if pr2_auto %}Merge this version into the other{% else %}Offer to merge this version into the other{% endif %}</button>
+                </form>
+                {% else %}
+                Request outstanding
+                {% endif %}
+            </td>
+        </tr>
+    </tbody>
+</table>
+{% endblock content %}

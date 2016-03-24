@@ -27,7 +27,7 @@ import zipfile
 import os
 import tempfile
 
-from editor.models import NewExam, NewQuestion, EditorItem, Access, ExamQuestion, Theme, Extension, QuestionPullRequest
+from editor.models import NewExam, NewQuestion, EditorItem, Access, ExamQuestion, Theme, Extension, PullRequest
 import editor.models
 from django.contrib.auth.models import User
 from accounts.util import find_users
@@ -225,6 +225,15 @@ class EditorItemForm(forms.ModelForm):
         obj.editoritem.save()
         return obj
 
+class CopyEditorItemForm(forms.ModelForm):
+    class Meta:
+        model = EditorItem
+        fields = ('name','project')
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control','placeholder':'e.g. "Solve an equation in two variables"'}),
+            'project': BootstrapSelect,
+        }
+        
 class QuestionForm(EditorItemForm):
     
     class Meta:
@@ -240,7 +249,7 @@ class NewQuestionForm(forms.ModelForm):
             'author': forms.HiddenInput(),
             'project': BootstrapSelect,
         }
-        
+
 class ExamForm(EditorItemForm):
     class Meta:
         model = NewExam
@@ -401,3 +410,8 @@ class TransferOwnershipForm(UserSearchMixin,forms.ModelForm):
         fields = []
 
 ProjectAccessFormset = inlineformset_factory(editor.models.Project,editor.models.ProjectAccess,fields=('access',),extra=0,can_delete=True)
+
+class CreatePullRequestForm(forms.ModelForm):
+    class Meta:
+        model = PullRequest
+        fields = ('source','destination','comment')

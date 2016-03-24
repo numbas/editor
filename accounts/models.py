@@ -69,10 +69,11 @@ class UserProfile(models.Model):
         return (Project.objects.filter(owner=self.user) | Project.objects.filter(projectaccess__user=self.user)).distinct()
 
     def all_timeline(self):
+        projects = self.user.own_projects.all() | Project.objects.filter(projectaccess__in=self.user.project_memberships.all())
         items = TimelineItem.objects.filter(
             Q(editoritems__in=self.user.watched_items.all()) | 
-            Q(projects__in=self.user.own_projects.all()) | 
-            Q(projects__projectaccess__in=self.user.project_memberships.all())
+            Q(editoritems__project__in=projects) |
+            Q(projects__in=projects)
         )
 
         return items.order_by('-date')

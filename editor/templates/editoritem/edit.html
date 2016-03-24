@@ -102,10 +102,12 @@
                         <li><a href="{% editoritem_url 'download' object %}">standalone .zip (no SCORM)</a></li>
                         <li><a href="{% editoritem_url 'source' object %}">source</a></li>
                     </ul>
-                 </li>
-                 <li>
-                    <a class="text-warning" href="{% editoritem_url 'copy' object %}" target="_blank" title="Create your own copy of this {{item_type}}"><span class="glyphicon glyphicon-duplicate"></span> Make a copy</a>
                 </li>
+                {% with can_copy=object.editoritem|can_be_copied_by:request.user %}
+                 <li class="{% if not can_copy %}disabled{% endif %}">
+                     <a class="text-warning" href="{% editoritem_url 'copy' object %}" target="_blank" title="{% if can_copy %}Create your own copy of this {{item_type}}{% else %}This item's licence doesn't allow you to modify it.{% endif %}"><span class="glyphicon glyphicon-duplicate"></span> Make a copy</a>
+                </li>
+                {% endwith %}
                 <li>
                     <a href="#" class="text-danger" data-bind="click: deleteItem" title="Delete this {{item_type}} permanently">
                         <span class="glyphicon glyphicon-remove"></span> Delete
@@ -436,9 +438,9 @@
                             <p>Here's what's changed:</p>
                             <blockquote class="comment">{{ pr.comment|strip_html|safe }}</blockquote>
                             <div class="responses">
-                                <form method="post" action="">{% csrf_token %}
-                                    <button class="btn btn-danger accept-pr" value="accept" title="Replace this {{item_type}} with the propsed version">Accept</button>
-                                    <button class="btn btn-default accept-pr" value="reject" title="Close this request and keep this {{item_type}} as it is">Reject</button>
+                                <form method="post" action="{% url 'pullrequest_close' pr.pk %}">{% csrf_token %}
+                                    <button type="submit" name="action" class="btn btn-danger accept-pr" value="accept" title="Replace this {{item_type}} with the proposed version">Accept</button>
+                                    <button type="submit" name="action" class="btn btn-default accept-pr" value="reject" title="Close this request and keep this {{item_type}} as it is">Reject</button>
                                 </form>
                             </div>
                         </li>

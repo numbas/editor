@@ -25,7 +25,7 @@ import subprocess
 import traceback
 
 from django.core.servers.basehttp import FileWrapper
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -44,7 +44,7 @@ import reversion
 from django_tables2.config import RequestConfig
 
 from editor.tables import EditorItemTable
-from editor.models import EditorItem, Project, Access, Licence
+from editor.models import EditorItem, Project, Access, Licence, PullRequest
 import editor.models
 import editor.views.generic
 from editor.views.errors import forbidden
@@ -56,7 +56,14 @@ from accounts.util import user_json
 from numbasobject import NumbasObject
 from examparser import ParseError
 
-class CreateView(generic.CreateView):
+class ProjectQuerysetMixin(object):
+    """ Set the queryset for the form's project field to the projects available to the user """
+    def get_form(self):
+        form = super(ProjectQuerysetMixin,self).get_form()
+        form.fields['project'].queryset = self.request.user.userprofile.projects().order_by('name')
+        return form
+
+class CreateView(ProjectQuerysetMixin,generic.CreateView):
     model = EditorItem
 
     def get_initial(self):
@@ -68,11 +75,40 @@ class CreateView(generic.CreateView):
             data['project'] = self.request.user.userprofile.personal_project
         return data
 
-    def get_form(self):
-        form = super(CreateView,self).get_form()
-        form.fields['project'].queryset = self.request.user.userprofile.projects()
-        return form
+class CopyView(ProjectQuerysetMixin, generic.FormView, generic.edit.ModelFormMixin):
 
+    template_name = 'editoritem/copy.html'
+    form_class = editor.forms.CopyEditorItemForm
+
+    def dispatch(self,request,*args,**kwargs):
+        self.object = self.get_object()
+        return super(CopyView,self).dispatch(request,*args,**kwargs)
+
+    def get_initial(self):
+        data = self.initial.copy()
+        data['name'] = "{}'s copy of {}".format(self.request.user.first_name,self.object.editoritem.name)
+        if self.object.editoritem.project.can_be_edited_by(self.request.user):
+            data['project'] = self.object.editoritem.project
+        else:
+            data['project'] = self.request.user.userprofile.personal_project
+        return data
+
+    def form_valid(self, form):
+        obj = self.get_object()
+        if not obj.editoritem.can_be_copied_by(self.request.user):
+            return http.HttpResponseForbidden("You may not copy this question.")
+
+        obj2 = obj.copy()
+
+        obj2.editoritem.author = self.request.user
+        obj2.editoritem.set_name(form.cleaned_data.get('name'))
+        obj2.editoritem.project = form.cleaned_data.get('project')
+        obj2.editoritem.save()
+
+        if self.request.is_ajax():
+            return HttpResponse(json.dumps(obj2.summary()),content_type='application/json')
+        else:
+            return redirect(obj2.get_absolute_url())
 
 class BaseUpdateView(generic.UpdateView):
 
@@ -470,8 +506,65 @@ class CompareView(generic.TemplateView):
         pk2 = int(pk2)
         ei1 = context['ei1'] = EditorItem.objects.get(pk=pk1)
         ei2 = context['ei2'] = EditorItem.objects.get(pk=pk2)
-        context['pr1_exists'] = QuestionPullRequest.objects.open().filter(source=ei1,destination=ei2).exists()
-        context['pr2_exists'] = QuestionPullRequest.objects.open().filter(source=ei2,destination=ei1).exists()
+        context['pr1_exists'] = PullRequest.objects.open().filter(source=ei1,destination=ei2).exists()
+        context['pr2_exists'] = PullRequest.objects.open().filter(source=ei2,destination=ei1).exists()
         context['pr1_auto'] = ei2.can_be_edited_by(self.request.user)
         context['pr2_auto'] = ei1.can_be_edited_by(self.request.user)
         return context
+
+class CreatePullRequestView(generic.CreateView):
+    model = PullRequest
+    form_class = editor.forms.CreatePullRequestForm
+
+    template_name = "pullrequest/new.html"
+
+    def form_valid(self, form):
+        owner = self.request.user
+
+        source = form.instance.source
+        destination = form.instance.destination
+
+        self.pr = PullRequest(owner=owner,source=source,destination=destination,comment=form.instance.comment)
+        try:
+            self.pr.full_clean()
+        except ValidationError as e:
+            return redirect('editoritem_compare',args=(source.pk,destination.pk))
+
+        self.pr.save()
+
+        if self.pr.destination.can_be_edited_by(owner):
+            self.pr.accept(owner)
+            messages.add_message(self.request, messages.SUCCESS, render_to_string('pullrequest/accepted_message.html',{'pr':self.pr}))
+            return redirect(self.pr.destination.get_absolute_url())
+        else:
+            messages.add_message(self.request, messages.INFO, render_to_string('pullrequest/created_message.html',{'pr':self.pr}))
+            return redirect(self.pr.source.get_absolute_url())
+
+    def get_context_data(self,*args,**kwargs):
+        context = super(CreatePullRequestView, self).get_context_data(**kwargs)
+
+        context['source'] = EditorItem.objects.get(pk=int(self.request.GET.get('source')))
+        context['destination'] = EditorItem.objects.get(pk=int(self.request.GET.get('destination')))
+
+        return context
+
+class ClosePullRequestView(generic.UpdateView):
+
+    model = PullRequest
+
+    def post(self,request,*args,**kwargs):
+        pr = self.get_object()
+
+        if not pr.can_be_merged_by(request.user):
+            return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
+
+        action = request.POST.get('action')
+        print('>>>>>>>>>>',action)
+        if action=='accept':
+            pr.accept(request.user)
+            messages.add_message(request, messages.SUCCESS, render_to_string('pullrequest/accepted_message.html',{'pr':pr}))
+            return redirect(pr.destination.get_absolute_url())
+        elif action=='reject':
+            pr.reject(self.request.user)
+            messages.add_message(request, messages.INFO, render_to_string('pullrequest/rejected_message.html',{'pr':pr}))
+            return redirect(pr.destination.get_absolute_url()+'#network')

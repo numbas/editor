@@ -569,6 +569,10 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
     def icon(self):
         return self.rel_obj.icon
 
+    @property
+    def theme_path(self):
+        return self.rel_obj.theme_path
+
     def edit_dict(self):
         """
             Dictionary of information passed to edit view
@@ -836,6 +840,8 @@ class NewQuestion(models.Model):
     resources = models.ManyToManyField(Resource,blank=True)
     extensions = models.ManyToManyField(Extension,blank=True)
 
+    theme_path = 'question'
+
     icon = 'file'
 
     class Meta:
@@ -931,6 +937,13 @@ class NewExam(models.Model):
     @property
     def resource_paths(self):
         return [(r.file.name,r.file.path) for r in self.resources.all()]
+
+    @property
+    def theme_path(self):
+        if self.custom_theme:
+            return self.custom_theme.extracted_path
+        else:
+            return self.theme
 
     @property
     def as_numbasobject(self):

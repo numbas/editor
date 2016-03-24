@@ -73,7 +73,7 @@ class UserUpdateView(CurrentUserUpdateView):
         return super(UserUpdateView,self).form_valid(form)
 
     def get_success_url(self):
-        return reverse('edit_profile')
+        return reverse('view_profile')
 
 class ChangePasswordView(CurrentUserUpdateView):
     template_name = 'registration/change_password.html'

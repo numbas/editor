@@ -21,19 +21,19 @@ import json
 class RegistrationView(registration.views.RegistrationView):
     form_class = NumbasRegistrationForm
 
-    def register(self,request,form,*args,**kwargs):
+    def register(self,form,*args,**kwargs):
         d = form.cleaned_data
         username, email, password = d['username'], d['email'], d['password1']
         first_name, last_name = d['first_name'], d['last_name']
         if Site._meta.installed:
             site = Site.objects.get_current()
         else:
-            site = RequestSite(request)
+            site = RequestSite(self.request)
         new_user = RegistrationProfile.objects.create_inactive_user(username, first_name, last_name, email,
                                                                     password, site)
         signals.user_registered.send(sender=self.__class__,
                                      user=new_user,
-                                     request=request,
+                                     request=self.request,
                                      subscribe=form.cleaned_data.get('subscribe')
                                      )
         return new_user
@@ -47,14 +47,14 @@ class RegistrationView(registration.views.RegistrationView):
 class ActivationView(registration.views.ActivationView):
     template_name = 'registration/activation_complete.html'
 
-    def activate(self,request,activation_key):
+    def activate(self,activation_key):
         activated_user = RegistrationProfile.objects.activate_user(activation_key)
         if activated_user:
             signals.user_activated.send(sender=self.__class__,
                                         user=activated_user,
-                                        request=request)
+                                        request=self.request)
         return activated_user
-    def get_success_url(self, request, user):
+    def get_success_url(self, user):
         return ('registration_activation_complete', (), {})
 
 class CurrentUserUpdateView(UpdateView):
@@ -73,7 +73,8 @@ class UserUpdateView(CurrentUserUpdateView):
         return super(UserUpdateView,self).form_valid(form)
 
     def get_success_url(self):
-        return reverse('view_profile')
+        user = self.get_object()
+        return reverse('view_profile',args=(user.pk,))
 
 class ChangePasswordView(CurrentUserUpdateView):
     template_name = 'registration/change_password.html'

@@ -59,6 +59,9 @@
 <div class="loaded-content">
     <div class="page-header">
         {% block page_header %}
+        <h2 class="project-header">
+            <small><span class="glyphicon glyphicon-briefcase"></span> <a href="{% url 'project_index' object.editoritem.project.pk %}">{{object.editoritem.project.name}}</a></small>
+        </h2>
         <h1 class="name-header">
             <span class="glyphicon glyphicon-{{object.icon}}"></span> <span data-bind="mathjaxHTML: name">{{object.name}}</span>
             <small class="pull-right" data-bind="if: current_stamp">
@@ -118,12 +121,24 @@
                 </li>
                 {% endblock admin_controls %}
             </ul>
-            <hr>
-            <ul class="nav nav-pills nav-stacked" data-bind="foreach: mainTabs">
-                <li data-bind="visible: visible, css: {active: $root.currentTab() == $data}">
-                    <a href="#" data-bind="click: $root.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon}"></span> <span data-bind="text: title"></span></a>
-                </li>
-            </ul>
+
+            <div class="navbar navbar-blank">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#editor-controls-collapse" aria-expanded="false">
+                        <span class="sr-only">toggle editor controls</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+                <div class="collapse navbar-collapse" id="editor-controls-collapse">
+                    <ul class="nav nav-pills nav-stacked" data-bind="foreach: mainTabs">
+                        <li data-bind="visible: visible, css: {active: $root.currentTab() == $data}">
+                            <a href="#" data-bind="click: $root.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon}"></span> <span data-bind="text: title"></span></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
 
         <div class="col-sm-9 col-md-10 editing">

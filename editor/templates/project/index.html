@@ -69,7 +69,7 @@
 
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h2 class="panel-title">Members</h2>
+                    <h2 class="panel-title">Members <span class="pull-right"><a href="{% url 'project_settings_members' project.pk %}"><span class="glyphicon glyphicon-cog"></span></a></span></h2>
                 </div>
                 <ul class="members list-group">
                     {% for user in project.members %}

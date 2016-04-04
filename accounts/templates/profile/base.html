@@ -18,7 +18,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-3">
-            <div class="thumbnail thumbnail-no-border">{% user_thumbnail view_user 150 %}</div>
+            <div class="thumbnail thumbnail-no-border"><a href="{% url 'edit_profile' %}" title="Change your profile picture">{% user_thumbnail view_user 150 %}</a></div>
             <div class="nav nav-pills nav-stacked">
                 <li class="{% if profile_page == "bio" %}active{% endif %}"><a href="{% url 'view_profile' object.pk %}"><span class="glyphicon glyphicon-user"></span> Profile</a></li>
                 <li class="{% if profile_page == "activity" %}active{% endif %}"><a href="{% url 'profile_activity' object.pk %}"><span class="glyphicon glyphicon-dashboard"></span> Activity</a></li>

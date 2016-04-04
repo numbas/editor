@@ -22,15 +22,41 @@
     <div class="col-sm-8">
         <div id="personal-timeline">
             <div class="timeline">
-                {% with include_object_link=True %}
-                {% for item in request.user.userprofile.all_timeline|slice:":20" %}
-                    {% include item.object.timelineitem_template %}
-                {% endfor %}
+                {% with include_object_link=True timeline=request.user.userprofile.all_timeline %}
+                {% if timeline.exists %}
+                    {% for item in request.user.userprofile.all_timeline|slice:":20" %}
+                        {% include item.object.timelineitem_template %}
+                    {% endfor %}
+                {% else %}
+                    {% with include_object_link=False %}
+                    {% include "timeline/welcome.html" %}
+                    {% endwith %}
+                {% endif %}
                 {% endwith %}
             </div>
         </div>
     </div>
     <div class="col-sm-4">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h2 class="panel-title"><span class="glyphicon glyphicon-plus"></span> Create</h2>
+                </div>
+                <div class="panel-body create">
+                    <a href="{% url 'question_new' %}" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-file"></span> Question</a> 
+                    <a href="{% url 'exam_new' %}" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-book"></span> Exam</a> 
+                </div>
+            </div>
+
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h2 class="panel-title"><span class="glyphicon glyphicon-search"></span> Browse the public database</h2>
+                </div>
+                <div class="panel-body browse">
+                    <a href="{% url 'search' %}?item_types=questions" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-file"></span> Questions</a> 
+                    <a href="{% url 'search' %}?item_types=exams" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-book"></span> Exams</a> 
+                </div>
+            </div>
+
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h2 class="panel-title"><span class="glyphicon glyphicon-briefcase"></span> Your projects</h2>

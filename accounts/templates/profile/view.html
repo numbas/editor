@@ -9,7 +9,11 @@
     {% if profile.bio %}
     {{profile.bio|escape_html|safe }}
     {% else %}
-    <p><em>This user hasn't written a bio yet.</em></p>
+        {% if user == profile.user %}
+           <p><em>You haven't written a bio yet. <a href="{% url 'edit_profile' %}">Add a bio</a> to tell other users who you are and what you're working on.</em></p>
+        {% else %}
+            <p><em>This user hasn't written a bio yet.</em></p>
+        {% endif %}
     {% endif %}
 </div>
 

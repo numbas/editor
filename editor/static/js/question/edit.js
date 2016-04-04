@@ -92,7 +92,7 @@ $(document).ready(function() {
 		]);
         if(item_json.editable) {
             var adviceTab = new Editor.Tab('access','Access','lock');
-            this.mainTabs.splice(5,0,adviceTab);
+            this.mainTabs.splice(6,0,adviceTab);
         }
         this.currentTab(this.mainTabs()[0]);
 

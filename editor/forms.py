@@ -391,10 +391,14 @@ class AddMemberForm(UserSearchMixin,forms.ModelForm):
         model = editor.models.ProjectAccess
         fields = ('project','access')
 
-    def clean(self):
-        cleaned_data = super(AddMemberForm,self).clean()
+    def clean_user_search(self):
+        user = self.cleaned_data.get('user_search')
+        if user is None:
+            raise forms.ValidationError("No such user")
         if cleaned_data['user_search'] == cleaned_data['project'].owner:
             raise forms.ValidationError("Can't give separate access to the project owner")
+
+        return user
 
     def save(self, force_insert=False, force_update=False, commit=True):
         m = super(AddMemberForm, self).save(commit=False)

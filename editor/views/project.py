@@ -2,6 +2,7 @@ from django.views import generic
 from django.db.models.query import EmptyQuerySet
 from django.core.urlresolvers import reverse,reverse_lazy
 from django.forms.models import inlineformset_factory
+from django.shortcuts import redirect
 from django import http
 from django.core.exceptions import PermissionDenied
 
@@ -86,9 +87,14 @@ class ManageMembersView(ProjectContextMixin,SettingsPageMixin,generic.UpdateView
 class AddMemberView(generic.CreateView):
     model = ProjectAccess
     form_class = editor.forms.AddMemberForm
+    template_name = 'project/add_member.html'
 
     def get_success_url(self):
         return reverse('project_settings_members',args=(self.object.project.pk,))
+
+    def form_invalid(self,form):
+        project = form.cleaned_data['project']
+        return redirect(reverse('project_settings_members',args=(project.pk,)))
 
 class TransferOwnershipView(ProjectContextMixin,MustBeOwnerMixin,generic.UpdateView):
     template_name = 'project/transfer_ownership.html'

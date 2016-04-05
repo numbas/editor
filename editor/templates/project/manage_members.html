@@ -1,6 +1,15 @@
 {% extends "project/settings_base.html" %}
 {% load user_link %}
 
+{% block javascripts %}
+{{block.super}}
+<script type="text/javascript">
+    $(document).ready(function() {
+        Editor.user_search_autocomplete($('#id_user_search'));
+    });
+</script>
+{% endblock %}
+
 {% block settings_content %}
 
 <div class="panel panel-default">
@@ -10,8 +19,8 @@
             <thead>
                 <tr>
                     <th></th>
-                    <th>Access</th>
-                    <th>Remove</th>
+                    <th><span class="glyphicon glyphicon-eye-open"></span> Access</th>
+                    <th><span class="glyphicon glyphicon-trash"></span> Remove</th>
                 </tr>
             </thead>
             <tbody>
@@ -40,7 +49,7 @@
         <button class="btn btn-primary pull-right" type="submit">Save changes</button>
     </div>
     </form>
-    <div class="panel-heading"><h3 class="panel-title">Add a member</h3></div>
+    <div class="panel-heading"><h3 class="panel-title"><span class="glyphicon glyphicon-plus"></span> Add a member</h3></div>
     <div class="panel-body">
         <form class="form-inline" action="{% url 'project_settings_add_member' project.pk %}" method="post">
             {{add_member_form.project.as_hidden}}
@@ -57,6 +66,7 @@
 
             {% csrf_token %}
             <button class="btn btn-primary" type="submit">Add</button>
+            <div class="help-block">You can invite someone who doesn't yet have an account by typing their email address in the box above.</div>
         </form>
     </div>
 </div>

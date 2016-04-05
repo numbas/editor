@@ -362,22 +362,45 @@ class NewExtensionForm(UpdateExtensionForm):
             self.save_m2m()
         return extension
 
-class UserField(forms.Field):
+class BootstrapFieldMixin(object):
+    def widget_attrs(self, widget):
+        attrs = super(BootstrapFieldMixin, self).widget_attrs(widget)
+        attrs.update({'class': 'form-control'})
+        return attrs
+
+class UserField(BootstrapFieldMixin,forms.Field):
     def from_db_value(self,value,expression,connection,context):
         return value.get_full_name()
+
+    def widget_attrs(self, widget):
+        attrs = super(UserField, self).widget_attrs(widget)
+        attrs.update({'placeholder': 'Username or full name'})
+        return attrs
 
     def to_python(self, value):
         if value is None:
             return None
-        return find_users(value).first()
+        user = find_users(value).first()
+        if user is None:
+            raise forms.ValidationError("No user matching query '{}'".format(value))
+        return user
 
 class UserSearchMixin(object):
-    user_search = UserField()
+    user_search = UserField(label='User')
     user_attr = 'user'
 
     def __init__(self,*args,**kwargs):
         super(UserSearchMixin,self).__init__(*args,**kwargs)
         self.fields['user_search'] = UserField()
+
+    def clean_user_search(self):
+        user = self.cleaned_data.get('user_search')
+        if user is None:
+            raise forms.ValidationError("No such user")
+        if self.cleaned_data['user_search'] == self.cleaned_data['project'].owner:
+            raise forms.ValidationError("Can't give separate access to the project owner")
+
+        return user
 
     def save(self, force_insert=False, force_update=False, commit=True):
         m = super(UserSearchMixin, self).save(commit=False)
@@ -390,15 +413,10 @@ class AddMemberForm(UserSearchMixin,forms.ModelForm):
     class Meta:
         model = editor.models.ProjectAccess
         fields = ('project','access')
-
-    def clean_user_search(self):
-        user = self.cleaned_data.get('user_search')
-        if user is None:
-            raise forms.ValidationError("No such user")
-        if cleaned_data['user_search'] == cleaned_data['project'].owner:
-            raise forms.ValidationError("Can't give separate access to the project owner")
-
-        return user
+        widgets = {
+            'project': forms.HiddenInput(),
+            'access': forms.Select(attrs={'class':'form-control'})
+        }
 
     def save(self, force_insert=False, force_update=False, commit=True):
         m = super(AddMemberForm, self).save(commit=False)

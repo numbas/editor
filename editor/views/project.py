@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.views import generic
 from django.db.models.query import EmptyQuerySet
 from django.core.urlresolvers import reverse,reverse_lazy
@@ -20,10 +21,14 @@ class ProjectContextMixin(object):
     model = Project
     context_object_name = 'project'
 
+    def get_project(self):
+        return self.get_object()
+
     def get_context_data(self,**kwargs):
         context = super(ProjectContextMixin,self).get_context_data(**kwargs)
-        context['in_project'] = self.get_object()
-        context['project_editable'] = self.get_object().can_be_edited_by(self.request.user)
+        project = self.get_project()
+        context['in_project'] = project
+        context['project_editable'] = project.can_be_edited_by(self.request.user)
         return context
 
 class SettingsPageMixin(object):
@@ -84,17 +89,22 @@ class ManageMembersView(ProjectContextMixin,SettingsPageMixin,generic.UpdateView
     def get_success_url(self):
         return reverse('project_settings_members',args=(self.get_object().pk,))
 
-class AddMemberView(generic.CreateView):
+class AddMemberView(ProjectContextMixin,SettingsPageMixin,generic.CreateView):
     model = ProjectAccess
     form_class = editor.forms.AddMemberForm
     template_name = 'project/add_member.html'
+    settings_page = 'members'
+
+    def get_project(self):
+        return Project.objects.get(pk=self.kwargs['pk'])
 
     def get_success_url(self):
         return reverse('project_settings_members',args=(self.object.project.pk,))
 
-    def form_invalid(self,form):
-        project = form.cleaned_data['project']
-        return redirect(reverse('project_settings_members',args=(project.pk,)))
+    def get_context_data(self,*args,**kwargs):
+        context = super(AddMemberView,self).get_context_data(*args,**kwargs)
+        context['project'] = self.get_project()
+        return context
 
 class TransferOwnershipView(ProjectContextMixin,MustBeOwnerMixin,generic.UpdateView):
     template_name = 'project/transfer_ownership.html'

@@ -1732,5 +1732,24 @@ $(document).ready(function() {
 	});
 
 
+    Editor.user_search_autocomplete = function(element) {
+        var url = '/users/search';
+        source = function(req,callback) {
+            element.addClass('loading');
+            $.getJSON(url,{q:req.term})
+                .success(function(data) {
+                    var things = [];
+                    var things = data.map(function(d) {
+                        return {label: d.name, value: d.name}
+                    });
+                    callback(things);
+                })
+                .complete(function() {
+                    $(element).removeClass('loading');
+                })
+            ;
+        }
+        element.autocomplete({source: source});
+    }
 
 });

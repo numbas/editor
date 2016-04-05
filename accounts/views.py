@@ -1,7 +1,7 @@
 from accounts.forms import NumbasRegistrationForm
 import registration.views
 from django.conf import settings
-from django.views.generic import UpdateView, DetailView, ListView
+from django.views.generic import UpdateView, DetailView, ListView, TemplateView
 from django.contrib.auth.models import User
 from django.shortcuts import redirect
 from django.core.urlresolvers import reverse
@@ -10,6 +10,7 @@ from django.http import Http404, HttpResponse
 from django.template.defaultfilters import slugify
 from accounts.forms import UserProfileForm,ChangePasswordForm
 from editor.models import Question, Exam
+import editor.models
 from zipfile import ZipFile
 from cStringIO import StringIO
 from django.contrib.sites.models import Site
@@ -184,3 +185,10 @@ class UserSearchView(ListView):
         except KeyError:
             users = User.objects.all()
         return [user_json(u) for u in users]
+
+class AfterFirstLoginView(TemplateView):
+    template_name='registration/after_first_login.html'
+    def get_context_data(self,*args,**kwargs):
+        context = super(AfterFirstLoginView,self).get_context_data(*args,**kwargs)
+        context['invitations'] = editor.models.ProjectInvitation.objects.filter(email=self.request.user.email)
+        return context

@@ -18,3 +18,7 @@ def editoritem_link(item):
 @register.simple_tag
 def editoritem_url(link,item):
     return reverse('{}_{}'.format(item.editoritem.item_type,link),args=(item.pk,item.editoritem.slug))
+
+@register.inclusion_tag('links/project.html')
+def project_link(project):
+    return {'project': project}

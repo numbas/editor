@@ -1,0 +1,7 @@
+{% load absoluteurl %}
+Hi,
+{{invitation.invited_by.get_full_name}} has invited you to join their project, "{{invitation.project.name}}", on {{SITE_TITLE}}.
+
+To accept {{invitation.invited_by.first_name}}'s invitation, create an account by clicking the link below:
+
+{% absurl 'editor_index' %}

@@ -44,6 +44,8 @@ from django.db.models.signals import pre_delete
 from uuslug import slugify
 from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
+from django.template.loader import get_template
+from django.core.mail import send_mail
 
 import reversion
 
@@ -189,6 +191,30 @@ class ProjectAccess(models.Model,TimelineMixin):
 
     class Meta:
         unique_together = (("project","user"),)
+
+class ProjectInvitation(models.Model):
+    email = models.EmailField()
+    invited_by = models.ForeignKey(User)
+    access = models.CharField(default='view',editable=True,choices=USER_ACCESS_CHOICES,max_length=6)
+    project = models.ForeignKey(Project,related_name='invitations')
+
+    def __unicode__(self):
+        return "Invitation for {} to join {}".format(self.email,self.project)
+
+@receiver(signals.post_save,sender=ProjectInvitation)
+def send_project_invitation(instance,created,**kwargs):
+    if created:
+        template = get_template('project/invitation_email.txt')
+        content = template.render({'invitation':instance,'SITE_TITLE':settings.SITE_TITLE})
+        subject = 'Invitation to join project "{}", on {}'.format(instance.project.name,settings.SITE_TITLE)
+        send_mail(subject,content,from_email=settings.DEFAULT_FROM_EMAIL,recipient_list=(instance.email,))
+
+@receiver(signals.post_save,sender=User)
+def apply_project_invitations(instance,created,**kwargs):
+    if created:
+        invitations = ProjectInvitation.objects.filter(email=instance.email)
+        for invitation in invitations:
+            ProjectAccess.objects.create(project=invitation.project,user=instance,access=invitation.access)
 
 class EditorTag(taggit.models.TagBase):
     official = models.BooleanField(default=False)

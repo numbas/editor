@@ -69,7 +69,7 @@ class ManageMembersView(ProjectContextMixin,SettingsPageMixin,generic.UpdateView
 
     def get_context_data(self,**kwargs):
         context = super(ManageMembersView,self).get_context_data(**kwargs)
-        context['add_member_form'] = editor.forms.AddMemberForm({'project':self.object.pk})
+        context['add_member_form'] = editor.forms.AddMemberForm({'project':self.object.pk,'adding_user':self.request.user})
         return context
 
     def post(self,request,*args,**kwargs):
@@ -100,6 +100,12 @@ class AddMemberView(ProjectContextMixin,SettingsPageMixin,generic.CreateView):
 
     def get_success_url(self):
         return reverse('project_settings_members',args=(self.object.project.pk,))
+
+    def form_valid(self,form):
+        self.object = form.save()
+        if form.invitation:
+            messages.info(self.request,'An email has been sent to {}, inviting them to join {}'.format(form.invitation.email,form.invitation.project))
+        return http.HttpResponseRedirect(self.get_success_url())
 
     def get_context_data(self,*args,**kwargs):
         context = super(AddMemberView,self).get_context_data(*args,**kwargs)

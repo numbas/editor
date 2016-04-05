@@ -52,7 +52,7 @@
     <div class="panel-heading"><h3 class="panel-title"><span class="glyphicon glyphicon-plus"></span> Add a member</h3></div>
     <div class="panel-body">
         <form class="form-inline" action="{% url 'project_settings_add_member' project.pk %}" method="post">
-            {{add_member_form.project.as_hidden}}
+            {% for field in add_member_form.hidden_fields %}{{field}}{% endfor %}
             <div class="form-group">
                 <input type="text" class="form-control" id="{{add_member_form.user_search.auto_id}}" name="user_search" placeholder="Username or full name">
             </div>

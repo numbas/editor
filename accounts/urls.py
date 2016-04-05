@@ -107,7 +107,7 @@ if settings.CAN_CHANGE_PASSWORD:
                     TemplateView.as_view(template_name='registration/registration_closed.html'),
                     name='registration_disallowed'),
                 url(r'^accounts/register/after-first-login/$',
-                    TemplateView.as_view(template_name='registration/after_first_login.html'),
+                    accounts.views.AfterFirstLoginView.as_view(),
                     name='after_first_login'),
                 )
 

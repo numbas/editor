@@ -12,6 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 from django import forms
+from django.contrib import messages
 from django.forms.models import inlineformset_factory,modelformset_factory
 from django.forms.widgets import SelectMultiple
 from django.core.exceptions import ValidationError
@@ -22,6 +23,7 @@ from django.utils.encoding import (
 )
 from django.db.models import Q, Count
 from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 
 import zipfile
 import os
@@ -382,7 +384,11 @@ class UserField(BootstrapFieldMixin,forms.Field):
             return None
         user = find_users(value).first()
         if user is None:
-            raise forms.ValidationError("No user matching query '{}'".format(value))
+            try:
+                validate_email(value)
+                return User(email=value)
+            except ValidationError:
+                raise forms.ValidationError("No user matching query '{}'".format(value))
         return user
 
 class UserSearchMixin(object):
@@ -410,6 +416,9 @@ class UserSearchMixin(object):
         return m
 
 class AddMemberForm(UserSearchMixin,forms.ModelForm):
+    invitation = None
+    adding_user = forms.ModelChoiceField(queryset=User.objects.all(),widget=forms.HiddenInput())
+
     class Meta:
         model = editor.models.ProjectAccess
         fields = ('project','access')
@@ -421,11 +430,15 @@ class AddMemberForm(UserSearchMixin,forms.ModelForm):
     def save(self, force_insert=False, force_update=False, commit=True):
         m = super(AddMemberForm, self).save(commit=False)
         if commit:
-            pa = editor.models.ProjectAccess.objects.filter(project=m.project,user=m.user).first()
-            if pa is not None:
-                pa.access = m.access
-                m = pa
-            m.save()
+            if m.user.pk:
+                # check if there's an existing ProjectAccess for this user & project
+                pa = editor.models.ProjectAccess.objects.filter(project=m.project,user=m.user).first()
+                if pa is not None:
+                    pa.access = m.access
+                    m = pa
+                m.save()
+            else:   # create email invitation if the user_search field contained an email address
+                self.invitation = editor.models.ProjectInvitation.objects.create(invited_by=self.cleaned_data.get('adding_user'),project=m.project,access=m.access,email=m.user.email)
         return m
 
 class TransferOwnershipForm(UserSearchMixin,forms.ModelForm):

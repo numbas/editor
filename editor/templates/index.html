@@ -1,18 +1,37 @@
 {% extends "base.html" %}
 
+{% block stylesheets %}
+{{block.super}}
+<style type="text/css">
+    .jumbotron .btn {
+        white-space: normal;
+    }
+</style>
+{% endblock stylesheets %}
+
 {% block content %}
 {% if request.user.is_anonymous %}
 <div class="jumbotron">
     {% include "index_message.html" %}
     <div class="text-center">
-        <p><strong>Get started by creating an account.</strong></p>
-        <p>
-            <a class="btn btn-success btn-lg" href="{% url 'registration_register' %}">Sign up</a>
-            <a class="btn btn-primary btn-lg" href="{% url 'login' %}">Log in</a>
-        </p>
-        <p>
-            <a class="btn btn-info btn-lg" href="http://www.numbas.org.uk">Learn about Numbas</a>
-        </p>
+        <h3>Get started by creating an account.</h3>
+        <div class="row">
+            <p class="col-sm-offset-2 col-sm-4">
+                <a class="btn btn-success btn-lg btn-block" href="{% url 'registration_register' %}">Sign up</a>
+            </p>
+            <p class="col-sm-4">
+                <a class="btn btn-primary btn-lg btn-block" href="{% url 'login' %}">Log in</a>
+            </p>
+        </div>
+        <h3>Or just take a look around.</h3>
+        <div class="row">
+            <p class="col-sm-offset-2 col-sm-4">
+                <a class="btn btn-info btn-lg btn-block" href="http://www.numbas.org.uk"><span class="glyphicon glyphicon-question-sign"></span> Learn about Numbas</a>
+            </p>
+            <p class="col-sm-4">
+                <a class="btn btn-default btn-lg btn-block" href="{% url 'search' %}"><span class="glyphicon glyphicon-search"></span> Browse the public database</a>
+            </p>
+        </div>
     </div>
 </div>
 {% endif %}

@@ -267,7 +267,7 @@ class SearchView(ListView):
 
         data = deepcopy(self.request.GET)
         form = self.form = editor.forms.EditorItemSearchForm(data)
-        for field in ('usage','item_types','order_by'):
+        for field in ('usage','item_types','order_by','tags'):
             form.data.setdefault(field,form.fields[field].initial)
         form.is_valid()
 

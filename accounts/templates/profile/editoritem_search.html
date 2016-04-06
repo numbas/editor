@@ -1,16 +1,22 @@
-{% extends "project/project_base.html" %}
+{% extends "base.html" %}
 {% load django_tables2 %}
+{% load user_link %}
 
 {% block content_container %}container-fluid{% endblock content_container %}
-{% block project_container %}{% endblock project_container %}
 
 {% block results_top %}
 
 {% endblock results_top %}
 
-{% block project_content %}
-{% include "project/search_content.html" %}
-{% endblock project_content %}
+{% block content %}
+<div class="page-header">
+    <h1 class="big-name">
+        {% user_thumbnail view_user 40 36 link=True %} {% user_link view_user %}
+    </h1>
+</div>
+
+{% include "profile/editoritem_search_content.html" %}
+{% endblock content %}
 
 {% block javascripts %}
     {{block.super}}

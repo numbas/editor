@@ -1,15 +1,31 @@
 {% extends "profile/base.html" %}
+{% load sanitizer %}
 {% load can_edit %}
 
 {% block profile_content %}
-<ul>
+<ul class="list-unstyled">
     {% for project in projects %}
-    {% if project|can_be_viewed_by:request.user %}
-    <li><a href="{% url 'project_index' project.pk %}">{{project.name}}</a></li>
-    {% endif %}
+        {% if project|can_be_viewed_by:request.user %}
+        <li>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title"><span class="glyphicon glyphicon-briefcase"></span> <a href="{% url 'project_index' project.pk %}">{{project.name}}</a></h3>
+                </div>
+                <div class="panel-body">
+                    {% if project.description %}
+                    {{project.description|escape_html|safe}}
+                    {% else %}
+                    <div class="nothing-here">
+                        <p>This project doesn't have a description.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </li>
+        {% endif %}
     {% endfor %}
     {% if not projects|length %}
-    <p class="nothing-here">{{view_user.first_name}} is not a member of any projects you're allowed to view.</p>
+        <p class="nothing-here">{{view_user.first_name}} is not a member of any projects you're allowed to view.</p>
     {% endif %}
 </ul>
 {% endblock profile_content %}

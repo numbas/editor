@@ -11,6 +11,7 @@ from django.template.defaultfilters import slugify
 from accounts.forms import UserProfileForm,ChangePasswordForm
 from editor.models import Question, Exam
 import editor.models
+from editor.views import editoritem
 from zipfile import ZipFile
 from cStringIO import StringIO
 from django.contrib.sites.models import Site
@@ -191,4 +192,19 @@ class AfterFirstLoginView(TemplateView):
     def get_context_data(self,*args,**kwargs):
         context = super(AfterFirstLoginView,self).get_context_data(*args,**kwargs)
         context['invitations'] = editor.models.ProjectInvitation.objects.filter(email=self.request.user.email)
+        return context
+
+class UserEditorItemSearchView(editoritem.SearchView):
+    template_name = 'profile/editoritem_search.html'
+
+    def dispatch(self,request,pk,*args,**kwargs):
+        self.user = User.objects.get(pk=pk)
+        return super(UserEditorItemSearchView,self).dispatch(request,pk,*args,**kwargs)
+
+    def base_queryset(self):
+        return self.user.own_items.all()
+
+    def get_context_data(self,*args,**kwargs):
+        context = super(UserEditorItemSearchView,self).get_context_data(*args,**kwargs)
+        context['view_user'] = self.user
         return context

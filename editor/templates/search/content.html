@@ -9,10 +9,10 @@
 <div class="container-fluid">
     <div class="row results-header">
         <div class="col-md-9 col-sm-8">
-            <p>{{ results.page.paginator.count}} result{{results.page.paginator.count|pluralize}}{% if search_query %} for "{{form.query.value}}"{% endif %}{% if project %} in {{project.name}} - <a class="widen-search" href="{% url 'search' %}{% querystring results.prefixed_page_field=1 %}">search across all projects</a>{% endif %}.</p>
+            <p>{{ results.page.paginator.count}} result{{results.page.paginator.count|pluralize}}{% if search_query %} for "{{form.query.value}}"{% endif %}{% block widen_search %}{% endblock %}.</p>
         </div>
         <div class="col-md-3 col-sm-4">
-            <form method="GET" action="{% url 'search' %}" class="form-inline text-right" id="order_by-form">
+            <form method="GET" action="" class="form-inline text-right" id="order_by-form">
                 {% for field in form %}{% if field.name != 'order_by' %}{{field.as_hidden}}{% endif %}{% endfor %}
                 <label>
                     Sort by
@@ -24,7 +24,7 @@
     
     <div class="row">
         <div class="col-lg-2 col-md-3 col-sm-3 col-xs-12" id="search-refine">
-            <form method="GET" action="{% url 'search' %}" id="search-panel-form">
+            <form method="GET" action="" id="search-panel-form">
                 {{form.tags.as_hidden}}
                 {{form.order_by.as_hidden}}
                 <div class="panel panel-primary">

@@ -23,5 +23,7 @@
 </div>
 {% endif %}
 
+<p><a href="{% url 'profile_editoritem_search' view_user.pk %}" class="btn btn-link btn-lg"><span class="glyphicon glyphicon-search"></span> Browse {{view_user.first_name}}'s content</a></p>
+
 {% endwith %}
 {% endblock profile_content %}

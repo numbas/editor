@@ -320,6 +320,10 @@
                         </div>
                         <div class="panel-body">
                             <p>This {{item_type}} has been published to the public {{item_type}} database.</p>
+                            <form method="POST" action="{% url 'item_unpublish' object.editoritem.pk %}">
+                                <button class="btn btn-danger" type="submit">Unpublish</button>
+                                {% csrf_token %}
+                            </form>
                         </div>
                     </div>
                     <div class="panel panel-primary">

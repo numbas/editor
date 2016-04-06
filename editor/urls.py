@@ -54,6 +54,9 @@ urlpatterns = patterns('',
     url(r'^item/(?P<pk>\d+)/publish$',
         editoritem.PublishView.as_view(),name='item_publish'),
 
+    url(r'^item/(?P<pk>\d+)/unpublish$',
+        editoritem.UnPublishView.as_view(),name='item_unpublish'),
+
     url(r'^item/(?P<pk>\d+)/set-access$',
         editoritem.SetAccessView.as_view(),name='set_access'),
 

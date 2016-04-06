@@ -105,11 +105,11 @@ class ControlledObject(object):
         if user.is_superuser:
             return Q()
         elif user.is_anonymous():
-            return Q(public_access__in=view_perms)
+            return Q(published=True,public_access__in=view_perms)
         else:
             return (  Q(access__user=user,access__access__in=view_perms) 
-                    | Q(public_access__in=view_perms) 
-                    | Q(owner=user)
+                    | Q(published=True,public_access__in=view_perms) 
+                    | Q(author=user)
                     | Q(project__projectaccess__user=user)
                     | Q(project__owner=user)
                    )
@@ -551,6 +551,9 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
         self.published = True
         self.published_date = datetime.now()
 
+    def unpublish(self):
+        self.published = False
+
     def set_licence(self,licence):
         NumbasObject.get_parsed_content(self)
         metadata = self.parsed_content.data.setdefault(u'metadata',{})
@@ -845,6 +848,7 @@ class ItemChangedTimelineItem(models.Model,TimelineMixin):
         return {
             'created': 'plus',
             'deleted': 'remove',
+            'published': 'globe',
         }[self.verb]
 
     def __unicode__(self):

@@ -11,4 +11,5 @@
 {% block timelineitem_class %}less-important{% endblock %}
 
 {% block content %}
+{% if not include_object_link %}{{item.object.verb|capfirst}} this.{% endif %}
 {% endblock content %}

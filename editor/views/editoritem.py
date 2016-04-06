@@ -475,14 +475,26 @@ class PublishView(generic.UpdateView):
     model = EditorItem
     fields = ['published']
     
+    def get_success_url(self):
+        ei = self.get_object()
+        return reverse('{}_edit'.format(ei.item_type), args=(ei.rel_obj.pk,ei.slug,)) 
+
     def get(self):
-        return redirect(reverse('{}_edit'.format(ei.item_type), args=(ei.rel_obj.pk,ei.slug,)))
+        return redirect(self.get_success_url())
 
     def post(self,request, *args, **kwargs):
         ei = self.get_object()
         ei.publish()
         ei.save()
-        return redirect(reverse('{}_edit'.format(ei.item_type), args=(ei.rel_obj.pk,ei.slug,)))
+        editor.models.ItemChangedTimelineItem.objects.create(user=self.request.user,object=ei,verb='published')
+        return redirect(self.get_success_url())
+
+class UnPublishView(PublishView):
+    def post(self,request, *args, **kwargs):
+        ei = self.get_object()
+        ei.unpublish()
+        ei.save()
+        return redirect(self.get_success_url())
 
 class SetAccessView(generic.UpdateView):
     model = EditorItem

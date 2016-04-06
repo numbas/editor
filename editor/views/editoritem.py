@@ -84,13 +84,28 @@ class CopyView(ProjectQuerysetMixin, generic.FormView, generic.edit.ModelFormMix
         self.object = self.get_object()
         return super(CopyView,self).dispatch(request,*args,**kwargs)
 
+    def get(self,request,*args,**kwargs):
+        print('GET',request.is_ajax())
+        if request.is_ajax():
+            form_class = self.get_form_class()
+            form = form_class(data=self.get_initial())
+            print(form.is_bound)
+            print(form.is_valid())
+            print(form.errors)
+            if form.is_valid():
+                return self.form_valid(form)
+            else:
+                return self.form_invalid(form)
+        else:
+            return super(CopyView,self).get(request,*args,**kwargs)
+
     def get_initial(self):
         data = self.initial.copy()
         data['name'] = "{}'s copy of {}".format(self.request.user.first_name,self.object.editoritem.name)
         if self.object.editoritem.project.can_be_edited_by(self.request.user):
-            data['project'] = self.object.editoritem.project
+            data['project'] = self.object.editoritem.project.pk
         else:
-            data['project'] = self.request.user.userprofile.personal_project
+            data['project'] = self.request.user.userprofile.personal_project.pk
         return data
 
     def form_valid(self, form):
@@ -98,15 +113,14 @@ class CopyView(ProjectQuerysetMixin, generic.FormView, generic.edit.ModelFormMix
         if not obj.editoritem.can_be_copied_by(self.request.user):
             return http.HttpResponseForbidden("You may not copy this question.")
 
-        obj2 = obj.copy()
+        obj2 = obj.copy(author=self.request.user)
 
-        obj2.editoritem.author = self.request.user
         obj2.editoritem.set_name(form.cleaned_data.get('name'))
         obj2.editoritem.project = form.cleaned_data.get('project')
         obj2.editoritem.save()
 
         if self.request.is_ajax():
-            return HttpResponse(json.dumps(obj2.summary()),content_type='application/json')
+            return http.HttpResponse(json.dumps(obj2.summary()),content_type='application/json')
         else:
             return redirect(obj2.get_absolute_url())
 

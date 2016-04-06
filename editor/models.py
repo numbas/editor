@@ -558,12 +558,14 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
         self.licence = licence
         self.content = str(self.parsed_content)
 
-    def copy(self):
+    def copy(self,author=None):
         e2 = deepcopy(self)
         e2.id = None
         e2.share_uuid_view = uuid.uuid4()
         e2.share_uuid_edit = uuid.uuid4()
         e2.copy_of = self
+        if author is not None:
+            e2.author = author
         return e2
 
     def get_absolute_url(self):
@@ -915,11 +917,11 @@ class NewQuestion(models.Model):
     def exams_using_this(self):
         return self.exams.distinct()
 
-    def copy(self):
+    def copy(self,author=None):
         q2 = deepcopy(self)
         q2.id = None
 
-        ei2 = self.editoritem.copy()
+        ei2 = self.editoritem.copy(author)
         ei2.save()
 
         q2.editoritem = ei2
@@ -1019,11 +1021,11 @@ class NewExam(models.Model):
             exam_question = NewExamQuestion(exam=self,question=question, qn_order=order)
             exam_question.save()
 
-    def copy(self):
+    def copy(self,author=None):
         e2 = deepcopy(self)
         e2.id = None
 
-        ei2 = self.editoritem.copy()
+        ei2 = self.editoritem.copy(author)
         ei2.save()
 
         e2.editoritem = ei2

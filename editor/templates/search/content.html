@@ -111,7 +111,7 @@
                 {% with item=row.record edit_view=item.type|add:'_edit' %}
                 <li class="result">
                     <div class="row">
-                        <div class="col-lg-7 col-md-8 col-sm-7 col-xs-8">
+                        <div class="col-lg-7 col-md-8 col-sm-7 col-xs-12">
                             <h4><a href="{% url item.item_type|add:'_edit' item.rel_obj.pk item.slug %}">{{item.name}}</a></h4>
                             <div class="fields">
                                 <p class="author">
@@ -126,7 +126,7 @@
                                 {% endif %}
                             </div>
                         </div>
-                        <div class="col-lg-5 col-md-4 col-sm-5 col-xs-4 info">
+                        <div class="col-lg-5 col-md-4 col-sm-5 col-xs-12 info">
                             <h4 class="text-left item-type {{item.item_type}}">
                                 <small>
                                     {% if item.item_type == 'question' %}

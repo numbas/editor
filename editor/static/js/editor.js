@@ -1635,7 +1635,7 @@ $(document).ready(function() {
 	function update_notifications() {
 		var num_notifications = $('#notifications .dropdown-menu .notification').length;
 		$('#notifications .dropdown-toggle').attr('title',num_notifications+' unread '+(num_notifications==1 ? 'notification' : 'notifications'));
-		$('#notifications .counter').text(num_notifications);
+		$('#notifications .badge').text(num_notifications>0 ? num_notifications : '');
 		if(num_notifications) {
 			$('#notifications').addClass('active');
 			$('#notifications .dropdown-toggle').removeClass('disabled');

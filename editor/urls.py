@@ -17,8 +17,7 @@ from django.views.generic import RedirectView, TemplateView
 
 from django.contrib.auth.decorators import login_required
 
-from editor.views import project, editoritem, exam, question, HomeView, theme, extension, generic, notification, resource
-from editor.views.basket import BasketView,add_question_to_basket,create_exam_from_basket,remove_question_from_basket,empty_question_basket
+from editor.views import project, editoritem, exam, question, HomeView, theme, extension, generic, notification, resource, basket
 
 
 urlpatterns = patterns('',
@@ -173,19 +172,19 @@ urlpatterns = patterns('',
     # Question basket
 
     url(r'question_basket/$',
-        BasketView.as_view(),
+        basket.BasketView.as_view(),
         name='basket'),
     url(r'question_basket/add/$',
-        login_required(add_question_to_basket),
+        login_required(basket.add_question_to_basket),
         name='add_question_to_basket'),
     url(r'question_basket/remove/$',
-        login_required(remove_question_from_basket),
+        login_required(basket.remove_question_from_basket),
         name='remove_question_from_basket'),
     url(r'question_basket/create_exam/$',
-        login_required(create_exam_from_basket),
+        login_required(basket.CreateExamFromBasketView.as_view()),
         name='create_exam_from_basket'),
     url(r'question_basket/empty/$',
-        login_required(empty_question_basket),
+        login_required(basket.empty_question_basket),
         name='empty_question_basket'),
 
     # Pull requests

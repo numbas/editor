@@ -119,14 +119,18 @@ class CreateView(editor.views.editoritem.CreateView):
     form_class = NewExamForm
     template_name = 'exam/new.html'
 
+    def make_exam(self,form):
+        ei = form.save()
+        ei.set_licence(ei.project.default_licence)
+        ei.locale = ei.project.default_locale
+        ei.save()
+        self.exam = NewExam()
+        self.exam.editoritem = ei
+        return self.exam
+
     def form_valid(self, form):
         with transaction.atomic(), reversion.create_revision():
-            ei = form.save()
-            ei.set_licence(ei.project.default_licence)
-            ei.locale = ei.project.default_locale
-            ei.save()
-            self.exam = NewExam()
-            self.exam.editoritem = ei
+            self.make_exam(form)
             self.exam.save()
 
         return redirect(self.get_success_url())

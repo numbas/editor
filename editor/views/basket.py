@@ -6,8 +6,10 @@ from django.shortcuts import redirect
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from editor.models import NewQuestion,NewExam
+import editor
 from accounts.models import BasketQuestion
 from django.views import generic
+import reversion
 
 def render_basket(user):
     return render_to_string('basket/list.html',{'user':user})
@@ -31,10 +33,20 @@ def remove_question_from_basket(request):
     BasketQuestion.objects.filter(profile=profile,question=id).delete()
     return HttpResponse(render_basket(request.user))
 
+class CreateExamFromBasketView(editor.views.exam.CreateView):
+    template_name = 'exam/new_from_basket.html'
+    def form_valid(self,form):
+        with transaction.atomic(), reversion.create_revision():
+            self.make_exam(form)
+            self.exam.save()
+            self.exam.set_questions([bq.question for bq in self.request.user.userprofile.basketquestion_set.all()])
+
+        return redirect(self.get_success_url())
+
+
 def create_exam_from_basket(request):
     e = NewExam(author=request.user)
     e.save()
-    e.set_questions([bq.question for bq in request.user.userprofile.basketquestion_set.all()])
     return redirect(reverse('exam_edit', args=(e.pk,e.editoritem.slug)))
 
 @require_POST

@@ -7,13 +7,12 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('editor', '0018_auto_20151215_0935'),
+        ('editor', '0014_version_2_data_migration'),
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='newexam',
-            name='locale',
-            field=models.CharField(default=b'en-GB', max_length=200),
+        migrations.RemoveField(
+            model_name='comment',
+            name='date',
         ),
     ]

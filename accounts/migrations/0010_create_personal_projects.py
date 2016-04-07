@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('accounts', '0009_userprofile_personal_project'),
-        ('editor','0029_project'),
+        ('editor','0013_version_2_models'),
     ]
 
     operations = [

@@ -124,7 +124,11 @@ class TimelineMixin(object):
         return user==self.user
 
     def timeline_object(self):
-        return self.object
+        try:
+            return self.object
+        except AttributeError:
+            ct = ContentType.objects.get(pk=self.object_content_type.pk)
+            return ct.get_object_for_this_type(pk=self.object_id)
 
     @property
     def timelineitem(self):
@@ -860,7 +864,7 @@ def create_timelineitem(sender,instance,created,**kwargs):
         return
     if created:
         try:
-            user = instance.user
+            user = User.objects.get(pk=instance.user.pk)
         except AttributeError:
             user = None
         TimelineItem.objects.create(object=instance,timeline=instance.timeline_object(),user=user)

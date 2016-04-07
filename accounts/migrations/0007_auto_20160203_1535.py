@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('editor', '0026_remove_editoritem_filename'),
+        ('editor', '0013_version_2_models'),
         ('accounts', '0006_auto_20160203_1532'),
     ]
 

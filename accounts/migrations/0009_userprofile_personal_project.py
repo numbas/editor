@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('editor', '0029_project'),
+        ('editor', '0013_version_2_models'),
         ('accounts', '0008_auto_20160203_1535'),
     ]
 

@@ -12,6 +12,7 @@ def old_to_new_questions(apps, schema_editor):
     NewStampOfApproval = apps.get_model('editor','NewStampOfApproval')
     TaggedQuestion = apps.get_model('editor','TaggedQuestion')
     Resource = apps.get_model('editor','Resource')
+    User = apps.get_model('auth','User')
 
     EditorItem._meta.get_field_by_name('last_modified')[0].auto_now = False
 
@@ -92,6 +93,7 @@ def old_exams_to_new(apps, schema_editor):
     NewStampOfApproval = apps.get_model('editor','NewStampOfApproval')
     ExamQuestion = apps.get_model('editor','ExamQuestion')
     NewExamQuestion = apps.get_model('editor','NewExamQuestion')
+    User = apps.get_model('auth','User')
 
     EditorItem._meta.get_field_by_name('last_modified')[0].auto_now = False
 
@@ -305,6 +307,9 @@ def copy_revisions(apps, schema_editor):
     set_timelineitem_date_auto_now(False)
     for rp in RestorePoint.objects.all():
         ti = TimelineItem.objects.get(object_content_type=restorepoint_ct,object_id=rp.pk)
+        for field in ti._meta.local_fields:
+            if field.name == "date":
+                field.auto_now_add = False
         ti.date = rp.revision.date_created
         ti.save()
 
@@ -340,10 +345,17 @@ def set_newstamp_dates(apps, schema_editor):
     newstamp_ct = ContentType.objects.get_for_model(NewStampOfApproval)
 
     for ns in NewStampOfApproval.objects.all():
-        os = StampOfApproval.objects.filter(object_id=ns.object.rel_obj.id).last()
+        try:
+            rel_obj = ns.object.exam
+        except Exception:
+            rel_obj = ns.object.question
+        os = StampOfApproval.objects.filter(object_id=rel_obj.id).last()
         if os is not None:
             ti = TimelineItem.objects.get(object_content_type=newstamp_ct,object_id=ns.pk)
-            ti.date = os.date
+            for field in ti._meta.local_fields:
+                if field.name == "date":
+                    field.auto_now_add = False
+                ti.date = os.date
             ti.save()
 
 def set_project(apps,schema_editor):
@@ -368,17 +380,15 @@ def copy_comments(apps,schema_editor):
     editoritem_ct = ContentType.objects.get_for_model(EditorItem)
     comment_ct = ContentType.objects.get_for_model(Comment)
 
-    ti = TimelineItem()
-    for field in ti._meta.local_fields:
-        if field.name == "date":
-            field.auto_now_add = False
-
     for oc in Comment.objects.filter(object_content_type=question_ct):
         ei = NewQuestion.objects.get(pk=oc.object_id).editoritem
         nc = Comment.objects.create(object_id=ei.pk,object_content_type=editoritem_ct, user=oc.user,text=oc.text)
 
     for c in Comment.objects.filter(object_content_type=newquestion_ct):
         ti = TimelineItem.objects.get(object_content_type=comment_ct,object_id=c.pk)
+        for field in ti._meta.local_fields:
+            if field.name == "date":
+                field.auto_now_add = False
         ti.date = c.date
         ti.save()
 

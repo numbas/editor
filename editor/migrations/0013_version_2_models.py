@@ -199,6 +199,17 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(to=settings.AUTH_USER_MODEL),
         ),
 
+        # add Resource model
+        migrations.CreateModel(
+            name='Resource',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('date_created', models.DateTimeField(auto_now_add=True)),
+                ('file', models.FileField(max_length=255, upload_to=b'question-resources/')),
+                ('owner', models.ForeignKey(related_name='resources', to=settings.AUTH_USER_MODEL)),
+            ],
+        ),
+
         # add NewQuestion model
         migrations.CreateModel(
             name='NewQuestion',
@@ -206,7 +217,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('editoritem', models.OneToOneField(related_name='question', to='editor.EditorItem')),
                 ('extensions', models.ManyToManyField(to='editor.Extension', blank=True)),
-                ('resources', models.ManyToManyField(to='editor.Image', blank=True)),
+                ('resources', models.ManyToManyField(to='editor.Resource', blank=True)),
             ],
             options={
                 'ordering': ['editoritem__name'],
@@ -376,29 +387,6 @@ class Migration(migrations.Migration):
                 ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
             ],
             bases=(models.Model, editor.models.TimelineMixin),
-        ),
-
-        # add Resource model
-        migrations.CreateModel(
-            name='Resource',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('date_created', models.DateTimeField(auto_now_add=True)),
-                ('file', models.FileField(max_length=255, upload_to=b'question-resources/')),
-                ('owner', models.ForeignKey(related_name='resources', to=settings.AUTH_USER_MODEL)),
-            ],
-        ),
-        migrations.AlterField(
-            model_name='newquestion',
-            name='resources',
-            field=models.ManyToManyField(to='editor.Resource', blank=True),
-        ),
-
-        # add user to TimelineItem and change file field on Resource
-        migrations.AlterField(
-            model_name='resource',
-            name='file',
-            field=models.FileField(max_length=255, upload_to=b'question-resources/'),
         ),
 
         # add PullRequest model

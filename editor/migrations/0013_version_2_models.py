@@ -269,7 +269,7 @@ class Migration(migrations.Migration):
                 ('owner', models.ForeignKey(related_name='own_projects', to=settings.AUTH_USER_MODEL)),
                 ('description', models.TextField(blank=True)),
                 ('default_licence', models.ForeignKey(blank=True, to='editor.Licence', null=True)),
-                ('default_locale', models.CharField(default=b'en-GB', max_length=10, choices=[(b'en-GB', b'English'), (b'nb-NO', 'Bokm\xe5l'), (b'nl-NL', b'Nederlands'), (b'es-ES', 'Espa\xf1ol')])),
+                ('default_locale', models.CharField(default=b'en-GB', max_length=10)),
             ],
             bases=(models.Model, editor.models.ControlledObject),
         ),

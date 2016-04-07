@@ -147,7 +147,7 @@ class Project(models.Model,ControlledObject):
     icon = 'briefcase'
 
     description = models.TextField(blank=True)
-    default_locale = models.CharField(choices=LOCALE_CHOICES,max_length=10,editable=True,default='en-GB')
+    default_locale = models.CharField(max_length=10,editable=True,default='en-GB')
     default_licence = models.ForeignKey('Licence',null=True,blank=True)
 
     def can_be_edited_by(self, user):

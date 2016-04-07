@@ -42,6 +42,10 @@ body:not(.loaded) .loaded-content {
     color: #888;
 }
 
+.user-thumbnail .glyphicon {
+    color: black !important;
+}
+
 /*
 ul.no-bullets, ol.no-bullets {
 	list-style-type: none;

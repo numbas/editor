@@ -11,8 +11,12 @@ def old_to_new_questions(apps, schema_editor):
     EditorItem = apps.get_model('editor','EditorItem')
     NewStampOfApproval = apps.get_model('editor','NewStampOfApproval')
     TaggedQuestion = apps.get_model('editor','TaggedQuestion')
+    TaggedItem = apps.get_model('editor','TaggedItem')
     Resource = apps.get_model('editor','Resource')
     User = apps.get_model('auth','User')
+    ContentType = apps.get_model('contenttypes','contenttype')
+
+    editoritem_ct= ContentType.objects.get_for_model(EditorItem)
 
     EditorItem._meta.get_field_by_name('last_modified')[0].auto_now = False
 
@@ -78,6 +82,9 @@ def old_to_new_questions(apps, schema_editor):
             nq = NewQuestion.objects.get(pk=q.pk)
             nq.editoritem.copy_of = NewQuestion.objects.get(pk=q.copy_of.pk).editoritem
             nq.save()
+
+    for tq in TaggedQuestion.objects.all():
+        TaggedItem.objects.create(content_type=editoritem_ct,object_id=NewQuestion.objects.get(pk=tq.object_id).editoritem.pk,tag=tq.tag)
 
 def remove_new_questions(apps, schema_editor):
     for name in ['NewQuestion','NewExam','EditorItem','TaggedItem','Access','NewStampOfApproval']:

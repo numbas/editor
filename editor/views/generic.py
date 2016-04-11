@@ -173,17 +173,6 @@ def ability_level_json(ability_level):
         'end': float(ability_level.end),
     }
 
-class DeleteTimelineItemView(generic.DeleteView):
-    model = TimelineItem
-
-    def delete(self,request,*args,**kwargs):
-        self.object = self.get_object()
-        if self.object.can_be_deleted_by(self.request.user):
-            self.object.delete()
-            return http.HttpResponse('timeline item {} deleted'.format(self.object.pk))
-        else:
-            return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
-
 class DeleteStampView(generic.DeleteView):
     model = NewStampOfApproval
 

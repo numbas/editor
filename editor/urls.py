@@ -17,7 +17,7 @@ from django.views.generic import RedirectView, TemplateView
 
 from django.contrib.auth.decorators import login_required
 
-from editor.views import project, editoritem, exam, question, HomeView, theme, extension, generic, notification, resource, basket
+from editor.views import project, editoritem, exam, question, HomeView, theme, extension, generic, notification, resource, basket, timeline
 
 
 urlpatterns = patterns('',
@@ -144,8 +144,14 @@ urlpatterns = patterns('',
 
     # Timeline items
 
+    url(r'^timelineitem/(?P<pk>\d+)/hide$',
+        timeline.HideTimelineItemView.as_view(), name='timelineitem_hide'),
+
+    url(r'^timelineitem/(?P<pk>\d+)/unhide$',
+        timeline.UnhideTimelineItemView.as_view(), name='timelineitem_unhide'),
+
     url(r'^timelineitem/(?P<pk>\d+)/delete$',
-        generic.DeleteTimelineItemView.as_view(), name='timelineitem_delete'),
+        timeline.DeleteTimelineItemView.as_view(), name='timelineitem_delete'),
 
     url(r'^stamp/(?P<pk>\d+)/delete$',
         generic.DeleteStampView.as_view(), name='stamp_delete'),

@@ -2,6 +2,7 @@
 {% load user_link %}
 {% load sstatic %}
 {% load sanitizer %}
+{% load timeline %}
 
 {% block javascripts %}
 {{ block.super }}
@@ -39,7 +40,7 @@
                 </div>
                 <div class="timeline">
                     {% with include_object_link=True %}
-                    {% for item in project.all_timeline|slice:":20" %}
+                    {% for item in project.all_timeline|visible_to:request.user|slice:":20" %}
                         {% include item.object.timelineitem_template %}
                     {% endfor %}
                     {% endwith %}

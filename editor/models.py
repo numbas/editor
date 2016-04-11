@@ -766,7 +766,13 @@ class PullRequest(models.Model,ControlledObject,TimelineMixin):
         self.open = False
         self.closed_by = user
 
+class TimelineItemManager(models.Manager):
+    def visible_to(self,user):
+        return self.exclude(hidden_by=user)
+
 class TimelineItem(models.Model):
+    objects = TimelineItemManager()
+
     # Object whose timeline this item belongs to
     timeline_content_type = models.ForeignKey(ContentType,related_name='timelineitem_timeline')
     timeline_id = models.PositiveIntegerField()
@@ -778,6 +784,8 @@ class TimelineItem(models.Model):
     object = GenericForeignKey('object_content_type','object_id')
 
     user = models.ForeignKey(User,related_name='timelineitems',null=True)
+
+    hidden_by = models.ManyToManyField(User,related_name='hidden_timelineitems',blank=True)
 
     date = models.DateTimeField(auto_now_add=True)
 

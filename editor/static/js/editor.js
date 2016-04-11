@@ -1570,6 +1570,35 @@ $(document).ready(function() {
         }
 
     }
+
+    $('body').on('click','.timeline-item .hide-item',function(e) {
+        var element = this;
+        e.preventDefault();
+        e.stopPropagation();
+        $.post(element.getAttribute('href'),{csrfmiddlewaretoken: getCookie('csrftoken')})
+            .success(function(data) {
+                $(element).parents('.timeline-item').first().slideUp(150,function(){$(this).remove()});
+            })
+            .error(function(response,type,message) {
+                if(message=='')
+                    message = 'Server did not respond.';
+
+                noty({
+                    text: 'Error hiding timeline item:\n\n'+message,
+                    layout: "topLeft",
+                    type: "error",
+                    textAlign: "center",
+                    animateOpen: {"height":"toggle"},
+                    animateClose: {"height":"toggle"},
+                    speed: 200,
+                    timeout: 5000,
+                    closable:true,
+                    closeOnSelfClick: true
+                });
+            })
+        ;
+    });
+
     $('body').on('click','.timeline-item .delete',function(e) {
         var element = this;
         e.preventDefault();

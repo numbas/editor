@@ -172,6 +172,27 @@ def remove_new_exams(apps,schema_editor):
     NewExamQuestion = apps.get_model('editor','NewExamQuestion')
     NewExamQuestion.objects.all().delete()
 
+def old_access_to_new(apps,schema_editor):
+    Exam = apps.get_model('editor','exam')
+    Question = apps.get_model('editor','question')
+    NewExam = apps.get_model('editor','newexam')
+    NewQuestion = apps.get_model('editor','newquestion')
+    EditorItem = apps.get_model('editor','editoritem')
+    QuestionAccess = apps.get_model('editor','QuestionAccess')
+    ExamAccess = apps.get_model('editor','ExamAccess')
+    Access = apps.get_model('editor','Access')
+
+    for qa in QuestionAccess.objects.all():
+        Access.objects.create(item=NewQuestion.objects.get(pk=qa.question.pk).editoritem,user=qa.user,access=qa.access)
+
+    for ea in ExamAccess.objects.all():
+        Access.objects.create(item=NewExam.objects.get(pk=ea.exam.pk).editoritem,user=ea.user,access=ea.access)
+
+def remove_new_access(apps,schema_editor):
+    Access = apps.get_model('editor','Access')
+
+    Access.objects.all().remove()
+
 def copy_revisions(apps, schema_editor):
     Version = apps.get_model('reversion','Version')
     ContentType = apps.get_model('contenttypes','contenttype')
@@ -425,6 +446,7 @@ class Migration(migrations.Migration):
         """),
         migrations.RunPython(old_exams_to_new,remove_new_exams),
         migrations.RunPython(copy_revisions,delete_new_revisions),
+        migrations.RunPython(old_access_to_new,remove_new_access),
         migrations.RunPython(set_newstamp_dates,migrations.RunPython.noop),
         migrations.RunPython(set_project,migrations.RunPython.noop),
         migrations.RunPython(copy_comments,migrations.RunPython.noop),

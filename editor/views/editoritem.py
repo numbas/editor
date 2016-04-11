@@ -278,7 +278,7 @@ class SearchView(ListView):
         self.filter_tags = Q()
         if tags:
             for tag in tags:
-                self.filter_tags = self.filter_tags & Q( tags__name__in=tag )
+                self.filter_tags = self.filter_tags & Q( tags__name__icontains=tag )
             items = items.filter(self.filter_tags)
 
         # filter based on query

@@ -5,7 +5,7 @@
         {% block thumbnail %}{% endblock %}
     </div>
     <div class="media-body">
-        <a class="btn btn-sm btn-link hide-item pull-right" title="Hide this item" href="{% url 'timelineitem_hide' item.pk %}"><span class="glyphicon">○</span></a>
+        {% block hide_item %}<a class="btn btn-sm btn-link hide-item pull-right" title="Hide this item" href="{% url 'timelineitem_hide' item.pk %}"><span class="glyphicon">○</span></a>{% endblock hide_item %}
         {% if request.user|can_delete_timeline_item:item %}<a class="btn btn-sm btn-link delete pull-right" href="{% block delete_url %}{% url 'timelineitem_delete' item.pk %}{% endblock %}" title="{% block delete_text %}Delete this item{% endblock %}"><span class="glyphicon glyphicon-trash text-danger"></span></a>{% endif %}
         <h4 class="media-heading">
             {% block heading %}{% endblock %} 

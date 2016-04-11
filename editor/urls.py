@@ -40,6 +40,8 @@ urlpatterns = patterns('',
     url(r'^project/(?P<pk>\d+)/settings/add_member$', project.AddMemberView.as_view(), name='project_settings_add_member'),
     url(r'^project/(?P<pk>\d+)/settings/transfer_ownership$', project.TransferOwnershipView.as_view(), name='project_transfer_ownership'),
 
+    url(r'^project/(?P<pk>\d+)/leave/$', project.LeaveProjectView.as_view(), name='project_leave'),
+
     url(r'^project/(?P<pk>\d+)/search/$', project.SearchView.as_view(), name='project_search'),
 
     url(r'^project/(?P<pk>\d+)/comment$',

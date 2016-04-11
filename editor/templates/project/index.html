@@ -77,9 +77,15 @@
                     <li class="list-group-item member">
                     {% user_thumbnail user 40 36 link=True %} {% user_link user %} 
                     {% if user == project.owner %}<span class="owner">(owner)</span>{% endif %}
+                    {% if user == request.user %}(you){% endif %}
                     </li>
                     {% endfor %}
                 </ul>
+                {% if request.user != project.owner %}
+                <div class="panel-footer">
+                    <a class="btn btn-danger btn-block" href="{% url 'project_leave' project.pk %}"><span class="glyphicon glyphicon-log-out"></span> Leave this project</a>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

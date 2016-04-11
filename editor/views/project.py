@@ -73,17 +73,13 @@ class ManageMembersView(ProjectContextMixin,SettingsPageMixin,generic.UpdateView
         return context
 
     def post(self,request,*args,**kwargs):
-        print("POST")
         return super(ManageMembersView,self).post(request,*args,**kwargs)
 
 
     def form_invalid(self, form):
-        print("INVALID")
-        print(form)
         return super(ManageMembersView,self).form_invalid(form)
 
     def form_valid(self, form):
-        print(form)
         return super(ManageMembersView,self).form_valid(form)
 
     def get_success_url(self):
@@ -148,3 +144,35 @@ class CommentView(editor.views.generic.CommentView):
 
     def get_comment_object(self):
         return self.get_object()
+
+class LeaveProjectView(ProjectContextMixin,generic.DeleteView):
+    model = ProjectAccess
+    template_name = 'project/leave.html'
+    context_object_name = 'projectaccess'
+
+    def dispatch(self,request,*args,**kwargs):
+        project = self.get_project()
+        if self.request.user == project.owner:
+            return http.HttpResponseBadRequest("You can't leave this project - you're the owner. Transfer ownership to someone else first.")
+        return super(LeaveProjectView,self).dispatch(request,*args,**kwargs)
+
+    def get_project(self):
+        pk = self.kwargs.get(self.pk_url_kwarg)
+        project = Project.objects.get(pk=pk)
+        return project
+
+    def get_object(self,queryset=None):
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        project = self.get_project()
+
+        try:
+            obj = queryset.get(project=project,user=self.request.user)
+        except queryset.model.DoesNotExist:
+            raise http.Http404("You don't have access to this project.")
+
+        return obj
+
+    def get_success_url(self):
+        return reverse('editor_index')

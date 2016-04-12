@@ -41,7 +41,7 @@ class SettingsPageMixin(object):
 class CreateView(generic.CreateView):
     model = Project
     template_name = 'project/create.html'
-    fields = ('name','description','default_licence','default_locale')
+    form_class = editor.forms.CreateProjectForm
     
     def form_valid(self,form):
         form.instance.owner = self.request.user

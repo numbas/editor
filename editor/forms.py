@@ -235,6 +235,14 @@ class CopyEditorItemForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class':'form-control','placeholder':'e.g. "Solve an equation in two variables"'}),
             'project': BootstrapSelect,
         }
+
+class EditorItemMoveProjectForm(forms.ModelForm):
+    class Meta:
+        model = EditorItem
+        fields = ('project',)
+        widgets = {
+            'project': BootstrapSelect,
+        }
         
 class QuestionForm(EditorItemForm):
     
@@ -440,6 +448,14 @@ class AddMemberForm(UserSearchMixin,forms.ModelForm):
             else:   # create email invitation if the user_search field contained an email address
                 self.invitation = editor.models.ProjectInvitation.objects.create(invited_by=self.cleaned_data.get('adding_user'),project=m.project,access=m.access,email=m.user.email)
         return m
+
+class CreateProjectForm(forms.ModelForm):
+    class Meta:
+        model = editor.models.Project
+        fields = ('name','description','default_licence','default_locale')
+        widgets = {
+            'default_locale': forms.widgets.Select(choices=editor.models.LOCALE_CHOICES,attrs={'class':'form-control'})
+        }
 
 class TransferOwnershipForm(UserSearchMixin,forms.ModelForm):
     user_attr = 'owner'

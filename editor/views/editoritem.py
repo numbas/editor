@@ -25,7 +25,7 @@ import subprocess
 import traceback
 
 from django.core.servers.basehttp import FileWrapper
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError, PermissionDenied
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -55,6 +55,13 @@ from accounts.util import user_json
 
 from numbasobject import NumbasObject
 from examparser import ParseError
+
+class MustBeAuthorMixin(object):
+    def dispatch(self,request,*args,**kwargs):
+        if request.user != self.get_object().author:
+            raise PermissionDenied
+        return super(MustBeAuthorMixin,self).dispatch(request,*args,**kwargs)
+
 
 class ProjectQuerysetMixin(object):
     """ Set the queryset for the form's project field to the projects available to the user """
@@ -521,6 +528,14 @@ class SetAccessView(generic.UpdateView):
 
     def get(self, request, *args, **kwargs):
         return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
+
+class MoveProjectView(MustBeAuthorMixin,ProjectQuerysetMixin,generic.UpdateView):
+    model = EditorItem
+    form_class = editor.forms.EditorItemMoveProjectForm
+    template_name = 'editoritem/move_project.html'
+
+    def get_success_url(self):
+        return self.get_object().get_absolute_url()
 
 class CompareView(generic.TemplateView):
 

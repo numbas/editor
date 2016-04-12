@@ -55,11 +55,8 @@ tinymce.init({
                     <li class="alert alert-danger">{{error}}</li>
                 {% endfor %}
             </ul>
-            <select id="{{form.default_locale.auto_id}}" name="default_locale" class="form-control">
-                {% for value,name in form.default_locale.field.choices %}
-                <option value="{{value}}">{{name}}</option>
-                {% endfor %}
-            </select>
+
+            {{form.default_locale}}
         </div>
     </div>
 

@@ -200,6 +200,7 @@
                                         <div class="form-group">
                                             <label><span class="glyphicon glyphicon-briefcase"></span> Project</label>
                                             <p class="form-control-static"><a target="_blank" href="{% url 'project_index' object.editoritem.project.pk %}">{{object.editoritem.project.name}}</a></p>
+                                            {% if request.user == object.editoritem.author %}<a class="btn btn-warning btn-sm" href="{% url 'item_move_project' object.editoritem.pk %}">Move to another project</a>{% endif %}
                                         </div>
                                         <div class="form-group">
                                             <label><span class="glyphicon glyphicon-copyright-mark"></span> Licence</label>

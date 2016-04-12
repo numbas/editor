@@ -61,6 +61,9 @@ urlpatterns = patterns('',
     url(r'^item/(?P<pk>\d+)/set-access$',
         editoritem.SetAccessView.as_view(),name='set_access'),
 
+    url(r'^item/(?P<pk>\d+)/move$',
+        editoritem.MoveProjectView.as_view(),name='item_move_project'),
+
     url(r'^items/compare/(?P<pk1>\d+)/(?P<pk2>\d+)$',
         editoritem.CompareView.as_view(), name='editoritem_compare'),
 

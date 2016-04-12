@@ -27,7 +27,8 @@ class ProjectContextMixin(object):
     def get_context_data(self,**kwargs):
         context = super(ProjectContextMixin,self).get_context_data(**kwargs)
         project = self.get_project()
-        context['in_project'] = project
+        context['project'] = project
+        context['in_project'] = project is not None
         context['project_editable'] = project.can_be_edited_by(self.request.user)
         return context
 
@@ -126,6 +127,7 @@ class TransferOwnershipView(ProjectContextMixin,MustBeOwnerMixin,generic.UpdateV
 
 class SearchView(editor.views.editoritem.SearchView):
     template_name = 'project/search.html'
+
     def dispatch(self,request,pk,*args,**kwargs):
         self.project = Project.objects.get(pk=pk)
         return super(SearchView,self).dispatch(request,pk,*args,**kwargs)

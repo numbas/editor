@@ -6,7 +6,7 @@
     <p>Are you sure you want to leave this project? You won't be able to see any of its content after you've left.</p>
     <p>
         <button type="submit" class="btn btn-danger">Leave this project</button>
-        <a href="{% url 'project_index' in_project.pk %}" class="btn btn-link">Cancel</a>
+        <a href="{% url 'project_index' project.pk %}" class="btn btn-link">Cancel</a>
     </p>
 </form>
 {% endblock project_content %}

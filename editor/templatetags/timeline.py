@@ -10,4 +10,7 @@ def can_delete_timeline_item(user,item):
 
 @register.filter
 def visible_to(items,user):
-    return items.exclude(hidden_by=user)
+    if user.is_anonymous():
+        return items
+    else:
+        return items.exclude(hidden_by=user)

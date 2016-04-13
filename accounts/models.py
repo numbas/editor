@@ -5,6 +5,7 @@ from django.contrib.sites.models import RequestSite
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Q
+from django.db.models.functions import Lower
 
 from django_thumbs.db.models import ImageWithThumbsField
 
@@ -66,7 +67,7 @@ class UserProfile(models.Model):
         return NewQuestion.objects.filter(editoritem__author=self.user).order_by('-editoritem__last_modified')[:10]
 
     def projects(self):
-        return (Project.objects.filter(owner=self.user) | Project.objects.filter(projectaccess__user=self.user)).distinct()
+        return (Project.objects.filter(owner=self.user) | Project.objects.filter(projectaccess__user=self.user)).distinct().order_by(Lower('name'))
 
     def all_timeline(self):
         projects = self.user.own_projects.all() | Project.objects.filter(projectaccess__in=self.user.project_memberships.all())

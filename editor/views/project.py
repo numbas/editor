@@ -37,6 +37,7 @@ class ProjectContextMixin(object):
         context['project'] = project
         context['in_project'] = project is not None
         context['project_editable'] = project.can_be_edited_by(self.request.user)
+        context['member_of_project'] = self.request.user == project.owner or ProjectAccess.objects.filter(project=project,user=self.request.user).exists()
         return context
 
 class SettingsPageMixin(MustBeMemberMixin):
@@ -48,7 +49,7 @@ class SettingsPageMixin(MustBeMemberMixin):
 class CreateView(generic.CreateView):
     model = Project
     template_name = 'project/create.html'
-    form_class = editor.forms.CreateProjectForm
+    form_class = editor.forms.ProjectForm
     
     def form_valid(self,form):
         form.instance.owner = self.request.user
@@ -62,9 +63,15 @@ class DeleteView(ProjectContextMixin,MustBeOwnerMixin,generic.DeleteView):
 class IndexView(ProjectContextMixin,MustBeMemberMixin,generic.DetailView):
     template_name = 'project/index.html'
 
+    def get_context_data(self,**kwargs):
+        project = self.get_project()
+        context = super(IndexView,self).get_context_data(**kwargs)
+        context['watching_project'] = project.watching_non_members.filter(pk=self.request.user.pk).exists()
+        return context
+
 class OptionsView(ProjectContextMixin,SettingsPageMixin,generic.UpdateView):
     template_name = 'project/options.html'
-    fields = ('name','description','default_locale','default_licence')
+    form_class = editor.forms.ProjectForm
     settings_page = 'options'
 
     def get_success_url(self):
@@ -153,6 +160,36 @@ class CommentView(MustBeMemberMixin,editor.views.generic.CommentView):
 
     def get_comment_object(self):
         return self.get_object()
+
+class WatchProjectView(generic.detail.SingleObjectMixin,generic.View):
+    model = Project
+
+    def get(self,request,*args,**kwargs):
+        project = self.get_object()
+        user = self.request.user
+        if not project.public_view:
+            return http.response.HttpResponseForbidden("This project is not publicly accessible.")
+
+        project.watching_non_members.add(user)
+
+        messages.info(self.request,'You\'re now watching {}. Any activity on this project will show up on your timeline.'.format(project.name))
+
+        return redirect(project.get_absolute_url())
+
+class UnwatchProjectView(generic.detail.SingleObjectMixin,generic.View):
+    model = Project
+
+    def get(self,request,*args,**kwargs):
+        project = self.get_object()
+        user = self.request.user
+        if not project.public_view:
+            return http.response.HttpResponseForbidden("This project is not publicly accessible.")
+
+        project.watching_non_members.remove(user)
+
+        messages.info(self.request,'You\'re not watching {} any more.'.format(project.name))
+
+        return redirect(project.get_absolute_url())
 
 class LeaveProjectView(ProjectContextMixin,MustBeMemberMixin,generic.DeleteView):
     model = ProjectAccess

@@ -70,7 +70,7 @@ class UserProfile(models.Model):
         return (Project.objects.filter(owner=self.user) | Project.objects.filter(projectaccess__user=self.user)).distinct().order_by(Lower('name'))
 
     def all_timeline(self):
-        projects = self.user.own_projects.all() | Project.objects.filter(projectaccess__in=self.user.project_memberships.all())
+        projects = self.user.own_projects.all() | Project.objects.filter(projectaccess__in=self.user.project_memberships.all()) | Project.objects.filter(watching_non_members=self.user)
         items = TimelineItem.objects.filter(
             Q(editoritems__in=self.user.watched_items.all()) | 
             Q(editoritems__project__in=projects) |

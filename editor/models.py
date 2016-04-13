@@ -144,6 +144,9 @@ class Project(models.Model,ControlledObject):
 
     timeline = GenericRelation('TimelineItem',related_query_name='projects',content_type_field='timeline_content_type',object_id_field='timeline_id')
 
+    public_view = models.BooleanField(default=False)
+    watching_non_members = models.ManyToManyField(User,related_name='watched_projects')
+
     icon = 'briefcase'
 
     description = models.TextField(blank=True)
@@ -152,6 +155,9 @@ class Project(models.Model,ControlledObject):
 
     def can_be_edited_by(self, user):
         return (user.is_superuser) or (self.owner==user) or self.has_access(user,('edit',))
+
+    def can_be_viewed_by(self,user):
+        return self.public_view or super(Project,self).can_be_viewed_by(user)
 
     def get_absolute_url(self):
         return reverse('project_index',args=(self.pk,))

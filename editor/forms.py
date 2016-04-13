@@ -449,10 +449,10 @@ class AddMemberForm(UserSearchMixin,forms.ModelForm):
                 self.invitation = editor.models.ProjectInvitation.objects.create(invited_by=self.cleaned_data.get('adding_user'),project=m.project,access=m.access,email=m.user.email)
         return m
 
-class CreateProjectForm(forms.ModelForm):
+class ProjectForm(forms.ModelForm):
     class Meta:
         model = editor.models.Project
-        fields = ('name','description','default_licence','default_locale')
+        fields = ('name','description','default_licence','default_locale','public_view')
         widgets = {
             'default_locale': forms.widgets.Select(choices=editor.models.LOCALE_CHOICES,attrs={'class':'form-control'})
         }

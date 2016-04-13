@@ -83,10 +83,10 @@ class ControlledObject(object):
         return (user.is_superuser) or (self.owner==user) or (self.has_access(user,accept_levels))
 
     def can_be_copied_by(self,user):
-        if not self.licence:
-            return False
         if user.is_superuser or self.owner==user or self.has_access(user,('edit',)):
             return True
+        elif not self.licence:
+            return False
         else:
             return self.licence.can_reuse and self.licence.can_modify
 

@@ -3,13 +3,20 @@ from django.views import generic
 from django.db.models.query import EmptyQuerySet
 from django.core.urlresolvers import reverse,reverse_lazy
 from django.forms.models import inlineformset_factory
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render_to_response
 from django import http
 from django.core.exceptions import PermissionDenied
 
 from editor.models import Project, ProjectAccess
 import editor.forms
 import editor.views.editoritem
+
+class MustBeMemberMixin(object):
+    def dispatch(self,request,*args,**kwargs):
+        self.object = self.get_object()
+        if not self.object.can_be_viewed_by(request.user):
+            return render_to_response('project/must_be_member.html',self.get_context_data())
+        return super(MustBeMemberMixin,self).dispatch(request,*args,**kwargs)
 
 class MustBeOwnerMixin(object):
     def dispatch(self,request,*args,**kwargs):
@@ -32,7 +39,7 @@ class ProjectContextMixin(object):
         context['project_editable'] = project.can_be_edited_by(self.request.user)
         return context
 
-class SettingsPageMixin(object):
+class SettingsPageMixin(MustBeMemberMixin):
     def get_context_data(self,**kwargs):
         context = super(SettingsPageMixin,self).get_context_data(**kwargs)
         context['settings_page'] = self.settings_page
@@ -52,7 +59,7 @@ class DeleteView(ProjectContextMixin,MustBeOwnerMixin,generic.DeleteView):
     success_url = reverse_lazy('editor_index')
 
 
-class IndexView(ProjectContextMixin,generic.DetailView):
+class IndexView(ProjectContextMixin,MustBeMemberMixin,generic.DetailView):
     template_name = 'project/index.html'
 
 class OptionsView(ProjectContextMixin,SettingsPageMixin,generic.UpdateView):
@@ -125,7 +132,7 @@ class TransferOwnershipView(ProjectContextMixin,MustBeOwnerMixin,generic.UpdateV
         
         return super(TransferOwnershipView,self).form_valid(form)
 
-class SearchView(editor.views.editoritem.SearchView):
+class SearchView(MustBeMemberMixin,editor.views.editoritem.SearchView):
     template_name = 'project/search.html'
 
     def dispatch(self,request,pk,*args,**kwargs):
@@ -141,13 +148,13 @@ class SearchView(editor.views.editoritem.SearchView):
         context['project'] = self.project
         return context
 
-class CommentView(editor.views.generic.CommentView):
+class CommentView(MustBeMemberMixin,editor.views.generic.CommentView):
     model = Project
 
     def get_comment_object(self):
         return self.get_object()
 
-class LeaveProjectView(ProjectContextMixin,generic.DeleteView):
+class LeaveProjectView(ProjectContextMixin,MustBeMemberMixin,generic.DeleteView):
     model = ProjectAccess
     template_name = 'project/leave.html'
     context_object_name = 'projectaccess'

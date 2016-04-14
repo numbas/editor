@@ -16,7 +16,7 @@ from sanitizer.models import SanitizedTextField
 
 from operator import itemgetter
 
-from editor.models import NewQuestion, NewExam, Question, Exam, EditorTag, Project, TimelineItem
+from editor.models import NewQuestion, NewExam, EditorTag, Project, TimelineItem
 
 class RegistrationManager(regmodels.RegistrationManager):
     @transaction.atomic

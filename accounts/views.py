@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.http import Http404, HttpResponse
 from django.template.defaultfilters import slugify
 from accounts.forms import UserProfileForm,ChangePasswordForm
-from editor.models import Question, Exam
+from editor.models import NewQuestion, NewExam
 import editor.models
 from editor.views import editoritem
 from zipfile import ZipFile
@@ -152,7 +152,7 @@ class ZipView(DetailView):
 class AllExamsView(ZipView):
     def get_zip(self,request,*args,**kwargs):
         user = request.user
-        exams = Exam.objects.filter(author=user)
+        exams = NewExam.objects.filter(author=user)
         files = [('%s.exam' % e.slug, e.as_source()) for e in exams]
 
         return files, '%s-exams.zip' % slugify(user.get_full_name())
@@ -160,7 +160,7 @@ class AllExamsView(ZipView):
 class AllQuestionsView(ZipView):
     def get_zip(self,request,*args,**kwargs):
         user = request.user
-        questions = Question.objects.filter(author=user)
+        questions = NewQuestion.objects.filter(author=user)
 
         files = [('%s.exam' % q.slug, q.as_source()) for q in questions]
 

@@ -39,7 +39,7 @@ import reversion
 from django_tables2.config import RequestConfig
 
 from editor.forms import NewQuestionForm, QuestionForm, SetAccessForm
-from editor.models import Project, EditorItem, NewQuestion, Access, Question, Extension, Resource, QuestionAccess
+from editor.models import Project, EditorItem, NewQuestion, Access, Extension, Resource
 import editor.views.generic
 import editor.views.editoritem
 from editor.views.errors import forbidden
@@ -60,7 +60,7 @@ class PreviewView(editor.views.editoritem.PreviewView):
     def get(self, request, *args, **kwargs):
         try:
             q = self.get_object()
-        except (Question.DoesNotExist, TypeError) as err:
+        except (NewQuestion.DoesNotExist, TypeError) as err:
             status = {
                 "result": "error",
                 "message": str(err),
@@ -87,7 +87,7 @@ class ZipView(editor.views.editoritem.ZipView):
         try:
             q = self.get_object()
             scorm = 'scorm' in request.GET
-        except (Question.DoesNotExist, TypeError) as err:
+        except (NewQuestion.DoesNotExist, TypeError) as err:
             status = {
                 "result": "error",
                 "message": str(err),
@@ -113,7 +113,7 @@ class SourceView(editor.views.editoritem.SourceView):
     def get(self, request, *args, **kwargs):
         try:
             q = self.get_object()
-        except (Question.DoesNotExist, TypeError) as err:
+        except (NewQuestion.DoesNotExist, TypeError) as err:
             status = {
                 "result": "error",
                 "message": str(err),
@@ -270,34 +270,9 @@ class JSONSearchView(editor.views.editoritem.SearchView):
         context['id'] = self.request.GET.get('id',None)
         return context
     
-class ShareLinkView(generic.RedirectView):
+class ShareLinkView(editor.views.generic.ShareLinkView):
     permanent = False
-
-    def get_redirect_url(self, *args,**kwargs):
-        access = kwargs['access']
-        try:
-            if access == 'edit':
-                q = NewQuestion.objects.get(editoritem__share_uuid_edit=kwargs['share_uuid'])
-            elif access == 'view':
-                q = NewQuestion.objects.get(editoritem__share_uuid_view=kwargs['share_uuid'])
-        except ValueError,Question.DoesNotExist:
-            raise Http404
-
-        user = self.request.user
-        if access=='view':
-            has_access = q.editoritem.can_be_viewed_by(user)
-        elif access=='edit':
-            has_access = q.editoritem.can_be_edited_by(user)
-            
-        if not has_access:
-            try:
-                ea = Access.objects.get(item=q.editoritem,user=user)
-            except Access.DoesNotExist:
-                ea = Access(item=q.editoritem, user=user,access=access)
-            ea.access = access
-            ea.save()
-
-        return reverse('question_edit',args=(q.pk,q.editoritem.slug))
+    model = NewQuestion
 
 class StampView(editor.views.generic.StampView):
     model = NewQuestion

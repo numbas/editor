@@ -44,7 +44,7 @@ from django_tables2.config import RequestConfig
 from editor.forms import ExamForm, NewExamForm, UploadExamForm
 from editor.models import NewExam, NewQuestion, EditorItem, Access
 import editor.models
-from editor.models import Exam, Question, ExamAccess, ExamHighlight, Theme, Licence, Extension, STAMP_STATUS_CHOICES
+from editor.models import Theme, Licence, Extension, STAMP_STATUS_CHOICES
 import editor.views.editoritem
 import editor.views.generic
 from editor.views.errors import forbidden
@@ -84,7 +84,7 @@ class ZipView(editor.views.editoritem.ZipView):
         try:
             e = self.get_object()
             scorm = 'scorm' in request.GET
-        except (Exam.DoesNotExist, TypeError) as err:
+        except (NewExam.DoesNotExist, TypeError) as err:
             status = {
                 "result": "error",
                 "message": str(err),
@@ -104,7 +104,7 @@ class SourceView(editor.views.editoritem.SourceView):
     def get(self, request, *args, **kwargs):
         try:
             e = self.get_object()
-        except (Exam.DoesNotExist, TypeError) as err:
+        except (NewExam.DoesNotExist, TypeError) as err:
             status = {
                 "result": "error",
                 "message": str(err),
@@ -317,49 +317,11 @@ class RevertView(generic.UpdateView):
         return redirect(reverse('exam_edit', args=(exam.pk,exam.editoritem.slug)))
 
 class CompareView(generic.TemplateView):
-
     template_name = "exam/compare.html"
 
-    def get_context_data(self, pk1,pk2, **kwargs):
-        context = super(CompareView, self).get_context_data(**kwargs)
-        """
-        pk1 = int(pk1)
-        pk2 = int(pk2)
-        q1 = context['q1'] = Question.objects.get(pk=pk1)
-        q2 = context['q2'] = Question.objects.get(pk=pk2)
-        context['pr1_exists'] = QuestionPullRequest.objects.open().filter(source=q1,destination=q2).exists()
-        context['pr2_exists'] = QuestionPullRequest.objects.open().filter(source=q2,destination=q1).exists()
-        context['pr1_auto'] = q2.editoritem.can_be_edited_by(self.request.user)
-        context['pr2_auto'] = q1.editoritem.can_be_edited_by(self.request.user)
-        """
-        return context
-
-class ShareLinkView(generic.RedirectView):
+class ShareLinkView(editor.views.generic.ShareLinkView):
     permanent = False
-
-    def get_redirect_url(self, *args,**kwargs):
-        try:
-            e = Exam.objects.get(share_uuid=kwargs['share_uuid'])
-        except ValueError,Exam.DoesNotExist:
-            raise Http404
-
-        access = kwargs['access']
-
-        user = self.request.user
-        if access=='view':
-            has_access = e.editoritem.can_be_viewed_by(user)
-        elif access=='edit':
-            has_access = e.editoritem.can_be_edited_by(user)
-            
-        if not has_access:
-            try:
-                ea = ExamAccess.objects.get(exam=e,user=user)
-            except ExamAccess.DoesNotExist:
-                ea = ExamAccess(exam=e, user=user,access=access)
-            ea.access = access
-            ea.save()
-
-        return reverse('exam_edit',args=(e.pk,e.slug))
+    model = NewExam
 
 class StampView(editor.views.generic.StampView):
     model = NewExam

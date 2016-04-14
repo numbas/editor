@@ -25,7 +25,7 @@ from django.template.loader import get_template
 from django.template import RequestContext
 import reversion
 
-from editor.models import Extension,NewStampOfApproval,Comment,RestorePoint,TimelineItem,EditorItem
+from editor.models import Extension,NewStampOfApproval,Comment,RestorePoint,TimelineItem,EditorItem, Access
 
 from accounts.util import user_json
 
@@ -187,3 +187,32 @@ class DeleteStampView(generic.DeleteView):
             return http.HttpResponse(json.dumps({'current_stamp':data}),content_type='application/json')
         else:
             return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
+
+class ShareLinkView(generic.RedirectView):
+    permanent = False
+
+    def get_redirect_url(self, *args,**kwargs):
+        access = kwargs['access']
+        try:
+            if access == 'edit':
+                q = self.model.objects.get(editoritem__share_uuid_edit=kwargs['share_uuid'])
+            elif access == 'view':
+                q = self.model.objects.get(editoritem__share_uuid_view=kwargs['share_uuid'])
+        except ValueError,self.model.DoesNotExist:
+            raise Http404
+
+        user = self.request.user
+        if access=='view':
+            has_access = q.editoritem.can_be_viewed_by(user)
+        elif access=='edit':
+            has_access = q.editoritem.can_be_edited_by(user)
+            
+        if not has_access:
+            try:
+                ea = Access.objects.get(item=q.editoritem,user=user)
+            except Access.DoesNotExist:
+                ea = Access(item=q.editoritem, user=user,access=access)
+            ea.access = access
+            ea.save()
+
+        return q.get_absolute_url()

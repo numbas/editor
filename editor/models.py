@@ -115,6 +115,13 @@ class ControlledObject(object):
                    )
 
 class TimelineMixin(object):
+    """ 
+    A model which produces a timeline item when it is created.
+    Models inheriting from this should implement either
+     * self.object, or 
+     * self.timeline_object() and self.can_be_deleted_by(user)
+    as well as a GenericRelation `timelineitems` to TimelineItem
+    """
     def can_be_deleted_by(self,user):
         try:
             if self.object.author==user:
@@ -780,8 +787,8 @@ class TimelineItem(models.Model):
     objects = TimelineItemManager()
 
     # Object whose timeline this item belongs to
-    timeline_content_type = models.ForeignKey(ContentType,related_name='timelineitem_timeline')
-    timeline_id = models.PositiveIntegerField()
+    timeline_content_type = models.ForeignKey(ContentType,related_name='timelineitem_timeline',null=True)
+    timeline_id = models.PositiveIntegerField(null=True)
     timeline = GenericForeignKey('timeline_content_type','timeline_id')
 
     # Reference to an object representing this item (e.g. a Comment)
@@ -809,6 +816,31 @@ class TimelineItem(models.Model):
 def delete_timelineitem_object(instance,*args,**kwargs):
     if instance.object is not None:
         instance.object.delete()
+
+class SiteBroadcastManager(models.Manager):
+    def visible_now(self):
+        return self.filter(Q(show_until__gte=datetime.now()) | Q(show_until=None))
+
+class SiteBroadcast(models.Model,TimelineMixin):
+    objects = SiteBroadcastManager()
+
+    author = models.ForeignKey(User,related_name='site_broadcasts')
+    title = models.CharField(max_length=200)
+    text = models.TextField()
+    sticky = models.BooleanField(default=False)
+    show_until = models.DateTimeField(null=True,blank=True)
+
+    timelineitems = GenericRelation(TimelineItem,related_query_name='site_broadcasts',content_type_field='object_content_type',object_id_field='object_id')
+    timelineitem_template = 'timeline/site_broadcast.html'
+
+    def can_be_deleted_by(self,user):
+        return False
+
+    def timeline_object(self):
+        return None
+
+    def __unicode__(self):
+        return self.text[:50]
 
 class NewStampOfApproval(models.Model,TimelineMixin):
     object = models.ForeignKey(EditorItem,related_name='stamps')

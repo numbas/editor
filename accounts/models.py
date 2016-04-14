@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Q
 from django.db.models.functions import Lower
+from datetime import datetime
+from django.contrib.contenttypes.models import ContentType
 
 from django_thumbs.db.models import ImageWithThumbsField
 
@@ -16,7 +18,7 @@ from sanitizer.models import SanitizedTextField
 
 from operator import itemgetter
 
-from editor.models import NewQuestion, NewExam, EditorTag, Project, TimelineItem
+from editor.models import NewQuestion, NewExam, EditorTag, Project, TimelineItem, SiteBroadcast
 
 class RegistrationManager(regmodels.RegistrationManager):
     @transaction.atomic
@@ -71,13 +73,18 @@ class UserProfile(models.Model):
 
     def all_timeline(self):
         projects = self.user.own_projects.all() | Project.objects.filter(projectaccess__in=self.user.project_memberships.all()) | Project.objects.filter(watching_non_members=self.user)
+        nonsticky_broadcasts = SiteBroadcast.objects.visible_now().exclude(sticky=True)
+        nonsticky_broadcast_timelineitems = TimelineItem.objects.filter(object_content_type=ContentType.objects.get_for_model(SiteBroadcast),object_id__in=nonsticky_broadcasts)
+
         items = TimelineItem.objects.filter(
             Q(editoritems__in=self.user.watched_items.all()) | 
             Q(editoritems__project__in=projects) |
             Q(projects__in=projects)
         )
 
-        return items.order_by('-date')
+        items = (items | nonsticky_broadcast_timelineitems).order_by('-date')
+
+        return items
 
     def public_timeline(self):
         return self.user.timelineitems.order_by('-date')

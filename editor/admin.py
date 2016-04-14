@@ -17,6 +17,8 @@ from django.contrib.auth.admin import UserAdmin
 
 import editor.models
 
+admin.site.register(editor.models.SiteBroadcast)
+
 admin.site.register(editor.models.NewExam)
 admin.site.register(editor.models.NewQuestion)
 admin.site.register(editor.models.Theme)

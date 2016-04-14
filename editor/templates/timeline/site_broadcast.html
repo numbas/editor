@@ -1,0 +1,17 @@
+{% extends "timeline/item.html" %}
+{% load user_link %}
+{% load sanitizer %}
+
+{% block thumbnail %}
+    <span class="glyphicon glyphicon-exclamation-sign" style="font-size: 36px"></span>
+{% endblock thumbnail %}
+
+{% block item_heading_container%}
+<h3 class="media-heading">{{item.object.title}}</h3>
+{% endblock %}
+
+{% block content %}
+{{item.object.text|strip_html|safe}}
+{% endblock %}
+
+{% block hide_item %}{% endblock %}

@@ -42,16 +42,21 @@
     <div class="col-sm-8">
         <div id="personal-timeline">
             <div class="timeline">
-                {% with include_object_link=True timeline=request.user.userprofile.all_timeline|visible_to:request.user %}
-                {% if timeline.exists %}
-                    {% for item in timeline|slice:":20" %}
+                {% for broadcast in sticky_broadcasts %}
+                    {% with item=broadcast.timelineitem %}
                         {% include item.object.timelineitem_template %}
-                    {% endfor %}
-                {% else %}
-                    {% with include_object_link=False %}
-                    {% include "timeline/welcome.html" %}
                     {% endwith %}
-                {% endif %}
+                {% endfor %}
+                {% with include_object_link=True timeline=request.user.userprofile.all_timeline|visible_to:request.user %}
+                    {% if timeline.exists %}
+                        {% for item in timeline|slice:":20" %}
+                            {% include item.object.timelineitem_template %}
+                        {% endfor %}
+                    {% else %}
+                        {% with include_object_link=False %}
+                        {% include "timeline/welcome.html" %}
+                        {% endwith %}
+                    {% endif %}
                 {% endwith %}
             </div>
         </div>

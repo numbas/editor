@@ -2,18 +2,19 @@
 run entirely in the browser, developed by [Newcastle University's School of
 Maths and Stats](http://www.ncl.ac.uk/maths/).
 
-This repository is an editor for creating Numbas exams.
+This is the Numbas editor. The Numbas runtime can be found at http://github.com/numbas/Numbas.
+
+For more information, see [the Numbas website](http://www.numbas.org.uk).
 
 ### Installation
 
 Instructions for installation can be found at http://numbas.github.io/editor/.
 
-Note that a full installation like this is not necessary if you just want to
-try out the editor - you can use [the free public editor at **math**centre](http://numbas.mathcentre.ac.uk).
+You probably don't need to set up your own editor installation: there's [a free public editor at **math**centre](http://numbas.mathcentre.ac.uk), which is supported by Newcastle University.
 
 ### Copyright
 
-> Copyright 2011-14 Newcastle University
+> Copyright 2011-16 Newcastle University
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

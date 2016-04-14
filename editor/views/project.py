@@ -142,8 +142,11 @@ class TransferOwnershipView(ProjectContextMixin,MustBeOwnerMixin,generic.UpdateV
 class SearchView(MustBeMemberMixin,editor.views.editoritem.SearchView):
     template_name = 'project/search.html'
 
+    def get_object(self):
+        return Project.objects.get(pk=self.kwargs.get('pk'))
+
     def dispatch(self,request,pk,*args,**kwargs):
-        self.project = Project.objects.get(pk=pk)
+        self.project = self.get_object() 
         return super(SearchView,self).dispatch(request,pk,*args,**kwargs)
 
     def base_queryset(self):

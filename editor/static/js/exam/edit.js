@@ -186,6 +186,7 @@ $(document).ready(function() {
             this.init_tasks();
         }
 
+        this.load_state();
     }
     Exam.prototype = {
 

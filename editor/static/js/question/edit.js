@@ -271,6 +271,7 @@ $(document).ready(function() {
         }
 
 		if(window.history !== undefined) {
+            this.load_state();
 			var state = window.history.state || {};
 			if('currentVariable' in state) {
 				var variables = this.variables();

@@ -670,24 +670,6 @@ $(document).ready(function() {
             };
         }
 
-		if(window.history !== undefined) {
-			var state = window.history.state || {};
-			if('currentTab' in state) {
-				var tabs = this.mainTabs();
-				for(var i=0;i<tabs.length;i++) {
-					var tab = tabs[i];
-					if(tab.id==state.currentTab) {
-						this.currentTab(tab);
-						break;
-					}
-				}
-			}
-			Editor.computedReplaceState('currentTab',ko.computed(function() {
-                var tab = this.currentTab();
-                return tab ? tab.id : '';
-            },this));
-        }
-
         this.addStamp = function(status_code) {
             return function() {
                 $.post('stamp',{'status': status_code, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(response) {
@@ -810,6 +792,26 @@ $(document).ready(function() {
                 ei.load(data);
             };
 
+        },
+
+        load_state: function() {
+            if(window.history !== undefined) {
+                var state = window.history.state || {};
+                if('currentTab' in state) {
+                    var tabs = this.mainTabs();
+                    for(var i=0;i<tabs.length;i++) {
+                        var tab = tabs[i];
+                        if(tab.id==state.currentTab) {
+                            this.currentTab(tab);
+                            break;
+                        }
+                    }
+                }
+                Editor.computedReplaceState('currentTab',ko.computed(function() {
+                    var tab = this.currentTab();
+                    return tab ? tab.id : '';
+                },this));
+            }
         },
 
         load: function(data) {

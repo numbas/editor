@@ -13,14 +13,17 @@ import editor.views.editoritem
 
 class MustBeMemberMixin(object):
     def dispatch(self,request,*args,**kwargs):
-        self.object = self.get_object()
-        if not self.object.can_be_viewed_by(request.user):
+        self.project = self.get_project()
+        if not self.project.can_be_viewed_by(request.user):
             return render_to_response('project/must_be_member.html',self.get_context_data())
         return super(MustBeMemberMixin,self).dispatch(request,*args,**kwargs)
 
+    def get_project(self):
+        return self.get_object()
+
 class MustBeOwnerMixin(object):
     def dispatch(self,request,*args,**kwargs):
-        if request.user != self.get_object().owner:
+        if request.user != self.get_project().owner:
             raise PermissionDenied
         return super(MustBeOwnerMixin,self).dispatch(request,*args,**kwargs)
 
@@ -107,7 +110,7 @@ class AddMemberView(ProjectContextMixin,SettingsPageMixin,generic.CreateView):
     settings_page = 'members'
 
     def get_project(self):
-        return Project.objects.get(pk=self.kwargs['pk'])
+        return Project.objects.get(pk=self.kwargs['project_pk'])
 
     def get_success_url(self):
         return reverse('project_settings_members',args=(self.object.project.pk,))

@@ -24,7 +24,7 @@ urlpatterns = patterns('',
     url(r'^project/(?P<pk>\d+)/delete$', project.DeleteView.as_view(), name='project_delete'),
     url(r'^project/(?P<pk>\d+)/settings/options$', project.OptionsView.as_view(), name='project_settings_options'),
     url(r'^project/(?P<pk>\d+)/settings/members$', project.ManageMembersView.as_view(), name='project_settings_members'),
-    url(r'^project/(?P<pk>\d+)/settings/add_member$', project.AddMemberView.as_view(), name='project_settings_add_member'),
+    url(r'^project/(?P<project_pk>\d+)/settings/add_member$', project.AddMemberView.as_view(), name='project_settings_add_member'),
     url(r'^project/(?P<pk>\d+)/settings/transfer_ownership$', project.TransferOwnershipView.as_view(), name='project_transfer_ownership'),
 
     url(r'^project/(?P<pk>\d+)/watch/$', project.WatchProjectView.as_view(), name='project_watch'),

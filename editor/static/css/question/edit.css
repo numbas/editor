@@ -56,6 +56,33 @@
     max-height: 200px;
 }
 
+.variable-group-name {
+    font-weight: bold;
+}
+
+.variable-list.empty {
+    margin-bottom: 3em;
+    position: relative;
+}
+
+.variable-list tbody.ko_container.empty {
+	display: block;
+	min-height: 3em;
+    background: #fefbfb;
+	width: 100%;
+	position: absolute;
+    box-sizing: border-box;
+    padding: 1em;
+}
+.variable-list tbody.ko_container.ui-sortable.empty::before {
+    content: 'Drag a variable here';
+    color: #888;
+    font-style: italic;
+}
+.variable-selector {
+    cursor: pointer;
+}
+
 
 /*
 #question-name {
@@ -278,15 +305,6 @@
 
 .variable-list th.value {
 	text-align: right;
-}
-
-.variable-list tbody.ko_container.empty {
-	display: block;
-	min-height: 1.5em;
-	border: 1px dashed #ccc;
-	width: 100%;
-	position: absolute;
-    box-sizing: border-box;
 }
 
 .variable-list .placeholder {

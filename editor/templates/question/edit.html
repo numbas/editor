@@ -280,11 +280,11 @@
                         <div class="panel-heading">
                             <h3 class="panel-title">
                                 {% if editable %}<button type="button" class="pull-left btn btn-xs btn-link" data-bind="click: sort" title="Sort the variables in this group"><span class="glyphicon glyphicon-sort-by-alphabet"></span></button>{% endif %}
-                                <input {% if not editable %}disabled{% endif %} class="transparent-input" type="text" data-bind="textInput: name, attr: {readonly: fixed}"/>
+                                <input {% if not editable %}disabled{% endif %} class="transparent-input variable-group-name" type="text" data-bind="textInput: name, attr: {readonly: fixed}"/>
                                 {% if editable %}<button type="button" class="pull-right btn btn-xs btn-link" data-bind="visible: !fixed, click: remove" title="Remove this variable group"><span class="glyphicon glyphicon-remove text-danger"></span></button>{% endif %}
                             </h3>
                         </div>
-                        <table class="table variable-list table-hover">
+                        <table class="table variable-list table-hover" data-bind="css: {empty: variables().length==0}">
                             <thead>
                                 <tr>
                                     <th></th>

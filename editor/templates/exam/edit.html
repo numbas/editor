@@ -22,6 +22,35 @@
 
 {% block main_tab_content %}
 {{ block.super }}
+    <!-- Display -->
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='display'}">
+        <form class="form-horizontal">
+            <div class="form-group">
+                <label class="label-block">
+                    <div class="col-sm-3 control-label">
+                        Interface theme 
+                        {% helplink 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-theme' %}
+                    </div>
+                    <div class="col-sm-6">
+                        <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.themes, value: theme, optionsText: 'name'"></select>
+                        <div class="help-block upload-theme"><a href="{% url 'theme_new' %}">Upload a new theme</a></div>
+                    </div>
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label class="label-block">
+                    <div class="col-sm-3 control-label">
+                        Interface language {% helplink 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-interface-language' %}
+                    </div>
+                    <div class="col-sm-6">
+                        <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.locales, value: locale, optionsValue: 'code', optionsText: 'name'"></select>
+                    </div>
+                </label>
+            </div>
+        </form>
+    </section>
+
     <!-- Questions -->
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='questions'}">
         <div class="questions row">
@@ -42,6 +71,7 @@
                             </div>
                             {% endwith %}
                         </form>
+
                     </div>
                     <ul class="list-group" data-bind="
                         sortable: {
@@ -52,6 +82,13 @@
                         }
                         ">
                     </ul>
+                    <div class="panel-footer" data-bind="fadeVisible: questions().length>0">
+                        <div class="form-group">
+                            <label>Pass threshold {% helplink 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-pass-threshold' %}</label>
+                            <input {% if not editable %}disabled{% endif %} type="range" min="0" max="100" data-bind="value: percentPass, valueUpdate: 'input'">
+                            <span class="percentproperty value" data-bind="text: ko.unwrap(percentPass)+'%'">0%</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="col-sm-6">
@@ -106,6 +143,7 @@
     <!-- Navigation -->
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='navigation'}">
         <form class="form-horizontal">
+            {% with form_label_class='col-sm-6' form_control_class='col-sm-6' %}
             {% booleanproperty 'allowregen' 'Allow user to regenerate questions?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-allow-user-to-regenerate-questions' %}
             {% booleanproperty 'reverse' 'Allow move to previous question?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-allow-move-to-previous-question' %}
             {% booleanproperty 'browse' 'Allow to jump to any question?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-allow-jump-to-any-question' %}
@@ -113,6 +151,7 @@
             {% booleanproperty 'showresultspage' 'Show results page?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-show-results-page' %}
             {% booleanproperty 'preventleave' 'Confirm before leaving the exam while it\'s running?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-confirm-before-leaving-the-exam-while-it-s-running' %}
             {% exam_event 'onleave' 'On leaving a question' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-on-leaving-a-question' %}
+            {% endwith %}
         </form>
 
         {% if editable %}
@@ -133,10 +172,12 @@
     <!-- Timing -->
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='timing'}">
         <form class="form-horizontal">
+            {% with form_label_class='col-sm-6' form_control_class='col-sm-6' %}
             {% property 'duration' 'Exam duration (minutes)' min=0 help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-exam-duration' %}
             {% booleanproperty 'allowPause' 'Allow pausing?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-allow-pausing' %}
             {% exam_event 'timeout' 'On timeout' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-on-timeout-event' %}
             {% exam_event 'timedwarning' '5 minutes before timeout' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-minutes-before-timeout-event' %}
+            {% endwith %}
         </form>
 
         {% if editable %}
@@ -157,11 +198,13 @@
     <!-- Feedback -->
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='feedback'}">
         <form class="form-horizontal">
+            {% with form_label_class='col-sm-6' form_control_class='col-sm-6' %}
             {% booleanproperty 'showactualmark' 'Show current score?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-show-current-score' %}
             {% booleanproperty 'showtotalmark' 'Show maximum score?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-show-maximum-score' %}
             {% booleanproperty 'showanswerstate' 'Show answer state?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-show-answer-state' %}
             {% booleanproperty 'allowrevealanswer' 'Allow reveal answer?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-allow-reveal-answer' %}
             {% percentproperty 'advicethreshold' 'Advice threshold' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-advice-threshold' %}
+            {% endwith %}
         </form>
 
         {% if editable %}
@@ -184,6 +227,8 @@
 {% block content %}
 {{ block.super }}
     {% verbatim %}
+
+    <!-- question result templates -->
 
     <script type="text/html" id="question">
         <li class="question list-group-item clearfix">
@@ -237,20 +282,4 @@
 
 {% block settings_main %}
 {{ block.super }}
-    <div class="form-group">
-        <label>Interface theme {% helplink 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-theme' %}</label>
-        <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.themes, value: theme, optionsText: 'name'"></select>
-        <div class="help-block upload-theme"><a href="{% url 'theme_new' %}">Upload a new theme</a></div>
-    </div>
-
-    <div class="form-group">
-        <label>Interface language {% helplink 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-interface-language' %}</label>
-        <select c{% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.locales, value: locale, optionsValue: 'code', optionsText: 'name'"></select>
-    </div>
-
-    <div class="form-group">
-        <label>Pass threshold {% helplink 'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-pass-threshold' %}</label>
-        <input {% if not editable %}disabled{% endif %} type="range" min="0" max="100" data-bind="value: percentPass, valueUpdate: 'input'">
-        <span class="percentproperty value" data-bind="text: ko.unwrap(percentPass)+'%'">0%</span>
-    </div>
 {% endblock settings_main %}

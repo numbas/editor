@@ -10,6 +10,7 @@ $(document).ready(function() {
 
         this.mainTabs([
             new Editor.Tab('settings','Settings','cog'),
+            new Editor.Tab('display','Display','picture'),
             new Editor.Tab('questions','Questions','file'),
             new Editor.Tab('navigation','Navigation','tasks'),
             new Editor.Tab('timing','Timing','time'),

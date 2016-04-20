@@ -61,7 +61,7 @@
                     </div>
                     <div class="panel-body">
                         <form class="form-horizontal">
-                            {% with form_label_class='col-sm-6' form_control_class='col-sm-6' %}
+                            {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
                             {% booleanproperty 'shuffleQuestions' 'Shuffle questions?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-shuffle-questions' %}
                             <div data-bind="fadeVisible: shuffleQuestions">
                                 {% booleanproperty 'allQuestions' 'Use all questions?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-use-all-questions' %}
@@ -143,7 +143,7 @@
     <!-- Navigation -->
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='navigation'}">
         <form class="form-horizontal">
-            {% with form_label_class='col-sm-6' form_control_class='col-sm-6' %}
+            {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
             {% booleanproperty 'allowregen' 'Allow user to regenerate questions?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-allow-user-to-regenerate-questions' %}
             {% booleanproperty 'reverse' 'Allow move to previous question?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-allow-move-to-previous-question' %}
             {% booleanproperty 'browse' 'Allow to jump to any question?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-allow-jump-to-any-question' %}
@@ -172,7 +172,7 @@
     <!-- Timing -->
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='timing'}">
         <form class="form-horizontal">
-            {% with form_label_class='col-sm-6' form_control_class='col-sm-6' %}
+            {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
             {% property 'duration' 'Exam duration (minutes)' min=0 help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-exam-duration' %}
             {% booleanproperty 'allowPause' 'Allow pausing?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-allow-pausing' %}
             {% exam_event 'timeout' 'On timeout' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-on-timeout-event' %}
@@ -198,7 +198,7 @@
     <!-- Feedback -->
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='feedback'}">
         <form class="form-horizontal">
-            {% with form_label_class='col-sm-6' form_control_class='col-sm-6' %}
+            {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
             {% booleanproperty 'showactualmark' 'Show current score?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-show-current-score' %}
             {% booleanproperty 'showtotalmark' 'Show maximum score?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-show-maximum-score' %}
             {% booleanproperty 'showanswerstate' 'Show answer state?' help_url='http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-show-answer-state' %}

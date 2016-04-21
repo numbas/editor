@@ -19,7 +19,7 @@ $(document).ready(function() {
             new Editor.Tab('history','Editing history','time')
         ]);
         if(item_json.editable) {
-            this.mainTabs.splice(5,0,new Editor.Tab('access','Access','lock'));
+            this.mainTabs.splice(6,0,new Editor.Tab('access','Access','lock'));
         }
         this.currentTab(this.mainTabs()[0]);
 

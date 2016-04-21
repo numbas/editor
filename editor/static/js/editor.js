@@ -675,10 +675,15 @@ $(document).ready(function() {
     Editor.EditorItem.prototype = {
         init_tasks: function() {
             this.section_completed = {};
+
+            function section_completed(tasks) {
+                return ko.computed(function() {
+                    return tasks.every(function(t){return ko.unwrap(t.done)});
+                })
+            }
+
             for(var section in this.section_tasks) {
-                this.section_completed[section] = ko.computed(function() {
-                    return this.section_tasks[section].every(function(t){return ko.unwrap(t.done)});
-                },this);
+                this.section_completed[section] = section_completed(this.section_tasks[section]);
             }
             
             this.all_sections_completed = ko.computed(function() {

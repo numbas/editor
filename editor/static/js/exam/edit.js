@@ -160,8 +160,8 @@ $(document).ready(function() {
 
             this.section_tasks = {
                 'settings': [
-                    Editor.nonempty_task('Give the question a name.',this.name),
-                    Editor.nonempty_task('Fill out the question description.',this.description),
+                    Editor.nonempty_task('Give the exam a name.',this.name),
+                    Editor.nonempty_task('Fill out the exam description.',this.description),
                     Editor.nonempty_task('Select a licence defining usage rights.',this.licence)
                 ],
                 'questions': [

@@ -614,6 +614,10 @@ $(document).ready(function() {
                 {value:'view',text:'Anyone can view this'},
                 {value:'edit',text:'Anyone can edit this'}
             ];
+            this.public_access_text = ko.computed(function() {
+                var public_access = this.public_access();
+                return this.access_options.filter(function(t){return t.value==public_access})[0].text;
+            },this);
             this.access_rights = ko.observableArray(item_json.access_rights.map(function(d){
                 var access = new UserAccess(ei,d.user)
                 access.access_level(d.access_level);

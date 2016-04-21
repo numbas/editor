@@ -349,7 +349,7 @@
                                 <tr>
                                     <td><span class="glyphicon glyphicon-globe"></span> Public access</td>
                                     <td>
-                                        <select class="form-control" data-bind="visible: published, value: public_access, options: access_options, optionsText:'text',optionsValue:'value'"></select>
+                                        <span data-bind="text: public_access_text"></span>
                                         <em data-bind="visible: !ko.unwrap(published)">This {{item_type}} has not been published</em>
                                     </td>
                                     <td></td>

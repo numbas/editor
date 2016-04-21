@@ -480,6 +480,7 @@ class PublishView(generic.UpdateView):
         ei.publish()
         ei.save()
         editor.models.ItemChangedTimelineItem.objects.create(user=self.request.user,object=ei,verb='published')
+        messages.add_message(self.request, messages.SUCCESS, 'This {} has been published to the public database.'.format(ei.item_type))
         return redirect(self.get_success_url())
 
 class UnPublishView(PublishView):
@@ -487,6 +488,7 @@ class UnPublishView(PublishView):
         ei = self.get_object()
         ei.unpublish()
         ei.save()
+        messages.add_message(self.request, messages.INFO, 'This {} has been unpublished from the public database.'.format(ei.item_type))
         return redirect(self.get_success_url())
 
 class SetAccessView(generic.UpdateView):

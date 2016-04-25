@@ -78,7 +78,6 @@ class CopyView(ProjectQuerysetMixin, generic.FormView, generic.edit.ModelFormMix
         return super(CopyView,self).dispatch(request,*args,**kwargs)
 
     def get(self,request,*args,**kwargs):
-        print('GET',request.is_ajax())
         if request.is_ajax():
             form_class = self.get_form_class()
             form = form_class(data=self.get_initial())

@@ -1072,7 +1072,8 @@ class NewExam(models.Model):
         e2.editoritem = ei2
         e2.save()
 
-        e2.set_questions(self.questions.all())
+        for eq in NewExamQuestion.objects.filter(exam=self):
+            NewExamQuestion.objects.create(exam=e2,question=eq.question,qn_order=eq.qn_order)
         e2.custom_theme = self.custom_theme
         e2.save()
 

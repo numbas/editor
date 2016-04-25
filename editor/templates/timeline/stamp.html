@@ -8,7 +8,7 @@
 {% block heading %}<span class="glyphicon glyphicon-flag"></span> {% user_link item.object.user %}{% endblock %}
 
 {% block content %}
-<p>Gave some feedback: <span class="label label-default stamp stamp-{{item.object.status}}">{{item.object.get_status_display}}</span></p>
+<p>Gave some feedback: {% include "stamp.html" with status=item.object.status label=item.object.get_status_display %}</p>
 {% endblock content %}
 
 {% block delete_url %}{% url 'stamp_delete' item.object.pk %}{% endblock %}

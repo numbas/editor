@@ -46,6 +46,31 @@ body:not(.loaded) .loaded-content {
     color: black !important;
 }
 
+.stamp[data-stamp="ok"]{
+	background-color: green;
+	color: white;
+}
+
+.stamp[data-stamp="problem"]{
+	background-color: #888;
+	color: white;
+}
+
+.stamp[data-stamp="broken"]{
+	background-color: red;
+	color: white;
+}
+
+.stamp[data-stamp="dontuse"]{
+	background-color: black;
+	color: yellow;
+}
+
+.stamp[data-stamp="pleasetest"]{
+	background-color: #ffbf00;
+}
+
+
 /*
 ul.no-bullets, ol.no-bullets {
 	list-style-type: none;

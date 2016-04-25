@@ -65,7 +65,7 @@
         <h1 class="name-header">
             <span class="glyphicon glyphicon-{{object.icon}}"></span> <span data-bind="mathjaxHTML: name">{{object.name}}</span>
             <small class="pull-right" data-bind="if: current_stamp">
-                <span class="label label-default stamp" data-bind="text: current_stamp().status_display"></span>
+                <span class="label label-default stamp" data-bind="text: current_stamp().status_display, attr: {'data-stamp':current_stamp().status}"></span>
             </small>
         </h1>
         {% endblock page_header %}

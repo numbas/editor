@@ -73,6 +73,7 @@
     <div class="row">
         <div class="col-sm-3 col-md-2 tabs">
             <ul class="controls nav nav-pills nav-stacked">
+                {% block admin_controls %}
                 <li id="preview">
                 <a class="text-success" data-bind="attr: {href: item_json.previewURL, target: item_json.previewWindow}" title="Run this {{item_type}} in a new window (Ctrl+B)">
                         <span class="glyphicon glyphicon-play"></span>
@@ -105,6 +106,7 @@
                         <li><a href="{% editoritem_url 'source' object %}">source</a></li>
                     </ul>
                 </li>
+                {% endblock admin_controls %}
             </ul>
 
             <hr>

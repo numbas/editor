@@ -1767,7 +1767,6 @@ $(document).ready(function() {
 	$('body').on('click','.add-to-basket',function(e) {
 		e.preventDefault();
 		e.stopPropagation();
-        console.log("ADD")
 		Editor.add_question_to_basket($(this).attr('data-question-id'));
 	});
 
@@ -1780,7 +1779,6 @@ $(document).ready(function() {
                 .success(function(data) {
                     var things = [];
                     var things = data.map(function(d) {
-                        console.log(d);
                         return {label: d.name, value: d.name}
                     });
                     callback(things);

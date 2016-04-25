@@ -154,6 +154,13 @@
 {% endif %}
 {% endblock settings %}
 
+{% block admin_controls %}
+{{block.super}}
+<li id="add-to-basket">
+<a class="basket add-to-basket" href="#" data-question-id="{{object.pk}}"><span class="glyphicon glyphicon-shopping-cart" title="Add this question to your basket" aria-hidden="true"></span> Add to your basket</a>
+</li>
+{% endblock admin_controls %}
+
 {% block main_tab_content %}
 {{ block.super }}
     <!-- Question statement -->

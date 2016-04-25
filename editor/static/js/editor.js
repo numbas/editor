@@ -462,6 +462,14 @@ $(document).ready(function() {
             Editor.save_noty = null;
         }
     }
+    Editor.abortSave = function(reason) {
+        Editor.savers = Math.max(Editor.savers-1,0);
+        $.noty.close(Editor.save_noty);
+        Editor.save_noty = null;
+        window.onbeforeunload = function() {
+            return reason;
+        }
+    }
 
     //obs is an observable on the data to be saved
     //savefn is a function which does the save, and returns a deferred object which resolves when the save is done
@@ -479,13 +487,17 @@ $(document).ready(function() {
             }
             Editor.startSave();
             data.csrfmiddlewaretoken = getCookie('csrftoken');
-            var def = savefn(data);
-            def
-                .always(Editor.endSave)
-                .done(function() {
-                    noty({text:'Saved.',type:'success',timeout: 1000, layout: 'topCenter'})
-                })
-            ;
+            try {
+                var def = savefn(data);
+                def
+                    .always(Editor.endSave)
+                    .done(function() {
+                        noty({text:'Saved.',type:'success',timeout: 1000, layout: 'topCenter'})
+                    })
+                ;
+            } catch(e) {
+                Editor.abortSave(e.message);
+            }
         }).extend({throttle:1000});
     }
 
@@ -717,6 +729,9 @@ $(document).ready(function() {
                     return data;
                 },
                 function(data) {
+                    if(!ei.name()) {
+                        throw(new Error("We can't save changes while the name field is empty."));
+                    }
                     return $.post(
                         '/'+ei.item_type+'/'+ei.id+'/'+slugify(ei.realName())+'/',
                         {json: JSON.stringify(data), csrfmiddlewaretoken: getCookie('csrftoken')}

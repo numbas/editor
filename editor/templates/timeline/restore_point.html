@@ -11,7 +11,7 @@
 {% block content %}
 <p>
 Saved a checkpoint:
-{% if current_timeline == item.object.object.rel_obj %}<a class="btn btn-primary btn-sm" href="{% url 'restore_point_revert' item.object.pk %}">Restore this checkpoint</a>{% endif %}
 </p>
 <blockquote>{{item.object.description|strip_html|safe}}</blockquote>
+{% if current_timeline == item.object.object.rel_obj %}<p><a class="btn btn-danger btn-sm" href="{% url 'restore_point_revert' item.object.pk %}"><span class="glyphicon glyphicon-open"></span> Restore this checkpoint</a></p>{% endif %}
 {% endblock content %}

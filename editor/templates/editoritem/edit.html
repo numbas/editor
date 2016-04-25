@@ -257,7 +257,7 @@
 
                     <div data-bind="visible: !commentwriter.writingComment() && !restorepointwriter.writingComment()">
                         <button class="btn btn-primary" data-bind="click: commentwriter.writingComment" type="button"><span class="glyphicon glyphicon-comment"></span> Write a comment</button>
-                        <button class="btn btn-primary" data-bind="click: restorepointwriter.writingComment" type="button"><span class="glyphicon glyphicon-save"></span> Set a checkpoint</button>
+                        <button class="btn btn-success" data-bind="click: restorepointwriter.writingComment" type="button"><span class="glyphicon glyphicon-save"></span> Set a checkpoint</button>
                     </div>
                     <div class="timeline-write-comment" data-bind="with: commentwriter">
                         <form action="{% url 'comment_on_'|add:item_type object.pk object.editoritem.slug %}" data-bind="fadeVisible: writingComment, submit: submitComment">

@@ -298,8 +298,9 @@
                                 data: $data.variables,
                                 options: {
                                     forcePlaceholderSize: true,
-                                    placeholder: 'placeholder'
-                                }
+                                    placeholder: 'placeholder',
+                                },
+                                afterAdd: function(_,_,v){if(!v.name()){$('.variable-definition input.name').focus()}}
                             }">
                             </tbody>
                         </table>

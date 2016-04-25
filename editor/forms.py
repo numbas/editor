@@ -133,7 +133,7 @@ class BootstrapSelect(forms.Select):
 class EditorItemSearchForm(forms.Form):
     query = forms.CharField(initial='', required=False)
     item_types = forms.MultipleChoiceField(initial=('questions','exams'),choices=(('questions','Questions'),('exams','Exams')), widget=ShowMoreCheckboxSelectMultiple, required=False)
-    author = forms.CharField(initial='', required=False)
+    author = forms.CharField(initial='', required=False, widget=forms.TextInput(attrs={'class':'form-control'}))
     usage = forms.ChoiceField(initial='any',choices=USAGE_OPTIONS, required=False, widget=BootstrapRadioSelect)
     subjects = forms.ModelMultipleChoiceField(queryset=editor.models.Subject.objects.all(), required=False, widget=ShowMoreCheckboxSelectMultiple)
     topics = forms.ModelMultipleChoiceField(queryset=editor.models.Topic.objects.all(), required=False, widget=ShowMoreCheckboxSelectMultiple)

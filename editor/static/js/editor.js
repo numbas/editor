@@ -1780,6 +1780,7 @@ $(document).ready(function() {
                 .success(function(data) {
                     var things = [];
                     var things = data.map(function(d) {
+                        console.log(d);
                         return {label: d.name, value: d.name}
                     });
                     callback(things);

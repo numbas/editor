@@ -1,38 +1,7 @@
 $(document).ready(function() {
-    var user_search_url = $('#search_author').attr('data-autocomplete-url');
-    function parseUser(user) { 
-        return {label: user.name, value: user.name} 
-    }
-    var author_source = function(req,callback) {
-        $(this).addClass('loading');
-        $.getJSON(user_search_url,{q:req.term})
-            .success(function(data) {
-                var things = [];
-                for(var i=0;i<data.length;i++) {
-                    var thing = parseUser(data[i]);
-                    things.push(thing);
-                }
-                callback(things);
-            })
-            .error(function() {
-            })
-            .complete(function() {
-                $(this).removeClass('loading');
-            })
-        ;
-    }
-    $('#search_author')
-        .autocomplete({
-            source: author_source,
-            select: function(e,ui) {
-                $(this).val(ui.item.value);
-                $(this).parents('form').submit();
-                e.stopPropagation();
-                e.preventDefault();
-                return false;
-            }
-        })
-    ;
+    Editor.user_search_autocomplete($('input[name="author"]'));
+    ['open','close','select','change','create','search'].forEach(function(p){
+    });
 
     var ability_level_checkboxes = $('#ability_levels .checkbox');
 
@@ -73,8 +42,9 @@ $(document).ready(function() {
         }
     }
 
-    $('#id_item_types, #id_subjects input, #id_topics input, #id_usage input, #id_status').on('change',form_changed('search-panel-form'));
-    $('#ability_levels').on('change','input',form_changed);
+    $('#id_item_types, #id_subjects input, #id_topics input, #id_usage input, #id_status, #id_author').on('change',form_changed('search-panel-form'));
+    $('#ability_levels').on('change','input[type="checkbox"]',form_changed('search-panel-form'));
+    $('input[name="author"]').on('autocompleteselect',form_changed('search-panel-form'));
 
     $('#id_order_by').on('change',form_changed('order_by-form'));
 

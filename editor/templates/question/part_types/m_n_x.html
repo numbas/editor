@@ -2,19 +2,19 @@
 {% load helplink %}
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking'}">
     <form class="form-horizontal">
-        {% property 'minMarks' 'Minimum marks' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-minimum-marks' %}
-        {% property 'maxMarks' 'Maximum marks' min='minMarks' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-maximum-marks' %}
-        {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal' %}
+        {% property 'minMarks' 'Minimum marks' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-minimum-marks' %}
+        {% property 'maxMarks' 'Maximum marks' min='minMarks' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-maximum-marks' %}
+        {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-show-correct-answer-on-reveal' %}
         <div data-bind="visible: $parent.steps().length">
-            {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-penalty-for-revealing-steps' %}
+            {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-penalty-for-revealing-steps' %}
         </div>
-        {% property 'minAnswers' 'Minimum answers' max='maxAnswers' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-minimum-answers' %}
-        {% property 'maxAnswers' 'Maximum answers' min=minAnswers help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-maximum-answers' %}
-        {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-shuffle-order-of-choices' %}
-        {% booleanproperty 'shuffleAnswers' 'Shuffle order of answers?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-shuffle-order-of-answers' %}
+        {% property 'minAnswers' 'Minimum answers' max='maxAnswers' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-minimum-answers' %}
+        {% property 'maxAnswers' 'Maximum answers' min=minAnswers help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-maximum-answers' %}
+        {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-shuffle-order-of-choices' %}
+        {% booleanproperty 'shuffleAnswers' 'Shuffle order of answers?' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-shuffle-order-of-answers' %}
         <div class="form-group" data-bind="fadeVisible: minAnswers()!=0 || maxAnswers()!=0">
             <label class="{{form_label_class}} control-label">
-                What to do if wrong number of answers selected: {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-what-to-do-if-wrong-number-of-answers-selected' %}
+                What to do if wrong number of answers selected: {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-what-to-do-if-wrong-number-of-answers-selected' %}
             </label>
             <div class="{{form_control_class}}">
                 <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: warningTypes, value: warningType, optionsText: 'niceName'"></select>
@@ -22,7 +22,7 @@
         </div>
         <div class="form-group">
             <label class="{{form_label_class}} control-label">
-                Selection type {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-selection-type' %}
+                Selection type {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-selection-type' %}
             </label>
             <div class="{{form_control_class}}">
                 <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: displayTypes, value: displayType, optionsText: 'niceName'"></select>
@@ -31,7 +31,7 @@
 
         <div class="form-group">
             <label class="{{form_label_class}} control-label">
-                Layout {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-layout-match-choices-with-answers-only' %}
+                Layout {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-layout-match-choices-with-answers-only' %}
             </label>
             <div class="{{form_control_class}}">
                 <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: layoutTypes, value: layoutType, optionsText: 'niceName'"></select>
@@ -46,9 +46,9 @@
 
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='choices'}">
     <form class="form-horizontal">
-        {% booleanproperty 'customChoices' 'Variable list of choices?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-variable-list-of-choices' %}
+        {% booleanproperty 'customChoices' 'Variable list of choices?' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-variable-list-of-choices' %}
         <div data-bind="fadeVisible: customChoices">
-            {% property 'customChoicesExpression' 'List of choices' monospace=True help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-list-of-choices' %}
+            {% property 'customChoicesExpression' 'List of choices' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-list-of-choices' %}
 		</div>
 	</form>
     <ul class="choices list-unstyled list-group" data-bind="fadeVisible: !customChoices()">
@@ -68,9 +68,9 @@
 
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='answers'}">
     <form class="form-horizontal">
-        {% booleanproperty 'customAnswers' 'Variable list of answers?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-variable-list-of-answers' %}
+        {% booleanproperty 'customAnswers' 'Variable list of answers?' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-variable-list-of-answers' %}
         <div data-bind="fadeVisible: customAnswers">
-            {% property 'customAnswersExpression' 'List of answers' monospace=True help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-list-of-answers' %}
+            {% property 'customAnswersExpression' 'List of answers' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-list-of-answers' %}
 		</div>
 	</form>
     <ul class="answers list-unstyled list-group" data-bind="fadeVisible: !customAnswers()">
@@ -90,9 +90,9 @@
 
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='matrix'}">
     <form class="form-horizontal">
-        {% booleanproperty 'customMarking' 'Custom marking matrix?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-marking-matrix' disable='customChoices() || customAnswers()' %}
+        {% booleanproperty 'customMarking' 'Custom marking matrix?' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-custom-marking-matrix' disable='customChoices() || customAnswers()' %}
         <div data-bind="fadeVisible: customMarking">
-            {% property 'customMatrix' 'Custom matrix expression' monospace=True help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-custom-matrix-expression' %}
+            {% property 'customMatrix' 'Custom matrix expression' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-custom-matrix-expression' %}
         </div>
     </form>
 

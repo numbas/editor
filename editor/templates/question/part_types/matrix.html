@@ -2,9 +2,9 @@
 {% load helplink %}
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking'}">
 <form class="form-horizontal">
-    {% property '$parent.marks' 'Marks' min=0 help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-marks' %}
+    {% property '$parent.marks' 'Marks' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-marks' %}
     <div data-bind="visible: $parent.steps().length">
-        {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-penalty-for-revealing-steps' %}
+        {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-penalty-for-revealing-steps' %}
     </div>
 
 	<h4>Correct answer</h4>
@@ -16,31 +16,31 @@
 			<textarea {% if not editable %}disabled{% endif %} data-bind="valueUpdate: 'afterkeydown', codemirror: correctAnswer, codemirrorMode: 'jme'"></textarea>
 		</div>
 	</div>
-    {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal' %}
+    {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-show-correct-answer-on-reveal' %}
     <div data-bind="fadeVisible: precisionType().name=='none'">
-        {% booleanproperty 'correctAnswerFractions' 'Display numbers in the correct answer as fractions?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-display-numbers-in-the-correct-answer-as-fractions' %}
+        {% booleanproperty 'correctAnswerFractions' 'Display numbers in the correct answer as fractions?' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-display-numbers-in-the-correct-answer-as-fractions' %}
     </div>
 
     <h4>Student's answer</h4>
-    {% property 'numRows' 'Number of rows' min=1 help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-number-of-rows' %}
-    {% property 'numColumns' 'Number of columns' min=1 help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-number-of-columns' %}
-    {% booleanproperty 'allowResize' 'Allow student to change size of matrix?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-allow-student-to-change-size-of-matrix' %}
-    {% property 'tolerance' 'Margin of error allowed in each cell' min=0 help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-margin-of-error-allowed-in-each-cell' %}
-    {% booleanproperty 'markPerCell' 'Gain marks for each correct cell?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-gain-marks-for-each-cell' %}
+    {% property 'numRows' 'Number of rows' min=1 help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-number-of-rows' %}
+    {% property 'numColumns' 'Number of columns' min=1 help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-number-of-columns' %}
+    {% booleanproperty 'allowResize' 'Allow student to change size of matrix?' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-allow-student-to-change-size-of-matrix' %}
+    {% property 'tolerance' 'Margin of error allowed in each cell' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-margin-of-error-allowed-in-each-cell' %}
+    {% booleanproperty 'markPerCell' 'Gain marks for each correct cell?' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-gain-marks-for-each-cell' %}
 
 	<h4>Precision restriction</h4>
 	<div class="form-group">
 		<label class="{{form_label_class}} control-label">
-            Precision restriction {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-precision-restriction' %}
+            Precision restriction {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-precision-restriction' %}
 		</label>
 		<div class="{{form_control_class}}">
 			<select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: precisionTypes, value: precisionType, optionsText: 'niceName'"></select>
 		</div>
 	</div>
-    {% booleanproperty 'allowFractions' 'Allow the student to enter fractions?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-allow-the-student-to-enter-a-fraction' %}
+    {% booleanproperty 'allowFractions' 'Allow the student to enter fractions?' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-allow-the-student-to-enter-a-fraction' %}
     <div data-bind="fadeVisible: precisionType().name!='none'">
         {% property 'precision' 'precisionWord' dynamic_label=True %}
-        {% booleanproperty 'strictPrecision' 'Require trailing zeros?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-require-trailing-zeroes' %}
+        {% booleanproperty 'strictPrecision' 'Require trailing zeros?' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-require-trailing-zeroes' %}
         {% percentproperty 'precisionPartialCredit' 'Partial credit for wrong precision' %}
         <div class="form-group">
             <label class="{{form_label_class}} control-label">

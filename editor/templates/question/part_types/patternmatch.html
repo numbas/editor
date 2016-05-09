@@ -2,17 +2,17 @@
 {% load helplink %}
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking'}">
 <form class="form-horizontal">
-    {% property '$parent.marks' 'Marks' min=0 help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-marks' %}
+    {% property '$parent.marks' 'Marks' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-marks' %}
     <div data-bind="visible: $parent.steps().length">
-        {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-penalty-for-revealing-steps' %}
+        {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-penalty-for-revealing-steps' %}
     </div>
 
-    {% property 'answer' 'Answer pattern' monospace=True help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-answer-pattern' %}
-    {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-show-correct-answer-on-reveal' %}
+    {% property 'answer' 'Answer pattern' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-answer-pattern' %}
+    {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-show-correct-answer-on-reveal' %}
     <div data-bind="fadeVisible: $parent.showCorrectAnswer">
-        {% property 'displayAnswer' 'Display answer' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-display-answer' %}
+        {% property 'displayAnswer' 'Display answer' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-display-answer' %}
     </div>
-    {% booleanproperty 'caseSensitive' 'Must the answer be in the correct case?' help_url='http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-must-the-answer-be-in-the-correct-case' %}
+    {% booleanproperty 'caseSensitive' 'Must the answer be in the correct case?' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-must-the-answer-be-in-the-correct-case' %}
     <div data-bind="fadeVisible:caseSensitive">
         {% percentproperty 'partialCredit' 'Partial credit for answer not matching case' %}
     </div>

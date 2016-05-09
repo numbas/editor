@@ -106,7 +106,7 @@ $(document).ready(function() {
         this.onleave = new Event(
             'onleave',
             'On leaving a question',
-            'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-on-leaving-a-question',
+            'http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-on-leaving-a-question',
             [
                 {name:'none', niceName:'None'},
                 {name:'warnifunattempted', niceName:'Warn if unattempted'},
@@ -117,7 +117,7 @@ $(document).ready(function() {
         this.timeout = new Event(
             'timeout',
             'On timeout',
-            'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-on-timeout-event',
+            'http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-on-timeout-event',
             [
                 {name:'none', niceName:'None'},
                 {name:'warn', niceName:'Warn'}
@@ -126,7 +126,7 @@ $(document).ready(function() {
         this.timedwarning = new Event(
             'timedwarning',
             '5 minutes before timeout',
-            'http://numbas-editor.readthedocs.org/en/latest/exam-reference.html#term-minutes-before-timeout-event',
+            'http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-minutes-before-timeout-event',
             [
                 {name:'none', niceName:'None'},
                 {name:'warn', niceName:'Warn'}

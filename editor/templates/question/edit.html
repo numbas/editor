@@ -169,7 +169,7 @@
             <label>Question statement</label>
             <div {% if not editable %}disabled{% endif %} data-bind="writemaths: statement"></div>
             <p class="help-block">
-                {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#statement' subject='the question statement' %}
+                {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-reference.html#statement' subject='the question statement' %}
                 Give any introductory information the student needs. 
             </p>
         </div>
@@ -372,7 +372,7 @@
             <div class="form-group">
                 <label class="col-sm-3 control-label">
                     Condition to satisfy
-                    {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-condition-to-satisfy' %}
+                    {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-reference.html#term-condition-to-satisfy' %}
                 </label>
                 <div class="col-sm-9">
                     <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: variablesTest.condition, codemirrorMode: 'jme'"></textarea>
@@ -380,7 +380,7 @@
                 </div>
             </div>
             {% with form_label_class="col-sm-3" form_control_class="col-sm-9" %}
-            {% property 'variablesTest.maxRuns' 'Maximum number of runs' min=1 help_url='http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-maximum-number-of-runs' %}
+            {% property 'variablesTest.maxRuns' 'Maximum number of runs' min=1 help_url='http://numbas-editor.readthedocs.io/en/latest/question-reference.html#term-maximum-number-of-runs' %}
             {% endwith %}
             <div class="form-group form-inline">
                 <div class="col-sm-offset-3">
@@ -437,7 +437,7 @@
                                 <div {% if not editable %}disabled{% endif %} data-bind="writemaths: prompt, preambleCSS: $root.preamble.css, tinymce_plugins: ['gapfill'], showButtons: {gapfill: function(){return $data.type().name=='gapfill'}}"></div>
 
                                 <p class="help-block">
-                                    {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-prompt' subject='the part prompt' %}
+                                    {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-prompt' subject='the part prompt' %}
                                     Ask the student a question, and give any hints about how they should answer this part.
                                 </p>
                             </section>
@@ -555,7 +555,7 @@
             <label>Advice</label>
             <div {% if not editable %}disabled{% endif %} data-bind="writemaths: advice"></div>
             <p class="help-block">
-                {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#advice' subject='the advice section' %}
+                {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-reference.html#advice' subject='the advice section' %}
                 Give a worked solution to the whole question. 
             </p>
         </div>
@@ -582,7 +582,7 @@
                 <div class="col-sm-4">
                     <div class="panel panel-info">
                         <div class="panel-heading">
-                            <h4 class="panel-title">Extensions {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-extensions' %}</h4>
+                            <h4 class="panel-title">Extensions {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-reference.html#term-extensions' %}</h4>
                         </div>
                         <div class="panel-body">
                             <ul class="extensions" data-bind="foreach: extensions">
@@ -602,7 +602,7 @@
                     </div>
                     <div class="panel panel-info">
                         <div class="panel-heading">
-                            <h4 class="panel-title">Rulesets {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#rulesets' subject='rulesets' %}</h4>
+                            <h4 class="panel-title">Rulesets {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-reference.html#rulesets' subject='rulesets' %}</h4>
                         </div>
                         <ul class="list-group">
                             <!-- ko foreach: {data: rulesets, afterAdd: Editor.afterAdd} -->
@@ -629,7 +629,7 @@
                 <div class="col-sm-8">
                     <div id="functions" class="panel panel-default">
                         <div class="panel-heading">
-                            <h3 class="panel-title">Functions {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#functions-rulesets' subject='functions' %}</h3>
+                            <h3 class="panel-title">Functions {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-reference.html#functions-rulesets' subject='functions' %}</h3>
                         </div>
                         <ul class="list-group">
                             <!-- ko foreach: {data: functions, afterAdd: Editor.afterAdd} -->
@@ -637,13 +637,13 @@
                                 <div class="row">
                                     <div class="form-group col-sm-8">
                                         <label>
-                                            Name {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-name' %}
+                                            Name {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-reference.html#term-name' %}
                                         </label>
                                         <input {% if not editable %}disabled{% endif %} class="form-control" placeholder="Name" type="text" data-bind="value: name, valueUpdate: 'afterkeydown'">
                                     </div>
                                     <div class="form-group col-sm-3">
                                         <label>
-                                            Language {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#term-language' subject='languages' %}
+                                            Language {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-reference.html#term-language' subject='languages' %}
                                         </label>
                                         <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: languages, value: language"></select>
                                     </div>
@@ -697,7 +697,7 @@
                         <div class="panel-heading">
                             <h3 class="panel-title">
                                 Preamble
-                                {% helplink 'http://numbas-editor.readthedocs.org/en/latest/question-reference.html#preamble' %}
+                                {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-reference.html#preamble' %}
                             </h3>
                         </div>
                         <div class="panel-body">

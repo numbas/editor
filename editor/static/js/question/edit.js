@@ -1538,9 +1538,9 @@ $(document).ready(function() {
 		this.variableReplacementStrategy = ko.observable(this.variableReplacementStrategies[0])
 
 		this.scripts = [
-			new Script('constructor','When the part is created','after','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-when-the-part-is-created'),
-			new Script('mark','Mark student\'s answer','instead','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-mark-student-s-answer'),
-			new Script('validate','Validate student\'s answer','instead','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-validate-student-s-answer')
+			new Script('constructor','When the part is created','after','http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-when-the-part-is-created'),
+			new Script('mark','Mark student\'s answer','instead','http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-mark-student-s-answer'),
+			new Script('validate','Validate student\'s answer','instead','http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-validate-student-s-answer')
 		];
 
 		this.types.map(function(t){p[t.name] = t.model});

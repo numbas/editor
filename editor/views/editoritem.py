@@ -590,9 +590,29 @@ class ClosePullRequestView(generic.UpdateView):
         print('>>>>>>>>>>',action)
         if action=='accept':
             pr.accept(request.user)
-            messages.add_message(request, messages.SUCCESS, render_to_string('pullrequest/accepted_message.html',{'pr':pr}))
+            messages.add_message(self.request, messages.SUCCESS, render_to_string('pullrequest/accepted_message.html',{'pr':pr}))
             return redirect(pr.destination.get_absolute_url())
         elif action=='reject':
             pr.reject(self.request.user)
-            messages.add_message(request, messages.INFO, render_to_string('pullrequest/rejected_message.html',{'pr':pr}))
+            messages.add_message(self.request, messages.INFO, render_to_string('pullrequest/rejected_message.html',{'pr':pr}))
             return redirect(pr.destination.get_absolute_url()+'#network')
+
+class TransferOwnershipView(generic.UpdateView):
+    model = EditorItem
+    template_name = 'editoritem/transfer_ownership.html'
+    form_class = editor.forms.EditorItemTransferOwnershipForm
+    context_object_name = 'item'
+
+    def dispatch(self,request,*args,**kwargs):
+        ei = self.get_object()
+        if request.user not in [ei.author,ei.project.owner]:
+            raise PermissionDenied
+        return super(TransferOwnershipView,self).dispatch(request,*args,**kwargs)
+
+    def get_success_url(self):
+        return self.get_object().get_absolute_url()
+
+    def form_valid(self, form):
+        messages.add_message(self.request, messages.SUCCESS, render_to_string('editoritem/ownership_transferred_message.html',{'to':form.cleaned_data.get('user_search'),'item':self.get_object()}))
+        return super(TransferOwnershipView,self).form_valid(form)
+

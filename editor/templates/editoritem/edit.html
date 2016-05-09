@@ -201,7 +201,7 @@
                                     <div class="panel-body">
                                         <div class="form-group">
                                             <label><span class="glyphicon glyphicon-user"></span> Author</label>
-                                            <div class="media">
+                                            <div class="media" style="margin-bottom:1em">
                                                 <div class="media-left">
                                                     {% user_thumbnail object.editoritem.author 40 36 %}
                                                 </div>
@@ -209,6 +209,7 @@
                                                     <p class="form-control-static">{% user_link object.editoritem.author %}</p>
                                                 </div>
                                             </div>
+                                            {% if request.user == object.editoritem.author or request.user == object.editoritem.project.owner %}<a class="btn btn-warning btn-sm" href="{% url 'item_transfer_ownership' object.editoritem.pk %}">Transfer ownership</a>{% endif %}
                                         </div>
                                         <div class="form-group">
                                             <label><span class="glyphicon glyphicon-briefcase"></span> Project</label>

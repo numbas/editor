@@ -53,6 +53,9 @@ urlpatterns = patterns('',
     url(r'^item/(?P<pk>\d+)/move$',
         editoritem.MoveProjectView.as_view(),name='item_move_project'),
 
+    url(r'^item/(?P<pk>\d+)/transfer_ownership$',
+        editoritem.TransferOwnershipView.as_view(),name='item_transfer_ownership'),
+
     url(r'^items/compare/(?P<pk1>\d+)/(?P<pk2>\d+)$',
         editoritem.CompareView.as_view(), name='editoritem_compare'),
 

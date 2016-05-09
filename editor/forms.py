@@ -387,6 +387,9 @@ class UserField(BootstrapFieldMixin,forms.Field):
         return user
 
 class UserSearchMixin(object):
+    """
+        Add a user_search field to the form, which resolves a string query to a User object, and set the property user_attr on the model to that user.
+    """
     user_search = UserField(label='User')
     user_attr = 'user'
 
@@ -398,8 +401,6 @@ class UserSearchMixin(object):
         user = self.cleaned_data.get('user_search')
         if user is None:
             raise forms.ValidationError("No such user")
-        if self.cleaned_data['user_search'] == self.cleaned_data['project'].owner:
-            raise forms.ValidationError("Can't give separate access to the project owner")
 
         return user
 
@@ -421,6 +422,13 @@ class AddMemberForm(UserSearchMixin,forms.ModelForm):
             'project': forms.HiddenInput(),
             'access': forms.Select(attrs={'class':'form-control'})
         }
+
+    def clean_user_search(self):
+        user = super(AddMemberForm,self).clean_user_search()
+        if self.cleaned_data['user_search'] == self.cleaned_data['project'].owner:
+            raise forms.ValidationError("Can't give separate access to the project owner")
+
+        return user
 
     def save(self, force_insert=False, force_update=False, commit=True):
         m = super(AddMemberForm, self).save(commit=False)
@@ -444,10 +452,16 @@ class ProjectForm(forms.ModelForm):
             'default_locale': forms.widgets.Select(choices=editor.models.LOCALE_CHOICES,attrs={'class':'form-control'})
         }
 
-class TransferOwnershipForm(UserSearchMixin,forms.ModelForm):
+class ProjectTransferOwnershipForm(UserSearchMixin,forms.ModelForm):
     user_attr = 'owner'
     class Meta:
         model = editor.models.Project 
+        fields = []
+
+class EditorItemTransferOwnershipForm(UserSearchMixin,forms.ModelForm):
+    user_attr = 'author'
+    class Meta:
+        model = editor.models.EditorItem
         fields = []
 
 ProjectAccessFormset = inlineformset_factory(editor.models.Project,editor.models.ProjectAccess,fields=('access',),extra=0,can_delete=True)

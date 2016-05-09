@@ -128,7 +128,7 @@ class AddMemberView(ProjectContextMixin,SettingsPageMixin,generic.CreateView):
 
 class TransferOwnershipView(ProjectContextMixin,MustBeOwnerMixin,generic.UpdateView):
     template_name = 'project/transfer_ownership.html'
-    form_class = editor.forms.TransferOwnershipForm
+    form_class = editor.forms.ProjectTransferOwnershipForm
 
     def get_success_url(self):
         return reverse('project_settings_members',args=(self.object.pk,))

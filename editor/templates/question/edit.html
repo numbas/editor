@@ -589,14 +589,19 @@
                                 <li class="extension">
                                     <label>
                                         <span class="checkbox"><input {% if not editable %}disabled{% endif %} type="checkbox" data-bind="checked: used"></span>
-                                        <span data-bind="text:name"></span> <a data-bind="if: url, attr: {href:url, title: 'Documentation on the '+name+' extension'}" target="_blank"><small class="glyphicon glyphicon-book"></small></a>
+                                        <span data-bind="text:name"></span> 
+                                        <a data-bind="if: url, attr: {href:url, title: 'Documentation on the '+name+' extension'}" target="_blank"><small class="glyphicon glyphicon-book"></small></a>
+                                        <a data-bind="if: author=={{user.pk}}, attr: {href: edit_url, title: 'Edit the '+name+' extension'}" target="_blank"><small class="glyphicon glyphicon-pencil"></small></a>
                                     </label>
                                 </li>
                             </ul>
                         </div>
                         {% if editable %}
                         <div class="panel-footer">
-                            <a class="btn btn-link btn-block" href="{% url 'extension_new' %}"><span class="glyphicon glyphicon-cloud-upload"></span> Upload a new extension</a>
+                            <ul class="list-unstyled list-inline">
+                                <li><a class="" target="_blank" href="{% url 'extension_new' %}"><span class="glyphicon glyphicon-cloud-upload"></span> Upload a new extension</a></li>
+                                {% if not user.is_anonymous %}<li><a class="" target="_blank" href="{% url 'profile_extensions' user.pk %}"><span class="glyphicon glyphicon-wrench"></span> Your extensions</a></li>{% endif %}
+                            </ul>
                         </div>
                         {% endif %}
                     </div>

@@ -385,7 +385,7 @@
             <div class="form-group form-inline">
                 <div class="col-sm-offset-3">
                     <p data-bind="visible: !variablesTest.running()"><button class="btn btn-primary" type="button" data-bind="click: testVariables">Test condition</button> for <input class="form-control" type="number" data-bind="textInput: variablesTest.running_time, autosize: {value:variablesTest.running_time, max:100, min: 20}"/> seconds</p>
-                    <p class="variable-test-running" data-bind="visible: variablesTest.running">Running for <span data-bind="text: variablesTest.time_remaining_display"></span>... <button type="button" data-bind="click: cancelVariablesTest">Cancel</button></p>
+                    <p class="variable-test-running" data-bind="visible: variablesTest.running">Running for <span data-bind="text: variablesTest.time_remaining_display"></span>... <button type="button" class="btn btn-warning" data-bind="click: cancelVariablesTest">Cancel</button></p>
                 </div>
             </div>
         </form>

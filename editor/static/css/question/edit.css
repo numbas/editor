@@ -2,6 +2,13 @@
     margin-top: 1em;
 }
 
+.part > .panel-heading {
+    cursor: s-resize;
+}
+.part.open > .panel-heading {
+    cursor: n-resize;
+}
+
 .part.gap, .part.step {
     margin-left: 2em;
     margin-right: 1em;

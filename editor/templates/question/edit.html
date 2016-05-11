@@ -596,12 +596,9 @@
                                 </li>
                             </ul>
                         </div>
-                        {% if editable %}
+                        {% if editable and not user.is_anonymous %}
                         <div class="panel-footer">
-                            <ul class="list-unstyled list-inline">
-                                <li><a class="" target="_blank" href="{% url 'extension_new' %}"><span class="glyphicon glyphicon-cloud-upload"></span> Upload a new extension</a></li>
-                                {% if not user.is_anonymous %}<li><a class="" target="_blank" href="{% url 'profile_extensions' user.pk %}"><span class="glyphicon glyphicon-wrench"></span> Your extensions</a></li>{% endif %}
-                            </ul>
+                            <a class="btn btn-link btn-block" target="_blank" href="{% url 'profile_extensions' user.pk %}"><span class="glyphicon glyphicon-wrench"></span> Your extensions</a>
                         </div>
                         {% endif %}
                     </div>

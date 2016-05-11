@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 {% load timeline %}
+{% load sstatic %}
+
+{% block javascripts %}
+{{block.super}}
+	<script src="{% sstatic 'js/index.js' %}" type="text/javascript"></script>
+{% endblock %}
 
 {% block stylesheets %}
 {{block.super}}
@@ -86,9 +92,15 @@
             <div class="panel-heading">
                 <h2 class="panel-title"><span class="glyphicon glyphicon-briefcase"></span> Your projects</h2>
             </div>
-            <ul class="members list-group">
+            <div class="panel-heading">
+                <div class="has-feedback">
+                    <input id="project_filter" type="text" class="input-sm form-control" placeholder="Search projects">
+                    <span class="glyphicon glyphicon-search form-control-feedback"></span>
+                </div>
+            </div>
+            <ul class="projects list-group">
                 {% for project in request.user.userprofile.projects.all %}
-                <li class="list-group-item"><a href="{% url 'project_index' project.pk %}">{{project.name}}</a></li>
+                <li class="list-group-item" data-name="{{project.name|escape}}"><a href="{% url 'project_index' project.pk %}">{{project.name}}</a></li>
                 {% endfor %}
             </ul>
         </div>

@@ -191,7 +191,7 @@ def old_access_to_new(apps,schema_editor):
 def remove_new_access(apps,schema_editor):
     Access = apps.get_model('editor','Access')
 
-    Access.objects.all().remove()
+    Access.objects.all().delete()
 
 def copy_revisions(apps, schema_editor):
     Version = apps.get_model('reversion','Version')
@@ -344,6 +344,7 @@ def copy_revisions(apps, schema_editor):
 def delete_new_revisions(apps, schema_editor):
     Version = apps.get_model('reversion','Version')
     ContentType = apps.get_model('contenttypes','contenttype')
+    RestorePoint = apps.get_model('editor','restorepoint')
 
     exam_ct = ContentType.objects.get(app_label='editor',model='exam')
     question_ct = ContentType.objects.get(app_label='editor',model='question')
@@ -364,9 +365,10 @@ def set_newstamp_dates(apps, schema_editor):
 
     def set_timelineitem_date_auto_now(v):
         ti = TimelineItem.objects.first()
-        for field in ti._meta.local_fields:
-            if field.name == "date":
-                field.auto_now_add = v
+        if ti:
+            for field in ti._meta.local_fields:
+                if field.name == "date":
+                    field.auto_now_add = v
 
     set_timelineitem_date_auto_now(False)
 

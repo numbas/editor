@@ -1,0 +1,40 @@
+{% extends "migration/base.html" %}
+
+{% block migrate_content %}
+<p>The Numbas editor has had a big upgrade and we've made some changes to how questions and exams are organised, so we've made this tool to help you get everything in order as quickly as possible.</p>
+<ul>
+    <li>Everything now belongs to a <strong>project</strong>; consider putting everything relating to an individual course you teach in its own project.</li>
+    <li>Exams and questions are hidden from other users by default, until you <strong>publish</strong> them. Make sure you select a <strong>licence</strong> before you publish any material.</li>
+</ul>
+<p>There's more information about the new system in <a href="http://numbas-editor.readthedocs.io/en/latest/">the Numbas editor documentation.</a></p>
+
+<h2>Migration tasks</h2>
+<div class="alert alert-info">
+    <p><span class="glyphicon glyphicon-exclamation-sign"></span> <strong>Note:</strong> These tasks are entirely optional; they're just prompts to try the new features of the editor. You can continue to use the editor without completing any of the tasks below.</p>
+</div>
+<table class="table">
+    <colgroup>
+        <col>
+        <col>
+    </colgroup>
+    <tbody>
+        {% with projects_complete as ok %}
+        <tr class="text-{% if ok %}success{% else %}danger{% endif %}">
+            <td>Create <strong>projects</strong> for each course you teach.</td>
+            <td class="text-right">You have access to <a href="{% url 'profile_projects' user.pk %}">{{user.userprofile.projects.count}} projects</a>.</td>
+            <td><span class="glyphicon glyphicon-{% if ok %}ok{% else %}alert{% endif %}"></span></td>
+        </tr>
+        {% endwith %}
+        {% with publish_complete as ok %}
+        <tr class="text-{% if ok %}success{% else %}danger{% endif %}">
+            <td><strong>Publish</strong> some material to the public database.</td>
+            <td class="text-right">You have published {{num_published}} of your <a href="{% url 'profile_editoritem_search' request.user.pk %}">{{user.own_items.count}} items</a>.</td>
+            <td><span class="glyphicon glyphicon-{% if ok %}ok{% else %}alert{% endif %}"></span></td>
+        </tr>
+        {% endwith %}
+    </tbody>
+</table>
+
+<a class="btn btn-lg btn-block btn-primary" href="{% url 'migrate_items' %}">Open the migration tool</a>
+
+{% endblock migrate_content %}

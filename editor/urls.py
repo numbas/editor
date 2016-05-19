@@ -1,6 +1,4 @@
-from django.conf import settings
 from django.conf.urls import *
-from django.views.generic import RedirectView, TemplateView
 
 from django.contrib.auth.decorators import login_required
 
@@ -94,7 +92,7 @@ urlpatterns = patterns('',
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/restore-point$',
         login_required(exam.SetRestorePointView.as_view()),name='set_restore_point_on_exam'),
 
-    url(r'exam/question-lists/$',
+    url(r'^exam/question-lists/$',
         exam.question_lists,
         name='question_lists'),
 
@@ -170,23 +168,23 @@ urlpatterns = patterns('',
 
     # Notifications
 
-    url(r'notification/(?P<pk>\d+)/open', notification.OpenNotification.as_view(permanent=False), name='open_notification'),
+    url(r'^notification/(?P<pk>\d+)/open', notification.OpenNotification.as_view(permanent=False), name='open_notification'),
 
     # Question basket
 
-    url(r'question_basket/$',
+    url(r'^question_basket/$',
         basket.BasketView.as_view(),
         name='basket'),
-    url(r'question_basket/add/$',
+    url(r'^question_basket/add/$',
         login_required(basket.add_question_to_basket),
         name='add_question_to_basket'),
-    url(r'question_basket/remove/$',
+    url(r'^question_basket/remove/$',
         login_required(basket.remove_question_from_basket),
         name='remove_question_from_basket'),
-    url(r'question_basket/create_exam/$',
+    url(r'^question_basket/create_exam/$',
         login_required(basket.CreateExamFromBasketView.as_view()),
         name='create_exam_from_basket'),
-    url(r'question_basket/empty/$',
+    url(r'^question_basket/empty/$',
         login_required(basket.empty_question_basket),
         name='empty_question_basket'),
 

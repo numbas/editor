@@ -16,5 +16,6 @@ urlpatterns = patterns('',
 	url(r'', include('accounts.urls')),
     
     url(r'', include('editor.urls')),
+    url(r'^migrate/', include('migration.urls')),
 	url(r'^notifications/', include(notifications.urls,namespace='notifications')),
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

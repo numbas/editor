@@ -508,7 +508,7 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
     author = models.ForeignKey(User,related_name='own_items')
     public_access = models.CharField(default='view',editable=True,choices=PUBLIC_ACCESS_CHOICES,max_length=6)
     access_rights = models.ManyToManyField(User, through='Access', blank=True, editable=False,related_name='accessed_questions+')
-    licence = models.ForeignKey(Licence,null=True)
+    licence = models.ForeignKey(Licence,null=True,blank=True)
     project = models.ForeignKey(Project,null=True,related_name='items')
 
     content = models.TextField(blank=True,validators=[validate_content])

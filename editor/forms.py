@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib import messages
-from django.forms.models import inlineformset_factory,modelformset_factory
+from django.forms.models import inlineformset_factory
 from django.forms.widgets import SelectMultiple
 from django.core.exceptions import ValidationError
 from django.utils.html import conditional_escape, format_html, html_safe

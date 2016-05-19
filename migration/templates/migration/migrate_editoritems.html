@@ -1,0 +1,117 @@
+{% extends "migration/base.html" %}
+{% load links %}
+{% load stamp %}
+{% load sstatic %}
+
+{% block javascripts %}
+{{block.super}}
+<script src="{% sstatic 'js/migrate_items.js' %}" type="text/javascript"></script>
+{% endblock %}
+
+{% block migrate_content %}
+<div class="help-block alert alert-info">
+    <p>Use this tool to organise your exams and questions in the updated database. </p>
+    <ul>
+        <li>Everything now belongs to a <strong>project</strong>; consider putting everything relating to an individual course you teach in its own project.</li>
+        <li>Exams and questions are hidden from other users by default, until you <strong>publish</strong> them. Make sure you select a <strong>licence</strong> before you publish any material.</li>
+    </ul>
+</div>
+
+<form method="GET" action="" class="form-inline">
+    Only show items 
+    <label>
+         whose name contains 
+        <input type="text" id="query" name="query" class="form-control">
+    </label>
+    and
+    <label>
+        belong to the project
+        <select name="in_project" class="form-control">
+            <option value="" {% if not in_project %}selected{% endif %}>--------</option>
+            {% for project in request.user.userprofile.projects %}
+            <option value="{{project.pk}}" {% if project == in_project %}selected{% endif %}>{{project.name}}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-search"></span></button>
+</form>
+<hr>
+
+{% if paginator.count %}
+<nav>
+    <ul class="pager">
+        {% if has_previous or page.has_next %}
+        <li class="previous {% if not page.has_previous %}disabled{% endif %}"><a {% if page.has_previous %}href="?page={{page.previous_page_number}}&query={{query}}&in_project={{in_project.pk}}" title="Previous page"{% endif %}><span aria-hidden="true">&larr;</span> Previous</a></li>
+        {% endif %}
+
+        <li>Page {{ page.number }} of {{ paginator.num_pages }}</li>
+
+        {% if page.has_next %}
+        <li class="next"><a href="?page={{page.next_page_number}}&query={{query}}&in_project={{in_project.pk}}">Next <span aria-hidden="true">&rarr;</span></a></li>
+        {% endif %}
+    </ul>
+</nav>
+
+<form method="POST" action="">
+    {% csrf_token %}
+    {% if form.errors %}
+        <h2>error</h2>{{form.errors}}
+    {% endif %}
+    {{form.management_form}}
+    {% for eform in form %}
+        {% for field in eform.hidden_fields %}{{field}}{% endfor %}
+    {% endfor %}
+    <table class="table">
+        <colgroup>
+            <col>
+            <col>
+            <col>
+            <col style="width:15em">
+            <col>
+        </colgroup>
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Current status</th>
+                <th>
+                    Project 
+                </th>
+                <th>Licence</th>
+                <th>Publish</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="info">
+                <td colspan="2"></td>
+                <td>
+                    <div class="row">
+                        <div class="col-sm-9">
+                            {{apply_to_all_form.project}}
+                        </div>
+                            <a class="btn btn-link" target="_blank" href="{% url 'project_new' %}" title="Create a new project"><span class="glyphicon glyphicon-plus"></span></a>
+                    </div>
+                </td>
+                <td>{{apply_to_all_form.licence}}</td>
+                <td class="text-center"><input type="checkbox" id="publish-all" title="Select/unselect every item for publication"></td>
+            </tr>
+        {% for eform in form %}
+        {% with ei=eform.instance %}
+        <tr>
+            <td><a href="{{ei.get_absolute_url}}" target="_blank"><span class="glyphicon glyphicon-{{ei.icon}}"></span> {{ei.name}}</a></td>
+            <td>{% if ei.current_stamp %}{% stamp ei.current_stamp.status %}{% else %}<em class="text-muted">No status set</em>{% endif %}</td>
+            <td>{{eform.project}}</td>
+            <td>{{eform.licence}}</td>
+            <td class="text-center">{{eform.published}} {% if ei.public_access == 'hidden' %}(Currently hidden){% endif %}</td>
+        </tr>
+        {% endwith %}
+        {% endfor %}
+        </tbody>
+    </table>
+    <button type="submit" class="btn btn-block btn-primary btn-lg">Save changes</button>
+</form>
+{% else %}
+<div class="alert alert-warning">
+    <p>No items match your search.</p>
+</div>
+{% endif %}
+{% endblock migrate_content %}

@@ -21,6 +21,7 @@
 <div class="jumbotron">
     {% include "index_message.html" %}
     <div class="text-center">
+        {% if ALLOW_REGISTRATION %}
         <h3>Get started by creating an account.</h3>
         <div class="row">
             <p class="col-sm-offset-2 col-sm-4">
@@ -30,6 +31,14 @@
                 <a class="btn btn-primary btn-lg btn-block" href="{% url 'login' %}">Log in</a>
             </p>
         </div>
+        {% else %}
+        <h3>Get started by logging in.</h3>
+        <div class="row">
+            <p class="col-sm-offset-4 col-sm-4">
+                <a class="btn btn-primary btn-lg btn-block" href="{% url 'login' %}">Log in</a>
+            </p>
+        </div>
+        {% endif %}
         <h3>Or just take a look around.</h3>
         <div class="row">
             <p class="col-sm-offset-2 col-sm-4">

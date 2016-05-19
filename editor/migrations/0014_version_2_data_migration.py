@@ -79,10 +79,9 @@ def old_to_new_questions(apps, schema_editor):
 
     for q in Question.objects.all():
         if q.copy_of:
-            print('{} is a copy of {}'.format(q.pk,q.copy_of.pk))
             nq = NewQuestion.objects.get(pk=q.pk)
             nq.editoritem.copy_of = NewQuestion.objects.get(pk=q.copy_of.pk).editoritem
-            nq.save()
+            nq.editoritem.save()
 
     for tq in TaggedQuestion.objects.all():
         TaggedItem.objects.create(content_type=editoritem_ct,object_id=NewQuestion.objects.get(pk=tq.object_id).editoritem.pk,tag=tq.tag)
@@ -414,8 +413,10 @@ def copy_comments(apps,schema_editor):
     for oc in Comment.objects.filter(object_content_type=question_ct):
         ei = NewQuestion.objects.get(pk=oc.object_id).editoritem
         nc = Comment.objects.create(object_id=ei.pk,object_content_type=editoritem_ct, user=oc.user,text=oc.text)
+        nc.date = oc.date
+        nc.save()
 
-    for c in Comment.objects.filter(object_content_type=newquestion_ct):
+    for c in Comment.objects.filter(object_content_type=editoritem_ct):
         ti = TimelineItem.objects.get(object_content_type=comment_ct,object_id=c.pk)
         for field in ti._meta.local_fields:
             if field.name == "date":

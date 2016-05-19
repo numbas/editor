@@ -79,6 +79,7 @@ def old_to_new_questions(apps, schema_editor):
 
     for q in Question.objects.all():
         if q.copy_of:
+            print('{} is a copy of {}'.format(q.pk,q.copy_of.pk))
             nq = NewQuestion.objects.get(pk=q.pk)
             nq.editoritem.copy_of = NewQuestion.objects.get(pk=q.copy_of.pk).editoritem
             nq.save()
@@ -428,7 +429,7 @@ class Migration(migrations.Migration):
         ('editor', '0013_version_2_models'),
         ('reversion','__first__'),
         ('auth','__first__'),
-        ('accounts','0010_create_personal_projects'),
+        ('accounts','0013_userprofile_avatar'),
     ]
 
     operations = [

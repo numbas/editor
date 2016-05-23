@@ -259,7 +259,7 @@ class Extension(models.Model):
             'url': self.url,
             'pk': self.pk,
             'location': self.location,
-            'author': self.author.pk,
+            'author': self.author.pk if self.author is not None else None,
             'edit_url': reverse('extension_edit',args=(self.pk,)),
         }
         path = self.script_path

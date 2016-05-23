@@ -244,9 +244,9 @@ def copy_revisions(apps, schema_editor):
             ne.locale = e.locale
             ne.theme = e.theme
             try:
-                if e.custom_theme:
-                    ne.custom_theme = Theme.objects.get(pk=e.custom_theme.pk)
-            except exceptions.ObjectDoesNotExist:
+                if e.custom_theme_id is not None:
+                    ne.custom_theme = Theme.objects.get(pk=e.custom_theme_id)
+            except Theme.DoesNotExist:
                 pass
 
             nve = Version()
@@ -294,9 +294,11 @@ def copy_revisions(apps, schema_editor):
             ei.slug = q.slug
             ei.metadata = q.metadata
             try:
-                if q.copy_of:
-                    ei.copy_of = NewQuestion.objects.get(pk=q.copy_of.pk).editoritem
-            except NewQuestion.DoesNotExist:
+                if q.copy_of_id is not None:
+                    nq2 = NewQuestion.objects.filter(pk=q.copy_of_id)
+                    if nq2.exists():
+                        ei.copy_of = nq2.first().editoritem
+            except (NewQuestion.DoesNotExist,Question.DoesNotExist):
                 pass
 
             nve = Version()
@@ -411,7 +413,10 @@ def copy_comments(apps,schema_editor):
     comment_ct = ContentType.objects.get_for_model(Comment)
 
     for oc in Comment.objects.filter(object_content_type=question_ct):
-        ei = NewQuestion.objects.get(pk=oc.object_id).editoritem
+        try:
+            ei = NewQuestion.objects.get(pk=oc.object_id).editoritem
+        except NewQuestion.DoesNotExist:
+            continue
         nc = Comment.objects.create(object_id=ei.pk,object_content_type=editoritem_ct, user=oc.user,text=oc.text)
         nc.date = oc.date
         nc.save()

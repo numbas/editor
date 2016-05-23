@@ -96,7 +96,13 @@ class RevertRestorePointView(generic.UpdateView):
         if not self.restore_point.object.can_be_edited_by(request.user):
             return http.HttpResponseForbidden()
 
+        oei = self.restore_point.object
+        project = oei.project
         self.restore_point.revision.revert()
+
+        ei = EditorItem.objects.get(pk=oei.pk)
+        ei.project = project
+        ei.save()
 
         return redirect(self.restore_point.object.get_absolute_url())
 

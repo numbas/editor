@@ -2,10 +2,17 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+import sys
+from numbas import settings
 
 def make_personal_workspaces(apps, schema_editor):
     Project = apps.get_model('editor','Project')
     UserProfile = apps.get_model('accounts','UserProfile')
+
+    # fiddle to get round sanitizedtextfield not loading its settings
+    bio = UserProfile._meta.get_field('bio')
+    bio._sanitizer_allowed_tags = settings.SANITIZER_ALLOWED_TAGS
+    bio._sanitizer_allowed_attributes = settings.SANITIZER_ALLOWED_ATTRIBUTES
 
     for up in UserProfile.objects.all():
         project = Project.objects.create(

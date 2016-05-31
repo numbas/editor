@@ -436,7 +436,6 @@ $(document).ready(function() {
 					var result = results.variables[name];
 					if(!result) {
 						v.value(null);
-						v.error('');
 						return;
 					}
 					if('value' in result) {
@@ -517,6 +516,7 @@ $(document).ready(function() {
 				try {
 					var tree = jme.compile(v.definition(),scope,true);
 					var vars = jme.findvars(tree);
+                    v.error('');
 				}
 				catch(e) {
 					v.error(e.message);

@@ -36,11 +36,10 @@ def old_to_new_questions(apps, schema_editor):
         ei.content = q.content
         ei.metadata = q.metadata
 
-        ei.created = q.created
-        ei.last_modified = q.last_modified
-
         ei.published = q.published
         ei.published_date = q.published_date
+
+        ei.last_modified = q.last_modified
 
         ei.ability_level_start = q.ability_level_start
         ei.ability_level_end = q.ability_level_end
@@ -73,6 +72,9 @@ def old_to_new_questions(apps, schema_editor):
 
         for e in q.extensions.all():
             nq.extensions.add(e)
+
+        ei.created = q.created
+        ei.last_modified = q.last_modified
 
         ei.save()
         nq.save()
@@ -120,11 +122,10 @@ def old_exams_to_new(apps, schema_editor):
         ei.content = e.content
         ei.metadata = e.metadata
 
-        ei.created = e.created
-        ei.last_modified = e.last_modified
-
         ei.published = e.published
         ei.published_date = e.published_date
+
+        ei.last_modified = e.last_modified
 
         ei.ability_level_start = e.ability_level_start
         ei.ability_level_end = e.ability_level_end
@@ -154,6 +155,9 @@ def old_exams_to_new(apps, schema_editor):
 
         for t in e.topics.all():
             ei.topics.add(t)
+
+        ei.created = e.created
+        ei.last_modified = e.last_modified
 
         ei.save()
         ne.save()
@@ -192,6 +196,24 @@ def remove_new_access(apps,schema_editor):
     Access = apps.get_model('editor','Access')
 
     Access.objects.all().delete()
+
+def itemchanged_timeline_items(apps, schema_editor):
+    EditorItem = apps.get_model('editor','editoritem')
+    ItemChangedTimelineItem = apps.get_model('editor','itemchangedtimelineitem')
+    TimelineItem = apps.get_model('editor','timelineitem')
+    ContentType = apps.get_model('contenttypes','contenttype')
+    
+    itemchange_ct = ContentType.objects.get_for_model(ItemChangedTimelineItem)
+
+    for ei in EditorItem.objects.all():
+        it = ItemChangedTimelineItem.objects.create(user=ei.author,object=ei,verb='created')
+        ti = TimelineItem.objects.get(object_id=it.pk,object_content_type=itemchange_ct)
+        ti.date = ei.created
+        ti.save()
+
+def remove_itemchanged_timeline_items(apps, schema_editor):
+    ItemChangedTimelineItem = apps.get_model('editor','itemchangedtimelineitem')
+    ItemChangedTimelineItem.objects.all().delete()
 
 def copy_revisions(apps, schema_editor):
     Version = apps.get_model('reversion','Version')
@@ -454,6 +476,7 @@ class Migration(migrations.Migration):
             DELETE FROM editor_taggeditem
         """),
         migrations.RunPython(old_exams_to_new,remove_new_exams),
+        migrations.RunPython(itemchanged_timeline_items,remove_itemchanged_timeline_items),
         migrations.RunPython(copy_revisions,delete_new_revisions),
         migrations.RunPython(old_access_to_new,remove_new_access),
         migrations.RunPython(set_newstamp_dates,migrations.RunPython.noop),

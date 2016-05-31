@@ -21,7 +21,7 @@
     Only show items 
     <label>
          whose name contains 
-        <input type="text" id="query" name="query" class="form-control">
+         <input type="text" id="query" name="query" class="form-control" value="{{query}}">
     </label>
     and
     <label>
@@ -38,20 +38,6 @@
 <hr>
 
 {% if paginator.count %}
-<nav>
-    <ul class="pager">
-        {% if has_previous or page.has_next %}
-        <li class="previous {% if not page.has_previous %}disabled{% endif %}"><a {% if page.has_previous %}href="?page={{page.previous_page_number}}&query={{query}}&in_project={{in_project.pk}}" title="Previous page"{% endif %}><span aria-hidden="true">&larr;</span> Previous</a></li>
-        {% endif %}
-
-        <li>Page {{ page.number }} of {{ paginator.num_pages }}</li>
-
-        {% if page.has_next %}
-        <li class="next"><a href="?page={{page.next_page_number}}&query={{query}}&in_project={{in_project.pk}}">Next <span aria-hidden="true">&rarr;</span></a></li>
-        {% endif %}
-    </ul>
-</nav>
-
 <form method="POST" action="">
     {% csrf_token %}
     {% if form.errors %}
@@ -61,6 +47,21 @@
     {% for eform in form %}
         {% for field in eform.hidden_fields %}{{field}}{% endfor %}
     {% endfor %}
+
+    <nav>
+        <ul class="pager">
+            {% if has_previous or page.has_next %}
+            <li class="previous {% if not page.has_previous %}disabled{% endif %}"><a {% if page.has_previous %}href="?page={{page.previous_page_number}}&query={{query}}&in_project={{in_project.pk}}" title="Previous page"{% endif %}><span aria-hidden="true">&larr;</span> Previous</a></li>
+            {% endif %}
+
+            <li>Page {{ page.number }} of {{ paginator.num_pages }}</li>
+
+            {% if page.has_next %}
+            <li class="next"><a href="?page={{page.next_page_number}}&query={{query}}&in_project={{in_project.pk}}">Next <span aria-hidden="true">&rarr;</span></a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
     <table class="table">
         <colgroup>
             <col>
@@ -88,7 +89,7 @@
                         <div class="col-sm-9">
                             {{apply_to_all_form.project}}
                         </div>
-                            <a class="btn btn-link" target="_blank" href="{% url 'project_new' %}" title="Create a new project"><span class="glyphicon glyphicon-plus"></span></a>
+                        <a class="btn btn-link" target="_blank" href="{% url 'project_new' %}" title="Create a new project"><span class="glyphicon glyphicon-plus"></span></a>
                     </div>
                 </td>
                 <td>{{apply_to_all_form.licence}}</td>
@@ -101,14 +102,30 @@
             <td>{% if ei.current_stamp %}{% stamp ei.current_stamp.status %}{% else %}<em class="text-muted">No status set</em>{% endif %}</td>
             <td>{{eform.project}}</td>
             <td>{{eform.licence}}</td>
-            <td class="text-center">{{eform.published}} {% if ei.public_access == 'hidden' %}(Currently hidden){% endif %}</td>
+            <td class="text-center">{{eform.published}} {% if ei.public_access == 'hidden' %}<br>(Currently hidden){% endif %}</td>
         </tr>
         {% endwith %}
         {% endfor %}
         </tbody>
     </table>
+
+    <nav>
+        <ul class="pager">
+            {% if has_previous or page.has_next %}
+            <li class="previous {% if not page.has_previous %}disabled{% endif %}"><a {% if page.has_previous %}href="?page={{page.previous_page_number}}&query={{query}}&in_project={{in_project.pk}}" title="Previous page"{% endif %}><span aria-hidden="true">&larr;</span> Previous</a></li>
+            {% endif %}
+
+            <li>Page {{ page.number }} of {{ paginator.num_pages }}</li>
+
+            {% if page.has_next %}
+            <li class="next"><a href="?page={{page.next_page_number}}&query={{query}}&in_project={{in_project.pk}}">Next <span aria-hidden="true">&rarr;</span></a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
     <button type="submit" class="btn btn-block btn-primary btn-lg">Save changes</button>
 </form>
+
 {% else %}
 <div class="alert alert-warning">
     <p>No items match your search.</p>

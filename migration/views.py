@@ -33,7 +33,7 @@ class PagedItemsMixin(object):
 
         query = self.query = self.request.GET.get('query','')
         if query:
-            queryset = queryset.filter(name__contains=query)
+            queryset = queryset.filter(name__icontains=query)
 
         paginator = self.paginator = Paginator(queryset,50)
         if self.request.method=='GET':

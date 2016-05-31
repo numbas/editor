@@ -21,15 +21,15 @@
         {% with projects_complete as ok %}
         <tr class="text-{% if ok %}success{% else %}danger{% endif %}">
             <td>Create <strong>projects</strong> for each course you teach.</td>
-            <td class="text-right">You have access to <a href="{% url 'profile_projects' user.pk %}">{{user.userprofile.projects.count}} projects</a>.</td>
-            <td><span class="glyphicon glyphicon-{% if ok %}ok{% else %}alert{% endif %}"></span></td>
+            <td class="text-right">You have access to <a href="{% url 'profile_projects' user.pk %}">{{user.userprofile.projects.count}} project{{user.userprofile.projects.count|pluralize}}</a>.</td>
+            <td><span class="glyphicon glyphicon-{% if ok %}ok{% else %}alert{% endif %}" title="{% if not ok %}This task is not complete{% endif %}"></span></td>
         </tr>
         {% endwith %}
         {% with publish_complete as ok %}
         <tr class="text-{% if ok %}success{% else %}danger{% endif %}">
             <td><strong>Publish</strong> some material to the public database.</td>
-            <td class="text-right">You have published {{num_published}} of your <a href="{% url 'profile_editoritem_search' request.user.pk %}">{{user.own_items.count}} items</a>.</td>
-            <td><span class="glyphicon glyphicon-{% if ok %}ok{% else %}alert{% endif %}"></span></td>
+            <td class="text-right">You have published {{num_published}} of your <a href="{% url 'profile_editoritem_search' request.user.pk %}">{{user.own_items.count}} item{{user.own_items.count|pluralize}}</a>.</td>
+            <td><span class="glyphicon glyphicon-{% if ok %}ok{% else %}alert{% endif %}" title="{% if not ok %}This task is not complete{% endif %}"></span></td>
         </tr>
         {% endwith %}
     </tbody>

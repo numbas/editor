@@ -211,6 +211,12 @@
                                             </div>
                                             {% if request.user == object.editoritem.author or request.user == object.editoritem.project.owner %}<a class="btn btn-warning btn-sm" href="{% url 'item_transfer_ownership' object.editoritem.pk %}">Transfer ownership</a>{% endif %}
                                         </div>
+                                        {% if object.editoritem.copy_of %}
+                                        <div class="form-group">
+                                            <label><span class="glyphicon glyphicon-duplicate"></span> Copy of</label>
+                                            <p class="form-control-static">{% editoritem_link object.editoritem.copy_of.rel_obj %} by {% user_thumbnail object.editoritem.copy_of.author %} {% user_link object.editoritem.copy_of.author %}</p>
+                                        </div>
+                                        {% endif %}
                                         <div class="form-group">
                                             <label><span class="glyphicon glyphicon-briefcase"></span> Project</label>
                                             <p class="form-control-static"><a target="_blank" href="{% url 'project_index' object.editoritem.project.pk %}">{{object.editoritem.project.name}}</a></p>

@@ -36,10 +36,7 @@ class PagedItemsMixin(object):
             queryset = queryset.filter(name__icontains=query)
 
         paginator = self.paginator = Paginator(queryset,50)
-        if self.request.method=='GET':
-            self.page = self.request.GET.get('page',1)
-        else:
-            self.page = 1
+        self.page = self.request.GET.get('page',1)
         self.page_objects = paginator.page(self.page)
         queryset = queryset.filter(id__in=[e.id for e in self.page_objects])
 
@@ -85,8 +82,6 @@ class MigrateItemsView(PagedItemsMixin,generic.UpdateView):
         return self.request.user
 
     def form_valid(self,form):
-        print("valid")
-        print(form.save())
         for eform in form:
             eform.instance.set_licence(eform.cleaned_data['licence'])
             eform.instance.save()

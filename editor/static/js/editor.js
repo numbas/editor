@@ -1,215 +1,434 @@
-/*
-Copyright 2012 Newcastle University
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-	   http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-*/
-var prettyData,tryLoad,makeContent,slugify;
+var prettyData,tryLoad,slugify;
 if(!window.Editor)
 	window.Editor = {};
 
-//knockout-sortable | (c) 2012 Ryan Niemeyer | http://www.opensource.org/licenses/mit-license
-(function(ko, $, undefined) {
-var ITEMKEY = "ko_sortItem",
-    LISTKEY = "ko_sortList",
-    PARENTKEY = "ko_parentList";
+// knockout-sortable 0.13.1 | (c) 2016 Ryan Niemeyer |  http://www.opensource.org/licenses/mit-license
+;(function(factory) {
+    if (typeof define === "function" && define.amd) {
+        // AMD anonymous module
+        define(["knockout", "jquery", "jquery-ui/sortable", "jquery-ui/draggable"], factory);
+    } else if (typeof require === "function" && typeof exports === "object" && typeof module === "object") {
+        // CommonJS module
+        var ko = require("knockout"),
+            jQuery = require("jquery");
+        require("jquery-ui/sortable");
+        require("jquery-ui/draggable");
+        factory(ko, jQuery);
+    } else {
+        // No module loader (plain <script> tag) - put directly in global namespace
+        factory(window.ko, window.jQuery);
+    }
+})(function(ko, $) {
+    var ITEMKEY = "ko_sortItem",
+        INDEXKEY = "ko_sourceIndex",
+        LISTKEY = "ko_sortList",
+        PARENTKEY = "ko_parentList",
+        DRAGKEY = "ko_dragItem",
+        unwrap = ko.utils.unwrapObservable,
+        dataGet = ko.utils.domData.get,
+        dataSet = ko.utils.domData.set,
+        version = $.ui && $.ui.version,
+        //1.8.24 included a fix for how events were triggered in nested sortables. indexOf checks will fail if version starts with that value (0 vs. -1)
+        hasNestedSortableFix = version && version.indexOf("1.6.") && version.indexOf("1.7.") && (version.indexOf("1.8.") || version === "1.8.24");
 
-//internal afterRender that adds meta-data to children
-var addMetaDataAfterRender = function(elements, data) {
-    ko.utils.arrayForEach(elements, function(element) {
-        if (element.nodeType === 1) {
-            ko.utils.domData.set(element, ITEMKEY, data);
-            ko.utils.domData.set(element, PARENTKEY, ko.utils.domData.get(element.parentNode, LISTKEY));
+    //internal afterRender that adds meta-data to children
+    var addMetaDataAfterRender = function(elements, data) {
+        ko.utils.arrayForEach(elements, function(element) {
+            if (element.nodeType === 1) {
+                dataSet(element, ITEMKEY, data);
+                dataSet(element, PARENTKEY, dataGet(element.parentNode, LISTKEY));
+            }
+        });
+    };
+
+    //prepare the proper options for the template binding
+    var prepareTemplateOptions = function(valueAccessor, dataName) {
+        var result = {},
+            options = unwrap(valueAccessor()) || {},
+            actualAfterRender;
+
+        //build our options to pass to the template engine
+        if (options.data) {
+            result[dataName] = options.data;
+            result.name = options.template;
+        } else {
+            result[dataName] = valueAccessor();
         }
-    });
-};
 
-//prepare the proper options for the template binding
-var prepareTemplateOptions = function(valueAccessor) {
-    var result = {},
-        options = ko.utils.unwrapObservable(valueAccessor()),
-        actualAfterRender;
-
-    //build our options to pass to the template engine
-    if (options.data) {
-        result.foreach = options.data;
-        result.name = options.template;
-    } else {
-        result.foreach = valueAccessor();
-    }
-
-    ko.utils.arrayForEach(["afterAdd", "afterRender", "beforeRemove", "includeDestroyed", "templateEngine", "templateOptions"], function (option) {
-        result[option] = options[option] || ko.bindingHandlers.sortable[option];
-    });
-
-    //use an afterRender function to add meta-data
-    if (result.afterRender) {
-        //wrap the existing function, if it was passed
-        actualAfterRender = result.afterRender;
-        result.afterRender = function(element, data) {
-            addMetaDataAfterRender.call(data, element, data);
-            actualAfterRender.call(data, element, data);
-        };
-    } else {
-        result.afterRender = addMetaDataAfterRender;
-    }
-
-    //return options to pass to the template binding
-    return result;
-};
-
-//connect items with observableArrays
-ko.bindingHandlers.sortable = {
-    init: function(element, valueAccessor, allBindingsAccessor, data, context) {
-        var $element = $(element),
-            value = ko.utils.unwrapObservable(valueAccessor()) || {},
-            templateOptions = prepareTemplateOptions(valueAccessor),
-            sortable = {},
-            startActual, updateActual;
-
-        //remove leading/trailing text nodes from anonymous templates
-        ko.utils.arrayForEach(element.childNodes, function(node) {
-            if (node && node.nodeType === 3) {
-                node.parentNode.removeChild(node);
+        ko.utils.arrayForEach(["afterAdd", "afterRender", "as", "beforeRemove", "includeDestroyed", "templateEngine", "templateOptions", "nodes"], function (option) {
+            if (options.hasOwnProperty(option)) {
+                result[option] = options[option];
+            } else if (ko.bindingHandlers.sortable.hasOwnProperty(option)) {
+                result[option] = ko.bindingHandlers.sortable[option];
             }
         });
 
-        //build a new object that has the global options with overrides from the binding
-        $.extend(true, sortable, ko.bindingHandlers.sortable);
-        if (value.options && sortable.options) {
-            ko.utils.extend(sortable.options, value.options);
-            delete value.options;
-        }
-        ko.utils.extend(sortable, value);
-
-        //if allowDrop is an observable or a function, then execute it in a computed observable
-        if (sortable.connectClass && (ko.isObservable(sortable.allowDrop) || typeof sortable.allowDrop == "function")) {
-            ko.computed({
-               read: function() {
-                   var value = ko.utils.unwrapObservable(sortable.allowDrop),
-                       shouldAdd = typeof value == "function" ? value.call(this, templateOptions.foreach) : value;
-                   ko.utils.toggleDomNodeCssClass(element, sortable.connectClass, shouldAdd);
-               },
-               disposeWhenNodeIsRemoved: element
-            }, this);
-        } else {
-            ko.utils.toggleDomNodeCssClass(element, sortable.connectClass, sortable.allowDrop);
+        //use an afterRender function to add meta-data
+        if (dataName === "foreach") {
+            if (result.afterRender) {
+                //wrap the existing function, if it was passed
+                actualAfterRender = result.afterRender;
+                result.afterRender = function(element, data) {
+                    addMetaDataAfterRender.call(data, element, data);
+                    actualAfterRender.call(data, element, data);
+                };
+            } else {
+                result.afterRender = addMetaDataAfterRender;
+            }
         }
 
-        //wrap the template binding
-        ko.bindingHandlers.template.init(element, function() { return templateOptions; }, allBindingsAccessor, data, context);
+        //return options to pass to the template binding
+        return result;
+    };
 
-        //keep a reference to start/update functions that might have been passed in
-        startActual = sortable.options.start;
-        updateActual = sortable.options.update;
+    var updateIndexFromDestroyedItems = function(index, items) {
+        var unwrapped = unwrap(items);
 
-        //initialize sortable binding after template binding has rendered in update function
-        setTimeout(function() {
-            $element.sortable(ko.utils.extend(sortable.options, {
-                start: function(event, ui) {
-                    //make sure that fields have a chance to update model
-                    ui.item.find("input:focus").change();
-                    if (startActual) {
-                        startActual.apply(this, arguments);
-                    }
-                },
-                update: function(event, ui) {
-                    var sourceParent, targetParent, targetIndex, arg,
-                        el = ui.item[0],
-                        item = ko.utils.domData.get(el, ITEMKEY);
+        if (unwrapped) {
+            for (var i = 0; i < index; i++) {
+                //add one for every destroyed item we find before the targetIndex in the target array
+                if (unwrapped[i] && unwrap(unwrapped[i]._destroy)) {
+                    index++;
+                }
+            }
+        }
 
-                    if (item) {
-                        //identify parents
-                        sourceParent = ko.utils.domData.get(el, PARENTKEY);
-                        targetParent = ko.utils.domData.get(el.parentNode, LISTKEY);
-                        targetIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), el);
+        return index;
+    };
 
-                        if (sortable.beforeMove || sortable.afterMove) {
-                            arg = {
-                                item: item,
-                                sourceParent: sourceParent,
-                                sourceParentNode: el.parentNode,
-                                sourceIndex: sourceParent.indexOf(item),
-                                targetParent: targetParent,
-                                targetIndex: targetIndex,
-                                cancelDrop: false
-                            };
+    //remove problematic leading/trailing whitespace from templates
+    var stripTemplateWhitespace = function(element, name) {
+        var templateSource,
+            templateElement;
+
+        //process named templates
+        if (name) {
+            templateElement = document.getElementById(name);
+            if (templateElement) {
+                templateSource = new ko.templateSources.domElement(templateElement);
+                templateSource.text($.trim(templateSource.text()));
+            }
+        }
+        else {
+            //remove leading/trailing non-elements from anonymous templates
+            $(element).contents().each(function() {
+                if (this && this.nodeType !== 1) {
+                    element.removeChild(this);
+                }
+            });
+        }
+    };
+
+    //connect items with observableArrays
+    ko.bindingHandlers.sortable = {
+        init: function(element, valueAccessor, allBindingsAccessor, data, context) {
+            var $element = $(element),
+                value = unwrap(valueAccessor()) || {},
+                templateOptions = prepareTemplateOptions(valueAccessor, "foreach"),
+                sortable = {},
+                startActual, updateActual;
+
+            stripTemplateWhitespace(element, templateOptions.name);
+
+            //build a new object that has the global options with overrides from the binding
+            $.extend(true, sortable, ko.bindingHandlers.sortable);
+            if (value.options && sortable.options) {
+                ko.utils.extend(sortable.options, value.options);
+                delete value.options;
+            }
+            ko.utils.extend(sortable, value);
+
+            //if allowDrop is an observable or a function, then execute it in a computed observable
+            if (sortable.connectClass && (ko.isObservable(sortable.allowDrop) || typeof sortable.allowDrop == "function")) {
+                ko.computed({
+                    read: function() {
+                        var value = unwrap(sortable.allowDrop),
+                            shouldAdd = typeof value == "function" ? value.call(this, templateOptions.foreach) : value;
+                        ko.utils.toggleDomNodeCssClass(element, sortable.connectClass, shouldAdd);
+                    },
+                    disposeWhenNodeIsRemoved: element
+                }, this);
+            } else {
+                ko.utils.toggleDomNodeCssClass(element, sortable.connectClass, sortable.allowDrop);
+            }
+
+            //wrap the template binding
+            ko.bindingHandlers.template.init(element, function() { return templateOptions; }, allBindingsAccessor, data, context);
+
+            //keep a reference to start/update functions that might have been passed in
+            startActual = sortable.options.start;
+            updateActual = sortable.options.update;
+
+            //ensure draggable table row cells maintain their width while dragging
+            sortable.options.helper = function(e, ui) {
+                if (ui.is("tr")) {
+                    ui.children().each(function() {
+                        $(this).width($(this).width());
+                    });
+                }
+                return ui;
+            };
+
+            //initialize sortable binding after template binding has rendered in update function
+            var createTimeout = setTimeout(function() {
+                var dragItem;
+                $element.sortable(ko.utils.extend(sortable.options, {
+                    start: function(event, ui) {
+                        //track original index
+                        var el = ui.item[0];
+                        dataSet(el, INDEXKEY, ko.utils.arrayIndexOf(ui.item.parent().children(), el));
+
+                        //make sure that fields have a chance to update model
+                        ui.item.find("input:focus").change();
+                        if (startActual) {
+                            startActual.apply(this, arguments);
                         }
+                    },
+                    receive: function(event, ui) {
+                        dragItem = dataGet(ui.item[0], DRAGKEY);
+                        if (dragItem) {
+                            //copy the model item, if a clone option is provided
+                            if (dragItem.clone) {
+                                dragItem = dragItem.clone();
+                            }
 
-                        if (sortable.beforeMove) {
-                            sortable.beforeMove.call(this, arg, event, ui);
-                            if (arg.cancelDrop) {
-                                $(arg.sourceParent === arg.targetParent ? this : ui.sender).sortable('cancel');
+                            //configure a handler to potentially manipulate item before drop
+                            if (sortable.dragged) {
+                                dragItem = sortable.dragged.call(this, dragItem, event, ui) || dragItem;
+                            }
+                        }
+                    },
+                    update: function(event, ui) {
+                        var sourceParent, targetParent, sourceIndex, targetIndex, arg,
+                            el = ui.item[0],
+                            parentEl = ui.item.parent()[0],
+                            item = dataGet(el, ITEMKEY) || dragItem;
+
+                        dragItem = null;
+
+                        //make sure that moves only run once, as update fires on multiple containers
+                        if (item && (this === parentEl) || (!hasNestedSortableFix && $.contains(this, parentEl))) {
+                            //identify parents
+                            sourceParent = dataGet(el, PARENTKEY);
+                            sourceIndex = dataGet(el, INDEXKEY);
+                            targetParent = dataGet(el.parentNode, LISTKEY);
+                            targetIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), el);
+
+                            //take destroyed items into consideration
+                            if (!templateOptions.includeDestroyed) {
+                                sourceIndex = updateIndexFromDestroyedItems(sourceIndex, sourceParent);
+                                targetIndex = updateIndexFromDestroyedItems(targetIndex, targetParent);
+                            }
+
+                            //build up args for the callbacks
+                            if (sortable.beforeMove || sortable.afterMove) {
+                                arg = {
+                                    item: item,
+                                    sourceParent: sourceParent,
+                                    sourceParentNode: sourceParent && ui.sender || el.parentNode,
+                                    sourceIndex: sourceIndex,
+                                    targetParent: targetParent,
+                                    targetIndex: targetIndex,
+                                    cancelDrop: false
+                                };
+
+                                //execute the configured callback prior to actually moving items
+                                if (sortable.beforeMove) {
+                                    sortable.beforeMove.call(this, arg, event, ui);
+                                }
+                            }
+
+                            //call cancel on the correct list, so KO can take care of DOM manipulation
+                            if (sourceParent) {
+                                $(sourceParent === targetParent ? this : ui.sender || this).sortable("cancel");
+                            }
+                            //for a draggable item just remove the element
+                            else {
+                                $(el).remove();
+                            }
+
+                            //if beforeMove told us to cancel, then we are done
+                            if (arg && arg.cancelDrop) {
                                 return;
+                            }
+
+                            //if the strategy option is unset or false, employ the order strategy involving removal and insertion of items
+                            if (!sortable.hasOwnProperty("strategyMove") || sortable.strategyMove === false) {
+                                //do the actual move
+                                if (targetIndex >= 0) {
+                                    if (sourceParent) {
+                                        sourceParent.splice(sourceIndex, 1);
+
+                                        //if using deferred updates plugin, force updates
+                                        if (ko.processAllDeferredBindingUpdates) {
+                                            ko.processAllDeferredBindingUpdates();
+                                        }
+                                    }
+
+                                    targetParent.splice(targetIndex, 0, item);
+                                }
+
+                                //rendering is handled by manipulating the observableArray; ignore dropped element
+                                dataSet(el, ITEMKEY, null);
+                            }
+                            else { //employ the strategy of moving items
+                                if (targetIndex >= 0) {
+                                    if (sourceParent) {
+                                        if (sourceParent !== targetParent) {
+                                            // moving from one list to another
+
+                                            sourceParent.splice(sourceIndex, 1);
+
+                                            //if using deferred updates plugin, force updates
+                                            if (ko.processAllDeferredBindingUpdates) {
+                                                ko.processAllDeferredBindingUpdates();
+                                            }
+
+                                            targetParent.splice(targetIndex, 0, item);
+
+                                            //rendering is handled by manipulating the observableArray; ignore dropped element
+                                            dataSet(el, ITEMKEY, null);
+                                            ui.item.remove();
+                                        }
+                                        else {
+                                            // moving within same list
+                                            var underlyingList = unwrap(sourceParent);
+
+                                            // notify 'beforeChange' subscribers
+                                            sourceParent.valueWillMutate();
+
+                                            // move from source index ...
+                                            underlyingList.splice(sourceIndex, 1);
+                                            // ... to target index
+                                            underlyingList.splice(targetIndex, 0, item);
+
+                                            // notify subscribers
+                                            sourceParent.valueHasMutated();
+                                        }
+                                    }
+                                    else {
+                                        // drop new element from outside
+                                        targetParent.splice(targetIndex, 0, item);
+
+                                        //rendering is handled by manipulating the observableArray; ignore dropped element
+                                        dataSet(el, ITEMKEY, null);
+                                        ui.item.remove();
+                                    }
+                                }
+                            }
+
+                            //if using deferred updates plugin, force updates
+                            if (ko.processAllDeferredBindingUpdates) {
+                                ko.processAllDeferredBindingUpdates();
+                            }
+
+                            //allow binding to accept a function to execute after moving the item
+                            if (sortable.afterMove) {
+                                sortable.afterMove.call(this, arg, event, ui);
                             }
                         }
 
-                        if (targetIndex >= 0) {
-                            sourceParent.remove(item);
-                            targetParent.splice(targetIndex, 0, item);
+                        if (updateActual) {
+                            updateActual.apply(this, arguments);
                         }
+                    },
+                    connectWith: sortable.connectClass ? "." + sortable.connectClass : false
+                }));
 
-                        //rendering is handled by manipulating the observableArray; ignore dropped element
-                        ko.utils.domData.set(el, ITEMKEY, null);
-                        ui.item.remove();
+                //handle enabling/disabling sorting
+                if (sortable.isEnabled !== undefined) {
+                    ko.computed({
+                        read: function() {
+                            $element.sortable(unwrap(sortable.isEnabled) ? "enable" : "disable");
+                        },
+                        disposeWhenNodeIsRemoved: element
+                    });
+                }
+            }, 0);
 
-                        //allow binding to accept a function to execute after moving the item
-                        if (sortable.afterMove) {
-                           sortable.afterMove.call(this, arg, event, ui);
-                        }
-                    }
+            //handle disposal
+            ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
+                //only call destroy if sortable has been created
+                if ($element.data("ui-sortable") || $element.data("sortable")) {
+                    $element.sortable("destroy");
+                }
 
-                    if (updateActual) {
-                        updateActual.apply(this, arguments);
-                    }
-                },
-                connectWith: sortable.connectClass ? "." + sortable.connectClass : false
-            }));
+                ko.utils.toggleDomNodeCssClass(element, sortable.connectClass, false);
+
+                //do not create the sortable if the element has been removed from DOM
+                clearTimeout(createTimeout);
+            });
+
+            return { 'controlsDescendantBindings': true };
+        },
+        update: function(element, valueAccessor, allBindingsAccessor, data, context) {
+            var templateOptions = prepareTemplateOptions(valueAccessor, "foreach");
+
+            //attach meta-data
+            dataSet(element, LISTKEY, templateOptions.foreach);
+
+            //call template binding's update with correct options
+            ko.bindingHandlers.template.update(element, function() { return templateOptions; }, allBindingsAccessor, data, context);
+        },
+        connectClass: 'ko_container',
+        allowDrop: true,
+        afterMove: null,
+        beforeMove: null,
+        options: {}
+    };
+
+    //create a draggable that is appropriate for dropping into a sortable
+    ko.bindingHandlers.draggable = {
+        init: function(element, valueAccessor, allBindingsAccessor, data, context) {
+            var value = unwrap(valueAccessor()) || {},
+                options = value.options || {},
+                draggableOptions = ko.utils.extend({}, ko.bindingHandlers.draggable.options),
+                templateOptions = prepareTemplateOptions(valueAccessor, "data"),
+                connectClass = value.connectClass || ko.bindingHandlers.draggable.connectClass,
+                isEnabled = value.isEnabled !== undefined ? value.isEnabled : ko.bindingHandlers.draggable.isEnabled;
+
+            value = "data" in value ? value.data : value;
+
+            //set meta-data
+            dataSet(element, DRAGKEY, value);
+
+            //override global options with override options passed in
+            ko.utils.extend(draggableOptions, options);
+
+            //setup connection to a sortable
+            draggableOptions.connectToSortable = connectClass ? "." + connectClass : false;
+
+            //initialize draggable
+            $(element).draggable(draggableOptions);
 
             //handle enabling/disabling sorting
-            if (sortable.isEnabled !== undefined) {
+            if (isEnabled !== undefined) {
                 ko.computed({
                     read: function() {
-                        $element.sortable(ko.utils.unwrapObservable(sortable.isEnabled) ? "enable" : "disable");
+                        $(element).draggable(unwrap(isEnabled) ? "enable" : "disable");
                     },
                     disposeWhenNodeIsRemoved: element
                 });
             }
-        }, 0);
 
-        //handle disposal
-        ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
-            $element.sortable("destroy");
-        });
+            //handle disposal
+            ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
+                $(element).draggable("destroy");
+            });
 
-        return { 'controlsDescendantBindings': true };
-    },
-    update: function(element, valueAccessor, allBindingsAccessor, data, context) {
-        var templateOptions = prepareTemplateOptions(valueAccessor);
+            return ko.bindingHandlers.template.init(element, function() { return templateOptions; }, allBindingsAccessor, data, context);
+        },
+        update: function(element, valueAccessor, allBindingsAccessor, data, context) {
+            var templateOptions = prepareTemplateOptions(valueAccessor, "data");
 
-        //attach meta-data
-        ko.utils.domData.set(element, LISTKEY, templateOptions.foreach);
-
-        //call template binding's update with correct options
-        ko.bindingHandlers.template.update(element, function() { return templateOptions; }, allBindingsAccessor, data, context);
-    },
-    connectClass: 'ko_container',
-    allowDrop: true,
-    afterMove: null,
-    beforeMove: null,
-    options: {}
-};
-})(ko, jQuery);
-
+            return ko.bindingHandlers.template.update(element, function() { return templateOptions; }, allBindingsAccessor, data, context);
+        },
+        connectClass: ko.bindingHandlers.sortable.connectClass,
+        options: {
+            helper: "clone"
+        }
+    };
+});
 
 
 $(document).ready(function() {
@@ -322,9 +541,10 @@ $(document).ready(function() {
 		});
 	}
 
-	Editor.Tab = function(id,title,visible) {
+	Editor.Tab = function(id,title,icon,visible) {
 		this.id = id;
 		this.title = title;
+        this.icon = icon;
 		this.visible = visible === undefined ? true : visible;
 	}
 
@@ -341,6 +561,12 @@ $(document).ready(function() {
             }
         });
 	};
+
+
+    Editor.nonempty_task = function(text,observable) {
+        return {text: text, done: ko.computed(function() {return observable() && true})};
+    }
+
 
     Editor.searchBinding = function(search,url,makeQuery) {
 		search.results.error = ko.observable('');
@@ -470,6 +696,14 @@ $(document).ready(function() {
             Editor.save_noty = null;
         }
     }
+    Editor.abortSave = function(reason) {
+        Editor.savers = Math.max(Editor.savers-1,0);
+        $.noty.close(Editor.save_noty);
+        Editor.save_noty = null;
+        window.onbeforeunload = function() {
+            return reason;
+        }
+    }
 
     //obs is an observable on the data to be saved
     //savefn is a function which does the save, and returns a deferred object which resolves when the save is done
@@ -487,14 +721,429 @@ $(document).ready(function() {
             }
             Editor.startSave();
             data.csrfmiddlewaretoken = getCookie('csrftoken');
-            var def = savefn(data);
-            def
-                .always(Editor.endSave)
-                .done(function() {
-                    noty({text:'Saved.',type:'success',timeout: 1000, layout: 'topCenter'})
-                })
-            ;
+            try {
+                var def = savefn(data);
+                def
+                    .always(Editor.endSave)
+                    .done(function() {
+                        noty({text:'Saved.',type:'success',timeout: 1000, layout: 'topCenter'})
+                    })
+                ;
+            } catch(e) {
+                Editor.abortSave(e.message);
+            }
         }).extend({throttle:1000});
+    }
+
+    Editor.EditorItem = function() {
+        var ei = this;
+
+        this.item_type = item_json.item_type;
+
+        this.published = ko.observable(false);
+        this.name = ko.observable('Loading');
+        this.current_stamp = ko.observable(item_json.current_stamp);
+        this.licence = ko.observable();
+        this.subjects = ko.observableArray([]);
+        this.topics = ko.observableArray([]);
+        this.ability_frameworks = ko.observableArray([]);
+		this.realtags = ko.observableArray([]);
+		this.description = ko.observable('');
+
+		this.mainTabs = ko.observableArray([]);
+
+		this.currentTab = ko.observable();
+
+        this.setTab = function(id) {
+            return function() {
+                var tab = ei.getTab(id);
+
+                ei.currentTab(tab);
+            }
+        }
+
+        this.subjects(item_json.subjects.map(function(d) {
+            return new Editor.Subject(d);
+        }));
+
+        this.topics(item_json.topics.map(function(d) {
+            return new Editor.Topic(d,ei.subjects);
+        }));
+
+        this.any_subjects_selected = ko.computed(function() {
+            return this.subjects().some(function(s){return s.used()});
+        },this);
+
+        this.ability_frameworks(item_json.ability_frameworks.map(function(d) {
+            return new Editor.AbilityFramework(d);
+        }));
+
+        this.ability_levels = ko.computed(function() {
+            var o = [];
+            this.ability_frameworks().map(function(af) {
+                o = o.concat(af.levels);
+            });
+            return o;
+        },this);
+
+        this.used_ability_levels = ko.computed(function() {
+            return this.ability_levels().filter(function(al){return al.used()});
+        },this);
+
+        item_json.licences.sort(function(a,b){a=a.short_name;b=b.short_name; return a<b ? -1 : a>b ? 1 : 0 });
+        this.licence_name = ko.computed(function() {
+            if(this.licence()) {
+                return this.licence().name;
+            } else {
+                return 'None specified';
+            }
+        },this);
+
+		this.realName = ko.computed(function() {
+			var name = this.name()
+			return name.length>0 ? name : 'Untitled Question';
+		},this);
+
+        this.tags = ko.computed({
+            read: function() {
+				return this.realtags().sort(function(a,b) {
+					a = a.toLowerCase();
+					b = b.toLowerCase();
+					return a>b ? 1 : a<b ? -1 : 0;
+				});
+			},
+            write: function(newtags) {
+				newtags = newtags.slice();
+                for(var i=newtags.length-1;i>=0;i--)
+                {
+                    if(newtags.indexOf(newtags[i])<i)
+                        newtags.splice(i,1);
+                }
+                this.realtags(newtags);
+            }
+        },this);
+
+        this.tags.push = function(thing) {
+            thing = thing.trim();
+			if(thing.length==0)
+				return;
+            if(ei.realtags().indexOf(thing)==-1) {
+                ei.realtags.push(thing);
+            }
+        }
+        this.tags.pop = function(thing) {
+            return ei.realtags.pop();
+        }
+        this.tags.splice = function(i,n) {
+            return ei.realtags.splice(i,n);
+        }
+		this.tags.remove = function(q) {
+			return ei.realtags.remove(q);
+		}
+
+		this.metadata = ko.computed(function() {
+			return {
+				description: this.description(),
+                licence: this.licence_name()
+			};
+		},this);
+
+        ko.computed(function() {
+            document.title = this.name() ? this.name()+' - Numbas Editor' : 'Numbas Editor';
+        },this);
+
+        if(item_json.editable) {
+            //access control stuff
+            this.public_access = ko.observable(item_json.public_access);
+            this.access_options = [
+                {value:'hidden',text:'Hidden'},
+                {value:'view',text:'Anyone can view this'},
+                {value:'edit',text:'Anyone can edit this'}
+            ];
+            this.public_access_text = ko.computed(function() {
+                var public_access = this.public_access();
+                return this.access_options.filter(function(t){return t.value==public_access})[0].text;
+            },this);
+            this.access_rights = ko.observableArray(item_json.access_rights.map(function(d){
+                var access = new UserAccess(ei,d.user)
+                access.access_level(d.access_level);
+                return access;
+            }));
+
+            this.access_data = ko.computed(function() {
+                return {
+                    public_access: ei.public_access(),
+                    user_ids: ei.access_rights().map(function(u){return u.id}),
+                    access_levels: ei.access_rights().map(function(u){return u.access_level()})
+                }
+            });
+            this.saveAccess = Editor.saver(this.access_data,function(data) {
+                return $.post('/item/'+ei.editoritem_id+'/set-access',data);
+            });
+            this.userAccessSearch=ko.observable('');
+
+            this.addUserAccess = function(data) {
+                var access_rights = ei.access_rights();
+                for(var i=0;i<access_rights.length;i++) {
+                    if(access_rights[i].id==data.id) {
+                        noty({
+                            text: "That user is already in the access list.",
+                            layout: "center",
+                            speed: 100,
+                            type: 'error',
+                            timeout: 2000,
+                            closable: true,
+                            animateOpen: {"height":"toggle"},
+                            animateClose: {"height":"toggle"},
+                            closeOnSelfClick: true
+                        });
+                        return;
+                    }
+                }
+                var access = new UserAccess(ei,data);
+                ei.access_rights.push(access);
+            };
+        }
+
+        this.addStamp = function(status_code) {
+            return function() {
+                $.post('stamp',{'status': status_code, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(response) {
+                    $('.timeline').prepend(response.html).mathjax();
+                    ei.current_stamp(response.object_json);
+                });
+                noty({
+                    text: 'Thanks for your feedback!',
+                    type: 'success',
+                    layout: 'topCenter'
+                });
+            }
+        }
+
+        this.commentwriter = new Editor.CommentWriter();
+        this.restorepointwriter = new Editor.CommentWriter();
+    }
+    Editor.EditorItem.prototype = {
+        init_tasks: function() {
+            this.section_completed = {};
+
+            function section_completed(tasks) {
+                return ko.computed(function() {
+                    return tasks.every(function(t){return ko.unwrap(t.done)});
+                })
+            }
+
+            for(var section in this.section_tasks) {
+                this.section_completed[section] = section_completed(this.section_tasks[section]);
+            }
+            
+            this.all_sections_completed = ko.computed(function() {
+                for(var key in this.section_completed) {
+                    if(!this.section_completed[key]()) {
+                        return false;
+                    }
+                }
+                return true;
+            },this);
+        },
+
+        init_output: function() {
+            this.output = ko.computed(function() {
+                var data = JSON.stringify(this.toJSON());
+                return '// Numbas version: '+Editor.numbasVersion+'\n'+data;
+            },this);
+        },
+
+        init_save: function() {
+            var ei = this;
+			this.firstSave = true;
+            this.autoSave = Editor.saver(
+                function() {
+                    var data = ei.save();
+
+                    return data;
+                },
+                function(data) {
+                    if(!ei.name()) {
+                        throw(new Error("We can't save changes while the name field is empty."));
+                    }
+                    return $.post(
+                        '/'+ei.item_type+'/'+ei.id+'/'+slugify(ei.realName())+'/',
+                        {json: JSON.stringify(data), csrfmiddlewaretoken: getCookie('csrftoken')}
+                    )
+                        .success(function(data){
+                            var address = location.protocol+'//'+location.host+data.url;
+                            if(history.replaceState)
+                                history.replaceState(history.state,ei.realName(),address);
+                        })
+                        .error(function(response,type,message) {
+                            if(message=='')
+                                message = 'Server did not respond.';
+
+                            noty({
+                                text: 'Error saving item:\n\n'+message,
+                                layout: "topLeft",
+                                type: "error",
+                                textAlign: "center",
+                                animateOpen: {"height":"toggle"},
+                                animateClose: {"height":"toggle"},
+                                speed: 200,
+                                timeout: 5000,
+                                closable:true,
+                                closeOnSelfClick: true
+                            });
+                        })
+                    ;
+                }
+            );
+
+            this.currentChange = ko.observable(new Editor.Change(this.versionJSON(),item_json.itemJSON.author));
+
+            // create a new version when the JSON changes
+            ko.computed(function() {
+                var currentChange = this.currentChange.peek();
+                var v = new Editor.Change(this.versionJSON(),item_json.itemJSON.author, currentChange);
+
+                //if the new version is different to the old one, keep the diff
+                if(!currentChange || v.diff.length!=0) {
+                    currentChange.next_version(v);
+                    this.currentChange(v);
+                }
+            },this).extend({throttle:1000});
+
+
+            this.rewindChange = function() {
+                var currentChange = ei.currentChange();
+                var prev_version = currentChange.prev_version();
+                if(!prev_version) {
+                    throw(new Error("Can't rewind - this is the first version"));
+                }
+                var data = ei.versionJSON();
+                data = jiff.patch(jiff.inverse(currentChange.diff),data);
+                ei.currentChange(prev_version);
+                ei.load(data);
+            };
+
+            this.forwardChange = function() {
+                var currentChange = ei.currentChange();
+                var next_version = currentChange.next_version();
+                if(!currentChange.next_version()) {
+                    throw(new Error("Can't go forward - this is the latest version"));
+                }
+                var data = ei.versionJSON();
+                data = jiff.patch(next_version.diff,data);
+                ei.currentChange(next_version);
+                ei.load(data);
+            };
+
+        },
+
+        load_state: function() {
+            if(window.history !== undefined) {
+                var state = window.history.state || {};
+                if('currentTab' in state) {
+                    var tabs = this.mainTabs();
+                    for(var i=0;i<tabs.length;i++) {
+                        var tab = tabs[i];
+                        if(tab.id==state.currentTab) {
+                            this.currentTab(tab);
+                            break;
+                        }
+                    }
+                }
+                Editor.computedReplaceState('currentTab',ko.computed(function() {
+                    var tab = this.currentTab();
+                    return tab ? tab.id : '';
+                },this));
+            }
+        },
+
+        load: function(data) {
+            this.reset();
+
+            this.id = data.id;
+            this.editoritem_id = data.editoritem_id;
+
+            if('metadata' in data) {
+                tryLoad(data.metadata,['description'],this);
+                var licence_name = data.metadata.licence;
+                for(var i=0;i<item_json.licences.length;i++) {
+                    if(item_json.licences[i].name==licence_name) {
+                        this.licence(item_json.licences[i]);
+                        break;
+                    }
+                }
+            }
+
+            if('topics' in data) {
+                data.topics.map(function(pk) {
+                    this.get_topic(pk).used(true);
+                },this);
+            }
+
+            if('subjects' in data) {
+                data.subjects.map(function(pk) {
+                    this.get_subject(pk).used(true);
+                },this);
+            }
+
+            if('ability_levels' in data) {
+                data.ability_levels.map(function(pk) {
+                    this.get_ability_level(pk).used(true);
+                },this);
+            }
+
+            var content = data.JSONContent;
+
+            this.published(data.published);
+        },
+
+        set_tab_from_hash: function() {
+            switch(window.location.hash.slice(1)) {
+                case 'editing-history':
+                    this.currentTab(this.getTab('history'));
+                    break;
+                case 'network':
+                    this.currentTab(this.getTab('network'));
+                    break;
+            } 
+        },
+
+		applyDiff: function(version) {
+			viewModel.currentChange(version);
+			viewModel.load(version.data);
+		},
+
+        getTab: function(id) {
+            return this.mainTabs().find(function(t){return t.id==id});
+        },
+
+        get_topic: function(pk) {
+            return this.topics().find(function(t){return t.pk==pk});
+        },
+
+        get_subject: function(pk) {
+            return this.subjects().find(function(s){return s.pk==pk});
+        },
+
+        get_ability_level: function(pk) {
+            return this.ability_levels().find(function(l){return l.pk==pk});
+        }
+
+    }
+
+    var UserAccess = Editor.UserAccess = function(question,data) {
+        var ua = this;
+        this.id = data.id;
+        this.link = data.link;
+        this.name = data.name;
+        this.access_level = ko.observable(data.access_level || 'view');
+        this.profile = data.profile;
+        this.remove = function() {
+            question.access_rights.remove(ua);
+        }
+    }
+    UserAccess.prototype = {
+        access_options: [{value:'view',text:'Can view this'},{value:'edit',text:'Can edit this'}]
     }
 
     // change applied in the editor
@@ -523,14 +1172,6 @@ $(document).ready(function() {
 			return this.next_version() != null;
 		},this);
 	}
-
-    Editor.Stamp = function(data) {
-        this.status = data.status;
-        this.status_display = data.status_display;
-        this.user = data.user;
-        this.date = data.date;
-        this.delete_url = data.delete_url;
-    }
 
     Editor.Comment = function(data) {
         this.text = data.text;
@@ -568,27 +1209,6 @@ $(document).ready(function() {
             },this);
         }
     } 
-
-    var timeline_item_constructors = {
-        'version': Editor.Version,
-        'stamp': Editor.Stamp,
-        'comment': Editor.Comment
-    }
-
-    Editor.TimelineItem = function(data) {
-        this.user = data.user;
-        this.date = data.date;
-
-        this.type = data.type;
-        this.delete_url = data.data.delete_url;
-    
-        if(!(data.type in timeline_item_constructors)) {
-            throw(new Error("Unrecognised timeline item "+data.type));
-        }
-        this.data = new timeline_item_constructors[data.type](data.data);
-
-        this.deleting = ko.observable(false);
-    }
 
 	/* Resizable 2d grid of observables.
 	 * Returns a 2d array of objects, each created by calling cell(row,column)
@@ -704,7 +1324,7 @@ $(document).ready(function() {
 			$(element).val(ko.utils.unwrapObservable(value));
 			
 			var mode = ko.utils.unwrapObservable(allBindings.codemirrorMode) || 'javascript';
-			var readOnly = ko.utils.unwrapObservable(allBindings.readOnly) || false;
+			var readOnly = ko.utils.unwrapObservable(allBindings.readOnly) || element.hasAttribute('disabled') || false;
 
 			function onChange(editor,change) {
 				if(typeof value=='function') {
@@ -753,6 +1373,12 @@ $(document).ready(function() {
 			allBindingsAccessor = allBindingsAccessor();
 
 			var value = ko.utils.unwrapObservable(valueAccessor) || '';
+
+            if(element.hasAttribute('disabled')) {
+                element.classList.add('well');
+                element.classList.add('content-area');
+                return;
+            }
 
 			var height = allBindingsAccessor.hasOwnProperty('wmHeight') ? allBindingsAccessor.wmHeight : 200;
 			var width = allBindingsAccessor.hasOwnProperty('wmWidth') ? allBindingsAccessor.wmWidth : '';
@@ -885,10 +1511,16 @@ $(document).ready(function() {
 			ko.utils.domData.set(plaintext[0],'codemirror',mc);
 		},
 		update: function(element, valueAccessor) {
+			var value = ko.utils.unwrapObservable(valueAccessor()) || '';
+
+            if(element.hasAttribute('disabled')) {
+                $(element).html(value).mathjax();
+                return;
+            }
+
 			var tinymce = $(element).find('iframe').contents().find('body');
 			var plaintext = $(element).children('.plaintext');
 
-			var value = ko.utils.unwrapObservable(valueAccessor()) || '';
             if (!tinymce.is(':focus')) {
 				var ed = $(element).children('.wmTextArea').tinymce();
 				if(ed)
@@ -913,6 +1545,20 @@ $(document).ready(function() {
 			console.log(value,ko.utils.unwrapObservable(value));
 		}
 	}
+
+    ko.bindingHandlers.restrictedClick = {
+        init: function(element,valueAccessor, allBindings, viewModel, bindingContext) {
+            var fn = valueAccessor();
+            $(element).click(function(e) {
+                if(e.target.hasAttribute('clickable')) {
+                    // Take all the event args, and prefix with the viewmodel
+                    viewModel = bindingContext['$data'];
+                    var argsForHandler = [viewModel].concat(arguments);
+                    fn.apply(viewModel, argsForHandler);
+                }
+            });
+        }
+    }
 
 	ko.bindingHandlers.foldlist = {
 		init: function(element,valueAccessor,allBindingsAccessor,viewModel)
@@ -940,80 +1586,64 @@ $(document).ready(function() {
 		}
 	};
 
-	ko.bindingHandlers.listbox = {
-		init: function(element,valueAccessor) {
-			var value = valueAccessor();
-			$(element).addClass('listbox');
-
-			var i = $('<input type="text"/>');
-			i.keydown(function(e){
-				switch(e.which)
-				{
-				case 13:
-				case 188:
-					var val = $(this).val().slice(0,this.selectionStart);
-					if(val.length)
-						value.push(val);
-					e.preventDefault();
-					e.stopPropagation();
-					$(this).val($(this).val().slice(val.length));
-					break;
-				case 8:
-					if(this.selectionStart==0 && this.selectionEnd==0)
-					{
-						var oval = $(this).val();
-						var val = (value.pop() || '');
-						$(this).val(val+oval);
-						this.setSelectionRange(val.length,val.length);
-						e.preventDefault();
-						e.stopPropagation();
-					}
-					break;
+    ko.components.register('listbox', {
+        viewModel: function(params) {
+            var lb = this;
+            this.disabled = params.disabled;
+            this.value = ko.observable('');
+            this.items = params.items;
+            this.edit_item = function(item,e) {
+                var input = e.target.parentElement.nextElementSibling;
+                var i = $(e.target).index();
+                lb.items.splice(i,1);
+                if(input.value) {
+                    lb.items.push(input.value);
+                }
+                input.value = item;
+                input.focus();
+            }
+            this.blur = function(lb,e) {
+                var item = e.target.value.trim();
+                if(item) {
+                    lb.items.push(item);
+                }
+                e.target.value = '';
+            }
+            this.keydown = function(lb,e) {
+                var input = e.target;
+				switch(e.which) {
+                    case 13:
+                    case 188:
+                        // enter or comma
+                        var val = input.value.slice(0,input.selectionStart).trim();
+                        if(val.length) {
+                            lb.items.push(val);
+                        }
+                        input.value = input.value.slice(val.length);
+                        break;
+                    case 8:
+                        // backspace
+                        if(input.selectionStart==0 && input.selectionEnd==0) {
+                            var oval = input.value;
+                            var val = (lb.items.pop() || '');
+                            input.value = val+oval;
+                            input.setSelectionRange(val.length,val.length);
+                        } else {
+                            return true;
+                        }
+                        break;
+                    default:
+                        return true;
 				}
-			});
-			i.blur(function(e){
-				var val = $(this).val();
-				if(val.length)
-					value.push(val);
-				$(this).val('');
-			});
-
-			var d = $('<div class="input-prepend"/>')
-			$(element).append(d);
-			$(d).append('<ul class="add-on"/>');
-			$(d).append(i);
-			function selectItem() {
-				var n = $(this).index();
-				i.val(value()[n]).focus();
-				value.splice(n,1);
-			};
-
-			$(element).on('click',function() {
-				i.focus();
-			});
-
-
-			$(element).delegate('li',{
-				click: selectItem,
-				keypress: function(e) {
-					if($(this).is(':focus') && e.which==32)
-					{
-						selectItem.call(this);
-						e.preventDefault();
-						e.stopPropagation();
-					}
-				}
-			});
-		},
-		update: function(element,valueAccessor) {
-			var value = ko.utils.unwrapObservable(valueAccessor());
-			$(element).find('ul li').remove();
-			for(var i=0;i<value.length;i++)
-			{
-				$(element).find('ul').append($('<li tabindex="0"/>').html(value[i]));
-			}
-		}
-	}
+            }
+        },
+        template: '\
+            <ul class="list-inline" data-bind="foreach: items">\
+                <button type="button" class="btn btn-default btn-sm" data-bind="click: $parent.edit_item, text: $data"></button>\
+            </ul>\
+            <input type="text" class="form-control" data-bind="visible: !disabled, textInput: value, event: {blur: blur, keydown: keydown}">\
+        '
+    });
 
 	ko.bindingHandlers.dragOut = {
 		init: function(element, valueAccessor) {
@@ -1080,6 +1710,51 @@ $(document).ready(function() {
         }
     }
 
+    var Subject = Editor.Subject = function(data) {
+        this.pk = data.pk;
+        this.name = data.name;
+        this.description = data.description;
+        this.used = ko.observable(false);
+    }
+
+    var Topic = Editor.Topic = function(data,subject_list) {
+        this.pk = data.pk;
+        this.name = data.name;
+        this.description = data.description;
+        this.subjects = ko.computed(function() {
+            return subject_list().filter(function(s){ return data.subjects.contains(s.pk) });
+        },this);
+        this.visible = ko.computed(function() {
+            var subjects = this.subjects();
+            for(var i=0;i<subjects.length;i++) {
+                if(subjects[i].used()) {
+                    return true;
+                }
+            }
+        },this);
+        var _used = ko.observable(false);
+        this.used = ko.computed({
+            read: function() { return this.visible() && _used(); },
+            write: function(v) { return _used(v); }
+        },this);
+    }
+
+    var AbilityFramework = Editor.AbilityFramework = function(data) {
+        this.name = data.name;
+        this.description = data.description;
+        this.pk = data.pk;
+        this.levels = data.levels.map(function(ld) {return new AbilityLevel(ld)});
+    }
+
+    var AbilityLevel = Editor.AbilityLevel = function(data) {
+        this.name = data.name;
+        this.description = data.description;
+        this.pk = data.pk;
+        this.start = data.start;
+        this.end = data.end;
+        this.used = ko.observable(false);
+    }
+
 	var Resource = Editor.Resource = function(data) {
 		this.progress = ko.observable(0);
 		this.url = ko.observable('');
@@ -1108,8 +1783,97 @@ $(document).ready(function() {
 				if(this.filePatterns[type].test(name))
 					return type;
 			}
-		}
+		},
+        can_embed: function() {
+            var type = this.filetype();
+            return type=='img' || type=='html';
+        }
 	};
+
+    var CommentWriter = Editor.CommentWriter = function() {
+        this.writingComment = ko.observable(false);
+        this.commentText = ko.observable('');
+        this.commentIsEmpty = ko.computed(function() {
+            return $(this.commentText()).text().trim()=='';
+        },this);
+        this.submitComment = function(form) {
+            if(this.commentIsEmpty()) {
+                return;
+            }
+
+            var text = this.commentText();
+            $.post(form.getAttribute('action'),{'text': text, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(response) {
+                $('.timeline').prepend(response.html).mathjax();
+            });
+
+            this.commentText('');
+            this.writingComment(false);
+        }
+        this.cancelComment = function() {
+            this.commentText('');
+            this.writingComment(false);
+        }
+
+    }
+
+    $('body').on('click','.timeline-item .hide-item',function(e) {
+        var element = this;
+        e.preventDefault();
+        e.stopPropagation();
+        $.post(element.getAttribute('href'),{csrfmiddlewaretoken: getCookie('csrftoken')})
+            .success(function(data) {
+                $(element).parents('.timeline-item').first().slideUp(150,function(){$(this).remove()});
+            })
+            .error(function(response,type,message) {
+                if(message=='')
+                    message = 'Server did not respond.';
+
+                noty({
+                    text: 'Error hiding timeline item:\n\n'+message,
+                    layout: "topLeft",
+                    type: "error",
+                    textAlign: "center",
+                    animateOpen: {"height":"toggle"},
+                    animateClose: {"height":"toggle"},
+                    speed: 200,
+                    timeout: 5000,
+                    closable:true,
+                    closeOnSelfClick: true
+                });
+            })
+        ;
+    });
+
+    $('body').on('click','.timeline-item .delete',function(e) {
+        var element = this;
+        e.preventDefault();
+        e.stopPropagation();
+        $.post(element.getAttribute('href'),{csrfmiddlewaretoken: getCookie('csrftoken')})
+            .success(function(data) {
+                $(element).parents('.timeline-item').first().slideUp(150,function(){$(this).remove()});
+                if(window.viewModel && data.current_stamp!==undefined) {
+                    viewModel.current_stamp(data.current_stamp);
+                }
+            })
+            .error(function(response,type,message) {
+                if(message=='')
+                    message = 'Server did not respond.';
+
+                noty({
+                    text: 'Error deleting timeline item:\n\n'+message,
+                    layout: "topLeft",
+                    type: "error",
+                    textAlign: "center",
+                    animateOpen: {"height":"toggle"},
+                    animateClose: {"height":"toggle"},
+                    speed: 200,
+                    timeout: 5000,
+                    closable:true,
+                    closeOnSelfClick: true
+                });
+            })
+        ;
+    });
 
 	ko.bindingHandlers.fileupload = {
 		init: function(element, valueAccessor, allBindingsAccessor) {
@@ -1145,7 +1909,7 @@ $(document).ready(function() {
 	function update_notifications() {
 		var num_notifications = $('#notifications .dropdown-menu .notification').length;
 		$('#notifications .dropdown-toggle').attr('title',num_notifications+' unread '+(num_notifications==1 ? 'notification' : 'notifications'));
-		$('#notifications .counter').text(num_notifications);
+		$('#notifications .badge').text(num_notifications>0 ? num_notifications : '');
 		if(num_notifications) {
 			$('#notifications').addClass('active');
 			$('#notifications .dropdown-toggle').removeClass('disabled');
@@ -1184,9 +1948,8 @@ $(document).ready(function() {
     function update_basket(response) {
 		var num_questions = $('#question_basket .dropdown-menu .question').length;
 		$('#question_basket .dropdown-toggle').attr('title',num_questions+' '+(num_questions==1 ? 'question' : 'questions')+' in your basket');
-		$('#question_basket .counter').text(num_questions);
+		$('#question_basket .badge').text(num_questions>0 ? num_questions : '');
 		if(num_questions) {
-			$('#question_basket').addClass('active');
 			$('#question_basket .dropdown-toggle').removeClass('disabled');
 		} else {
 			$('#question_basket').removeClass('active open');
@@ -1223,6 +1986,12 @@ $(document).ready(function() {
 		e.stopPropagation();
         Editor.empty_basket();
     });
+	$('#question_basket').on('click','.question .btn-remove',function(e) {
+		e.preventDefault();
+		e.stopPropagation();
+		Editor.remove_question_from_basket($(this).attr('data-id'));
+		$(this).parent('.question').remove();
+	});
 	$('#question_basket').on('click','.question .remove',function(e) {
 		e.preventDefault();
 		e.stopPropagation();
@@ -1232,6 +2001,28 @@ $(document).ready(function() {
 	$('body').on('click','.add-to-basket',function(e) {
 		e.preventDefault();
 		e.stopPropagation();
-		Editor.add_question_to_basket($(this).attr('data-id'));
+		Editor.add_question_to_basket($(this).attr('data-question-id'));
 	});
+
+
+    Editor.user_search_autocomplete = function(element) {
+        var url = '/users/search';
+        source = function(req,callback) {
+            element.addClass('loading');
+            $.getJSON(url,{q:req.term})
+                .success(function(data) {
+                    var things = [];
+                    var things = data.map(function(d) {
+                        return {label: d.name, value: d.name}
+                    });
+                    callback(things);
+                })
+                .complete(function() {
+                    $(element).removeClass('loading');
+                })
+            ;
+        }
+        element.autocomplete({source: source});
+    }
+
 });

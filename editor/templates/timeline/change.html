@@ -1,0 +1,15 @@
+{% extends "timeline/item.html" %}
+{% load user_link %}
+
+{% block thumbnail %}
+{% endblock thumbnail %}
+
+{% block heading %}<span class="glyphicon glyphicon-{{item.object.icon}}"></span> {% user_link item.object.user %}{% endblock %}
+
+{% block on_object %}{{item.object.verb}} <a href="{{item.timeline.get_absolute_url}}"><span class="glyphicon glyphicon-{{item.timeline.icon}}"></span> {{item.timeline.name}}</a>{% endblock on_object %}
+
+{% block timelineitem_class %}less-important{% endblock %}
+
+{% block content %}
+{% if not include_object_link %}{{item.object.verb|capfirst}} this.{% endif %}
+{% endblock content %}

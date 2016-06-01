@@ -1,4 +1,8 @@
-{% extends "editor.html" %}
+{% extends "editoritem/edit.html" %}
+{% load helplink %}
+{% load editor_controls %}
+{% load links %}
+{% load sanitizer %}
 {% load sstatic %}
 {% load verbatim %}
 {% load json_filter %}
@@ -12,130 +16,266 @@
 {% block javascripts %}
     {{ block.super }}
 
-	<!-- numbas -->
-    <script src="{% sstatic 'js/numbas/R/R.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'js/numbas/R/en-gb.js' %}" type="text/javascript"></script>
-	<script src="{% sstatic 'js/numbas/numbas.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'js/numbas/jme-display.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'js/numbas/jme-variables.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'js/numbas/jme-builtins.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'js/numbas/jme.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'js/numbas/editor-extras.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'js/numbas/math.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'js/numbas/util.js' %}" type="text/javascript"></script>
-
     <!-- exam editor -->
     <script src="{% sstatic 'js/exam/edit.js' %}" type="text/javascript"></script>
-
-    <script type="text/javascript">
-        {% autoescape off %}
-        {% endautoescape %}
-        (function() {
-            window.Editor = {{editor_json|json|safe}};
-        })();
-    </script>
 {% endblock javascripts %}
 
-{% block content %}
-    {{ block.super }}
-
-
-	<div id="exam">
-		<div class="row-fluid">
-            <h1 id="name-header" class="span9">
-                <span data-bind="text: name, mathjax: name">{{object.name}}</span>
-                {% if request.user.is_authenticated %}
-                <button type="button" style="display:none" data-bind="visible: true, css:{starred: starred}, attr: {title: starred() ? 'This exam is starred. Click to unstar it.' : 'Star this exam'}, click: toggleStar" class="star icon-button" ></button>
-                {% endif %}
-            </h1>
-            {% if editable %}
-			<div class="span3" id="edit-history" style="display:none" data-bind="visible: true, with: currentVersion">
-				<button disabled title="Undo" type="button" data-bind="click: $root.rewindVersion, enable: hasPrevious">&larr;</button>
-				<button disabled title="Redo" type="button" data-bind="click: $root.forwardVersion, enable: hasNext">&rarr;</button>
+{% block main_tab_content %}
+{{ block.super }}
+    <!-- Display -->
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='display'}">
+        <form class="form-horizontal">
+            <div class="form-group">
+                <label class="label-block">
+                    <div class="col-sm-3 control-label">
+                        Interface theme 
+                        {% helplink 'http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-theme' %}
+                    </div>
+                    <div class="col-sm-6">
+                        <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.themes, value: theme, optionsText: 'name'"></select>
+                        <div class="help-block upload-theme"><a href="{% url 'theme_new' %}">Upload a new theme</a></div>
+                    </div>
+                </label>
             </div>
-            {% endif %}
-		</div>
-		<div id="controls">
-			<div class="row-fluid">
-			{% block controls %}
-			{% endblock controls %}
-			</div>
 
-			<ul class="controlbox" id="admin" style="display:none;" data-bind="visible: true">
-				<li>
-					<a id="preview" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this exam in a new window (Ctrl+B)">Test Run</a>
-                    {% if user.is_authenticated %}
-                        <div class="btn-group stamp-of-approval-dropdown">
-                          <button class="btn dropdown-toggle" data-toggle="dropdown">
-                            Feedback
-                            <span class="caret"></span>
-                          </button>
-                          <ul class="dropdown-menu">
-						  {% for name,description in stamp_choices %}
-							<li><a tabindex="-1" href="#" data-bind="click: stamp('{{name}}')">{{description}}</a></li>
-						  {% endfor %}
-                          </ul>
+            <div class="form-group">
+                <label class="label-block">
+                    <div class="col-sm-3 control-label">
+                        Interface language {% helplink 'http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-interface-language' %}
+                    </div>
+                    <div class="col-sm-6">
+                        <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.locales, value: locale, optionsValue: 'code', optionsText: 'name'"></select>
+                    </div>
+                </label>
+            </div>
+        </form>
+    </section>
+
+    <!-- Questions -->
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='questions'}">
+        <div class="questions row">
+            <div class="col-sm-6">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">Questions in this exam</h4>
+                    </div>
+                    <div class="panel-body">
+                        <form class="form-horizontal">
+                            {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
+                            {% booleanproperty 'shuffleQuestions' 'Shuffle questions?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-shuffle-questions' %}
+                            <div data-bind="fadeVisible: shuffleQuestions">
+                                {% booleanproperty 'allQuestions' 'Use all questions?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-use-all-questions' %}
+                            </div>
+                            <div data-bind="fadeVisible: !allQuestions()">
+                                {% property 'pickQuestions' 'Number of questions to display' min=0 max='questions().length' help_url='http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-number-of-questions-to-display' %}
+                            </div>
+                            {% endwith %}
+                        </form>
+
+                    </div>
+                    <ul class="list-group" data-bind="
+                        sortable: {
+                            template: 'question', 
+                            data: questions, 
+                            afterMove: dropQuestion,
+                            options: {handle: '.handle', placeholder: 'placeholder'}
+                        }
+                        ">
+                    </ul>
+                    <div class="panel-footer" data-bind="fadeVisible: questions().length>0">
+                        <div class="form-group">
+                            <label>Pass threshold {% helplink 'http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-pass-threshold' %}</label>
+                            <input {% if not editable %}disabled{% endif %} type="range" min="0" max="100" data-bind="value: percentPass, valueUpdate: 'input'">
+                            <span class="percentproperty value" data-bind="text: ko.unwrap(percentPass)+'%'">0%</span>
                         </div>
-                    {% endif %}
-				</li>			
-				{% if can_delete %}
-				<li>
-					<a id="delete" data-bind="click: deleteExam" href="{% url 'exam_delete' object.pk object.slug %}" title="Delete this exam permanently but not the questions it uses">Delete
-						<form action="{% url 'exam_delete' object.pk object.slug %}" method="post">{% csrf_token %}
-							<input type="submit" value="Submit" />
-						</form>
-					</a>
-				</li>
-				{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="panel panel-default tab-content">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">Add questions to this exam</h4>
+                    </div>
+                    <div class="panel-body">
+                        <ul class="nav nav-pills nav-justified" data-bind="foreach: questionTabs">
+                            <li data-bind="css: {active: $root.currentQuestionTab() == $data}">
+                                <a href="#" data-bind="click: $root.currentQuestionTab, text: title"></a>
+                            </li>
+                        </ul>
+                    </div>
+                    <ul class="results list-group tab-pane" data-bind="
+                        css: {active: ko.unwrap($root.currentQuestionTab().id)=='mine'},
+                        template: {
+                            name: 'questionResult',
+                            foreach: recentQuestions,
+                        }
+                    "></ul>
+                    <ul class="results list-group tab-pane" data-bind="
+                        css: {active: ko.unwrap($root.currentQuestionTab().id)=='basket'},
+                        template: {
+                            name: 'questionResult',
+                            foreach: basketQuestions,
+                        }
+                    "></ul>
+                    <div class="panel-body nothing-here" data-bind="visible: ko.unwrap($root.currentQuestionTab().id)=='basket' && basketQuestions().length==0">
+                        <p>There's nothing in your basket at the moment.</p>
+                        <p><a target="_blank" href="{% url 'search' %}">Search for questions you'd like to use</a>, and click on the basket icon. They'll show up here so you can easily add them to this exam.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-				{% if user.is_authenticated and can_copy %}
-				<li>
-					<a id="copy" href="{% url 'exam_copy' object.pk object.slug %}" target="_blank" title="Create your own copy of this exam">Make a Copy</a>
-				</li>
-				{% endif %}
+        {% if editable %}
+        <hr>
+        <nav>
+            <ul class="pager">
+                <li class="previous">
+                    <a title="Back to the previous section" href="#" data-bind="click: setTab('settings')">← Settings</a>
+                </li>
+                <li class="next" data-bind="css: {ready: section_completed.settings}">
+                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('navigation')">Navigation →</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </section>
 
-                <li>
-                    <span id="download">
-						Download: 
-                        <div class="btn-group">
-                          <a class="btn" href="{% url 'exam_download' object.pk object.slug %}?scorm">SCORM package</a>
-                          <button class="btn dropdown-toggle" data-toggle="dropdown" title="More download options">
-                            <span class="caret"></span>
-                          </button>
-                          <ul class="dropdown-menu">
-                            <li><a tabindex="-1" href="{% url 'exam_download' object.pk object.slug %}">standalone .zip (no SCORM)</a></li>
-                            <li><a tabindex="-1" href="{% url 'exam_source' object.pk object.slug %}">source</a></li>
-                          </ul>
-                        </div>
-					</span>
-				</li>
-			</ul>
-		</div>
+    <!-- Navigation -->
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='navigation'}">
+        <form class="form-horizontal">
+            {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
+            {% booleanproperty 'allowregen' 'Allow user to regenerate questions?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-allow-user-to-regenerate-questions' %}
+            {% booleanproperty 'reverse' 'Allow move to previous question?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-allow-move-to-previous-question' %}
+            {% booleanproperty 'browse' 'Allow to jump to any question?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-allow-jump-to-any-question' %}
+            {% booleanproperty 'showfrontpage' 'Show front page?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-show-front-page' %}
+            {% booleanproperty 'showresultspage' 'Show results page?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-show-results-page' %}
+            {% booleanproperty 'preventleave' 'Confirm before leaving the exam while it\'s running?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-confirm-before-leaving-the-exam-while-it-s-running' %}
+            {% exam_event 'onleave' 'On leaving a question' help_url='http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-on-leaving-a-question' %}
+            {% endwith %}
+        </form>
 
-		<div style="display:none" data-bind="visible: true">
-			<div class="row-fluid">
-				<ul class="nav nav-tabs" data-bind="foreach: mainTabs">
-					<li data-bind="css: {active: $root.currentTab() == $data}">
-						<a href="#" data-bind="click: $root.currentTab, text: title"></a>
-					</li>
-				</ul>
-			</div>
+        {% if editable %}
+        <hr>
+        <nav>
+            <ul class="pager">
+                <li class="previous">
+                    <a title="Back to the previous section" href="#" data-bind="click: setTab('questions')">← Questions</a>
+                </li>
+                <li class="next" data-bind="css: {ready: section_completed.settings}">
+                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('timing')">Timing →</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </section>
 
-			{% block editor %}
-			{% endblock %}
-		</div>
-		<div class="page-loading" data-bind="visible: false">
-			<h2>Loading...</h2>
-		</div>
-		<div class="page-error">
-			<h2>Error</h2>
-			<p>There was an error loading the page.</p>
+    <!-- Timing -->
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='timing'}">
+        <form class="form-horizontal">
+            {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
+            {% property 'duration' 'Exam duration (minutes)' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-exam-duration' %}
+            {% booleanproperty 'allowPause' 'Allow pausing?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-allow-pausing' %}
+            {% exam_event 'timeout' 'On timeout' help_url='http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-on-timeout-event' %}
+            {% exam_event 'timedwarning' '5 minutes before timeout' help_url='http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-minutes-before-timeout-event' %}
+            {% endwith %}
+        </form>
 
-			<pre class="trace"></pre>
-		</div>
-	</div>
+        {% if editable %}
+        <hr>
+        <nav>
+            <ul class="pager">
+                <li class="previous">
+                    <a title="Back to the previous section" href="#" data-bind="click: setTab('navigation')">← Navigation</a>
+                </li>
+                <li class="next" data-bind="css: {ready: section_completed.settings}">
+                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('feedback')">Feedback →</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </section>
+
+    <!-- Feedback -->
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='feedback'}">
+        <form class="form-horizontal">
+            {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
+            {% booleanproperty 'showactualmark' 'Show current score?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-show-current-score' %}
+            {% booleanproperty 'showtotalmark' 'Show maximum score?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-show-maximum-score' %}
+            {% booleanproperty 'showanswerstate' 'Show answer state?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-show-answer-state' %}
+            {% booleanproperty 'allowrevealanswer' 'Allow reveal answer?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-allow-reveal-answer' %}
+            {% percentproperty 'advicethreshold' 'Advice threshold' help_url='http://numbas-editor.readthedocs.io/en/latest/exam-reference.html#term-advice-threshold' %}
+            {% endwith %}
+        </form>
+
+        {% if editable %}
+        <hr>
+        <nav>
+            <ul class="pager">
+                <li class="previous">
+                    <a title="Back to the previous section" href="#" data-bind="click: setTab('timing')">← Timing</a>
+                </li>
+                <li class="next" data-bind="css: {ready: section_completed.settings}">
+                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('access')">Access →</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </section>
+
+{% endblock main_tab_content %}
+
+{% block content %}
+{{ block.super }}
+    {% verbatim %}
+
+    <!-- question result templates -->
+
+    <script type="text/html" id="question">
+        <li class="question list-group-item clearfix">
+            <span class="handle btn btn-link btn-lg pull-left" data-bind="visible: item_json.editable"><span class="glyphicon glyphicon-move"></span></span>
+            <div class="controls pull-right">
+                <a class="preview btn btn-link" data-bind="attr: {href: previewURL()}" target="_blank" title="Preview this question"><span class="glyphicon glyphicon-play text-success"></span></a>
+                <button type="button" class="copy btn btn-link" data-bind="click:replaceWithCopy, visible: item_json.editable" title="Replace this question with a copy"><span class="glyphicon glyphicon-duplicate text-warning"></span></button>
+                <button type="button" class="delete btn btn-link" data-bind="click:remove, visible: item_json.editable" title="Delete this question"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+            </div>
+            <div class="title">
+                <strong class="number" data-bind="text: ($index()+1)+'.'"></strong>
+                <a data-bind="attr:{href: url}, text: name, mathjax: name" target="_blank"></a>
+            </div>
+            <div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
+        </li>
+    </script>
+
+    <script type="text/html" id="questionResult">
+        <li class="question question-result list-group-item">
+            <span class="handle btn btn-link pull-left" data-bind="click: add, visible: item_json.editable"><span class="glyphicon glyphicon-plus"></span></span>
+            <div class="controls pull-right">
+                <a class="preview btn btn-link" data-bind="attr: {href: previewURL()}" target="_blank" title="Preview this question"><span class="glyphicon glyphicon-play text-success"></span></a>
+            </div>
+            <div class="details">
+                <div class="title">
+                    <a data-bind="attr:{href: url}, text: name, mathjax: name" target="_blank"></a>
+                </div>
+                <div class="author">
+                    (<span data-bind="text: author"></span>)
+                </div>
+            </div>
+            <div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
+        </li>
+    </script>
+    {% endverbatim %}
 {% endblock content %}
 
-{% block sidebar %}
-{% endblock sidebar %}
-
+{% block settings %}
+{{ block.super }}
+    {% if editable %}
+    <hr>
+    <nav>
+        <ul class="pager">
+            <li class="next" data-bind="css: {ready: section_completed.settings}">
+                <a title="Proceed to the next section" href="#" data-bind="click: setTab('questions')">Questions →</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+{%endblock settings %}

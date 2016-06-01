@@ -1,0 +1,4 @@
+{% extends "search/content.html" %}
+{% load django_tables2 %}
+
+{% block widen_search %} authored by {{view_user.get_full_name}} - <a class="widen-search" href="{% url 'search' %}{% querystring results.prefixed_page_field=1 %}">search across all users</a>{% endblock %}

@@ -1,3 +1,33 @@
+.results-header {
+  border-bottom: 1px solid #eee;
+  margin-bottom: 1em;
+  vertical-align: bottom;
+}
+
+.result {
+  border-bottom: 2px solid #eee;
+  padding-bottom: 1em;
+  margin-bottom: 1em;
+}
+
+.initial-list > li:last-child {
+  margin-bottom: 5px;
+}
+.initial-list {
+}
+.show-more ul > li:first-child {
+  margin-top: 0px;
+}
+
+.num-hits {
+  color: #888;
+}
+
+.result .info .list-inline {
+    margin-left: 0;
+}
+
+/*
 #newExamForm, #newQuestionForm {
 	display: none;
 }
@@ -196,3 +226,4 @@
 .controlbox:first-child {
     margin-top: 0;
 }
+*/

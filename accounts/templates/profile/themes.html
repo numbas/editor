@@ -1,0 +1,53 @@
+{% extends "profile/base.html" %}
+{% load sstatic %}
+
+{% block stylesheets %}
+	{{ block.super }}
+    <link href="{% sstatic 'css/theme.css' %}" type="text/css" rel="stylesheet" />
+{% endblock stylesheets %}
+
+{% block profile_content %}
+
+{% if view_user.own_themes.exists %}
+<table class="themes table">
+    <thead>
+        <th>Name</th>
+        {% if is_me %}<th></th><!-- control links -->{% endif %}
+        <th>Last modified</th>
+    </thead>
+    <tbody>
+    {% for theme in view_user.own_themes.all %}
+    <tr>
+        <td>{{theme.name}}</td>
+        {% if is_me %}
+        <td class="text-center">
+            <a class="btn btn-link" href="{% url 'theme_edit' theme.pk %}" title="Edit this theme"><span class="glyphicon glyphicon-pencil text-warning"></span></a>
+            <a class="btn btn-link" href="{{theme.zipfile.url}}" title="Download this theme"><span class="glyphicon glyphicon-download text-info"></span></a>
+            <a class="btn btn-link" href="{% url 'theme_delete' theme.pk %}" title="Delete this theme"><span class="glyphicon glyphicon-remove text-danger"></span></a>
+        </td>
+        {% endif %}
+		<td>{{theme.last_modified}}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+    {% if is_me %}
+    <tfoot>
+        <tr>
+            <td colspan="3">
+                <a class="btn btn-primary" href="{% url 'theme_new' %}"><span class="glyphicon glyphicon-upload"></span> Upload a new theme</a>
+            </td>
+        </tr>
+    </tfoot>
+    {% endif %}
+</table>
+{% else %}
+{% if is_me %}
+<p><a class="btn btn-primary" href="{% url 'theme_new' %}"><span class="glyphicon glyphicon-upload"></span> Upload a new theme</a></p>
+{% else %}
+<p class="nothing-here">{{view_user.first_name}} hasn't uploaded any themes yet.</p>
+{% endif %}
+{% endif %}
+
+<p><a target="numbasquickhelp" href="http://numbas-editor.readthedocs.io/en/latest/themes.html"><span class="glyphicon glyphicon-question-sign"></span> Help with themes</a></p>
+
+{% endblock profile_content %}

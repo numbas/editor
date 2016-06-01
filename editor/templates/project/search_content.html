@@ -1,0 +1,4 @@
+{% extends "search/content.html" %}
+{% load django_tables2 %}
+
+{% block widen_search %} in {{project.name}} - <a class="widen-search" href="{% url 'search' %}{% querystring results.prefixed_page_field=1 %}">search across all projects</a>{% endblock %}

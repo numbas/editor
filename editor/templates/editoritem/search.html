@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+
+{% block content_container %}container-fluid{% endblock content_container %}
+
+{% block content %}
+{% include "search/content.html" %}
+{% endblock content %}
+
+{% block javascripts %}
+    {{block.super}}
+    {% include "search/js.html" %}
+{% endblock javascripts %}
+
+{% block stylesheets %}
+    {{ block.super }}
+    {% include "search/css.html" %}
+{% endblock stylesheets %}

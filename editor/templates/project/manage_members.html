@@ -1,0 +1,86 @@
+{% extends "project/settings_base.html" %}
+{% load user_link %}
+
+{% block javascripts %}
+{{block.super}}
+<script type="text/javascript">
+    $(document).ready(function() {
+        Editor.user_search_autocomplete($('#id_user_search'));
+    });
+</script>
+{% endblock %}
+
+{% block settings_content %}
+
+<div class="panel panel-default">
+    <div class="panel-heading"><h3 class="panel-title">Project members</h3></div>
+    <form method="post" class="form-inline">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th><span class="glyphicon glyphicon-eye-open"></span> Access</th>
+                    <th><span class="glyphicon glyphicon-trash"></span> Remove</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="member owner">
+                    <td>{% user_thumbnail project.owner 20 15 link=True %}{% user_link project.owner %}</td>
+                    <td>Owner</td>
+                </tr>
+                {% for uform in form %}
+                <tr class="member">
+                    <td>{% user_thumbnail uform.instance.user 20 15 link=True %}{% user_link uform.instance.user %}{{uform.id}}</td>
+                    <td>
+                        <select id="{{uform.access.auto_id}}" name="{{uform.access.html_name}}" class="form-control">
+                            {% for value,name in uform.access.field.choices %}
+                            <option {% if value == uform.access.value %}selected{% endif %} value="{{value}}">{{name}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>{{uform.DELETE}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {{form.management_form}}
+        <div class="panel-body">
+        {% csrf_token %}
+        <button class="btn btn-primary pull-right" type="submit">Save changes</button>
+    </div>
+    </form>
+    <div class="panel-heading"><h3 class="panel-title"><span class="glyphicon glyphicon-plus"></span> Add a member</h3></div>
+    <div class="panel-body">
+        <form class="form-inline" action="{% url 'project_settings_add_member' project.pk %}" method="post">
+            {% for field in add_member_form.hidden_fields %}{{field}}{% endfor %}
+            <div class="form-group">
+                <input type="text" class="form-control" id="{{add_member_form.user_search.auto_id}}" name="user_search" placeholder="Username or full name">
+            </div>
+            <div class="form-group">
+                <select id="{{add_member_form.access.auto_id}}" name="access" class="form-control">
+                    {% for value,name in add_member_form.access.field.choices %}
+                    <option value="{{value}}">{{name}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% csrf_token %}
+            <button class="btn btn-primary" type="submit">Add</button>
+            <div class="help-block">You can invite someone who doesn't yet have an account by typing their email address in the box above.</div>
+        </form>
+    </div>
+</div>
+
+{% if request.user == project.owner %}
+<div class="panel panel-danger">
+    <div class="panel-heading"><h3 class="panel-title">Transfer ownership</h3></div>
+    <div class="panel-body">
+        <a class="btn btn-danger pull-right" href="{% url 'project_transfer_ownership' project.pk %}">Transfer ownership</a>
+        <p>Transfer ownership of this project to another user. Afterwards, you'll have editing access to this project but be unable to perform admin tasks.</p>
+    </div>
+</div>
+{% endif %}
+
+
+
+{% endblock settings_content %}

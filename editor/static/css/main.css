@@ -1,22 +1,77 @@
-header
-,nav
-,section
-,article
-,aside
-,footer
-,hgroup 
-{ 
-display: block;
+.navbar-brand img {
+	max-height: 100%;
 }
 
-.clearAfter::after {
-    clear: both;
-    content: '.';
+.monospace {
+	font-family: monospace;
+}
+
+@media screen and (min-width: 768px) {
+    #search-bar {
+        width: 19em;
+    }
+}
+@media screen and (min-width: 992px) {
+    #search-bar {
+        width: 33em;
+    }
+}
+@media screen and (min-width: 1200px) {
+    #search-bar {
+        width: 46em;
+    }
+}
+
+.page-error {
+	display: none;
+}
+body:not(.loaded) .loaded-content {
+    display: none;
+}
+
+.label-block {
     display: block;
-    visibility: hidden;
-    height: 0;
 }
 
+.timeline-item {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1em;
+}
+.timeline-item.less-important .media-heading {
+    font-size: 1em;
+    color: #888;
+}
+
+.user-thumbnail .glyphicon {
+    color: black !important;
+}
+
+.stamp[data-stamp="ok"]{
+	background-color: green;
+	color: white;
+}
+
+.stamp[data-stamp="problem"]{
+	background-color: #888;
+	color: white;
+}
+
+.stamp[data-stamp="broken"]{
+	background-color: red;
+	color: white;
+}
+
+.stamp[data-stamp="dontuse"]{
+	background-color: black;
+	color: yellow;
+}
+
+.stamp[data-stamp="pleasetest"]{
+	background-color: #ffbf00;
+}
+
+
+/*
 ul.no-bullets, ol.no-bullets {
 	list-style-type: none;
 	margin-left: 10px;
@@ -316,10 +371,6 @@ button.search.loading {
 	padding: 4px;
 }
 
-.monospace {
-	font-family: monospace;
-}
-
 .errorlist {
 	background: black;
 	color: white;
@@ -330,56 +381,6 @@ button.search.loading {
 .errorlist, .messages {
     list-style: none;
     display: inline-block;
-}
-
-.admin a {
-	margin-right: 0.5em;
-}
-
-.admin-icon {
-	display: inline-block;
-	background-color: white;
-	border-radius: 50%;
-	width: 16px;
-	height: 16px;
-	position: relative;
-}
-
-.admin-icon svg.icon {
-	position: absolute;
-	top: 3px;
-	left: 3px;
-}
-.admin-icon svg.icon use {
-	fill: white;
-}
-
-.admin .delete {
-	margin-left: 0.5em;
-}
-.admin-icon.delete {
-	background-color: red;
-}
-
-.admin-icon.copy {
-	background-color: black;
-}
-.admin-icon.basket {
-	background-color: black;
-}
-
-.admin-icon.preview {
-	background-color: rgb(133,196,63);
-}
-
-.page-loading {
-    text-align: center;
-}
-.page-error {
-	display: none;
-}
-.page-error h2 {
-	text-align: center;
 }
 
 .stamp-status {
@@ -416,3 +417,4 @@ button.search.loading {
 .alert > p:last-child {
     margin-bottom: 0;
 }
+*/

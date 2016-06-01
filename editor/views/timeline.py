@@ -1,8 +1,11 @@
+import json
 from editor.views.generic import user_json,stamp_json,comment_json
-from editor.views.version import version_json
+from editor.models import TimelineItem
+from django.views import generic
+from django import http
+from django.core.urlresolvers import reverse
 
 event_json_views = {
-    'version': version_json,
     'stamp': stamp_json,
     'comment': comment_json,
 }
@@ -25,3 +28,37 @@ def event_json(event,viewed_by):
 
 def timeline_json(events,viewed_by):
     return [event_json(event,viewed_by) for event in events]
+
+class DeleteTimelineItemView(generic.DeleteView):
+    model = TimelineItem
+
+    def delete(self,request,*args,**kwargs):
+        self.object = self.get_object()
+        if self.object.can_be_deleted_by(self.request.user):
+            self.object.delete()
+            return http.HttpResponse('timeline item {} deleted'.format(self.object.pk))
+        else:
+            return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
+
+class HideTimelineItemView(generic.UpdateView):
+    model = TimelineItem
+
+    def post(self,request,*args,**kwargs):
+        self.object = self.get_object()
+        self.object.hidden_by.add(self.request.user)
+        data = {
+            'success': True,
+            'undo': reverse('timelineitem_unhide',args=(self.object.pk,))
+        }
+        return http.HttpResponse(json.dumps(data),content_type='application/json')
+
+class UnhideTimelineItemView(generic.UpdateView):
+    model = TimelineItem
+
+    def post(self,request,*args,**kwargs):
+        self.object = self.get_object()
+        self.object.hidden_by.remove(self.request.user)
+        data = {
+            'success': True,
+        }
+        return http.HttpResponse(json.dumps(data),content_type='application/json')

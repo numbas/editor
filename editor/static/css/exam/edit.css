@@ -1,3 +1,11 @@
+.placeholder {
+	border: 1px dashed;
+	height: 2.5em;
+    list-style: none;
+    background: #eee;
+}
+
+/*
 #exam-name {
 	font-size: 2em;
 	height: 1.5em;
@@ -145,12 +153,9 @@ li.questionResult.ui-draggable-dragging, li.question.ui-sortable-helper {
     border: 1px dashed black;
 }
 
-.placeholder {
-	border: 1px dashed;
-	height: 2.5em;
-}
 
 .upload-theme {
     font-size: small;
     text-align: right;
 }
+*/

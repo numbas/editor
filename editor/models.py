@@ -1,18 +1,6 @@
-#Copyright 2012 Newcastle University
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#       http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
 import uuid
 import os
+from copy import deepcopy
 import shutil
 from zipfile import ZipFile
 import json
@@ -32,9 +20,9 @@ from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
 from django.db import models,transaction
-from django.db.models import signals
+from django.db.models import signals, Max, Min
 from django.dispatch import receiver
-from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.forms import model_to_dict
@@ -42,6 +30,9 @@ from django.utils.deconstruct import deconstructible
 from django.db.models.signals import pre_delete
 from uuslug import slugify
 from django.contrib import messages
+from django.utils.translation import ugettext_lazy as _
+from django.template.loader import get_template
+from django.core.mail import send_mail
 
 import reversion
 
@@ -57,70 +48,187 @@ import numbasobject
 from jsonfield import JSONField
 
 PUBLIC_ACCESS_CHOICES = (('hidden','Hidden'),('view','Public can view'),('edit','Public can edit'))
-USER_ACCESS_CHOICES = (('view','Public can view'),('edit','Public can edit'))
+USER_ACCESS_CHOICES = (('view','Can view'),('edit','Can edit'))
+
+@deconstructible
+class ControlledObject(object):
+
+    @property
+    def owner(self):
+        raise NotImplementedError
+
+    def has_access(self,user,accept_levels):
+        raise NotImplementedError
+
+    def can_be_viewed_by(self,user):
+        accept_levels = ('view','edit')
+        try:
+            if self.public_access in accept_levels:
+                return True
+        except AttributeError:
+            pass
+        return (user.is_superuser) or (self.owner==user) or (self.has_access(user,accept_levels))
+
+    def can_be_copied_by(self,user):
+        if user.is_superuser or self.owner==user or self.has_access(user,('edit',)):
+            return True
+        elif not self.licence:
+            return False
+        else:
+            return self.licence.can_reuse and self.licence.can_modify
+
+    def can_be_deleted_by(self,user):
+        return user == self.owner
+
+    def can_be_edited_by(self, user):
+        return self.public_access=='edit' or (user.is_superuser) or (self.owner==user) or self.has_access(user,('edit',))
+
+    def __eq__(self,other):
+        return True
+
+    @classmethod
+    def filter_can_be_viewed_by(self,user):
+        view_perms = ('edit','view')
+        if user.is_superuser:
+            return Q()
+        elif user.is_anonymous():
+            return Q(published=True,public_access__in=view_perms)
+        else:
+            return (  Q(access__user=user,access__access__in=view_perms) 
+                    | Q(published=True,public_access__in=view_perms) 
+                    | Q(author=user)
+                    | Q(project__projectaccess__user=user)
+                    | Q(project__owner=user)
+                   )
+
+class TimelineMixin(object):
+    """ 
+    A model which produces a timeline item when it is created.
+    Models inheriting from this should implement either
+     * self.object, or 
+     * self.timeline_object() and self.can_be_deleted_by(user)
+    as well as a GenericRelation `timelineitems` to TimelineItem
+    """
+    def can_be_deleted_by(self,user):
+        try:
+            if self.object.author==user:
+                return True
+        except AttributeError:
+            pass
+        return user==self.user
+
+    def timeline_object(self):
+        try:
+            return self.object
+        except AttributeError:
+            ct = ContentType.objects.get(pk=self.object_content_type.pk)
+            return ct.get_object_for_this_type(pk=self.object_id)
+
+    @property
+    def timelineitem(self):
+        return self.timelineitems.get()
+
+LOCALE_CHOICES = [(y,x) for x,y in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']]
+
+class Project(models.Model,ControlledObject):
+    name = models.CharField(max_length=200)
+    owner = models.ForeignKey(User,related_name='own_projects')
+
+    permissions = models.ManyToManyField(User,through='ProjectAccess')
+
+    timeline = GenericRelation('TimelineItem',related_query_name='projects',content_type_field='timeline_content_type',object_id_field='timeline_id')
+
+    public_view = models.BooleanField(default=False)
+    watching_non_members = models.ManyToManyField(User,related_name='watched_projects')
+
+    icon = 'briefcase'
+
+    description = models.TextField(blank=True)
+    default_locale = models.CharField(max_length=10,editable=True,default='en-GB')
+    default_licence = models.ForeignKey('Licence',null=True,blank=True)
+
+    def can_be_edited_by(self, user):
+        return (user.is_superuser) or (self.owner==user) or self.has_access(user,('edit',))
+
+    def can_be_viewed_by(self,user):
+        return self.public_view or super(Project,self).can_be_viewed_by(user)
+
+    def get_absolute_url(self):
+        return reverse('project_index',args=(self.pk,))
+
+    def has_access(self,user,levels):
+        if user.is_anonymous():
+            return False
+        return ProjectAccess.objects.filter(project=self,user=user,access__in=levels).exists()
+
+    def members(self):
+        return [self.owner]+list(User.objects.filter(project_memberships__project=self).exclude(pk=self.owner.pk))
+
+    def all_timeline(self):
+        items = self.timeline.all() | TimelineItem.objects.filter(editoritems__project=self)
+        items.order_by('-date')
+        return items
+
+    @property
+    def watching_users(self):
+        return (User.objects.filter(pk=self.owner.pk) | User.objects.filter(project_memberships__project=self)).distinct()
+
+    def __unicode__(self):
+        return self.name
+
+class ProjectAccess(models.Model,TimelineMixin):
+    project = models.ForeignKey(Project)
+    user = models.ForeignKey(User,related_name='project_memberships')
+    access = models.CharField(default='view',editable=True,choices=USER_ACCESS_CHOICES,max_length=6)
+
+    timelineitems = GenericRelation('TimelineItem',related_query_name='project_accesses',content_type_field='object_content_type',object_id_field='object_id')
+    timelineitem_template = 'timeline/access.html'
+
+    def can_be_deleted_by(self,user):
+        return self.project.can_be_edited_by(user)
+
+    def timeline_object(self):
+        return self.project
+
+    def icon(self):
+        return 'eye-open'
+
+    class Meta:
+        unique_together = (("project","user"),)
+
+class ProjectInvitation(models.Model):
+    email = models.EmailField()
+    invited_by = models.ForeignKey(User)
+    access = models.CharField(default='view',editable=True,choices=USER_ACCESS_CHOICES,max_length=6)
+    project = models.ForeignKey(Project,related_name='invitations')
+
+    def __unicode__(self):
+        return "Invitation for {} to join {}".format(self.email,self.project)
+
+@receiver(signals.post_save,sender=ProjectInvitation)
+def send_project_invitation(instance,created,**kwargs):
+    if created:
+        template = get_template('project/invitation_email.txt')
+        content = template.render({'invitation':instance,'SITE_TITLE':settings.SITE_TITLE})
+        subject = 'Invitation to join project "{}", on {}'.format(instance.project.name,settings.SITE_TITLE)
+        send_mail(subject,content,from_email=settings.DEFAULT_FROM_EMAIL,recipient_list=(instance.email,))
+
+@receiver(signals.post_save,sender=User)
+def apply_project_invitations(instance,created,**kwargs):
+    if created:
+        invitations = ProjectInvitation.objects.filter(email=instance.email)
+        for invitation in invitations:
+            ProjectAccess.objects.create(project=invitation.project,user=instance,access=invitation.access)
 
 class EditorTag(taggit.models.TagBase):
     official = models.BooleanField(default=False)
-
-    def used_count(self):
-        return self.tagged_items.count()
 
     class Meta:
         verbose_name = 'tag'
         ordering = ['name']
 
-class TaggedQuestion(taggit.models.GenericTaggedItemBase):
-    tag = models.ForeignKey(EditorTag,related_name='tagged_items')
-
-@deconstructible
-class ControlledObject(object):
-
-    def can_be_viewed_by(self,user):
-        accept_levels = ('view','edit')
-        return (self.public_access in accept_levels) or (user.is_superuser) or (self.author==user) or (self.get_access_for(user) in accept_levels)
-
-    def can_be_copied_by(self,user):
-        if not self.licence or user.is_superuser or self.author==user or self.get_access_for(user)=='edit':
-            return True
-        else:
-            return self.licence.can_reuse and self.licence.can_modify
-
-    def can_be_deleted_by(self,user):
-        return user == self.author
-
-    def can_be_edited_by(self, user):
-        return self.public_access=='edit' or (user.is_superuser) or (self.author==user) or self.get_access_for(user)=='edit'
-
-    def __eq__(self,other):
-        return True
-
-NUMBAS_FILE_VERSION = 'variables_as_objects'
-
-@deconstructible
-class NumbasObject(object):
-
-    def get_parsed_content(self):
-        if self.content:
-            self.parsed_content = numbasobject.NumbasObject(self.content)
-            self.name = self.parsed_content.data['name']
-        elif self.name:
-            self.parsed_content = numbasobject.NumbasObject(data={'name': self.name}, version=NUMBAS_FILE_VERSION)
-
-        self.metadata = self.parsed_content.data.get('metadata',self.metadata)
-
-        self.content = str(self.parsed_content)
-        return self.parsed_content
-
-    def set_name(self,name):
-        self.name = name
-        if self.content:
-            self.get_parsed_content()
-            self.parsed_content.data['name'] = name
-            self.content = str(self.parsed_content)
-        self.save()
-
-    def __eq__(self,other):
-        return self.content==other.content
+    def used_count(self):
+        return self.tagged_items.count()
 
 #check that the .exam file for an object is valid and defines at the very least a name
 def validate_content(content):
@@ -151,6 +259,8 @@ class Extension(models.Model):
             'url': self.url,
             'pk': self.pk,
             'location': self.location,
+            'author': self.author.pk if self.author is not None else None,
+            'edit_url': reverse('extension_edit',args=(self.pk,)),
         }
         path = self.script_path
         if path is not None:
@@ -230,38 +340,25 @@ def reset_theme_on_delete(sender,instance,**kwargs):
         exam.theme = default_theme
         exam.save()
 
-class Image( models.Model ):
-    title = models.CharField( max_length=255 ) 
-    image = models.ImageField( upload_to='question-resources/', max_length=255) 
-
-    @property 
-    def data_url( self ):
-        try:
-            img = open( self.image.path, "rb") 
-            data = img.read() 
-            return "data:image/jpg;base64,%s" % codecs.encode(data,'base64')[:-1]
-    
-        except IOError as e:
-            return self.image.url
+class Resource( models.Model ):
+    owner = models.ForeignKey(User,related_name='resources')
+    date_created = models.DateTimeField(auto_now_add=True)
+    file = models.FileField( upload_to='question-resources/', max_length=255) 
 
     @property
     def resource_url(self):
-        return 'resources/%s' % self.image.name
+        return 'resources/%s' % self.file.name
 
     def delete(self,*args,**kwargs):
-        self.image.delete(save=False)
+        self.file.delete(save=False)
         super(Image,self).delete(*args,**kwargs)
 
     def as_json(self):
         return {
             'url': self.resource_url,
-            'name': self.image.name,
+            'name': self.file.name,
             'pk': self.pk,
-            'delete_url': reverse('delete_resource',args=(self.pk,)),
         }
-
-    def summary(self):
-        return json.dumps(self.as_json()),
 
 class Licence(models.Model):
     name = models.CharField(max_length=80,unique=True)
@@ -286,26 +383,6 @@ class Licence(models.Model):
                 'pk': self.pk,
         }
 
-class TimelineEvent(object):
-    def __init__(self,user,date,type,data):
-        self.user = user
-        self.date = date
-        self.type = type
-        self.data = data
-
-class StampTimelineEvent(TimelineEvent):
-    def __init__(self,stamp):
-        super(StampTimelineEvent,self).__init__(user=stamp.user, date=stamp.date, type='stamp', data=stamp)
-
-class VersionTimelineEvent(TimelineEvent):
-    def __init__(self,version):
-        revision = version.revision
-        super(VersionTimelineEvent,self).__init__(user=revision.user, date=revision.date_created, type='version', data=version)
-
-class CommentTimelineEvent(TimelineEvent):
-    def __init__(self,comment):
-        super(CommentTimelineEvent,self).__init__(user=comment.user, date=comment.date, type='comment', data=comment)
-
 STAMP_STATUS_CHOICES = (
     ('ok','Ready to use'),
     ('dontuse','Should not be used'),
@@ -314,33 +391,742 @@ STAMP_STATUS_CHOICES = (
     ('pleasetest','Needs to be tested'),
 )
 
-class TimelineMixin(object):
-    def can_be_deleted_by(self,user):
-        return user==self.user or user==self.object.author
+class AbilityFramework(models.Model):
+    name = models.CharField(max_length=200,blank=False,unique=True)
+    description = models.TextField(blank=False)
 
-class StampOfApproval(models.Model,TimelineMixin):
-    object_content_type = models.ForeignKey(ContentType)
+    class Meta:
+        ordering = ('name',)
+
+    def __unicode__(self):
+        return self.name
+
+ABILITY_PRECISION = 10
+
+class AbilityLevel(models.Model):
+    name = models.CharField(max_length=200,blank=False,unique=True)
+    description = models.TextField(blank=False)
+    start = models.DecimalField(max_digits=ABILITY_PRECISION+1,decimal_places=ABILITY_PRECISION)
+    end = models.DecimalField(max_digits=ABILITY_PRECISION+1,decimal_places=ABILITY_PRECISION)
+    framework = models.ForeignKey(AbilityFramework,related_name='levels')
+
+    class Meta:
+        ordering = ('framework','start',)
+
+    def __unicode__(self):
+        return self.name
+
+class Subject(models.Model):
+    name = models.CharField(max_length=200,blank=False,unique=True)
+    description = models.TextField(blank=False)
+
+    class Meta:
+        ordering = ('name',)
+
+    def __unicode__(self):
+        return self.name
+
+class Topic(models.Model):
+    name = models.CharField(max_length=200,blank=False,unique=True)
+    description = models.TextField(blank=False)
+    subjects = models.ManyToManyField(Subject)
+
+    class Meta:
+        ordering = ('name',)
+
+    def __unicode__(self):
+        return self.name
+
+class AbilityLevelField(models.FloatField):
+    pass
+
+class TaggedItem(taggit.models.GenericTaggedItemBase):
+    tag = models.ForeignKey(EditorTag,related_name='tagged_editoritems')
+
+class TaggedQuestion(taggit.models.GenericTaggedItemBase):
+    tag = models.ForeignKey(EditorTag,related_name='tagged_items')
+
+class Access(models.Model,TimelineMixin):
+    item = models.ForeignKey('EditorItem')
+    user = models.ForeignKey(User)
+    access = models.CharField(default='view',editable=True,choices=USER_ACCESS_CHOICES,max_length=6)
+
+    timelineitems = GenericRelation('TimelineItem',related_query_name='item_accesses',content_type_field='object_content_type',object_id_field='object_id')
+    timelineitem_template = 'timeline/access.html'
+
+    def can_be_deleted_by(self,user):
+        return self.item.can_be_deleted_by(user)
+
+    def timeline_object(self):
+        return self.item
+
+    def icon(self):
+        return 'eye-open'
+
+@receiver(signals.post_save,sender=Access)
+def add_watching_user_for_access(instance,**kwargs):
+    instance.item.watching_users.add(instance.user)
+
+NUMBAS_FILE_VERSION = 'variables_as_objects'
+
+@deconstructible
+class NumbasObject(object):
+
+    def get_parsed_content(self):
+        if self.content:
+            self.parsed_content = numbasobject.NumbasObject(self.content)
+            self.name = self.parsed_content.data['name']
+        elif self.name:
+            self.parsed_content = numbasobject.NumbasObject(data={'name': self.name}, version=NUMBAS_FILE_VERSION)
+
+        self.metadata = self.parsed_content.data.get('metadata',self.metadata)
+
+        self.content = str(self.parsed_content)
+        return self.parsed_content
+
+    def set_name(self,name):
+        self.name = name
+        if self.content:
+            self.get_parsed_content()
+            self.parsed_content.data['name'] = name
+            self.content = str(self.parsed_content)
+        self.save()
+
+    def __eq__(self,other):
+        return self.content==other.content
+
+@reversion.register
+class EditorItem(models.Model,NumbasObject,ControlledObject):
+    """
+        Base model for exams and questions - each exam or question has a reference to an instance of this
+    """
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=200,editable=False,unique=False)
+
+    timeline = GenericRelation('TimelineItem',related_query_name='editoritems',content_type_field='timeline_content_type',object_id_field='timeline_id')
+
+    author = models.ForeignKey(User,related_name='own_items')
+    public_access = models.CharField(default='view',editable=True,choices=PUBLIC_ACCESS_CHOICES,max_length=6)
+    access_rights = models.ManyToManyField(User, through='Access', blank=True, editable=False,related_name='accessed_questions+')
+    licence = models.ForeignKey(Licence,null=True,blank=True)
+    project = models.ForeignKey(Project,null=True,related_name='items')
+
+    content = models.TextField(blank=True,validators=[validate_content])
+    metadata = JSONField(blank=True)
+
+    created = models.DateTimeField(auto_now_add=True)
+    last_modified = models.DateTimeField(auto_now=True)
+
+    copy_of = models.ForeignKey('self',null=True,related_name='copies',on_delete=models.SET_NULL)
+
+    tags = TaggableManager(through=TaggedItem)
+
+    current_stamp = models.ForeignKey('NewStampOfApproval', blank=True, null=True, on_delete=models.SET_NULL)
+
+    share_uuid_view = models.UUIDField(default=uuid.uuid4, editable=False, unique = True)
+    share_uuid_edit = models.UUIDField(default=uuid.uuid4, editable=False, unique = True)
+
+    published = models.BooleanField(default=False)
+    published_date = models.DateTimeField(null=True)
+
+    ability_level_start = AbilityLevelField(null=True)
+    ability_level_end = AbilityLevelField(null=True)
+    ability_levels = models.ManyToManyField(AbilityLevel)
+
+    subjects = models.ManyToManyField(Subject)
+    topics = models.ManyToManyField(Topic)
+
+    watching_users = models.ManyToManyField(User,related_name='watched_items')
+
+    class Meta:
+        ordering = ('name',)
+
+    def __unicode__(self):
+        return self.name
+
+    @property
+    def owner(self):
+        return self.author
+
+    def has_access(self,user,levels):
+        if user.is_anonymous():
+            return False
+        return self.project.has_access(user,levels) or Access.objects.filter(item=self,user=user,access__in=levels).exists()
+
+    def publish(self):
+        self.published = True
+        self.published_date = datetime.now()
+
+    def unpublish(self):
+        self.published = False
+
+    def set_licence(self,licence):
+        NumbasObject.get_parsed_content(self)
+        metadata = self.parsed_content.data.setdefault(u'metadata',{})
+        metadata['licence'] = licence.name if licence is not None else None
+        self.licence = licence
+        self.content = str(self.parsed_content)
+
+    def copy(self,author=None):
+        e2 = deepcopy(self)
+        e2.id = None
+        e2.share_uuid_view = uuid.uuid4()
+        e2.share_uuid_edit = uuid.uuid4()
+        e2.copy_of = self
+        if author is not None:
+            e2.author = author
+        return e2
+
+    def get_absolute_url(self):
+        return self.rel_obj.get_absolute_url()
+
+    @property
+    def item_type(self):
+        if hasattr(self,'exam'):
+            return 'exam'
+        elif hasattr(self,'question'):
+            return 'question'
+
+    @property
+    def rel_obj(self):
+        """ the exam/question object corresponding to this item (to make contructing the URLs easier, mainly) """
+        if hasattr(self,'exam'):
+            return self.exam
+        elif hasattr(self,'question'):
+            return self.question
+
+    @property
+    def as_numbasobject(self):
+        if self.item_type=='exam':
+            return self.exam.as_numbasobject
+        elif self.item_type=='question':
+            return self.question.as_numbasobject
+
+    @property
+    def icon(self):
+        return self.rel_obj.icon
+
+    @property
+    def theme_path(self):
+        return self.rel_obj.theme_path
+
+    def edit_dict(self):
+        """
+            Dictionary of information passed to edit view
+        """
+        self.get_parsed_content()
+        return {
+            'id': self.rel_obj.id,
+            'editoritem_id': self.id,
+            'author': self.author_id,
+            'metadata': self.metadata,
+            'published': self.published,
+            'JSONContent': self.parsed_content.data,
+            'tags': [t.name for t in self.tags.all()],
+            'subjects': [s.pk for s in self.subjects.all()],
+            'topics': [t.pk for t in self.topics.all()],
+            'ability_levels': [a.pk for a in self.ability_levels.all()],
+        }
+
+    @property
+    def filename(self):
+        return '{}-{}-{}'.format(self.item_type,self.pk,self.slug)
+
+    @property
+    def network(self):
+        ei = self
+        while ei.copy_of:
+            ei = ei.copy_of
+        return sorted(ei.descendants(), key=lambda x: x.created)
+
+    def descendants(self):
+        return [self]+sum([ei2.descendants() for ei2 in self.copies.all()],[])
+
+    def summary(self,user=None):
+        obj = {
+            'editoritem_id': self.id, 
+            'name': self.name, 
+            'metadata': self.metadata,
+            'created': str(self.created),
+            'last_modified': str(self.last_modified), 
+            'author': self.author.get_full_name(), 
+        }
+        if self.item_type=='exam':
+            obj['id'] = self.exam.id
+        elif self.item_type=='question':
+            obj['id'] = self.question.id
+
+        if user:
+            obj['canEdit'] = self.can_be_edited_by(user) 
+        return obj
+
+    def merge(self,other):
+        oname = self.name
+        self.content = other.content
+        self.metadata = other.metadata
+
+        self.tags.set(*other.tags.all())
+
+        self.ability_levels.clear()
+        self.ability_levels.add(*other.ability_levels.all())
+        self.subjects.clear()
+        self.subjects.add(*other.subjects.all())
+        self.topics.clear()
+        self.topics.add(*other.topics.all())
+
+        self.set_name(oname)
+
+        self.rel_obj.merge(other.rel_obj)
+        self.save()
+
+@receiver(signals.post_save,sender=EditorItem)
+def author_watches_editoritem(instance,created,**kwargs):
+    if created:
+        instance.watching_users.add(instance.author)
+
+@receiver(signals.pre_save,sender=EditorItem)
+def set_editoritem_name(instance,**kwargs):
+    NumbasObject.get_parsed_content(instance)
+    instance.slug = slugify(instance.name)
+    if 'metadata' in instance.parsed_content.data:
+        licence_name = instance.parsed_content.data['metadata'].get('licence',None)
+    else:
+        licence_name = None
+    instance.licence = Licence.objects.filter(name=licence_name).first()
+
+@receiver(signals.pre_save,sender=EditorItem)
+def set_ability_level_limits(instance,**kwargs):
+    if instance.pk is None:
+        return
+    ends = instance.ability_levels.aggregate(Min('start'),Max('end'))
+    instance.ability_level_start = ends.get('start__min',None)
+    instance.ability_level_end = ends.get('end__max',None)
+
+class PullRequestManager(models.Manager):
+    def open(self):
+        return self.filter(open=True)
+
+class PullRequest(models.Model,ControlledObject,TimelineMixin):
+    objects = PullRequestManager()
+
+    # user who created this request
+    owner = models.ForeignKey(User,related_name='pullrequests_created')
+    # user who accepted or rejected this request
+    closed_by = models.ForeignKey(User,related_name='pullrequests_closed',null=True,blank=True,on_delete=models.SET_NULL)
+
+    source = models.ForeignKey(EditorItem,related_name='outgoing_pull_requests')
+    destination = models.ForeignKey(EditorItem,related_name='incoming_pull_requests')
+
+    open = models.BooleanField(default=True)
+    accepted = models.BooleanField(default=False)
+
+    created = models.DateTimeField(auto_now_add=True)
+    comment = models.TextField(blank=True)
+
+    timelineitems = GenericRelation('TimelineItem',related_query_name='pull_requests',content_type_field='object_content_type',object_id_field='object_id')
+    timelineitem_template = 'timeline/pull_request.html'
+
+    @property
+    def object(self):
+        return self.destination
+
+    def timeline_user(self):
+        if self.open:
+            return self.owner
+        else:
+            return self.closed_by
+
+    def has_access(self,user,accept_levels):
+        return self.destination.has_access(user,accept_levels) or user==self.owner
+
+    def can_be_merged_by(self,user):
+        return self.destination.can_be_edited_by(user)
+
+    def can_be_deleted_by(self,user):
+        return user==self.owner or self.destination.can_be_edited_by(user)
+
+    def clean(self):
+        if self.source==self.destination:
+            raise ValidationError({'source': "Source and destination are the same."})
+
+    def validate_unique(self,exclude=None):
+        if self.open and PullRequest.objects.filter(source=self.source,destination=self.destination,open=True).exists():
+            raise ValidationError("There's already an open pull request between these items.")
+
+    def accept(self,user):
+        self.accepted = True
+        self.destination.merge(self.source)
+        self.close(user)
+        self.save()
+
+    def reject(self,user):
+        self.accepted = False
+        self.close(user)
+        self.save()
+
+    def close(self,user):
+        self.open = False
+        self.closed_by = user
+
+class TimelineItemManager(models.Manager):
+    def visible_to(self,user):
+        return self.exclude(hidden_by=user)
+
+class TimelineItem(models.Model):
+    objects = TimelineItemManager()
+
+    # Object whose timeline this item belongs to
+    timeline_content_type = models.ForeignKey(ContentType,related_name='timelineitem_timeline',null=True)
+    timeline_id = models.PositiveIntegerField(null=True)
+    timeline = GenericForeignKey('timeline_content_type','timeline_id')
+
+    # Reference to an object representing this item (e.g. a Comment)
+    object_content_type = models.ForeignKey(ContentType,related_name='timelineitem_object')
     object_id = models.PositiveIntegerField()
     object = GenericForeignKey('object_content_type','object_id')
 
-    user = models.ForeignKey(User, related_name='stamps')
-    status = models.CharField(choices = STAMP_STATUS_CHOICES, max_length=20)
+    user = models.ForeignKey(User,related_name='timelineitems',null=True)
+
+    hidden_by = models.ManyToManyField(User,related_name='hidden_timelineitems',blank=True)
+
     date = models.DateTimeField(auto_now_add=True)
 
+    def can_be_deleted_by(self,user):
+        try:
+            return self.object.can_be_deleted_by(user)
+        except AttributeError:
+            return False
+
+    class Meta:
+        unique_together = (('object_id','object_content_type'),)
+        ordering = ('-date',)
+
+@receiver(signals.post_delete,sender=TimelineItem)
+def delete_timelineitem_object(instance,*args,**kwargs):
+    if instance.object is not None:
+        instance.object.delete()
+
+class SiteBroadcastManager(models.Manager):
+    def visible_now(self):
+        return self.filter(Q(show_until__gte=datetime.now()) | Q(show_until=None))
+
+class SiteBroadcast(models.Model,TimelineMixin):
+    objects = SiteBroadcastManager()
+
+    author = models.ForeignKey(User,related_name='site_broadcasts')
+    title = models.CharField(max_length=200)
+    text = models.TextField()
+    sticky = models.BooleanField(default=False)
+    show_until = models.DateTimeField(null=True,blank=True)
+
+    timelineitems = GenericRelation(TimelineItem,related_query_name='site_broadcasts',content_type_field='object_content_type',object_id_field='object_id')
+    timelineitem_template = 'timeline/site_broadcast.html'
+
+    def can_be_deleted_by(self,user):
+        return False
+
+    def timeline_object(self):
+        return None
+
     def __unicode__(self):
-        return '{} as "{}"'.format(self.user.username,self.object.name,self.get_status_display(),self.date)
+        return self.text[:50]
+
+class NewStampOfApproval(models.Model,TimelineMixin):
+    object = models.ForeignKey(EditorItem,related_name='stamps')
+
+    timelineitems = GenericRelation(TimelineItem,related_query_name='stamps',content_type_field='object_content_type',object_id_field='object_id')
+    timelineitem_template = 'timeline/stamp.html'
+
+    user = models.ForeignKey(User, related_name='newstamps')
+    status = models.CharField(choices = STAMP_STATUS_CHOICES, max_length=20)
+
+    def __unicode__(self):
+        return '{} said "{}"'.format(self.user.username,self.get_status_display())
 
 class Comment(models.Model,TimelineMixin):
     object_content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
     object = GenericForeignKey('object_content_type','object_id')
 
+    timelineitems = GenericRelation(TimelineItem,related_query_name='comments',content_type_field='object_content_type',object_id_field='object_id')
+    timelineitem_template = 'timeline/comment.html'
+
     user = models.ForeignKey(User, related_name='comments')
     text = models.TextField()
-    date = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
-        return 'Comment by {} on {}: "{}"'.format(self.user.get_full_name(), str(self.object), self.text[:47]+'...' if len(self.text)>50 else self.text)
+        return 'Comment by {}: "{}"'.format(self.user.get_full_name(), str(self.object), self.text[:47]+'...' if len(self.text)>50 else self.text)
+
+class RestorePoint(models.Model,TimelineMixin):
+    object = models.ForeignKey(EditorItem,related_name='restore_points')
+
+    timelineitems = GenericRelation(TimelineItem,related_query_name='restore_points',content_type_field='object_content_type',object_id_field='object_id')
+    timelineitem_template = 'timeline/restore_point.html'
+
+    user = models.ForeignKey(User, related_name='restore_points')
+    description = models.TextField()
+
+    revision = models.ForeignKey(reversion.models.Revision)
+    
+    def __unicode__(self):
+        return 'Restore point set by {}: "{}"'.format(self.user.get_full_name(), str(self.object), self.description[:47]+'...' if len(self.description)>50 else self.description)
+
+ITEM_CHANGED_VERBS = [('created','created')]
+class ItemChangedTimelineItem(models.Model,TimelineMixin):
+    object = models.ForeignKey(EditorItem)
+    verb = models.CharField(choices=ITEM_CHANGED_VERBS,editable=False,max_length=10)
+    user = models.ForeignKey(User)
+
+    timelineitems = GenericRelation(TimelineItem,related_query_name='item_changes',content_type_field='object_content_type',object_id_field='object_id')
+    timelineitem_template = 'timeline/change.html'
+    
+    def can_be_deleted_by(self,user):
+        return False
+
+    def icon(self):
+        return {
+            'created': 'plus',
+            'deleted': 'remove',
+            'published': 'globe',
+        }[self.verb]
+
+    def __unicode__(self):
+        return '{} {} {}'.format(self.user.get_full_name(),self.verb,str(self.object))
+
+@receiver(signals.post_save)
+def create_timelineitem(sender,instance,created,**kwargs):
+    if not issubclass(sender,TimelineMixin):
+        return
+    if created:
+        try:
+            user = User.objects.get(pk=instance.user.pk)
+        except AttributeError:
+            user = None
+        TimelineItem.objects.create(object=instance,timeline=instance.timeline_object(),user=user)
+
+@reversion.register
+class NewQuestion(models.Model):
+    editoritem = models.OneToOneField(EditorItem,on_delete=models.CASCADE,related_name='question')
+
+    resources = models.ManyToManyField(Resource,blank=True)
+    extensions = models.ManyToManyField(Extension,blank=True)
+
+    theme_path = 'question'
+
+    icon = 'file'
+
+    class Meta:
+        ordering = ['editoritem__name']
+        permissions = (
+              ('highlight', 'Can pick questions to feature on the front page.'),
+        )
+
+    def __unicode__(self):
+        return '%s' % self.editoritem.name
+
+    def get_absolute_url(self):
+        return reverse('question_edit',args=(self.pk,self.editoritem.slug))
+
+    @property
+    def resource_paths(self):
+        return [(r.file.name,r.file.path) for r in self.resources.all()]
+
+    @property
+    def as_numbasobject(self):
+        self.editoritem.get_parsed_content()
+        data = OrderedDict([
+            ('name',self.editoritem.name),
+            ('extensions',[e.location for e in self.extensions.all()]),
+            ('resources',self.resource_paths),
+            ('navigation',{'allowregen': True, 'showfrontpage': False, 'preventleave': False}),
+            ('questions',[self.editoritem.parsed_content.data])
+        ])
+        obj = numbasobject.NumbasObject(data=data,version=self.editoritem.parsed_content.version)
+        return obj
+
+    def edit_dict(self):
+        d = self.editoritem.edit_dict()
+        d['extensions'] = [e.location for e in self.extensions.all()]
+        d['resources'] = [res.as_json() for res in self.resources.all()]
+        return d
+
+    def summary(self, user=None):
+        obj = self.editoritem.summary(user)
+        obj['url'] = reverse('question_edit', args=(self.pk,self.editoritem.slug,))
+        obj['deleteURL'] = reverse('question_delete', args=(self.pk,self.editoritem.slug))
+        return obj
+
+    @property
+    def exams_using_this(self):
+        return self.exams.distinct()
+
+    def copy(self,author=None):
+        q2 = deepcopy(self)
+        q2.id = None
+
+        ei2 = self.editoritem.copy(author)
+        ei2.save()
+
+        q2.editoritem = ei2
+        q2.save()
+
+        q2.resources = self.resources.all()
+        q2.extensions = self.extensions.all()
+        q2.save()
+
+        return q2
+
+    def merge(self,other):
+        self.resources.clear()
+        self.resources.add(*other.resources.all())
+        self.extensions.clear()
+        self.extensions.add(*other.extensions.all())
+        self.save()
+
+@reversion.register
+class NewExam(models.Model):
+    editoritem = models.OneToOneField(EditorItem,on_delete=models.CASCADE,related_name='exam')
+
+    questions = models.ManyToManyField(NewQuestion, through='NewExamQuestion', blank=True, editable=False, related_name='exams')
+
+    theme = models.CharField(max_length=200,default='default',blank=True)  # used if custom_theme is None
+    custom_theme = models.ForeignKey(Theme,null=True,blank=True,on_delete=models.SET_NULL,related_name='used_in_newexams')
+    locale = models.CharField(max_length=200,default='en-GB')
+
+    icon = 'book'
+
+    def __unicode__(self):
+        return '%s' % self.editoritem.name
+
+    def get_absolute_url(self):
+        return reverse('exam_edit',args=(self.pk,self.editoritem.slug))
+
+    @property
+    def resources(self):
+        return Resource.objects.filter(newquestion__in=self.questions.all()).distinct()
+
+    @property
+    def resource_paths(self):
+        return [(r.file.name,r.file.path) for r in self.resources.all()]
+
+    @property
+    def theme_path(self):
+        if self.custom_theme:
+            return self.custom_theme.extracted_path
+        else:
+            return self.theme
+
+    @property
+    def as_numbasobject(self):
+        obj = numbasobject.NumbasObject(self.editoritem.content)
+        data = obj.data
+        resources = []
+        questions = self.ordered_questions
+        data['extensions'] = [e.location for e in self.extensions]
+        data['name'] = self.editoritem.name
+        data['questions'] = [numbasobject.NumbasObject(q.editoritem.content).data for q in questions]
+        data['resources'] = self.resource_paths
+        
+        return obj
+
+    def edit_dict(self):
+        """ 
+            Dictionary of information passed to update view 
+        """
+        exam_dict = self.editoritem.edit_dict()
+        exam_dict['local'] = self.locale
+        exam_dict['custom_theme'] = self.custom_theme_id
+        exam_dict['theme'] = self.theme
+        exam_dict['questions'] = [q.summary() for q in self.ordered_questions]
+
+        return exam_dict
+
+    
+    @property
+    def ordered_questions(self):
+        return self.questions.order_by('newexamquestion')
+
+    @property
+    def extensions(self):
+        return Extension.objects.filter(newquestion__in=self.questions.all()).distinct()
+
+    def set_questions(self,question_list=None,**kwargs):
+        """ 
+            Set the list of questions for this exam. 
+            question_list is an ordered list of question IDs
+        """
+
+        if 'question_ids' in kwargs:
+            question_list = [NewQuestion.objects.get(pk=pk) for pk in kwargs['question_ids']]
+
+        self.questions.clear()
+        for order,question in enumerate(question_list):
+            exam_question = NewExamQuestion(exam=self,question=question, qn_order=order)
+            exam_question.save()
+
+    def copy(self,author=None):
+        e2 = deepcopy(self)
+        e2.id = None
+
+        ei2 = self.editoritem.copy(author)
+        ei2.save()
+
+        e2.editoritem = ei2
+        e2.save()
+
+        for eq in NewExamQuestion.objects.filter(exam=self):
+            NewExamQuestion.objects.create(exam=e2,question=eq.question,qn_order=eq.qn_order)
+        e2.custom_theme = self.custom_theme
+        e2.save()
+
+        return e2
+
+    def merge(self,other):
+        self.set_questions(other.questions.all())
+        self.theme = other.theme
+        self.custom_theme = other.custom_theme
+        self.locale = other.locale
+        self.save()
+
+class NewExamQuestion(models.Model):
+    
+    """
+        Through model for a question belonging to an exam.
+        Specifies position the question should appear in.
+    """
+    
+    class Meta:
+        ordering = ['qn_order']
+        
+    exam = models.ForeignKey(NewExam)
+    question = models.ForeignKey(NewQuestion)
+    qn_order = models.PositiveIntegerField()
+
+@receiver(signals.post_save,sender=NewQuestion)
+@receiver(signals.post_save,sender=NewExam)
+def item_created_timeline_event(instance,created,**kwargs):
+    if created:
+        ItemChangedTimelineItem.objects.create(user=instance.editoritem.author,object=instance.editoritem,verb='created')
+
+@receiver(signals.post_save,sender=NewStampOfApproval)
+@receiver(signals.post_delete,sender=NewStampOfApproval)
+def set_current_stamp(instance,**kwargs):
+    instance.object.current_stamp = NewStampOfApproval.objects.filter(object=instance.object).last()
+    instance.object.save()
+
+
+@receiver(signals.post_save,sender=NewStampOfApproval)
+def notify_stamp(instance,**kwargs):
+    notify_watching(instance.user,target=instance.object,verb='gave feedback on',action_object=instance)
+
+@receiver(signals.post_save,sender=Comment)
+def notify_comment(instance,**kwargs):
+    notify_watching(instance.user,target=instance.object,verb='commented on',action_object=instance)
+
+
+"""
+    Everything below is to be deleted in Numbas 2.0
+"""
 
 class EditorModel(models.Model):
     class Meta:
@@ -348,9 +1134,19 @@ class EditorModel(models.Model):
 
     licence = models.ForeignKey(Licence,null=True)
 
-    current_stamp = models.ForeignKey(StampOfApproval, blank=True, null=True, on_delete=models.SET_NULL)
+    current_stamp = models.ForeignKey('StampOfApproval', blank=True, null=True, on_delete=models.SET_NULL)
 
     share_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique = True)
+
+    published = models.BooleanField(default=False)
+    published_date = models.DateTimeField(null=True)
+
+    ability_level_start = AbilityLevelField(null=True)
+    ability_level_end = AbilityLevelField(null=True)
+    ability_levels = models.ManyToManyField(AbilityLevel)
+
+    subjects = models.ManyToManyField(Subject)
+    topics = models.ManyToManyField(Topic)
 
     def set_licence(self,licence):
         NumbasObject.get_parsed_content(self)
@@ -361,35 +1157,11 @@ class EditorModel(models.Model):
 
     @property
     def timeline(self):
-        events = [StampTimelineEvent(stamp) for stamp in self.stamps] + [VersionTimelineEvent(version) for version in reversion.get_for_object(self)] + [CommentTimelineEvent(comment) for comment in self.comments]
-        events.sort(key=lambda x:x.date, reverse=True)
-        return events
+        return []
     
     @property
     def stamps(self):
-        return StampOfApproval.objects.filter(object_content_type=ContentType.objects.get_for_model(self.__class__),object_id=self.pk).order_by('-date')
-
-    @property
-    def comments(self):
-        return Comment.objects.filter(object_content_type=ContentType.objects.get_for_model(self.__class__),object_id=self.pk).order_by('-date')
-
-    @property
-    def watching_users(self):
-        """ Users who should be notified when something happens to this object. """
-        return [self.author] + list(self.access_rights.all())
-
-@receiver(signals.post_save,sender=StampOfApproval)
-def set_current_stamp(instance,**kwargs):
-    instance.object.current_stamp = instance
-    instance.object.save()
-
-@receiver(signals.post_save,sender=StampOfApproval)
-def notify_stamp(instance,**kwargs):
-    notify_watching(instance.user,target=instance.object,verb='gave feedback on',action_object=instance)
-
-@receiver(signals.post_save,sender=Comment)
-def notify_comment(instance,**kwargs):
-    notify_watching(instance.user,target=instance.object,verb='commented on',action_object=instance)
+        return NewStampOfApproval.objects.filter(object_content_type=ContentType.objects.get_for_model(self.__class__),object_id=self.pk).order_by('-date')
 
 class QuestionManager(models.Manager):
     def viewable_by(self,user):
@@ -423,7 +1195,7 @@ class Question(EditorModel,NumbasObject,ControlledObject):
     metadata = JSONField(blank=True)
     created = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
-    resources = models.ManyToManyField(Image,blank=True)
+    resources = models.ManyToManyField('Image',blank=True)
     copy_of = models.ForeignKey('self',null=True,related_name='copies',on_delete=models.SET_NULL)
     extensions = models.ManyToManyField(Extension,blank=True)
 
@@ -550,10 +1322,6 @@ class QuestionHighlight(models.Model):
     note = models.TextField(blank=True)
     date = models.DateTimeField(auto_now_add=True)
 
-class PullRequestManager(models.Manager):
-    def open(self):
-        return self.filter(open=True)
-
 class QuestionPullRequest(models.Model):
     objects = PullRequestManager()
 
@@ -613,6 +1381,8 @@ def clean_pull_request_pre_save(sender,instance, *args, **kwargs):
 def notify_pull_request(instance,created,**kwargs):
     if created and instance.owner!=instance.destination.author:
         notify.send(instance.owner,verb='has sent you a request to merge',target=instance.destination,recipient=instance.destination.author,action_object=instance)
+
+
 
 @reversion.register
 class Exam(EditorModel,NumbasObject,ControlledObject):
@@ -750,7 +1520,7 @@ class Exam(EditorModel,NumbasObject,ControlledObject):
 
 @receiver(signals.post_delete)
 def remove_deleted_notifications(sender, instance=None,**kwargs):
-    if sender in [Question,Exam,StampOfApproval,Comment]:
+    if sender in [NewQuestion,NewExam,NewStampOfApproval,Comment]:
         Notification.objects.filter(target_object_id=instance.pk).delete()
         Notification.objects.filter(action_object_object_id=instance.pk).delete()
 
@@ -773,7 +1543,6 @@ def notify_given_exam_access(instance,created,**kwargs):
     if created and hasattr(instance,'given_by'):
         notify.send(instance.given_by,verb='gave you access to',target=instance.exam,recipient=instance.user)
         
-        
 class ExamQuestion(models.Model):
     
     """Model class linking exams and questions."""
@@ -784,4 +1553,50 @@ class ExamQuestion(models.Model):
     exam = models.ForeignKey(Exam)
     question = models.ForeignKey(Question)
     qn_order = models.PositiveIntegerField()
+
+class Image( models.Model ):
+    # on its way out as of Numbas editor 2.0
+    title = models.CharField( max_length=255 ) 
+    image = models.ImageField( upload_to='question-resources/', max_length=255) 
+
+    @property 
+    def data_url( self ):
+        try:
+            img = open( self.image.path, "rb") 
+            data = img.read() 
+            return "data:image/jpg;base64,%s" % codecs.encode(data,'base64')[:-1]
+    
+        except IOError as e:
+            return self.image.url
+
+    @property
+    def resource_url(self):
+        return 'resources/%s' % self.image.name
+
+    def delete(self,*args,**kwargs):
+        self.image.delete(save=False)
+        super(Image,self).delete(*args,**kwargs)
+
+    def as_json(self):
+        return {
+            'url': self.resource_url,
+            'name': self.image.name,
+            'pk': self.pk,
+            'delete_url': reverse('delete_resource',args=(self.pk,)),
+        }
+
+    def summary(self):
+        return json.dumps(self.as_json()),
+
+class StampOfApproval(models.Model,TimelineMixin):
+    object_content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    object = GenericForeignKey('object_content_type','object_id')
+
+    user = models.ForeignKey(User, related_name='stamps')
+    status = models.CharField(choices = STAMP_STATUS_CHOICES, max_length=20)
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __unicode__(self):
+        return '{} as "{}"'.format(self.user.username,self.object.name,self.get_status_display(),self.date)
 

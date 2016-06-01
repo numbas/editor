@@ -1,0 +1,17 @@
+{% extends "timeline/item.html" %}
+{% load user_link %}
+
+{% block thumbnail %}
+    <span class="glyphicon glyphicon-star" style="font-size: 36px"></span>
+{% endblock thumbnail %}
+
+{% block heading %}Welcome to the Numbas editor{% endblock %}
+
+{% block content %}
+<div class="nothing-here">
+    <p>This is your activity timeline. Notifications about activity on content you've created or have access to will appear here.</p>
+    <p>Get started by browsing the public database, or create your own questions, using the links on the right.</p>
+    <p>You might also like to add some detail to <a href="{% url 'view_profile' user.pk %}">your user profile</a>.</p>
+</div>
+{% endblock %}
+{% block hide_item %}{% endblock %}

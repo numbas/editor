@@ -1,16 +1,3 @@
-#Copyright 2012 Newcastle University
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#       http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
 import json
 import traceback
 import uuid
@@ -29,7 +16,6 @@ from django import http
 from django.shortcuts import redirect
 from django.views import generic
 from django.views.generic.detail import SingleObjectMixin
-from django.views.generic.edit import FormMixin
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.core import serializers
@@ -39,30 +25,29 @@ import reversion
 
 from django_tables2.config import RequestConfig
 
-from editor.forms import NewQuestionForm, QuestionForm, QuestionSetAccessForm, QuestionSearchForm, QuestionHighlightForm
-from editor.models import Question, Extension, Image, QuestionAccess, QuestionHighlight, QuestionPullRequest, EditorTag, Licence, STAMP_STATUS_CHOICES
+from editor.forms import NewQuestionForm, QuestionForm, SetAccessForm
+from editor.models import Project, EditorItem, NewQuestion, Access, Extension, Resource
 import editor.views.generic
+import editor.views.editoritem
 from editor.views.errors import forbidden
 from editor.views.user import find_users
-from editor.tables import QuestionTable, QuestionHighlightTable
-from editor.views.version import version_json
-from editor.views.timeline import timeline_json
 
 from accounts.models import UserProfile
+from accounts.util import user_json
 
 from numbasobject import NumbasObject
 from examparser import ParseError
 
-class PreviewView(editor.views.generic.PreviewView):
+class PreviewView(editor.views.editoritem.PreviewView):
     
     """Compile question as a preview and return its URL."""
     
-    model = Question
+    model = NewQuestion
     
     def get(self, request, *args, **kwargs):
         try:
             q = self.get_object()
-        except (Question.DoesNotExist, TypeError) as err:
+        except (NewQuestion.DoesNotExist, TypeError) as err:
             status = {
                 "result": "error",
                 "message": str(err),
@@ -76,20 +61,20 @@ class PreviewView(editor.views.generic.PreviewView):
             except Exception:
                 pass
 
-            return self.preview(q)
+            return self.preview(q.editoritem)
 
 
-class ZipView(editor.views.generic.ZipView):
+class ZipView(editor.views.editoritem.ZipView):
 
     """Compile a question as a SCORM package and return the .zip file"""
 
-    model = Question
+    model = NewQuestion
 
     def get(self, request, *args, **kwargs):
         try:
             q = self.get_object()
             scorm = 'scorm' in request.GET
-        except (Question.DoesNotExist, TypeError) as err:
+        except (NewQuestion.DoesNotExist, TypeError) as err:
             status = {
                 "result": "error",
                 "message": str(err),
@@ -103,19 +88,19 @@ class ZipView(editor.views.generic.ZipView):
             except Exception:
                 pass
 
-            return self.download(q,scorm)
+            return self.download(q.editoritem,scorm)
 
 
-class SourceView(editor.views.generic.SourceView):
+class SourceView(editor.views.editoritem.SourceView):
 
     """Compile a question as a SCORM package and return the .zip file"""
 
-    model = Question
+    model = NewQuestion
 
     def get(self, request, *args, **kwargs):
         try:
             q = self.get_object()
-        except (Question.DoesNotExist, TypeError) as err:
+        except (NewQuestion.DoesNotExist, TypeError) as err:
             status = {
                 "result": "error",
                 "message": str(err),
@@ -123,157 +108,66 @@ class SourceView(editor.views.generic.SourceView):
             return http.HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
         else:
-            return self.source(q)
+            return self.source(q.editoritem)
 
 
-class CreateView(generic.CreateView):
+class CreateView(editor.views.editoritem.CreateView):
     
     """Create a question."""
     
-    model = Question
     form_class = NewQuestionForm
     template_name = 'question/new.html'
 
-    def get(self, request, *args, **kwargs):
-        self.object = Question()
-        self.object.author = request.user
-        self.object.save()
-        return redirect(self.get_success_url())
-
-    
-    def get_success_url(self):
-        return reverse('question_edit', args=(self.object.pk,
-                                              self.object.slug,))
- 
- 
-class UploadView(generic.CreateView):
-    
-    """Upload a .exam file representing a question"""
-
-    model = Question
-
-    def post(self, request, *args, **kwargs):
-        try:
-            content = request.FILES['file'].read().decode('utf-8')
-        except UnicodeDecodeError:
-            return self.not_exam_file()
-
-        try:
-            exam_object = NumbasObject(content)
-        except ParseError:
-            return self.not_exam_file()
-        self.qs = []
-        for q in exam_object.data['questions']:
-            question = NumbasObject(data=q,version=exam_object.version)
-            qo = Question(
-                content = str(question), 
-                author = self.request.user
-            )
-
-            try:
-                qo.save()
-            except ParseError:
-                return self.not_exam_file()
-
-            extensions = Extension.objects.filter(location__in=exam_object.data['extensions'])
-            qo.extensions.add(*extensions)
-            self.qs.append(qo)
+    def form_valid(self, form):
+        with transaction.atomic(), reversion.create_revision():
+            ei = form.save()
+            ei.set_licence(ei.project.default_licence)
+            ei.save()
+            self.question = NewQuestion()
+            self.question.editoritem = ei
+            self.question.save()
 
         return redirect(self.get_success_url())
-
-    def not_exam_file(self):
-        messages.add_message(self.request, messages.ERROR, render_to_string('notexamfile.html'))
-        return HttpResponseRedirect(reverse('question_index'))
-
+    
     def get_success_url(self):
-        if len(self.qs)==1:
-            q = self.qs[0]
-            return reverse('question_edit', args=(q.pk, q.slug) )
-        else:
-            return reverse('question_index')
+        return reverse('question_edit', args=(self.question.pk,
+                                              self.question.editoritem.slug,))
+ 
+ 
+class CopyView(editor.views.editoritem.CopyView):
 
+    """ Copy a question """
 
-class CopyView(generic.View, SingleObjectMixin):
-
-    """ Copy a question and redirect to its edit page. """
-
-    model = Question
-
-    def get(self, request, *args, **kwargs):
-        try:
-            q = self.get_object()
-            if not q.can_be_copied_by(request.user):
-                return http.HttpResponseForbidden("You may not copy this question.")
-            q2 = deepcopy(q)
-            q2.id = None
-            q2.author = request.user
-            q2.share_uuid = uuid.uuid4()
-            q2.save()
-            q2.set_name("%s's copy of %s" % (q2.author.first_name,q.name))
-            q2.copy_of = q
-            q2.resources = q.resources.all()
-            q2.extensions = q.extensions.all()
-            q2.save()
-        except (Question.DoesNotExist, TypeError) as err:
-            status = {
-                "result": "error",
-                "message": str(err),
-                "traceback": traceback.format_exc(),}
-            return http.HttpResponseServerError(json.dumps(status),
-                                           content_type='application/json')
-        else:
-            if self.request.is_ajax():
-                return HttpResponse(json.dumps(q2.summary()),content_type='application/json')
-            else:
-                return redirect(reverse('question_edit', args=(q2.pk,q2.slug)))
-
+    model = NewQuestion
 
 class DeleteView(generic.DeleteView):
     
     """Delete a question."""
     
-    model = Question
+    model = NewQuestion
     template_name = 'question/delete.html'
     
     def delete(self,request,*args,**kwargs):
         self.object = self.get_object()
-        if self.object.can_be_deleted_by(self.request.user):
-            self.object.delete()
+        if self.object.editoritem.can_be_deleted_by(self.request.user):
+            self.object.editoritem.delete()
             return http.HttpResponseRedirect(self.get_success_url())
         else:
             return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
     
     def get_success_url(self):
-        return reverse('question_index')
+        return reverse('editor_index')
 
 
-class UpdateView(generic.UpdateView):
-    
-    """Edit a question or view as non-editable if not author."""
-    
-    model = Question
+class UpdateView(editor.views.editoritem.BaseUpdateView):
+
+    model = NewQuestion
     form_class = QuestionForm
+    template_name = 'question/edit.html'
     
-    def get_object(self):
-        obj = super(UpdateView,self).get_object()
-        self.editable = obj.can_be_edited_by(self.request.user)
-        self.can_delete = obj.can_be_deleted_by(self.request.user)
-        self.can_copy = obj.can_be_copied_by(self.request.user)
-        return obj
-
-    def get_template_names(self):
-        self.object = self.get_object()
-        return 'question/editable.html' if self.editable else 'question/noneditable.html'
-
-
     def post(self, request, *args, **kwargs):
-        self.user = request.user
-        self.object = self.get_object()
+        super(UpdateView,self).post(request,*args,**kwargs)
 
-        if not self.object.can_be_edited_by(self.user):
-            return http.HttpResponseForbidden()
-
-        self.data = json.loads(request.POST['json'])
         self.resources = self.data['resources']
         del self.data['resources']
         question_form = QuestionForm(self.data, instance=self.object)
@@ -282,118 +176,55 @@ class UpdateView(generic.UpdateView):
             return self.form_valid(question_form)
         else:
             return self.form_invalid(question_form)
-        
-    def get(self, request, *args, **kwargs):
-        self.user = request.user
-        self.object = self.get_object()
-        if not self.object.can_be_viewed_by(request.user):
-            return forbidden(request)
-        else:
-            if not self.user.is_anonymous():
-                self.user.notifications.filter(target_object_id=self.object.pk).mark_all_as_read()
+    
+    def pre_save(self,form):
+        self.object.editoritem.metadata = json.dumps(self.object.editoritem.metadata)
+        self.object.extensions.clear()
+        self.object.extensions.add(*form.cleaned_data['extensions'])
+        self.object.editoritem.subjects.clear()
+        self.object.editoritem.subjects.add(*form.cleaned_data['subjects'])
+        self.object.editoritem.topics.clear()
+        self.object.editoritem.topics.add(*form.cleaned_data['topics'])
 
-            return super(UpdateView,self).get(request,*args,**kwargs)
+        resource_pks = [res['pk'] for res in self.resources]
+        self.object.resources = Resource.objects.filter(pk__in=resource_pks)
 
-    def form_valid(self, form):
-
-        with transaction.atomic(), reversion.create_revision():
-            self.object = form.save(commit=False)
-            self.object.metadata = json.dumps(self.object.metadata)
-            self.object.extensions.clear()
-            self.object.extensions.add(*form.cleaned_data['extensions'])
-
-            self.object.edit_user = self.user
-
-            resource_pks = [res['pk'] for res in self.resources]
-            self.object.resources = Image.objects.filter(pk__in=resource_pks)
-
-            self.object.save()
-
-            reversion.set_user(self.user)
-
-        version = reversion.get_for_object(self.object)[0]
-
-        status = {"result": "success", "url": self.get_success_url(), "version": version_json(version,self.user)}
-        return HttpResponse(json.dumps(status), content_type='application/json')
-        
-    def form_invalid(self, form):
-        status = {
-            "result": "error",
-            "message": "Something went wrong...",
-            "traceback": traceback.format_exc(),}
-        return http.HttpResponseServerError(json.dumps(status),
-                                       content_type='application/json')
     
     def get_context_data(self, **kwargs):
         context = super(UpdateView, self).get_context_data(**kwargs)
-        self.object.get_parsed_content()
 
         extensions = Extension.objects.filter(public=True) | self.object.extensions.all()
+
         if not self.request.user.is_anonymous():
             extensions |= Extension.objects.filter(author=self.request.user) 
 
         extensions = extensions.distinct()
 
-        context['extensions'] = [e.as_json() for e in extensions]
+        self.item_json['numbasExtensions'] = context['extensions'] = [e.as_json() for e in extensions]
 
-        context['editable'] = self.editable
-        context['can_delete'] = self.can_delete
-        context['can_copy'] = self.can_copy
-        context['navtab'] = 'questions'
+        self.item_json['resources'] = [r.as_json() for r in self.object.resources.all()]
 
-        if not self.request.user.is_anonymous():
-            context['starred'] = self.request.user.userprofile.favourite_questions.filter(pk=self.object.pk).exists()
-        else:
-            context['starred'] = False
-    
-        context['access_rights'] = [{'id': qa.user.pk, 'name': qa.user.get_full_name(), 'access_level': qa.access} for qa in QuestionAccess.objects.filter(question=self.object)]
-
-        versions = [version_json(v,self.user) for v in reversion.get_for_object(self.object)]
-
-        licences = [licence.as_json() for licence in Licence.objects.all()]
-
-        question_json = context['question_json'] = {
-            'questionJSON': json.loads(self.object.as_json()),
-            'editable': self.editable,
-
-            'licences': licences,
-
-            'numbasExtensions': context['extensions'],
-
-            'previewURL': reverse('question_preview', args=(self.object.pk, self.object.slug)),
-            'previewWindow': str(calendar.timegm(time.gmtime())),
-            'starred': context['starred'],
-
-            'versions': versions,
-            'timeline': timeline_json(self.object.timeline,self.user),
-        }
-        if self.editable:
-            question_json['public_access'] = self.object.public_access
-            question_json['access_rights'] = context['access_rights']
-            context['versions'] = reversion.get_for_object(self.object)
-
-        part_type_path = 'question/part_types/'+('editable' if self.editable else 'noneditable')
+        part_type_path = 'question/part_types/'
         context['partNames'] = [
             ( name, '{}/{}.html'.format(part_type_path,name) ) 
             for name in 
             'jme','gapfill','numberentry','patternmatch','1_n_2','m_n_2','m_n_x','matrix'
         ]
 
-        context['stamp_choices'] = STAMP_STATUS_CHOICES
-
         return context
     
     def get_success_url(self):
-        return reverse('question_edit', args=(self.object.pk,self.object.slug))
+        return reverse('question_edit', args=(self.object.pk,self.object.editoritem.slug))
+
 
 class RevertView(generic.UpdateView):
-    model = Question
+    model = NewQuestion
     
     def get(self, request, *args, **kwargs):
         self.user = request.user
         self.question = self.get_object()
 
-        if not self.question.can_be_edited_by(self.user):
+        if not self.question.editoritem.can_be_edited_by(self.user):
             return http.HttpResponseForbidden()
 
         try:
@@ -403,260 +234,9 @@ class RevertView(generic.UpdateView):
 
         self.version.revision.revert()
 
-        return redirect(reverse('question_edit', args=(self.question.pk,self.question.slug)))
+        return redirect(reverse('question_edit', args=(self.question.pk,self.question.editoritem.slug)))
 
-class CompareView(generic.TemplateView):
-
-    template_name = "question/compare.html"
-
-    def get_context_data(self, pk1,pk2, **kwargs):
-        context = super(CompareView, self).get_context_data(**kwargs)
-        pk1 = int(pk1)
-        pk2 = int(pk2)
-        q1 = context['q1'] = Question.objects.get(pk=pk1)
-        q2 = context['q2'] = Question.objects.get(pk=pk2)
-        context['pr1_exists'] = QuestionPullRequest.objects.open().filter(source=q1,destination=q2).exists()
-        context['pr2_exists'] = QuestionPullRequest.objects.open().filter(source=q2,destination=q1).exists()
-        context['pr1_auto'] = q2.can_be_edited_by(self.request.user)
-        context['pr2_auto'] = q1.can_be_edited_by(self.request.user)
-        return context
-
-class CreatePullRequestView(generic.CreateView):
-    model = QuestionPullRequest
-    template_name = "question/pullrequest.html"
-    fields = ['source','destination','comment']
-
-    def form_valid(self, form):
-        owner = self.request.user
-
-        source = form.instance.source
-        destination = form.instance.destination
-
-        self.pr = QuestionPullRequest(owner=owner,source=source,destination=destination,comment=form.instance.comment)
-        try:
-            self.pr.full_clean()
-        except ValidationError as e:
-            return redirect('question_compare',args=(source.pk,destination.pk))
-
-        if self.pr.destination.can_be_edited_by(owner):
-            self.pr.merge(owner)
-            messages.add_message(self.request, messages.SUCCESS, render_to_string('question/pullrequest_accepted_message.html',{'pr':self.pr}))
-            return redirect('question_edit',self.pr.destination.pk, self.pr.destination.slug)
-        else:
-            self.pr.save()
-            messages.add_message(self.request, messages.INFO, render_to_string('question/pullrequest_created_message.html',{'pr':self.pr}))
-            return redirect('question_edit',self.pr.source.pk,self.pr.source.slug)
-
-    def get_context_data(self,*args,**kwargs):
-        context = super(CreatePullRequestView, self).get_context_data(**kwargs)
-
-        context['source'] = Question.objects.get(pk=self.kwargs['source'])
-        context['destination'] = Question.objects.get(pk=self.kwargs['destination'])
-
-        return context
-
-class AcceptPullRequestView(generic.UpdateView):
-
-    model = QuestionPullRequest
-
-    def dispatch(self,request,*args,**kwargs):
-        pr = self.get_object()
-
-        if not pr.can_be_merged_by(request.user):
-            return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
-
-        messages.add_message(request, messages.SUCCESS, render_to_string('question/pullrequest_accepted_message.html',{'pr':pr}))
-
-        pr.merge(request.user)
-        pr.open = False
-        pr.save()
-        return redirect('question_edit',pr.destination.pk,pr.destination.slug)
-
-class RejectPullRequestView(generic.DeleteView):
-    
-    model = QuestionPullRequest
-    
-    def delete(self,request,*args,**kwargs):
-        pr = self.object = self.get_object()
-        if pr.can_be_deleted_by(self.request.user):
-            pr.reject(self.request.user)
-
-            messages.add_message(request, messages.INFO, render_to_string('question/pullrequest_rejected_message.html',{'pr':pr}))
-            return redirect(reverse('question_edit',args=(pr.destination.pk,pr.destination.slug))+'#network')
-
-        else:
-            return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
-    
-
-class HighlightView(generic.FormView):
-    template_name = 'question/highlight.html'
-    form_class = QuestionHighlightForm
-
-    def get_initial(self):
-        initial = super(HighlightView,self).get_initial()
-
-        self.question = Question.objects.get(pk=self.kwargs.get('pk'))
-
-        try:
-            qh = QuestionHighlight.objects.get(question=self.question, picked_by=self.request.user)
-            initial['note'] = qh.note
-        except ObjectDoesNotExist:
-            initial['note'] = u''
-
-        return initial
-
-    def form_valid(self, form):
-        note = form.cleaned_data.get('note')
-
-        self.object, new = QuestionHighlight.objects.get_or_create(question=self.question, picked_by=self.request.user)
-        self.object.note = note
-        self.object.save()
-
-        return super(HighlightView,self).form_valid(form)
-
-    def get_success_url(self):
-        return reverse('question_edit', args=(self.question.pk,self.question.slug))
-
-    def get_context_data(self, **kwargs):
-        context = super(HighlightView, self).get_context_data(**kwargs)
-        
-        context['question'] = self.question
-
-        return context
-
-class IndexView(generic.TemplateView):
-
-    template_name = 'question/index.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(IndexView, self).get_context_data(**kwargs)
-
-        if self.request.user.is_authenticated():
-            profile = self.request.user.userprofile
-            context['favourites'] = profile.favourite_questions.all()
-            context['recents'] = Question.objects.filter(author=self.request.user).order_by('-last_modified')
-        
-        context['highlights'] = QuestionHighlight.objects.all().order_by('-date')
-
-        context['navtab'] = 'questions'
-
-        tags = list(EditorTag.objects.filter(official=True))
-        tags.sort(key=EditorTag.used_count)
-        numtags = len(tags)
-        #mad magic to get approximate quartiles
-        tag_counts = [(t,(4*s)//numtags) for t,s in zip(tags,range(numtags))]
-        tag_counts.sort(key=lambda x:x[0].name.upper())
-
-        context['officialtags'] = tag_counts
-
-        return context
-    
-class ListView(generic.ListView):
-    
-    """List of questions."""
-    model = Question
-    table_class = QuestionTable
-    per_page = 10
-
-    def make_table(self):
-        config = RequestConfig(self.request, paginate={'per_page': self.per_page})
-        results = self.table_class(self.object_list)
-        config.configure(results)
-
-        return results
-
-    def get_context_data(self, **kwargs):
-        context = super(ListView, self).get_context_data(**kwargs)
-        context['navtab'] = 'questions'
-        context['results'] = self.make_table()
-
-        return context
-    
-class SearchView(ListView):
-    template_name = 'question/search.html'
-
-    def get_queryset(self):
-        form = self.form = QuestionSearchForm(self.request.GET)
-        form.is_valid()
-
-        questions = Question.objects.viewable_by(self.request.user)
-
-        search_term = form.cleaned_data.get('query')
-        if search_term:
-            questions = questions.filter(Q(name__icontains=search_term) | Q(metadata__icontains=search_term) | Q(tags__name__istartswith=search_term)).distinct()
-
-        author = form.cleaned_data.get('author')
-        if author:
-            questions = questions.filter(author__in=find_users(author))
-
-        tags = form.cleaned_data.get('tags')
-        if len(tags):
-            for tag in tags:
-                questions = questions.filter(tags__name__in=[tag])
-
-        exclude_tags = form.cleaned_data.get('exclude_tags')
-        questions = questions.exclude(tags__name__in=exclude_tags)
-
-        usage = form.cleaned_data.get('usage')
-        usage_filters = {
-            "any": Q(),
-            "reuse": Q(licence__can_reuse=True),
-            "modify": Q(licence__can_reuse=True, licence__can_modify=True),
-            "sell": Q(licence__can_reuse=True, licence__can_sell=True),
-            "modify-sell": Q(licence__can_reuse=True, licence__can_modify=True, licence__can_sell=True),
-        }
-        if usage in usage_filters:
-            questions = questions.filter(usage_filters[usage])
-
-        filter_copies = form.cleaned_data.get('filter_copies')
-        if filter_copies:
-            questions = questions.filter(copy_of=None)
-
-        only_ready_to_use = form.cleaned_data.get('only_ready_to_use')
-        if only_ready_to_use:
-            questions = questions.filter(current_stamp__status='ok')
-
-        questions = questions.distinct()
-
-        return questions
-        
-    def get_context_data(self, **kwargs):
-        context = super(SearchView, self).get_context_data(**kwargs)
-        context['form'] = self.form
-
-        return context
-
-class FavouritesView(ListView):
-    template_name = 'question/favourites.html'
-
-    def get_queryset(self):
-        return self.request.user.userprofile.favourite_questions.all()
-
-class HighlightsView(ListView):
-    model = QuestionHighlight
-    template_name = 'question/highlights.html'
-    table_class = QuestionHighlightTable
-    per_page = 5
-
-    def get_queryset(self):
-        highlights = QuestionHighlight.objects.all()
-        return highlights
-
-class RecentQuestionsView(ListView):
-    def get_queryset(self):
-        if self.request.user.is_anonymous():
-            return []
-        else:
-            return [q.summary() for q in self.request.user.userprofile.recent_questions]
-
-    def render_to_response(self, context, **response_kwargs):
-        if self.request.is_ajax():
-            return HttpResponse(json.dumps(context['object_list']),
-                                content_type='application/json',
-                                **response_kwargs)
-        raise Http404
-
-class JSONSearchView(SearchView):
+class JSONSearchView(editor.views.editoritem.SearchView):
     
     """Search questions."""
     
@@ -677,80 +257,18 @@ class JSONSearchView(SearchView):
         context['id'] = self.request.GET.get('id',None)
         return context
     
-class SetAccessView(generic.UpdateView):
-    model = Question
-    form_class = QuestionSetAccessForm
-
-    def get_form_kwargs(self):
-        kwargs = super(SetAccessView,self).get_form_kwargs()
-        kwargs['data'] = self.request.POST.copy()
-        kwargs['data'].update({'given_by':self.request.user.pk})
-        return kwargs
-
-    def form_valid(self, form):
-        question = self.get_object()
-
-        if not question.can_be_edited_by(self.request.user):
-            return http.HttpResponseForbidden("You don't have permission to edit this question.")
-
-        self.object = form.save()
-
-        return HttpResponse('ok!')
-
-    def form_invalid(self,form):
-        return HttpResponse(form.errors.as_text())
-
-    def get(self, request, *args, **kwargs):
-        return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
-
-class ShareLinkView(generic.RedirectView):
+class ShareLinkView(editor.views.generic.ShareLinkView):
     permanent = False
-
-    def get_redirect_url(self, *args,**kwargs):
-        try:
-            q = Question.objects.get(share_uuid=kwargs['share_uuid'])
-        except ValueError,Question.DoesNotExist:
-            raise Http404
-
-        access = kwargs['access']
-
-        user = self.request.user
-        if access=='view':
-            has_access = q.can_be_viewed_by(user)
-        elif access=='edit':
-            has_access = q.can_be_edited_by(user)
-            
-        if not has_access:
-            try:
-                qa = QuestionAccess.objects.get(question=q,user=user)
-            except QuestionAccess.DoesNotExist:
-                qa = QuestionAccess(question=q, user=user,access=access)
-            qa.access = access
-            qa.save()
-
-        return reverse('question_edit',args=(q.pk,q.slug))
-
-class SetStarView(generic.UpdateView):
-    model = Question
-
-    def post(self, request, *args, **kwargs):
-        question = self.get_object()
-
-        profile = request.user.userprofile
-        starred = request.POST.get('starred') == 'true'
-        if starred:
-            profile.favourite_questions.add(question)
-        else:
-            profile.favourite_questions.remove(question)
-        profile.save()
-
-        return HttpResponse('ok!')
-
-    def get(self, request, *args, **kwargs):
-        return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
+    model = NewQuestion
 
 class StampView(editor.views.generic.StampView):
-    model = Question
+    model = NewQuestion
 
 class CommentView(editor.views.generic.CommentView):
-    model = Question
+    model = NewQuestion
+
+    def get_comment_object(self):
+        return self.get_object().editoritem
+
+class SetRestorePointView(editor.views.generic.SetRestorePointView):
+    model = NewQuestion

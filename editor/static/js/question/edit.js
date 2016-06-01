@@ -1,18 +1,3 @@
-/*
-Copyright 2012 Newcastle University
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-*/
 var viewModel;
 
 $(document).ready(function() {
@@ -31,74 +16,75 @@ $(document).ready(function() {
     {
 		var q = this;
 
-		this.mainTabs = ko.observableArray([
-			new Editor.Tab('general','General'),
-			new Editor.Tab('statement','Statement'),
-			new Editor.Tab('variables','Variables'),
-			new Editor.Tab('functions','Functions & Rulesets'),
-			new Editor.Tab(
-				'parts',
-				ko.computed(function() {
-					return 'Parts ('+q.parts().length+')';
-				})
-			),
-			new Editor.Tab('advice','Advice'),
-			new Editor.Tab(
-                'resources',
-                ko.computed(function() {
-                    return 'Resources ('+q.resources().length+')';
-                })
-            ),
-			new Editor.Tab('exams','Exams using this question'),
-		]);
-		var networkTab = new Editor.Tab('network','Other versions');
-        this.mainTabs.push(networkTab);
-        var editingHistoryTab = new Editor.Tab('versions','Editing history');
-        this.mainTabs.splice(1,0,editingHistoryTab);
-        if(Editor.editable) {
-            this.mainTabs.push(new Editor.Tab('access','Access'));
-        }
-
-		this.currentTab = ko.observable(this.mainTabs()[0]);
-
-		if(Editor.editable) {
-            switch(window.location.hash.slice(1)) {
-                case 'editing-history':
-        			this.currentTab(editingHistoryTab);
-                    break;
-                case 'network':
-                    this.currentTab(networkTab);
-            } 
-		}
-
-        this.starred = ko.observable(Editor.starred);
-        this.toggleStar = function() {
-            q.starred(!q.starred());
-        }
-        this.starData = ko.computed(function() {
-            return {starred: this.starred()}
-        },this);
-        this.saveStar = Editor.saver(this.starData,function(data) {
-            return $.post('set-star',data);
-        });
-
-        this.add_to_basket = function() {
-            Editor.add_question_to_basket(Editor.questionJSON.id);
-        }
-
-		this.exams = data.exams;
-
-        Editor.licences.sort(function(a,b){a=a.short_name;b=b.short_name; return a<b ? -1 : a>b ? 1 : 0 });
-        this.licence = ko.observable();
-        this.licence_name = ko.computed(function() {
-            if(this.licence()) {
-                return this.licence().name;
-            } else {
-                return 'None specified';
-            }
-        },this);
+        Editor.EditorItem.apply(this);
 
 		this.resources = ko.observableArray([]);
+		this.extensions = ko.observableArray([]);
+        this.statement = Editor.contentObservable('');
+        this.advice = Editor.contentObservable('');
+        var rulesets = this.rulesets = ko.observableArray([]);
+        this.functions = ko.observableArray([]);
+        this.variables = ko.observableArray([]);
+		this.questionScope = ko.observable();
+		this.variableGroups = ko.observableArray([]);
+		this.editVariableGroup = ko.observable(null);
+		this.autoCalculateVariables = ko.observable(true);
+		this.currentVariable = ko.observable(null);
+		this.variablesTest = {
+			condition: ko.observable(''),
+			conditionError: ko.observable(false),
+			maxRuns: ko.observable(100),
+			totalRuns: ko.observable(0),
+			totalErrors: ko.observable(0),
+			totalCorrect: ko.observable(0),
+			advice: ko.observable(''),
+			running_time: ko.observable(3),
+			running: ko.observable(false),
+			time_remaining: ko.observable(0)
+		};
+        this.parts = ko.observableArray([]);
+
+		//for image attribute modal
+		this.imageModal = {
+			width: ko.observable(0),
+			height: ko.observable(0),
+			title: ko.observable(''),
+			alt: ko.observable('')
+		}
+		//for iframe attribute modal
+		this.iframeModal = {
+			width: ko.observable(0),
+			height: ko.observable(0)
+		}
+
+
+		this.mainTabs([
+			new Editor.Tab('settings','Settings','cog'),
+			new Editor.Tab('statement','Statement','blackboard'),
+			new Editor.Tab('variables','Variables','th-list'),
+			new Editor.Tab('variabletesting','Variable testing','dashboard'),
+			new Editor.Tab(
+				'parts',
+                'Parts',
+                'list'
+			),
+			new Editor.Tab('advice','Advice','blackboard'),
+			new Editor.Tab('extensions','Extensions & scripts','wrench'),
+			new Editor.Tab('resources','Resources','picture'),
+			new Editor.Tab('exams','Exams using this question','book'),
+            new Editor.Tab('network','Other versions','link'),
+            new Editor.Tab('history','Editing history','time')
+		]);
+        if(item_json.editable) {
+            var adviceTab = new Editor.Tab('access','Access','lock');
+            this.mainTabs.splice(6,0,adviceTab);
+        }
+        this.currentTab(this.mainTabs()[0]);
+
+        this.add_to_basket = function() {
+            Editor.add_question_to_basket(item_json.itemJSON.id);
+        }
+
 		this.saveResources = ko.computed(function() {
 			var resources = this.resources();
 			var out = [];
@@ -113,64 +99,8 @@ $(document).ready(function() {
 			return out;
 		},this);
 
-		var isadvanced = this.isadvanced = ko.observable(true);
-
-        this.name = ko.observable('Untitled Question');
-		this.realName = ko.computed(function() {
-			var name = this.name()
-			return name.length>0 ? name : 'Untitled Question';
-		},this);
-
-		var realtags = this.realtags = ko.observableArray([]);
-        this.tags = ko.computed({
-            read: function() {
-				return this.realtags().sort(function(a,b) {
-					a = a.toLowerCase();
-					b = b.toLowerCase();
-					return a>b ? 1 : a<b ? -1 : 0;
-				});
-			},
-            write: function(newtags) {
-				newtags = newtags.slice();
-                for(var i=newtags.length-1;i>=0;i--)
-                {
-                    if(newtags.indexOf(newtags[i])<i)
-                        newtags.splice(i,1);
-                }
-                this.realtags(newtags);
-            }
-        },this);
-
-        this.tags.push = function(thing) {
-            thing = thing.trim();
-			if(thing.length==0)
-				return;
-            if(realtags().indexOf(thing)==-1)
-                realtags.push(thing);
-        }
-        this.tags.pop = function(thing) {
-            return realtags.pop();
-        }
-        this.tags.splice = function(i,n) {
-            return realtags.splice(i,n);
-        }
-		this.tags.remove = function(q) {
-			return realtags.remove(q);
-		}
-
-		this.notes = ko.observable('');
-		this.description = ko.observable('');
-		this.metadata = ko.computed(function() {
-			return {
-				notes: this.notes(),
-				description: this.description(),
-                licence: this.licence_name()
-			};
-		},this);
-
-		this.extensions = ko.observableArray([]);
-		for(var i=0;i<Editor.numbasExtensions.length;i++) {
-			var ext = Editor.numbasExtensions[i];
+		for(var i=0;i<item_json.numbasExtensions.length;i++) {
+			var ext = item_json.numbasExtensions[i];
 			ext.used = ko.observable(false);
 			this.extensions.push(ext);
 		}
@@ -178,33 +108,21 @@ $(document).ready(function() {
 			return this.extensions().filter(function(e){return e.used()});
 		},this);
 
-        this.statement = Editor.contentObservable('');
-        this.advice = Editor.contentObservable('');
-
-        var rulesets = this.rulesets = ko.observableArray([]);
         this.allsets = ko.computed(function() {
-            return builtinRulesets.concat(rulesets().map(function(r){return r.name()})).sort();
-        });
-
-        this.functions = ko.observableArray([]);
+            return builtinRulesets.concat(this.rulesets().map(function(r){return r.name()})).sort();
+        },this);
 
 		this.preamble = {
 			css: ko.observable(''),
 			js: ko.observable('')
 		};
 
-        this.variables = ko.observableArray([]);
-		this.questionScope = ko.observable();
-		this.variableGroups = ko.observableArray([]);
 		this.baseVariableGroup = new VariableGroup(this,{name:'Ungrouped variables'});
 		this.baseVariableGroup.fixed = true;
 		this.allVariableGroups = ko.computed(function() {
 			var l = this.variableGroups();
 			return l.concat(this.baseVariableGroup);
 		},this);
-		this.editVariableGroup = ko.observable(null);
-		this.autoCalculateVariables = ko.observable(true);
-		this.currentVariable = ko.observable(null);
 
 		// this changes whenever there's a change to a variable name or definition, or a variables is added or removed (or similar to the functions)
 		this.lastVariableChange = ko.computed(function() {
@@ -222,18 +140,6 @@ $(document).ready(function() {
 			return new Date();
 		},this);
 
-		this.variablesTest = {
-			condition: ko.observable(''),
-			conditionError: ko.observable(false),
-			maxRuns: ko.observable(100),
-			totalRuns: ko.observable(0),
-			totalErrors: ko.observable(0),
-			totalCorrect: ko.observable(0),
-			advice: ko.observable(''),
-			running_time: ko.observable(3),
-			running: ko.observable(false),
-			time_remaining: ko.observable(0)
-		};
 		this.variablesTest.time_remaining_display = ko.computed(function() {
 			return this.time_remaining()+' '+Numbas.util.pluralise(this.time_remaining(),'second','seconds');
 		},this.variablesTest);
@@ -260,50 +166,31 @@ $(document).ready(function() {
 			q.variables.splice(n,0,v);
 		}
 
-		this.variableTabs = ko.observableArray([
-			new Editor.Tab('definitions','Definitions'),
-			new Editor.Tab('test',ko.computed(function() {
-				return 'Testing' + (q.variablesTest.condition().trim() ? ' (active)' : '');
-			}))
-		]);
-		this.currentVariableTab = ko.observable(this.variableTabs()[0]);
+        this.expand_all_parts = function() {
+            q.allParts().map(function(p) {
+                p.open(true);
+            });
+        }
 
-        this.parts = ko.observableArray([]);
-		this.currentPart = ko.observable(undefined);
-		this.showPart = function(part) {
-			q.currentPart(part);
-		};
+        this.collapse_all_parts = function() {
+            q.allParts().map(function(p) {
+                p.open(false);
+            });
+        }
 
 		// all parts in this question, including child parts such as gaps and steps
 		this.allParts = ko.computed(function() {
 			var o = [];
 			this.parts().map(function(p) {
-				o = o.concat(p,p.gaps(),p.steps())
+                o.push(p);
+                if(p.type().name=='gapfill') {
+                    o = o.concat(p.gaps());
+                }
+				o = o.concat(p.steps());
 			});
-			return o
+			return o;
 		},this);
 
-        this.output = ko.computed(function() {
-            var data = JSON.stringify(q.toJSON());
-			return '// Numbas version: '+Editor.numbasVersion+'\n'+data;
-        },this);
-
-		//for image attribute modal
-		this.imageModal = {
-			width: ko.observable(0),
-			height: ko.observable(0),
-			title: ko.observable(''),
-			alt: ko.observable('')
-		}
-		//for iframe attribute modal
-		this.iframeModal = {
-			width: ko.observable(0),
-			height: ko.observable(0)
-		}
-
-        ko.computed(function() {
-            document.title = this.name() ? this.name()+' - Numbas Editor' : 'Numbas Editor';
-        },this);
 
 		ko.computed(function() {
 			if(!this.autoCalculateVariables())
@@ -325,125 +212,52 @@ $(document).ready(function() {
 			this.load(data);
 		}
 
-        if(Editor.editable) {
-			this.firstSave = true;
-
+        if(item_json.editable) {
 			this.deleteResource =  function(res) {
-				$.get(res.deleteURL)
-					.success(function() {
-						q.resources.remove(res);
-					})
-					.error(function(e) {
-						console.log("Error deleting resource",e);
-						q.resources.remove(res);
-					})
-				;
+                q.resources.remove(res);
 			}
+
+            this.init_output();
 
 			this.save = ko.computed(function() {
                 return {
                     content: this.output(),
 					extensions: this.usedExtensions().map(function(e){return e.pk}),
                     tags: this.tags(),
+                    subjects: this.subjects().filter(function(s){return s.used()}).map(function(s){return s.pk}),
+                    topics: this.topics().filter(function(t){return t.used()}).map(function(t){return t.pk}),
+                    ability_levels: this.used_ability_levels().map(function(al){return al.pk}),
 					resources: this.saveResources(),
                     metadata: this.metadata()
                 };
 			},this);
 
-            this.autoSave = Editor.saver(
-                function() {
-                    var data = q.save();
+            this.init_save();
 
-                    return data;
-                },
-                function(data) {
-                    return $.post(
-                        '/question/'+q.id+'/'+slugify(q.realName())+'/',
-                        {json: JSON.stringify(data), csrfmiddlewaretoken: getCookie('csrftoken')}
-                    )
-                        .success(function(data){
-                            var address = location.protocol+'//'+location.host+data.url;
-                            if(history.replaceState)
-                                history.replaceState(history.state,q.realName(),address);
-                            q.timeline.splice(0,0,new Editor.TimelineItem({date: data.version.date_created, user: data.version.user, type: 'version', data: data.version}));
-                        })
-                        .error(function(response,type,message) {
-                            if(message=='')
-                                message = 'Server did not respond.';
 
-                            noty({
-                                text: 'Error saving question:\n\n'+message,
-                                layout: "topLeft",
-                                type: "error",
-                                textAlign: "center",
-                                animateOpen: {"height":"toggle"},
-                                animateClose: {"height":"toggle"},
-                                speed: 200,
-                                timeout: 5000,
-                                closable:true,
-                                closeOnSelfClick: true
-                            });
-                        })
-                    ;
-                }
-            );
+            this.section_tasks = {
+                'settings': [
+                    Editor.nonempty_task('Give the question a name.',this.name),
+                    Editor.nonempty_task('Fill out the question description.',this.description),
+                    Editor.nonempty_task('Select a licence defining usage rights.',this.licence)
+                ],
+                'statement': [
+                    Editor.nonempty_task('Write a question statement.',this.statement)
+                ],
+                'parts': [
+                    {text: 'Create at least one part.', done: ko.computed(function(){ return this.parts().length>0 },this)}
+                ],
+                'advice': [
+                    Editor.nonempty_task('Write a worked solution to the question.',this.advice)
+                ]
+            }
 
-            //access control stuff
-            this.public_access = ko.observable(Editor.public_access);
-            this.access_options = [
-                {value:'hidden',text:'Hidden'},
-                {value:'view',text:'Anyone can view this'},
-                {value:'edit',text:'Anyone can edit this'}
-            ];
-            this.access_rights = ko.observableArray(Editor.access_rights.map(function(d){return new UserAccess(q,d)}));
-
-            this.access_data = ko.computed(function() {
-                return {
-                    public_access: q.public_access(),
-                    user_ids: q.access_rights().map(function(u){return u.id}),
-                    access_levels: q.access_rights().map(function(u){return u.access_level()})
-                }
-            });
-            this.saveAccess = Editor.saver(this.access_data,function(data) {
-                return $.post('set-access',data);
-            });
-            this.userAccessSearch=ko.observable('');
-
-            this.addUserAccess = function(data) {
-                var access_rights = q.access_rights();
-                for(var i=0;i<access_rights.length;i++) {
-                    if(access_rights[i].id==data.id) {
-                        noty({
-                            text: "That user is already in the access list.",
-                            layout: "center",
-                            speed: 100,
-                            type: 'error',
-                            timeout: 2000,
-                            closable: true,
-                            animateOpen: {"height":"toggle"},
-                            animateClose: {"height":"toggle"},
-                            closeOnSelfClick: true
-                        });
-                        return;
-                    }
-                }
-                q.access_rights.push(new UserAccess(q,data));
-            };
+            this.init_tasks();
         }
 
 		if(window.history !== undefined) {
+            this.load_state();
 			var state = window.history.state || {};
-			if('currentTab' in state) {
-				var tabs = this.mainTabs();
-				for(var i=0;i<tabs.length;i++) {
-					var tab = tabs[i];
-					if(tab.id==state.currentTab) {
-						this.currentTab(tab);
-						break;
-					}
-				}
-			}
-			Editor.computedReplaceState('currentTab',ko.computed(function(){return this.currentTab().id},this));
 			if('currentVariable' in state) {
 				var variables = this.variables();
 				for(var i=0;i<variables.length;i++) {
@@ -454,215 +268,38 @@ $(document).ready(function() {
 					}
 				}
 			}
-			Editor.computedReplaceState('currentVariable',ko.computed(function(){return this.currentVariable().name().toLowerCase()},this));
-			if('currentVariableTab' in state) {
-				var tabs = this.variableTabs();
-				for(var i=0;i<tabs.length;i++) {
-					var tab = tabs[i];
-					if(tab.id==state.currentVariableTab) {
-						this.currentVariableTab(tab);
-						break;
-					}
-				}
-			}
-			Editor.computedReplaceState('currentVariableTab',ko.computed(function(){return this.currentVariableTab().id},this));
-
-			if('currentPart' in state && state.currentPart!==undefined) {
-				var path = state.currentPart;
-				var part = this.parts()[path[0]];
-				if(path.length>1) {
-					switch(path[1]) {
-						case 'gap':
-							part = part.gaps()[path[2]];
-							break;
-						case 'step':
-							part = part.steps()[path[2]];
-							break;
-					}
-				}
-				this.currentPart(part);
-			}
-			Editor.computedReplaceState('currentPart',ko.computed(function(){
-				var p = this.currentPart();
-				if(p.isGap()) {
-					var parentPart = p.parent();
-					return [this.parts().indexOf(parentPart), 'gap', parentPart.gaps().indexOf(p)];
-				} else if(p.isStep()) {
-					var parentPart = p.parent();
-					return [this.parts().indexOf(parentPart), 'step', parentPart.steps().indexOf(p)];
-				} else {
-					return [this.parts().indexOf(p)];
-				}
-			},this));
-			if(this.currentPart() && 'currentPartTab' in state) {
-				var tabs = this.currentPart().tabs();
-				for(var i=0;i<tabs.length;i++) {
-					var tab = tabs[i];
-					if(tab.id==state.currentPartTab) {
-						this.currentPart().currentTab(tab);
-						break;
-					}
-				}
-			}
-			Editor.computedReplaceState('currentPartTab',ko.computed(function(){return this.currentPart().currentTab().id},this));
+			Editor.computedReplaceState('currentVariable',ko.computed(function(){
+                var v = this.currentVariable();
+                if(v) {
+                    return v.name().toLowerCase();
+                } else {
+                    return undefined;
+                }
+            },this));
 		}
 
-		this.currentChange = ko.observable(new Editor.Change(this.versionJSON(),Editor.questionJSON.author));
-
-		// create a new version when the question JSON changes
-		ko.computed(function() {
-			var currentChange = this.currentChange.peek();
-			var v = new Editor.Change(this.versionJSON(),Editor.questionJSON.author, currentChange);
-
-			//if the new version is different to the old one, keep the diff
-			if(!currentChange || v.diff.length!=0) {
-				currentChange.next_version(v);
-				this.currentChange(v);
-			}
-		},this).extend({throttle:1000});
-
-
-		this.rewindChange = function() {
-			var currentChange = q.currentChange();
-			var prev_version = currentChange.prev_version();
-			if(!prev_version) {
-				throw(new Error("Can't rewind - this is the first version"));
-			}
-			var data = q.versionJSON();
-			data = jiff.patch(jiff.inverse(currentChange.diff),data);
-			q.currentChange(prev_version);
-			q.load(data);
-		};
-
-		this.forwardChange = function() {
-			var currentChange = q.currentChange();
-			var next_version = currentChange.next_version();
-			if(!currentChange.next_version()) {
-				throw(new Error("Can't go forward - this is the latest version"));
-			}
-			var data = q.versionJSON();
-			data = jiff.patch(next_version.diff,data);
-			q.currentChange(next_version);
-			q.load(data);
-		};
-
-        this.timeline = ko.observableArray(Editor.timeline.map(function(t){return new Editor.TimelineItem(t)}));
-
-		this.showCondensedTimeline = ko.observable(true);
-        
-        this.timelineToDisplay = ko.computed(function() {
-			if(this.showCondensedTimeline()) {
-                var out = [];
-				this.timeline().map(function(e){
-					var last = out[out.length-1];
-                    if(e.type=='version') {
-                        if(!e.data.comment() && last && last.type=='version') {
-                            return false;
-                        }
-                        firstVersion = false;
-					}
-                    out.push(e);
-                });
-                return out;
-			} else {
-				return this.timeline();
-			}
-        },this);
-
-        this.stamp = function(status_code) {
-            return function() {
-                $.post('stamp',{'status': status_code, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(stamp) {
-                    q.timeline.splice(0,0,new Editor.TimelineItem({date: stamp.date, user: stamp.user, data: stamp, type: 'stamp'}));
-                });
-                noty({
-                    text: 'Thanks for your feedback!',
-                    type: 'success',
-                    layout: 'topCenter'
-                });
-            }
-        }
-
-        this.writingComment = ko.observable(false);
-        this.commentText = ko.observable('');
-        this.commentIsEmpty = ko.computed(function() {
-            return $(this.commentText()).text().trim()=='';
-        },this);
-        this.submitComment = function() {
-            if(this.commentIsEmpty()) {
-                return;
-            }
-
-            var text = this.commentText();
-            $.post('comment',{'text': text, csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(comment) {
-                q.timeline.splice(0,0,new Editor.TimelineItem({date: comment.date, user: comment.user, data: comment, type: 'comment'}));
-            });
-
-            this.commentText('');
-            this.writingComment(false);
-        }
-        this.cancelComment = function() {
-            this.commentText('');
-            this.writingComment(false);
-        }
-
-        this.deleteTimelineItem = function(item) {
-            if(item.deleting()) {
-                return;
-            }
-            item.deleting(true);
-            $.post(item.data.delete_url,{csrfmiddlewaretoken: getCookie('csrftoken')})
-                .success(function() {
-                    q.timeline.remove(item);
-                })
-                .error(function(response,type,message) {
-                    if(message=='')
-                        message = 'Server did not respond.';
-
-                    noty({
-                        text: 'Error deleting timeline item:\n\n'+message,
-                        layout: "topLeft",
-                        type: "error",
-                        textAlign: "center",
-                        animateOpen: {"height":"toggle"},
-                        animateClose: {"height":"toggle"},
-                        speed: 200,
-                        timeout: 5000,
-                        closable:true,
-                        closeOnSelfClick: true
-                    });
-
-                    item.deleting(false);
-                })
-            ;
-        }
     }
     Question.prototype = {
-
 		versionJSON: function() {
 			var obj = {
 				id: this.id,
 				JSONContent: this.toJSON(),
 				numbasVersion: Editor.numbasVersion,
 				name: this.name(),
-				author: Editor.questionJSON.author,
-				copy_of: Editor.questionJSON.copy_of,
+				author: item_json.itemJSON.author,
+				copy_of: item_json.itemJSON.copy_of,
 				extensions: this.usedExtensions().map(function(e){return e.pk}),
 				tags: this.tags(),
 				resources: this.saveResources(),
 				metadata: this.metadata()
 			};
-            if(Editor.editable) {
+            if(item_json.editable) {
                 obj.public_access = this.public_access();
             }
             return obj;
 		},
 
-		applyDiff: function(version) {
-			viewModel.currentChange(version);
-			viewModel.load(version.data);
-		},
-
-		deleteQuestion: function(q,e) {
+		deleteItem: function(q,e) {
 			if(window.confirm('Really delete this question?')) {
 				$(e.target).find('form').submit();
 			}
@@ -722,14 +359,12 @@ $(document).ready(function() {
         addPart: function() {
 			var p = new Part(this,null,this.parts);
             this.parts.push(p);
-			this.currentPart(p);
 			return p;
         },
 
 		loadPart: function(data) {
 			var p = new Part(this,null,this.parts,data);
             this.parts.push(p);
-			this.currentPart(p);
 			return p;
 		},
 
@@ -801,7 +436,6 @@ $(document).ready(function() {
 					var result = results.variables[name];
 					if(!result) {
 						v.value(null);
-						v.error('');
 						return;
 					}
 					if('value' in result) {
@@ -882,6 +516,7 @@ $(document).ready(function() {
 				try {
 					var tree = jme.compile(v.definition(),scope,true);
 					var vars = jme.findvars(tree);
+                    v.error('');
 				}
 				catch(e) {
 					v.error(e.message);
@@ -1083,6 +718,7 @@ $(document).ready(function() {
                 statement: this.statement(),
                 advice: this.advice(),
                 rulesets: rulesets,
+                extensions: this.extensions().filter(function(e){return e.used()}).map(function(e){return e.location}),
                 variables: variables,
 				variablesTest: {
 					condition: this.variablesTest.condition(),
@@ -1110,38 +746,24 @@ $(document).ready(function() {
 			this.baseVariableGroup.variables([]);
 			this.parts([]);
 			this.extensions().map(function(e){
-					e.used(false);
+                e.used(false);
 			});
 
 		},
 
         load: function(data) {
+            Editor.EditorItem.prototype.load.apply(this,[data]);
+
 			var q = this;
-
-			this.reset();
-
-			this.id = data.id;
-
-			if('metadata' in data) {
-				tryLoad(data.metadata,['notes','description'],this);
-                var licence_name = data.metadata.licence;
-                for(var i=0;i<Editor.licences.length;i++) {
-                    if(Editor.licences[i].name==licence_name) {
-                        this.licence(Editor.licences[i]);
-                        break;
-                    }
-                }
-			}
 
 			if('extensions' in data) {
 				this.extensions().map(function(e) {
-					if(data.extensions.indexOf(e.pk)>=0)
+					if(data.extensions.indexOf(e.location)>=0)
 						e.used(true);
 				});
 			}
 
-			if('resources' in data)
-			{
+			if('resources' in data) {
 				data.resources.map(function(rd) {
 					this.resources.push(new Editor.Resource(rd));
 				},this);
@@ -1210,8 +832,6 @@ $(document).ready(function() {
                 contentData.parts.map(function(pd) {
                     this.loadPart(pd);
                 },this);
-				if(this.parts().length) 
-					this.currentPart(this.parts()[0]);
             }
 
 			try{
@@ -1236,14 +856,6 @@ $(document).ready(function() {
 			this.currentVariable(null);
 		},
 
-		download: function() {
-			window.location = Editor.download_url;
-		},
-        
-        changeEditLevel: function() {
-            this.isadvanced(!this.isadvanced());
-        },
-        
         insertImage: function(image) {
             $('#imagePickModal').modal('hide');
 
@@ -1301,28 +913,15 @@ $(document).ready(function() {
 			ed.onChange.dispatch();
 		}
     };
-
-    function UserAccess(question,data) {
-        var ua = this;
-        this.id = data.id;
-        this.name = data.name;
-        this.access_level = ko.observable(data.access_level || 'view');
-        this.remove = function() {
-            question.access_rights.remove(ua);
-        }
-    }
-    UserAccess.prototype = {
-        access_options: [{value:'view',text:'Can view this'},{value:'edit',text:'Can edit this'}]
-    }
+    Question.prototype.__proto__ = Editor.EditorItem.prototype;
 
     function Ruleset(exam,data)
     {
-        this.name = ko.observable('ruleset'+exam.rulesets().length);
+        this.name = ko.observable('');
         this.sets = ko.observableArray([]);
         this.allsets = exam.allsets;
         this.remove = function() {
-            if(confirm("Remove this ruleset?"))
-                exam.rulesets.remove(this);
+            exam.rulesets.remove(this);
         };
         if(data)
             this.load(data);
@@ -1652,7 +1251,7 @@ $(document).ready(function() {
 		toJSON: function() {
 			var obj = {
 				name: this.name(),
-				group: this.group().name(),
+				group: this.group() ? this.group().name() : null,
 				definition: this.definition(),
 				description: this.description(),
 				templateType: this.templateType().id,
@@ -1801,7 +1400,16 @@ $(document).ready(function() {
         this.parent = ko.observable(parent);
 		this.parentList = parentList;
 
+        this.open = ko.observable(true);
+        this.toggleOpen = function() {
+            p.open(!p.open());
+        }
+
 		this.types = partTypes.map(function(data){return new PartType(p,data);});
+
+        this.isRootPart = ko.computed(function() {
+            return !this.parent();
+        },this);
 
 		this.isGap = ko.computed(function(){
 			return this.parent() && this.parent().type().name=='gapfill' && !this.parent().steps().contains(this);
@@ -1821,12 +1429,11 @@ $(document).ready(function() {
 			else
 				return this.types;
 		},this);
+        this.type = ko.observable(this.availableTypes()[0]);
 
 		this.canBeReplacedWithGap = ko.computed(function() {
 			return !(this.isGap() || this.isStep() || nonGapTypes.indexOf(this.type().name)>=0);
 		},this);
-
-        this.type = ko.observable(this.availableTypes()[0]);
 
 		this.indexLabel = ko.computed(function() {
 			var i = this.parentList.indexOf(this);
@@ -1839,15 +1446,17 @@ $(document).ready(function() {
 			return i;
 		},this);
 		this.header = ko.computed(function() {
-			if(this.isGap() || this.isStep()) {
-				return this.indexLabel()+'. ';
-			} else {
-				return this.indexLabel()+') ';
+			if(this.isGap()) {
+                return 'Gap '+this.indexLabel()+'. ';
+            } else if(this.isStep()) {
+				return 'Step '+this.indexLabel()+'. ';
+			} else if(this.isRootPart()) {
+				return 'Part '+this.indexLabel()+') ';
 			}
 		},this);
 
 		this.path = ko.computed(function() {
-			var i = this.parentList.indexOf(this);
+			var i = Math.max(this.parentList.indexOf(this),0);
 			if(this.isGap()) {
 				return this.parent().path()+'g'+i;
 			} else if(this.isStep()) {
@@ -1863,16 +1472,16 @@ $(document).ready(function() {
 		this.tabs = ko.computed(function() {
 			var tabs = [];
 			if(!this.isGap())
-				tabs.push(new Editor.Tab('prompt','Prompt'));
+				tabs.push(new Editor.Tab('prompt','Prompt','blackboard'));
 
 			if(this.type().has_marks)
-				tabs.push(new Editor.Tab('marking','Marking'));
+				tabs.push(new Editor.Tab('marking','Marking','pencil'));
 
 			tabs = tabs.concat(this.type().tabs);
 
-			tabs.push(new Editor.Tab('scripts','Scripts'));
+			tabs.push(new Editor.Tab('scripts','Scripts','wrench'));
 
-			tabs.push(new Editor.Tab('adaptivemarking','Adaptive marking'));
+			tabs.push(new Editor.Tab('adaptivemarking','Adaptive marking','transfer'));
 
 			return tabs;
 		},this);
@@ -1910,7 +1519,6 @@ $(document).ready(function() {
 		this.addGap = function() {
 			var gap = new Part(p.q,p,p.gaps);
 			p.gaps.push(gap);
-			p.q.currentPart(gap);
 		}
 
 		this.showCorrectAnswer = ko.observable(true);
@@ -1930,24 +1538,12 @@ $(document).ready(function() {
 		this.variableReplacementStrategy = ko.observable(this.variableReplacementStrategies[0])
 
 		this.scripts = [
-			new Script('constructor','When the part is created','after','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-when-the-part-is-created'),
-			new Script('mark','Mark student\'s answer','instead','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-mark-student-s-answer'),
-			new Script('validate','Validate student\'s answer','instead','http://numbas-editor.readthedocs.org/en/latest/question-parts.html#term-validate-student-s-answer')
+			new Script('constructor','When the part is created','after','http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-when-the-part-is-created'),
+			new Script('mark','Mark student\'s answer','instead','http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-mark-student-s-answer'),
+			new Script('validate','Validate student\'s answer','instead','http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-validate-student-s-answer')
 		];
 
 		this.types.map(function(t){p[t.name] = t.model});
-
-		this.meOrChildSelected = ko.computed(function() {
-			var currentPart = q.currentPart();
-			if(currentPart==this)
-				return true;
-			var children = this.gaps().concat(this.steps());
-			for(var i=0;i<children.length;i++) {
-				if(currentPart==children[i])
-					return true;
-			}
-			return false;
-		},this);
 
         if(data)
             this.load(data);
@@ -1958,8 +1554,13 @@ $(document).ready(function() {
 			var data = this.toJSON();
 			var p = new Part(this.q,this.parent(),this.parentList,data);
 			this.parentList.push(p);
-			this.q.currentPart(p);
+            p.scrollTo();
 		},
+
+        scrollTo: function() {
+            var p = this;
+            setTimeout(function() {window.scrollTo(0,$('.part[data-path="'+p.path()+'"]').offset().top-10)},0);
+        },
 
 		replaceWithGapfill: function() {
 			var gapFill = new Part(this.q,this.parent(),this.parentList);
@@ -1994,16 +1595,12 @@ $(document).ready(function() {
         addStep: function() {
 			var step = new Part(this.q,this,this.steps);
             this.steps.push(step);
-			this.q.currentPart(step);
         },
 
 		remove: function() {
             if(confirm("Remove this part?"))
             {
 				this.parentList.remove(this);
-				if(viewModel.currentPart()==this) {
-					viewModel.currentPart(this.parent());
-				}
             }
         },
 
@@ -2012,6 +1609,7 @@ $(document).ready(function() {
 			if(i>0) {
 				this.parentList.remove(this);
 				this.parentList.splice(i-1,0,this);
+                this.scrollTo();
 			}
 		},
 
@@ -2019,6 +1617,7 @@ $(document).ready(function() {
 			var i = this.parentList.indexOf(this);
 			this.parentList.remove(this);
 			this.parentList.splice(i+1,0,this);
+            this.scrollTo();
 		},
 
 		setType: function(name) {
@@ -2201,7 +1800,7 @@ $(document).ready(function() {
 			niceName: 'Mathematical expression', 
 			has_marks: true, 
 			tabs: [
-				new Editor.Tab('restrictions','Accuracy and string restrictions')
+				new Editor.Tab('restrictions','Accuracy and string restrictions','scale')
 			],
 
 			model: function() {
@@ -2482,8 +2081,8 @@ $(document).ready(function() {
 			name:'1_n_2', 
 			niceName: 'Choose one from a list',
 			tabs: [
-				new Editor.Tab('marking','Marking'),
-				new Editor.Tab('choices','Choices')
+				new Editor.Tab('marking','Marking','pencil'),
+				new Editor.Tab('choices','Choices','list')
 			],
 
 			model: function(part) {
@@ -2591,8 +2190,8 @@ $(document).ready(function() {
 			name:'m_n_2', 
 			niceName: 'Choose several from a list',
 			tabs: [
-				new Editor.Tab('marking','Marking'),
-				new Editor.Tab('choices','Choices')
+				new Editor.Tab('marking','Marking','pencil'),
+				new Editor.Tab('choices','Choices','list')
 			],
 
 			model: function() {
@@ -2718,10 +2317,10 @@ $(document).ready(function() {
 			name:'m_n_x', 
 			niceName: 'Match choices with answers',
 			tabs: [
-				new Editor.Tab('choices','Choices'),
-				new Editor.Tab('answers','Answers'),
-				new Editor.Tab('matrix','Marking matrix'),
-				new Editor.Tab('marking','Marking options')
+				new Editor.Tab('choices','Choices','list'),
+				new Editor.Tab('answers','Answers','list'),
+				new Editor.Tab('matrix','Marking matrix','th'),
+				new Editor.Tab('marking','Marking options','pencil')
 			],
 
 			model: function() {
@@ -2920,16 +2519,20 @@ $(document).ready(function() {
 	];
 
     var deps = ['jme-display','jme-variables','jme','editor-extras'];
-	for(var i=0;i<Editor.numbasExtensions.length;i++) {
-		var extension = Editor.numbasExtensions[i];
+	for(var i=0;i<item_json.numbasExtensions.length;i++) {
+		var extension = item_json.numbasExtensions[i];
 		if(extension.hasScript) {
 			deps.push('extensions/'+extension.location+'/'+extension.location+'.js');
 		}
 	}
     Numbas.queueScript('start-editor',deps,function() {
 		try {
-			viewModel = new Question(Editor.questionJSON);
+			viewModel = new Question(item_json.itemJSON);
+            viewModel.set_tab_from_hash();
+            ko.options.deferUpdates = true;
 			ko.applyBindings(viewModel);
+            document.body.classList.add('loaded');
+            $('.timeline').mathjax();
 		}
 		catch(e) {
 			$('.page-loading').hide();
@@ -2943,8 +2546,6 @@ $(document).ready(function() {
 	});
 
 	Mousetrap.bind(['ctrl+b','command+b'],function() {
-		window.open(Editor.previewURL,Editor.previewWindow);
+		window.open(item_json.previewURL,item_json.previewWindow);
 	});
-
-
 });

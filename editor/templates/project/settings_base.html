@@ -1,0 +1,15 @@
+{% extends "project/project_base.html" %}
+
+{% block project_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-2 tabs">
+            <ul class="nav nav-pills nav-stacked">
+                <li class="{% if settings_page == "options" %}active{% endif %}"><a href="{% url 'project_settings_options' project.pk %}"><span class="glyphicon glyphicon-cog"></span> Options</a></li>
+                <li class="{% if settings_page == "members" %}active{% endif %}"><a href="{% url 'project_settings_members' project.pk %}"><span class="glyphicon glyphicon-user"></span> Members</a></li>
+            </ul>
+        </div>
+        <div class="col-sm-10 content">{% block settings_content %}{% endblock settings_content %}</div>
+    </div>
+</div>
+{% endblock project_content %}

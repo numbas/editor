@@ -1,5 +1,10 @@
-{% extends "editor.html" %}
-{% load icon %}
+{% extends "editoritem/edit.html" %}
+{% load user_link %}
+{% load can_edit %}
+{% load links %}
+{% load sanitizer %}
+{% load helplink %}
+{% load editor_controls %}
 {% load sstatic %}
 {% load verbatim %}
 {% load json_filter %}
@@ -7,139 +12,762 @@
 {% block javascripts %}
     {{ block.super }}
 
-	<!-- numbas -->
-	<script src="{% sstatic 'js/numbas/R/R.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'js/numbas/R/en-gb.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'js/numbas/numbas.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'js/numbas/jme-display.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'js/numbas/jme-builtins.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'js/numbas/jme-variables.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'js/numbas/jme.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'js/numbas/editor-extras.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'js/numbas/math.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'js/numbas/util.js' %}" type="text/javascript"></script>
-
     {% for extension in extensions %}
         {% if extension.hasScript %}
             <script src="{% sstatic extension.scriptURL %}" type="text/javascript"></script>
         {% endif %}
     {% endfor %}
 
-	<!-- question editor -->
+    <!-- question editor -->
     <script src="{% sstatic 'js/question/edit.js' %}" type="text/javascript"></script>
-
-    <script type="text/javascript">
-        (function() {
-            var editor = window.Editor = {{question_json|json|safe}};
-        })();
-    </script>
 {% endblock javascripts %}
 
 {% block stylesheets %}
-	{{ block.super }}
-	<link rel="stylesheet" type="text/css" href="{% sstatic 'css/question/edit.css' %}"/>
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% sstatic 'css/question/edit.css' %}"/>
 {% endblock stylesheets %}
-	
+
 {% block content %}
-	{{block.super }}
+{{block.super}}
+    <div class="modal fade" id="imagePickModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h3 class="modal-title">Insert image</h3>
+                </div>
+                <div class="modal-body">
+                    <form data-bind="fileupload: resources, afterupload: $root.insertImage" data-url="{% url 'upload_resource' %}">
+                        {% csrf_token %}
+                        <span class="control-label">Upload a file</span>
+                        <input id="fileupload" type="file" name="files[]">
+                    </form>
 
-    {% block property_templates %}{% endblock %}
 
-	<div id="question" class="{% if editable %}edit{% else %}nonedit{% endif %}">
-		<div class="row-fluid">
-            <h1 id="name-header" class="span9">
-				<span data-bind="text: name, mathjax: name">{{object.name}}</span> 
-                {% if request.user.is_authenticated %}
-                <span style="display:none" data-bind="visible: true">
-                    <button type="button" data-bind="css:{starred: starred}, attr: {title: starred() ? 'This question is starred. Click to unstar it.' : 'Star this question'}, click: toggleStar" class="star icon-button" ></button>
-					<button type="button" data-bind="click: add_to_basket" class="add-to-basket icon-button" title="Add this question to your basket">{% icon "basket" size=24 %}</button>
-				</span>
-                {% endif %}
-            </h1>
-            {% if editable %}
-			<div class="span3" id="edit-history" style="display:none" data-bind="visible: true, with: currentChange">
-				<button disabled title="Undo" type="button" data-bind="click: $root.rewindChange, enable: hasPrevious">&larr;</button>
-				<button disabled title="Redo" type="button" data-bind="click: $root.forwardChange, enable: hasNext">&rarr;</button>
+                    <ul class="list-unstyled resources-list" data-bind="foreach: resources">
+                        <li class="resource clearfix" data-bind="visible: can_embed, click: $root.insertImage">
+                            <img class="thumbnail" data-bind="visible: filetype()=='img', attr: {src: url, title: name}"/>
+                            <span data-bind="text: name"></span><span data-bind="visible: filetype()=='html'"> (will be embedded as an iframe)</span>
+                        </li>
+                    </ul>
+                </div>
             </div>
-            {% endif %}
-		</div>
-		<div id="controls">
-			<div class="row-fluid">
-			{% block controls %}
-			{% endblock controls %}
-			</div>
-			<ul class="controlbox" id="admin" style="display:none" data-bind="visible: true">
-				<li class="preview-li">
-                    <a id="preview" data-bind="attr: {href: Editor.previewURL, target: Editor.previewWindow}" title="Run this question in a new window (Ctrl+B)">Test Run</a>
-                    {% if user.is_authenticated %}
-                        <div class="btn-group stamp-of-approval-dropdown">
-                          <button class="btn dropdown-toggle" data-toggle="dropdown">
-                            Feedback
-                            <span class="caret"></span>
-                          </button>
-						  <ul class="dropdown-menu">
-						  {% for name,description in stamp_choices %}
-							<li><a tabindex="-1" href="#" data-bind="click: stamp('{{name}}')">{{description}}</a></li>
-						  {% endfor %}
-                          </ul>
+        </div>
+    </div>
+    <div class="modal fade" id="imageAttributeModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h3 class="modal-title">Image attributes</h3>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="label-block">
+                                <span class="col-sm-3 control-label">Width</span>
+                                <div class="col-sm-9 controls">
+                                    <input type="text" class="form-control" data-bind="value: imageModal.width">
+                                </div>
+                            </label>
                         </div>
-                    {% endif %}
-				</li>			
-				{% if can_delete %}
-				<li>
-                    <a id="delete" data-bind="click: deleteQuestion" href="{% url 'question_delete' object.pk object.slug %}" title="Delete this question permanently">Delete
-						<form action="{% url 'question_delete' object.pk object.slug %}" method="post">{% csrf_token %}
-							<input type="submit" value="Submit" />
-						</form>
-					</a>
-				</li>
-                {% endif %}
-
-				{% if user.is_authenticated and can_copy %}
-				<li>
-				<a id="copy" href="{% url 'question_copy' object.pk object.slug %}" target="_blank" title="Create your own copy of this question">Make a Copy</a>
-				</li>
-				{% endif %}
-
-				<li>
-					<span id="download">
-						Download: 
-                        <div class="btn-group">
-                          <a class="btn" href="{% url 'question_download' object.pk object.slug %}?scorm">SCORM package</a>
-                          <button class="btn dropdown-toggle" data-toggle="dropdown" title="More download options">
-                            <span class="caret"></span>
-                          </button>
-                          <ul class="dropdown-menu">
-                            <li><a tabindex="-1" href="{% url 'question_download' object.pk object.slug %}">standalone .zip (no SCORM)</a></li>
-                            <li><a tabindex="-1" href="{% url 'question_source' object.pk object.slug %}">source</a></li>
-                          </ul>
+                        <div class="form-group">
+                            <label class="label-block">
+                                <span class="col-sm-3 control-label">Height</span>
+                                <div class="col-sm-9 controls">
+                                    <input type="text" class="form-control" data-bind="value: imageModal.height">
+                                </div>
+                            </label>
                         </div>
-					</span>
-				</li>
-			</ul>
-		</div>
-
-		<div style="display:none" data-bind="visible: true">
-			<div class="row-fluid">
-				<ul class="nav nav-tabs" data-bind="foreach: mainTabs">
-					<li data-bind="visible: visible, css: {active: $root.currentTab() == $data}">
-						<a href="#" data-bind="click: $root.currentTab, text: title"></a>
-					</li>
-				</ul>
-			</div>
-
-			{% block editor %}
-			{% endblock %}
-		</div>
-		<div class="page-loading" data-bind="visible: false">
-			<h2>Loading...</h2>
-		</div>
-		<div class="page-error">
-			<h2>Error</h2>
-			<p>There was an error loading the page.</p>
-
-			<pre class="trace"></pre>
-		</div>
-	</div>
-
+                        <div class="form-group">
+                            <label class="label-block">
+                                <span class="col-sm-3 control-label">Title text</span>
+                                <div class="col-sm-9 controls">
+                                    <input type="text" class="form-control" data-bind="value: imageModal.title">
+                                </div>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="label-block">
+                                <span class="col-sm-3 control-label">Alt text</span>
+                                <div class="col-sm-9 controls">
+                                    <input type="text" class="form-control" data-bind="value: imageModal.alt">
+                                </div>
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bind="click: function(){$('#imageAttributeModal').modal('hide');}">Cancel</button>
+                    <button type="button" class="btn btn-primary" data-bind="click: $root.changeImageAttributes">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="iframeAttributeModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h3 class="modal-title">Embedded page attributes</h3>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="label-block">
+                                <span class="col-sm-3 control-label">Width</span>
+                                <div class="col-sm-9 controls">
+                                    <input type="text" class="form-control" data-bind="value: iframeModal.width">
+                                </div>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="label-block">
+                                <span class="col-sm-3 control-label">Height</span>
+                                <div class="col-sm-9 controls">
+                                    <input type="text" class="form-control" data-bind="value: iframeModal.height">
+                                </div>
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bind="click: function(){$('#iframeAttributeModal').modal('hide');}">Cancel</button>
+                    <button type="button" class="btn btn-primary" data-bind="click: $root.changeIframeAttributes">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock content %}
+
+{% block settings %}
+{{ block.super }}
+{% if editable %}
+    <hr>
+    <nav>
+        <ul class="pager">
+            <li class="next" data-bind="css: {ready: section_completed.settings}">
+                <a title="Proceed to the next section" href="#" data-bind="click: setTab('statement')">Statement →</a>
+            </li>
+        </ul>
+    </nav>
+{% endif %}
+{% endblock settings %}
+
+{% block admin_controls %}
+{{block.super}}
+<li id="add-to-basket">
+<a class="basket add-to-basket" href="#" data-question-id="{{object.pk}}"><span class="glyphicon glyphicon-shopping-cart" title="Add this question to your basket" aria-hidden="true"></span> Add to your basket</a>
+</li>
+{% endblock admin_controls %}
+
+{% block main_tab_content %}
+{{ block.super }}
+    <!-- Question statement -->
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='statement'}">
+        <div class="form-group">
+            <label>Question statement</label>
+            <div {% if not editable %}disabled{% endif %} data-bind="writemaths: statement"></div>
+            <p class="help-block">
+                {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-reference.html#statement' subject='the question statement' %}
+                Give any introductory information the student needs. 
+            </p>
+        </div>
+
+        {% if editable %}
+        <hr>
+        <nav>
+            <ul class="pager">
+                <li class="previous">
+                    <a title="Back to the previous section" href="#" data-bind="click: setTab('settings')">← Settings</a>
+                </li>
+                <li class="next" data-bind="css: {ready: section_completed.statement}">
+                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('variables')">Variables →</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </section>
+
+    <!-- Variables -->
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='variables'}">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-12 col-md-6 col-lg-7" data-bind="visible: variables().length==0">
+                    <p class="nothing-here">No variables have been defined in this question.</p>
+                </div>
+                <div class="col-sm-12 col-md-6 col-lg-7 variable-definition" data-bind="with: currentVariable">
+                    <form>
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input {% if not editable %}disabled{% endif %} type="text" placeholder="Name" class="form-control name monospace" data-bind="value:name, valueUpdate: 'afterkeydown'"/>
+                            <span class="name-error" data-bind="text: nameError, visible: nameError"></span>
+                        </div>
+                        <div class="form-group">
+                            <label>Data type</label>
+                            <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: templateTypes, value: templateType, optionsText: 'name'"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Value</label>
+
+                            <div data-bind="visible: templateType().id=='anything'">
+                                <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: templateTypeValues.anything.definition, codemirrorMode: 'jme'"></textarea>
+                            </div>
+                            <div data-bind="visible: templateType().id=='number'">
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value: templateTypeValues.number.value, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 30, value: templateTypeValues.number.value}"/> 
+                                <p class="help-block">(a number)</p>
+                            </div>
+                            <div data-bind="visible: templateType().id=='range'" class="form-inline">
+                                Numbers between 
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value: templateTypeValues.range.min, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.min}"/>
+                                and
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value: templateTypeValues.range.max, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.max}"/>
+                                (inclusive) with step size
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value: templateTypeValues.range.step, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.step}"/>
+                            </div>
+                            <div data-bind="visible: templateType().id=='randrange'" class="form-inline">
+                                A random number between 
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value: templateTypeValues.randrange.min, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.min}"/>
+                                and
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value: templateTypeValues.randrange.max, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.max}"/>
+                                (inclusive) with step size
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value: templateTypeValues.randrange.step, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.step}"/>
+                            </div>
+                            <div data-bind="visible: templateType().id=='string'">
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value: templateTypeValues.string.value, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.string.value}"/> 
+                                <p class="help-block">(text string)</p>
+                            </div>
+                            <div data-bind="visible: templateType().id=='long string'">
+                                <div {% if not editable %}disabled{% endif %} data-bind="writemaths: templateTypeValues['long string'].value"></div>
+                            </div>
+                            <div data-bind="visible: templateType().id=='list of numbers', with: templateTypeValues['list of numbers']">
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value: commaValue, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: commaValue}"/>
+                                <p class="help-block">(comma-separated list of numbers)</p>
+                            </div>
+                            <div data-bind="visible: templateType().id=='list of strings', with: templateTypeValues['list of strings']">
+                                <ul class="list-unstyled" data-bind="foreach: values.edit">
+                                    <li>
+                                        <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value: value, valueUpdate: 'afterkeydown', event: {blur: onBlur}, autosize: {max: 500, min: 30, padding: 10, value: value}"/>
+                                    </li>
+                                </ul>
+                                <p class="help-block">(text strings)</p>
+                            </div>
+                            </div>
+                            <div class="help-block">
+                                <div class="value-error alert alert-danger" data-bind="visible: error().length>0, html: error">
+                                <div class="html-type-warning value-error alert alert-danger" data-bind="visible: value() && value().type=='html'">
+                                    <p>This variable is an HTML node. HTML nodes can not be relied upon to work correctly when resuming a session - for example, attached event callbacks will be lost, and mathematical notation will likely also break.</p>
+                                    <p>If this causes problems, try to create HTML nodes where you use them in content areas, instead of storing them in variables.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <div {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
+                            <p class="help-block">Describe what this variable represents, and list any assumptions made about its value.</p>
+                        </div>
+                    </form>
+                    <div data-bind="visible: dependencies().length>0" class="inline-names">
+                        <label>← Depends on:</label>
+                        <ul class="list-inline" data-bind="foreach: dependenciesObjects">
+                            <li><span class="btn btn-sm btn-info monospace" data-bind="click: setCurrent, text: name, css: {notdefined: notdefined}, attr: {title: title}"></span></li>
+                        </ul>
+                    </div>
+                    <div data-bind="visible: usedIn().length>0">
+                        <label>→ Used by:</label>
+                        <ul class="list-inline" data-bind="foreach: usedIn">
+                            <li><span class="btn btn-sm btn-info monospace" data-bind="click: $root.currentVariable, text: name"></span></li>
+                        </ul>
+                    </div>
+
+                </div>
+                <div class="col-sm-12 col-md-6 col-lg-5">
+                    <div class="panel panel-info variable-groups">
+                        <!-- ko foreach: allVariableGroups -->
+                        <div class="panel-heading">
+                            <h3 class="panel-title">
+                                {% if editable %}<button type="button" class="pull-left btn btn-xs btn-link" data-bind="click: sort" title="Sort the variables in this group"><span class="glyphicon glyphicon-sort-by-alphabet"></span></button>{% endif %}
+                                <input {% if not editable %}disabled{% endif %} class="transparent-input variable-group-name" type="text" data-bind="textInput: name, attr: {readonly: fixed}"/>
+                                {% if editable %}<button type="button" class="pull-right btn btn-xs btn-link" data-bind="visible: !fixed, click: remove" title="Remove this variable group"><span class="glyphicon glyphicon-remove text-danger"></span></button>{% endif %}
+                            </h3>
+                        </div>
+                        <table class="table variable-list table-hover" data-bind="css: {empty: variables().length==0}">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th class="name">Name</th>
+                                    <th class="value">Generated Value</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody data-bind="css: {empty: variables().length==0}, sortable: {
+                                template: 'variable-template',
+                                data: $data.variables,
+                                options: {
+                                    forcePlaceholderSize: true,
+                                    placeholder: 'placeholder',
+                                },
+                                afterAdd: function(_,_,v){if(!v.name()){$('.variable-definition input.name').focus()}}
+                            }">
+                            </tbody>
+                        </table>
+
+                        <script type="text/html" id="variable-template">
+                            <tr data-bind="css: {noname: !name(), active: $data==$root.currentVariable(), dependency: isDependency, danger: error().length>0}" class="variable-selector">
+                                <td class="lock-cell">
+                                    {% if editable %}
+                                    <button type="button" class="btn btn-xs btn-link lock" data-bind="click: toggleLocked, css: {locked: locked}" title="Lock the value of this variable (editor only)">
+                                        <span class="glyphicon glyphicon-lock"></span>
+                                    </button>
+                                    {% endif %}
+                                </td>
+                                <td class="name monospace" data-bind="click: $root.currentVariable, text: name() ? name() : 'Unnamed', css: {'name-error': nameError()!=''}"></td>
+                                <td class="value-cell" data-bind="click: $root.currentVariable">
+                                    <div class="value" data-bind="html: display"></div>
+                                </td>
+                                <td>
+                                    {% if editable %}
+                                    <button class="btn btn-xs btn-link" type="button" title="Remove this variable" data-bind="click:remove">
+                                        <span class="glyphicon glyphicon-remove text-danger"></span>
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </script>
+
+                        <div class="panel-footer">
+                            {% if editable %}
+                            <button type="button" class="btn btn-default add-variable" data-bind="click: addVariable, attr: {title: (variables().length ? 'Add another variable' : 'Add a variable')+' to '+name()}">
+                                <span class="glyphicon glyphicon-plus"></span>
+                                Add a variable
+                            </button>
+                            {% endif %}
+                        </div>
+
+                        <!-- /ko -->
+                    </div>
+                    <button class="btn btn-info btn-lg btn-block" type="button" data-bind="click: generateVariablePreview, visible: variables().length>0"><span class="glyphicon glyphicon-refresh"></span> Regenerate values</button>
+                    {% if editable %}<button class="btn btn-primary btn-block" type="button" data-bind="click: addVariableGroup"><span class="glyphicon glyphicon-plus"></span> New variable group</button>{% endif %}
+                </div>
+            </div>
+        </div>
+        {% if editable %}
+        <hr>
+        <nav>
+            <ul class="pager">
+                <li class="previous">
+                    <a title="Back to the previous section" href="#" data-bind="click: setTab('statement')">← Statement</a>
+                </li>
+                <li class="next" data-bind="css: {ready: section_completed.variables}">
+                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('parts')">Parts →</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </section>
+
+    <!-- Variable testing -->
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='variabletesting'}">
+        <form class="form-horizontal">
+            <div class="form-group">
+                <label class="col-sm-3 control-label">
+                    Condition to satisfy
+                    {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-reference.html#term-condition-to-satisfy' %}
+                </label>
+                <div class="col-sm-9">
+                    <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: variablesTest.condition, codemirrorMode: 'jme'"></textarea>
+                    <p class="alert alert-danger" data-bind="visible: variablesTest.conditionError">Error: <span data-bind="html: variablesTest.conditionError"></span></p>
+                </div>
+            </div>
+            {% with form_label_class="col-sm-3" form_control_class="col-sm-9" %}
+            {% property 'variablesTest.maxRuns' 'Maximum number of runs' min=1 help_url='http://numbas-editor.readthedocs.io/en/latest/question-reference.html#term-maximum-number-of-runs' %}
+            {% endwith %}
+            <div class="form-group form-inline">
+                <div class="col-sm-offset-3">
+                    <p data-bind="visible: !variablesTest.running()"><button class="btn btn-primary" type="button" data-bind="click: testVariables">Test condition</button> for <input class="form-control" type="number" data-bind="textInput: variablesTest.running_time, autosize: {value:variablesTest.running_time, max:100, min: 20}"/> seconds</p>
+                    <p class="variable-test-running" data-bind="visible: variablesTest.running">Running for <span data-bind="text: variablesTest.time_remaining_display"></span>... <button type="button" class="btn btn-warning" data-bind="click: cancelVariablesTest">Cancel</button></p>
+                </div>
+            </div>
+        </form>
+        <div class="variable-test-advice alert alert-info" data-bind="visible: !variablesTest.running() && variablesTest.advice(), html: variablesTest.advice"></div>
+    </section>
+
+    <!-- Parts -->
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='parts'}">
+
+        <p class="text-right">
+            <button type="button" class="btn btn-link" data-bind="click: expand_all_parts"><span class="glyphicon glyphicon-expand"></span> Expand every part</button>
+            <button type="button" class="btn btn-link" data-bind="click: collapse_all_parts"><span class="glyphicon glyphicon-collapse-up"></span> Collapse every part</button>
+        </p>
+
+        <div class="panel-group parts" role="tablist" aria-multiselectable="true">
+            <!-- ko foreach: allParts-->
+            <div class="panel part" data-bind="
+                    visible: isRootPart() || parent().open(), 
+                    attr: {'data-path': path},
+                    css: {'open': open, 'panel-primary': isRootPart, 'panel-success': isGap, 'panel-info': isStep, 'root': isRootPart, 'gap': isGap, 'step': isStep}
+                ">
+                <div class="panel-heading" data-bind="restrictedClick: toggleOpen" clickable>
+                    <div class="pull-right">
+                        <div class="btn-group part-header-controls">
+                            {% if editable %}
+                            <button type="button" class="btn btn-link" data-bind="click: moveUp, visible: canMove('up')" title="Move this part up one place"><span class="glyphicon glyphicon-arrow-up"></span></button>
+                            <button type="button" class="btn btn-link" data-bind="click: moveDown, visible: canMove('down')" title="Move this part down one place"><span class="glyphicon glyphicon-arrow-down"></span></button>
+                            {% endif %}
+                        </div>
+                        {% if editable %}
+                        <button type="button" class="btn btn-link" title="Remove this part" data-bind="click: remove"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                        {% endif %}
+                    </div>
+                    <h3 class="panel-title form-inline" clickable>
+                        <span clickable class="glyphicon" data-bind="css: {'glyphicon-triangle-right': !open(), 'glyphicon-triangle-bottom': open}"></span>
+                        <strong clickable data-bind="text: header"></strong>
+                        <select {% if not editable %}disabled{% endif %} class="form-control type" data-bind="options: availableTypes, value:type, optionsText: 'niceName'"></select>
+                    </h3>
+                </div>
+                <div data-bind="fadeVisible: open">
+                    <div class="panel-body">
+                        <ul class="col-sm-3 nav nav-pills nav-stacked part-tabs" data-bind="foreach: tabs">
+                            <li data-bind="css: {active: ko.unwrap($parent.currentTab().id) == $data.id}">
+                                <a href="#" data-bind="click: $parent.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon}"></span> <span data-bind="text: title"></span></a>
+                            </li>
+                        </ul>
+                        <div class="col-sm-9 tab-content">
+                            <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='prompt'}">
+                                <div {% if not editable %}disabled{% endif %} data-bind="writemaths: prompt, preambleCSS: $root.preamble.css, tinymce_plugins: ['gapfill'], showButtons: {gapfill: function(){return $data.type().name=='gapfill'}}"></div>
+
+                                <p class="help-block">
+                                    {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-prompt' subject='the part prompt' %}
+                                    Ask the student a question, and give any hints about how they should answer this part.
+                                </p>
+                            </section>
+
+                            {% with form_label_class="col-sm-4" form_control_class="col-sm-8" %}
+                            {% for name,template in partNames %}
+                                <!-- ko if: type().name=='{{name}}' -->
+                                    <!-- ko with: type().model -->
+                                    {% include template %}
+                                    <!-- /ko -->
+                                <!-- /ko -->
+                                {% endfor %}
+                            {% endwith %}
+
+                            <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='scripts'}">
+                                <form class="form-inline" data-bind="foreach: scripts">
+                                    <div class="script control-group">
+                                        <label class="control-label">
+                                            <p>
+                                            <span data-bind="text: displayName"></span><span data-bind="if: active"> (active)</span>
+                                            </p>
+                                        </label>
+                                        <div class="controls">
+                                            <textarea {% if not editable %}disabled{% endif %} data-bind="valueUpdate: 'afterkeydown', codemirror: script, codemirrorMode: 'javascript'"></textarea>
+                                            <p class="order" data-bind="visible: name!='constructor'">Run this script <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: orderOptions, value: orderItem, optionsText: 'niceName'"></select> the built-in script.</p>
+                                            <p class="order" data-bind="visible: name=='constructor'">This script runs after the built-in script.</p>
+                                        </div>
+                                    </div>
+                                </form>
+                            </section>
+                            <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='adaptivemarking'}">
+                                <h4>Variable replacement</h4>
+                                <div class="variable-replacements">
+                                    <table class="table" data-bind="fadeVisible: variableReplacements().length">
+                                        <thead>
+                                            <tr>
+                                                <th>Variable</th>
+                                                <th>Answer to use</th>
+                                                <th>Must be answered?</th>
+                                            </th>
+                                        </thead>
+                                        <tbody data-bind="foreach: variableReplacements">
+                                            <tr>
+                                                <td><input {% if not editable %}disabled{% endif %} class="form-control variable-name monospace" data-bind="value: variable"/></td>
+                                                <td>
+                                                    <select {% if not editable %}disabled{% endif %} class="form-control replace-with" data-bind="options: availableParts, optionsText: 'nicePath', optionsValue: 'path', value: replacement"/>
+                                                </td>
+                                                <td>
+                                                    <input {% if not editable %}disabled{% endif %} type="checkbox" data-bind="checked: must_go_first"/>
+                                                </td>
+                                                <td>
+                                                    {% if editable %}<button type="button" class="delete btn btn-link" data-bind="click: part.deleteVariableReplacement" title="Delete this replacement"><span class="glyphicon glyphicon-remove text-danger"></span></button>{% endif %}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="text-right">
+                                        {% if editable %}<button class="btn btn-sm btn-primary add-variable-replacement" data-bind="click: addVariableReplacement"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: variableReplacements().length? 'Add another replacement' : 'Add a variable replacement'">Add a variable replacement</span></button>{% endif %}
+                                    </div>
+
+                                    <form class="form-horizontal">
+                                        <div class="control-group">
+                                            <label class="control-label">
+                                                Variable replacement strategy:
+                                            </label>
+                                            <div class="controls">
+                                                <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: variableReplacementStrategies, value: variableReplacementStrategy, optionsText: 'niceName'"></select>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                    {% if editable %}
+                    <div class="panel-footer clearfix">
+                        <div class="pull-left">
+                            <button type="button" class="btn btn-default" data-bind="click: copy"><span class="glyphicon glyphicon-duplicate"></span> Copy this part</button>
+                            <button type="button" class="btn btn-default" data-bind="click: replaceWithGapfill, visible: canBeReplacedWithGap"><span class="glyphicon glyphicon-tasks"></span> Replace part <strong data-bind="text:indexLabel"></strong> with a gapfill</button>
+                        </div>
+                        <div class="pull-right">
+                            <button type="button" class="btn btn-default" data-bind="click: addGap, visible: type().name=='gapfill'"><span class="glyphicon glyphicon-plus"></span> Add a gap to part <strong data-bind="text:indexLabel"></strong></button>
+                            <button type="button" class="btn btn-info" data-bind="click: addStep, visible: isRootPart"><span class="glyphicon glyphicon-plus"></span> Add a step to part <strong data-bind="text:indexLabel"></strong></button>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- /ko -->
+        </div>
+
+        {% if editable %}
+        <button class="btn btn-primary" type="button" data-bind="click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
+        {% endif %}
+
+        {% if editable %}
+        <hr>
+        <nav>
+            <ul class="pager">
+                <li class="previous">
+                    <a title="Back to the previous section" href="#" data-bind="click: setTab('variables')">← Variables</a>
+                </li>
+                <li class="next" data-bind="css: {ready: section_completed.parts}">
+                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('advice')">Advice →</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </section>
+
+
+    <!-- Advice -->
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='advice'}">
+        <div class="form-group">
+            <label>Advice</label>
+            <div {% if not editable %}disabled{% endif %} data-bind="writemaths: advice"></div>
+            <p class="help-block">
+                {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-reference.html#advice' subject='the advice section' %}
+                Give a worked solution to the whole question. 
+            </p>
+        </div>
+
+        {% if editable %}
+        <hr>
+        <nav>
+            <ul class="pager">
+                <li class="previous">
+                    <a title="Back to the previous section" href="#" data-bind="click: setTab('parts')">← Parts</a>
+                </li>
+                <li class="next" data-bind="css: {ready: section_completed.advice}">
+                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('access')">Access →</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </section>
+
+    <!-- Extensions and scripts -->
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='extensions'}">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="panel panel-info">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">Extensions {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-reference.html#term-extensions' %}</h4>
+                        </div>
+                        <div class="panel-body">
+                            <ul class="extensions" data-bind="foreach: extensions">
+                                <li class="extension">
+                                    <label>
+                                        <span class="checkbox"><input {% if not editable %}disabled{% endif %} type="checkbox" data-bind="checked: used"></span>
+                                        <span data-bind="text:name"></span> 
+                                        <a data-bind="if: url, attr: {href:url, title: 'Documentation on the '+name+' extension'}" target="_blank"><small class="glyphicon glyphicon-book"></small></a>
+                                        <a data-bind="if: author=={{user.pk}}, attr: {href: edit_url, title: 'Edit the '+name+' extension'}" target="_blank"><small class="glyphicon glyphicon-pencil"></small></a>
+                                    </label>
+                                </li>
+                            </ul>
+                        </div>
+                        {% if editable and not user.is_anonymous %}
+                        <div class="panel-footer">
+                            <a class="btn btn-link btn-block" target="_blank" href="{% url 'profile_extensions' user.pk %}"><span class="glyphicon glyphicon-wrench"></span> Your extensions</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="panel panel-info">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">Rulesets {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-reference.html#rulesets' subject='rulesets' %}</h4>
+                        </div>
+                        <ul class="list-group">
+                            <!-- ko foreach: {data: rulesets, afterAdd: Editor.afterAdd} -->
+                            <li class="list-group-item ruleset">
+                                {% if editable %}<button type="button" class="pull-right btn btn-link btn-sm" data-bind="click:remove" title="Delete this ruleset"><span class="glyphicon glyphicon-remove"></span></button>{% endif %}
+                                <div class="form-group">
+                                    <label>Name</label>
+                                    <input {% if not editable %}disabled{% endif %} type="text" placeholder="Name" class="name form-control" data-bind="textInput: name"/>
+                                </div>
+                                <div class="form-group">
+                                    <label>Definition</label>
+                                    <listbox params="items: sets{% if not editable %}, disabled: true{% endif %}"></listbox>
+                                </div>
+                            </li>
+                            <!-- /ko -->
+                        </ul>
+                        {% if editable %}
+                        <div class="panel-footer">
+                            <button type="button" class="btn btn-primary" data-bind="click:addRuleset"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></span></button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-sm-8">
+                    <div id="functions" class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Functions {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-reference.html#functions-rulesets' subject='functions' %}</h3>
+                        </div>
+                        <ul class="list-group">
+                            <!-- ko foreach: {data: functions, afterAdd: Editor.afterAdd} -->
+                            <li class="function list-group-item">
+                                <div class="row">
+                                    <div class="form-group col-sm-8">
+                                        <label>
+                                            Name {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-reference.html#term-name' %}
+                                        </label>
+                                        <input {% if not editable %}disabled{% endif %} class="form-control" placeholder="Name" type="text" data-bind="value: name, valueUpdate: 'afterkeydown'">
+                                    </div>
+                                    <div class="form-group col-sm-3">
+                                        <label>
+                                            Language {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-reference.html#term-language' subject='languages' %}
+                                        </label>
+                                        <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: languages, value: language"></select>
+                                    </div>
+                                    <div class="col-sm-1">
+                                        {% if editable %}<button type="button" class="delete btn btn-sm btn-link pull-right" data-bind="click:remove" title="Delete this function"><span class="glyphicon glyphicon-remove"></span></button>{% endif %}
+                                    </div>
+                                </div>
+                                <div class="form-group form-inline">
+                                    <label>Type</label>
+                                    <ul class="list-inline parameters">
+                                        <!-- ko foreach: parameters -->
+                                        <li class="parameter">
+                                            <div class="input-group">
+                                                <input {% if not editable %}disabled{% endif %} placeholder="Name" type="text" class="form-control" data-bind="textInput: name, autosize: name">
+                                                <span class="input-group-btn">
+                                                    <select {% if not editable %}disabled{% endif %} class="btn btn-info" data-bind="options: $parent.types, value: type" title"Type of this parameter"></select>
+                                                    {% if editable %}<button type="button" class="btn btn-danger" title="Remove this parameter" data-bind="click: remove"><span class="glyphicon glyphicon-remove"></span></button>{% endif %}
+                                                </span>
+                                            </div>
+                                        </li>
+                                        <!-- /ko -->
+                                        {% if editable %}
+                                        <li>
+                                            <button type="button" class="btn btn-xs btn-info" title="Add a parameter" data-bind="click: addParameter"><span class="glyphicon glyphicon-plus"></span></button>
+                                        </li>
+                                        {% endif %}
+                                        <li class="output">
+                                            <select {% if not editable %}disabled{% endif %} class="form-control btn-info" data-bind="options: types, value: type" title="Output type"></select>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div clas="form-group">
+                                    <label>
+                                        Definition:
+                                    </label>
+                                    <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: definition, codemirrorMode: language, valueUpdate: 'afterkeydown'"></textarea>
+                                    <div class="alert alert-danger" data-bind="visible: error().length>0">
+                                        <span class="glyphicon glyphicon-alert"></span> <span class="errortext" data-bind="html: error"></span>
+                                    </div>
+                                </div>
+                            </li>
+                            <!-- /ko -->
+                        </ul>
+                        {% if editable %}
+                        <div class="panel-footer">
+                            <button type="button" class="btn btn-primary" data-bind="click:addFunction"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: functions().length ? 'Add another function' : 'Add a function'"></span></button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div id="preamble" class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">
+                                Preamble
+                                {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-reference.html#preamble' %}
+                            </h3>
+                        </div>
+                        <div class="panel-body">
+                            <form>
+                                <div class="form-group">
+                                    <label>Javascript</label>
+                                    <textarea {% if not editable %}disabled{% endif %} data-bind="valueUpdate: 'afterkeydown', codemirror: preamble.js, codemirrorMode: 'javascript'"></textarea>
+                                    <div class="help-block">
+                                        This script will run after the question's variable have been generated but before the HTML is attached.
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>CSS</label>
+                                    <textarea {% if not editable %}disabled{% endif %} data-bind="valueUpdate: 'afterkeydown', codemirror: preamble.css, codemirrorMode: 'css'"></textarea>
+                                    <div class="help-block">
+                                        Apply styling rules to the question's content.
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Resources -->
+    <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='resources'}">
+        {% if editable %}
+        <form class="alert alert-info" data-bind="fileupload: resources" data-url="{% url 'upload_resource' %}">
+            {% csrf_token %}
+            <h4 class="control-label">Upload a file</h4>
+            <p><input id="fileupload" type="file" name="files[]"></p>
+        </form>
+        {% endif %}
+        <ul class="media-list" data-bind="foreach: resources">
+            <li class="media resource">
+                {% if editable %}<button type="button" class="pull-left btn btn-lg btn-link text-warning delete" data-bind="click: $root.deleteResource" title="Delete this resource"><span class="glyphicon glyphicon-remove"></span></button>{% endif %}
+                <div class="media-left">
+                    <div data-bind="visible: progress()<1" class="progress progress-striped active">
+                        <div class="bar" data-bind="style: {width: progress()+'%'}"></div>
+                    </div>
+                    <div data-bind="visible: progress()==1">
+                        <a data-bind="attr: {href: url}" target="_blank"><img class="thumbnail" data-bind="visible: filetype()=='img', attr: {src: url, title: name}"/></a>
+                    </div>
+                </div>
+                <div class="media-body">
+                    <label>URL:</label>
+                    <code class="path monospace" data-bind="visible: progress()==1, text: 'resources/'+name()"></code>
+                </div>
+            </li>
+        </ul>
+    </section>
+
+    <!-- Exams using this question -->
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='exams'}">
+        {% if object.exams_using_this.count %}
+        <p>This question is used in the following exam{{object.exams_using_this.count|pluralize}}:</p>
+            <ul class="exams-list">
+            {% for exam in object.exams_using_this.all %}
+                <li class="exam">
+                    <a href="{% url 'exam_edit' exam.pk exam.editoritem.slug %}">{{exam.editoritem.name}}</a> by {% user_link exam.editoritem.author %}
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            This question is not used in any exams.
+        {% endif %}
+    </section>
+
+{% endblock main_tab_content %}

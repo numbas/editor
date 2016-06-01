@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load django_tables2 %}
+{% load user_link %}
+
+{% block content_container %}container-fluid{% endblock content_container %}
+
+{% block results_top %}
+
+{% endblock results_top %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="big-name">
+        {% user_thumbnail view_user 40 36 link=True %} {% user_link view_user %}
+    </h1>
+</div>
+
+{% include "profile/editoritem_search_content.html" %}
+{% endblock content %}
+
+{% block javascripts %}
+    {{block.super}}
+    {% include "search/js.html" %}
+{% endblock javascripts %}
+
+{% block stylesheets %}
+    {{ block.super }}
+    {% include "search/css.html" %}
+{% endblock stylesheets %}

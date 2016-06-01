@@ -1,0 +1,21 @@
+.comparison-table {
+    margin: 0 auto;
+}
+
+.comparison-table col.editoritem {
+    width: 25em;
+}
+
+.comparison-table tbody th {
+    vertical-align: top;
+}
+
+.comparison-table tbody th, .comparison-table td {
+    padding: 1em 0 1em 1em;
+    vertical-align: top;
+}
+
+.comparison-table tbody th:first-child {
+    text-align: right;
+}
+

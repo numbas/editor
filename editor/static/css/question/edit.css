@@ -1,4 +1,98 @@
-﻿#question-name {
+﻿.parts > .part + .part.root {
+    margin-top: 1em;
+}
+
+.part > .panel-heading {
+    cursor: s-resize;
+}
+.part.open > .panel-heading {
+    cursor: n-resize;
+}
+
+.part.gap, .part.step {
+    margin-left: 2em;
+    margin-right: 1em;
+}
+
+.part-tabs {
+	margin-bottom: 1em;
+}
+
+.part-header-controls .btn {
+    color: inherit;
+}
+
+.part select.type {
+    margin-left: 1em;
+}
+
+.part .form-horizontal .form-control {
+	display: inline;
+}
+
+.jme-answer {
+	display: inline-block;
+	padding: 5px;
+}
+
+.variable-selector button.lock.locked {
+	color: black;
+}
+
+.panel.variable-groups {
+    max-height: 40em;
+    overflow-y: auto;
+}
+
+.function .parameters li {
+    margin-bottom: 0.5em;
+}
+
+.function .parameter + .parameter::before {
+    content: ',';
+    margin-right: 0.5em;
+}
+
+.function .output::before {
+    content: '⇒';
+    margin-right: 0.5em;
+}
+
+.resource img.thumbnail {
+    max-width: 200px;
+    max-height: 200px;
+}
+
+.variable-group-name {
+    font-weight: bold;
+}
+
+.variable-list.empty {
+    margin-bottom: 3em;
+    position: relative;
+}
+
+.variable-list tbody.ko_container.empty {
+	display: block;
+	min-height: 3em;
+    background: #fefbfb;
+	width: 100%;
+	position: absolute;
+    box-sizing: border-box;
+    padding: 1em;
+}
+.variable-list tbody.ko_container.ui-sortable.empty::before {
+    content: 'Drag a variable here';
+    color: #888;
+    font-style: italic;
+}
+.variable-selector {
+    cursor: pointer;
+}
+
+
+/*
+#question-name {
 	font-size: 2em;
 	height: 1.5em;
 }
@@ -146,11 +240,6 @@
 	width: 9em;
 }
 
-.jme-answer {
-	display: inline-block;
-	padding: 5px;
-}
-
 .variable-groups {
 	margin-bottom: 1em;
 	height: 30em;
@@ -225,15 +314,6 @@
 	text-align: right;
 }
 
-.variable-list tbody.ko_container.empty {
-	display: block;
-	min-height: 1.5em;
-	border: 1px dashed #ccc;
-	width: 100%;
-	position: absolute;
-    box-sizing: border-box;
-}
-
 .variable-list .placeholder {
 	background-color: #eee;
 	display: block;
@@ -275,20 +355,10 @@ input.recalculate-checkbox {
 	fill: #ccc;
 }
 
-.variable-selector button.lock.locked {
-	fill: black;
-}
-
 .variable-selector.current {
 	background-color: #08c;
 	color: #fff;
 }
-
-/*
-.variable-selector.dependency {
-	background-color: #95dcff;
-}
-*/
 
 .variable-selector td {
 	padding: 0.3em 0.5em;
@@ -518,3 +588,4 @@ input.recalculate-checkbox {
 .pull-request .responses form {
     display: inline;
 }
+*/

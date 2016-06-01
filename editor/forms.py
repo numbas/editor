@@ -1,27 +1,25 @@
-#Copyright 2012 Newcastle University
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#       http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
 from django import forms
+from django.contrib import messages
 from django.forms.models import inlineformset_factory
 from django.forms.widgets import SelectMultiple
 from django.core.exceptions import ValidationError
+from django.utils.html import conditional_escape, format_html, html_safe
+from django.utils.safestring import mark_safe
+from django.utils.encoding import (
+    force_str, force_text, python_2_unicode_compatible,
+)
+from django.db.models import Q, Count
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 
 import zipfile
 import os
 import tempfile
 
-from editor.models import Exam, Question, ExamQuestion, QuestionAccess, ExamAccess, QuestionHighlight, ExamHighlight, Theme, Extension, QuestionPullRequest
+from editor.models import NewExam, NewQuestion, EditorItem, Access, ExamQuestion, Theme, Extension, PullRequest
+import editor.models
 from django.contrib.auth.models import User
+from accounts.util import find_users
 
 class FixedSelectMultiple(SelectMultiple):
     def value_from_datadict(self,data,files,name):
@@ -46,49 +44,149 @@ USAGE_OPTIONS = (
     ('modify-sell','Free to reuse commercially with modification'),
 )
 
-class QuestionSearchForm(forms.Form):
+class ShowMoreCheckboxRenderer(forms.widgets.CheckboxFieldRenderer):
+    outer_html = """
+    <div{id_attr}>
+        <ul class="initial-list list-unstyled">{first_content}</ul>
+        {more}
+    </div>
+    """
+    inner_html = '<li class="checkbox">{choice_value}{sub_widgets}</li>'
+    more_html = """
+        <div class="show-more collapse" id="{collapse_id}">
+            <ul class="list-unstyled">
+                {more_content}
+            </ul>
+        </div>
+        <div>
+            <a role="button" class="btn btn-link" data-toggle="collapse" href="#{collapse_id}">Show more</a>
+        </div>
+    """
+
+    def render(self):
+        """
+        Outputs a <ul> for this set of choice fields.
+        If an id was given to the field, it is applied to the <ul> (each
+        item in the list will get an id of `$id_$i`).
+        """
+        id_ = self.attrs.get('id')
+        first_output = []
+        more_output = []
+        num_in = len([1 for choice_value, choice_label in self.choices if force_text(choice_value) in self.value])
+        num_unchecked_to_show = max(0,3-num_in)
+        unchecked_shown = 0
+        for i, choice in enumerate(self.choices):
+            choice_value, choice_label = choice
+            if force_text(choice_value) in self.value:
+                output = first_output
+            elif unchecked_shown < num_unchecked_to_show:
+                output = first_output
+                unchecked_shown += 1
+            else:
+                output = more_output
+
+            if isinstance(choice_label, (tuple, list)):
+                attrs_plus = self.attrs.copy()
+                if id_:
+                    attrs_plus['id'] += '_{}'.format(i)
+                sub_ul_renderer = self.__class__(
+                    name=self.name,
+                    value=self.value,
+                    attrs=attrs_plus,
+                    choices=choice_label,
+                )
+                sub_ul_renderer.choice_input_class = self.choice_input_class
+                output.append(format_html(self.inner_html, choice_value=choice_value,
+                                          sub_widgets=sub_ul_renderer.render()))
+            else:
+                w = self.choice_input_class(self.name, self.value,
+                                            self.attrs.copy(), choice, i)
+                output.append(format_html(self.inner_html,
+                                          choice_value=force_text(w), sub_widgets=''))
+        if len(more_output):
+            more = format_html(self.more_html,
+                    collapse_id='{}-show-more'.format(id_) if id_ else 'show-more',
+                    more_content=mark_safe('\n'.join(more_output))
+            )
+        else:
+            more = ''
+        return format_html(self.outer_html,
+                           id_attr=format_html(' id="{}"', id_) if id_ else '',
+                           first_content=mark_safe('\n'.join(first_output)), more=more)
+
+class ShowMoreCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
+    renderer = ShowMoreCheckboxRenderer
+
+class BootstrapRadioFieldRenderer(forms.widgets.RadioFieldRenderer):
+    outer_html = """<div{id_attr}>{content}</div>"""
+    inner_html = """<div class="radio">{choice_value}{sub_widgets}</div>"""
+
+class BootstrapRadioSelect(forms.RadioSelect):
+    renderer = BootstrapRadioFieldRenderer
+
+class BootstrapSelect(forms.Select):
+    def build_attrs(self,extra_attrs=None,**kwargs):
+        attrs = super(BootstrapSelect,self).build_attrs(extra_attrs,**kwargs)
+        attrs['class'] = 'form-control input-sm'
+        return attrs
+
+class EditorItemSearchForm(forms.Form):
     query = forms.CharField(initial='', required=False)
-    author = forms.CharField(initial='', required=False)
-    usage = forms.ChoiceField(choices=USAGE_OPTIONS, required=False)
-    filter_copies = forms.BooleanField(initial=False)
-    only_ready_to_use = forms.BooleanField(initial=False)
+    item_types = forms.MultipleChoiceField(initial=('questions','exams'),choices=(('questions','Questions'),('exams','Exams')), widget=ShowMoreCheckboxSelectMultiple, required=False)
+    author = forms.CharField(initial='', required=False, widget=forms.TextInput(attrs={'class':'form-control'}))
+    usage = forms.ChoiceField(initial='any',choices=USAGE_OPTIONS, required=False, widget=BootstrapRadioSelect)
+    subjects = forms.ModelMultipleChoiceField(queryset=editor.models.Subject.objects.all(), required=False, widget=ShowMoreCheckboxSelectMultiple)
+    topics = forms.ModelMultipleChoiceField(queryset=editor.models.Topic.objects.all(), required=False, widget=ShowMoreCheckboxSelectMultiple)
+    ability_framework = forms.ModelChoiceField(queryset=editor.models.AbilityFramework.objects.all(), required=False, widget=forms.Select(attrs={'class':'form-control input-sm'}),empty_label=None)
+    ability_levels = forms.ModelMultipleChoiceField(queryset=editor.models.AbilityLevel.objects.all(), widget=forms.CheckboxSelectMultiple, required=False)
+    status = forms.ChoiceField(choices=[('any','Any status')]+list(editor.models.STAMP_STATUS_CHOICES),required=False, widget=BootstrapRadioSelect)
+    order_by = forms.ChoiceField(choices=[('last_modified','Last modified'),('name','Name'),('licence','Usage rights'),('author','Author')],required=False, widget=BootstrapSelect,initial='last_modified')
+
     tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
     exclude_tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
 
-class QuestionAccessForm(forms.ModelForm):
+    def __init__(self,data,*args,**kwargs):
+        super(EditorItemSearchForm,self).__init__(data,*args,**kwargs)
+        subjects = data.getlist('subjects')
+        if len(subjects):
+            self.fields['topics'].queryset = editor.models.Topic.objects.filter( Q(subjects__pk__in=subjects) | Q(pk__in=data.getlist('topics')) ).distinct()
+        else:
+            self.fields['topics'].queryset = editor.models.Topic.objects.annotate(num_editoritems=Count('editoritem')).order_by('-num_editoritems')
+
+class AccessForm(forms.ModelForm):
     given_by = forms.ModelChoiceField(queryset=User.objects.all())
 
     class Meta:
-        model = QuestionAccess
+        model = Access
         exclude = []
 
     def save(self,commit=True):
         self.instance.given_by = self.cleaned_data.get('given_by')
-        super(QuestionAccessForm,self).save(commit)
+        super(AccessForm,self).save(commit)
 
-class QuestionSetAccessForm(forms.ModelForm):
+class SetAccessForm(forms.ModelForm):
     given_by = forms.ModelChoiceField(queryset=User.objects.all())
 
     class Meta:
-        model = Question
+        model = EditorItem
         fields = ['public_access']
 
     def is_valid(self):
-        v = super(QuestionSetAccessForm,self).is_valid()
+        v = super(SetAccessForm,self).is_valid()
         for f in self.user_access_forms:
             if not f.is_valid():
                 return False
         return v
     
     def clean(self):
-        cleaned_data = super(QuestionSetAccessForm,self).clean()
+        cleaned_data = super(SetAccessForm,self).clean()
 
         self.user_ids = self.data.getlist('user_ids[]')
         self.access_levels = self.data.getlist('access_levels[]')
         self.user_access_forms = []
 
         for i,(user,access_level) in enumerate(zip(self.user_ids,self.access_levels)):
-            f = QuestionAccessForm({'user':user,'access':access_level,'question':self.instance.pk,'given_by':cleaned_data.get('given_by').pk}, instance=QuestionAccess.objects.filter(question=self.instance,user=user).first())
+            f = AccessForm({'user':user,'access':access_level,'item':self.instance.pk,'given_by':self.cleaned_data.get('given_by').pk}, instance=Access.objects.filter(item=self.instance,user=user).first())
             f.full_clean()
             self.user_access_forms.append(f)
             for key,messages in f.errors.items():
@@ -97,144 +195,115 @@ class QuestionSetAccessForm(forms.ModelForm):
         return cleaned_data
 
     def save(self):
-        access_to_remove = QuestionAccess.objects.filter(question=self.instance).exclude(user__in=self.user_ids)
+        access_to_remove = Access.objects.filter(item=self.instance).exclude(user__in=self.user_ids)
         access_to_remove.delete()
         for f in self.user_access_forms:
             f.save()
-        return super(QuestionSetAccessForm,self).save()
+        return super(SetAccessForm,self).save()
+        
+class EditorItemForm(forms.ModelForm):
+    content = forms.CharField()
 
-class ExamAccessForm(forms.ModelForm):
-    given_by = forms.ModelChoiceField(queryset=User.objects.all())
-
-    class Meta:
-        model = ExamAccess
-        exclude = []
+    subjects = forms.ModelMultipleChoiceField(queryset=editor.models.Subject.objects.all(),required=False)
+    topics = forms.ModelMultipleChoiceField(queryset=editor.models.Topic.objects.all(),required=False)
+    ability_levels = forms.ModelMultipleChoiceField(queryset=editor.models.AbilityLevel.objects.all(),required=False)
 
     def save(self,commit=True):
-        self.instance.given_by = self.cleaned_data.get('given_by')
-        super(ExamAccessForm,self).save(commit)
+        obj = super(EditorItemForm,self).save(commit=commit)
+        obj.editoritem.content = self.cleaned_data['content']
+        obj.editoritem.save()
+        return obj
 
-class ExamSetAccessForm(forms.ModelForm):
-    given_by = forms.ModelChoiceField(queryset=User.objects.all())
-
+class CopyEditorItemForm(forms.ModelForm):
     class Meta:
-        model = Exam
-        fields = ['public_access']
+        model = EditorItem
+        fields = ('name','project')
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control','placeholder':'e.g. "Solve an equation in two variables"'}),
+            'project': BootstrapSelect,
+        }
 
-    def is_valid(self):
-        v = super(ExamSetAccessForm,self).is_valid()
-        for f in self.user_access_forms:
-            if not f.is_valid():
-                return False
-        return v
-    
-    def clean(self):
-        cleaned_data = super(ExamSetAccessForm,self).clean()
-
-        self.user_ids = self.data.getlist('user_ids[]')
-        self.access_levels = self.data.getlist('access_levels[]')
-        self.user_access_forms = []
-
-        for i,(user,access_level) in enumerate(zip(self.user_ids,self.access_levels)):
-            f = ExamAccessForm({'user':user,'access':access_level,'exam':self.instance.pk,'given_by':self.cleaned_data.get('given_by').pk}, instance=ExamAccess.objects.filter(exam=self.instance,user=user).first())
-            f.full_clean()
-            self.user_access_forms.append(f)
-            for key,messages in f.errors.items():
-                self._errors[('user %i: ' % i)+key]=messages
-
-        return cleaned_data
-
-    def save(self):
-        access_to_remove = ExamAccess.objects.filter(exam=self.instance).exclude(user__in=self.user_ids)
-        access_to_remove.delete()
-        for f in self.user_access_forms:
-            f.save()
-        return super(ExamSetAccessForm,self).save()
+class EditorItemMoveProjectForm(forms.ModelForm):
+    class Meta:
+        model = EditorItem
+        fields = ('project',)
+        widgets = {
+            'project': BootstrapSelect,
+        }
         
-class QuestionForm(forms.ModelForm):
+class QuestionForm(EditorItemForm):
     
-    """Form for a question."""
-
     class Meta:
-        model = Question
-        fields = ('content','resources','extensions')
+        model = NewQuestion
+        fields = ('resources','extensions')
 
-class QuestionHighlightForm(forms.ModelForm):
-    note = forms.CharField(widget=forms.Textarea(attrs={'data-bind':'text:note'}), label='Write a note explaining why you\'re highlighting this question.')
-
-    class Meta:
-        model = QuestionHighlight
-        fields = ('note',)
-        
 class NewQuestionForm(forms.ModelForm):
-    
-    """Form for a new question only, not including some fields."""
-    
     class Meta:
-        model = Question
-        fields = ('name','author')
-        
-        
-class ExamForm(forms.ModelForm):
-    
-    """Form for an exam."""
-    
+        model = EditorItem
+        fields = ('name','author','project')
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control','placeholder':'e.g. "Solve an equation in two variables"'}),
+            'author': forms.HiddenInput(),
+            'project': BootstrapSelect,
+        }
+
+class ExamForm(EditorItemForm):
     class Meta:
-        model = Exam
-        fields = ('content','theme','custom_theme','locale')
+        model = NewExam
+        fields = ('theme','custom_theme','locale')
         
 class NewExamForm(forms.ModelForm):
-    
-    """Form for a new exam only, not including some fields."""
-    
     class Meta:
-        model = Exam
-        fields = ('name','author')
+        model = EditorItem
+        fields = ('name','author','project')
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control','placeholder':'e.g. "Week 4 homework"'}),
+            'author': forms.HiddenInput(),
+            'project': BootstrapSelect,
+        }
 
-class ExamQuestionForm(forms.ModelForm):
-    
-    """Form linking exams and questions."""
-    
-    qn_order = forms.IntegerField(label='Order')
-    
-    class Meta:
-        model = ExamQuestion
-        exclude = []
+def validate_exam_file(f):
+    try:
+        content = f.read().decode('utf-8')
+        editor.models.validate_content(content)
+        f.seek(0)
+    except (UnicodeDecodeError,ValidationError):
+        raise ValidationError("Not a valid .exam file")
 
-ExamQuestionFormSet = inlineformset_factory(Exam, ExamQuestion, form=ExamQuestionForm)
-
-class ExamHighlightForm(forms.ModelForm):
-    note = forms.CharField(widget=forms.Textarea(attrs={'data-bind':'text:note'}), label='Write a note explaining why you\'re highlighting this exam.')
+class UploadExamForm(forms.ModelForm):
+    file = forms.FileField(required=True,validators=[validate_exam_file])
 
     class Meta:
-        model = ExamHighlight
-        fields = ['note']
-        
+        model = EditorItem
+        fields = ('project',)
+        widgets = {
+            'author': forms.HiddenInput(),
+            'project': BootstrapSelect,
+        }
 
-class ExamSearchForm(forms.Form):
-    
-    """Search form for an exam."""
-    
-    query = forms.CharField(initial='', required=False)
-    author = forms.CharField(initial='', required=False)
-    usage = forms.ChoiceField(choices=USAGE_OPTIONS, required=False)
-    only_ready_to_use = forms.BooleanField(initial=False)
-        
 class ValidateZipField:
     def clean_zipfile(self):
         zip = self.cleaned_data['zipfile']
         if not zipfile.is_zipfile(zip):
             raise forms.ValidationError('Uploaded file is not a zip file')
         return zip
-        
-class NewThemeForm(forms.ModelForm,ValidateZipField):
+
+class UpdateThemeForm(forms.ModelForm,ValidateZipField):
     
-    """Form for a new theme."""
+    """Form to edit a theme."""
     
     class Meta:
         model = Theme
         fields = ['name','zipfile']
-
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control'}),
+            'zipfile': forms.FileInput()
+        }
+        
+class NewThemeForm(UpdateThemeForm):
+    
+    """Form for a new theme."""
+    
     def __init__(self,*args,**kwargs):
         self._user= kwargs.pop('author')
         super(NewThemeForm,self).__init__(*args,**kwargs)
@@ -248,14 +317,6 @@ class NewThemeForm(forms.ModelForm,ValidateZipField):
             self.save_m2m()
         return theme
 
-class UpdateThemeForm(forms.ModelForm,ValidateZipField):
-    
-    """Form to edit a theme."""
-    
-    class Meta:
-        model = Theme
-        fields = ['name','zipfile']
-
 class UpdateExtensionForm(forms.ModelForm):
     
     """Form to edit an extension."""
@@ -264,6 +325,9 @@ class UpdateExtensionForm(forms.ModelForm):
         model = Extension
         fields = ['name','location','url','zipfile']
         widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control'}),
+            'location': forms.TextInput(attrs={'class':'form-control'}),
+            'url': forms.TextInput(attrs={'class':'form-control'}),
             'zipfile': forms.FileInput()
         }
 
@@ -291,7 +355,118 @@ class NewExtensionForm(UpdateExtensionForm):
         extension.public = False
         extension.author = self._user
         if commit:
-            print("SAVE",extension)
             extension.save()
             self.save_m2m()
         return extension
+
+class BootstrapFieldMixin(object):
+    def widget_attrs(self, widget):
+        attrs = super(BootstrapFieldMixin, self).widget_attrs(widget)
+        attrs.update({'class': 'form-control'})
+        return attrs
+
+class UserField(BootstrapFieldMixin,forms.Field):
+    def from_db_value(self,value,expression,connection,context):
+        return value.get_full_name()
+
+    def widget_attrs(self, widget):
+        attrs = super(UserField, self).widget_attrs(widget)
+        attrs.update({'placeholder': 'Username or full name'})
+        return attrs
+
+    def to_python(self, value):
+        if value is None:
+            return None
+        user = find_users(value).first()
+        if user is None:
+            try:
+                validate_email(value)
+                return User(email=value)
+            except ValidationError:
+                raise forms.ValidationError("No user matching query '{}'".format(value))
+        return user
+
+class UserSearchMixin(object):
+    """
+        Add a user_search field to the form, which resolves a string query to a User object, and set the property user_attr on the model to that user.
+    """
+    user_search = UserField(label='User')
+    user_attr = 'user'
+
+    def __init__(self,*args,**kwargs):
+        super(UserSearchMixin,self).__init__(*args,**kwargs)
+        self.fields['user_search'] = UserField()
+
+    def clean_user_search(self):
+        user = self.cleaned_data.get('user_search')
+        if user is None:
+            raise forms.ValidationError("No such user")
+
+        return user
+
+    def save(self, force_insert=False, force_update=False, commit=True):
+        m = super(UserSearchMixin, self).save(commit=False)
+        setattr(m,self.user_attr,self.cleaned_data['user_search'])
+        if commit:
+            m.save()
+        return m
+
+class AddMemberForm(UserSearchMixin,forms.ModelForm):
+    invitation = None
+    adding_user = forms.ModelChoiceField(queryset=User.objects.all(),widget=forms.HiddenInput())
+
+    class Meta:
+        model = editor.models.ProjectAccess
+        fields = ('project','access')
+        widgets = {
+            'project': forms.HiddenInput(),
+            'access': forms.Select(attrs={'class':'form-control'})
+        }
+
+    def clean_user_search(self):
+        user = super(AddMemberForm,self).clean_user_search()
+        if self.cleaned_data['user_search'] == self.cleaned_data['project'].owner:
+            raise forms.ValidationError("Can't give separate access to the project owner")
+
+        return user
+
+    def save(self, force_insert=False, force_update=False, commit=True):
+        m = super(AddMemberForm, self).save(commit=False)
+        if commit:
+            if m.user.pk:
+                # check if there's an existing ProjectAccess for this user & project
+                pa = editor.models.ProjectAccess.objects.filter(project=m.project,user=m.user).first()
+                if pa is not None:
+                    pa.access = m.access
+                    m = pa
+                m.save()
+            else:   # create email invitation if the user_search field contained an email address
+                self.invitation = editor.models.ProjectInvitation.objects.create(invited_by=self.cleaned_data.get('adding_user'),project=m.project,access=m.access,email=m.user.email)
+        return m
+
+class ProjectForm(forms.ModelForm):
+    class Meta:
+        model = editor.models.Project
+        fields = ('name','description','default_licence','default_locale','public_view')
+        widgets = {
+            'default_locale': forms.widgets.Select(choices=editor.models.LOCALE_CHOICES,attrs={'class':'form-control'})
+        }
+
+class ProjectTransferOwnershipForm(UserSearchMixin,forms.ModelForm):
+    user_attr = 'owner'
+    class Meta:
+        model = editor.models.Project 
+        fields = []
+
+class EditorItemTransferOwnershipForm(UserSearchMixin,forms.ModelForm):
+    user_attr = 'author'
+    class Meta:
+        model = editor.models.EditorItem
+        fields = []
+
+ProjectAccessFormset = inlineformset_factory(editor.models.Project,editor.models.ProjectAccess,fields=('access',),extra=0,can_delete=True)
+
+class CreatePullRequestForm(forms.ModelForm):
+    class Meta:
+        model = PullRequest
+        fields = ('source','destination','comment')

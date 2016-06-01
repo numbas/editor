@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Compilation Error{% endblock %}
 {% block body %}
-	<h1>Compilation Error</h1>
+    <div class="page-header">
+    	<h1 class="text-warning">Compilation Error</h1>
+    </div>
 	{% autoescape on %}
 	<p id="message">{{message}} (code {{code}})</p>
 	<h3>STDERR</h3>

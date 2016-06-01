@@ -214,7 +214,7 @@
                                         {% if object.editoritem.copy_of %}
                                         <div class="form-group">
                                             <label><span class="glyphicon glyphicon-duplicate"></span> Copy of</label>
-                                            <p class="form-control-static">{% editoritem_link object.editoritem.copy_of.rel_obj %} by {% user_thumbnail object.editoritem.copy_of.author %} {% user_link object.editoritem.copy_of.author %}</p>
+                                            <p class="form-control-static">{% editoritem_link object.editoritem.copy_of.rel_obj %} by {% user_thumbnail object.editoritem.copy_of.author 20 15 %} {% user_link object.editoritem.copy_of.author %}</p>
                                         </div>
                                         {% endif %}
                                         <div class="form-group">

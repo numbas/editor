@@ -40,7 +40,7 @@ class PagedItemsMixin(object):
         self.page_objects = paginator.page(self.page)
         queryset = queryset.filter(id__in=[e.id for e in self.page_objects])
 
-        self.query_string = '?'+urlencode({'query':self.query,'project':self.in_project.pk if self.in_project else '','page':self.page})
+        self.query_string = '?'+urlencode({'query':self.query,'in_project':self.in_project.pk if self.in_project else '','page':self.page})
 
         return queryset
 

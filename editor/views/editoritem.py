@@ -376,7 +376,16 @@ class CompileObject():
     
     """Compile an exam or question."""
 
-    def compile(self,numbasobject,switches,location,obj):
+    def get_locale(self,obj):
+        if obj.item_type=='exam':
+            return obj.exam.locale
+        elif not self.request.user.is_anonymous():
+                return self.request.user.userprofile.language
+        else:
+            return 'en-GB'
+
+
+    def compile(self,numbasobject,switches,location,obj,locale='en-GB'):
         """
             Construct a temporary exam/question file and compile it.
             Returns the path to the output produced
@@ -386,8 +395,6 @@ class CompileObject():
         source = str(numbasobject)
 
         theme_path = obj.theme_path if hasattr(obj,'theme_path') else 'default'
-        locale = obj.locale if hasattr(obj,'locale') else 'en-GB'
-
 
         output_location = os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'], location)
         numbas_command = [
@@ -423,7 +430,7 @@ class PreviewView(generic.DetailView,CompileObject):
         location = obj.filename
         switches = ['-c']
         try:
-            fsLocation = self.compile(numbasobject, switches, location, obj)
+            fsLocation = self.compile(numbasobject, switches, location, obj,locale=self.get_locale(obj))
         except CompileError as err:
             return self.get_error_response(err)
         else:
@@ -444,7 +451,7 @@ class ZipView(generic.DetailView,CompileObject):
         location = obj.filename + '.zip'
 
         try:
-            fsLocation = self.compile(numbasobject, switches, location, obj)
+            fsLocation = self.compile(numbasobject, switches, location, obj,locale=self.get_locale(obj))
         except CompileError as err:
             return self.get_error_response(err)
         else:

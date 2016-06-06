@@ -11,6 +11,8 @@ def user_link(user,text=None,new_window=False):
 @register.inclusion_tag('links/user_thumbnail.html')
 def user_thumbnail(user,size=None,glyphicon_size=None,link=False):
     avatar = user.userprofile.avatar
+    if size is None:
+        size = 20
     if glyphicon_size is None:
         glyphicon_size = size
     context = {'user': user, 'size': size, 'glyphicon_size': glyphicon_size, 'link': link}

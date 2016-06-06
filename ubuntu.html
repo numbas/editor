@@ -3,8 +3,8 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<title>Numbas editor - Ubuntu installation</title>
-	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/normalize/2.1.3/normalize.min.css"></link>
-	<link rel="stylesheet" href="style.css"></link>
+        <link rel="stylesheet" href="normalize.css"></link>
+        <link rel="stylesheet" href="style.css"></link>
 	</head>
 	<body>
 		<a class="index-link" href="index.html">Numbas installation instructions</a>
@@ -126,16 +126,19 @@
 			<li>Sync the database:
 				<ul>
 					<li><code class="shell">cd /srv/www/numbas_editor</code></li>
-					<li><code class="shell">python manage.py syncdb</code></li>
-					<li>Create a superuser (answer <code>yes</code>)</li>
-					<li>Enter username, e-mail address, and password</li>
+					<li><code class="shell">python manage.py migrate</code></li>
 				</ul>
-			</li>
+            </li>
+            <li>
+                Create a superuser:
+                <code>python manage.py createsuperuser</code>
+            </li>
 			<li>Set up static files: <code class="shell">python manage.py collectstatic --noinput</code></li>
-			<li>Copy <code>editor/templates/index.html.dist</code> to
-			<code>editor/templates/index.html</code> and customise.</li>
-			<li>Copy <code>web/django.wsgi.dist</code> to
-			<code>web/django.wsgi</code> and edit:
+            <li>
+                Copy <code>editor/templates/index_message.html.dist</code> to <code>editor/templates/index_message.html</code>, and customise to your liking.
+            </li>
+            <li>
+                Copy <code>web/django.wsgi.dist</code> to <code>web/django.wsgi</code> and edit:
 				<ul>
 					<li>Make sure the <code>sys.path.append</code> line matches the
 					path to the editor on the file system.</li>

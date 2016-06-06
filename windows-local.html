@@ -3,8 +3,8 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<title>Numbas editor - Windows installation</title>
-	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/normalize/2.1.3/normalize.min.css"></link>
-	<link rel="stylesheet" href="style.css"></link>
+        <link rel="stylesheet" href="normalize.css"></link>
+        <link rel="stylesheet" href="style.css"></link>
 	</head>
 	<body>
 		<a class="index-link" href="index.html">Numbas installation instructions</a>
@@ -34,37 +34,41 @@
 		</ol>
 
 		<h2>Configuration</h2>
-		<ol>
-			<li>
-			Copy <code>settings.py.dist</code> to <code>settings.py</code>
-			<ul>
-			<li>Change <code>STATIC_ROOT</code> to <code>'editor/static'</code></li>
-			<li>Change <code>NUMBAS_PATH</code> to <code>'../numbas_runtime'</code></li>
-			<li>Change <code>PREVIEW_PATH</code> to <code>'editor/static/previews'</code>, and create that directory.</li>
-			<li>Change <code>PREVIEW_URL</code> to <code>'/static/previews/'</code></li>
-			<li>Change <code>PYTHON_EXEC</code> to <code>'c:/python35/python'</code> (the exact location will depend on which version of python 3 you've installed. If it's 3.3 for example, it'll be <code>c:/python33/python</code>)</li>
-			</ul>
-		</li>
+        <ol>
+            <li>
+                Copy <code>settings.py.dist</code> to <code>settings.py</code>
+                <ul>
+                    <li>Change <code>STATIC_ROOT</code> to <code>'editor/static'</code></li>
+                    <li>Change <code>NUMBAS_PATH</code> to <code>'../numbas_runtime'</code></li>
+                    <li>Change <code>PREVIEW_PATH</code> to <code>'editor/static/previews'</code>, and create that directory.</li>
+                    <li>Change <code>PREVIEW_URL</code> to <code>'/static/previews/'</code></li>
+                    <li>Change <code>PYTHON_EXEC</code> to <code>'c:/python35/python'</code> (the exact location will depend on which version of python 3 you've installed. If it's 3.3 for example, it'll be <code>c:/python33/python</code>)</li>
+                </ul>
+            </li>
 
-			<li>
-			Copy <code>database.py.dist</code> to <code>database.py</code>
-		<ul>
-			<li>Change <code>ENGINE</code> to <code>'django.db.backends.sqlite3'</code></li>
-				<li>Change <code>NAME</code> to <code>'database.sqlite'</code></li>
-		</ul>
-		</li>
+            <li>
+                Copy <code>database.py.dist</code> to <code>database.py</code>
+                <ul>
+                    <li>Change <code>ENGINE</code> to <code>'django.db.backends.sqlite3'</code></li>
+                    <li>Change <code>NAME</code> to <code>'database.sqlite'</code></li>
+                </ul>
+            </li>
 
-			<li>Sync the database:
-				<code class="shell">c:\python27\python manage.py syncdb</code>
-				Create a superuser (answer <code>yes</code>), and enter a username, e-mail address, and password.</li>
-			</li>
-			<li>Copy <code>editor/templates/index.html.dist</code> to <code>editor/templates/index.html</code>.</li>
-			<li>
-				Start the server
-				<code class="shell">c:\python27\python manage.py runserver</code></li>
-			</li>
-			<li>Open <a href="http://localhost:8000">htttp://localhost:8000</li>
-		</ol>
+            <li>
+                Sync the database:
+                <code class="shell">c:\python27\python manage.py migrate</code>
+            </li>
+            <li>Copy <code>editor/templates/index_message.html.dist</code> to <code>editor/templates/index_message.html</code>, and customise it to your liking.</li>
+            <li>
+                Create a superuser (you'll be asked for a username, email address and password - the email address isn't used).
+                <code class="shell">c:\python27\python manage.py createsuperuser</code></li>
+            </li>
+            <li>
+                Start the server
+                <code class="shell">c:\python27\python manage.py runserver</code></li>
+            </li>
+            <li>Open <a href="http://localhost:8000">htttp://localhost:8000</li>
+        </ol>
 
-	</body>
+    </body>
 </html>

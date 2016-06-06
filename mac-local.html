@@ -3,8 +3,8 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<title>Numbas editor - Mac installation</title>
-	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/normalize/2.1.3/normalize.min.css"></link>
-	<link rel="stylesheet" href="style.css"></link>
+        <link rel="stylesheet" href="normalize.css"></link>
+        <link rel="stylesheet" href="style.css"></link>
 	</head>
 	<body>
 		<a class="index-link" href="index.html">Numbas installation instructions</a>
@@ -54,10 +54,13 @@
 			</li>
 
 			<li>Sync the database:
-				<code class="shell">python manage.py syncdb</code>
-				Create a superuser (answer <code>yes</code>) and enter a username, e-mail address, and password.
+				<code class="shell">python manage.py migrate</code>
 			</li>
-			<li>Copy <code>editor/templates/index.html.dist</code> to <code>editor/templates/index.html</code>.</li>
+			<li>Copy <code>editor/templates/index_message.html.dist</code> to <code>editor/templates/index_message.html</code>, and customise it to your liking.</li>
+            <li>
+                Create a superuser (you'll be asked for a username, email address and password - the email address isn't used).
+                <code class="shell">python manage.py createsuperuser</code></li>
+            </li>
 			<li>
 				Start the server:
 				<code class="shell">python manage.py runserver</code></li>

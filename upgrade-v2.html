@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Numbas editor - Installation instructions</title>
+        <link rel="stylesheet" href="normalize.css"></link>
+        <link rel="stylesheet" href="style.css"></link>
+    </head>
+    <body>
+        <h1>Numbas Editor Installation</h1>
+
+        <p>Upgrading to Numbas 2.0 from an earlier version is a straightforward process, but can take a long time and disk space if you have a very large database.</p>
+
+        <p>Follow the instructions below, using a shell in your <code>numbas_editor</code> directory.</p>
+        <ul>
+            <li>
+                Remove <code>editor/templates/index.html</code> - Numbas 2.0 looks for your custom welcome message in <code>editor/templates/index_message.html</code>.
+            </li>
+            <li>
+                Get the latest code:
+                <code class="shell">git pull</code>
+            </li>
+            <li>
+                Upgrade Python libraries:
+                <code class="shell">pip install --upgrade -r numbas/requirements.pip</code>
+            </li>
+            <li>
+                Migrate the database (this could take a while):
+                <code class="shell">python manage.py migrate</code>
+            </li>
+            <li>
+                Copy <code>editor/templates/index_message.html.dist</code> to <code>editor/templates/index_message.html</code>, and customise to your liking.
+            </li>
+        </ul>
+        <p>That's it!</p>
+        <p>If you have any problems, email <a href="mailto:numbas@ncl.ac.uk">numbas@ncl.ac.uk</a>.</p>
+    </body>
+</html>

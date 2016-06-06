@@ -266,6 +266,16 @@
     {% endverbatim %}
 {% endblock content %}
 
+{% block access_tab_nav %}
+<nav>
+    <ul class="pager">
+        <li class="previous">
+        <a title="Back to the previous section" href="#" data-bind="click: setTab('feedback')">← Feedback</a>
+        </li>
+    </ul>
+</nav>
+{% endblock %}
+
 {% block settings %}
 {{ block.super }}
     {% if editable %}

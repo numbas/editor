@@ -422,13 +422,8 @@
                         </ul>
                     </div>
 
-                    <nav>
-                        <ul class="pager">
-                            <li class="previous">
-                                <a title="Back to the previous section" href="#" data-bind="click: setTab('advice')">← Advice</a>
-                            </li>
-                        </ul>
-                    </nav>
+                    {% block access_tab_nav %}
+                    {% endblock access_tab_nav %}
                     </section>
                 {% endif %}
 

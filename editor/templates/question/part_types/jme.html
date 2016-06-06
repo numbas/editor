@@ -19,7 +19,7 @@
     {% property 'answerSimplification' 'Answer simplification rules' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-answer-simplification-rules' %}
 </form>
 </section>
-<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='restrictions'}">
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='checking-accuracy'}">
 <form class="form-horizontal">
 	<h4>Checking accuracy</h4>
 	<div class="form-group">
@@ -36,6 +36,8 @@
     {% property 'vset.start' 'Checking range start' max='vset.end' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-checking-range-start' %}
     {% property 'vset.end' 'Checking range end' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-checking-range-end' %}
 </form>
+</section>
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='restrictions'}">
 <h4>Length restriction</h4>
 <form class="form-horizontal">
     {% property 'maxlength.length' 'Maximum length' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-maximum-length-restriction' %}

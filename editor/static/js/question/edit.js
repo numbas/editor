@@ -1800,7 +1800,8 @@ $(document).ready(function() {
 			niceName: 'Mathematical expression', 
 			has_marks: true, 
 			tabs: [
-				new Editor.Tab('restrictions','Accuracy and string restrictions','scale')
+				new Editor.Tab('checking-accuracy','Accuracy','scale'),
+				new Editor.Tab('restrictions','String restrictions','text-background')
 			],
 
 			model: function() {

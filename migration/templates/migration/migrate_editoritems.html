@@ -50,7 +50,7 @@
 
     <nav>
         <ul class="pager">
-            {% if has_previous or page.has_next %}
+            {% if page.has_previous or page.has_next %}
             <li class="previous {% if not page.has_previous %}disabled{% endif %}"><a {% if page.has_previous %}href="?page={{page.previous_page_number}}&query={{query}}&in_project={{in_project.pk}}" title="Previous page"{% endif %}><span aria-hidden="true">&larr;</span> Previous</a></li>
             {% endif %}
 
@@ -111,7 +111,7 @@
 
     <nav>
         <ul class="pager">
-            {% if has_previous or page.has_next %}
+            {% if page.has_previous or page.has_next %}
             <li class="previous {% if not page.has_previous %}disabled{% endif %}"><a {% if page.has_previous %}href="?page={{page.previous_page_number}}&query={{query}}&in_project={{in_project.pk}}" title="Previous page"{% endif %}><span aria-hidden="true">&larr;</span> Previous</a></li>
             {% endif %}
 

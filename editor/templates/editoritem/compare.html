@@ -39,10 +39,10 @@
         <tr>
             <td></td>
             <td>
-                <a href="{% url ei1.item_type|add:'_preview' ei1.pk ei1.slug %}" target="_blank" title="Test run"><span class="glyphicon glyphicon-play"></span> Test Run</a>
+                <a href="{% url ei1.item_type|add:'_preview' ei1.rel_obj.pk ei1.slug %}" target="_blank" title="Test run"><span class="glyphicon glyphicon-play"></span> Test Run</a>
             </td>
             <td>
-                <a href="{% url ei2.item_type|add:'_preview' ei2.pk ei2.slug %}" target="_blank" title="Test run"><span class="glyphicon glyphicon-play"></span> Test Run</a>
+                <a href="{% url ei2.item_type|add:'_preview' ei2.rel_obj.pk ei2.slug %}" target="_blank" title="Test run"><span class="glyphicon glyphicon-play"></span> Test Run</a>
             </td>
         </tr>
         <tr>

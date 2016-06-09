@@ -359,4 +359,12 @@ button.delete-grey:hover {
     cursor: pointer;
 }
 
+.add-to-basket {
+    transition: transform 0.1s;
+}
+
+.add-to-basket:active {
+    transform: scale(1.2);
+}
+
 */

@@ -11,7 +11,7 @@
 
     {% for bq in user.userprofile.basketquestion_set.all %}
         {% with question=bq.question %}
-            <li class="question">
+            <li class="question" data-id="{{question.pk}}">
                 <a tabindex="-1" href="{% url 'question_edit' question.pk question.editoritem.slug %}">
                     {{question.editoritem.name}}
                     <button role="button" class="btn btn-xs btn-link btn-remove pull-right" data-id="{{question.pk}}" title="Remove this question from the basket"><span class="glyphicon glyphicon-remove"></span></button>

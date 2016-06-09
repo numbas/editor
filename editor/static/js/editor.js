@@ -1968,7 +1968,15 @@ $(document).ready(function() {
 			$('#question_basket').removeClass('active open');
 			$('#question_basket .dropdown-toggle').addClass('disabled');
 		}
+        var ids = $('#question_basket .dropdown-menu .question').map(function(){return parseInt($(this).attr('data-id'))});
+        $('.add-to-basket[data-question-id]').each(function() {
+            var id = parseInt($(this).attr('data-question-id'));
+            var inBasket = ids.index(id)>=0;
+            $(this).find('.glyphicon').toggleClass('text-success',inBasket);
+        });
     }
+
+    update_basket();
 
     Editor.add_question_to_basket = function(id) {
         $.post('/question_basket/add/',{csrfmiddlewaretoken: getCookie('csrftoken'), id: id})

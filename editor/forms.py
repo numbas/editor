@@ -275,7 +275,7 @@ class UploadExamForm(forms.ModelForm):
 
     class Meta:
         model = EditorItem
-        fields = ('project',)
+        fields = ('file','project',)
         widgets = {
             'author': forms.HiddenInput(),
             'project': BootstrapSelect,

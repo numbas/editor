@@ -2532,7 +2532,11 @@ $(document).ready(function() {
             viewModel.set_tab_from_hash();
             ko.options.deferUpdates = true;
 			ko.applyBindings(viewModel);
-            document.body.classList.add('loaded');
+            try {
+                document.body.classList.add('loaded');
+            } catch(e) {
+                document.body.className += ' loaded';
+            }
             $('.timeline').mathjax();
 		}
 		catch(e) {

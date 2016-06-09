@@ -405,8 +405,14 @@ $(document).ready(function() {
     Numbas.queueScript('start-editor',['jme-display','jme-variables','jme','editor-extras'],function() {
         try {
             viewModel = new Exam(item_json.itemJSON);
+            ko.options.deferUpdates = true;
             ko.applyBindings(viewModel);
-            document.body.classList.add('loaded');
+            try {
+                document.body.classList.add('loaded');
+            } catch(e) {
+                document.body.className += ' loaded';
+            }
+            $('.timeline').mathjax();
         }
         catch(e) {
             $('.page-loading').hide();

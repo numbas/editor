@@ -537,7 +537,9 @@ $(document).ready(function() {
 		ko.computed(function() {
 			var state = history.state || {};
 			state[key] = observable();
-			history.replaceState(state,window.title);
+            if(history.replaceState) {
+    			history.replaceState(state,window.title);
+            }
 		});
 	}
 
@@ -736,6 +738,13 @@ $(document).ready(function() {
     }
 
     Editor.EditorItem = function() {
+        if(this.__proto__.__proto__!==Editor.EditorItem.prototype) {
+            for(var x in Editor.EditorItem.prototype) {
+                if(!(this[x])) {
+                    this[x] = Editor.EditorItem.prototype[x];
+                }
+            }
+        }
         var ei = this;
 
         this.item_type = item_json.item_type;
@@ -1375,8 +1384,12 @@ $(document).ready(function() {
 			var value = ko.utils.unwrapObservable(valueAccessor) || '';
 
             if(element.hasAttribute('disabled')) {
-                element.classList.add('well');
-                element.classList.add('content-area');
+                try {
+                    element.classList.add('well');
+                    element.classList.add('content-area');
+                } catch(e) {
+                    element.className += ' well content-area';
+                }
                 return;
             }
 

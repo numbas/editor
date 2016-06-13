@@ -33,6 +33,7 @@ $(document).ready(function() {
 		this.variablesTest = {
 			condition: ko.observable(''),
 			conditionError: ko.observable(false),
+            conditionSatisfied: ko.observable(true), // was the condition satisfied when generating a preview set of values?
 			maxRuns: ko.observable(100),
 			totalRuns: ko.observable(0),
 			totalErrors: ko.observable(0),
@@ -425,6 +426,7 @@ $(document).ready(function() {
 				conditionSatisfied = results.conditionSatisfied;
 				runs += 1;
 			}
+            this.variablesTest.conditionSatisfied(conditionSatisfied);
 
 			// fill in observables
 			if(conditionSatisfied) {
@@ -1196,12 +1198,20 @@ $(document).ready(function() {
 			return this.usedIn().some(function(v){return v.locked()}) || this.thisLocked();
 		},this);
 		this.error = ko.observable('');
+        this.anyError = ko.computed(function() {
+            if(this.question.variablesTest.conditionError()) {
+                return "Error in testing condition";
+            } else if(!(this.question.variablesTest.conditionSatisfied())) {
+                return "Testing condition not satisfied";
+            } else {
+                return this.error();
+            }
+        },this);
 		this.display = ko.computed(function() {
 			var v;
-			if(this.error())
-				return this.error();
-			else if(v = this.value())
-			{
+			if(this.anyError()) {
+				return this.anyError();
+            } else if(v = this.value()) {
 				switch(v.type)
 				{
 				case 'string':
@@ -1213,9 +1223,9 @@ $(document).ready(function() {
 				default:
 					return Numbas.jme.display.treeToJME({tok:v});
 				}
-			}
-			else
+			} else {
 				return '';
+            }
 		},this);
         this.remove = function() {
             q.variables.remove(this);

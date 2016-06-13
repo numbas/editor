@@ -306,7 +306,7 @@
                                     group: 'variables'
                                 },
                             }">
-                                <tr data-bind="css: {noname: !name(), active: $data==$root.currentVariable(), dependency: isDependency, danger: error().length>0}" class="variable-selector">
+                                <tr data-bind="css: {noname: !name(), active: $data==$root.currentVariable(), dependency: isDependency, danger: anyError().length>0}" class="variable-selector">
                                     <td class="lock-cell">
                                         {% if editable %}
                                         <button type="button" class="btn btn-xs btn-link lock" data-bind="click: toggleLocked, css: {locked: locked}" title="Lock the value of this variable (editor only)">
@@ -347,6 +347,10 @@
                         </div>
 
                         <!-- /ko -->
+                    </div>
+                    <div class="alert alert-danger" data-bind="visible: variablesTest.conditionError">
+                        <h4><strong>Error in variable testing condition</strong></h4>
+                        <p>There's an error in the condition you specified in the <a data-bind="click: setTab('variabletesting')" href="#">Variable testing tab</a>. Variable values can't be generated until it's fixed.</p>
                     </div>
                     <button class="btn btn-info btn-lg btn-block" type="button" data-bind="click: generateVariablePreview, visible: variables().length>0"><span class="glyphicon glyphicon-refresh"></span> Regenerate values</button>
                     {% if editable %}<button class="btn btn-primary btn-block" type="button" data-bind="click: addVariableGroup"><span class="glyphicon glyphicon-plus"></span> New variable group</button>{% endif %}

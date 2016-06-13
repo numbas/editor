@@ -966,6 +966,13 @@ $(document).ready(function() {
 			});
 		},this);
 
+        this.receivedVariables = ko.observableArray([]);
+        ko.computed(function() {
+            var received = this.receivedVariables();
+            this.variables(this.variables().concat(received));
+            this.receivedVariables([]);
+        },this);
+
 		this.addVariable = function() {
 			var v = q.addVariable();
 			this.variables.push(v);

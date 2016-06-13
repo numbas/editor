@@ -67,11 +67,6 @@
     font-weight: bold;
 }
 
-.variable-list.empty {
-    margin-bottom: 3em;
-    position: relative;
-}
-
 .variable-list tbody.ko_container.empty {
 	display: block;
 	min-height: 3em;
@@ -81,13 +76,12 @@
     box-sizing: border-box;
     padding: 1em;
 }
-.variable-list tbody.ko_container.ui-sortable.empty::before {
-    content: 'Drag a variable here';
-    color: #888;
-    font-style: italic;
-}
 .variable-selector {
     cursor: pointer;
+}
+
+.empty-receiver * {
+    opacity: 0;
 }
 
 

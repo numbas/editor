@@ -934,6 +934,19 @@ $(document).ready(function() {
 			});
 			mc.on('change',onChange);
 			ko.utils.domData.set(element,'codemirror',mc);
+
+            setInterval(function() {
+                var visible = $(element).parents('.tab-pane:not(.active)').length==0;
+                ko.utils.domData.set(element,'cm-visible',visible);
+                if(visible) {
+                    if(!ko.utils.domData.get(element,'cm-visible-refresh')) {
+                        mc.refresh();
+                        ko.utils.domData.set(element,'cm-visible-refresh',true);
+                    }
+                } else {
+                    ko.utils.domData.set(element,'cm-visible-refresh',false);
+                }
+            },100);
 		},
 		update: function(element,valueAccessor,allBindingsAccessor) {
 			var mc = ko.utils.domData.get(element,'codemirror');

@@ -572,6 +572,8 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
         e2.id = None
         e2.share_uuid_view = uuid.uuid4()
         e2.share_uuid_edit = uuid.uuid4()
+        e2.current_stamp = None
+        e2.public_access = 'view'
         e2.copy_of = self
         if author is not None:
             e2.author = author

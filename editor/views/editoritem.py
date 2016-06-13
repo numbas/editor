@@ -110,6 +110,7 @@ class CopyView(ProjectQuerysetMixin, generic.FormView, generic.edit.ModelFormMix
         obj2.editoritem.set_name(form.cleaned_data.get('name'))
         obj2.editoritem.project = form.cleaned_data.get('project')
         obj2.editoritem.save()
+        obj2.editoritem.access_rights.clear()
 
         if self.request.is_ajax():
             return http.HttpResponse(json.dumps(obj2.summary()),content_type='application/json')

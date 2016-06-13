@@ -1003,7 +1003,15 @@ $(document).ready(function() {
 
     function Variable(q,data) {
 		this.question = q;
-        this.name = ko.observable('');
+        this._name = ko.observable('');
+        this.name = ko.computed({
+            read: function() {
+                return this._name().trim();
+            },
+            write: function(v) {
+                return this._name(v);
+            }
+        },this);
 		this.group = ko.observable(null);
 		this.nameError = ko.computed(function() {
 			var name = this.name();

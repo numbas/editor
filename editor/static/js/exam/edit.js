@@ -202,10 +202,6 @@ $(document).ready(function() {
             }
         },
 
-        dropQuestion: function(data) {
-            data.item.parent = data.targetParent;
-        },
-
         //returns a JSON-y object representing the exam
         toJSON: function() {
             return {

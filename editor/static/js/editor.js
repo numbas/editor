@@ -1112,6 +1112,9 @@ $(document).ready(function() {
 
             if(element.hasAttribute('disabled')) {
                 $(element).html(value).mathjax();
+                $(element).find('[data-bind]').each(function() {
+                    this.removeAttribute('data-bind');
+                });
                 return;
             }
 

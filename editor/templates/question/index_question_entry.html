@@ -1,9 +1,0 @@
-{% load sanitizer %}
-{% load links %}
-<div class="header">
-	<span class="name">{% question_link question %}</span>
-	<span class="admin">
-		{% include "question/admin_buttons.html" %}
-    </span>
-</div>
-<div class="description">{{ question.metadata.description|strip_html|safe }}</div>

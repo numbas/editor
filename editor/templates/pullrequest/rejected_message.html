@@ -1,0 +1,3 @@
+{% load links %}
+{% load user_link %}
+You rejected {% user_link pr.owner %}'s request to merge this {{pr.destination.item_type}} with {% editoritem_link pr.source.rel_obj %}.

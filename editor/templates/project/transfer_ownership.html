@@ -1,0 +1,23 @@
+{% extends "project/settings_base.html" %}
+
+{% block settings_content %}
+
+<div class="alert alert-danger">
+    <p><strong>Warning</strong></p>
+    <p>You are about to transfer ownership of the project <em>{{project.name}}</em> to another user. Once this is done, you will have editing access to this project but will not have admin rights.</p>
+    <p>Only do this if you're absolutely sure it needs to be done.</p>
+</div>
+
+<form method="post">
+    <div class="form-group">
+        {{form.errors}}
+        <label for="{{form.user_search.auto_id}}">Transfer ownership of {{project.name}} to</label>
+        <input type="text" class="form-control" id="{{form.user_search.auto_id}}" name="user_search" placeholder="Username or full name">
+    </div>
+
+    {% csrf_token %}
+    <button class="btn btn-danger" type="submit">Transfer ownership</button>
+</form>
+
+{% endblock settings_content %}
+

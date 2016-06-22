@@ -1,0 +1,13 @@
+{% extends "timeline/item.html" %}
+{% load user_link %}
+{% load sanitizer %}
+
+{% block thumbnail %}
+    {% user_thumbnail item.object.user 40 36 link=True %}
+{% endblock thumbnail %}
+
+{% block heading %}<span class="glyphicon glyphicon-comment"></span> {% user_link item.object.user %}{% endblock %}
+
+{% block content %}
+<blockquote>{{item.object.text|strip_html|safe}}</blockquote>
+{% endblock content %}

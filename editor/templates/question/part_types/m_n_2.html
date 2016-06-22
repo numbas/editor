@@ -1,0 +1,58 @@
+{% load editor_controls %}
+{% load helplink %}
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking'}">
+    <form class="form-horizontal">
+        {% property 'minMarks' 'Minimum marks' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-minimum-marks' %}
+        {% property 'maxMarks' 'Maximum marks' min='minMarks' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-maximum-marks' %}
+        {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-show-correct-answer-on-reveal' %}
+        <div data-bind="visible: $parent.steps().length">
+            {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-penalty-for-revealing-steps' %}
+        </div>
+        {% property 'minAnswers' 'Minimum answers' max='maxAnswers' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-minimum-answers' %}
+        {% property 'maxAnswers' 'Maximum answers' min=minAnswers help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-maximum-answers' %}
+        {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-shuffle-order-of-choices' %}
+		<div class="form-group" data-bind="fadeVisible: minAnswers()!=0 || maxAnswers()!=0">
+            <label class="{{form_label_class}} control-label">
+                What to do if wrong number of answers selected: {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-what-to-do-if-wrong-number-of-answers-selected' %}
+            </label>
+            <div class="{{form_control_class}}">
+                <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: warningTypes, value: warningType, optionsText: 'niceName'"></select>
+            </div>
+        </div>
+        {% property 'displayColumns' 'Number of display columns' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-number-of-display-columns' %}
+        {% booleanproperty 'customMarking' 'Custom marking matrix?' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-custom-marking-matrix' disable='customChoices' %}
+        <div data-bind="fadeVisible: customMarking">
+            {% property 'customMarking' 'Custom matrix expression' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-custom-matrix-expression' %}
+        </div>
+	</form>
+</section>
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='choices'}">
+    <form class="form-horizontal">
+        {% booleanproperty 'customChoices' 'Variable list of choices?' help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-variable-list-of-choices' %}
+        <div data-bind="fadeVisible: customChoices">
+            {% property 'customChoicesExpression' 'List of choices' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question-parts.html#term-list-of-choices' %}
+		</div>
+	</form>
+	<ul class="choices list-unstyled list-group" data-bind="fadeVisible: !customChoices()">
+		<!-- ko foreach: {data: choices, afterAdd: Editor.afterAdd} -->
+		<li class="choice form-inline list-group-item clearfix">
+			<div class="col-sm-9">
+				<div {% if not editable %}disabled{% endif %} id="description" data-bind="writemaths: content, wmHeight: 100, preambleCSS: $root.preamble.css"></div>
+			</div>
+			<div class="col-sm-3">
+                {% if editable %}<button type="button" type="button" class="delete btn btn-sm btn-danger btn-block" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this choice</button>{% endif %}
+
+				<label data-bind="visible: !$parent.customMarking()">
+					Marks:
+					<input {% if not editable %}disabled{% endif %} class="marks monospace form-control" type="text" data-bind="value:marks, valueUpdate:'input'"/>
+				</label>
+				<label>
+					Distractor Message:
+					<input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value:distractor, valueUpdate:'input'"/>
+				</label>
+			</div>
+		</li>
+		<!-- /ko -->
+	</ul>
+    {% if editable %}<button type="button" class="btn btn-primary" data-bind="click:addChoice"><span class="glyphicon glyphicon-plus"></span> Add a choice</button>{% endif %}
+</section>

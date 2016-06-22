@@ -19,11 +19,12 @@ class NumbasRegistrationForm(RegistrationForm):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        exclude = ('user','favourite_questions','favourite_exams','question_basket')
-    first_name = forms.CharField(max_length=30)
-    last_name = forms.CharField(max_length=30)
-    email = forms.EmailField()
-    language = forms.ChoiceField(choices=[(x,y) for y,x in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']])
+        fields = ('first_name','last_name','email','bio','language','avatar')
+
+    first_name = forms.CharField(max_length=30,widget=forms.TextInput(attrs={'class':'form-control'}))
+    last_name = forms.CharField(max_length=30,widget=forms.TextInput(attrs={'class':'form-control'}))
+    email = forms.EmailField(widget=forms.TextInput(attrs={'class':'form-control'}))
+    language = forms.ChoiceField(choices=[(x,y) for y,x in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']],widget=forms.Select(attrs={'class':'form-control'}))
     bio = SanitizedCharField(
             widget=Textarea, 
             allowed_tags=settings.SANITIZER_ALLOWED_TAGS, 
@@ -43,6 +44,8 @@ class UserProfileForm(forms.ModelForm):
     def save(self,*args,**kwargs):
         self.profile.language = self.cleaned_data.get('language')
         self.profile.bio = self.cleaned_data.get('bio')
+        if self.cleaned_data.get('avatar'):
+            self.profile.avatar = self.cleaned_data.get('avatar')
         self.profile = self.profile.save()
         super(UserProfileForm,self).save(self,*args,**kwargs)
 
@@ -50,8 +53,8 @@ class ChangePasswordForm(forms.ModelForm):
     class Meta:
         model = User
         fields = []
-    password1 = forms.CharField(widget=PasswordInput,label='New password')
-    password2 = forms.CharField(widget=PasswordInput,label='Type new password again')
+    password1 = forms.CharField(widget=PasswordInput(attrs={'class':'form-control'}),label='New password')
+    password2 = forms.CharField(widget=PasswordInput(attrs={'class':'form-control'}),label='Type new password again')
 
     def clean(self):
         cleaned_data = super(forms.ModelForm,self).clean()

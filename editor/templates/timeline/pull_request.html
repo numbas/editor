@@ -1,0 +1,25 @@
+{% extends "timeline/item.html" %}
+{% load user_link %}
+{% load links %}
+{% load sanitizer %}
+
+{% block thumbnail %}
+    {% user_thumbnail item.object.timeline_user 40 36 link=True %}
+{% endblock thumbnail %}
+
+{% block heading %}<span class="glyphicon glyphicon-gift"></span> {% user_link item.object.timeline_user %}{% endblock %}
+
+{% block content %}
+{% with item.object as pr %}
+{% if pr.open %}
+Wants to merge their version, {% editoritem_link pr.source.rel_obj %}.
+{% else %}
+    {% if pr.accepted %}
+        Merged {% editoritem_link pr.source.rel_obj %}
+    {% else %}
+        Rejected a request to merge {% editoritem_link pr.source.rel_obj %}
+    {% endif %}
+{% endif %}
+<blockquote>{{item.object.comment|strip_html|safe}}</blockquote>
+{% endwith %}
+{% endblock content %}

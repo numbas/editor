@@ -5,92 +5,83 @@
 	</script>
 
     <script type="text/html" id="property">
-		<label>
-			<span class="control-label">
+		<label class="col-sm-3 control-label">
 				<span data-bind="html: label"></span>
 				<span data-bind="template: {name: 'helplink', data: {url: $data.helpURL}}"></span>
-			</span>
-			<div class="controls">
-				<input data-bind="
-					value: property, 
-					valueUpdate: 'afterkeydown', 
-					attr: {
-						type: $data.type || 'text', 
-						min: $data.min, 
-						max: $data.max
-					}, 
-					css: {monospace: 'monospace' in $data ? monospace : false},
-					autosize: {max: 500, min: 30, padding: 10, value: property}
-				"/>
-			</div>
 		</label>
+		<div class="col-sm-9">
+			<input class="form-control" data-bind="
+				textInput: property, 
+				attr: {
+					type: $data.type || 'text', 
+					min: $data.min, 
+					max: $data.max
+				}, 
+				css: {monospace: 'monospace' in $data ? monospace : false},
+				autosize: {max: 500, min: 30, padding: 10, value: property}
+			"/>
+		</div>
 	</script>
 
     <script type="text/html" id="numberproperty">
-		<label>
-			<span class="control-label">
-				<span data-bind="html: label"></span>
-				<span data-bind="template: {name: 'helplink', data: {url: $data.helpURL}}"></span>
-			</span>
-			<div class="controls">
-				<input type="number" data-bind="
-					value: property, 
-					valueUpdate: 'afterkeydown', 
-					attr: {
-						min: $data.min, 
-						max: $data.max
-					}, 
-					css: {monospace: 'monospace' in $data ? monospace : false},
-					autosize: {max: 500, min: 30, padding: 25, value: property}
-				"/>
-			</div>
+		<label class="col-sm-3 control-label">
+			<span data-bind="html: label"></span>
+			<span data-bind="template: {name: 'helplink', data: {url: $data.helpURL}}"></span>
 		</label>
+		<div class="col-sm-9">
+			<input class="form-control" type="number" data-bind="
+				textInput: property, 
+				attr: {
+					min: $data.min, 
+					max: $data.max
+				}, 
+				css: {monospace: 'monospace' in $data ? monospace : false},
+				autosize: {max: 500, min: 30, padding: 25, value: property}
+			"/>
+		</div>
 	</script>
 
 	<script type="text/html" id="percentproperty">
-		<label>
-			<span class="control-label">
-				<span data-bind="html: label"></span>
-				<span data-bind="template: {name: 'helplink', data: {url: $data.helpURL}}"></span>
-			</span>
-			<div class="controls">
-				<input 
-					data-bind="
-						value: property, 
-						valueUpdate: 'afterkeydown'
-					"
-					type="range"
-					step="5"
-					min="0"
-					max="100"
-					/>
-				<span class="percentproperty value" data-bind="text: property()+'%'"></span>
-			</div>
+		<label class="col-sm-3 control-label">
+			<span data-bind="html: label"></span>
+			<span data-bind="template: {name: 'helplink', data: {url: $data.helpURL}}"></span>
 		</label>
+		<div class="col-sm-9">
+			<input
+				data-bind="
+					value: property, 
+				"
+				type="range"
+				step="5"
+				min="0"
+				max="100"
+				/>
+			<span class="percentproperty value" data-bind="text: property()+'%'"></span>
+		</div>
 	</script>
 
 	<script type="text/html" id="selectproperty">
-		<label>
-			<span class="control-label">
-				<span data-bind="html: label"></span>
-				<span data-bind="template: {name: 'helplink', data: {url: $data.helpURL}}"></span>
-			</span>
-			<div class="controls">
-				<select data-bind="options: options, value: property, optionsText: ko.utils.unwrapObservable($data.optionsText===undefined ? options : optionsText)"></select>
-			</div>
+		<label class="col-sm-3 control-label">
+			<span data-bind="html: label"></span>
+			<span data-bind="template: {name: 'helplink', data: {url: $data.helpURL}}"></span>
 		</label>
+		<div class="col-sm-3">
+			<select class="form-control" data-bind="options: options, value: property, optionsText: ko.utils.unwrapObservable($data.optionsText===undefined ? options : optionsText)"></select>
+		</div>
 	</script>
 
 	<script type="text/html" id="booleanproperty">
-		<label>
-			<span class="control-label">
-				<span data-bind="html: label"></span>
-				<span data-bind="template: {name: 'helplink', data: {url: $data.helpURL}}"></span>
-			</span>
-			<div class="controls">
-				<input data-bind="checked: property, disable: $data.disable" type="checkbox"/>
-			</div>
+		<label class="col-sm-3 control-label">
+			<span data-bind="html: label"></span>
+			<span data-bind="template: {name: 'helplink', data: {url: $data.helpURL}}"></span>
 		</label>
+		<div class="col-sm-9">
+			<div class="checkbox">
+				<label>
+					<input data-bind="checked: property, disable: $data.disable" type="checkbox"/>
+				</label>
+			</div>
+		</div>
 	</script>
 {% endverbatim %}
 

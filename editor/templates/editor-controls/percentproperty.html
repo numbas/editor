@@ -1,0 +1,22 @@
+{% load helplink %}
+<div class="form-group">
+    <label class="label-block">
+        <div class="{{form_label_class}} control-label">
+            {{label}}
+            {% if help_url %}{% helplink help_url %}{% endif %}
+        </div>
+        <div class="{{form_control_class}}">
+            <input
+                {% if not editable %}disabled{% endif%} 
+                data-bind="
+                    value: {{property}}, 
+                "
+                type="range"
+                step="5"
+                min="0"
+                max="100"
+            />
+            <span class="percentproperty value" data-bind="text: ko.unwrap({{property}})+'%'"></span>
+        </div>
+    </label>
+</div>

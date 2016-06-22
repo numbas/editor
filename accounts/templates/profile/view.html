@@ -1,54 +1,29 @@
-{% extends "layout.html" %}
+{% extends "profile/base.html" %}
 {% load escape_html from sanitizer %}
+{% load user_link %}
 
-{% block stylesheets %}
-{{block.super}}
-<link href="{{ STATIC_URL }}css/profile-view.css" type="text/css" rel="stylesheet" />
-{% endblock stylesheets %}
-
-{% block content %}
+{% block profile_content %}
 {% with object.userprofile as profile %}
-{% if is_me %}<div class="pull-right" id="edit-profile"><a href="{% url 'edit_profile' %}">Edit your profile</a></div>{% endif %}
 
-<h2 class="big-name">{{object.get_full_name}}</h2>
+<div class="bio jumbotron">
+    {% if profile.bio %}
+    {{profile.bio|escape_html|safe }}
+    {% else %}
+        {% if user == profile.user %}
+           <p><em>You haven't written a bio yet. <a href="{% url 'edit_profile' %}">Add a bio</a> to tell other users who you are and what you're working on.</em></p>
+        {% else %}
+            <p><em>This user hasn't written a bio yet.</em></p>
+        {% endif %}
+    {% endif %}
+</div>
 
-{% if profile.bio %}
-<div class="bio well">{{profile.bio|escape_html|safe }}</div>
+{% if is_me %}
+<div class="text-right" id="edit-profile">
+    <a class="btn btn-link" href="{% url 'edit_profile' %}"><span class="glyphicon glyphicon-pencil"></span> Edit your profile</a>
+</div>
 {% endif %}
 
-<ul>
-    <li>
-        {% if object.own_exams.count %}
-			<p><a href="{% url 'exam_search' %}?author={{object.get_full_name|urlencode}}">{% if is_me %}Your{% else %}{{object.first_name}}'s{% endif %}  exams</a>.</p>
-			<p>{% if is_me %}(Download a backup .zip file of <a href="{% url 'all_exams_download' %}">all your exams</a>){% endif %}</p>
-        {% else %}
-            {% if is_me %}
-                You haven't created any exams.
-            {% else %}
-                {{object.first_name}} hasn't created any exams.
-            {% endif %}
-        {% endif %}
-    </li>
-
-    <li>
-        {% if object.own_questions.count %}
-			<p><a href="{% url 'question_search' %}?author={{object.get_full_name|urlencode}}">{% if is_me %}Your{% else %}{{object.first_name}}'s{% endif %}  questions</a>.</p>
-			<p>{% if is_me %}(Download a backup .zip file of <a href="{% url 'all_questions_download' %}">all your questions</a>){% endif %}</p>
-        {% else %}
-            {% if is_me %}
-                You haven't created any questions.
-            {% else %}
-                {{object.first_name}} hasn't created any questions.
-            {% endif %}
-        {% endif %}
-    </li>
-
-    {% if is_me %}
-    <li><a href="{% url 'theme_list' %}">Your themes</a>.</li>
-    <li><a href="{% url 'extension_list' %}">Your extensions</a>.</li>
-    {% endif %}
-</ul>
-
+<p><a href="{% url 'profile_editoritem_search' view_user.pk %}" class="btn btn-link btn-lg"><span class="glyphicon glyphicon-search"></span> Browse {{view_user.first_name}}'s content</a></p>
 
 {% endwith %}
-{% endblock content %}
+{% endblock profile_content %}

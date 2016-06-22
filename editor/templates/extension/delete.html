@@ -1,11 +1,16 @@
 {% extends "layout.html" %}
 
 {% block content %}
+<div class="page-header">
+    <h1>Delete extension <em>"{{object.name}}"</em></h1>
+</div>
+
 <form action="" method="post">{% csrf_token %}
-    <p>Are you sure you want to delete the extension "{{object.name}}"?
-    {% with object.question_set.all as used_in_exams %}It's used in {{used_in_exams|length}} question{{used_in_exams|pluralize}}.
-    {% endwith %}</p>
-    <p><button type="submit" >Yes</button> <a href="{% url 'extension_list' %}">No</a></p>
+    <p>Are you sure you want to delete this extension?</p>
+    {% with object.question_set.all as used_in_exams %}
+    <p>It's used in {{used_in_exams|length}} question{{used_in_exams|pluralize}}.</p>
+    {% endwith %}
+    <p><button type="submit" class="btn btn-danger" title="Delete this extension">Yes</button> <a class="btn btn-default" title="Don't delete this extension" href="{% url 'profile_extensions' request.user.pk %}">No</a></p>
 </form>
 {% endblock content %}
 

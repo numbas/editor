@@ -11,33 +11,54 @@ tinymce.init({
 	autoresize_bottom_margin: 0,
 	relative_urls: false,
     theme_advanced_resizing: true,
-    theme_advanced_resize_horizontal: false
+    theme_advanced_resize_horizontal: false,
+    plugins: ['link','fullscreen']
  });
 </script>
 {% endblock javascripts %}
 
 {% block content %}
-	<h1>Your user profile</h1>
+    <div class="page-header">
+	    <h1>Update your profile</h1>
+    </div>
 
-    <form method="post" action="" class="form-horizontal">
+    <form method="post" action="" enctype="multipart/form-data">
 		{% csrf_token %} 
 		{{form.non_field_errors}}
-		{% for field in form %}
-        <div class="control-group">
-			<label>
-				<span class="control-label">{{field.label}}:</span>
-				<div class="controls">
-					{{ field }}
-        		    {{ field.errors }}
-				</div>
-			</label>
+        <div class="row form-group">
+            <div class="col-xs-6">
+                <label>{{form.first_name.label}}</label>
+                {{form.first_name}}
+            </div>
+            <div class="col-xs-6">
+                <label>{{form.last_name.label}}</label>
+                {{form.last_name}}
+            </div>
+        </div>
+        <div class="form-group">
+            <label>{{form.email.label}}</label>
+            {{form.email}}
+            {{form.email.errors}}
+        </div>
+        {% if CAN_CHANGE_PASSWORD %}
+        <div class="form-group">
+            <a class="btn btn-warning" href="{% url 'change_password' %}"><span class="glyphicon glyphicon-pencil"></span> Change your password</a>
+        </div>
+        {% endif %}
+        <div class="form-group">
+            <label>{{form.bio.label}}</label>
+            <p>{{form.bio}}</p>
+        </div>
+        <div class="form-group">
+            <label>{{form.language.label}}</label>
+            {{form.language}}
+        </div>
+        <div class="form-group">
+            <label>{{form.avatar.label}}</label>
+            {{form.avatar}}
+        </div>
+		<div class="form-group">
+            <button type="submit" class="btn btn-primary">Update</button>
 		</div>
-		{% endfor %}
-		<div class="control-group">
-			<div class="controls">
-				<button type="submit">Update</button>
-			</div>
-		</div>
-		{% if CAN_CHANGE_PASSWORD %}<div><a href="{% url 'change_password' %}">Change your password</a></div>{% endif %}
     </form>
 {% endblock content %}

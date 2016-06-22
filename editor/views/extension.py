@@ -1,17 +1,3 @@
-#Copyright 2014 Newcastle University
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#       http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-
 from django.views import generic
 from django.core.urlresolvers import reverse
 
@@ -32,7 +18,7 @@ class CreateView(generic.CreateView):
         return kwargs
 
     def get_success_url(self):
-        return reverse('extension_list')
+        return reverse('profile_extensions',args=(self.request.user.pk,))
 
 class UpdateView(AuthorRequiredMixin,generic.UpdateView):
 	""" Edit an extension """
@@ -42,21 +28,11 @@ class UpdateView(AuthorRequiredMixin,generic.UpdateView):
 	template_name = 'extension/edit.html'
 
 	def get_success_url(self):
-		return reverse('extension_list')
-
-class ListView(generic.ListView):
-    """ List all the current user's extensions """
-    
-    model = Extension
-    template_name = 'extension/list.html'
-
-    def get_queryset(self):
-        return Extension.objects.filter(author=self.request.user)
+		return reverse('profile_extensions',args=(self.request.user.pk,))
 
 class DeleteView(AuthorRequiredMixin,generic.DeleteView):
     model = Extension
     template_name = 'extension/delete.html'
 
     def get_success_url(self):
-        return reverse('extension_list')
-
+        return reverse('profile_extensions',args=(self.request.user.pk,))

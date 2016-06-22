@@ -1,0 +1,23 @@
+{% extends "project/project_base.html" %}
+{% load django_tables2 %}
+
+{% block content_container %}container-fluid{% endblock content_container %}
+{% block project_container %}{% endblock project_container %}
+
+{% block results_top %}
+
+{% endblock results_top %}
+
+{% block project_content %}
+{% include "project/search_content.html" %}
+{% endblock project_content %}
+
+{% block javascripts %}
+    {{block.super}}
+    {% include "search/js.html" %}
+{% endblock javascripts %}
+
+{% block stylesheets %}
+    {{ block.super }}
+    {% include "search/css.html" %}
+{% endblock stylesheets %}

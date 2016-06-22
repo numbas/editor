@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1><span class="glyphicon glyphicon-briefcase"></span> Move <a href="{{object.get_absolute_url}}">{{object.name}}</a> to another project</h1>
+</div>
+
+<form action="" method="post" class="form-horizontal">
+    {% csrf_token %}
+    {% for field in form.hidden_fields %}{{field}}{% endfor %}
+
+    {% for field in form.visible_fields %}
+    <div class="form-group {% if field.errors %}has-error{% endif %}">
+        <label class="col-sm-2 control-label">{{field.label}}</label>
+        <div class="col-sm-10">
+            {{field.as_widget}}
+            {% if field.errors %}
+            <ul class="errorlist list-unstyled">
+                {% for error in field.errors %}
+                <li>{{error}}</li>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="col-sm-offset-2 col-sm-10">
+        <p>
+            <button type="submit" class="btn btn-primary">Move</button>
+            <a href="{{object.get_absolute_url}}" class="btn btn-link">Cancel</a>
+        </p>
+    </div>
+</form>
+
+{% endblock content %}
+

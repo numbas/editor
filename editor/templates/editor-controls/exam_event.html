@@ -1,0 +1,12 @@
+{% load helplink %}
+<h4>{{name}}{% if help_url %} {% helplink help_url %}{% endif %}</h4>
+<div class="form-group">
+    <label class="control-label {{form_label_class}}">Action</label>
+    <div class="controls {{form_control_class}}">
+        <select {% if not editable %}disabled{% endif%} class="form-control" data-bind="options: {{property}}.actions, value: {{property}}.action, optionsText: 'niceName'"></select>
+    </div>
+</div>
+<div class="form-group" data-bind="fadeVisible: {{property}}.action().name!='none'">
+    <label class="control-label {{form_label_class}}">Message</label>
+    <div {% if not editable %}disabled{% endif %} class="controls {{form_control_class}}" data-bind="writemaths: {{property}}.message"></div>
+</div>

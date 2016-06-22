@@ -24,3 +24,7 @@
 #edit-profile {
     font-style: italic;
 }
+
+.thumbnail a {
+    color: inherit;
+}

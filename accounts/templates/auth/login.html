@@ -3,44 +3,49 @@
 {% block stylesheets %}
 {{block.super}}
 <style type="text/css">
-	#loginForm label {
-		display: inline-block;
-		width: 5em;
-	}
 </style>
 {% endblock stylesheets %}
 
 {% block content %}
-{% if form.errors %}
-	<p>Your username and password did not match.</p>
-{% endif %}
+<div class="page-header">
+    <h1>Log in</h1>
+</div>
 
 <form id="loginForm" class="form-horizontal" method="post" action="{% url 'login' %}" autocomplete="off">
 	{% csrf_token %}
-	<div class="control-group">
-		<label>
-			<span class="control-label">Username:</span>
-			<div class="controls">
-				<input type="text" id="id_username" name="username" maxlength="30">
-			</div>
-		</label>
+
+    {% if form.errors %}
+    <div class="col-sm-offset-3 alert alert-warning">
+        <p>Your username and password did not match.</p>
+    </div>
+    {% endif %}
+
+	<div class="form-group">
+		<label for="id_username" class="col-sm-3 control-label">Username</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="id_username" name="username" maxlength="30">
+		</div>
 	</div>
 
-	<div class="control-group">
-		<label>
-			<span class="control-label">Password:</span>
-			<div class="controls">
-				<input type="password" id="id_password" name="password">
-			</div>
-		</label>
+	<div class="form-group">
+		<label for="id_password" class="col-sm-3 control-label">Password</label>
+		<div class="col-sm-3">
+			<input type="password" class="form-control" id="id_password" name="password"/>
+		</div>
 	</div>
-	<div class="control-group">
-		<div class="controls">
-			<button type="submit">Log in</button>
+
+	<div class="form-group">
+		<div class="col-sm-offset-3 col-sm-9">
+			<button type="submit" class="btn btn-primary">Log in</button>
+			<a href="{% url 'auth_password_reset' %}" class="btn btn-link">Forgotten your password?</a>
+			{% if ALLOW_REGISTRATION %}<a href="{% url 'registration_register' %}" class="btn btn-link">Register for your own account</a>{% endif %}
 		</div>
 	</div>
 	<input type="hidden" name="next" value="{{ next }}" />
-    <p><a href="{% url 'auth_password_reset' %}">Forgotten your password?</a></p>
-	{% if ALLOW_REGISTRATION %}<p><a href="{% url 'registration_register' %}">Register for your own account</a></p>{% endif %}
+
+	<div class="form-group">
+		<div class="controls">
+		</div>
+	</div>
 </form>
 {% endblock content %}

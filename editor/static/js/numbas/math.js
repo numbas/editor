@@ -1776,7 +1776,7 @@ var vectormath = Numbas.vectormath = {
 	 * @returns {matrix}
 	 */
 	transpose: function(v) {
-		var matrix = v.map(function(x){ return [x]; });
+		var matrix = [v.slice()];
 		matrix.rows = 1;
 		matrix.columns = v.length;
 		return matrix;

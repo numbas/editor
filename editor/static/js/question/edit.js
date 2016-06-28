@@ -504,6 +504,10 @@ $(document).ready(function() {
 				if(!v.name()) {
 					return;
 				}
+                if(v.definitionError()) {
+                    v.error(v.definitionError());
+                    return;
+                }
 				if(!v.definition()) {
 					todo[name] = {
 						v: v,
@@ -1129,36 +1133,69 @@ $(document).ready(function() {
 			return numbers;
 		},this.templateTypeValues['list of numbers']);
 
+        this.definitionError = ko.observable(null);
 		this.definition = ko.computed({
 			read: function() {
+                this.definitionError(null);
 				var templateType = this.templateType().id;
 				var val = this.templateTypeValues[templateType];
 				var treeToJME = Numbas.jme.display.treeToJME;
 				var wrapValue = Numbas.jme.wrapValue;
-				switch(templateType) {
-				case 'anything':
-					return val.definition()+'';
-				case 'number':
-					return treeToJME({tok: wrapValue(parseFloat(val.value()))});
-				case 'range':
-					var tree = Numbas.jme.compile('a..b#c');
-					tree.args[0].args[0] = {tok: wrapValue(parseFloat(val.min()))};
-					tree.args[0].args[1] = {tok: wrapValue(parseFloat(val.max()))};
-					tree.args[1] = {tok: wrapValue(parseFloat(val.step()))};
-					return treeToJME(tree);
-				case 'randrange':
-					var tree = Numbas.jme.compile('random(a..b#c)');
-					tree.args[0].args[0].args[0] = {tok: wrapValue(parseFloat(val.min()))};
-					tree.args[0].args[0].args[1] = {tok: wrapValue(parseFloat(val.max()))};
-					tree.args[0].args[1] = {tok: wrapValue(parseFloat(val.step()))};
-					return treeToJME(tree);
-				case 'string':
-				case 'long string':
-					return treeToJME({tok: wrapValue(val.value())});
-				case 'list of numbers':
-				case 'list of strings':
-					return treeToJME({tok: wrapValue(val.values())});
-				}
+                try {
+                    switch(templateType) {
+                    case 'anything':
+                        return val.definition()+'';
+                    case 'number':
+                        var n = parseFloat(val.value());
+                        if(isNaN(n)) {
+                            throw("Value is not a number");
+                        }
+                        return treeToJME({tok: wrapValue(parseFloat(val.value()))});
+                    case 'range':
+                        var min = parseFloat(val.min());
+                        var max = parseFloat(val.max());
+                        var step = parseFloat(val.step());
+                        if(isNaN(min)) {
+                            throw('Minimum value is not a number');
+                        } else if(isNaN(max)) {
+                            throw('Maximum value is not a number');
+                        } else if(isNaN(step)) {
+                            throw("Step value is not a number");
+                        }
+
+                        var tree = Numbas.jme.compile('a..b#c');
+                        tree.args[0].args[0] = {tok: wrapValue(parseFloat(val.min()))};
+                        tree.args[0].args[1] = {tok: wrapValue(parseFloat(val.max()))};
+                        tree.args[1] = {tok: wrapValue(parseFloat(val.step()))};
+                        return treeToJME(tree);
+                    case 'randrange':
+                        var min = parseFloat(val.min());
+                        var max = parseFloat(val.max());
+                        var step = parseFloat(val.step());
+                        if(isNaN(min)) {
+                            throw('Minimum value is not a number');
+                        } else if(isNaN(max)) {
+                            throw('Maximum value is not a number');
+                        } else if(isNaN(step)) {
+                            throw("Step value is not a number");
+                        }
+
+                        var tree = Numbas.jme.compile('random(a..b#c)');
+                        tree.args[0].args[0].args[0] = {tok: wrapValue(parseFloat(val.min()))};
+                        tree.args[0].args[0].args[1] = {tok: wrapValue(parseFloat(val.max()))};
+                        tree.args[0].args[1] = {tok: wrapValue(parseFloat(val.step()))};
+                        return treeToJME(tree);
+                    case 'string':
+                    case 'long string':
+                        return treeToJME({tok: wrapValue(val.value())});
+                    case 'list of numbers':
+                    case 'list of strings':
+                        return treeToJME({tok: wrapValue(val.values())});
+                    }
+                } catch(e) {
+                    this.definitionError(e);
+                    return;
+                }
 			}
 		},this);
 

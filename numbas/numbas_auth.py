@@ -1,3 +1,5 @@
+from django.conf import settings
+
 try:
     from django_auth_ldap.backend import LDAPBackend
     class NumbasAuthBackend(LDAPBackend):
@@ -20,20 +22,8 @@ try:
 except ImportError:
     pass
 
-try:
-    from shibboleth.middleware import ShibbolethRemoteUserMiddleware
-    class NumbasShibbolethRemoteUserMiddleware(ShibbolethRemoteUserMiddleware):
-        """Authentication backend overriding ShibbolethRemoteUserMiddleware."""
+from shibboleth.middleware import ShibbolethRemoteUserMiddleware
+class NumbasShibbolethRemoteUserMiddleware(ShibbolethRemoteUserMiddleware):
+    """Authentication backend overriding ShibbolethRemoteUserMiddleware."""
 
-        # If the Shibboleth username header should not be REMOTE_USER, then set
-        # what it should be here.  This is the only user attribute that should be
-        # set here; all others should be set in shib_auth.py
-        header = 'uname'
-
-        def make_profile(self, user, shib_meta):
-            """Transform the displayname into a friendly first name."""
-            user.first_name = user.first_name.split()[0]
-            user.save()
-except ImportError:
-    pass
-
+    header = settings.SHIBBOLETH_USERNAME_HEADER

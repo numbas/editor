@@ -10,3 +10,5 @@ SHIBBOLETH_ATTRIBUTE_MAP = {
     'givenname': (True, 'first_name'),
     'surname': (True, 'last_name'),
 }
+
+SHIBBOLETH_USERNAME_HEADER = 'username'

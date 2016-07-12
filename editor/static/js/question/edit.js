@@ -1836,6 +1836,11 @@ $(document).ready(function() {
 			niceName: 'Information only'
 		},
 		{
+			name: 'extension', 
+			niceName: 'Extension',
+            has_marks: true
+		},
+		{
 			name: 'gapfill', 
 			niceName: 'Gap-fill', 
 			has_marks: true,

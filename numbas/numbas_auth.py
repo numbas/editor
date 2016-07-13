@@ -22,8 +22,11 @@ try:
 except ImportError:
     pass
 
-from shibboleth.middleware import ShibbolethRemoteUserMiddleware
-class NumbasShibbolethRemoteUserMiddleware(ShibbolethRemoteUserMiddleware):
-    """Authentication backend overriding ShibbolethRemoteUserMiddleware."""
+try:
+    from shibboleth.middleware import ShibbolethRemoteUserMiddleware
+    class NumbasShibbolethRemoteUserMiddleware(ShibbolethRemoteUserMiddleware):
+        """Authentication backend overriding ShibbolethRemoteUserMiddleware."""
 
-    header = settings.SHIBBOLETH_USERNAME_HEADER
+        header = settings.SHIBBOLETH_USERNAME_HEADER
+except ImportError:
+    pass

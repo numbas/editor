@@ -333,14 +333,21 @@ class UpdateExtensionForm(forms.ModelForm):
 
     def clean_zipfile(self):
         file = self.cleaned_data['zipfile']
+        if file is None:
+            raise forms.ValidationError("No file uploaded")
         if not zipfile.is_zipfile(file):
             name, extension = os.path.splitext(file.name)
             if extension.lower() == '.js':
                 return file
             else:
-                raise forms.ValidationError('Uploaded file is not a .zip file or .js file')
+                raise forms.ValidationError('Uploaded file is not a .zip file or .js file.')
         else:
             return file
+
+    def clean_location(self):
+        location = self.cleaned_data.get('location')
+        if location == '':
+            raise ValidationError('You must give a short name.')
 
 class NewExtensionForm(UpdateExtensionForm):
     

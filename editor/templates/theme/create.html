@@ -5,15 +5,20 @@
     <h1>Upload a theme</h1>
 </div>
 
-{% if error %}<p><strong>{{ error }}</strong></p>{% endif %}
-
 <form class="form-horizontal" action="{% url 'theme_new' %}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {% for field in form %}
-        <div class="form-group">
+        <div class="form-group {% if field.errors %}has-error{% endif %}">
             <label class="col-sm-3 control-label">{{field.label}}</label>
             <div class="col-sm-9">
                 {{field}}
+                {% if field.errors %}
+                    <ul class="help-block list-unstyled">
+                        {% for error in field.errors %}
+                        <li class="alert alert-danger">{{error}}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
                 <div class="help-block">{{field.help_text}}</div>
             </div>
         </div>

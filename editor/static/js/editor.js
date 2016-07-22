@@ -1613,7 +1613,7 @@ $(document).ready(function() {
 	});
 
 
-    Editor.user_search_autocomplete = function(element) {
+    Editor.user_search_autocomplete = function(element,options) {
         var url = '/users/search';
         source = function(req,callback) {
             element.addClass('loading');
@@ -1621,7 +1621,7 @@ $(document).ready(function() {
                 .success(function(data) {
                     var things = [];
                     var things = data.map(function(d) {
-                        return {label: d.name, value: d.name}
+                        return {label: d.autocomplete_entry, value: d.name, id: d.id}
                     });
                     callback(things);
                 })
@@ -1630,7 +1630,11 @@ $(document).ready(function() {
                 })
             ;
         }
-        element.autocomplete({source: source});
+        function set_user(e,ui) {
+            var id = ui.item.id;
+            element.parents('form').find('[name="selected_user"]').val(id);
+        }
+        element.autocomplete($.extend({source: source, select: set_user, html: true},options));
     }
 
 });

@@ -4,7 +4,7 @@
 {{block.super}}
 <script type="text/javascript">
     $(document).ready(function() {
-        Editor.user_search_autocomplete($('#id_user_search'));
+        Editor.user_search_autocomplete($('#{{form.user_search.auto_id}}'));
     });
 </script>
 {% endblock %}
@@ -24,6 +24,7 @@
 
 <form method="post">
     <div class="form-group">
+        {% for field in form.hidden_fields %}{{field}}{% endfor %}
         {{form.errors}}
         <label for="{{form.user_search.auto_id}}">Transfer ownership of {{item.name}} to</label>
         <input type="text" class="form-control" id="{{form.user_search.auto_id}}" name="user_search" placeholder="Username or full name">

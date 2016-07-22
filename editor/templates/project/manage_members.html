@@ -5,7 +5,7 @@
 {{block.super}}
 <script type="text/javascript">
     $(document).ready(function() {
-        Editor.user_search_autocomplete($('#id_user_search'));
+            Editor.user_search_autocomplete($('#{{add_member_form.user_search.auto_id}}'));
     });
 </script>
 {% endblock %}

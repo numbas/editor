@@ -386,12 +386,13 @@ class UserField(BootstrapFieldMixin,forms.Field):
                 raise forms.ValidationError("No user matching query '{}'".format(value))
         return user
 
-class UserSearchMixin(object):
+class UserSearchMixin(forms.ModelForm):
     """
         Add a user_search field to the form, which resolves a string query to a User object, and set the property user_attr on the model to that user.
     """
     user_search = UserField(label='User')
     user_attr = 'user'
+    selected_user = forms.ModelChoiceField(queryset=User.objects.all(),widget=forms.HiddenInput(),required=False)
 
     def __init__(self,*args,**kwargs):
         super(UserSearchMixin,self).__init__(*args,**kwargs)
@@ -399,10 +400,20 @@ class UserSearchMixin(object):
 
     def clean_user_search(self):
         user = self.cleaned_data.get('user_search')
-        if user is None:
-            raise forms.ValidationError("No such user")
 
         return user
+
+    def clean(self):
+        cleaned_data = super(UserSearchMixin,self).clean()
+        selected_user = cleaned_data.get('selected_user')
+        user_search = cleaned_data.get('user_search')
+        if selected_user is not None:
+            cleaned_data['user_search'] = selected_user
+
+        if cleaned_data['user_search'] is None:
+            raise forms.ValidationError("No such user")
+
+        return cleaned_data
 
     def save(self, force_insert=False, force_update=False, commit=True):
         m = super(UserSearchMixin, self).save(commit=False)
@@ -423,12 +434,12 @@ class AddMemberForm(UserSearchMixin,forms.ModelForm):
             'access': forms.Select(attrs={'class':'form-control'})
         }
 
-    def clean_user_search(self):
-        user = super(AddMemberForm,self).clean_user_search()
-        if self.cleaned_data['user_search'] == self.cleaned_data['project'].owner:
+    def clean(self):
+        cleaned_data = super(AddMemberForm,self).clean()
+        user = cleaned_data.get('user_search')
+        if user == cleaned_data.get('project').owner:
             raise forms.ValidationError("Can't give separate access to the project owner")
-
-        return user
+        return cleaned_data
 
     def save(self, force_insert=False, force_update=False, commit=True):
         m = super(AddMemberForm, self).save(commit=False)

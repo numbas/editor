@@ -1,5 +1,14 @@
 {% extends "project/settings_base.html" %}
 
+{% block javascripts %}
+{{block.super}}
+<script type="text/javascript">
+    $(document).ready(function() {
+        Editor.user_search_autocomplete($('#{{form.user_search.auto_id}}'));
+    });
+</script>
+{% endblock %}
+
 {% block settings_content %}
 
 <div class="alert alert-danger">
@@ -9,6 +18,7 @@
 </div>
 
 <form method="post">
+    {% for field in form.hidden_fields %}{{field}}{% endfor %}
     <div class="form-group">
         {{form.errors}}
         <label for="{{form.user_search.auto_id}}">Transfer ownership of {{project.name}} to</label>

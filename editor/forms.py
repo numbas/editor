@@ -349,6 +349,8 @@ class UpdateExtensionForm(forms.ModelForm):
         if location == '':
             raise ValidationError('You must give a short name.')
 
+        return location
+
 class NewExtensionForm(UpdateExtensionForm):
     
     """Form for a new extension."""

@@ -89,6 +89,7 @@
                             <div class="title">
                                 <strong class="number" data-bind="text: ($index()+1)+'.'"></strong>
                                 <a data-bind="attr:{href: url}, text: name, mathjax: name" target="_blank"></a>
+                                <span class="label label-default stamp" data-bind="visible: current_stamp, text: current_stamp_display, attr: {'data-stamp':current_stamp}"></span>
                             </div>
                             <div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
                         </li>
@@ -253,6 +254,7 @@
             <div class="details">
                 <div class="title">
                     <a data-bind="attr:{href: url}, text: name, mathjax: name" target="_blank"></a>
+                    <span class="label label-default stamp" data-bind="visible: current_stamp, text: current_stamp_display, attr: {'data-stamp':current_stamp}"></span>
                 </div>
                 <div class="author">
                     (<span data-bind="text: author"></span>)

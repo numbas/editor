@@ -349,12 +349,12 @@ $(document).ready(function() {
         this.previewURL = ko.computed(function() {
             return q.url()+'preview/';
         },this);
-        this.progress = data.progress;
-        this.progressDisplay = data.progressDisplay;
         this.metadata = ko.observable(data.metadata);
         var descriptionDiv = document.createElement('div');
         descriptionDiv.innerHTML = this.metadata().description;
         this.description = $(descriptionDiv).text();
+        this.current_stamp = data.current_stamp;
+        this.current_stamp_display = data.current_stamp_display;
         this.parent = parent;
         this.data = data;
 
@@ -381,8 +381,6 @@ $(document).ready(function() {
                 deleteURL: this.deleteURL(),
                 last_modified: this.last_modified(),
                 metadata: this.metadata(),
-                progress: this.progress,
-                progressDisplay: this.progressDisplay,
                 url: this.url()
             };
         },

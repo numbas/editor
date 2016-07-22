@@ -652,6 +652,8 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
             'created': str(self.created),
             'last_modified': str(self.last_modified), 
             'author': self.author.get_full_name(), 
+            'current_stamp': (self.current_stamp.status if self.current_stamp else None),
+            'current_stamp_display': (self.current_stamp.get_status_display() if self.current_stamp else None),
         }
         if self.item_type=='exam':
             obj['id'] = self.exam.id

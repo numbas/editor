@@ -1621,7 +1621,7 @@ $(document).ready(function() {
                 .success(function(data) {
                     var things = [];
                     var things = data.map(function(d) {
-                        return {label: d.autocomplete_entry, value: d.name, id: d.id}
+                        return {label: d.autocomplete_entry, value: d.name, id: d.id, profile: d.profile}
                     });
                     callback(things);
                 })
@@ -1637,4 +1637,7 @@ $(document).ready(function() {
         element.autocomplete($.extend({source: source, select: set_user, html: true},options));
     }
 
+    Editor.user_search_autocomplete($('#top-search-bar'),{select: function(e,ui) {
+        window.location.href = ui.item.profile;
+    }});
 });

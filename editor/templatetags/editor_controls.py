@@ -12,6 +12,7 @@ def property(context,property,label,*args,**kwargs):
         'monospace': kwargs.get('monospace',False),
         'type': kwargs.get('type','text'),
         'help_url': kwargs.get('help_url'),
+        'disable': kwargs.get('disable','false'),
         'min': kwargs.get('min'),
         'max': kwargs.get('max'),
         'form_label_class': context.get('form_label_class','col-sm-3'),
@@ -25,6 +26,7 @@ def percentproperty(context,property,label,*args,**kwargs):
         'property': property,
         'label': label,
         'help_url': kwargs.get('help_url'),
+        'disable': kwargs.get('disable','false'),
         'form_label_class': context.get('form_label_class','col-sm-3'),
         'form_control_class': context.get('form_control_class','col-sm-9'),
     })
@@ -38,6 +40,7 @@ def selectproperty(context,property,label,*args,**kwargs):
         'options': kwargs.get('options'),
         'options_text': kwargs.get('options_text'),
         'help_url': kwargs.get('help_url'),
+        'disable': kwargs.get('disable','false'),
         'form_label_class': context.get('form_label_class','col-sm-3'),
         'form_control_class': context.get('form_control_class','col-sm-9'),
     })
@@ -49,6 +52,7 @@ def booleanproperty(context,property,label,*args,**kwargs):
         'property': property,
         'label': label,
         'help_url': kwargs.get('help_url'),
+        'disable': kwargs.get('disable','false'),
         'form_label_class': context.get('form_label_class','col-sm-3'),
         'form_control_class': context.get('form_control_class','col-sm-9'),
     })
@@ -60,6 +64,7 @@ def exam_event(context,property,name,*args,**kwargs):
         'property': property,
         'name': name,
         'help_url': kwargs.get('help_url'),
+        'disable': kwargs.get('disable','false'),
         'form_label_class': context.get('form_label_class','col-sm-3'),
         'form_control_class': context.get('form_control_class','col-sm-9'),
     })

@@ -182,7 +182,7 @@ class UserSearchView(ListView):
     def get_queryset(self):
         try:
             search_term = self.request.GET['q']
-            users = find_users(name=search_term)
+            users = find_users(name=search_term)[:5]
         except KeyError:
             users = User.objects.all()
         return [user_json(u) for u in users]

@@ -63,7 +63,7 @@
         </li>
         <!-- /ko -->
     </ul>
-    {% if editable %}<button type="button" class="btn btn-primary" data-bind="click:addChoice"><span class="glyphicon glyphicon-plus"></span> Add a choice</button>{% endif %}
+    {% if editable %}<button type="button" class="btn btn-primary" data-bind="click:addChoice, fadeVisible: !customChoices()"><span class="glyphicon glyphicon-plus"></span> Add a choice</button>{% endif %}
 </section>
 
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='answers'}">
@@ -85,7 +85,7 @@
         </li>
         <!-- /ko -->
     </ul>
-    {% if editable %}<button type="button" class="btn btn-primary" data-bind="click:addAnswer"><span class="glyphicon glyphicon-plus"></span> Add a answer</button>{% endif %}
+    {% if editable %}<button type="button" class="btn btn-primary" data-bind="click:addAnswer, fadeVisible: !customAnswers()"><span class="glyphicon glyphicon-plus"></span> Add an answer</button>{% endif %}
 </section>
 
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='matrix'}">
@@ -96,7 +96,7 @@
         </div>
     </form>
 
-    <div class="matrix" data-bind="fadeVisible: !customMarking()">
+    <div class="matrix" data-bind="fadeVisible: showMarkingMatrix">
         <table class="marking-matrix table form-inline">
             <thead>
                 <tr>
@@ -121,5 +121,6 @@
             </tbody>
         </table>
     </div>
+    <div class="nothing-here" data-bind="fadeVisible: !showMarkingMatrix() && !customMarking()">Both choices and answers must be defined for this part.</div>
 </section>
 

@@ -54,5 +54,5 @@
 		</li>
 		<!-- /ko -->
 	</ul>
-    {% if editable %}<button type="button" class="btn btn-primary" data-bind="click:addChoice"><span class="glyphicon glyphicon-plus"></span> Add a choice</button>{% endif %}
+    {% if editable %}<button type="button" class="btn btn-primary" data-bind="click:addChoice, fadeVisible: !customChoices()"><span class="glyphicon glyphicon-plus"></span> Add a choice</button>{% endif %}
 </section>

@@ -2488,6 +2488,12 @@ $(document).ready(function() {
 					return a;
 				};
 
+                model.showMarkingMatrix = ko.computed(function() {
+                    var hasChoices = model.customChoices() || model.choices().length;
+                    var hasAnswers = model.customAnswers() || model.answers().length;
+                    return hasChoices && hasAnswers && !model.customMarking();
+                },this);
+
 				model.removeAnswer = function(answer) {
 					var n = model.answers.indexOf(answer);
 					model.answers.remove(answer);

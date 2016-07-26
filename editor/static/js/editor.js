@@ -1310,6 +1310,19 @@ $(document).ready(function() {
         }
     }
 
+    /** update the value of an observable when the input event is triggered
+     * augments the value binding
+     */
+    ko.bindingHandlers.inputValue = {
+        init: function(element,valueAccessor) {
+            var value = valueAccessor();
+            $(element).on('input',function() {
+                value($(element).val());
+            });
+            ko.applyBindingsToNode(element,{value:value});
+        }
+    }
+
     var Subject = Editor.Subject = function(data) {
         this.pk = data.pk;
         this.name = data.name;

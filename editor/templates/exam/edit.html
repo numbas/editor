@@ -210,13 +210,54 @@
     <!-- Feedback -->
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='feedback'}">
         <form class="form-horizontal" data-bind="submit: Editor.noop">
-            {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
+            {% with form_label_class='col-sm-3' form_control_class='col-sm-6' form_offset_class='col-sm-offset-3' %}
             {% booleanproperty 'showactualmark' 'Show current score?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-show-current-score' %}
             {% booleanproperty 'showtotalmark' 'Show maximum score?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-show-maximum-score' %}
             {% booleanproperty 'showanswerstate' 'Show answer state?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-show-answer-state' %}
             {% booleanproperty 'allowrevealanswer' 'Allow reveal answer?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-allow-reveal-answer' %}
-            {% percentproperty 'advicethreshold' 'Advice threshold' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-advice-threshold' %}
+
+            <div class="form-group">
+                <label class="{{form_label_class}} control-label">
+                    Introduction
+                    {% helplink 'http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-introduction' subject='the exam introduction' %}
+                </label>
+                <div class="{{form_control_class}}">
+                    <div {% if not editable %}disabled{% endif %} data-bind="writemaths: intro"></div>
+                    <p class="help-block">
+                        Give any information applying to the whole exam, which the student will see before they begin.
+                    </p>
+                </div>
+            </div>
+
+            <h4>Feedback messages</h4>
+            <ul class="feedback-messages list-unstyled list-group" data-bind="foreach: feedbackMessages">
+                <li class="feedback-message list-group-item clearfix">
+                    <div class="form-group">
+                        <label class="{{form_label_class}} control-label">
+                            If the student's score is at least
+                        </label>
+                        <div class="{{form_control_class}} form-inline">
+                            <input type="range" data-bind="inputValue: threshold" step="1" min="0" max="100"> <span class="percentproperty value" data-bind="text: ko.unwrap(threshold)+'%', valueUpdate: 'input'"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="{{form_label_class}} control-label">
+                            Show this message
+                        </label>
+                        <div class="{{form_control_class}}">
+                            <div {% if not editable %}disabled{% endif %} data-bind="writemaths: message"></div>
+                        </div>
+                    </div>
+                    <div class="{{form_control_class}} {{form_offset_class}}">
+                        {% if editable %}<button type="button" type="button" class="delete btn btn-sm btn-danger" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this feedback message</button>{% endif %}
+                    </div>
+                </li>
+            </ul>
+            {% if editable %}<button type="button" class="btn btn-primary" data-bind="click: addFeedbackMessage"><span class="glyphicon glyphicon-plus"></span> Add a feedback message</button>{% endif %}
+
             {% endwith %}
+
+
         </form>
 
         {% if editable %}
@@ -232,6 +273,7 @@
             </ul>
         </nav>
         {% endif %}
+
     </section>
 
 {% endblock main_tab_content %}

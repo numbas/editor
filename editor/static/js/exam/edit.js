@@ -61,6 +61,13 @@ $(document).ready(function() {
         this.allowrevealanswer = ko.observable(true);
         this.advicethreshold = ko.observable(0);
 
+        this.intro = ko.observable('');
+        this.feedbackMessages = ko.observableArray([]);
+
+        this.addFeedbackMessage = function() {
+            e.feedbackMessages.push(new FeedbackMessage());
+        }
+
         this.questionTabs = ko.observableArray([
             new Editor.Tab('basket','Basket','shopping-cart'),
             new Editor.Tab('mine','Recent Questions','time')
@@ -231,7 +238,9 @@ $(document).ready(function() {
                   showtotalmark: this.showtotalmark(),
                   showanswerstate: this.showanswerstate(),
                   allowrevealanswer: this.allowrevealanswer(),
-                  advicethreshold: this.advicethreshold()
+                  advicethreshold: this.advicethreshold(),
+                  intro: this.intro(),
+                  feedbackmessages: this.feedbackMessages().map(function(f){return f.toJSON()})
                 }
             };
         },
@@ -265,7 +274,10 @@ $(document).ready(function() {
 
             if('feedback' in content)
             {
-                tryLoad(content.feedback,['showactualmark','showtotalmark','showanswerstate','allowrevealanswer','advicethreshold'],this);
+                tryLoad(content.feedback,['showactualmark','showtotalmark','showanswerstate','allowrevealanswer','advicethreshold','intro'],this);
+                if('feedbackmessages' in content.feedback) {
+                    this.feedbackMessages(content.feedback.feedbackmessages.map(function(d){var f = new FeedbackMessage(); f.load(d); return f}));
+                }
             }
 
             if('custom_theme' in data && data.custom_theme) {
@@ -393,6 +405,27 @@ $(document).ready(function() {
             var newQ = this.clone();
             newQ.parent = viewModel.questions;
             viewModel.questions.push(newQ);
+        }
+    }
+
+    function FeedbackMessage() {
+        this.message = ko.observable('');
+        this.threshold = ko.observable(0);
+    }
+    FeedbackMessage.prototype = {
+        toJSON: function() {
+            return {
+                message: this.message(),
+                threshold: this.threshold()
+            }
+        },
+
+        load: function(data) {
+            this.message(data.message);
+            this.threshold(data.threshold || 0);
+        },
+        remove: function() {
+            viewModel.feedbackMessages.remove(this);
         }
     }
 

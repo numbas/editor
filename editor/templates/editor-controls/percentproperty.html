@@ -9,7 +9,8 @@
             <input
                 {% if not editable %}disabled{% endif%} 
                 data-bind="
-                    value: {{property}}, 
+					value: {{property}}, 
+					inputValue: {{property}}
                 "
                 type="range"
                 step="5"

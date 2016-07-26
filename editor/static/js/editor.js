@@ -1640,4 +1640,6 @@ $(document).ready(function() {
     Editor.user_search_autocomplete($('#top-search-bar'),{select: function(e,ui) {
         window.location.href = ui.item.profile;
     }});
+
+    Editor.noop = function() {}
 });

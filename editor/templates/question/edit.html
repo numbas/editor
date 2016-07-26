@@ -62,7 +62,7 @@
                     <h3 class="modal-title">Image attributes</h3>
                 </div>
                 <div class="modal-body">
-                    <form class="form-horizontal">
+                    <form class="form-horizontal" data-bind="submit: Editor.noop">
                         <div class="form-group">
                             <label class="label-block">
                                 <span class="col-sm-3 control-label">Width</span>
@@ -112,7 +112,7 @@
                     <h3 class="modal-title">Embedded page attributes</h3>
                 </div>
                 <div class="modal-body">
-                    <form class="form-horizontal">
+                    <form class="form-horizontal" data-bind="submit: Editor.noop">
                         <div class="form-group">
                             <label class="label-block">
                                 <span class="col-sm-3 control-label">Width</span>
@@ -197,7 +197,7 @@
                     <p class="nothing-here">No variables have been defined in this question.</p>
                 </div>
                 <div class="col-sm-12 col-md-6 col-lg-7 variable-definition" data-bind="with: currentVariable">
-                    <form>
+                    <form data-bind="submit: Editor.noop">
                         <div class="form-group">
                             <label>Name</label>
                             <input {% if not editable %}disabled{% endif %} type="text" placeholder="Name" class="form-control name monospace" data-bind="value:_name, valueUpdate: 'afterkeydown'"/>
@@ -374,7 +374,7 @@
 
     <!-- Variable testing -->
     <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='variabletesting'}">
-        <form class="form-horizontal">
+        <form class="form-horizontal" data-bind="submit: Editor.noop">
             <div class="form-group">
                 <label class="col-sm-3 control-label">
                     Condition to satisfy
@@ -459,7 +459,7 @@
                             {% endwith %}
 
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='scripts'}">
-                                <form class="form-inline" data-bind="foreach: scripts">
+                                <form class="form-inline" data-bind="foreach: scripts, submit: Editor.noop">
                                     <div class="script control-group">
                                         <label class="control-label">
                                             <p>
@@ -504,7 +504,7 @@
                                         {% if editable %}<button class="btn btn-sm btn-primary add-variable-replacement" data-bind="click: addVariableReplacement"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: variableReplacements().length? 'Add another replacement' : 'Add a variable replacement'">Add a variable replacement</span></button>{% endif %}
                                     </div>
 
-                                    <form class="form-horizontal">
+                                    <form class="form-horizontal" data-bind="submit: Editor.noop">
                                         <div class="control-group">
                                             <label class="control-label">
                                                 Variable replacement strategy:
@@ -709,7 +709,7 @@
                             </h3>
                         </div>
                         <div class="panel-body">
-                            <form>
+                            <form data-bind="submit: Editor.noop">
                                 <div class="form-group">
                                     <label>Javascript</label>
                                     <textarea {% if not editable %}disabled{% endif %} data-bind="valueUpdate: 'afterkeydown', codemirror: preamble.js, codemirrorMode: 'javascript'"></textarea>

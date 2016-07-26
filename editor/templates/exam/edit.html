@@ -24,7 +24,7 @@
 {{ block.super }}
     <!-- Display -->
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='display'}">
-        <form class="form-horizontal">
+        <form class="form-horizontal" data-bind="submit: Editor.noop">
             <div class="form-group">
                 <label class="label-block">
                     <div class="col-sm-3 control-label">
@@ -60,7 +60,7 @@
                         <h4 class="panel-title">Questions in this exam</h4>
                     </div>
                     <div class="panel-body">
-                        <form class="form-horizontal">
+                        <form class="form-horizontal" data-bind="submit: Editor.noop">
                             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
                             {% booleanproperty 'shuffleQuestions' 'Shuffle questions?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-shuffle-questions' %}
                             <div data-bind="fadeVisible: shuffleQuestions">
@@ -154,7 +154,7 @@
 
     <!-- Navigation -->
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='navigation'}">
-        <form class="form-horizontal">
+        <form class="form-horizontal" data-bind="submit: Editor.noop">
             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
             {% booleanproperty 'allowregen' 'Allow user to regenerate questions?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-allow-user-to-regenerate-questions' %}
             {% booleanproperty 'reverse' 'Allow move to previous question?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-allow-move-to-previous-question' %}
@@ -183,7 +183,7 @@
 
     <!-- Timing -->
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='timing'}">
-        <form class="form-horizontal">
+        <form class="form-horizontal" data-bind="submit: Editor.noop">
             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
             {% property 'duration' 'Exam duration (minutes)' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-exam-duration' %}
             {% booleanproperty 'allowPause' 'Allow pausing?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-allow-pausing' %}
@@ -209,7 +209,7 @@
 
     <!-- Feedback -->
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='feedback'}">
-        <form class="form-horizontal">
+        <form class="form-horizontal" data-bind="submit: Editor.noop">
             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
             {% booleanproperty 'showactualmark' 'Show current score?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-show-current-score' %}
             {% booleanproperty 'showtotalmark' 'Show maximum score?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-show-maximum-score' %}

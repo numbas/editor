@@ -2,7 +2,7 @@
 {% load helplink %}
 
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking'}">
-<form class="form-horizontal">
+<form class="form-horizontal" data-bind="submit: Editor.noop">
     {% property '$parent.marks' 'Marks' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-marks' %}
     <div data-bind="visible: $parent.steps().length">{% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-penalty-for-revealing-steps' %}</div>
 	<div class="form-group">
@@ -20,7 +20,7 @@
 </form>
 </section>
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='checking-accuracy'}">
-<form class="form-horizontal">
+<form class="form-horizontal" data-bind="submit: Editor.noop">
 	<h4>Checking accuracy</h4>
 	<div class="form-group">
 		<label class="{{form_label_class}} control-label">
@@ -39,7 +39,7 @@
 </section>
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='restrictions'}">
 <h4>Length restriction</h4>
-<form class="form-horizontal">
+<form class="form-horizontal" data-bind="submit: Editor.noop">
     {% property 'maxlength.length' 'Maximum length' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-maximum-length-restriction' %}
     <div data-bind="fadeVisible: maxlength.length()>0">
         {% percentproperty 'maxlength.partialCredit' 'Partial credit for long answer' %}
@@ -51,7 +51,7 @@
 		</div>
 	</div>
 </form>
-<form class="form-horizontal">
+<form class="form-horizontal" data-bind="submit: Editor.noop">
     {% property 'minlength.length' 'Minimum length' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-minimum-length-restriction' %}
     <div data-bind="fadeVisible: minlength.length()>0">
         {% percentproperty 'minlength.partialCredit' 'Partial credit for short answer' %}
@@ -64,7 +64,7 @@
 	</div>
 </form>
 <h4>String restriction</h4>
-<form class="form-horizontal">
+<form class="form-horizontal" data-bind="submit: Editor.noop">
 	<div class="form-group">
 		<label class="{{form_label_class}} control-label">
             Required strings {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-required-strings' %}
@@ -87,7 +87,7 @@
 	</div>
 </form>
 
-<form class="form-horizontal">
+<form class="form-horizontal" data-bind="submit: Editor.noop">
 	<div class="form-group">
 		<label class="{{form_label_class}} control-label">
             Forbidden strings: {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-forbidden-strings' %}
@@ -111,7 +111,7 @@
 </form>
 
 <h4>Variables</h4>
-<form class="form-horizontal">
+<form class="form-horizontal" data-bind="submit: Editor.noop">
     {% booleanproperty 'checkVariableNames' 'Warn if student uses an unexpected variable name?' %}
 	<div class="form-group" data-bind="fadeVisible:checkVariableNames">
 		<label class="{{form_label_class}} control-label">

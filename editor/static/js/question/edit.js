@@ -792,16 +792,20 @@ $(document).ready(function() {
 					var vg = q.getVariableGroup(gdata.name);
 					gdata.variables.map(function(variable_name) {
 						var v = q.getVariable(variable_name);
-						vg.variables.push(v);
-						q.baseVariableGroup.variables.remove(v);
+                        if(v) {
+    						vg.variables.push(v);
+	    					q.baseVariableGroup.variables.remove(v);
+                        }
 					});
 				});
 			}
 			if('ungrouped_variables' in contentData) {
 				contentData.ungrouped_variables.map(function(variable_name) {
 					var v = q.getVariable(variable_name);
-					q.baseVariableGroup.variables.remove(v);
-					q.baseVariableGroup.variables.push(v);
+                    if(v) {
+    					q.baseVariableGroup.variables.remove(v);
+	    				q.baseVariableGroup.variables.push(v);
+                    }
 				});
 			}
 

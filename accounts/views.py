@@ -70,6 +70,12 @@ class UserUpdateView(CurrentUserUpdateView):
 
     form_class = UserProfileForm
 
+    def get_context_data(self,*args,**kwargs):
+        context = super(UserUpdateView,self).get_context_data(*args,**kwargs)
+        context['profile_page'] = 'bio'
+        context['view_user'] = self.get_object()
+        return context
+
     def form_valid(self,form):
         messages.success(self.request,'Your profile has been updated.')
         return super(UserUpdateView,self).form_valid(form)

@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "profile/base.html" %}
 
 {% block javascripts %}
 {{block.super}}
@@ -17,7 +17,7 @@ tinymce.init({
 </script>
 {% endblock javascripts %}
 
-{% block content %}
+{% block profile_content %}
     <div class="page-header">
 	    <h1>Update your profile</h1>
     </div>
@@ -61,4 +61,4 @@ tinymce.init({
             <button type="submit" class="btn btn-primary">Update</button>
 		</div>
     </form>
-{% endblock content %}
+{% endblock profile_content %}

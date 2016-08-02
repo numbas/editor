@@ -40,7 +40,7 @@ class ProjectContextMixin(object):
         context['project'] = project
         context['in_project'] = project is not None
         context['project_editable'] = project.can_be_edited_by(self.request.user)
-        context['member_of_project'] = self.request.user == project.owner or ProjectAccess.objects.filter(project=project,user=self.request.user).exists()
+        context['member_of_project'] = self.request.user == project.owner or ((not self.request.user.is_anonymous()) and ProjectAccess.objects.filter(project=project,user=self.request.user).exists())
         return context
 
 class SettingsPageMixin(MustBeMemberMixin):
@@ -64,10 +64,11 @@ class DeleteView(ProjectContextMixin,MustBeOwnerMixin,generic.DeleteView):
 
 
 class IndexView(ProjectContextMixin,MustBeMemberMixin,generic.DetailView):
+    model = Project
     template_name = 'project/index.html'
 
     def get_context_data(self,**kwargs):
-        project = self.get_project()
+        project = self.object = self.get_project()
         context = super(IndexView,self).get_context_data(**kwargs)
         context['watching_project'] = project.watching_non_members.filter(pk=self.request.user.pk).exists()
         return context

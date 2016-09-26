@@ -147,7 +147,7 @@
                                     <a class="btn btn-link btn-sm test-run" target="_blank" href="{% url item.item_type|add:'_preview' item.rel_obj.pk item.slug %}"><span class="glyphicon glyphicon-play" title="Test run" aria-hidden="true"></span></a>
                                 </li>
                                 <li>
-                                    <a class="btn btn-link btn-sm copy" href="{% url item.item_type|add:'_copy' item.rel_obj.pk item.slug %}"><span class="glyphicon glyphicon-duplicate" title="Make a copy of this question" aria-hidden="true"></span></a>
+                                    <a class="btn btn-link btn-sm copy" href="{% url item.item_type|add:'_copy' item.rel_obj.pk item.slug %}"><span class="glyphicon glyphicon-duplicate" title="Make a copy of this {{item.item_type}}" aria-hidden="true"></span></a>
                                 </li>
                                 {% if item.item_type == 'question' %}
                                 <li>

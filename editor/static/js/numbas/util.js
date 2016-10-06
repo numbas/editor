@@ -281,6 +281,15 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 		return parseFloat(f)==f;
 	},
 
+    /** Test if parameter is a fraction
+     * @param {string} s
+     * @returns {boolean}
+     */
+    isFraction: function(s) {
+		s = s.toString().trim();
+        return util.re_fraction.test(s);
+    },
+
 	/** Is `n` a number? i.e. `!isNaN(n)`, or is `n` "infinity", or if `allowFractions` is true, is `n` a fraction?
 	 * @param {number} n
 	 * @param {boolean} allowFractions
@@ -399,6 +408,18 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 			str=str.replace(/%s/,arguments[i]);
 		}
 		return str;
+	},
+
+    /** String representation of a time, in the format HH:MM:SS
+     * @param {Data} t
+     * @returns {string}
+     */
+    formatTime: function(t) {
+		var h = t.getHours();
+		var m = t.getMinutes();
+		var s = t.getSeconds();
+        var lpad = util.lpad;
+		return t.toDateString() + ' ' + lpad(h,2,'0')+':'+lpad(m,2,'0')+':'+lpad(s,2,'0');
 	},
 
 	/** Format an amount of currency
@@ -611,14 +632,24 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	 * @returns {array}
 	 */
 	product: function(lists) {
+        if(!Array.isArray(lists)) {
+            throw(new Numbas.Error("util.product.non list"));
+        }
 		var indexes = lists.map(function(){return 0});
 		var zero = false;
+        var nonArray = false;
 		var lengths = lists.map(function(l){
+            if(!Array.isArray(l)) {
+                nonArray = true;
+            }
 			if(l.length==0) {
 				zero = true;
 			}
 			return l.length
 		});
+        if(nonArray) {
+            throw(new Numbas.Error("util.product.non list"));
+        }
 		if(zero) {
 			return [];
 		}

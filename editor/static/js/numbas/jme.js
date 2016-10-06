@@ -49,7 +49,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 		re_bool: /^(true|false)(?![a-zA-Z_0-9'])/i,
 		re_number: /^[0-9]+(?:\x2E[0-9]+)?/,
 		re_name: /^{?((?:(?:[a-zA-Z]+):)*)((?:\$?[a-zA-Z_][a-zA-Z0-9_]*'*)|\?\??)}?/i,
-		re_op: /^(\.\.|#|<=|>=|<>|&&|\|\||[\|*+\-\/\^<>=!&;]|(?:(not|and|or|xor|implies|isa|except|in)([^a-zA-Z0-9_']|$)))/i,
+		re_op: /^(\.\.|#|<=|>=|<>|&&|\|\||[\|*+\-\/\^<>=!&;]|(?:(not|and|or|xor|implies|isa|except|in|divides)([^a-zA-Z0-9_']|$)))/i,
 		re_punctuation: /^([\(\),\[\]])/,
 		re_string: /^(['"])((?:[^\1\\]|\\.)*?)\1/,
 		re_comment: /^\/\/.*(?:\n|$)/
@@ -108,6 +108,9 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 				var nt;
 				var postfix = false;
 				var prefix = false;
+                if(token in opSynonyms) {
+                    token = opSynonyms[token];
+                }
 				if( tokens.length==0 || (nt=tokens[tokens.length-1].type)=='(' || nt==',' || nt=='[' || (nt=='op' && !tokens[tokens.length-1].postfix) )
 				{
 					if(token in prefixForm) {
@@ -196,17 +199,6 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 			tokens.push(token);
 		}
 
-		//rewrite some synonyms
-		for(var i=0; i<tokens.length; i++)
-		{
-			if(tokens[i].name)
-			{
-				if(synonyms[tokens[i].name])
-					tokens[i].name=synonyms[tokens[i].name];
-			}
-		}
-
-
 		return(tokens);
 	},
 
@@ -251,8 +243,12 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 				addoutput(tok);
 				break;
 			case "name":
-				if( i<tokens.length-1 && tokens[i+1].type=="(")
+				if( i<tokens.length-1 && tokens[i+1].type=="(") // if followed by an open bracket, this is a function application
 				{
+                        if(funcSynonyms[tok.name]) {
+                            tok.name=funcSynonyms[tok.name];
+                        }
+
 						stack.push(new TFunc(tok.name,tok.annotation));
 						numvars.push(0);
 						olength.push(output.length);
@@ -834,11 +830,11 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 					v = jme.tokenToDisplayString(v);
 				} else {
 					if(v.type=='number') {
-						v = '('+Numbas.jme.display.treeToJME({tok:v})+')';
+						v = '('+Numbas.jme.display.treeToJME({tok:v},{niceNumber: false})+')';
 					} else if(v.type=='string') {
 						v = "'"+v.value+"'";
 					} else {
-						v = jme.display.treeToJME({tok:v});
+						v = jme.display.treeToJME({tok:v},{niceNumber: false});
 					}
 				}
 
@@ -1054,6 +1050,7 @@ var fnSort = util.sortBy('id');
  * @property {object} variables - dictionary of {@link Numbas.jme.token} objects
  * @property {object} functions - dictionary of arrays of {@link Numbas.jme.funcObj} objects. There can be more than one function for each name because of signature overloading.
  * @property {objects} rulesets - dictionary of {@link Numbas.jme.Ruleset} objects
+ * @property {Numbas.Question} question - the question this scope belongs to
  *
  * @param {Numbas.jme.Scope[]} scopes - List of scopes to combine into this one. Scopes appearing later in the list override ones appearing earlier, in case variable/ruleset names conflict.
  */
@@ -1070,6 +1067,7 @@ var Scope = jme.Scope = function(scopes) {
 
 	for(var i=0;i<scopes.length;i++) {
 		var scope = scopes[i];
+        this.question = scope.question || this.question;
 		if(scope) {
 			if('variables' in scope) {
 				for(var x in scope.variables) {
@@ -1204,6 +1202,9 @@ TBool.doc = {
  * @param {element} html
  */
 var THTML = types.THTML = types.html = function(html) {
+    if(html.ownerDocument===undefined && !html.jquery) {
+        throw(new Numbas.Error('jme.thtml.not html'));
+    }
 	this.value = $(html);
 }
 THTML.prototype.type = 'html';
@@ -1288,6 +1289,14 @@ TVector.doc = {
 var TMatrix = types.TMatrix = types.matrix = function(value)
 {
 	this.value = value;
+    if(arguments.length>0) {
+        if(value.length!=value.rows) {
+            throw(new Numbas.Error("jme.matrix.reports bad size"));
+        }
+        if(value.rows>0 && value[0].length!=value.columns) {
+            throw(new Numbas.Error("jme.matrix.reports bad size"));
+        }
+    }
 }
 TMatrix.prototype.type = 'matrix';
 TMatrix.doc = {
@@ -1502,16 +1511,23 @@ var precedence = jme.precedence = {
 	'implies': 14
 };
 
-/** Synonyms of names - keys in this dictionary are translated to their corresponding values after tokenising.
+/** Synonyms of operator names - keys in this dictionary are translated to their corresponding values
  * @enum {string}
  * @memberof Numbas.jme
  * @readonly
  */
-var synonyms = jme.synonyms = {
+var opSynonyms = jme.opSynonyms = {
 	'&':'and',
 	'&&':'and',
 	'divides': '|',
-	'||':'or',
+	'||':'or'
+}
+/** Synonyms of function names - keys in this dictionary are translated to their corresponding values 
+ * @enum {string}
+ * @memberof Numbas.jme
+ * @readonly
+ */
+var funcSynonyms = jme.funcSynonyms = {
 	'sqr':'sqrt',
 	'gcf': 'gcd',
 	'sgn':'sign',
@@ -1600,7 +1616,7 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
 	this.name=name;
 	this.intype = intype;
 	if(typeof(outcons)=='function')
-		this.outtype = new outcons().type;
+		this.outtype = outcons.prototype.type;
 	else
 		this.outtype = '?';
 	this.outcons = outcons;

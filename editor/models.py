@@ -791,21 +791,19 @@ class Timeline(object):
         items = items.prefetch_related('object')
 
         nonsticky_broadcasts = SiteBroadcast.objects.visible_now().exclude(sticky=True)
-        nonsticky_broadcast_timelineitems = TimelineItem.objects.filter(object_content_type=ContentType.objects.get_for_model(SiteBroadcast),object_id__in=nonsticky_broadcasts)
 
-        filtered_items = items.filter(editoritems__published=True) | nonsticky_broadcast_timelineitems
+        view_filter = Q(editoritems__published=True) | Q(object_content_type=ContentType.objects.get_for_model(SiteBroadcast),object_id__in=nonsticky_broadcasts)
+
         if not self.viewing_user.is_anonymous():
             projects = self.viewing_user.own_projects.all() | Project.objects.filter(projectaccess__in=self.viewing_user.project_memberships.all()) | Project.objects.filter(watching_non_members=self.viewing_user)
-            items_for_user = TimelineItem.objects.filter(
+            items_for_user = (
                 Q(editoritems__in=self.viewing_user.watched_items.all()) | 
                 Q(editoritems__project__in=projects) |
                 Q(projects__in=projects)
             )
 
-            filtered_items = filtered_items | items_for_user
-            filtered_items = filtered_items.exclude(hidden_by=self.viewing_user)
-
-        self.filtered_items = filtered_items
+            view_filter = view_filter | items_for_user
+        self.filtered_items = filtered_items = items.filter(view_filter).exclude(hidden_by=self.viewing_user)
 
     def __getitem__(self,index):
         return self.filtered_items.__getitem__(index)

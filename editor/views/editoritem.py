@@ -254,7 +254,10 @@ class SearchView(ListView):
     template_name = 'editoritem/search.html'
 
     def base_queryset(self):
-        return EditorItem.objects.filter(EditorItem.filter_can_be_viewed_by(self.request.user))
+        return EditorItem.objects
+
+    def get_viewable_items(self):
+        return self.base_queryset().filter(EditorItem.filter_can_be_viewed_by(self.request.user))
 
     def get_queryset(self):
 
@@ -264,7 +267,7 @@ class SearchView(ListView):
             form.data.setdefault(field,form.fields[field].initial)
         form.is_valid()
 
-        items = self.viewable_items = self.base_queryset()
+        items = self.get_viewable_items()
 
         # filter based on tags
         tags = self.tags = form.cleaned_data.get('tags')

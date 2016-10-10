@@ -235,27 +235,6 @@ class RevertView(generic.UpdateView):
         self.version.revision.revert()
 
         return redirect(reverse('question_edit', args=(self.question.pk,self.question.editoritem.slug)))
-
-class JSONSearchView(editor.views.editoritem.SearchView):
-    
-    """Search questions."""
-    
-    def render_to_response(self, context, **response_kwargs):
-        if self.request.is_ajax():
-            return HttpResponse(json.dumps({'object_list':context['object_list'],'page':context['page'],'id':context['id']}),
-                                content_type='application/json',
-                                **response_kwargs)
-        raise Http404
-
-    def get_queryset(self):
-        questions = super(JSONSearchView,self).get_queryset()
-        return [q.summary() for q in questions]
-
-    def get_context_data(self, **kwargs):
-        context = ListView.get_context_data(self,**kwargs)
-        context['page'] = self.request.GET.get('page',1)
-        context['id'] = self.request.GET.get('id',None)
-        return context
     
 class ShareLinkView(editor.views.generic.ShareLinkView):
     permanent = False

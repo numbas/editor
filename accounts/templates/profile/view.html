@@ -1,6 +1,7 @@
 {% extends "profile/base.html" %}
 {% load escape_html from sanitizer %}
 {% load user_link %}
+{% load timeline %}
 
 {% block profile_content %}
 {% with object.userprofile as profile %}
@@ -24,6 +25,16 @@
 {% endif %}
 
 <p><a href="{% url 'profile_editoritem_search' view_user.pk %}" class="btn btn-link btn-lg"><span class="glyphicon glyphicon-search"></span> Browse {{view_user.first_name}}'s content</a></p>
+
+<hr>
+
+<h2 class="timeline-header"><span class="glyphicon glyphicon-dashboard"></span> {{user.first_name}}'s activity</h2>
+<div class="timeline">
+    {% with include_object_link=True  %}
+    {% timeline profile.public_timeline %}
+    {% endwith %}
+</div>
+
 
 {% endwith %}
 {% endblock profile_content %}

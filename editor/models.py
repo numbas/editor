@@ -33,6 +33,7 @@ from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 from django.template.loader import get_template
 from django.core.mail import send_mail
+from django.core.paginator import Paginator
 
 import reversion
 
@@ -63,7 +64,7 @@ class ControlledObject(object):
     def can_be_viewed_by(self,user):
         accept_levels = ('view','edit')
         try:
-            if self.public_access in accept_levels:
+            if self.published and self.public_access in accept_levels:
                 return True
         except AttributeError:
             pass
@@ -116,6 +117,9 @@ class TimelineMixin(object):
         except AttributeError:
             pass
         return user==self.user
+
+    def can_be_viewed_by(self,user):
+        raise NotImplementedError
 
     def timeline_object(self):
         try:
@@ -186,6 +190,9 @@ class ProjectAccess(models.Model,TimelineMixin):
 
     def can_be_deleted_by(self,user):
         return self.project.can_be_edited_by(user)
+
+    def can_be_viewed_by(self,user):
+        return self.project.can_be_viewed_by(user)
 
     def timeline_object(self):
         return self.project
@@ -453,6 +460,9 @@ class Access(models.Model,TimelineMixin):
 
     timelineitems = GenericRelation('TimelineItem',related_query_name='item_accesses',content_type_field='object_content_type',object_id_field='object_id')
     timelineitem_template = 'timeline/access.html'
+
+    def can_be_viewed_by(self,user):
+        return self.item.can_be_viewed_by(user)
 
     def can_be_deleted_by(self,user):
         return self.item.can_be_deleted_by(user)
@@ -749,6 +759,9 @@ class PullRequest(models.Model,ControlledObject,TimelineMixin):
     def can_be_deleted_by(self,user):
         return user==self.owner or self.destination.can_be_edited_by(user)
 
+    def can_be_viewed_by(self,user):
+        return self.source.can_be_viewed_by(user) and self.destination.can_be_viewed_by(user)
+
     def clean(self):
         if self.source==self.destination:
             raise ValidationError({'source': "Source and destination are the same."})
@@ -772,9 +785,35 @@ class PullRequest(models.Model,ControlledObject,TimelineMixin):
         self.open = False
         self.closed_by = user
 
+class Timeline(object):
+    def __init__(self,items,viewing_user):
+        self.viewing_user = viewing_user
+        items = items.prefetch_related('object')
+
+        nonsticky_broadcasts = SiteBroadcast.objects.visible_now().exclude(sticky=True)
+        nonsticky_broadcast_timelineitems = TimelineItem.objects.filter(object_content_type=ContentType.objects.get_for_model(SiteBroadcast),object_id__in=nonsticky_broadcasts)
+
+        filtered_items = items.filter(editoritems__published=True) | nonsticky_broadcast_timelineitems
+        if not self.viewing_user.is_anonymous():
+            projects = self.viewing_user.own_projects.all() | Project.objects.filter(projectaccess__in=self.viewing_user.project_memberships.all()) | Project.objects.filter(watching_non_members=self.viewing_user)
+            items_for_user = TimelineItem.objects.filter(
+                Q(editoritems__in=self.viewing_user.watched_items.all()) | 
+                Q(editoritems__project__in=projects) |
+                Q(projects__in=projects)
+            )
+
+            filtered_items = filtered_items | items_for_user
+            filtered_items = filtered_items.exclude(hidden_by=self.viewing_user)
+
+        self.filtered_items = filtered_items
+
+    def __getitem__(self,index):
+        return self.filtered_items.__getitem__(index)
+
 class TimelineItemManager(models.Manager):
     def visible_to(self,user):
-        return self.exclude(hidden_by=user)
+        objects = self.exclude(hidden_by=user)
+        return objects
 
 class TimelineItem(models.Model):
     objects = TimelineItemManager()
@@ -795,11 +834,17 @@ class TimelineItem(models.Model):
 
     date = models.DateTimeField(auto_now_add=True)
 
+    def __unicode__(self):
+        return '{}: {}'.format(self.date,str(self.object))
+
     def can_be_deleted_by(self,user):
         try:
             return self.object.can_be_deleted_by(user)
         except AttributeError:
             return False
+
+    def can_be_viewed_by(self,user):
+        return self.user==user or self.object.can_be_viewed_by(user)
 
     class Meta:
         unique_together = (('object_id','object_content_type'),)
@@ -829,6 +874,9 @@ class SiteBroadcast(models.Model,TimelineMixin):
     def can_be_deleted_by(self,user):
         return False
 
+    def can_be_viewed_by(self,user):
+        return True
+
     def timeline_object(self):
         return None
 
@@ -847,6 +895,9 @@ class NewStampOfApproval(models.Model,TimelineMixin):
     def __unicode__(self):
         return '{} said "{}"'.format(self.user.username,self.get_status_display())
 
+    def can_be_viewed_by(self,user):
+        return self.object.can_be_viewed_by(user)
+
 class Comment(models.Model,TimelineMixin):
     object_content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
@@ -860,6 +911,9 @@ class Comment(models.Model,TimelineMixin):
 
     def __unicode__(self):
         return 'Comment by {}: "{}"'.format(self.user.get_full_name(), str(self.object), self.text[:47]+'...' if len(self.text)>50 else self.text)
+
+    def can_be_viewed_by(self,user):
+        return self.object.can_be_viewed_by(user)
 
 class RestorePoint(models.Model,TimelineMixin):
     object = models.ForeignKey(EditorItem,related_name='restore_points')
@@ -875,6 +929,9 @@ class RestorePoint(models.Model,TimelineMixin):
     def __unicode__(self):
         return 'Restore point set by {}: "{}"'.format(self.user.get_full_name(), str(self.object), self.description[:47]+'...' if len(self.description)>50 else self.description)
 
+    def can_be_viewed_by(self,user):
+        return self.object.can_be_viewed_by(user)
+
 ITEM_CHANGED_VERBS = [('created','created')]
 class ItemChangedTimelineItem(models.Model,TimelineMixin):
     object = models.ForeignKey(EditorItem)
@@ -883,6 +940,9 @@ class ItemChangedTimelineItem(models.Model,TimelineMixin):
 
     timelineitems = GenericRelation(TimelineItem,related_query_name='item_changes',content_type_field='object_content_type',object_id_field='object_id')
     timelineitem_template = 'timeline/change.html'
+
+    def can_be_viewed_by(self,user):
+        return self.object.can_be_viewed_by(user)
     
     def can_be_deleted_by(self,user):
         return False
@@ -1603,4 +1663,7 @@ class StampOfApproval(models.Model,TimelineMixin):
 
     def __unicode__(self):
         return '{} as "{}"'.format(self.user.username,self.object.name,self.get_status_display(),self.date)
+
+    def can_be_viewed_by(self,user):
+        return self.object.can_be_viewed_by(user)
 

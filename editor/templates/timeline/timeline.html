@@ -1,0 +1,7 @@
+{% load el_pagination_tags %}
+
+{% lazy_paginate timeline_items_per_page timeline as items %}
+{% for item in items %}
+    {% include item.object.timelineitem_template %}
+{% endfor %}
+{% show_more "Earlier activity →" "" "btn btn-info btn-lg timeline-more" %}

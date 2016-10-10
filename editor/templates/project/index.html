@@ -41,11 +41,9 @@
                 </div>
                 {% endif %}
                 <div class="timeline">
-                    {% with include_object_link=True timeline=project.all_timeline|visible_to:request.user %}
+                    {% with include_object_link=True timeline=project.all_timeline %}
                     {% if timeline.exists %}
-                        {% for item in timeline|slice:":20" %}
-                            {% include item.object.timelineitem_template %}
-                        {% endfor %}
+                        {% timeline timeline per_page=20 %}
                     {% else %} 
                         <p class="nothing-here">No activity yet!</p>
                     {% endif %}

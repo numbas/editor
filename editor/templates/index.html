@@ -62,11 +62,9 @@
                         {% include item.object.timelineitem_template %}
                     {% endwith %}
                 {% endfor %}
-                {% with include_object_link=True timeline=request.user.userprofile.all_timeline|visible_to:request.user %}
+                {% with include_object_link=True timeline=request.user.userprofile.all_timeline %}
                     {% if timeline.exists %}
-                        {% for item in timeline|slice:":20" %}
-                            {% include item.object.timelineitem_template %}
-                        {% endfor %}
+                        {% timeline timeline per_page=20 %}
                     {% else %}
                         {% with include_object_link=False %}
                         {% include "timeline/welcome.html" %}

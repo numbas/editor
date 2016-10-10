@@ -1,6 +1,7 @@
 from django.core.serializers import serialize
 import json
 from django.template import Library
+from editor.models import Timeline
 
 register = Library()
 
@@ -14,3 +15,13 @@ def visible_to(items,user):
         return items
     else:
         return items.exclude(hidden_by=user)
+
+@register.inclusion_tag('timeline/timeline.html',takes_context=True)
+def timeline(context,items,**kwargs):
+    return {
+        'timeline': Timeline(items,context['user']), 
+        'request': context.get('request'),
+        'include_object_link': context.get('include_object_link',False),
+        'timeline_items_per_page': kwargs.get('per_page',10),
+    }
+

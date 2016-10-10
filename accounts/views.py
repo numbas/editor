@@ -11,7 +11,7 @@ from django.template.defaultfilters import slugify
 from accounts.forms import UserProfileForm,ChangePasswordForm
 from editor.models import NewQuestion, NewExam
 import editor.models
-from editor.views import editoritem
+from editor.views import editoritem,timeline
 from zipfile import ZipFile
 from cStringIO import StringIO
 from django.contrib.sites.models import Site
@@ -112,10 +112,6 @@ class UserProfileView(DetailView):
         context['is_me'] = self.request.user == self.object
         context['profile_page'] = self.profile_page
         return context
-
-class UserTimelineView(UserProfileView):
-    template_name = 'profile/timeline.html'
-    profile_page = 'activity'
 
 class UserProjectsView(UserProfileView):
     template_name = 'profile/projects.html'

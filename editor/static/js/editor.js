@@ -93,7 +93,7 @@ $(document).ready(function() {
 			set(data[attr.toLowerCase()]);
 	}
 
-    Editor.numbasVersion = 'custom_script_order';
+    Editor.numbasVersion = 'show_precision_hint';
 
 	Editor.parseExam = function(source) {
 		var content = /\/\/(.*?)\n(.*)/.exec(source)[2]

@@ -11,6 +11,7 @@
     {% property 'maxValue' 'Maximum accepted value' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-maximum-accepted-value' %}
     {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-show-correct-answer-on-reveal' %}
     {% booleanproperty 'integerAnswer' 'Must the answer be an integer?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-must-the-answer-be-an-integer' %}
+    <hr>
     <div data-bind="fadeVisible: integerAnswer">
         {% percentproperty 'integerPartialCredit' 'Partial credit for non-integer answer' %}
     </div>
@@ -27,6 +28,7 @@
     <div class="form-group" data-bind="fadeVisible: precisionType().name!='none'">
         {% property 'precision' 'precisionWord' dynamic_label=True %}
         {% booleanproperty 'strictPrecision' 'Require trailing zeros?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-require-trailing-zeroes' %}
+        {% booleanproperty 'showPrecisionHint' 'Show precision restriction hint?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-show-precision-restriction-hint' %}
         {% percentproperty 'precisionPartialCredit' 'Partial credit for wrong precision' %}
         <div class="form-group">
             <label class="{{form_label_class}} control-label">

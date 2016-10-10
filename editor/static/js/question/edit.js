@@ -2010,7 +2010,8 @@ $(document).ready(function() {
 					precision: ko.observable(0),
 					precisionPartialCredit: ko.observable(0),
 					precisionMessage: ko.observable('You have not given your answer to the correct precision.'),
-					strictPrecision: ko.observable(true)
+					strictPrecision: ko.observable(true),
+                    showPrecisionHint: ko.observable(true)
 				};
 				model.precisionType = ko.observable(model.precisionTypes[0]);
 				model.precisionWord = ko.computed(function() {
@@ -2041,10 +2042,11 @@ $(document).ready(function() {
 					data.precisionPartialCredit = this.precisionPartialCredit();
 					data.precisionMessage = this.precisionMessage();
 					data.strictPrecision = this.strictPrecision();
+                    data.showPrecisionHint = this.showPrecisionHint();
 				}
 			},
 			load: function(data) {
-                tryLoad(data,['minValue','maxValue','correctAnswerFraction','integerAnswer','integerPartialCredit','allowFractions','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision'],this);
+                tryLoad(data,['minValue','maxValue','correctAnswerFraction','integerAnswer','integerPartialCredit','allowFractions','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision','showPrecisionHint'],this);
 				if('answer' in data) {
 					this.minValue(data.answer);
 					this.maxValue(data.answer);

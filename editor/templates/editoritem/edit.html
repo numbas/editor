@@ -8,6 +8,7 @@
 {% load sstatic %}
 {% load verbatim %}
 {% load json_filter %}
+{% load raw_include %}
 
 {% block skipMathJaxStartup %}true{% endblock %}
 
@@ -15,8 +16,30 @@
     {{ block.super }}
 
     <!-- numbas -->
-    <script src="{% sstatic 'js/numbas/R/R.js' %}" type="text/javascript"></script>
-    <script src="{% sstatic 'js/numbas/R/en-gb.js' %}" type="text/javascript"></script>
+    <script src="{% sstatic 'js/numbas/i18next/i18next.js' %}" type="text/javascript"></script>
+    <script>
+        i18next.init({
+            lng: '{{preferred_locale}}',
+            fallbackLng: 'en-GB',
+            keySeparator: false,
+            interpolation: {
+                format: function(value,format) {
+                    if(format=='niceNumber') {
+                        return Numbas.math.niceNumber(value);
+                    }
+                }
+            },
+            resources: {
+                {% for locale in locales %}
+                "{{locale}}": {"translation":{% raw_include "js/numbas/locales/"|add:locale|add:".json" %} },
+                {% endfor %}
+            }
+        });
+        window.R = function(){
+            return i18next.t.apply(i18next,arguments) 
+        };
+    </script>
+
     <script src="{% sstatic 'js/numbas/numbas.js' %}" type="text/javascript"></script>
     <script src="{% sstatic 'js/numbas/jme-display.js' %}" type="text/javascript"></script>
     <script src="{% sstatic 'js/numbas/jme-builtins.js' %}" type="text/javascript"></script>

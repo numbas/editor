@@ -220,7 +220,7 @@ class BaseUpdateView(generic.UpdateView):
         context['stamp_choices'] = editor.models.STAMP_STATUS_CHOICES
 
         context['preferred_locale'] = self.request.user.userprofile.language if not self.request.user.is_anonymous() else 'en-GB'
-        context['locales'] = [code for name,code in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']]
+        context['locale_files'] = [code for name,code in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']]
 
         return context
 

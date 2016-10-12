@@ -30,7 +30,7 @@
                 }
             },
             resources: {
-                {% for locale in locales %}
+                {% for locale in locale_files %}
                 "{{locale}}": {"translation":{% raw_include "js/numbas/locales/"|add:locale|add:".json" %} },
                 {% endfor %}
             }

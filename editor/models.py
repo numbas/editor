@@ -803,7 +803,10 @@ class Timeline(object):
             )
 
             view_filter = view_filter | items_for_user
-        self.filtered_items = filtered_items = items.filter(view_filter).exclude(hidden_by=self.viewing_user)
+        filtered_items = items.filter(view_filter)
+        if not self.viewing_user.is_anonymous():
+            filtered_items = filtered_items.exclude(hidden_by=self.viewing_user)
+        self.filtered_items = filtered_items
 
     def __getitem__(self,index):
         return self.filtered_items.__getitem__(index)

@@ -504,7 +504,16 @@
                                                 </td>
                                             </tr>
                                         </tbody>
-                                    </table>
+									</table>
+
+									<div data-bind="fadeVisible: replacementRandomDependencies().length" class="alert alert-danger">
+										<p>The variable replacements you've chosen will cause the following variables to be regenerated each time the student submits an answer to this part:</p>
+										<p><ul class="list-inline" data-bind="foreach: replacementRandomDependencies">
+											<li><span class="btn btn-sm btn-danger monospace" data-bind="text: $data,click: $root.goToVariable" title="Edit this variable"></span></li>
+										</ul></p>
+										<p>These variables have some random elements, which means they're not guaranteed to have the same value each time the student submits an answer. You should define new variables to store the random elements, so that they remain the same each time this part is marked.</p>
+									</div>
+
                                     <div class="text-right">
                                         {% if editable %}<button class="btn btn-sm btn-primary add-variable-replacement" data-bind="click: addVariableReplacement"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: variableReplacements().length? 'Add another replacement' : 'Add a variable replacement'">Add a variable replacement</span></button>{% endif %}
                                     </div>

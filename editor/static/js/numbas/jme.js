@@ -922,6 +922,44 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 	 */
 	isFunction: function(tok,name) {
 		return tok.type=='function' && tok.name==name;
+	},
+
+	/** Does this expression behave randomly?
+	 *  True if it contains any instances of functions or operations, defined in the given scope, which could behave randomly.
+	 *  
+	 *  @param {JME} expr
+	 *  @param {Numbas.jme.Scope} scope
+	 *  @returns {boolean}
+	 */
+	isRandom: function(expr,scope) {
+		switch(expr.tok.type) {
+			case 'op':
+			case 'function':
+				// a function application is random if its definition is marked as random,
+				// or if any of its arguments are random
+				var op = expr.tok.name.toLowerCase();
+				if(scope.functions[op]) {
+					var fns = scope.functions[op];
+					for(var i=0;i<fns.length;i++) {
+						var fn = fns[i]
+						if(fn.random===undefined && fn.language=='jme') {
+							fn.random = false; // put false in to avoid infinite recursion if fn is defined in terms of another function which itself uses fn
+							fn.random = jme.isRandom(fn.tree,scope);
+						}
+						if(fn.random) {
+							return true;
+						}
+					}
+				}
+				for(var i=0;i<expr.args.length;i++) {
+					if(jme.isRandom(expr.args[i],scope)) {
+						return true;
+					}
+				}
+				return false;
+			default:
+				return false;
+		}
 	}
 };
 
@@ -1682,6 +1720,8 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
 	}	
 
 	this.doc = options.doc;
+
+	this.random = options.random;
 }
 
 

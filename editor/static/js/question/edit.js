@@ -167,6 +167,15 @@ $(document).ready(function() {
 			q.variables.splice(n,0,v);
 		}
 
+		this.goToVariable = function(name) {
+			var v = q.getVariable(name);
+			if(!v) {
+				return;
+			}
+			q.currentVariable(v);
+			q.currentTab(q.getTab('variables'));
+		}
+
         this.expand_all_parts = function() {
             q.allParts().map(function(p) {
                 p.open(true);
@@ -549,6 +558,21 @@ $(document).ready(function() {
 					todo: todo,
 					condition: condition
 			};
+		},
+
+		/* Given a list of variable names, return a list of names of the dependencies of those variables which have some random element */
+		randomDependencies: function(vars) {
+			var d = this.prepareVariables();
+			var scope = d.scope;
+			var todo = d.todo;
+			var deps = Numbas.jme.variables.variableDependants(todo,vars);
+			var randoms = [];
+			for(var name in deps) {
+				if(Numbas.jme.isRandom(deps[name].tree,scope)) {
+					randoms.push(name);
+				}
+			}
+			return randoms;
 		},
 
 		computeVariables: function(prep) {
@@ -1602,6 +1626,12 @@ $(document).ready(function() {
 			{name: 'alwaysreplace', niceName: 'Always replace variables'}
 		];
 		this.variableReplacementStrategy = ko.observable(this.variableReplacementStrategies[0])
+
+		this.replacementRandomDependencies = ko.computed(function() {
+			var names = this.variableReplacements().map(function(vr) {return vr.variable()});
+			var randomDependencies = this.q.randomDependencies(names);
+			return randomDependencies;
+		},this);
 
 		this.scripts = [
 			new Script('constructor','When the part is created','after','http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-when-the-part-is-created'),

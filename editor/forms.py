@@ -490,3 +490,14 @@ class CreatePullRequestForm(forms.ModelForm):
     class Meta:
         model = PullRequest
         fields = ('source','destination','comment')
+
+class CreateExamFromBasketForm(forms.ModelForm):
+    clear_basket = forms.BooleanField(initial=True,label='Empty your basket after creation?',required=False)
+    class Meta:
+        model = EditorItem
+        fields = ('name','author','project')
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control','placeholder':'e.g. "Week 4 homework"'}),
+            'author': forms.HiddenInput(),
+            'project': BootstrapSelect,
+        }

@@ -35,19 +35,18 @@ def remove_question_from_basket(request):
 
 class CreateExamFromBasketView(editor.views.exam.CreateView):
     template_name = 'exam/new_from_basket.html'
+    form_class = editor.forms.CreateExamFromBasketForm
+
     def form_valid(self,form):
         with transaction.atomic(), reversion.create_revision():
             self.make_exam(form)
             self.exam.save()
             self.exam.set_questions([bq.question for bq in self.request.user.userprofile.basketquestion_set.all()])
+            if form.cleaned_data.get('clear_basket'):
+                self.request.user.userprofile.question_basket.clear()
 
         return redirect(self.get_success_url())
 
-
-def create_exam_from_basket(request):
-    e = NewExam(author=request.user)
-    e.save()
-    return redirect(reverse('exam_edit', args=(e.pk,e.editoritem.slug)))
 
 @require_POST
 def empty_question_basket(request):

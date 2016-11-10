@@ -197,11 +197,24 @@ class DeleteView(generic.DeleteView):
     model = NewExam
     template_name = 'exam/delete.html'
     
+    def do_delete(self):
+        self.object.editoritem.delete()
+        return http.HttpResponseRedirect(self.get_success_url())
+
     def delete(self,request,*args,**kwargs):
         self.object = self.get_object()
         if self.object.editoritem.can_be_deleted_by(self.request.user):
-            self.object.editoritem.delete()
-            return http.HttpResponseRedirect(self.get_success_url())
+            return self.do_delete()
+        elif self.request.user.is_superuser:
+            if not self.request.POST.get('confirmed'):
+                return self.response_class(
+                    request=self.request,
+                    template='editoritem/superuser_confirm_delete.html',
+                    context=self.get_context_data(object=self.object),
+                    using=self.template_engine
+                )
+            else:
+                return self.do_delete()
         else:
             return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
     

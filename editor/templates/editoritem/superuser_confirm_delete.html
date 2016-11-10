@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% load user_link %}
+{% load links %}
+
+{% block content %}
+<div class="page-header">
+    <h1><span class="glyphicon glyphicon-duplicate"></span> Copy {% editoritem_link object %}</h1>
+</div>
+
+<form action="" method="post" class="form-horizontal">
+    {% csrf_token %}
+    <input type="hidden" name="confirmed" value="true">
+    <p>Are you sure you want to delete this {{object.editoritem.item_type}}, belonging to {% user_link object.editoritem.author %}?</p>
+    <p>Although you are a superuser, you don't have explicit editing privileges to it, so only do this if you're absolutely sure.</p>
+    <p><button type="submit" class="btn btn-danger">Delete</button> <a href="{{object.get_absolute_url}}" class="btn btn-link">Cancel</a></p>
+</form>
+
+{% endblock content %}

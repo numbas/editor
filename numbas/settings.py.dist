@@ -123,6 +123,7 @@ INSTALLED_APPS = (
     'registration',
     'django_tables2',
     'taggit',
+    'el_pagination',
 )
 
 # A sample logging configuration. The only tangible logging

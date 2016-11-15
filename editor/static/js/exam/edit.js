@@ -8,6 +8,27 @@ $(document).ready(function() {
 
         this.questions = ko.observableArray([]);
 
+        this.question_groups = ko.observableArray([]);
+        this.addQuestionGroup = function() {
+            e.question_groups.push(new QuestionGroup(null,e.question_groups));
+        }
+
+        this.showQuestionGroupNames = ko.observable(false);
+
+        this.shuffleQuestions = ko.observable(false);
+        var tickAllQuestions = ko.observable(true);
+        this.allQuestions = ko.computed({
+            read: function() {
+                return this.shuffleQuestions() ? tickAllQuestions() : true;
+            },
+            write: function(v) {
+                if(this.shuffleQuestions()) {
+                    tickAllQuestions(v);
+                }
+            }
+        },this);
+        this.pickQuestions = ko.observable(0);
+
         this.mainTabs([
             new Editor.Tab('settings','Settings','cog'),
             new Editor.Tab('display','Display','picture'),
@@ -29,19 +50,6 @@ $(document).ready(function() {
         this.duration = ko.observable(0);
         this.allowPause = ko.observable(true);
         this.percentPass = ko.observable(0);
-        this.shuffleQuestions = ko.observable(false);
-        var tickAllQuestions = ko.observable(true);
-        this.allQuestions = ko.computed({
-            read: function() {
-                return this.shuffleQuestions() ? tickAllQuestions() : true;
-            },
-            write: function(v) {
-                if(this.shuffleQuestions()) {
-                    tickAllQuestions(v);
-                }
-            }
-        },this);
-        this.pickQuestions = ko.observable(0);
         this.showfrontpage = ko.observable(true);
         this.showresultspage = ko.observable(true);
 
@@ -157,9 +165,8 @@ $(document).ready(function() {
                     topics: this.topics().filter(function(t){return t.used()}).map(function(t){return t.pk}),
                     ability_levels: this.used_ability_levels().map(function(al){return al.pk}),
                     metadata: this.metadata(),
-                    questions: this.questions()
-                                .filter(function(q){return q.id()>0})
-                                .map(function(q){ return q.id(); })
+                    question_groups: this.question_groups()
+                                .map(function(qg,i){ return qg.questions().map(function(q) {return q.id(); }) })
                 };
             },this);
 
@@ -209,6 +216,13 @@ $(document).ready(function() {
             }
         },
 
+        addQuestion: function(q) {
+            var groups = this.question_groups();
+            var group = groups[groups.length-1];
+            q.parent = group.questions;
+            group.questions.push(q);
+        },
+
         //returns a JSON-y object representing the exam
         toJSON: function() {
             return {
@@ -216,9 +230,8 @@ $(document).ready(function() {
                 metadata: this.metadata(),
                 duration: this.duration()*60,
                 percentPass: this.percentPass(),
-                shuffleQuestions: this.shuffleQuestions(),
-                allQuestions: this.allQuestions(),
-                pickQuestions: this.pickQuestions(),
+                showQuestionGroupNames: this.showQuestionGroupNames(),
+                question_groups: this.question_groups().map(function(qg) { return qg.toJSON() }),
                 navigation: {
                     allowregen: this.allowregen(),
                     reverse: this.reverse(),
@@ -305,10 +318,14 @@ $(document).ready(function() {
             if('locale' in data)
                 this.locale(data.locale);
 
-            if('questions' in data)
-            {
-                this.questions(data.questions.map(function(q) {
-                    return new Question(q,e.questions)
+            if('question_groups' in content) {
+                if('question_groups' in data) {
+                    data.question_groups.forEach(function(d) {
+                        content.question_groups[d.group].questions = d.questions;
+                    })
+                }
+                this.question_groups(content.question_groups.map(function(qg) {
+                    return new QuestionGroup(qg,e.question_groups);
                 }));
             }
         }
@@ -347,6 +364,57 @@ $(document).ready(function() {
             this.message(data.message);
         }
     };
+
+    function QuestionGroup(data,parent) {
+        console.log(data);
+        var qg = this;
+
+        this.parent = parent;
+
+        data = data || {};
+
+        this.name = ko.observable(data.name || 'Group');
+
+        this.questions = ko.observableArray([]);
+
+        this.receivedQuestions = ko.observableArray([]);
+        ko.computed(function() {
+            var received = this.receivedQuestions();
+            if(received.length) {
+                this.questions(this.questions().concat(received));
+                this.receivedQuestions([]);
+            }
+        },this);
+
+        if(data.questions) {
+            this.questions(data.questions.map(function(q) {
+                return new Question(q,qg.questions);
+            }));
+        }
+
+        this.pickingStrategies = [
+            {name: 'all-ordered', niceName: 'All questions, in this order'},
+            {name: 'all-shuffled', niceName: 'All questions, in random order'},
+            {name: 'random-subset', niceName: 'Pick a random subset'}
+        ];
+        this.pickingStrategy = ko.observable(this.pickingStrategies.filter(function(s){return s.name==data.pickingStrategy})[0] || this.pickingStrategies[0]);
+        this.pickQuestions = ko.observable(data.pickQuestions||1);
+
+        this.remove = function() {
+            if(!qg.questions().length || window.confirm('Are you sure you want to remove this group? All of its questions will also be removed from the exam.')) {
+                qg.parent.remove(qg);
+            }
+        }
+    }
+    QuestionGroup.prototype = {
+        toJSON: function() {
+            return {
+                name: this.name(),
+                pickingStrategy: this.pickingStrategy().name,
+                pickQuestions: this.pickQuestions()
+            }
+        }
+    }
 
     function Question(data,parent)
     {
@@ -403,8 +471,7 @@ $(document).ready(function() {
 
         add: function() {
             var newQ = this.clone();
-            newQ.parent = viewModel.questions;
-            viewModel.questions.push(newQ);
+            viewModel.addQuestion(newQ);
         }
     }
 

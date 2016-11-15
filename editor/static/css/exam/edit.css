@@ -4,3 +4,9 @@
     list-style: none;
     background: #eee;
 }
+.panel-body ~ .question-group {
+    border-top: 2px solid #ccc;
+}
+.question-group form {
+    margin-bottom: 1em;
+}

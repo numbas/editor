@@ -93,7 +93,7 @@ $(document).ready(function() {
 			set(data[attr.toLowerCase()]);
 	}
 
-    Editor.numbasVersion = 'show_precision_hint';
+    Editor.numbasVersion = 'exam_question_groups';
 
 	Editor.parseExam = function(source) {
 		var content = /\/\/(.*?)\n(.*)/.exec(source)[2]

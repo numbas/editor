@@ -1003,8 +1003,10 @@ $(document).ready(function() {
         this.receivedVariables = ko.observableArray([]);
         ko.computed(function() {
             var received = this.receivedVariables();
-            this.variables(this.variables().concat(received));
-            this.receivedVariables([]);
+            if(received.length) {
+                this.variables(this.variables().concat(received));
+                this.receivedVariables([]);
+            }
         },this);
 
 		this.addVariable = function() {

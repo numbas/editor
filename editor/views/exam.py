@@ -152,26 +152,29 @@ class UploadView(editor.views.editoritem.CreateView):
 
         exam_object = NumbasObject(source=content)
 
-        qs = []
-        for q in exam_object.data['questions']:
-            question_object = NumbasObject(data=q,version=exam_object.version)
+        groups = []
+        for group in exam_object.data['question_groups']:
+            qs = []
+            for q in group['questions']:
+                question_object = NumbasObject(data=q,version=exam_object.version)
 
-            qei = EditorItem(
-                content = str(question_object),
-                author = ei.author
-            )
-            qei.set_licence(ei.licence)
-            qei.project = ei.project
-            qei.save()
+                qei = EditorItem(
+                    content = str(question_object),
+                    author = ei.author
+                )
+                qei.set_licence(ei.licence)
+                qei.project = ei.project
+                qei.save()
 
-            qo = NewQuestion()
-            qo.editoritem = qei
-            qo.save()
+                qo = NewQuestion()
+                qo.editoritem = qei
+                qo.save()
 
-            extensions = Extension.objects.filter(location__in=exam_object.data['extensions'])
-            qo.extensions.add(*extensions)
-            qs.append(qo)
-        exam.set_questions(qs)
+                extensions = Extension.objects.filter(location__in=exam_object.data['extensions'])
+                qo.extensions.add(*extensions)
+                qs.append(qo.pk)
+            groups.append(qs)
+        exam.set_question_groups(qs)
 
         self.exam = exam
 
@@ -242,8 +245,8 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
             self.data['custom_theme'] = None
             self.data['theme'] = theme['path']
 
-        self.questions = self.data['questions']
-        del self.data['questions']
+        self.question_groups = self.data['question_groups']
+        del self.data['question_groups']
 
         exam_form = ExamForm(self.data, instance=self.object)
 
@@ -253,7 +256,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
             return self.form_invalid(exam_form)
  
     def pre_save(self,form):
-        self.object.set_questions(question_ids=self.questions)
+        self.object.set_question_groups(self.question_groups)
 
     def get_context_data(self, **kwargs):
         context = super(UpdateView, self).get_context_data(**kwargs)

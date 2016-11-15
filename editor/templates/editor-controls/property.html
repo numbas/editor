@@ -9,8 +9,8 @@
             <input {% if not editable %}disabled{% endif%} class="form-control {% if monospace %}monospace{% endif %}" type="{{type}}" data-bind="
                 textInput: {{property}}, 
                 attr: {
-                    {% if min %}min: {{min}},{% endif %}
-                    {% if max %}max: {{max}},{% endif %}
+                    {% if min or min == 0 %}min: {{min}},{% endif %}
+                    {% if max or max == 0 %}max: {{max}},{% endif %}
                 },
                 autosize: {max: 500, min: 30, padding: 10, value: {{property}} }
             "/>

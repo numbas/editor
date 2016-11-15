@@ -5,6 +5,7 @@ import shutil
 from zipfile import ZipFile
 import json
 from datetime import datetime
+from itertools import groupby
 import codecs
 try:
   # For Python > 2.7
@@ -1086,10 +1087,15 @@ class NewExam(models.Model):
         obj = numbasobject.NumbasObject(self.editoritem.content)
         data = obj.data
         resources = []
-        questions = self.ordered_questions
+        question_groups = self.question_groups
         data['extensions'] = [e.location for e in self.extensions]
         data['name'] = self.editoritem.name
-        data['questions'] = [numbasobject.NumbasObject(q.editoritem.content).data for q in questions]
+        for i,g in enumerate(data['question_groups']):
+            if i<len(question_groups):
+                questions = question_groups[i]
+            else:
+                questions = []
+            g['questions'] = [numbasobject.NumbasObject(q.editoritem.content).data for q in questions]
         data['resources'] = self.resource_paths
         
         return obj
@@ -1102,32 +1108,32 @@ class NewExam(models.Model):
         exam_dict['local'] = self.locale
         exam_dict['custom_theme'] = self.custom_theme_id
         exam_dict['theme'] = self.theme
-        exam_dict['questions'] = [q.summary() for q in self.ordered_questions]
+        groups = groupby(self.newexamquestion_set.order_by('group','qn_order'),key=lambda q:q.group)
+        exam_dict['question_groups'] = [{'group':group,'questions':[q.question.summary() for q in qs]} for group,qs in groups]
 
         return exam_dict
 
     
     @property
-    def ordered_questions(self):
-        return self.questions.order_by('newexamquestion')
+    def question_groups(self):
+        groups = []
+        for eq in self.newexamquestion_set.all():
+            while len(groups)<eq.group+1:
+                groups.append([])
+            groups[eq.group].append(eq.question)
+        return groups
 
     @property
     def extensions(self):
         return Extension.objects.filter(newquestion__in=self.questions.all()).distinct()
 
-    def set_questions(self,question_list=None,**kwargs):
-        """ 
-            Set the list of questions for this exam. 
-            question_list is an ordered list of question IDs
-        """
-
-        if 'question_ids' in kwargs:
-            question_list = [NewQuestion.objects.get(pk=pk) for pk in kwargs['question_ids']]
-
-        self.questions.clear()
-        for order,question in enumerate(question_list):
-            exam_question = NewExamQuestion(exam=self,question=question, qn_order=order)
-            exam_question.save()
+    def set_question_groups(self,question_groups):
+        with transaction.atomic():
+            self.questions.clear()
+            for group_number,group in enumerate(question_groups):
+                for order,pk in enumerate(group):
+                    exam_question = NewExamQuestion(exam=self,question=NewQuestion.objects.get(pk=pk), qn_order=order, group=group_number)
+                    exam_question.save()
 
     def copy(self,author=None):
         e2 = deepcopy(self)
@@ -1140,14 +1146,17 @@ class NewExam(models.Model):
         e2.save()
 
         for eq in NewExamQuestion.objects.filter(exam=self):
-            NewExamQuestion.objects.create(exam=e2,question=eq.question,qn_order=eq.qn_order)
+            NewExamQuestion.objects.create(exam=e2, question=eq.question, qn_order=eq.qn_order, group=eq.group)
         e2.custom_theme = self.custom_theme
         e2.save()
 
         return e2
 
     def merge(self,other):
-        self.set_questions(other.questions.all())
+        with transaction.atomic():
+            for eq in other.newexamquestion_set.all():
+                exam_question = NewExamQuestion(exam=self,question=eq.question, qn_order=eq.qn_order, group=eq.group)
+                exam_question.save()
         self.theme = other.theme
         self.custom_theme = other.custom_theme
         self.locale = other.locale
@@ -1166,6 +1175,7 @@ class NewExamQuestion(models.Model):
     exam = models.ForeignKey(NewExam)
     question = models.ForeignKey(NewQuestion)
     qn_order = models.PositiveIntegerField()
+    group = models.PositiveIntegerField(default=0)
 
 @receiver(signals.post_save,sender=NewQuestion)
 @receiver(signals.post_save,sender=NewExam)

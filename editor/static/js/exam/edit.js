@@ -29,6 +29,14 @@ $(document).ready(function() {
         },this);
         this.pickQuestions = ko.observable(0);
 
+        this.numQuestions = ko.computed(function() {
+            var t = 0;
+            this.question_groups().forEach(function(g) {
+                t += g.questions().length;
+            });
+            return t;
+        },this);
+
         this.mainTabs([
             new Editor.Tab('settings','Settings','cog'),
             new Editor.Tab('display','Display','picture'),

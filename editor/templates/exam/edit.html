@@ -62,7 +62,7 @@
                     <div class="panel-body">
                         <form class="form-inline" data-bind="submit: Editor.noop">
                             {% with form_label_class='col-sm-10' form_control_class='col-sm-2' %}
-                            {% booleanproperty 'showQuestionGroupNames' 'Show group names?' %}
+                            {% booleanproperty 'showQuestionGroupNames' 'Show group names?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-show-group-names' %}
                             {% endwith %}
                         </form>
                     </div>
@@ -79,12 +79,12 @@
                                 {% with form_label_class='' form_control_class='' %}
                                 <div class="form-group">
                                     <label class="">
-                                        <div class="control-label">Questions to use {% helplink '' %}</div>
+                                        <div class="control-label">Questions to use {% helplink 'http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-questions-to-use' %}</div>
                                         <select class="form-control" data-bind="options: pickingStrategies, optionsText: 'niceName', value: pickingStrategy"></select>
                                     </label>
                                 </div>
                                 <span data-bind="visible: pickingStrategy().name=='random-subset'">
-                                    {% property 'pickQuestions' 'Number of questions to choose' type='number' min=1 max='questions().length' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-number-of-questions-to-display' %}
+                                    {% property 'pickQuestions' 'Number of questions to choose' type='number' min=1 max='questions().length' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-number-of-questions-to-choose' %}
                                 </span>
                                 {% endwith %}
                             </div>
@@ -102,7 +102,7 @@
                                 <div class="controls pull-right">
                                     <a class="preview btn btn-link" data-bind="attr: {href: previewURL()}" target="_blank" title="Preview this question"><span class="glyphicon glyphicon-play text-success"></span></a>
                                     <button type="button" class="copy btn btn-link" data-bind="click:replaceWithCopy, visible: item_json.editable" title="Replace this question with a copy"><span class="glyphicon glyphicon-duplicate text-warning"></span></button>
-                                    <button type="button" class="delete btn btn-link" data-bind="click:remove, visible: item_json.editable" title="Delete this question"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                                    <button type="button" class="delete btn btn-link" data-bind="click:remove, visible: item_json.editable" title="Remove this question from the exam"><span class="glyphicon glyphicon-remove text-danger"></span></button>
                                 </div>
                                 <div class="title">
                                     <strong class="number" data-bind="text: ($index()+1)+'.'"></strong>
@@ -112,6 +112,7 @@
                                 <div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
                             </li>
                         </ul>
+                        <p class="nothing-here" data-bind="visible: questions().length==0">There are no questions in this group.</p>
                     </div>
                     <div class="panel-body empty-receiver" data-bind="visible: questions().length==0, sortable: {
                         foreach: $data.receivedQuestions, 
@@ -126,8 +127,7 @@
                     <div class="panel-body">
                         <button class="btn btn-primary btn-block" data-bind="click: addQuestionGroup"><span class="glyphicon glyphicon-plus"></span> Add another question group</button>
                     </div>
-                    <div class="panel-footer" data-bind="fadeVisible: questions().length>0">
-                        <button class="btn btn-primary btn-block" data-bind="click: addQuestionGroup"><span class="glyphicon glyphicon-plus"></span> Add another question group</button>
+                    <div class="panel-footer" data-bind="fadeVisible: numQuestions()>0">
                         <div class="form-group">
                             <label>Pass threshold {% helplink 'http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-pass-threshold' %}</label>
                             <input {% if not editable %}disabled{% endif %} type="range" min="0" max="100" data-bind="value: percentPass, valueUpdate: 'input'">

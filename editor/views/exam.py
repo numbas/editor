@@ -174,7 +174,7 @@ class UploadView(editor.views.editoritem.CreateView):
                 qo.extensions.add(*extensions)
                 qs.append(qo.pk)
             groups.append(qs)
-        exam.set_question_groups(qs)
+        exam.set_question_groups(groups)
 
         self.exam = exam
 

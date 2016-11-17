@@ -1005,7 +1005,7 @@ class NewQuestion(models.Model):
             ('extensions',[e.location for e in self.extensions.all()]),
             ('resources',self.resource_paths),
             ('navigation',{'allowregen': True, 'showfrontpage': False, 'preventleave': False}),
-            ('questions',[self.editoritem.parsed_content.data])
+            ('question_groups',[{'pickingStrategy':'all-ordered','questions':[self.editoritem.parsed_content.data]}])
         ])
         obj = numbasobject.NumbasObject(data=data,version=self.editoritem.parsed_content.version)
         return obj

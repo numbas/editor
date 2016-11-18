@@ -41,7 +41,7 @@ class CreateExamFromBasketView(editor.views.exam.CreateView):
         with transaction.atomic(), reversion.create_revision():
             self.make_exam(form)
             self.exam.save()
-            self.exam.set_questions([bq.question for bq in self.request.user.userprofile.basketquestion_set.all()])
+            self.exam.set_question_groups([[bq.question.pk for bq in self.request.user.userprofile.basketquestion_set.all()]])
             if form.cleaned_data.get('clear_basket'):
                 self.request.user.userprofile.question_basket.clear()
 

@@ -12,6 +12,8 @@
 
 {% block skipMathJaxStartup %}true{% endblock %}
 
+{% block search_url %}{% url 'project_search' object.editoritem.project.pk %}{% endblock search_url %}
+
 {% block javascripts %}
     {{ block.super }}
 

@@ -192,6 +192,8 @@ class BaseUpdateView(generic.UpdateView):
         context['can_delete'] = self.can_delete
         context['can_copy'] = self.can_copy
 
+        context['project'] = self.object.editoritem.project
+
         context['access_rights'] = [{'user': user_json(a.user), 'access_level': a.access} for a in Access.objects.filter(item=self.object.editoritem)]
 
         licences = [licence.as_json() for licence in Licence.objects.all()]

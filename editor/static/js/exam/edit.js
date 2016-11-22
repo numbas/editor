@@ -187,7 +187,7 @@ $(document).ready(function() {
                     Editor.nonempty_task('Select a licence defining usage rights.',this.licence)
                 ],
                 'questions': [
-                    {text: 'Add at least one question.', done: ko.computed(function(){ return this.questions().length>0 },this)}
+                    {text: 'Add at least one question.', done: ko.computed(function(){ return this.numQuestions()>0 },this)}
                 ]
             }
             this.init_tasks();

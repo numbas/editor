@@ -13,7 +13,10 @@ register = template.Library()
 def raw_include(path):
     if settings.DEBUG:
         absolute_path = finders.find(path)
-        content = open(absolute_path).read()
+        if absolute_path is None:
+            raise Exception("raw_include: couldn't find file {}".format(path))
+        f = open(absolute_path)
     else:
-        content = staticfiles_storage.open(path).read()
+        f = staticfiles_storage.open(path)
+    content = f.read()
     return mark_safe(content)

@@ -4,12 +4,16 @@ from django.contrib.auth.decorators import login_required
 
 from editor.views import project, editoritem, exam, question, HomeView, theme, extension, generic, notification, resource, basket, timeline
 
+from .rest_urls import urls as rest_urls
 
 urlpatterns = patterns('',
 
     # Home
 
     url(r'^$', HomeView.as_view(), name='editor_index'),
+
+    # REST API
+    url(r'^api/', include(rest_urls)),
 
     # Search
 

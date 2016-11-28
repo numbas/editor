@@ -44,6 +44,7 @@ class EditorItemSerializer(serializers.ModelSerializer):
         fields = ('name',)
 
 class ExamSerializer(serializers.HyperlinkedModelSerializer):
+    url = serializers.HyperlinkedIdentityField(view_name='exams-detail')
     edit = EditorItemHyperlinkedIdentityField(view_name='exam_edit')
     download = EditorItemHyperlinkedIdentityField(view_name='exam_download')
     preview = EditorItemHyperlinkedIdentityField(view_name='exam_preview')
@@ -54,7 +55,16 @@ class ExamSerializer(serializers.HyperlinkedModelSerializer):
     author = UserSerializer(source='editoritem.author')
     class Meta:
         model = NewExam
-        fields = ('name','project','author','edit','preview','download','metadata','status')
+        fields = ('url','name','project','author','edit','preview','download','metadata','status')
+
+class ExamViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = ExamSerializer
+
+    def get_queryset(self):
+        queryset = NewExam.objects.all()
+        projects = Project.objects.filter(public_view=True)
+        queryset = queryset.filter(editoritem__project__public_view=True,editoritem__current_stamp__status='ok',editoritem__published=True)
+        return queryset
 
 class AvailableExamsViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ExamSerializer
@@ -72,6 +82,7 @@ class AvailableExamsViewSet(viewsets.ReadOnlyModelViewSet):
 router = routers.DefaultRouter()
 router.register(r'projects',ProjectViewSet)
 router.register(r'users', UserViewSet)
+router.register(r'exams', ExamViewSet,base_name='exams')
 router.register(r'available-exams', AvailableExamsViewSet,base_name='available-exams')
 
 

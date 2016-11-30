@@ -14,10 +14,11 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
 class ProjectSerializer(serializers.HyperlinkedModelSerializer):
     homepage = serializers.HyperlinkedIdentityField(view_name='project_index')
+    url = serializers.HyperlinkedIdentityField(view_name='project-detail')
     owner = UserSerializer()
     class Meta:
         model = Project
-        fields = ('name','pk','description','owner','homepage',)
+        fields = ('name','pk','description','owner','homepage','url')
         depth=2
 
 class EditorItemHyperlinkedIdentityField(serializers.HyperlinkedIdentityField):

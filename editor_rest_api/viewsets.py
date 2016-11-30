@@ -1,7 +1,11 @@
 from rest_framework import viewsets
 from . import serializers
+from django.conf import settings
 from editor.models import Project, NewExam, NewQuestion, EditorItem, Resource
 from django.contrib.auth.models import User
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -44,3 +48,8 @@ class AvailableExamsViewSet(viewsets.ReadOnlyModelViewSet):
 class ResourceViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.ResourceSerializer
     queryset = Resource.objects.all()
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def handshake(request):
+    return Response({'numbas_editor':1,'site_title': settings.SITE_TITLE})

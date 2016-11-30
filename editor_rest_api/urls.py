@@ -13,4 +13,5 @@ router.register(r'available-exams', viewsets.AvailableExamsViewSet,base_name='av
 
 urls = patterns('',
     url(r'^', include(router.urls)),
+    url(r'^handshake$',viewsets.handshake),
 )

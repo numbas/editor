@@ -1,15 +1,23 @@
 {% extends "base.html" %}
 {% block title %}Compilation Error{% endblock %}
 {% block body %}
+<div class="container">
     <div class="page-header">
     	<h1 class="text-warning">Compilation Error</h1>
     </div>
+    <p><small>Attempted to compile at {% now "Y-m-d H:i:s" %}</small></p>
 	{% autoescape on %}
-	<p id="message">{{message}} (code {{code}})</p>
+    <p id="message">{{message}}</p>
+    {% if stderr %}
 	<h3>STDERR</h3>
-	<pre id="stderr"><code>{{stderr}}</code></pre>
+    <pre id="stderr"><code>{{stderr}}</code></pre>
+    {% endif %}
+    {% if stdout %}
 	<h3>STDOUT</h3>
-	<pre id="stdout"><code>{{stdout}}</code></pre>
-	{% endautoescape %}
+    <pre id="stdout"><code>{{stdout}}</code></pre>
+    {% endif %}
+    {% endautoescape %}
+    <button class="btn btn-primary" onclick="window.location.reload()">Try again</button>
+</div>
 {% endblock %}
 

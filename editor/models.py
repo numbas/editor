@@ -328,7 +328,7 @@ class Theme( models.Model ):
 
     @property
     def extracted_path(self):
-        return os.path.join(settings.MEDIA_ROOT,self.zipfile_folder,'extracted',str(self.pk))
+        return os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'],settings.MEDIA_ROOT,self.zipfile_folder,'extracted',str(self.pk))
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
@@ -1080,7 +1080,7 @@ class NewExam(models.Model):
         if self.custom_theme:
             return self.custom_theme.extracted_path
         else:
-            return self.theme
+            return os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'],'themes',self.theme)
 
     @property
     def as_numbasobject(self):

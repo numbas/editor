@@ -977,7 +977,7 @@ class NewQuestion(models.Model):
     resources = models.ManyToManyField(Resource,blank=True)
     extensions = models.ManyToManyField(Extension,blank=True)
 
-    theme_path = 'question'
+    theme_path = os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'],'themes','question')
 
     icon = 'file'
 

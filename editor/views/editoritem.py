@@ -400,10 +400,15 @@ class CompileObject():
             Returns the path to the output produced
         """
 
-        numbasobject.data['extensions'] = [e.extracted_path for e in editor.models.Extension.objects.filter(location__in=numbasobject.data.get('extensions',[]))]
+        numbasobject.data['extensions'] = [os.path.join(os.getcwd(),e.extracted_path) for e in editor.models.Extension.objects.filter(location__in=numbasobject.data.get('extensions',[]))]
+        for extracted_path in numbasobject.data['extensions']:
+            if not os.path.exists(extracted_path):
+                raise CompileError("Extension not found at {}. Is MEDIA_ROOT configured correctly? It should be the absolute path to your editor media directory.".format(extracted_path))
         source = str(numbasobject)
 
         theme_path = obj.theme_path if hasattr(obj,'theme_path') else 'default'
+        if not os.path.exists(theme_path):
+            raise CompileError("Theme not found at {}. Is MEDIA_ROOT configured correctly? It should be the absolute path to your editor media directory.".format(theme_path))
 
         output_location = os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'], location)
         numbas_command = [

@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.db.models import Count
 from django.contrib.auth.admin import UserAdmin
 
-import .models
+import editor.models
 
 admin.site.register(editor.models.SiteBroadcast)
 

@@ -1,7 +1,7 @@
 import django_tables2 as tables
 from django_tables2.columns import Column
 from django_tables2 import columns
-from editor.models import EditorItem
+from .models import EditorItem
 
 class ObjectTable(tables.Table):
     last_modified = Column()

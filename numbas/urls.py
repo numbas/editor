@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, include, url
 from django.conf.urls.static import static
-import settings
+from django.conf import settings
 import notifications.urls
 
 from django.contrib import admin,auth

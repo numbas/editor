@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.utils.html import conditional_escape, format_html, html_safe
 from django.utils.safestring import mark_safe
 from django.utils.encoding import (
-    force_str, force_text, python_2_unicode_compatible,
+    force_str, force_text,
 )
 from django.db.models import Q, Count
 from django.core.exceptions import ValidationError

@@ -191,7 +191,7 @@ class ShareLinkView(generic.RedirectView):
                 q = self.model.objects.get(editoritem__share_uuid_edit=kwargs['share_uuid'])
             elif access == 'view':
                 q = self.model.objects.get(editoritem__share_uuid_view=kwargs['share_uuid'])
-        except ValueError,self.model.DoesNotExist:
+        except (ValueError,self.model.DoesNotExist):
             raise Http404
 
         user = self.request.user

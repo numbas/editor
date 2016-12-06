@@ -255,7 +255,6 @@ filter_question = Q(question__isnull=False)
 
 class SearchView(ListView):
     
-    """Search exams."""
     template_name = 'editoritem/search.html'
 
     def base_queryset(self):

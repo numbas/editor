@@ -13,7 +13,10 @@ from editor.models import NewQuestion, NewExam
 import editor.models
 from editor.views import editoritem,timeline
 from zipfile import ZipFile
-from cStringIO import StringIO
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO
 from django.contrib.sites.models import Site
 from accounts.models import RegistrationProfile
 from registration import signals

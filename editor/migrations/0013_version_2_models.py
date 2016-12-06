@@ -5,6 +5,7 @@ import django
 from django.db import migrations, models
 from django.conf import settings
 import editor.models
+import editor.jsonfield
 import uuid
 import taggit.managers
 

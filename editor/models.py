@@ -29,25 +29,25 @@ from django.db.models import Q
 from django.forms import model_to_dict
 from django.utils.deconstruct import deconstructible
 from django.db.models.signals import pre_delete
-from uuslug import slugify
 from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 from django.template.loader import get_template
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
+from uuslug import slugify
 
 import reversion
 
 from notifications.signals import notify
 from notifications.models import Notification
-from editor.notify_watching import notify_watching
+from .notify_watching import notify_watching
 
 from taggit.managers import TaggableManager
 import taggit.models
 
 import numbasobject
 
-from jsonfield import JSONField
+from .jsonfield import JSONField
 
 PUBLIC_ACCESS_CHOICES = (('hidden','Hidden'),('view','Public can view'),('edit','Public can edit'))
 USER_ACCESS_CHOICES = (('view','Can view'),('edit','Can edit'))
@@ -178,7 +178,7 @@ class Project(models.Model,ControlledObject):
     def watching_users(self):
         return (User.objects.filter(pk=self.owner.pk) | User.objects.filter(project_memberships__project=self)).distinct()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 class ProjectAccess(models.Model,TimelineMixin):
@@ -210,7 +210,7 @@ class ProjectInvitation(models.Model):
     access = models.CharField(default='view',editable=True,choices=USER_ACCESS_CHOICES,max_length=6)
     project = models.ForeignKey(Project,related_name='invitations')
 
-    def __unicode__(self):
+    def __str__(self):
         return "Invitation for {} to join {}".format(self.email,self.project)
 
 @receiver(signals.post_save,sender=ProjectInvitation)
@@ -258,7 +258,7 @@ class Extension(models.Model):
     zipfile_folder = 'user-extensions'
     zipfile = models.FileField(upload_to=zipfile_folder+'/zips', blank=True,null=True, max_length=255, verbose_name = 'Extension package',help_text='A .zip package containing the extension\'s files')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def as_json(self):
@@ -323,7 +323,7 @@ class Theme( models.Model ):
     zipfile_folder = 'user-themes'
     zipfile = models.FileField(upload_to=zipfile_folder+'/zips', max_length=255, verbose_name = 'Theme package',help_text='A .zip package containing the theme\'s files')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     @property
@@ -377,7 +377,7 @@ class Licence(models.Model):
     url = models.URLField(blank=True)
     full_text = models.TextField(blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def as_json(self):
@@ -406,7 +406,7 @@ class AbilityFramework(models.Model):
     class Meta:
         ordering = ('name',)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 ABILITY_PRECISION = 10
@@ -421,7 +421,7 @@ class AbilityLevel(models.Model):
     class Meta:
         ordering = ('framework','start',)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 class Subject(models.Model):
@@ -431,7 +431,7 @@ class Subject(models.Model):
     class Meta:
         ordering = ('name',)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 class Topic(models.Model):
@@ -442,7 +442,7 @@ class Topic(models.Model):
     class Meta:
         ordering = ('name',)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 class AbilityLevelField(models.FloatField):
@@ -552,7 +552,7 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
     class Meta:
         ordering = ('name',)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     @property
@@ -836,7 +836,7 @@ class TimelineItem(models.Model):
 
     date = models.DateTimeField(auto_now_add=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return '{}: {}'.format(self.date,str(self.object))
 
     def can_be_deleted_by(self,user):
@@ -882,7 +882,7 @@ class SiteBroadcast(models.Model,TimelineMixin):
     def timeline_object(self):
         return None
 
-    def __unicode__(self):
+    def __str__(self):
         return self.text[:50]
 
 class NewStampOfApproval(models.Model,TimelineMixin):
@@ -894,7 +894,7 @@ class NewStampOfApproval(models.Model,TimelineMixin):
     user = models.ForeignKey(User, related_name='newstamps')
     status = models.CharField(choices = STAMP_STATUS_CHOICES, max_length=20)
 
-    def __unicode__(self):
+    def __str__(self):
         return '{} said "{}"'.format(self.user.username,self.get_status_display())
 
     def can_be_viewed_by(self,user):
@@ -911,7 +911,7 @@ class Comment(models.Model,TimelineMixin):
     user = models.ForeignKey(User, related_name='comments')
     text = models.TextField()
 
-    def __unicode__(self):
+    def __str__(self):
         return 'Comment by {}: "{}"'.format(self.user.get_full_name(), str(self.object), self.text[:47]+'...' if len(self.text)>50 else self.text)
 
     def can_be_viewed_by(self,user):
@@ -928,7 +928,7 @@ class RestorePoint(models.Model,TimelineMixin):
 
     revision = models.ForeignKey(reversion.models.Revision)
     
-    def __unicode__(self):
+    def __str__(self):
         return 'Restore point set by {}: "{}"'.format(self.user.get_full_name(), str(self.object), self.description[:47]+'...' if len(self.description)>50 else self.description)
 
     def can_be_viewed_by(self,user):
@@ -956,7 +956,7 @@ class ItemChangedTimelineItem(models.Model,TimelineMixin):
             'published': 'globe',
         }[self.verb]
 
-    def __unicode__(self):
+    def __str__(self):
         return '{} {} {}'.format(self.user.get_full_name(),self.verb,str(self.object))
 
 @receiver(signals.post_save)
@@ -987,7 +987,7 @@ class NewQuestion(models.Model):
               ('highlight', 'Can pick questions to feature on the front page.'),
         )
 
-    def __unicode__(self):
+    def __str__(self):
         return '%s' % self.editoritem.name
 
     def get_absolute_url(self):
@@ -1061,7 +1061,7 @@ class NewExam(models.Model):
 
     icon = 'book'
 
-    def __unicode__(self):
+    def __str__(self):
         return '%s' % self.editoritem.name
 
     def get_absolute_url(self):
@@ -1285,7 +1285,7 @@ class Question(EditorModel,NumbasObject,ControlledObject):
               ('highlight', 'Can pick questions to feature on the front page.'),
         )
 
-    def __unicode__(self):
+    def __str__(self):
         return '%s' % self.name
 
     def save(self, *args, **kwargs):
@@ -1491,7 +1491,7 @@ class Exam(EditorModel,NumbasObject,ControlledObject):
               ('highlight', 'Can pick exams to feature on the front page.'),
         )
 
-    def __unicode__(self):
+    def __str__(self):
         return '%s' %self.name
     
     @property
@@ -1672,7 +1672,7 @@ class StampOfApproval(models.Model,TimelineMixin):
     status = models.CharField(choices = STAMP_STATUS_CHOICES, max_length=20)
     date = models.DateTimeField(auto_now_add=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return '{} as "{}"'.format(self.user.username,self.object.name,self.get_status_display(),self.date)
 
     def can_be_viewed_by(self,user):

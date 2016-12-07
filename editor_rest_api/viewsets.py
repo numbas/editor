@@ -7,13 +7,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = serializers.UserSerializer
-
 class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Project.objects.filter(public_view=True)
     serializer_class = serializers.ProjectSerializer
+
+class UserViewSet(viewsets.mixins.RetrieveModelMixin,viewsets.GenericViewSet):
+    queryset = User.objects.all()
+    serializer_class = serializers.UserSerializer
 
 class ExamViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.ExamSerializer

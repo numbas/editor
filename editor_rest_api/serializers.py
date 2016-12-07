@@ -9,7 +9,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
     full_name = serializers.CharField(source='get_full_name')
     class Meta:
         model = User
-        fields = ('url', 'profile', 'username', 'email', 'full_name')
+        fields = ('url', 'profile', 'full_name','pk')
 
 
 class ProjectSerializer(serializers.HyperlinkedModelSerializer):

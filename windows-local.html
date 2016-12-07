@@ -28,7 +28,10 @@
                 You'll need to activate the virtual environment each time you want to use it.
             </li>
 			<li>
-            Either download the Numbas runtime tools <a href="https://github.com/numbas/Numbas/archive/master.zip">from github</a> and extract to a folder called <code>numbas_runtime</code>, or use <a href="https://git-scm.com/">git</a> to clone the repository:
+				You can either download static copies of the Numbas software, or get a version-tracked copy which is easier to update through git. If you're using git, you'll need to install <a href="https://git-scm.com/downloads">Git for Windows</a> first.
+			</li>
+			<li>
+				Either download the Numbas runtime tools <a href="https://github.com/numbas/Numbas/archive/master.zip">from github</a> and extract to a folder called <code>numbas_runtime</code>, or use git to clone the repository:
 				<code class="shell">git clone git://github.com/numbas/Numbas.git numbas_runtime</code>
 			</li>
 			<li>
@@ -60,6 +63,7 @@
             <li>
                 Copy <code>numbas_editor/numbas/settings.py.dist</code> to <code>numbas_editor/numbas/settings.py</code>
                 <ul>
+                    <li>Change <code>MEDIA_ROOT</code> to <code>'media'</code></li>
                     <li>Change <code>STATIC_ROOT</code> to <code>'editor/static'</code></li>
                     <li>Change <code>NUMBAS_PATH</code> to <code>'../numbas_runtime'</code></li>
                     <li>Change <code>PREVIEW_PATH</code> to <code>'editor/static/previews'</code>, and create that directory.</li>

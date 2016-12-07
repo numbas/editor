@@ -21,7 +21,7 @@ class JSONFormField(CharField):
 
         value = super(JSONFormField, self).clean(value)
 
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             try:
                 json.loads(value)
             except ValueError:
@@ -41,7 +41,7 @@ class JSONField(models.TextField):
 
     def to_python(self, value):
         """Convert string value to JSON"""
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             try:
                 return json.loads(value, **self.load_kwargs)
             except ValueError as e:
@@ -51,7 +51,7 @@ class JSONField(models.TextField):
     def get_db_prep_value(self, value, connection, prepared=False):
         """Convert JSON object to a string"""
         
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             return value
         return json.dumps(value, **self.dump_kwargs)
 

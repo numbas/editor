@@ -7,36 +7,58 @@
         <link rel="stylesheet" href="style.css"></link>
 	</head>
 	<body>
-		<a class="index-link" href="index.html">Numbas installation instructions</a>
-		<h1>Running a personal instance of the editor on Windows</h1>
+		<a class="index-link" href="index.html">&larr; Numbas installation instructions</a>
+
+        <h1>Running a personal instance of the editor on Windows</h1>
+
+		<p>
+			These are outline instructions on setting up the Numbas editor on a PC running Windows, for personal use.
+            For instances where multiple users need access to the editor, we recommend following the <a href="ubuntu.html">Ubuntu</a> installation instructions.
+        </p>
+
+        <section>
 		<h2>Installation</h2>
 		<ol>
-			<li>Install Python 3 and Python 2.7 from <a href="http://python.org/download/">python.org/download</a>. Python 2 is needed to run the webserver, while Python 3 is needed to run the Numbas tools.</li>
+            <li>Install Python 3 from <a href="http://python.org/download/">python.org/download</a>.</li>
+            <li>
+                <em>If you already have two versions of Python installed on your PC, the command <code>python</code> might run the wrong version. The easiest way of making sure you use the right one is to create a virtual environment. Here's how to do that:</em>
+                <code class="shell">pip3 install virtualenv</code>
+                <code class="shell">virtualenv -p python3 numbas_venv</code>
+                <code class="shell">numbas_venv\Scripts\activate</code>
+                You'll need to activate the virtual environment each time you want to use it.
+            </li>
 			<li>
-				Install pip for both Python 2 and Python3 (this is annoyingly fiddly).
-				<ul>
-					<li>Download and install <a href="http://pypi.python.org/pypi/setuptools">setuptools for Python 2</a>.</li>
-					<li>Install pip <code class="shell">c:\python27\Scripts\easy_install pip</code></li>
-				</ul>
-			</li>
-			<li>
-				Either download the Numbas runtime tools <a href="https://github.com/numbas/Numbas/archive/master.zip">from github</a> and extract to a folder called <code>numbas_runtime</code>, or git clone the repository:
+            Either download the Numbas runtime tools <a href="https://github.com/numbas/Numbas/archive/master.zip">from github</a> and extract to a folder called <code>numbas_runtime</code>, or use <a href="https://git-scm.com/">git</a> to clone the repository:
 				<code class="shell">git clone git://github.com/numbas/Numbas.git numbas_runtime</code>
 			</li>
 			<li>
-			Either download the Numbas editor <a href="https://github.com/numbas/editor/archive/master.zip">from github</a> and extract to a folder called <code>numbas_editor</code>, or git clone the repository:
+			Either download the Numbas editor <a href="https://github.com/numbas/editor/archive/master.zip">from github</a> and extract to a folder called <code>numbas_editor</code>, or use git to clone the repository:
 				<code class="shell">git clone git://github.com/numbas/editor.git numbas_editor</code>
 			</li>
 			<li>
-				Go into the <code>numbas_editor/numbas</code> directory, and install all the required Python2 modules:
-				<code class="shell">c:\python27\Scripts\pip install -r requirements.pip</code>
-			</li>
-		</ol>
+				Install all the required Python modules:
+                <code class="shell">pip3 install -r numbas_editor/requirements.txt</code>
+                <code class="shell">pip3 install -r numbas_runtime/requirements.txt</code>
+            </li>
+            <li>
+                <em>You may have some trouble installing <code>Pillow</code>. If so, try installing it using a wheel file:</em>
+                <ul>
+                    <li>Download <a href="https://pypi.python.org/packages/0a/b1/d5b77dc8d399072d7564a849b5cedd40bfabbcfe8981c1a0352033e7280e/Pillow-3.4.2-cp35-cp35m-win32.whl#md5=82e3c3e7caa0ff3bfdaba2e80e55e3d7">Pillow-3.4.2-cp35-cp35m-win32.whl</a> from the Python package index (on 64-bit systems, it's <a href="https://pypi.python.org/packages/13/97/893f8c74e829464f86110f8a0ddefd3886f03cc45af9799185294d7c45e3/Pillow-3.4.2-cp35-cp35m-win_amd64.whl#md5=d034bb805314429fa2afe8da7ecaa935">Pillow-3.4.2-cp35-cp35m-win_amd64.whl</a></li>
+                    <li>
+                        Run 
+                        <code class="shell">pip3 install Pillow-3.4.2-cp35-cp35m-win32.whl</code>
+                    </li>
+                    <li>Once Pillow is successfully installed, try again to install the rest of the required modules.</li>
+                </ul>
+            </li>
+        </ol>
+        </section>
 
+        <section>
 		<h2>Configuration</h2>
         <ol>
             <li>
-                Copy <code>settings.py.dist</code> to <code>settings.py</code>
+                Copy <code>numbas_editor/numbas/settings.py.dist</code> to <code>numbas_editor/numbas/settings.py</code>
                 <ul>
                     <li>Change <code>STATIC_ROOT</code> to <code>'editor/static'</code></li>
                     <li>Change <code>NUMBAS_PATH</code> to <code>'../numbas_runtime'</code></li>
@@ -56,19 +78,38 @@
 
             <li>
                 Sync the database:
-                <code class="shell">c:\python27\python manage.py migrate</code>
+                <code class="shell">python manage.py migrate</code>
             </li>
             <li>Copy <code>editor/templates/index_message.html.dist</code> to <code>editor/templates/index_message.html</code>, and customise it to your liking.</li>
             <li>
                 Create a superuser (you'll be asked for a username, email address and password - the email address isn't used).
-                <code class="shell">c:\python27\python manage.py createsuperuser</code></li>
+                <code class="shell">python manage.py createsuperuser</code></li>
             </li>
             <li>
                 Start the server
-                <code class="shell">c:\python27\python manage.py runserver</code></li>
+                <code class="shell">python manage.py runserver</code></li>
             </li>
-            <li>Open <a href="http://localhost:8000">htttp://localhost:8000</li>
+            <li>Open <a href="http://localhost:8000">htttp://localhost:8000</a> in your web browser. You will be able to log in using the credentials you created earlier.</li>
         </ol>
+        </section>
 
+        <section>
+        <h2>Ongoing maintenance</h2>
+
+        <p>
+            If you used git to clone the runtime and editor repositories, run the following commands to update your installation:
+            <code class="shell">cd numbas_editor</code>
+            <code class="shell">git pull origin master</code>
+            <code class="shell">python manage.py migrate</code>
+            <code class="shell">cd ../numbas_runtime</code>
+            <code class="shell">git pull origin master</code>
+        </p>
+
+        <p>The admin site, where you can manually edit entries in the database, is at <a href="http://localhost:8000/admin">http://localhost:8000/admin</a>.</p>
+        </section>
+
+        <footer>
+            <p><a href="http://www.numbas.org.uk">Numbas</a> is an open-source, web-based e-assessment system.</p>
+        </footer>
     </body>
 </html>

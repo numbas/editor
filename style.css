@@ -38,3 +38,15 @@ code.shell:before {
 code.shell.mysql:before {
 	content: 'mysql> ';
 }
+code.shell .shell-variable {
+    text-decoration: underline;
+    font-family: sans-serif;
+    font-weight: bold;
+}
+footer {
+    margin-top:4em;
+    border-top: 2px solid #ccc;
+}
+section ~ section {
+    margin-top: 3em;
+}

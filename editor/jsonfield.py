@@ -9,6 +9,11 @@ from django.forms.fields import CharField
 from django.forms.utils import ValidationError as FormValidationError
 
 try:
+    basestring = unicode
+except NameError:
+    basestring = str
+
+try:
 	from south.modelsinspector import add_introspection_rules
 except ImportError:
 	pass
@@ -21,7 +26,7 @@ class JSONFormField(CharField):
 
         value = super(JSONFormField, self).clean(value)
 
-        if isinstance(value, str):
+        if isinstance(value, basestring):
             try:
                 json.loads(value)
             except ValueError:
@@ -41,7 +46,7 @@ class JSONField(models.TextField):
 
     def to_python(self, value):
         """Convert string value to JSON"""
-        if isinstance(value, str):
+        if isinstance(value, basestring):
             try:
                 return json.loads(value, **self.load_kwargs)
             except ValueError as e:
@@ -51,7 +56,7 @@ class JSONField(models.TextField):
     def get_db_prep_value(self, value, connection, prepared=False):
         """Convert JSON object to a string"""
         
-        if isinstance(value, str):
+        if isinstance(value, basestring):
             return value
         return json.dumps(value, **self.dump_kwargs)
 

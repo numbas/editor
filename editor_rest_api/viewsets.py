@@ -15,7 +15,7 @@ class UserViewSet(viewsets.mixins.RetrieveModelMixin,viewsets.GenericViewSet):
     queryset = User.objects.all()
     serializer_class = serializers.UserSerializer
 
-class ExamViewSet(viewsets.ReadOnlyModelViewSet):
+class ExamViewSet(viewsets.mixins.RetrieveModelMixin,viewsets.GenericViewSet):
     serializer_class = serializers.ExamSerializer
 
     def get_queryset(self):

@@ -11,11 +11,14 @@ class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Project.objects.filter(public_view=True)
     serializer_class = serializers.ProjectSerializer
 
-class UserViewSet(viewsets.mixins.RetrieveModelMixin,viewsets.GenericViewSet):
+class RetrieveOnlyViewset(viewsets.mixins.RetrieveModelMixin,viewsets.GenericViewSet):
+    pass
+
+class UserViewSet(RetrieveOnlyViewset):
     queryset = User.objects.all()
     serializer_class = serializers.UserSerializer
 
-class ExamViewSet(viewsets.mixins.RetrieveModelMixin,viewsets.GenericViewSet):
+class ExamViewSet(RetrieveOnlyViewset):
     serializer_class = serializers.ExamSerializer
 
     def get_queryset(self):
@@ -24,7 +27,7 @@ class ExamViewSet(viewsets.mixins.RetrieveModelMixin,viewsets.GenericViewSet):
         queryset = queryset.filter(editoritem__project__public_view=True,editoritem__current_stamp__status='ok',editoritem__published=True)
         return queryset
 
-class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
+class QuestionViewSet(RetrieveOnlyViewset):
     serializer_class = serializers.QuestionSerializer
 
     def get_queryset(self):
@@ -45,7 +48,7 @@ class AvailableExamsViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = queryset.filter(editoritem__project__in=projects,editoritem__current_stamp__status='ok',editoritem__published=True)
         return queryset
     
-class ResourceViewSet(viewsets.ReadOnlyModelViewSet):
+class ResourceViewSet(RetrieveOnlyViewset):
     serializer_class = serializers.ResourceSerializer
     queryset = Resource.objects.all()
 

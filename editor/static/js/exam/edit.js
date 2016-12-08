@@ -374,7 +374,6 @@ $(document).ready(function() {
     };
 
     function QuestionGroup(data,parent) {
-        console.log(data);
         var qg = this;
 
         this.parent = parent;

@@ -98,6 +98,14 @@ body.mce-fullscreen .mce-fullscreen {
     color: red;
 }
 
+gapfill {
+	border: 1px solid #888;
+	padding: 0.1em 0.3em;
+	color: #888;
+	border-radius: 2px;
+	display: inline-block;
+}
+
 /*
 #name-header {
     padding: 0;

@@ -1149,7 +1149,12 @@ $(document).ready(function() {
                             $(ed.getContainer()).removeClass('wm-focus');
                         });
 
-                        setTimeout(function() {ed.execCommand('mceAutoResize')}, 100);
+                        var resizer = setInterval(function() {
+                            if($(ed.getContainer()).parents('.tab-pane:not(.active)').length==0) {
+                                ed.execCommand('mceAutoResize');
+                                clearInterval(resizer);
+                            }
+                        }, 100);
 					}
                 })
             ;

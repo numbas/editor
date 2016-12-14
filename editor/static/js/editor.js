@@ -26,17 +26,72 @@ $(document).ready(function() {
 			return {message: e.message, tex: '\\color{red}{\\text{'+tex+'}}', error: true};
 		}
 	}
+
+    var currentScope = null;
+
+    MathJax.Hub.Register.MessageHook("End Math Input",function() {
+        currentScope = null;
+    });
+
 	MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
 
 		var TEX = MathJax.InputJax.TeX;
+
+		TEX.prefilterHooks.Add(function(data) {
+			currentScope = $(data.script).parents('.jme-scope').first().data('jme-scope');
+		});
 
 		TEX.Definitions.Add({macros: {
 			'var': 'JMEvar', 
 			'simplify': 'JMEsimplify'
 		}});
 
+        function JMEvarsub(name) {
+            var settings_string = this.GetBrackets(name);
+            var settings = {};
+            if(settings_string!==undefined) {
+                settings_string.split(/\s*,\s*/g).forEach(function(v) {
+                    var setting = v.trim().toLowerCase();
+                    settings[setting] = true;
+                });
+            }
+            var expr = this.GetArgument(name);
+
+            var scope = currentScope;
+
+            try {
+                var v = Numbas.jme.evaluate(Numbas.jme.compile(expr,scope),scope);
+
+                var tex = Numbas.jme.display.texify({tok: v},settings);
+            }catch(e) {
+                throw(new Numbas.Error('mathjax.math processing error',{message:e.message,expression:expr}));
+            }
+            var mml = TEX.Parse(tex,this.stack.env).mml();
+
+            this.Push(mml);
+        }
+        function JMEsimplifysub(name) {
+            var rules = this.GetBrackets(name);
+            if(rules===undefined) {
+                rules = 'all';
+            }
+            var expr = this.GetArgument(name);
+
+            var scope = currentScope;
+            expr = Numbas.jme.subvars(expr,scope);
+
+            var tex = Numbas.jme.display.exprToLaTeX(expr,rules,scope);
+            var mml = TEX.Parse(tex,this.stack.env).mml();
+
+            this.Push(mml);
+        }
+
 		TEX.Parse.Augment({
 			JMEvar: function(name) {
+                if(currentScope) {
+                    JMEvarsub.apply(this,[name]);
+                    return;
+                }
 				var rules = this.GetBrackets(name);
 				var expr = this.GetArgument(name);
 
@@ -48,6 +103,10 @@ $(document).ready(function() {
 			},
 
 			JMEsimplify: function(name) {
+                if(currentScope) {
+                    JMEsimplifysub.apply(this,[name]);
+                    return;
+                }
 				var rules = this.GetBrackets(name);
 				var expr = this.GetArgument(name);
 				var res = texJMEBit(expr,rules);
@@ -984,32 +1043,11 @@ $(document).ready(function() {
 
 			var tinymce_plugins = ko.utils.unwrapObservable(allBindingsAccessor.tinymce_plugins) || [];
 
-			var d = $('<div style="text-align:right"/>');
-			var toggle = $('<button type="button" class="wmToggle on">Toggle rich text editor</button>');
-			d.append(toggle);
-			$(element).append(d);
-			toggle.click(function() {
-				var ed = $(element).children('textarea').tinymce();
-				$(element).toggleClass('on',ed.isHidden());
-				if(ed.isHidden()) {
-					ed.show()
-					ed.setContent(ko.utils.unwrapObservable(valueAccessor));
-				}
-				else {
-					ed.hide();
-					var mc = ko.utils.domData.get(plaintext[0],'codemirror');
-					mc.setValue(ko.utils.unwrapObservable(valueAccessor));
-				}
-			});
-
-            var t = $('<textarea class="wmTextArea" style="width:100%"/>');
-			var plaintext = $('<textarea class="plaintext"/>');
+            var t = $('<div class="wmTextArea" style="width:100%"/>');
 
             $(element)
 				.css('width',width)
-                .addClass('writemathsContainer on')
                 .append(t)
-				.append(plaintext)
             ;
 
 			function remove_empty_spans(node) {
@@ -1028,13 +1066,47 @@ $(document).ready(function() {
 					}
 				}
 			}
+            
+            var plugins = [
+                'anchor',
+                'autoresize',
+                'code',
+                'codesample',
+                'colorpicker',
+                'directionality',
+                'fullscreen',
+                'hr',
+                'image',
+                'link',
+                'media',
+                'noneditable',
+                'paste',
+                'preview',
+                'searchreplace',
+                'table',
+                'textcolor',
+                'textpattern'
+            ]
+            .concat(tinymce_plugins);
 
 			//tinyMCE
             t
                 .tinymce({
                     theme: 'modern',
-					skin: 'light',
-					plugins: ['media','noneditable','searchreplace','autoresize','fullscreen','link','paste','table','image','jmevisible'].concat(tinymce_plugins),
+					skin: 'lightgray',
+                    plugins: plugins,
+
+                    menu: {
+                        edit: {title: 'Edit', items: 'undo redo | cut copy paste pastetext | selectall | searchreplace'},
+                        insert: {title: 'Insert', items: 'image media link | anchor hr'},
+                        view: {title: 'View', items: 'visualaid | fullscreen preview'},
+                        format: {title: 'Format', items: 'bold italic underline strikethrough superscript subscript | formats | removeformat'},
+                        table: {title: 'Table', items: 'inserttable tableprops deletetable | cell row column'},
+                        tools: {title: 'Tools', items: 'code'}
+                    },
+                    
+                    toolbar: "undo redo | styleselect | bold italic removeformat | alignleft aligncenter alignright | bullist numlist outdent indent | link image gapfill jmevisible | fullscreen preview code",
+
 					statusbar: false,
 					media_strict: false,
 					width: width,
@@ -1068,44 +1140,19 @@ $(document).ready(function() {
 							}
 						});
 
-						if(allBindingsAccessor.showButtons) {
-							for(var button in allBindingsAccessor.showButtons) {
-								ko.computed(function() {
-									var v = ko.utils.unwrapObservable(allBindingsAccessor.showButtons[button]);
-									if(typeof(v)=="function") {
-										v = v();
-									}
-									var buttons = ed.theme.panel.find('button.'+button);
-									if(v) {
-										buttons.show();
-									} else {
-										buttons.hide();
-									}
-								});
-							}
-						}
-
 						ed.setContent(value);
+                        ed.undoManager.clear();
+                        ed.on('focus',function() {
+                            $(ed.getContainer()).addClass('wm-focus');
+                        });
+                        ed.on('blur',function() {
+                            $(ed.getContainer()).removeClass('wm-focus');
+                        });
+
+                        setTimeout(function() {ed.execCommand('mceAutoResize')}, 100);
 					}
                 })
             ;
-
-
-			//codemirror
-			function onChange(editor,change) {
-				if(typeof valueAccessor=='function') {
-					valueAccessor(editor.getValue());
-				}
-			}
-
-			var mc = CodeMirror.fromTextArea(plaintext[0],{
-				lineNumbers: true,
-				styleActiveLine: true,
-				matchBrackets: true,
-                mode: 'htmlmixed'
-			});
-			mc.on('change',onChange);
-			ko.utils.domData.set(plaintext[0],'codemirror',mc);
 		},
 		update: function(element, valueAccessor) {
 			var value = ko.utils.unwrapObservable(valueAccessor()) || '';
@@ -1119,19 +1166,12 @@ $(document).ready(function() {
             }
 
 			var tinymce = $(element).find('iframe').contents().find('body');
-			var plaintext = $(element).children('.plaintext');
 
             if (!tinymce.is(':focus')) {
 				var ed = $(element).children('.wmTextArea').tinymce();
 				if(ed)
 					ed.setContent(value);
 			}
-			if(plaintext.length && tinymce.is(':focus')) {
-				var mc = ko.utils.domData.get(plaintext[0],'codemirror');
-				if(value!=mc.getValue()) {
-					mc.setValue(value);
-				}
-            }		
 		}
 	};
 

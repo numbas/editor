@@ -52,6 +52,26 @@
 	content: url(../images/check_16x13.png);
 }
 
+body.mce-fullscreen .mce-fullscreen {
+    z-index: 1000;
+}
+.mce-tinymce:not(.wm-focus) .mce-toolbar {
+    display: none;
+}
+.mce-container .mce-preview-footer {
+    bottom: 0em;
+    background: hsl(0,100%,90%);
+    width: 100%;
+    padding: 0.2em;
+    border-top: 1px solid hsl(0,100%,80%);
+    font-style: italic;
+}
+.mce-container .mce-preview-content {
+    width: 100%;
+    height: 100%;
+    padding: 1em;
+}
+
 .transparent-input:not(:focus):not(:hover), .transparent-input[readonly] {
     background: none;
     border: none;
@@ -60,6 +80,22 @@
 
 .timeline-write-comment {
     margin-bottom: 2em;
+}
+
+.jme-var {
+	color: olive;
+}
+
+.jme-simplify {
+	color: blue;
+}
+
+.jme-subvar {
+	color: gray;
+}
+
+.jme-error {
+    color: red;
 }
 
 /*
@@ -146,22 +182,6 @@ form.licence {
 
 body .wm_preview {
 	padding: 1.5em;
-}
-
-.jme-var {
-	color: olive;
-}
-
-.jme-simplify {
-	color: blue;
-}
-
-.jme-subvar {
-	color: gray;
-}
-
-.jme-error {
-    color: red;
 }
 
 button.delete {

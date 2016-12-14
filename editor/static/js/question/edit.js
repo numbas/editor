@@ -1706,6 +1706,7 @@ $(document).ready(function() {
 			var i = this.parentList.indexOf(this);
 			if(i>0) {
 				this.parentList.remove(this);
+                ko.tasks.runEarly();
 				this.parentList.splice(i-1,0,this);
                 this.scrollTo();
 			}
@@ -1714,6 +1715,7 @@ $(document).ready(function() {
 		moveDown: function() {
 			var i = this.parentList.indexOf(this);
 			this.parentList.remove(this);
+            ko.tasks.runEarly();
 			this.parentList.splice(i+1,0,this);
             this.scrollTo();
 		},

@@ -47,7 +47,7 @@
             <label class="{{form_label_class}} control-label">
 				Warning message
 			</label>
-            <div {% if not editable %}disabled{% endif %} class="{{form_control_class}}" data-bind="writemaths: maxlength.message, preambleCSS: $root.preamble.css"></div>
+            <div {% if not editable %}disabled{% endif %} class="{{form_control_class}}" data-bind="writemaths: maxlength.message, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible']"></div>
 		</div>
 	</div>
 </form>
@@ -59,7 +59,7 @@
             <label class="{{form_label_class}} control-label">
 				Warning message
 			</label>
-            <div {% if not editable %}disabled{% endif %} class="{{form_control_class}}" data-bind="writemaths: maxlength.message, preambleCSS: $root.preamble.css"></div>
+            <div {% if not editable %}disabled{% endif %} class="{{form_control_class}}" data-bind="writemaths: maxlength.message, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible']"></div>
 		</div>
 	</div>
 </form>
@@ -81,7 +81,7 @@
 				Warning message
 			</label>
 			<div class="{{form_control_class}}">
-				<div {% if not editable %}disabled{% endif %} data-bind="writemaths: musthave.message, preambleCSS: $root.preamble.css"></div>
+				<div {% if not editable %}disabled{% endif %} data-bind="writemaths: musthave.message, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible']"></div>
 			</div>
 		</div>
 	</div>
@@ -104,7 +104,7 @@
 				Warning message
 			</label>
 			<div class="{{form_control_class}}">
-				<div {% if not editable %}disabled{% endif %} data-bind="writemaths: notallowed.message, preambleCSS: $root.preamble.css"></div>
+				<div {% if not editable %}disabled{% endif %} data-bind="writemaths: notallowed.message, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible']"></div>
 			</div>
 		</div>
 	</div>

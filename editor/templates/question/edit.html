@@ -29,6 +29,19 @@
 
 {% block content %}
 {{block.super}}
+    <div class="modal fade" id="previewModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h3 class="modal-title">Preview</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="preview-content jme-scope"></div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="modal fade" id="imagePickModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -167,7 +180,7 @@
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='statement'}">
         <div class="form-group">
             <label>Question statement</label>
-            <div {% if not editable %}disabled{% endif %} data-bind="writemaths: statement"></div>
+            <div {% if not editable %}disabled{% endif %} data-bind="writemaths: statement, tinymce_plugins: ['jmevisible']"></div>
             <p class="help-block">
                 {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#statement' subject='the question statement' %}
                 Give any introductory information the student needs. 
@@ -445,7 +458,7 @@
                         </ul>
                         <div class="col-sm-9 tab-content">
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='prompt'}">
-                                <div {% if not editable %}disabled{% endif %} data-bind="writemaths: prompt, preambleCSS: $root.preamble.css, tinymce_plugins: ['gapfill'], showButtons: {gapfill: function(){return $data.type().name=='gapfill'}}"></div>
+                                <div {% if not editable %}disabled{% endif %} data-bind="writemaths: prompt, preambleCSS: $root.preamble.css, tinymce_plugins: ['gapfill','jmevisible'], showButtons: {gapfill: function(){return $data.type().name=='gapfill'}}"></div>
 
                                 <p class="help-block">
                                     {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-prompt' subject='the part prompt' %}
@@ -574,7 +587,7 @@
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='advice'}">
         <div class="form-group">
             <label>Advice</label>
-            <div {% if not editable %}disabled{% endif %} data-bind="writemaths: advice"></div>
+            <div {% if not editable %}disabled{% endif %} data-bind="writemaths: advice, tinymce_plugins: ['jmevisible']"></div>
             <p class="help-block">
                 {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#advice' subject='the advice section' %}
                 Give a worked solution to the whole question. 

@@ -1081,7 +1081,6 @@ $(document).ready(function() {
                 'media',
                 'noneditable',
                 'paste',
-                'preview',
                 'searchreplace',
                 'table',
                 'textcolor',

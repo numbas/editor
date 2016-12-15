@@ -180,7 +180,7 @@
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='statement'}">
         <div class="form-group">
             <label>Question statement</label>
-            <div {% if not editable %}disabled{% endif %} data-bind="writemaths: statement, tinymce_plugins: ['jmevisible']"></div>
+            <div {% if not editable %}disabled{% endif %} data-bind="writemaths: statement, tinymce_plugins: ['jmevisible','preview']"></div>
             <p class="help-block">
                 {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#statement' subject='the question statement' %}
                 Give any introductory information the student needs. 
@@ -458,7 +458,7 @@
                         </ul>
                         <div class="col-sm-9 tab-content">
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='prompt'}">
-                                <div {% if not editable %}disabled{% endif %} data-bind="writemaths: prompt, preambleCSS: $root.preamble.css, tinymce_plugins: ['gapfill','jmevisible'], showButtons: {gapfill: function(){return $data.type().name=='gapfill'}}"></div>
+                                <div {% if not editable %}disabled{% endif %} data-bind="writemaths: prompt, preambleCSS: $root.preamble.css, tinymce_plugins: ($data.type().name=='gapfill' ?  ['gapfill'] : [] ).concat(['jmevisible','preview']), showButtons: {gapfill: function(){return $data.type().name=='gapfill'}}"></div>
 
                                 <p class="help-block">
                                     {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-prompt' subject='the part prompt' %}
@@ -587,7 +587,7 @@
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='advice'}">
         <div class="form-group">
             <label>Advice</label>
-            <div {% if not editable %}disabled{% endif %} data-bind="writemaths: advice, tinymce_plugins: ['jmevisible']"></div>
+            <div {% if not editable %}disabled{% endif %} data-bind="writemaths: advice, tinymce_plugins: ['jmevisible','preview']"></div>
             <p class="help-block">
                 {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#advice' subject='the advice section' %}
                 Give a worked solution to the whole question. 

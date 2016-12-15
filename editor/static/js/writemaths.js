@@ -153,7 +153,7 @@ function findMaths(txt,target) {
 }
 
 jQuery(function() {
-    jQuery("<style type='text/css'> .wm_preview { z-index: 1; position: absolute; display: none; border: 1px solid; padding: 0.2em; width: auto; margin: 0 auto; background: white;} </style>").appendTo("head");
+    jQuery("<style type='text/css'> .wm_preview { z-index: 1001; position: absolute; display: none; border: 1px solid; padding: 0.2em; width: auto; margin: 0 auto; background: white;} </style>").appendTo("head");
 
 	jQuery.fn.writemaths = function(custom_options) {
 

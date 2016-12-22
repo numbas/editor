@@ -115,6 +115,13 @@ gapfill {
 	display: inline-block;
 }
 
+.help-block {
+    font-weight: normal;
+}
+.help-block.help-block-inline {
+    display: inline;
+}
+
 /*
 #name-header {
     padding: 0;

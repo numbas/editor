@@ -37,6 +37,13 @@
             <div {% if not editable %}disabled{% endif %} class="{{form_control_class}}" data-bind="writemaths: precisionMessage, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','preview']"></div>
         </div>
     </div>
+    <hr>
+    <div class="form-group">
+        <label class="{{form_label_class}} control-label">Allowed notation {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-allowed-notation' %}</label>
+        <div class="{{form_control_class}}">
+            <multi-select-checkboxes params="options: notationStyles, selectedOptions: allowedNotationStyles, labelProperty: 'name', helpProperty: 'description'"></muli-select-checkboxes>
+        </div>
+    </div>
+    {% selectproperty 'correctAnswerStyle' 'Correct answer style' options_text='name' options='allowedNotationStyles' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-correct-answer-style' %}
 </form>
 </section>
-

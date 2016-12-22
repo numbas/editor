@@ -1289,6 +1289,38 @@ $(document).ready(function() {
         '
     });
 
+    ko.components.register('multi-select-checkboxes',{
+        viewModel: function(params) {
+            var labelProperty = ko.unwrap(params.labelProperty);
+            var helpProperty = ko.unwrap(params.helpProperty);
+            var selectedOptions = ko.unwrap(params.selectedOptions);
+            this.options = ko.pureComputed(function() {
+                return ko.unwrap(params.options).map(function(option) {
+                    return {
+                        checked: ko.observable(selectedOptions.indexOf(option)!=-1),
+                        label: option[labelProperty],
+                        help: option[helpProperty],
+                        value: option
+                    }
+                })
+            });
+            ko.computed(function() {
+                params.selectedOptions(this.options().filter(function(p){return p.checked()}).map(function(p){return p.value}));
+            },this)
+        },
+        template: '\
+            <ul class="list-unstyled" data-bind="foreach: options"> \
+                <li>\
+                    <label>\
+                        <input type="checkbox" data-bind="checked:checked">\
+                        <span data-bind="text:label"></span>\
+                    </label>\
+                    <span class="help-block help-block-inline" data-bind="text: help"></span>\
+                </li>\
+            </ul>\
+            '
+    })
+
 	ko.bindingHandlers.dragOut = {
 		init: function(element, valueAccessor) {
 			var obj = {

@@ -2047,6 +2047,54 @@ $(document).ready(function() {
 					strictPrecision: ko.observable(true),
                     showPrecisionHint: ko.observable(true)
 				};
+
+                model.notationStyles = [
+                    {
+                        code: 'plain',
+                        name: 'English (Plain)',
+                        description: 'No thousands separator; dot for decimal point.',
+                    },
+                    {
+                        code: 'en',
+                        name:'English',
+                        description:'Commas separate thousands; dot for decimal point.',
+                    },
+                    {
+                        code: 'si-en',
+                        name:'SI (English)',
+                        description:'Spaces separate thousands; dot for decimal point.',
+                    },
+                    {
+                        code: 'si-fr',
+                        name:'SI (French)',
+                        description:'Spaces separate thousands; comma for decimal point.',
+                    },
+                    {
+                        code: 'eu',
+                        name: 'Continental',
+                        description:'Dots separate thousands; comma for decimal point.',
+                    },
+                    {
+                        code: 'plain-eu',
+                        name:'Continental (Plain)',
+                        description:'No thousands separator; comma for decimal point.',
+                    },
+                    {
+                        code: 'ch',
+                        name:'Swiss',
+                        description:'Apostrophes separate thousands; dot for decimal point.',
+                    },
+                    {
+                        code: 'in',
+                        name:'Indian',
+                        description:'Commas separate groups; rightmost group is 3 digits, other groups 2 digits; dot for decimal point.',
+                    }
+                ];
+
+                model.allowedNotationStyles = ko.observableArray(model.notationStyles.filter(function(s){return ['plain','en','si-en'].contains(s.code)}));
+
+                model.correctAnswerStyle = ko.observable(model.allowedNotationStyles()[0] || model.notationStyles[0]);
+
 				model.precisionType = ko.observable(model.precisionTypes[0]);
 				model.precisionWord = ko.computed(function() {
 					switch(this.precisionType().name) {
@@ -2078,6 +2126,10 @@ $(document).ready(function() {
 					data.strictPrecision = this.strictPrecision();
                     data.showPrecisionHint = this.showPrecisionHint();
 				}
+                data.notationStyles = this.allowedNotationStyles().map(function(s){return s.code});
+                if(this.correctAnswerStyle()) {
+                    data.correctAnswerStyle = this.correctAnswerStyle().code;
+                }
 			},
 			load: function(data) {
                 tryLoad(data,['minValue','maxValue','correctAnswerFraction','integerAnswer','integerPartialCredit','allowFractions','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision','showPrecisionHint'],this);
@@ -2089,6 +2141,17 @@ $(document).ready(function() {
 					if(this.precisionTypes[i].name == this.precisionType())
 						this.precisionType(this.precisionTypes[i]);
 				}
+                if('notationStyles' in data) {
+                    this.allowedNotationStyles(this.notationStyles.filter(function(s) {
+                        return data.notationStyles.contains(s.code);
+                    }));
+                }
+                if('correctAnswerStyle' in data) {
+                    var style = this.notationStyles.filter(function(s){return s.code==data.correctAnswerStyle})[0];
+                    if(style) {
+                        this.correctAnswerStyle(style);
+                    }
+                }
 			}
 		},
 		{

@@ -1627,7 +1627,8 @@ var funcObjAcc = 0;	//accumulator for ids for funcObjs, so they can be sorted
  */
 var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
 {
-	/** 
+	/** Globally unique ID of this function object
+	 * @name id
 	 * @member {number} 
 	 * @memberof Numbas.jme.funcObj 
 	 */
@@ -1651,15 +1652,45 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
 
 	name = name.toLowerCase();
 
+	/** Name 
+	 * @name name
+	 * @member {string}
+	 * @memberof Numbas.jme.funcObj
+	 */
 	this.name=name;
+
+	/** Calling signature of this function. A list of types - either token constructors; '?', representing any type; a type name. A type name or '?' followed by '*' means any number of arguments matching that type.
+	 *
+	 * @name intype
+	 * @member {list}
+	 * @memberof Numbas.jme.funcObj
+	 */
 	this.intype = intype;
+
+	/** The return type of this function. Either a Numbas.jme.token constructor function, or the string '?', meaning unknown type.
+	 * @name outtype
+	 * @member {function|string}
+	 * @memberof Numbas.jme.funcObj
+	 */
 	if(typeof(outcons)=='function')
 		this.outtype = outcons.prototype.type;
 	else
 		this.outtype = '?';
 	this.outcons = outcons;
+
+	/** Javascript function for the body of this function
+	 * @name fn
+	 * @member {function}
+	 * @memberof Numbas.jme.funcObj
+	 */
 	this.fn = fn;
 
+	/** Can this function be called with the given list of arguments?
+	 * @function typecheck
+	 * @param {Numbas.jme.token[]} variables
+	 * @returns {boolean}
+	 * @memberof Numbas.jme.funcObj
+	 */
 	this.typecheck = options.typecheck || function(variables)
 	{
 		variables = variables.slice();	//take a copy of the array
@@ -1692,6 +1723,14 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
 			return true;
 	};
 
+	/** Evaluate this function on the given arguments, in the given scope.
+	 *
+	 * @function evaluate
+	 * @param {Numbas.jme.token[]} args
+	 * @param {Numbas.jme.Scope} scope
+	 * @returns {Numbas.jme.token}
+	 * @memberof Numbas.jme.funcObj
+	 */
 	this.evaluate = options.evaluate || function(args,scope)
 	{
 		var nargs = [];
@@ -1721,6 +1760,11 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
 
 	this.doc = options.doc;
 
+	/** Does this function behave randomly?
+	 * @name random
+	 * @member {boolean} 
+	 * @memberof Numbas.jme.funcObj 
+	 */
 	this.random = options.random;
 }
 

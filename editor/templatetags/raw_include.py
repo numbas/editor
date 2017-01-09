@@ -15,7 +15,7 @@ def raw_include(path):
         absolute_path = finders.find(path)
         if absolute_path is None:
             raise Exception("raw_include: couldn't find file {}".format(path))
-        f = open(absolute_path)
+        f = open(absolute_path,encoding='utf-8')
     else:
         f = staticfiles_storage.open(path)
     content = f.read()

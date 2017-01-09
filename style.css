@@ -20,6 +20,9 @@ code {
 	display:inline-block;
 	color: #050;
 }
+a code {
+	color: inherit;
+}
 
 code.shell {
 	padding: 0 4px;

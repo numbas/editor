@@ -1782,9 +1782,10 @@ $(document).ready(function() {
 
             if(data.steps)
             {
+                var parentPart = this.isGap() ? this.parent : this;
                 data.steps.map(function(s) {
                     this.steps.push(new Part(this.q,this,this.steps,s));
-                },this);
+                },parentPart);
             }
 
 			if(data.scripts) {

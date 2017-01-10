@@ -849,6 +849,35 @@ $(document).ready(function() {
         }
     } 
 
+
+    /** Make a block of CSS declarations more specific by prepending the given selector to every rule
+     * @param {string} css
+     * @param {string} selector
+     * @returns {string}
+     */
+    Editor.makeCSSMoreSpecific = function(css,selector) {
+        var doc = document.implementation.createHTMLDocument(""),
+        styleElement = document.createElement("style");
+
+        styleElement.textContent = css;
+        doc.body.appendChild(styleElement);
+
+        var rules = styleElement.sheet.cssRules;
+        var new_rules = [];
+        Array.prototype.map.apply(rules,[function(rule) {
+          var selectorText = '.preview '+rule.selectorText;
+          for(var i=0;i<rule.style.length;i++) {
+            var name = rule.style.item(i);
+            var value = rule.style.getPropertyValue(name);
+            if(value) {
+            }
+          }
+          new_rules.push(selector+' '+rule.cssText);
+        }]);
+        return new_rules.join('\n');
+    };
+
+
 	/* Resizable 2d grid of observables.
 	 * Returns a 2d array of objects, each created by calling cell(row,column)
 	 */

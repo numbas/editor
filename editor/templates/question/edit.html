@@ -553,7 +553,7 @@
                     {% if editable %}
                     <div class="panel-footer clearfix">
                         <div class="pull-left">
-                            <button type="button" class="btn btn-default" data-bind="click: copy"><span class="glyphicon glyphicon-duplicate"></span> Copy this part</button>
+                            <button type="button" class="btn btn-default" data-bind="click: copy"><span class="glyphicon glyphicon-duplicate"></span> Copy this <span data-bind="text: levelName"></span></button>
                             <button type="button" class="btn btn-default" data-bind="click: replaceWithGapfill, visible: canBeReplacedWithGap"><span class="glyphicon glyphicon-tasks"></span> Replace part <strong data-bind="text:indexLabel"></strong> with a gapfill</button>
                         </div>
                         <div class="pull-right">

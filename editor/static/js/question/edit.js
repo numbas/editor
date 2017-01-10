@@ -1537,6 +1537,9 @@ $(document).ready(function() {
 			}
 			return i;
 		},this);
+        this.levelName = ko.computed(function() {
+            return this.isGap() ? 'gap' : this.isStep() ? 'step' : 'part';
+        },this);
 		this.header = ko.computed(function() {
 			if(this.isGap()) {
                 return 'Gap '+this.indexLabel()+'. ';

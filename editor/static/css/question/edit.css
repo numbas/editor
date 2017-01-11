@@ -79,6 +79,24 @@
 .variable-selector {
     cursor: pointer;
 }
+.variable-selector .value {
+	text-align: left;
+	display: inline-block;
+	max-height: 5em;
+	overflow-y: hidden;
+	overflow-x: hidden;
+    word-break: break-word;
+}
+
+.variable-selector.error .value {
+	color: red;
+	font-weight: bold;
+	max-height: none;
+}
+.variable-selector .value img {
+    max-height: 5em;
+}
+
 
 .empty-receiver * {
     opacity: 0;

@@ -1284,16 +1284,21 @@ $(document).ready(function() {
         },this);
 		this.display = ko.computed(function() {
 			var v;
+
 			if(this.anyError()) {
 				return this.anyError();
             } else if(v = this.value()) {
 				switch(v.type)
 				{
 				case 'string':
-					return v.value;
+					return Numbas.util.escapeHTML(v.value);
 				case 'list':
 					return 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
 				case 'html':
+                    if(v.value.length==1 && v.value[0].tagName=='IMG') {
+                        var src = v.value[0].getAttribute('src');
+                        return '<img src="'+src+'" title="'+src+'">';
+                    }
 					return 'HTML node';
 				default:
 					return Numbas.jme.display.treeToJME({tok:v});

@@ -1235,7 +1235,7 @@ $(document).ready(function() {
                     case 'json':
                         JSON.parse(val.value());
                         var json = treeToJME({tok: wrapValue(val.value())});
-                        return 'safe('+json+')';
+                        return 'json_decode(safe('+json+'))';
                     }
                 } catch(e) {
                     this.definitionError(e);

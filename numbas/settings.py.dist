@@ -92,9 +92,8 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    # Uncomment *one* of the two lines below to enable Shibboleth authentication, then look at shib_auth.py.dist and/or numbas_auth.py.
+    # Uncomment the line below to enable Shibboleth authentication, then look at shib_auth.py.dist
     #'shibboleth.middleware.ShibbolethRemoteUserMiddleware',
-    #'numbas_auth.NumbasShibbolethRemoteUserMiddleware',
 )
 
 ROOT_URLCONF = 'numbas.urls'
@@ -115,7 +114,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.humanize',
     'sanitizer',
-	'notifications',
+    'notifications',
     'accounts',
     'analytical',
     'reversion',
@@ -192,10 +191,10 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 sys.path.append(os.path.join(GLOBAL_SETTINGS['NUMBAS_PATH'],'bin'))
 
 AUTHENTICATION_BACKENDS = (
+    # Uncomment to enable Shibboleth authentication
+    #'shibboleth.backends.ShibbolethRemoteUserBackend',
     # Uncomment to enable LDAP authentication, then look at ldap_auth.py.dist
     #'django_auth_ldap.backend.LDAPBackend',
-    # Uncomment to enable the RemoteUser backend for Shibboleth authentication
-    #'django.contrib.auth.backends.RemoteUserBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
 

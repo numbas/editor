@@ -269,6 +269,10 @@
                                 </ul>
                                 <p class="help-block">(text strings)</p>
                             </div>
+                            <div data-bind="visible: templateType().id=='json'">
+                                <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: templateTypeValues.json.value, codemirrorMode: 'json'"></textarea>
+                                <button type="button" class="btn btn-default" data-bind="click: templateTypeValues.json.prettyPrint"><span class="glyphicon glyphicon-object-align-left"></span> Clean up formatting</button>
+                            </div>
                             </div>
                             <div class="help-block">
                                 <div class="value-error alert alert-danger" data-bind="visible: error().length>0, html: error">

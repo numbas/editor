@@ -178,7 +178,9 @@ Numbas.tryInit = function()
 			}
 			if(go)
 			{
-				req.callback({exports:window});
+				if(req.callback) {
+					req.callback({exports:window});
+				}
 				req.executed=true;
 				ind++;
 				for(var j=0;j<req.backdeps.length;j++) {
@@ -216,4 +218,20 @@ Numbas.addExtension = function(name,deps,callback) {
     });
 }
 
+/** Check all required scripts have executed - the theme should call this once the document has loaded
+ */
+Numbas.checkAllScriptsLoaded = function() {
+    for(var file in scriptreqs) {
+        var req = scriptreqs[file];
+        if(req.executed) {
+            continue;
+        }
+        if(req.fdeps.every(function(f){return scriptreqs[f].executed})) {
+            Numbas.display.die(new Numbas.Error('die.script not loaded',{file:file}));
+            break;
+        }
+    }
+}
+
 })();
+

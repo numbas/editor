@@ -404,20 +404,6 @@ input.recalculate-checkbox {
     overflow-x: auto;
 }
 
-.variable-selector .value {
-	text-align: left;
-	display: inline-block;
-	max-height: 5em;
-	overflow-y: hidden;
-	overflow-x: hidden;
-}
-
-.variable-selector.error .value {
-	color: red;
-	font-weight: bold;
-	max-height: none;
-}
-
 .variable {
 	padding-bottom: 1em;
 }

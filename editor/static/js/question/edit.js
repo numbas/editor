@@ -1141,7 +1141,18 @@ $(document).ready(function() {
 			},
 			'list of strings': {
 				values: InexhaustibleList()
-			}
+			},
+            'json': {
+                value: ko.observable(''),
+                prettyPrint: function() {
+                    var v = this.templateTypeValues.json.value();
+                    try {
+                        var data = JSON.parse(v);
+                        this.templateTypeValues.json.value(JSON.stringify(data,null,4));
+                    } catch(e) {
+                    }
+                }
+            }
 		};
 		this.editDefinition = this.templateTypeValues['anything'].definition;
 		this.templateTypeValues['list of numbers'].values = ko.computed(function() {
@@ -1221,6 +1232,10 @@ $(document).ready(function() {
                     case 'list of numbers':
                     case 'list of strings':
                         return treeToJME({tok: wrapValue(val.values())});
+                    case 'json':
+                        JSON.parse(val.value());
+                        var json = treeToJME({tok: wrapValue(val.value())});
+                        return 'safe('+json+')';
                     }
                 } catch(e) {
                     this.definitionError(e);
@@ -1326,7 +1341,8 @@ $(document).ready(function() {
 			{id: 'string', name: 'Short text string'},
 			{id: 'long string', name: 'Long text string'},
 			{id: 'list of numbers', name: 'List of numbers'},
-			{id: 'list of strings', name: 'List of short text strings'}
+			{id: 'list of strings', name: 'List of short text strings'},
+            {id: 'json', name: 'JSON data'}
 		],
 
         load: function(data) {
@@ -1392,6 +1408,8 @@ $(document).ready(function() {
 					break;
 				case 'list of strings':
 					templateTypeValues.values(tree.args.map(function(t){return t.tok.value}));
+                case 'json':
+                    templateTypeValues.value(tree.args[0].tok.value);
 				}
 			}
 			catch(e) {

@@ -1409,7 +1409,7 @@ $(document).ready(function() {
 				case 'list of strings':
 					templateTypeValues.values(tree.args.map(function(t){return t.tok.value}));
                 case 'json':
-                    templateTypeValues.value(tree.args[0].tok.value);
+                    templateTypeValues.value(tree.args[0].args[0].tok.value);
 				}
 			}
 			catch(e) {

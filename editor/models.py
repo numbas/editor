@@ -555,6 +555,9 @@ class EditorItem(models.Model,NumbasObject,ControlledObject):
     def __str__(self):
         return self.name
 
+    def __unicode__(self):
+        return self.name
+
     @property
     def owner(self):
         return self.author
@@ -988,7 +991,10 @@ class NewQuestion(models.Model):
         )
 
     def __str__(self):
-        return '%s' % self.editoritem.name
+        return self.editoritem.name
+
+    def __unicode__(self):
+        return self.editoritem.name
 
     def get_absolute_url(self):
         return reverse('question_edit',args=(self.pk,self.editoritem.slug))
@@ -1062,7 +1068,10 @@ class NewExam(models.Model):
     icon = 'book'
 
     def __str__(self):
-        return '%s' % self.editoritem.name
+        return self.name
+
+    def __unicode__(self):
+        return self.name
 
     def get_absolute_url(self):
         return reverse('exam_edit',args=(self.pk,self.editoritem.slug))

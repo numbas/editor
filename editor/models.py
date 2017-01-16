@@ -1068,10 +1068,10 @@ class NewExam(models.Model):
     icon = 'book'
 
     def __str__(self):
-        return self.name
+        return self.editoritem.name
 
     def __unicode__(self):
-        return self.name
+        return self.editoritem.name
 
     def get_absolute_url(self):
         return reverse('exam_edit',args=(self.pk,self.editoritem.slug))

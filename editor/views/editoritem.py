@@ -468,7 +468,7 @@ class ZipView(generic.DetailView,CompileObject):
         except CompileError as err:
             return self.get_error_response(err)
         else:
-            wrapper = FileWrapper(file(fsLocation,'rb'))
+            wrapper = FileWrapper(open(fsLocation,'rb'))
             response = http.HttpResponse(wrapper, content_type='application/zip')
             response['Content-Disposition'] = 'attachment; filename={}.zip'.format(obj.filename)
             response['Content-Length'] = os.path.getsize(fsLocation)

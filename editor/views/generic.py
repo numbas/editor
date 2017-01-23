@@ -74,9 +74,7 @@ class SetRestorePointView(generic.UpdateView,TimelineItemViewMixin):
     def post(self, request, *args, **kwargs):
         object = self.get_object()
     
-        print(request.POST)
         description = request.POST.get('text')
-        print(reversion.get_for_object(object))
         revision = reversion.get_for_object(object).first().revision
 
         restore_point = self.item = RestorePoint.objects.create(user=request.user,object=object.editoritem,description=description,revision=revision)

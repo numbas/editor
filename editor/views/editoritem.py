@@ -81,9 +81,6 @@ class CopyView(ProjectQuerysetMixin, generic.FormView, generic.edit.ModelFormMix
         if request.is_ajax():
             form_class = self.get_form_class()
             form = form_class(data=self.get_initial())
-            print(form.is_bound)
-            print(form.is_valid())
-            print(form.errors)
             if form.is_valid():
                 return self.form_valid(form)
             else:
@@ -292,7 +289,6 @@ class SearchView(ListView):
 
         # filter based on item type
         item_types = self.item_types = form.cleaned_data.get('item_types',[])
-        print(item_types)
         if 'exams' in item_types:
             if 'questions' not in item_types:
                 items = items.filter(filter_exam)
@@ -607,7 +603,6 @@ class ClosePullRequestView(generic.UpdateView):
             return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
 
         action = request.POST.get('action')
-        print('>>>>>>>>>>',action)
         if action=='accept':
             pr.accept(request.user)
             messages.add_message(self.request, messages.SUCCESS, render_to_string('pullrequest/accepted_message.html',{'pr':pr}))

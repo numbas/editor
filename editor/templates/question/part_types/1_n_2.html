@@ -33,11 +33,11 @@
 
 				<label data-bind="visible: !$parent.customMarking()">
 					Marks:
-					<input {% if not editable %}disabled{% endif %} class="marks monospace form-control" type="text" data-bind="value:marks, valueUpdate:'input'"/>
+					<input {% if not editable %}disabled{% endif %} class="marks monospace form-control" type="text" data-bind="textInput:marks"/>
 				</label>
 				<label>
 					Distractor Message:
-					<input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value:distractor, valueUpdate:'input'"/>
+					<input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: distractor"/>
 				</label>
 			</div>
 		</li>

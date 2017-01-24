@@ -217,7 +217,7 @@
                     <form data-bind="submit: Editor.noop">
                         <div class="form-group">
                             <label>Name</label>
-                            <input {% if not editable %}disabled{% endif %} type="text" placeholder="Name" class="form-control name monospace" data-bind="value:_name, valueUpdate: 'afterkeydown'"/>
+                            <input {% if not editable %}disabled{% endif %} type="text" placeholder="Name" class="form-control name monospace" data-bind="textInput: _name"/>
                             <span class="name-error text-danger" data-bind="text: nameError, visible: nameError"></span>
                         </div>
                         <div class="form-group">
@@ -228,49 +228,49 @@
                             <label>Value</label>
 
                             <div data-bind="visible: templateType().id=='anything'">
-                                <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: templateTypeValues.anything.definition, codemirrorMode: 'jme'"></textarea>
+                                <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: templateTypeValues.anything.definition, codemirrorMode: 'jme'"></textarea>
                             </div>
                             <div data-bind="visible: templateType().id=='number'">
-                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value: templateTypeValues.number.value, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 30, value: templateTypeValues.number.value}"/> 
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: templateTypeValues.number.value, autosize: {max: 500, min: 30, padding: 30, value: templateTypeValues.number.value}"/> 
                                 <p class="help-block">(a number)</p>
                             </div>
                             <div data-bind="visible: templateType().id=='range'" class="form-inline">
                                 Numbers between 
-                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value: templateTypeValues.range.min, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.min}"/>
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: templateTypeValues.range.min, autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.min}"/>
                                 and
-                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value: templateTypeValues.range.max, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.max}"/>
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: templateTypeValues.range.max, autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.max}"/>
                                 (inclusive) with step size
-                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value: templateTypeValues.range.step, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.step}"/>
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: templateTypeValues.range.step, autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.range.step}"/>
                             </div>
                             <div data-bind="visible: templateType().id=='randrange'" class="form-inline">
                                 A random number between 
-                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value: templateTypeValues.randrange.min, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.min}"/>
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: templateTypeValues.randrange.min, autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.min}"/>
                                 and
-                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value: templateTypeValues.randrange.max, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.max}"/>
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: templateTypeValues.randrange.max, autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.max}"/>
                                 (inclusive) with step size
-                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value: templateTypeValues.randrange.step, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.step}"/>
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: templateTypeValues.randrange.step, autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.randrange.step}"/>
                             </div>
                             <div data-bind="visible: templateType().id=='string'">
-                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value: templateTypeValues.string.value, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.string.value}"/> 
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: templateTypeValues.string.value, autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.string.value}"/> 
                                 <p class="help-block">(text string)</p>
                             </div>
                             <div data-bind="visible: templateType().id=='long string'">
                                 <div {% if not editable %}disabled{% endif %} data-bind="writemaths: templateTypeValues['long string'].value"></div>
                             </div>
                             <div data-bind="visible: templateType().id=='list of numbers', with: templateTypeValues['list of numbers']">
-                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value: commaValue, valueUpdate: 'afterkeydown', autosize: {max: 500, min: 30, padding: 10, value: commaValue}"/>
+                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: commaValue, autosize: {max: 500, min: 30, padding: 10, value: commaValue}"/>
                                 <p class="help-block">(comma-separated list of numbers)</p>
                             </div>
                             <div data-bind="visible: templateType().id=='list of strings', with: templateTypeValues['list of strings']">
                                 <ul class="list-unstyled" data-bind="foreach: values.edit">
                                     <li>
-                                        <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="value: value, valueUpdate: 'afterkeydown', event: {blur: onBlur}, autosize: {max: 500, min: 30, padding: 10, value: value}"/>
+                                        <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: value, event: {blur: onBlur}, autosize: {max: 500, min: 30, padding: 10, value: value}"/>
                                     </li>
                                 </ul>
                                 <p class="help-block">(text strings)</p>
                             </div>
                             <div data-bind="visible: templateType().id=='json'">
-                                <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: templateTypeValues.json.value, codemirrorMode: 'json'"></textarea>
+                                <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: templateTypeValues.json.value, codemirrorMode: 'json'"></textarea>
                                 <button type="button" class="btn btn-default" data-bind="click: templateTypeValues.json.prettyPrint"><span class="glyphicon glyphicon-object-align-left"></span> Clean up formatting</button>
                             </div>
                             </div>
@@ -407,7 +407,7 @@
                     {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-condition-to-satisfy' %}
                 </label>
                 <div class="col-sm-9">
-                    <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="valueUpdate: 'afterkeydown', codemirror: variablesTest.condition, codemirrorMode: 'jme'"></textarea>
+                    <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: variablesTest.condition, codemirrorMode: 'jme'"></textarea>
                     <p class="alert alert-danger" data-bind="visible: variablesTest.conditionError">Error: <span data-bind="html: variablesTest.conditionError"></span></p>
                 </div>
             </div>
@@ -493,7 +493,7 @@
                                             </p>
                                         </label>
                                         <div class="controls">
-                                            <textarea {% if not editable %}disabled{% endif %} data-bind="valueUpdate: 'afterkeydown', codemirror: script, codemirrorMode: 'javascript'"></textarea>
+                                            <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: script, codemirrorMode: 'javascript'"></textarea>
                                             <p class="order" data-bind="visible: name!='constructor'">Run this script <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: orderOptions, value: orderItem, optionsText: 'niceName'"></select> the built-in script.</p>
                                             <p class="order" data-bind="visible: name=='constructor'">This script runs after the built-in script.</p>
                                         </div>
@@ -683,7 +683,7 @@
                                         <label>
                                             Name {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-name' %}
                                         </label>
-                                        <input {% if not editable %}disabled{% endif %} class="form-control" placeholder="Name" type="text" data-bind="value: name, valueUpdate: 'afterkeydown'">
+                                        <input {% if not editable %}disabled{% endif %} class="form-control" placeholder="Name" type="text" data-bind="textInput: name">
                                     </div>
                                     <div class="form-group col-sm-3">
                                         <label>
@@ -723,7 +723,7 @@
                                     <label>
                                         Definition:
                                     </label>
-                                    <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: definition, codemirrorMode: language, valueUpdate: 'afterkeydown'"></textarea>
+                                    <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: definition, codemirrorMode: language"></textarea>
                                     <div class="alert alert-danger" data-bind="visible: error().length>0">
                                         <span class="glyphicon glyphicon-alert"></span> <span class="errortext" data-bind="html: error"></span>
                                     </div>
@@ -748,14 +748,14 @@
                             <form data-bind="submit: Editor.noop">
                                 <div class="form-group">
                                     <label>Javascript</label>
-                                    <textarea {% if not editable %}disabled{% endif %} data-bind="valueUpdate: 'afterkeydown', codemirror: preamble.js, codemirrorMode: 'javascript'"></textarea>
+                                    <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: preamble.js, codemirrorMode: 'javascript'"></textarea>
                                     <div class="help-block">
                                         This script will run after the question's variable have been generated but before the HTML is attached.
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label>CSS</label>
-                                    <textarea {% if not editable %}disabled{% endif %} data-bind="valueUpdate: 'afterkeydown', codemirror: preamble.css, codemirrorMode: 'css'"></textarea>
+                                    <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: preamble.css, codemirrorMode: 'css'"></textarea>
                                     <div class="help-block">
                                         Apply styling rules to the question's content.
                                     </div>

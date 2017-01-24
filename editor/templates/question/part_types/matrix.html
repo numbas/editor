@@ -13,7 +13,7 @@
 			Correct answer
 		</label>
 		<div class="{{form_control_class}}">
-			<textarea {% if not editable %}disabled{% endif %} data-bind="valueUpdate: 'afterkeydown', codemirror: correctAnswer, codemirrorMode: 'jme'"></textarea>
+			<textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: correctAnswer, codemirrorMode: 'jme'"></textarea>
 		</div>
 	</div>
     {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-correct-answer-on-reveal' %}

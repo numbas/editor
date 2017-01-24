@@ -10,7 +10,7 @@
             Correct answer {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-correct-answer'%}
 		</label>
 		<div class="{{form_control_class}}">
-			<input {% if not editable %}disabled{% endif %} class="monospace form-control" type="text" data-bind="value: answer, valueUpdate: 'input', autosize: {max: 500, min: 30, padding: 10, value: answer}"/>
+			<input {% if not editable %}disabled{% endif %} class="monospace form-control" type="text" data-bind="textInput: answer, autosize: {max: 500, min: 30, padding: 10, value: answer}"/>
 			<span data-bind="JME: answer" class="jme-answer"></span>
 		</div>
     </div>

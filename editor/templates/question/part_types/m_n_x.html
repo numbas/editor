@@ -113,7 +113,7 @@
 
                     <!-- ko foreach: $data -->
                     <td>
-                        <input {% if not editable %}disabled{% endif %} class="form-control" type="text" class="marks monospace" data-bind="value: marks, valueUpdate:'input'"/>
+                        <input {% if not editable %}disabled{% endif %} class="form-control" type="text" class="marks monospace" data-bind="textInput: marks"/>
                     </td>
                     <!-- /ko -->
                 </tr>

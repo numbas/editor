@@ -2256,12 +2256,18 @@ $(document).ready(function() {
 			tabs: [],
 
 			model: function() {
-				return {
+				var model = {
 					answer: ko.observable(''),
 					displayAnswer: Editor.contentObservable(''),
 					caseSensitive: ko.observable(false),
-					partialCredit: ko.observable(0)
+					partialCredit: ko.observable(0),
+                    matchModes: [
+                        {name: 'regex', niceName: 'Regular expression'},
+                        {name: 'exact', niceName: 'Exact match'}
+                    ]
 				}
+                model.matchMode = ko.observable(model.matchModes[0]);
+                return model;
 			},
 
 			toJSON: function(data) {
@@ -2272,9 +2278,14 @@ $(document).ready(function() {
                     data.caseSensitive = this.caseSensitive();
                     data.partialCredit = this.partialCredit();
                 }
+                data.matchMode = this.matchMode().name;
 			},
 			load: function(data) {
-                tryLoad(data,['answer','displayAnswer','caseSensitive','partialCredit'],this);
+                tryLoad(data,['answer','displayAnswer','caseSensitive','partialCredit','matchMode'],this);
+				for(var i=0;i<this.matchModes.length;i++) {
+					if(this.matchModes[i].name == this.matchMode())
+						this.matchMode(this.matchModes[i]);
+				}
 			}
 		},
 		{

@@ -33,6 +33,15 @@ class JSONFormField(CharField):
                 raise FormValidationError(_("Enter valid JSON"))
         return value
 
+def load_json(value,load_kwargs):
+    """Convert string value to JSON"""
+    if isinstance(value, basestring):
+        try:
+            return json.loads(value, **load_kwargs)
+        except ValueError as e:
+            pass
+    return value
+
 class JSONField(models.TextField):
     """JSONField is a generic textfield that serializes/unserializes JSON objects"""
 
@@ -44,14 +53,11 @@ class JSONField(models.TextField):
 
         super(JSONField, self).__init__(*args, **kwargs)
 
+    def from_db_value(self, value, expression, connection, context):
+        return load_json(value,self.load_kwargs)
+
     def to_python(self, value):
-        """Convert string value to JSON"""
-        if isinstance(value, basestring):
-            try:
-                return json.loads(value, **self.load_kwargs)
-            except ValueError as e:
-                pass
-        return value
+        return load_json(value,self.load_kwargs)
 
     def get_db_prep_value(self, value, connection, prepared=False):
         """Convert JSON object to a string"""

@@ -17,6 +17,7 @@
 		</div>
 	</div>
     {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-correct-answer-on-reveal' %}
+    {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-score-feedback-icon' %}	
     <div data-bind="fadeVisible: precisionType().name=='none'">
         {% booleanproperty 'correctAnswerFractions' 'Display numbers in the correct answer as fractions?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/matrixentry.html#term-display-numbers-in-the-correct-answer-as-fractions' %}
     </div>

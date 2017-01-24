@@ -10,6 +10,7 @@
     {% property 'minValue' 'Minimum accepted value' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-minimum-accepted-value' %}
     {% property 'maxValue' 'Maximum accepted value' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-maximum-accepted-value' %}
     {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-show-correct-answer-on-reveal' %}
+    {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-score-feedback-icon' %}	
     {% booleanproperty 'integerAnswer' 'Must the answer be an integer?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-must-the-answer-be-an-integer' %}
     <hr>
     <div data-bind="fadeVisible: integerAnswer">

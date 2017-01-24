@@ -5,6 +5,7 @@
         {% property 'minMarks' 'Minimum marks' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-minimum-marks' %}
         {% property 'maxMarks' 'Maximum marks' min='minMarks' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-maximum-marks' %}
         {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-correct-answer-on-reveal' %}
+        {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-score-feedback-icon' %}	
         <div data-bind="visible: $parent.steps().length">
             {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-penalty-for-revealing-steps' %}
         </div>

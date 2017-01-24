@@ -1640,6 +1640,7 @@ $(document).ready(function() {
 		}
 
 		this.showCorrectAnswer = ko.observable(true);
+        this.showFeedbackIcon = ko.observable(true);
 
 		this.variableReplacements = ko.observableArray([]);
 		this.addVariableReplacement = function() {
@@ -1762,6 +1763,7 @@ $(document).ready(function() {
                 type: this.type().name,
                 marks: this.realMarks(),
 				showCorrectAnswer: this.showCorrectAnswer(),
+                showFeedbackIcon: this.showFeedbackIcon(),
 				scripts: {},
 				variableReplacements: this.variableReplacements().map(function(vr){return vr.toJSON()}),
 				variableReplacementStrategy: this.variableReplacementStrategy().name
@@ -1801,7 +1803,7 @@ $(document).ready(function() {
                 if(this.types[i].name == data.type.toLowerCase())
                     this.type(this.types[i]);
             }
-            tryLoad(data,['marks','prompt','stepsPenalty','showCorrectAnswer'],this);
+            tryLoad(data,['marks','prompt','stepsPenalty','showCorrectAnswer','showFeedbackIcon'],this);
 
             if(data.steps)
             {

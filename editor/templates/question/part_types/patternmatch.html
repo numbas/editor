@@ -9,6 +9,7 @@
 
     {% property 'answer' 'Answer pattern' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/match-text-pattern.html#term-answer-pattern' %}
     {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-correct-answer-on-reveal' %}
+    {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-score-feedback-icon' %}	
     <div data-bind="fadeVisible: $parent.showCorrectAnswer">
         {% property 'displayAnswer' 'Display answer' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/match-text-pattern.html#term-display-answer' %}
     </div>

@@ -1,6 +1,5 @@
 import django_tables2 as tables
 from django_tables2.columns import Column
-from django_tables2 import columns
 from .models import EditorItem
 
 class ObjectTable(tables.Table):
@@ -12,10 +11,10 @@ class ObjectTable(tables.Table):
         fields = ('name', 'current_stamp', 'licence', 'author')
         order_by = ('-last_modified')
 
-    def render_last_modified(self,record):
+    def render_last_modified(self, record):
         return record.last_modified.strftime('%d/%m/%Y %H:%M')
 
 class EditorItemTable(ObjectTable):
     class Meta(ObjectTable.Meta):
         model = EditorItem
-        sequence = ('name','current_stamp','licence','author','last_modified')
+        sequence = ('name', 'current_stamp', 'licence', 'author', 'last_modified')

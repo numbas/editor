@@ -1,18 +1,13 @@
 import json
-import os
-import subprocess
-import traceback
 
-from django.shortcuts import render,redirect,render_to_response
-from django.conf import settings
-from django.core.urlresolvers import reverse
+from django.shortcuts import redirect
 from django import http
 from django.views import generic
 from django.template.loader import get_template
 from django.template import RequestContext
 import reversion
 
-from editor.models import Extension,NewStampOfApproval,Comment,RestorePoint,TimelineItem,EditorItem, Access
+from editor.models import NewStampOfApproval, Comment, RestorePoint, EditorItem, Access
 
 from accounts.util import user_json
 
@@ -31,20 +26,20 @@ class TimelineItemViewMixin(object):
             'object_json': self.object_json(),
             'html': self.object_html(),
         }
-        return http.HttpResponse(json.dumps(data),content_type='application/json')
+        return http.HttpResponse(json.dumps(data), content_type='application/json')
 
     def object_html(self):
         template = get_template(self.item.timelineitem_template)
-        html = template.render(RequestContext(self.request,{'item': self.item.timelineitem, 'can_delete': self.item.can_be_deleted_by(self.request.user)}))
+        html = template.render(RequestContext(self.request, {'item': self.item.timelineitem, 'can_delete': self.item.can_be_deleted_by(self.request.user)}))
         return html
 
-class StampView(generic.UpdateView,TimelineItemViewMixin):
+class StampView(generic.UpdateView, TimelineItemViewMixin):
     def post(self, request, *args, **kwargs):
-        object = self.get_object()
+        obj = self.get_object()
 
         status = request.POST.get('status')
 
-        stamp = self.item = NewStampOfApproval.objects.create(user=request.user,object=object.editoritem,status=status)
+        self.item = NewStampOfApproval.objects.create(user=request.user, object=obj.editoritem, status=status)
 
         return self.response()
 
@@ -52,15 +47,15 @@ class StampView(generic.UpdateView,TimelineItemViewMixin):
         return stamp_json(self.item)
 
     def get(self, request, *args, **kwargs):
-        return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
+        return http.HttpResponseNotAllowed(['POST'], 'GET requests are not allowed at this URL.')
 
-class CommentView(generic.UpdateView,TimelineItemViewMixin):
+class CommentView(generic.UpdateView, TimelineItemViewMixin):
     def post(self, request, *args, **kwargs):
-        object = self.get_comment_object()
+        obj = self.get_comment_object()
 
         text = request.POST.get('text')
 
-        self.item = Comment.objects.create(user=request.user,object=object,text=text)
+        self.item = Comment.objects.create(user=request.user, object=obj, text=text)
 
         return self.response()
 
@@ -68,16 +63,16 @@ class CommentView(generic.UpdateView,TimelineItemViewMixin):
         return comment_json(self.item)
 
     def get(self, request, *args, **kwargs):
-        return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
+        return http.HttpResponseNotAllowed(['POST'], 'GET requests are not allowed at this URL.')
 
-class SetRestorePointView(generic.UpdateView,TimelineItemViewMixin):
+class SetRestorePointView(generic.UpdateView, TimelineItemViewMixin):
     def post(self, request, *args, **kwargs):
-        object = self.get_object()
+        obj = self.get_object()
     
         description = request.POST.get('text')
-        revision = reversion.get_for_object(object).first().revision
+        revision = reversion.get_for_object(obj).first().revision
 
-        restore_point = self.item = RestorePoint.objects.create(user=request.user,object=object.editoritem,description=description,revision=revision)
+        self.item = RestorePoint.objects.create(user=request.user, object=obj.editoritem, description=description, revision=revision)
 
         return self.response()
 
@@ -85,11 +80,11 @@ class SetRestorePointView(generic.UpdateView,TimelineItemViewMixin):
         return restore_point_json(self.item)
 
     def get(self, request, *args, **kwargs):
-        return http.HttpResponseNotAllowed(['POST'],'GET requests are not allowed at this URL.')
+        return http.HttpResponseNotAllowed(['POST'], 'GET requests are not allowed at this URL.')
 
 class RevertRestorePointView(generic.UpdateView):
     model = RestorePoint
-    def get(self,request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         self.restore_point = self.get_object()
         if not self.restore_point.object.can_be_edited_by(request.user):
             return http.HttpResponseForbidden()
@@ -105,7 +100,7 @@ class RevertRestorePointView(generic.UpdateView):
         return redirect(self.restore_point.object.get_absolute_url())
 
 # JSON representation of a editor.models.StampOfApproval object
-def stamp_json(stamp,**kwargs):
+def stamp_json(stamp, **kwargs):
     return {
         'pk': stamp.pk,
         'date': stamp.timelineitem.date.strftime('%Y-%m-%d %H:%M:%S'),
@@ -115,7 +110,7 @@ def stamp_json(stamp,**kwargs):
     }
 
 # JSON representation of a editor.models.Comment object
-def comment_json(comment,**kwargs):
+def comment_json(comment, **kwargs):
     return {
         'pk': comment.pk,
         'date': comment.timelineitem.date.strftime('%Y-%m-%d %H:%M:%S'),
@@ -123,7 +118,7 @@ def comment_json(comment,**kwargs):
         'user': user_json(comment.user),
     }
 
-def restore_point_json(restore_point,**kwargs):
+def restore_point_json(restore_point, **kwargs):
     return {
         'pk': restore_point.pk,
         'date': restore_point.timelineitem.date.strftime('%Y-%m-%d %H:%M:%S'),
@@ -167,42 +162,41 @@ def ability_level_json(ability_level):
 class DeleteStampView(generic.DeleteView):
     model = NewStampOfApproval
 
-    def delete(self,request,*args,**kwargs):
+    def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
         if self.object.can_be_deleted_by(self.request.user):
-            pk = self.object.pk
             self.object.delete()
             ei = self.object.object
             now_current_stamp = EditorItem.objects.get(pk=ei.pk).current_stamp
             data = stamp_json(now_current_stamp) if now_current_stamp else None
-            return http.HttpResponse(json.dumps({'current_stamp':data}),content_type='application/json')
+            return http.HttpResponse(json.dumps({'current_stamp':data}), content_type='application/json')
         else:
             return http.HttpResponseForbidden('You don\'t have the necessary access rights.')
 
 class ShareLinkView(generic.RedirectView):
     permanent = False
 
-    def get_redirect_url(self, *args,**kwargs):
+    def get_redirect_url(self, *args, **kwargs):
         access = kwargs['access']
         try:
             if access == 'edit':
                 q = self.model.objects.get(editoritem__share_uuid_edit=kwargs['share_uuid'])
             elif access == 'view':
                 q = self.model.objects.get(editoritem__share_uuid_view=kwargs['share_uuid'])
-        except (ValueError,self.model.DoesNotExist):
-            raise Http404
+        except (ValueError, self.model.DoesNotExist):
+            raise http.Http404
 
         user = self.request.user
-        if access=='view':
+        if access == 'view':
             has_access = q.editoritem.can_be_viewed_by(user)
-        elif access=='edit':
+        elif access == 'edit':
             has_access = q.editoritem.can_be_edited_by(user)
             
         if not has_access:
             try:
-                ea = Access.objects.get(item=q.editoritem,user=user)
+                ea = Access.objects.get(item=q.editoritem, user=user)
             except Access.DoesNotExist:
-                ea = Access(item=q.editoritem, user=user,access=access)
+                ea = Access(item=q.editoritem, user=user, access=access)
             ea.access = access
             ea.save()
 

@@ -1,43 +1,26 @@
 import json
-import uuid
 import traceback
-from copy import deepcopy
 import operator
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.template.loader import render_to_string
 from django.core.urlresolvers import reverse
-from django.db.models import Q
 from django.db import transaction
-from django.forms.models import model_to_dict
-from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError, HttpResponseForbidden
+from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django import http
-from django.shortcuts import render,redirect
-from django.utils.decorators import method_decorator
+from django.shortcuts import redirect
 from django.views import generic
-from django.views.generic.detail import SingleObjectMixin
-from examparser import ParseError
 
 import reversion
 
-import time
-import calendar
-
-from django_tables2.config import RequestConfig
-
 from editor.forms import ExamForm, NewExamForm, UploadExamForm
-from editor.models import NewExam, NewQuestion, EditorItem, Access
+from editor.models import NewExam, NewQuestion, EditorItem
 import editor.models
-from editor.models import Theme, Licence, Extension, STAMP_STATUS_CHOICES
+from editor.models import Theme, Extension
 import editor.views.editoritem
 import editor.views.generic
-from editor.views.errors import forbidden
-from editor.views.user import find_users
-
-from accounts.util import user_json
 
 from numbasobject import NumbasObject
 
@@ -54,7 +37,8 @@ class PreviewView(editor.views.editoritem.PreviewView):
             status = {
                 "result": "error",
                 "message": str(err),
-                "traceback": traceback.format_exc(),}
+                "traceback": traceback.format_exc(),
+            }
             return HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
         else:
@@ -75,11 +59,12 @@ class ZipView(editor.views.editoritem.ZipView):
             status = {
                 "result": "error",
                 "message": str(err),
-                "traceback": traceback.format_exc(),}
+                "traceback": traceback.format_exc(),
+            }
             return HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
         else:
-            return self.download(e.editoritem,scorm)
+            return self.download(e.editoritem, scorm)
 
 
 class SourceView(editor.views.editoritem.SourceView):
@@ -95,7 +80,8 @@ class SourceView(editor.views.editoritem.SourceView):
             status = {
                 "result": "error",
                 "message": str(err),
-                "traceback": traceback.format_exc(),}
+                "traceback": traceback.format_exc(),
+            }
             return HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
         else:
@@ -106,7 +92,7 @@ class CreateView(editor.views.editoritem.CreateView):
     form_class = NewExamForm
     template_name = 'exam/new.html'
 
-    def make_exam(self,form):
+    def make_exam(self, form):
         ei = form.save()
         ei.set_licence(ei.project.default_licence)
         ei.locale = ei.project.default_locale
@@ -140,7 +126,7 @@ class UploadView(editor.views.editoritem.CreateView):
         content = exam_file.read().decode('utf-8')
         project = form.cleaned_data.get('project')
 
-        ei = EditorItem(content=content,author=self.request.user,project=project)
+        ei = EditorItem(content=content, author=self.request.user, project=project)
         ei.locale = project.default_locale
 
         ei.save()
@@ -156,11 +142,11 @@ class UploadView(editor.views.editoritem.CreateView):
         for group in exam_object.data['question_groups']:
             qs = []
             for q in group['questions']:
-                question_object = NumbasObject(data=q,version=exam_object.version)
+                question_object = NumbasObject(data=q, version=exam_object.version)
 
                 qei = EditorItem(
-                    content = str(question_object),
-                    author = ei.author
+                    content=str(question_object),
+                    author=ei.author
                 )
                 qei.set_licence(ei.licence)
                 qei.project = ei.project
@@ -204,7 +190,7 @@ class DeleteView(generic.DeleteView):
         self.object.editoritem.delete()
         return http.HttpResponseRedirect(self.get_success_url())
 
-    def delete(self,request,*args,**kwargs):
+    def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
         if self.object.editoritem.can_be_deleted_by(self.request.user):
             return self.do_delete()
@@ -231,11 +217,8 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
     form_class = ExamForm
     template_name = 'exam/edit.html'
 
-    def pre_save(self,form):
-        pass
-
     def post(self, request, *args, **kwargs):
-        super(UpdateView,self).post(request,*args,**kwargs)
+        super(UpdateView, self).post(request, *args, **kwargs)
 
         theme = self.data['theme']
         if theme['custom']:
@@ -255,7 +238,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         else:
             return self.form_invalid(exam_form)
  
-    def pre_save(self,form):
+    def pre_save(self, form):
         self.object.set_question_groups(self.question_groups)
 
     def get_context_data(self, **kwargs):
@@ -275,7 +258,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         context['themes'] = ([{'name': x[0], 'path': x[1], 'custom': False} for x in settings.GLOBAL_SETTINGS['NUMBAS_THEMES']] + 
                              [{'name': theme.name, 'path': theme.pk, 'custom': True} for theme in custom_themes])
 
-        context['locales'] = sorted([{'name': x[0], 'code': x[1]} for x in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']],key=operator.itemgetter('name'))
+        context['locales'] = sorted([{'name': x[0], 'code': x[1]} for x in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']], key=operator.itemgetter('name'))
 
         if self.request.user.is_authenticated():
             profile = self.request.user.userprofile
@@ -283,7 +266,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
             profile = None
 
         self.item_json.update({
-            'themes': sorted(context['themes'],key=operator.itemgetter('name')),
+            'themes': sorted(context['themes'], key=operator.itemgetter('name')),
             'locales': context['locales'],
         })
 
@@ -295,7 +278,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         return context
 
     def get_success_url(self):
-        return reverse('exam_edit', args=(self.object.pk,self.object.editoritem.slug,))
+        return reverse('exam_edit', args=(self.object.pk, self.object.editoritem.slug,))
 
 class RevertView(generic.UpdateView):
     model = EditorItem
@@ -303,9 +286,9 @@ class RevertView(generic.UpdateView):
     def get(self, request, *args, **kwargs):
         self.user = request.user
         self.exam = self.get_object()
-        item = exam.editoritem
+        item = self.exam.editoritem
 
-        if not self.item.can_be_edited_by(self.user):
+        if not item.can_be_edited_by(self.user):
             return http.HttpResponseForbidden()
 
         try:
@@ -317,7 +300,7 @@ class RevertView(generic.UpdateView):
 
         exam = NewExam.objects.get(pk=self.exam.pk)
 
-        return redirect(reverse('exam_edit', args=(exam.pk,exam.editoritem.slug)))
+        return redirect(reverse('exam_edit', args=(exam.pk, exam.editoritem.slug)))
 
 class CompareView(generic.TemplateView):
     template_name = "exam/compare.html"
@@ -353,7 +336,7 @@ def question_lists(request):
         'recent': recent,
         'basket': basket
     }
-    out = {k: [q.summary() for q in qs] for k,qs in lists.items()}
+    out = {k: [q.summary() for q in qs] for k, qs in lists.items()}
 
     return HttpResponse(json.dumps(out),
                         content_type='application/json')

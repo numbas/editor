@@ -24,7 +24,7 @@ def find_users(name=''):
 def user_json(user):
     return {
         'id': user.pk, 
-        'profile': reverse('view_profile',args=(user.pk,)), 
+        'profile': reverse('view_profile', args=(user.pk,)), 
         'name': user.get_full_name(),
         'link': get_template('links/user_link.html').render(Context({'user':user})),
         'autocomplete_entry': get_template('autocomplete/user.html').render(Context({'user':user})),

@@ -1,24 +1,21 @@
+from operator import itemgetter
+
 from django.conf import settings
 from django.db import transaction
 from django.db.models.signals import post_save
-from django.contrib.sites.models import RequestSite
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Q
 from django.db.models.functions import Lower
-from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
 
 from django_thumbs.db.models import ImageWithThumbsField
 
 from registration import models as regmodels
-from registration.signals import user_registered
 
 from sanitizer.models import SanitizedTextField
 
-from operator import itemgetter
-
-from editor.models import NewQuestion, NewExam, EditorTag, Project, TimelineItem, SiteBroadcast
+from editor.models import NewQuestion, EditorTag, Project, TimelineItem, SiteBroadcast
 
 class RegistrationManager(regmodels.RegistrationManager):
     @transaction.atomic
@@ -33,7 +30,7 @@ class RegistrationManager(regmodels.RegistrationManager):
         user. To disable this, pass ``send_email=False``.
         
         """
-        new_user = User.objects.create_user(username, email, password,first_name=first_name,last_name=last_name)
+        new_user = User.objects.create_user(username, email, password, first_name=first_name, last_name=last_name)
         new_user.is_active = False
         new_user.save()
 
@@ -50,17 +47,17 @@ class RegistrationProfile(regmodels.RegistrationProfile):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
-    language = models.CharField(max_length=100,default='en-GB')
-    bio = SanitizedTextField(default='',allowed_tags=settings.SANITIZER_ALLOWED_TAGS,allowed_attributes=settings.SANITIZER_ALLOWED_ATTRIBUTES)
-    question_basket = models.ManyToManyField(NewQuestion,blank=True,related_name='baskets',through='BasketQuestion')
-    personal_project = models.ForeignKey(Project,null=True,on_delete=models.SET_NULL)
-    avatar = ImageWithThumbsField(upload_to='avatars',sizes=((20,20),(40,40),(150,150)),blank=True,null=True,max_length=255,verbose_name='Profile image')
+    language = models.CharField(max_length=100, default='en-GB')
+    bio = SanitizedTextField(default='', allowed_tags=settings.SANITIZER_ALLOWED_TAGS, allowed_attributes=settings.SANITIZER_ALLOWED_ATTRIBUTES)
+    question_basket = models.ManyToManyField(NewQuestion, blank=True, related_name='baskets', through='BasketQuestion')
+    personal_project = models.ForeignKey(Project, null=True, on_delete=models.SET_NULL)
+    avatar = ImageWithThumbsField(upload_to='avatars', sizes=((20, 20), (40, 40), (150, 150)), blank=True, null=True, max_length=255, verbose_name='Profile image')
 
     def sorted_tags(self):
         qs = self.user.own_questions
         tags = EditorTag.objects.filter(question__author=self.user).distinct()
-        tag_counts = [(tag,len(qs.filter(tags__id=tag.id))) for tag in tags]
-        tag_counts.sort(key=itemgetter(1),reverse=True)
+        tag_counts = [(tag, len(qs.filter(tags__id=tag.id))) for tag in tags]
+        tag_counts.sort(key=itemgetter(1), reverse=True)
 
         return tag_counts
 
@@ -74,7 +71,7 @@ class UserProfile(models.Model):
     def all_timeline(self):
         projects = self.user.own_projects.all() | Project.objects.filter(projectaccess__in=self.user.project_memberships.all()) | Project.objects.filter(watching_non_members=self.user)
         nonsticky_broadcasts = SiteBroadcast.objects.visible_now().exclude(sticky=True)
-        nonsticky_broadcast_timelineitems = TimelineItem.objects.filter(object_content_type=ContentType.objects.get_for_model(SiteBroadcast),object_id__in=nonsticky_broadcasts)
+        nonsticky_broadcast_timelineitems = TimelineItem.objects.filter(object_content_type=ContentType.objects.get_for_model(SiteBroadcast), object_id__in=nonsticky_broadcasts)
 
         items = TimelineItem.objects.filter(
             Q(editoritems__in=self.user.watched_items.all()) | 
@@ -92,7 +89,7 @@ class UserProfile(models.Model):
 class BasketQuestion(models.Model):
     class Meta:
         ordering = ['qn_order']
-        unique_together = ('profile','question')
+        unique_together = ('profile', 'question')
         
     profile = models.ForeignKey(UserProfile)
     question = models.ForeignKey(NewQuestion)
@@ -105,7 +102,7 @@ def createUserProfile(sender, instance, created, **kwargs):
     """
     if created:
         profile = UserProfile.objects.create(user=instance)
-        profile.personal_project = Project.objects.create(name="{}'s workspace".format(instance.first_name),owner=instance)
+        profile.personal_project = Project.objects.create(name="{}'s workspace".format(instance.first_name), owner=instance)
         profile.save()
 
 post_save.connect(createUserProfile, sender=User)

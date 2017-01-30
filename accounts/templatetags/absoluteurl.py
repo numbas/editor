@@ -1,5 +1,5 @@
 # from http://djangosnippets.org/snippets/1518/
-import urlparse
+import urllib.parse
 from django.template import Library
 from django.template.defaulttags import URLNode, url
 from django.contrib.sites.models import Site
@@ -11,10 +11,10 @@ class AbsoluteURLNode(URLNode):
         path = super(AbsoluteURLNode, self).render(context)
         domain = "http://%s" % Site.objects.get_current().domain
         if self.asvar:  
-            context[self.asvar]= urlparse.urljoin(domain, context[self.asvar])  
+            context[self.asvar] = urllib.parse.urljoin(domain, context[self.asvar])  
             return ''  
         else:  
-            return urlparse.urljoin(domain, path)
+            return urllib.parse.urljoin(domain, path)
 
 def absurl(parser, token, node_cls=AbsoluteURLNode):
     """Just like {% url %} but ads the domain of the current site."""
@@ -24,4 +24,3 @@ def absurl(parser, token, node_cls=AbsoluteURLNode):
         kwargs=node_instance.kwargs,
         asvar=node_instance.asvar)
 absurl = register.tag(absurl) 
-

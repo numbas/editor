@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import migrations, models
+from django.db import migrations
 from django.utils.encoding import force_text
 from django.core import serializers
 
 def old_to_new_questions(apps, schema_editor):
-    Question = apps.get_model('editor','Question')
-    NewQuestion = apps.get_model('editor','NewQuestion')
-    EditorItem = apps.get_model('editor','EditorItem')
-    NewStampOfApproval = apps.get_model('editor','NewStampOfApproval')
-    TaggedQuestion = apps.get_model('editor','TaggedQuestion')
-    TaggedItem = apps.get_model('editor','TaggedItem')
-    Resource = apps.get_model('editor','Resource')
-    User = apps.get_model('auth','User')
-    ContentType = apps.get_model('contenttypes','contenttype')
+    Question = apps.get_model('editor', 'Question')
+    NewQuestion = apps.get_model('editor', 'NewQuestion')
+    EditorItem = apps.get_model('editor', 'EditorItem')
+    NewStampOfApproval = apps.get_model('editor', 'NewStampOfApproval')
+    TaggedQuestion = apps.get_model('editor', 'TaggedQuestion')
+    TaggedItem = apps.get_model('editor', 'TaggedItem')
+    Resource = apps.get_model('editor', 'Resource')
+    User = apps.get_model('auth', 'User')
+    ContentType = apps.get_model('contenttypes', 'contenttype')
 
-    editoritem_ct= ContentType.objects.get_for_model(EditorItem)
+    editoritem_ct = ContentType.objects.get_for_model(EditorItem)
 
     EditorItem._meta.get_field_by_name('last_modified')[0].auto_now = False
 
@@ -67,7 +67,7 @@ def old_to_new_questions(apps, schema_editor):
             ei.topics.add(t)
 
         for r in q.resources.all():
-            r2 = Resource.objects.create(owner=ei.author,file=r.image)
+            r2 = Resource.objects.create(owner=ei.author, file=r.image)
             nq.resources.add(r2)
 
         for e in q.extensions.all():
@@ -86,23 +86,23 @@ def old_to_new_questions(apps, schema_editor):
             nq.editoritem.save()
 
     for tq in TaggedQuestion.objects.all():
-        TaggedItem.objects.create(content_type=editoritem_ct,object_id=NewQuestion.objects.get(pk=tq.object_id).editoritem.pk,tag=tq.tag)
+        TaggedItem.objects.create(content_type=editoritem_ct, object_id=NewQuestion.objects.get(pk=tq.object_id).editoritem.pk, tag=tq.tag)
 
 def remove_new_questions(apps, schema_editor):
-    for name in ['NewQuestion','NewExam','EditorItem','TaggedItem','Access','NewStampOfApproval']:
-        model = apps.get_model('editor',name)
+    for name in ['NewQuestion', 'NewExam', 'EditorItem', 'TaggedItem', 'Access', 'NewStampOfApproval']:
+        model = apps.get_model('editor', name)
         model.objects.all().delete()
 
 
 def old_exams_to_new(apps, schema_editor):
-    Exam = apps.get_model('editor','Exam')
-    NewExam = apps.get_model('editor','NewExam')
-    NewQuestion = apps.get_model('editor','NewQuestion')
-    EditorItem = apps.get_model('editor','EditorItem')
-    NewStampOfApproval = apps.get_model('editor','NewStampOfApproval')
-    ExamQuestion = apps.get_model('editor','ExamQuestion')
-    NewExamQuestion = apps.get_model('editor','NewExamQuestion')
-    User = apps.get_model('auth','User')
+    Exam = apps.get_model('editor', 'Exam')
+    NewExam = apps.get_model('editor', 'NewExam')
+    NewQuestion = apps.get_model('editor', 'NewQuestion')
+    EditorItem = apps.get_model('editor', 'EditorItem')
+    NewStampOfApproval = apps.get_model('editor', 'NewStampOfApproval')
+    ExamQuestion = apps.get_model('editor', 'ExamQuestion')
+    NewExamQuestion = apps.get_model('editor', 'NewExamQuestion')
+    User = apps.get_model('auth', 'User')
 
     EditorItem._meta.get_field_by_name('last_modified')[0].auto_now = False
 
@@ -170,64 +170,61 @@ def old_exams_to_new(apps, schema_editor):
         neq.save()
 
 
-def remove_new_exams(apps,schema_editor):
-    NewExam = apps.get_model('editor','NewExam')
+def remove_new_exams(apps, schema_editor):
+    NewExam = apps.get_model('editor', 'NewExam')
     NewExam.objects.all().delete()
-    NewExamQuestion = apps.get_model('editor','NewExamQuestion')
+    NewExamQuestion = apps.get_model('editor', 'NewExamQuestion')
     NewExamQuestion.objects.all().delete()
 
-def old_access_to_new(apps,schema_editor):
-    Exam = apps.get_model('editor','exam')
-    Question = apps.get_model('editor','question')
-    NewExam = apps.get_model('editor','newexam')
-    NewQuestion = apps.get_model('editor','newquestion')
-    EditorItem = apps.get_model('editor','editoritem')
-    QuestionAccess = apps.get_model('editor','QuestionAccess')
-    ExamAccess = apps.get_model('editor','ExamAccess')
-    Access = apps.get_model('editor','Access')
+def old_access_to_new(apps, schema_editor):
+    NewExam = apps.get_model('editor', 'newexam')
+    NewQuestion = apps.get_model('editor', 'newquestion')
+    QuestionAccess = apps.get_model('editor', 'QuestionAccess')
+    ExamAccess = apps.get_model('editor', 'ExamAccess')
+    Access = apps.get_model('editor', 'Access')
 
     for qa in QuestionAccess.objects.all():
-        Access.objects.create(item=NewQuestion.objects.get(pk=qa.question.pk).editoritem,user=qa.user,access=qa.access)
+        Access.objects.create(item=NewQuestion.objects.get(pk=qa.question.pk).editoritem, user=qa.user, access=qa.access)
 
     for ea in ExamAccess.objects.all():
-        Access.objects.create(item=NewExam.objects.get(pk=ea.exam.pk).editoritem,user=ea.user,access=ea.access)
+        Access.objects.create(item=NewExam.objects.get(pk=ea.exam.pk).editoritem, user=ea.user, access=ea.access)
 
-def remove_new_access(apps,schema_editor):
-    Access = apps.get_model('editor','Access')
+def remove_new_access(apps, schema_editor):
+    Access = apps.get_model('editor', 'Access')
 
     Access.objects.all().delete()
 
 def itemchanged_timeline_items(apps, schema_editor):
-    EditorItem = apps.get_model('editor','editoritem')
-    ItemChangedTimelineItem = apps.get_model('editor','itemchangedtimelineitem')
-    TimelineItem = apps.get_model('editor','timelineitem')
-    ContentType = apps.get_model('contenttypes','contenttype')
+    EditorItem = apps.get_model('editor', 'editoritem')
+    ItemChangedTimelineItem = apps.get_model('editor', 'itemchangedtimelineitem')
+    TimelineItem = apps.get_model('editor', 'timelineitem')
+    ContentType = apps.get_model('contenttypes', 'contenttype')
     
     itemchange_ct = ContentType.objects.get_for_model(ItemChangedTimelineItem)
 
     for ei in EditorItem.objects.all():
-        it = ItemChangedTimelineItem.objects.create(user=ei.author,object=ei,verb='created')
-        ti = TimelineItem.objects.get(object_id=it.pk,object_content_type=itemchange_ct)
+        it = ItemChangedTimelineItem.objects.create(user=ei.author, object=ei, verb='created')
+        ti = TimelineItem.objects.get(object_id=it.pk, object_content_type=itemchange_ct)
         ti.date = ei.created
         ti.save()
 
 def remove_itemchanged_timeline_items(apps, schema_editor):
-    ItemChangedTimelineItem = apps.get_model('editor','itemchangedtimelineitem')
+    ItemChangedTimelineItem = apps.get_model('editor', 'itemchangedtimelineitem')
     ItemChangedTimelineItem.objects.all().delete()
 
 def copy_revisions(apps, schema_editor):
-    Version = apps.get_model('reversion','Version')
-    ContentType = apps.get_model('contenttypes','contenttype')
-    Exam = apps.get_model('editor','exam')
-    Question = apps.get_model('editor','question')
-    NewExam = apps.get_model('editor','newexam')
-    NewQuestion = apps.get_model('editor','newquestion')
-    User = apps.get_model('auth','user')
-    Theme = apps.get_model('editor','theme')
-    Licence = apps.get_model('editor','licence')
-    EditorItem = apps.get_model('editor','editoritem')
-    TimelineItem = apps.get_model('editor','timelineitem')
-    RestorePoint = apps.get_model('editor','restorepoint')
+    Version = apps.get_model('reversion', 'Version')
+    ContentType = apps.get_model('contenttypes', 'contenttype')
+    Exam = apps.get_model('editor', 'exam')
+    Question = apps.get_model('editor', 'question')
+    NewExam = apps.get_model('editor', 'newexam')
+    NewQuestion = apps.get_model('editor', 'newquestion')
+    User = apps.get_model('auth', 'user')
+    Theme = apps.get_model('editor', 'theme')
+    Licence = apps.get_model('editor', 'licence')
+    EditorItem = apps.get_model('editor', 'editoritem')
+    TimelineItem = apps.get_model('editor', 'timelineitem')
+    RestorePoint = apps.get_model('editor', 'restorepoint')
 
     exam_ct = ContentType.objects.get_for_model(Exam)
     question_ct = ContentType.objects.get_for_model(Question)
@@ -237,7 +234,7 @@ def copy_revisions(apps, schema_editor):
     restorepoint_ct = ContentType.objects.get_for_model(RestorePoint)
  
     for v in Version.objects.exclude(revision__comment=''):
-        if v.content_type==exam_ct:
+        if v.content_type == exam_ct:
             data = v.serialized_data
             data = force_text(data.encode("utf8"))
             e = list(serializers.deserialize(v.format, data, ignorenonexistent=True))[0].object
@@ -252,7 +249,7 @@ def copy_revisions(apps, schema_editor):
             ei.content = e.content
             ei.created = e.created
             ei.content = e.content
-            ei.share_uuid = q.share_uuid
+            ei.share_uuid = e.share_uuid
             ei.last_modified = e.last_modified
             if e.licence:
                 try:
@@ -278,7 +275,7 @@ def copy_revisions(apps, schema_editor):
             nve.object_id_int = ei.pk
             nve.object_repr = repr(ei)
             nve.revision = v.revision
-            nve.serialized_data = serializers.serialize(v.format,(ei,))
+            nve.serialized_data = serializers.serialize(v.format, (ei,))
             nve.save()
 
             nvx = Version()
@@ -288,9 +285,9 @@ def copy_revisions(apps, schema_editor):
             nvx.object_id_int = v.object_id
             nvx.object_repr = repr(ne)
             nvx.revision = v.revision
-            nvx.serialized_data = serializers.serialize(v.format,(ne,))
+            nvx.serialized_data = serializers.serialize(v.format, (ne,))
             nvx.save()
-        elif v.content_type==question_ct:
+        elif v.content_type == question_ct:
             data = v.serialized_data
             data = force_text(data.encode("utf8"))
             q = list(serializers.deserialize(v.format, data, ignorenonexistent=True))[0].object
@@ -320,7 +317,7 @@ def copy_revisions(apps, schema_editor):
                     nq2 = NewQuestion.objects.filter(pk=q.copy_of_id)
                     if nq2.exists():
                         ei.copy_of = nq2.first().editoritem
-            except (NewQuestion.DoesNotExist,Question.DoesNotExist):
+            except (NewQuestion.DoesNotExist, Question.DoesNotExist):
                 pass
 
             nve = Version()
@@ -330,7 +327,7 @@ def copy_revisions(apps, schema_editor):
             nve.object_id_int = ei.pk
             nve.object_repr = repr(ei)
             nve.revision = v.revision
-            nve.serialized_data = serializers.serialize(v.format,(ei,))
+            nve.serialized_data = serializers.serialize(v.format, (ei,))
             nve.save()
 
             nvq = Version()
@@ -340,7 +337,7 @@ def copy_revisions(apps, schema_editor):
             nvq.object_id_int = v.object_id
             nvq.object_repr = repr(nq)
             nvq.revision = v.revision
-            nvq.serialized_data = serializers.serialize(v.format,(nq,))
+            nvq.serialized_data = serializers.serialize(v.format, (nq,))
             nvq.save()
 
     def set_timelineitem_date_auto_now(v):
@@ -354,11 +351,11 @@ def copy_revisions(apps, schema_editor):
     RestorePoint.objects.all().delete()
     for v in Version.objects.exclude(revision__comment='').exclude(revision__user=None).filter(content_type=editoritem_ct):
         ei = EditorItem.objects.get(pk=v.object_id)
-        rp = RestorePoint.objects.create(object=ei,description=v.revision.comment,user=v.revision.user,revision=v.revision)
+        rp = RestorePoint.objects.create(object=ei, description=v.revision.comment, user=v.revision.user, revision=v.revision)
         
     set_timelineitem_date_auto_now(False)
     for rp in RestorePoint.objects.all():
-        ti = TimelineItem.objects.get(object_content_type=restorepoint_ct,object_id=rp.pk)
+        ti = TimelineItem.objects.get(object_content_type=restorepoint_ct, object_id=rp.pk)
         for field in ti._meta.local_fields:
             if field.name == "date":
                 field.auto_now_add = False
@@ -366,26 +363,23 @@ def copy_revisions(apps, schema_editor):
         ti.save()
 
 def delete_new_revisions(apps, schema_editor):
-    Version = apps.get_model('reversion','Version')
-    ContentType = apps.get_model('contenttypes','contenttype')
-    RestorePoint = apps.get_model('editor','restorepoint')
+    Version = apps.get_model('reversion', 'Version')
+    ContentType = apps.get_model('contenttypes', 'contenttype')
+    RestorePoint = apps.get_model('editor', 'restorepoint')
 
-    exam_ct = ContentType.objects.get(app_label='editor',model='exam')
-    question_ct = ContentType.objects.get(app_label='editor',model='question')
-    newexam_ct = ContentType.objects.get(app_label='editor',model='newexam')
-    newquestion_ct = ContentType.objects.get(app_label='editor',model='newquestion')
-    editoritem_ct = ContentType.objects.get(app_label='editor',model='editoritem')
+    newexam_ct = ContentType.objects.get(app_label='editor', model='newexam')
+    newquestion_ct = ContentType.objects.get(app_label='editor', model='newquestion')
+    editoritem_ct = ContentType.objects.get(app_label='editor', model='editoritem')
 
-    Version.objects.filter(content_type__in=[newexam_ct,newquestion_ct,editoritem_ct]).delete()
+    Version.objects.filter(content_type__in=[newexam_ct, newquestion_ct, editoritem_ct]).delete()
 
     RestorePoint.objects.all().delete()
-    pass
 
 def set_newstamp_dates(apps, schema_editor):
-    ContentType = apps.get_model('contenttypes','contenttype')
-    TimelineItem = apps.get_model('editor','timelineitem')
-    NewStampOfApproval = apps.get_model('editor','newstampofapproval')
-    StampOfApproval = apps.get_model('editor','stampofapproval')
+    ContentType = apps.get_model('contenttypes', 'contenttype')
+    TimelineItem = apps.get_model('editor', 'timelineitem')
+    NewStampOfApproval = apps.get_model('editor', 'newstampofapproval')
+    StampOfApproval = apps.get_model('editor', 'stampofapproval')
 
     def set_timelineitem_date_auto_now(v):
         ti = TimelineItem.objects.first()
@@ -405,15 +399,15 @@ def set_newstamp_dates(apps, schema_editor):
             rel_obj = ns.object.question
         os = StampOfApproval.objects.filter(object_id=rel_obj.id).last()
         if os is not None:
-            ti = TimelineItem.objects.get(object_content_type=newstamp_ct,object_id=ns.pk)
+            ti = TimelineItem.objects.get(object_content_type=newstamp_ct, object_id=ns.pk)
             for field in ti._meta.local_fields:
                 if field.name == "date":
                     field.auto_now_add = False
                 ti.date = os.date
             ti.save()
 
-def set_project(apps,schema_editor):
-    EditorItem = apps.get_model('editor','EditorItem')
+def set_project(apps, schema_editor):
+    EditorItem = apps.get_model('editor', 'EditorItem')
 
     EditorItem._meta.get_field_by_name('last_modified')[0].auto_now = False
 
@@ -421,16 +415,15 @@ def set_project(apps,schema_editor):
         e.project = e.author.userprofile.personal_project
         e.save()
 
-def copy_comments(apps,schema_editor):
-    ContentType = apps.get_model('contenttypes','contenttype')
-    TimelineItem = apps.get_model('editor','timelineitem')
-    Comment = apps.get_model('editor','comment')
-    Question = apps.get_model('editor','question')
-    NewQuestion = apps.get_model('editor','newquestion')
-    EditorItem = apps.get_model('editor','editoritem')
+def copy_comments(apps, schema_editor):
+    ContentType = apps.get_model('contenttypes', 'contenttype')
+    TimelineItem = apps.get_model('editor', 'timelineitem')
+    Comment = apps.get_model('editor', 'comment')
+    Question = apps.get_model('editor', 'question')
+    NewQuestion = apps.get_model('editor', 'newquestion')
+    EditorItem = apps.get_model('editor', 'editoritem')
 
     question_ct = ContentType.objects.get_for_model(Question)
-    newquestion_ct = ContentType.objects.get_for_model(NewQuestion)
     editoritem_ct = ContentType.objects.get_for_model(EditorItem)
     comment_ct = ContentType.objects.get_for_model(Comment)
 
@@ -439,12 +432,12 @@ def copy_comments(apps,schema_editor):
             ei = NewQuestion.objects.get(pk=oc.object_id).editoritem
         except NewQuestion.DoesNotExist:
             continue
-        nc = Comment.objects.create(object_id=ei.pk,object_content_type=editoritem_ct, user=oc.user,text=oc.text)
+        nc = Comment.objects.create(object_id=ei.pk, object_content_type=editoritem_ct, user=oc.user, text=oc.text)
         nc.date = oc.date
         nc.save()
 
     for c in Comment.objects.filter(object_content_type=editoritem_ct):
-        ti = TimelineItem.objects.get(object_content_type=comment_ct,object_id=c.pk)
+        ti = TimelineItem.objects.get(object_content_type=comment_ct, object_id=c.pk)
         for field in ti._meta.local_fields:
             if field.name == "date":
                 field.auto_now_add = False
@@ -455,16 +448,16 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('editor', '0013_version_2_models'),
-        ('reversion','__first__'),
-        ('auth','__first__'),
-        ('accounts','0013_userprofile_avatar'),
+        ('reversion', '__first__'),
+        ('auth', '__first__'),
+        ('accounts', '0013_userprofile_avatar'),
     ]
 
     operations = [
-        migrations.RunPython(old_to_new_questions,remove_new_questions),
+        migrations.RunPython(old_to_new_questions, remove_new_questions),
         migrations.RunSQL(
         """
-            SELECT ei.id,et.id,ct.id 
+            SELECT ei.id, et.id, ct.id 
             FROM editor_taggedquestion as tq 
             JOIN editor_editortag as et ON tq.tag_id=et.id 
             JOIN editor_question AS q ON q.id=tq.object_id 
@@ -475,11 +468,11 @@ class Migration(migrations.Migration):
         """
             DELETE FROM editor_taggeditem
         """),
-        migrations.RunPython(old_exams_to_new,remove_new_exams),
-        migrations.RunPython(itemchanged_timeline_items,remove_itemchanged_timeline_items),
-        migrations.RunPython(copy_revisions,delete_new_revisions),
-        migrations.RunPython(old_access_to_new,remove_new_access),
-        migrations.RunPython(set_newstamp_dates,migrations.RunPython.noop),
-        migrations.RunPython(set_project,migrations.RunPython.noop),
-        migrations.RunPython(copy_comments,migrations.RunPython.noop),
+        migrations.RunPython(old_exams_to_new, remove_new_exams),
+        migrations.RunPython(itemchanged_timeline_items, remove_itemchanged_timeline_items),
+        migrations.RunPython(copy_revisions, delete_new_revisions),
+        migrations.RunPython(old_access_to_new, remove_new_access),
+        migrations.RunPython(set_newstamp_dates, migrations.RunPython.noop),
+        migrations.RunPython(set_project, migrations.RunPython.noop),
+        migrations.RunPython(copy_comments, migrations.RunPython.noop),
     ]

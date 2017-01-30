@@ -1,7 +1,6 @@
 # coding=utf-8
 
 # Django settings for numbas project.
-import imp
 import os
 import sys
 from .database import DATABASES
@@ -160,8 +159,8 @@ GLOBAL_SETTINGS = {
     'PREVIEW_URL': 'http://server.domain/numbas-previews/',    # a URL which serves files from PREVIEW_PATH
     'HELP_URL': 'http://numbas-editor.readthedocs.org',        # the URL of the Numbas webdocs
     'PYTHON_EXEC': '/usr/bin/python3',
-    'NUMBAS_THEMES': [('Standard','default'),('Printable worksheet','worksheet'),('School','school')],
-    'NUMBAS_LOCALES': [('English','en-GB'),(u'Bokmål','nb-NO'),('Nederlands','nl-NL'),(u'Español','es-ES')],
+    'NUMBAS_THEMES': [('Standard', 'default'), ('Printable worksheet', 'worksheet'), ('School', 'school')],
+    'NUMBAS_LOCALES': [('English', 'en-GB'), (u'Bokmål', 'nb-NO'), ('Nederlands', 'nl-NL'), (u'Español', 'es-ES')],
     #Uncomment the line below and provide a path to a minification tool to minify javascript files
     #'MINIFIER_PATH': 'uglifyjs',
 }
@@ -188,7 +187,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "editor.context_processors.site_root",
 )
 
-sys.path.append(os.path.join(GLOBAL_SETTINGS['NUMBAS_PATH'],'bin'))
+sys.path.append(os.path.join(GLOBAL_SETTINGS['NUMBAS_PATH'], 'bin'))
 
 AUTHENTICATION_BACKENDS = (
     # Uncomment to enable Shibboleth authentication
@@ -215,5 +214,5 @@ AUTH_PROFILE_MODULE = 'accounts.UserProfile'
 # Uncomment to enable Shibboleth authentication, then look at shib_auth.py.dist
 #from shib_auth import *
 
-SANITIZER_ALLOWED_TAGS = ['a', 'p', 'img','br','strong','em','div','code','i','b', 'ul', 'ol', 'li', 'table','thead','tbody','td','th','tr']
-SANITIZER_ALLOWED_ATTRIBUTES = ['href','title']
+SANITIZER_ALLOWED_TAGS = ['a', 'p', 'img', 'br', 'strong', 'em', 'div', 'code', 'i', 'b', 'ul', 'ol', 'li', 'table', 'thead', 'tbody', 'td', 'th', 'tr']
+SANITIZER_ALLOWED_ATTRIBUTES = ['href', 'title']

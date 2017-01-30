@@ -1,14 +1,14 @@
 from django.contrib.auth.models import User
-from editor.models import EditorItem,Project,Licence
 from django.forms.models import inlineformset_factory
 from django import forms
+from editor.models import EditorItem, Project, Licence
 from editor.forms import BootstrapSelect
 
 MigrateEditorItemFormset = inlineformset_factory(
     User,
     EditorItem,
-    fields=('project','licence','published'),
-    widgets = {
+    fields=('project', 'licence', 'published'),
+    widgets={
         'project': BootstrapSelect(),
         'licence': BootstrapSelect(),
     },
@@ -18,5 +18,5 @@ MigrateEditorItemFormset = inlineformset_factory(
 )
 
 class ApplyToAllItemsForm(forms.Form):
-    project = forms.ModelChoiceField(queryset=Project.objects.all(),widget=BootstrapSelect())
-    licence = forms.ModelChoiceField(queryset=Licence.objects.all(),widget=BootstrapSelect())
+    project = forms.ModelChoiceField(queryset=Project.objects.all(), widget=BootstrapSelect())
+    licence = forms.ModelChoiceField(queryset=Licence.objects.all(), widget=BootstrapSelect())

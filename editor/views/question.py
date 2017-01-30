@@ -1,42 +1,22 @@
 import json
 import traceback
-import uuid
-from copy import deepcopy
 
-import time
-import calendar
-
-from django.core.exceptions import ObjectDoesNotExist,ValidationError
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
-from django.db.models import Q
 from django.db import transaction
-from django.forms import model_to_dict
-from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.http import Http404
 from django import http
 from django.shortcuts import redirect
 from django.views import generic
-from django.views.generic.detail import SingleObjectMixin
-from django.template.loader import render_to_string
-from django.conf import settings
-from django.core import serializers
-from django.contrib import messages
 
 import reversion
 
-from django_tables2.config import RequestConfig
-
-from editor.forms import NewQuestionForm, QuestionForm, SetAccessForm
-from editor.models import Project, EditorItem, NewQuestion, Access, Extension, Resource
+from editor.forms import NewQuestionForm, QuestionForm
+from editor.models import NewQuestion, Extension, Resource
 import editor.views.generic
 import editor.views.editoritem
-from editor.views.errors import forbidden
-from editor.views.user import find_users
 
 from accounts.models import UserProfile
-from accounts.util import user_json
-
-from numbasobject import NumbasObject
-from examparser import ParseError
 
 class PreviewView(editor.views.editoritem.PreviewView):
     
@@ -51,14 +31,15 @@ class PreviewView(editor.views.editoritem.PreviewView):
             status = {
                 "result": "error",
                 "message": str(err),
-                "traceback": traceback.format_exc(),}
+                "traceback": traceback.format_exc(),
+            }
             return http.HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
         else:
             try:
                 profile = UserProfile.objects.get(user=request.user)
                 q.locale = profile.language
-            except Exception:
+            except UserProfile.ObjectDoesNotExist:
                 pass
 
             return self.preview(q.editoritem)
@@ -78,17 +59,18 @@ class ZipView(editor.views.editoritem.ZipView):
             status = {
                 "result": "error",
                 "message": str(err),
-                "traceback": traceback.format_exc(),}
+                "traceback": traceback.format_exc(),
+            }
             return http.HttpResponseServerError(json.dumps(status),
                                            content_type='application/json')
         else:
             try:
                 profile = UserProfile.objects.get(user=request.user)
                 q.locale = profile.language
-            except Exception:
+            except UserProfile.ObjectDoesNotExist:
                 pass
 
-            return self.download(q.editoritem,scorm)
+            return self.download(q.editoritem, scorm)
 
 
 class SourceView(editor.views.editoritem.SourceView):
@@ -151,7 +133,7 @@ class DeleteView(generic.DeleteView):
         self.object.editoritem.delete()
         return http.HttpResponseRedirect(self.get_success_url())
 
-    def delete(self,request,*args,**kwargs):
+    def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
         if self.object.editoritem.can_be_deleted_by(self.request.user):
             return self.do_delete()
@@ -179,7 +161,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
     template_name = 'question/edit.html'
     
     def post(self, request, *args, **kwargs):
-        super(UpdateView,self).post(request,*args,**kwargs)
+        super(UpdateView, self).post(request, *args, **kwargs)
 
         self.resources = self.data['resources']
         del self.data['resources']
@@ -190,7 +172,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         else:
             return self.form_invalid(question_form)
     
-    def pre_save(self,form):
+    def pre_save(self, form):
         self.object.editoritem.metadata = json.dumps(self.object.editoritem.metadata)
         self.object.extensions.clear()
         self.object.extensions.add(*form.cleaned_data['extensions'])
@@ -219,15 +201,15 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
 
         part_type_path = 'question/part_types/'
         context['partNames'] = [
-            ( name, '{}/{}.html'.format(part_type_path,name) ) 
+            (name, '{}/{}.html'.format(part_type_path, name)) 
             for name in 
-            ('jme','gapfill','numberentry','patternmatch','1_n_2','m_n_2','m_n_x','matrix','extension')
+            ('jme', 'gapfill', 'numberentry', 'patternmatch', '1_n_2', 'm_n_2', 'm_n_x', 'matrix', 'extension')
         ]
 
         return context
     
     def get_success_url(self):
-        return reverse('question_edit', args=(self.object.pk,self.object.editoritem.slug))
+        return reverse('question_edit', args=(self.object.pk, self.object.editoritem.slug))
 
 
 class RevertView(generic.UpdateView):
@@ -247,7 +229,7 @@ class RevertView(generic.UpdateView):
 
         self.version.revision.revert()
 
-        return redirect(reverse('question_edit', args=(self.question.pk,self.question.editoritem.slug)))
+        return redirect(reverse('question_edit', args=(self.question.pk, self.question.editoritem.slug)))
     
 class ShareLinkView(editor.views.generic.ShareLinkView):
     permanent = False

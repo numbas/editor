@@ -3,13 +3,13 @@ from django import template
 register = template.Library()
 
 @register.inclusion_tag('links/user.html')
-def user_link(user,text=None,new_window=False):
+def user_link(user, text=None, new_window=False):
     if text is None:
         text = user.get_full_name()
     return {'user': user, 'text': text, 'new_window': new_window}
 
 @register.inclusion_tag('links/user_thumbnail.html')
-def user_thumbnail(user,size=None,glyphicon_size=None,link=False):
+def user_thumbnail(user, size=None, glyphicon_size=None, link=False):
     avatar = user.userprofile.avatar
     if size is None:
         size = 20

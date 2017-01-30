@@ -1,43 +1,42 @@
 import json
 from django.views.decorators.http import require_POST
-from django.core.urlresolvers import reverse
-from django.db import IntegrityError,transaction
+from django.db import IntegrityError, transaction
 from django.shortcuts import redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.template.loader import render_to_string
-from editor.models import NewQuestion,NewExam
+from django.views import generic
+from editor.models import NewQuestion
 import editor
 from accounts.models import BasketQuestion
-from django.views import generic
 import reversion
 
 def render_basket(user):
-    return render_to_string('basket/list.html',{'user':user})
+    return render_to_string('basket/list.html', {'user':user})
 
 @require_POST
 def add_question_to_basket(request):
-    id = request.POST.get('id')
+    qid = request.POST.get('id')
     profile = request.user.userprofile
     try:
         with transaction.atomic():
-            BasketQuestion(profile=profile,question=NewQuestion.objects.get(pk=id),qn_order=profile.question_basket.count()).save()
+            BasketQuestion(profile=profile, question=NewQuestion.objects.get(pk=qid), qn_order=profile.question_basket.count()).save()
     except IntegrityError:
         pass
     return HttpResponse(render_basket(request.user))
 
 @require_POST
 def remove_question_from_basket(request):
-    id = request.POST.get('id')
+    qid = request.POST.get('id')
 
     profile = request.user.userprofile
-    BasketQuestion.objects.filter(profile=profile,question=id).delete()
+    BasketQuestion.objects.filter(profile=profile, question=qid).delete()
     return HttpResponse(render_basket(request.user))
 
 class CreateExamFromBasketView(editor.views.exam.CreateView):
     template_name = 'exam/new_from_basket.html'
     form_class = editor.forms.CreateExamFromBasketForm
 
-    def form_valid(self,form):
+    def form_valid(self, form):
         with transaction.atomic(), reversion.create_revision():
             self.make_exam(form)
             self.exam.save()

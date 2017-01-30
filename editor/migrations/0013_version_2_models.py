@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import uuid
 import django
 from django.db import migrations, models
 from django.conf import settings
 import editor.models
 import editor.jsonfield
-import uuid
 import taggit.managers
 
 class Migration(migrations.Migration):
@@ -234,7 +234,7 @@ class Migration(migrations.Migration):
                 ('theme', models.CharField(default=b'default', max_length=200, blank=True)),
                 ('custom_theme', models.ForeignKey(related_name='used_in_newexams', on_delete=django.db.models.deletion.SET_NULL, blank=True, to='editor.Theme', null=True)),
                 ('editoritem', models.OneToOneField(related_name='exam', to='editor.EditorItem')),
-                ('locale',models.CharField(default=b'en-GB', max_length=200)),
+                ('locale', models.CharField(default=b'en-GB', max_length=200)),
             ],
         ),
         migrations.CreateModel(
@@ -261,8 +261,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('status', models.CharField(max_length=20, choices=[(b'ok', b'Ready to use'), (b'dontuse', b'Should not be used'), (b'problem', b'Has some problems'), (b'broken', b"Doesn't work"), (b'pleasetest', b'Needs to be tested')])),
-                ('object',models.ForeignKey(related_name='stamps', to='editor.EditorItem')),
-                ('user',models.ForeignKey(related_name='newstamps', to=settings.AUTH_USER_MODEL)),
+                ('object', models.ForeignKey(related_name='stamps', to='editor.EditorItem')),
+                ('user', models.ForeignKey(related_name='newstamps', to=settings.AUTH_USER_MODEL)),
             ],
             bases=(models.Model, editor.models.TimelineMixin),
         ),

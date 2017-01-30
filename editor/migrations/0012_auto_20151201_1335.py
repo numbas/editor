@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import migrations, models
 import uuid
+from django.db import migrations, models
 
 def gen_uuid(apps, schema_editor):
-    Exam = apps.get_model('editor','Exam')
+    Exam = apps.get_model('editor', 'Exam')
     Exam._meta.get_field_by_name('last_modified')[0].auto_now = False
     for row in Exam.objects.all():
         row.share_uuid = uuid.uuid4()
         row.save()
-    Question = apps.get_model('editor','Question')
+    Question = apps.get_model('editor', 'Question')
     Question._meta.get_field_by_name('last_modified')[0].auto_now = False
     for row in Question.objects.all():
         row.share_uuid = uuid.uuid4()
@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
             field=models.UUIDField(default=uuid.uuid4, null=True, editable=False),
         ),
 
-        migrations.RunPython(gen_uuid, reverse_code = migrations.RunPython.noop),
+        migrations.RunPython(gen_uuid, reverse_code=migrations.RunPython.noop),
 
         migrations.AlterField(
             model_name='exam',

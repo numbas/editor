@@ -1,4 +1,4 @@
-from django.conf.urls import *
+from django.conf.urls import patterns, url
 
 from django.contrib.auth.decorators import login_required
 
@@ -31,7 +31,7 @@ urlpatterns = patterns('',
     url(r'^project/(?P<pk>\d+)/search/$', project.SearchView.as_view(), name='project_search'),
 
     url(r'^project/(?P<pk>\d+)/comment$',
-        login_required(project.CommentView.as_view()),name='comment_on_project'),
+        login_required(project.CommentView.as_view()), name='comment_on_project'),
 
 
     # Editor items
@@ -39,19 +39,19 @@ urlpatterns = patterns('',
     url(r'^item/(?P<pk>\d+)/preview/$', editoritem.PreviewView.as_view(), name='item_preview'),
 
     url(r'^item/(?P<pk>\d+)/publish$',
-        editoritem.PublishView.as_view(),name='item_publish'),
+        editoritem.PublishView.as_view(), name='item_publish'),
 
     url(r'^item/(?P<pk>\d+)/unpublish$',
-        editoritem.UnPublishView.as_view(),name='item_unpublish'),
+        editoritem.UnPublishView.as_view(), name='item_unpublish'),
 
     url(r'^item/(?P<pk>\d+)/set-access$',
-        editoritem.SetAccessView.as_view(),name='set_access'),
+        editoritem.SetAccessView.as_view(), name='set_access'),
 
     url(r'^item/(?P<pk>\d+)/move$',
-        editoritem.MoveProjectView.as_view(),name='item_move_project'),
+        editoritem.MoveProjectView.as_view(), name='item_move_project'),
 
     url(r'^item/(?P<pk>\d+)/transfer_ownership$',
-        editoritem.TransferOwnershipView.as_view(),name='item_transfer_ownership'),
+        editoritem.TransferOwnershipView.as_view(), name='item_transfer_ownership'),
 
     url(r'^items/compare/(?P<pk1>\d+)/(?P<pk2>\d+)$',
         editoritem.CompareView.as_view(), name='editoritem_compare'),
@@ -65,7 +65,7 @@ urlpatterns = patterns('',
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/$', exam.UpdateView.as_view(),
         name='exam_edit'),
 
-    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/copy/$',login_required(exam.CopyView.as_view()), name='exam_copy',),
+    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/copy/$', login_required(exam.CopyView.as_view()), name='exam_copy',),
                        
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/delete/$',
         login_required(exam.DeleteView.as_view()), name='exam_delete'),
@@ -80,16 +80,16 @@ urlpatterns = patterns('',
         exam.SourceView.as_view(), name='exam_source'),
                        
     url(r'^exam/share/(?P<access>(view|edit))/(?P<share_uuid>.*)$',
-        login_required(exam.ShareLinkView.as_view()),name='share_exam'),
+        login_required(exam.ShareLinkView.as_view()), name='share_exam'),
 
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/stamp$',
-        login_required(exam.StampView.as_view()),name='stamp_exam'),
+        login_required(exam.StampView.as_view()), name='stamp_exam'),
 
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/comment$',
-        login_required(exam.CommentView.as_view()),name='comment_on_exam'),
+        login_required(exam.CommentView.as_view()), name='comment_on_exam'),
 
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/restore-point$',
-        login_required(exam.SetRestorePointView.as_view()),name='set_restore_point_on_exam'),
+        login_required(exam.SetRestorePointView.as_view()), name='set_restore_point_on_exam'),
 
     url(r'^exam/question-lists/$',
         exam.question_lists,
@@ -103,21 +103,21 @@ urlpatterns = patterns('',
         question.UpdateView.as_view(), name='question_edit'),
 
     url(r'^question/share/(?P<access>(view|edit))/(?P<share_uuid>.*)$',
-        login_required(question.ShareLinkView.as_view()),name='share_question'),
+        login_required(question.ShareLinkView.as_view()), name='share_question'),
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/comment$',
-        login_required(question.CommentView.as_view()),name='comment_on_question'),
+        login_required(question.CommentView.as_view()), name='comment_on_question'),
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/stamp$',
-        login_required(question.StampView.as_view()),name='stamp_question'),
+        login_required(question.StampView.as_view()), name='stamp_question'),
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/restore-point$',
-        login_required(question.SetRestorePointView.as_view()),name='set_restore_point_on_question'),
+        login_required(question.SetRestorePointView.as_view()), name='set_restore_point_on_question'),
 
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/resources/(?P<resource>.*)$',
         resource.view_resource, name='view_resource'),
                        
-    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/copy/$',login_required(question.CopyView.as_view()), name='question_copy',),
+    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/copy/$', login_required(question.CopyView.as_view()), name='question_copy',),
                        
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/delete/$',
         login_required(question.DeleteView.as_view()), name='question_delete'),
@@ -134,7 +134,7 @@ urlpatterns = patterns('',
     # Resources
 
     url(r'^resource/upload',
-        login_required(resource.upload_resource),name='upload_resource'),
+        login_required(resource.upload_resource), name='upload_resource'),
 
     # Timeline items
 
@@ -151,7 +151,7 @@ urlpatterns = patterns('',
         generic.DeleteStampView.as_view(), name='stamp_delete'),
 
     url(r'^restore_point/(?P<pk>\d+)/revert$',
-        generic.RevertRestorePointView.as_view(),name='restore_point_revert'),
+        generic.RevertRestorePointView.as_view(), name='restore_point_revert'),
 
     # Themes
 

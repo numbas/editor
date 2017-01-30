@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
 import datetime
+from django.db import models, migrations
 from django.conf import settings
 import django.db.models.deletion
 import editor.jsonfield
-import taggit.managers
 import editor.models
+import taggit.managers
 
 
 class Migration(migrations.Migration):

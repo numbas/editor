@@ -1,35 +1,30 @@
+import zipfile
+import os
+
 from django import forms
-from django.contrib import messages
 from django.forms.models import inlineformset_factory
 from django.forms.widgets import SelectMultiple
 from django.core.exceptions import ValidationError
-from django.utils.html import conditional_escape, format_html, html_safe
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from django.utils.encoding import (
-    force_str, force_text,
-)
+from django.utils.encoding import force_text
 from django.db.models import Q, Count
-from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-
-import zipfile
-import os
-import tempfile
-
-from editor.models import NewExam, NewQuestion, EditorItem, Access, ExamQuestion, Theme, Extension, PullRequest
-import editor.models
 from django.contrib.auth.models import User
+
+from editor.models import NewExam, NewQuestion, EditorItem, Access, Theme, Extension, PullRequest
+import editor.models
 from accounts.util import find_users
 
 class FixedSelectMultiple(SelectMultiple):
-    def value_from_datadict(self,data,files,name):
+    def value_from_datadict(self, data, files, name):
         name += '[]'
-        v = super(FixedSelectMultiple,self).value_from_datadict(data,files,name)
+        v = super(FixedSelectMultiple, self).value_from_datadict(data, files, name)
         return v
 
 class TagField(forms.CharField):
-    def clean(self,value):
-        tags_string = super(TagField,self).clean(value)
+    def clean(self, value):
+        tags_string = super(TagField, self).clean(value)
         if len(tags_string.strip()):
             tags = tags_string.split(',')
             return [t.strip() for t in tags]
@@ -37,11 +32,11 @@ class TagField(forms.CharField):
             return []
 
 USAGE_OPTIONS = (
-    ('any','Any'),
-    ('reuse','Free to reuse'),
-    ('modify','Free to reuse with modification'),
-    ('sell','Free to reuse commercially'),
-    ('modify-sell','Free to reuse commercially with modification'),
+    ('any', 'Any'),
+    ('reuse', 'Free to reuse'),
+    ('modify', 'Free to reuse with modification'),
+    ('sell', 'Free to reuse commercially'),
+    ('modify-sell', 'Free to reuse commercially with modification'),
 )
 
 class ShowMoreCheckboxRenderer(forms.widgets.CheckboxFieldRenderer):
@@ -73,7 +68,7 @@ class ShowMoreCheckboxRenderer(forms.widgets.CheckboxFieldRenderer):
         first_output = []
         more_output = []
         num_in = len([1 for choice_value, choice_label in self.choices if force_text(choice_value) in self.value])
-        num_unchecked_to_show = max(0,3-num_in)
+        num_unchecked_to_show = max(0, 3-num_in)
         unchecked_shown = 0
         for i, choice in enumerate(self.choices):
             choice_value, choice_label = choice
@@ -125,31 +120,31 @@ class BootstrapRadioSelect(forms.RadioSelect):
     renderer = BootstrapRadioFieldRenderer
 
 class BootstrapSelect(forms.Select):
-    def build_attrs(self,extra_attrs=None,**kwargs):
-        attrs = super(BootstrapSelect,self).build_attrs(extra_attrs,**kwargs)
+    def build_attrs(self, extra_attrs=None, **kwargs):
+        attrs = super(BootstrapSelect, self).build_attrs(extra_attrs, **kwargs)
         attrs['class'] = 'form-control input-sm'
         return attrs
 
 class EditorItemSearchForm(forms.Form):
     query = forms.CharField(initial='', required=False)
-    item_types = forms.MultipleChoiceField(initial=('questions','exams'),choices=(('questions','Questions'),('exams','Exams')), widget=ShowMoreCheckboxSelectMultiple, required=False)
+    item_types = forms.MultipleChoiceField(initial=('questions', 'exams'), choices=(('questions', 'Questions'), ('exams', 'Exams')), widget=ShowMoreCheckboxSelectMultiple, required=False)
     author = forms.CharField(initial='', required=False, widget=forms.TextInput(attrs={'class':'form-control'}))
-    usage = forms.ChoiceField(initial='any',choices=USAGE_OPTIONS, required=False, widget=BootstrapRadioSelect)
+    usage = forms.ChoiceField(initial='any', choices=USAGE_OPTIONS, required=False, widget=BootstrapRadioSelect)
     subjects = forms.ModelMultipleChoiceField(queryset=editor.models.Subject.objects.all(), required=False, widget=ShowMoreCheckboxSelectMultiple)
     topics = forms.ModelMultipleChoiceField(queryset=editor.models.Topic.objects.all(), required=False, widget=ShowMoreCheckboxSelectMultiple)
-    ability_framework = forms.ModelChoiceField(queryset=editor.models.AbilityFramework.objects.all(), required=False, widget=forms.Select(attrs={'class':'form-control input-sm'}),empty_label=None)
+    ability_framework = forms.ModelChoiceField(queryset=editor.models.AbilityFramework.objects.all(), required=False, widget=forms.Select(attrs={'class':'form-control input-sm'}), empty_label=None)
     ability_levels = forms.ModelMultipleChoiceField(queryset=editor.models.AbilityLevel.objects.all(), widget=forms.CheckboxSelectMultiple, required=False)
-    status = forms.ChoiceField(choices=[('any','Any status')]+list(editor.models.STAMP_STATUS_CHOICES),required=False, widget=BootstrapRadioSelect)
-    order_by = forms.ChoiceField(choices=[('last_modified','Last modified'),('name','Name'),('licence','Usage rights'),('author','Author')],required=False, widget=BootstrapSelect,initial='last_modified')
+    status = forms.ChoiceField(choices=[('any', 'Any status')]+list(editor.models.STAMP_STATUS_CHOICES), required=False, widget=BootstrapRadioSelect)
+    order_by = forms.ChoiceField(choices=[('last_modified', 'Last modified'), ('name', 'Name'), ('licence', 'Usage rights'), ('author', 'Author')], required=False, widget=BootstrapSelect, initial='last_modified')
 
     tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
     exclude_tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
 
-    def __init__(self,data,*args,**kwargs):
-        super(EditorItemSearchForm,self).__init__(data,*args,**kwargs)
+    def __init__(self, data, *args, **kwargs):
+        super(EditorItemSearchForm, self).__init__(data, *args, **kwargs)
         subjects = data.getlist('subjects')
         if len(subjects):
-            self.fields['topics'].queryset = editor.models.Topic.objects.filter( Q(subjects__pk__in=subjects) | Q(pk__in=data.getlist('topics')) ).distinct()
+            self.fields['topics'].queryset = editor.models.Topic.objects.filter(Q(subjects__pk__in=subjects) | Q(pk__in=data.getlist('topics'))).distinct()
         else:
             self.fields['topics'].queryset = editor.models.Topic.objects.annotate(num_editoritems=Count('editoritem')).order_by('-num_editoritems')
 
@@ -160,9 +155,9 @@ class AccessForm(forms.ModelForm):
         model = Access
         exclude = []
 
-    def save(self,commit=True):
+    def save(self, commit=True):
         self.instance.given_by = self.cleaned_data.get('given_by')
-        super(AccessForm,self).save(commit)
+        super(AccessForm, self).save(commit)
 
 class SetAccessForm(forms.ModelForm):
     given_by = forms.ModelChoiceField(queryset=User.objects.all())
@@ -172,44 +167,44 @@ class SetAccessForm(forms.ModelForm):
         fields = ['public_access']
 
     def is_valid(self):
-        v = super(SetAccessForm,self).is_valid()
+        v = super(SetAccessForm, self).is_valid()
         for f in self.user_access_forms:
             if not f.is_valid():
                 return False
         return v
     
     def clean(self):
-        cleaned_data = super(SetAccessForm,self).clean()
+        cleaned_data = super(SetAccessForm, self).clean()
 
         self.user_ids = self.data.getlist('user_ids[]')
         self.access_levels = self.data.getlist('access_levels[]')
         self.user_access_forms = []
 
-        for i,(user,access_level) in enumerate(zip(self.user_ids,self.access_levels)):
-            f = AccessForm({'user':user,'access':access_level,'item':self.instance.pk,'given_by':self.cleaned_data.get('given_by').pk}, instance=Access.objects.filter(item=self.instance,user=user).first())
+        for i, (user, access_level) in enumerate(zip(self.user_ids, self.access_levels)):
+            f = AccessForm({'user':user, 'access':access_level, 'item':self.instance.pk, 'given_by':self.cleaned_data.get('given_by').pk}, instance=Access.objects.filter(item=self.instance, user=user).first())
             f.full_clean()
             self.user_access_forms.append(f)
-            for key,messages in f.errors.items():
-                self._errors[('user %i: ' % i)+key]=messages
+            for key, warnings in f.errors.items():
+                self._errors[('user %i: ' % i)+key] = warnings
 
         return cleaned_data
 
-    def save(self):
+    def save(self, commit=True):
         access_to_remove = Access.objects.filter(item=self.instance).exclude(user__in=self.user_ids)
         access_to_remove.delete()
         for f in self.user_access_forms:
             f.save()
-        return super(SetAccessForm,self).save()
+        return super(SetAccessForm, self).save()
         
 class EditorItemForm(forms.ModelForm):
     content = forms.CharField()
 
-    subjects = forms.ModelMultipleChoiceField(queryset=editor.models.Subject.objects.all(),required=False)
-    topics = forms.ModelMultipleChoiceField(queryset=editor.models.Topic.objects.all(),required=False)
-    ability_levels = forms.ModelMultipleChoiceField(queryset=editor.models.AbilityLevel.objects.all(),required=False)
+    subjects = forms.ModelMultipleChoiceField(queryset=editor.models.Subject.objects.all(), required=False)
+    topics = forms.ModelMultipleChoiceField(queryset=editor.models.Topic.objects.all(), required=False)
+    ability_levels = forms.ModelMultipleChoiceField(queryset=editor.models.AbilityLevel.objects.all(), required=False)
 
-    def save(self,commit=True):
-        obj = super(EditorItemForm,self).save(commit=commit)
+    def save(self, commit=True):
+        obj = super(EditorItemForm, self).save(commit=commit)
         obj.editoritem.content = self.cleaned_data['content']
         obj.editoritem.save()
         return obj
@@ -217,9 +212,9 @@ class EditorItemForm(forms.ModelForm):
 class CopyEditorItemForm(forms.ModelForm):
     class Meta:
         model = EditorItem
-        fields = ('name','project')
+        fields = ('name', 'project')
         widgets = {
-            'name': forms.TextInput(attrs={'class':'form-control','placeholder':'e.g. "Solve an equation in two variables"'}),
+            'name': forms.TextInput(attrs={'class':'form-control', 'placeholder':'e.g. "Solve an equation in two variables"'}),
             'project': BootstrapSelect,
         }
 
@@ -235,14 +230,14 @@ class QuestionForm(EditorItemForm):
     
     class Meta:
         model = NewQuestion
-        fields = ('resources','extensions')
+        fields = ('resources', 'extensions')
 
 class NewQuestionForm(forms.ModelForm):
     class Meta:
         model = EditorItem
-        fields = ('name','author','project')
+        fields = ('name', 'author', 'project')
         widgets = {
-            'name': forms.TextInput(attrs={'class':'form-control','placeholder':'e.g. "Solve an equation in two variables"'}),
+            'name': forms.TextInput(attrs={'class':'form-control', 'placeholder':'e.g. "Solve an equation in two variables"'}),
             'author': forms.HiddenInput(),
             'project': BootstrapSelect,
         }
@@ -250,14 +245,14 @@ class NewQuestionForm(forms.ModelForm):
 class ExamForm(EditorItemForm):
     class Meta:
         model = NewExam
-        fields = ('theme','custom_theme','locale')
+        fields = ('theme', 'custom_theme', 'locale')
         
 class NewExamForm(forms.ModelForm):
     class Meta:
         model = EditorItem
-        fields = ('name','author','project')
+        fields = ('name', 'author', 'project')
         widgets = {
-            'name': forms.TextInput(attrs={'class':'form-control','placeholder':'e.g. "Week 4 homework"'}),
+            'name': forms.TextInput(attrs={'class':'form-control', 'placeholder':'e.g. "Week 4 homework"'}),
             'author': forms.HiddenInput(),
             'project': BootstrapSelect,
         }
@@ -267,15 +262,15 @@ def validate_exam_file(f):
         content = f.read().decode('utf-8')
         editor.models.validate_content(content)
         f.seek(0)
-    except (UnicodeDecodeError,ValidationError):
+    except (UnicodeDecodeError, ValidationError):
         raise ValidationError("Not a valid .exam file")
 
 class UploadExamForm(forms.ModelForm):
-    file = forms.FileField(required=True,validators=[validate_exam_file])
+    file = forms.FileField(required=True, validators=[validate_exam_file])
 
     class Meta:
         model = EditorItem
-        fields = ('file','project',)
+        fields = ('file', 'project',)
         widgets = {
             'author': forms.HiddenInput(),
             'project': BootstrapSelect,
@@ -283,18 +278,18 @@ class UploadExamForm(forms.ModelForm):
 
 class ValidateZipField:
     def clean_zipfile(self):
-        zip = self.cleaned_data['zipfile']
-        if not zipfile.is_zipfile(zip):
+        value = self.cleaned_data['zipfile']
+        if not zipfile.is_zipfile(value):
             raise forms.ValidationError('Uploaded file is not a zip file')
-        return zip
+        return value
 
-class UpdateThemeForm(forms.ModelForm,ValidateZipField):
+class UpdateThemeForm(forms.ModelForm, ValidateZipField):
     
     """Form to edit a theme."""
     
     class Meta:
         model = Theme
-        fields = ['name','zipfile']
+        fields = ['name', 'zipfile']
         widgets = {
             'name': forms.TextInput(attrs={'class':'form-control'}),
             'zipfile': forms.FileInput()
@@ -304,12 +299,12 @@ class NewThemeForm(UpdateThemeForm):
     
     """Form for a new theme."""
     
-    def __init__(self,*args,**kwargs):
-        self._user= kwargs.pop('author')
-        super(NewThemeForm,self).__init__(*args,**kwargs)
+    def __init__(self, *args, **kwargs):
+        self._user = kwargs.pop('author')
+        super(NewThemeForm, self).__init__(*args, **kwargs)
 
     def save(self, commit=True):
-        theme = super(NewThemeForm,self).save(commit=False)
+        theme = super(NewThemeForm, self).save(commit=False)
         theme.public = False
         theme.author = self._user
         if commit:
@@ -323,7 +318,7 @@ class UpdateExtensionForm(forms.ModelForm):
     
     class Meta:
         model = Extension
-        fields = ['name','location','url','zipfile']
+        fields = ['name', 'location', 'url', 'zipfile']
         widgets = {
             'name': forms.TextInput(attrs={'class':'form-control'}),
             'location': forms.TextInput(attrs={'class':'form-control'}),
@@ -336,7 +331,7 @@ class UpdateExtensionForm(forms.ModelForm):
         if file is None:
             raise forms.ValidationError("No file uploaded")
         if not zipfile.is_zipfile(file):
-            name, extension = os.path.splitext(file.name)
+            _, extension = os.path.splitext(file.name)
             if extension.lower() == '.js':
                 return file
             else:
@@ -355,12 +350,12 @@ class NewExtensionForm(UpdateExtensionForm):
     
     """Form for a new extension."""
     
-    def __init__(self,*args,**kwargs):
-        self._user= kwargs.pop('author')
-        super(NewExtensionForm,self).__init__(*args,**kwargs)
+    def __init__(self, *args, **kwargs):
+        self._user = kwargs.pop('author')
+        super(NewExtensionForm, self).__init__(*args, **kwargs)
 
     def save(self, commit=True):
-        extension = super(NewExtensionForm,self).save(commit=False)
+        extension = super(NewExtensionForm, self).save(commit=False)
         extension.public = False
         extension.author = self._user
         if commit:
@@ -374,8 +369,8 @@ class BootstrapFieldMixin(object):
         attrs.update({'class': 'form-control'})
         return attrs
 
-class UserField(BootstrapFieldMixin,forms.Field):
-    def from_db_value(self,value,expression,connection,context):
+class UserField(BootstrapFieldMixin, forms.Field):
+    def from_db_value(self, value, expression, connection, context):
         return value.get_full_name()
 
     def widget_attrs(self, widget):
@@ -401,10 +396,10 @@ class UserSearchMixin(forms.ModelForm):
     """
     user_search = UserField(label='User')
     user_attr = 'user'
-    selected_user = forms.ModelChoiceField(queryset=User.objects.all(),widget=forms.HiddenInput(),required=False)
+    selected_user = forms.ModelChoiceField(queryset=User.objects.all(), widget=forms.HiddenInput(), required=False)
 
-    def __init__(self,*args,**kwargs):
-        super(UserSearchMixin,self).__init__(*args,**kwargs)
+    def __init__(self, *args, **kwargs):
+        super(UserSearchMixin, self).__init__(*args, **kwargs)
         self.fields['user_search'] = UserField()
 
     def clean_user_search(self):
@@ -413,9 +408,8 @@ class UserSearchMixin(forms.ModelForm):
         return user
 
     def clean(self):
-        cleaned_data = super(UserSearchMixin,self).clean()
+        cleaned_data = super(UserSearchMixin, self).clean()
         selected_user = cleaned_data.get('selected_user')
-        user_search = cleaned_data.get('user_search')
         if selected_user is not None:
             cleaned_data['user_search'] = selected_user
 
@@ -424,27 +418,27 @@ class UserSearchMixin(forms.ModelForm):
 
         return cleaned_data
 
-    def save(self, force_insert=False, force_update=False, commit=True):
+    def save(self, commit=True, force_insert=False, force_update=False):
         m = super(UserSearchMixin, self).save(commit=False)
-        setattr(m,self.user_attr,self.cleaned_data['user_search'])
+        setattr(m, self.user_attr, self.cleaned_data['user_search'])
         if commit:
             m.save()
         return m
 
-class AddMemberForm(UserSearchMixin,forms.ModelForm):
+class AddMemberForm(UserSearchMixin, forms.ModelForm):
     invitation = None
-    adding_user = forms.ModelChoiceField(queryset=User.objects.all(),widget=forms.HiddenInput())
+    adding_user = forms.ModelChoiceField(queryset=User.objects.all(), widget=forms.HiddenInput())
 
     class Meta:
         model = editor.models.ProjectAccess
-        fields = ('project','access')
+        fields = ('project', 'access')
         widgets = {
             'project': forms.HiddenInput(),
             'access': forms.Select(attrs={'class':'form-control'})
         }
 
     def clean(self):
-        cleaned_data = super(AddMemberForm,self).clean()
+        cleaned_data = super(AddMemberForm, self).clean()
         user = cleaned_data.get('user_search')
         if user == cleaned_data.get('project').owner:
             raise forms.ValidationError("Can't give separate access to the project owner")
@@ -455,49 +449,49 @@ class AddMemberForm(UserSearchMixin,forms.ModelForm):
         if commit:
             if m.user.pk:
                 # check if there's an existing ProjectAccess for this user & project
-                pa = editor.models.ProjectAccess.objects.filter(project=m.project,user=m.user).first()
+                pa = editor.models.ProjectAccess.objects.filter(project=m.project, user=m.user).first()
                 if pa is not None:
                     pa.access = m.access
                     m = pa
                 m.save()
             else:   # create email invitation if the user_search field contained an email address
-                self.invitation = editor.models.ProjectInvitation.objects.create(invited_by=self.cleaned_data.get('adding_user'),project=m.project,access=m.access,email=m.user.email)
+                self.invitation = editor.models.ProjectInvitation.objects.create(invited_by=self.cleaned_data.get('adding_user'), project=m.project, access=m.access, email=m.user.email)
         return m
 
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = editor.models.Project
-        fields = ('name','description','default_licence','default_locale','public_view')
+        fields = ('name', 'description', 'default_licence', 'default_locale', 'public_view')
         widgets = {
-            'default_locale': forms.widgets.Select(choices=editor.models.LOCALE_CHOICES,attrs={'class':'form-control'})
+            'default_locale': forms.widgets.Select(choices=editor.models.LOCALE_CHOICES, attrs={'class':'form-control'})
         }
 
-class ProjectTransferOwnershipForm(UserSearchMixin,forms.ModelForm):
+class ProjectTransferOwnershipForm(UserSearchMixin, forms.ModelForm):
     user_attr = 'owner'
     class Meta:
         model = editor.models.Project 
         fields = []
 
-class EditorItemTransferOwnershipForm(UserSearchMixin,forms.ModelForm):
+class EditorItemTransferOwnershipForm(UserSearchMixin, forms.ModelForm):
     user_attr = 'author'
     class Meta:
         model = editor.models.EditorItem
         fields = []
 
-ProjectAccessFormset = inlineformset_factory(editor.models.Project,editor.models.ProjectAccess,fields=('access',),extra=0,can_delete=True)
+ProjectAccessFormset = inlineformset_factory(editor.models.Project, editor.models.ProjectAccess, fields=('access',), extra=0, can_delete=True)
 
 class CreatePullRequestForm(forms.ModelForm):
     class Meta:
         model = PullRequest
-        fields = ('source','destination','comment')
+        fields = ('source', 'destination', 'comment')
 
 class CreateExamFromBasketForm(forms.ModelForm):
-    clear_basket = forms.BooleanField(initial=True,label='Empty your basket after creation?',required=False)
+    clear_basket = forms.BooleanField(initial=True, label='Empty your basket after creation?', required=False)
     class Meta:
         model = EditorItem
-        fields = ('name','author','project')
+        fields = ('name', 'author', 'project')
         widgets = {
-            'name': forms.TextInput(attrs={'class':'form-control','placeholder':'e.g. "Week 4 homework"'}),
+            'name': forms.TextInput(attrs={'class':'form-control', 'placeholder':'e.g. "Week 4 homework"'}),
             'author': forms.HiddenInput(),
             'project': BootstrapSelect,
         }

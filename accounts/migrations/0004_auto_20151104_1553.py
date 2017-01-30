@@ -4,12 +4,12 @@ from __future__ import unicode_literals
 from django.db import models, migrations
 
 def copy_basket(apps, schema_editor):
-    UserProfile = apps.get_model('accounts','UserProfile')
-    BasketQuestion = apps.get_model('accounts','BasketQuestion')
+    UserProfile = apps.get_model('accounts', 'UserProfile')
+    BasketQuestion = apps.get_model('accounts', 'BasketQuestion')
     db_alias = schema_editor.connection.alias
     for profile in UserProfile.objects.using(db_alias).all():
         BasketQuestion.objects.using(db_alias).bulk_create([
-            BasketQuestion(profile=profile,question=question,qn_order=i) for i,question in enumerate(profile.question_basket.using(db_alias).all())
+            BasketQuestion(profile=profile, question=question, qn_order=i) for i, question in enumerate(profile.question_basket.using(db_alias).all())
         ])
 
 def noop(apps, schema_editor):
@@ -49,7 +49,7 @@ class Migration(migrations.Migration):
             field=models.ManyToManyField(related_name='baskets_old', to='editor.Question', blank=True),
             preserve_default=True,
         ),
-        migrations.RunPython(copy_basket,noop),
+        migrations.RunPython(copy_basket, noop),
         migrations.RemoveField(
             model_name='userprofile',
             name='question_basket',

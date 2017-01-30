@@ -13,26 +13,26 @@ class CreateView(generic.CreateView):
     template_name = 'extension/create.html'
 
     def get_form_kwargs(self):
-        kwargs = super(CreateView,self).get_form_kwargs()
+        kwargs = super(CreateView, self).get_form_kwargs()
         kwargs['author'] = self.request.user
         return kwargs
 
     def get_success_url(self):
-        return reverse('profile_extensions',args=(self.request.user.pk,))
+        return reverse('profile_extensions', args=(self.request.user.pk,))
 
-class UpdateView(AuthorRequiredMixin,generic.UpdateView):
-	""" Edit an extension """
+class UpdateView(AuthorRequiredMixin, generic.UpdateView):
+    """ Edit an extension """
 
-	model = Extension
-	form_class = UpdateExtensionForm
-	template_name = 'extension/edit.html'
+    model = Extension
+    form_class = UpdateExtensionForm
+    template_name = 'extension/edit.html'
 
-	def get_success_url(self):
-		return reverse('profile_extensions',args=(self.request.user.pk,))
+    def get_success_url(self):
+        return reverse('profile_extensions', args=(self.request.user.pk,))
 
-class DeleteView(AuthorRequiredMixin,generic.DeleteView):
+class DeleteView(AuthorRequiredMixin, generic.DeleteView):
     model = Extension
     template_name = 'extension/delete.html'
 
     def get_success_url(self):
-        return reverse('profile_extensions',args=(self.request.user.pk,))
+        return reverse('profile_extensions', args=(self.request.user.pk,))

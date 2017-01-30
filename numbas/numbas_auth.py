@@ -18,12 +18,12 @@ try:
             """Alter the LDAP givenName attribute to the familiar first name in displayName."""
             
             ldap_user.attrs['givenName'] = [ldap_user.attrs['displayName'][0].split()[0]]
-            user,created = super(NumbasAuthBackend, self).get_or_create_user(username, ldap_user)
+            user, created = super(NumbasAuthBackend, self).get_or_create_user(username, ldap_user)
             if created:
                 p = user.userprofile.personal_project
                 p.name = "{}'s workspace".format(ldap_user.attrs['givenName'][0])
                 p.save()
-            return user,created
+            return user, created
 except ImportError:
     pass
 

@@ -18,13 +18,13 @@ up your own URL patterns for these views instead.
 """
 
 
-from django.conf.urls import *
+from django.conf.urls import patterns, url
 from django.views.generic import TemplateView
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import views as auth_views
 
-from accounts.views import ActivationView,RegistrationView,UserUpdateView,ChangePasswordView,UserProfileView,AllExamsView, AllQuestionsView, UserSearchView
+from accounts.views import ActivationView, RegistrationView, UserUpdateView, ChangePasswordView, UserProfileView, AllExamsView, AllQuestionsView, UserSearchView
 import accounts.views
 
 from numbas import settings
@@ -32,7 +32,7 @@ from numbas import settings
 
 
 urlpatterns = patterns('',
-        url(r'^users/search/$',UserSearchView.as_view(),name='user_search'),
+        url(r'^users/search/$', UserSearchView.as_view(), name='user_search'),
 
         url(r'^accounts/password/change/done/$',
             auth_views.password_change_done,
@@ -110,5 +110,3 @@ if settings.CAN_CHANGE_PASSWORD:
                     accounts.views.AfterFirstLoginView.as_view(),
                     name='after_first_login'),
                 )
-
-

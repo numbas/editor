@@ -10,7 +10,7 @@ class UserSearchView(ListView):
     
     """Search users."""
     
-    model=User
+    model = User
     
     def render_to_response(self, context, **response_kwargs):
         if self.request.is_ajax():
@@ -25,4 +25,4 @@ class UserSearchView(ListView):
             users = find_users(name=search_term)
         except KeyError:
             users = User.objects.all()
-        return [{"name": u.get_full_name(), "id": u.id, "profile": reverse('view_profile',args=(u.pk,))} for u in users]
+        return [{"name": u.get_full_name(), "id": u.id, "profile": reverse('view_profile', args=(u.pk,))} for u in users]

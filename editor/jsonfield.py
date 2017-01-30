@@ -14,9 +14,9 @@ except NameError:
     basestring = str
 
 try:
-	from south.modelsinspector import add_introspection_rules
+    from south.modelsinspector import add_introspection_rules
 except ImportError:
-	pass
+    pass
 
 class JSONFormField(CharField):
     def clean(self, value):
@@ -33,12 +33,12 @@ class JSONFormField(CharField):
                 raise FormValidationError(_("Enter valid JSON"))
         return value
 
-def load_json(value,load_kwargs):
+def load_json(value, load_kwargs):
     """Convert string value to JSON"""
     if isinstance(value, basestring):
         try:
             return json.loads(value, **load_kwargs)
-        except ValueError as e:
+        except ValueError:
             pass
     return value
 
@@ -54,10 +54,10 @@ class JSONField(models.TextField):
         super(JSONField, self).__init__(*args, **kwargs)
 
     def from_db_value(self, value, expression, connection, context):
-        return load_json(value,self.load_kwargs)
+        return load_json(value, self.load_kwargs)
 
     def to_python(self, value):
-        return load_json(value,self.load_kwargs)
+        return load_json(value, self.load_kwargs)
 
     def get_db_prep_value(self, value, connection, prepared=False):
         """Convert JSON object to a string"""
@@ -84,6 +84,6 @@ class JSONField(models.TextField):
         return field
 
 try:
-	add_introspection_rules([], ["^editor\.jsonfield\.JSONField"])
+    add_introspection_rules([], [r"^editor\.jsonfield\.JSONField"])
 except NameError:
-	pass
+    pass

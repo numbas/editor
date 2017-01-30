@@ -14,5 +14,5 @@ def site_root(request):
     site = Site.objects.get_current()
     protocol = 'https' if request.is_secure() else 'http'
     return {
-        'SITE_ROOT': '{}://{}'.format(protocol,site.domain)
+        'SITE_ROOT': '{}://{}'.format(protocol, site.domain)
     }

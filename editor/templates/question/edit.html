@@ -484,12 +484,24 @@
                                 {% endfor %}
                             {% endwith %}
 
+                            <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='marking-algorithm'}">
+                                <form class="form-horizontal" data-bind="submit: Editor.noop">
+                                    {% booleanproperty 'use_custom_algorithm' 'Use custom marking algorithm?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-use-custom-marking-algorithm' %}
+
+                                    <div data-bind="fadeVisible: use_custom_algorithm">
+                                        <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: customMarkingAlgorithm, codemirrorMode: 'jme'"></textarea>
+                                    </div>
+                                </form>
+                            </section>
+
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='scripts'}">
                                 <form class="form-inline" data-bind="foreach: scripts, submit: Editor.noop">
                                     <div class="script control-group">
                                         <label class="control-label">
                                             <p>
-                                            <span data-bind="text: displayName"></span><span data-bind="if: active"> (active)</span>
+                                                <span data-bind="text: displayName"></span>
+                                                <span data-bind="if: active"> (active)</span>
+                                                <span data-bind="if: !active()"> (inactive)</span>
                                             </p>
                                         </label>
                                         <div class="controls">

@@ -1589,11 +1589,14 @@ $(document).ready(function() {
 
 		this.tabs = ko.computed(function() {
 			var tabs = [];
-			if(!this.isGap())
+			if(!this.isGap()) {
 				tabs.push(new Editor.Tab('prompt','Prompt','blackboard'));
+            }
 
-			if(this.type().has_marks)
-				tabs.push(new Editor.Tab('marking','Marking','pencil'));
+			if(this.type().has_marks) {
+				tabs.push(new Editor.Tab('marking-settings','Marking settings','pencil'));
+				tabs.push(new Editor.Tab('marking-algorithm','Marking algorithm','pencil'));
+            }
 
 			tabs = tabs.concat(this.type().tabs);
 
@@ -1667,6 +1670,9 @@ $(document).ready(function() {
 			new Script('mark','Mark student\'s answer','instead','http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-mark-student-s-answer'),
 			new Script('validate','Validate student\'s answer','instead','http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-validate-student-s-answer')
 		];
+
+        this.use_custom_algorithm = ko.observable(false);
+        this.customMarkingAlgorithm = ko.observable('');
 
 		this.types.map(function(t){p[t.name] = t.model});
 
@@ -1766,7 +1772,8 @@ $(document).ready(function() {
                 showFeedbackIcon: this.showFeedbackIcon(),
 				scripts: {},
 				variableReplacements: this.variableReplacements().map(function(vr){return vr.toJSON()}),
-				variableReplacementStrategy: this.variableReplacementStrategy().name
+				variableReplacementStrategy: this.variableReplacementStrategy().name,
+                customMarkingAlgorithm: this.use_custom_algorithm() ? this.customMarkingAlgorithm() : ''
             };
 
             if(this.prompt())
@@ -1803,7 +1810,8 @@ $(document).ready(function() {
                 if(this.types[i].name == data.type.toLowerCase())
                     this.type(this.types[i]);
             }
-            tryLoad(data,['marks','prompt','stepsPenalty','showCorrectAnswer','showFeedbackIcon'],this);
+            tryLoad(data,['marks','prompt','stepsPenalty','showCorrectAnswer','showFeedbackIcon','customMarkingAlgorithm'],this);
+            this.use_custom_algorithm(this.customMarkingAlgorithm()!='');
 
             if(data.steps)
             {
@@ -2292,7 +2300,7 @@ $(document).ready(function() {
 			name:'1_n_2', 
 			niceName: 'Choose one from a list',
 			tabs: [
-				new Editor.Tab('marking','Marking','pencil'),
+				new Editor.Tab('marking-settings','Marking settings','pencil'),
 				new Editor.Tab('choices','Choices','list')
 			],
 
@@ -2401,7 +2409,7 @@ $(document).ready(function() {
 			name:'m_n_2', 
 			niceName: 'Choose several from a list',
 			tabs: [
-				new Editor.Tab('marking','Marking','pencil'),
+				new Editor.Tab('marking-settings','Marking settings','pencil'),
 				new Editor.Tab('choices','Choices','list')
 			],
 

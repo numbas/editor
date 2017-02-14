@@ -1,6 +1,6 @@
 {% load editor_controls %}
 {% load helplink %}
-<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking'}">
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking-settings'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         {% property 'minMarks' 'Minimum marks' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-minimum-marks' %}
         {% property 'maxMarks' 'Maximum marks' min='minMarks' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-maximum-marks' %}

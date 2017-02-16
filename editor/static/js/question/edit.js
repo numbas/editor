@@ -2301,6 +2301,7 @@ $(document).ready(function() {
 			niceName: 'Choose one from a list',
 			tabs: [
 				new Editor.Tab('marking-settings','Marking settings','pencil'),
+				new Editor.Tab('marking-algorithm','Marking algorithm','pencil'),
 				new Editor.Tab('choices','Choices','list')
 			],
 
@@ -2410,6 +2411,7 @@ $(document).ready(function() {
 			niceName: 'Choose several from a list',
 			tabs: [
 				new Editor.Tab('marking-settings','Marking settings','pencil'),
+				new Editor.Tab('marking-algorithm','Marking algorithm','pencil'),
 				new Editor.Tab('choices','Choices','list')
 			],
 
@@ -2539,7 +2541,8 @@ $(document).ready(function() {
 				new Editor.Tab('choices','Choices','list'),
 				new Editor.Tab('answers','Answers','list'),
 				new Editor.Tab('matrix','Marking matrix','th'),
-				new Editor.Tab('marking','Marking options','pencil')
+				new Editor.Tab('marking','Marking options','pencil'),
+				new Editor.Tab('marking-algorithm','Marking algorithm','pencil')
 			],
 
 			model: function() {

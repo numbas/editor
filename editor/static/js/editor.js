@@ -1769,5 +1769,21 @@ $(document).ready(function() {
         window.location.href = ui.item.profile;
     }});
 
+    Editor.tinymce = function(extra_options) {
+        var options = {
+            theme: 'modern',
+            skin: 'lightgray',
+            statusbar: false,
+            autoresize_bottom_margin: 0,
+            relative_urls: false,
+            theme_advanced_resizing: true,
+            theme_advanced_resize_horizontal: false,
+            plugins: ['link','fullscreen','autoresize','anchor','code','codesample','colorpicker','directionality','fullscreen','hr','link','paste','searchreplace','table','textcolor','textpattern']
+        }
+        options = $.extend(options,extra_options);
+
+        return tinymce.init(options);
+    }
+
     Editor.noop = function() {}
 });

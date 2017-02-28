@@ -277,6 +277,8 @@ $(document).ready(function() {
 
             var content = data.JSONContent;
 
+            this.project_id = data.project_id;
+
             tryLoad(content,['name','percentPass','shuffleQuestions','allQuestions','pickQuestions'],this);
             this.duration((content.duration||0)/60);
 
@@ -446,7 +448,7 @@ $(document).ready(function() {
         this.data = data;
 
         this.replaceWithCopy = function() {
-            $.get(this.url()+'copy/',{csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(data) {
+            $.get(this.url()+'copy/',{csrfmiddlewaretoken: getCookie('csrftoken'),project:viewModel.project_id}).success(function(data) {
                 var newq = new Question(data,q.parent);
                 var i = q.parent.indexOf(q)
                 q.parent.splice(i,1,newq);

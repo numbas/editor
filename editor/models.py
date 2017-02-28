@@ -630,6 +630,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
         return {
             'id': self.rel_obj.id,
             'editoritem_id': self.id,
+            'project_id': self.project.id,
             'author': self.author_id,
             'metadata': self.metadata,
             'published': self.published,

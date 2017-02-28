@@ -73,7 +73,10 @@ class CopyView(ProjectQuerysetMixin, generic.FormView, generic.edit.ModelFormMix
     def get(self, request, *args, **kwargs):
         if request.is_ajax():
             form_class = self.get_form_class()
-            form = form_class(data=self.get_initial())
+            data = self.get_initial()
+            data.update(request.GET.dict())
+            form = form_class(data)
+
             if form.is_valid():
                 return self.form_valid(form)
             else:
@@ -106,6 +109,14 @@ class CopyView(ProjectQuerysetMixin, generic.FormView, generic.edit.ModelFormMix
             return http.HttpResponse(json.dumps(obj2.summary()), content_type='application/json')
         else:
             return redirect(obj2.get_absolute_url())
+
+    def form_invalid(self, form):
+        response = super(CopyView, self).form_invalid(form)
+        if self.request.is_ajax():
+            return http.JsonResponse(form.errors, status=400)
+        else:
+            return response
+
 
 class BaseUpdateView(generic.UpdateView):
 

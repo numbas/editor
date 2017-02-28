@@ -1183,9 +1183,19 @@ $(document).ready(function() {
                                 clearInterval(resizer);
                             }
                         }, 100);
+
+                        if(allBindingsAccessor.showButtons) {
+                            ko.computed(function() {
+                                var showButtons = ko.unwrap(allBindingsAccessor.showButtons);
+                                var show = showButtons.gapfill();
+                                ed.fire('toggle_gapfill_button',{show:show});
+                            },this);
+                        }
+
 					}
                 })
             ;
+
 		},
 		update: function(element, valueAccessor) {
 			var value = ko.utils.unwrapObservable(valueAccessor()) || '';

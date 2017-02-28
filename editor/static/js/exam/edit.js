@@ -10,7 +10,7 @@ $(document).ready(function() {
 
         this.question_groups = ko.observableArray([]);
         this.addQuestionGroup = function() {
-            e.question_groups.push(new QuestionGroup(null,e.question_groups));
+            e.question_groups.push(new QuestionGroup(null,e));
         }
 
         this.showQuestionGroupNames = ko.observable(false);
@@ -90,10 +90,10 @@ $(document).ready(function() {
         ]);
         this.currentQuestionTab = ko.observable(this.questionTabs()[0]);
 
-        this.recentQuestions = Editor.mappedObservableArray(function(d){ return new Question(d);});
+        this.recentQuestions = Editor.mappedObservableArray(function(d){ return new Question(d,e);});
         this.recentQuestions(data.recentQuestions);
 
-        this.basketQuestions = Editor.mappedObservableArray(function(d){ return new Question(d);});
+        this.basketQuestions = Editor.mappedObservableArray(function(d){ return new Question(d,e);});
         this.basketQuestions(data.basketQuestions);
 
         function update_question_list(list,data) {
@@ -227,7 +227,6 @@ $(document).ready(function() {
         addQuestion: function(q) {
             var groups = this.question_groups();
             var group = groups[groups.length-1];
-            q.parent = group.questions;
             group.questions.push(q);
         },
 
@@ -279,7 +278,7 @@ $(document).ready(function() {
 
             this.project_id = data.project_id;
 
-            tryLoad(content,['name','percentPass','shuffleQuestions','allQuestions','pickQuestions'],this);
+            tryLoad(content,['name','percentPass','shuffleQuestions','allQuestions','pickQuestions','showQuestionGroupNames'],this);
             this.duration((content.duration||0)/60);
 
             if('navigation' in content)
@@ -335,7 +334,7 @@ $(document).ready(function() {
                     })
                 }
                 this.question_groups(content.question_groups.map(function(qg) {
-                    return new QuestionGroup(qg,e.question_groups);
+                    return new QuestionGroup(qg,e);
                 }));
             }
         }
@@ -375,10 +374,11 @@ $(document).ready(function() {
         }
     };
 
-    function QuestionGroup(data,parent) {
+    function QuestionGroup(data,exam) {
         var qg = this;
 
-        this.parent = parent;
+        this.exam = exam
+        this.parent = exam.question_groups;
 
         data = data || {};
 
@@ -397,7 +397,7 @@ $(document).ready(function() {
 
         if(data.questions) {
             this.questions(data.questions.map(function(q) {
-                return new Question(q,qg.questions);
+                return new Question(q,qg.exam);
             }));
         }
 
@@ -414,6 +414,29 @@ $(document).ready(function() {
                 qg.parent.remove(qg);
             }
         }
+
+        // the number of questions that will be chosen from this group
+        this.num_questions = ko.computed(function() {
+            switch(this.pickingStrategy().name) {
+                case 'random-subset':
+                    return parseInt(this.pickQuestions());
+                default:
+                    return this.questions().length;
+            }
+        },this);
+
+        this.first_number = ko.computed(function() {
+            if(!this.parent) {
+                return 0;
+            }
+            var all_groups = this.parent();
+            var index = all_groups.indexOf(this);
+            var total = 0;
+            all_groups.slice(0,index).forEach(function(g) {
+                total += g.num_questions();
+            });
+            return total;
+        },this);
     }
     QuestionGroup.prototype = {
         toJSON: function() {
@@ -425,9 +448,9 @@ $(document).ready(function() {
         }
     }
 
-    function Question(data,parent)
-    {
+    function Question(data,exam) {
         var q = this;
+        this.exam = exam;
         this.id = ko.observable(data.id);
         this.name = ko.observable(data.name);
         this.created = ko.observable(data.created);
@@ -444,21 +467,49 @@ $(document).ready(function() {
         this.description = $(descriptionDiv).text();
         this.current_stamp = data.current_stamp;
         this.current_stamp_display = data.current_stamp_display;
-        this.parent = parent;
+        this.question_group = ko.computed(function() {
+            var groups = exam.question_groups();
+            for(var i=0;i<groups.length;i++) {
+                if(groups[i].questions.indexOf(this)!=-1) {
+                    return groups[i];
+                }
+            }
+            return null;
+        },this);
+        this.number = ko.computed(function() {
+            var g = this.question_group();
+            if(!g) {
+                return undefined;
+            } else {
+                switch(g.pickingStrategy().name) {
+                    case 'random-subset':
+                        return undefined;
+                    default:
+                        return g.first_number()+g.questions.indexOf(this)+1;
+                }
+            }
+        },this);
+
         this.data = data;
 
         this.replaceWithCopy = function() {
+            if(!q.question_group()) {
+                return;
+            }
             $.get(this.url()+'copy/',{csrfmiddlewaretoken: getCookie('csrftoken'),project:viewModel.project_id}).success(function(data) {
-                var newq = new Question(data,q.parent);
-                var i = q.parent.indexOf(q)
-                q.parent.splice(i,1,newq);
+                var newq = new Question(data,q.exam);
+                var i = q.question_group().indexOf(q)
+                q.question_group().questions.splice(i,1,newq);
             })
         }
 
     }
     Question.prototype = {
         remove: function() {
-            this.parent.remove(this);
+            if(!this.question_group()) {
+                return;
+            }
+            this.question_group().questions.remove(this);
         },
 
         toJSON: function() {
@@ -475,7 +526,7 @@ $(document).ready(function() {
         },
 
         clone: function() {
-            return new Question(this.data,this.parent);
+            return new Question(this.data,this.exam);
         },
 
         add: function() {

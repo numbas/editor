@@ -170,8 +170,10 @@ class BaseUpdateView(generic.UpdateView):
 
             reversion.set_user(self.user)
 
-        status = {"result": "success", "url": self.get_success_url()}
-        return http.HttpResponse(json.dumps(status), content_type='application/json')
+        return http.HttpResponse(json.dumps(self.form_valid_response_dict(form)), content_type='application/json')
+
+    def form_valid_response_dict(self, form):
+        return {"result": "success", "url": self.get_success_url()}
 
     def form_invalid(self, form):
         status = {

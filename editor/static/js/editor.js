@@ -592,7 +592,7 @@ $(document).ready(function() {
             },this);
         },
 
-        init_save: function() {
+        init_save: function(callback) {
             var ei = this;
 			this.firstSave = true;
             this.autoSave = Editor.saver(
@@ -605,7 +605,7 @@ $(document).ready(function() {
                     if(!ei.name()) {
                         throw(new Error("We can't save changes while the name field is empty."));
                     }
-                    return $.post(
+                    var promise = $.post(
                         '/'+ei.item_type+'/'+ei.id+'/'+slugify(ei.realName())+'/',
                         {json: JSON.stringify(data), csrfmiddlewaretoken: getCookie('csrftoken')}
                     )
@@ -632,6 +632,10 @@ $(document).ready(function() {
                             });
                         })
                     ;
+                    if(callback) {
+                        callback(promise);
+                    }
+                    return promise;
                 }
             );
 

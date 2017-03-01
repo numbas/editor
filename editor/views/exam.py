@@ -245,7 +245,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
             ok = [q.pk for q in NewQuestion.objects.filter(pk__in=group)]
             deleted = [pk for pk in group if pk not in ok]
             deleted_questions += deleted
-            question_groups.append(ok)
+            question_groups.append([pk for pk in group if pk in ok])
         self.deleted_questions = deleted_questions
         self.object.set_question_groups(question_groups)
 

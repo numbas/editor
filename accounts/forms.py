@@ -18,7 +18,7 @@ class NumbasRegistrationForm(RegistrationForm):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        fields = ('first_name', 'last_name', 'email', 'bio', 'language', 'avatar')
+        fields = ('first_name', 'last_name', 'email', 'bio', 'language', 'avatar','wrap_lines')
 
     first_name = forms.CharField(max_length=30, widget=forms.TextInput(attrs={'class':'form-control'}))
     last_name = forms.CharField(max_length=30, widget=forms.TextInput(attrs={'class':'form-control'}))
@@ -36,6 +36,7 @@ class UserProfileForm(forms.ModelForm):
         self.profile = self.get_profile()
         self.fields['language'].initial = self.profile.language
         self.fields['bio'].initial = self.profile.bio
+        self.fields['wrap_lines'].initial = self.profile.wrap_lines
     
     def get_profile(self):
         return UserProfile.objects.get(user=self.instance)
@@ -43,6 +44,7 @@ class UserProfileForm(forms.ModelForm):
     def save(self, *args, **kwargs):
         self.profile.language = self.cleaned_data.get('language')
         self.profile.bio = self.cleaned_data.get('bio')
+        self.profile.wrap_lines = self.cleaned_data.get('wrap_lines')
         if self.cleaned_data.get('avatar'):
             self.profile.avatar = self.cleaned_data.get('avatar')
         self.profile = self.profile.save()

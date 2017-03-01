@@ -1035,7 +1035,8 @@ $(document).ready(function() {
 				indentWithTabs: false,
 				indentUnit: 2,
 				extraKeys: { Tab: betterTab },
-				readOnly: readOnly
+				readOnly: readOnly,
+                lineWrapping: Editor.wrapLines
 			});
 			mc.on('change',onChange);
 			ko.utils.domData.set(element,'codemirror',mc);

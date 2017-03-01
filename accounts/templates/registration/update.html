@@ -3,17 +3,9 @@
 {% block javascripts %}
 {{block.super}}
 <script type="text/javascript">
-tinymce.init({
-    selector: "#id_bio",
-    theme: 'modern',
-	skin: 'light',
-	statusbar: false,
-	autoresize_bottom_margin: 0,
-	relative_urls: false,
-    theme_advanced_resizing: true,
-    theme_advanced_resize_horizontal: false,
-    plugins: ['link','fullscreen']
- });
+    $(document).ready(function() {
+        Editor.tinymce({selector:'#id_bio'});
+    });
 </script>
 {% endblock javascripts %}
 
@@ -27,16 +19,16 @@ tinymce.init({
 		{{form.non_field_errors}}
         <div class="row form-group">
             <div class="col-xs-6">
-                <label>{{form.first_name.label}}</label>
+                <label for="{{form.first_name.auto_id}}">{{form.first_name.label}}</label>
                 {{form.first_name}}
             </div>
             <div class="col-xs-6">
-                <label>{{form.last_name.label}}</label>
+                <label for="{{form.last_name.auto_id}}">{{form.last_name.label}}</label>
                 {{form.last_name}}
             </div>
         </div>
         <div class="form-group">
-            <label>{{form.email.label}}</label>
+            <label for="{{form.email.auto_id}}">{{form.email.label}}</label>
             {{form.email}}
             {{form.email.errors}}
         </div>
@@ -46,15 +38,19 @@ tinymce.init({
         </div>
         {% endif %}
         <div class="form-group">
-            <label>{{form.bio.label}}</label>
+            <label for="{{form.bio.auto_id}}">{{form.bio.label}}</label>
             <p>{{form.bio}}</p>
         </div>
         <div class="form-group">
-            <label>{{form.language.label}}</label>
+            <label for="{{form.language.auto_id}}">{{form.language.label}}</label>
             {{form.language}}
         </div>
         <div class="form-group">
-            <label>{{form.avatar.label}}</label>
+            <label>{{form.wrap_lines.label}} {{form.wrap_lines}}</label>
+            {{form.wrap_lines.errors}}
+        </div>
+        <div class="form-group">
+            <label for="{{form.avatar.auto_id}}">{{form.avatar.label}}</label>
             {{form.avatar}}
         </div>
 		<div class="form-group">

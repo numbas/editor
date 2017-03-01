@@ -10,6 +10,18 @@ def global_settings(request):
         'SITE_TITLE': settings.SITE_TITLE
     }
 
+def user_settings(request):
+    if request.user.is_anonymous():
+        return {}
+    else:
+        profile = request.user.userprofile
+        return {
+            'user_settings': {
+                'wrap_lines': profile.wrap_lines,
+            
+            }
+        }
+
 def site_root(request):
     site = Site.objects.get_current()
     protocol = 'https' if request.is_secure() else 'http'

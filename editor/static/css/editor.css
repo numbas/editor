@@ -18,7 +18,7 @@
 }
 .CodeMirror-scroll {
 	height: auto;
-	max-height: 20em;
+	max-height: 90vh;
 }
 
 .writemathsContainer {

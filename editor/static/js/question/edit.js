@@ -536,6 +536,9 @@ $(document).ready(function() {
 				} 
 				try {
 					var tree = jme.compile(v.definition(),scope,true);
+                    if(!tree) {
+                        throw(new Numbas.Error('jme.variables.empty definition',{name:name}));
+                    }
 					var vars = jme.findvars(tree);
                     v.error('');
 				}

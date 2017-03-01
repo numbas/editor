@@ -76,6 +76,7 @@ $(document).ready(function() {
         this.showanswerstate = ko.observable(true);
         this.allowrevealanswer = ko.observable(true);
         this.advicethreshold = ko.observable(0);
+        this.showstudentname = ko.observable(true);
 
         this.intro = ko.observable('');
         this.feedbackMessages = ko.observableArray([]);
@@ -242,6 +243,7 @@ $(document).ready(function() {
                 duration: this.duration()*60,
                 percentPass: this.percentPass(),
                 showQuestionGroupNames: this.showQuestionGroupNames(),
+                showstudentname: this.showstudentname(),
                 question_groups: this.question_groups().map(function(qg) { return qg.toJSON() }),
                 navigation: {
                     allowregen: this.allowregen(),
@@ -282,7 +284,7 @@ $(document).ready(function() {
 
             this.project_id = data.project_id;
 
-            tryLoad(content,['name','percentPass','shuffleQuestions','allQuestions','pickQuestions','showQuestionGroupNames'],this);
+            tryLoad(content,['name','percentPass','shuffleQuestions','allQuestions','pickQuestions','showQuestionGroupNames','showstudentname'],this);
             this.duration((content.duration||0)/60);
 
             if('navigation' in content)

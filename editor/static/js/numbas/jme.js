@@ -112,7 +112,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
                 if(token in opSynonyms) {
                     token = opSynonyms[token];
                 }
-				if( tokens.length==0 || (nt=tokens[tokens.length-1].type)=='(' || nt==',' || nt=='[' || (nt=='op' && !tokens[tokens.length-1].postfix) )
+				if( tokens.length==0 || (nt=tokens[tokens.length-1].type)=='(' || nt==',' || nt=='[' || (nt=='op' && !tokens[tokens.length-1].postfix) || nt=='keypair' )
 				{
 					if(token in prefixForm) {
 						token = prefixForm[token];
@@ -1027,7 +1027,11 @@ jme.re.re_whitespace = '(?:[\\s \\f\\n\\r\\t\\v\\u00A0\\u2028\\u2029]|(?:\&nbsp;
 jme.re.re_strip_whitespace = new RegExp('^'+jme.re.re_whitespace+'+|'+jme.re.re_whitespace+'+$','g');
 
 
-var displayFlags = {
+/** Flags used to control the behaviour of JME display functions.
+ * Values are `undefined` so they can be overridden
+ * @memberof Numbas.jme
+ */
+var displayFlags = jme.displayFlags = {
 	fractionnumbers: undefined,
 	rowvector: undefined
 };

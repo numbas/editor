@@ -73,7 +73,9 @@ $(document).ready(function() {
 
 	ko.bindingHandlers.mathjax = {
 		update: function(element) {
-			$(element).mathjax();
+            if(!window.noMathJax) {
+    			$(element).mathjax();
+            }
 		}
 	};
 

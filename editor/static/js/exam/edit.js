@@ -98,19 +98,16 @@ $(document).ready(function() {
         this.basketQuestions(data.basketQuestions);
 
         function update_question_list(list,data) {
-            var odata = list();
-            var changed = data.length!=list.length;
-            if(!changed) {
-                for(var i=0;i<odata.length;i++) {
-                    if(JSON.stringify(odata[i].data)!=JSON.stringify(data[i])) {
-                        changed = true;
-                        break;
-                    }
+            var odata = list.getLastData();
+            var ndata = [];
+            for(var i=0;i<data.length;i++) {
+                if(i>=odata.length || JSON.stringify(odata[i])!=JSON.stringify(data[i])) {
+                    ndata.push(data[i]);
+                } else {
+                    ndata.push(odata[i]);
                 }
             }
-            if(changed) {
-                list(data);
-            }
+            list(ndata);
         }
 
         function getQuestions() {

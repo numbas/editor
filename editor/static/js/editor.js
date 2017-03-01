@@ -261,12 +261,22 @@ $(document).ready(function() {
     }
 
 	Editor.mappedObservableArray = function(map) {
-		var obj = {list: ko.observableArray([])};
+		var obj = {list: ko.observableArray([]), lastData: []};
 		var obs = ko.computed({
 			owner: obj,
 			read: obj.list,
 			write: function(l) {
-				this.list(l.map(map));
+                var current_mapped = obj.list();
+                var out = [];
+                for(var i=0;i<l.length;i++) {
+                    if(i<obj.lastData.length && l[i]==obj.lastData[i]) {
+                        out.push(current_mapped[i]);
+                    } else {
+                        out.push(map(l[i]));
+                    }
+                }
+                obj.lastData = l;
+                this.list(out);
 			}
 		});
 		obs.remove = function(o) {
@@ -278,6 +288,9 @@ $(document).ready(function() {
 		obs.indexOf = function(o) {
 			return obj.list.indexOf(o);
 		}
+        obs.getLastData = function() {
+            return obj.lastData;
+        }
 		return obs;
 	}
 

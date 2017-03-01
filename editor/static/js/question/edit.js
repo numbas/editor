@@ -458,6 +458,12 @@ $(document).ready(function() {
 				});
 			}
 
+            var rulesetTodo = {};
+            this.rulesets().forEach(function(r) {
+                rulesetTodo[r.name()] = r.sets();
+            });
+            Numbas.jme.variables.makeRulesets(rulesetTodo,results.scope);
+
 			this.questionScope(results.scope);
 		},
 

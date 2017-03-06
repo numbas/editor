@@ -2,27 +2,33 @@
 {% load helplink %}
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking'}">
 <form class="form-horizontal" data-bind="submit: Editor.noop">
-    {% property '$parent.marks' 'Marks' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-marks' %}
-    <div data-bind="visible: $parent.steps().length">
-        {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-penalty-for-revealing-steps' %}
+    <div class="main-settings">
+        {% property '$parent.marks' 'Marks' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-marks' %}
+        <div data-bind="visible: $parent.steps().length">
+            {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-penalty-for-revealing-steps' %}
+        </div>
+        <div class="form-group">
+            <label class="{{form_label_class}} control-label">
+                Match test {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/match-text-pattern.html#term-match-test' %}
+            </label>
+            <div class="{{form_control_class}}">
+                <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: matchModes, value: matchMode, optionsText: 'niceName'"></select>
+            </div>
+        </div>
+        {% property 'answer' 'Answer pattern' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/match-text-pattern.html#term-answer-pattern' %}
+        <div data-bind="fadeVisible: $parent.showCorrectAnswer">
+            {% property 'displayAnswer' 'Display answer' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/match-text-pattern.html#term-display-answer' %}
+        </div>
     </div>
-	<div class="form-group">
-		<label class="{{form_label_class}} control-label">
-            Match test {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/match-text-pattern.html#term-match-test' %}
-		</label>
-		<div class="{{form_control_class}}">
-            <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: matchModes, value: matchMode, optionsText: 'niceName'"></select>
-		</div>
-	</div>
-    {% property 'answer' 'Answer pattern' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/match-text-pattern.html#term-answer-pattern' %}
-    {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-correct-answer-on-reveal' %}
-    {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-score-feedback-icon' %}	
-    <div data-bind="fadeVisible: $parent.showCorrectAnswer">
-        {% property 'displayAnswer' 'Display answer' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/match-text-pattern.html#term-display-answer' %}
-    </div>
+
+    <h4>Advanced settings</h4>
+    <hr>
+
     {% booleanproperty 'caseSensitive' 'Must the answer be in the correct case?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/match-text-pattern.html#term-must-the-answer-be-in-the-correct-case' %}
     <div data-bind="fadeVisible:caseSensitive">
         {% percentproperty 'partialCredit' 'Partial credit for answer not matching case' %}
     </div>
+    {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-correct-answer-on-reveal' %}
+    {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-score-feedback-icon' %}	
 </form>
 </section>

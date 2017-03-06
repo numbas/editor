@@ -466,12 +466,12 @@
                         </ul>
                         <div class="col-sm-9 tab-content">
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='prompt'}">
-                                <div {% if not editable %}disabled{% endif %} data-bind="writemaths: prompt, preambleCSS: $root.preamble.css, tinymce_plugins: ['gapfill','jmevisible','preview'], showButtons: {gapfill: function(){return $data.type().name=='gapfill'}}"></div>
-
                                 <p class="help-block">
                                     {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-prompt' subject='the part prompt' %}
                                     Ask the student a question, and give any hints about how they should answer this part.
                                 </p>
+
+                                <div {% if not editable %}disabled{% endif %} data-bind="writemaths: prompt, preambleCSS: $root.preamble.css, tinymce_plugins: ['gapfill','jmevisible','preview'], showButtons: {gapfill: function(){return $data.type().name=='gapfill'}}"></div>
                             </section>
 
                             {% with form_label_class="col-sm-4" form_control_class="col-sm-8" %}
@@ -485,6 +485,10 @@
                             {% endwith %}
 
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='scripts'}">
+                                <p class="help-block">
+                                    {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#scripts' subject='part scripts' %}
+                                    When you need to change the way this part works beyond the available options, you can write JavaScript code to be executed at the times described below.
+                                </p>
                                 <form class="form-inline" data-bind="foreach: scripts, submit: Editor.noop">
                                     <div class="script control-group">
                                         <label class="control-label">
@@ -501,7 +505,10 @@
                                 </form>
                             </section>
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='adaptivemarking'}">
-							<h4>Variable replacement {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#adaptive-marking' subject='adaptive marking' %}</h4>
+                                <p class="help-block">
+                                    {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#adaptive-marking' subject='adaptive marking' %}
+                                    To account for errors made by the student in earlier calculations, replace question variables with answers to earlier parts.
+                                </p>
                                 <div class="variable-replacements">
                                     <table class="table" data-bind="fadeVisible: variableReplacements().length">
                                         <thead>
@@ -561,8 +568,23 @@
                             <button type="button" class="btn btn-default" data-bind="click: replaceWithGapfill, visible: canBeReplacedWithGap"><span class="glyphicon glyphicon-tasks"></span> Replace part <strong data-bind="text:indexLabel"></strong> with a gapfill</button>
                         </div>
                         <div class="pull-right">
-                            <button type="button" class="btn btn-default" data-bind="click: addGap, visible: type().name=='gapfill'"><span class="glyphicon glyphicon-plus"></span> Add a gap to part <strong data-bind="text:indexLabel"></strong></button>
-                            <button type="button" class="btn btn-info" data-bind="click: addStep, visible: isRootPart"><span class="glyphicon glyphicon-plus"></span> Add a step to part <strong data-bind="text:indexLabel"></strong></button>
+                            <div class="btn-group" data-bind="visible: type().name=='gapfill'">
+                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <span class="glyphicon glyphicon-plus"></span> Add a gap to part <strong data-bind="text:indexLabel"></strong> <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu" data-bind="foreach: $root.gapTypes">
+                                    <li><a href="#" data-bind="click: $parent.addGap, text: niceName"></a></li>
+                                </ul>
+                            </div>
+
+                            <div class="btn-group" data-bind="visible: isRootPart">
+                                <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <span class="glyphicon glyphicon-plus"></span> Add a step to part <strong data-bind="text:indexLabel"></strong> <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu" data-bind="foreach: $root.stepTypes">
+                                    <li><a href="#" data-bind="click: $parent.addStep, text: niceName"></a></li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                     {% endif %}
@@ -572,7 +594,14 @@
         </div>
 
         {% if editable %}
-        <button class="btn btn-primary" type="button" data-bind="click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
+        <div class="btn-group">
+            <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-bind="css: {'btn-lg': parts().length==0}">
+                <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parts().length ? 'Add another part' : 'Add a part'"></span> <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" data-bind="foreach: partTypes">
+                <li><a href="#" data-bind="click: $parent.addPart, text: niceName"></a></li>
+            </ul>
+        </div>
         {% endif %}
 
         {% if editable %}

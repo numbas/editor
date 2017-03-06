@@ -2,17 +2,22 @@
 {% load helplink %}
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
-        {% property 'minMarks' 'Minimum marks' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-minimum-marks' %}
-        {% property 'maxMarks' 'Maximum marks' min='minMarks' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-maximum-marks' %}
-        {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-correct-answer-on-reveal' %}
-        {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-score-feedback-icon' %}	
-        <div data-bind="visible: $parent.steps().length">
-            {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-penalty-for-revealing-steps' %}
+        <div class="main-settings">
+            {% property 'minMarks' 'Minimum marks' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-minimum-marks' %}
+            {% property 'maxMarks' 'Maximum marks' min='minMarks' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-maximum-marks' zero_means='no maximum' %}
+            <div data-bind="visible: $parent.steps().length">
+                {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-penalty-for-revealing-steps' %}
+            </div>
+
+            {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-shuffle-order-of-choices' %}
+            {% booleanproperty 'shuffleAnswers' 'Shuffle order of answers?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-shuffle-order-of-answers' %}
         </div>
+
+        <h4>Advanced settings</h4>
+        <hr>
+
         {% property 'minAnswers' 'Minimum answers' max='maxAnswers' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-minimum-answers' %}
-        {% property 'maxAnswers' 'Maximum answers' min=minAnswers help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-maximum-answers' %}
-        {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-shuffle-order-of-choices' %}
-        {% booleanproperty 'shuffleAnswers' 'Shuffle order of answers?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-shuffle-order-of-answers' %}
+        {% property 'maxAnswers' 'Maximum answers' min=minAnswers help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-maximum-answers' zero_means='no maximum' %}
         <div class="form-group" data-bind="fadeVisible: minAnswers()!=0 || maxAnswers()!=0">
             <label class="{{form_label_class}} control-label">
                 What to do if wrong number of answers selected: {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-what-to-do-if-wrong-number-of-answers-selected' %}
@@ -21,6 +26,7 @@
                 <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: warningTypes, value: warningType, optionsText: 'niceName'"></select>
             </div>
         </div>
+
         <div class="form-group">
             <label class="{{form_label_class}} control-label">
                 Selection type {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-selection-type' %}
@@ -42,6 +48,11 @@
         <div data-bind="fadeVisible: layoutType().name=='expression'">
             {% property 'layoutExpression' 'Custom layout expression' monospace=True %}
         </div>
+
+        <hr>
+
+        {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-correct-answer-on-reveal' %}
+        {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-score-feedback-icon' %}	
     </form>
 </section>
 

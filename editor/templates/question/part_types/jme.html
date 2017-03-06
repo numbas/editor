@@ -3,26 +3,35 @@
 
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking'}">
 <form class="form-horizontal" data-bind="submit: Editor.noop">
-    {% property '$parent.marks' 'Marks' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-marks' %}
-    <div data-bind="visible: $parent.steps().length">{% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-penalty-for-revealing-steps' %}</div>
-	<div class="form-group">
-        <label class="{{form_label_class}} control-label">
-            Correct answer {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-correct-answer'%}
-		</label>
-		<div class="{{form_control_class}}">
-			<input {% if not editable %}disabled{% endif %} class="monospace form-control" type="text" data-bind="textInput: answer, autosize: {max: 500, min: 30, padding: 10, value: answer}"/>
-			<span data-bind="JME: answer" class="jme-answer"></span>
-		</div>
+    <div class="main-settings">
+        {% property '$parent.marks' 'Marks' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-marks' %}
+        <div data-bind="visible: $parent.steps().length">{% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-penalty-for-revealing-steps' %}</div>
+        <div class="form-group">
+            <label class="{{form_label_class}} control-label">
+                Correct answer {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-correct-answer'%}
+            </label>
+            <div class="{{form_control_class}}">
+                <input {% if not editable %}disabled{% endif %} class="monospace form-control" type="text" data-bind="textInput: answer, autosize: {max: 500, min: 30, padding: 10, value: answer}"/>
+                <span data-bind="JME: answer" class="jme-answer"></span>
+            </div>
+        </div>
     </div>
+
+    <h4>Advanced settings</h4>
+    <hr>
+    {% property 'answerSimplification' 'Answer simplification rules' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-answer-simplification-rules' %}
     {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-correct-answer-on-reveal' %}
     {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-score-feedback-icon' %}	
     {% booleanproperty 'showPreview' 'Show preview of student\'s answer?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-show-preview-of-student-s-answer' %}
-    {% property 'answerSimplification' 'Answer simplification rules' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-answer-simplification-rules' %}
 </form>
 </section>
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='checking-accuracy'}">
 <form class="form-horizontal" data-bind="submit: Editor.noop">
 	<h4>Checking accuracy</h4>
+    <p class="help-block">
+        {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#string-restrictions' subject='the advice section' %}
+        Define the range of points over which the student's answer will be compared with the correct answer, and the method used to compare them.
+    </p>
 	<div class="form-group">
 		<label class="{{form_label_class}} control-label">
             Checking type {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-checking-type' %}
@@ -39,88 +48,94 @@
 </form>
 </section>
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='restrictions'}">
-<h4>Length restriction</h4>
-<form class="form-horizontal" data-bind="submit: Editor.noop">
-    {% property 'maxlength.length' 'Maximum length' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-maximum-length-restriction' %}
-    <div data-bind="fadeVisible: maxlength.length()>0">
-        {% percentproperty 'maxlength.partialCredit' 'Partial credit for long answer' %}
-		<div class="form-group">
+    <div class="main-settings">
+    <h4>Variables</h4>
+    <form class="form-horizontal" data-bind="submit: Editor.noop">
+        {% booleanproperty 'checkVariableNames' 'Warn if student uses an unexpected variable name?' %}
+        <div class="form-group" data-bind="fadeVisible:checkVariableNames">
             <label class="{{form_label_class}} control-label">
-				Warning message
-			</label>
-            <div {% if not editable %}disabled{% endif %} class="{{form_control_class}}" data-bind="writemaths: maxlength.message, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','preview']"></div>
-		</div>
-	</div>
-</form>
-<form class="form-horizontal" data-bind="submit: Editor.noop">
-    {% property 'minlength.length' 'Minimum length' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-minimum-length-restriction' %}
-    <div data-bind="fadeVisible: minlength.length()>0">
-        {% percentproperty 'minlength.partialCredit' 'Partial credit for short answer' %}
-		<div class="form-group">
+                Expected variable names {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-expected-variable-names' %}
+            </label>
+            <div class="{{form_control_class}}">
+                <listbox params="items: expectedVariableNames{% if not editable %}, disabled: true{% endif %}"></listbox>
+            </div>
+        </div>
+    </form>
+    </div>
+    <hr>
+
+
+    <h4>Length restriction</h4>
+    <form class="form-horizontal" data-bind="submit: Editor.noop">
+        {% property 'minlength.length' 'Minimum length' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-minimum-length-restriction' %}
+        <div data-bind="fadeVisible: minlength.length()>0">
+            {% percentproperty 'minlength.partialCredit' 'Partial credit for short answer' %}
+            <div class="form-group">
+                <label class="{{form_label_class}} control-label">
+                    Warning message
+                </label>
+                <div {% if not editable %}disabled{% endif %} class="{{form_control_class}}" data-bind="writemaths: maxlength.message, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','preview']"></div>
+            </div>
+        </div>
+    </form>
+    <form class="form-horizontal" data-bind="submit: Editor.noop">
+        {% property 'maxlength.length' 'Maximum length' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-maximum-length-restriction' zero_means='no maximum' %}
+        <div data-bind="fadeVisible: maxlength.length()>0">
+            {% percentproperty 'maxlength.partialCredit' 'Partial credit for long answer' %}
+            <div class="form-group">
+                <label class="{{form_label_class}} control-label">
+                    Warning message
+                </label>
+                <div {% if not editable %}disabled{% endif %} class="{{form_control_class}}" data-bind="writemaths: maxlength.message, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','preview']"></div>
+            </div>
+        </div>
+    </form>
+
+    <h4>String restriction</h4>
+    <form class="form-horizontal" data-bind="submit: Editor.noop">
+        <div class="form-group">
             <label class="{{form_label_class}} control-label">
-				Warning message
-			</label>
-            <div {% if not editable %}disabled{% endif %} class="{{form_control_class}}" data-bind="writemaths: maxlength.message, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','preview']"></div>
-		</div>
-	</div>
-</form>
-<h4>String restriction</h4>
-<form class="form-horizontal" data-bind="submit: Editor.noop">
-	<div class="form-group">
-		<label class="{{form_label_class}} control-label">
-            Required strings {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-required-strings' %}
-		</label>
-        <div class="{{form_control_class}}">
-            <listbox params="items: musthave.strings{% if not editable %}, disabled: true{% endif %}"></listbox>
-		</div>
-	</div>
-    <div data-bind="fadeVisible: musthave.strings().length>0">
-        {% percentproperty 'musthave.partialCredit' 'Partial credit for not using all required strings' %}
-        {% booleanproperty 'musthave.showStrings' 'Show required strings in warning?' %}
-		<div class="form-group">
-			<label class="{{form_label_class}} control-label">
-				Warning message
-			</label>
-			<div class="{{form_control_class}}">
-				<div {% if not editable %}disabled{% endif %} data-bind="writemaths: musthave.message, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','preview']"></div>
-			</div>
-		</div>
-	</div>
-</form>
+                Required strings {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-required-strings' %}
+            </label>
+            <div class="{{form_control_class}}">
+                <listbox params="items: musthave.strings{% if not editable %}, disabled: true{% endif %}"></listbox>
+            </div>
+        </div>
+        <div data-bind="fadeVisible: musthave.strings().length>0">
+            {% percentproperty 'musthave.partialCredit' 'Partial credit for not using all required strings' %}
+            {% booleanproperty 'musthave.showStrings' 'Show required strings in warning?' %}
+            <div class="form-group">
+                <label class="{{form_label_class}} control-label">
+                    Warning message
+                </label>
+                <div class="{{form_control_class}}">
+                    <div {% if not editable %}disabled{% endif %} data-bind="writemaths: musthave.message, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','preview']"></div>
+                </div>
+            </div>
+        </div>
+    </form>
 
-<form class="form-horizontal" data-bind="submit: Editor.noop">
-	<div class="form-group">
-		<label class="{{form_label_class}} control-label">
-            Forbidden strings: {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-forbidden-strings' %}
-		</label>
-        <div class="{{form_control_class}}">
-            <listbox params="items: notallowed.strings{% if not editable %}, disabled: true{% endif %}"></listbox>
-		</div>
-	</div>
-    <div data-bind="fadeVisible: notallowed.strings().length>0">
-        {% percentproperty 'notallowed.partialCredit' 'Partial credit for using any forbidden string' %}
-        {% booleanproperty 'notallowed.showStrings' 'Show forbidden strings in warning?' %}
-		<div class="form-group">
-			<label class="{{form_label_class}} control-label">
-				Warning message
-			</label>
-			<div class="{{form_control_class}}">
-				<div {% if not editable %}disabled{% endif %} data-bind="writemaths: notallowed.message, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','preview']"></div>
-			</div>
-		</div>
-	</div>
-</form>
+    <form class="form-horizontal" data-bind="submit: Editor.noop">
+        <div class="form-group">
+            <label class="{{form_label_class}} control-label">
+                Forbidden strings: {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-forbidden-strings' %}
+            </label>
+            <div class="{{form_control_class}}">
+                <listbox params="items: notallowed.strings{% if not editable %}, disabled: true{% endif %}"></listbox>
+            </div>
+        </div>
+        <div data-bind="fadeVisible: notallowed.strings().length>0">
+            {% percentproperty 'notallowed.partialCredit' 'Partial credit for using any forbidden string' %}
+            {% booleanproperty 'notallowed.showStrings' 'Show forbidden strings in warning?' %}
+            <div class="form-group">
+                <label class="{{form_label_class}} control-label">
+                    Warning message
+                </label>
+                <div class="{{form_control_class}}">
+                    <div {% if not editable %}disabled{% endif %} data-bind="writemaths: notallowed.message, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','preview']"></div>
+                </div>
+            </div>
+        </div>
+    </form>
 
-<h4>Variables</h4>
-<form class="form-horizontal" data-bind="submit: Editor.noop">
-    {% booleanproperty 'checkVariableNames' 'Warn if student uses an unexpected variable name?' %}
-	<div class="form-group" data-bind="fadeVisible:checkVariableNames">
-		<label class="{{form_label_class}} control-label">
-            Expected variable names {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/mathematical-expression.html#term-expected-variable-names' %}
-		</label>
-        <div class="{{form_control_class}}">
-            <listbox params="items: expectedVariableNames{% if not editable %}, disabled: true{% endif %}"></listbox>
-		</div>
-	</div>
-</form>
 </section>

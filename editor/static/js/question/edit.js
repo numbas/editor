@@ -45,6 +45,10 @@ $(document).ready(function() {
 		};
         this.parts = ko.observableArray([]);
 
+        this.partTypes = partTypes;
+        this.gapTypes = gapTypes;
+        this.stepTypes = stepTypes;
+
 		//for image attribute modal
 		this.imageModal = {
 			width: ko.observable(0),
@@ -60,25 +64,21 @@ $(document).ready(function() {
 
 
 		this.mainTabs([
-			new Editor.Tab('settings','Settings','cog'),
 			new Editor.Tab('statement','Statement','blackboard'),
-			new Editor.Tab('variables','Variables','th-list'),
+			new Editor.Tab('parts','Parts','check'),
+			new Editor.Tab('variables','Variables','list'),
 			new Editor.Tab('variabletesting','Variable testing','dashboard'),
-			new Editor.Tab(
-				'parts',
-                'Parts',
-                'list'
-			),
 			new Editor.Tab('advice','Advice','blackboard'),
 			new Editor.Tab('extensions','Extensions & scripts','wrench'),
 			new Editor.Tab('resources','Resources','picture'),
+			new Editor.Tab('settings','Metadata','cog'),
 			new Editor.Tab('exams','Exams using this question','book'),
             new Editor.Tab('network','Other versions','link'),
             new Editor.Tab('history','Editing history','time')
 		]);
         if(item_json.editable) {
             var adviceTab = new Editor.Tab('access','Access','lock');
-            this.mainTabs.splice(6,0,adviceTab);
+            this.mainTabs.splice(8,0,adviceTab);
         }
         this.currentTab(this.mainTabs()[0]);
 
@@ -117,6 +117,13 @@ $(document).ready(function() {
 			css: ko.observable(''),
 			js: ko.observable('')
 		};
+
+        this.addPart = function(type) {
+			var p = new Part(q,null,q.parts);
+            p.setType(type.name);
+            q.parts.push(p);
+			return p;
+        }
 
 		this.baseVariableGroup = new VariableGroup(this,{name:'Ungrouped variables'});
 		this.baseVariableGroup.fixed = true;
@@ -365,12 +372,6 @@ $(document).ready(function() {
 			this.variableGroups.push(vg);
 			return vg;
 		},
-
-        addPart: function() {
-			var p = new Part(this,null,this.parts);
-            this.parts.push(p);
-			return p;
-        },
 
 		loadPart: function(data) {
 			var p = new Part(this,null,this.parts,data);
@@ -1543,20 +1544,19 @@ $(document).ready(function() {
 			return this.parent() && this.parent().steps().contains(this);
 		},this);
 
-		var nonGapTypes = ['information','gapfill'];
 		this.availableTypes = ko.computed(function() {
-			var nonStepTypes = ['gapfill'];
-			if(this.isGap())
-				return this.types.filter(function(t){return nonGapTypes.indexOf(t.name)==-1});
-			else if(this.isStep())
-				return this.types.filter(function(t){return nonStepTypes.indexOf(t.name)==-1});
-			else
+			if(this.isGap()) {
+				return this.types.filter(function(t){return nonGapTypeNames.indexOf(t.name)==-1});
+            } else if(this.isStep()) {
+				return this.types.filter(function(t){return nonStepTypeNames.indexOf(t.name)==-1});
+            } else {
 				return this.types;
+            }
 		},this);
         this.type = ko.observable(this.availableTypes()[0]);
 
 		this.canBeReplacedWithGap = ko.computed(function() {
-			return !(this.isGap() || this.isStep() || nonGapTypes.indexOf(this.type().name)>=0);
+			return !(this.isGap() || this.isStep() || nonGapTypeNames.indexOf(this.type().name)>=0);
 		},this);
 
 		this.indexLabel = ko.computed(function() {
@@ -1643,10 +1643,17 @@ $(document).ready(function() {
         this.stepsPenalty = ko.observable(0);
 
 		this.gaps = ko.observableArray([]);
-		this.addGap = function() {
+		this.addGap = function(type) {
 			var gap = new Part(p.q,p,p.gaps);
+            gap.setType(type.name);
 			p.gaps.push(gap);
 		}
+
+        this.addStep = function(type) {
+			var step = new Part(p.q,p,p.steps);
+            step.setType(type.name);
+            p.steps.push(step);
+        }
 
 		this.showCorrectAnswer = ko.observable(true);
         this.showFeedbackIcon = ko.observable(true);
@@ -1725,11 +1732,6 @@ $(document).ready(function() {
 					return parentList.indexOf(this)<parentList.length-1;
 			}
 		},
-
-        addStep: function() {
-			var step = new Part(this.q,this,this.steps);
-            this.steps.push(step);
-        },
 
 		remove: function() {
             if(confirm("Remove this part?"))
@@ -1906,17 +1908,17 @@ $(document).ready(function() {
 	};
 
 
-	var partTypes = [
-		{
+	var partTypeModels = {
+		'information': {
 			name: 'information', 
 			niceName: 'Information only'
 		},
-		{
+		'extension': {
 			name: 'extension', 
 			niceName: 'Extension',
             has_marks: true
 		},
-		{
+		'gapfill': {
 			name: 'gapfill', 
 			niceName: 'Gap-fill', 
 			has_marks: true,
@@ -1938,13 +1940,13 @@ $(document).ready(function() {
                 }
 			}
 		},
-		{
+		'jme': {
 			name:'jme', 
 			niceName: 'Mathematical expression', 
 			has_marks: true, 
 			tabs: [
-				new Editor.Tab('checking-accuracy','Accuracy','scale'),
-				new Editor.Tab('restrictions','String restrictions','text-background')
+				new Editor.Tab('restrictions','String restrictions','text-background'),
+				new Editor.Tab('checking-accuracy','Accuracy','scale')
 			],
 
 			model: function() {
@@ -2060,7 +2062,7 @@ $(document).ready(function() {
                 tryLoad(data.notallowed,['strings','showStrings','partialCredt','message'],this.notallowed);
 			}
 		},
-		{
+		'numberentry': {
 			name:'numberentry', 
 			niceName: 'Number entry', 
 			has_marks: true,
@@ -2143,19 +2145,23 @@ $(document).ready(function() {
 					}
 				},model);
 
+                model.fractionPossible = ko.computed(function() {
+                    return !(['dp','sigfig'].contains(this.precisionType().name));
+                },model);
+
 				return model;
 			},
 
 			toJSON: function(data) {
                 data.minValue = this.minValue();
                 data.maxValue = this.maxValue();
-				data.correctAnswerFraction = this.correctAnswerFraction();
+				data.correctAnswerFraction = this.fractionPossible() && this.correctAnswerFraction();
                 if(this.integerAnswer())
                 {
                     data.integerAnswer = this.integerAnswer();
                     data.integerPartialCredit= this.integerPartialCredit();
                 }
-				data.allowFractions = this.allowFractions();
+				data.allowFractions = this.fractionPossible() && this.allowFractions();
 				if(this.precisionType().name!='none') {
 					data.precisionType = this.precisionType().name;
 					data.precision = this.precision();
@@ -2192,7 +2198,7 @@ $(document).ready(function() {
                 }
 			}
 		},
-		{
+		'matrix': {
 			name: 'matrix',
 			niceName: 'Matrix entry',
 			has_marks: true,
@@ -2228,18 +2234,22 @@ $(document).ready(function() {
 					}
 				},model);
 
+                model.fractionPossible = ko.computed(function() {
+                    return !(['dp','sigfig'].contains(this.precisionType().name));
+                },model);
+
 				return model;
 			},
 
 			toJSON: function(data) {
 				data.correctAnswer = this.correctAnswer();
-				data.correctAnswerFractions = this.correctAnswerFractions();
+				data.correctAnswerFractions = this.fractionPossible() && this.correctAnswerFractions();
 				data.numRows = this.numRows();
 				data.numColumns = this.numColumns();
 				data.allowResize = this.allowResize();
 				data.tolerance = this.tolerance();
 				data.markPerCell = this.markPerCell();
-				data.allowFractions = this.allowFractions();
+				data.allowFractions = this.fractionPossible() && this.allowFractions();
 
 				if(this.precisionType().name!='none') {
 					data.precisionType = this.precisionType().name;
@@ -2258,7 +2268,7 @@ $(document).ready(function() {
 				}
 			}
 		},
-		{
+		'patternmatch': {
 			name:'patternmatch', 
 			niceName: 'Match text pattern', 
 			has_marks: true,
@@ -2297,12 +2307,12 @@ $(document).ready(function() {
 				}
 			}
 		},
-		{
+		'1_n_2': {
 			name:'1_n_2', 
 			niceName: 'Choose one from a list',
 			tabs: [
+				new Editor.Tab('choices','Choices','list'),
 				new Editor.Tab('marking','Marking','pencil'),
-				new Editor.Tab('choices','Choices','list')
 			],
 
 			model: function(part) {
@@ -2406,12 +2416,12 @@ $(document).ready(function() {
 
 			}
 		},
-		{
+        'm_n_2': {
 			name:'m_n_2', 
 			niceName: 'Choose several from a list',
 			tabs: [
-				new Editor.Tab('marking','Marking','pencil'),
-				new Editor.Tab('choices','Choices','list')
+				new Editor.Tab('choices','Choices','list'),
+				new Editor.Tab('marking','Marking','pencil')
 			],
 
 			model: function() {
@@ -2533,7 +2543,7 @@ $(document).ready(function() {
 				}
 			}
 		},
-		{
+		'm_n_x': {
 			name:'m_n_x', 
 			niceName: 'Match choices with answers',
 			tabs: [
@@ -2742,7 +2752,12 @@ $(document).ready(function() {
 				}
 			}
 		}
-	];
+    };
+    var partTypes = ['jme','numberentry','matrix','patternmatch','1_n_2','m_n_2','m_n_x','gapfill','information','extension'].map(function(name){ return partTypeModels[name] });
+    var nonGapTypeNames = ['information','gapfill'];
+    var nonStepTypeNames = ['gapfill'];
+    var gapTypes = partTypes.filter(function(t){return nonGapTypeNames.indexOf(t.name)==-1});
+    var stepTypes = partTypes.filter(function(t){return nonStepTypeNames.indexOf(t.name)==-1});
 
     var deps = ['jme-display','jme-variables','jme','editor-extras'];
 	for(var i=0;i<item_json.numbasExtensions.length;i++) {

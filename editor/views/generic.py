@@ -101,13 +101,21 @@ class RevertRestorePointView(generic.UpdateView):
 
 # JSON representation of a editor.models.StampOfApproval object
 def stamp_json(stamp, **kwargs):
-    return {
-        'pk': stamp.pk,
-        'date': stamp.timelineitem.date.strftime('%Y-%m-%d %H:%M:%S'),
-        'status': stamp.status,
-        'status_display': stamp.get_status_display(),
-        'user': user_json(stamp.user),
-    }
+    if stamp.pk is None:
+        return {
+            'pk': None,
+            'status': 'draft',
+            'status_display': 'Draft',
+            'user': None,
+        }
+    else:
+        return {
+            'pk': stamp.pk,
+            'date': stamp.timelineitem.date.strftime('%Y-%m-%d %H:%M:%S'),
+            'status': stamp.status,
+            'status_display': stamp.get_status_display(),
+            'user': user_json(stamp.user),
+        }
 
 # JSON representation of a editor.models.Comment object
 def comment_json(comment, **kwargs):
@@ -167,8 +175,8 @@ class DeleteStampView(generic.DeleteView):
         if self.object.can_be_deleted_by(self.request.user):
             self.object.delete()
             ei = self.object.object
-            now_current_stamp = EditorItem.objects.get(pk=ei.pk).current_stamp
-            data = stamp_json(now_current_stamp) if now_current_stamp else None
+            now_current_stamp = EditorItem.objects.get(pk=ei.pk).get_current_stamp()
+            data = stamp_json(now_current_stamp)
             return http.HttpResponse(json.dumps({'current_stamp':data}), content_type='application/json')
         else:
             return http.HttpResponseForbidden('You don\'t have the necessary access rights.')

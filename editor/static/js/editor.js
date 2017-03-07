@@ -576,6 +576,8 @@ $(document).ready(function() {
     }
     Editor.EditorItem.prototype = {
         init_tasks: function() {
+            var ei = this;
+
             this.section_completed = {};
 
             function section_completed(tasks) {
@@ -595,6 +597,10 @@ $(document).ready(function() {
                     }
                 }
                 return true;
+            },this);
+
+            this.canPublish = ko.computed(function() {
+                return !this.published() && this.all_sections_completed();
             },this);
         },
 

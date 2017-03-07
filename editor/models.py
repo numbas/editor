@@ -558,6 +558,12 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
     def owner(self):
         return self.author
 
+    def get_current_stamp(self):
+        if self.current_stamp is not None:
+            return self.current_stamp
+        else:
+            return NewStampOfApproval(object=self,status='draft')
+
     def has_access(self, user, levels):
         if user.is_anonymous():
             return False
@@ -656,6 +662,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
         return [self]+sum([ei2.descendants() for ei2 in self.copies.all()], [])
 
     def summary(self, user=None):
+        current_stamp = self.get_current_stamp()
         obj = {
             'editoritem_id': self.id, 
             'name': self.name, 
@@ -663,8 +670,8 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
             'created': str(self.created),
             'last_modified': str(self.last_modified), 
             'author': self.author.get_full_name(), 
-            'current_stamp': (self.current_stamp.status if self.current_stamp else None),
-            'current_stamp_display': (self.current_stamp.get_status_display() if self.current_stamp else None),
+            'current_stamp': current_stamp.status,
+            'current_stamp_display': current_stamp.get_status_display()
         }
         if self.item_type == 'exam':
             obj['id'] = self.exam.id

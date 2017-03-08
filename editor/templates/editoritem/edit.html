@@ -194,12 +194,12 @@
                                 {% block settings_main %}
                                 <div class="form-group name">
                                     <label>Name</label>
-                                    <input {% if not editable %}disabled{% endif %} class="form-control input-lg" data-bind="textInput: name">
+                                    <input id="name-input" {% if not editable %}disabled{% endif %} class="form-control input-lg" data-bind="textInput: name">
                                 </div>
 
                                 <div class="form-group description">
                                     <label>Description</label>
-                                    <div {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
+                                    <div id="description-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
                                     <p class="help-block">
                                         {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-description' subject='the description field' %}
                                         Describe what this {{item_type}} assesses, or how it is going to be used.
@@ -252,7 +252,7 @@
                                         </div>
                                         <div class="form-group">
                                             <label><span class="glyphicon glyphicon-copyright-mark"></span> Licence</label>
-                                            <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.licences, value: licence, optionsText: 'short_name', optionsCaption: 'None specified'"></select>
+                                            <select id="licence-select" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.licences, value: licence, optionsText: 'short_name', optionsCaption: 'None specified'"></select>
                                             <p class="help-block">
                                                 <small data-bind="visible: licence, with: licence"><a target="_blank" data-bind="visible: url, attr:{href:url}">Licence information</a></small>
                                             </p>
@@ -455,7 +455,8 @@
 
                     {% block access_tab_nav %}
                     {% endblock access_tab_nav %}
-                    </section>
+
+                </section>
                 {% endif %}
 
                 <!-- Other versions -->

@@ -38,12 +38,12 @@ $(document).ready(function() {
         },this);
 
         this.mainTabs([
-            new Editor.Tab('settings','Settings','cog'),
-            new Editor.Tab('display','Display','picture'),
             new Editor.Tab('questions','Questions','file'),
+            new Editor.Tab('display','Display','picture'),
             new Editor.Tab('navigation','Navigation','tasks'),
             new Editor.Tab('timing','Timing','time'),
             new Editor.Tab('feedback','Feedback','comment'),
+            new Editor.Tab('settings','Metadata','cog'),
             new Editor.Tab('network','Other versions','link'),
             new Editor.Tab('history','Editing history','time')
         ]);
@@ -184,12 +184,12 @@ $(document).ready(function() {
 
             this.section_tasks = {
                 'settings': [
-                    Editor.nonempty_task('Give the exam a name.',this.name),
-                    Editor.nonempty_task('Fill out the exam description.',this.description),
-                    Editor.nonempty_task('Select a licence defining usage rights.',this.licence)
+                    Editor.nonempty_task('Give the exam a name.',this.name, '#name-input'),
+                    Editor.nonempty_task('Fill out the exam description.',this.description, '#description-input .wmTextArea'),
+                    Editor.nonempty_task('Select a licence defining usage rights.',this.licence, '#licence-select')
                 ],
                 'questions': [
-                    {text: 'Add at least one question.', done: ko.computed(function(){ return this.numQuestions()>0 },this)}
+                    {text: 'Add at least one question.', done: ko.computed(function(){ return this.numQuestions()>0 },this), focus_on: '.question-result .handle:first'}
                 ]
             }
             this.init_tasks();

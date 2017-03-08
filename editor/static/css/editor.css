@@ -122,6 +122,30 @@ gapfill {
     display: inline;
 }
 
+editor-pager .still-to-do {
+    cursor: pointer;
+}
+editor-pager nav {
+    border-top: 1px solid #eee;
+    margin-top: 4rem;
+}
+
+.pager li.ready a {
+  color: #fff;
+  background-color: #5cb85c;
+  border-color: #4cae4c;
+}
+.pager li.ready:focus a {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #255625;
+}
+.pager li.ready:hover a {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #398439;
+}
+
 /*
 #name-header {
     padding: 0;

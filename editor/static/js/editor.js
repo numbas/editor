@@ -195,8 +195,12 @@ $(document).ready(function() {
 	};
 
 
-    Editor.nonempty_task = function(text,observable) {
-        return {text: text, done: ko.computed(function() {return observable() && true})};
+    Editor.nonempty_task = function(text,observable,focus_on) {
+        return {
+            text: text, 
+            done: ko.computed(function() {return observable() && true}),
+            focus_on: focus_on
+        };
     }
 
 
@@ -579,6 +583,7 @@ $(document).ready(function() {
             var ei = this;
 
             this.section_completed = {};
+            this.section_still_to_do = {};
 
             function section_completed(tasks) {
                 return ko.computed(function() {
@@ -586,8 +591,19 @@ $(document).ready(function() {
                 })
             }
 
+            function section_still_to_do(tasks) {
+                return ko.computed(function() {
+                    var task = tasks.filter(function(t){return !ko.unwrap(t.done)})[0];
+                    function uncapitalise(str){ 
+                        return str.slice(0,1).toLowerCase()+str.slice(1);
+                    }
+                    return task ? uncapitalise(task.text) : '';
+                });
+            }
+
             for(var section in this.section_tasks) {
                 this.section_completed[section] = section_completed(this.section_tasks[section]);
+                this.section_still_to_do[section] = section_still_to_do(this.section_tasks[section]);
             }
             
             this.all_sections_completed = ko.computed(function() {
@@ -1292,6 +1308,52 @@ $(document).ready(function() {
 		}
 	};
 
+    ko.components.register('editor-pager', {
+        viewModel: function(params) {
+            var p = this;
+
+            var editor = this.editor = params.editor;
+            this.previousTab = params.previousTab ? editor.getTab(params.previousTab) : null;
+            this.nextTab = params.nextTab ? editor.getTab(params.nextTab) : null;
+            this.task_group = params.task_group;
+            this.has_task = editor.section_tasks[this.task_group] !== undefined;
+            this.completed = this.has_task ? editor.section_completed[this.task_group] : true;
+            this.still_to_do = this.has_task ? editor.section_still_to_do[this.task_group] : false;
+            this.current_task = ko.computed(function() {
+                if(!editor.section_tasks[this.task_group]) {
+                    return null;
+                } else {
+                    return editor.section_tasks[this.task_group].filter(function(t){return !t.done()})[0];
+                }
+            },this);
+
+            this.focus = function() {
+                var task = p.current_task();
+                if(task && task.focus_on) {
+                    var s = $(task.focus_on);
+                    if(s.hasClass('wmTextArea')) {
+                        s.tinymce().focus();
+                    } else {
+                        s.focus();
+                    }
+                }
+            }
+        },
+        template: '\
+            <nav data-bind="visible: !editor.published()">\
+                <ul class="pager">\
+                    <li class="previous" data-bind="if: previousTab">\
+                        <a title="Back to the previous section" href="#" data-bind="click: editor.setTab(previousTab.id)">← <span data-bind="text: previousTab.title"></span></a>\
+                    </li>\
+                    <span class="still-to-do text-warning" data-bind="if: has_task, visible: !ko.unwrap(completed), click: focus">Before moving on, you should <span data-bind="text: still_to_do"></span></span>\
+                    <span data-bind="if: nextTab, visible: ko.unwrap(completed)" class="text-success">Move on when you\'re ready!</span>\
+                    <li class="next" data-bind="if: nextTab, css: {ready: completed}">\
+                        <a title="Proceed to the next section" href="#" data-bind="click: editor.setTab(nextTab.id)"><span data-bind="text: nextTab.title"></span> →</a>\
+                    </li>\
+                </ul>\
+            </nav>\
+        '
+    });
     ko.components.register('listbox', {
         viewModel: function(params) {
             var lb = this;

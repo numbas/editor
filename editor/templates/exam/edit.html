@@ -49,6 +49,10 @@
                 </label>
             </div>
         </form>
+
+        {% if editable %}
+        <editor-pager params="editor: $root, previousTab: 'questions', nextTab: 'navigation', task_group: 'display'"></editor-pager>
+        {% endif %}
     </section>
 
     <!-- Questions -->
@@ -171,17 +175,7 @@
         </div>
 
         {% if editable %}
-        <hr>
-        <nav>
-            <ul class="pager">
-                <li class="previous">
-                    <a title="Back to the previous section" href="#" data-bind="click: setTab('settings')">← Settings</a>
-                </li>
-                <li class="next" data-bind="css: {ready: section_completed.settings}">
-                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('navigation')">Navigation →</a>
-                </li>
-            </ul>
-        </nav>
+        <editor-pager params="editor: $root, nextTab: 'display', task_group: 'questions'"></editor-pager>
         {% endif %}
     </section>
 
@@ -200,17 +194,7 @@
         </form>
 
         {% if editable %}
-        <hr>
-        <nav>
-            <ul class="pager">
-                <li class="previous">
-                    <a title="Back to the previous section" href="#" data-bind="click: setTab('questions')">← Questions</a>
-                </li>
-                <li class="next" data-bind="css: {ready: section_completed.settings}">
-                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('timing')">Timing →</a>
-                </li>
-            </ul>
-        </nav>
+        <editor-pager params="editor: $root, previousTab: 'display', nextTab: 'timing', task_group: 'navigation'"></editor-pager>
         {% endif %}
     </section>
 
@@ -226,17 +210,7 @@
         </form>
 
         {% if editable %}
-        <hr>
-        <nav>
-            <ul class="pager">
-                <li class="previous">
-                    <a title="Back to the previous section" href="#" data-bind="click: setTab('navigation')">← Navigation</a>
-                </li>
-                <li class="next" data-bind="css: {ready: section_completed.settings}">
-                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('feedback')">Feedback →</a>
-                </li>
-            </ul>
-        </nav>
+        <editor-pager params="editor: $root, previousTab: 'navigation', nextTab: 'feedback', task_group: 'timing'"></editor-pager>
         {% endif %}
     </section>
 
@@ -298,17 +272,7 @@
         </form>
 
         {% if editable %}
-        <hr>
-        <nav>
-            <ul class="pager">
-                <li class="previous">
-                    <a title="Back to the previous section" href="#" data-bind="click: setTab('timing')">← Timing</a>
-                </li>
-                <li class="next" data-bind="css: {ready: section_completed.settings}">
-                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('access')">Access →</a>
-                </li>
-            </ul>
-        </nav>
+        <editor-pager params="editor: $root, previousTab: 'timing', nextTab: 'settings', task_group: 'feedback'"></editor-pager>
         {% endif %}
 
     </section>
@@ -346,25 +310,12 @@
 {% endblock content %}
 
 {% block access_tab_nav %}
-<nav>
-    <ul class="pager">
-        <li class="previous">
-        <a title="Back to the previous section" href="#" data-bind="click: setTab('feedback')">← Feedback</a>
-        </li>
-    </ul>
-</nav>
+    <editor-pager params="editor: $root, previousTab: 'settings', task_group: 'access'"></editor-pager>
 {% endblock %}
 
 {% block settings %}
 {{ block.super }}
     {% if editable %}
-    <hr>
-    <nav>
-        <ul class="pager">
-            <li class="next" data-bind="css: {ready: section_completed.settings}">
-                <a title="Proceed to the next section" href="#" data-bind="click: setTab('questions')">Questions →</a>
-            </li>
-        </ul>
-    </nav>
+    <editor-pager params="editor: $root, previousTab: 'feedback', nextTab: 'access', task_group: 'settings'"></editor-pager>
     {% endif %}
 {%endblock settings %}

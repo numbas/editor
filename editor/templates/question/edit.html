@@ -160,14 +160,7 @@
 {% block settings %}
 {{ block.super }}
 {% if editable %}
-    <hr>
-    <nav>
-        <ul class="pager">
-            <li class="next" data-bind="css: {ready: section_completed.settings}">
-                <a title="Proceed to the next section" href="#" data-bind="click: setTab('statement')">Statement →</a>
-            </li>
-        </ul>
-    </nav>
+    <editor-pager params="editor: $root, previousTab: 'advice', nextTab: 'access', task_group: 'settings'"></editor-pager>
 {% endif %}
 {% endblock settings %}
 
@@ -184,7 +177,7 @@
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='statement'}">
         <div class="form-group">
             <label>Question statement</label>
-            <div {% if not editable %}disabled{% endif %} data-bind="writemaths: statement, tinymce_plugins: ['jmevisible','preview']"></div>
+            <div id="statement-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: statement, tinymce_plugins: ['jmevisible','preview']"></div>
             <p class="help-block">
                 {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#statement' subject='the question statement' %}
                 Give any introductory information the student needs. 
@@ -192,17 +185,7 @@
         </div>
 
         {% if editable %}
-        <hr>
-        <nav>
-            <ul class="pager">
-                <li class="previous">
-                    <a title="Back to the previous section" href="#" data-bind="click: setTab('settings')">← Settings</a>
-                </li>
-                <li class="next" data-bind="css: {ready: section_completed.statement}">
-                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('variables')">Variables →</a>
-                </li>
-            </ul>
-        </nav>
+        <editor-pager params="editor: $root, nextTab: 'parts', task_group: 'statement'"></editor-pager>
         {% endif %}
     </section>
 
@@ -360,7 +343,7 @@
 
                         <div class="panel-footer">
                             {% if editable %}
-                            <button type="button" class="btn btn-default add-variable" data-bind="click: addVariable, attr: {title: (variables().length ? 'Add another variable' : 'Add a variable')+' to '+name()}">
+                            <button id="add-variable-button" type="button" class="btn btn-default add-variable" data-bind="click: addVariable, attr: {title: (variables().length ? 'Add another variable' : 'Add a variable')+' to '+name()}">
                                 <span class="glyphicon glyphicon-plus"></span>
                                 Add a variable
                             </button>
@@ -384,17 +367,7 @@
             </div>
         </div>
         {% if editable %}
-        <hr>
-        <nav>
-            <ul class="pager">
-                <li class="previous">
-                    <a title="Back to the previous section" href="#" data-bind="click: setTab('statement')">← Statement</a>
-                </li>
-                <li class="next" data-bind="css: {ready: section_completed.variables}">
-                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('parts')">Parts →</a>
-                </li>
-            </ul>
-        </nav>
+        <editor-pager params="editor: $root, previousTab: 'parts', nextTab: 'advice', task_group: 'variables'"></editor-pager>
         {% endif %}
     </section>
 
@@ -595,7 +568,7 @@
 
         {% if editable %}
         <div class="btn-group">
-            <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-bind="css: {'btn-lg': parts().length==0}">
+            <button id="add-part-button" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-bind="css: {'btn-lg': parts().length==0}">
                 <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parts().length ? 'Add another part' : 'Add a part'"></span> <span class="caret"></span>
             </button>
             <ul class="dropdown-menu" data-bind="foreach: partTypes">
@@ -605,17 +578,7 @@
         {% endif %}
 
         {% if editable %}
-        <hr>
-        <nav>
-            <ul class="pager">
-                <li class="previous">
-                    <a title="Back to the previous section" href="#" data-bind="click: setTab('variables')">← Variables</a>
-                </li>
-                <li class="next" data-bind="css: {ready: section_completed.parts}">
-                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('advice')">Advice →</a>
-                </li>
-            </ul>
-        </nav>
+        <editor-pager params="editor: $root, previousTab: 'statement', nextTab: 'variables', task_group: 'parts'"></editor-pager>
         {% endif %}
     </section>
 
@@ -624,7 +587,7 @@
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='advice'}">
         <div class="form-group">
             <label>Advice</label>
-            <div {% if not editable %}disabled{% endif %} data-bind="writemaths: advice, tinymce_plugins: ['jmevisible','preview']"></div>
+            <div id="advice-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: advice, tinymce_plugins: ['jmevisible','preview']"></div>
             <p class="help-block">
                 {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#advice' subject='the advice section' %}
                 Give a worked solution to the whole question. 
@@ -632,17 +595,7 @@
         </div>
 
         {% if editable %}
-        <hr>
-        <nav>
-            <ul class="pager">
-                <li class="previous">
-                    <a title="Back to the previous section" href="#" data-bind="click: setTab('parts')">← Parts</a>
-                </li>
-                <li class="next" data-bind="css: {ready: section_completed.advice}">
-                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('access')">Access →</a>
-                </li>
-            </ul>
-        </nav>
+        <editor-pager params="editor: $root, previousTab: 'variables', nextTab: 'settings', task_group: 'advice'"></editor-pager>
         {% endif %}
     </section>
 
@@ -844,11 +797,5 @@
 {% endblock main_tab_content %}
 
 {% block access_tab_nav %}
-<nav>
-    <ul class="pager">
-        <li class="previous">
-        <a title="Back to the previous section" href="#" data-bind="click: setTab('advice')">← Advice</a>
-        </li>
-    </ul>
-</nav>
+    <editor-pager params="editor: $root, previousTab: 'settings', task_group: 'access'"></editor-pager>
 {% endblock access_tab_nav %}

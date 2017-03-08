@@ -162,7 +162,7 @@ $(document).ready(function() {
 		this.variableErrors = ko.computed(function() {
 			var variables = this.variables();
 			for(var i=0;i<variables.length;i++) {
-				if(variables[i].nameError() || variables[i].error())
+				if(variables[i].name().trim()=='' || variables[i].definition().trim()=='' || variables[i].nameError() || variables[i].error())
 					return true;
 			}
 			return false;
@@ -254,18 +254,21 @@ $(document).ready(function() {
 
             this.section_tasks = {
                 'settings': [
-                    Editor.nonempty_task('Give the question a name.',this.name),
-                    Editor.nonempty_task('Fill out the question description.',this.description),
-                    Editor.nonempty_task('Select a licence defining usage rights.',this.licence)
+                    Editor.nonempty_task('Give the question a name.',this.name, '#name-input'),
+                    Editor.nonempty_task('Fill out the question description.',this.description,'#description-input .wmTextArea'),
+                    Editor.nonempty_task('Select a licence defining usage rights.',this.licence, '#licence-select')
                 ],
                 'statement': [
-                    Editor.nonempty_task('Write a question statement.',this.statement)
+                    Editor.nonempty_task('Write a question statement.',this.statement,'#statement-input .wmTextArea')
+                ],
+                'variables': [
+                    {text: 'Add one or more variables to randomise the question', done: ko.computed(function() { return this.variables().length>0 && !this.variableErrors(); },this), focus_on: '#add-variable-button'}
                 ],
                 'parts': [
-                    {text: 'Create at least one part.', done: ko.computed(function(){ return this.parts().length>0 },this)}
+                    {text: 'Create at least one part.', done: ko.computed(function(){ return this.parts().length>0 },this), focus_on: '#add-part-button'}
                 ],
                 'advice': [
-                    Editor.nonempty_task('Write a worked solution to the question.',this.advice)
+                    Editor.nonempty_task('Write a worked solution to the question.',this.advice, '#advice-input .wmTextArea')
                 ]
             }
 

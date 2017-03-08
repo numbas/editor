@@ -1077,8 +1077,6 @@ $(document).ready(function() {
             valueAccessor = valueAccessor();
 			allBindingsAccessor = allBindingsAccessor();
 
-			var value = ko.utils.unwrapObservable(valueAccessor) || '';
-
             if(element.hasAttribute('disabled')) {
                 try {
                     element.classList.add('well');
@@ -1192,7 +1190,7 @@ $(document).ready(function() {
 							}
 						});
 
-						ed.setContent(value);
+						ed.setContent(ko.unwrap(valueAccessor));
                         ed.undoManager.clear();
                         ed.on('focus',function() {
                             $(ed.getContainer()).addClass('wm-focus');
@@ -1236,8 +1234,9 @@ $(document).ready(function() {
 
             if (!tinymce.is(':focus')) {
 				var ed = $(element).children('.wmTextArea').tinymce();
-				if(ed)
+				if(ed && ed.initialized) {
 					ed.setContent(value);
+                }
 			}
 		}
 	};

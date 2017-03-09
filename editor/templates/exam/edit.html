@@ -106,6 +106,7 @@
                                 <div class="controls pull-right">
                                     <a class="preview btn btn-link" data-bind="attr: {href: previewURL()}" target="_blank" title="Preview this question"><span class="glyphicon glyphicon-play text-success"></span></a>
                                     <button type="button" class="copy btn btn-link" data-bind="click:replaceWithCopy, visible: item_json.editable" title="Replace this question with a copy"><span class="glyphicon glyphicon-duplicate text-warning"></span></button>
+                                    <a class="btn btn-link btn-sm basket add-to-basket" data-bind="attr: {'data-question-id': id}"><span class="glyphicon glyphicon-shopping-cart" title="Add this to your basket" aria-hidden="true"></span></a>
                                     <button type="button" class="delete btn btn-link" data-bind="click:remove, visible: item_json.editable" title="Remove this question from the exam"><span class="glyphicon glyphicon-remove text-danger"></span></button>
                                 </div>
                                 <div class="title">

@@ -71,7 +71,7 @@ $(document).ready(function() {
 			new Editor.Tab('advice','Advice','blackboard'),
 			new Editor.Tab('extensions','Extensions & scripts','wrench'),
 			new Editor.Tab('resources','Resources','picture'),
-			new Editor.Tab('settings','Metadata','cog'),
+			new Editor.Tab('settings','Settings','cog'),
 			new Editor.Tab('exams','Exams using this question','book'),
             new Editor.Tab('network','Other versions','link'),
             new Editor.Tab('history','Editing history','time')

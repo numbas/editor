@@ -43,7 +43,7 @@ $(document).ready(function() {
             new Editor.Tab('navigation','Navigation','tasks'),
             new Editor.Tab('timing','Timing','time'),
             new Editor.Tab('feedback','Feedback','comment'),
-            new Editor.Tab('settings','Metadata','cog'),
+            new Editor.Tab('settings','Settings','cog'),
             new Editor.Tab('network','Other versions','link'),
             new Editor.Tab('history','Editing history','time')
         ]);

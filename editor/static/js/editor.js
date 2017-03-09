@@ -577,6 +577,12 @@ $(document).ready(function() {
 
         this.commentwriter = new Editor.CommentWriter();
         this.restorepointwriter = new Editor.CommentWriter();
+
+        this.edit_name = function() {
+            ei.setTab('settings')();
+            ko.tasks.runEarly();
+            $('#name-input').focus();
+        }
     }
     Editor.EditorItem.prototype = {
         init_tasks: function() {

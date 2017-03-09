@@ -88,7 +88,7 @@
             <small><span class="glyphicon glyphicon-briefcase"></span> <a href="{% url 'project_index' object.editoritem.project.pk %}">{{object.editoritem.project.name}}</a></small>
         </h2>
         <h1 class="name-header">
-            <span class="glyphicon glyphicon-{{object.icon}}"></span> <span data-bind="mathjaxHTML: name">{{object.name}}</span>
+            <span class="glyphicon glyphicon-{{object.icon}}"></span> <span data-bind="mathjaxHTML: name, click: edit_name">{{object.name}}</span>
             <small class="pull-right">
                 {% if user.is_authenticated %}
                     <div class="btn-group">

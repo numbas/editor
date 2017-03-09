@@ -433,7 +433,7 @@
                 <div data-bind="fadeVisible: open">
                     <div class="panel-body">
                         <ul class="col-sm-3 nav nav-pills nav-stacked part-tabs" data-bind="foreach: tabs">
-                            <li data-bind="css: {active: ko.unwrap($parent.currentTab().id) == $data.id}">
+                            <li data-bind="css: {active: ko.unwrap($parent.currentTab().id) == $data.id, 'more-important': $data.more_important}">
                                 <a href="#" data-bind="click: $parent.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon}"></span> <span data-bind="text: title"></span></a>
                             </li>
                         </ul>

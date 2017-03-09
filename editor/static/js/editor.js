@@ -173,11 +173,12 @@ $(document).ready(function() {
 		});
 	}
 
-	Editor.Tab = function(id,title,icon,visible) {
+	Editor.Tab = function(id,title,icon,visible,more_important) {
 		this.id = id;
 		this.title = title;
         this.icon = icon;
 		this.visible = visible === undefined ? true : visible;
+        this.more_important = more_important;
 	}
 
 	Editor.contentObservable = function(val) {

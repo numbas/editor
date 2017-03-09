@@ -1602,10 +1602,10 @@ $(document).ready(function() {
 		this.tabs = ko.computed(function() {
 			var tabs = [];
 			if(!this.isGap())
-				tabs.push(new Editor.Tab('prompt','Prompt','blackboard'));
+				tabs.push(new Editor.Tab('prompt','Prompt','blackboard',true,true));
 
 			if(this.type().has_marks)
-				tabs.push(new Editor.Tab('marking','Marking','pencil'));
+				tabs.push(new Editor.Tab('marking','Marking','pencil',true,true));
 
 			tabs = tabs.concat(this.type().tabs);
 
@@ -2314,8 +2314,8 @@ $(document).ready(function() {
 			name:'1_n_2', 
 			niceName: 'Choose one from a list',
 			tabs: [
-				new Editor.Tab('choices','Choices','list'),
-				new Editor.Tab('marking','Marking','pencil'),
+				new Editor.Tab('choices','Choices','list',true,true),
+				new Editor.Tab('marking','Marking','pencil',true,true),
 			],
 
 			model: function(part) {
@@ -2423,8 +2423,8 @@ $(document).ready(function() {
 			name:'m_n_2', 
 			niceName: 'Choose several from a list',
 			tabs: [
-				new Editor.Tab('choices','Choices','list'),
-				new Editor.Tab('marking','Marking','pencil')
+				new Editor.Tab('choices','Choices','list',true,true),
+				new Editor.Tab('marking','Marking','pencil',true,true)
 			],
 
 			model: function() {
@@ -2550,10 +2550,10 @@ $(document).ready(function() {
 			name:'m_n_x', 
 			niceName: 'Match choices with answers',
 			tabs: [
-				new Editor.Tab('choices','Choices','list'),
-				new Editor.Tab('answers','Answers','list'),
-				new Editor.Tab('matrix','Marking matrix','th'),
-				new Editor.Tab('marking','Marking options','pencil')
+				new Editor.Tab('choices','Choices','list',true,true),
+				new Editor.Tab('answers','Answers','list',true,true),
+				new Editor.Tab('matrix','Marking matrix','th',true,true),
+				new Editor.Tab('marking','Marking options','pencil',true,true)
 			],
 
 			model: function() {

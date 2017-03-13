@@ -14,6 +14,7 @@ def property_tag(context, property_name, label, *args, **kwargs):
         'disable': kwargs.get('disable', 'false'),
         'min': kwargs.get('min'),
         'max': kwargs.get('max'),
+        'zero_means': kwargs.get('zero_means'),
         'form_label_class': context.get('form_label_class', 'col-sm-3'),
         'form_control_class': context.get('form_control_class', 'col-sm-9'),
     })

@@ -160,14 +160,7 @@
 {% block settings %}
 {{ block.super }}
 {% if editable %}
-    <hr>
-    <nav>
-        <ul class="pager">
-            <li class="next" data-bind="css: {ready: section_completed.settings}">
-                <a title="Proceed to the next section" href="#" data-bind="click: setTab('statement')">Statement →</a>
-            </li>
-        </ul>
-    </nav>
+    <editor-pager params="editor: $root, previousTab: 'advice', nextTab: 'access', task_group: 'settings'"></editor-pager>
 {% endif %}
 {% endblock settings %}
 
@@ -184,7 +177,7 @@
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='statement'}">
         <div class="form-group">
             <label>Question statement</label>
-            <div {% if not editable %}disabled{% endif %} data-bind="writemaths: statement, tinymce_plugins: ['jmevisible','preview']"></div>
+            <div id="statement-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: statement, tinymce_plugins: ['jmevisible','preview']"></div>
             <p class="help-block">
                 {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#statement' subject='the question statement' %}
                 Give any introductory information the student needs. 
@@ -192,17 +185,7 @@
         </div>
 
         {% if editable %}
-        <hr>
-        <nav>
-            <ul class="pager">
-                <li class="previous">
-                    <a title="Back to the previous section" href="#" data-bind="click: setTab('settings')">← Settings</a>
-                </li>
-                <li class="next" data-bind="css: {ready: section_completed.statement}">
-                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('variables')">Variables →</a>
-                </li>
-            </ul>
-        </nav>
+        <editor-pager params="editor: $root, nextTab: 'parts', task_group: 'statement'"></editor-pager>
         {% endif %}
     </section>
 
@@ -360,7 +343,7 @@
 
                         <div class="panel-footer">
                             {% if editable %}
-                            <button type="button" class="btn btn-default add-variable" data-bind="click: addVariable, attr: {title: (variables().length ? 'Add another variable' : 'Add a variable')+' to '+name()}">
+                            <button id="add-variable-button" type="button" class="btn btn-default add-variable" data-bind="click: addVariable, attr: {title: (variables().length ? 'Add another variable' : 'Add a variable')+' to '+name()}">
                                 <span class="glyphicon glyphicon-plus"></span>
                                 Add a variable
                             </button>
@@ -384,17 +367,7 @@
             </div>
         </div>
         {% if editable %}
-        <hr>
-        <nav>
-            <ul class="pager">
-                <li class="previous">
-                    <a title="Back to the previous section" href="#" data-bind="click: setTab('statement')">← Statement</a>
-                </li>
-                <li class="next" data-bind="css: {ready: section_completed.variables}">
-                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('parts')">Parts →</a>
-                </li>
-            </ul>
-        </nav>
+        <editor-pager params="editor: $root, previousTab: 'parts', nextTab: 'advice', task_group: 'variables'"></editor-pager>
         {% endif %}
     </section>
 
@@ -460,18 +433,18 @@
                 <div data-bind="fadeVisible: open">
                     <div class="panel-body">
                         <ul class="col-sm-3 nav nav-pills nav-stacked part-tabs" data-bind="foreach: tabs">
-                            <li data-bind="css: {active: ko.unwrap($parent.currentTab().id) == $data.id}">
+                            <li data-bind="css: {active: ko.unwrap($parent.currentTab().id) == $data.id, 'more-important': $data.more_important}">
                                 <a href="#" data-bind="click: $parent.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon}"></span> <span data-bind="text: title"></span></a>
                             </li>
                         </ul>
                         <div class="col-sm-9 tab-content">
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='prompt'}">
-                                <div {% if not editable %}disabled{% endif %} data-bind="writemaths: prompt, preambleCSS: $root.preamble.css, tinymce_plugins: ($data.type().name=='gapfill' ?  ['gapfill'] : [] ).concat(['jmevisible','preview']), showButtons: {gapfill: function(){return $data.type().name=='gapfill'}}"></div>
-
                                 <p class="help-block">
                                     {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-prompt' subject='the part prompt' %}
                                     Ask the student a question, and give any hints about how they should answer this part.
                                 </p>
+
+                                <div {% if not editable %}disabled{% endif %} data-bind="writemaths: prompt, preambleCSS: $root.preamble.css, tinymce_plugins: ['gapfill','jmevisible','preview'], showButtons: {gapfill: function(){return $data.type().name=='gapfill'}}"></div>
                             </section>
 
                             {% with form_label_class="col-sm-4" form_control_class="col-sm-8" %}
@@ -495,6 +468,10 @@
                             </section>
 
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='scripts'}">
+                                <p class="help-block">
+                                    {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#scripts' subject='part scripts' %}
+                                    When you need to change the way this part works beyond the available options, you can write JavaScript code to be executed at the times described below.
+                                </p>
                                 <form class="form-inline" data-bind="foreach: scripts, submit: Editor.noop">
                                     <div class="script control-group">
                                         <label class="control-label">
@@ -513,7 +490,10 @@
                                 </form>
                             </section>
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='adaptivemarking'}">
-							<h4>Variable replacement {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#adaptive-marking' subject='adaptive marking' %}</h4>
+                                <p class="help-block">
+                                    {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#adaptive-marking' subject='adaptive marking' %}
+                                    To account for errors made by the student in earlier calculations, replace question variables with answers to earlier parts.
+                                </p>
                                 <div class="variable-replacements">
                                     <table class="table" data-bind="fadeVisible: variableReplacements().length">
                                         <thead>
@@ -573,8 +553,23 @@
                             <button type="button" class="btn btn-default" data-bind="click: replaceWithGapfill, visible: canBeReplacedWithGap"><span class="glyphicon glyphicon-tasks"></span> Replace part <strong data-bind="text:indexLabel"></strong> with a gapfill</button>
                         </div>
                         <div class="pull-right">
-                            <button type="button" class="btn btn-default" data-bind="click: addGap, visible: type().name=='gapfill'"><span class="glyphicon glyphicon-plus"></span> Add a gap to part <strong data-bind="text:indexLabel"></strong></button>
-                            <button type="button" class="btn btn-info" data-bind="click: addStep, visible: isRootPart"><span class="glyphicon glyphicon-plus"></span> Add a step to part <strong data-bind="text:indexLabel"></strong></button>
+                            <div class="btn-group" data-bind="visible: type().name=='gapfill'">
+                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <span class="glyphicon glyphicon-plus"></span> Add a gap to part <strong data-bind="text:indexLabel"></strong> <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu" data-bind="foreach: $root.gapTypes">
+                                    <li><a href="#" data-bind="click: $parent.addGap, text: niceName"></a></li>
+                                </ul>
+                            </div>
+
+                            <div class="btn-group" data-bind="visible: isRootPart">
+                                <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <span class="glyphicon glyphicon-plus"></span> Add a step to part <strong data-bind="text:indexLabel"></strong> <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu" data-bind="foreach: $root.stepTypes">
+                                    <li><a href="#" data-bind="click: $parent.addStep, text: niceName"></a></li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                     {% endif %}
@@ -584,21 +579,18 @@
         </div>
 
         {% if editable %}
-        <button class="btn btn-primary" type="button" data-bind="click:addPart, text: parts().length ? 'Add another part' : 'Add a part'"></button>
+        <div class="btn-group">
+            <button id="add-part-button" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-bind="css: {'btn-lg': parts().length==0}">
+                <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parts().length ? 'Add another part' : 'Add a part'"></span> <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" data-bind="foreach: partTypes">
+                <li><a href="#" data-bind="click: $parent.addPart, text: niceName"></a></li>
+            </ul>
+        </div>
         {% endif %}
 
         {% if editable %}
-        <hr>
-        <nav>
-            <ul class="pager">
-                <li class="previous">
-                    <a title="Back to the previous section" href="#" data-bind="click: setTab('variables')">← Variables</a>
-                </li>
-                <li class="next" data-bind="css: {ready: section_completed.parts}">
-                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('advice')">Advice →</a>
-                </li>
-            </ul>
-        </nav>
+        <editor-pager params="editor: $root, previousTab: 'statement', nextTab: 'variables', task_group: 'parts'"></editor-pager>
         {% endif %}
     </section>
 
@@ -607,7 +599,7 @@
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='advice'}">
         <div class="form-group">
             <label>Advice</label>
-            <div {% if not editable %}disabled{% endif %} data-bind="writemaths: advice, tinymce_plugins: ['jmevisible','preview']"></div>
+            <div id="advice-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: advice, tinymce_plugins: ['jmevisible','preview']"></div>
             <p class="help-block">
                 {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#advice' subject='the advice section' %}
                 Give a worked solution to the whole question. 
@@ -615,17 +607,7 @@
         </div>
 
         {% if editable %}
-        <hr>
-        <nav>
-            <ul class="pager">
-                <li class="previous">
-                    <a title="Back to the previous section" href="#" data-bind="click: setTab('parts')">← Parts</a>
-                </li>
-                <li class="next" data-bind="css: {ready: section_completed.advice}">
-                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('access')">Access →</a>
-                </li>
-            </ul>
-        </nav>
+        <editor-pager params="editor: $root, previousTab: 'variables', nextTab: 'settings', task_group: 'advice'"></editor-pager>
         {% endif %}
     </section>
 
@@ -827,11 +809,5 @@
 {% endblock main_tab_content %}
 
 {% block access_tab_nav %}
-<nav>
-    <ul class="pager">
-        <li class="previous">
-        <a title="Back to the previous section" href="#" data-bind="click: setTab('advice')">← Advice</a>
-        </li>
-    </ul>
-</nav>
+    <editor-pager params="editor: $root, previousTab: 'settings', task_group: 'access'"></editor-pager>
 {% endblock access_tab_nav %}

@@ -18,6 +18,15 @@
 	margin-bottom: 1em;
 }
 
+.part-tabs li.more-important + li:not(.more-important) {
+    border-top: 1px solid #eee;
+    margin-top: 1em;
+}
+
+.part-tabs > li:not(.more-important):not(.active) > a {
+    color: hsl(204, 40%, 55%);
+}
+
 .part-header-controls .btn {
     color: inherit;
 }
@@ -100,6 +109,10 @@
 
 .empty-receiver * {
     opacity: 0;
+}
+
+.main-settings {
+    margin-bottom: 8rem;
 }
 
 

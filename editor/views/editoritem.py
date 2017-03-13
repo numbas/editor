@@ -73,7 +73,10 @@ class CopyView(ProjectQuerysetMixin, generic.FormView, generic.edit.ModelFormMix
     def get(self, request, *args, **kwargs):
         if request.is_ajax():
             form_class = self.get_form_class()
-            form = form_class(data=self.get_initial())
+            data = self.get_initial()
+            data.update(request.GET.dict())
+            form = form_class(data)
+
             if form.is_valid():
                 return self.form_valid(form)
             else:
@@ -106,6 +109,14 @@ class CopyView(ProjectQuerysetMixin, generic.FormView, generic.edit.ModelFormMix
             return http.HttpResponse(json.dumps(obj2.summary()), content_type='application/json')
         else:
             return redirect(obj2.get_absolute_url())
+
+    def form_invalid(self, form):
+        response = super(CopyView, self).form_invalid(form)
+        if self.request.is_ajax():
+            return http.JsonResponse(form.errors, status=400)
+        else:
+            return response
+
 
 class BaseUpdateView(generic.UpdateView):
 
@@ -159,8 +170,10 @@ class BaseUpdateView(generic.UpdateView):
 
             reversion.set_user(self.user)
 
-        status = {"result": "success", "url": self.get_success_url()}
-        return http.HttpResponse(json.dumps(status), content_type='application/json')
+        return http.HttpResponse(json.dumps(self.form_valid_response_dict(form)), content_type='application/json')
+
+    def form_valid_response_dict(self, form):
+        return {"result": "success", "url": self.get_success_url()}
 
     def form_invalid(self, form):
         status = {
@@ -200,7 +213,7 @@ class BaseUpdateView(generic.UpdateView):
 
             'previewURL': reverse('{}_preview'.format(self.object.editoritem.item_type), args=(self.object.pk, self.object.editoritem.slug)),
             'previewWindow': str(calendar.timegm(time.gmtime())),
-            'current_stamp': editor.views.generic.stamp_json(self.object.editoritem.current_stamp) if self.object.editoritem.current_stamp else None,
+            'current_stamp': editor.views.generic.stamp_json(self.object.editoritem.get_current_stamp()),
         }
 
         if self.editable:

@@ -2,16 +2,17 @@
 {% load helplink %}
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking-settings'}">
 <form class="form-horizontal" data-bind="submit: Editor.noop">
-    {% property '$parent.marks' 'Marks' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-marks' %}
-    <div data-bind="visible: $parent.steps().length">
-        {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-penalty-for-revealing-steps' %}
+    <div class="main-settings">
+        {% property '$parent.marks' 'Marks' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-marks' %}
+        <div data-bind="visible: $parent.steps().length">
+            {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-penalty-for-revealing-steps' %}
+        </div>
+
+        {% property 'minValue' 'Minimum accepted value' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-minimum-accepted-value' %}
+        {% property 'maxValue' 'Maximum accepted value' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-maximum-accepted-value' %}
     </div>
 
-    {% property 'minValue' 'Minimum accepted value' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-minimum-accepted-value' %}
-    {% property 'maxValue' 'Maximum accepted value' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-maximum-accepted-value' %}
-    {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-show-correct-answer-on-reveal' %}
-    {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-score-feedback-icon' %}	
-    {% booleanproperty 'integerAnswer' 'Must the answer be an integer?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-must-the-answer-be-an-integer' %}
+    <h4>Advanced settings</h4>
     <hr>
     <div data-bind="fadeVisible: integerAnswer">
         {% percentproperty 'integerPartialCredit' 'Partial credit for non-integer answer' %}
@@ -24,8 +25,10 @@
 			<select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: precisionTypes, value: precisionType, optionsText: 'niceName'"></select>
 		</div>
 	</div>
-    {% booleanproperty 'allowFractions' 'Allow the student to enter a fraction?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-allow-the-student-to-enter-a-fraction' %}
-    {% booleanproperty 'correctAnswerFraction' 'Display the correct answer as a fraction?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-display-the-correct-answer-as-a-fraction' %}
+    <div data-bind="fadeVisible: fractionPossible">
+        {% booleanproperty 'allowFractions' 'Allow the student to enter a fraction?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-allow-the-student-to-enter-a-fraction' %}
+        {% booleanproperty 'correctAnswerFraction' 'Display the correct answer as a fraction?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-display-the-correct-answer-as-a-fraction' %}
+    </div>
     <div class="form-group" data-bind="fadeVisible: precisionType().name!='none'">
         {% property 'precision' 'precisionWord' dynamic_label=True %}
         {% booleanproperty 'strictPrecision' 'Require trailing zeros?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-require-trailing-zeroes' %}
@@ -46,5 +49,8 @@
         </div>
     </div>
     {% selectproperty 'correctAnswerStyle' 'Correct answer style' options_text='name' options='allowedNotationStyles' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-correct-answer-style' %}
+    <hr>
+    {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-show-correct-answer-on-reveal' %}
+    {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-score-feedback-icon' %}	
 </form>
 </section>

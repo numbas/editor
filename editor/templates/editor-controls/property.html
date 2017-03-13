@@ -14,6 +14,9 @@
                 },
                 autosize: {max: 500, min: 30, padding: 10, value: {{property}} }
             "/>
+            {% if zero_means %}
+            <span class="help-block help-block-inline" data-bind="visible: ko.unwrap({{property}})==0">({{zero_means}})</span>
+            {% endif %}
         </div>
     </label>
 </div>

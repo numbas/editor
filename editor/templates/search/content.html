@@ -139,7 +139,7 @@
                                     {% elif item.item_type == 'exam' %}
                                     <span class="glyphicon glyphicon-book"></span> Exam (<span class="num-questions">{{item.exam.questions.count}}</span> question{{item.exam.questions.count|pluralize}})
                                     {% endif %}
-                                    {% if item.current_stamp %}<span>{% stamp item.current_stamp.status %}</span>{% endif %}
+                                    <span>{% stamp item.get_current_stamp.status %}</span>
                                 </small>
                             </h4>
                             <ul class="list-inline controls">
@@ -156,8 +156,8 @@
                                 {% endif %}
                             </ul>
                             <p class="status">
-                                {% if item.current_stamp %}
-                                {% with item.current_stamp as stamp %}
+                                {% if item.get_current_stamp %}
+                                {% with item.get_current_stamp as stamp %}
                                     {% include "stamp_column.html" %}
                                 {% endwith %}
                                 {% endif %}

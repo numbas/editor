@@ -173,11 +173,12 @@ $(document).ready(function() {
 		});
 	}
 
-	Editor.Tab = function(id,title,icon,visible) {
+	Editor.Tab = function(id,title,icon,visible,more_important) {
 		this.id = id;
 		this.title = title;
         this.icon = icon;
 		this.visible = visible === undefined ? true : visible;
+        this.more_important = more_important;
 	}
 
 	Editor.contentObservable = function(val) {
@@ -195,8 +196,12 @@ $(document).ready(function() {
 	};
 
 
-    Editor.nonempty_task = function(text,observable) {
-        return {text: text, done: ko.computed(function() {return observable() && true})};
+    Editor.nonempty_task = function(text,observable,focus_on) {
+        return {
+            text: text, 
+            done: ko.computed(function() {return observable() && true}),
+            focus_on: focus_on
+        };
     }
 
 
@@ -261,12 +266,22 @@ $(document).ready(function() {
     }
 
 	Editor.mappedObservableArray = function(map) {
-		var obj = {list: ko.observableArray([])};
+		var obj = {list: ko.observableArray([]), lastData: []};
 		var obs = ko.computed({
 			owner: obj,
 			read: obj.list,
 			write: function(l) {
-				this.list(l.map(map));
+                var current_mapped = obj.list();
+                var out = [];
+                for(var i=0;i<l.length;i++) {
+                    if(i<obj.lastData.length && l[i]==obj.lastData[i]) {
+                        out.push(current_mapped[i]);
+                    } else {
+                        out.push(map(l[i]));
+                    }
+                }
+                obj.lastData = l;
+                this.list(out);
 			}
 		});
 		obs.remove = function(o) {
@@ -278,6 +293,9 @@ $(document).ready(function() {
 		obs.indexOf = function(o) {
 			return obj.list.indexOf(o);
 		}
+        obs.getLastData = function() {
+            return obj.lastData;
+        }
 		return obs;
 	}
 
@@ -560,10 +578,19 @@ $(document).ready(function() {
 
         this.commentwriter = new Editor.CommentWriter();
         this.restorepointwriter = new Editor.CommentWriter();
+
+        this.edit_name = function() {
+            ei.setTab('settings')();
+            ko.tasks.runEarly();
+            $('#name-input').focus();
+        }
     }
     Editor.EditorItem.prototype = {
         init_tasks: function() {
+            var ei = this;
+
             this.section_completed = {};
+            this.section_still_to_do = {};
 
             function section_completed(tasks) {
                 return ko.computed(function() {
@@ -571,8 +598,19 @@ $(document).ready(function() {
                 })
             }
 
+            function section_still_to_do(tasks) {
+                return ko.computed(function() {
+                    var task = tasks.filter(function(t){return !ko.unwrap(t.done)})[0];
+                    function uncapitalise(str){ 
+                        return str.slice(0,1).toLowerCase()+str.slice(1);
+                    }
+                    return task ? uncapitalise(task.text) : '';
+                });
+            }
+
             for(var section in this.section_tasks) {
                 this.section_completed[section] = section_completed(this.section_tasks[section]);
+                this.section_still_to_do[section] = section_still_to_do(this.section_tasks[section]);
             }
             
             this.all_sections_completed = ko.computed(function() {
@@ -583,6 +621,10 @@ $(document).ready(function() {
                 }
                 return true;
             },this);
+
+            this.canPublish = ko.computed(function() {
+                return !this.published() && this.all_sections_completed();
+            },this);
         },
 
         init_output: function() {
@@ -592,7 +634,7 @@ $(document).ready(function() {
             },this);
         },
 
-        init_save: function() {
+        init_save: function(callback) {
             var ei = this;
 			this.firstSave = true;
             this.autoSave = Editor.saver(
@@ -605,7 +647,7 @@ $(document).ready(function() {
                     if(!ei.name()) {
                         throw(new Error("We can't save changes while the name field is empty."));
                     }
-                    return $.post(
+                    var promise = $.post(
                         '/'+ei.item_type+'/'+ei.id+'/'+slugify(ei.realName())+'/',
                         {json: JSON.stringify(data), csrfmiddlewaretoken: getCookie('csrftoken')}
                     )
@@ -632,6 +674,10 @@ $(document).ready(function() {
                             });
                         })
                     ;
+                    if(callback) {
+                        callback(promise);
+                    }
+                    return promise;
                 }
             );
 
@@ -1018,7 +1064,8 @@ $(document).ready(function() {
 				indentWithTabs: false,
 				indentUnit: 2,
 				extraKeys: { Tab: betterTab },
-				readOnly: readOnly
+				readOnly: readOnly,
+                lineWrapping: Editor.wrapLines
 			});
 			mc.on('change',onChange);
 			ko.utils.domData.set(element,'codemirror',mc);
@@ -1052,8 +1099,6 @@ $(document).ready(function() {
 		init: function(element,valueAccessor,allBindingsAccessor) {
             valueAccessor = valueAccessor();
 			allBindingsAccessor = allBindingsAccessor();
-
-			var value = ko.utils.unwrapObservable(valueAccessor) || '';
 
             if(element.hasAttribute('disabled')) {
                 try {
@@ -1168,7 +1213,7 @@ $(document).ready(function() {
 							}
 						});
 
-						ed.setContent(value);
+						ed.setContent(ko.unwrap(valueAccessor));
                         ed.undoManager.clear();
                         ed.on('focus',function() {
                             $(ed.getContainer()).addClass('wm-focus');
@@ -1183,9 +1228,19 @@ $(document).ready(function() {
                                 clearInterval(resizer);
                             }
                         }, 100);
+
+                        if(allBindingsAccessor.showButtons) {
+                            ko.computed(function() {
+                                var showButtons = ko.unwrap(allBindingsAccessor.showButtons);
+                                var show = showButtons.gapfill();
+                                ed.fire('toggle_gapfill_button',{show:show});
+                            },this);
+                        }
+
 					}
                 })
             ;
+
 		},
 		update: function(element, valueAccessor) {
 			var value = ko.utils.unwrapObservable(valueAccessor()) || '';
@@ -1202,8 +1257,9 @@ $(document).ready(function() {
 
             if (!tinymce.is(':focus')) {
 				var ed = $(element).children('.wmTextArea').tinymce();
-				if(ed)
+				if(ed && ed.initialized) {
 					ed.setContent(value);
+                }
 			}
 		}
 	};
@@ -1259,6 +1315,52 @@ $(document).ready(function() {
 		}
 	};
 
+    ko.components.register('editor-pager', {
+        viewModel: function(params) {
+            var p = this;
+
+            var editor = this.editor = params.editor;
+            this.previousTab = params.previousTab ? editor.getTab(params.previousTab) : null;
+            this.nextTab = params.nextTab ? editor.getTab(params.nextTab) : null;
+            this.task_group = params.task_group;
+            this.has_task = editor.section_tasks[this.task_group] !== undefined;
+            this.completed = this.has_task ? editor.section_completed[this.task_group] : true;
+            this.still_to_do = this.has_task ? editor.section_still_to_do[this.task_group] : false;
+            this.current_task = ko.computed(function() {
+                if(!editor.section_tasks[this.task_group]) {
+                    return null;
+                } else {
+                    return editor.section_tasks[this.task_group].filter(function(t){return !t.done()})[0];
+                }
+            },this);
+
+            this.focus = function() {
+                var task = p.current_task();
+                if(task && task.focus_on) {
+                    var s = $(task.focus_on);
+                    if(s.hasClass('wmTextArea')) {
+                        s.tinymce().focus();
+                    } else {
+                        s.focus();
+                    }
+                }
+            }
+        },
+        template: '\
+            <nav data-bind="visible: !editor.published()">\
+                <ul class="pager">\
+                    <li class="previous" data-bind="if: previousTab">\
+                        <a title="Back to the previous section" href="#" data-bind="click: editor.setTab(previousTab.id)">← <span data-bind="text: previousTab.title"></span></a>\
+                    </li>\
+                    <span class="still-to-do text-warning" data-bind="if: has_task, visible: !ko.unwrap(completed), click: focus">Before moving on, you should <span data-bind="text: still_to_do"></span></span>\
+                    <span data-bind="if: nextTab, visible: ko.unwrap(completed)" class="text-success">Move on when you\'re ready!</span>\
+                    <li class="next" data-bind="if: nextTab, css: {ready: completed}">\
+                        <a title="Proceed to the next section" href="#" data-bind="click: editor.setTab(nextTab.id)"><span data-bind="text: nextTab.title"></span> →</a>\
+                    </li>\
+                </ul>\
+            </nav>\
+        '
+    });
     ko.components.register('listbox', {
         viewModel: function(params) {
             var lb = this;
@@ -1758,6 +1860,22 @@ $(document).ready(function() {
     Editor.user_search_autocomplete($('#top-search-bar'),{select: function(e,ui) {
         window.location.href = ui.item.profile;
     }});
+
+    Editor.tinymce = function(extra_options) {
+        var options = {
+            theme: 'modern',
+            skin: 'lightgray',
+            statusbar: false,
+            autoresize_bottom_margin: 0,
+            relative_urls: false,
+            theme_advanced_resizing: true,
+            theme_advanced_resize_horizontal: false,
+            plugins: ['link','fullscreen','autoresize','anchor','code','codesample','colorpicker','directionality','fullscreen','hr','link','paste','searchreplace','table','textcolor','textpattern']
+        }
+        options = $.extend(options,extra_options);
+
+        return tinymce.init(options);
+    }
 
     Editor.noop = function() {}
 });

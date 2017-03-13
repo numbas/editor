@@ -239,7 +239,15 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
             return self.form_invalid(exam_form)
  
     def pre_save(self, form):
-        self.object.set_question_groups(self.question_groups)
+        deleted_questions = []
+        question_groups = []
+        for group in self.question_groups:
+            ok = [q.pk for q in NewQuestion.objects.filter(pk__in=group)]
+            deleted = [pk for pk in group if pk not in ok]
+            deleted_questions += deleted
+            question_groups.append([pk for pk in group if pk in ok])
+        self.deleted_questions = deleted_questions
+        self.object.set_question_groups(question_groups)
 
     def get_context_data(self, **kwargs):
         context = super(UpdateView, self).get_context_data(**kwargs)
@@ -279,6 +287,14 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
 
     def get_success_url(self):
         return reverse('exam_edit', args=(self.object.pk, self.object.editoritem.slug,))
+
+    def form_valid_response_dict(self, form):
+        d = super(UpdateView,self).form_valid_response_dict(form)
+        d.update({
+            'deleted_questions': self.deleted_questions
+        })
+        return d
+
 
 class RevertView(generic.UpdateView):
     model = EditorItem

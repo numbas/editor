@@ -47,6 +47,11 @@ class SettingsPageMixin(MustBeMemberMixin):
         context['settings_page'] = self.settings_page
         return context
 
+    def form_valid(self, form):
+        result = super(SettingsPageMixin,self).form_valid(form)
+        messages.add_message(self.request, messages.SUCCESS, 'Your changes have been saved.')
+        return result
+
 class CreateView(generic.CreateView):
     model = Project
     template_name = 'project/create.html'

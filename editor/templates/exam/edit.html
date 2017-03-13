@@ -49,6 +49,10 @@
                 </label>
             </div>
         </form>
+
+        {% if editable %}
+        <editor-pager params="editor: $root, previousTab: 'questions', nextTab: 'navigation', task_group: 'display'"></editor-pager>
+        {% endif %}
     </section>
 
     <!-- Questions -->
@@ -102,10 +106,11 @@
                                 <div class="controls pull-right">
                                     <a class="preview btn btn-link" data-bind="attr: {href: previewURL()}" target="_blank" title="Preview this question"><span class="glyphicon glyphicon-play text-success"></span></a>
                                     <button type="button" class="copy btn btn-link" data-bind="click:replaceWithCopy, visible: item_json.editable" title="Replace this question with a copy"><span class="glyphicon glyphicon-duplicate text-warning"></span></button>
+                                    <a class="btn btn-link btn-sm basket add-to-basket" data-bind="attr: {'data-question-id': id}"><span class="glyphicon glyphicon-shopping-cart" title="Add this to your basket" aria-hidden="true"></span></a>
                                     <button type="button" class="delete btn btn-link" data-bind="click:remove, visible: item_json.editable" title="Remove this question from the exam"><span class="glyphicon glyphicon-remove text-danger"></span></button>
                                 </div>
                                 <div class="title">
-                                    <strong class="number" data-bind="text: ($index()+1)+'.'"></strong>
+                                    <strong class="number" data-bind="text: number()===undefined ? '' : number()+'.'"></strong>
                                     <a data-bind="attr:{href: url}, text: name, mathjax: name" target="_blank"></a>
                                     <span class="label label-default stamp" data-bind="visible: current_stamp, text: current_stamp_display, attr: {'data-stamp':current_stamp}"></span>
                                 </div>
@@ -171,17 +176,7 @@
         </div>
 
         {% if editable %}
-        <hr>
-        <nav>
-            <ul class="pager">
-                <li class="previous">
-                    <a title="Back to the previous section" href="#" data-bind="click: setTab('settings')">← Settings</a>
-                </li>
-                <li class="next" data-bind="css: {ready: section_completed.settings}">
-                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('navigation')">Navigation →</a>
-                </li>
-            </ul>
-        </nav>
+        <editor-pager params="editor: $root, nextTab: 'display', task_group: 'questions'"></editor-pager>
         {% endif %}
     </section>
 
@@ -200,17 +195,7 @@
         </form>
 
         {% if editable %}
-        <hr>
-        <nav>
-            <ul class="pager">
-                <li class="previous">
-                    <a title="Back to the previous section" href="#" data-bind="click: setTab('questions')">← Questions</a>
-                </li>
-                <li class="next" data-bind="css: {ready: section_completed.settings}">
-                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('timing')">Timing →</a>
-                </li>
-            </ul>
-        </nav>
+        <editor-pager params="editor: $root, previousTab: 'display', nextTab: 'timing', task_group: 'navigation'"></editor-pager>
         {% endif %}
     </section>
 
@@ -226,17 +211,7 @@
         </form>
 
         {% if editable %}
-        <hr>
-        <nav>
-            <ul class="pager">
-                <li class="previous">
-                    <a title="Back to the previous section" href="#" data-bind="click: setTab('navigation')">← Navigation</a>
-                </li>
-                <li class="next" data-bind="css: {ready: section_completed.settings}">
-                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('feedback')">Feedback →</a>
-                </li>
-            </ul>
-        </nav>
+        <editor-pager params="editor: $root, previousTab: 'navigation', nextTab: 'feedback', task_group: 'timing'"></editor-pager>
         {% endif %}
     </section>
 
@@ -248,6 +223,7 @@
             {% booleanproperty 'showtotalmark' 'Show maximum score?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-show-maximum-score' %}
             {% booleanproperty 'showanswerstate' 'Show answer state?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-show-answer-state' %}
             {% booleanproperty 'allowrevealanswer' 'Allow reveal answer?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-allow-reveal-answer' %}
+            {% booleanproperty 'showstudentname' 'Show student\'s name?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-show-students-name' %}
 
             <div class="form-group">
                 <label class="{{form_label_class}} control-label">
@@ -297,17 +273,7 @@
         </form>
 
         {% if editable %}
-        <hr>
-        <nav>
-            <ul class="pager">
-                <li class="previous">
-                    <a title="Back to the previous section" href="#" data-bind="click: setTab('timing')">← Timing</a>
-                </li>
-                <li class="next" data-bind="css: {ready: section_completed.settings}">
-                    <a title="Proceed to the next section" href="#" data-bind="click: setTab('access')">Access →</a>
-                </li>
-            </ul>
-        </nav>
+        <editor-pager params="editor: $root, previousTab: 'timing', nextTab: 'settings', task_group: 'feedback'"></editor-pager>
         {% endif %}
 
     </section>
@@ -345,25 +311,12 @@
 {% endblock content %}
 
 {% block access_tab_nav %}
-<nav>
-    <ul class="pager">
-        <li class="previous">
-        <a title="Back to the previous section" href="#" data-bind="click: setTab('feedback')">← Feedback</a>
-        </li>
-    </ul>
-</nav>
+    <editor-pager params="editor: $root, previousTab: 'settings', task_group: 'access'"></editor-pager>
 {% endblock %}
 
 {% block settings %}
 {{ block.super }}
     {% if editable %}
-    <hr>
-    <nav>
-        <ul class="pager">
-            <li class="next" data-bind="css: {ready: section_completed.settings}">
-                <a title="Proceed to the next section" href="#" data-bind="click: setTab('questions')">Questions →</a>
-            </li>
-        </ul>
-    </nav>
+    <editor-pager params="editor: $root, previousTab: 'feedback', nextTab: 'access', task_group: 'settings'"></editor-pager>
     {% endif %}
 {%endblock settings %}

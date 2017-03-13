@@ -88,9 +88,32 @@
             <small><span class="glyphicon glyphicon-briefcase"></span> <a href="{% url 'project_index' object.editoritem.project.pk %}">{{object.editoritem.project.name}}</a></small>
         </h2>
         <h1 class="name-header">
-            <span class="glyphicon glyphicon-{{object.icon}}"></span> <span data-bind="mathjaxHTML: name">{{object.name}}</span>
-            <small class="pull-right" data-bind="if: current_stamp">
-                <span class="label label-default stamp" data-bind="text: current_stamp().status_display, attr: {'data-stamp':current_stamp().status}"></span>
+            <span class="glyphicon glyphicon-{{object.icon}}"></span> <span data-bind="mathjaxHTML: name, click: edit_name">{{object.name}}</span>
+            <small class="pull-right">
+                {% if user.is_authenticated %}
+                    <div class="btn-group">
+                        <button type="button" class="stamp btn btn-lg btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-bind="attr: {'data-stamp':current_stamp().status}">
+                            Status: <span data-bind="text: current_stamp().status_display"></span> <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                        {% for name,description in stamp_choices %}
+                            <li><a class="stamp" data-stamp="{{name}}" tabindex="-1" href="#" data-bind="click: addStamp('{{name}}')">{{description}}</a></li>
+                        {% endfor %}
+                            <li role="separator" class="divider"></li>
+                            <li>
+                            <a tabindex="-1" href="#" {% if editable %}data-bind="click: setTab('access')"{% endif %}>
+                                    {% if object.editoritem.published %}
+                                    <span class="text-success"><span class="glyphicon glyphicon-ok"></span> Published</span>
+                                    {% else %}
+                                    <span class="text-muted"><span class="glyphicon glyphicon-lock"></span> Not published</span>
+                                    {% endif %}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <span class="label label-default stamp" data-bind="text: current_stamp().status_display, attr: {'data-stamp':current_stamp().status}"></span>
+                {% endif %}
             </small>
         </h1>
         {% endblock page_header %}
@@ -100,25 +123,29 @@
             <ul class="controls nav nav-pills nav-stacked">
                 {% block admin_controls %}
                 <li id="preview">
-                <a class="text-success" data-bind="attr: {href: item_json.previewURL, target: item_json.previewWindow}" title="Run this {{item_type}} in a new window (Ctrl+B)">
+                    <a class="text-success" data-bind="attr: {href: item_json.previewURL, target: item_json.previewWindow}" title="Run this {{item_type}} in a new window (Ctrl+B)">
                         <span class="glyphicon glyphicon-play"></span>
                         Test Run
                     </a>
                 </li>
-                {% if user.is_authenticated %}
-                <li id="stamp-dropdown" class="dropdown">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
-                        <span class="glyphicon glyphicon-flag"></span>
-                        Feedback
-                        <span class="caret"></span>
+
+                {% with can_copy=object.editoritem|can_be_copied_by:request.user %}
+                <li class="{% if not can_copy %}disabled{% endif %}">
+                    <a class="text-warning" href="{% if can_copy %}{% editoritem_url 'copy' object %}{% endif %}" target="_blank" title="{% if can_copy %}Create your own copy of this {{item_type}}{% else %}This item's licence doesn't allow you to modify it.{% endif %}"><span class="glyphicon glyphicon-duplicate"></span> Make a copy</a>
+                </li>
+                {% endwith %}
+
+                {% if editable %}
+                <li class="">
+                    <a href="#" class="text-danger" data-bind="click: deleteItem" title="Delete this {{item_type}} permanently">
+                        <span class="glyphicon glyphicon-remove"></span> Delete
+                        <form class="hidden" action="{% editoritem_url 'delete' object %}" method="POST">
+                            {% csrf_token %}
+                        </form>
                     </a>
-                    <ul class="dropdown-menu">
-                    {% for name,description in stamp_choices %}
-                        <li><a tabindex="-1" href="#" data-bind="click: addStamp('{{name}}')">{{description}}</a></li>
-                    {% endfor %}
-                    </ul>
                 </li>
                 {% endif %}
+
                 <li id="download" class="dropdown">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                         <span class="glyphicon glyphicon-cloud-download"></span>
@@ -167,12 +194,12 @@
                                 {% block settings_main %}
                                 <div class="form-group name">
                                     <label>Name</label>
-                                    <input {% if not editable %}disabled{% endif %} class="form-control input-lg" data-bind="textInput: name">
+                                    <input id="name-input" {% if not editable %}disabled{% endif %} class="form-control input-lg" data-bind="textInput: name">
                                 </div>
 
                                 <div class="form-group description">
                                     <label>Description</label>
-                                    <div {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
+                                    <div id="description-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
                                     <p class="help-block">
                                         {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-description' subject='the description field' %}
                                         Describe what this {{item_type}} assesses, or how it is going to be used.
@@ -194,30 +221,6 @@
                                 {% endblock settings_main %}
                             </div>
                             <div class="col-sm-4">
-                                {% with can_copy=object.editoritem|can_be_copied_by:request.user %}
-                                {% if can_copy or editable %}
-                                <div class="panel panel-default">
-                                    <div class="panel-heading">
-                                        <h3 class="panel-title">Admin</h3>
-                                    </div>
-                                    <ul class="list-group">
-                                        <li class="list-group-item {% if not can_copy %}disabled{% endif %}">
-                                        <a class="text-warning" href="{% if can_copy %}{% editoritem_url 'copy' object %}{% endif %}" target="_blank" title="{% if can_copy %}Create your own copy of this {{item_type}}{% else %}This item's licence doesn't allow you to modify it.{% endif %}"><span class="glyphicon glyphicon-duplicate"></span> Make a copy of this {{item_type}}</a>
-                                        </li>
-                                        {% if editable %}
-                                        <li class="list-group-item">
-                                            <a href="#" class="text-danger" data-bind="click: deleteItem" title="Delete this {{item_type}} permanently">
-                                                <span class="glyphicon glyphicon-remove"></span> Delete this {{item_type}}
-                                                <form class="hidden" action="{% editoritem_url 'delete' object %}" method="POST">
-                                                    {% csrf_token %}
-                                                </form>
-                                            </a>
-                                        </li>
-                                        {% endif %}
-                                    </ul>
-                                </div>
-                                {% endif %}
-                                        {% endwith %}
                                 <div class="panel panel-info">
                                     {% block settings_metadata %}
                                     <div class="panel-heading">
@@ -249,7 +252,7 @@
                                         </div>
                                         <div class="form-group">
                                             <label><span class="glyphicon glyphicon-copyright-mark"></span> Licence</label>
-                                            <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.licences, value: licence, optionsText: 'short_name', optionsCaption: 'None specified'"></select>
+                                            <select id="licence-select" {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.licences, value: licence, optionsText: 'short_name', optionsCaption: 'None specified'"></select>
                                             <p class="help-block">
                                                 <small data-bind="visible: licence, with: licence"><a target="_blank" data-bind="visible: url, attr:{href:url}">Licence information</a></small>
                                             </p>
@@ -347,14 +350,14 @@
                             </ul>
                         </div>
                     </div>
-                    <div class="panel panel-warning" data-bind="visible: !published() && all_sections_completed()">
+                    <div class="panel panel-warning" data-bind="visible: canPublish">
                         <div class="panel-heading">
                             <h3 class="panel-title">Publish</h3>
                         </div>
                         <div class="panel-body">
                             <p>At the moment, this {{item_type}} is restricted to members of the project this {{item_type}} belongs to and any other users you've explicitly granted access to.</p>
                             <p>Publish your {{item_type}} so that others can see it.</p>
-                            <form method="POST" action="{% url 'item_publish' object.editoritem.pk %}">
+                            <form method="POST" id="publish-form" action="{% url 'item_publish' object.editoritem.pk %}">
                                 <button class="btn btn-danger" type="submit">Publish</button>
                                 {% csrf_token %}
                             </form>
@@ -452,7 +455,8 @@
 
                     {% block access_tab_nav %}
                     {% endblock access_tab_nav %}
-                    </section>
+
+                </section>
                 {% endif %}
 
                 <!-- Other versions -->

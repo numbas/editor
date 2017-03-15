@@ -383,11 +383,13 @@ $(document).ready(function() {
 		},
 
 		getPart: function(path) {
-			return this.parts()[0];
 			var re_path = /^p(\d+)(?:g(\d+)|s(\d+))?$/;
 			var m = re_path.exec(path);
 			var i = parseInt(m[1]);
 			var p = this.parts()[i];
+            if(!p) {
+                return;
+            }
 			if(m[2]) {
 				var g = parseInt(m[2]);
 				return p.gaps()[g];

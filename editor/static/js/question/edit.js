@@ -1692,6 +1692,7 @@ $(document).ready(function() {
 
         this.use_custom_algorithm = ko.observable(false);
         this.customMarkingAlgorithm = ko.observable('');
+        this.extendBaseMarkingAlgorithm = ko.observable(true);
 
 		this.types.map(function(t){p[t.name] = t.model});
 
@@ -1787,7 +1788,8 @@ $(document).ready(function() {
 				scripts: {},
 				variableReplacements: this.variableReplacements().map(function(vr){return vr.toJSON()}),
 				variableReplacementStrategy: this.variableReplacementStrategy().name,
-                customMarkingAlgorithm: this.use_custom_algorithm() ? this.customMarkingAlgorithm() : ''
+                customMarkingAlgorithm: this.use_custom_algorithm() ? this.customMarkingAlgorithm() : '',
+                extendBaseMarkingAlgorithm: this.use_custom_algorithm() ? this.extendBaseMarkingAlgorithm() : true
             };
 
             if(this.prompt())
@@ -1824,7 +1826,7 @@ $(document).ready(function() {
                 if(this.types[i].name == data.type.toLowerCase())
                     this.type(this.types[i]);
             }
-            tryLoad(data,['marks','prompt','stepsPenalty','showCorrectAnswer','showFeedbackIcon','customMarkingAlgorithm'],this);
+            tryLoad(data,['marks','prompt','stepsPenalty','showCorrectAnswer','showFeedbackIcon','customMarkingAlgorithm','extendBaseMarkingAlgorithm'],this);
             this.use_custom_algorithm(this.customMarkingAlgorithm()!='');
 
             if(data.steps)
@@ -2432,9 +2434,9 @@ $(document).ready(function() {
 			name:'m_n_2', 
 			niceName: 'Choose several from a list',
 			tabs: [
-				new Editor.Tab('choices','Choices','list',true,true)
+				new Editor.Tab('choices','Choices','list',true,true),
 				new Editor.Tab('marking-settings','Marking settings','pencil',true,true),
-				new Editor.Tab('marking-algorithm','Marking algorithm','pencil'),
+				new Editor.Tab('marking-algorithm','Marking algorithm','pencil')
 			],
 
 			model: function() {

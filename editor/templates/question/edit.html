@@ -462,6 +462,7 @@
                                     {% booleanproperty 'use_custom_algorithm' 'Use custom marking algorithm?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-use-custom-marking-algorithm' %}
 
                                     <div data-bind="fadeVisible: use_custom_algorithm">
+                                        {% booleanproperty 'extendBaseMarkingAlgorithm' 'Extend base marking algorithm?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-extend-base-marking-algorithm' %}
                                         <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: customMarkingAlgorithm, codemirrorMode: 'jme'"></textarea>
                                     </div>
                                 </form>

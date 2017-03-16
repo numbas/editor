@@ -383,11 +383,13 @@ $(document).ready(function() {
 		},
 
 		getPart: function(path) {
-			return this.parts()[0];
 			var re_path = /^p(\d+)(?:g(\d+)|s(\d+))?$/;
 			var m = re_path.exec(path);
 			var i = parseInt(m[1]);
 			var p = this.parts()[i];
+            if(!p) {
+                return;
+            }
 			if(m[2]) {
 				var g = parseInt(m[2]);
 				return p.gaps()[g];
@@ -2086,8 +2088,6 @@ $(document).ready(function() {
 					minValue: ko.observable(''),
 					maxValue: ko.observable(''),
 					correctAnswerFraction: ko.observable(false),
-					integerAnswer: ko.observable(false),
-					integerPartialCredit: ko.observable(0),
 					allowFractions: ko.observable(false),
 					precisionTypes: [
 						{name: 'none', niceName: 'None'},
@@ -2169,11 +2169,6 @@ $(document).ready(function() {
                 data.minValue = this.minValue();
                 data.maxValue = this.maxValue();
 				data.correctAnswerFraction = this.fractionPossible() && this.correctAnswerFraction();
-                if(this.integerAnswer())
-                {
-                    data.integerAnswer = this.integerAnswer();
-                    data.integerPartialCredit= this.integerPartialCredit();
-                }
 				data.allowFractions = this.fractionPossible() && this.allowFractions();
 				if(this.precisionType().name!='none') {
 					data.precisionType = this.precisionType().name;
@@ -2189,7 +2184,7 @@ $(document).ready(function() {
                 }
 			},
 			load: function(data) {
-                tryLoad(data,['minValue','maxValue','correctAnswerFraction','integerAnswer','integerPartialCredit','allowFractions','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision','showPrecisionHint'],this);
+                tryLoad(data,['minValue','maxValue','correctAnswerFraction','allowFractions','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision','showPrecisionHint'],this);
 				if('answer' in data) {
 					this.minValue(data.answer);
 					this.maxValue(data.answer);

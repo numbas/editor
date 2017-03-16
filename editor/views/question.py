@@ -37,9 +37,10 @@ class PreviewView(editor.views.editoritem.PreviewView):
                                            content_type='application/json')
         else:
             try:
-                profile = UserProfile.objects.get(user=request.user)
-                q.locale = profile.language
-            except UserProfile.ObjectDoesNotExist:
+                if not request.user.is_anonymous:
+                    profile = UserProfile.objects.get(user=request.user)
+                    q.locale = profile.language
+            except UserProfile.DoesNotExist:
                 pass
 
             return self.preview(q.editoritem)

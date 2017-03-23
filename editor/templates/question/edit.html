@@ -466,6 +466,32 @@
                                         <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: customMarkingAlgorithm, codemirrorMode: 'jme'"></textarea>
                                     </div>
                                 </form>
+
+                                <div data-bind="with: marking_test">
+                                    <input type="text" data-bind="textInput: answer">
+                                    <table class="notes table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Note</th>
+                                                <th>Value</th>
+                                                <th>Feedback</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody data-bind="foreach: notes">
+                                            <tr class="note">
+                                                <td>
+                                                    <span class="name" data-bind="text: note.name, attr: {title: note.description}"></span> 
+                                                </td>
+                                                <td data-bind="html: value"></td>
+                                                <td>
+                                                    <ul data-bind="foreach: feedback.states">
+                                                        <li data-bind="text: message"></li>
+                                                    </ul>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </section>
 
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='scripts'}">

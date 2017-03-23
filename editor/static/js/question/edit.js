@@ -1050,6 +1050,23 @@ $(document).ready(function() {
 		}
 	}
 
+    function displayJMEValue(v) {
+        switch(v.type) {
+            case 'string':
+                return Numbas.util.escapeHTML(v.value);
+            case 'list':
+                return 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
+            case 'html':
+                if(v.value.length==1 && v.value[0].tagName=='IMG') {
+                    var src = v.value[0].getAttribute('src');
+                    return '<img src="'+src+'" title="'+src+'">';
+                }
+                return 'HTML node';
+            default:
+                return Numbas.jme.display.treeToJME({tok:v});
+        }
+    }
+
     function Variable(q,data) {
 		this.question = q;
         this._name = ko.observable('');
@@ -1318,21 +1335,7 @@ $(document).ready(function() {
 			if(this.anyError()) {
 				return this.anyError();
             } else if(v = this.value()) {
-				switch(v.type)
-				{
-				case 'string':
-					return Numbas.util.escapeHTML(v.value);
-				case 'list':
-					return 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
-				case 'html':
-                    if(v.value.length==1 && v.value[0].tagName=='IMG') {
-                        var src = v.value[0].getAttribute('src');
-                        return '<img src="'+src+'" title="'+src+'">';
-                    }
-					return 'HTML node';
-				default:
-					return Numbas.jme.display.treeToJME({tok:v});
-				}
+                return displayJMEValue(v);
 			} else {
 				return '';
             }
@@ -1696,6 +1699,17 @@ $(document).ready(function() {
         this.customMarkingAlgorithm = ko.observable('');
         this.extendBaseMarkingAlgorithm = ko.observable(true);
 
+        this.markingScript = ko.computed(function() {
+            var base = Numbas.marking_scripts[this.type().name];
+            if(!this.use_custom_algorithm) {
+                return base;
+            } else {
+                return new Numbas.marking.MarkingScript(this.customMarkingAlgorithm(), this.extendBaseMarkingAlgorithm() ? base : undefined);
+            }
+        },this);
+
+        this.marking_test = new MarkingTest(this,this.q.questionScope());
+
 		this.types.map(function(t){p[t.name] = t.model});
 
         if(data)
@@ -1903,6 +1917,56 @@ $(document).ready(function() {
 		}
 	}
 
+    Numbas.marking.ignore_note_errors = true;
+    function MarkingTest(part,scope) {
+        this.part = part;
+        this.scope = ko.observable(scope);
+        this.answer = ko.observable('');
+        this.result = ko.computed(function() {
+            try {
+                var script = part.markingScript();
+                var result = script.evaluate(
+                    this.scope(), 
+                    Numbas.jme.wrapValue({
+                        studentAnswer: this.answer(),
+                        settings: part.type().model.markingSettings(),
+                        marks: 1,
+                        partType: part.type().name,
+                        gaps: [],
+                        steps: []
+                    }).value
+                );
+                return result;
+            } catch(e) {
+                return {
+                    error: e.message
+                }
+            }
+        },this);
+
+        this.notes = ko.computed(function() {
+            var result = this.result();
+            var script = part.markingScript();
+            var states = [];
+            for(var x in result.states) {
+                var feedback = Numbas.marking.finalise_state(result.states[x]);
+                states.push({
+                    note: script.notes[x],
+                    value: result.values[x] ? displayJMEValue(result.values[x]) : '',
+                    feedback: feedback,
+                    error: result.state_errors[x] ? result.state_errors[x].message : '',
+                    valid: result.state_valid[x]
+                });
+            }
+            states.sort(function(a,b) {
+                a = a.note.name;
+                b = b.note.name;
+                return a<b ? -1 : a>b ? 1 : 0;
+            });
+            return states;
+        },this);
+    }
+
 	function PartType(part,data) {
 		this.name = data.name;
 		this.part = part;
@@ -1964,7 +2028,7 @@ $(document).ready(function() {
 				new Editor.Tab('checking-accuracy','Accuracy','scale')
 			],
 
-			model: function() {
+			model: function(part) {
 				var model = {
 					answer: ko.observable(''),
 					answerSimplification: ko.observable(''),
@@ -2007,6 +2071,35 @@ $(document).ready(function() {
 					expectedVariableNames: ko.observableArray([])
 				};
 				model.checkingType = ko.observable(model.checkingTypes[0]);
+
+                model.markingSettings = ko.computed(function() {
+                    return {
+                        expectedVariableNames: model.expectedVariableNames(),
+                        minLength: model.minlength.length(),
+                        minLengthPC: model.minlength.partialCredit(),
+                        minLengthMessage: model.minlength.message(),
+                        maxLength: model.maxlength.length(),
+                        maxLengthPC: model.maxlength.partialCredit(),
+                        maxLengthMessage: model.maxlength.message(),
+                        notAllowed: model.notallowed.strings(),
+                        notAllowedPC: model.notallowed.partialCredit(),
+                        notAllowedMessage: model.notallowed.message(),
+                        mustHave: model.musthave.strings(),
+                        mustHavePC: model.musthave.partialCredit(),
+                        correctAnswer: Numbas.jme.subvars(model.answer(),part.q.questionScope()),
+                        correctAnswerString: model.answer(),
+                        answerSimplificationString: model.answerSimplification(),
+                        vsetRangeStart: model.vset.start(),
+                        vsetRangeEnd: model.vset.end(),
+                        vsetRangePoints: model.vset.points(),
+                        checkingType: model.checkingType().name,
+                        checkingAccuracy: model.checkingType().accuracy(),
+                        failureRate: model.failureRate(),
+                        checkVariableNames: model.checkVariableNames(),
+                        showPreview: model.showPreview(),
+                        expectedVariableNames: model.expectedVariableNames()
+                    };
+                });
 
 				return model;
 			},

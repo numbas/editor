@@ -6732,6 +6732,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
 	 * @param {object} todo - dictionary of variables mapped to their definitions
 	 * @param {Numbas.jme.Scope} scope
 	 * @param {Numbas.jme.tree} condition - condition on the values of the variables which must be satisfied
+	 * @param {function} computeFn - a function to compute a variable. Default is Numbas.jme.variables.computeVariable
 	 * @returns {object} - {variables: dictionary of evaluated variables, conditionSatisfied: was the condition satisfied?}
 	 */
 	makeVariables: function(todo,scope,condition,computeFn)
@@ -7427,7 +7428,7 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
                         }
                     }
                 }
-                if(invalid_dep) {
+                if(invalid_dep || Numbas.marking.ignore_note_errors) {
                     scope.state_valid[name] = false;
                 } else {
                     throw(new Error("Error evaluating note <code>"+name+"</code> - "+e.message));

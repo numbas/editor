@@ -2770,7 +2770,7 @@ $(document).ready(function() {
     var gapTypes = partTypes.filter(function(t){return nonGapTypeNames.indexOf(t.name)==-1});
     var stepTypes = partTypes.filter(function(t){return nonStepTypeNames.indexOf(t.name)==-1});
 
-    var deps = ['jme-display','jme-variables','jme','editor-extras'];
+    var deps = ['jme-display','jme-variables','jme','editor-extras','marking'];
 	for(var i=0;i<item_json.numbasExtensions.length;i++) {
 		var extension = item_json.numbasExtensions[i];
 		if(extension.hasScript) {

@@ -1298,10 +1298,7 @@ $(document).ready(function() {
 			});
 		},this);
 		this.value = ko.observable('');
-		this.thisLocked = ko.observable(false);
-		this.locked = ko.computed(function() {
-			return this.usedIn().some(function(v){return v.locked()}) || this.thisLocked();
-		},this);
+
 		this.error = ko.observable('');
         this.anyError = ko.computed(function() {
             if(this.question.variablesTest.conditionError()) {
@@ -1312,6 +1309,33 @@ $(document).ready(function() {
                 return this.error();
             }
         },this);
+
+		this.thisLocked = ko.observable(false);
+        var lockedSeen = {};
+        var lockedDepth = 0;
+		this.locked = ko.computed(function() {
+            if(lockedDepth==0) {
+                lockedSeen = {};
+            }
+            lockedDepth += 1;
+            lockedSeen[this.name()] = true;
+
+            if(this.error()) {
+                return false;
+            }
+            if(this.thisLocked()) {
+                return true;
+            }
+			var lockedUsed = this.usedIn().some(function(v){
+                if(lockedSeen[v.name()]) {
+                    return false;
+                }
+                return v.locked();
+            });
+            lockedDepth -= 1;
+            return lockedUsed;
+		},this);
+
 		this.display = ko.computed(function() {
 			var v;
 

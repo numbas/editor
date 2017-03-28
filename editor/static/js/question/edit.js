@@ -296,6 +296,22 @@ $(document).ready(function() {
                     return undefined;
                 }
             },this));
+            if('currentPartTabs' in state) {
+                Object.keys(state.currentPartTabs).forEach(function(path) {
+                    var tab = state.currentPartTabs[path];
+                    var part = q.getPart(path);
+                    if(part) {
+                        part.setTab(tab)();
+                    }
+                });
+            }
+            Editor.computedReplaceState('currentPartTabs',ko.computed(function() {
+                var d = {};
+                q.allParts().forEach(function(p) {
+                    d[p.path()] = p.currentTab().id;
+                });
+                return d;
+            },this));
 		}
 
     }
@@ -1635,6 +1651,18 @@ $(document).ready(function() {
 			},
 			write: this.realCurrentTab
 		},this);
+
+        this.getTab = function(id) {
+            return p.tabs().find(function(t){return t.id==id});
+        }
+
+        this.setTab = function(id) {
+            return function() {
+                var tab = p.getTab(id);
+                p.currentTab(tab);
+            }
+        }
+
 
         this.marks = ko.observable(1);
 		this.realMarks = ko.computed(function() {

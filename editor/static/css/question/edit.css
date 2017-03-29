@@ -115,6 +115,38 @@
     margin-bottom: 8rem;
 }
 
+.jme-value {
+    font-family: monospace;
+}
+.jme-value[data-jme-value-type="error"],
+.jme-value[data-jme-value-type="string"],
+.jme-value[data-jme-value-type="list"],
+.jme-value[data-jme-value-type="html"] {
+    font-family: inherit;
+}
+
+.marking-test .nav-tabs {
+    margin-bottom: 1em;
+}
+
+.marking-test .variables .variable .name {
+    cursor: pointer;
+}
+
+.marking-test .note:not(.show-note) .only-when-shown > * {
+    display: none;
+}
+.marking-test .note:not(.show-note) {
+    color: #555;
+}
+.marking-test .note:not(.show-note) > td {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.marking-test .note.show-note .name {
+    font-weight: bold;
+}
 
 /*
 #question-name {

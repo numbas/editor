@@ -225,6 +225,10 @@ $(document).ready(function() {
 			this.generateVariablePreview();
 		},this).extend({throttle:300});
 
+        this.regenerateVariables = function() {
+            q.generateVariablePreview();
+        }
+
         if(data) {
 			this.load(data);
 		}
@@ -1066,23 +1070,6 @@ $(document).ready(function() {
 		}
 	}
 
-    function displayJMEValue(v) {
-        switch(v.type) {
-            case 'string':
-                return Numbas.util.escapeHTML(v.value);
-            case 'list':
-                return 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
-            case 'html':
-                if(v.value.length==1 && v.value[0].tagName=='IMG') {
-                    var src = v.value[0].getAttribute('src');
-                    return '<img src="'+src+'" title="'+src+'">';
-                }
-                return 'HTML node';
-            default:
-                return Numbas.jme.display.treeToJME({tok:v});
-        }
-    }
-
     function Variable(q,data) {
 		this.question = q;
         this._name = ko.observable('');
@@ -1345,17 +1332,6 @@ $(document).ready(function() {
                 return this.error();
             }
         },this);
-		this.display = ko.computed(function() {
-			var v;
-
-			if(this.anyError()) {
-				return this.anyError();
-            } else if(v = this.value()) {
-                return displayJMEValue(v);
-			} else {
-				return '';
-            }
-		},this);
         this.remove = function() {
             q.variables.remove(this);
 			this.group().variables.remove(this);
@@ -1646,8 +1622,9 @@ $(document).ready(function() {
 					this.realCurrentTab(this.tabs()[0]);
 					return this.tabs()[0];
 				}
-				else
+				else {
 					return this.realCurrentTab();
+                }
 			},
 			write: this.realCurrentTab
 		},this);
@@ -1727,16 +1704,31 @@ $(document).ready(function() {
         this.customMarkingAlgorithm = ko.observable('');
         this.extendBaseMarkingAlgorithm = ko.observable(true);
 
+        this.markingScriptError = ko.observable('');
         this.markingScript = ko.computed(function() {
             var base = Numbas.marking_scripts[this.type().name];
             if(!this.use_custom_algorithm) {
                 return base;
             } else {
-                return new Numbas.marking.MarkingScript(this.customMarkingAlgorithm(), this.extendBaseMarkingAlgorithm() ? base : undefined);
+                try {
+                    var script = new Numbas.marking.MarkingScript(this.customMarkingAlgorithm(), this.extendBaseMarkingAlgorithm() ? base : undefined);
+                    this.markingScriptError('');
+                    return script;
+                } catch(e) {
+                    this.markingScriptError(e.message);
+                }
             }
         },this);
 
-        this.marking_test = new MarkingTest(this,this.q.questionScope());
+        this.marking_test = ko.observable(new MarkingTest(this,this.q.questionScope()));
+
+        this.unit_tests = ko.observableArray([]);
+
+        this.addUnitTest = function(test) {
+            test.editing(false);
+            p.unit_tests.push(test);
+            p.marking_test(new MarkingTest(p,p.q.questionScope()));
+        }
 
 		this.types.map(function(t){p[t.name] = t.model});
 
@@ -1947,12 +1939,32 @@ $(document).ready(function() {
 
     Numbas.marking.ignore_note_errors = true;
     function MarkingTest(part,scope) {
+        var mt = this;
         this.part = part;
-        this.scope = ko.observable(scope);
+        this.editing = ko.observable(true);
+        this.variables = ko.observableArray([]);
+        ko.computed(function() {
+            if(this.editing()) {
+                this.variables(this.part.q.variables().map(function(v) {
+                    return {
+                        name: v.name(),
+                        value: v.value()
+                    }
+                }));
+            }
+        },this);
+
         this.answer = ko.observable('');
+
+        this.notes = ko.observableArray([]);
+
+        this.scope = ko.observable(scope);
+
+        this.markingScript = part.markingScript;
+
         this.result = ko.computed(function() {
             try {
-                var script = part.markingScript();
+                var script = this.markingScript();
                 var result = script.evaluate(
                     this.scope(), 
                     Numbas.jme.wrapValue({
@@ -1970,29 +1982,287 @@ $(document).ready(function() {
                     error: e.message
                 }
             }
-        },this);
+        },this).extend({throttle:300});
 
-        this.notes = ko.computed(function() {
+        ko.computed(function() {
             var result = this.result();
-            var script = part.markingScript();
+            var script = this.markingScript();
+            var editing = this.editing();
+            if(!(result && script)) {
+                this.notes().forEach(function(n) {
+                    n.missing(true);
+                });
+                return;
+            }
             var states = [];
+            var existing_notes = {};
+
+            // look at notes we already know about, and if they're present in this result
+            this.notes().forEach(function(note) {
+                var missing = !(note.name in result.states);
+                if(missing && mt.editing()) {
+                    mt.notes.remove(note);
+                    return;
+                } else {
+                    note.missing(missing);
+                }
+                existing_notes[note.name] = note;
+            });
+
+            // save the results for each note
             for(var x in result.states) {
-                var feedback = Numbas.marking.finalise_state(result.states[x]);
-                states.push({
-                    note: script.notes[x],
-                    value: result.values[x] ? displayJMEValue(result.values[x]) : '',
-                    feedback: feedback,
-                    error: result.state_errors[x] ? result.state_errors[x].message : '',
-                    valid: result.state_valid[x]
+                var name = x.toLowerCase();
+                var note = existing_notes[name];
+                // if this note is new, add it to the list
+                if(!note) {
+                    note = new MarkingNote(name);
+                    existing_notes[name] = note;
+                    this.notes.push(note);
+                }
+
+                // compile feedback messages
+                var feedback = compile_feedback(Numbas.marking.finalise_state(result.states[x]));
+
+                // save the results for this note
+                note.note(script.notes[x]);
+                note.value(result.values[x]);
+                note.messages(feedback.messages);
+                note.warnings(feedback.warnings);
+                note.error(result.state_errors[x] ? result.state_errors[x].message : '');
+                note.valid(result.state_valid[x]);
+            }
+        },this);
+        ko.computed(function() {
+            if(this.editing()) {
+                this.notes().forEach(function(note) {
+                    note.setExpected();
                 });
             }
-            states.sort(function(a,b) {
-                a = a.note.name;
-                b = b.note.name;
+        },this).extend({throttle:100});
+
+        this.sortedNotes = ko.computed(function() {
+            var notes = this.notes().slice();
+            notes.sort(function(a,b) {
+                a = a.name;
+                b = b.name;
                 return a<b ? -1 : a>b ? 1 : 0;
-            });
-            return states;
+            })
+            return notes;
         },this);
+
+        this.shownNotes = ko.computed(function() {
+            return this.notes().filter(function(n){ return n.show(); });
+        },this);
+
+        this.canCreateUnitTest = ko.computed(function() {
+            return this.shownNotes().length>0;
+        },this);
+
+        this.tabs = [
+            new Editor.Tab('variables','Variable values','text-background'),
+            new Editor.Tab('notes','Feedback notes','text-background')
+        ];
+
+        this.getTab = function(id) {
+            return mt.tabs.find(function(t){return t.id==id});
+        }
+
+        this.setTab = function(id) {
+            return function() {
+                var tab = mt.getTab(id);
+                mt.currentTab(tab);
+            }
+        }
+        this.currentTab = ko.observable(null);
+
+        this.failingNotes = ko.computed(function() {
+            return this.shownNotes().filter(function(n){return !n.matchesExpected()});
+        },this);
+
+        this.passes = ko.computed(function() {
+            return this.failingNotes().length==0;
+        },this);
+
+        this.setTab('notes')();
+    }
+
+    function MarkingNote(name) {
+        var mn = this;
+        this.name = name;
+
+        this.show = ko.observable(false).toggleable();
+
+        this.note = ko.observable(null);
+        this.description = ko.computed(function() {
+            var note = this.note();
+            return note ? note.description : '';
+        },this);
+
+        this.missing = ko.observable(false);
+
+        this.value = ko.observable(null);
+        this.messages = ko.observableArray([]);
+        this.warnings = ko.observableArray([]);
+        this.error = ko.observable('');
+        this.valid = ko.observable(true);
+
+        this.valueType = ko.computed(function() {
+            var v = this.value();
+            return v ? v.type : 'none';
+        },this);
+
+        this.expected = {
+            value: ko.observable(''),
+            messages: ko.observableArray([]),
+            warnings: ko.observableArray([]),
+            error: ko.observable(''),
+            valid: ko.observable(true)
+        };
+        this.setExpected = function() {
+            var value = mn.value()
+            mn.expected.value(value ? Numbas.jme.display.treeToJME({tok:value}) : '');
+            mn.expected.messages(mn.messages());
+            mn.expected.warnings(mn.warnings());
+            mn.expected.error(mn.error());
+            mn.expected.valid(mn.valid());
+        }
+        this.noMatchReason = ko.computed(function() {
+            try {
+                var expectedValue = Numbas.jme.builtinScope.evaluate(this.expected.value());
+                var bothValues= expectedValue && this.value();
+                var differentValue = bothValues ? !Numbas.util.eq(expectedValue,this.value()) : expectedValue==this.value();
+            } catch(e) {
+                differentValue = false;
+            }
+            var differentMessages = this.messages().join('\n')!=this.expected.messages().join('\n');
+            var differentWarnings = this.warnings().join('\n')!=this.expected.warnings().join('\n');
+            var differentError = this.error()!=this.expected.error();
+            var differentValidity = this.valid()!=this.expected.valid();
+
+            if(differentValue) {
+                return 'value';
+            } else if(differentMessages) {
+                return 'messages';
+            } else if(differentWarnings) {
+                return 'warnings';
+            } else if(differentError) {
+                return this.error() ? this.expected.error() ? 'different-error' : 'unexpected-error' : 'missing-error';
+            } else if(differentValidity) {
+                return this.expected.valid() ? 'unexpected-invalid' : 'unexpected-invalid';
+            } else {
+                return null;
+            }
+        },this);
+        this.noMatchDescription = ko.computed(function() {
+            var reason = this.noMatchReason();
+            var d = {
+                'value': 'The value of this note differs from the expected value.',
+                'messages': 'The feedback messages differ from those expected.',
+                'warnings': 'The warning messages differ from those expected.',
+                'different-error': 'A different error message has been thrown.',
+                'unexpected-error': 'An unexpected error has been thrown.',
+                'missing-error': 'An error was expected.',
+                'unexpected-valid': 'This note was expected to be invalid.',
+                'unexpected-invalid': 'This note was expected to be valid.'
+            }
+            return d[reason];
+        },this);
+
+        this.matchesExpected = ko.computed(function() {
+            return !this.noMatchReason();
+        },this);
+    }
+
+    function compile_feedback(feedback) {
+        var valid = true;
+        var part = this;
+        var end = false;
+        var states = feedback.states.slice();
+        var i=0;
+        var lifts = [];
+        var scale = 1;
+        var maxMarks = 1;
+
+        var messages = [];
+        var warnings = [];
+        var credit = 0;
+
+        function addCredit(change,message) {
+            credit += change;
+            change *= maxMarks;
+
+            var message = message || '';
+            if(Numbas.util.isNonemptyHTML(message)) {
+                var marks = Math.abs(change);
+
+                if(change>0)
+                    message+='\n\n'+R('feedback.you were awarded',{count:marks});
+                else if(change<0)
+                    message+='\n\n'+R('feedback.taken away',{count:marks});
+            }
+            if(Numbas.util.isNonemptyHTML(message)) {
+                messages.push(message);
+            }
+        }
+
+        while(i<states.length) {
+            var state = states[i];
+            switch(state.op) {
+                case 'set_credit':
+                    addCredit(scale*state.credit-credit,state.message);
+                    break;
+                case 'multiply_credit':
+                    addCredit((scale*state.factor-1)*credit,state.message);
+                    break;
+                case 'add_credit':
+                    addCredit(scale*state.credit, state.message);
+                    break;
+                case 'sub_credit':
+                    addCredit(-scale*state.credit, state.message);
+                    break;
+                case 'warning':
+                    warnings.push(state.message);
+                    break;
+                case 'feedback':
+                    messages.push(state.message);
+                    break;
+                case 'end':
+                    if(lifts.length) {
+                        while(i+1<states.length && states[i+1].op!='end_lift') {
+                            i += 1;
+                        }
+                    } else {
+                        end = true;
+                        if(state.invalid) {
+                            valid = false;
+                        }
+                    }
+                    break;
+                case 'start_lift':
+                    lifts.push({credit: this.credit,scale:scale});
+                    this.credit = 0;
+                    scale = state.scale;
+                    break;
+                case 'end_lift':
+                    var last_lift = lifts.pop();
+                    var lift_credit = credit;
+                    credit = last_lift.credit;
+                    addCredit(lift_credit*last_lift.scale);
+                    scale = last_lift.scale;
+                    break;
+            }
+            i += 1;
+            if(end) {
+                break;
+            }
+        }
+
+        return {
+            valid: valid,
+            credit: credit,
+            messages: messages,
+            warnings: warnings
+        }
     }
 
 	function PartType(part,data) {
@@ -2101,6 +2371,11 @@ $(document).ready(function() {
 				model.checkingType = ko.observable(model.checkingTypes[0]);
 
                 model.markingSettings = ko.computed(function() {
+                    try {
+                        var correctAnswer = Numbas.jme.subvars(model.answer(),part.q.questionScope());
+                    } catch(e) {
+                        correctAnswer = '';
+                    }
                     return {
                         expectedVariableNames: model.expectedVariableNames(),
                         minLength: model.minlength.length(),
@@ -2114,7 +2389,7 @@ $(document).ready(function() {
                         notAllowedMessage: model.notallowed.message(),
                         mustHave: model.musthave.strings(),
                         mustHavePC: model.musthave.partialCredit(),
-                        correctAnswer: Numbas.jme.subvars(model.answer(),part.q.questionScope()),
+                        correctAnswer: correctAnswer,
                         correctAnswerString: model.answer(),
                         answerSimplificationString: model.answerSimplification(),
                         vsetRangeStart: model.vset.start(),

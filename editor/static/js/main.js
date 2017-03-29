@@ -62,6 +62,14 @@ $(document).ready(function() {
 		});
 	}
 
+    ko.observable.fn.toggleable = function() {
+        var o = this;
+        this.toggle = function() {
+            o(!o());
+        }
+        return o;
+    }
+
 	ko.bindingHandlers.dotdotdot = {
 		update: function(element) {
 			$(element).dotdotdot({

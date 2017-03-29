@@ -4033,7 +4033,11 @@ newBuiltin('table',[TList],THTML,
 );
 
 newBuiltin('parse',[TString],TExpression,function(expr) {
-    return jme.compile(expr);
+    var tree = jme.compile(expr);
+    if(!tree) {
+        throw(new Numbas.Error('jme.compile.empty expression'));
+    }
+    return tree;
 });
 
 newBuiltin('head',[TExpression],'?',null, {
@@ -7345,7 +7349,7 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
     var MarkingNote = marking.MarkingNote = function(source) {
         var m = re_note.exec(source.trim());
         if(!m) {
-            throw(new Numbas.Error("marking.note.invalid definition",{source: source}));
+            throw(new Numbas.Error("marking.note.invalid definition",{source: source.split('\n')[0]}));
         }
         this.name = m[1];
         this.description = m[2];
@@ -9938,7 +9942,18 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 		},
 		'boolean': function(a,b) {
 			return a.value==b.value;
-		}
+		},
+        'dict': function(a,b) {
+            var akeys = Object.keys(a.value);
+            var bkeys = Object.keys(b.value);
+            if(akeys.length != bkeys.length || akeys.filter(function(k){return !bkeys.contains(k)})) {
+                return false;
+            } else {
+                return akeys.every(function(key) {
+                    return util.eq(a.value[key],b.value[key]);
+                });
+            }
+        }
 	},
 
 

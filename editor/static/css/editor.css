@@ -146,6 +146,14 @@ editor-pager nav {
   border-color: #398439;
 }
 
+@media (min-width: 768px) and (max-width: 992px) {
+    .nav-pills.nav-stacked > li > a {
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+    }
+}
+
 /*
 #name-header {
     padding: 0;

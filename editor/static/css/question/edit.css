@@ -2,10 +2,12 @@
     margin-top: 1em;
 }
 
-.part > .panel-heading {
+.part > .panel-heading,
+.unit-test > .panel-heading {
     cursor: s-resize;
 }
-.part.open > .panel-heading {
+.part.open > .panel-heading,
+.unit-test.open > .panel-heading {
     cursor: n-resize;
 }
 
@@ -125,8 +127,12 @@
     font-family: inherit;
 }
 
-.marking-test .nav-tabs {
+.marking-test .nav-tabs,
+.unit-test .nav-tabs {
     margin-bottom: 1em;
+}
+.unit-test .passing-status {
+    margin-right: 0.5em;
 }
 
 .marking-test .variables .variable .name {

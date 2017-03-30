@@ -5444,6 +5444,16 @@ function jmeRealNumber(n,settings)
 	}
 }
 
+function jmeCleanString(str) {
+    return str
+            .replace(/\\/g,'\\\\')
+            .replace(/\\([{}])/g,'$1')
+            .replace(/\n/g,'\\n')
+            .replace(/"/g,'\\"')
+            .replace(/'/g,"\\'")
+    ;
+}
+
 /** Dictionary of functions to turn {@link Numbas.jme.types} objects into JME strings
  *
  * @enum
@@ -5465,14 +5475,7 @@ var typeToJME = Numbas.jme.display.typeToJME = {
 		return tok.name;
 	},
 	'string': function(tree,tok,bits,settings) {
-		var str = tok.value
-					.replace(/\\/g,'\\\\')
-					.replace(/\\([{}])/g,'$1')
-					.replace(/\n/g,'\\n')
-					.replace(/"/g,'\\"')
-					.replace(/'/g,"\\'")
-		;
-		return '"'+str+'"';
+		return '"'+jmeCleanString(tok.value)+'"';
 	},
 	html: function(tree,tok,bits,settings) {
 		var html = $(tok.value).clone().wrap('<div>').parent().html();
@@ -5616,7 +5619,12 @@ var typeToJME = Numbas.jme.display.typeToJME = {
 	},
 
 	expression: function(tree,tok,bits,settings) {
-		return treeToJME(tok.tree);
+		var str = treeToJME(tok.tree);
+        if(settings.bareExpression===false) {
+            return 'parse("'+jmeCleanString(str)+'")';
+        } else {
+            return str;
+        }
 	}
 }
 

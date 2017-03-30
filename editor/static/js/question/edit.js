@@ -1604,7 +1604,7 @@ $(document).ready(function() {
 
 			if(this.type().has_marks) {
 				tabs.push(new Editor.Tab('marking-settings','Marking settings','pencil',true,true));
-				tabs.push(new Editor.Tab('marking-algorithm','Marking algorithm','pencil'));
+				tabs.push(new Editor.Tab('marking-algorithm','Marking algorithm','ok'));
             }
 
 			tabs = tabs.concat(this.type().tabs);
@@ -1720,9 +1720,8 @@ $(document).ready(function() {
             }
         },this);
 
-        this.marking_test = ko.observable(new MarkingTest(this,this.q.questionScope()));
-
         this.unit_tests = ko.observableArray([]);
+        this.marking_test = ko.observable(new MarkingTest(this,this.q.questionScope()));
 
         this.addUnitTest = function(test) {
             test.editing(false);
@@ -1825,7 +1824,8 @@ $(document).ready(function() {
 				variableReplacements: this.variableReplacements().map(function(vr){return vr.toJSON()}),
 				variableReplacementStrategy: this.variableReplacementStrategy().name,
                 customMarkingAlgorithm: this.use_custom_algorithm() ? this.customMarkingAlgorithm() : '',
-                extendBaseMarkingAlgorithm: this.use_custom_algorithm() ? this.extendBaseMarkingAlgorithm() : true
+                extendBaseMarkingAlgorithm: this.use_custom_algorithm() ? this.extendBaseMarkingAlgorithm() : true,
+                unitTests: this.unit_tests().map(function(t){ return t.toJSON() })
             };
 
             if(this.prompt())
@@ -1897,6 +1897,45 @@ $(document).ready(function() {
 				});
 			}
 
+            if(data.unitTests) {
+                data.unitTests.forEach(function(dt) {
+                    var test = new MarkingTest(p,p.q.questionScope());
+                    test.editing(false);
+                    test.open(false);
+                    test.variables(dt.variables.map(function(v) {
+                        try {
+                            var value = Numbas.jme.builtinScope.evaluate(v.value);
+                        } catch(e) {
+                            value = null;
+                        }
+                        return {
+                            name: v.name,
+                            valueString: v.value,
+                            value: value
+                        }
+                    }));
+                    test.name(dt.name);
+                    test.answer(dt.answer);
+                    test.notes().forEach(function(n) {
+                        n.show(false);
+                    });
+                    dt.notes.forEach(function(dn) {
+                        var note = test.getNote(dn.name);
+                        if(!note) {
+                            note = new MarkingNote(dn.name);
+                            test.notes.push(note);
+                        }
+                        note.show(true);
+                        note.expected.value(dn.expected.value);
+                        note.expected.messages(dn.expected.messages);
+                        note.expected.warnings(dn.expected.warnings);
+                        note.expected.error(dn.expected.error);
+                        note.expected.valid(dn.expected.valid);
+                    });
+                    p.unit_tests.push(test);
+                });
+            }
+
 			try{
 				this.type().load(data);
 			}catch(e){
@@ -1942,21 +1981,39 @@ $(document).ready(function() {
         var mt = this;
         this.part = part;
         this.editing = ko.observable(true);
+        this.open = ko.observable(true).toggleable();
+        this.name = ko.observable();
+
         this.variables = ko.observableArray([]);
         ko.computed(function() {
             if(this.editing()) {
                 this.variables(this.part.q.variables().map(function(v) {
+                    var value = v.value();
                     return {
                         name: v.name(),
-                        value: v.value()
+                        value: value,
+                        valueString: value ? Numbas.jme.display.treeToJME({tok:value},{bareExpression:false}) : ''
                     }
                 }));
             }
         },this);
 
+        this.header = ko.computed(function() {
+            var i = this.part.unit_tests().indexOf(this)+1;
+            return i+'. ';
+        },this);
+
+        this.remove = function() {
+            mt.part.unit_tests.remove(mt);
+        }
+
         this.answer = ko.observable('');
 
         this.notes = ko.observableArray([]);
+
+        this.getNote = function(name) {
+            return this.notes().filter(function(n){return n.name==name})[0];
+        }
 
         this.scope = ko.observable(scope);
 
@@ -1988,9 +2045,14 @@ $(document).ready(function() {
             var result = this.result();
             var script = this.markingScript();
             var editing = this.editing();
-            if(!(result && script)) {
+            if(!(result && script) || result.error) {
                 this.notes().forEach(function(n) {
                     n.missing(true);
+                    n.value(null);
+                    n.messages([]);
+                    n.warnings([]);
+                    n.error('');
+                    n.valid(false);
                 });
                 return;
             }
@@ -2032,11 +2094,14 @@ $(document).ready(function() {
                 note.valid(result.state_valid[x]);
             }
         },this);
+        this.setExpected = function() {
+            mt.notes().forEach(function(note) {
+                note.setExpected();
+            });
+        }
         ko.computed(function() {
             if(this.editing()) {
-                this.notes().forEach(function(note) {
-                    note.setExpected();
-                });
+                this.setExpected();
             }
         },this).extend({throttle:100});
 
@@ -2058,6 +2123,13 @@ $(document).ready(function() {
             return this.shownNotes().length>0;
         },this);
 
+        this.showAllNotes = function() {
+            mt.notes().forEach(function(n){ n.show(true); });
+        }
+        this.hideAllNotes = function() {
+            mt.notes().forEach(function(n){ n.show(false); });
+        }
+
         this.tabs = [
             new Editor.Tab('variables','Variable values','text-background'),
             new Editor.Tab('notes','Feedback notes','text-background')
@@ -2076,7 +2148,11 @@ $(document).ready(function() {
         this.currentTab = ko.observable(null);
 
         this.failingNotes = ko.computed(function() {
-            return this.shownNotes().filter(function(n){return !n.matchesExpected()});
+            return this.shownNotes().filter(function(n){return n.missing() || !n.matchesExpected()});
+        },this);
+
+        this.missingNotes = ko.computed(function() {
+            return this.shownNotes().filter(function(n){return n.missing()});
         },this);
 
         this.passes = ko.computed(function() {
@@ -2085,12 +2161,39 @@ $(document).ready(function() {
 
         this.setTab('notes')();
     }
+    MarkingTest.prototype = {
+        toJSON: function() {
+            return {
+                variables: this.variables().map(function(v) {
+                    return {
+                        name: v.name,
+                        value: v.valueString
+                    }
+                }),
+                name: this.name(),
+                answer: this.answer(),
+                notes: this.shownNotes().map(function(note) {
+                    return {
+                        name: note.name,
+                        expected: {
+                            value: note.expected.value(),
+                            messages: note.expected.messages(),
+                            warnings: note.expected.warnings(),
+                            error: note.expected.error(),
+                            valid: note.expected.valid()
+                        }
+                    }
+                }),
+            }
+        }
+    }
 
     function MarkingNote(name) {
         var mn = this;
         this.name = name;
 
-        this.show = ko.observable(false).toggleable();
+        var default_show_names = ['mark','interpreted_answer'];
+        this.show = ko.observable(default_show_names.contains(this.name)).toggleable();
 
         this.note = ko.observable(null);
         this.description = ko.computed(function() {
@@ -2118,19 +2221,39 @@ $(document).ready(function() {
             error: ko.observable(''),
             valid: ko.observable(true)
         };
+        this.expected.computedValue = ko.computed(function() {
+            try {
+                return Numbas.jme.builtinScope.evaluate(this.expected.value());
+            } catch(e) {
+                return null;
+            }
+        },this);
         this.setExpected = function() {
             var value = mn.value()
-            mn.expected.value(value ? Numbas.jme.display.treeToJME({tok:value}) : '');
+            mn.expected.value(value ? Numbas.jme.display.treeToJME({tok:value},{bareExpression:false}) : '');
             mn.expected.messages(mn.messages());
             mn.expected.warnings(mn.warnings());
             mn.expected.error(mn.error());
             mn.expected.valid(mn.valid());
         }
         this.noMatchReason = ko.computed(function() {
+            if(this.missing()) {
+                return 'missing';
+            }
             try {
-                var expectedValue = Numbas.jme.builtinScope.evaluate(this.expected.value());
-                var bothValues= expectedValue && this.value();
-                var differentValue = bothValues ? !Numbas.util.eq(expectedValue,this.value()) : expectedValue==this.value();
+                var value = this.value();
+                var expectedValue = this.expected.computedValue();
+                var bothValues = expectedValue && value;
+                var differentValue;
+                if(bothValues) {
+                    if(Numbas.util.equalityTests[expectedValue.type] && Numbas.util.equalityTests[value.type]) {
+                        differentValue = !Numbas.util.eq(expectedValue,value);
+                    } else {
+                        differentValue = expectedValue.type != value.type;
+                    }
+                } else {
+                    differentValue = expectedValue==value;
+                }
             } catch(e) {
                 differentValue = false;
             }
@@ -2156,6 +2279,7 @@ $(document).ready(function() {
         this.noMatchDescription = ko.computed(function() {
             var reason = this.noMatchReason();
             var d = {
+                'missing': 'This note is no longer defined.',
                 'value': 'The value of this note differs from the expected value.',
                 'messages': 'The feedback messages differ from those expected.',
                 'warnings': 'The warning messages differ from those expected.',
@@ -2716,8 +2840,8 @@ $(document).ready(function() {
 			niceName: 'Choose one from a list',
 			tabs: [
 				new Editor.Tab('choices','Choices','list',true,true),
-				new Editor.Tab('marking-settings','Marking settings','pencil,true,true'),
-				new Editor.Tab('marking-algorithm','Marking algorithm','pencil,true,true'),
+				new Editor.Tab('marking-settings','Marking settings','pencil',true,true),
+				new Editor.Tab('marking-algorithm','Marking algorithm','ok'),
 			],
 
 			model: function(part) {
@@ -2827,7 +2951,7 @@ $(document).ready(function() {
 			tabs: [
 				new Editor.Tab('choices','Choices','list',true,true),
 				new Editor.Tab('marking-settings','Marking settings','pencil',true,true),
-				new Editor.Tab('marking-algorithm','Marking algorithm','pencil')
+				new Editor.Tab('marking-algorithm','Marking algorithm','ok')
 			],
 
 			model: function() {
@@ -2957,7 +3081,7 @@ $(document).ready(function() {
 				new Editor.Tab('answers','Answers','list',true,true),
 				new Editor.Tab('matrix','Marking matrix','th',true,true),
 				new Editor.Tab('marking','Marking options','pencil',true,true),
-				new Editor.Tab('marking-algorithm','Marking algorithm','pencil')
+				new Editor.Tab('marking-algorithm','Marking algorithm','ok')
 			],
 
 			model: function() {

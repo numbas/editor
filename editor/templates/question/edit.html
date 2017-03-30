@@ -167,7 +167,10 @@
 {% block admin_controls %}
 {{block.super}}
 <li id="add-to-basket">
-<a class="basket add-to-basket" href="#" data-question-id="{{object.pk}}"><span class="glyphicon glyphicon-shopping-cart" title="Add this question to your basket" aria-hidden="true"></span> Add to your basket</a>
+<a class="basket add-to-basket" href="#" data-question-id="{{object.pk}}">
+    <span class="glyphicon glyphicon-shopping-cart" title="Add this question to your basket" aria-hidden="true"></span> 
+    <span class="hidden-sm">Add to your basket</span>
+</a>
 </li>
 {% endblock admin_controls %}
 
@@ -432,12 +435,12 @@
                 </div>
                 <div data-bind="fadeVisible: open">
                     <div class="panel-body">
-                        <ul class="col-sm-3 nav nav-pills nav-stacked part-tabs" data-bind="foreach: tabs">
+                        <ul class="col-sm-1 col-md-3 nav nav-pills nav-stacked part-tabs" data-bind="foreach: tabs">
                             <li data-bind="css: {active: ko.unwrap($parent.currentTab().id) == $data.id, 'more-important': $data.more_important}">
-                                <a href="#" data-bind="click: $parent.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon}"></span> <span data-bind="text: title"></span></a>
+                                <a href="#" data-bind="click: $parent.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> <span class="hidden-sm" data-bind="text: title"></span></a>
                             </li>
                         </ul>
-                        <div class="col-sm-9 tab-content">
+                        <div class="col-sm-11 col-md-9 tab-content">
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='prompt'}">
                                 <p class="help-block">
                                     {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-prompt' subject='the part prompt' %}
@@ -447,7 +450,7 @@
                                 <div {% if not editable %}disabled{% endif %} data-bind="writemaths: prompt, preambleCSS: $root.preamble.css, tinymce_plugins: ['gapfill','jmevisible','preview'], showButtons: {gapfill: function(){return $data.type().name=='gapfill'}}"></div>
                             </section>
 
-                            {% with form_label_class="col-sm-4" form_control_class="col-sm-8" %}
+                            {% with form_label_class="col-sm-6 col-md-4" form_control_class="col-sm-6 col-md-8" %}
                             {% for name,template in partNames %}
                                 <!-- ko if: type().name=='{{name}}' -->
                                     <!-- ko with: type().model -->
@@ -470,6 +473,11 @@
 
                                 <hr>
                                 <h4>Marking test</h4>
+
+                                <div class="help-block">
+                                    <p>Check that the marking algorithm works with different sets of variables and student answers using the interface below.</p>
+                                    <p>Create unit tests to save expected results and to document how the algorithm should work.</p>
+                                </div>
 
                                 <div class="marking-test" data-bind="with: marking_test">
                                     <ul class="nav nav-tabs" data-bind="foreach: tabs">
@@ -503,113 +511,163 @@
                                             <table class="notes table">
                                                 <thead>
                                                     <tr>
-                                                        <th>Note</th>
+                                                        <th>
+                                                            Note
+                                                            <br>
+                                                            <div class="btn-group" role="group">
+                                                                <button type="button" class="btn btn-sm btn-link" data-bind="click: showAllNotes"><span class="glyphicon glyphicon-eye-open"></span> Show all</button> 
+                                                                <button type="button" class="btn btn-sm btn-link" data-bind="click: hideAllNotes"><span class="glyphicon glyphicon-eye-close"></span> Hide all</button>
+                                                            </div>
+                                                        </th>
                                                         <th>Value</th>
                                                         <th>Feedback</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody data-bind="foreach: sortedNotes">
                                                     <tr class="note" data-bind="css: {danger: missing() || !valid(), 'show-note': show}">
-                                                        <td>
-                                                            <span class="name monospace" data-bind="click: show.toggle, text: name, attr: {title: description}"></span> 
-                                                        </td>
-                                                        <td class="only-when-shown value jme-value">
-                                                            <span data-bind="jmevalue: value, error: error"></span>
+                                                        <td role="button" data-bind="click: show.toggle">
+                                                            <span class="name monospace" data-bind="text: name, attr: {title: description}"></span> 
                                                         </td>
                                                         <td class="only-when-shown">
-                                                            <ul data-bind="foreach: messages">
+                                                            <span class="value jme-value" data-bind="jmevalue: value, error: error"></span>
+                                                        </td>
+                                                        <td class="only-when-shown">
+                                                            <ul class="list-unstyled" data-bind="foreach: messages">
                                                                 <li data-bind="html: $data"></li>
                                                             </ul>
-                                                        </td>
-                                                        <td data-bind="visible: !$parent.editing()">
-                                                            <span class="text-success" data-bind="visible: matchesExpected"><span class="glyphicon glyphicon-ok"></span></span>
-                                                            <span class="text-danger" data-bind="visible: !matchesExpected()"><span class="glyphicon glyphicon-remove" data-bind="attr: {title: noMatchDescription}"></span> <span class="sr-only" data-bind="text: noMatchDescription"></span></span>
                                                         </td>
                                                     </tr>
                                                 </tbody>
                                             </table>
+
+                                            <div class="help-block">
+                                                <p>
+                                                    Click on a note's name to show or hide it. Only shown notes will be included when you create a unit test. 
+                                                </p>
+                                            </div>
+
                                             <button class="btn btn-primary" type="button" data-bind="click: $parent.addUnitTest, disable: !canCreateUnitTest()">Create a unit test</button>
+
                                         </section>
                                     </div>
                                 </div>
 
+                                <hr>
                                 <h4>Unit tests</h4>
-                                <ul class="unit-tests list-unstyled" data-bind="foreach: unit_tests">
-                                    <ul class="nav nav-tabs" data-bind="foreach: tabs">
-                                        <li role="presentation" data-bind="css: {active: ko.unwrap($parent.currentTab().id) == $data.id}"><a href="#" data-bind="click: $parent.currentTab, text: title"></a></li>
-                                    </ul>
+                                <div class="nothing-here" data-bind="fadeVisible: unit_tests().length==0">
+                                    <p>No unit tests have been defined. Select one or more notes above, and click the "Create a unit test" button.</p>
+                                </div>
+                                <div class="panel-group unit-tests">
+                                    <!-- ko foreach: unit_tests -->
+                                    <div class="panel unit-test" data-bind="css: {open: open(), 'panel-success': passes(), 'panel-danger': !passes()}">
+                                        <div class="panel-heading" data-bind="restrictedClick: open.toggle" clickable>
+                                            {% if editable %}
+                                            <div class="pull-right">
+                                                <button type="button" class="btn btn-link" title="Remove this unit test" data-bind="click: remove"><span class="glyphicon glyphicon-trash text-danger"></span></button>
+                                            </div>
+                                            {% endif %}
 
-                                    <div class="tab-content">
-                                        <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='variables'}">
-                                            <table class="variables table table-striped">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Name</th>
-                                                        <th>Value</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody data-bind="foreach: variables">
-                                                    <tr class="variable">
-                                                        <td class="name monospace" data-bind="click: function(){$root.goToVariable(name)}, text: name ? name : 'Unnamed'"></td>
-                                                        <td class="value jme-value" data-bind="jmevalue: value"></td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </section>
+                                            <h3 class="panel-title form-inline" clickable>
+                                                <span class="lead passing-status" clickable>
+                                                    <span class="text-success" data-bind="visible: passes"><span class="glyphicon glyphicon-ok" title="This test produces the expected output" clickable></span> <span class="sr-only">This test produces the expected output</span></span>
+                                                    <span class="text-danger" data-bind="visible: !passes()"><span class="glyphicon glyphicon-remove" title="This test does not produce the expected output" clickable></span> <span class="sr-only">This test does not produce the expected output</span></span>
+                                                </span>
+                                                <span clickable role="button" class="glyphicon" data-bind="css: {'glyphicon-triangle-right': !open(), 'glyphicon-triangle-bottom': open}"></span>
+                                                <strong data-bind="text: header" clickable></strong>
+                                                <span data-bind="visible: !open(), text: name()" clickable></span>
+                                                <input type="text" class="form-control" data-bind="visible: open, textInput: name" placeholder="Describe this test">
+                                            </h3>
+                                        </div>
 
-                                        <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='notes'}">
-                                            <form class="form-horizontal" data-bind="submit: Editor.noop">
-                                                {% property 'answer' 'Student\'s answer' disable=True %}
-                                            </form>
+                                        <div data-bind="fadeVisible: open">
+                                            <div class="panel-body">
+                                                <div class="alert alert-danger" data-bind="visible: !passes() && missingNotes().length==0">
+                                                    <p>This test is not currently producing the expected result. Fix the marking algorithm to produce the expected results detailed below or, if this test is out of date, update the test to accept the current values.</p>
+                                                    <p><button type="button" class="btn btn-danger" data-bind="click: setExpected"><span class="glyphicon glyphicon-refresh"></span> Accept the current values</button></p>
+                                                </div>
+                                                <div class="alert alert-danger" data-bind="visible: !passes() && missingNotes().length>0">
+                                                    <p>One or more notes in this test are no longer defined. If these notes are no longer needed, you should delete this test.</p>
+                                                </div>
+                                                <ul class="nav nav-tabs" data-bind="foreach: tabs">
+                                                    <li role="presentation" data-bind="css: {active: ko.unwrap($parent.currentTab().id) == $data.id}"><a href="#" data-bind="click: $parent.currentTab, text: title"></a></li>
+                                                </ul>
 
-                                            <table class="notes table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Note</th>
-                                                        <th></th>
-                                                        <th>Value</th>
-                                                        <th>Feedback</th>
-                                                        <td></td>
-                                                    </tr>
-                                                </thead>
-                                                <!-- ko foreach: sortedNotes -->
-                                                    <tbody data-bind="visible: show">
-                                                        <tr class="note" data-bind="css: {danger: missing() || !valid()}">
-                                                            <td rowspan="2">
-                                                                <span class="name monospace" data-bind="text: name, attr: {title: description}"></span> 
-                                                            </td>
-                                                            <th>Current:</th>
-                                                            <td class="value jme-value">
-                                                                <span data-bind="jmevalue: value, error: error"></span>
-                                                            </td>
-                                                            <td>
-                                                                <ul data-bind="foreach: messages">
-                                                                    <li data-bind="html: $data"></li>
-                                                                </ul>
-                                                            </td>
-                                                            <td rowspan="2">
-                                                                <span class="text-success" data-bind="visible: matchesExpected"><span class="glyphicon glyphicon-ok"></span></span>
-                                                                <span class="text-danger" data-bind="visible: !matchesExpected()"><span class="glyphicon glyphicon-remove" data-bind="attr: {title: noMatchDescription}"></span> <span class="sr-only" data-bind="text: noMatchDescription"></span></span>
-                                                            </td>
-                                                        </tr>
-                                                        <tr class="note" data-bind="css: {danger: missing() || !valid()}">
-                                                            <th>Expected</th>
-                                                            <td class="value jme-value">
-                                                                <span data-bind="text: expected.value"></span>
-                                                            </td>
-                                                            <td>
-                                                                <ul data-bind="foreach: expected.messages">
-                                                                    <li data-bind="html: $data"></li>
-                                                                </ul>
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                <!-- /ko -->
-                                            </table>
-                                            <button class="btn btn-primary" type="button" data-bind="click: $parent.addUnitTest, disable: !canCreateUnitTest()">Create a unit test</button>
-                                        </section>
+                                                <div class="tab-content">
+                                                    <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='variables'}">
+                                                        <table class="variables table table-striped">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Name</th>
+                                                                    <th>Value</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody data-bind="foreach: variables">
+                                                                <tr class="variable">
+                                                                    <td class="name monospace" data-bind="click: function(){$root.goToVariable(name)}, text: name ? name : 'Unnamed'"></td>
+                                                                    <td class="value jme-value" data-bind="jmevalue: value"></td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </section>
+
+                                                    <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='notes'}">
+                                                        <form class="form-horizontal" data-bind="submit: Editor.noop">
+                                                            {% property 'answer' 'Student\'s answer' disable=True %}
+                                                        </form>
+
+                                                        <table class="notes table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th></th>
+                                                                    <th>Note</th>
+                                                                    <th></th>
+                                                                    <th>Value</th>
+                                                                    <th>Feedback</th>
+                                                                    <td></td>
+                                                                </tr>
+                                                            </thead>
+                                                            <!-- ko foreach: sortedNotes -->
+                                                                <tbody data-bind="visible: show">
+                                                                    <tr class="note" data-bind="css: {danger: missing() || !valid()}">
+                                                                        <td rowspan="2" class="lead">
+                                                                            <span class="text-success" data-bind="visible: matchesExpected"><span class="glyphicon glyphicon-ok" title="This note produces the expected output"></span> <span class="sr-only">This note produces the expected output</span></span>
+                                                                            <span class="text-danger" data-bind="visible: !matchesExpected()"><span class="glyphicon glyphicon-remove" data-bind="attr: {title: noMatchDescription}"></span> <span class="sr-only" data-bind="text: noMatchDescription"></span></span>
+                                                                        </td>
+                                                                        <td rowspan="2">
+                                                                            <span class="name monospace" data-bind="text: name, attr: {title: description}"></span> 
+                                                                        </td>
+                                                                        <th>Current:</th>
+                                                                        <td>
+                                                                            <span class="value jme-value" data-bind="jmevalue: value, error: error"></span>
+                                                                        </td>
+                                                                        <td>
+                                                                            <ul class="list-unstyled" data-bind="foreach: messages">
+                                                                                <li data-bind="html: $data"></li>
+                                                                            </ul>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr class="note" data-bind="css: {danger: missing() || !valid()}">
+                                                                        <th>Expected:</th>
+                                                                        <td>
+                                                                            <span class="value jme-value" data-bind="jmevalue: expected.computedValue"></span>
+                                                                        </td>
+                                                                        <td>
+                                                                            <ul class="list-unstyled" data-bind="foreach: expected.messages">
+                                                                                <li data-bind="html: $data"></li>
+                                                                            </ul>
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            <!-- /ko -->
+                                                        </table>
+                                                        <button class="btn btn-primary" type="button" data-bind="click: $parent.addUnitTest, disable: !canCreateUnitTest()">Create a unit test</button>
+                                                    </section>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </ul>
+                                    <!-- /ko -->
+                                </div>
                             </section>
 
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='scripts'}">

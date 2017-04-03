@@ -157,6 +157,7 @@
     "marking.script.error parsing notes": "Error parsing marking script: {{message}}",
     "marking.note.compilation error": "Error compiling note <code>{{name}}</code>: {{message}}",
     "marking.note.invalid definition": "Invalid note definition beginning at <code>{{source}}</code>",
+    "marking.note.empty definition": "Note <code>{{name}}</code> has an empty definition",
     "part.correct answer": "Expected answer:",
     "part.missing type attribute": "{{part}}: Missing part type attribute",
     "part.unknown type": "{{part}}: Unrecognised part type {{type}}",

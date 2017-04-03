@@ -2060,14 +2060,16 @@ $(document).ready(function() {
             var existing_notes = {};
 
             // look at notes we already know about, and if they're present in this result
-            this.notes().forEach(function(note) {
+            var notes = this.notes().slice();
+            notes.forEach(function(note) {
                 var missing = !(note.name in result.states);
-                if(missing && mt.editing()) {
-                    mt.notes.remove(note);
-                    return;
-                } else {
-                    note.missing(missing);
-                }
+                if(missing) {
+                    if(mt.editing()) {
+                        mt.notes.remove(note);
+                    } else {
+                        note.missing(missing);
+                    }
+                } 
                 existing_notes[note.name] = note;
             });
 

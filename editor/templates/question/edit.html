@@ -524,7 +524,7 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody data-bind="foreach: sortedNotes">
-                                                    <tr class="note" data-bind="css: {danger: missing() || !valid(), 'show-note': show}">
+                                                    <tr class="note" data-bind="css: {'show-note': show(), 'invalid': !valid()}">
                                                         <td role="button" data-bind="click: show.toggle">
                                                             <span class="name monospace" data-bind="text: name, attr: {title: description}"></span> 
                                                         </td>
@@ -628,7 +628,7 @@
                                                             </thead>
                                                             <!-- ko foreach: sortedNotes -->
                                                                 <tbody data-bind="visible: show">
-                                                                    <tr class="note" data-bind="css: {danger: missing() || !valid()}">
+                                                                    <tr class="note">
                                                                         <td rowspan="2" class="lead">
                                                                             <span class="text-success" data-bind="visible: matchesExpected"><span class="glyphicon glyphicon-ok" title="This note produces the expected output"></span> <span class="sr-only">This note produces the expected output</span></span>
                                                                             <span class="text-danger" data-bind="visible: !matchesExpected()"><span class="glyphicon glyphicon-remove" data-bind="attr: {title: noMatchDescription}"></span> <span class="sr-only" data-bind="text: noMatchDescription"></span></span>

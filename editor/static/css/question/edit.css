@@ -126,6 +126,9 @@
 .jme-value[data-jme-value-type="html"] {
     font-family: inherit;
 }
+.note.invalid {
+    color: red;
+}
 
 .marking-test .nav-tabs,
 .unit-test .nav-tabs {

@@ -7,7 +7,7 @@ from .database import DATABASES
 
 SITE_TITLE = 'Numbas'
 
-MATHJAX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML'
+MATHJAX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0'
 
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 

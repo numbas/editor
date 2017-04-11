@@ -6,6 +6,8 @@ from django.forms.widgets import PasswordInput, Textarea
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
 from accounts.models import UserProfile
+from urllib.parse import urlparse, urlunparse
+import re
 
 class NumbasRegistrationForm(RegistrationForm):
     first_name = forms.CharField(label=_('First Name(s)'))
@@ -18,7 +20,13 @@ class NumbasRegistrationForm(RegistrationForm):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        fields = ('first_name', 'last_name', 'email', 'bio', 'language', 'avatar','wrap_lines')
+        fields = ('first_name', 'last_name', 'email', 'bio', 'language', 'avatar','wrap_lines','mathjax_url')
+        widgets = {
+            'mathjax_url': forms.TextInput(attrs={'class':'form-control','placeholder':settings.MATHJAX_URL})
+        }
+        help_texts = {
+            'mathjax_url': 'This will be used in all questions and exams you compile. Leave blank to use the default.'
+        }
 
     first_name = forms.CharField(max_length=30, widget=forms.TextInput(attrs={'class':'form-control'}))
     last_name = forms.CharField(max_length=30, widget=forms.TextInput(attrs={'class':'form-control'}))
@@ -31,12 +39,21 @@ class UserProfileForm(forms.ModelForm):
             required=False
             )
 
+    def clean_mathjax_url(self):
+        url = self.cleaned_data['mathjax_url']
+        bits = urlparse(url)
+        if bits.scheme=='http':
+            raise forms.ValidationError("Loading MathJax over HTTP can cause problems when the exam is loaded over HTTPS. If you're absolutely sure you want to do this, use // instead of http://")
+        path = re.sub(r'/(MathJax.js)?$','',bits.path)
+        return urlunparse((bits.scheme,bits.netloc,path,'','',''))
+
     def __init__(self, *args, **kw):
         super(UserProfileForm, self).__init__(*args, **kw)
         self.profile = self.get_profile()
         self.fields['language'].initial = self.profile.language
         self.fields['bio'].initial = self.profile.bio
         self.fields['wrap_lines'].initial = self.profile.wrap_lines
+        self.fields['mathjax_url'].initial = self.profile.mathjax_url
     
     def get_profile(self):
         return UserProfile.objects.get(user=self.instance)
@@ -45,6 +62,7 @@ class UserProfileForm(forms.ModelForm):
         self.profile.language = self.cleaned_data.get('language')
         self.profile.bio = self.cleaned_data.get('bio')
         self.profile.wrap_lines = self.cleaned_data.get('wrap_lines')
+        self.profile.mathjax_url = self.cleaned_data.get('mathjax_url')
         if self.cleaned_data.get('avatar'):
             self.profile.avatar = self.cleaned_data.get('avatar')
         self.profile = self.profile.save()

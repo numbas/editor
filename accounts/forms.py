@@ -6,7 +6,10 @@ from django.forms.widgets import PasswordInput, Textarea
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
 from accounts.models import UserProfile
-from urllib.parse import urlparse, urlunparse
+try:
+    from urllib.parse import urlparse, urlunparse
+except ImportError:
+    from urlparse import urlparse, urlunparse
 import re
 
 class NumbasRegistrationForm(RegistrationForm):

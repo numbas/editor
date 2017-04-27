@@ -27,9 +27,9 @@
     </div>
     <div data-bind="fadeVisible: allowFractions">
         {% booleanproperty 'mustBeReduced' 'Must the fraction be reduced?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-must-the-fraction-be-reduced' %}
-        {% percentproperty 'mustBeReducedPC' 'Partial credit for unreduced fraction' %}
-    </div>
-    <div data-bind="fadeVisible: fractionPossible">
+        <div data-bind="fadeVisible: mustBeReduced">
+            {% percentproperty 'mustBeReducedPC' 'Partial credit for unreduced fraction' %}
+        </div>
         {% booleanproperty 'correctAnswerFraction' 'Display the correct answer as a fraction?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/numberentry.html#term-display-the-correct-answer-as-a-fraction' %}
     </div>
     <div class="form-group" data-bind="fadeVisible: precisionType().name!='none'">

@@ -2184,7 +2184,7 @@ $(document).ready(function() {
 			toJSON: function(data) {
                 data.minValue = this.minValue();
                 data.maxValue = this.maxValue();
-				data.correctAnswerFraction = this.fractionPossible() && this.correctAnswerFraction();
+				data.correctAnswerFraction = this.fractionPossible() && this.allowFractions() && this.correctAnswerFraction();
 				data.allowFractions = this.fractionPossible() && this.allowFractions();
 				data.mustBeReduced = this.fractionPossible() && this.allowFractions() && this.mustBeReduced();
 				data.mustBeReducedPC = this.mustBeReducedPC();

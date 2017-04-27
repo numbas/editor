@@ -7,6 +7,14 @@
 .panel-body ~ .question-group {
     border-top: 2px solid #ccc;
 }
-.question-group form {
-    margin-bottom: 1em;
+
+.panel .panel {
+  border: none;
 }
+
+.question-group .panel-heading {
+  padding-left: 0;
+  border-radius: 0;
+  margin-bottom: 1em;
+}
+

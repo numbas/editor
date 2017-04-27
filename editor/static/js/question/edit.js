@@ -2344,10 +2344,13 @@ $(document).ready(function() {
 					shuffleChoices: ko.observable(false),
 					displayColumns: ko.observable(0),
 					customMatrix: ko.observable(''),
-
+					displayType:ko.observable(''),
 					customChoices: ko.observable(false),
 					customChoicesExpression: ko.observable(''),
-
+					displayTypes: [
+						{name: 'radiogroup', niceName: 'Radio buttons'},
+						{name: 'dropdownlist', niceName: 'Drop down list'}
+					],
 					choices: ko.observableArray([])
 				};
 				var _customMarking = ko.observable(false);
@@ -2386,7 +2389,7 @@ $(document).ready(function() {
                 data.minMarks = this.minMarks();
                 data.maxMarks = this.maxMarks();
                 data.shuffleChoices = this.shuffleChoices();
-                data.displayType = 'radiogroup';
+                data.displayType = this.displayType().name;
                 data.displayColumns = this.displayColumns();
 
 				if(this.customChoices()) {
@@ -2417,7 +2420,11 @@ $(document).ready(function() {
 					this.customMarking(true);
 					this.customMatrix(data.matrix);
 				}
-
+                for(var i=0;i<this.displayTypes.length;i++) {
+                    if(this.displayTypes[i].name==data.displayType) {
+                        this.displayType(this.displayTypes[i]);
+					}
+                }
 				if(typeof data.choices == 'string') {
 					this.customChoices(true);
 					this.customChoicesExpression(data.choices);

@@ -1,4 +1,5 @@
 {% load editor_controls %}
+{% load helplink %}
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div class="main-settings">
@@ -11,7 +12,19 @@
         <h4>Advanced settings</h4>
         <hr>
 
-        {% property 'displayColumns' 'Number of display columns' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-number-of-display-columns' zero_means='not displayed in columns' %}
+        <div class="form-group">
+            <label class="{{form_label_class}} control-label">
+                Selection type {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-selection-type' %}
+            </label>
+            <div class="{{form_control_class}}">
+                <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: displayTypes, value: displayType, optionsText: 'niceName'"></select>
+            </div>
+        </div>
+
+        <div data-bind="fadeVisible: displayType().name == 'radiogroup'">
+            {% property 'displayColumns' 'Number of display columns' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-number-of-display-columns' zero_means='not displayed in columns' %}
+        </div>
+
         {% booleanproperty 'customMarking' 'Custom marking matrix?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-custom-marking-matrix' disable='customChoices' %}
         <div data-bind="fadeVisible: customMarking">
             {% property 'customMatrix' 'Custom matrix expression' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-custom-matrix-expression' %}

@@ -2112,7 +2112,9 @@ $(document).ready(function() {
 					precisionPartialCredit: ko.observable(0),
 					precisionMessage: ko.observable('You have not given your answer to the correct precision.'),
 					strictPrecision: ko.observable(true),
-                    showPrecisionHint: ko.observable(true)
+                    showPrecisionHint: ko.observable(true),
+					mustBeReduced: ko.observable(false),
+					mustBeReducedPC: ko.observable(0)
 				};
 
                 model.notationStyles = [
@@ -2184,6 +2186,8 @@ $(document).ready(function() {
                 data.maxValue = this.maxValue();
 				data.correctAnswerFraction = this.fractionPossible() && this.correctAnswerFraction();
 				data.allowFractions = this.fractionPossible() && this.allowFractions();
+				data.mustBeReduced = this.fractionPossible() && this.allowFractions() && this.mustBeReduced();
+				data.mustBeReducedPC = this.mustBeReducedPC();
 				if(this.precisionType().name!='none') {
 					data.precisionType = this.precisionType().name;
 					data.precision = this.precision();
@@ -2198,7 +2202,7 @@ $(document).ready(function() {
                 }
 			},
 			load: function(data) {
-                tryLoad(data,['minValue','maxValue','correctAnswerFraction','allowFractions','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision','showPrecisionHint'],this);
+                tryLoad(data,['minValue','maxValue','correctAnswerFraction','allowFractions','mustBeReduced','mustBeReducedPC','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision','showPrecisionHint'],this);
 				if('answer' in data) {
 					this.minValue(data.answer);
 					this.maxValue(data.answer);

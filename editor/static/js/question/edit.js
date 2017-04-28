@@ -1152,7 +1152,7 @@ $(document).ready(function() {
 				value: ko.observable('')
 			},
 			'list of numbers': {
-				commaValue: ko.observable('')
+				values: InexhaustibleList()
 			},
 			'list of strings': {
 				values: InexhaustibleList()
@@ -1170,25 +1170,6 @@ $(document).ready(function() {
             }
 		};
 		this.editDefinition = this.templateTypeValues['anything'].definition;
-		this.templateTypeValues['list of numbers'].values = ko.computed(function() {
-			var commaValue = this.commaValue();
-			if(!commaValue.trim())
-				return [];
-
-			var numbers = commaValue.split(/\s+|\s*,\s*/g);
-
-			numbers = numbers
-						.map(function(n) {
-							return parseFloat(n);
-						})
-						.filter(function(n) {
-							return !isNaN(n);
-						})
-			;
-
-			return numbers;
-		},this.templateTypeValues['list of numbers']);
-
         this.definitionError = ko.observable(null);
 		this.definition = ko.computed({
 			read: function() {
@@ -1245,6 +1226,11 @@ $(document).ready(function() {
                     case 'long string':
                         return treeToJME({tok: wrapValue(val.value())});
                     case 'list of numbers':
+                    	var valuesAsFloats = val.values().map(parseFloat);
+                        if(valuesAsFloats.some(isNaN)){
+                            throw("One of the values is not a number");
+                        }
+                        return treeToJME({tok: wrapValue(val.values())});
                     case 'list of strings':
                         return treeToJME({tok: wrapValue(val.values())});
                     case 'json':
@@ -1443,10 +1429,11 @@ $(document).ready(function() {
 					templateTypeValues.value(tree.tok.value);
 					break;
 				case 'list of numbers':
-					templateTypeValues.commaValue(tree.args.map(function(t){return Numbas.jme.evaluate(t,Numbas.jme.builtinScope).value}).join(' , '));
+					templateTypeValues.values(tree.args.map(function(t){return t.tok.value}));
 					break;
 				case 'list of strings':
 					templateTypeValues.values(tree.args.map(function(t){return t.tok.value}));
+					break;
                 case 'json':
                     templateTypeValues.value(tree.args[0].args[0].tok.value);
 				}

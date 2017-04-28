@@ -243,8 +243,12 @@
                                 <div {% if not editable %}disabled{% endif %} data-bind="writemaths: templateTypeValues['long string'].value"></div>
                             </div>
                             <div data-bind="visible: templateType().id=='list of numbers', with: templateTypeValues['list of numbers']">
-                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: commaValue, autosize: {max: 500, min: 30, padding: 10, value: commaValue}"/>
-                                <p class="help-block">(comma-separated list of numbers)</p>
+                                <ul class="list-unstyled" data-bind="foreach: values.edit">
+                                    <li>
+                                        <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: value, event: {blur: onBlur}, autosize: {max: 500, min: 30, padding: 10, value: value}"/>
+                                    </li>
+                                </ul>
+                                <p class="help-block">(numbers)</p>
                             </div>
                             <div data-bind="visible: templateType().id=='list of strings', with: templateTypeValues['list of strings']">
                                 <ul class="list-unstyled" data-bind="foreach: values.edit">

@@ -1254,7 +1254,7 @@ $(document).ready(function() {
                     }
                 } catch(e) {
                     this.definitionError(e);
-                    return;
+                    return '';
                 }
 			}
 		},this);

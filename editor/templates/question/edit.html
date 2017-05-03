@@ -244,7 +244,7 @@
                             </div>
                             <div data-bind="visible: templateType().id=='list of numbers', with: templateTypeValues['list of numbers']">
                                 <ul class="list-unstyled" data-bind="foreach: values.edit">
-                                    <li>
+                                    <li data-bind="css: {'has-error': value() && !Numbas.util.isNumber(value(),true)}">
                                         <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: value, event: {blur: onBlur}, autosize: {max: 500, min: 30, padding: 10, value: value}"/>
                                     </li>
                                 </ul>

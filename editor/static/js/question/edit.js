@@ -1152,7 +1152,7 @@ $(document).ready(function() {
 				value: ko.observable('')
 			},
 			'list of numbers': {
-				values: InexhaustibleList()
+				values: InexhaustibleList(),
 			},
 			'list of strings': {
 				values: InexhaustibleList()
@@ -1169,6 +1169,9 @@ $(document).ready(function() {
                 }
             }
 		};
+        this.templateTypeValues['list of numbers'].floatValues = ko.computed(function() {
+            return this.values().map(function(n){return parseFloat(n)});
+        },this.templateTypeValues['list of numbers']);
 		this.editDefinition = this.templateTypeValues['anything'].definition;
         this.definitionError = ko.observable(null);
 		this.definition = ko.computed({
@@ -1226,11 +1229,11 @@ $(document).ready(function() {
                     case 'long string':
                         return treeToJME({tok: wrapValue(val.value())});
                     case 'list of numbers':
-                    	var valuesAsFloats = val.values().map(parseFloat);
-                        if(valuesAsFloats.some(isNaN)){
+                        var values = val.values().filter(function(n){return n!=''});
+                        if(!values.every(function(n){return Numbas.util.isNumber(n,true)})) {
                             throw("One of the values is not a number");
                         }
-                        return treeToJME({tok: wrapValue(val.values())});
+                        return treeToJME(Numbas.jme.compile('['+values.join(',')+']'));
                     case 'list of strings':
                         return treeToJME({tok: wrapValue(val.values())});
                     case 'json':
@@ -1429,7 +1432,7 @@ $(document).ready(function() {
 					templateTypeValues.value(tree.tok.value);
 					break;
 				case 'list of numbers':
-					templateTypeValues.values(tree.args.map(function(t){return t.tok.value}));
+					templateTypeValues.values(tree.args.map(function(t){return Numbas.jme.display.treeToJME(t);}));
 					break;
 				case 'list of strings':
 					templateTypeValues.values(tree.args.map(function(t){return t.tok.value}));

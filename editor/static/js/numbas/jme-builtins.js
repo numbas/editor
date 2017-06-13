@@ -268,8 +268,9 @@ newBuiltin('image',[TString],THTML,function(url){ return $('<img/>').attr('src',
 
 newBuiltin('latex',[TString],TString,null,{
 	evaluate: function(args,scope) {
-		args[0].latex = true;
-		return args[0];
+        var s = new TString(args[0].value);
+        s.latex = true;
+        return s;
 	},
 	doc: {
 		usage: ['latex("something")'],
@@ -494,6 +495,9 @@ newBuiltin('sign', [TNum], TNum, math.sign, {doc: {usage: 'sign(x)', description
 
 newBuiltin('rational_approximation',[TNum],TList,function(n) {
     return math.rationalApproximation(n);
+},{unwrapValues:true});
+newBuiltin('rational_approximation',[TNum,TNum],TList,function(n,accuracy) {
+    return math.rationalApproximation(n,accuracy);
 },{unwrapValues:true});
 
 newBuiltin('factorise',[TNum],TList,function(n) {

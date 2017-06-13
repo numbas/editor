@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userprofile',
             name='mathjax_url',
-            field=models.CharField(default=b'', max_length=300, verbose_name=b'Preferred URL to load MathJax from', blank=True),
+            field=models.CharField(default='', max_length=300, verbose_name='Preferred URL to load MathJax from', blank=True),
         ),
     ]

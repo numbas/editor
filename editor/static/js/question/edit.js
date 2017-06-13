@@ -2404,9 +2404,9 @@ $(document).ready(function() {
 					}
 
 					data.matrix = matrix;
-				}
 
-                data.distractors = distractors;
+                    data.distractors = distractors;
+				}
 			},
 			load: function(data) {
                 tryLoad(data,['minMarks','maxMarks','shuffleChoices','displayColumns'],this);
@@ -2529,9 +2529,9 @@ $(document).ready(function() {
 					}
 
 					data.matrix = matrix;
-				}
 
-                data.distractors = distractors;
+                    data.distractors = distractors;
+				}
 			},
 			load: function(data) {
                 tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','displayColumns'],this);

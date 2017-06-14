@@ -39,7 +39,7 @@ class PreviewView(editor.views.editoritem.PreviewView):
             try:
                 profile = UserProfile.objects.get(user=request.user)
                 q.locale = profile.language
-            except (UserProfile.ObjectDoesNotExist,TypeError):
+            except (UserProfile.DoesNotExist,TypeError):
                 pass
 
             return self.preview(q.editoritem)
@@ -67,7 +67,7 @@ class ZipView(editor.views.editoritem.ZipView):
             try:
                 profile = UserProfile.objects.get(user=request.user)
                 q.locale = profile.language
-            except (UserProfile.ObjectDoesNotExist,TypeError):
+            except (UserProfile.DoesNotExist,TypeError):
                 pass
 
             return self.download(q.editoritem, scorm)

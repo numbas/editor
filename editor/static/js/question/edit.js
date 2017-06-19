@@ -1300,7 +1300,7 @@ $(document).ready(function() {
             } else if(!(this.question.variablesTest.conditionSatisfied())) {
                 return "Testing condition not satisfied";
             } else {
-                return this.error();
+                return this.error() || this.nameError();
             }
         },this);
 

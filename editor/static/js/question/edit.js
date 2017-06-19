@@ -1078,6 +1078,11 @@ $(document).ready(function() {
 				return 'This variable name is invalid.';
 			}
 
+			if(name.toLowerCase() in Numbas.jme.constants) {
+				return 'This variable name is reserved.';
+			}
+			
+
 			return '';
 		},this);
 
@@ -1295,7 +1300,7 @@ $(document).ready(function() {
             } else if(!(this.question.variablesTest.conditionSatisfied())) {
                 return "Testing condition not satisfied";
             } else {
-                return this.error();
+                return this.error() || this.nameError();
             }
         },this);
 

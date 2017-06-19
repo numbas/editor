@@ -1758,7 +1758,7 @@ $(document).ready(function() {
 		},
 
 		remove: function() {
-            if(confirm("Remove this part?"))
+            if(confirm("Remove "+this.levelName()+" "+this.indexLabel()+"?"))
             {
 				this.parentList.remove(this);
             }

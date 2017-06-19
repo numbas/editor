@@ -1078,6 +1078,11 @@ $(document).ready(function() {
 				return 'This variable name is invalid.';
 			}
 
+			if(name.toLowerCase() in Numbas.jme.constants) {
+				return 'This variable name is reserved.';
+			}
+			
+
 			return '';
 		},this);
 

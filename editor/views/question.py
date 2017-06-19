@@ -40,7 +40,7 @@ class PreviewView(editor.views.editoritem.PreviewView):
                 if not request.user.is_anonymous:
                     profile = UserProfile.objects.get(user=request.user)
                     q.locale = profile.language
-            except UserProfile.DoesNotExist:
+            except (UserProfile.DoesNotExist,TypeError):
                 pass
 
             return self.preview(q.editoritem)
@@ -68,7 +68,7 @@ class ZipView(editor.views.editoritem.ZipView):
             try:
                 profile = UserProfile.objects.get(user=request.user)
                 q.locale = profile.language
-            except UserProfile.ObjectDoesNotExist:
+            except (UserProfile.DoesNotExist,TypeError):
                 pass
 
             return self.download(q.editoritem, scorm)

@@ -53,6 +53,7 @@ class UserProfile(models.Model):
     personal_project = models.ForeignKey(Project, null=True, on_delete=models.SET_NULL)
     avatar = ImageWithThumbsField(upload_to='avatars', sizes=((20, 20), (40, 40), (150, 150)), blank=True, null=True, max_length=255, verbose_name='Profile image')
     wrap_lines = models.BooleanField(default=False,verbose_name='Wrap long lines in the code editor?')
+    mathjax_url = models.CharField(max_length=300,default='',blank=True,verbose_name='Preferred URL to load MathJax from')
 
     def sorted_tags(self):
         qs = self.user.own_questions

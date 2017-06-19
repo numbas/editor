@@ -228,6 +228,9 @@ $(document).ready(function() {
 
         addQuestion: function(q) {
             var groups = this.question_groups();
+            if(!groups.length) {
+                this.addQuestionGroup();
+            }
             var group = groups[groups.length-1];
             group.questions.push(q);
         },

@@ -420,6 +420,7 @@ class CompileObject():
             '-o'+output_location,
             '-t'+theme_path,
             '-l'+locale,
+            '--mathjax-url',self.get_mathjax_url()
         ] + switches
 
         if settings.DEBUG:
@@ -432,6 +433,12 @@ class CompileObject():
             raise CompileError('Compilation failed.', stdout=stdout, stderr=stderr, code=code)
         else:
             return output_location
+
+    def get_mathjax_url(self):
+        if self.request.user.is_anonymous() or self.request.user.userprofile.mathjax_url=='':
+            return settings.MATHJAX_URL
+        else:
+            return self.request.user.userprofile.mathjax_url
     
     def get_error_response(self, error):
         template = get_template("compile/error.html")

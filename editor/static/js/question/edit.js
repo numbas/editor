@@ -1098,6 +1098,11 @@ $(document).ready(function() {
 				return 'This variable name is invalid.';
 			}
 
+			if(name.toLowerCase() in Numbas.jme.constants) {
+				return 'This variable name is reserved.';
+			}
+			
+
 			return '';
 		},this);
 
@@ -1172,7 +1177,7 @@ $(document).ready(function() {
 				value: ko.observable('')
 			},
 			'list of numbers': {
-				commaValue: ko.observable('')
+				values: InexhaustibleList(),
 			},
 			'list of strings': {
 				values: InexhaustibleList()
@@ -1189,26 +1194,10 @@ $(document).ready(function() {
                 }
             }
 		};
+        this.templateTypeValues['list of numbers'].floatValues = ko.computed(function() {
+            return this.values().map(function(n){return parseFloat(n)});
+        },this.templateTypeValues['list of numbers']);
 		this.editDefinition = this.templateTypeValues['anything'].definition;
-		this.templateTypeValues['list of numbers'].values = ko.computed(function() {
-			var commaValue = this.commaValue();
-			if(!commaValue.trim())
-				return [];
-
-			var numbers = commaValue.split(/\s+|\s*,\s*/g);
-
-			numbers = numbers
-						.map(function(n) {
-							return parseFloat(n);
-						})
-						.filter(function(n) {
-							return !isNaN(n);
-						})
-			;
-
-			return numbers;
-		},this.templateTypeValues['list of numbers']);
-
         this.definitionError = ko.observable(null);
 		this.definition = ko.computed({
 			read: function() {
@@ -1265,6 +1254,11 @@ $(document).ready(function() {
                     case 'long string':
                         return treeToJME({tok: wrapValue(val.value())});
                     case 'list of numbers':
+                        var values = val.values().filter(function(n){return n!=''});
+                        if(!values.every(function(n){return Numbas.util.isNumber(n,true)})) {
+                            throw("One of the values is not a number");
+                        }
+                        return treeToJME(Numbas.jme.compile('['+values.join(',')+']'));
                     case 'list of strings':
                         return treeToJME({tok: wrapValue(val.values())});
                     case 'json':
@@ -1274,7 +1268,7 @@ $(document).ready(function() {
                     }
                 } catch(e) {
                     this.definitionError(e);
-                    return;
+                    return '';
                 }
 			}
 		},this);
@@ -1318,10 +1312,7 @@ $(document).ready(function() {
 			});
 		},this);
 		this.value = ko.observable('');
-		this.thisLocked = ko.observable(false);
-		this.locked = ko.computed(function() {
-			return this.usedIn().some(function(v){return v.locked()}) || this.thisLocked();
-		},this);
+
 		this.error = ko.observable('');
         this.anyError = ko.computed(function() {
             if(this.question.variablesTest.conditionError()) {
@@ -1329,9 +1320,61 @@ $(document).ready(function() {
             } else if(!(this.question.variablesTest.conditionSatisfied())) {
                 return "Testing condition not satisfied";
             } else {
-                return this.error();
+                return this.error() || this.nameError();
             }
         },this);
+
+		this.thisLocked = ko.observable(false);
+        var lockedSeen = {};
+        var lockedDepth = 0;
+		this.locked = ko.computed(function() {
+            if(lockedDepth==0) {
+                lockedSeen = {};
+            }
+            lockedDepth += 1;
+            lockedSeen[this.name()] = true;
+
+            if(this.error()) {
+                return false;
+            }
+            if(this.thisLocked()) {
+                return true;
+            }
+			var lockedUsed = this.usedIn().some(function(v){
+                if(lockedSeen[v.name()]) {
+                    return false;
+                }
+                return v.locked();
+            });
+            lockedDepth -= 1;
+            return lockedUsed;
+		},this);
+
+		this.display = ko.computed(function() {
+			var v;
+
+			if(this.anyError()) {
+				return this.anyError();
+            } else if(v = this.value()) {
+				switch(v.type)
+				{
+				case 'string':
+					return Numbas.util.escapeHTML(v.value);
+				case 'list':
+					return 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
+				case 'html':
+                    if(v.value.length==1 && v.value[0].tagName=='IMG') {
+                        var src = v.value[0].getAttribute('src');
+                        return '<img src="'+src+'" title="'+src+'">';
+                    }
+					return 'HTML node';
+				default:
+					return Numbas.jme.display.treeToJME({tok:v});
+				}
+			} else {
+				return '';
+            }
+		},this);
         this.remove = function() {
             q.variables.remove(this);
 			this.group().variables.remove(this);
@@ -1414,10 +1457,11 @@ $(document).ready(function() {
 					templateTypeValues.value(tree.tok.value);
 					break;
 				case 'list of numbers':
-					templateTypeValues.commaValue(tree.args.map(function(t){return Numbas.jme.evaluate(t,Numbas.jme.builtinScope).value}).join(' , '));
+					templateTypeValues.values(tree.args.map(function(t){return Numbas.jme.display.treeToJME(t);}));
 					break;
 				case 'list of strings':
 					templateTypeValues.values(tree.args.map(function(t){return t.tok.value}));
+					break;
                 case 'json':
                     templateTypeValues.value(tree.args[0].args[0].tok.value);
 				}
@@ -1779,7 +1823,7 @@ $(document).ready(function() {
 		},
 
 		remove: function() {
-            if(confirm("Remove this part?"))
+            if(confirm("Remove "+this.levelName()+" "+this.indexLabel()+"?"))
             {
 				this.parentList.remove(this);
             }
@@ -2620,7 +2664,9 @@ $(document).ready(function() {
 					precisionPartialCredit: ko.observable(0),
 					precisionMessage: ko.observable('You have not given your answer to the correct precision.'),
 					strictPrecision: ko.observable(true),
-                    showPrecisionHint: ko.observable(true)
+                    showPrecisionHint: ko.observable(true),
+					mustBeReduced: ko.observable(false),
+					mustBeReducedPC: ko.observable(0)
 				};
 
                 model.notationStyles = [
@@ -2690,8 +2736,10 @@ $(document).ready(function() {
 			toJSON: function(data) {
                 data.minValue = this.minValue();
                 data.maxValue = this.maxValue();
-				data.correctAnswerFraction = this.fractionPossible() && this.correctAnswerFraction();
+				data.correctAnswerFraction = this.fractionPossible() && this.allowFractions() && this.correctAnswerFraction();
 				data.allowFractions = this.fractionPossible() && this.allowFractions();
+				data.mustBeReduced = this.fractionPossible() && this.allowFractions() && this.mustBeReduced();
+				data.mustBeReducedPC = this.mustBeReducedPC();
 				if(this.precisionType().name!='none') {
 					data.precisionType = this.precisionType().name;
 					data.precision = this.precision();
@@ -2706,7 +2754,7 @@ $(document).ready(function() {
                 }
 			},
 			load: function(data) {
-                tryLoad(data,['minValue','maxValue','correctAnswerFraction','allowFractions','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision','showPrecisionHint'],this);
+                tryLoad(data,['minValue','maxValue','correctAnswerFraction','allowFractions','mustBeReduced','mustBeReducedPC','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision','showPrecisionHint'],this);
 				if('answer' in data) {
 					this.minValue(data.answer);
 					this.maxValue(data.answer);
@@ -2853,10 +2901,13 @@ $(document).ready(function() {
 					shuffleChoices: ko.observable(false),
 					displayColumns: ko.observable(0),
 					customMatrix: ko.observable(''),
-
+					displayType:ko.observable(''),
 					customChoices: ko.observable(false),
 					customChoicesExpression: ko.observable(''),
-
+					displayTypes: [
+						{name: 'radiogroup', niceName: 'Radio buttons'},
+						{name: 'dropdownlist', niceName: 'Drop down list'}
+					],
 					choices: ko.observableArray([])
 				};
 				var _customMarking = ko.observable(false);
@@ -2895,7 +2946,7 @@ $(document).ready(function() {
                 data.minMarks = this.minMarks();
                 data.maxMarks = this.maxMarks();
                 data.shuffleChoices = this.shuffleChoices();
-                data.displayType = 'radiogroup';
+                data.displayType = this.displayType().name;
                 data.displayColumns = this.displayColumns();
 
 				if(this.customChoices()) {
@@ -2916,9 +2967,9 @@ $(document).ready(function() {
 					}
 
 					data.matrix = matrix;
-				}
 
-                data.distractors = distractors;
+                    data.distractors = distractors;
+				}
 			},
 			load: function(data) {
                 tryLoad(data,['minMarks','maxMarks','shuffleChoices','displayColumns'],this);
@@ -2926,7 +2977,11 @@ $(document).ready(function() {
 					this.customMarking(true);
 					this.customMatrix(data.matrix);
 				}
-
+                for(var i=0;i<this.displayTypes.length;i++) {
+                    if(this.displayTypes[i].name==data.displayType) {
+                        this.displayType(this.displayTypes[i]);
+					}
+                }
 				if(typeof data.choices == 'string') {
 					this.customChoices(true);
 					this.customChoicesExpression(data.choices);
@@ -3038,9 +3093,9 @@ $(document).ready(function() {
 					}
 
 					data.matrix = matrix;
-				}
 
-                data.distractors = distractors;
+                    data.distractors = distractors;
+				}
 			},
 			load: function(data) {
                 tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','displayColumns'],this);

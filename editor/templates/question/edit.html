@@ -212,9 +212,11 @@
                         </div>
                         <div class="form-group">
                             <label>Value</label>
-
                             <div data-bind="visible: templateType().id=='anything'">
                                 <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: templateTypeValues.anything.definition, codemirrorMode: 'jme'"></textarea>
+                                <p class="help-block text-right">
+                                    <a class="helplink text-info" href="http://numbas-editor.readthedocs.io/en/latest/jme-reference.html" target="_blank">JME function reference <span class="glyphicon glyphicon-question-sign"></span></a>
+                                </p>
                             </div>
                             <div data-bind="visible: templateType().id=='number'">
                                 <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: templateTypeValues.number.value, autosize: {max: 500, min: 30, padding: 30, value: templateTypeValues.number.value}"/> 
@@ -244,8 +246,12 @@
                                 <div {% if not editable %}disabled{% endif %} data-bind="writemaths: templateTypeValues['long string'].value"></div>
                             </div>
                             <div data-bind="visible: templateType().id=='list of numbers', with: templateTypeValues['list of numbers']">
-                                <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: commaValue, autosize: {max: 500, min: 30, padding: 10, value: commaValue}"/>
-                                <p class="help-block">(comma-separated list of numbers)</p>
+                                <ul class="list-unstyled" data-bind="foreach: values.edit">
+                                    <li data-bind="css: {'has-error': value() && !Numbas.util.isNumber(value(),true)}">
+                                        <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: value, event: {blur: onBlur}, autosize: {max: 500, min: 30, padding: 10, value: value}"/>
+                                    </li>
+                                </ul>
+                                <p class="help-block">(numbers)</p>
                             </div>
                             <div data-bind="visible: templateType().id=='list of strings', with: templateTypeValues['list of strings']">
                                 <ul class="list-unstyled" data-bind="foreach: values.edit">
@@ -424,7 +430,7 @@
                             {% endif %}
                         </div>
                         {% if editable %}
-                        <button type="button" class="btn btn-link" title="Remove this part" data-bind="click: remove"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                        <button type="button" class="btn btn-link" data-bind="click: remove, attr: {title: 'Remove this '+levelName()}"><span class="glyphicon glyphicon-remove text-danger"></span></button>
                         {% endif %}
                     </div>
                     <h3 class="panel-title form-inline" clickable>

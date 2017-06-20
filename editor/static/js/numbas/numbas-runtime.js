@@ -29,8 +29,8 @@ if(!window.Numbas) { window.Numbas = {} }
 Numbas.extensions = {};
 
 /** A function for displaying debug info in the console. It will try to give a reference back to the line that called it, if it can. 
- * @param {string} msg - text to display
- * @param {boolean} [noStack=false] - don't show the stack trace
+ * @param {String} msg - text to display
+ * @param {Boolean} [noStack=false] - don't show the stack trace
  */
 Numbas.debug = function(msg,noStack)
 {
@@ -50,7 +50,7 @@ Numbas.debug = function(msg,noStack)
 };
 
 /** Display an error in a nice alert box. Also sends the error to the console via {@link Numbas.debug} 
- * @param {error} e
+ * @param {Error} e
  */
 Numbas.showError = function(e)
 {
@@ -63,7 +63,7 @@ Numbas.showError = function(e)
 
 /** Generic error class. Extends JavaScript's Error
  * @constructor
- * @param {string} message - A description of the error. Localised by R.js.
+ * @param {String} message - A description of the error. Localised by R.js.
  */
 Numbas.Error = function(message)
 {
@@ -82,14 +82,14 @@ Numbas.Error.prototype.constructor = Numbas.Error;
 var scriptreqs = {};
 
 /** Keep track of loading status of a script and its dependencies
- * @param {string} file - name of script
+ * @param {String} file - name of script
  * @global
  * @constructor
- * @property {string} file - Name of script
- * @property {boolean} loaded - Has the script been loaded yet?
- * @property {boolean} executed - Has the script been run?
- * @property {Array.string} backdeps - Scripts which depend on this one (need this one to run first)
- * @property {Array.string} fdeps - Scripts which this one depends on (it must run after them)
+ * @property {String} file - Name of script
+ * @property {Boolean} loaded - Has the script been loaded yet?
+ * @property {Boolean} executed - Has the script been run?
+ * @property {Array.<String>} backdeps - Scripts which depend on this one (need this one to run first)
+ * @property {Array.<String>} fdeps - Scripts which this one depends on (it must run after them)
  * @property {function} callback - The function to run when all this script's dependencies have run (this is the script itself)
  */
 function RequireScript(file)
@@ -110,8 +110,8 @@ RequireScript.prototype = {
 
 /** Ask to load a javascript file. Unless `noreq` is set, the file's code must be wrapped in a call to Numbas.queueScript with its filename as the first parameter.
  * @memberof Numbas
- * @param {string} file
- * @param {boolean} noreq - don't create a {@link Numbas.RequireScript} object
+ * @param {String} file
+ * @param {Boolean} noreq - don't create a {@link Numbas.RequireScript} object
  */
 var loadScript = Numbas.loadScript = function(file,noreq)	
 {
@@ -126,8 +126,8 @@ var loadScript = Numbas.loadScript = function(file,noreq)
 /**
  * Queue up a file's code to be executed.
  * Each script should be wrapped in this function
- * @param {string} file - Name of the script
- * @param {Array.string} deps - A list of other scripts which need to be run before this one can be run
+ * @param {String} file - Name of the script
+ * @param {Array.<String>} deps - A list of other scripts which need to be run before this one can be run
  * @param {function} callback - A function wrapping up this file's code
  */
 Numbas.queueScript = function(file, deps, callback)	
@@ -204,8 +204,8 @@ Numbas.tryInit = function()
 }
 
 /** A wrapper round {@link Numbas.queueScript} to register extensions easily. 
- * @param {string} name - unique name of the extension
- * @param {Array.string} deps - A list of other scripts which need to be run before this one can be run
+ * @param {String} name - unique name of the extension
+ * @param {Array.<String>} deps - A list of other scripts which need to be run before this one can be run
  * @param {function} callback - Code to set up the extension. It's given the object `Numbas.extensions.<name>` as a parameter, which contains a {@link Numbas.jme.Scope} object.
  */
 Numbas.addExtension = function(name,deps,callback) {
@@ -276,8 +276,8 @@ var util = Numbas.util;
 var math = Numbas.math;
 
 /** @typedef Numbas.jme.tree
-  * @type {object}
-  * @property {tree[]} args - the token's arguments (if it's an op or function)
+  * @type {Object}
+  * @property {Array.<Numbas.jme.tree>} args - the token's arguments (if it's an op or function)
   * @property {Numbas.jme.token} tok - the token at this node
   */
 
@@ -307,7 +307,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 
 	/** Convert given expression string to a list of tokens. Does some tidying, e.g. inserts implied multiplication symbols.
 	 * @param {JME} expr 
-	 * @returns {token[]}
+	 * @returns {Array.<Numbas.jme.token>}
 	 * @see Numbas.jme.compile
 	 */
 	tokenise: function(expr)
@@ -459,7 +459,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 	},
 
 	/** Shunt list of tokens into a syntax tree. Uses the shunting yard algorithm (wikipedia has a good description)
-	 * @param {token[]} tokens
+	 * @param {Array.<Numbas.jme.token>} tokens
 	 * @returns {Numbas.jme.tree}
 	 * @see Numbas.jme.tokenise
 	 * @see Numbas.jme.compile
@@ -674,7 +674,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 	/** Substitute variables defined in `scope` into the given syntax tree (in place).
 	 * @param {Numbas.jme.tree} tree
 	 * @param {Numbas.jme.Scope} scope
-	 * @param {boolean} [allowUnbound=false] - allow unbound variables to remain in the returned tree
+	 * @param {Boolean} [allowUnbound=false] - allow unbound variables to remain in the returned tree
 	 * @returns {Numbas.jme.tree}
 	 */
 	substituteTree: function(tree,scope,allowUnbound)
@@ -727,9 +727,9 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 	},
 
 	/** Evaluate a syntax tree (or string, which is compiled to a syntax tree), with respect to the given scope.
-	 * @param {tree|string} tree
+	 * @param {Numbas.jme.tree|String} tree
 	 * @param {Numbas.jme.Scope} scope
-	 * @returns {jme.type}
+	 * @returns {Numbas.jme.token}
 	 */
 	evaluate: function(tree,scope)
 	{
@@ -816,12 +816,22 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 		return trees;
 	},
 
+    /** Settings for {@link Numbas.jme.compare}
+     * @typedef {Object} Numbas.jme.compare_settings
+     * @property {String} checkingType - The name of the method to determine if two results are equal. See {@link Numbas.jme.checkingFunctions}.
+     * @property {Number} vsetRangeStart - The lower bound of the range to pick variable values from.
+     * @property {Number} vsetRangeEnd - The upper bound of the range to pick variable values from.
+     * @property {Number} vsetRangePoints - The number of values to pick for each variable.
+     * @property {Number} checkingAccuracy - A parameter for the checking function to determine if two results are equal. See {@link Numbas.jme.checkingFunctions}.
+     * @property {Number} failureRate - The number of times the comparison must fail to declare that the expressions are unequal.
+     */
+
 	/** Compare two expressions over some randomly selected points in the space of variables, to decide if they're equal.
 	 * @param {JME} expr1
 	 * @param {JME} expr2
-	 * @param {object} settings
+	 * @param {Numbas.jme.compare_settings} settings
 	 * @param {Numbas.jme.Scope} scope
-	 * @returns {boolean}
+	 * @returns {Boolean}
 	 */
 	compare: function(expr1,expr2,settings,scope) {
 		expr1 += '';
@@ -883,9 +893,9 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 	},
 
 	/** Substitute variables into content. To substitute variables, use {@link Numbas.jme.variables.DOMcontentsubvars}.
-	 * @param {string} str
+	 * @param {String} str
 	 * @param {Numbas.jme.Scope} scope
-	 * @returns {string}
+	 * @returns {String}
 	 */
 	contentsubvars: function(str, scope)
 	{
@@ -899,8 +909,8 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 
 	/** Split up a TeX expression, finding the \var and \simplify commands.
 	 * Returns an array [normal tex,var or simplify,options,argument,normal tex,...]a
-	 * @param {string} s
-	 * @returns {string[]}
+	 * @param {String} s
+	 * @returns {Array.<String>}
 	 */
 	texsplit: function(s)
 	{
@@ -977,7 +987,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 	/** Produce a string representation of the given token, for display
 	 * @param {Numbas.jme.token} v
 	 * @see Numbas.jme.typeToDisplayString
-	 * @returns {string}
+	 * @returns {String}
 	 */
 	tokenToDisplayString: function(v) {
 		if(v.type in jme.typeToDisplayString) {
@@ -988,9 +998,9 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 	},
 
 	/** Substitute variables into a text string (not maths).
-	 * @param {string} str
+	 * @param {String} str
 	 * @param {Numbas.jme.Scope} scope
-	 * @param {boolean} [display=false] - Is this string going to be displayed to the user? If so, avoid unnecessary brackets and quotes.
+	 * @param {Boolean} [display=false] - Is this string going to be displayed to the user? If so, avoid unnecessary brackets and quotes.
 	 */
 	subvars: function(str, scope,display)
 	{
@@ -1029,7 +1039,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 
 	/** Unwrap a {@link Numbas.jme.token} into a plain JavaScript value
 	 * @param {Numbas.jme.token} v
-	 * @returns {object}
+	 * @returns {Object}
 	 */
 	unwrapValue: function(v) {
         switch(v.type) {
@@ -1049,8 +1059,8 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 	},
 	
 	/** Wrap up a plain JavaScript value (number, string, bool or array) as a {@link Numbas.jme.token}.
-	 * @param {object} v
-	 * @param {string} typeHint - name of the expected type (to differentiate between, for example, matrices, vectors and lists
+	 * @param {Object} v
+	 * @param {String} typeHint - name of the expected type (to differentiate between, for example, matrices, vectors and lists
 	 * @returns {Numbas.jme.token}
 	 */
 	wrapValue: function(v,typeHint) {
@@ -1102,7 +1112,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 	 *
 	 * @param {Numbas.jme.token} 
 	 * 
-	 * @returns {boolean}
+	 * @returns {Boolean}
 	 */
 	isOp: function(tok,op) {
 		return tok.type=='op' && tok.name==op;
@@ -1112,7 +1122,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 	 *
 	 * @param {Numbas.jme.token} 
 	 * 
-	 * @returns {boolean}
+	 * @returns {Boolean}
 	 */
 	isName: function(tok,name) {
 		return tok.type=='name' && tok.name==name;
@@ -1122,7 +1132,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 	 *
 	 * @param {Numbas.jme.token} 
 	 * 
-	 * @returns {boolean}
+	 * @returns {Boolean}
 	 */
 	isFunction: function(tok,name) {
 		return tok.type=='function' && tok.name==name;
@@ -1133,7 +1143,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 	 *  
 	 *  @param {JME} expr
 	 *  @param {Numbas.jme.Scope} scope
-	 *  @returns {boolean}
+	 *  @returns {Boolean}
 	 */
 	isRandom: function(expr,scope) {
 		switch(expr.tok.type) {
@@ -1173,6 +1183,13 @@ jme.re.re_strip_whitespace = new RegExp('^'+jme.re.re_whitespace+'+|'+jme.re.re_
 
 var fnSort = util.sortBy('id');
 
+/** Options for the {@link Numbas.jme.funcObj} constructor
+ * @typedef {Object} scope_deletions
+ * @property {Object} variables - Names of deleted variables.
+ * @property {Object} functions - Names of deleted functions.
+ * @property {Object} rulesets - Names of deleted rulesets.
+ */
+
 /**
  * A JME evaluation environment.
  * Stores variable, function, and ruleset definitions.
@@ -1181,11 +1198,11 @@ var fnSort = util.sortBy('id');
  *
  * @memberof Numbas.jme
  * @constructor
- * @property {object} variables - dictionary of {@link Numbas.jme.token} objects defined **at this level in the scope**. To resolve a variable in the scope, use `getVariable`.
- * @property {object} functions - dictionary of arrays of {@link Numbas.jme.funcObj} objects. There can be more than one function for each name because of signature overloading. To resolve a function name in the scope, use `getFunction`.
- * @property {object} rulesets - dictionary of {@link Numbas.jme.Ruleset} objects. To resolve a ruleset in the scope, use `getRuleset`.
- * @property {object} deleted - an object `{variables: {}, functions: {}, rulesets: {}}`: names of deleted variables/functions/rulesets
- * @property {Numbas.Question} question - the question this scope belongs to
+ * @property {Object.<Numbas.jme.token>} variables - Dictionary of variables defined **at this level in the scope**. To resolve a variable in the scope, use {@link Numbas.jme.Scope.getVariable}.
+ * @property {Object.<Array.<Numbas.jme.funcObj>>} functions - Dictionary of functions defined at this level in the scope. Function names map to lists of functions: there can be more than one function for each name because of multiple dispatch. To resolve a function name in the scope, use {@link Numbas.jme.Scope.getFunction}.
+ * @property {Object.<Numbas.jme.Ruleset>} rulesets - Dictionary of rulesets defined at this level in the scope. To resolve a ruleset in the scope, use {@link Numbas.jme.Scope.getRuleset}.
+ * @property {scope_deletions} deleted - Names of deleted variables/functions/rulesets.
+ * @property {Numbas.Question} question - The question this scope belongs to.
  *
  * @param {Numbas.jme.Scope[]} scopes - Either: nothing, in which case this scope has no parents; a parent Scope object; a list whose first element is a parent scope, and the second element is a dictionary of extra variables/functions/rulesets to store in this scope
  */
@@ -1228,7 +1245,7 @@ var Scope = jme.Scope = function(scopes) {
 Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
 
 	/** Add a JME function to the scope.
-	 * @param {jme.funcObj} fn - function to add
+	 * @param {Numbas.jme.funcObj} fn - function to add
 	 */
 	addFunction: function(fn) {
 		if(!(fn.name in this.functions)) {
@@ -1387,7 +1404,7 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
 
 	/** Evaluate an expression in this scope - equivalent to `Numbas.jme.evaluate(expr,this)`
 	 * @param {JME} expr
-	 * @param {object} [variables] - dictionary of variables to sub into expression. Values are automatically wrapped up as JME types, so you can pass raw JavaScript values.
+	 * @param {Object.<Numbas.jme.token|Object>} [variables] - Dictionary of variables to sub into expression. Values are automatically wrapped up as JME types, so you can pass raw JavaScript values.
 	 * @returns {Numbas.jme.token}
 	 */
 	evaluate: function(expr,variables) {
@@ -1516,9 +1533,8 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
 };
 
 
-/** @typedef Numbas.jme.token
- * @type {object}
- * @property {string} type
+/** @typedef {Object} Numbas.jme.token
+ * @property {String} type
  * @see Numbas.jme.types
  */
 
@@ -1530,19 +1546,39 @@ var types = jme.types = {}
 /** Number type.
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
- * @property {number} value
+ * @property {Number} value
+ * @property {String|Number|complex} originalValue - the value used to construct the token - either a string, a number, or a complex number object
  * @property type "number"
  * @constructor
- * @param {number} num
+ * @param {Number} num
  */
 var TNum = types.TNum = types.number = function(num)
 {
-	if(num===undefined) 
+	if(num===undefined)
 		return;
+
+    this.originalValue = num;
+
+    switch(typeof(num)) {
+        case 'object':
+            if(num.complex) {
+                this.value = num;
+            } else {
+                throw(new Numbas.Error("jme.tokenise.number.object not complex"));
+            }
+            break;
+        case "number":
+            this.value = num;
+            break;
+        case "string":
+            this.value = parseFloat(num);
+            break;
+    }
 
 	this.value = num.complex ? num : parseFloat(num);
 }
 TNum.prototype.type = 'number';
+
 TNum.doc = {
 	name: 'number',
 	usage: ['0','1','0.234','i','e','pi'],
@@ -1552,12 +1588,12 @@ TNum.doc = {
 /** String type.
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
- * @property {string} value
- * @property {boolean} latex - is this string LaTeX code? If so, it's displayed as-is in math mode
- * @property {boolean} safe - if true, don't run {@link Numbas.jme.subvars} on this token when it's evaluated
- * @property type "string"
+ * @property {String} value
+ * @property {Boolean} latex - is this string LaTeX code? If so, it's displayed as-is in math mode
+ * @property {Boolean} safe - if true, don't run {@link Numbas.jme.subvars} on this token when it's evaluated
+ * @property {String} type "string"
  * @constructor
- * @param {string} s
+ * @param {String} s
  */
 var TString = types.TString = types.string = function(s)
 {
@@ -1573,10 +1609,10 @@ TString.doc = {
 /** Boolean type
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
- * @property {boolean} value
+ * @property {Boolean} value
  * @property type "boolean"
  * @constructor
- * @param {boolean} b
+ * @param {Boolean} b
  */
 var TBool = types.TBool = types.boolean = function(b)
 {
@@ -1592,10 +1628,10 @@ TBool.doc = {
 /** HTML DOM element
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
- * @property {element} value
+ * @property {Element} value
  * @property type "html"
  * @constructor
- * @param {element} html
+ * @param {Element} html
  */
 var THTML = types.THTML = types.html = function(html) {
     if(html.ownerDocument===undefined && !html.jquery) {
@@ -1614,11 +1650,11 @@ THTML.doc = {
 /** List of elements of any data type
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
- * @property {number} vars - Length of list
- * @property {object[]} value - Values (may not be filled in if the list was created empty)
+ * @property {Number} vars - Length of list
+ * @property {Array.<Numbas.jme.token>} value - Values (may not be filled in if the list was created empty)
  * @property type "html"
  * @constructor
- * @param {number|object} value - Either the size of the list, or an array of values
+ * @param {Number|Array.<Numbas.jme.token>} value - Either the size of the list, or an array of values
  */
 var TList = types.TList = types.list = function(value)
 {
@@ -1646,9 +1682,9 @@ TList.doc = {
 /** Key-value pair assignment
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
- * @property {string} key
+ * @property {String} key
  * @constructor
- * @param {string} key
+ * @param {String} key
  */
 var TKeyPair = types.TKeyPair = types.keypair = function(key) {
     this.key = key;
@@ -1661,10 +1697,10 @@ TKeyPair.prototype = {
 /** Dictionary: map strings to values
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
- * @property {object} value - undefined until the token is evaluated
+ * @property {Object.<Numbas.jme.token>} value - Map strings to tokens. Undefined until this token is evaluated.
  * @property type "dict"
  * @constructor
- * @param {object} value
+ * @param {Object.<Numbas.jme.token>} value
  */
 var TDict = types.TDict = types.dict = function(value) {
     this.value = value;
@@ -1673,13 +1709,13 @@ TDict.prototype = {
     type: 'dict'
 }
 
-/** Set type
+/** Set type: a collection of elements, with no duplicates
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
- * @property {object[]} value - Array of elements. Constructor assumes all elements are distinct
+ * @property {Array.<Numbas.jme.token>} value - Array of elements. Constructor assumes all elements are distinct
  * @property type "set"
  * @constructor
- * @param {object[]} value
+ * @param {Array.<Numbas.jme.token>} value
  */
 var TSet = types.TSet = types.set = function(value) {
 	this.value = value;
@@ -1689,10 +1725,10 @@ TSet.prototype.type = 'set';
 /** Vector type
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
- * @property {number[]} value - Array of components
+ * @property {Array.<Number>} value - Array of components
  * @property type "vector"
  * @constructor
- * @param {number[]} value
+ * @param {Array.<Number>} value
  */
 var TVector = types.TVector = types.vector = function(value)
 {
@@ -1735,14 +1771,14 @@ TMatrix.doc = {
 /** A range of numerical values - either discrete or continuous
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
- * @property {number[]} value - `[start,end,step]` and then, if the range is discrete, all the values included in the range.
- * @property {number} size - the number of values in the range (if it's discrete, `undefined` otherwise)
- * @property {number} start - the lower bound of the range
- * @property {number} end - the upper bound of the range
- * @property {number} start - the difference between elements in the range
+ * @property {Array.<Number>} value - `[start,end,step]`
+ * @property {Number} size - the number of values in the range (if it's discrete, `undefined` otherwise)
+ * @property {Number} start - the lower bound of the range
+ * @property {Number} end - the upper bound of the range
+ * @property {Number} step - the difference between elements in the range
  * @property type "range"
  * @constructor
- * @param {number[]} range - `[start,end,step]`
+ * @param {Array.<Number>} range - `[start,end,step]`
  */
 var TRange = types.TRange = types.range = function(range)
 {
@@ -1765,13 +1801,13 @@ TRange.doc = {
 /** Variable name token
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
- * @property {string} name
- * @property {string} value - Same as `name`
- * @property {string[]} annotation - List of annotations (used to modify display)
+ * @property {String} name
+ * @property {String} value - Same as `name`
+ * @property {Array.<String>} annotation - List of annotations (used to modify display)
  * @property type "name"
  * @constructor
- * @param {string} name
- * @param {string[]} annotation
+ * @param {String} name
+ * @param {Array.<String>} annotation
  */
 var TName = types.TName = types.name = function(name,annotation)
 {
@@ -1803,13 +1839,13 @@ Any other annotation is taken to be a LaTeX command. For example, a name @vec:x@
 /** JME function token
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
- * @property {string} name
- * @property {string[]} annotation - List of annotations (used to modify display)
- * @property {number} vars - Arity of the function
+ * @property {String} name
+ * @property {Array.<String>} annotation - List of annotations (used to modify display)
+ * @property {Number} vars - Arity of the function
  * @property type "function"
  * @constructor
- * @param {string} name
- * @param {string[]} annotation
+ * @param {String} name
+ * @param {Array.<String>} annotation
  */
 var TFunc = types.TFunc = types['function'] = function(name,annotation)
 {
@@ -1822,15 +1858,15 @@ TFunc.prototype.vars = 0;
 /** Unary/binary operation token
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
- * @property {string} name
- * @property {number} vars - Arity of the operation
- * @property {boolean} postfix
- * @property {boolean} prefix
+ * @property {String} name
+ * @property {Number} vars - Arity of the operation
+ * @property {Boolean} postfix
+ * @property {Boolean} prefix
  * @properrty type "op"
  * @constructor
- * @param {string} op - Name of the operation
- * @param {boolean} postfix
- * @param {boolean} prefix
+ * @param {String} op - Name of the operation
+ * @param {Boolean} postfix
+ * @param {Boolean} prefix
  */
 var TOp = types.TOp = types.op = function(op,postfix,prefix)
 {
@@ -1848,9 +1884,9 @@ TOp.prototype.type = 'op';
 /** Punctuation token
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
- * @property {string} type - The punctuation character
+ * @property {String} type - The punctuation character
  * @constructor
- * @param {string} kind - The punctuation character
+ * @param {String} kind - The punctuation character
  */
 var TPunc = types.TPunc = function(kind)
 {
@@ -1871,7 +1907,7 @@ TExpression.prototype = {
 /** Arities of built-in operations
  * @readonly
  * @memberof Numbas.jme
- * @enum {number} */
+ * @enum {Number} */
 var arity = jme.arity = {
 	'!': 1,
 	'not': 1,
@@ -1883,7 +1919,7 @@ var arity = jme.arity = {
 /** Some names represent different operations when used as prefix. This dictionary translates them.
  * @readonly
  * @memberof Numbas.jme
- * @enum {string}
+ * @enum {String}
  */
 var prefixForm = {
 	'+': '+u',
@@ -1893,14 +1929,14 @@ var prefixForm = {
 /** Some names represent different operations when used as prefix. This dictionary translates them.
  * @readonly
  * @memberof Numbas.jme
- * @enum {string}
+ * @enum {String}
  */
 var postfixForm = {
 	'!': 'fact'
 }
 
 /** Operator precedence
- * @enum {number}
+ * @enum {Number}
  * @memberof Numbas.jme
  * @readonly
  */
@@ -1935,7 +1971,7 @@ var precedence = jme.precedence = {
 };
 
 /** Synonyms of operator names - keys in this dictionary are translated to their corresponding values
- * @enum {string}
+ * @enum {String}
  * @memberof Numbas.jme
  * @readonly
  */
@@ -1946,7 +1982,7 @@ var opSynonyms = jme.opSynonyms = {
 	'||':'or'
 }
 /** Synonyms of function names - keys in this dictionary are translated to their corresponding values 
- * @enum {string}
+ * @enum {String}
  * @memberof Numbas.jme
  * @readonly
  */
@@ -1978,7 +2014,7 @@ function leftAssociative(op)
 };
 
 /** Operations which commute.
- * @enum {boolean}
+ * @enum {Boolean}
  * @memberof Numbas.jme
  * @readonly
  */
@@ -1990,31 +2026,44 @@ var commutative = jme.commutative =
 	'=': true
 };
 
+/** A function which checks whether a {@link Numbas.jme.funcObj} can be applied to the given arguments.
+ * @callback Numbas.jme.typecheck_fn
+ * @param {Array.<Numbas.jme.token>} variables
+ * @returns {Boolean}
+ */
+
+/** Evaluate a JME function on a list of arguments and in a given scope.
+ * @callback Numbas.jme.evaluate_fn
+ * @param {Array.<Numbas.jme.tree|Numbas.jme.token|Object>} args - Arguments of the function. If the function is {@link Numbas.jme.lazyOps|lazy}, syntax trees are passed, otherwise arguments are evaluated to JME tokens first. If the {@link Numbas.jme.funcObj_options|unwrapValues} option is set, the arguments are unwrapped to raw JavaScript values.
+ * @param {Numbas.jme.Scope} scope - Scope in which the function is evaluated.
+ * @returns {Numbas.jme.token|Object} If {@link Numbas.jme.funcObj_options|unwrapValues} is set, 
+ */
+
+/** Options for the {@link Numbas.jme.funcObj} constructor
+ * @typedef {Object} Numbas.jme.funcObj_options
+ * @property {Numbas.jme.typecheck_fn} typecheck - Check that this function can be evaluated on the given arguments.
+ * @property {Numbas.jme.evaluate_fn} evaluate - Evaluate the function on a list of arguments and in a given scope.
+ * @property {Boolean} unwrapValues - Unwrap list elements in arguments into javascript primitives before passing to the evaluate function?
+ */
 
 var funcObjAcc = 0;	//accumulator for ids for funcObjs, so they can be sorted
 /**
- * Function object - for doing type checking away from the evaluator.
+ * A JME function. Capable of confirming that it can be evaluated on a given list of arguments, and returning the result of its evaluation on a list of arguments inside a given scope.
  * 
- * `options` can contain any of
- *
- * - `typecheck`: a function which checks whether the funcObj can be applied to the given arguments 
- * - `evaluate`: a function which performs the funcObj on given arguments and variables. Arguments are passed as expression trees, i.e. unevaluated
- * - `unwrapValues`: unwrap list elements in arguments into javascript primitives before passing to the evaluate function
- *
  * @memberof Numbas.jme
  * @constructor
- * @param {string} name
- * @param {function[]|string[]} intype - A list of data type constructors for the function's paramters' types. Use the string '?' to match any type. Or, give the type's name with a '*' in front to match any number of that type.
+ * @param {String} name
+ * @param {Array.<function|String>} intype - A list of data type constructors for the function's paramters' types. Use the string '?' to match any type. Or, give the type's name with a '*' in front to match any number of that type. If `null`, then `options.typecheck` is used.
  * @param {function} outcons - The constructor for the output value of the function
- * @param {function} fn - JavaScript code which evaluates the function.
- * @param {object} options
+ * @param {Numbas.jme.evaluate_fn} fn - JavaScript code which evaluates the function.
+ * @param {Numbas.jme.funcObj_options} options
  *
  */
 var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
 {
 	/** Globally unique ID of this function object
 	 * @name id
-	 * @member {number} 
+	 * @member {Number} 
 	 * @memberof Numbas.jme.funcObj 
 	 */
 	this.id = funcObjAcc++;
@@ -2039,7 +2088,7 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
 
 	/** Name 
 	 * @name name
-	 * @member {string}
+	 * @member {String}
 	 * @memberof Numbas.jme.funcObj
 	 */
 	this.name=name;
@@ -2047,14 +2096,14 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
 	/** Calling signature of this function. A list of types - either token constructors; '?', representing any type; a type name. A type name or '?' followed by '*' means any number of arguments matching that type.
 	 *
 	 * @name intype
-	 * @member {list}
+	 * @member {Array.<Numbas.jme.token|String>}
 	 * @memberof Numbas.jme.funcObj
 	 */
 	this.intype = intype;
 
 	/** The return type of this function. Either a Numbas.jme.token constructor function, or the string '?', meaning unknown type.
 	 * @name outtype
-	 * @member {function|string}
+	 * @member {function|String}
 	 * @memberof Numbas.jme.funcObj
 	 */
 	if(typeof(outcons)=='function')
@@ -2073,7 +2122,7 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
 	/** Can this function be called with the given list of arguments?
 	 * @function typecheck
 	 * @param {Numbas.jme.token[]} variables
-	 * @returns {boolean}
+	 * @returns {Boolean}
 	 * @memberof Numbas.jme.funcObj
 	 */
 	this.typecheck = options.typecheck || function(variables)
@@ -2147,7 +2196,7 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
 
 	/** Does this function behave randomly?
 	 * @name random
-	 * @member {boolean} 
+	 * @member {Boolean} 
 	 * @memberof Numbas.jme.funcObj 
 	 */
 	this.random = options.random;
@@ -2183,14 +2232,22 @@ function varnamesAgree(array1, array2) {
 	return true;
 };
 
+/** Decide if two numbers are close enough to count as equal.
+ * @callback Numbas.jme.checkingFunction
+ * @param {Number} r1
+ * @param {Number} r2
+ * @param {Number} tolerance - A measure of how close the results need to be to count as equal. What this means depends on the checking function.
+ * @returns {Boolean} - True if `r1` and `r2` are close enough to be equal.
+ */
+
 /** 
  * Numerical comparison functions
- * @enum {function}
+ * @enum {Numbas.jme.checkingFunction}
  * @memberof Numbas.jme 
  */
 var checkingFunctions = jme.checkingFunctions = 
 {
-	/** Absolute difference between variables - fail if bigger than tolerance */
+	/** Absolute difference between variables - fail if `Math.abs(r1-r2)` is bigger than `tolerance` */
 	absdiff: function(r1,r2,tolerance) 
 	{
 		if(r1===Infinity || r1===-Infinity)
@@ -2199,7 +2256,7 @@ var checkingFunctions = jme.checkingFunctions =
 		return math.leq(math.abs(math.sub(r1,r2)), Math.abs(tolerance));
 	},
 
-	/** Relative (proportional) difference between variables - fail if `r1/r2 - 1` is bigger than tolerance */
+	/** Relative (proportional) difference between variables - fail if `r1/r2 - 1` is bigger than `tolerance` */
 	reldiff: function(r1,r2,tolerance) {
 		if(r1===Infinity || r1===-Infinity)
 			return r1===r2;
@@ -2212,7 +2269,7 @@ var checkingFunctions = jme.checkingFunctions =
 		}
 	},
 
-	/** Round both values to given number of decimal places, and fail if unequal. */
+	/** Round both values to `tolerance` decimal places, and fail if unequal. */
 	dp: function(r1,r2,tolerance) {
 		if(r1===Infinity || r1===-Infinity)
 			return r1===r2;
@@ -2221,7 +2278,7 @@ var checkingFunctions = jme.checkingFunctions =
 		return math.eq( math.precround(r1,tolerance), math.precround(r2,tolerance) );
 	},
 
-	/** Round both values to given number of significant figures, and fail if unequal. */
+	/** Round both values to `tolerance` significant figures, and fail if unequal. */
 	sigfig: function(r1,r2,tolerance) {
 		if(r1===Infinity || r1===-Infinity)
 			return r1===r2;
@@ -2236,19 +2293,15 @@ var checkingFunctions = jme.checkingFunctions =
  * Functions have the signature <tree with function call at the top, scope, allowUnbound>
  *
  * @memberof Numbas.jme
- * @enum {function}
+ * @enum {Numbas.jme.substituteTree}
  * @see Numbas.jme.substituteTree
  */
 var substituteTreeOps = jme.substituteTreeOps = {};
 
 /** Custom findvars behaviour for specific functions - for a given usage of a function, work out which variables it depends on.
  * 
- * Functions have the signature <tree with function call at top, list of bound variable names, scope>.
- *
- * tree.args is a list of the function's arguments.
- *
  * @memberof Numbas.jme
- * @enum {function}
+ * @enum {Numbas.jme.findvars}
  * @see Numbas.jme.findvars
  */
 var findvarsOps = jme.findvarsOps = {}
@@ -2257,9 +2310,9 @@ var findvarsOps = jme.findvarsOps = {}
  * @memberof Numbas.jme
  * @method
  * @param {Numbas.jme.tree} tree
- * @param {string[]} boundvars - variables to be considered as bound (don't include them)
+ * @param {Array.<String>} boundvars - variables to be considered as bound (don't include them)
  * @param {Numbas.jme.Scope} scope
- * @returns {string[]}
+ * @returns {Array.<String>}
  */
 var findvars = jme.findvars = function(tree,boundvars,scope)
 {
@@ -2342,8 +2395,8 @@ var findvars = jme.findvars = function(tree,boundvars,scope)
  * @param {Numbas.jme.token} r1
  * @param {Numbas.jme.token} r2
  * @param {function} checkingFunction - one of {@link Numbas.jme.checkingFunctions}
- * @param {number} checkingAccuracy
- * @returns {boolean}
+ * @param {Number} checkingAccuracy
+ * @returns {Boolean}
  */
 var resultsEqual = jme.resultsEqual = function(r1,r2,checkingFunction,checkingAccuracy)
 {	// first checks both expressions are of same type, then uses given checking type to compare results
@@ -2781,8 +2834,9 @@ newBuiltin('image',[TString],THTML,function(url){ return $('<img/>').attr('src',
 
 newBuiltin('latex',[TString],TString,null,{
 	evaluate: function(args,scope) {
-		args[0].latex = true;
-		return args[0];
+        var s = new TString(args[0].value);
+        s.latex = true;
+        return s;
 	},
 	doc: {
 		usage: ['latex("something")'],
@@ -3017,6 +3071,13 @@ newBuiltin('degrees', [TNum], TNum, math.degrees, {doc: {usage: 'degrees(pi/2)',
 newBuiltin('radians', [TNum], TNum, math.radians, {doc: {usage: 'radians(90)', description: 'Convert degrees to radians.'}} );
 newBuiltin('round', [TNum], TNum, math.round, {doc: {usage: 'round(x)', description: 'Round to nearest integer.', tags: ['whole number']}} );
 newBuiltin('sign', [TNum], TNum, math.sign, {doc: {usage: 'sign(x)', description: 'Sign of a number. Equivalent to $\\frac{x}{|x|}$, or $0$ when $x=0$.', tags: ['positive','negative']}} );
+
+newBuiltin('rational_approximation',[TNum],TList,function(n) {
+    return math.rationalApproximation(n);
+},{unwrapValues:true});
+newBuiltin('rational_approximation',[TNum,TNum],TList,function(n,accuracy) {
+    return math.rationalApproximation(n,accuracy);
+},{unwrapValues:true});
 
 newBuiltin('factorise',[TNum],TList,function(n) {
 		return math.factorise(n).map(function(n){return new TNum(n)});
@@ -3375,9 +3436,6 @@ newBuiltin('listval',[TList,TRange],TList, null, {
 		tags: ['range','section','part']
 	}
 });
-
-newBuiltin('listval',[TString,TNum],TString,function(s,i) { return s[i]; });
-newBuiltin('listval',[TString,TRange],TString,function(s,r) { return s.slice(r[0],r[1]); });
 
 newBuiltin('listval',[TVector,TNum],TNum, null, {
 	evaluate: function(args,scope)
@@ -4036,11 +4094,10 @@ newBuiltin('table',[TList],THTML,
 );
 
 newBuiltin('parse',[TString],TExpression,function(expr) {
-    var tree = jme.compile(expr);
-    if(!tree) {
-        throw(new Numbas.Error('jme.compile.empty expression'));
-    }
-    return tree;
+    return jme.compile(expr);
+});
+newBuiltin('expression',[TString],TExpression,function(str) {
+    return jme.compile(str);
 });
 
 newBuiltin('head',[TExpression],'?',null, {
@@ -4249,12 +4306,12 @@ var util = Numbas.util;
 
 /** A JME expression
  * @typedef JME
- * @type {string}
+ * @type {String}
  */
 
 /** A LaTeX string
  * @typedef TeX
- * @type {string}
+ * @type {String}
  */
 
 /** @namespace Numbas.jme.display */
@@ -4263,7 +4320,7 @@ jme.display = /** @lends Numbas.jme.display */ {
 	/** Convert a JME expression to LaTeX.
 	 *
 	 * @param {JME} expr
-	 * @param {string[]|Numbas.jme.Ruleset} ruleset - can be anything accepted by {@link Numbas.jme.display.collectRuleset}
+	 * @param {Array.<String>|Numbas.jme.Ruleset} ruleset - can be anything accepted by {@link Numbas.jme.display.collectRuleset}
 	 * @param {Numbas.jme.Scope} scope
 	 * @returns {TeX}
 	 */
@@ -4285,7 +4342,7 @@ jme.display = /** @lends Numbas.jme.display */ {
 	/** Simplify a JME expression string according to the given ruleset and return it as a JME string
 	 * 
 	 * @param {JME} expr
-	 * @param {string[]|Numbas.jme.Ruleset} ruleset - can be anything accepted by {@link Numbas.jme.display.collectRuleset}
+	 * @param {Array.<String>|Numbas.jme.Ruleset} ruleset - can be anything accepted by {@link Numbas.jme.display.collectRuleset}
 	 * @param {Numbas.jme.Scope} scope
 	 * @returns {JME}
 	 *
@@ -4301,7 +4358,7 @@ jme.display = /** @lends Numbas.jme.display */ {
 	/** Simplify a JME expression string according to given ruleset and return it as a syntax tree
 	 *
 	 * @param {JME} expr 
-	 * @param {string[]|Numbas.jme.Ruleset} ruleset
+	 * @param {Array.<String>|Numbas.jme.Ruleset} ruleset
 	 * @param {Numbas.jme.Scope} scope
 	 * @returns {Numbas.jme.tree}
 	 *
@@ -4332,7 +4389,7 @@ jme.display = /** @lends Numbas.jme.display */ {
 	/** Simplify a syntax tree according to the given ruleset
 	 * 
 	 * @param {Numbas.jme.tree} exprTree
-	 * @param {string[]|Numbas.jme.Ruleset} ruleset
+	 * @param {Array.<String>|Numbas.jme.Ruleset} ruleset
 	 * @param {Numbas.jme.Scope} scope
 	 * @returns {Numbas.jme.tree}
 	 *
@@ -4421,8 +4478,8 @@ function texifyWouldBracketOpArg(thing,i) {
  * @private
  *
  * @param {Numbas.jme.tree} thing
- * @param {string[]} texArgs - the arguments of `thing`, as TeX
- * @param {number} i - the index of the argument to bracket
+ * @param {Array.<String>} texArgs - the arguments of `thing`, as TeX
+ * @param {Number} i - the index of the argument to bracket
  * @returns {TeX}
  */
 function texifyOpArg(thing,texArgs,i)
@@ -4805,7 +4862,7 @@ var texOps = jme.display.texOps = {
  * @memberof Numbas.jme.display
  * @private
  * 
- * @param {number} n
+ * @param {Number} n
  * @returns {TeX}
  */
 var texRationalNumber = jme.display.texRationalNumber = function(n)
@@ -4887,7 +4944,7 @@ var texRationalNumber = jme.display.texRationalNumber = function(n)
  * @memberof Numbas.jme.display
  * @private
  *
- * @param {number} n
+ * @param {Number} n
  * @returns {TeX}
  */
 function texRealNumber(n)
@@ -4971,20 +5028,17 @@ function texRealNumber(n)
  * @memberof Numbas.jme.display
  * @private
  * 
- * @param {number[]|Numbas.jme.tree} v
- * @param {object} settings
+ * @param {Array.<Number>|Numbas.jme.tree} v
+ * @param {texify_settings} settings
  * @returns {TeX}
  */
 function texVector(v,settings)
 {
 	var out;
 	var elements;
-	if(v.args)
-	{
+	if(v.args) {
 		elements = v.args.map(function(x){return texify(x,settings)});
-	}
-	else
-	{
+	} else {
 		var texNumber = settings.fractionnumbers ? texRationalNumber : texRealNumber;
 		elements = v.map(function(x){return texNumber(x)});
 	}
@@ -4999,9 +5053,9 @@ function texVector(v,settings)
  * @memberof Numbas.jme.display
  * @private
  *
- * @param {Array.Array.<number>|Numbas.jme.tree} m
- * @param {object} settings
- * @param {boolean} parens - enclose the matrix in parentheses?
+ * @param {Array.<Array.<Number>>|Numbas.jme.tree} m
+ * @param {texify_settings} settings
+ * @param {Boolean} parens - enclose the matrix in parentheses?
  * @returns {TeX}
  */
 function texMatrix(m,settings,parens)
@@ -5079,8 +5133,8 @@ texNameAnnotations.m = texNameAnnotations.matrix;
 /** Convert a variable name to TeX
  * @memberof Numbas.jme.display
  *
- * @param {string} name
- * @param {string[]} [annotations]
+ * @param {String} name
+ * @param {Array.<String>} [annotations]
  * @param {function} [longNameMacro=texttt] - function which returns TeX for a long name
  * @returns {TeX}
  */
@@ -5229,6 +5283,15 @@ var typeToTeX = jme.display.typeToTeX = {
 		return '\\left\\{ '+texArgs.join(', ')+' \\right\\}';
 	}
 }
+
+/** A dictionary of settings for {@link Numbas.jme.display.texify}.
+ * @typedef texify_settings
+ * @property {Boolean} fractionnumbers - Show all numbers as fractions?
+ * @property {Boolean} nicenumber - Run numbers through {@link Numbas.math.niceNumber}?
+ * @property {Number} accuracy - Accuracy to use when finding rational approximations to numbers. See {@link Numbas.math.rationalApproximation}.
+ * @property {Boolean} rowvector - Display vectors as a horizontal list of components?
+ */
+
 /** Turn a syntax tree into a TeX string. Data types can be converted to TeX straightforwardly, but operations and functions need a bit more care.
  *
  * The idea here is that each function and op has a function associated with it which takes a syntax tree with that op at the top and returns the appropriate TeX
@@ -5237,7 +5300,7 @@ var typeToTeX = jme.display.typeToTeX = {
  * @method
  *
  * @param {Numbas.jme.tree} thing
- * @param {object} settings
+ * @param {texify_settings} settings
  *
  * @returns {TeX}
  */
@@ -5273,8 +5336,8 @@ var texify = Numbas.jme.display.texify = function(thing,settings)
  * @memberof Numbas.jme.display
  * @private
  *
- * @param {number} n
- * @param {object} settings - if `settings.niceNumber===false`, don't round off numbers
+ * @param {Number} n
+ * @param {jme_display_settings} settings - if `settings.niceNumber===false`, don't round off numbers
  * @returns {JME}
  */
 var jmeRationalNumber = jme.display.jmeRationalNumber = function(n,settings)
@@ -5358,8 +5421,8 @@ var jmeRationalNumber = jme.display.jmeRationalNumber = function(n,settings)
  * @memberof Numbas.jme.display
  * @private
  *
- * @param {number} n
- * @param {object} settings - if `settings.niceNumber===false`, don't round off numbers
+ * @param {Number} n
+ * @param {jme_display_settings} settings - if `settings.niceNumber===false`, don't round off numbers
  * @returns {JME}
  */
 function jmeRealNumber(n,settings)
@@ -5447,16 +5510,6 @@ function jmeRealNumber(n,settings)
 	}
 }
 
-function jmeCleanString(str) {
-    return str
-            .replace(/\\/g,'\\\\')
-            .replace(/\\([{}])/g,'$1')
-            .replace(/\n/g,'\\n')
-            .replace(/"/g,'\\"')
-            .replace(/'/g,"\\'")
-    ;
-}
-
 /** Dictionary of functions to turn {@link Numbas.jme.types} objects into JME strings
  *
  * @enum
@@ -5478,7 +5531,14 @@ var typeToJME = Numbas.jme.display.typeToJME = {
 		return tok.name;
 	},
 	'string': function(tree,tok,bits,settings) {
-		return '"'+jmeCleanString(tok.value)+'"';
+		var str = tok.value
+					.replace(/\\/g,'\\\\')
+					.replace(/\\([{}])/g,'$1')
+					.replace(/\n/g,'\\n')
+					.replace(/"/g,'\\"')
+					.replace(/'/g,"\\'")
+		;
+		return '"'+str+'"';
 	},
 	html: function(tree,tok,bits,settings) {
 		var html = $(tok.value).clone().wrap('<div>').parent().html();
@@ -5551,21 +5611,14 @@ var typeToJME = Numbas.jme.display.typeToJME = {
 			var pd;
             var bracketNumberOp = (op=='*' || op=='-u' || op=='/' || op=='^')
 
-			if(arg_type=='op' && op in opBrackets && opBrackets[op][i][args[i].tok.name]==true)
-			{
-				bits[i]='('+bits[i]+')';
-				args[i].bracketed=true;
-			}
-			else if(arg_type=='number' && arg_value.complex && bracketNumberOp)	// put brackets round a complex number
-			{
-				if(arg_value.im!=0 && !(arg_value.im==1 && arg_value.re==0))
-				{
-					bits[i] = '('+bits[i]+')';
-					args[i].bracketed = true;
-				}
-			} else if(arg_type=='number' && (pd = math.piDegree(args[i].tok.value))>0 && arg_value/math.pow(Math.PI,pd)>1 && bracketNumberOp) {
+            var bracketArg = arg_type=='op' && op in opBrackets && opBrackets[op][i][args[i].tok.name]==true // if this kind of op as an argument to the parent op always gets brackets
+            bracketArg = bracketArg || ((arg_type=='number' && arg_value.complex && bracketNumberOp) && (arg_value.im!=0 && !(arg_value.im==1 && arg_value.re==0)));  // put brackets round a complex number
+            bracketArg = bracketArg || (arg_type=='number' && (pd = math.piDegree(args[i].tok.value))>0 && arg_value/math.pow(Math.PI,pd)>1 && bracketNumberOp);  // put brackets around multiples of pi
+            bracketArg = bracketArg || (arg_type=='number' && bracketNumberOp && bits[i].indexOf('/')>=0); // put brackets around fractions when necessary
+
+			if(bracketArg) {
 				bits[i] = '('+bits[i]+')';
-				args[i].bracketed = true;
+				args[i].bracketed=true;
 			}
 		}
 		
@@ -5622,12 +5675,7 @@ var typeToJME = Numbas.jme.display.typeToJME = {
 	},
 
 	expression: function(tree,tok,bits,settings) {
-		var str = treeToJME(tok.tree);
-        if(settings.bareExpression===false) {
-            return 'parse("'+jmeCleanString(str)+'")';
-        } else {
-            return str;
-        }
+		return treeToJME(tok.tree);
 	}
 }
 
@@ -5646,12 +5694,19 @@ var jmeFunctions = jme.display.jmeFunctions = {
     }
 }
 
+/** A dictionary of settings for {@link Numbas.jme.display.treeToJME}.
+ * @typedef jme_display_settings
+ * @property {Boolean} fractionnumbers - Show all numbers as fractions?
+ * @property {Boolean} niceNumber - Run numbers through {@link Numbas.math.niceNumber}?
+ * @property {Number} accuracy - Accuracy to use when finding rational approximations to numbers. See {@link Numbas.math.rationalApproximation}.
+ */
+
 /** Turn a syntax tree back into a JME expression (used when an expression is simplified)
  * @memberof Numbas.jme.display
  * @method
  * 
  * @param {Numbas.jme.tree} tree
- * @param {object} settings
+ * @param {jme_display_settings} settings
  * @returns {JME}
  */
 var treeToJME = jme.display.treeToJME = function(tree,settings)
@@ -7011,7 +7066,7 @@ DOMcontentsubber.prototype = {
                 jme.variables.DOMcontentsubvars(element.contentDocument.rootElement,scope);
             }
 
-            if(element.contentDocument) {
+            if(element.contentDocument && element.contentDocument.rootElement) {
                 go();
             } else {
                 element.addEventListener('load',go,false);
@@ -7080,6 +7135,7 @@ Numbas.queueScript('localisation',['i18next','localisation-resources'],function(
         lng: Numbas.locale.preferred_locale,
         lowerCaseLng: true,
         keySeparator: false,
+        nsSeparator: false,
         interpolation: {
             format: function(value,format) {
                 if(format=='niceNumber') {
@@ -7360,7 +7416,7 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
     var MarkingNote = marking.MarkingNote = function(source) {
         var m = re_note.exec(source.trim());
         if(!m) {
-            throw(new Numbas.Error("marking.note.invalid definition",{source: source.split('\n')[0]}));
+            throw(new Numbas.Error("marking.note.invalid definition",{source: source}));
         }
         this.name = m[1];
         this.description = m[2];
@@ -7368,10 +7424,7 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
         try {
             this.tree = jme.compile(this.expr);
         } catch(e) {
-            throw(new Numbas.Error("marking.note.compilation error",{name:this.name, message:e.message}));
-        }
-        if(!this.tree) {
-            throw(new Numbas.Error("marking.note.empty definition",{name:this.name}))
+            throw(new Numbas.Error("marking.note.compilation error",{name:name, message:e.message}));
         }
         this.vars = jme.findvars(this.tree);
     }
@@ -7558,17 +7611,18 @@ Numbas.queueScript('math',['base'],function() {
 /** Mathematical functions, providing stuff that the built-in `Math` object doesn't
  * @namespace Numbas.math */
 
-/** @typedef complex
- * @property {number} re
- * @property {number} im
+/** A complex number.
+ * @typedef complex
+ * @property {Number} re
+ * @property {Number} im
  */
 
 /** @typedef range
- * @desc A range of numbers, separated by a constant intervaland between fixed lower and upper bounds.
- * @type {number[]}
- * @property {number} 0 Minimum value
- * @property {number} 1 Maximum value
- * @property {number} 2 Step size
+ * @desc A range of numbers, separated by a constant interval and between fixed lower and upper bounds.
+ * @type {Array.<Number>}
+ * @property {Number} 0 Minimum value
+ * @property {Number} 1 Maximum value
+ * @property {Number} 2 Step size
  * @see Numbas.math.defineRange
  */
 
@@ -7579,9 +7633,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	
 	/** Construct a complex number from real and imaginary parts.
 	 *
-	 * Elsewhere in this documentation, `{number}` will refer to either a JavaScript float or a {@link complex} object, interchangeably.
-	 * @param {number} re
-	 * @param {number} im
+	 * Elsewhere in this documentation, `{Number}` will refer to either a JavaScript float or a {@link complex} object, interchangeably.
+	 * @param {Number} re
+	 * @param {Number} im
 	 * @returns {complex}
 	 */
 	complex: function(re,im)
@@ -7594,7 +7648,7 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 	
 	/** String version of a complex number
-	 * @returns {string}
+	 * @returns {String}
 	 * @method
 	 * @memberof! complex
 	 */
@@ -7604,8 +7658,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Negate a number.
-	 * @param {number} n
-	 * @returns {number}
+	 * @param {Number} n
+	 * @returns {Number}
 	 */
 	negate: function(n)
 	{
@@ -7616,8 +7670,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Complex conjugate
-	 * @param {number} n
-	 * @returns {number}
+	 * @param {Number} n
+	 * @returns {Number}
 	 */
 	conjugate: function(n)
 	{
@@ -7628,9 +7682,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Add two numbers
-	 * @param {number} a
-	 * @param {number} b
-	 * @returns {number}
+	 * @param {Number} a
+	 * @param {Number} b
+	 * @returns {Number}
 	 */
 	add: function(a,b)
 	{
@@ -7651,9 +7705,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Subtract one number from another
-	 * @param {number} a
-	 * @param {number} b
-	 * @returns {number}
+	 * @param {Number} a
+	 * @param {Number} b
+	 * @returns {Number}
 	 */
 	sub: function(a,b)
 	{
@@ -7674,9 +7728,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Multiply two numbers
-	 * @param {number} a
-	 * @param {number} b
-	 * @returns {number}
+	 * @param {Number} a
+	 * @param {Number} b
+	 * @returns {Number}
 	 */
 	mul: function(a,b)
 	{
@@ -7697,9 +7751,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Divide one number by another
-	 * @param {number} a
-	 * @param {number} b
-	 * @returns {number}
+	 * @param {Number} a
+	 * @param {Number} b
+	 * @returns {Number}
 	 */
 	div: function(a,b)
 	{
@@ -7726,9 +7780,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Exponentiate a number
-	 * @param {number} a
-	 * @param {number} b
-	 * @returns {number}
+	 * @param {Number} a
+	 * @param {Number} b
+	 * @returns {Number}
 	 */
 	pow: function(a,b)
 	{
@@ -7771,8 +7825,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Calculate the Nth row of Pascal's triangle
-	 * @param {number} n
-	 * @returns {number[]}
+	 * @param {Number} n
+	 * @returns {Array.<Number>}
 	 */
 	binomialCoefficients: function(n) {
 		var b = [1];
@@ -7785,9 +7839,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** a mod b. Always returns a positive number
-	 * @param {number} a
-	 * @param {number} b
-	 * @returns {number}
+	 * @param {Number} a
+	 * @param {Number} b
+	 * @returns {Number}
 	 */
 	mod: function(a,b) {
 		if(b==Infinity) {
@@ -7798,9 +7852,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Calculate the `b`-th root of `a`
-	 * @param {number} a
-	 * @param {number} b
-	 * @returns {number}
+	 * @param {Number} a
+	 * @param {Number} b
+	 * @returns {Number}
 	 */
 	root: function(a,b)
 	{
@@ -7808,8 +7862,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Square root
-	 * @param {number} n
-	 * @returns {number}
+	 * @param {Number} n
+	 * @returns {Number}
 	 */
 	sqrt: function(n)
 	{
@@ -7825,8 +7879,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Natural logarithm (base `e`)
-	 * @param {number} n
-	 * @returns {number}
+	 * @param {Number} n
+	 * @returns {Number}
 	 */
 	log: function(n)
 	{
@@ -7843,8 +7897,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Calculate `e^n`
-	 * @param {number} n
-	 * @returns {number}
+	 * @param {Number} n
+	 * @returns {Number}
 	 */
 	exp: function(n)
 	{
@@ -7857,8 +7911,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 	
 	/** Magnitude of a number - absolute value of a real; modulus of a complex number.
-	 * @param {number} n
-	 * @returns {number}
+	 * @param {Number} n
+	 * @returns {Number}
 	 */
 	abs: function(n)
 	{
@@ -7876,8 +7930,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Argument of a (complex) number
-	 * @param {number} n
-	 * @returns {number}
+	 * @param {Number} n
+	 * @returns {Number}
 	 */
 	arg: function(n)
 	{
@@ -7888,8 +7942,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Real part of a number
-	 * @param {number} n
-	 * @returns {number}
+	 * @param {Number} n
+	 * @returns {Number}
 	 */
 	re: function(n)
 	{
@@ -7900,8 +7954,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Imaginary part of a number
-	 * @param {number} n
-	 * @returns {number}
+	 * @param {Number} n
+	 * @returns {Number}
 	 */
 	im: function(n)
 	{
@@ -7913,9 +7967,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 
 	/** Is `a` less than `b`?
 	 * @throws {Numbas.Error} `math.order complex numbers` if `a` or `b` are complex numbers.
-	 * @param {number} a
-	 * @param {number} b
-	 * @returns {boolean}
+	 * @param {Number} a
+	 * @param {Number} b
+	 * @returns {Boolean}
 	 */
 	lt: function(a,b)
 	{
@@ -7926,9 +7980,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 
 	/** Is `a` greater than `b`?
 	 * @throws {Numbas.Error} `math.order complex numbers` if `a` or `b` are complex numbers.
-	 * @param {number} a
-	 * @param {number} b
-	 * @returns {boolean}
+	 * @param {Number} a
+	 * @param {Number} b
+	 * @returns {Boolean}
 	 */
 	gt: function(a,b)
 	{
@@ -7939,9 +7993,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 
 	/** Is `a` less than or equal to `b`?
 	 * @throws {Numbas.Error} `math.order complex numbers` if `a` or `b` are complex numbers.
-	 * @param {number} a
-	 * @param {number} b
-	 * @returns {boolean}
+	 * @param {Number} a
+	 * @param {Number} b
+	 * @returns {Boolean}
 	 */
 	leq: function(a,b)
 	{
@@ -7952,9 +8006,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	
 	/** Is `a` greater than or equal to `b`?
 	 * @throws {Numbas.Error} `math.order complex numbers` if `a` or `b` are complex numbers.
-	 * @param {number} a
-	 * @param {number} b
-	 * @returns {boolean}
+	 * @param {Number} a
+	 * @param {Number} b
+	 * @returns {Boolean}
 	 */
 	geq: function(a,b)
 	{
@@ -7964,9 +8018,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Is `a` equal to `b`?
-	 * @param {number} a
-	 * @param {number} b
-	 * @returns {boolean}
+	 * @param {Number} a
+	 * @param {Number} b
+	 * @returns {Boolean}
 	 */
 	eq: function(a,b)
 	{
@@ -7988,9 +8042,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 
 	/** Greatest of two numbers - wraps `Math.max`
 	 * @throws {Numbas.Error} `math.order complex numbers` if `a` or `b` are complex numbers.
-	 * @param {number} a
-	 * @param {number} b
-	 * @returns {number}
+	 * @param {Number} a
+	 * @param {Number} b
+	 * @returns {Number}
 	 */
 	max: function(a,b)
 	{
@@ -8002,7 +8056,7 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	/** Greatest of a list of numbers
 	 * @throws {Numbas.Error} `math.order complex numbers` if any element of the list is complex.
 	 * @param {Array} numbers
-	 * @returns {number}
+	 * @returns {Number}
 	 */
 	listmax: function(numbers) {
 		if(numbers.length==0) {
@@ -8017,9 +8071,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 
 	/** Least of two numbers - wraps `Math.min`
 	 * @throws {Numbas.Error} `math.order complex numbers` if `a` or `b` are complex numbers.
-	 * @param {number} a
-	 * @param {number} b
-	 * @returns {number}
+	 * @param {Number} a
+	 * @param {Number} b
+	 * @returns {Number}
 	 */
 	min: function(a,b)
 	{
@@ -8031,7 +8085,7 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	/** Least of a list of numbers
 	 * @throws {Numbas.Error} `math.order complex numbers` if any element of the list is complex.
 	 * @param {Array} numbers
-	 * @returns {number}
+	 * @returns {Number}
 	 */
 	listmin: function(numbers) {
 		if(numbers.length==0) {
@@ -8045,9 +8099,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Are `a` and `b` unequal?
-	 * @param {number} a
-	 * @param {number} b
-	 * @returns {boolean}
+	 * @param {Number} a
+	 * @param {Number} b
+	 * @returns {Boolean}
 	 * @see Numbas.math.eq
 	 */
 	neq: function(a,b)
@@ -8056,8 +8110,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** If `n` can be written in the form `a*pi^n`, return the biggest possible `n`, otherwise return `0`.
-	 * @param {number} n
-	 * @returns {number}
+	 * @param {Number} n
+	 * @returns {Number}
 	 */
 	piDegree: function(n)
 	{
@@ -8072,9 +8126,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
     /** Add the given number of zero digits to a string representation of a number.
-     * @param {string} n - a string representation of a number
-     * @param {number} digits - the number of digits to add
-     * @returns {string}
+     * @param {String} n - a string representation of a number
+     * @param {Number} digits - the number of digits to add
+     * @returns {String}
      */
     addDigits: function(n,digits) {
         n = n+'';
@@ -8092,12 +8146,17 @@ var math = Numbas.math = /** @lends Numbas.math */ {
         }
     },
 
+    /** Settings for {@link Numbas.math.niceNumber}
+     * @typedef niceNumber_settings
+     * @property {String} precisionType - Either `"dp"` or `"sigfig"`.
+     * @property {String} style - Name of a notational style to use. See {@link Numbas.util.numberNotationStyles}.
+     */
 
 	/** Display a number nicely - rounds off to 10dp so floating point errors aren't displayed
-	 * @param {number} n
-	 * @param {object} options - `precisionType` is either "dp" or "sigfig". `style` is an optional notation style to use.
+	 * @param {Number} n
+	 * @param {niceNumber_settings} options - `precisionType` is either "dp" or "sigfig". `style` is an optional notation style to use.
      * @see Numbas.util.numberNotationStyles
-	 * @returns {string}
+	 * @returns {String}
 	 */
 	niceNumber: function(n,options)
 	{
@@ -8204,16 +8263,16 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Get a random number in range `[0..n-1]`
-	 * @param {number} n
-	 * @returns {number}
+	 * @param {Number} n
+	 * @returns {Number}
 	 */
 	randomint: function(n) {
 		return Math.floor(n*(Math.random()%1)); 
 	},
 
 	/** Get a  random shuffling of the numbers `[0..n-1]`
-	 * @param {number} n
-	 * @returns {number[]}
+	 * @param {Number} n
+	 * @returns {Array.<Number>}
 	 */
 	deal: function(N) 
 	{ 
@@ -8238,8 +8297,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Calculate the inverse of a shuffling
-	 * @param {number[]} l
-	 * @returns {number[]} l
+	 * @param {Array.<Number>} l
+	 * @returns {Array.<Number>} l
 	 * @see Numbas.math.deal
 	 */
 	inverse: function(l)
@@ -8253,8 +8312,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/* Just the numbers from 1 to `n` (inclusive) in an array!
-	 * @param {number} n
-	 * @returns {number[]}
+	 * @param {Number} n
+	 * @returns {Array.<Number>}
 	 */
 	range: function(n)
 	{
@@ -8267,9 +8326,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Round `a` to `b` decimal places. Real and imaginary parts of complex numbers are rounded independently.
-	 * @param {number} n
-	 * @param {number} b
-	 * @returns {number}
+	 * @param {Number} n
+	 * @param {Number} b
+	 * @returns {Number}
 	 * @throws {Numbas.Error} "math.precround.complex" if b is complex
 	 */
 	precround: function(a,b) {
@@ -8321,9 +8380,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Round `a` to `b` significant figures. Real and imaginary parts of complex numbers are rounded independently.
-	 * @param {number} n
-	 * @param {number} b
-	 * @returns {number}
+	 * @param {Number} n
+	 * @param {Number} b
+	 * @returns {Number}
 	 * @throws {Numbas.Error} "math.precround.complex" if b is complex
 	 */
 	siground: function(a,b) {
@@ -8354,8 +8413,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Count the number of decimal places used in the string representation of a number.
-	 * @param {number|string} n
-	 * @returns {number}
+	 * @param {Number|String} n
+	 * @returns {Number}
 	 */
 	countDP: function(n) {
 		var m = (n+'').match(/(?:\.(\d*))?(?:[Ee]([\-+])?(\d+))?$/);
@@ -8371,9 +8430,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 	
 	/** Calculate the significant figures precision of a number.
-	 * @param {number|string} n
-	 * @param {boolean} [max] - be generous with calculating sig. figs. for whole numbers. e.g. '1000' could be written to 4 sig figs.
-	 * @returns {number}
+	 * @param {Number|String} n
+	 * @param {Boolean} [max] - be generous with calculating sig. figs. for whole numbers. e.g. '1000' could be written to 4 sig figs.
+	 * @returns {Number}
 	 */
 	countSigFigs: function(n,max) {
         n += '';
@@ -8390,11 +8449,11 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Is n given to the desired precision?
-	 * @param {number|string} n
-	 * @param {string} precisionType - either 'dp' or 'sigfig'
-	 * @param {number} precision - number of desired digits of precision
-	 * @param {boolean} strictPrecision - must trailing zeroes be used to get to the desired precision (true), or is it allowed to give fewer digits in that case (false)?
-	 * @returns {boolean}
+	 * @param {Number|String} n
+	 * @param {String} precisionType - either 'dp' or 'sigfig'
+	 * @param {Number} precision - number of desired digits of precision
+	 * @param {Boolean} strictPrecision - must trailing zeroes be used to get to the desired precision (true), or is it allowed to give fewer digits in that case (false)?
+	 * @returns {Boolean}
 	 */
 	toGivenPrecision: function(n,precisionType,precision,strictPrecision) {
 		if(precisionType=='none') {
@@ -8425,10 +8484,10 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Is a within +/- tolerance of b?
-	 * @param {number} a
-	 * @param {number} b
-	 * @param {number} tolerance
-	 * @returns {boolean}
+	 * @param {Number} a
+	 * @param {Number} b
+	 * @param {Number} tolerance
+	 * @returns {Boolean}
 	 */
 	withinTolerance: function(a,b,tolerance) {
 		if(tolerance==0) {
@@ -8441,8 +8500,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Factorial, or Gamma(n+1) if n is not a positive integer.
-	 * @param {number} n
-	 * @returns {number}
+	 * @param {Number} n
+	 * @returns {Number}
 	 */
 	factorial: function(n)
 	{
@@ -8468,8 +8527,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	/** Lanczos approximation to the gamma function 
 	 *
 	 * http://en.wikipedia.org/wiki/Lanczos_approximation#Simple_implementation
-	 * @param {number} n
-	 * @returns {number}
+	 * @param {Number} n
+	 * @returns {Number}
 	 */
 	gamma: function(n)
 	{
@@ -8496,8 +8555,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Base-10 logarithm
-	 * @param {number} n
-	 * @returns {number}
+	 * @param {Number} n
+	 * @returns {Number}
 	 */
 	log10: function(n)
 	{
@@ -8505,9 +8564,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Arbitrary base logarithm
-	 * @param {number} n
-     * @param {number} b
-	 * @returns {number} log(n)/log(b)
+	 * @param {Number} n
+     * @param {Number} b
+	 * @returns {Number} log(n)/log(b)
 	 */
 	log_base: function(n,b)
 	{
@@ -8515,8 +8574,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Convert from degrees to radians
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 * @see Numbas.math.degrees
 	 */
 	radians: function(x) {
@@ -8524,8 +8583,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Convert from radians to degrees
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 * @see Numbas.math.radians
 	 */
 	degrees: function(x) {
@@ -8533,8 +8592,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Cosine
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 */
 	cos: function(x) {
 		if(x.complex)
@@ -8546,8 +8605,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 	
 	/** Sine
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 */
 	sin: function(x) {
 		if(x.complex)
@@ -8559,8 +8618,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Tangent
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 */
 	tan: function(x) {
 		if(x.complex)
@@ -8570,32 +8629,32 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Cosecant 
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 */
 	cosec: function(x) {
 		return div(1,math.sin(x));
 	},
 
 	/** Secant
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 */
 	sec: function(x) {
 		return div(1,math.cos(x));
 	},
 		
 	/** Cotangent
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 */
 	cot: function(x) {
 		return div(1,math.tan(x));
 	},
 
 	/** Inverse sine
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 */
 	arcsin: function(x) {
 		if(x.complex || math.abs(x)>1)
@@ -8609,8 +8668,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Inverse cosine
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 */
 	arccos: function(x) {
 		if(x.complex || math.abs(x)>1)
@@ -8627,8 +8686,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Inverse tangent
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 */
 	arctan: function(x) {
 		if(x.complex)
@@ -8642,8 +8701,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Hyperbolic sine
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 */
 	sinh: function(x) {
 		if(x.complex)
@@ -8653,8 +8712,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Hyperbolic cosine
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 */
 	cosh: function(x) {
 		if(x.complex)
@@ -8664,40 +8723,40 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Hyperbolic tangent
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 */
 	tanh: function(x) {
 		return div(math.sinh(x),math.cosh(x));
 	},
 
 	/** Hyperbolic cosecant
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 */
 	cosech: function(x) {
 		return div(1,math.sinh(x));
 	},
 
 	/** Hyperbolic secant
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 */
 	sech: function(x) {
 		return div(1,math.cosh(x));
 	},
 
 	/** Hyperbolic tangent
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 */
 	coth: function(x) {
 		return div(1,math.tanh(x));
 	},
 
 	/** Inverse hyperbolic sine
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 */
 	arcsinh: function(x) {
 		if(x.complex)
@@ -8707,8 +8766,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Inverse hyperbolic cosine
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 */
 	arccosh: function (x) {
 		if(x.complex)
@@ -8718,8 +8777,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Inverse hyperbolic tangent
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 */
 	arctanh: function (x) {
 		if(x.complex)
@@ -8729,8 +8788,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Round up to the nearest integer. For complex numbers, real and imaginary parts are rounded independently.
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 * @see Numbas.math.round
 	 * @see Numbas.math.floor
 	 */
@@ -8742,8 +8801,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Round down to the nearest integer. For complex numbers, real and imaginary parts are rounded independently.
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 * @see Numbas.math.ceil
 	 * @see Numbas.math.round
 	 */
@@ -8755,8 +8814,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Round to the nearest integer; fractional part >= 0.5 rounds up. For complex numbers, real and imaginary parts are rounded independently.
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 * @see Numbas.math.ceil
 	 * @see Numbas.math.floor
 	 */
@@ -8768,8 +8827,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Integer part of a number - chop off the fractional part. For complex numbers, real and imaginary parts are rounded independently.
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 * @see Numbas.math.fract
 	 */
 	trunc: function(x) {
@@ -8784,8 +8843,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Fractional part of a number - Take away the whole number part. For complex numbers, real and imaginary parts are rounded independently.
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 * @see Numbas.math.trunc
 	 */
 	fract: function(x) {
@@ -8796,8 +8855,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Sign of a number - +1, 0, or -1. For complex numbers, gives the sign of the real and imaginary parts separately.
-	 * @param {number} x
-	 * @returns {number}
+	 * @param {Number} x
+	 * @returns {Number}
 	 */
 	sign: function(x) {
 		if(x.complex)
@@ -8813,9 +8872,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Get a random real number between `min` and `max` (inclusive)
-	 * @param {number} min
-	 * @param {number] max
-	 * @returns {number}
+	 * @param {Number} min
+	 * @param {Number] max
+	 * @returns {Number}
 	 * @see Numbas.math.random
 	 * @see Numbas.math.choose
 	 */
@@ -8831,7 +8890,7 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	 * If all the values in the range are appended to the list, eg `[min,max,step,v1,v2,v3,...]`, just pick randomly from the values.
 	 * 
 	 * @param {range} range - `[min,max,step]`
-	 * @returns {number}
+	 * @returns {Number}
 	 * @see Numbas.math.randomrange
 	 */
 	random: function(range)
@@ -8846,9 +8905,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Remove all the values in the list `exclude` from the list `range`
-	 * @param {number[]} range
-	 * @param {number[]} exclude
-	 * @returns {number[]}
+	 * @param {Array.<Number>} range
+	 * @param {Array.<Number>} exclude
+	 * @returns {Array.<Number>}
 	 */
 	except: function(range,exclude) {
 		range = range.filter(function(r) {
@@ -8863,7 +8922,6 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 
 	/** Choose one item from an array, at random
 	 * @param {Array} selection
-	 * @returns {object}
 	 * @throws {Numbas.Error} "math.choose.empty selection" if `selection` has length 0.
 	 * @see Numbas.math.randomrange
 	 */
@@ -8881,9 +8939,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	 * from http://dreaminginjavascript.wordpress.com/2008/11/08/combinations-and-permutations-in-javascript/ 
 	 * 
 	 * (public domain)
-	 * @param {number} a
-	 * @param {number} b
-	 * @returns {number}
+	 * @param {Number} a
+	 * @param {Number} b
+	 * @returns {Number}
 	 */
 	productRange: function(a,b) {
 		if(a>b)
@@ -8896,8 +8954,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 	 
 	/** `nCk` - number of ways of picking `k` unordered elements from `n`.
-	 * @param {number} n
-	 * @param {number} k
+	 * @param {Number} n
+	 * @param {Number} k
 	 * @throws {Numbas.Error} "math.combinations.complex" if either of `n` or `k` is complex.
 	 */
 	combinations: function(n,k) {
@@ -8919,8 +8977,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** `nPk` - number of ways of picking `k` ordered elements from `n`.
-	 * @param {number} n
-	 * @param {number} k
+	 * @param {Number} n
+	 * @param {Number} k
 	 * @throws {Numbas.Error} "math.combinations.complex" if either of `n` or `k` is complex.
 	 */
     permutations: function(n,k) {
@@ -8941,9 +8999,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Does `a` divide `b`? If either of `a` or `b` is not an integer, return `false`.
-	 * @param {number} a
-	 * @param {number} b
-	 * @returns {boolean}
+	 * @param {Number} a
+	 * @param {Number} b
+	 * @returns {Boolean}
 	 */
 	divides: function(a,b) {
 		if(a.complex || b.complex || !Numbas.util.isInt(a) || !Numbas.util.isInt(b))
@@ -8953,9 +9011,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Greatest common factor (GCF), or greatest common divisor (GCD), of `a` and `b`.
-	 * @param {number} a
-	 * @param {number} b
-	 * @returns {number}
+	 * @param {Number} a
+	 * @param {Number} b
+	 * @returns {Number}
 	 * @throws {Numbas.Error} "math.gcf.complex" if either of `a` or `b` is complex.
 	 */
 	gcd: function(a,b) {
@@ -8981,9 +9039,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	},
 
 	/** Lowest common multiple (LCM) of `a` and `b`.
-	 * @param {number} a
-	 * @param {number} b
-	 * @returns {number}
+	 * @param {Number} a
+	 * @param {Number} b
+	 * @returns {Number}
 	 * @throws {Numbas.Error} "math.gcf.complex" if either of `a` or `b` is complex.
 	 */
 	lcm: function(a,b) {
@@ -9017,8 +9075,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 
 	/** Write the range of integers `[a..b]` as an array of the form `[min,max,step]`, for use with {@link Numbas.math.random}. If either number is complex, only the real part is used.
 	 *
-	 * @param {number} a
-	 * @param {number} b
+	 * @param {Number} a
+	 * @param {Number} b
 	 * @returns {range}
 	 * @see Numbas.math.random
 	 */
@@ -9033,7 +9091,7 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 
 	/** Change the step size of a range created with {@link Numbas.math.defineRange}
 	 * @param {range} range
-	 * @param {number} step
+	 * @param {Number} step
 	 * @returns {range}
 	 */
 	rangeSteps: function(range,step)
@@ -9085,9 +9143,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	 *
 	 * If `accuracy` is given, the returned answer will be within `Math.exp(-accuracy)` of the original number
 	 * 
-	 * @param {number} n
-	 * @param {number} [accuracy]
-	 * @returns {number[]} - [numerator,denominator]
+	 * @param {Number} n
+	 * @param {Number} [accuracy]
+	 * @returns {Array.<Number>} - [numerator,denominator]
 	 */
 	rationalApproximation: function(n,accuracy)
 	{
@@ -9129,8 +9187,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 
 	/** Factorise n. When n=2^(a1)*3^(a2)*5^(a3)*..., this returns the powers [a1,a2,a3,...]
 	 * 
-	 * @param {number} n
-	 * @returns {number[]} - exponents of the prime factors of n
+	 * @param {Number} n
+	 * @returns {Array.<Number>} - exponents of the prime factors of n
 	 */
 	factorise: function(n) {
 		if(n<=0) {
@@ -9154,8 +9212,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 
 	/** Sum the elements in the given list
 	 *
-	 * @param {list} list
-	 * @returns {number}
+	 * @param {Array.<Number>} list
+	 * @returns {Number}
 	 */
 	sum: function(list) {
 		var total = 0;
@@ -9177,9 +9235,9 @@ math.gcf = math.gcd;
 
 var add = math.add, sub = math.sub, mul = math.mul, div = math.div, eq = math.eq, neq = math.neq, negate = math.negate;
 
-/** A list of the vector's components. 
+/** A list of a vector's components. 
  * @typedef vector
- *  @type {number[]}
+ *  @type {Array.<Number>}
  */
 
 /** Vector operations.
@@ -9228,7 +9286,7 @@ var vectormath = Numbas.vectormath = {
 	},
 
 	/** Multiply by a scalar
-	 * @param {number} k
+	 * @param {Number} k
 	 * @param {vector} v
 	 * @returns {vector}
 	 */
@@ -9238,7 +9296,7 @@ var vectormath = Numbas.vectormath = {
 
 	/** Divide by a scalar
 	 * @param {vector} v
-	 * @param {number} k
+	 * @param {Number} k
 	 * @returns {vector}
 	 */
 	div: function(v,k) {
@@ -9248,8 +9306,8 @@ var vectormath = Numbas.vectormath = {
 	/** Vector dot product - each argument can be a vector, or a matrix with one row or one column, which is converted to a vector.
 	 * @param {vector|matrix} a
 	 * @param {vector|matrix} b
-	 * @returns {number}
-	 * @throws {NumbasError} "vectormaths.dot.matrix too big" if either of `a` or `b` is bigger than `1xN` or `Nx1`.
+	 * @returns {Number}
+	 * @throws {Numbas.Error} "vectormaths.dot.matrix too big" if either of `a` or `b` is bigger than `1xN` or `Nx1`.
 	 */
 	dot: function(a,b) {
 
@@ -9288,8 +9346,8 @@ var vectormath = Numbas.vectormath = {
 	 * @param {vector|matrix} b
 	 * @returns {vector}
 	 *
-	 * @throws {NumbasError} "vectormaths.cross.matrix too big" if either of `a` or `b` is bigger than `1xN` or `Nx1`.
-	 * @throws {NumbasError} "vectormath.cross.not 3d" if either of the vectors is not 3D.
+	 * @throws {Numbas.Error} "vectormaths.cross.matrix too big" if either of `a` or `b` is bigger than `1xN` or `Nx1`.
+	 * @throws {Numbas.Error} "vectormath.cross.not 3d" if either of the vectors is not 3D.
 	 */
 	cross: function(a,b) {
 		//check if A is a matrix object. If it's the right shape, we can use it anyway
@@ -9325,7 +9383,7 @@ var vectormath = Numbas.vectormath = {
 
 	/** Length of a vector, squared
 	 * @param {vector} a
-	 * @returns {number}
+	 * @returns {Number}
 	 */
 	abs_squared: function(a) {
 		return a.reduce(function(s,x){ return s + mul(x,x); },0);
@@ -9333,7 +9391,7 @@ var vectormath = Numbas.vectormath = {
 
 	/** Length of a vector
 	 * @param {vector} a
-	 * @returns {number}
+	 * @returns {Number}
 	 */
 	abs: function(a) {
 		return Math.sqrt( a.reduce(function(s,x){ return s + mul(x,x); },0) );
@@ -9342,7 +9400,7 @@ var vectormath = Numbas.vectormath = {
     /** Angle between vectors a and b, in radians, or 0 if either vector has length 0.
      * @param {vector} a
      * @param {vector} b
-     * @returns {number}
+     * @returns {Number}
      */
     angle: function(a,b) {
         var dot = vectormath.dot(a,b);
@@ -9358,7 +9416,7 @@ var vectormath = Numbas.vectormath = {
 	/** Are two vectors equal? True if each pair of corresponding components is equal.
 	 * @param {vector} a
 	 * @param {vector} b
-	 * @returns {boolean}
+	 * @returns {Boolean}
 	 */
 	eq: function(a,b) {
 		if(b.length>a.length)
@@ -9373,8 +9431,8 @@ var vectormath = Numbas.vectormath = {
 	/** Are two vectors unequal?
 	 * @param {vector} a
 	 * @param {vector} b
-	 * @returns {boolean}
-	 * @see {Numbas.vectormath.eq}
+	 * @returns {Boolean}
+	 * @see Numbas.vectormath.eq
 	 */
 	neq: function(a,b) {
 		return !vectormath.eq(a,b);
@@ -9416,7 +9474,7 @@ var vectormath = Numbas.vectormath = {
 
 	/** Round each element to given number of decimal places
 	 * @param {vector}
-	 * @param {number} - number of decimal places
+	 * @param {Number} - number of decimal places
 	 * @returns {vector}
 	 */
 	precround: function(v,dp) {
@@ -9425,7 +9483,7 @@ var vectormath = Numbas.vectormath = {
 
 	/** Round each element to given number of significant figures
 	 * @param {vector}
-	 * @param {number} - number of decimal places
+	 * @param {Number} - number of decimal places
 	 * @returns {vector}
 	 */
 	siground: function(v,sf) {
@@ -9455,11 +9513,11 @@ var vectormath = Numbas.vectormath = {
 	}
 }
 
-/** An array of rows (each of which is an array of numbers) 
+/** A two-dimensional matrix: an array of rows, each of which is an array of numbers.
  * @typedef matrix
- * @type {Array.Array.<number>}
- * @property {number} rows
- * @property {number} columns
+ * @type {Array.<Array.<Number>>}
+ * @property {Number} rows - The number of rows in the matrix
+ * @property {Number} columns - The number of columns in the matrix
  */
 
 /** Matrix operations.
@@ -9529,8 +9587,8 @@ var matrixmath = Numbas.matrixmath = {
 	
 	/** Matrix determinant. Only works up to 3x3 matrices.
 	 * @param {matrix} m
-	 * @returns {number}
-	 * @throws {NumbasError} "matrixmath.abs.too big" if the matrix has more than 3 rows.
+	 * @returns {Number}
+	 * @throws {Numbas.Error} "matrixmath.abs.too big" if the matrix has more than 3 rows.
 	 */
 	abs: function(m) {
 		if(m.rows!=m.columns)
@@ -9556,7 +9614,7 @@ var matrixmath = Numbas.matrixmath = {
 	},
 
 	/** Multiply a matrix by a scalar
-	 * @param {number} k
+	 * @param {Number} k
 	 * @param {matrix} m
 	 * @returns {matrix}
 	 */
@@ -9569,7 +9627,7 @@ var matrixmath = Numbas.matrixmath = {
 
 	/** Divide a matrix by a scalar
 	 * @param {matrix} m
-	 * @param {number} k
+	 * @param {Number} k
 	 * @returns {matrix}
 	 */
 	scalardiv: function(m,k) {
@@ -9583,7 +9641,7 @@ var matrixmath = Numbas.matrixmath = {
 	 * @param {matrix} a
 	 * @param {matrix} b
 	 * @returns {matrix}
-	 * @throws {NumbasError} "matrixmath.mul.different sizes" if `a` doesn't have as many columns as `b` has rows.
+	 * @throws {Numbas.Error} "matrixmath.mul.different sizes" if `a` doesn't have as many columns as `b` has rows.
 	 */
 	mul: function(a,b) {
 		if(a.columns!=b.rows)
@@ -9612,7 +9670,7 @@ var matrixmath = Numbas.matrixmath = {
 	/** Are two matrices equal? True if each pair of corresponding elements is equal.
 	 * @param {matrix} a
 	 * @param {matrix} b
-	 * @returns {boolean}
+	 * @returns {Boolean}
 	 */
 	eq: function(a,b) {
 		var rows = Math.max(a.rows,b.rows);
@@ -9621,7 +9679,7 @@ var matrixmath = Numbas.matrixmath = {
 		{
 			var rowA = a[i] || [];
 			var rowB = b[i] || [];
-			for(var j=0;j<rows;j++)
+			for(var j=0;j<columns;j++)
 			{
 				if(!eq(rowA[j]||0,rowB[j]||0))
 					return false;
@@ -9633,15 +9691,15 @@ var matrixmath = Numbas.matrixmath = {
 	/** Are two matrices unequal?
 	 * @param {matrix} a
 	 * @param {matrix} b
-	 * @returns {boolean}
-	 * @see {Numbas.matrixmath.eq}
+	 * @returns {Boolean}
+	 * @see Numbas.matrixmath.eq
 	 */
 	neq: function(a,b) {
 		return !matrixmath.eq(a,b);
 	},
 
 	/** Make an `NxN` identity matrix.
-	 * @param {number} n
+	 * @param {Number} n
 	 * @returns {matrix}
 	 */
 	id: function(n) {
@@ -9694,7 +9752,7 @@ var matrixmath = Numbas.matrixmath = {
 
 	/** Round each element to given number of decimal places
 	 * @param {matrix}
-	 * @param {number} - number of decimal places
+	 * @param {Number} - number of decimal places
 	 * @returns {matrix}
 	 */
 	precround: function(m,dp) {
@@ -9703,7 +9761,7 @@ var matrixmath = Numbas.matrixmath = {
 
 	/** Round each element to given number of significant figures
 	 * @param {matrix}
-	 * @param {number} - number of decimal places
+	 * @param {Number} - number of decimal places
 	 * @returns {matrix}
 	 */
 	siground: function(m,sf) {
@@ -9711,6 +9769,10 @@ var matrixmath = Numbas.matrixmath = {
 	}
 }
 
+/** A set of objects: no item occurs more than once.
+ * @typedef set
+ * @type Array
+ */
 
 /** Set operations.
  *
@@ -9719,8 +9781,8 @@ var matrixmath = Numbas.matrixmath = {
 var setmath = Numbas.setmath = {
 	/** Does the set contain the given element?
 	 * @param {set} set
-	 * @param {object} element
-	 * @returns {bool}
+	 * @param element
+	 * @returns {Boolean}
 	 */
 	contains: function(set,element) {
 		for(var i=0,l=set.length;i<l;i++) {
@@ -9759,7 +9821,7 @@ var setmath = Numbas.setmath = {
 	/** Are two sets equal? Yes if a,b and (a intersect b) all have the same length
 	 * @param {set} a
 	 * @param {set} b
-	 * @returns {bool}
+	 * @returns {Boolean}
 	 */
 	eq: function(a,b) {	
 		return a.length==b.length && setmath.intersection(a,b).length==a.length;
@@ -9776,7 +9838,7 @@ var setmath = Numbas.setmath = {
 
 	/** Size of a set
 	 * @param {set} set
-	 * @returns {number}
+	 * @returns {Number}
 	 */
 	size: function(set) {
 		return set.length;
@@ -9850,7 +9912,7 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	 * Array.splice() will create a copy of an array, but the elements are the same objects, which can cause fruity bugs.
 	 * This function clones the array elements as well, so there should be no side-effects when operating on the cloned array.
 	 * @param {Array} arr
-	 * @param {boolean} deep - if true, do a deep copy of each element
+	 * @param {Boolean} deep - if true, do a deep copy of each element
 	 * @see Numbas.util.copyobj
 	 * @returns {Array}
 	 */
@@ -9868,9 +9930,9 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	},
 
 	/** Clone an object.
-	 * @param {object} obj
-	 * @param {boolean} deep - if true, each property is cloned as well (recursively) so there should be no side-effects when operating on the cloned object.
-	 * @returns {object}
+	 * @param {Object} obj
+	 * @param {Boolean} deep - if true, each property is cloned as well (recursively) so there should be no side-effects when operating on the cloned object.
+	 * @returns {Object}
 	 */
 	copyobj: function(obj,deep)
 	{
@@ -9902,8 +9964,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 
 	/** Shallow copy an object into an already existing object
 	 * (add all src's properties to dest)
-	 * @param {object} src
-	 * @param {object} dest
+	 * @param {Object} src
+	 * @param {Object} dest
 	 */
 	copyinto: function(src,dest)
 	{
@@ -9917,7 +9979,7 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	/** Generic equality test on {@link Numbas.jme.token}s
 	 * @param {Numbas.jme.token} a
 	 * @param {Numbas.jme.token} b
-	 * @returns {boolean}
+	 * @returns {Boolean}
 	 */
 	eq: function(a,b) {
 		if(a.type != b.type)
@@ -9956,25 +10018,14 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 		},
 		'boolean': function(a,b) {
 			return a.value==b.value;
-		},
-        'dict': function(a,b) {
-            var akeys = Object.keys(a.value);
-            var bkeys = Object.keys(b.value);
-            if(akeys.length != bkeys.length || akeys.filter(function(k){return !bkeys.contains(k)})) {
-                return false;
-            } else {
-                return akeys.every(function(key) {
-                    return util.eq(a.value[key],b.value[key]);
-                });
-            }
-        }
+		}
 	},
 
 
 	/** Generic inequality test on {@link Numbas.jme.token}s
 	 * @param {Numbas.jme.token} a
 	 * @param {Numbas.jme.token} b
-	 * @returns {boolean}
+	 * @returns {Boolean}
 	 * @see Numbas.util.eq
 	 */
 	neq: function(a,b) {
@@ -9984,7 +10035,7 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	/** Are two arrays equal? True if their elements are all equal
 	 * @param {Array} a
 	 * @param {Array} b
-	 * @returns {boolean}
+	 * @returns {Boolean}
 	 */
 	arraysEqual: function(a,b) {
 		if(a.length!=b.length) {
@@ -10023,8 +10074,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	},
 
 	/** Return a copy of the input list with duplicates removed
-	 * @param {array} list
-	 * @returns {list}
+	 * @param {Array} list
+	 * @returns {Array}
 	 * @see Numbas.util.eq
 	 */
 	distinct: function(list) {
@@ -10048,9 +10099,9 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	},
 
 	/** Is value in the list?
-	 * @param {array} list
+	 * @param {Array} list
 	 * @param {Numbas.jme.token} value
-	 * @returns {boolean}
+	 * @returns {Boolean}
 	 */
 	contains: function(list,value) {
 		for(var i=0;i<list.length;i++) {
@@ -10062,8 +10113,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	},
 
 	/** Test if parameter is an integer
-	 * @param {object} i
-	 * @returns {boolean}
+	 * @param {Object} i
+	 * @returns {Boolean}
 	 */
 	isInt: function(i)
 	{
@@ -10071,8 +10122,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	},
 
 	/** Test if parameter is a float
-	 * @param {object} f
-	 * @returns {boolean}
+	 * @param {Object} f
+	 * @returns {Boolean}
 	 */
 	isFloat: function(f)
 	{
@@ -10080,8 +10131,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	},
 
     /** Test if parameter is a fraction
-     * @param {string} s
-     * @returns {boolean}
+     * @param {String} s
+     * @returns {Boolean}
      */
     isFraction: function(s) {
 		s = s.toString().trim();
@@ -10091,11 +10142,11 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	/** Is `n`a number? i.e. `!isNaN(n)`, or is `n` "infinity", or if `allowFractions` is true, is `n` a fraction?
      *
      * If `styles` is given, try to put the number in standard form if it matches any of the given styles.
-	 * @param {number|string} n
-	 * @param {boolean} allowFractions
-     * @param {string|string[]} styles - styles of notation to allow.
+	 * @param {Number|String} n
+	 * @param {Boolean} allowFractions
+     * @param {String|Array.<String>} styles - styles of notation to allow.
      * @see Numbas.util.cleanNumber
-	 * @returns {boolean}
+	 * @returns {Boolean}
 	 */
 	isNumber: function(n,allowFractions,styles) {
         n = util.cleanNumber(n,styles);
@@ -10112,9 +10163,9 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	},
 
 	/** Wrap a list index so -1 maps to length-1
-	 * @param {number} n
-	 * @param {number} size
-	 * @returns {number}
+	 * @param {Number} n
+	 * @param {Number} size
+	 * @returns {Number}
 	 */
 	wrapListIndex: function(n,size) {
 		if(n<0) {
@@ -10124,8 +10175,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	},
 
 	/** Test if parameter is a boolean - that is: a boolean literal, or any of the strings 'false','true','yes','no', case-insensitive.
-	 * @param {object} b
-	 * @returns {boolean}
+	 * @param {Object} b
+	 * @returns {Boolean}
 	 */
 	isBool: function(b)
 	{
@@ -10137,8 +10188,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	},
 
 	/** Parse a string as HTML, and return true only if it contains non-whitespace text
-	 * @param {string} html
-	 * @returns {boolean}
+	 * @param {String} html
+	 * @returns {Boolean}
 	 */
 	isNonemptyHTML: function(html) {
 		var d = document.createElement('div');
@@ -10147,8 +10198,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	},
 
 	/** Parse parameter as a boolean. The boolean value `true` and the strings 'true' and 'yes' are parsed as the value `true`, everything else is `false`.
-	 * @param {object} b
-	 * @returns {boolean}
+	 * @param {Object} b
+	 * @returns {Boolean}
 	 */
 	parseBool: function(b)
 	{
@@ -10162,9 +10213,9 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	re_fraction: /^\s*(-?)\s*(\d+)\s*\/\s*(\d+)\s*/,
 
     /** Create a function `(integer,decimal) -> string` which formats a number according to the given punctuation.
-     * @param {string} thousands - the string used to separate powers of 1000
-     * @param {string} decimal_mark - the decimal mark character
-     * @param {boolean} separate_decimal=false - should the `thousands` separator be used to separate negative powers of 1000 (that is, groups of 3 digits after the decimal point)?
+     * @param {String} thousands - the string used to separate powers of 1000
+     * @param {String} decimal_mark - the decimal mark character
+     * @param {Boolean} separate_decimal=false - should the `thousands` separator be used to separate negative powers of 1000 (that is, groups of 3 digits after the decimal point)?
      * @returns {function}
      */
     standardNumberFormatter: function(thousands, decimal_mark, separate_decimal) {
@@ -10192,8 +10243,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
      * 
      * If `styles` is given, `s` will be tested against the given styles. If it matches, the string will be rewritten using the matched integer and decimal parts, with punctuation removed and the decimal point changed to a dot.
      *
-     * @param {string} s - the string potentially representing a number.
-     * @param {string|string[]} styles - styles of notation to allow, e.g. `['en','si-en']` 
+     * @param {String} s - the string potentially representing a number.
+     * @param {String|String[]} styles - styles of notation to allow, e.g. `['en','si-en']` 
      *
      * @see Numbas.util.numberNotationStyles
      */
@@ -10231,11 +10282,11 @@ var util = Numbas.util = /** @lends Numbas.util */ {
     },
 
 	/** Parse a number - either parseFloat, or parse a fraction.
-	 * @param {string} s
-     * @param {boolean} allowFractions - are fractions of the form `a/b` (`a` and `b` integers without punctuation) allowed? 
-     * @param {string|string[]} styles - styles of notation to allow.
+	 * @param {String} s
+     * @param {Boolean} allowFractions - are fractions of the form `a/b` (`a` and `b` integers without punctuation) allowed? 
+     * @param {String|String[]} styles - styles of notation to allow.
      * @see Numbas.util.cleanNumber
-	 * @returns {number}
+	 * @returns {Number}
 	 */
 	parseNumber: function(s,allowFractions,styles) {
         s = util.cleanNumber(s,styles);
@@ -10247,19 +10298,43 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 			return Infinity;
 		} else if(s.toLowerCase()=='-infinity') {
 			return -Infinity;
-		} else if(allowFractions && (m = util.re_fraction.exec(s))) {
-			var n = parseInt(m[2])/parseInt(m[3]);
-			return m[1] ? -n : n;
+		} else if(allowFractions && (m = util.parseFraction(s))) {
+			return m.numerator/m.denominator;
 		} else {
 			return NaN;
 		}
 	},
 
+    /** A fraction
+     * @typedef {Object} fraction
+     * @property {Number} numerator
+     * @property {Number} denominator
+     */
+
+	/** Parse a string representing an integer or fraction
+	 * @param {String} s
+	 * @see Numbas.util.re_fraction
+	 * @returns {fraction}
+	 */
+	parseFraction: function(s) {
+		if(util.isInt(s)){
+			return {numerator:parseInt(s), denominator:1};
+		}
+		var m = util.re_fraction.exec(s);
+		if(!m) {
+			return;
+		}
+		var n = parseInt(m[2]);
+		n = m[1] ? -n : n;
+		var d = parseInt(m[3]);
+		return {numerator:n, denominator:d};
+	},
+
 	/** Pad string `s` on the left with a character `p` until it is `n` characters long.
-	 * @param {string} s
-	 * @param {number} n
-	 * @param {string} p
-	 * @returns {string}
+	 * @param {String} s
+	 * @param {Number} n
+	 * @param {String} p
+	 * @returns {String}
 	 */
 	lpad: function(s,n,p)
 	{
@@ -10271,9 +10346,9 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 
 	/** Replace occurences of `%s` with the extra arguments of the function
 	 * @example formatString('hello %s %s','Mr.','Perfect') => 'hello Mr. Perfect'
-	 * @param {string} str
-	 * @param {...string} value - string to substitute
-	 * @returns {string}
+	 * @param {String} str
+	 * @param {...String} value - string to substitute
+	 * @returns {String}
 	 */
 	formatString: function(str)
 	{
@@ -10286,8 +10361,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	},
 
     /** String representation of a time, in the format HH:MM:SS
-     * @param {Data} t
-     * @returns {string}
+     * @param {Date} t
+     * @returns {String}
      */
     formatTime: function(t) {
 		var h = t.getHours();
@@ -10299,9 +10374,9 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 
 	/** Format an amount of currency
 	 * @example currency(5.3,'£','p') => £5.30
-	 * @param {number} n
-	 * @param {string} prefix - symbol to use in front of currency if abs(n) >= 1
-	 * @param {string} suffix - symbol to use in front of currency if abs(n) <= 1
+	 * @param {Number} n
+	 * @param {String} prefix - symbol to use in front of currency if abs(n) >= 1
+	 * @param {String} suffix - symbol to use in front of currency if abs(n) <= 1
 	 */
 	currency: function(n,prefix,suffix) {
 		if(n<0)
@@ -10323,9 +10398,9 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 
     /* Write a number with every three digits separated by the given separator character
      * @example separateThousands(1234567.1234,',') => '1,234,567.1234'
-     * @param {number} n
-     * @param {string} separator
-     * @returns {string}
+     * @param {Number} n
+     * @param {String} separator
+     * @returns {String}
      */
     separateThousands: function(n,separator) {
         if(n<0) {
@@ -10351,8 +10426,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	/** Get rid of the % on the end of percentages and parse as float, then divide by 100
 	 * @example unPercent('50%') => 0.5
 	 * @example unPercent('50') => 0.5
-	 * @param {string} s
-	 * @returns {number}
+	 * @param {String} s
+	 * @returns {Number}
 	 */
 	unPercent: function(s)
 	{
@@ -10363,10 +10438,10 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	/** Pluralise a word
 	 * 
 	 * If `n` is not unity, return `plural`, else return `singular`
-	 * @param {number} n
-	 * @param {string} singular - string to return if `n` is +1 or -1
-	 * @param {string} plural - string to returns if `n` is not +1 or -1
-	 * @returns {string}
+	 * @param {Number} n
+	 * @param {String} singular - string to return if `n` is +1 or -1
+	 * @param {String} plural - string to returns if `n` is not +1 or -1
+	 * @returns {String}
 	 */
 	pluralise: function(n,singular,plural)
 	{
@@ -10378,8 +10453,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	},
 
 	/** Make the first letter in the string a capital
-	 * @param {string} str
-	 * @returns {string}
+	 * @param {String} str
+	 * @returns {String}
 	 */
 	capitalise: function(str) {
 		return str.replace(/^[a-z]/,function(c){return c.toUpperCase()});
@@ -10389,10 +10464,10 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	 *
 	 * Strips out nested brackets
 	 * @example splitbrackets('a{{b}}c','{','}') => ['a','b','c']
-	 * @param {string} t - string to split
-	 * @param {string} lb - left bracket string
-	 * @param {string} rb - right bracket string
-	 * @returns {string[]} - alternating strings in brackets and strings outside: odd-numbered indices are inside brackets.
+	 * @param {String} t - string to split
+	 * @param {String} lb - left bracket string
+	 * @param {String} rb - right bracket string
+	 * @returns {Array.<String>} - alternating strings in brackets and strings outside: odd-numbered indices are inside brackets.
 	 */
 	splitbrackets: function(str,lb,rb)
 	{
@@ -10456,8 +10531,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	},
 
 	/** Because XML doesn't like having ampersands hanging about, replace them with escape codes
-	 * @param {string} str - XML string
-	 * @returns {string}
+	 * @param {String} str - XML string
+	 * @returns {String}
 	 */
 	escapeHTML: function(str)
 	{
@@ -10471,7 +10546,7 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	},
 
 	/** Create a comparison function which sorts objects by a particular property
-	 * @param {string[]|string} prop - name of the property (or list of names of properties) to sort by
+	 * @param {Array.<String>|String} prop - name of the property (or list of names of properties) to sort by
 	 * @returns {function}
 	 */
 	sortBy: function(props) {
@@ -10509,8 +10584,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	},
 
 	/** Cartesian product of one or more lists
-	 * @param {array} lists - list of arrays
-	 * @returns {array}
+	 * @param {Array} lists - list of arrays
+	 * @returns {Array}
 	 */
 	product: function(lists) {
         if(!Array.isArray(lists)) {
@@ -10551,8 +10626,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	},
 
 	/** Zip lists together: given lists [a,b,c,...], [x,y,z,...], return [[a,x],[b,y],[c,z], ...]
-	 * @param {array} lists - list of arrays
-	 * @returns {array}
+	 * @param {Array} lists - list of arrays
+	 * @returns {Array}
 	 */
 	zip: function(lists) {
 		var out = [];
@@ -10573,8 +10648,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	},
 
 	/** All combinations of r items from given array, without replacement
-	 * @param {array} list
-	 * @param {number} r
+	 * @param {Array} list
+	 * @param {Number} r
 	 */
 	combinations: function(list,r) {
 		var indexes = [];
@@ -10607,8 +10682,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 
 	
 	/** All combinations of r items from given array, with replacement
-	 * @param {array} list
-	 * @param {number} r
+	 * @param {Array} list
+	 * @param {Number} r
 	 */
 	combinations_with_replacement: function(list,r) {
 		var indexes = [];
@@ -10640,8 +10715,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	/** All permutations of all choices of r elements from list
 	 *
 	 * Inspired by the algorithm in Python's itertools library
-	 * @param {array} list - elements to choose and permute
-	 * @param {number} r - number of elements to choose
+	 * @param {Array} list - elements to choose and permute
+	 * @param {Number} r - number of elements to choose
 	 */
 	permutations: function(list,r) {
 		var n = list.length;
@@ -10685,8 +10760,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 
 	/** Get the letter format of an ordinal
 	 * e.g. the Nth element in the sequence a,b,c,...z,aa,ab,..,az,ba,...
-	 * @param {number} n
-	 * @returns {string}
+	 * @param {Number} n
+	 * @returns {String}
 	 */
 	letterOrdinal: function(n) {
 		var alphabet = 'abcdefghijklmnopqrstuvwxyz';
@@ -10707,8 +10782,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	},
 
 	/** Get a human-sensible name of a part, given its path
-	 * @param {string} path
-	 * @returns {string}
+	 * @param {String} path
+	 * @returns {String}
 	 */
 	nicePartName: function(path) {
 		var re_path = /^p(\d+)(?:g(\d+)|s(\d+))?$/;
@@ -10730,10 +10805,10 @@ var util = Numbas.util = /** @lends Numbas.util */ {
  * Objects of the form `{re,format}`, where `re` is a regex recognising numbers in this style, and `format(integer,decimal)` renders the number in this style.
  *
  * Each regex matches the integer part in group 1, and the decimal part in group 2 - it should be safe to remove all non-digit characters in these and preserve meaning.
- * @see https://en.wikipedia.org/wiki/Decimal_mark#Examples_of_use
+ * @see {@link https://en.wikipedia.org/wiki/Decimal_mark#Examples_of_use|Examples of decimal mark use on Wikipedia}
  * @memberof Numbas.util
  */
-util.numberNotationStyles = {
+var numberNotationStyles = util.numberNotationStyles = {
     // Plain English style - no thousands separator, dot for decimal point
     'plain-en': {
         re: /^([0-9]+)(\x2E[0-9]+)?$/,
@@ -10822,9 +10897,9 @@ var re_startMaths = /(^|[^\\])(?:\$\$|\$)|\\\(|\\\[|\\begin\{(\w+)\}/;
 /** Split a string up by TeX delimiters (`$`, `\[`, `\]`)
  *
  * `bits.re_end` stores the delimiter if the returned array has unfinished maths at the end
- * @param {string} txt - string to split up
+ * @param {String} txt - string to split up
  * @param {RegExp} re_end - If tex is split across several strings (e.g. text nodes with <br> in the middle), this can be used to give the end delimiter for unfinished maths 
- * @returns {string[]} bits - stuff outside TeX, left delimiter, TeX, right delimiter, stuff outside TeX, ...
+ * @returns {Array.<String>} bits - stuff outside TeX, left delimiter, TeX, right delimiter, stuff outside TeX, ...
  * @example contentsplitbrackets('hello $x+y$ and \[this\] etc') => ['hello ','$','x+y','$',' and ','\[','this','\]']
  * @memberof Numbas.util
  * @method

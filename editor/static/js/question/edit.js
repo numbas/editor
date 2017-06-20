@@ -1732,9 +1732,6 @@ $(document).ready(function() {
 			gapFill.setType('gapfill');
 
 			this.parentList.splice(this.parentList.indexOf(this),1,gapFill);
-			gapFill.gaps.push(this);
-			this.parentList = gapFill.gaps;
-			this.parent(gapFill);
 			
 			gapFill.prompt(this.prompt()+'\n<p>[[0]]</p>');
 			this.prompt('');
@@ -1745,6 +1742,10 @@ $(document).ready(function() {
 				step.parentList = gapFill.steps;
 			});
 			this.steps([]);
+
+			gapFill.gaps.push(this);
+			this.parentList = gapFill.gaps;
+			this.parent(gapFill);
 		},
 
 		canMove: function(direction) {

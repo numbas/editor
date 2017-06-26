@@ -322,8 +322,8 @@
                                         <button type="button" class="btn btn-xs btn-link lock" data-bind="click: toggleLocked, css: {locked: locked}" title="Lock the value of this variable (editor only)">
                                             <span class="glyphicon glyphicon-lock"></span>
                                         </button>
-                                        <button type="button" class="btn btn-xs btn-link" title="This variable is used in testing">
-                                            <span class="glyphicon glyphicon-flag" data-bind="visible: UsedInTestCondition"></span>
+                                        <button type="button" class="btn btn-xs btn-link" title="This variable is used in the testing condition">
+                                            <span class="glyphicon glyphicon-flag" data-bind="visible: usedInTestCondition, click: $root.setTab('variabletesting')"></span>
                                         </button>
                                         {% endif %}
                                     </td>

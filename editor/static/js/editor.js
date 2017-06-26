@@ -1152,6 +1152,7 @@ $(document).ready(function() {
                 'hr',
                 'image',
                 'link',
+                'lists',
                 'media',
                 'noneditable',
                 'paste',
@@ -1178,7 +1179,7 @@ $(document).ready(function() {
                         tools: {title: 'Tools', items: 'code'}
                     },
                     
-                    toolbar: "undo redo | styleselect | bold italic removeformat | alignleft aligncenter alignright | bullist numlist outdent indent | link image gapfill jmevisible | fullscreen preview code",
+                    toolbar: "undo redo | styleselect | bullist numlist | bold italic removeformat | alignleft aligncenter alignright | bullist numlist outdent indent | link image gapfill jmevisible | fullscreen preview code",
 
 					statusbar: false,
 					media_strict: false,

@@ -1086,6 +1086,19 @@ $(document).ready(function() {
 			return '';
 		},this);
 
+		this.UsedInTestCondition = ko.computed(function() {
+			var name = this.name();
+			var condition = Numbas.jme.compile(this.question.variablesTest.condition());
+			try {
+				var vars = Numbas.jme.findvars(condition);
+				var index = $.inArray(name, vars);
+				return index >= 0 ? true : false;
+			}
+			catch(e) {
+				return false;
+			}
+		},this);
+
 		this.description = ko.observable('');
 		this.templateType = ko.observable(this.templateTypes[0]);
 

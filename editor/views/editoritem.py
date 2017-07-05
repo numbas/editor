@@ -353,7 +353,10 @@ class SearchView(ListView):
 
         # filter based on status
         status = form.cleaned_data.get('status')
-        if status and status != 'any':
+        if status == 'draft':
+            self.filter_status = Q(current_stamp=None)
+            items = items.filter(self.filter_status)
+        elif status and status != 'any':
             self.filter_status = Q(current_stamp__status=status)
             items = items.filter(self.filter_status)
         else:

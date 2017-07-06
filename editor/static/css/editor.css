@@ -410,6 +410,14 @@ button.delete-grey:hover {
     background: #eee;
 }
 
+.timeline-item table {
+    margin: 1em 0;
+}
+.timeline-item table td, .timeline-item table th {
+    border: 1px solid #ddd;
+    padding: 0.5em;
+}
+
 #edit-history {
 	text-align: right;
 }

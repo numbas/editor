@@ -3,6 +3,7 @@
 {% load sstatic %}
 {% load sanitizer %}
 {% load timeline %}
+{% load stamp %}
 
 {% block javascripts %}
 {{ block.super }}
@@ -70,6 +71,24 @@
                     <a href="{% url 'project_search' project.pk %}?item_types=questions" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-file"></span> Questions</a> 
                     <a href="{% url 'project_search' project.pk %}?item_types=exams" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-book"></span> Exams</a> 
                 </div>
+                <table class="table table-condensed status-breakdown">
+                    <tbody>
+                        {% for status,label,count in status_counts %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'project_search' project.pk %}?status={{status}}">
+                                {% stamp status %}
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{% url 'project_search' project.pk %}?status={{status}}">
+                                {{count}}
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
 
             <div class="panel panel-default">

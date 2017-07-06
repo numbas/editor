@@ -348,7 +348,7 @@
                                     </ul>
                                 </li>
                             </ul>
-                            <button id="ignore" class="btn btn-danger" data-bind="visible: !all_sections_completed() && !published(), click: set_ignored_publishing_criteria">
+                            <button type="button" class="btn btn-danger" data-bind="click: set_ignored_publishing_criteria, visible: !published() && !all_sections_completed()">
                                  Ignore these tasks and publish
                             </button>
                         </div>

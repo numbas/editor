@@ -415,9 +415,8 @@ $(document).ready(function() {
         this.setTab = function(id) {
             return function() {
                 var tab = ei.getTab(id);
-
                 ei.currentTab(tab);
-                ei.set_ignored_publishing_criteria(false);
+                ei.ignored_publishing_criteria(false);
             }
         }
 

@@ -416,7 +416,6 @@ $(document).ready(function() {
             return function() {
                 var tab = ei.getTab(id);
                 ei.currentTab(tab);
-                ei.ignored_publishing_criteria(false);
             }
         }
 

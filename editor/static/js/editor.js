@@ -406,6 +406,7 @@ $(document).ready(function() {
         this.ability_frameworks = ko.observableArray([]);
 		this.realtags = ko.observableArray([]);
 		this.description = ko.observable('');
+        this.ignored_publishing_criteria = ko.observable(false);
 
 		this.mainTabs = ko.observableArray([]);
 
@@ -414,7 +415,6 @@ $(document).ready(function() {
         this.setTab = function(id) {
             return function() {
                 var tab = ei.getTab(id);
-
                 ei.currentTab(tab);
             }
         }
@@ -623,8 +623,12 @@ $(document).ready(function() {
             },this);
 
             this.canPublish = ko.computed(function() {
-                return !this.published() && this.all_sections_completed();
+                return !this.published() && (this.all_sections_completed() || this.ignored_publishing_criteria());
             },this);
+        },
+
+        set_ignored_publishing_criteria: function() {
+                this.ignored_publishing_criteria(true);
         },
 
         init_output: function() {

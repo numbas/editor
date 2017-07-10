@@ -348,6 +348,14 @@
                                     </ul>
                                 </li>
                             </ul>
+                            <button type="button" class="btn btn-danger" data-bind="click: set_ignored_publishing_criteria, visible: !ignored_publishing_criteria()">
+                                <span class="glyphicon glyphicon-warning-sign"></span> 
+                                Ignore these tasks and publish
+                            </button>
+                            <form method="POST" id="publish-form" action="{% url 'item_publish' object.editoritem.pk %}" data-bind="visible: ignored_publishing_criteria">
+                                <button class="btn btn-danger" type="submit"><span class="glyphicon glyphicon-warning-sign"></span> Click again to ignore these tasks and publish</button>
+                                {% csrf_token %}
+                            </form>
                         </div>
                     </div>
                     <div class="panel panel-warning" data-bind="visible: canPublish">

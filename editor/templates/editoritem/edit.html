@@ -348,11 +348,6 @@
                                     </ul>
                                 </li>
                             </ul>
-<<<<<<< HEAD
-                            <button type="button" class="btn btn-danger" data-bind="click: set_ignored_publishing_criteria, visible: !published() && !all_sections_completed() && !ignored_publishing_criteria()">
-                                 Ignore these tasks and publish
-                            </button>
-=======
                             <button type="button" class="btn btn-danger" data-bind="click: set_ignored_publishing_criteria, visible: !ignored_publishing_criteria()">
                                 <span class="glyphicon glyphicon-warning-sign"></span> 
                                 Ignore these tasks and publish
@@ -361,7 +356,6 @@
                                 <button class="btn btn-danger" type="submit"><span class="glyphicon glyphicon-warning-sign"></span> Click again to ignore these tasks and publish</button>
                                 {% csrf_token %}
                             </form>
->>>>>>> 0e6250a87ce9f79f636ae1431567e66f93930760
                         </div>
                     </div>
                     <div class="panel panel-warning" data-bind="visible: canPublish">

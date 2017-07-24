@@ -18,7 +18,7 @@ def find_users(name=''):
     # second part - search on username
     q |= Q(username__icontains=name)
 
-    users = User.objects.filter(q).distinct()
+    users = User.objects.filter(q).distinct().order_by('first_name', 'last_name')
     return users
 
 def user_json(user):

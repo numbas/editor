@@ -406,6 +406,7 @@ $(document).ready(function() {
         this.ability_frameworks = ko.observableArray([]);
 		this.realtags = ko.observableArray([]);
 		this.description = ko.observable('');
+        this.ignored_publishing_criteria = ko.observable(false);
 
 		this.mainTabs = ko.observableArray([]);
 
@@ -414,7 +415,6 @@ $(document).ready(function() {
         this.setTab = function(id) {
             return function() {
                 var tab = ei.getTab(id);
-
                 ei.currentTab(tab);
             }
         }
@@ -625,6 +625,10 @@ $(document).ready(function() {
             this.canPublish = ko.computed(function() {
                 return !this.published() && this.all_sections_completed();
             },this);
+        },
+
+        set_ignored_publishing_criteria: function() {
+                this.ignored_publishing_criteria(true);
         },
 
         init_output: function() {
@@ -1152,6 +1156,7 @@ $(document).ready(function() {
                 'hr',
                 'image',
                 'link',
+                'lists',
                 'media',
                 'noneditable',
                 'paste',
@@ -1178,7 +1183,7 @@ $(document).ready(function() {
                         tools: {title: 'Tools', items: 'code'}
                     },
                     
-                    toolbar: "undo redo | styleselect | bold italic removeformat | alignleft aligncenter alignright | bullist numlist outdent indent | link image gapfill jmevisible | fullscreen preview code",
+                    toolbar: "undo redo | styleselect | bullist numlist | bold italic removeformat | alignleft aligncenter alignright | bullist numlist outdent indent | link image gapfill jmevisible | fullscreen preview code",
 
 					statusbar: false,
 					media_strict: false,

@@ -175,6 +175,11 @@
                                 {% else %}
                                     <span class="no-licence nothing-here">No licence specified</span>
                                 {% endif %}
+                                {% if item.published %}
+                                    <span class="text-success glyphicon glyphicon-ok"></span> Published
+                                {% else %}
+                                    <span class="glyphicon glyphicon-lock"></span> Not published
+                                {% endif %}
                             </p>
                             <p class="last-modified">
                                 <span class="glyphicon glyphicon-time"></span> Last modified {{item.last_modified|date:"d/m/Y H:i"}}

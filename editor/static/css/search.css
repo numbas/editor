@@ -27,6 +27,10 @@
     margin-left: 0;
 }
 
+.info p > * ~ .glyphicon {
+    margin-left: 0.5em;
+}
+
 /*
 #newExamForm, #newQuestionForm {
 	display: none;

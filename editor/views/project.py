@@ -4,8 +4,9 @@ from django.core.urlresolvers import reverse, reverse_lazy
 from django.shortcuts import redirect, render_to_response
 from django import http
 from django.core.exceptions import PermissionDenied
+from itertools import groupby
 
-from editor.models import Project, ProjectAccess
+from editor.models import Project, ProjectAccess, STAMP_STATUS_CHOICES
 import editor.forms
 import editor.views.editoritem
 
@@ -72,7 +73,13 @@ class IndexView(ProjectContextMixin, MustBeMemberMixin, generic.DetailView):
 
     def get_context_data(self, **kwargs):
         project = self.object = self.get_project()
+
         context = super(IndexView, self).get_context_data(**kwargs)
+
+        status_counts = {status:len(list(items)) for status,items in groupby(sorted([x[0] if x[0] is not None else 'draft' for x in project.items.values_list('current_stamp__status')]))}
+        status_choices = list(STAMP_STATUS_CHOICES)+[('draft','Draft')]
+        context['status_counts'] = [(status,label,status_counts.get(status,0)) for status,label in status_choices]
+
         context['watching_project'] = project.watching_non_members.filter(pk=self.request.user.pk).exists()
         return context
 

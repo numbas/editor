@@ -10,6 +10,11 @@
 <script src="{% sstatic 'js/project/index.js' %}"></script>
 {% endblock %}
 
+{% block stylesheets %}
+{{ block.super }}
+    <link href="{% sstatic 'css/project.css' %}" rel="stylesheet">
+{% endblock %}
+
 {% block project_content %}
 
 <div class="container-fluid">
@@ -74,13 +79,13 @@
                 <table class="table table-condensed status-breakdown">
                     <tbody>
                         {% for status,label,count in status_counts %}
-                        <tr>
+                        <tr data-stamp="{{status}}" class="stamp">
                             <td>
                                 <a href="{% url 'project_search' project.pk %}?status={{status}}">
                                 {% stamp status %}
                                 </a>
                             </td>
-                            <td>
+                            <td class="count">
                                 <a href="{% url 'project_search' project.pk %}?status={{status}}">
                                 {{count}}
                                 </a>

@@ -1,0 +1,9 @@
+.status-breakdown a {
+    color: inherit;
+    display: block;
+}
+
+.status-breakdown .count {
+    text-align: right;
+}
+

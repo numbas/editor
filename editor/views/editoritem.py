@@ -14,7 +14,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.template.loader import render_to_string
 from django.core.urlresolvers import reverse
-from django.db.models import Q, Min, Max
+from django.db.models import Q, Min, Max, Count
 from django.db import transaction
 from django import http
 from django.shortcuts import redirect
@@ -27,7 +27,7 @@ import reversion
 from django_tables2.config import RequestConfig
 
 from editor.tables import EditorItemTable
-from editor.models import EditorItem, Project, Access, Licence, PullRequest
+from editor.models import EditorItem, Project, Access, Licence, PullRequest, Taxonomy
 import editor.models
 import editor.views.generic
 from editor.views.errors import forbidden
@@ -158,10 +158,8 @@ class BaseUpdateView(generic.UpdateView):
         with transaction.atomic(), reversion.create_revision():
             self.object = form.save(commit=False)
             self.pre_save(form)
-            self.object.editoritem.subjects.clear()
-            self.object.editoritem.subjects.add(*form.cleaned_data['subjects'])
-            self.object.editoritem.topics.clear()
-            self.object.editoritem.topics.add(*form.cleaned_data['topics'])
+            self.object.editoritem.taxonomy_nodes.clear()
+            self.object.editoritem.taxonomy_nodes.add(*form.cleaned_data['taxonomy_nodes'])
             self.object.editoritem.ability_levels.clear()
             self.object.editoritem.ability_levels.add(*form.cleaned_data['ability_levels'])
             self.object.editoritem.tags.set(*[t.strip() for t in self.data.get('tags', [])])
@@ -200,12 +198,15 @@ class BaseUpdateView(generic.UpdateView):
 
         licences = [licence.as_json() for licence in Licence.objects.all()]
 
+        taxonomies = [{'pk':taxonomy.pk, 'name': taxonomy.name, 'description': taxonomy.description, 'nodes': taxonomy.json} for taxonomy in Taxonomy.objects.all()]
+
         self.item_json = context['item_json'] = {
             'itemJSON': self.object.edit_dict(),
             'editable': self.editable,
             'item_type': self.object.editoritem.item_type,
 
             'licences': licences,
+            'taxonomies': taxonomies,
 
             'subjects': [editor.views.generic.subject_json(subject) for subject in editor.models.Subject.objects.all()],
             'topics': [editor.views.generic.topic_json(topic) for topic in editor.models.Topic.objects.all()],
@@ -362,12 +363,23 @@ class SearchView(ListView):
         else:
             self.filter_status = Q()
 
+        # filter based on taxonomy nodes
+        taxonomy_nodes = form.cleaned_data.get('taxonomy_nodes')
+        if taxonomy_nodes.exists():
+            self.filter_taxonomy_node = Q(taxonomy_nodes__in=taxonomy_nodes)
+            items = items.filter(self.filter_taxonomy_node).annotate(num_nodes=Count('taxonomy_nodes')).filter(num_nodes=taxonomy_nodes.count())
+        else:
+            self.filter_taxonomy_node = Q()
+
         items = items.distinct()
 
         return items
 
     def get_context_data(self, **kwargs):
         context = super(SearchView, self).get_context_data(**kwargs)
+
+        context['taxonomies'] = [{'pk':taxonomy.pk, 'name': taxonomy.name, 'description': taxonomy.description, 'nodes': taxonomy.json} for taxonomy in Taxonomy.objects.all()]
+        context['used_taxonomy_nodes'] = [n.pk for n in self.form.cleaned_data.get('taxonomy_nodes')]
         context['form'] = self.form
         context['item_types'] = self.form.cleaned_data.get('item_types')
         context['search_query'] = self.query

@@ -31,6 +31,14 @@
     margin-left: 0.5em;
 }
 
+#taxonomies-form ul {
+    padding-left: 0;
+    list-style: none;
+}
+#taxonomies-form taxonomy-node:last-child > .taxonomy-node {
+    margin-bottom: 0.5em;
+}
+
 /*
 #newExamForm, #newQuestionForm {
 	display: none;

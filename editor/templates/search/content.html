@@ -55,14 +55,6 @@
                     <div class="panel-collapse collapse-in" id="collapse-refine">
                     <ul class="list-group">
                         <li class="list-group-item">
-                            <h4><span class="glyphicon glyphicon-education"></span> Subject</h4>
-                            {{form.subjects}}
-                        </li>
-                        <li class="list-group-item">
-                            <h4><span class="glyphicon glyphicon-asterisk"></span> Topic</h4>
-                            {{form.topics}}
-                        </li>
-                        <li class="list-group-item">
                             <h4><span class="glyphicon glyphicon-sort-by-attributes"></span> Ability Level</h4>
                             {{form.ability_framework}}
                             <div id="ability_levels">
@@ -101,7 +93,27 @@
                             <h4><span class="glyphicon glyphicon-copyright-mark"></span> Usage rights</h4>
                             {{form.usage}}
                         </li>
+
+                        <li class="list-group-item">
+                            <h4><span class="glyphicon glyphicon-education"></span> Subject</h4>
+                            {{form.subjects}}
+                        </li>
+                        <li class="list-group-item">
+                            <h4><span class="glyphicon glyphicon-asterisk"></span> Topic</h4>
+                            {{form.topics}}
+                        </li>
                     </ul>
+                    </div>
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><span class="glyphicon glyphicon-education"></span> Topics</h3>
+                    </div>
+                    <div class="panel-collapse collapse-in" id="taxonomies-form">
+                        <ul class="list-group" data-bind="foreach: taxonomies">
+                            <li class="list-group-item">
+                                <h4 data-bind="text: name"></h4>
+                                <ul data-bind="foreach: trees"><taxonomy-node params="node: $data"></taxonomy-node></ul>
+                            </li>
+                        </ul>
                     </div>
                 </div>
 

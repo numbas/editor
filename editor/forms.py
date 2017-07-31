@@ -132,6 +132,7 @@ class EditorItemSearchForm(forms.Form):
     usage = forms.ChoiceField(initial='any', choices=USAGE_OPTIONS, required=False, widget=BootstrapRadioSelect)
     subjects = forms.ModelMultipleChoiceField(queryset=editor.models.Subject.objects.all(), required=False, widget=ShowMoreCheckboxSelectMultiple)
     topics = forms.ModelMultipleChoiceField(queryset=editor.models.Topic.objects.all(), required=False, widget=ShowMoreCheckboxSelectMultiple)
+    taxonomy_nodes = forms.ModelMultipleChoiceField(queryset=editor.models.TaxonomyNode.objects.all(), required=False)
     ability_framework = forms.ModelChoiceField(queryset=editor.models.AbilityFramework.objects.all(), required=False, widget=forms.Select(attrs={'class':'form-control input-sm'}), empty_label=None)
     ability_levels = forms.ModelMultipleChoiceField(queryset=editor.models.AbilityLevel.objects.all(), widget=forms.CheckboxSelectMultiple, required=False)
     status = forms.ChoiceField(choices=[('any', 'Any status'),('draft','Draft')]+list(editor.models.STAMP_STATUS_CHOICES), required=False, widget=BootstrapRadioSelect)
@@ -199,8 +200,7 @@ class SetAccessForm(forms.ModelForm):
 class EditorItemForm(forms.ModelForm):
     content = forms.CharField()
 
-    subjects = forms.ModelMultipleChoiceField(queryset=editor.models.Subject.objects.all(), required=False)
-    topics = forms.ModelMultipleChoiceField(queryset=editor.models.Topic.objects.all(), required=False)
+    taxonomy_nodes = forms.ModelMultipleChoiceField(queryset=editor.models.TaxonomyNode.objects.all(), required=False)
     ability_levels = forms.ModelMultipleChoiceField(queryset=editor.models.AbilityLevel.objects.all(), required=False)
 
     def save(self, commit=True):

@@ -1,2 +1,7 @@
 {% load sstatic %}
+{% load json_filter %}
+<script>
+    Editor.taxonomies = {{taxonomies|json|safe}};
+    Editor.used_taxonomy_nodes = {{used_taxonomy_nodes|json|safe}};
+</script>
 <script type="text/javascript" src="{% sstatic 'js/editoritem/search.js' %}"></script>

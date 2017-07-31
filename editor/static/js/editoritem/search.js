@@ -1,4 +1,11 @@
 $(document).ready(function() {
+
+    /**
+     *  This tries not to use Knockout, but I've ended up having to use it for the taxonomy stuff.
+     *  So it's ended up a bit of a mess. It should be rewritten to use KO exclusively.
+     *  - Christian Lawson-Perfect
+     */
+
     Editor.user_search_autocomplete($('input[name="author"]'));
     ['open','close','select','change','create','search'].forEach(function(p){
     });
@@ -31,35 +38,48 @@ $(document).ready(function() {
         $('#search-form').submit();
     }
 
-    function form_changed(form_id) {
+    function form_changed(form_id,timeout) {
+        timeout = timeout || 500;
         return function() {
             if(form_change_timeouts[form_id]) {
                 clearTimeout(form_change_timeouts[form_id]);
             }
             form_change_timeouts[form_id] = setTimeout(function() {
                 document.getElementById(form_id).submit();
-            },500);
+            },timeout);
         }
     }
 
+    var taxonomies = Editor.taxonomies.map(function(t){ return new Editor.Taxonomy(t) });
+    var used = {};
+    Editor.used_taxonomy_nodes.forEach(function(pk){ used[pk] = true });
+    function set_used(n) {
+        n.used(used[n.pk]===true);
+        n.children.forEach(set_used);
+    }
+    taxonomies.forEach(function(t){ t.trees.forEach(set_used) });
+    var vm = window.vm = {taxonomies: taxonomies};
+    ko.applyBindings(vm);
+
     $('#id_item_types, #id_subjects input, #id_topics input, #id_usage input, #id_status, #id_author').on('change',form_changed('search-panel-form'));
     $('#ability_levels').on('change','input[type="checkbox"]',form_changed('search-panel-form'));
+    $('#taxonomies-form').on('change','input[type="checkbox"]',form_changed('search-panel-form',1500));
     $('input[name="author"]').on('autocompleteselect',form_changed('search-panel-form'));
 
     $('#id_order_by').on('change',form_changed('order_by-form'));
 
-    if($('.pagination .previous[href]').length) {
+    if($('.pager .previous a[href]').length) {
         Mousetrap.bind(['left','k'],function() {
-            window.location = $('.pagination .previous').attr('href');
+            window.location = $('.pager .previous a').attr('href');
         });
     }
-    if($('.pagination .next[href]').length) {
+    if($('.pager .next a[href]').length) {
         Mousetrap.bind(['right','j'],function() {
-            window.location = $('.pagination .next').attr('href');
+            window.location = $('.pager .next a').attr('href');
         });
     }
     Mousetrap.bind(['/','?'],function() {
-        $('#search_query').focus();
+        $('#top-search-bar').focus();
         return false;
     });
 

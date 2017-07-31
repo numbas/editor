@@ -15,6 +15,13 @@ admin.site.register(editor.models.Topic)
 admin.site.register(editor.models.AbilityFramework)
 admin.site.register(editor.models.AbilityLevel)
 
+class TaxonomyAdmin(admin.ModelAdmin):
+    fields = ['name','description']
+
+admin.site.register(editor.models.Taxonomy,TaxonomyAdmin)
+
+admin.site.register(editor.models.TaxonomyNode)
+
 # allow users to be sorted by date joined
 UserAdmin.list_display += ('date_joined',)
 UserAdmin.list_filter += ('date_joined',)

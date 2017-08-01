@@ -39,6 +39,12 @@
     margin-bottom: 0.5em;
 }
 
+#taxonomies-form button.taxonomy-name {
+    text-align: left;
+    padding-left: 0;
+    padding-right: 0;
+}
+
 /*
 #newExamForm, #newQuestionForm {
 	display: none;

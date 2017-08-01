@@ -50,14 +50,14 @@ $(document).ready(function() {
         }
     }
 
-    var taxonomies = Editor.taxonomies.map(function(t){ return new Editor.Taxonomy(t) });
+    var taxonomies = Editor.taxonomies.map(function(t){ return new Editor.Taxonomy(t); });
     var used = {};
     Editor.used_taxonomy_nodes.forEach(function(pk){ used[pk] = true });
     function set_used(n) {
         n.used(used[n.pk]===true);
         n.children.forEach(set_used);
     }
-    taxonomies.forEach(function(t){ t.trees.forEach(set_used) });
+    taxonomies.forEach(function(t){ t.trees.forEach(set_used); t.open(t.any_used()); });
     var vm = window.vm = {taxonomies: taxonomies};
     ko.applyBindings(vm);
 

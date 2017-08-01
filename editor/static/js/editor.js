@@ -395,6 +395,9 @@ $(document).ready(function() {
         this.toggleOpen = function() {
             t.open(!t.open());
         }
+        this.any_used = ko.computed(function() {
+            return this.trees.some(function(n){ return n.used() || n.children_used(); });
+        },this);
     }
 
     function TaxonomyNode(data) {

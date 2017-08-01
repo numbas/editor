@@ -409,13 +409,10 @@ $(document).ready(function() {
         this.children_used = ko.computed(function() {
             return this.children.some(function(n){ return n.used() || n.children_used() });
         },this);
-        var _used = ko.observable(false);
-        this.used = ko.computed({
-            read: function() {
-                return _used() || n.children_used();
-            },
-            write: function(v) {
-                return _used(v);
+        this.used = ko.observable(false);
+        ko.computed(function() {
+            if(!this.used()) {
+                this.children.forEach(function(n){ n.used(false); });
             }
         },this);
     }

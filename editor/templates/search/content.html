@@ -102,7 +102,17 @@
                                             <span class="glyphicon" data-bind="css:{'glyphicon-triangle-right': !open(), 'glyphicon-triangle-bottom': open()}"></span>
                                             Taxonomy: <span data-bind="text: name"></span>
                                         </button>
-                                        <ul data-bind="fadeVisible: open, foreach: trees"><taxonomy-node params="node: $data"></taxonomy-node></ul>
+                                        <div data-bind="fadeVisible: open">
+                                            <div class="form-group">
+                                                <input class="form-control" id="search_author" type="text" placeholder="Search for topics" size="30" data-bind="
+                                                    autocomplete: search_nodes, 
+                                                    autocompleteSelect: use_node
+                                                    "
+                                                />
+                                            </div>
+
+                                            <ul data-bind="foreach: trees"><taxonomy-node params="node: $data"></taxonomy-node></ul>
+                                        </div>
                                     </li>
                                 </ul>
                             </div>

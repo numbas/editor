@@ -398,14 +398,40 @@ $(document).ready(function() {
         this.any_used = ko.computed(function() {
             return this.trees.some(function(n){ return n.used() || n.children_used(); });
         },this);
+
+        this.search = ko.observable('');
+        var all_nodes = this.all_nodes = [];
+        function list_nodes(n) {
+            all_nodes.push(n);
+            n.children.forEach(list_nodes);
+        }
+        this.trees.forEach(list_nodes);
+
+        this.use_node = function(code) {
+            var n = t.all_nodes.find(function(n){return n.code==code});
+            while(n) {
+                n.used(true);
+                n = n.parent;
+            }
+        }
+
+        this.search_nodes = function(query, response) {
+            query = query.term.toLowerCase();
+            var result = t.all_nodes
+                .filter(function(n){ return n.name.toLowerCase().contains(query) })
+                .map(function(n){ return {label: n.code+' - '+n.name, value: n.code} })
+            ;
+            response(result);
+        }
     }
 
-    function TaxonomyNode(data) {
+    function TaxonomyNode(data,parent) {
         var n = this;
+        this.parent = parent;
         this.pk = data.pk;
         this.code = data.code;
         this.name = data.name;
-        this.children = data.children.map(function(d){ return new TaxonomyNode(d); });
+        this.children = data.children.map(function(d){ return new TaxonomyNode(d,n); });
         this.children_used = ko.computed(function() {
             return this.children.some(function(n){ return n.used() || n.children_used() });
         },this);

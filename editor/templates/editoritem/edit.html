@@ -288,9 +288,19 @@
                                             <span data-bind="text: name" clickable></span>
                                         </h3>
                                     </div>
+
                                     <div data-bind="fadeVisible: open">
                                         <div class="panel-body">
                                             <div class="description" data-bind="html: description"></div>
+
+                                            <div class="form-group">
+                                                <input class="form-control" id="search_author" type="text" placeholder="Search for topics" size="30" data-bind="
+                                                    autocomplete: search_nodes, 
+                                                    autocompleteSelect: use_node
+                                                    "
+                                                />
+                                            </div>
+
                                             <ul data-bind="visible: open, foreach: trees"><taxonomy-node params="node: $data{% if not editable %}, disable: true{% endif %}"></ul>
                                         </div>
                                     </div>

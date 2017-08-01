@@ -208,8 +208,6 @@ class BaseUpdateView(generic.UpdateView):
             'licences': licences,
             'taxonomies': taxonomies,
 
-            'subjects': [editor.views.generic.subject_json(subject) for subject in editor.models.Subject.objects.all()],
-            'topics': [editor.views.generic.topic_json(topic) for topic in editor.models.Topic.objects.all()],
             'ability_frameworks': [editor.views.generic.ability_framework_json(af) for af in editor.models.AbilityFramework.objects.all()],
 
             'previewURL': reverse('{}_preview'.format(self.object.editoritem.item_type), args=(self.object.pk, self.object.editoritem.slug)),
@@ -309,22 +307,6 @@ class SearchView(ListView):
             items = items.filter(self.filter_authors)
         else:
             self.filter_authors = Q()
-
-        # filter based on subject
-        subjects = form.cleaned_data.get('subjects')
-        if subjects and len(subjects):
-            self.filter_subjects = Q(subjects__in=subjects)
-            items = items.filter(self.filter_subjects)
-        else:
-            self.filter_subjects = Q()
-
-        # filter based on topic
-        topics = form.cleaned_data.get('topics')
-        if topics and len(topics):
-            self.filter_topics = Q(topics__in=topics)
-            items = items.filter(self.filter_topics)
-        else:
-            self.filter_topics = Q()
 
         # filter based on usage
         usage = form.cleaned_data.get('usage')

@@ -130,8 +130,6 @@ class EditorItemSearchForm(forms.Form):
     item_types = forms.MultipleChoiceField(initial=('questions', 'exams'), choices=(('questions', 'Questions'), ('exams', 'Exams')), widget=ShowMoreCheckboxSelectMultiple, required=False)
     author = forms.CharField(initial='', required=False, widget=forms.TextInput(attrs={'class':'form-control'}))
     usage = forms.ChoiceField(initial='any', choices=USAGE_OPTIONS, required=False, widget=BootstrapRadioSelect)
-    subjects = forms.ModelMultipleChoiceField(queryset=editor.models.Subject.objects.all(), required=False, widget=ShowMoreCheckboxSelectMultiple)
-    topics = forms.ModelMultipleChoiceField(queryset=editor.models.Topic.objects.all(), required=False, widget=ShowMoreCheckboxSelectMultiple)
     taxonomy_nodes = forms.ModelMultipleChoiceField(queryset=editor.models.TaxonomyNode.objects.all(), required=False)
     ability_framework = forms.ModelChoiceField(queryset=editor.models.AbilityFramework.objects.all(), required=False, widget=forms.Select(attrs={'class':'form-control input-sm'}), empty_label=None)
     ability_levels = forms.ModelMultipleChoiceField(queryset=editor.models.AbilityLevel.objects.all(), widget=forms.CheckboxSelectMultiple, required=False)
@@ -140,14 +138,6 @@ class EditorItemSearchForm(forms.Form):
 
     tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
     exclude_tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
-
-    def __init__(self, data, *args, **kwargs):
-        super(EditorItemSearchForm, self).__init__(data, *args, **kwargs)
-        subjects = data.getlist('subjects')
-        if len(subjects):
-            self.fields['topics'].queryset = editor.models.Topic.objects.filter(Q(subjects__pk__in=subjects) | Q(pk__in=data.getlist('topics'))).distinct()
-        else:
-            self.fields['topics'].queryset = editor.models.Topic.objects.annotate(num_editoritems=Count('editoritem')).order_by('-num_editoritems')
 
 class AccessForm(forms.ModelForm):
     given_by = forms.ModelChoiceField(queryset=User.objects.all())

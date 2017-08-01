@@ -691,8 +691,6 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
             'published': self.published,
             'JSONContent': self.parsed_content.data,
             'tags': [t.name for t in self.tags.all()],
-            'subjects': [s.pk for s in self.subjects.all()],
-            'topics': [t.pk for t in self.topics.all()],
             'taxonomy_nodes': [n.pk for n in self.taxonomy_nodes.all()],
             'ability_levels': [a.pk for a in self.ability_levels.all()],
         }
@@ -741,10 +739,6 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
 
         self.ability_levels.clear()
         self.ability_levels.add(*other.ability_levels.all())
-        self.subjects.clear()
-        self.subjects.add(*other.subjects.all())
-        self.topics.clear()
-        self.topics.add(*other.topics.all())
 
         self.set_name(oname)
 

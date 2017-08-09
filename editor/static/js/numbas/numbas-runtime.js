@@ -733,6 +733,9 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 	 */
 	evaluate: function(tree,scope)
 	{
+        if(!scope) {
+            throw(new Numbas.Error('jme.evaluate.no scope given'));
+        }
         return scope.evaluate(tree);
 	},
 
@@ -3128,7 +3131,9 @@ newBuiltin('sigformat', [TNum,TNum], TString, function(n,p) {return math.niceNum
 newBuiltin('sigformat', [TNum,TNum,TString], TString, function(n,p,style) {return math.niceNumber(n,{precisionType: 'sigfig', precision:p, style:style});}, {latex: true, doc: {usage: 'dpformat(x,3)', description: 'Round to given number of significant figures and pad with zeroes if necessary.', tags: ['sig figs','sigfig','format','display','precision']}} );
 newBuiltin('formatnumber', [TNum,TString], TString, function(n,style) {return math.niceNumber(n,{style:style});});
 newBuiltin('parsenumber', [TString,TString], TNum, function(s,style) {return util.parseNumber(s,false,style);});
+newBuiltin('parsenumber', [TString,TList], TNum, function(s,styles) {return util.parseNumber(s,false,styles);}, {unwrapValues: true});
 newBuiltin('parsenumber_or_fraction', [TString,TString], TNum, function(s,style) {return util.parseNumber(s,true,style);});
+newBuiltin('parsenumber_or_fraction', [TString,TList], TNum, function(s,styles) {return util.parseNumber(s,true,styles);}, {unwrapValues: true});
 newBuiltin('togivenprecision', [TString,TString,TNum,TBool], TBool, math.toGivenPrecision);
 newBuiltin('withintolerance',[TNum,TNum,TNum],TBool, math.withinTolerance);
 newBuiltin('countdp',[TString],TNum,math.countDP);
@@ -3772,7 +3777,7 @@ newBuiltin('set', ['?'], TSet, null, {
 });
 newBuiltin('list',[TSet],TList,function(set) {
 	var l = [];
-	for(i=0;i<set.length;i++) {
+	for(var i=0;i<set.length;i++) {
 		l.push(set[i]);
 	}
 	return l;
@@ -6807,7 +6812,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
 	 */
 	makeVariables: function(todo,scope,condition,computeFn)
 	{
-		nscope = new jme.Scope(scope);
+		var nscope = new jme.Scope(scope);
         computeFn = computeFn || jme.variables.computeVariable;
 
 		var conditionSatisfied = true;
@@ -7149,6 +7154,1157 @@ Numbas.queueScript('localisation',['i18next','localisation-resources'],function(
 });
 
 
+/*
+Copyright 2011-14 Newcastle University
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+/** @file {@link Numbas.parts}, {@link Numbas.partConstructors}, {@link Numbas.createPart} and the generic {@link Numbas.parts.Part} object */
+
+Numbas.queueScript('part',['base','jme','jme-variables','util','marking'],function() {
+
+var util = Numbas.util;
+var jme = Numbas.jme;
+var math = Numbas.math;
+var marking = Numbas.marking;
+
+/** A unique identifier for a {@link Numbas.parts.Part} object, of the form `qXpY[gZ|sZ]`. Numbering starts from zero, and the `gZ` bit is used only when the part is a gap, and `sZ` is used if it's a step.
+ * @typedef partpath
+ * @type {String}
+ */
+
+/** Part type constructors
+ * These functions aren't called directly - they're the original part constructor objects before they're extended with the generic part methods, kept for reference so their methods can be reused by other parts
+ * @see Numbas.partConstructors
+ * @namespace Numbas.parts
+ * @memberof Numbas
+ */
+Numbas.parts = {};
+
+/** Associate part type names with their object constructors
+ * These constructors are called by {@link Numbas.createPart} - they should be finalised constructors with all the generic part methods implemented.
+ * Most often, you do this by extending {@link Numbas.parts.Part}
+ * @memberof Numbas
+ */
+var partConstructors = Numbas.partConstructors = {};
+
+
+/** Create a new question part.
+ * @see Numbas.partConstructors
+ * @param {String} type
+ * @param {partpath} path
+ * @param {Numbas.Question} question
+ * @param {Numbas.parts.Part} parentPart
+ * @returns {Numbas.parts.Part}
+ * @throws {Numbas.Error} "part.unknown type" if the given part type is not in {@link Numbas.partConstructors}
+ * @memberof Numbas
+ */
+var createPart = Numbas.createPart = function(type, path, question, parentPart)
+{
+	if(partConstructors[type])
+	{
+		var cons = partConstructors[type];
+		var part = new cons(path, question, parentPart);
+        part.type = type;
+		if(part.customConstructor) {
+			part.customConstructor.apply(part);
+		}
+		return part;
+	}
+	else {
+		throw(new Numbas.Error('part.unknown type',{part:util.nicePartName(path),type:type}));
+	}
+}
+
+/** Create a question part based on an XML definition.
+ * @param {Element} xml
+ * @param {partpath} path
+ * @param {Numbas.Question} question
+ * @param {Numbas.parts.Part} parentPart
+ * @returns {Numbas.parts.Part}
+ * @throws {Numbas.Error} "part.missing type attribute" if the top node in `xml` doesn't have a "type" attribute.
+ * @memberof Numbas
+ */
+var createPartFromXML = Numbas.createPartFromXML = function(xml, path, question, parentPart) {
+    var tryGetAttribute = Numbas.xml.tryGetAttribute;
+
+	var type = tryGetAttribute(null,xml,'.','type',[]);
+	if(type==null) {
+		throw(new Numbas.Error('part.missing type attribute',{part:util.nicePartName(path)}));
+	}
+    var part = createPart(type,path, question, parentPart);
+    part.loadFromXML(xml);
+    part.finaliseLoad();
+    return part;
+}
+
+/** Create a question part based on an XML definition.
+ * @param {Object} data
+ * @param {partpath} path
+ * @param {Numbas.Question} question
+ * @param {Numbas.parts.Part} parentPart
+ * @returns {Numbas.parts.Part}
+ * @throws {Numbas.Error} "part.missing type attribute" if `data` doesn't have a "type" attribute.
+ * @memberof Numbas
+ */
+var createPartFromJSON = Numbas.createPartFromJSON = function(data, path, question, parentPart) {
+    if(!data.type) {
+		throw(new Numbas.Error('part.missing type attribute',{part:util.nicePartName(path)}));
+	}
+    var part = createPart(data.type,path, question, parentPart);
+    part.loadFromJSON(data);
+    part.finaliseLoad();
+    return part;
+}
+
+/** Base question part object
+ * @constructor
+ * @memberof Numbas.parts
+ * @param {Element} xml
+ * @param {partpath} path
+ * @param {Numbas.Question} Question
+ * @param {Numbas.parts.Part} parentPart
+ * @see Numbas.createPart
+ */
+var Part = Numbas.parts.Part = function( path, question, parentPart)
+{
+    var p = this;
+
+	//remember parent question object
+	this.question = question;
+
+	//remember parent part object, so scores can percolate up for steps/gaps
+	this.parentPart = parentPart;
+	
+	//remember a path for this part, for stuff like marking and warnings
+	this.path = path;
+    if(this.question) {
+    	this.question.partDictionary[path] = this;
+    }
+
+    this.index = parseInt(this.path.match(/\d+$/));
+
+	//initialise settings object
+	this.settings = util.copyobj(Part.prototype.settings);
+	
+	//initialise gap and step arrays
+	this.gaps = [];
+	this.steps = [];
+    this.isStep = false;
+
+	this.settings.errorCarriedForwardReplacements = [];
+	this.errorCarriedForwardBackReferences = {};
+
+	this.markingFeedback = [];
+	this.warnings = [];
+
+	this.scripts = {};
+
+	this.applyScripts();
+}
+
+Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
+
+    /** Storage engine
+     * @type {Numbas.storage.BlankStorage}
+     */
+    store: undefined,
+
+	/** XML defining this part
+	 * @type {Element}
+	 */
+	xml: '',				
+
+    /** Load the part's settings from an XML <part> node
+     * @param {Element} xml
+     */
+    loadFromXML: function(xml) {
+        this.xml = xml;
+
+        var tryGetAttribute = Numbas.xml.tryGetAttribute;
+
+        tryGetAttribute(this,this.xml,'.',['type','marks']);
+        tryGetAttribute(this.settings,this.xml,'.',['minimumMarks','enableMinimumMarks','stepsPenalty','showCorrectAnswer','showFeedbackIcon'],[]);
+
+        //load steps
+        var stepNodes = this.xml.selectNodes('steps/part');
+        for(var i=0; i<stepNodes.length; i++)
+        {
+            var step = Numbas.createPartFromXML( stepNodes[i], this.path+'s'+i, this.question, this);
+            this.addStep(step,i);
+        }
+
+        // set variable replacements
+        var variableReplacementsNode = this.xml.selectSingleNode('adaptivemarking/variablereplacements');
+        tryGetAttribute(this.settings,this.xml,variableReplacementsNode,['strategy'],['variableReplacementStrategy'])
+        var replacementNodes = variableReplacementsNode.selectNodes('replace');
+        this.settings.hasVariableReplacements = replacementNodes.length>0;
+        for(var i=0;i<replacementNodes.length;i++) {
+            var n = replacementNodes[i];
+            var vr = {}
+            tryGetAttribute(vr,n,'.',['variable','part','must_go_first']);
+            this.addVariableReplacement(vr.variable, vr.part, vr.must_go_first);
+        }
+
+        // create the JME marking script for the part
+        var markingScriptNode = this.xml.selectSingleNode('markingalgorithm');
+        var markingScriptString = Numbas.xml.getTextContent(markingScriptNode).trim();
+        if(markingScriptString) {
+            // extend the base marking algorithm if asked to do so
+            var extend_base = markingScriptNode.getAttribute('extend') || true;
+            this.setMarkingScript(markingScriptString,extend_base);
+        }
+
+        // custom JavaScript scripts
+        var scriptNodes = this.xml.selectNodes('scripts/script');
+        for(var i=0;i<scriptNodes.length; i++) {
+            var name = scriptNodes[i].getAttribute('name');
+            var order = scriptNodes[i].getAttribute('order');
+            var script = Numbas.xml.getTextContent(scriptNodes[i]);
+            this.setScript(name, order, script);
+        }
+
+    },
+
+    /** Load the part's settings from a JSON object
+     * @param {Object} data
+     */
+    loadFromJSON: function(data) {
+        var p = this;
+        var settings = this.settings;
+        var tryLoad = Numbas.json.tryLoad;
+        var tryGet = Numbas.json.tryGet;
+
+        tryLoad(data,['marks'],this);
+        tryLoad(data,['showCorrectAnswer', 'showFeedbackIcon', 'stepsPenalty','variableReplacementStrategy'],this.settings);
+
+        var variableReplacements = tryGet(data, 'variableReplacements');
+        if(variableReplacements) {
+            variableReplacements.map(function(vr) {
+                p.addVariableReplacement(vr.variable, vr.part, vr.must_go_first);
+            });
+        }
+
+        if('steps' in data) {
+            data.steps.map(function(sd,i) {
+                var s = createPartFromJSON(sd, this.path+'s'+i, this.question, this);
+                p.addStep(sd,i);
+            });
+        }
+
+        var marking = {};
+        tryLoad(data, ['customMarkingAlgorithm', 'extendBaseMarkingAlgorithm'], marking);
+        if(marking.customMarkingAlgorithm) {
+            this.setMarkingScript(marking.customMarkingAlgorithm, marking.extendBaseMarkingAlgorithm);
+        }
+
+        if('scripts' in data) {
+            for(var name in data.scripts) {
+                var script = data.scripts[name];
+                this.setScript(name, script.order, script.script);
+            }
+        }
+    },
+
+    /** Perform any tidying up or processing that needs to happen once the part's definition has been loaded
+     */
+    finaliseLoad: function() {
+        if(Numbas.display) {
+            this.display = new Numbas.display.PartDisplay(this);
+        }
+    },
+
+    /** Load saved data about this part from storage
+     */
+    resume: function() {
+        var part = this;
+        if(!this.store) {
+            return;
+        }
+		var pobj = this.store.loadPart(this);
+		this.answered = pobj.answered;
+		this.stepsShown = pobj.stepsShown;
+		this.stepsOpen = pobj.stepsOpen;
+
+		if(this.answered) {
+			this.question && this.question.onHTMLAttached(function() {part.submit()});
+		}
+
+        this.steps.forEach(function(s){ s.resume() });
+    },
+
+    /** Add a step to this part
+     * @param {Numbas.parts.Part} step
+     * @param {Number} index - position of the step
+     */
+    addStep: function(step, index) {
+        step.isStep = true;
+        this.steps.splice(index,0,step);
+        this.stepsMarks += step.marks;
+    },
+
+    /** Add a variable replacement for this part's adaptive marking
+     * @param {String} variable - the name of the variable to replace
+     * @param {String} part - the path of the part to use
+     * @param {Boolean} must_go_first - Must the referred part be answered before this part can be marked?
+     */
+    addVariableReplacement: function(variable, part, must_go_first) {
+        var vr = {
+            variable: variable.toLowerCase(),
+            part: part,
+            must_go_first: must_go_first
+        };
+        this.settings.errorCarriedForwardReplacements.push(vr);
+    },
+
+    /** Set this part's JME marking script
+     * @param {String} markingScriptString
+     * @param {Boolean} extend_base - Does this script extend the built-in script?
+     */
+    setMarkingScript: function(markingScriptString, extend_base) {
+        var oldMarkingScript = this.markingScript;
+
+        var algo = this.markingScript = new marking.MarkingScript(markingScriptString, extend_base ? oldMarkingScript : undefined);
+
+        // check that the required notes are present
+        var requiredNotes = ['mark','interpreted_answer'];
+        requiredNotes.forEach(function(name) {
+            if(!(name in algo.notes)) {
+                p.error("part.marking.missing required note",{note:name});
+            }
+        });
+    },
+
+    /** Set a custom JavaScript script
+     * @param {String} name - the name of the method to override
+     * @param {String} order - When should the script run? `'instead'`, `'before'` or `'after'`
+     * @param {String} script - the source code of the script
+     * @see {Numbas.parts.Part#applyScripts}
+     */
+    setScript: function(name,order,script) {
+        var withEnv = {
+            variables: this.question ? this.question.unwrappedVariables : {},
+            question: this.question,
+            part: this
+        };
+        with(withEnv) {
+            script = eval('(function(){try{'+script+'\n}catch(e){Numbas.showError(new Numbas.Error(\'part.script.error\',{path:util.nicePartName(this.path),script:name,message:e.message}))}})');
+        }
+        this.scripts[name] = {script: script, order: order};
+    },
+	
+	/** The question this part belongs to
+	 * @type {Numbas.Question}
+	 */
+	question: undefined,
+
+	/** Reference to parent of this part, if this is a gap or a step
+	 * @type {Numbas.parts.Part}
+	 */
+	parentPart: undefined,
+
+	/** A question-wide unique 'address' for this part.
+	 * @type {partpath}
+	 */
+	path: '',
+
+	/** This part's type, e.g. "jme", "numberentry", ...
+	 * @type {String}
+	 */
+	type: '',
+
+	/** Maximum marks available for this part
+	 * @type {Number}
+	 */
+	marks: 0,
+
+	/** Marks available for the steps, if any
+	 * @type {Number}
+	 */
+	stepsMarks: 0,
+
+	/** Proportion of available marks awarded to the student - i.e. `score/marks`. Penalties will affect this instead of the raw score, because of things like the steps marking algorithm.
+	 * @type {Number}
+	 */
+	credit: 0,
+
+	/** Student's score on this part
+	 * @type {Number}
+	 */
+	score: 0,
+	
+	/** Messages explaining how marks were awarded
+	 * @type {Array.<Numbas.parts.feedbackmessage>}
+	 */
+	markingFeedback: [],
+
+	/** Warnings shown next to the student's answer
+	 * @type {Array.<String>}
+	 */
+	warnings: [],
+
+	/** Has the student changed their answer since last submitting?
+	 * @type {Boolean}
+	 */
+	isDirty: false,
+
+	/** Student's answers as visible on the screen (not necessarily yet submitted)
+	 * @type {Array.<String>}
+	 */
+	stagedAnswer: undefined,
+
+	/** Student's last submitted answer - a copy of {@link Numbas.parts.Part.stagedAnswer} taken when they submitted.
+	 * @type {Array.<String>}
+	 */
+	answerList: undefined,
+
+	/** Has this part been answered?
+	 * @type {Boolean}
+	 */
+	answered: false,
+
+	/** Child gapfill parts
+	 * @type {Numbas.parts.Part[]}
+	 */
+	gaps: [],
+
+	/** Child step parts
+	 * @type {Numbas.parts.Part[]}
+	 */
+	steps: [],
+
+	/** Have the steps been show for this part?
+	 * @type {Boolean}
+	 */
+	stepsShown: false,
+
+	/** Is the steps display open? (Students can toggle it, but that doesn't affect whether they get the penalty)
+	 * @type {Boolean}
+	 */
+	stepsOpen: false,
+
+	/** True if this part should be resubmitted because another part it depended on has changed
+	 * @type {Boolean}
+	 */
+	shouldResubmit: false,
+
+	/** Does this mark do any marking? False for information only parts
+	 * @type {Boolean}
+	 */
+	doesMarking: true,
+
+	/** Properties set when the part is generated
+	 * @type {Object}
+	 * @property {Number} stepsPenalty - Number of marks to deduct when the steps are shown
+	 * @property {Boolean} enableMinimumMarks - Is there a lower limit on the score the student can be awarded for this part?
+	 * @property {Number} minimumMarks - Lower limit on the score the student can be awarded for this part
+	 * @property {Boolean} showCorrectAnswer - Show the correct answer on reveal?
+	 * @property {Boolean} hasVariableReplacements - Does this part have any variable replacement rules?
+     * @property {String} variableReplacementStrategy - `'originalfirst'` or `'alwaysreplace'`
+     * @property {Object} markingScript
+	 */
+	settings: 
+	{
+		stepsPenalty: 0,
+		enableMinimumMarks: false,
+		minimumMarks: 0,
+		showCorrectAnswer: true,
+		showFeedbackIcon: true,
+		hasVariableReplacements: false,
+        variableReplacementStrategy: 'originalfirst'
+	},
+
+    /** The script to mark this part - assign credit, and give messages and feedback.
+     * @type {Numbas.marking.MarkingScript}
+     */
+    markingScript: null,
+
+	/** Throw an error, with the part's identifier prepended to the message
+	 * @param {String} message
+	 * @returns {Numbas.Error}
+	 */
+	error: function(message) {
+		message = R.apply(this,arguments);
+		var niceName = Numbas.util.capitalise(util.nicePartName(this.path));
+		throw(new Numbas.Error('part.error',{path: niceName, message: message}));
+	},
+
+	applyScripts: function() {
+        var part = this;
+		this.originalScripts = {};
+
+		for(var name in this.scripts) {
+			var script_dict = this.scripts[name];
+			var order = script_dict.order;
+			var script = script_dict.script;
+			switch(name) {
+				case 'constructor':
+					this.customConstructor = script;
+					break;
+				default:
+					var originalScript = this[name];
+
+                    function instead(script) {
+                        return function() {
+                            return script.apply(part,arguments);
+                        }
+                    }
+                    function before(script,originalScript) {
+                        return function() {
+                            script.apply(part,arguments);
+                            return originalScript.apply(this,arguments);
+                        }
+                    }
+                    function after(script,originalScript) {
+                        return function() {
+                            originalScript.apply(this,arguments);
+                            return script.apply(part,arguments);
+                        }
+                    }
+
+					switch(order) {
+						case 'instead':
+							this[name] = instead(script);
+							break;
+						case 'before':
+							this[name] = before(script,originalScript);
+							break;
+						case 'after':
+							this[name] = after(script,originalScript);
+							break;
+					}
+			}
+		}
+	},
+
+	/** Associated display object. It is not safe to assume this is always present - in the editor, parts have no display.
+	 * @type {Numbas.display.PartDisplay}
+	 */
+	display: undefined,
+
+	/** Give the student a warning about this part. 	
+	 * @param {String} warning
+	 * @see Numbas.display.PartDisplay.warning
+	 */
+	giveWarning: function(warning)
+	{
+		this.warnings.push(warning);
+		this.display && this.display.warning(warning);
+	},
+
+	/** Set the list of warnings
+	 * @param {Array.<String>} warnings
+	 * @see Numbas.display.PartDisplay.warning
+	 */
+	setWarnings: function(warnings) {
+		this.warnings = warnings;
+		this.display && this.display.setWarnings(warnings);
+	},
+
+	/** Remove all warnings
+	 * @see Numbas.display.PartDisplay.warning
+	 */
+	removeWarnings: function() {
+		this.setWarnings([]);
+	},
+
+	/** Calculate the student's score based on their submitted answers
+	 *
+	 * Calls the parent part's `calculateScore` method at the end.
+	 */
+	calculateScore: function()
+	{
+		if(this.steps.length && this.stepsShown)
+		{
+			var oScore = this.score = (this.marks - this.settings.stepsPenalty) * this.credit; 	//score for main keypart
+
+			var stepsScore = 0, stepsMarks=0;
+			for(var i=0; i<this.steps.length; i++)
+			{
+				stepsScore += this.steps[i].score;
+				stepsMarks += this.steps[i].marks;
+			}
+
+			var stepsFraction = Math.max(Math.min(1-this.credit,1),0);	//any credit not earned in main part can be earned back in steps
+
+			this.score += stepsScore;						//add score from steps to total score
+
+
+			this.score = Math.min(this.score,this.marks - this.settings.stepsPenalty)	//if too many marks are awarded for steps, it's possible that getting all the steps right leads to a higher score than just getting the part right. Clip the score to avoid this.
+
+			if(this.settings.enableMinimumMarks)								//make sure awarded score is not less than minimum allowed
+				this.score = Math.max(this.score,this.settings.minimumMarks);
+
+			if(stepsMarks!=0 && stepsScore!=0)
+			{
+				if(this.credit==1)
+					this.markingComment(R('part.marking.steps no matter'));
+				else
+				{
+					var change = this.score - oScore;
+					this.markingComment(R('part.marking.steps change',{count:change}));
+				}
+			}
+		}
+		else
+		{
+			this.score = this.credit * this.marks;
+			//make sure awarded score is not less than minimum allowed
+			if(this.settings.enableMinimumMarks && this.credit*this.marks<this.settings.minimumMarks)
+				this.score = Math.max(this.score,this.settings.minimumMarks);
+		}
+        if(this.revealed) {
+            this.score = 0;
+        }
+
+		if(this.parentPart && !this.parentPart.submitting)
+			this.parentPart.calculateScore();
+	},
+
+	/** Update the stored answer from the student (called when the student changes their answer, but before submitting) 
+	 */
+	storeAnswer: function(answerList) {
+		this.stagedAnswer = answerList;
+		this.setDirty(true);
+		this.display && this.display.removeWarnings();
+	},
+
+	/** Call when the student changes their answer, or submits - update {@link Numbas.parts.Part.isDirty}
+	 * @param {Boolean} dirty
+	 */
+	setDirty: function(dirty) {
+		this.isDirty = dirty;
+		if(this.display) {
+			this.display && this.display.isDirty(dirty);
+			if(dirty && this.parentPart) {
+				this.parentPart.setDirty(true);
+			}
+			this.question && this.question.display && this.question.display.isDirty(this.question.isDirty());
+		}
+	},
+
+    /** Get a JME scope for this part.
+     * If `this.question` is set, use the question's scope. Otherwise, use {@link Numbas.jme.builtinScope}.
+     * @returns {Numbas.jme.Scope}
+     */
+    getScope: function() {
+        if(!this.scope) {
+            if(this.question) {
+                this.scope = this.question.scope;
+            } else {
+                this.scope = new Numbas.jme.Scope(Numbas.jme.builtinScope);
+            }
+        }
+        return this.scope;
+    },
+
+	/** Submit the student's answers to this part - remove warnings. save answer, calculate marks, update scores
+	 */
+	submit: function() {
+		this.shouldResubmit = false;
+		this.display && this.display.removeWarnings();
+		this.credit = 0;
+		this.markingFeedback = [];
+		this.submitting = true;
+
+		if(this.stepsShown)
+		{
+			var stepsMax = this.marks - this.settings.stepsPenalty;
+			this.markingComment(
+				this.settings.stepsPenalty>0 
+					? R('part.marking.revealed steps with penalty',{count:stepsMax})	
+                    : R('part.marking.revealed steps no penalty'));
+		}
+
+		if(this.stagedAnswer) {
+			this.answerList = util.copyarray(this.stagedAnswer);
+		}
+		this.setStudentAnswer();
+
+		if(this.doesMarking) {
+			if(this.hasStagedAnswer()) {
+				this.setDirty(false);
+
+				// save existing feedback
+				var existing_feedback = {
+					warnings: this.warnings.slice(),
+					markingFeedback: this.markingFeedback.slice()
+				};
+
+				var result;
+				var try_replacement;
+
+				try{
+					if(this.settings.variableReplacementStrategy=='originalfirst') {
+						var result_original = this.markAgainstScope(this.getScope(),existing_feedback);
+						result = result_original;
+						var try_replacement = this.settings.hasVariableReplacements && (!result.answered || result.credit<1);
+					}
+					if(this.settings.variableReplacementStrategy=='alwaysreplace' || try_replacement) {
+						try {
+							var scope = this.errorCarriedForwardScope();
+						} catch(e) {
+							if(!result) {
+								this.giveWarning(e.originalMessage);
+								this.answered = false;
+								throw(e);
+							}
+						}
+						var result_replacement = this.markAgainstScope(scope,existing_feedback);
+						if(!(result_original) || (result_replacement.answered && result_replacement.credit>result_original.credit)) {
+							result = result_replacement;
+							result.markingFeedback.splice(0,0,{op: 'comment', message: R('part.marking.used variable replacements')});
+						}
+					}
+
+                    if(!result) {
+                        this.error('part.marking.no result');
+                    }
+
+					this.setWarnings(result.warnings);
+					this.markingFeedback = result.markingFeedback;
+					this.credit = result.credit;
+					this.answered = result.answered;
+				} catch(e) {
+                    throw(new Numbas.Error('part.marking.uncaught error',{part:util.nicePartName(this.path),message:e.message}));
+				}
+			} else {
+				this.giveWarning(R('part.marking.not submitted'));
+				this.setCredit(0,R('part.marking.did not answer'));;
+				this.answered = false;
+			}
+		}
+
+        if(this.stepsShown) {
+            for(var i=0;i<this.steps.length;i++) {
+                if(this.steps[i].isDirty) {
+                    this.steps[i].submit();
+                }
+            }
+        }
+
+		this.calculateScore();
+		this.question && this.question.updateScore();
+
+		if(this.answered)
+		{
+			if(!(this.parentPart && this.parentPart.type=='gapfill'))
+				this.markingComment(
+					R('part.marking.total score',{count:this.score})
+				);
+		}
+
+		this.store && this.store.partAnswered(this);
+		this.display && this.display.showScore(this.answered);
+
+		this.submitting = false;
+
+		if(this.answered && this.question) {
+			for(var path in this.errorCarriedForwardBackReferences) {
+				var p2 = this.question.getPart(path);
+				p2.pleaseResubmit();
+			}
+		}
+	},
+
+	/** Has the student entered an answer to this part?
+	 * @see Numbas.parts.Part#stagedAnswer
+	 * @returns {Boolean}
+	 */
+	hasStagedAnswer: function() {
+		return !(this.stagedAnswer==undefined || this.stagedAnswer=='');
+	},
+
+	/** Called by another part when its marking means that the marking for this part might change (i.e., when this part replaces a variable with the answer from the other part)
+	 * Sets this part as dirty, and gives a warning explaining why the student must resubmit.
+	 */
+	pleaseResubmit: function() {
+		if(!this.shouldResubmit) {
+			this.shouldResubmit = true;
+			this.setDirty(true);
+			this.giveWarning(R('part.marking.resubmit because of variable replacement'));
+		}
+	},
+
+    /** @typedef {Object} Numbas.parts.feedbackmessage 
+     * @property {String} op - the kind of feedback
+     * @see Numbas.parts.Part#setCredit Numbas.parts.Part#addCredit Numbas.parts.Part#multCredit Numbas.parts.Part#markingComment
+     */
+
+    /** @typedef {Object} Numbas.parts.marking_results
+     * A dictionary representing the results of marking a student's answer.
+     * @property {Array.<String>} warnings - Warning messages.
+     * @property {Array.<Numbas.parts.feedbackmessage>} markingFeedback - Feedback messages.
+     * @property {Object} validation - dictionary of data to be used by {@link Numbas.parts.Part#validate} to determine if the student's answer could be marked.
+     * @property {Number} credit - Proportion of the available marks to award to the student.
+     * @property {Boolean} answered - True if the student's answer could be marked. False if the answer was invalid - the student should change their answer and resubmit.
+     */
+
+	/** Calculate the correct answer in the given scope, and mark the student's answer
+	 * @param {Numbas.jme.Scope} scope - scope in which to calculate the correct answer
+	 * @param {Object.<Array.<String>>} feedback - dictionary of existing `warnings` and `markingFeedback` lists, to add to - copies of these are returned with any additional feedback appended
+	 * @returns {Numbas.parts.marking_results}
+	 */
+	markAgainstScope: function(scope,feedback) {
+		this.setWarnings(feedback.warnings.slice());
+		this.markingFeedback = feedback.markingFeedback.slice();
+
+        try {
+    		this.getCorrectAnswer(scope);
+    		this.mark();
+        } catch(e) {
+            this.giveWarning(e.message);
+        }
+
+		return {
+			warnings: this.warnings.slice(),
+			markingFeedback: this.markingFeedback.slice(),
+			credit: this.credit,
+			answered: this.answered
+		}
+	},
+
+	/** Replace variables with student's answers to previous parts
+	 * @returns {Numbas.jme.Scope}
+	 */
+	errorCarriedForwardScope: function() {
+		// dictionary of variables to replace
+		var replace = this.settings.errorCarriedForwardReplacements;
+		var replaced = [];
+
+        if(!this.question) {
+            return this.getScope();
+        }
+
+		// fill scope with new values of those variables
+		var new_variables = {}
+		for(var i=0;i<replace.length;i++) {
+			var vr = replace[i];
+			var p2 = this.question.getPart(vr.part);
+			if(p2.answered) {
+				new_variables[vr.variable] = p2.studentAnswerAsJME();
+				replaced.push(vr.variable);
+			} else if(vr.must_go_first) {
+				throw(new Numbas.Error("part.marking.variable replacement part not answered",{part:util.nicePartName(vr.part)}));
+			}
+		}
+		for(var i=0;i<replace.length;i++) {
+			var p2 = this.question.getPart(replace[i].part);
+			p2.errorCarriedForwardBackReferences[this.path] = true;
+		}
+		var scope = new Numbas.jme.Scope([this.question.scope,{variables: new_variables}])
+
+		// find dependent variables which need to be recomputed
+		var todo = Numbas.jme.variables.variableDependants(this.question.variablesTodo,replaced);
+		for(var name in todo) {
+			if(name in new_variables) {
+				delete todo[name];
+			} else {
+				scope.deleteVariable(name);
+			}
+		}
+
+		// compute those variables
+		var nv = Numbas.jme.variables.makeVariables(todo,scope);
+		scope = new Numbas.jme.Scope([scope,{variables:nv.variables}]);
+
+		return scope;
+	},
+
+	/** Compute the correct answer, based on the given scope.
+	 * Anything to do with marking that depends on the scope should be in this method, and calling it with a new scope should update all the settings used by the marking algorithm.
+	 * @param {Numbas.jme.Scope} scope
+	 * @abstract
+	 */
+	getCorrectAnswer: function(scope) {},
+
+	/** Save a copy of the student's answer as entered on the page, for use in marking.
+	 * @abstract
+	 */
+	setStudentAnswer: function() {},
+
+	/** Get the student's answer as it was entered as a JME data type, to be used in the marking script.
+	 * @abstract
+	 * @returns {Numbas.jme.token}
+	 */
+	rawStudentAnswerAsJME: function() {
+	},
+
+	/** Get the student's answer as a JME data type, to be used in error-carried-forward calculations
+	 * @abstract
+	 * @returns {Numbas.jme.token}
+	 */
+	studentAnswerAsJME: function() {
+        return this.interpretedStudentAnswer;
+	},
+
+    /** Function which marks the student's answer: run `this.settings.markingScript`, which sets the credit for the student's answer to a number between 0 and 1 and produces a list of feedback messages and warnings.
+     * If the question has been answered in a way that can be marked, `this.answered` should be set to `true`.
+     * @see Numbas.parts.Part.settings.markingScript
+     * @see Numbas.parts.Part.answered
+     * @returns {Numbas.marking.finalised_state}
+     */
+    mark: function() {
+		if(this.answerList==undefined) {
+			this.setCredit(0,R('part.marking.nothing entered'));
+			return;
+		}
+		
+        var result = this.mark_answer(this.rawStudentAnswerAsJME());
+
+        var finalised_result = marking.finalise_state(result.states.mark)
+        this.apply_feedback(finalised_result);
+
+        this.interpretedStudentAnswer = result.values['interpreted_answer'];
+
+        return finalised_result;
+    },
+
+    /** Apply a finalised list of feedback states to this part.
+     * @param {object[]} feedback
+     * @see Numbas.marking.finalise_state
+     */
+    apply_feedback: function(feedback) {
+        var valid = true;
+        var part = this;
+        var end = false;
+        var states = feedback.states.slice();
+        var i=0;
+        var lifts = [];
+        var scale = 1;
+        while(i<states.length) {
+            var state = states[i];
+            switch(state.op) {
+                case 'set_credit':
+                    part.setCredit(scale*state.credit, state.message);
+                    break;
+                case 'multiply_credit':
+                    part.multCredit(scale*state.factor, state.message);
+                    break;
+                case 'add_credit':
+                    part.addCredit(scale*state.credit, state.message);
+                    break;
+                case 'sub_credit':
+                    part.subCredit(scale*state.credit, state.message);
+                    break;
+                case 'warning':
+                    part.giveWarning(state.message);
+                    break;
+                case 'feedback':
+                    part.markingComment(state.message);
+                    break;
+                case 'end':
+                    if(lifts.length) {
+                        while(i+1<states.length && states[i+1].op!='end_lift') {
+                            i += 1;
+                        }
+                    } else {
+                        end = true;
+                        if(state.invalid) {
+                            valid = false;
+                        }
+                    }
+                    break;
+                case 'start_lift':
+                    lifts.push({credit: this.credit,scale:scale});
+                    this.credit = 0;
+                    scale = state.scale;
+                    break;
+                case 'end_lift':
+                    var last_lift = lifts.pop();
+                    var lift_credit = this.credit;
+                    this.credit = last_lift.credit;
+                    this.addCredit(lift_credit*last_lift.scale);
+                    scale = last_lift.scale;
+                    break;
+            }
+            i += 1;
+            if(end) {
+                break;
+            }
+        }
+
+        part.answered = valid;
+    },
+
+    marking_parameters: function(studentAnswer) {
+        return {
+            path: jme.wrapValue(this.path),
+            studentAnswer: studentAnswer, 
+            settings: jme.wrapValue(this.settings), 
+            marks: new jme.types.TNum(this.marks),
+            partType: new jme.types.TString(this.type),
+            gaps: jme.wrapValue(this.gaps.map(function(g){return g.marking_parameters(g.rawStudentAnswerAsJME())})),
+            steps: jme.wrapValue(this.steps.map(function(s){return s.marking_parameters(s.rawStudentAnswerAsJME())}))
+        };
+    },
+
+    /** Run the marking script against the given answer.
+     * This does NOT apply the feedback and credit to the part object, it just returns it.
+     * @param {Numbas.jme.token} studentAnswer
+     * @see Numbas.parts.Part#mark
+     * @returns {object} a dictionary `{states, values, scope, state_valid, state_errors}`
+     */
+    mark_answer: function(studentAnswer) {
+        var result = this.markingScript.evaluate(
+            this.getScope(), 
+            this.marking_parameters(studentAnswer)
+        );
+        if(result.state_errors.mark) {
+            throw(result.state_errors.mark);
+        }
+
+        return result;
+    },
+
+	/** Set the `credit` to an absolute value
+	 * @param {Number} credit
+	 * @param {String} message - message to show in feedback to explain this action
+	 */
+	setCredit: function(credit,message)
+	{
+		var oCredit = this.credit;
+		this.credit = credit;
+		this.markingFeedback.push({
+			op: 'add_credit',
+			credit: this.credit - oCredit,
+			message: message
+		});
+	},
+
+	/** Add an absolute value to `credit`
+	 * @param {Number} credit - amount to add
+	 * @param {String} message - message to show in feedback to explain this action
+	 */
+	addCredit: function(credit,message)
+	{
+		this.credit += credit;
+		this.markingFeedback.push({
+			op: 'add_credit',
+			credit: credit,
+			message: message
+		});
+	},
+
+	/** Subtract an absolute value from `credit`
+	 * @param {number} credit - amount to subtract
+	 * @param {string} message - message to show in feedback to explain this action
+	 */
+	subCredit: function(credit,message)
+	{
+		this.credit -= credit;
+		this.markingFeedback.push({
+			op: 'subCredit',
+			credit: credit,
+			message: message
+		});
+	},
+
+	/** Multiply `credit` by the given amount - use to apply penalties
+	 * @param {Number} factor
+	 * @param {String} message - message to show in feedback to explain this action
+	 */
+	multCredit: function(factor,message)
+	{
+		var oCredit = this.credit
+		this.credit *= factor;
+		this.markingFeedback.push({
+			op: 'add_credit',
+			credit: this.credit - oCredit,
+			message: message
+		});
+	},
+
+	/** Add a comment to the marking feedback
+	 * @param {String} message
+	 */
+	markingComment: function(message)
+	{
+		this.markingFeedback.push({
+			op: 'comment',
+			message: message
+		});
+	},
+
+	/** Show the steps, as a result of the student asking to show them.
+	 * If the answers have not been revealed, we should apply the steps penalty.
+	 *
+	 * @param {Boolean} dontStore - don't tell the storage that this is happening - use when loading from storage to avoid callback loops
+	 */
+	showSteps: function(dontStore)
+	{
+		this.openSteps();
+		if(this.revealed) {
+			return;
+		}
+
+		this.stepsShown = true;
+		if(!this.revealed) {
+			if(this.answered) {
+				this.submit();
+            } else {
+                this.calculateScore();
+				this.question && this.question.updateScore();
+            }
+		} else {
+            this.calculateScore();
+        }
+		if(!dontStore) {
+			this.store && this.store.stepsShown(this);
+		}
+	},
+
+	/** Open the steps, either because the student asked or the answers to the question are being revealed. This doesn't affect the steps penalty.
+	 */
+	openSteps: function() {
+		this.stepsOpen = true;
+		this.display && this.display.showSteps();
+	},
+
+	/** Close the steps box. This doesn't affect the steps penalty.
+	 */
+	hideSteps: function()
+	{
+		this.stepsOpen = false;
+		this.display && this.display.hideSteps();
+		this.store && this.store.stepsHidden(this);
+	},
+
+	/** Reveal the correct answer to this part
+	 * @param {Boolean} dontStore - don't tell the storage that this is happening - use when loading from storage to avoid callback loops
+	 */
+	revealAnswer: function(dontStore)
+	{
+		this.display && this.display.revealAnswer();
+		this.revealed = true;
+        this.setDirty(false);
+
+		//this.setCredit(0);
+		if(this.steps.length>0) {
+			this.openSteps();
+			for(var i=0; i<this.steps.length; i++ )
+			{
+				this.steps[i].revealAnswer(dontStore);
+			}
+		}
+	}
+
+};
+
+
+});
+
 Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
     var marking = Numbas.marking = {};
 
@@ -7355,13 +8511,13 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
             var part_result = part.mark_answer(args[1]);
             var result = marking.finalise_state(part_result.states.mark);
             return jme.wrapValue({
-                credit: result.credit,
                 marks: part.marks,
+                credit: result.credit,
                 feedback: result.states,
+                valid: result.valid,
                 states: part_result.states,
                 state_valid: part_result.state_valid,
-                values: part_result.values,
-                valid: result.valid
+                values: part_result.values
             });
         }
     }));
@@ -7510,10 +8666,17 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
         return scope.variables[name];
     }
 
+    /** @typedef Numbas.marking.finalised_state
+     * @type {Object}
+     * @property {Boolean} valid - Can the answer be marked?
+     * @property {Number} credit - Proportion of the credit to award
+     * @property {Array.<Object>} states - Feedback actions
+     */
+
     /** Run through a sequence of state operations, accumulating credit.
      * It might look like this is duplicated in `Numbas.parts.Part#apply_feedback`, but we need to be able to get a description of what a sequence of operations does in abstract so it can be reused in marking scripts for parent parts.
      * @see Numbas.parts.Part#apply_feedback
-     * @returns {object} a dictionary `{valid: boolean, credit: number, states: object[]}`
+     * @returns {Numbas.marking.finalised_state} a dictionary `{valid: boolean, credit: number, states: object[]}`
      */
     marking.finalise_state = function(states) {
         var valid = true;
@@ -12282,5 +13445,2038 @@ Numbas.queueScript('i18next',[],function(module) {
 !function(t,e){"object"==typeof exports&&"undefined"!=typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):t.i18next=e()}(this,function(){"use strict";function t(t){return null==t?"":""+t}function e(t,e,n){t.forEach(function(t){e[t]&&(n[t]=e[t])})}function n(t,e,n){function o(t){return t&&t.indexOf("###")>-1?t.replace(/###/g,"."):t}for(var r="string"!=typeof e?[].concat(e):e.split(".");r.length>1;){if(!t)return{};var i=o(r.shift());!t[i]&&n&&(t[i]=new n),t=t[i]}return t?{obj:t,k:o(r.shift())}:{}}function o(t,e,o){var r=n(t,e,Object),i=r.obj,s=r.k;i[s]=o}function r(t,e,o,r){var i=n(t,e,Object),s=i.obj,a=i.k;s[a]=s[a]||[],r&&(s[a]=s[a].concat(o)),r||s[a].push(o)}function i(t,e){var o=n(t,e),r=o.obj,i=o.k;if(r)return r[i]}function s(t,e,n){for(var o in e)o in t?"string"==typeof t[o]||t[o]instanceof String||"string"==typeof e[o]||e[o]instanceof String?n&&(t[o]=e[o]):s(t[o],e[o],n):t[o]=e[o];return t}function a(t){return t.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g,"\\$&")}function u(t){return"string"==typeof t?t.replace(/[&<>"'\/]/g,function(t){return P[t]}):t}function l(t){return t.interpolation={unescapeSuffix:"HTML"},t.interpolation.prefix=t.interpolationPrefix||"__",t.interpolation.suffix=t.interpolationSuffix||"__",t.interpolation.escapeValue=t.escapeInterpolation||!1,t.interpolation.nestingPrefix=t.reusePrefix||"$t(",t.interpolation.nestingSuffix=t.reuseSuffix||")",t}function c(t){return t.resStore&&(t.resources=t.resStore),t.ns&&t.ns.defaultNs?(t.defaultNS=t.ns.defaultNs,t.ns=t.ns.namespaces):t.defaultNS=t.ns||"translation",t.fallbackToDefaultNS&&t.defaultNS&&(t.fallbackNS=t.defaultNS),t.saveMissing=t.sendMissing,t.saveMissingTo=t.sendMissingTo||"current",t.returnNull=!t.fallbackOnNull,t.returnEmptyString=!t.fallbackOnEmpty,t.returnObjects=t.returnObjectTrees,t.joinArrays="\n",t.returnedObjectHandler=t.objectTreeKeyHandler,t.parseMissingKeyHandler=t.parseMissingKey,t.appendNamespaceToMissingKey=!0,t.nsSeparator=t.nsseparator,t.keySeparator=t.keyseparator,"sprintf"===t.shortcutFunction&&(t.overloadTranslationOptionHandler=function(t){for(var e=[],n=1;n<t.length;n++)e.push(t[n]);return{postProcess:"sprintf",sprintf:e}}),t.whitelist=t.lngWhitelist,t.preload=t.preload,"current"===t.load&&(t.load="currentOnly"),"unspecific"===t.load&&(t.load="languageOnly"),t.backend=t.backend||{},t.backend.loadPath=t.resGetPath||"locales/__lng__/__ns__.json",t.backend.addPath=t.resPostPath||"locales/add/__lng__/__ns__",t.backend.allowMultiLoading=t.dynamicLoad,t.cache=t.cache||{},t.cache.prefix="res_",t.cache.expirationTime=6048e5,t.cache.enabled=!!t.useLocalStorage,t=l(t),t.defaultVariables&&(t.interpolation.defaultVariables=t.defaultVariables),t}function p(t){return t=l(t),t.joinArrays="\n",t}function f(t){return(t.interpolationPrefix||t.interpolationSuffix||t.escapeInterpolation)&&(t=l(t)),t.nsSeparator=t.nsseparator,t.keySeparator=t.keyseparator,t.returnObjects=t.returnObjectTrees,t}function g(t){t.lng=function(){return j.deprecate("i18next.lng() can be replaced by i18next.language for detected language or i18next.languages for languages ordered by translation lookup."),t.services.languageUtils.toResolveHierarchy(t.language)[0]},t.preload=function(e,n){j.deprecate("i18next.preload() can be replaced with i18next.loadLanguages()"),t.loadLanguages(e,n)},t.setLng=function(e,n,o){return j.deprecate("i18next.setLng() can be replaced with i18next.changeLanguage() or i18next.getFixedT() to get a translation function with fixed language or namespace."),"function"==typeof n&&(o=n,n={}),n||(n={}),n.fixLng===!0&&o?o(null,t.getFixedT(e)):void t.changeLanguage(e,o)},t.addPostProcessor=function(e,n){j.deprecate("i18next.addPostProcessor() can be replaced by i18next.use({ type: 'postProcessor', name: 'name', process: fc })"),t.use({type:"postProcessor",name:e,process:n})}}function h(t){return t.charAt(0).toUpperCase()+t.slice(1)}function d(){var t={};return T.forEach(function(e){e.lngs.forEach(function(n){return t[n]={numbers:e.nr,plurals:A[e.fc]}})}),t}function v(t,e){for(var n=t.indexOf(e);n!==-1;)t.splice(n,1),n=t.indexOf(e)}function y(){return{debug:!1,initImmediate:!0,ns:["translation"],defaultNS:["translation"],fallbackLng:["dev"],fallbackNS:!1,whitelist:!1,nonExplicitWhitelist:!1,load:"all",preload:!1,keySeparator:".",nsSeparator:":",pluralSeparator:"_",contextSeparator:"_",saveMissing:!1,saveMissingTo:"fallback",missingKeyHandler:!1,postProcess:!1,returnNull:!0,returnEmptyString:!0,returnObjects:!1,joinArrays:!1,returnedObjectHandler:function(){},parseMissingKeyHandler:!1,appendNamespaceToMissingKey:!1,overloadTranslationOptionHandler:function(t){return{defaultValue:t[1]}},interpolation:{escapeValue:!0,format:function(t,e,n){return t},prefix:"{{",suffix:"}}",formatSeparator:",",unescapePrefix:"-",nestingPrefix:"$t(",nestingSuffix:")",defaultVariables:void 0}}}function b(t){return"string"==typeof t.ns&&(t.ns=[t.ns]),"string"==typeof t.fallbackLng&&(t.fallbackLng=[t.fallbackLng]),"string"==typeof t.fallbackNS&&(t.fallbackNS=[t.fallbackNS]),t.whitelist&&t.whitelist.indexOf("cimode")<0&&t.whitelist.push("cimode"),t}var m="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol?"symbol":typeof t},x=function(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")},k=Object.assign||function(t){for(var e=1;e<arguments.length;e++){var n=arguments[e];for(var o in n)Object.prototype.hasOwnProperty.call(n,o)&&(t[o]=n[o])}return t},S=function(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e)},w=function(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!e||"object"!=typeof e&&"function"!=typeof e?t:e},L=function(){function t(t,e){var n=[],o=!0,r=!1,i=void 0;try{for(var s,a=t[Symbol.iterator]();!(o=(s=a.next()).done)&&(n.push(s.value),!e||n.length!==e);o=!0);}catch(t){r=!0,i=t}finally{try{!o&&a.return&&a.return()}finally{if(r)throw i}}return n}return function(e,n){if(Array.isArray(e))return e;if(Symbol.iterator in Object(e))return t(e,n);throw new TypeError("Invalid attempt to destructure non-iterable instance")}}(),N={type:"logger",log:function(t){this._output("log",t)},warn:function(t){this._output("warn",t)},error:function(t){this._output("error",t)},_output:function(t,e){console&&console[t]&&console[t].apply(console,Array.prototype.slice.call(e))}},O=function(){function t(e){var n=arguments.length<=1||void 0===arguments[1]?{}:arguments[1];x(this,t),this.subs=[],this.init(e,n)}return t.prototype.init=function(t){var e=arguments.length<=1||void 0===arguments[1]?{}:arguments[1];this.prefix=e.prefix||"i18next:",this.logger=t||N,this.options=e,this.debug=e.debug!==!1},t.prototype.setDebug=function(t){this.debug=t,this.subs.forEach(function(e){e.setDebug(t)})},t.prototype.log=function(){this.forward(arguments,"log","",!0)},t.prototype.warn=function(){this.forward(arguments,"warn","",!0)},t.prototype.error=function(){this.forward(arguments,"error","")},t.prototype.deprecate=function(){this.forward(arguments,"warn","WARNING DEPRECATED: ",!0)},t.prototype.forward=function(t,e,n,o){o&&!this.debug||("string"==typeof t[0]&&(t[0]=n+this.prefix+" "+t[0]),this.logger[e](t))},t.prototype.create=function(e){var n=new t(this.logger,k({prefix:this.prefix+":"+e+":"},this.options));return this.subs.push(n),n},t}(),j=new O,R=function(){function t(){x(this,t),this.observers={}}return t.prototype.on=function(t,e){var n=this;t.split(" ").forEach(function(t){n.observers[t]=n.observers[t]||[],n.observers[t].push(e)})},t.prototype.off=function(t,e){var n=this;this.observers[t]&&this.observers[t].forEach(function(){if(e){var o=n.observers[t].indexOf(e);o>-1&&n.observers[t].splice(o,1)}else delete n.observers[t]})},t.prototype.emit=function(t){for(var e=arguments.length,n=Array(e>1?e-1:0),o=1;o<e;o++)n[o-1]=arguments[o];this.observers[t]&&this.observers[t].forEach(function(t){t.apply(void 0,n)}),this.observers["*"]&&this.observers["*"].forEach(function(e){var o;e.apply(e,(o=[t]).concat.apply(o,n))})},t}(),P={"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","/":"&#x2F;"},C=function(t){function e(){var n=arguments.length<=0||void 0===arguments[0]?{}:arguments[0],o=arguments.length<=1||void 0===arguments[1]?{ns:["translation"],defaultNS:"translation"}:arguments[1];x(this,e);var r=w(this,t.call(this));return r.data=n,r.options=o,r}return S(e,t),e.prototype.addNamespaces=function(t){this.options.ns.indexOf(t)<0&&this.options.ns.push(t)},e.prototype.removeNamespaces=function(t){var e=this.options.ns.indexOf(t);e>-1&&this.options.ns.splice(e,1)},e.prototype.getResource=function(t,e,n){var o=arguments.length<=3||void 0===arguments[3]?{}:arguments[3],r=o.keySeparator||this.options.keySeparator;void 0===r&&(r=".");var s=[t,e];return n&&"string"!=typeof n&&(s=s.concat(n)),n&&"string"==typeof n&&(s=s.concat(r?n.split(r):n)),t.indexOf(".")>-1&&(s=t.split(".")),i(this.data,s)},e.prototype.addResource=function(t,e,n,r){var i=arguments.length<=4||void 0===arguments[4]?{silent:!1}:arguments[4],s=this.options.keySeparator;void 0===s&&(s=".");var a=[t,e];n&&(a=a.concat(s?n.split(s):n)),t.indexOf(".")>-1&&(a=t.split("."),r=e,e=a[1]),this.addNamespaces(e),o(this.data,a,r),i.silent||this.emit("added",t,e,n,r)},e.prototype.addResources=function(t,e,n){for(var o in n)"string"==typeof n[o]&&this.addResource(t,e,o,n[o],{silent:!0});this.emit("added",t,e,n)},e.prototype.addResourceBundle=function(t,e,n,r,a){var u=[t,e];t.indexOf(".")>-1&&(u=t.split("."),r=n,n=e,e=u[1]),this.addNamespaces(e);var l=i(this.data,u)||{};r?s(l,n,a):l=k({},l,n),o(this.data,u,l),this.emit("added",t,e,n)},e.prototype.removeResourceBundle=function(t,e){this.hasResourceBundle(t,e)&&delete this.data[t][e],this.removeNamespaces(e),this.emit("removed",t,e)},e.prototype.hasResourceBundle=function(t,e){return void 0!==this.getResource(t,e)},e.prototype.getResourceBundle=function(t,e){return e||(e=this.options.defaultNS),"v1"===this.options.compatibilityAPI?k({},this.getResource(t,e)):this.getResource(t,e)},e.prototype.toJSON=function(){return this.data},e}(R),E={processors:{},addPostProcessor:function(t){this.processors[t.name]=t},handle:function(t,e,n,o,r){var i=this;return t.forEach(function(t){i.processors[t]&&(e=i.processors[t].process(e,n,o,r))}),e}},_=function(t){function n(o){var r=arguments.length<=1||void 0===arguments[1]?{}:arguments[1];x(this,n);var i=w(this,t.call(this));return e(["resourceStore","languageUtils","pluralResolver","interpolator","backendConnector"],o,i),i.options=r,i.logger=j.create("translator"),i}return S(n,t),n.prototype.changeLanguage=function(t){t&&(this.language=t)},n.prototype.exists=function(t){var e=arguments.length<=1||void 0===arguments[1]?{interpolation:{}}:arguments[1];return"v1"===this.options.compatibilityAPI&&(e=f(e)),void 0!==this.resolve(t,e)},n.prototype.extractFromKey=function(t,e){var n=e.nsSeparator||this.options.nsSeparator;void 0===n&&(n=":");var o=e.ns||this.options.defaultNS;if(n&&t.indexOf(n)>-1){var r=t.split(n);o=r[0],t=r[1]}return"string"==typeof o&&(o=[o]),{key:t,namespaces:o}},n.prototype.translate=function(t){var e=arguments.length<=1||void 0===arguments[1]?{}:arguments[1];if("object"!==("undefined"==typeof e?"undefined":m(e))?e=this.options.overloadTranslationOptionHandler(arguments):"v1"===this.options.compatibilityAPI&&(e=f(e)),void 0===t||null===t||""===t)return"";"number"==typeof t&&(t=String(t)),"string"==typeof t&&(t=[t]);var n=e.lng||this.language;if(n&&"cimode"===n.toLowerCase())return t[t.length-1];var o=e.keySeparator||this.options.keySeparator||".",r=this.extractFromKey(t[t.length-1],e),i=r.key,s=r.namespaces,a=s[s.length-1],u=this.resolve(t,e),l=Object.prototype.toString.apply(u),c=["[object Number]","[object Function]","[object RegExp]"],p=void 0!==e.joinArrays?e.joinArrays:this.options.joinArrays;if(u&&"string"!=typeof u&&c.indexOf(l)<0&&(!p||"[object Array]"!==l)){if(!e.returnObjects&&!this.options.returnObjects)return this.logger.warn("accessing an object - but returnObjects options is not enabled!"),this.options.returnedObjectHandler?this.options.returnedObjectHandler(i,u,e):"key '"+i+" ("+this.language+")' returned an object instead of string.";var g="[object Array]"===l?[]:{};for(var h in u)g[h]=this.translate(""+i+o+h,k({joinArrays:!1,ns:s},e));u=g}else if(p&&"[object Array]"===l)u=u.join(p),u&&(u=this.extendTranslation(u,i,e));else{var d=!1,v=!1;if(this.isValidLookup(u)||void 0===e.defaultValue||(d=!0,u=e.defaultValue),this.isValidLookup(u)||(v=!0,u=i),v||d){this.logger.log("missingKey",n,a,i,u);var y=[];if("fallback"===this.options.saveMissingTo&&this.options.fallbackLng&&this.options.fallbackLng[0])for(var b=0;b<this.options.fallbackLng.length;b++)y.push(this.options.fallbackLng[b]);else"all"===this.options.saveMissingTo?y=this.languageUtils.toResolveHierarchy(e.lng||this.language):y.push(e.lng||this.language);this.options.saveMissing&&(this.options.missingKeyHandler?this.options.missingKeyHandler(y,a,i,u):this.backendConnector&&this.backendConnector.saveMissing&&this.backendConnector.saveMissing(y,a,i,u)),this.emit("missingKey",y,a,i,u)}u=this.extendTranslation(u,i,e),v&&u===i&&this.options.appendNamespaceToMissingKey&&(u=a+":"+i),v&&this.options.parseMissingKeyHandler&&(u=this.options.parseMissingKeyHandler(u))}return u},n.prototype.extendTranslation=function(t,e,n){var o=this;n.interpolation&&this.interpolator.init(n);var r=n.replace&&"string"!=typeof n.replace?n.replace:n;this.options.interpolation.defaultVariables&&(r=k({},this.options.interpolation.defaultVariables,r)),t=this.interpolator.interpolate(t,r,this.language),t=this.interpolator.nest(t,function(){for(var t=arguments.length,e=Array(t),n=0;n<t;n++)e[n]=arguments[n];return o.translate.apply(o,e)},n),n.interpolation&&this.interpolator.reset();var i=n.postProcess||this.options.postProcess,s="string"==typeof i?[i]:i;return void 0!==t&&s&&s.length&&n.applyPostProcessor!==!1&&(t=E.handle(s,t,e,n,this)),t},n.prototype.resolve=function(t){var e=this,n=arguments.length<=1||void 0===arguments[1]?{}:arguments[1],o=void 0;return"string"==typeof t&&(t=[t]),t.forEach(function(t){if(!e.isValidLookup(o)){var r=e.extractFromKey(t,n),i=r.key,s=r.namespaces;e.options.fallbackNS&&(s=s.concat(e.options.fallbackNS));var a=void 0!==n.count&&"string"!=typeof n.count,u=void 0!==n.context&&"string"==typeof n.context&&""!==n.context,l=n.lngs?n.lngs:e.languageUtils.toResolveHierarchy(n.lng||e.language);s.forEach(function(t){e.isValidLookup(o)||l.forEach(function(r){if(!e.isValidLookup(o)){var s=i,l=[s],c=void 0;a&&(c=e.pluralResolver.getSuffix(r,n.count)),a&&u&&l.push(s+c),u&&l.push(s+=""+e.options.contextSeparator+n.context),a&&l.push(s+=c);for(var p=void 0;p=l.pop();)e.isValidLookup(o)||(o=e.getResource(r,t,p,n))}})})}}),o},n.prototype.isValidLookup=function(t){return!(void 0===t||!this.options.returnNull&&null===t||!this.options.returnEmptyString&&""===t)},n.prototype.getResource=function(t,e,n){var o=arguments.length<=3||void 0===arguments[3]?{}:arguments[3];return this.resourceStore.getResource(t,e,n,o)},n}(R),M=function(){function t(e){x(this,t),this.options=e,this.whitelist=this.options.whitelist||!1,this.logger=j.create("languageUtils")}return t.prototype.getLanguagePartFromCode=function(t){if(t.indexOf("-")<0)return t;var e=["NB-NO","NN-NO","nb-NO","nn-NO","nb-no","nn-no"],n=t.split("-");return this.formatLanguageCode(e.indexOf(t)>-1?n[1].toLowerCase():n[0])},t.prototype.formatLanguageCode=function(t){if("string"==typeof t&&t.indexOf("-")>-1){var e=["hans","hant","latn","cyrl","cans","mong","arab"],n=t.split("-");return this.options.lowerCaseLng?n=n.map(function(t){return t.toLowerCase()}):2===n.length?(n[0]=n[0].toLowerCase(),n[1]=n[1].toUpperCase(),e.indexOf(n[1].toLowerCase())>-1&&(n[1]=h(n[1].toLowerCase()))):3===n.length&&(n[0]=n[0].toLowerCase(),2===n[1].length&&(n[1]=n[1].toUpperCase()),"sgn"!==n[0]&&2===n[2].length&&(n[2]=n[2].toUpperCase()),e.indexOf(n[1].toLowerCase())>-1&&(n[1]=h(n[1].toLowerCase())),e.indexOf(n[2].toLowerCase())>-1&&(n[2]=h(n[2].toLowerCase()))),n.join("-")}return this.options.cleanCode||this.options.lowerCaseLng?t.toLowerCase():t},t.prototype.isWhitelisted=function(t,e){return("languageOnly"===this.options.load||this.options.nonExplicitWhitelist&&!e)&&(t=this.getLanguagePartFromCode(t)),!this.whitelist||!this.whitelist.length||this.whitelist.indexOf(t)>-1},t.prototype.toResolveHierarchy=function(t,e){var n=this;e=e||this.options.fallbackLng||[],"string"==typeof e&&(e=[e]);var o=[],r=function(t){var e=!(arguments.length<=1||void 0===arguments[1])&&arguments[1];n.isWhitelisted(t,e)?o.push(t):n.logger.warn("rejecting non-whitelisted language code: "+t)};return"string"==typeof t&&t.indexOf("-")>-1?("languageOnly"!==this.options.load&&r(this.formatLanguageCode(t),!0),"currentOnly"!==this.options.load&&r(this.getLanguagePartFromCode(t))):"string"==typeof t&&r(this.formatLanguageCode(t)),e.forEach(function(t){o.indexOf(t)<0&&r(n.formatLanguageCode(t))}),o},t}(),T=[{lngs:["ach","ak","am","arn","br","fil","gun","ln","mfe","mg","mi","oc","tg","ti","tr","uz","wa"],nr:[1,2],fc:1},{lngs:["af","an","ast","az","bg","bn","ca","da","de","dev","el","en","eo","es","es_ar","et","eu","fi","fo","fur","fy","gl","gu","ha","he","hi","hu","hy","ia","it","kn","ku","lb","mai","ml","mn","mr","nah","nap","nb","ne","nl","nn","no","nso","pa","pap","pms","ps","pt","pt_br","rm","sco","se","si","so","son","sq","sv","sw","ta","te","tk","ur","yo"],nr:[1,2],fc:2},{lngs:["ay","bo","cgg","fa","id","ja","jbo","ka","kk","km","ko","ky","lo","ms","sah","su","th","tt","ug","vi","wo","zh"],nr:[1],fc:3},{lngs:["be","bs","dz","hr","ru","sr","uk"],nr:[1,2,5],fc:4},{lngs:["ar"],nr:[0,1,2,3,11,100],fc:5},{lngs:["cs","sk"],nr:[1,2,5],fc:6},{lngs:["csb","pl"],nr:[1,2,5],fc:7},{lngs:["cy"],nr:[1,2,3,8],fc:8},{lngs:["fr"],nr:[1,2],fc:9},{lngs:["ga"],nr:[1,2,3,7,11],fc:10},{lngs:["gd"],nr:[1,2,3,20],fc:11},{lngs:["is"],nr:[1,2],fc:12},{lngs:["jv"],nr:[0,1],fc:13},{lngs:["kw"],nr:[1,2,3,4],fc:14},{lngs:["lt"],nr:[1,2,10],fc:15},{lngs:["lv"],nr:[1,2,0],fc:16},{lngs:["mk"],nr:[1,2],fc:17},{lngs:["mnk"],nr:[0,1,2],fc:18},{lngs:["mt"],nr:[1,2,11,20],fc:19},{lngs:["or"],nr:[2,1],fc:2},{lngs:["ro"],nr:[1,2,20],fc:20},{lngs:["sl"],nr:[5,1,2,3],fc:21}],A={1:function(t){return Number(t>1)},2:function(t){return Number(1!=t)},3:function(t){return 0},4:function(t){return Number(t%10==1&&t%100!=11?0:t%10>=2&&t%10<=4&&(t%100<10||t%100>=20)?1:2)},5:function(t){return Number(0===t?0:1==t?1:2==t?2:t%100>=3&&t%100<=10?3:t%100>=11?4:5)},6:function(t){return Number(1==t?0:t>=2&&t<=4?1:2)},7:function(t){return Number(1==t?0:t%10>=2&&t%10<=4&&(t%100<10||t%100>=20)?1:2)},8:function(t){return Number(1==t?0:2==t?1:8!=t&&11!=t?2:3)},9:function(t){return Number(t>=2)},10:function(t){return Number(1==t?0:2==t?1:t<7?2:t<11?3:4)},11:function(t){return Number(1==t||11==t?0:2==t||12==t?1:t>2&&t<20?2:3)},12:function(t){return Number(t%10!=1||t%100==11)},13:function(t){return Number(0!==t)},14:function(t){return Number(1==t?0:2==t?1:3==t?2:3)},15:function(t){return Number(t%10==1&&t%100!=11?0:t%10>=2&&(t%100<10||t%100>=20)?1:2)},16:function(t){return Number(t%10==1&&t%100!=11?0:0!==t?1:2)},17:function(t){return Number(1==t||t%10==1?0:1)},18:function(t){return Number(0==t?0:1==t?1:2)},19:function(t){return Number(1==t?0:0===t||t%100>1&&t%100<11?1:t%100>10&&t%100<20?2:3)},20:function(t){return Number(1==t?0:0===t||t%100>0&&t%100<20?1:2)},21:function(t){return Number(t%100==1?1:t%100==2?2:t%100==3||t%100==4?3:0)}},H=function(){function t(e){var n=arguments.length<=1||void 0===arguments[1]?{}:arguments[1];x(this,t),this.languageUtils=e,this.options=n,this.logger=j.create("pluralResolver"),this.rules=d()}return t.prototype.addRule=function(t,e){this.rules[t]=e},t.prototype.getRule=function(t){return this.rules[this.languageUtils.getLanguagePartFromCode(t)]},t.prototype.needsPlural=function(t){var e=this.getRule(t);return!(e&&e.numbers.length<=1)},t.prototype.getSuffix=function(t,e){var n=this,o=this.getRule(t);if(!o)return this.logger.warn("no plural rule found for: "+t),"";var r=function(){if(1===o.numbers.length)return{v:""};var t=o.noAbs?o.plurals(e):o.plurals(Math.abs(e)),r=o.numbers[t];2===o.numbers.length&&1===o.numbers[0]&&(2===r?r="plural":1===r&&(r=""));var i=function(){return n.options.prepend&&r.toString()?n.options.prepend+r.toString():r.toString()};return"v1"===n.options.compatibilityJSON?1===r?{v:""}:"number"==typeof r?{v:"_plural_"+r.toString()}:{v:i()}:"v2"===n.options.compatibilityJSON||2===o.numbers.length&&1===o.numbers[0]?{v:i()}:2===o.numbers.length&&1===o.numbers[0]?{v:i()}:{v:n.options.prepend&&t.toString()?n.options.prepend+t.toString():t.toString()}}();return"object"===("undefined"==typeof r?"undefined":m(r))?r.v:void 0},t}(),V=function(){function e(){var t=arguments.length<=0||void 0===arguments[0]?{}:arguments[0];x(this,e),this.logger=j.create("interpolator"),this.init(t,!0)}return e.prototype.init=function(){var t=arguments.length<=0||void 0===arguments[0]?{}:arguments[0],e=arguments[1];e&&(this.options=t,this.format=t.interpolation&&t.interpolation.format||function(t){return t}),t.interpolation||(t.interpolation={escapeValue:!0});var n=t.interpolation;this.escapeValue=n.escapeValue,this.prefix=n.prefix?a(n.prefix):n.prefixEscaped||"{{",this.suffix=n.suffix?a(n.suffix):n.suffixEscaped||"}}",this.formatSeparator=n.formatSeparator?a(n.formatSeparator):n.formatSeparator||",",this.unescapePrefix=n.unescapeSuffix?"":n.unescapePrefix||"-",this.unescapeSuffix=this.unescapePrefix?"":n.unescapeSuffix||"",this.nestingPrefix=n.nestingPrefix?a(n.nestingPrefix):n.nestingPrefixEscaped||a("$t("),this.nestingSuffix=n.nestingSuffix?a(n.nestingSuffix):n.nestingSuffixEscaped||a(")"),this.resetRegExp()},e.prototype.reset=function(){this.options&&this.init(this.options)},e.prototype.resetRegExp=function(){var t=this.prefix+"(.+?)"+this.suffix;this.regexp=new RegExp(t,"g");var e=this.prefix+this.unescapePrefix+"(.+?)"+this.unescapeSuffix+this.suffix;this.regexpUnescape=new RegExp(e,"g");var n=this.nestingPrefix+"(.+?)"+this.nestingSuffix;this.nestingRegexp=new RegExp(n,"g")},e.prototype.interpolate=function(e,n,o){function r(t){return t.replace(/\$/g,"$$$$")}var s=this,a=void 0,l=void 0,c=function(t){if(t.indexOf(s.formatSeparator)<0)return i(n,t);var e=t.split(s.formatSeparator),r=e.shift().trim(),a=e.join(s.formatSeparator).trim();return s.format(i(n,r),a,o)};for(this.resetRegExp();a=this.regexpUnescape.exec(e);){var p=c(a[1].trim());e=e.replace(a[0],p),this.regexpUnescape.lastIndex=0}for(;a=this.regexp.exec(e);)l=c(a[1].trim()),"string"!=typeof l&&(l=t(l)),l||(this.logger.warn("missed to pass in variable "+a[1]+" for interpolating "+e),l=""),l=r(this.escapeValue?u(l):l),e=e.replace(a[0],l),this.regexp.lastIndex=0;return e},e.prototype.nest=function(e,n){function o(t){return t.replace(/\$/g,"$$$$")}function r(t){if(t.indexOf(",")<0)return t;var e=t.split(",");t=e.shift();var n=e.join(",");n=this.interpolate(n,l);try{l=JSON.parse(n)}catch(e){this.logger.error("failed parsing options string in nesting for key "+t,e)}return t}var i=arguments.length<=2||void 0===arguments[2]?{}:arguments[2],s=void 0,a=void 0,l=JSON.parse(JSON.stringify(i));for(l.applyPostProcessor=!1;s=this.nestingRegexp.exec(e);)a=n(r.call(this,s[1].trim()),l),"string"!=typeof a&&(a=t(a)),a||(this.logger.warn("missed to pass in variable "+s[1]+" for interpolating "+e),a=""),a=o(this.escapeValue?u(a):a),e=e.replace(s[0],a),this.regexp.lastIndex=0;return e},e}(),U=function(t){function e(n,o,r){var i=arguments.length<=3||void 0===arguments[3]?{}:arguments[3];x(this,e);var s=w(this,t.call(this));return s.backend=n,s.store=o,s.services=r,s.options=i,s.logger=j.create("backendConnector"),s.state={},s.queue=[],s.backend&&s.backend.init&&s.backend.init(r,i.backend,i),s}return S(e,t),e.prototype.queueLoad=function(t,e,n){var o=this,r=[],i=[],s=[],a=[];return t.forEach(function(t){var n=!0;e.forEach(function(e){var s=t+"|"+e;o.store.hasResourceBundle(t,e)?o.state[s]=2:o.state[s]<0||(1===o.state[s]?i.indexOf(s)<0&&i.push(s):(o.state[s]=1,n=!1,i.indexOf(s)<0&&i.push(s),r.indexOf(s)<0&&r.push(s),a.indexOf(e)<0&&a.push(e)))}),n||s.push(t)}),(r.length||i.length)&&this.queue.push({pending:i,loaded:{},errors:[],callback:n}),{toLoad:r,pending:i,toLoadLanguages:s,toLoadNamespaces:a}},e.prototype.loaded=function(t,e,n){var o=this,i=t.split("|"),s=L(i,2),a=s[0],u=s[1];e&&this.emit("failedLoading",a,u,e),n&&this.store.addResourceBundle(a,u,n),this.state[t]=e?-1:2,this.queue.forEach(function(n){r(n.loaded,[a],u),v(n.pending,t),e&&n.errors.push(e),0!==n.pending.length||n.done||(n.errors.length?n.callback(n.errors):n.callback(),o.emit("loaded",n.loaded),n.done=!0)}),this.queue=this.queue.filter(function(t){return!t.done})},e.prototype.read=function(t,e,n,o,r,i){var s=this;return o||(o=0),r||(r=250),t.length?void this.backend[n](t,e,function(a,u){return a&&u&&o<5?void setTimeout(function(){s.read.call(s,t,e,n,++o,2*r,i)},r):void i(a,u)}):i(null,{})},e.prototype.load=function(t,e,n){var o=this;if(!this.backend)return this.logger.warn("No backend was added via i18next.use. Will not load resources."),n&&n();var r=k({},this.backend.options,this.options.backend);"string"==typeof t&&(t=this.services.languageUtils.toResolveHierarchy(t)),"string"==typeof e&&(e=[e]);var s=this.queueLoad(t,e,n);return s.toLoad.length?void(r.allowMultiLoading&&this.backend.readMulti?this.read(s.toLoadLanguages,s.toLoadNamespaces,"readMulti",null,null,function(t,e){t&&o.logger.warn("loading namespaces "+s.toLoadNamespaces.join(", ")+" for languages "+s.toLoadLanguages.join(", ")+" via multiloading failed",t),!t&&e&&o.logger.log("loaded namespaces "+s.toLoadNamespaces.join(", ")+" for languages "+s.toLoadLanguages.join(", ")+" via multiloading",e),s.toLoad.forEach(function(n){var r=n.split("|"),s=L(r,2),a=s[0],u=s[1],l=i(e,[a,u]);if(l)o.loaded(n,t,l);else{var c="loading namespace "+u+" for language "+a+" via multiloading failed";o.loaded(n,c),o.logger.error(c)}})}):!function(){var t=function(t){var e=this,n=t.split("|"),o=L(n,2),r=o[0],i=o[1];this.read(r,i,"read",null,null,function(n,o){n&&e.logger.warn("loading namespace "+i+" for language "+r+" failed",n),!n&&o&&e.logger.log("loaded namespace "+i+" for language "+r,o),e.loaded(t,n,o)})};s.toLoad.forEach(function(e){t.call(o,e)})}()):void(s.pending.length||n())},e.prototype.reload=function(t,e){var n=this;this.backend||this.logger.warn("No backend was added via i18next.use. Will not load resources.");var o=k({},this.backend.options,this.options.backend);"string"==typeof t&&(t=this.services.languageUtils.toResolveHierarchy(t)),"string"==typeof e&&(e=[e]),o.allowMultiLoading&&this.backend.readMulti?this.read(t,e,"readMulti",null,null,function(o,r){o&&n.logger.warn("reloading namespaces "+e.join(", ")+" for languages "+t.join(", ")+" via multiloading failed",o),!o&&r&&n.logger.log("reloaded namespaces "+e.join(", ")+" for languages "+t.join(", ")+" via multiloading",r),t.forEach(function(t){e.forEach(function(e){var s=i(r,[t,e]);if(s)n.loaded(t+"|"+e,o,s);else{var a="reloading namespace "+e+" for language "+t+" via multiloading failed";n.loaded(t+"|"+e,a),n.logger.error(a)}})})}):!function(){var o=function(t){var e=this,n=t.split("|"),o=L(n,2),r=o[0],i=o[1];this.read(r,i,"read",null,null,function(n,o){n&&e.logger.warn("reloading namespace "+i+" for language "+r+" failed",n),!n&&o&&e.logger.log("reloaded namespace "+i+" for language "+r,o),e.loaded(t,n,o)})};t.forEach(function(t){e.forEach(function(e){o.call(n,t+"|"+e)})})}()},e.prototype.saveMissing=function(t,e,n,o){this.backend&&this.backend.create&&this.backend.create(t,e,n,o),t&&t[0]&&this.store.addResource(t[0],e,n,o)},e}(R),I=function(t){function e(n,o,r){var i=arguments.length<=3||void 0===arguments[3]?{}:arguments[3];x(this,e);var s=w(this,t.call(this));return s.cache=n,s.store=o,s.services=r,s.options=i,s.logger=j.create("cacheConnector"),s.cache&&s.cache.init&&s.cache.init(r,i.cache,i),s}return S(e,t),e.prototype.load=function(t,e,n){var o=this;if(!this.cache)return n&&n();var r=k({},this.cache.options,this.options.cache);"string"==typeof t&&(t=this.services.languageUtils.toResolveHierarchy(t)),"string"==typeof e&&(e=[e]),r.enabled?this.cache.load(t,function(e,r){if(e&&o.logger.error("loading languages "+t.join(", ")+" from cache failed",e),r)for(var i in r)for(var s in r[i])if("i18nStamp"!==s){var a=r[i][s];a&&o.store.addResourceBundle(i,s,a)}n&&n()}):n&&n()},e.prototype.save=function(){this.cache&&this.options.cache&&this.options.cache.enabled&&this.cache.save(this.store.data)},e}(R),K=function(t){function e(){var n=arguments.length<=0||void 0===arguments[0]?{}:arguments[0],o=arguments[1];x(this,e);var r=w(this,t.call(this));return r.options=b(n),r.services={},r.logger=j,r.modules={},o&&!r.isInitialized&&r.init(n,o),r}return S(e,t),e.prototype.init=function(t,e){function n(t){if(t)return"function"==typeof t?new t:t}var o=this;if("function"==typeof t&&(e=t,t={}),t||(t={}),"v1"===t.compatibilityAPI?this.options=k({},y(),b(c(t)),{}):"v1"===t.compatibilityJSON?this.options=k({},y(),b(p(t)),{}):this.options=k({},y(),this.options,b(t)),e||(e=function(){}),!this.options.isClone){this.modules.logger?j.init(n(this.modules.logger),this.options):j.init(null,this.options);var r=new M(this.options);this.store=new C(this.options.resources,this.options);var i=this.services;i.logger=j,i.resourceStore=this.store,i.resourceStore.on("added removed",function(t,e){i.cacheConnector.save()}),i.languageUtils=r,i.pluralResolver=new H(r,{prepend:this.options.pluralSeparator,compatibilityJSON:this.options.compatibilityJSON}),i.interpolator=new V(this.options),i.backendConnector=new U(n(this.modules.backend),i.resourceStore,i,this.options),i.backendConnector.on("*",function(t){for(var e=arguments.length,n=Array(e>1?e-1:0),r=1;r<e;r++)n[r-1]=arguments[r];o.emit.apply(o,[t].concat(n))}),i.backendConnector.on("loaded",function(t){i.cacheConnector.save()}),i.cacheConnector=new I(n(this.modules.cache),i.resourceStore,i,this.options),i.cacheConnector.on("*",function(t){for(var e=arguments.length,n=Array(e>1?e-1:0),r=1;r<e;r++)n[r-1]=arguments[r];o.emit.apply(o,[t].concat(n))}),this.modules.languageDetector&&(i.languageDetector=n(this.modules.languageDetector),i.languageDetector.init(i,this.options.detection,this.options)),this.translator=new _(this.services,this.options),this.translator.on("*",function(t){for(var e=arguments.length,n=Array(e>1?e-1:0),r=1;r<e;r++)n[r-1]=arguments[r];o.emit.apply(o,[t].concat(n))})}var s=["getResource","addResource","addResources","addResourceBundle","removeResourceBundle","hasResourceBundle","getResourceBundle"];s.forEach(function(t){o[t]=function(){return this.store[t].apply(this.store,arguments)}}),"v1"===this.options.compatibilityAPI&&g(this);var a=function(){o.changeLanguage(o.options.lng,function(t,n){o.emit("initialized",o.options),o.logger.log("initialized",o.options),e(t,n)})};return this.options.resources||!this.options.initImmediate?a():setTimeout(a,0),this},e.prototype.loadResources=function(t){var e=this;if(t||(t=function(){}),this.options.resources)t(null);else{var n=function(){if(e.language&&"cimode"===e.language.toLowerCase())return{v:t()};var n=[],o=function(t){var o=e.services.languageUtils.toResolveHierarchy(t);o.forEach(function(t){n.indexOf(t)<0&&n.push(t)})};o(e.language),e.options.preload&&e.options.preload.forEach(function(t){o(t)}),e.services.cacheConnector.load(n,e.options.ns,function(){e.services.backendConnector.load(n,e.options.ns,t)})}();if("object"===("undefined"==typeof n?"undefined":m(n)))return n.v}},e.prototype.reloadResources=function(t,e){t||(t=this.languages),e||(e=this.options.ns),this.services.backendConnector.reload(t,e);
 },e.prototype.use=function(t){return"backend"===t.type&&(this.modules.backend=t),"cache"===t.type&&(this.modules.cache=t),("logger"===t.type||t.log&&t.warn&&t.warn)&&(this.modules.logger=t),"languageDetector"===t.type&&(this.modules.languageDetector=t),"postProcessor"===t.type&&E.addPostProcessor(t),this},e.prototype.changeLanguage=function(t,e){var n=this,o=function(o){t&&(n.emit("languageChanged",t),n.logger.log("languageChanged",t)),e&&e(o,function(){for(var t=arguments.length,e=Array(t),o=0;o<t;o++)e[o]=arguments[o];return n.t.apply(n,e)})};!t&&this.services.languageDetector&&(t=this.services.languageDetector.detect()),t&&(this.language=t,this.languages=this.services.languageUtils.toResolveHierarchy(t),this.translator.changeLanguage(t),this.services.languageDetector&&this.services.languageDetector.cacheUserLanguage(t)),this.loadResources(function(t){o(t)})},e.prototype.getFixedT=function(t,e){var n=this,o=function t(e,o){return o=o||{},o.lng=o.lng||t.lng,o.ns=o.ns||t.ns,n.t(e,o)};return o.lng=t,o.ns=e,o},e.prototype.t=function(){return this.translator&&this.translator.translate.apply(this.translator,arguments)},e.prototype.exists=function(){return this.translator&&this.translator.exists.apply(this.translator,arguments)},e.prototype.setDefaultNamespace=function(t){this.options.defaultNS=t},e.prototype.loadNamespaces=function(t,e){var n=this;return this.options.ns?("string"==typeof t&&(t=[t]),t.forEach(function(t){n.options.ns.indexOf(t)<0&&n.options.ns.push(t)}),void this.loadResources(e)):e&&e()},e.prototype.loadLanguages=function(t,e){"string"==typeof t&&(t=[t]);var n=this.options.preload||[],o=t.filter(function(t){return n.indexOf(t)<0});return o.length?(this.options.preload=n.concat(o),void this.loadResources(e)):e()},e.prototype.dir=function(t){if(t||(t=this.language),!t)return"rtl";var e=["ar","shu","sqr","ssh","xaa","yhd","yud","aao","abh","abv","acm","acq","acw","acx","acy","adf","ads","aeb","aec","afb","ajp","apc","apd","arb","arq","ars","ary","arz","auz","avl","ayh","ayl","ayn","ayp","bbz","pga","he","iw","ps","pbt","pbu","pst","prp","prd","ur","ydd","yds","yih","ji","yi","hbo","men","xmn","fa","jpr","peo","pes","prs","dv","sam"];return e.indexOf(this.services.languageUtils.getLanguagePartFromCode(t))>=0?"rtl":"ltr"},e.prototype.createInstance=function(){var t=arguments.length<=0||void 0===arguments[0]?{}:arguments[0],n=arguments[1];return new e(t,n)},e.prototype.cloneInstance=function(){var t=this,n=arguments.length<=0||void 0===arguments[0]?{}:arguments[0],o=arguments[1],r=new e(k({},n,this.options,{isClone:!0}),o),i=["store","translator","services","language"];return i.forEach(function(e){r[e]=t[e]}),r},e}(R),D=new K;return D});
     window['i18next'] = module.exports;
+});
+
+/** @file Stuff to do with loading from JSON objects. Provides {@link Numbas.json}. */
+
+Numbas.queueScript('json',['base'],function() {
+/** @namespace Numbas.json */
+var json = Numbas.json = {
+    /** Try to load an attribute with name from `attr` from `source` into `target`.
+     *  Tries lower-case 
+     *  @param {Object} source - object to load value(s) from
+     *  @param {String|Array.<String>} attrs - the name, or list of names, of attributes to load
+     *  @param {Object} target - object to set values in
+     *  @param {String|Array.<String>} altnames - the name, or list of names, to set in the target object
+     */
+    tryLoad: function(source,attrs,target,altnames) {
+        if(!source) {
+            return;
+        }
+        if(typeof(attrs)=='string') {
+            attrs = [attrs];
+            altnames = altnames && [altnames];
+        }
+
+        altnames = altnames || [];
+
+        for(var i=0;i<attrs.length;i++) {
+            var attr = attrs[i];
+            var target_attr = altnames[i] || attr;
+            var value = json.tryGet(source, attr);
+            if(value!==undefined) {
+                if(target_attr in target && typeof target[target_attr] == 'string') {
+                    value += '';
+                }
+                target[target_attr] = value;
+            }
+        }
+    },
+
+    /** Try to load an attribute with the given name from `source`. The given name and its lower-case equivalent are tried.
+     * @param {Object} source
+     * @param {String} attr
+     */
+    tryGet: function(source, attr) {
+        if(attr in source) {
+            return source[attr];
+        } else if(attr.toLowerCase() in source) {
+            return source[attr.toLowerCase()]
+        }
+    }
+}
+});
+
+/*
+Copyright 2011-15 Newcastle University
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+/** @file The {@link Numbas.parts.} object */
+
+Numbas.queueScript('parts/extension',['base','util','part'],function() {
+
+var util = Numbas.util;
+
+var Part = Numbas.parts.Part;
+
+/** Extension part - validation and marking should be filled in by an extension, or custom javascript code belonging to the question.
+ * @constructor
+ * @memberof Numbas.parts
+ * @augments Numbas.parts.Part
+ */
+var ExtensionPart = Numbas.parts.ExtensionPart = function(path, question, parentPart)
+{
+}
+ExtensionPart.prototype = /** @lends Numbas.parts.ExtensionPart.prototype */ {
+    loadFromXML: function() {},
+
+    loadFromJSON: function() {},
+
+    finaliseLoad: function() {
+        if(Numbas.display) {
+        	this.display = new Numbas.display.ExtensionPartDisplay(this);
+        }
+    },
+
+	validate: function() {
+        return false;
+	},
+
+	hasStagedAnswer: function() {
+		return true;
+	},
+
+	doesMarking: true,
+
+    mark: function() {
+        this.markingComment(R('part.extension.not implemented',{name:'mark'}));
+    },
+
+    /** Return suspend data for this part so it can be restored when resuming the exam - must be implemented by an extension or the question.
+     * @ returns {object}
+     */
+    createSuspendData: function() {
+        return {};
+    },
+
+    /** Get the suspend data created in a previous session for this part, if it exists.
+     * @ param {object} data
+     */
+    loadSuspendData: function(data) {
+        if(!this.store) {
+            return;
+        }
+        var pobj = this.store.loadExtensionPart(this);
+        if(pobj) {
+            return pobj.extension_data;
+        }
+    }
+};
+['finaliseLoad'].forEach(function(method) {
+    ExtensionPart.prototype[method] = util.extend(Part.prototype[method],ExtensionPart.prototype[method]);
+});
+
+Numbas.partConstructors['extension'] = util.extend(Part,ExtensionPart);
+});
+
+/*
+Copyright 2011-15 Newcastle University
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+/** @file The {@link Numbas.parts.GapFillPart} object */
+
+Numbas.queueScript('parts/gapfill',['base','jme','jme-variables','util','part','marking_scripts'],function() {
+
+var util = Numbas.util;
+var jme = Numbas.jme;
+var math = Numbas.math;
+
+var Part = Numbas.parts.Part;
+
+/** Gap-fill part: text with multiple input areas, each of which is its own sub-part, known as a 'gap'.
+ * @constructor
+ * @memberof Numbas.parts
+ * @augments Numbas.parts.Part
+ */
+var GapFillPart = Numbas.parts.GapFillPart = function(path, question, parentPart)
+{
+}	
+GapFillPart.prototype = /** @lends Numbas.parts.GapFillPart.prototype */
+{
+
+    loadFromXML: function(xml) {
+        var gapXML = xml.selectNodes('gaps/part');
+
+        this.marks = 0;
+
+        for( var i=0 ; i<gapXML.length; i++ ) {
+            var gap = Numbas.createPartFromXML(gapXML[i], this.path+'g'+i, this.question, this);
+            this.addGap(gap,i);
+        }
+    },
+
+    loadFromJSON: function(data) {
+        var p = this;
+        if('gaps' in data) {
+            data.gaps.forEach(function(gd,i) {
+                var gap = Numbas.createPartFromJSON(gd, p.path+'g'+i, p.question, p);
+                p.addGap(gap, i)
+            });
+        }
+    },
+
+    finaliseLoad: function() {
+        if(Numbas.display) {
+            this.display = new Numbas.display.GapFillPartDisplay(this);
+        }
+    },
+
+    /** Add a gap to this part
+     * @param {Numbas.parts.Part} gap
+     * @param {Number} index - the position of the gap
+     */
+    addGap: function(gap, index) {
+        gap.isGap = true;
+        this.marks += gap.marks;
+        this.gaps.splice(index,0,gap);
+    },
+
+    resume: function() {
+        var p = this;
+        this.gaps.forEach(function(g){ 
+            g.resume(); 
+            p.answered = p.answered || gap.answered;
+        });
+    },
+
+	/** Included so the "no answer entered" error isn't triggered for the whole gap-fill part.
+	 */
+	stagedAnswer: 'something',
+
+    /** The script to mark this part - assign credit, and give messages and feedback.
+     * @type {Numbas.marking.MarkingScript}
+     */
+    markingScript: Numbas.marking_scripts.gapfill,
+
+	/** Reveal the answers to all of the child gaps 
+	 * Extends {@link Numbas.parts.Part.revealAnswer}
+	 */
+	revealAnswer: function(dontStore)
+	{
+		for(var i=0; i<this.gaps.length; i++)
+			this.gaps[i].revealAnswer(dontStore);
+	},
+
+	/** Get the student's answer as it was entered as a JME data type, to be used in the custom marking algorithm
+	 * @abstract
+	 * @returns {Numbas.jme.token}
+	 */
+	rawStudentAnswerAsJME: function() {
+		return new Numbas.jme.types.TList(this.gaps.map(function(g){return g.rawStudentAnswerAsJME()}));
+	},
+
+    setStudentAnswer: function() {
+        this.studentAnswer = this.gaps.map(function(g) {
+            if(g.stagedAnswer) {
+                g.answerList = util.copyarray(g.stagedAnswer);
+            }
+            g.setStudentAnswer();
+            return g.studentAnswer;
+        });
+    },
+
+	/** Get the student's answer as a JME data type, to be used in error-carried-forward calculations
+	 * @abstract
+	 * @returns {Numbas.jme.token}
+	 */
+	studentAnswerAsJME: function() {
+		return new Numbas.jme.types.TList(this.gaps.map(function(g){return g.studentAnswerAsJME()}));
+	},
+
+	/** Mark this part - add up the scores from each of the child gaps.
+	 */
+	mark_old: function()
+	{
+		this.credit=0;
+		if(this.marks>0)
+		{
+			for(var i=0; i<this.gaps.length; i++)
+			{
+				var gap = this.gaps[i];
+    			gap.submit();
+				this.credit += gap.credit*gap.marks;
+				if(this.gaps.length>1)
+					this.markingComment(R('part.gapfill.feedback header',{index:i+1}));
+				for(var j=0;j<gap.markingFeedback.length;j++)
+				{
+					var action = util.copyobj(gap.markingFeedback[j]);
+					action.gap = i;
+					this.markingFeedback.push(action);
+				}
+			}
+			this.credit/=this.marks;
+		}
+
+		//go through all gaps, and if any one fails to validate then
+		//whole part fails to validate
+		var success = true;
+		for(var i=0; i<this.gaps.length; i++) {
+			success = success && this.gaps[i].answered;
+        }
+
+        this.answered = success;
+	}
+
+};
+['loadFromXML','resume','finaliseLoad'].forEach(function(method) {
+    GapFillPart.prototype[method] = util.extend(Part.prototype[method], GapFillPart.prototype[method]);
+});
+['revealAnswer'].forEach(function(method) {
+    GapFillPart.prototype[method] = util.extend(GapFillPart.prototype[method], Part.prototype[method]);
+});
+
+Numbas.partConstructors['gapfill'] = util.extend(Part,GapFillPart);
+});
+
+/*
+Copyright 2011-15 Newcastle University
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+/** @file The {@link Numbas.parts.} object */
+
+Numbas.queueScript('parts/information',['base','jme','jme-variables','util','part'],function() {
+
+var util = Numbas.util;
+var jme = Numbas.jme;
+var math = Numbas.math;
+
+var Part = Numbas.parts.Part;
+
+/** Information only part - no input, no marking, just display some content to the student. 
+ * @constructor
+ * @memberof Numbas.parts
+ * @augments Numbas.parts.Part
+ */
+var InformationPart = Numbas.parts.InformationPart = function(xml, path, question, parentPart, loading)
+{
+}
+InformationPart.prototype = /** @lends Numbas.parts.InformationOnlyPart.prototype */ {
+    loadFromXML: function() {
+    },
+
+    loadFromJSON: function() {
+    },
+    finaliseLoad: function() {
+        this.answered = true;
+        this.isDirty = false;
+
+        if(Numbas.display) {
+            this.display = new Numbas.display.InformationPartDisplay(this);
+        }
+    },
+
+	/** This part is always valid
+	 * @returns {Boolean} true
+	 */
+	validate: function() {
+		this.answered = true;
+		return true;
+	},
+
+	/** This part is never dirty
+	 */
+	setDirty: function() {
+		this.isDirty = false;
+	},
+
+	hasStagedAnswer: function() {
+		return true;
+	},
+
+	doesMarking: false
+};
+['finaliseLoad'].forEach(function(method) {
+    InformationPart.prototype[method] = util.extend(Part.prototype[method], InformationPart.prototype[method]);
+});
+
+Numbas.partConstructors['information'] = util.extend(Part,InformationPart);
+});
+
+/*
+Copyright 2011-15 Newcastle University
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+/** @file The {@link Numbas.parts.JMEPart} object */
+
+Numbas.queueScript('parts/jme',['base','jme','jme-variables','util','part','marking_scripts'],function() {
+
+var util = Numbas.util;
+var jme = Numbas.jme;
+var math = Numbas.math;
+var nicePartName = util.nicePartName;
+
+var Part = Numbas.parts.Part;
+
+/** Judged Mathematical Expression
+ *
+ * Student enters a string representing a mathematical expression, eg. `x^2+x+1`, and it is compared with the correct answer by evaluating over a range of values.
+ * @constructor
+ * @memberof Numbas.parts
+ * @augments Numbas.parts.Part
+ */
+var JMEPart = Numbas.parts.JMEPart = function(path, question, parentPart)
+{
+	var settings = this.settings;
+	util.copyinto(JMEPart.prototype.settings,settings);
+
+	settings.mustHave = [];
+	settings.notAllowed = [];
+	settings.expectedVariableNames = [];
+
+}
+
+JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */ 
+{
+
+    loadFromXML: function(xml) {
+        var settings = this.settings;
+        var tryGetAttribute = Numbas.xml.tryGetAttribute;
+        //parse correct answer from XML
+        answerNode = xml.selectSingleNode('answer/correctanswer');
+        if(!answerNode) {
+            this.error('part.jme.answer missing');
+        }
+
+        tryGetAttribute(settings,xml,'answer/correctanswer','simplification','answerSimplificationString');
+
+        settings.correctAnswerString = Numbas.xml.getTextContent(answerNode).trim();
+
+        //get checking type, accuracy, checking range
+        var parametersPath = 'answer';
+        tryGetAttribute(settings,xml,parametersPath+'/checking',['type','accuracy','failurerate'],['checkingType','checkingAccuracy','failureRate']);
+
+        tryGetAttribute(settings,xml,parametersPath+'/checking/range',['start','end','points'],['vsetRangeStart','vsetRangeEnd','vsetRangePoints']);
+
+
+        //max length and min length
+        tryGetAttribute(settings,xml,parametersPath+'/maxlength',['length','partialcredit'],['maxLength','maxLengthPC']);
+        var messageNode = xml.selectSingleNode('answer/maxlength/message');
+        if(messageNode)
+        {
+            settings.maxLengthMessage = $.xsl.transform(Numbas.xml.templates.question,messageNode).string;
+            if($(settings.maxLengthMessage).text() == '')
+                settings.maxLengthMessage = R('part.jme.answer too long');
+        }
+        tryGetAttribute(settings,xml,parametersPath+'/minlength',['length','partialcredit'],['minLength','minLengthPC']);
+        var messageNode = xml.selectSingleNode('answer/minlength/message');
+        if(messageNode)
+        {
+            settings.minLengthMessage = $.xsl.transform(Numbas.xml.templates.question,messageNode).string;
+            if($(settings.minLengthMessage).text() == '')
+                settings.minLengthMessage = R('part.jme.answer too short');
+        }
+
+        //get list of 'must have' strings
+        var mustHaveNode = xml.selectSingleNode('answer/musthave');
+        if(mustHaveNode)
+        {
+            var mustHaves = mustHaveNode.selectNodes('string');
+            for(var i=0; i<mustHaves.length; i++)
+            {
+                settings.mustHave.push(Numbas.xml.getTextContent(mustHaves[i]));
+            }
+            //partial credit for failing must-have test and whether to show strings which must be present to student when warning message displayed
+            tryGetAttribute(settings,xml,mustHaveNode,['partialcredit','showstrings'],['mustHavePC','mustHaveShowStrings']);
+            //warning message to display when a must-have is missing
+            var messageNode = mustHaveNode.selectSingleNode('message');
+            if(messageNode)
+                settings.mustHaveMessage = $.xsl.transform(Numbas.xml.templates.question,messageNode).string;
+        }
+
+        //get list of 'not allowed' strings
+        var notAllowedNode = xml.selectSingleNode('answer/notallowed');
+        if(notAllowedNode)
+        {
+            var notAlloweds = notAllowedNode.selectNodes('string');
+            for(i=0; i<notAlloweds.length; i++)
+            {
+                settings.notAllowed.push(Numbas.xml.getTextContent(notAlloweds[i]));
+            }
+            //partial credit for failing not-allowed test
+            tryGetAttribute(settings,xml,notAllowedNode,['partialcredit','showstrings'],['notAllowedPC','notAllowedShowStrings']);
+            var messageNode = notAllowedNode.selectSingleNode('message');
+            if(messageNode)
+                settings.notAllowedMessage = $.xsl.transform(Numbas.xml.templates.question,messageNode).string;
+        }
+
+        tryGetAttribute(settings,xml,parametersPath,['checkVariableNames','showPreview']);
+        var expectedVariableNamesNode = xml.selectSingleNode('answer/expectedvariablenames');
+        if(expectedVariableNamesNode)
+        {
+            var nameNodes = expectedVariableNamesNode.selectNodes('string');
+            for(i=0; i<nameNodes.length; i++)
+                settings.expectedVariableNames.push(Numbas.xml.getTextContent(nameNodes[i]).toLowerCase().trim());
+        }
+    },
+
+    loadFromJSON: function(data) {
+        var settings = this.settings;
+        var tryLoad = Numbas.json.tryLoad;
+
+        tryLoad(data, ['answer', 'answerSimplification'], settings, ['correctAnswerString', 'answerSimplificationString']);
+        tryLoad(data, ['checkingType', 'checkingAccuracy', 'failureRate'], settings, ['checkingType', 'checkingAccuracy', 'failureRate']);
+        tryLoad(data.maxlength, ['length', 'partialCredit', 'message'], settings, ['maxLength', 'maxLengthPC', 'maxLengthMessage']);
+        tryLoad(data.minlength, ['length', 'partialCredit', 'message'], settings, ['minLength', 'minLengthPC', 'minLengthMessage']);
+        tryLoad(data.musthave, ['strings', 'showStrings', 'partialCredit', 'message'], settings, ['mustHave', 'mustHaveShowStrings', 'mustHavePC', 'mustHaveMessage']);
+        tryLoad(data.notallowed, ['strings', 'showStrings', 'partialCredit', 'message'], settings, ['notAllowed', 'notAllowedShowStrings', 'notAllowedPC', 'notAllowedMessage']);
+
+        tryLoad(data, ['checkVariableNames', 'expectedVariableNames', 'showPreview'], settings);
+    },
+
+    resume: function() {
+        if(!this.store) {
+            return;
+        }
+		var pobj = this.store.loadJMEPart(this);
+		this.stagedAnswer = [pobj.studentAnswer];
+    },
+
+    finaliseLoad: function() {
+        this.stagedAnswer = [''];
+        this.getCorrectAnswer(this.getScope());
+        if(Numbas.display) {
+            this.display = new Numbas.display.JMEPartDisplay(this);
+        }
+    },
+
+	/** Student's last submitted answer
+	 * @type {String}
+	 */
+	studentAnswer: '',
+
+    /** The script to mark this part - assign credit, and give messages and feedback.
+     * @type {Numbas.marking.MarkingScript}
+     */
+    markingScript: Numbas.marking_scripts.jme,
+
+	/** Properties set when the part is generated.
+	 *
+	 * Extends {@link Numbas.parts.Part#settings}
+	 * @property {JME} correctAnswerString - the definition of the correct answer, without variables substituted into it.
+	 * @property {String} correctAnswer - An expression representing the correct answer to the question. The student's answer should evaluate to the same value as this.
+	 * @property {String} answerSimplificationString - string from the XML defining which answer simplification rules to use
+	 * @property {Array.<String>} answerSimplification - names of simplification rules (see {@link Numbas.jme.display.Rule}) to use on the correct answer
+	 * @property {String} checkingType - method to compare answers. See {@link Numbas.jme.checkingFunctions}
+	 * @property {Number} checkingAccuracy - accuracy threshold for checking. Exact definition depends on the checking type.
+	 * @property {Number} failureRate - comparison failures allowed before we decide answers are different
+	 * @property {Number} vsetRangeStart - lower bound on range of points to pick values from for variables in the answer expression
+	 * @property {Number} vsetRangeEnd - upper bound on range of points to pick values from for variables in the answer expression
+	 * @property {Number} vsetRangePoints - number of points to compare answers on
+	 * @property {Number} maxLength - maximum length, in characters, of the student's answer. Note that the student's answer is cleaned up before checking length, so extra space or brackets aren't counted
+	 * @property {Number} maxLengthPC - partial credit if the student's answer is too long
+	 * @property {String} maxLengthMessage - Message to add to marking feedback if the student's answer is too long
+	 * @property {Number} minLength - minimum length, in characters, of the student's answer. Note that the student's answer is cleaned up before checking length, so extra space or brackets aren't counted
+	 * @property {Number} minLengthPC - partial credit if the student's answer is too short
+	 * @property {String} minLengthMessage - message to add to the marking feedback if the student's answer is too short
+	 * @property {Array.<String>} mustHave - strings which must be present in the student's answer
+	 * @property {Number} mustHavePC - partial credit to award if any must-have string is missing
+	 * @property {String} mustHaveMessage - message to add to the marking feedback if the student's answer is missing a must-have string.
+	 * @property {Boolean} mustHaveShowStrings - tell the students which strings must be included in the marking feedback, if they're missing a must-have?
+	 * @property {Array.<String>} notAllowed - strings which must not be present in the student's answer
+	 * @property {Number} notAllowedPC - partial credit to award if any not-allowed string is present
+	 * @property {String} notAllowedMessage - message to add to the marking feedback if the student's answer contains a not-allowed string.
+	 * @property {Boolean} notAllowedShowStrings - tell the students which strings must not be included in the marking feedback, if they've used a not-allowed string?
+	 */
+	settings: 
+	{
+		correctAnswerString: '',
+		correctAnswer: '',
+
+		answerSimplificationString: '',
+		answerSimplification: ['basic','unitFactor','unitPower','unitDenominator','zeroFactor','zeroTerm','zeroPower','collectNumbers','zeroBase','constantsFirst','sqrtProduct','sqrtDivision','sqrtSquare','otherNumbers'],
+		
+		checkingType: 'RelDiff',
+
+		checkingAccuracy: 0,
+		failureRate: 1,
+
+		vsetRangeStart: 0,
+		vsetRangeEnd: 1,
+		vsetRangePoints: 1,
+		
+		maxLength: 0,
+		maxLengthPC: 0,
+		maxLengthMessage: 'Your answer is too long',
+
+		minLength: 0,
+		minLengthPC: 0,
+		minLengthMessage: 'Your answer is too short',
+
+		mustHave: [],
+		mustHavePC: 0,
+		mustHaveMessage: '',
+		mustHaveShowStrings: false,
+
+		notAllowed: [],
+		notAllowedPC: 0,
+		notAllowedMessage: '',
+		notAllowedShowStrings: false
+	},
+
+	/** Compute the correct answer, based on the given scope
+	 */
+	getCorrectAnswer: function(scope) {
+		var settings = this.settings;
+
+		settings.answerSimplification = Numbas.jme.collectRuleset(settings.answerSimplificationString,scope.allRulesets());
+
+		var expr = jme.subvars(settings.correctAnswerString,scope);
+		settings.correctAnswer = jme.display.simplifyExpression(
+			expr,
+			settings.answerSimplification,
+			scope
+		);
+		if(settings.correctAnswer == '' && this.marks>0) {
+			this.error('part.jme.answer missing');
+		}
+
+		this.markingScope = new jme.Scope(this.getScope());
+		this.markingScope.variables = {};
+
+	},
+
+	/** Save a copy of the student's answer as entered on the page, for use in marking.
+	 */
+	setStudentAnswer: function() {
+		this.studentAnswer = this.answerList[0];
+	},
+
+	/** Get the student's answer as it was entered as a JME data type, to be used in the custom marking algorithm
+	 * @abstract
+	 * @returns {Numbas.jme.token}
+	 */
+	rawStudentAnswerAsJME: function() {
+		return new Numbas.jme.types.TString(this.studentAnswer);
+	}
+};
+['loadFromXML','resume','finaliseLoad'].forEach(function(method) {
+    JMEPart.prototype[method] = util.extend(Part.prototype[method], JMEPart.prototype[method]);
+});
+
+Numbas.partConstructors['jme'] = util.extend(Part,JMEPart);
+
+});
+
+/*
+Copyright 2011-15 Newcastle University
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+/** @file The {@link Numbas.parts.MatrixEntryPart} object */
+
+Numbas.queueScript('parts/matrixentry',['base','jme','jme-variables','util','part','marking_scripts'],function() {
+
+var util = Numbas.util;
+var jme = Numbas.jme;
+var math = Numbas.math;
+
+var Part = Numbas.parts.Part;
+
+/** Matrix entry part - student enters a matrix of numbers
+ * @constructor
+ * @memberof Numbas.parts
+ * @augments Numbas.parts.Part
+ */
+var MatrixEntryPart = Numbas.parts.MatrixEntryPart = function(xml, path, question, parentPart, loading) {
+	var settings = this.settings;
+	util.copyinto(MatrixEntryPart.prototype.settings,settings);
+
+
+}
+MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
+{
+    loadFromXML: function(xml) {
+        var settings = this.settings;
+        var tryGetAttribute = Numbas.xml.tryGetAttribute;
+        tryGetAttribute(settings,xml,'answer',['correctanswer'],['correctAnswerString'],{string:true});
+        tryGetAttribute(settings,xml,'answer',['correctanswerfractions','rows','columns','allowresize','tolerance','markpercell','allowfractions'],['correctAnswerFractions','numRows','numColumns','allowResize','tolerance','markPerCell','allowFractions']);
+        tryGetAttribute(settings,xml,'answer/precision',['type','partialcredit','strict'],['precisionType','precisionPC','strictPrecision']);
+        tryGetAttribute(settings,xml,'answer/precision','precision','precisionString',{'string':true});
+
+        var messageNode = xml.selectSingleNode('answer/precision/message');
+        if(messageNode) {
+            settings.precisionMessage = $.xsl.transform(Numbas.xml.templates.question,messageNode).string;
+        }
+
+    },
+
+    loadFromJSON: function(data) {
+        var settings = this.settings;
+        var tryLoad = Numbas.json.tryLoad;
+
+        tryLoad(data,['correctAnswer', 'correctAnswerFractions', 'numRows', 'numColumns', 'allowResize', 'tolerance', 'markPerCell', 'allowFractions'], settings, ['correctAnswerString', 'correctAnswerFractions', 'numRows', 'numColumns', 'allowResize', 'tolerance', 'markPerCell', 'allowFractions']);
+        tryLoad(data,['precisionType', 'precision', 'precisionPartialCredit', 'precisionMessage', 'strictPrecision'], settings, ['precisionType', 'precision', 'precisionPC', 'precisionMessage', 'strictPrecision']);
+    },
+
+    resume: function() {
+        if(!this.store) {
+            return;
+        }
+		var pobj = this.store.loadMatrixEntryPart(this);
+		if(pobj.studentAnswer) {
+			var rows = pobj.studentAnswer.length;
+			var columns = rows>0 ? pobj.studentAnswer[0].length : 0;
+			this.stagedAnswer = [rows, columns, pobj.studentAnswer];
+		}
+    },
+
+    finaliseLoad: function() {
+        var settings = this.settings;
+        var scope = this.getScope();
+        var numRows = jme.subvars(settings.numRows, scope);
+        settings.numRows = scope.evaluate(numRows).value;
+
+        var numColumns = jme.subvars(settings.numColumns, scope);
+        settings.numColumns = scope.evaluate(numColumns).value;
+
+        var tolerance = jme.subvars(settings.tolerance, scope);
+        settings.tolerance = scope.evaluate(tolerance).value;
+        settings.tolerance = Math.max(settings.tolerance,0.00000000001);
+
+        if(settings.precisionType!='none') {
+            settings.allowFractions = false;
+        }
+
+        this.studentAnswer = [];
+        for(var i=0;i<this.settings.numRows;i++) {
+            var row = [];
+            for(var j=0;j<this.settings.numColumns;j++) {
+                row.push('');
+            }
+            this.studentAnswer.push(row);
+        }
+        
+        this.getCorrectAnswer(scope);
+
+        if(!settings.allowResize && (settings.correctAnswer.rows!=settings.numRows || settings.correctAnswer.columns != settings.numColumns)) {
+            var correctSize = settings.correctAnswer.rows+'×'+settings.correctAnswer.columns;
+            var answerSize = settings.numRows+'×'+settings.numColumns;
+            throw(new Numbas.Error('part.matrix.size mismatch',{correct_dimensions:correctSize,input_dimensions:answerSize}));
+        }
+
+        if(Numbas.display) {
+            this.display = new Numbas.display.MatrixEntryPartDisplay(this);
+        }
+    },
+
+	/** The student's last submitted answer */
+	studentAnswer: '',
+
+    /** The script to mark this part - assign credit, and give messages and feedback.
+     * @type {Numbas.marking.MarkingScript}
+     */
+    markingScript: Numbas.marking_scripts.matrixentry,
+
+	/** Properties set when part is generated
+	 * Extends {@link Numbas.parts.Part#settings}
+	 * @property {matrix} correctAnswer - the correct answer to the part
+	 * @property {JME} numRows - default number of rows in the student's answer
+	 * @property {JME} numColumns - default number of columns in the student's answer
+	 * @property {Boolean} allowResize - allow the student to change the dimensions of their answer?
+	 * @property {JME} tolerance - allowed margin of error in each cell (if student's answer is within +/- `tolerance` of the correct answer (after rounding to , mark it as correct
+	 * @property {Boolean} markPerCell - should the student gain marks for each correct cell (true), or only if they get every cell right (false)?
+	 * @property {Boolean} allowFractions - can the student enter a fraction as their answer for a cell?
+	 * @property {String} precisionType - type of precision restriction to apply: `none`, `dp` - decimal places, or `sigfig` - significant figures
+	 * @property {Number} precision - how many decimal places or significant figures to require
+	 * @property {Number} precisionPC - partial credit to award if the answer is between `minvalue` and `maxvalue` but not given to the required precision
+	 * @property {String} precisionMessage - message to display in the marking feedback if their answer was not given to the required precision
+     * @property {Boolean} strictPrecision - must the student give exactly the required precision? If false, omitting trailing zeros is allowed.
+	 */
+	settings: {
+		correctAnswer: null,
+		correctAnswerFractions: false,
+		numRows: '3',
+		numColumns: '3',
+		allowResize: true,
+		tolerance: '0',
+		markPerCell: false,
+		allowFractions: false,
+		precisionType: 'none',	//'none', 'dp' or 'sigfig'
+        precisionString: '0',
+		precision: 0,
+		precisionPC: 0,
+		precisionMessage: R('You have not given your answer to the correct precision.'),
+        strictPrecision: true
+	},
+
+	/** Compute the correct answer, based on the given scope
+	 */
+	getCorrectAnswer: function(scope) {
+		var settings = this.settings;
+
+		var correctAnswer = jme.subvars(settings.correctAnswerString,scope);
+		correctAnswer = jme.evaluate(correctAnswer,scope);
+		if(correctAnswer && correctAnswer.type=='matrix') {
+			settings.correctAnswer = correctAnswer.value;
+		} else if(correctAnswer && correctAnswer.type=='vector') {
+			settings.correctAnswer = Numbas.vectormath.toMatrix(correctAnswer.value);
+		} else {
+			this.error('part.setting not present','correct answer');
+		}
+
+		settings.precision = jme.subvars(settings.precisionString, scope);
+		settings.precision = jme.evaluate(settings.precision,scope).value;
+
+		switch(settings.precisionType) {
+		case 'dp':
+			settings.correctAnswer = Numbas.matrixmath.precround(settings.correctAnswer,settings.precision);
+			break;
+		case 'sigfig':
+			settings.correctAnswer = Numbas.matrixmath.siground(settings.correctAnswer,settings.precision);
+			break;
+		}
+
+	},
+
+	/** Save a copy of the student's answer as entered on the page, for use in marking.
+	 */
+	setStudentAnswer: function() {
+		this.studentAnswerRows = parseInt(this.stagedAnswer[0]);
+		this.studentAnswerColumns = parseInt(this.stagedAnswer[1]);
+		this.studentAnswer = this.stagedAnswer[2];
+	},
+
+	/** Get the student's answer as it was entered as a JME data type, to be used in the marking script
+	 * @abstract
+	 * @returns {Numbas.jme.token}
+	 */
+	rawStudentAnswerAsJME: function() {
+        return jme.wrapValue(this.studentAnswer);
+	},
+
+    /** Get the student's answer as a matrix
+     * @returns {matrix}
+     */
+	studentAnswerAsMatrix: function() {
+		var rows = this.studentAnswerRows;
+		var columns = this.studentAnswerColumns;
+
+		var studentMatrix = [];
+		for(var i=0;i<rows;i++) {
+			var row = [];
+			for(var j=0;j<columns;j++) {
+				var cell = this.studentAnswer[i][j];
+				var n = util.parseNumber(cell,this.settings.allowFractions);
+				
+				if(isNaN(n)) {
+					return null;
+				} else {
+					row.push(n);
+				}
+			}
+			studentMatrix.push(row);
+		}
+
+		studentMatrix.rows = rows;
+		studentMatrix.columns = columns;
+		
+		return studentMatrix;
+	}
+};
+['loadFromXML','resume','finaliseLoad'].forEach(function(method) {
+    MatrixEntryPart.prototype[method] = util.extend(Part.prototype[method], MatrixEntryPart.prototype[method]);
+});
+
+Numbas.partConstructors['matrix'] = util.extend(Part,MatrixEntryPart);
+
+});
+
+
+/*
+Copyright 2011-15 Newcastle University
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+/** @file The {@link Numbas.parts.MultipleResponsePart} object */
+
+Numbas.queueScript('parts/multipleresponse',['base','jme','jme-variables','util','part','marking_scripts'],function() {
+
+var util = Numbas.util;
+var jme = Numbas.jme;
+var math = Numbas.math;
+
+var Part = Numbas.parts.Part;
+
+/** Multiple choice part - either pick one from a list, pick several from a list, or match choices with answers (2d grid, either pick one from each row or tick several from each row)
+ *
+ * Types:
+ * * `1_n_2`: pick one from a list. Represented as N answers, 1 choice
+ * * `m_n_2`: pick several from a list. Represented as N answers, 1 choice
+ * * `m_n_x`: match choices (rows) with answers (columns). Represented as N answers, X choices.
+ *
+ * @constructor
+ * @augments Numbas.parts.Part
+ * @memberof Numbas.parts
+ */
+var MultipleResponsePart = Numbas.parts.MultipleResponsePart = function(path, question, parentPart)
+{
+    var p = this;
+    var settings = this.settings;
+    util.copyinto(MultipleResponsePart.prototype.settings,settings);
+
+}
+MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.prototype */
+{
+    loadFromXML: function(xml) {
+        var settings = this.settings;
+        var tryGetAttribute = Numbas.xml.tryGetAttribute;
+        var scope = this.getScope();
+
+        //get number of answers and answer order setting
+        if(this.type == '1_n_2' || this.type == 'm_n_2') {
+            // the XML for these parts lists the options in the <choices> tag, but it makes more sense to list them as answers
+            // so swap "answers" and "choices"
+            // this all stems from an extremely bad design decision made very early on
+            this.flipped = true;
+        } else {
+            this.flipped = false;
+        }
+
+        //work out marks available
+        tryGetAttribute(settings,xml,'marking/maxmarks','enabled','maxMarksEnabled');
+        if(settings.maxMarksEnabled) {
+            tryGetAttribute(this,xml,'marking/maxmarks','value','marks');
+        } else {
+            tryGetAttribute(this,xml,'.','marks');
+        }
+        
+        //get minimum marks setting
+        tryGetAttribute(settings,xml,'marking/minmarks','enabled','minMarksEnabled');
+        if(settings.minMarksEnabled) {
+            tryGetAttribute(settings,xml,'marking/minmarks','value','minimumMarks');
+        }
+
+        //get restrictions on number of choices
+        var choicesNode = xml.selectSingleNode('choices');
+        if(!choicesNode) {
+            this.error('part.mcq.choices missing');
+        }
+
+        tryGetAttribute(settings,null,choicesNode,['minimumexpected','maximumexpected','shuffleChoices','displayType'],['minAnswersString','maxAnswersString','shuffleChoices']);
+
+        var choiceNodes = choicesNode.selectNodes('choice');
+
+        var answersNode, answerNodes;
+
+        if(this.type == '1_n_2' || this.type == 'm_n_2') {
+            // the XML for these parts lists the options in the <choices> tag, but it makes more sense to list them as answers
+            // so swap "answers" and "choices"
+            // this all stems from an extremely bad design decision made very early on
+            this.numAnswers = choiceNodes.length;
+            answerNodes = choiceNodes;
+            choicesNode = null;
+        } else {
+            this.numChoices = choiceNodes.length;
+            answersNode = xml.selectSingleNode('answers');
+            if(answersNode) {
+                tryGetAttribute(settings,null,answersNode,'shuffleAnswers','shuffleAnswers');
+                answerNodes = answersNode.selectNodes('answer');
+                this.numAnswers = answerNodes.length;
+            }
+        }
+    
+        var def;
+
+        function loadDef(def,scope,topNode,nodeName) {
+            var values = jme.evaluate(def,scope);
+            if(values.type!='list') {
+                p.error('part.mcq.options def not a list',nodeName);
+            }
+            var numValues = values.value.length;
+            values.value.map(function(value) {
+                var node = xml.ownerDocument.createElement(nodeName);
+                var content = xml.ownerDocument.createElement('content');
+                var span = xml.ownerDocument.createElement('span');
+                content.appendChild(span);
+                node.appendChild(content);
+                topNode.appendChild(node);
+
+                switch(value.type) {
+                case 'string':
+                    var d = document.createElement('d');
+                    d.innerHTML = value.value;
+                    var newNode;
+                    try {
+                        newNode = xml.ownerDocument.importNode(d,true);
+                    } catch(e) {
+                        d = Numbas.xml.dp.parseFromString('<d>'+value.value.replace(/&(?!amp;)/g,'&amp;')+'</d>','text/xml').documentElement;
+                        newNode = xml.ownerDocument.importNode(d,true);
+                    }
+                    while(newNode.childNodes.length) {
+                        span.appendChild(newNode.childNodes[0]);
+                    }
+
+                    break;
+                case 'html':
+                    var selection = $(value.value);
+                    for(var i=0;i<selection.length;i++) {
+                        try {
+                            span.appendChild(xml.ownerDocument.importNode(selection[i],true));
+                        } catch(e) {
+                            var d = Numbas.xml.dp.parseFromString('<d>'+selection[i].outerHTML+'</d>','text/xml').documentElement;
+                            var newNode = xml.ownerDocument.importNode(d,true);
+                            while(newNode.childNodes.length) {
+                                span.appendChild(newNode.childNodes[0]);
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    span.appendChild(xml.ownerDocument.createTextNode(value));
+                }
+            });
+            return numValues;
+        }
+
+        if(def = answersNode.getAttribute('def')) {
+            settings.answersDef = def;
+            var nodeName = this.flipped ? 'choice' : 'answer';
+            loadDef(settings.answersDef,scope,answersNode,nodeName);
+            answerNodes = answersNode.selectNodes(nodeName);
+            this.numAnswers = answerNodes.length;
+        }
+        if(choicesNode && (def = choicesNode.getAttribute('def'))) {
+            settings.choicesDef = def;
+            loadDef(settings.choicesDef,scope,choicesNode,'choice');
+            choiceNodes = choicesNode.selectNodes('choice');
+            this.numChoices = choiceNodes.length;
+        }
+
+        //get warning type and message for wrong number of choices
+        warningNode = xml.selectSingleNode('marking/warning');
+        if(warningNode) {
+            tryGetAttribute(settings,null,warningNode,'type','warningType');
+        }
+        
+        if(this.type=='m_n_x') {
+            var layoutNode = xml.selectSingleNode('layout');
+            tryGetAttribute(settings,null,layoutNode,['type','expression'],['layoutType','layoutExpression']);
+        }
+
+        //fill marks matrix
+        var def;
+        var markingMatrixNode = xml.selectSingleNode('marking/matrix');
+        var markingMatrixString = markingMatrixNode.getAttribute('def');
+        var useMarkingString = settings.answersDef || settings.choicesDef || (typeof markingMatrixString == "string");
+        if(useMarkingString) {
+            settings.markingMatrixString = markingMatrixString;
+            if(!settings.markingMatrixString) {
+                this.error('part.mcq.marking matrix string empty')
+            }
+        } else {
+            var matrixNodes = xml.selectNodes('marking/matrix/mark');
+            var markingMatrixArray = settings.markingMatrixArray = [];
+            for( i=0; i<this.numAnswers; i++ ) {
+                markingMatrixArray.push([]);
+            }
+            for( i=0; i<matrixNodes.length; i++ ) {
+                var cell = {value: ""};
+                tryGetAttribute(cell,null, matrixNodes[i], ['answerIndex', 'choiceIndex', 'value']);
+
+                if(this.flipped) {
+                    // possible answers are recorded as choices in the multiple choice types.
+                    // switch the indices round, so we don't have to worry about this again
+                    cell.answerIndex = cell.choiceIndex;
+                    cell.choiceIndex = 0;
+                }
+
+                markingMatrixArray[cell.answerIndex][cell.choiceIndex] = cell.value;
+            }
+        }
+
+        var distractors = [];
+        for( i=0; i<this.numAnswers; i++ ) {
+            var row = [];
+            for(var j=0;j<this.numChoices;j++) {
+                row.push('');
+            }
+            distractors.push(row);
+        }
+        var distractorNodes = xml.selectNodes('marking/distractors/distractor');
+        for( i=0; i<distractorNodes.length; i++ )
+        {
+            var cell = {message: ""};
+            tryGetAttribute(cell,null, distractorNodes[i], ['answerIndex', 'choiceIndex']);
+            cell.message = $.xsl.transform(Numbas.xml.templates.question,distractorNodes[i]).string;
+            cell.message = jme.contentsubvars(cell.message,scope);
+
+            if(this.type == '1_n_2' || this.type == 'm_n_2') {    
+                // possible answers are recorded as choices in the multiple choice types.
+                // switch the indices round, so we don't have to worry about this again
+                cell.answerIndex = cell.choiceIndex;
+                cell.choiceIndex = 0;
+            }
+
+            distractors[cell.answerIndex][cell.choiceIndex] = cell.message;
+        }
+        settings.distractors = distractors;
+    },
+
+    loadFromJSON: function(data) {
+        var settings = this.settings;
+        var tryLoad = Numbas.json.tryLoad;
+        var scope = this.getScope();
+
+        //get number of answers and answer order setting
+        if(this.type == '1_n_2' || this.type == 'm_n_2') {
+            // the XML for these parts lists the options in the <choices> tag, but it makes more sense to list them as answers
+            // so swap "answers" and "choices"
+            // this all stems from an extremely bad design decision made very early on
+            this.flipped = true;
+        } else {
+            this.flipped = false;
+        }
+
+        tryLoad(data, ['maxMarks'], this, ['marks']);
+        tryLoad(data, ['minMarks'], settings, ['minimumMarks']);
+        tryLoad(data, ['minAnswers', 'maxAnswers', 'shuffleChoices', 'shuffleAnswers', 'displayType'], settings, ['minAnswersString', 'maxAnswersString', 'shuffleChoices', 'shuffleAnswers', 'displayType']);
+        tryLoad(data, ['warningType'], settings);
+        tryLoad(data.layout, ['type', 'expression'], settings, ['layoutType', 'layoutExpression']);
+
+        if('choices' in data) {
+            if(typeof(data.choices)=='string') {
+                choices = jme.evaluate(data.choices, scope);
+                if(settings.choices.type!='list') {
+                    this.error('part.mcq.options def not a list','choice');
+                }
+                settings.choices = jme.unwrapValue(choices);
+            } else {
+                settings.choices = data.choices;
+            }
+            this.numChoices = settings.choices.length;
+        }
+
+        if('answers' in data) {
+            if(typeof(data.answers)=='string') {
+                answers = jme.evaluate(data.answers, scope);
+                if(settings.answers.type!='list') {
+                    this.error('part.mcq.options def not a list','answer');
+                }
+                settings.answers = jme.unwrapValue(answers);
+            } else {
+                settings.answers = data.answers;
+            }
+            this.numAnswers = settings.answers.length;
+        }
+
+        if(this.flipped) {
+            this.numAnswers = 1;
+        }
+
+        if(typeof(data.matrix)=='string') {
+            settings.markingMatrixString = data.matrix;
+        } else {
+            settings.markingMatrixArray = data.matrix;
+        }
+
+        tryLoad(data, ['distractors'], settings);
+        if(!settings.distractors) {
+            console.log(this.type, this.numChoices, this.numAnswers);
+            settings.distractors = [];
+            for(var i=0;i<this.numChoices; i++) {
+                var row = [];
+                for(var j=0;j<this.numAnswers; j++) {
+                    row.push('');
+                }
+                settings.distractors.push(row);
+            }
+        }
+
+        if(this.flipped) {
+            this.numAnswers = this.numChoices;
+            this.numChoices = 1;
+            this.answers = this.choices;
+            this.choices = null;
+        }
+
+    },
+
+    resume: function() {
+        if(!this.store) {
+            return;
+        }
+        var pobj = this.store.loadMultipleResponsePart(this);
+        this.shuffleChoices = pobj.shuffleChoices;
+        this.shuffleAnswers = pobj.shuffleAnswers;
+        this.ticks = pobj.ticks;
+
+        this.stagedAnswer = [];
+        for( i=0; i<this.numAnswers; i++ ) {
+            this.stagedAnswer.push([]);
+            for( var j=0; j<this.numChoices; j++ ) {
+                this.stagedAnswer[i].push(false);
+            }
+        }
+        for( i=0;i<this.numAnswers;i++) {
+            for(j=0;j<this.numChoices;j++) {
+                if(pobj.ticks[i][j]) {
+                    this.stagedAnswer[i][j] = true;
+                }
+            }
+        }
+    },
+
+    finaliseLoad: function() {
+        var settings = this.settings;
+        var scope = this.getScope();
+
+        //get number of answers and answer order setting
+        if(this.type == '1_n_2' || this.type == 'm_n_2') {
+            settings.shuffleAnswers = settings.shuffleChoices;
+            settings.shuffleChoices = false;
+        }
+
+        this.shuffleChoices = [];
+        if(settings.shuffleChoices) {
+            this.shuffleChoices = math.deal(this.numChoices);
+        } else {
+            this.shuffleChoices = math.range(this.numChoices);
+        }
+
+        this.shuffleAnswers = [];
+        if(settings.shuffleAnswers) {
+            this.shuffleAnswers = math.deal(this.numAnswers);
+        } else {
+            this.shuffleAnswers = math.range(this.numAnswers);
+        }
+
+        this.marks = util.parseNumber(this.marks) || 0;
+        settings.minimumMarks = util.parseNumber(settings.minimumMarks) || 0;
+
+        var minAnswers = jme.subvars(settings.minAnswersString, scope);
+        minAnswers = jme.evaluate(minAnswers, scope);
+        if(minAnswers && minAnswers.type=='number') {
+            settings.minAnswers = minAnswers.value;
+        } else {
+            this.error('part.setting not present',{property: 'minimum answers'});
+        }
+
+        var maxAnswers = jme.subvars(settings.maxAnswersString, scope);
+        maxAnswers = jme.evaluate(maxAnswers, scope);
+        if(maxAnswers && maxAnswers.type=='number') {
+            settings.maxAnswers = maxAnswers.value;
+        } else {
+            this.error('part.setting not present',{property: 'maximum answers'});
+        }
+
+        // fill layout matrix
+        var layout = this.layout = [];
+        if(this.type=='m_n_x') {
+            if(settings.layoutType=='expression') {
+                // expression can either give a 2d array (list of lists) or a matrix
+                // note that the list goes [row][column], unlike all the other properties of this part object, which go [column][row], i.e. they're indexed by answer then choice
+                // it's easier for question authors to go [row][column] because that's how they're displayed, but it's too late to change the internals of the part to match that now
+                // I have only myself to thank for this - CP
+                var layoutMatrix = jme.unwrapValue(jme.evaluate(settings.layoutExpression,scope));
+            }
+            var layoutFunction = MultipleResponsePart.layoutTypes[settings.layoutType];
+            for(var i=0;i<this.numAnswers;i++) {
+                var row = [];
+                for(var j=0;j<this.numChoices;j++) {
+                    row.push(layoutFunction(j,i));
+                }
+                layout.push(row);
+            }
+        } else {
+            for(var i=0;i<this.numAnswers;i++) {
+                var row = [];
+                for(var j=0;j<this.numChoices;j++) {
+                    row.push(true);
+                }
+                layout.push(row);
+            }
+        }
+
+        if(this.type=='1_n_2') {
+            settings.maxAnswers = 1;
+        } else if(settings.maxAnswers==0) {
+            settings.maxAnswers = this.numAnswers * this.numChoices;
+        }
+
+        this.getCorrectAnswer(scope);
+
+        var matrix = this.settings.matrix;
+        
+        if(this.marks == 0) {    //if marks not set explicitly
+            var flat = [];
+            switch(this.type)
+            {
+            case '1_n_2':
+                for(var i=0;i<matrix.length;i++) {
+                    flat.push(matrix[i][0]);
+                }
+                break;
+            case 'm_n_2':
+                for(var i=0;i<matrix.length;i++) {
+                    flat.push(matrix[i][0]);
+                }
+                break;
+            case 'm_n_x':
+                if(settings.displayType=='radiogroup') {
+                    for(var i=0;i<this.numChoices;i++)
+                    {
+                        var row = [];
+                        for(var j=0;j<this.numAnswers;j++)
+                        {
+                            row.push(matrix[j][i]);
+                        }
+                        row.sort(function(a,b){return a>b ? 1 : a<b ? -1 : 0});
+                        flat.push(row[row.length-1]);
+                    }
+                } else {
+                    for(var i=0;i<matrix.length;i++) {
+                        flat = flat.concat(matrix[i]);
+                    }
+                }
+                break;
+            }
+            flat.sort(function(a,b){return a>b ? 1 : a<b ? -1 : 0});
+            for(var i=flat.length-1; i>=0 && flat.length-1-i<settings.maxAnswers && flat[i]>0;i--) {
+                this.marks+=flat[i];
+            }
+        }
+
+        //ticks array - which answers/choices are selected?
+        this.ticks = [];
+        this.stagedAnswer = [];
+        for( i=0; i<this.numAnswers; i++ ) {
+            this.ticks.push([]);
+            this.stagedAnswer.push([]);
+            for( var j=0; j<this.numChoices; j++ ) {
+                this.ticks[i].push(false);
+                this.stagedAnswer[i].push(false);
+            }
+        }
+
+        if(Numbas.display) {
+            this.display = new Numbas.display.MultipleResponsePartDisplay(this);
+        }
+    },
+
+    /** Student's last submitted answer/choice selections
+     * @type {Array.<Array.<Boolean>>}
+     */
+    ticks: [],
+    
+    /** The script to mark this part - assign credit, and give messages and feedback.
+     * @type {Numbas.marking.MarkingScript}
+     */
+    markingScript: Numbas.marking_scripts.multipleresponse,
+
+    /** Number of choices - used by `m_n_x` parts
+     * @type {Number}
+     */
+    numChoices: 0,
+
+    /** Number of answers
+     * @type {Number}
+     */
+    numAnswers: 0,
+
+    /** Have choice and answers been swapped (because of the weird settings for 1_n_2 and m_n_2 parts)
+     * @type {Boolean}
+     */
+    flipped: false,
+
+    /** Properties set when the part is generated
+     * Extends {@link Numbas.parts.Part#settings}
+     * @property {Boolean} maxMarksEnabled - is there a maximum number of marks the student can get?
+     * @property {String} minAnswersString - minimum number of responses the student must select, without variables substituted in.
+     * @property {String} maxAnswersString - maxmimum number of responses the student must select, without variables substituted in.
+     * @property {Number} minAnswers - minimum number of responses the student must select. Generated from `minAnswersString`.
+     * @property {Number} maxAnswers - maxmimum number of responses the student must select. Generated from `maxAnswersString`.
+     * @property {String} shuffleChoices - should the order of choices be randomised?
+     * @property {String} shuffleAnswers - should the order of answers be randomised?
+     * @property {Array.<Array.<Number>>} matrix - marks for each answer/choice pair. Arranged as `matrix[answer][choice]`
+     * @property {String} displayType - how to display the response selectors. Can be `radiogroup` or `checkbox`
+     * @property {String} warningType - what to do if the student picks the wrong number of responses? Either `none` (do nothing), `prevent` (don't let the student submit), or `warn` (show a warning but let them submit)
+     * @property {String} layoutType - The kind of layout to use. See {@link Numbas.parts.MultipleResponsePart.layoutTypes}
+     * @property {JME} layoutExpression - Expression giving a 2d array or matrix describing the layout when `layoutType` is `'expression'`.
+     */
+    settings:
+    {
+        maxMarksEnabled: false,        //is there a maximum number of marks the student can get?
+        minAnswersString: '0',                //minimum number of responses student must select
+        maxAnswersString: '0',                //maximum ditto
+        minAnswers: 0,                //minimum number of responses student must select
+        maxAnswers: 0,                //maximum ditto
+        shuffleChoices: false,
+        shuffleAnswers: false,
+        matrix: [],                    //marks matrix
+        displayType: '',            //how to display the responses? can be: radiogroup, dropdownlist, buttonimage, checkbox, choicecontent
+        warningType: '',                //what to do if wrong number of responses
+        layoutType: 'all',
+        layoutExpression: ''
+    },
+
+    /** Compute the correct answer, based on the given scope
+     */
+    getCorrectAnswer: function(scope) {
+        var settings = this.settings;
+
+        var matrix = [];
+        if(settings.markingMatrixString) {
+            matrix = jme.evaluate(settings.markingMatrixString,scope);
+            switch(matrix.type) {
+            case 'list':
+                var numLists = 0;
+                var numNumbers = 0;
+                for(var i=0;i<matrix.value.length;i++) {
+                    switch(matrix.value[i].type) {
+                    case 'list':
+                        numLists++;
+                        break;
+                    case 'number':
+                        numNumbers++;
+                        break;
+                    default:
+                        this.error('part.mcq.matrix wrong type',matrix.value[i].type);
+                    }
+                }
+                if(numLists == matrix.value.length) {
+                    matrix = matrix.value.map(function(row){    //convert TNums to javascript numbers
+                        return row.value.map(function(e){return e.value;});
+                    });
+                } else if(numNumbers == matrix.value.length) {
+                    matrix = matrix.value.map(function(e) {
+                        return [e.value];
+                    });
+                } else {
+                    this.error('part.mcq.matrix mix of numbers and lists');
+                }
+                matrix.rows = matrix.length;
+                matrix.columns = matrix[0].length;
+                break;
+            case 'matrix':
+                matrix = matrix.value;
+                break;
+            default:
+                this.error('part.mcq.matrix not a list');
+            }
+            if(this.flipped) {
+                matrix = Numbas.matrixmath.transpose(matrix);
+            }
+            if(matrix.length!=this.numChoices) {
+                this.error('part.mcq.matrix wrong size');
+            }
+
+            // take into account shuffling;
+            for(var i=0;i<this.numChoices;i++) {
+                if(matrix[i].length!=this.numAnswers) {
+                    this.error('part.mcq.matrix wrong size');
+                }
+            }
+
+            matrix = Numbas.matrixmath.transpose(matrix);
+        } else {
+            for(var i=0;i<this.numAnswers;i++) {
+                var row = [];
+                matrix.push(row);
+                for(var j=0;j<this.numChoices;j++) {
+                    var value = settings.markingMatrixArray[i][j];
+                    if(util.isFloat(value)) {
+                        value = parseFloat(value);
+                    } else {
+                        if(value == ''){
+                          this.error('part.mcq.matrix cell empty',{part:this.path,row:i,column:j});
+                        }
+                        try {
+                          value = jme.evaluate(value,scope).value;
+                        } catch(e) {
+                          this.error('part.mcq.matrix jme error',{part:this.path,row:i,column:j,error:e.message});
+                        }
+                        if(!util.isFloat(value)) {
+                          this.error('part.mcq.matrix not a number',{part:this.path,row:i,column:j});
+                        }
+                        value = parseFloat(value);
+                    }
+
+                    row[j] = value;
+                }
+            }
+        }
+
+        for(var i=0;i<matrix.length;i++) {
+            var l = matrix[i].length;
+            for(var j=0;j<l;j++) {
+                if(!this.layout[i][j]) {
+                    matrix[i][j] = 0;
+                }
+            }
+        }
+
+        settings.matrix = matrix;
+    },
+
+    /** Store the student's choices */
+    storeAnswer: function(answerList)
+    {
+        this.setDirty(true);
+        this.display && this.display.removeWarnings();
+        //get choice and answer 
+        //in MR1_n_2 and MRm_n_2 parts, only the choiceindex matters
+        var answerIndex = answerList[0];
+        var choiceIndex = answerList[1];
+
+        switch(this.settings.displayType)
+        {
+        case 'radiogroup':                            //for radiogroup parts, only one answer can be selected.
+        case 'dropdownlist':
+            for(var i=0; i<this.numAnswers; i++)
+            {
+                this.stagedAnswer[i][choiceIndex]= i===answerIndex;
+            }
+            break;
+        default:
+            this.stagedAnswer[answerIndex][choiceIndex] = answerList[2];
+        }
+    },
+
+    /** Save a copy of the student's answer as entered on the page, for use in marking.
+     */
+    setStudentAnswer: function() {
+        this.ticks = util.copyarray(this.stagedAnswer,true);
+    },
+
+    /** Get the student's answer as it was entered as a JME data type, to be used in the custom marking algorithm
+     * @abstract
+     * @returns {Numbas.jme.token}
+     */
+    rawStudentAnswerAsJME: function() {
+        return Numbas.jme.wrapValue(this.ticks);
+    },
+
+    /** Get the student's answer as a JME data type, to be used in error-carried-forward calculations
+     * @abstract
+     * @returns {Numbas.jme.token}
+     */
+    studentAnswerAsJME: function() {
+        switch(this.type) {
+            case '1_n_2':
+                for(var i=0;i<this.numAnswers;i++) {
+                    if(this.ticks[i][0]) {
+                        return new jme.types.TNum(i);
+                    }
+                }
+                break;
+            case 'm_n_2':
+                var o = [];
+                for(var i=0;i<this.numAnswers;i++) {
+                    o.push(new jme.types.TBool(this.ticks[i][0]));
+                }
+                return new jme.types.TList(o);
+            case 'm_n_x':
+                switch(this.settings.displayType) {
+                    case 'radiogroup':
+                        var o = [];
+                        for(var choice=0;choice<this.numChoices;choice++) {
+                            for(var answer=0;answer<this.numAnswers;answer++) {
+                                if(this.ticks[choice][answer]) {
+                                    o.push(new jme.types.TNum(answer));
+                                    break;
+                                }
+                            }
+                        }
+                        return new jme.types.TList(o);
+                    case 'checkbox':
+                        return Numbas.jme.wrapValue(this.ticks);
+                }
+        }
+    },
+
+    /** Reveal the correct answers, and any distractor messages for the student's choices 
+     * Extends {@link Numbas.parts.Part.revealAnswer}
+     */
+    revealAnswer: function()
+    {
+        var row,message;
+        for(var i=0;i<this.numAnswers;i++)
+        {
+            for(var j=0;j<this.numChoices;j++)
+            {
+                if((row = this.settings.distractors[i]) && (message=row[j]))
+                {
+                    this.markingComment(message);
+                }
+            }
+        }
+    }
+};
+['revealAnswer','loadFromXML','resume','finaliseLoad'].forEach(function(method) {
+    MultipleResponsePart.prototype[method] = util.extend(Part.prototype[method],MultipleResponsePart.prototype[method]);
+});
+['revealAnswer'].forEach(function(method) {
+    MultipleResponsePart.prototype[method] = util.extend(MultipleResponsePart.prototype[method], Part.prototype[method]);
+});
+
+
+/** Layouts for multiple response types
+ * @type {Object.<function>
+ */
+Numbas.parts.MultipleResponsePart.layoutTypes = {
+    all: function(row,column) { return true; },
+    lowertriangle: function(row,column) { return row>=column; },
+    strictlowertriangle: function(row,column) { return row>column; },
+    uppertriangle: function(row,column) { return row<=column; },
+    strictuppertriangle: function(row,column) { return row<column; },
+    expression: function(row,column) { return layoutMatrix[row][column]; }
+};
+
+Numbas.partConstructors['1_n_2'] = util.extend(Part,MultipleResponsePart);
+Numbas.partConstructors['m_n_2'] = util.extend(Part,MultipleResponsePart);
+Numbas.partConstructors['m_n_x'] = util.extend(Part,MultipleResponsePart);
+});
+
+
+/*
+Copyright 2011-15 Newcastle University
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+/** @file The {@link Numbas.parts.NumberEntryPart} object */
+
+Numbas.queueScript('parts/numberentry',['base','jme','jme-variables','util','part','marking_scripts'],function() {
+
+var util = Numbas.util;
+var jme = Numbas.jme;
+var math = Numbas.math;
+
+var Part = Numbas.parts.Part;
+
+/** Number entry part - student's answer must be within given range, and written to required precision.
+ * @constructor
+ * @memberof Numbas.parts
+ * @augments Numbas.parts.Part
+ */
+var NumberEntryPart = Numbas.parts.NumberEntryPart = function(xml, path, question, parentPart, loading)
+{
+	var settings = this.settings;
+	util.copyinto(NumberEntryPart.prototype.settings,settings);
+}
+NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
+{
+    loadFromXML: function(xml) {
+        var settings = this.settings;
+        var tryGetAttribute = Numbas.xml.tryGetAttribute;
+
+        tryGetAttribute(settings,xml,'answer',['minvalue','maxvalue'],['minvalueString','maxvalueString'],{string:true});
+        tryGetAttribute(settings,xml,'answer',['correctanswerfraction','correctanswerstyle','allowfractions'],['correctAnswerFraction','correctAnswerStyle','allowFractions']);
+        tryGetAttribute(settings,xml,'answer',['mustbereduced','mustbereducedpc'],['mustBeReduced','mustBeReducedPC']);
+
+        var answerNode = xml.selectSingleNode('answer');
+        var notationStyles = answerNode.getAttribute('notationstyles');
+        if(notationStyles) {
+            settings.notationStyles = notationStyles.split(',');
+        }
+        
+        tryGetAttribute(settings,xml,'answer/precision',['type','partialcredit','strict','showprecisionhint'],['precisionType','precisionPC','strictPrecision','showPrecisionHint']);
+        tryGetAttribute(settings,xml,'answer/precision','precision','precisionString',{'string':true});
+
+        var messageNode = xml.selectSingleNode('answer/precision/message');
+        if(messageNode) {
+            settings.precisionMessage = $.xsl.transform(Numbas.xml.templates.question,messageNode).string;
+        }
+
+    },
+
+    loadFromJSON: function(data) {
+        var settings = this.settings;
+        var tryLoad = Numbas.json.tryLoad;
+
+        tryLoad(data, ['minValue', 'maxValue'], settings, ['minvalueString', 'maxvalueString']);
+        tryLoad(data, ['correctAnswerFraction', 'correctAnswerStyle', 'allowFractions'], settings);
+        tryLoad(data, ['mustBeReduced', 'mustBeReducedPC'], settings);
+        tryLoad(data, ['notationStyles'], settings);
+        tryLoad(data, ['precisionPartialCredit', 'strictPrecision', 'showPrecisionHint', 'precision', 'precisionType', 'precisionMessage'], settings, ['precisionPC', 'strictPrecision', 'showPrecisionHint', 'precisionString', 'precisionType', 'precisionMessage']);
+    },
+
+    finaliseLoad: function() {
+        var settings = this.settings;
+        if(settings.precisionType!='none') {
+            settings.allowFractions = false;
+        }
+
+        try {
+            this.getCorrectAnswer(this.getScope());
+        } catch(e) {
+            this.error(e.message);
+        }
+
+        var displayAnswer = (settings.minvalue + settings.maxvalue)/2;
+        if(settings.correctAnswerFraction) {
+            var diff = Math.abs(settings.maxvalue-settings.minvalue)/2;
+            var accuracy = Math.max(15,Math.ceil(-Math.log(diff)));
+            settings.displayAnswer = jme.display.jmeRationalNumber(displayAnswer,{accuracy:accuracy});
+        } else {
+            settings.displayAnswer = math.niceNumber(displayAnswer,{precisionType: settings.precisionType,precision:settings.precision, style: settings.correctAnswerStyle});
+        }
+
+        this.stagedAnswer = [''];
+
+        if(Numbas.display) {
+            this.display = new Numbas.display.NumberEntryPartDisplay(this);
+        }
+    },
+
+    resume: function() {
+        if(!this.store) {
+            return;
+        }
+		var pobj = this.store.loadNumberEntryPart(this);
+		this.stagedAnswer = [pobj.studentAnswer+''];
+    },
+
+	/** The student's last submitted answer */
+	studentAnswer: '',
+
+    /** The script to mark this part - assign credit, and give messages and feedback.
+     * @type {Numbas.marking.MarkingScript}
+     */
+    markingScript: Numbas.marking_scripts.numberentry,
+
+	/** Properties set when the part is generated
+	 * Extends {@link Numbas.parts.Part#settings}
+	 * @property {Number} minvalueString - definition of minimum value, before variables are substituted in
+	 * @property {Number} minvalue - minimum value marked correct
+	 * @property {Number} maxvalueString - definition of maximum value, before variables are substituted in
+	 * @property {Number} maxvalue - maximum value marked correct
+	 * @property {Number} correctAnswerFraction - display the correct answer as a fraction?
+	 * @property {Boolean} allowFractions - can the student enter a fraction as their answer?
+     * @property {Array.<String>} notationStyles - styles of notation to allow, other than `<digits>.<digits>`. See {@link Numbas.util.re_decimal}.
+	 * @property {Number} displayAnswer - representative correct answer to display when revealing answers
+	 * @property {String} precisionType - type of precision restriction to apply: `none`, `dp` - decimal places, or `sigfig` - significant figures
+	 * @property {Number} precisionString - definition of precision setting, before variables are substituted in
+     * @property {Boolean} strictPrecision - must the student give exactly the required precision? If false, omitting trailing zeros is allowed.
+	 * @property {Number} precision - how many decimal places or significant figures to require
+	 * @property {Number} precisionPC - partial credit to award if the answer is between `minvalue` and `maxvalue` but not given to the required precision
+	 * @property {String} precisionMessage - message to display in the marking feedback if their answer was not given to the required precision
+	 * @property {Boolean} mustBeReduced - should the student enter a fraction in lowest terms
+	 * @property {Number} mustBeReducedPC - partial credit to award if the answer is not a reduced fraction
+	 */
+	settings:
+	{
+        minvalueString: '0',
+        maxvalueString: '0',
+		minvalue: 0,
+		maxvalue: 0,
+		correctAnswerFraction: false,
+		allowFractions: false,
+        notationStyles: ['en','si-en'],
+		displayAnswer: 0,
+		precisionType: 'none',
+        precisionString: '0',
+        strictPrecision: false,
+		precision: 0,
+		precisionPC: 0,
+		mustBeReduced: false,
+		mustBeReducedPC: 0,
+		precisionMessage: R('You have not given your answer to the correct precision.'),
+        showPrecisionHint: true
+	},
+
+	/** Compute the correct answer, based on the given scope
+	 */
+	getCorrectAnswer: function(scope) {
+		var settings = this.settings;
+
+		var precision = jme.subvars(settings.precisionString, scope);
+		settings.precision = scope.evaluate(precision).value;
+
+        if(settings.precisionType=='sigfig' && settings.precision<=0) {
+            throw(new Numbas.Error('part.numberentry.zero sig fig'));
+        }
+
+        if(settings.precisionType=='dp' && settings.precision<0) {
+            throw(new Numbas.Error('part.numberentry.negative decimal places'));
+        }
+
+		var minvalue = jme.subvars(settings.minvalueString,scope);
+		minvalue = scope.evaluate(minvalue);
+		if(minvalue && minvalue.type=='number') {
+			minvalue = minvalue.value;
+		} else {
+			throw(new Numbas.Error('part.setting not present',{property:R('minimum value')}));
+		}
+
+		var maxvalue = jme.subvars(settings.maxvalueString,scope);
+		maxvalue = scope.evaluate(maxvalue);
+		if(maxvalue && maxvalue.type=='number') {
+			maxvalue = maxvalue.value;
+		} else {
+			throw(new Numbas.Error('part.setting not present',{property:R('maximum value')}));
+		}
+
+		switch(settings.precisionType) {
+		case 'dp':
+			minvalue = math.precround(minvalue,settings.precision);
+			maxvalue = math.precround(maxvalue,settings.precision);
+			break;
+		case 'sigfig':
+			minvalue = math.siground(minvalue,settings.precision);
+			maxvalue = math.siground(maxvalue,settings.precision);
+			break;
+		}
+
+		var fudge = 0.00000000001;
+		settings.minvalue = minvalue - fudge;
+		settings.maxvalue = maxvalue + fudge;
+	},
+
+	/** Tidy up the student's answer - at the moment, just remove space.
+     * You could override this to do more substantial filtering of the student's answer.
+	 * @param {String} answer
+	 * @returns {String}
+	 */
+	cleanAnswer: function(answer) {
+		answer = answer.toString().trim();
+		return answer;
+	},
+
+	/** Save a copy of the student's answer as entered on the page, for use in marking.
+	 */
+	setStudentAnswer: function() {
+		this.studentAnswer = this.cleanAnswer(this.answerList[0]);
+	},
+
+	/** Get the student's answer as it was entered as a JME data type, to be used in the custom marking algorithm
+	 * @abstract
+	 * @returns {Numbas.jme.token}
+	 */
+	rawStudentAnswerAsJME: function() {
+		return new Numbas.jme.types.TString(this.studentAnswer);
+	},
+
+    /** Get the student's answer as a floating point number
+     * @returns {Number}
+     */
+	studentAnswerAsFloat: function() {
+		return util.parseNumber(this.studentAnswer,this.settings.allowFractions,this.settings.notationStyles);
+	}
+};
+['loadFromXML','loadFromJSON','resume','finaliseLoad'].forEach(function(method) {
+    NumberEntryPart.prototype[method] = util.extend(Part.prototype[method], NumberEntryPart.prototype[method]);
+});
+
+Numbas.partConstructors['numberentry'] = util.extend(Part,NumberEntryPart);
+});
+
+/*
+Copyright 2011-15 Newcastle University
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+/** @file The {@link Numbas.parts.PatternMatchPart} object */
+
+Numbas.queueScript('parts/patternmatch',['base','jme','jme-variables','util','part','marking_scripts'],function() {
+
+var util = Numbas.util;
+var jme = Numbas.jme;
+var math = Numbas.math;
+
+var Part = Numbas.parts.Part;
+
+/** Text-entry part - student's answer must match the given regular expression
+ * @constructor
+ * @memberof Numbas.parts
+ * @augments Numbas.parts.Part
+ */
+var PatternMatchPart = Numbas.parts.PatternMatchPart = function(xml, path, question, parentPart, loading) {
+ 	var settings = this.settings;
+ 	util.copyinto(PatternMatchPart.prototype.settings,settings);
+}
+PatternMatchPart.prototype = /** @lends Numbas.PatternMatchPart.prototype */ {
+
+    loadFromXML: function(xml) {
+        var settings = this.settings;
+        var tryGetAttribute = Numbas.xml.tryGetAttribute;
+        settings.correctAnswerString = $.trim(Numbas.xml.getTextContent(xml.selectSingleNode('correctanswer')));
+        tryGetAttribute(settings,xml,'correctanswer',['mode'],['matchMode']);
+        var displayAnswerNode = xml.selectSingleNode('displayanswer');
+        if(!displayAnswerNode)
+            this.error('part.patternmatch.display answer missing');
+        settings.displayAnswerString = $.trim(Numbas.xml.getTextContent(displayAnswerNode));
+        tryGetAttribute(settings,xml,'case',['sensitive','partialCredit'],'caseSensitive');
+    },
+
+    loadFromJSON: function(data) {
+        var settings = this.settings;
+        var tryLoad = Numbas.json.tryLoad;
+
+        tryLoad(data, ['answer', 'displayAnswer'], settings, ['correctAnswerString', 'displayAnswerString']);
+        tryLoad(data, ['caseSensitive', 'partialCredit'], settings);
+    },
+
+    finaliseLoad: function() {
+        this.getCorrectAnswer(this.getScope());
+        if(Numbas.display) {
+            this.display = new Numbas.display.PatternMatchPartDisplay(this);
+        }
+    },
+
+    resume: function() {
+        if(!this.store) {
+            return;
+        }
+ 		var pobj = this.store.loadPatternMatchPart(this);
+ 		this.stagedAnswer = [pobj.studentAnswer];
+    },
+
+	/** The student's last submitted answer 
+	 * @type {String}
+	 */
+	studentAnswer: '',
+
+    /** The script to mark this part - assign credit, and give messages and feedback.
+     * @type {Numbas.marking.MarkingScript}
+     */
+    markingScript: Numbas.marking_scripts.patternmatch,
+
+	/** Properties set when the part is generated.
+	 * Extends {@link Numbas.parts.Part#settings}
+	 * @property {String} correctAnswerString - the definition of the correct answer, without variables substituted in.
+	 * @property {RegExp} correctAnswer - regular expression pattern to match correct answers
+	 * @property {String} displayAnswerString - the definition of the display answer, without variables substituted in.
+	 * @property {String} displayAnswer - a representative correct answer to display when answers are revealed
+	 * @property {Boolean} caseSensitive - does case matter?
+	 * @property {Number} partialCredit - partial credit to award if the student's answer matches, apart from case, and `caseSensitive` is `true`.
+	 */
+	settings: {
+	 	correctAnswerString: '.*',
+	 	correctAnswer: /.*/,
+	 	displayAnswerString: '',
+	 	displayAnswer: '',
+	 	caseSensitive: false,
+	 	partialCredit: 0,
+	 	matchMode: 'regex'
+    },
+
+	/** Compute the correct answer, based on the given scope
+	 */
+	getCorrectAnswer: function(scope) {
+		var settings = this.settings;
+
+		settings.correctAnswer = jme.subvars(settings.correctAnswerString, scope, true);
+
+        switch(this.settings.matchMode) {
+            case 'regex':
+                settings.correctAnswer = '^'+settings.correctAnswer+'$';
+                break;
+        }
+
+		settings.displayAnswer = jme.subvars(settings.displayAnswerString,scope, true);
+	},
+
+	/** Save a copy of the student's answer as entered on the page, for use in marking.
+	 */
+	setStudentAnswer: function() {
+		this.studentAnswer = this.answerList[0];
+	},
+
+	/** Get the student's answer as it was entered as a JME data type, to be used in the custom marking algorithm
+	 * @abstract
+   	 * @returns {Numbas.jme.token}
+  	 */
+	rawStudentAnswerAsJME: function() {
+	    return new Numbas.jme.types.TString(this.studentAnswer);
+	},
+
+};
+['finaliseLoad','resume','loadFromXML'].forEach(function(method) {
+    PatternMatchPart.prototype[method] = util.extend(Part.prototype[method], PatternMatchPart.prototype[method]);
+});
+
+Numbas.partConstructors['patternmatch'] = util.extend(Part,PatternMatchPart);
 });
 

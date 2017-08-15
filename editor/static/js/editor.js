@@ -1489,7 +1489,7 @@ $(document).ready(function() {
                 </li>\
             </ul>\
             '
-    })
+    });
 
 	ko.bindingHandlers.dragOut = {
 		init: function(element, valueAccessor) {

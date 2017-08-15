@@ -515,49 +515,68 @@
 
                                         <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='notes'}">
                                             <form class="form-horizontal" data-bind="submit: Editor.noop">
-                                                {% property 'answer' 'Student\'s answer' %}
+                                                <div class="form-group">
+                                                    <label class="label-block">
+                                                        <div class="col-sm-12 col-md-3">
+                                                            Student's answer
+                                                        </div>
+                                                        <div class="col-sm-12 col-md-9">
+                                                            <div data-bind="component: {name: 'answer-widget', params: {answer: answer, widget: $parent.type().widget, part: $parent}}"></div>
+                                                        </div>
+                                                    </label>
+                                                </div>
                                             </form>
 
-                                            <table class="notes table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>
-                                                            Note
-                                                            <br>
-                                                            <div class="btn-group" role="group">
-                                                                <button type="button" class="btn btn-sm btn-link" data-bind="click: showAllNotes"><span class="glyphicon glyphicon-eye-open"></span> Show all</button> 
-                                                                <button type="button" class="btn btn-sm btn-link" data-bind="click: hideAllNotes"><span class="glyphicon glyphicon-eye-close"></span> Hide all</button>
-                                                            </div>
-                                                        </th>
-                                                        <th>Value</th>
-                                                        <th>Feedback</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody data-bind="foreach: sortedNotes">
-                                                    <tr class="note" data-bind="css: {'show-note': show(), 'invalid': !valid()}">
-                                                        <td role="button" data-bind="click: show.toggle">
-                                                            <span class="name monospace" data-bind="text: name, attr: {title: description}"></span> 
-                                                        </td>
-                                                        <td class="only-when-shown">
-                                                            <span class="value jme-value" data-bind="jmevalue: value, error: error"></span>
-                                                        </td>
-                                                        <td class="only-when-shown">
-                                                            <ul class="list-unstyled" data-bind="foreach: messages">
-                                                                <li data-bind="html: $data"></li>
-                                                            </ul>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
 
-                                            <div class="help-block">
-                                                <p>
-                                                    Click on a note's name to show or hide it. Only shown notes will be included when you create a unit test. 
-                                                </p>
+                                            <div data-bind="if: last_run_error">
+                                                <div class="alert alert-danger">
+                                                    <p data-bind="html: last_run_error"></p>
+                                                </div>
                                             </div>
+                                            <div data-bind="visible: last_run() && !last_run_error()">
+                                                <table class="notes table">
+                                                    <colgroup>
+                                                        <col class="name"></col>
+                                                    </colgroup>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>
+                                                                Note
+                                                                <br>
+                                                                <div class="btn-group" role="group">
+                                                                    <button type="button" class="btn btn-sm btn-link" data-bind="click: showAllNotes"><span class="glyphicon glyphicon-eye-open"></span> Show all</button> 
+                                                                    <button type="button" class="btn btn-sm btn-link" data-bind="click: hideAllNotes"><span class="glyphicon glyphicon-eye-close"></span> Hide all</button>
+                                                                </div>
+                                                            </th>
+                                                            <th>Value</th>
+                                                            <th>Feedback</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody data-bind="foreach: sortedNotes">
+                                                        <tr class="note" data-bind="css: {'show-note': show(), 'invalid': !valid()}">
+                                                            <td role="button" data-bind="click: show.toggle">
+                                                                <span class="name monospace" data-bind="text: name, attr: {title: description}"></span> 
+                                                            </td>
+                                                            <td class="only-when-shown">
+                                                                <span class="value jme-value" data-bind="jmevalue: value, error: error"></span>
+                                                            </td>
+                                                            <td class="only-when-shown">
+                                                                <ul class="list-unstyled" data-bind="foreach: messages">
+                                                                    <li data-bind="html: $data"></li>
+                                                                </ul>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
 
-                                            <button class="btn btn-primary" type="button" data-bind="click: $parent.addUnitTest, disable: !canCreateUnitTest()">Create a unit test</button>
+                                                <div class="help-block">
+                                                    <p>
+                                                        Click on a note's name to show or hide it. Only shown notes will be included when you create a unit test. 
+                                                    </p>
+                                                </div>
 
+                                                <button class="btn btn-primary" type="button" data-bind="click: $parent.addUnitTest, disable: !canCreateUnitTest()">Create a unit test</button>
+                                            </div>
                                         </section>
                                     </div>
                                 </div>
@@ -625,52 +644,62 @@
                                                             {% property 'answer' 'Student\'s answer' disable=True %}
                                                         </form>
 
-                                                        <table class="notes table">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th></th>
-                                                                    <th>Note</th>
-                                                                    <th></th>
-                                                                    <th>Value</th>
-                                                                    <th>Feedback</th>
-                                                                    <td></td>
-                                                                </tr>
-                                                            </thead>
-                                                            <!-- ko foreach: sortedNotes -->
-                                                                <tbody data-bind="visible: show">
-                                                                    <tr class="note">
-                                                                        <td rowspan="2" class="lead">
-                                                                            <span class="text-success" data-bind="visible: matchesExpected"><span class="glyphicon glyphicon-ok" title="This note produces the expected output"></span> <span class="sr-only">This note produces the expected output</span></span>
-                                                                            <span class="text-danger" data-bind="visible: !matchesExpected()"><span class="glyphicon glyphicon-remove" data-bind="attr: {title: noMatchDescription}"></span> <span class="sr-only" data-bind="text: noMatchDescription"></span></span>
-                                                                        </td>
-                                                                        <td rowspan="2">
-                                                                            <span class="name monospace" data-bind="text: name, attr: {title: description}"></span> 
-                                                                        </td>
-                                                                        <th>Current:</th>
-                                                                        <td>
-                                                                            <span class="value jme-value" data-bind="jmevalue: value, error: error"></span>
-                                                                        </td>
-                                                                        <td>
-                                                                            <ul class="list-unstyled" data-bind="foreach: messages">
-                                                                                <li data-bind="html: $data"></li>
-                                                                            </ul>
-                                                                        </td>
+                                                        <div class="if: last_run_error">
+                                                            <div class="alert alert-danger">
+                                                                <p data-bind="html: last_run_error"></p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="if: !last_run_error()">
+                                                            <table class="notes table">
+                                                                <colgroup>
+                                                                    <col class="name"></col>
+                                                                </colgroup>
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th></th>
+                                                                        <th>Note</th>
+                                                                        <th></th>
+                                                                        <th>Value</th>
+                                                                        <th>Feedback</th>
+                                                                        <td></td>
                                                                     </tr>
-                                                                    <tr class="note" data-bind="css: {danger: missing() || !valid()}">
-                                                                        <th>Expected:</th>
-                                                                        <td>
-                                                                            <span class="value jme-value" data-bind="jmevalue: expected.computedValue"></span>
-                                                                        </td>
-                                                                        <td>
-                                                                            <ul class="list-unstyled" data-bind="foreach: expected.messages">
-                                                                                <li data-bind="html: $data"></li>
-                                                                            </ul>
-                                                                        </td>
-                                                                    </tr>
-                                                                </tbody>
-                                                            <!-- /ko -->
-                                                        </table>
-                                                        <button class="btn btn-primary" type="button" data-bind="click: $parent.addUnitTest, disable: !canCreateUnitTest()">Create a unit test</button>
+                                                                </thead>
+                                                                <!-- ko foreach: sortedNotes -->
+                                                                    <tbody data-bind="visible: show">
+                                                                        <tr class="note">
+                                                                            <td rowspan="2" class="lead">
+                                                                                <span class="text-success" data-bind="visible: matchesExpected"><span class="glyphicon glyphicon-ok" title="This note produces the expected output"></span> <span class="sr-only">This note produces the expected output</span></span>
+                                                                                <span class="text-danger" data-bind="visible: !matchesExpected()"><span class="glyphicon glyphicon-remove" data-bind="attr: {title: noMatchDescription}"></span> <span class="sr-only" data-bind="text: noMatchDescription"></span></span>
+                                                                            </td>
+                                                                            <td rowspan="2">
+                                                                                <span class="name monospace" data-bind="text: name, attr: {title: description}"></span> 
+                                                                            </td>
+                                                                            <th>Current:</th>
+                                                                            <td>
+                                                                                <span class="value jme-value" data-bind="jmevalue: value, error: error"></span>
+                                                                            </td>
+                                                                            <td>
+                                                                                <ul class="list-unstyled" data-bind="foreach: messages">
+                                                                                    <li data-bind="html: $data"></li>
+                                                                                </ul>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr class="note" data-bind="css: {danger: missing() || !valid()}">
+                                                                            <th>Expected:</th>
+                                                                            <td>
+                                                                                <span class="value jme-value" data-bind="jmevalue: expected.computedValue"></span>
+                                                                            </td>
+                                                                            <td>
+                                                                                <ul class="list-unstyled" data-bind="foreach: expected.messages">
+                                                                                    <li data-bind="html: $data"></li>
+                                                                                </ul>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                <!-- /ko -->
+                                                            </table>
+                                                            <button class="btn btn-primary" type="button" data-bind="click: $parent.addUnitTest, disable: !canCreateUnitTest()">Create a unit test</button>
+                                                        </div>
                                                     </section>
                                                 </div>
                                             </div>

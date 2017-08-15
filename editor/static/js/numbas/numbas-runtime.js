@@ -292,7 +292,8 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 		'pi': Math.PI,
 		'i': math.complex(0,1),
 		'infinity': Infinity,
-		'infty': Infinity
+		'infty': Infinity,
+        'nan': NaN
 	},
 
 	/** Regular expressions to match tokens */
@@ -383,18 +384,15 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 			{
 				var name = result[2];
 				var annotation = result[1] ? result[1].split(':').slice(0,-1) : null;
-				if(!annotation)
-				{
+				if(!annotation) {
 					var lname = name.toLowerCase();
 					// fill in constants here to avoid having more 'variables' than necessary
 					if(lname in jme.constants) {
 						token = new TNum(jme.constants[lname]);
-					}else{
+					} else {
 						token = new TName(name);
 					}
-				}
-				else
-				{
+				} else {
 					token = new TName(name,annotation);
 				}
 				
@@ -7475,6 +7473,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @param {Boolean} extend_base - Does this script extend the built-in script?
      */
     setMarkingScript: function(markingScriptString, extend_base) {
+        var p = this;
         var oldMarkingScript = this.markingScript;
 
         var algo = this.markingScript = new marking.MarkingScript(markingScriptString, extend_base ? oldMarkingScript : undefined);
@@ -7565,11 +7564,6 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
 	 * @type {Array.<String>}
 	 */
 	stagedAnswer: undefined,
-
-	/** Student's last submitted answer - a copy of {@link Numbas.parts.Part.stagedAnswer} taken when they submitted.
-	 * @type {Array.<String>}
-	 */
-	answerList: undefined,
 
 	/** Has this part been answered?
 	 * @type {Boolean}
@@ -7775,9 +7769,11 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
 	},
 
 	/** Update the stored answer from the student (called when the student changes their answer, but before submitting) 
+     * @param {*} answer
+     * @see {Numbas.parts.Part.stagedAnswer}
 	 */
-	storeAnswer: function(answerList) {
-		this.stagedAnswer = answerList;
+	storeAnswer: function(answer) {
+		this.stagedAnswer = answer;
 		this.setDirty(true);
 		this.display && this.display.removeWarnings();
 	},
@@ -7829,9 +7825,6 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
                     : R('part.marking.revealed steps no penalty'));
 		}
 
-		if(this.stagedAnswer) {
-			this.answerList = util.copyarray(this.stagedAnswer);
-		}
 		this.setStudentAnswer();
 
 		if(this.doesMarking) {
@@ -8030,7 +8023,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
 	 */
 	getCorrectAnswer: function(scope) {},
 
-	/** Save a copy of the student's answer as entered on the page, for use in marking.
+	/** Save an answer entered by the student, for use in marking.
 	 * @abstract
 	 */
 	setStudentAnswer: function() {},
@@ -8057,12 +8050,13 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @returns {Numbas.marking.finalised_state}
      */
     mark: function() {
-		if(this.answerList==undefined) {
+        var studentAnswer = this.rawStudentAnswerAsJME();
+		if(studentAnswer==undefined) {
 			this.setCredit(0,R('part.marking.nothing entered'));
 			return;
 		}
 		
-        var result = this.mark_answer(this.rawStudentAnswerAsJME());
+        var result = this.mark_answer(studentAnswer);
 
         var finalised_result = marking.finalise_state(result.states.mark)
         this.apply_feedback(finalised_result);
@@ -8483,8 +8477,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                 q.addPart(part,j);
             }
             q.signals.trigger('partsGenerated');
-        })
-
+        });
     },
 
     /** Load the question's settings from a JSON object
@@ -8896,16 +8889,6 @@ Question.prototype = /** @lends Numbas.Question.prototype */
 		}
 	},
 
-	/** Mark the student's answer to a given part/gap/step.
-	 */
-	doPart: function(answerList, partRef)
-	{
-		var part = this.getPart(partRef);
-		if(!part)
-			throw(new Numbas.Error('question.no such part',{path:partRef}));
-		part.storeAnswer(answerList);
-	},
-
 	/** Calculate the student's total score for this questoin - adds up all part scores 
 	 */
 	calculateScore: function()
@@ -9152,23 +9135,44 @@ SignalBox.prototype = {
 
     on: function(events, fn) {
         var sb = this;
+        if(sb.error) {
+            return Promise.reject(sb.error);
+        }
         if(typeof(events)=='string') {
             events = [events];
         }
         var promises = [];
-        events.forEach(function(name) {
+        var callbacks = events.map(function(name) {
             var callback = sb.getCallback(name);
             promises.push(callback.promise);
+            return callback;
         });
         var promise = Promise.all(promises);
         if(fn) {
-            promise = promise.then(fn);
+            promise = promise.then(function() {
+                return new Promise(function(resolve,reject) {
+                    try {
+                        var result = fn();
+                        resolve(result);
+                    } catch(e) {
+                        reject(e);
+                    }
+                });
+            }).catch(function(e){
+                sb.error = e;
+                for(var x in sb.callbacks) {
+                    sb.callbacks[x].reject(e);
+                }
+            });
         }
         return promise;
     },
 
     trigger: function(name) {
         var callback = this.getCallback(name);
+        if(this.error) {
+            callback.reject(error);
+        }
         callback.resolved = true;
         callback.resolve();
     }
@@ -9451,7 +9455,7 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
         try {
             this.tree = jme.compile(this.expr);
         } catch(e) {
-            throw(new Numbas.Error("marking.note.compilation error",{name:name, message:e.message}));
+            throw(new Numbas.Error("marking.note.compilation error",{name:this.name, message:e.message}));
         }
         this.vars = jme.findvars(this.tree);
     }
@@ -10056,8 +10060,10 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	 * @param {Number} b
 	 * @returns {Boolean}
 	 */
-	eq: function(a,b)
-	{
+	eq: function(a,b) {
+        if(isNaN(a)) {
+            return isNaN(b);
+        }
 		if(a.complex)
 		{
 			if(b.complex)
@@ -12045,7 +12051,7 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 			return a.value[0]==b.value[0] && a.value[1]==b.value[1] && a.value[2]==b.value[2];
 		},
 		'name': function(a,b) {
-			return a.name == b.name;
+			return a.name.toLowerCase() == b.name.toLowerCase();
 		},
 		'string': function(a,b) {
 			return a.value==b.value;
@@ -14560,11 +14566,14 @@ GapFillPart.prototype = /** @lends Numbas.parts.GapFillPart.prototype */
 		return new Numbas.jme.types.TList(this.gaps.map(function(g){return g.rawStudentAnswerAsJME()}));
 	},
 
+    storeAnswer: function(answer) {
+        this.gaps.forEach(function(g,i) {
+            g.storeAnswer(answer[i]);
+        })
+    },
+
     setStudentAnswer: function() {
         this.studentAnswer = this.gaps.map(function(g) {
-            if(g.stagedAnswer) {
-                g.answerList = util.copyarray(g.stagedAnswer);
-            }
             g.setStudentAnswer();
             return g.studentAnswer;
         });
@@ -14613,7 +14622,7 @@ GapFillPart.prototype = /** @lends Numbas.parts.GapFillPart.prototype */
 	}
 
 };
-['loadFromXML','resume','finaliseLoad','loadFromJSON'].forEach(function(method) {
+['loadFromXML','resume','finaliseLoad','loadFromJSON','storeAnswer'].forEach(function(method) {
     GapFillPart.prototype[method] = util.extend(Part.prototype[method], GapFillPart.prototype[method]);
 });
 ['revealAnswer'].forEach(function(method) {
@@ -14957,7 +14966,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
 	/** Save a copy of the student's answer as entered on the page, for use in marking.
 	 */
 	setStudentAnswer: function() {
-		this.studentAnswer = this.answerList[0];
+		this.studentAnswer = this.stagedAnswer;
 	},
 
 	/** Get the student's answer as it was entered as a JME data type, to be used in the custom marking algorithm
@@ -15161,9 +15170,9 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
 	/** Save a copy of the student's answer as entered on the page, for use in marking.
 	 */
 	setStudentAnswer: function() {
-		this.studentAnswerRows = parseInt(this.stagedAnswer[0]);
-		this.studentAnswerColumns = parseInt(this.stagedAnswer[1]);
-		this.studentAnswer = this.stagedAnswer[2];
+		this.studentAnswerRows = parseInt(this.stagedAnswer.rows);
+		this.studentAnswerColumns = parseInt(this.stagedAnswer.columns);
+		this.studentAnswer = this.stagedAnswer.matrix;
 	},
 
 	/** Get the student's answer as it was entered as a JME data type, to be used in the marking script
@@ -15849,14 +15858,14 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
     },
 
     /** Store the student's choices */
-    storeAnswer: function(answerList)
+    storeTick: function(answer)
     {
         this.setDirty(true);
         this.display && this.display.removeWarnings();
         //get choice and answer 
         //in MR1_n_2 and MRm_n_2 parts, only the choiceindex matters
-        var answerIndex = answerList[0];
-        var choiceIndex = answerList[1];
+        var answerIndex = answer.answer;
+        var choiceIndex = answer.choice;
 
         switch(this.settings.displayType)
         {
@@ -15868,7 +15877,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
             }
             break;
         default:
-            this.stagedAnswer[answerIndex][choiceIndex] = answerList[2];
+            this.stagedAnswer[answerIndex][choiceIndex] = answer.ticked;
         }
     },
 
@@ -16186,7 +16195,7 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
 	/** Save a copy of the student's answer as entered on the page, for use in marking.
 	 */
 	setStudentAnswer: function() {
-		this.studentAnswer = this.cleanAnswer(this.answerList[0]);
+		this.studentAnswer = this.cleanAnswer(this.stagedAnswer);
 	},
 
 	/** Get the student's answer as it was entered as a JME data type, to be used in the custom marking algorithm
@@ -16331,7 +16340,7 @@ PatternMatchPart.prototype = /** @lends Numbas.PatternMatchPart.prototype */ {
 	/** Save a copy of the student's answer as entered on the page, for use in marking.
 	 */
 	setStudentAnswer: function() {
-		this.studentAnswer = this.answerList[0];
+		this.studentAnswer = this.stagedAnswer;
 	},
 
 	/** Get the student's answer as it was entered as a JME data type, to be used in the custom marking algorithm

@@ -157,6 +157,10 @@
     font-weight: bold;
 }
 
+.table.notes col.name {
+    width: 13em;
+}
+
 /*
 #question-name {
 	font-size: 2em;

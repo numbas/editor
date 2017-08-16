@@ -1383,7 +1383,12 @@ $(document).ready(function() {
 				case 'string':
 					return Numbas.util.escapeHTML(v.value);
 				case 'list':
-					return 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
+                    var s = Numbas.jme.display.treeToJME({tok:v});
+                    if(s.length<30) {
+                        return s;
+                    } else {
+    					return 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
+                    }
 				case 'html':
                     if(v.value.length==1 && v.value[0].tagName=='IMG') {
                         var src = v.value[0].getAttribute('src');
@@ -2116,7 +2121,6 @@ $(document).ready(function() {
                 var res = part.mark_answer(part.rawStudentAnswerAsJME());
                 mt.last_run({script: part.markingScript, result: res, marks: part.marks});
             }).catch(function(e) {
-                console.log(e.stack);
                 mt.last_run({error:e.message});
             });
         },this).extend({throttle:300});

@@ -1307,7 +1307,12 @@ $(document).ready(function() {
             case 'string':
                 return Numbas.util.escapeHTML(v.value);
             case 'list':
-                return 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
+                var s = Numbas.jme.display.treeToJME({tok:v});
+                if(s.length<30) {
+                    return s;
+                } else {
+                    return 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
+                }
             case 'html':
                 if(v.value.length==1 && v.value[0].tagName=='IMG') {
                     var src = v.value[0].getAttribute('src');

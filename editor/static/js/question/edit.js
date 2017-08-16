@@ -2114,8 +2114,9 @@ $(document).ready(function() {
                 part.storeAnswer(mt.answer());
                 part.setStudentAnswer();
                 var res = part.mark_answer(part.rawStudentAnswerAsJME());
-                mt.last_run({script: part.markingScript, result: res});
+                mt.last_run({script: part.markingScript, result: res, marks: part.marks});
             }).catch(function(e) {
+                console.log(e.stack);
                 mt.last_run({error:e.message});
             });
         },this).extend({throttle:300});
@@ -2176,7 +2177,7 @@ $(document).ready(function() {
                 }
 
                 // Compile feedback messages
-                var feedback = compile_feedback(Numbas.marking.finalise_state(result.states[x]));
+                var feedback = compile_feedback(Numbas.marking.finalise_state(result.states[x]), last_run.marks);
 
                 // Save the results for this note
                 note.note(script.notes[x]);
@@ -2424,7 +2425,7 @@ $(document).ready(function() {
         },this);
     }
 
-    function compile_feedback(feedback) {
+    function compile_feedback(feedback, maxMarks) {
         var valid = true;
         var part = this;
         var end = false;
@@ -2432,13 +2433,16 @@ $(document).ready(function() {
         var i=0;
         var lifts = [];
         var scale = 1;
-        var maxMarks = 1;
+        maxMarks = maxMarks===undefined ? 0 : maxMarks;
 
         var messages = [];
         var warnings = [];
         var credit = 0;
 
         function addCredit(change,message) {
+            if(change<-credit) {
+                change = -credit;
+            }
             credit += change;
             change *= maxMarks;
 

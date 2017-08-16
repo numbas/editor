@@ -533,7 +533,7 @@
                                                     <p data-bind="html: last_run_error"></p>
                                                 </div>
                                             </div>
-                                            <div data-bind="visible: last_run() && !last_run_error()">
+                                            <div data-bind="visible: last_run() && sortedNotes().length>0">
                                                 <table class="notes table">
                                                     <colgroup>
                                                         <col class="name"></col>

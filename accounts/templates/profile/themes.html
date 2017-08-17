@@ -6,6 +6,8 @@
     <link href="{% sstatic 'css/theme.css' %}" type="text/css" rel="stylesheet" />
 {% endblock stylesheets %}
 
+{% block profile_header %}{{view_user.get_full_name}}'s themes{% endblock %}
+
 {% block profile_content %}
 
 {% if view_user.own_themes.exists %}

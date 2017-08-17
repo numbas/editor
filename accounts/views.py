@@ -136,6 +136,10 @@ class UserExtensionsView(UserProfileView):
     template_name = 'profile/extensions.html'
     profile_page = 'extensions'
 
+class UserCustomPartTypesView(UserProfileView):
+    template_name = 'profile/custom_part_types.html'
+    profile_page = 'custom_part_types'
+
 class ZipView(DetailView):
     def get(self, request, *args, **kwargs):
         files, filename = self.get_zip(request, *args, **kwargs)

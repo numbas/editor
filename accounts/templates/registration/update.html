@@ -9,11 +9,9 @@
 </script>
 {% endblock javascripts %}
 
-{% block profile_content %}
-    <div class="page-header">
-	    <h1>Update your profile</h1>
-    </div>
+{% block profile_header %}Update your profile{% endblock %}
 
+{% block profile_content %}
     <form method="post" action="" enctype="multipart/form-data">
 		{% csrf_token %} 
 		{{form.non_field_errors}}

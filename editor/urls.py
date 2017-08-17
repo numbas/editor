@@ -2,7 +2,7 @@ from django.conf.urls import patterns, url
 
 from django.contrib.auth.decorators import login_required
 
-from .views import project, editoritem, exam, question, HomeView, theme, extension, generic, notification, resource, basket, timeline
+from .views import project, editoritem, exam, question, HomeView, theme, extension, generic, notification, resource, basket, timeline, custom_part_type
 
 urlpatterns = patterns('',
 
@@ -164,6 +164,11 @@ urlpatterns = patterns('',
     url(r'^extension/new/$', login_required(extension.CreateView.as_view()), name='extension_new'),
     url(r'^extensions/(?P<pk>\d+)/edit$', login_required(extension.UpdateView.as_view()), name='extension_edit'),
     url(r'^extensions/(?P<pk>\d+)/delete$', login_required(extension.DeleteView.as_view()), name='extension_delete'),
+
+    # Custom part types
+    url(r'^part_type/new/$', login_required(custom_part_type.CreateView.as_view()), name='custom_part_type_new'),
+    url(r'^part_type/(?P<pk>\d+)/edit$', login_required(custom_part_type.UpdateView.as_view()), name='custom_part_type_edit'),
+    url(r'^part_type/(?P<pk>\d+)/delete$', login_required(custom_part_type.DeleteView.as_view()), name='custom_part_type_delete'),
 
     # Notifications
 

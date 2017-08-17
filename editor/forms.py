@@ -12,7 +12,7 @@ from django.db.models import Q, Count
 from django.core.validators import validate_email
 from django.contrib.auth.models import User
 
-from editor.models import NewExam, NewQuestion, EditorItem, Access, Theme, Extension, PullRequest
+from editor.models import NewExam, NewQuestion, EditorItem, Access, Theme, Extension, PullRequest, CustomPartType
 import editor.models
 from accounts.util import find_users
 
@@ -362,6 +362,42 @@ class NewExtensionForm(UpdateExtensionForm):
             extension.save()
             self.save_m2m()
         return extension
+
+class UpdateCustomPartTypeForm(forms.ModelForm):
+    
+    """Form to edit a custom part type."""
+    
+    class Meta:
+        model = CustomPartType
+        fields = ['name', 'short_name', 'description', 'input_widget', 'can_be_gap', 'can_be_step', 'settings', 'marking_script']
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control'}),
+            'short_name': forms.TextInput(attrs={'class':'form-control'}),
+            'input_widget': forms.widgets.Select(choices=editor.models.CUSTOM_PART_TYPE_INPUT_WIDGETS, attrs={'class':'form-control'})
+        }
+
+    def clean_short_name(self):
+        short_name = self.cleaned_data.get('short_name')
+        built_in_part_types = ['jme','numberentry','patternmatch','matrix','gapfill','information','extension','1_n_2','m_n_2','m_n_x']
+        if short_name in built_in_part_types:
+            raise ValidationError("The unique identifier you chose is already in use.")
+        return short_name
+
+class NewCustomPartTypeForm(UpdateCustomPartTypeForm):
+    
+    """Form for a new extension."""
+    
+    def __init__(self, *args, **kwargs):
+        self._user = kwargs.pop('author')
+        super(NewCustomPartTypeForm, self).__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        custom_part_type = super(NewCustomPartTypeForm, self).save(commit=False)
+        custom_part_type.author = self._user
+        if commit:
+            custom_part_type.save()
+            self.save_m2m()
+        return custom_part_type
 
 class BootstrapFieldMixin(object):
     def widget_attrs(self, widget):

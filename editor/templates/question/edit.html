@@ -641,15 +641,24 @@
 
                                                     <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='notes'}">
                                                         <form class="form-horizontal" data-bind="submit: Editor.noop">
-                                                            {% property 'answer' 'Student\'s answer' disable=True %}
+                                                            <div class="form-group">
+                                                                <label class="label-block">
+                                                                    <div class="col-sm-12 col-md-3">
+                                                                        Student's answer
+                                                                    </div>
+                                                                    <div class="col-sm-12 col-md-9">
+                                                                        <div data-bind="component: {name: 'answer-widget', params: {answer: answer, widget: $parent.type().widget, part: $parent}}"></div>
+                                                                    </div>
+                                                                </label>
+                                                            </div>
                                                         </form>
 
-                                                        <div class="if: last_run_error">
+                                                        <div data-bind="visible: last_run_error">
                                                             <div class="alert alert-danger">
                                                                 <p data-bind="html: last_run_error"></p>
                                                             </div>
                                                         </div>
-                                                        <div class="if: !last_run_error()">
+                                                        <div data-bind="visible: !last_run_error()">
                                                             <table class="notes table">
                                                                 <colgroup>
                                                                     <col class="name"></col>

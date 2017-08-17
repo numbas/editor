@@ -148,6 +148,8 @@ class Project(models.Model, ControlledObject):
     default_locale = models.CharField(max_length=10, editable=True, default='en-GB')
     default_licence = models.ForeignKey('Licence', null=True, blank=True)
 
+    custom_part_types = models.ManyToManyField('CustomPartType', related_name='projects')
+
     def can_be_edited_by(self, user):
         return (user.is_superuser) or (self.owner == user) or self.has_access(user, ('edit',))
 
@@ -343,6 +345,59 @@ def reset_theme_on_delete(sender, instance, **kwargs):
         exam.custom_theme = None
         exam.theme = default_theme
         exam.save()
+
+CUSTOM_PART_TYPE_PUBLIC_CHOICES = [
+    ('restricted', 'Only to permitted users'),
+    ('always', 'Always available'),
+    ('select', 'When selected'),
+]
+
+CUSTOM_PART_TYPE_INPUT_WIDGETS = [
+    ('string', 'String'),
+    ('number', 'Number'),
+    ('jme', 'Mathematical expression'),
+    ('matrix', 'Matrix'),
+    ('radios', 'Radio buttons'),
+    ('checkboxes', 'Choose several from a list'),
+    ('dropdown', 'Drop-down box'),
+]
+
+class CustomPartType(models.Model):
+    author = models.ForeignKey(User, related_name='own_custom_part_types')
+    name = models.CharField(max_length=200, verbose_name='Name')
+    short_name = models.CharField(max_length=200, unique=True, verbose_name='Unique identifier for this part type')
+    description = models.TextField(default='', verbose_name='What\'s this part type for?')
+    input_widget = models.CharField(max_length=200, choices = CUSTOM_PART_TYPE_INPUT_WIDGETS, verbose_name='Answer input method')
+    can_be_gap = models.BooleanField(default=True, verbose_name='Can this part be a gap?')
+    can_be_step = models.BooleanField(default=True, verbose_name='Can this part be a step?')
+    marking_script = models.TextField(default='', blank=True, verbose_name='Marking algorithm')
+    settings = JSONField(blank=True)
+    public_availability = models.CharField(max_length=10, choices=CUSTOM_PART_TYPE_PUBLIC_CHOICES, verbose_name='Public availability', default='restricted')
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return '<CustomPartType: {}>'.format(self.short_name)
+
+    def as_json(self):
+        return {
+            'source': {
+                'pk': self.pk,
+                'author': {
+                    'name': self.author.get_full_name(),
+                    'pk': self.author.pk,
+                },
+            },
+            'name': self.name,
+            'short_name': self.short_name,
+            'description': self.description,
+            'input_widget': self.input_widget,
+            'can_be_gap': self.can_be_gap,
+            'can_be_step': self.can_be_step,
+            'marking_script': self.marking_script,
+            'settings': self.settings,
+        }
 
 class Resource(models.Model):
     owner = models.ForeignKey(User, related_name='resources')
@@ -983,6 +1038,7 @@ class NewQuestion(models.Model):
 
     resources = models.ManyToManyField(Resource, blank=True)
     extensions = models.ManyToManyField(Extension, blank=True)
+    custom_part_types = models.ManyToManyField(CustomPartType, blank=True, related_name='questions')
 
     theme_path = os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'], 'themes', 'question')
 
@@ -1058,6 +1114,15 @@ class NewQuestion(models.Model):
         self.extensions.clear()
         self.extensions.add(*other.extensions.all())
         self.save()
+
+@receiver(signals.pre_save, sender=NewQuestion)
+def set_question_custom_part_types(instance, **kwargs):
+    q = instance
+    c = NumbasObject.get_parsed_content(q.editoritem)
+    part_types = set(p['type'] for p in c.data.get('parts',[]))
+    q.custom_part_types.clear()
+    custom_part_types = CustomPartType.objects.filter(short_name__in=part_types)
+    q.custom_part_types.add(*custom_part_types)
 
 @reversion.register
 class NewExam(models.Model):
@@ -1209,7 +1274,6 @@ def notify_stamp(instance, **kwargs):
 @receiver(signals.post_save, sender=Comment)
 def notify_comment(instance, **kwargs):
     notify_watching(instance.user, target=instance.object, verb='commented on', action_object=instance)
-
 
 
 #    Everything below is to be deleted in Numbas 2.0

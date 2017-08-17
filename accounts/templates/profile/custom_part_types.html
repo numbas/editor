@@ -1,0 +1,54 @@
+{% extends "profile/base.html" %}
+{% load sstatic %}
+{% load sanitizer %}
+
+{% block stylesheets %}
+	{{ block.super }}
+    <link href="{% sstatic 'css/custom_part_type.css' %}" type="text/css" rel="stylesheet" />
+{% endblock stylesheets %}
+
+{% block profile_header %}{{view_user.get_full_name}}'s part types{% endblock %}
+
+{% block profile_content %}
+
+{% if view_user.own_custom_part_types.exists %}
+<table class="custom_part_types table">
+    <thead>
+		<th>Name</th>
+		<th>What's it used for?</th>
+        {% if is_me %}<th></th><!-- control links -->{% endif %}
+    </thead>
+    <tbody>
+    {% for custom_part_type in view_user.own_custom_part_types.all %}
+    <tr>
+        <td><a href="{% url 'custom_part_type_edit' custom_part_type.pk %}">{{custom_part_type.name}}</a></td>
+		<td>{{custom_part_type.description|strip_html|safe}}</td>
+        {% if is_me %}
+        <td class="text-center">
+            <a class="btn btn-link" href="{% url 'custom_part_type_delete' custom_part_type.pk %}" title="Delete this part type"><span class="glyphicon glyphicon-remove text-danger"></span></a>
+        </td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+    </tbody>
+    {% if is_me %}
+    <tfoot>
+        <tr>
+            <td colspan="4">
+                <a class="btn btn-primary" href="{% url 'custom_part_type_new' %}"><span class="glyphicon glyphicon-upload"></span> Create a new part type</a>
+            </td>
+        </tr>
+    </tfoot>
+    {% endif %}
+</table>
+{% else %}
+{% if is_me %}
+<p><a class="btn btn-primary" href="{% url 'custom_part_type_new' %}"><span class="glyphicon glyphicon-upload"></span> Create a new part type</a></p>
+{% else %}
+<p class="nothing-here">{{view_user.first_name}} hasn't created any part types yet.</p>
+{% endif %}
+{% endif %}
+
+<p><a target="numbasquickhelp" href="http://numbas-editor.readthedocs.io/en/latest/custom_part_types.html"><span class="glyphicon glyphicon-question-sign"></span> Help with custom part types</a></p>
+
+{% endblock profile_content %}

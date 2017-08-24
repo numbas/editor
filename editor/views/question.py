@@ -153,6 +153,65 @@ class DeleteView(generic.DeleteView):
     def get_success_url(self):
         return reverse('editor_index')
 
+class PublishView(generic.UpdateView):
+    model = NewQuestion
+    fields = ['published']
+    
+    def get_success_url(self):
+        ei = self.get_object()
+        return reverse('{}_edit'.format(ei.item_type), args=(ei.rel_obj.pk, ei.slug,)) 
+
+    def get(self, *args, **kwargs):
+        return redirect(self.get_success_url())
+
+    def post(self, request, *args, **kwargs):
+        ei = self.get_object()
+        error_message = ''
+        count = 1
+        if (ei.item_type == 'exam'):
+            exam_questions = ei.exam.newexamquestion_set.all().order_by('qn_order').distinct()
+            for eq in exam_questions:
+                question = eq.question
+                if question.editoritem.published == True:
+                    continue
+                current_error_message = ''
+                if not question.editoritem.can_be_edited_by(self.request.user):
+                    current_error_message = 'User cannot edit this question. '
+                edit_content = question.editoritem.edit_dict()['JSONContent']
+                if edit_content['statement'] == '':
+                    current_error_message = current_error_message + 'No statement provided. '
+                parts = edit_content['parts']
+                if len(parts) == 0:
+                    current_error_message = current_error_message + 'No parts provided. '
+                variables = edit_content['variables']
+                if len(variables) == 0:
+                    current_error_message = current_error_message + 'No variables given. '
+                advice = edit_content['advice']
+                if len(advice) == 0:
+                    current_error_message = current_error_message + 'No advice given. '
+                name = edit_content['name']
+                if name == '':
+                    current_error_message = current_error_message + 'No name for question. '
+                settings = edit_content['metadata']
+                license_rights = settings['licence']
+                description = settings['description']
+                if license_rights == 'None specified':
+                    current_error_message = current_error_message + 'No license selected. '
+                if len(description) == 0:
+                    current_error_message = current_error_message + 'No description provided. '
+                
+                if len(current_error_message) > 0:
+                    error_message = error_message + 'Cannot publish question ' + str(count) + ': ' + name + '. ' + current_error_message + '\n'
+                count += 1        
+
+        if len(error_message) > 0:
+            error_message = "Attempt to publish the following question(s) failed: " + error_message
+        ei.publish()
+        ei.save()
+        editor.models.ItemChangedTimelineItem.objects.create(user=self.request.user, object=ei, verb='published')
+        messages.add_message(self.request, messages.SUCCESS, 'This {} has been published to the public database.'.format(ei.item_type))
+        messages.add_message(request, messages.INFO, error_message)
+        return redirect(self.get_success_url())
 
 class UpdateView(editor.views.editoritem.BaseUpdateView):
 

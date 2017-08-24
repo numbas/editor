@@ -153,7 +153,21 @@
             {% if messages %}
             <ul class="messages list-unstyled">
                 {% for message in messages %}
-                <li class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">{{ message }}</li>
+                <li class="alert alert-{% if message.tags and 'safe' not in message.tags%}{{ message.tags }}{% else %}info{% endif %}">
+                    {% if 'safe' in message.tags %}
+                        {{message|safe}}
+                    {% else %}
+                        {{message}}
+                    {% endif %}
+                </li> 
+                <!--<li class="alert alert-info">
+                    {% if 'safe' in message.tags %}
+                        {{message|safe}}
+                    {% else %}
+                        {{message}}
+                    {% endif %}
+                </li>
+                -->
                 {% endfor %}
             </ul>
             {% endif %}

@@ -1103,6 +1103,48 @@ class NewQuestion(models.Model):
         self.extensions.add(*other.extensions.all())
         self.save()
 
+    def ready_to_publish(self, user):
+        question = self
+        if question.editoritem.published == True:
+            return True
+        error_message = ''
+        current_error_message = ''
+        if not question.editoritem.can_be_edited_by(user):
+            current_error_message = 'User cannot edit this question. '
+        edit_content = question.editoritem.get_parsed_content().data
+        if edit_content['statement'] == '':
+            current_error_message = current_error_message + 'No statement provided. '
+        parts = edit_content['parts']
+        if len(parts) == 0:
+            current_error_message = current_error_message + 'No parts provided. '
+        variables = edit_content['variables']
+        if len(variables) == 0:
+            current_error_message = current_error_message + 'No variables given. '
+        advice = edit_content['advice']
+        if len(advice) == 0:
+            current_error_message = current_error_message + 'No advice given. '
+        name = edit_content['name']
+        if name == '':
+            current_error_message = current_error_message + 'No name for question. '
+        metadata = edit_content['metadata']
+        license_rights = question.editoritem.licence
+        description = metadata['description']
+        if license_rights == None:
+            current_error_message = current_error_message + 'No license selected. '
+        if len(description) == 0:
+            current_error_message = current_error_message + 'No description provided. '
+        
+        if len(current_error_message) > 0:
+            error_message = error_message + str(question.id) + ': ' + '<a href="/question/' + str(question.id) + '/' + name.replace(' ', '-') + '">' + name + '</a>' + '\n'
+            raise ExamCannotBePublishedException(error_message)
+        return True
+
+class ExamCannotBePublishedException(RuntimeError):
+    def __init__(self, arg):
+        self.message = arg
+    def __str__(self):
+        return self.message
+        
 @reversion.register
 class NewExam(models.Model):
     editoritem = models.OneToOneField(EditorItem, on_delete=models.CASCADE, related_name='exam')

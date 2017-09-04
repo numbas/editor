@@ -27,7 +27,7 @@ import reversion
 from django_tables2.config import RequestConfig
 
 from editor.tables import EditorItemTable
-from editor.models import EditorItem, Project, Access, Licence, PullRequest, Taxonomy
+from editor.models import EditorItem, Project, Access, Licence, PullRequest, Taxonomy, ExamCannotBePublishedException
 import editor.models
 import editor.views.generic
 from editor.views.errors import forbidden
@@ -499,6 +499,7 @@ class SourceView(generic.DetailView):
         response['Cache-Control'] = 'max-age=0,no-cache,no-store'
         return response
 
+
 class PublishView(generic.UpdateView):
     model = EditorItem
     fields = ['published']
@@ -512,11 +513,29 @@ class PublishView(generic.UpdateView):
 
     def post(self, request, *args, **kwargs):
         ei = self.get_object()
+        error_message = ''
+        if (ei.item_type == 'exam'):
+            exam_questions = ei.exam.newexamquestion_set.all().order_by('qn_order').distinct()
+            for count, eq in enumerate(exam_questions, 1):
+                question = eq.question
+                try:
+                    if question.ready_to_publish(self.request.user) == True:
+                        question.editoritem.publish()
+                except ExamCannotBePublishedException as e:
+                    error_message = error_message + "<li>" + str(e) + "</li>"
+                
+        if error_message:
+            error_message = "<ul>" + error_message + "</ul>"
+            error_message = "The following questions need more information before they can be automatically published: <br>" + error_message
         ei.publish()
         ei.save()
         editor.models.ItemChangedTimelineItem.objects.create(user=self.request.user, object=ei, verb='published')
         messages.add_message(self.request, messages.SUCCESS, 'This {} has been published to the public database.'.format(ei.item_type))
+        if error_message:
+            messages.add_message(request, messages.INFO, error_message, extra_tags='safe')
         return redirect(self.get_success_url())
+
+
 
 class UnPublishView(PublishView):
     def post(self, request, *args, **kwargs):

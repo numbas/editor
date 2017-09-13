@@ -496,6 +496,54 @@ class Topic(models.Model):
     def __str__(self):
         return self.name
 
+class Taxonomy(models.Model):
+    name = models.CharField(max_length=200, blank=False, unique=True)
+    description = models.TextField(blank=False)
+    json = JSONField(blank=True)    # the JSON encoding of the taxonomy's nodes takes a while, and a lot of database queries, to make, so it's stored here and updated each time a node changes
+
+    class Meta:
+        verbose_name_plural = 'taxonomies'
+
+    def __str__(self):
+        return self.name
+
+    def forest(self):
+        """ 
+        The nodes in the taxonomy, returned as a list of trees associating each node to its children.
+        """
+        key = lambda n:(len(n.code),n.code)
+        def make_tree(node):
+            return [(n,make_tree(n)) for n in sorted(node.children.all(), key=key)]
+            
+        return [(n,make_tree(n)) for n in sorted(self.nodes.filter(parent=None),key=key)]
+
+    def create_json(self):
+        def tree_json(leaves):
+            return [{
+                'pk': node.pk,
+                'name': node.name,
+                'code': node.code,
+                'children': tree_json(kids)
+            } for node,kids in leaves]
+
+        self.json = tree_json(self.forest())
+        return self.json
+
+class TaxonomyNode(models.Model):
+    name = models.CharField(max_length=200, blank=False, unique=False)
+    parent = models.ForeignKey('TaxonomyNode', on_delete = models.CASCADE, related_name='children', blank=True, null=True)
+    taxonomy = models.ForeignKey(Taxonomy, related_name='nodes')
+    code = models.CharField(max_length=200, blank=False)
+
+    def __str__(self):
+        return self.name
+
+@receiver(signals.post_save, sender=TaxonomyNode)
+def update_taxonomy_json(instance, **kwargs):
+    t = instance.taxonomy
+    t.create_json()
+    t.save()
+
 class AbilityLevelField(models.FloatField):
     pass
 
@@ -597,6 +645,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
 
     subjects = models.ManyToManyField(Subject)
     topics = models.ManyToManyField(Topic)
+    taxonomy_nodes = models.ManyToManyField(TaxonomyNode)
 
     watching_users = models.ManyToManyField(User, related_name='watched_items')
 
@@ -697,8 +746,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
             'published': self.published,
             'JSONContent': self.parsed_content.data,
             'tags': [t.name for t in self.tags.all()],
-            'subjects': [s.pk for s in self.subjects.all()],
-            'topics': [t.pk for t in self.topics.all()],
+            'taxonomy_nodes': [n.pk for n in self.taxonomy_nodes.all()],
             'ability_levels': [a.pk for a in self.ability_levels.all()],
         }
 
@@ -746,10 +794,6 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
 
         self.ability_levels.clear()
         self.ability_levels.add(*other.ability_levels.all())
-        self.subjects.clear()
-        self.subjects.add(*other.subjects.all())
-        self.topics.clear()
-        self.topics.add(*other.topics.all())
 
         self.set_name(oname)
 

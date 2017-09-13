@@ -2751,10 +2751,20 @@ newBuiltin('dict',[TList],TDict,null, {
 
 newBuiltin('dict',['*keypair'],TDict,null,{
     evaluate: function(args,scope) {
+        if(args.length==0) {
+            return new TDict({});
+        }
         var value = {};
-        args.forEach(function(kp) {
-            value[kp.tok.key] = jme.evaluate(kp.args[0],scope);
-        });
+        if(args[0].tok.type=='keypair') {
+            args.forEach(function(kp) {
+                value[kp.tok.key] = jme.evaluate(kp.args[0],scope);
+            });
+        } else {
+            var list = scope.evaluate(args[0]);
+            list.value.forEach(function(pair) {
+                value[pair.value[0].value] = pair.value[1];
+            });
+        }
         return new TDict(value);
     }
 });
@@ -2879,6 +2889,9 @@ newBuiltin('split',[TString,TString],TList, function(str,delimiter) {
 });
 newBuiltin('currency',[TNum,TString,TString],TString,util.currency);
 newBuiltin('separateThousands',[TNum,TString],TString,util.separateThousands);
+newBuiltin('listval',[TString,TNum],TString,function(s,i) {return s[i]});
+newBuiltin('listval',[TString,TRange],TString,function(s,range) {return s.slice(range[0],range[1])});
+newBuiltin('in',[TString,TString],TBool,function(sub,str) { return str.indexOf(sub)>=0 });
 
 newBuiltin('match_regex',[TString,TString],TList,function(pattern,str) {
     var re = new RegExp(pattern);
@@ -5628,7 +5641,7 @@ var typeToJME = Numbas.jme.display.typeToJME = {
 			var arg_type = args[i].tok.type;
 			var arg_value = args[i].tok.value;
 			var pd;
-            var bracketNumberOp = (op=='*' || op=='-u' || op=='/' || op=='^')
+            var bracketNumberOp = (op=='*' || op=='-u' || op=='/' || op=='^' || op=='fact')
 
             var bracketArg = arg_type=='op' && op in opBrackets && opBrackets[op][i][args[i].tok.name]==true // if this kind of op as an argument to the parent op always gets brackets
             bracketArg = bracketArg || ((arg_type=='number' && arg_value.complex && bracketNumberOp) && (arg_value.im!=0 && !(arg_value.im==1 && arg_value.re==0)));  // put brackets round a complex number
@@ -5680,6 +5693,9 @@ var typeToJME = Numbas.jme.display.typeToJME = {
             break;
         case 'fact':
             op = '!';
+            if(!(tree.args[0].tok.type=='number' || tree.args[0].tok.type=='name')) {
+                bits[0] = '('+bits[0]+')';
+            }
             break;
 		}
 
@@ -6157,17 +6173,39 @@ var matchTree = jme.rules.matchTree = function(ruleTree,exprTree,doCommute) {
 			if(ruleTok.type!=exprTok.type || ruleTok.name!=exprTok.name) {
 				return false;
 			}
+            var i = 0;
+            var j = 0;
 			for(var i=0;i<ruleTree.args.length;i++)
 			{
-				var m = matchTree(ruleTree.args[i],exprTree.args[i],doCommute);
-				if(m==false) {
-					return false;
-				} else {
-					for(var x in m) {
-						d[x]=m[x];
-					}
-				}
+                if(jme.isFunction(ruleTree.args[i].tok,'m_all')) {
+                    while(j<exprTree.args.length) {
+                        var m = matchTree(ruleTree.args[i],exprTree.args[i],doCommute);
+                        if(!m) {
+                            break;
+                        }
+                        for(var x in m) {
+                            d[x]=m[x];
+                        }
+                        j += 1;
+                    }
+                } else if(jme.isName(ruleTree.args[i].tok,'m_nothing')) {
+                    continue;
+                } else {
+                    var m = matchTree(ruleTree.args[i],exprTree.args[j],doCommute);
+                    if(m===false) {
+                        return false;
+                    } else {
+                        for(var x in m) {
+                            d[x]=m[x];
+                        }
+                        j += 1;
+                    }
+                }
 			}
+            // if not all terms in the rule have been matched, the rule doesn't match
+            if(j<i) {
+                return false;
+            }
 			return d
 		}
 	case 'name':
@@ -6254,9 +6292,9 @@ function mergeRulesets(r1,r2) {
 }
 
 /** Collect a ruleset together from a list of ruleset names, or rulesets.
- * @param {string|Array<string>} set - can be a comma-separated string of ruleset names, or an array of names/Ruleset objects.
- * @param {object} scopeSets - a dictionary of rulesets
- * @returns {Numbas.jme.rules.Ruleset}
+ * @param {String|Array.<String|Numbas.jme.Ruleset>} set - A comma-separated string of ruleset names, or an array of names/Ruleset objects.
+ * @param {Object.<Numbas.jme.Ruleset>} scopeSets - Dictionary of rulesets defined in the current scope.
+ * @returns Numbas.jme.Ruleset
  */
 var collectRuleset = jme.rules.collectRuleset = function(set,scopeSets)
 {
@@ -6273,6 +6311,7 @@ var collectRuleset = jme.rules.collectRuleset = function(set,scopeSets)
 
 	if(typeof(set)=='string') {
 		set = set.split(',');
+        set.splice(0,0,'basic');
 	}
 	else {
 		flags = $.extend(flags,set.flags);
@@ -8086,7 +8125,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @see Numbas.marking.finalise_state
      */
     apply_feedback: function(feedback) {
-        var valid = true;
+        var valid = feedback.valid;
         var part = this;
         var end = false;
         var states = feedback.states.slice();
@@ -12431,7 +12470,7 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	 * @example currency(5.3,'£','p') => £5.30
 	 * @param {Number} n
 	 * @param {String} prefix - symbol to use in front of currency if abs(n) >= 1
-	 * @param {String} suffix - symbol to use in front of currency if abs(n) <= 1
+	 * @param {String} suffix - symbol to use after currency if abs(n) <= 1
 	 */
 	currency: function(n,prefix,suffix) {
 		if(n<0)
@@ -12440,14 +12479,18 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 			return prefix+'0';
 		}
 
-		var s = Numbas.math.niceNumber(Math.floor(100*n));
-		if(Math.abs(n)>=1) {
-			if(n%1<0.005)
-				return prefix+Numbas.math.niceNumber(n);
-			s = s.replace(/(..)$/,'.$1');
-			return prefix+s
+        // convert n to a whole number of pence, as a string
+		var s = Numbas.math.niceNumber(100*n,{precisionType:'dp',precision:0});
+		if(n >= 0.995) {
+			if(n%1 < 0.005) {
+				return prefix+Numbas.math.niceNumber(Math.floor(n));
+            } else if(n%1 >= 0.995) {
+                return prefix+Numbas.math.niceNumber(Math.ceil(n));
+            }
+			s = s.replace(/(..)$/,'.$1');   // put a dot before the last two digits, representing the pence
+			return prefix + s
 		} else {
-			return s+suffix;
+			return s + suffix;
 		}
 	},
 
@@ -15361,8 +15404,9 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
 
                 switch(value.type) {
                 case 'string':
+                case 'number':
                     var d = document.createElement('d');
-                    d.innerHTML = value.value;
+                    d.innerHTML = value.type == 'string' ? value.value : Numbas.math.niceNumber(value.value);
                     var newNode;
                     try {
                         newNode = xml.ownerDocument.importNode(d,true);

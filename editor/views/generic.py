@@ -134,21 +134,6 @@ def restore_point_json(restore_point, **kwargs):
         'user': user_json(restore_point.user),
     }
 
-def topic_json(topic):
-    return {
-        'pk': topic.pk,
-        'name': topic.name,
-        'description': topic.description,
-        'subjects': [s.pk for s in topic.subjects.all()],
-    }
-
-def subject_json(subject):
-    return {
-        'pk': subject.pk,
-        'name': subject.name,
-        'description': subject.description,
-    }
-
 def ability_framework_json(ability_framework):
     return {
         'pk': ability_framework.pk,

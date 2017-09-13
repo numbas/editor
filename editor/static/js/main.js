@@ -115,9 +115,9 @@ $(document).ready(function() {
 
             var source = ko.utils.unwrapObservable(valueAccessor());
 
-            var dataDict = {};
-
             if(typeof source == 'string') {
+                var dataDict = {};
+
                 var url = source;
                 source = function(req,callback) {
                     $(element).addClass('loading');
@@ -146,7 +146,7 @@ $(document).ready(function() {
                         if('value' in allBindings)
                             allBindings.value(ui.item.value);
                         if('autocompleteSelect' in allBindings)
-                            allBindings.autocompleteSelect(dataDict[ui.item.value]);
+                            allBindings.autocompleteSelect(dataDict ? dataDict[ui.item.value] : ui.item.value);
                         $(this).submit();
 						$(this).val('');
 						e.stopPropagation();

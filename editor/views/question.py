@@ -177,10 +177,6 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         self.object.editoritem.metadata = json.dumps(self.object.editoritem.metadata)
         self.object.extensions.clear()
         self.object.extensions.add(*form.cleaned_data['extensions'])
-        self.object.editoritem.subjects.clear()
-        self.object.editoritem.subjects.add(*form.cleaned_data['subjects'])
-        self.object.editoritem.topics.clear()
-        self.object.editoritem.topics.add(*form.cleaned_data['topics'])
 
         resource_pks = [res['pk'] for res in self.resources]
         self.object.resources = Resource.objects.filter(pk__in=resource_pks)

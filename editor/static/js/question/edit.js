@@ -243,12 +243,21 @@ $(document).ready(function() {
             this.init_output();
 
 			this.save = ko.computed(function() {
+                var used_nodes = [];
+                function node_used(n) {
+                    if(n.used()) {
+                        used_nodes.push(n.pk);
+                        n.children.forEach(node_used);
+                    }
+                }
+                this.taxonomies.forEach(function(t) {
+                    t.trees.forEach(node_used);
+                });
                 return {
                     content: this.output(),
 					extensions: this.usedExtensions().map(function(e){return e.pk}),
                     tags: this.tags(),
-                    subjects: this.subjects().filter(function(s){return s.used()}).map(function(s){return s.pk}),
-                    topics: this.topics().filter(function(t){return t.used()}).map(function(t){return t.pk}),
+                    taxonomy_nodes: used_nodes,
                     ability_levels: this.used_ability_levels().map(function(al){return al.pk}),
 					resources: this.saveResources(),
                     metadata: this.metadata()

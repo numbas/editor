@@ -38,6 +38,7 @@
 	<!-- jsonpatch -->
     <script src="{% sstatic 'js/jiff.js' %}" type="text/javascript"></script>
 
+
     <script type="text/javascript">
         {% autoescape off %}
         {% endautoescape %}
@@ -208,9 +209,11 @@
                                         <input type="text" class="form-control">
                                     </form>
                                 </div>
+
                                 {% endblock settings_main %}
                             </div>
                             <div class="col-sm-4">
+                                <div class="panel-group">
                                 <div class="panel panel-info">
                                     {% block settings_metadata %}
                                     <div class="panel-heading">
@@ -247,18 +250,7 @@
                                                 <small data-bind="visible: licence, with: licence"><a target="_blank" data-bind="visible: url, attr:{href:url}">Licence information</a></small>
                                             </p>
                                         </div>
-                                        <div class="form-group subjects">
-                                            <label><span class="glyphicon glyphicon-education"></span> Subjects</label>
-                                            <ul class="list-inline" data-bind="foreach: subjects">
-                                                <li><label data-bind="attr: {title: description}"><input {% if not editable %}disabled{% endif %} type="checkbox" data-bind="checked: used"> <span data-bind="text: name"></span></label></li>
-                                            </ul>
-                                        </div>
-                                        <div class="form-group topics" data-bind="fadeVisible: any_subjects_selected">
-                                            <label><span class="glyphicon glyphicon-asterisk"></span> Topics</label>
-                                            <ul class="list-inline" data-bind="foreach: topics">
-                                                <li data-bind="visible: visible"><label data-bind="attr: {title: description}"><input {% if not editable %}disabled{% endif %} type="checkbox" data-bind="checked: used"> <span data-bind="text: name"></span></label></li>
-                                            </ul>
-                                        </div>
+
                                         <div class="form-group ability-levels">
                                             <label><span class="glyphicon glyphicon-sort-by-attributes"></span> Ability levels</label>
                                             <ul data-bind="foreach: ability_frameworks">
@@ -270,9 +262,41 @@
                                                 </li>
                                             </ul>
                                         </div>
+
+
                                     </div>
                                     {% endblock settings_metadata %}
                                 </div>
+                                <!-- ko foreach: taxonomies -->
+                                <div class="panel panel-info taxonomy" data-bind="
+                                    css: {'open': open}
+                                ">
+                                    <div class="panel-heading" data-bind="restrictedClick: toggleOpen" clickable>
+                                        <h3 class="panel-title" clickable>
+                                            <span class="glyphicon glyphicon-education" clickable></span>
+                                            Taxonomy:
+                                            <span data-bind="text: name" clickable></span>
+                                        </h3>
+                                    </div>
+
+                                    <div data-bind="fadeVisible: open">
+                                        <div class="panel-body">
+                                            <div class="description" data-bind="html: description"></div>
+
+                                            <div class="form-group">
+                                                <input class="form-control" id="search_author" type="text" placeholder="Search for topics" size="30" data-bind="
+                                                    autocomplete: search_nodes, 
+                                                    autocompleteSelect: use_node
+                                                    "
+                                                />
+                                            </div>
+
+                                            <ul data-bind="visible: open, foreach: trees"><taxonomy-node params="node: $data{% if not editable %}, disable: true{% endif %}"></ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /ko -->
+                            </div>
                             </div>
                         </div>
                         {% endblock settings %}
@@ -338,6 +362,14 @@
                                     </ul>
                                 </li>
                             </ul>
+                            <button type="button" class="btn btn-danger" data-bind="click: set_ignored_publishing_criteria, visible: !ignored_publishing_criteria()">
+                                <span class="glyphicon glyphicon-warning-sign"></span> 
+                                Ignore these tasks and publish
+                            </button>
+                            <form method="POST" id="publish-form" action="{% url 'item_publish' object.editoritem.pk %}" data-bind="visible: ignored_publishing_criteria">
+                                <button class="btn btn-danger" type="submit"><span class="glyphicon glyphicon-warning-sign"></span> Click again to ignore these tasks and publish</button>
+                                {% csrf_token %}
+                            </form>
                         </div>
                     </div>
                     <div class="panel panel-warning" data-bind="visible: canPublish">

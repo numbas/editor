@@ -385,6 +385,64 @@ $(document).ready(function() {
         }).extend({throttle:1000});
     }
 
+    var Taxonomy = Editor.Taxonomy = function(data) {
+        var t = this;
+        this.name = data.name;
+        this.pk = data.pk;
+        this.description = data.description;
+        this.open = ko.observable(true);
+        this.trees = data.nodes.map(function(t) { return new TaxonomyNode(t) })
+        this.toggleOpen = function() {
+            t.open(!t.open());
+        }
+        this.any_used = ko.computed(function() {
+            return this.trees.some(function(n){ return n.used() || n.children_used(); });
+        },this);
+
+        this.search = ko.observable('');
+        var all_nodes = this.all_nodes = [];
+        function list_nodes(n) {
+            all_nodes.push(n);
+            n.children.forEach(list_nodes);
+        }
+        this.trees.forEach(list_nodes);
+
+        this.use_node = function(code) {
+            var n = t.all_nodes.find(function(n){return n.code==code});
+            while(n) {
+                n.used(true);
+                n = n.parent;
+            }
+        }
+
+        this.search_nodes = function(query, response) {
+            query = query.term.toLowerCase();
+            var result = t.all_nodes
+                .filter(function(n){ return n.name.toLowerCase().contains(query) })
+                .map(function(n){ return {label: n.code+' - '+n.name, value: n.code} })
+            ;
+            response(result);
+        }
+    }
+
+    function TaxonomyNode(data,parent) {
+        var n = this;
+        this.parent = parent;
+        this.pk = data.pk;
+        this.code = data.code;
+        this.name = data.name;
+        this.children = data.children.map(function(d){ return new TaxonomyNode(d,n); });
+        this.children_used = ko.computed(function() {
+            return this.children.some(function(n){ return n.used() || n.children_used() });
+        },this);
+        this.used = ko.observable(false);
+        ko.computed(function() {
+            if(!this.used()) {
+                this.children.forEach(function(n){ n.used(false); });
+            }
+        },this);
+    }
+
     Editor.EditorItem = function() {
         if(this.__proto__.__proto__!==Editor.EditorItem.prototype) {
             for(var x in Editor.EditorItem.prototype) {
@@ -401,11 +459,10 @@ $(document).ready(function() {
         this.name = ko.observable('Loading');
         this.current_stamp = ko.observable(item_json.current_stamp);
         this.licence = ko.observable();
-        this.subjects = ko.observableArray([]);
-        this.topics = ko.observableArray([]);
         this.ability_frameworks = ko.observableArray([]);
 		this.realtags = ko.observableArray([]);
 		this.description = ko.observable('');
+        this.ignored_publishing_criteria = ko.observable(false);
 
 		this.mainTabs = ko.observableArray([]);
 
@@ -414,22 +471,9 @@ $(document).ready(function() {
         this.setTab = function(id) {
             return function() {
                 var tab = ei.getTab(id);
-
                 ei.currentTab(tab);
             }
         }
-
-        this.subjects(item_json.subjects.map(function(d) {
-            return new Editor.Subject(d);
-        }));
-
-        this.topics(item_json.topics.map(function(d) {
-            return new Editor.Topic(d,ei.subjects);
-        }));
-
-        this.any_subjects_selected = ko.computed(function() {
-            return this.subjects().some(function(s){return s.used()});
-        },this);
 
         this.ability_frameworks(item_json.ability_frameworks.map(function(d) {
             return new Editor.AbilityFramework(d);
@@ -455,6 +499,10 @@ $(document).ready(function() {
                 return 'None specified';
             }
         },this);
+
+        this.taxonomies = item_json.taxonomies.map(function(t) {
+            return new Taxonomy(t);
+        });
 
 		this.realName = ko.computed(function() {
 			var name = this.name()
@@ -627,6 +675,10 @@ $(document).ready(function() {
             },this);
         },
 
+        set_ignored_publishing_criteria: function() {
+                this.ignored_publishing_criteria(true);
+        },
+
         init_output: function() {
             this.output = ko.computed(function() {
                 var data = JSON.stringify(this.toJSON());
@@ -759,22 +811,24 @@ $(document).ready(function() {
                 }
             }
 
-            if('topics' in data) {
-                data.topics.map(function(pk) {
-                    this.get_topic(pk).used(true);
-                },this);
-            }
-
-            if('subjects' in data) {
-                data.subjects.map(function(pk) {
-                    this.get_subject(pk).used(true);
-                },this);
-            }
-
             if('ability_levels' in data) {
                 data.ability_levels.map(function(pk) {
                     this.get_ability_level(pk).used(true);
                 },this);
+            }
+
+            if('taxonomy_nodes' in data) {
+                var used_nodes = {}
+                data.taxonomy_nodes.map(function(pk){used_nodes[pk] = true});
+                function node_used(any,n) {
+                    var used = used_nodes[n.pk]===true;
+                    n.used(used);
+                    any = any || used;
+                    return n.children.reduce(node_used,any);
+                }
+                this.taxonomies.map(function(t) {
+                     var any_used = t.trees.reduce(node_used, false);
+                });
             }
 
             var content = data.JSONContent;
@@ -800,14 +854,6 @@ $(document).ready(function() {
 
         getTab: function(id) {
             return this.mainTabs().find(function(t){return t.id==id});
-        },
-
-        get_topic: function(pk) {
-            return this.topics().find(function(t){return t.pk==pk});
-        },
-
-        get_subject: function(pk) {
-            return this.subjects().find(function(s){return s.pk==pk});
         },
 
         get_ability_level: function(pk) {
@@ -1152,6 +1198,7 @@ $(document).ready(function() {
                 'hr',
                 'image',
                 'link',
+                'lists',
                 'media',
                 'noneditable',
                 'paste',
@@ -1178,7 +1225,7 @@ $(document).ready(function() {
                         tools: {title: 'Tools', items: 'code'}
                     },
                     
-                    toolbar: "undo redo | styleselect | bold italic removeformat | alignleft aligncenter alignright | bullist numlist outdent indent | link image gapfill jmevisible | fullscreen preview code",
+                    toolbar: "undo redo | styleselect | bullist numlist | bold italic removeformat | alignleft aligncenter alignright | bullist numlist outdent indent | link image gapfill jmevisible | fullscreen preview code",
 
 					statusbar: false,
 					media_strict: false,
@@ -1496,6 +1543,25 @@ $(document).ready(function() {
             '
     });
 
+    ko.components.register('taxonomy-node',{
+        viewModel: function(params) {
+            var n = this.node = params.node;
+            this.disable = params.disable || false;
+        },
+        template: '\
+        <li class="taxonomy-node" data-bind="css: {used:node.used}">\
+            <label class="description">\
+                <input type="checkbox" name="taxonomy_nodes" data-bind="checked: node.used, disable: disable, attr: {value: node.pk}"> \
+                <span class="code" data-bind="text: node.code + (node.code ? \' - \' : \'\')"></span>\
+                <span class="name" data-bind="text: node.name"></span>\
+            </label>\
+            <ul data-bind="fadeVisible: node.used, foreach: node.children">\
+                <taxonomy-node params="node: $data, disable: $parent.disable"></taxonomy-node>\
+            </ul>\
+        </li>\
+        '
+    });
+
 	ko.bindingHandlers.dragOut = {
 		init: function(element, valueAccessor) {
 			var obj = {
@@ -1572,35 +1638,6 @@ $(document).ready(function() {
             });
             ko.applyBindingsToNode(element,{value:value});
         }
-    }
-
-    var Subject = Editor.Subject = function(data) {
-        this.pk = data.pk;
-        this.name = data.name;
-        this.description = data.description;
-        this.used = ko.observable(false);
-    }
-
-    var Topic = Editor.Topic = function(data,subject_list) {
-        this.pk = data.pk;
-        this.name = data.name;
-        this.description = data.description;
-        this.subjects = ko.computed(function() {
-            return subject_list().filter(function(s){ return data.subjects.contains(s.pk) });
-        },this);
-        this.visible = ko.computed(function() {
-            var subjects = this.subjects();
-            for(var i=0;i<subjects.length;i++) {
-                if(subjects[i].used()) {
-                    return true;
-                }
-            }
-        },this);
-        var _used = ko.observable(false);
-        this.used = ko.computed({
-            read: function() { return this.visible() && _used(); },
-            write: function(v) { return _used(v); }
-        },this);
     }
 
     var AbilityFramework = Editor.AbilityFramework = function(data) {

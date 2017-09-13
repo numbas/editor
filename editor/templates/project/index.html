@@ -3,10 +3,16 @@
 {% load sstatic %}
 {% load sanitizer %}
 {% load timeline %}
+{% load stamp %}
 
 {% block javascripts %}
 {{ block.super }}
 <script src="{% sstatic 'js/project/index.js' %}"></script>
+{% endblock %}
+
+{% block stylesheets %}
+{{ block.super }}
+    <link href="{% sstatic 'css/project.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block project_content %}
@@ -70,6 +76,24 @@
                     <a href="{% url 'project_search' project.pk %}?item_types=questions" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-file"></span> Questions</a> 
                     <a href="{% url 'project_search' project.pk %}?item_types=exams" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-book"></span> Exams</a> 
                 </div>
+                <table class="table table-condensed status-breakdown">
+                    <tbody>
+                        {% for status,label,count in status_counts %}
+                        <tr data-stamp="{{status}}" class="stamp">
+                            <td>
+                                <a href="{% url 'project_search' project.pk %}?status={{status}}">
+                                {% stamp status %}
+                                </a>
+                            </td>
+                            <td class="count">
+                                <a href="{% url 'project_search' project.pk %}?status={{status}}">
+                                {{count}}
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
 
             <div class="panel panel-default">

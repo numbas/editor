@@ -55,12 +55,29 @@
                     <div class="panel-collapse collapse-in" id="collapse-refine">
                     <ul class="list-group">
                         <li class="list-group-item">
-                            <h4><span class="glyphicon glyphicon-education"></span> Subject</h4>
-                            {{form.subjects}}
+                            <h4><span class="glyphicon glyphicon-flag"></span> Status</h4>
+                            {{ form.status }}
                         </li>
+                        {% if not view_user %}
                         <li class="list-group-item">
-                            <h4><span class="glyphicon glyphicon-asterisk"></span> Topic</h4>
-                            {{form.topics}}
+                            <h4><span class="glyphicon glyphicon-user"></span> Author</h4>
+                            {{form.author}}
+                        </li>
+                        {% endif %}
+                        <li class="list-group-item">
+                            <h4><span class="glyphicon glyphicon-tags"></span> Tags</h4>
+                            {% if form.tags.value %}<div class="input-group">{% endif %}
+                                <input type="text" class="form-control" id="{{form.tags.auto_id}}" name="tags" value="{{form.tags.value}}" placeholder="Tags separated by commas">
+                                {% if form.tags.value %}
+                                    <div class="input-group-btn">
+                                        <a class="btn btn-default" href="{% querystring "tags"="" %}"><span class="glyphicon glyphicon-remove"></span></a>
+                                    </div>
+                                {% endif %}
+                            {% if form.tags.value %}</div>{% endif %}
+                        </li>
+                        <li id="radio" class="list-group-item">
+                            <h4><span class="glyphicon glyphicon-copyright-mark"></span> Usage rights</h4>
+                            {{form.usage}}
                         </li>
                         <li class="list-group-item">
                             <h4><span class="glyphicon glyphicon-sort-by-attributes"></span> Ability Level</h4>
@@ -77,31 +94,33 @@
                             </div>
                         </li>
                         <li class="list-group-item">
-                            <h4><span class="glyphicon glyphicon-flag"></span> Status</h4>
-                            {{ form.status }}
-                        </li>
-                        <li class="list-group-item">
-                            <h4><span class="glyphicon glyphicon-tags"></span> Tags</h4>
-                            {% if form.tags.value %}<div class="input-group">{% endif %}
-                                <input type="text" class="form-control" id="{{form.tags.auto_id}}" name="tags" value="{{form.tags.value}}" placeholder="Tags separated by commas">
-                                {% if form.tags.value %}
-                                    <div class="input-group-btn">
-                                        <a class="btn btn-default" href="{% querystring "tags"="" %}"><span class="glyphicon glyphicon-remove"></span></a>
-                                    </div>
-                                {% endif %}
-                            {% if form.tags.value %}</div>{% endif %}
-                        </li>
-                        {% if not view_user %}
-                        <li class="list-group-item">
-                            <h4><span class="glyphicon glyphicon-user"></span> Author</h4>
-                            {{form.author}}
-                        </li>
-                        {% endif %}
-                        <li id="radio" class="list-group-item">
-                            <h4><span class="glyphicon glyphicon-copyright-mark"></span> Usage rights</h4>
-                            {{form.usage}}
+                            <div id="taxonomies-form">
+                                <h4><span class="glyphicon glyphicon-education"></span> Topics</h4>
+                                <ul class="list-unstyled taxonomies" data-bind="foreach: taxonomies">
+                                    <li>
+                                        <button type="button" class="btn btn-link btn-block taxonomy-name" data-bind="click: toggleOpen">
+                                            <span class="glyphicon" data-bind="css:{'glyphicon-triangle-right': !open(), 'glyphicon-triangle-bottom': open()}"></span>
+                                            Taxonomy: <span data-bind="text: name"></span>
+                                        </button>
+                                        <div data-bind="fadeVisible: open">
+                                            <div class="form-group">
+                                                <input class="form-control" id="search_author" type="text" placeholder="Search for topics" size="30" data-bind="
+                                                    autocomplete: search_nodes, 
+                                                    autocompleteSelect: use_node
+                                                    "
+                                                />
+                                            </div>
+
+                                            <ul data-bind="foreach: trees"><taxonomy-node params="node: $data"></taxonomy-node></ul>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
                         </li>
                     </ul>
+                    </div>
+                    <div class="panel-footer">
+                        <button type="submit" class="btn btn-block btn-primary">Update</button>
                     </div>
                 </div>
 
@@ -174,6 +193,11 @@
                                     {% endwith %}
                                 {% else %}
                                     <span class="no-licence nothing-here">No licence specified</span>
+                                {% endif %}
+                                {% if item.published %}
+                                    <span class="text-success glyphicon glyphicon-ok"></span> Published
+                                {% else %}
+                                    <span class="glyphicon glyphicon-lock"></span> Not published
                                 {% endif %}
                             </p>
                             <p class="last-modified">

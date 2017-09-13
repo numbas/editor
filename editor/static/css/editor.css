@@ -154,6 +154,26 @@ editor-pager nav {
     }
 }
 
+.taxonomy .panel-heading {
+    cursor: ns-resize;
+}
+
+.taxonomy-node > .description {
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    text-align: left;
+    font-weight: normal;
+}
+.taxonomy-node.used > .description {
+    font-weight: bold;
+    color: inherit;
+}
+.taxonomy-node ul {
+    padding-left: 1em;
+}
+
 /*
 #name-header {
     padding: 0;
@@ -416,6 +436,14 @@ button.delete-grey:hover {
 }
 .timeline-event.version .comment .edit-comment:focus {
     background: #eee;
+}
+
+.timeline-item table {
+    margin: 1em 0;
+}
+.timeline-item table td, .timeline-item table th {
+    border: 1px solid #ddd;
+    padding: 0.5em;
 }
 
 #edit-history {

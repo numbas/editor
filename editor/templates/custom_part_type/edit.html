@@ -1,8 +1,17 @@
 {% extends "layout.html" %}
 
+{% block javascripts %}
+{{block.super}}
+<script type="text/javascript">
+    $(document).ready(function() {
+        window.mc = Editor.codemirror(document.getElementById('id_settings'), {mode:'json'});
+    });
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
-    <h1>Create a new part type</h1>
+    <h1><span class="glyphicon glyphicon-pencil"></span> Editing part type "{{object.name}}"</h1>
 </div>
 
 <form class="form-horizontal" action="{% url 'custom_part_type_edit' object.pk %}" method="post" enctype="multipart/form-data">

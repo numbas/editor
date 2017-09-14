@@ -7,6 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from django.forms.fields import CharField
 from django.forms.utils import ValidationError as FormValidationError
+from django.forms.widgets import Textarea
 
 try:
     basestring = unicode
@@ -18,9 +19,15 @@ try:
 except ImportError:
     pass
 
-class JSONFormField(CharField):
-    def clean(self, value):
+class JSONWidget(Textarea):
+    def render(self, name, value, attrs=None):
+        value = json.dumps(value, indent=4)
+        return super(JSONWidget,self).render(name,value,attrs)
 
+class JSONFormField(CharField):
+    widget = JSONWidget
+
+    def clean(self, value):
         if not value and not self.required:
             return None
 

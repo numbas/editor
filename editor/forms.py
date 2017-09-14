@@ -15,6 +15,7 @@ from django.contrib.auth.models import User
 from editor.models import NewExam, NewQuestion, EditorItem, Access, Theme, Extension, PullRequest, CustomPartType
 import editor.models
 from accounts.util import find_users
+from editor import jsonfield
 
 class FixedSelectMultiple(SelectMultiple):
     def value_from_datadict(self, data, files, name):
@@ -363,7 +364,8 @@ class UpdateCustomPartTypeForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class':'form-control'}),
             'short_name': forms.TextInput(attrs={'class':'form-control'}),
-            'input_widget': forms.widgets.Select(choices=editor.models.CUSTOM_PART_TYPE_INPUT_WIDGETS, attrs={'class':'form-control'})
+            'input_widget': forms.widgets.Select(choices=editor.models.CUSTOM_PART_TYPE_INPUT_WIDGETS, attrs={'class':'form-control'}),
+            'settings': jsonfield.JSONWidget(),
         }
 
     def clean_short_name(self):
@@ -372,6 +374,10 @@ class UpdateCustomPartTypeForm(forms.ModelForm):
         if short_name in built_in_part_types:
             raise ValidationError("The unique identifier you chose is already in use.")
         return short_name
+
+    def clean_marking_script(self):
+        marking_script = self.cleaned_data.get('marking_script')
+        return marking_script.replace('\r','')
 
 class NewCustomPartTypeForm(UpdateCustomPartTypeForm):
     

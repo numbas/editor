@@ -900,6 +900,59 @@ part_types.models = [
     }
 ];
 
+function CustomPartType(data) {
+    this.name = data.short_name;
+    this.niceName = data.name;
+    this.description = data.description;
+    this.widget = data.input_widget;
+    this.has_marks = true;
+    this.tabs = [];
+    this.can_be_gap = data.can_be_gap;
+    this.can_be_step = data.can_be_step;
+    this.marking_script = data.marking_script;
+    this.source = data.source;
+    this.make_settings(data.settings);
+}
+CustomPartType.prototype = {
+    is_custom_part_type: true,
+
+    make_settings: function(settings_def) {
+        var pt = this;
+        this.settings = settings_def.map(function(d) {
+            var value = $.isArray(d.default) ? ko.observableArray(d.default) : ko.observable(d.default);
+            return {
+                name: d.name,
+                value: value,
+                label: d.label,
+                input_type: d.input_type,
+                hint: d.hint,
+                data: d
+            }
+        });
+
+    },
+    model: function() {
+        var pt = this;
+        var model = {settings: this.settings};
+        return model;
+    },
+    toJSON: function(data) {
+        this.settings.forEach(function(s) {
+            data[s.name] = s.value();
+        });
+        return data;
+    },
+    load: function(data) {
+        this.settings.forEach(function(s) {
+            tryLoad(data,s.name,s,'value');
+        });
+    }
+}
+
+item_json.custom_part_types.forEach(function(data) {
+    part_types.models.push(new CustomPartType(data));
+});
+
 ko.components.register('answer-widget', {
     viewModel: function(params) {
         this.answerJSON = params.answer;

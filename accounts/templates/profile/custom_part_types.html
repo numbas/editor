@@ -4,7 +4,7 @@
 
 {% block stylesheets %}
 	{{ block.super }}
-    <link href="{% sstatic 'css/custom_part_type.css' %}" type="text/css" rel="stylesheet" />
+    <link href="{% sstatic 'css/custom_part_types.css' %}" type="text/css" rel="stylesheet" />
 {% endblock stylesheets %}
 
 {% block profile_header %}{{view_user.get_full_name}}'s part types{% endblock %}
@@ -13,6 +13,10 @@
 
 {% if view_user.own_custom_part_types.exists %}
 <table class="custom_part_types table">
+    <colgroup>
+        <col class="name"></col>
+        <col class="description"></col>
+    </colgroup>
     <thead>
 		<th>Name</th>
 		<th>What's it used for?</th>
@@ -21,7 +25,7 @@
     <tbody>
     {% for custom_part_type in view_user.own_custom_part_types.all %}
     <tr>
-        <td><a href="{% url 'custom_part_type_edit' custom_part_type.pk %}">{{custom_part_type.name}}</a></td>
+        <td><a href="{% url 'custom_part_type_edit' custom_part_type.pk %}"><span class="glyphicon glyphicon-pencil"></span> {{custom_part_type.name}}</a></td>
 		<td>{{custom_part_type.description|strip_html|safe}}</td>
         {% if is_me %}
         <td class="text-center">

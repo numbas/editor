@@ -461,13 +461,18 @@
                             </section>
 
                             {% with form_label_class="col-sm-6 col-md-4" form_control_class="col-sm-6 col-md-8" %}
-                            {% for name,template in partNames %}
+                                {% for name,template in partNames %}
                                 <!-- ko if: type().name=='{{name}}' -->
                                     <!-- ko with: type().model -->
                                     {% include template %}
                                     <!-- /ko -->
                                 <!-- /ko -->
                                 {% endfor %}
+                                <!-- ko if: type().is_custom_part_type -->
+                                <!-- ko with: type().model -->
+                                {% include "question/part_types/custom_part_type.html" %}
+                                <!-- /ko -->
+                                <!-- /ko -->
                             {% endwith %}
 
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='marking-algorithm'}">

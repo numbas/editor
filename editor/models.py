@@ -1113,6 +1113,7 @@ class NewQuestion(models.Model):
         data = OrderedDict([
             ('name', self.editoritem.name),
             ('extensions', [e.location for e in self.extensions.all()]),
+            ('custom_part_types', [p.as_json() for p in self.custom_part_types.all()]),
             ('resources', self.resource_paths),
             ('navigation', {'allowregen': True, 'showfrontpage': False, 'preventleave': False}),
             ('question_groups', [{'pickingStrategy':'all-ordered', 'questions':[self.editoritem.parsed_content.data]}])
@@ -1210,6 +1211,7 @@ class NewExam(models.Model):
         data = obj.data
         question_groups = self.question_groups
         data['extensions'] = [e.location for e in self.extensions]
+        data['custom_part_types'] = [p.as_json() for p in self.custom_part_types]
         data['name'] = self.editoritem.name
         for i, g in enumerate(data['question_groups']):
             if i < len(question_groups):
@@ -1247,6 +1249,10 @@ class NewExam(models.Model):
     @property
     def extensions(self):
         return Extension.objects.filter(newquestion__in=self.questions.all()).distinct()
+
+    @property
+    def custom_part_types(self):
+        return CustomPartType.objects.filter(questions__in=self.questions.all()).distinct()
 
     def set_question_groups(self, question_groups):
         with transaction.atomic():

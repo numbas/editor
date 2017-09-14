@@ -2541,6 +2541,7 @@ $(document).ready(function() {
 		this.has_marks = data.has_marks || false;
 		this.tabs = data.tabs || [];
 		this.model = data.model ? data.model(part) : {};
+        this.is_custom_part_type = data.is_custom_part_type;
 		this.toJSONFn = data.toJSON || function() {};
 		this.loadFn = data.load || function() {};
 	}

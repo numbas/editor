@@ -1516,13 +1516,15 @@ $(document).ready(function() {
             var labelProperty = ko.unwrap(params.labelProperty);
             var helpProperty = ko.unwrap(params.helpProperty);
             var selectedOptions = ko.unwrap(params.selectedOptions);
+            var valueName = ko.unwrap(params.valueName);
             this.options = ko.pureComputed(function() {
                 return ko.unwrap(params.options).map(function(option) {
+                    var value = valueName ? ko.unwrap(option[valueName]) : option
                     return {
-                        checked: ko.observable(selectedOptions.indexOf(option)!=-1),
+                        checked: ko.observable(selectedOptions.indexOf(value)!=-1),
                         label: option[labelProperty],
                         help: option[helpProperty],
-                        value: option
+                        value: value
                     }
                 })
             });
@@ -1956,6 +1958,20 @@ $(document).ready(function() {
         options = $.extend(options,extra_options);
 
         return tinymce.init(options);
+    }
+
+    Editor.codemirror = function(element, extra_options) {
+        var options = {
+            lineNumbers: true,
+            styleActiveLine: true,
+            matchBrackets: true,
+            mode: 'javascript',
+            indentWithTabs: false,
+            indentUnit: 2,
+            lineWrapping: Editor.wrapLines
+        }
+        options = $.extend(options, extra_options);
+        return CodeMirror.fromTextArea(element,options);
     }
 
     Editor.noop = function() {}

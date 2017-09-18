@@ -360,12 +360,13 @@ class UpdateCustomPartTypeForm(forms.ModelForm):
     
     class Meta:
         model = CustomPartType
-        fields = ['name', 'short_name', 'description', 'input_widget', 'can_be_gap', 'can_be_step', 'settings', 'marking_script']
+        fields = ['name', 'short_name', 'description', 'input_widget', 'input_options', 'can_be_gap', 'can_be_step', 'settings', 'marking_script']
         widgets = {
             'name': forms.TextInput(attrs={'class':'form-control'}),
             'short_name': forms.TextInput(attrs={'class':'form-control'}),
             'input_widget': forms.widgets.Select(choices=editor.models.CUSTOM_PART_TYPE_INPUT_WIDGETS, attrs={'class':'form-control'}),
             'settings': jsonfield.JSONWidget(),
+            'input_options': jsonfield.JSONWidget(),
         }
 
     def clean_short_name(self):

@@ -448,7 +448,7 @@ part_types.models = [
             new Editor.Tab('marking-settings','Marking settings','pencil',true,true),
             new Editor.Tab('marking-algorithm','Marking algorithm','ok'),
         ],
-        widget: '1_n_2',
+        widget: 'radios',
 
         model: function(part) {
             var model = {
@@ -566,7 +566,7 @@ part_types.models = [
             new Editor.Tab('marking-settings','Marking settings','pencil',true,true),
             new Editor.Tab('marking-algorithm','Marking algorithm','ok')
         ],
-        widget: 'm_n_2',
+        widget: 'checkboxes',
 
         model: function() {
             var model = {
@@ -1186,7 +1186,7 @@ ko.components.register('answer-widget-multipleresponse', {
     '
 });
 
-ko.components.register('answer-widget-1_n_2', {
+ko.components.register('answer-widget-radios', {
     viewModel: function(params) {
         this.part = params.part;
         this.choices = ko.computed(function() {
@@ -1211,7 +1211,7 @@ ko.components.register('answer-widget-1_n_2', {
     '
 });
 
-ko.components.register('answer-widget-m_n_2', {
+ko.components.register('answer-widget-checkboxes', {
     viewModel: function(params) {
         this.part = params.part;
         this.choices = ko.computed(function() {

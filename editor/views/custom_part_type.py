@@ -16,7 +16,7 @@ class CreateView(generic.CreateView):
         return kwargs
 
     def get_success_url(self):
-        return reverse('profile_custom_part_types', args=(self.request.user.pk,))
+        return self.object.get_absolute_url()
 
 class UpdateView(generic.UpdateView):
     model = CustomPartType
@@ -24,7 +24,7 @@ class UpdateView(generic.UpdateView):
     template_name = 'custom_part_type/edit.html'
 
     def get_success_url(self):
-        return reverse('profile_custom_part_types', args=(self.request.user.pk,))
+        return self.object.get_absolute_url()
 
 class DeleteView(AuthorRequiredMixin, generic.DeleteView):
     model = CustomPartType

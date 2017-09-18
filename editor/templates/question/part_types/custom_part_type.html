@@ -1,0 +1,68 @@
+{% load editor_controls %}
+{% load helplink %}
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking-settings'}">
+<form class="form-horizontal" data-bind="submit: Editor.noop">
+    {% property '$parent.marks' 'Marks' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-marks' %}
+    <div data-bind="visible: $parent.steps().length">
+        {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-penalty-for-revealing-steps' %}
+    </div>
+    <!-- ko foreach: settings -->
+    <div class="form-group">
+        <label class="label-block">
+            <div class="{{form_label_class}} control-label">
+                <span data-bind="text: label"></span>
+            </div>
+            <div class="{{form_control_class}}">
+                <div data-bind="if: input_type=='string'">
+                    <input {% if not editable %}disabled{% endif%} class="form-control" type="text" data-bind="
+                        textInput: value, 
+                        autosize: {max: 500, min: 30, padding: 10, value: value }
+                    "/>
+                </div>
+                <div data-bind="if: input_type=='mathematical_expression'">
+                    <input {% if not editable %}disabled{% endif %} class="monospace form-control" type="text" data-bind="textInput: value, autosize: {max: 500, min: 30, padding: 10, value: value}"/>
+                    <span data-bind="JME: value" class="jme-answer"></span>
+                </div>
+                <div data-bind="if: input_type=='checkbox'">
+                    <div class="checkbox">
+                        <label>
+                            <input {% if not editable %}disabled{% endif %} type="checkbox" data-bind="checked: value">
+                        </label>
+                    </div>
+                </div>
+                <div data-bind="if: input_type=='dropdown'">
+                    <select {% if not editable %}disabled{% endif%} class="form-control" data-bind="value: value, foreach: data.choices">
+                        <option data-bind="value: name, text: label"></option>
+                    </select>
+                </div>
+                <div data-bind="if: input_type=='code'">
+                    <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: value, codemirrorMode: 'jme'"></textarea>
+                </div>
+                <div data-bind="if: input_type=='percent'">
+                    <input
+                        {% if not editable %}disabled{% endif%} 
+                        data-bind="value: value"
+                        type="range"
+                        step="5"
+                        min="0"
+                        max="100"
+                    />
+                    <span class="percentproperty value" data-bind="text: ko.unwrap(value)+'%'"></span>
+                </div>
+                <div data-bind="if: input_type=='html'">
+                    <div {% if not editable %}disabled{% endif %} data-bind="writemaths: value, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','preview']"></div>
+                </div>
+                <div data-bind="if: input_type=='list_of_strings'">
+                    <listbox params="items: value{% if not editable %}, disabled: true{% endif %}"></listbox>
+                </div>
+                <div data-bind="if: input_type=='choose_several'">
+                    <multi-select-checkboxes params="options: data.choices, valueName: 'name', selectedOptions: value, labelProperty: 'label', helpProperty: 'hint'"></muli-select-checkboxes>
+                </div>
+
+                <p class="help-block" data-bind="visible: hint, html: hint"></p>
+            </div>
+        </label>
+    </div>
+    <!-- /ko -->
+</form>
+</section>

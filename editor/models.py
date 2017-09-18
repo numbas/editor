@@ -368,6 +368,7 @@ class CustomPartType(models.Model):
     short_name = models.CharField(max_length=200, unique=True, verbose_name='Unique identifier for this part type')
     description = models.TextField(default='', verbose_name='What\'s this part type for?')
     input_widget = models.CharField(max_length=200, choices = CUSTOM_PART_TYPE_INPUT_WIDGETS, verbose_name='Answer input method')
+    input_options = JSONField(blank=True, verbose_name='Options for the answer input method')
     can_be_gap = models.BooleanField(default=True, verbose_name='Can this part be a gap?')
     can_be_step = models.BooleanField(default=True, verbose_name='Can this part be a step?')
     marking_script = models.TextField(default='', blank=True, verbose_name='Marking algorithm')
@@ -379,6 +380,9 @@ class CustomPartType(models.Model):
 
     def __repr__(self):
         return '<CustomPartType: {}>'.format(self.short_name)
+
+    def get_absolute_url(self):
+        return reverse('custom_part_type_edit', args=(self.pk,))
 
     def as_json(self):
         return {
@@ -393,6 +397,7 @@ class CustomPartType(models.Model):
             'short_name': self.short_name,
             'description': self.description,
             'input_widget': self.input_widget,
+            'input_options': self.input_options,
             'can_be_gap': self.can_be_gap,
             'can_be_step': self.can_be_step,
             'marking_script': self.marking_script,

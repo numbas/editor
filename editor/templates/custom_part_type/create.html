@@ -1,11 +1,23 @@
 {% extends "layout.html" %}
 
+{% block javascripts %}
+{{block.super}}
+<script type="text/javascript">
+    $(document).ready(function() {
+        Editor.codemirror(document.getElementById('id_settings'), {mode:'json'});
+        Editor.codemirror(document.getElementById('id_marking_script'), {mode:'jme'});
+        Editor.codemirror(document.getElementById('id_input_options'), {mode:'jme'});
+        Editor.tinymce({selector:'#id_description'});
+    });
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
-    <h1>Create a new part type</h1>
+    <h1>{% block custom_part_type_page_header %}Create a new part type{% endblock %}</h1>
 </div>
 
-<form class="form-horizontal" action="{% url 'custom_part_type_new' %}" method="post" enctype="multipart/form-data">
+<form class="form-horizontal" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {% for field in form %}
         <div class="form-group {% if field.errors %}has-error{% endif %}">
@@ -26,7 +38,7 @@
     <div class="form-group">
         <div class="col-sm-offset-3 col-sm-9">
             <button type="submit" class="btn btn-primary">Submit</button>
-            <a class="btn btn-link" href="{% url 'profile_extensions' request.user.pk %}">Cancel</a>
+            <a class="btn btn-link" href="{% url 'profile_custom_part_types' request.user.pk %}">Cancel</a>
         </div>
     </div>
 </form>
@@ -35,5 +47,3 @@
 {#{{ formset.non_form_errors }}#}
 <p></p>
 {% endblock content %}
-
-

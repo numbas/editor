@@ -2,7 +2,7 @@
 
 ## For Newcastle University
 
-* Christian Lawson-Perfect
+* [Christian Lawson-Perfect](https://www.staff.ncl.ac.uk/christian.perfect/)
 * Anthony Youd
 
 ## Other contributors

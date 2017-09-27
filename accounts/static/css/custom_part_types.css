@@ -1,3 +1,6 @@
 .table.custom_part_types col.name {
     width: 15em;
 }
+.table.custom_part_types col.controls {
+    width: 7em;
+}

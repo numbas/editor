@@ -39,17 +39,19 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 	constants: {
 		'e': Math.E,
 		'pi': Math.PI,
+        'π': Math.PI,
 		'i': math.complex(0,1),
 		'infinity': Infinity,
-		'infty': Infinity
+		'infty': Infinity,
+        '∞': Infinity
 	},
 
 	/** Regular expressions to match tokens */
 	re: {
 		re_bool: /^(true|false)(?![a-zA-Z_0-9'])/i,
 		re_number: /^[0-9]+(?:\x2E[0-9]+)?/,
-		re_name: /^{?((?:(?:[a-zA-Z]+):)*)((?:\$?[a-zA-Z_][a-zA-Z0-9_]*'*)|\?\??)}?/i,
-		re_op: /^(\.\.|#|<=|>=|<>|&&|\|\||[\|*+\-\/\^<>=!&;]|(?:(not|and|or|xor|implies|isa|except|in|divides)([^a-zA-Z0-9_']|$)))/i,
+		re_name: /^{?((?:(?:[a-zA-Z]+):)*)((?:\$?[a-zA-Z_][a-zA-Z0-9_]*'*)|\?\??|[π∞])}?/i,
+		re_op: /^(\.\.|#|<=|>=|<>|&&|\|\||[\|*+\-\/\^<>=!&;÷×∈∧∨⟹≠≥≤]|(?:(not|and|or|xor|implies|isa|except|in|divides)([^a-zA-Z0-9_']|$)))/i,
 		re_punctuation: /^([\(\),\[\]])/,
 		re_string: /^("""|'''|['"])((?:[^\1\\]|\\.)*?)\1/,
 		re_comment: /^\/\/.*(?:\n|$)/,
@@ -1047,7 +1049,8 @@ jme.re.re_strip_whitespace = new RegExp('^'+jme.re.re_whitespace+'+|'+jme.re.re_
  */
 var displayFlags = jme.displayFlags = {
 	fractionnumbers: undefined,
-	rowvector: undefined
+	rowvector: undefined,
+    alwaystimes: undefined
 };
 
 var ruleSort = util.sortBy(['patternString','resultString','conditionStrings']);
@@ -1489,6 +1492,9 @@ TMatrix.doc = {
  * @augments Numbas.jme.token
  * @property {Array.<Number>} value - `[start,end,step]` and then, if the range is discrete, all the values included in the range.
  * @property {Number} size - the number of values in the range (if it's discrete, `undefined` otherwise)
+ * @property {Number} start - the lower bound of the range
+ * @property {Number} end - the upper bound of the range
+ * @property {Number} start - the difference between elements in the range
  * @property type "range"
  * @constructor
  * @param {Array.<Number>} range - `[start,end,step]`
@@ -1498,18 +1504,10 @@ var TRange = types.TRange = types.range = function(range)
 	this.value = range;
 	if(this.value!==undefined)
 	{
-		var start = this.value[0], end = this.value[1], step = this.value[2];
-
-		//if range is discrete, store all values in range so they don't need to be computed each time
-		if(step != 0)
-		{
-			var n = (end-start)/step;
-			this.size = n+1;
-			for(var i=0;i<=n;i++)
-			{
-				this.value[i+3] = start+i*step;
-			}
-		}
+        this.start = this.value[0];
+        this.end = this.value[1];
+        this.step = this.value[2];
+        this.size = Math.floor((this.end-this.start)/this.step);
 	}
 }
 TRange.prototype.type = 'range';
@@ -1700,7 +1698,16 @@ var opSynonyms = jme.opSynonyms = {
 	'&':'and',
 	'&&':'and',
 	'divides': '|',
-	'||':'or'
+	'||':'or',
+    '÷': '/',
+    '×': '*',
+    '∈': 'in',
+    '∧': 'and',
+    '∨': 'or',
+    '⟹': 'implies',
+    '≠': '<>',
+    '≥': '>=',
+    '≤': '<='
 }
 /** Synonyms of function names - keys in this dictionary are translated to their corresponding values 
  * @enum {String}

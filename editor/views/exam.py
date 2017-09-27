@@ -337,9 +337,12 @@ class CommentView(editor.views.generic.CommentView):
 class SetRestorePointView(editor.views.generic.SetRestorePointView):
     model = NewExam
 
-def question_lists(request):
+def question_lists(request, pk):
     if not request.is_ajax():
         raise Http404
+
+    exam = NewExam.objects.get(pk=pk)
+    exam_questions = exam.questions.all()
 
     user = request.user
     if user.is_anonymous():
@@ -350,7 +353,8 @@ def question_lists(request):
 
     lists = {
         'recent': recent,
-        'basket': basket
+        'basket': basket,
+        'exam_questions': exam_questions
     }
     out = {k: [q.summary() for q in qs] for k, qs in lists.items()}
 

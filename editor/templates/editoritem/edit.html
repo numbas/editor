@@ -154,6 +154,11 @@
                         <span class="caret"></span>
                     </a>
                     <ul class="dropdown-menu">
+                        <li class="disabled">
+                            <a data-bind="visible: ready_to_download"><span class="text-success"><span class="glyphicon glyphicon-ok"></span> This {{item_type}} is ready to download.</span></a>
+                            <a data-bind="visible: !ready_to_download()"><span class="text-danger"><span class="glyphicon glyphicon-exclamation-sign"></span> This {{item_type}} might need some attention: <span data-bind="text: ready_to_download_reason"></span></span></a>
+                        </li>
+                        <li role="separator" class="divider"></li>
                         <li><a href="{% editoritem_url 'download' object %}?scorm">SCORM package</a></li>
                         <li><a href="{% editoritem_url 'download' object %}">standalone .zip (no SCORM)</a></li>
                         <li><a href="{% editoritem_url 'source' object %}">source</a></li>

@@ -309,25 +309,6 @@ $(document).ready(function() {
 
     }
     Question.prototype = {
-		versionJSON: function() {
-			var obj = {
-				id: this.id,
-				JSONContent: this.toJSON(),
-				numbasVersion: Editor.numbasVersion,
-				name: this.name(),
-				author: item_json.itemJSON.author,
-				copy_of: item_json.itemJSON.copy_of,
-				extensions: this.usedExtensions().map(function(e){return e.pk}),
-				tags: this.tags(),
-				resources: this.saveResources(),
-				metadata: this.metadata()
-			};
-            if(item_json.editable) {
-                obj.public_access = this.public_access();
-            }
-            return obj;
-		},
-
 		deleteItem: function(q,e) {
 			if(window.confirm('Really delete this question?')) {
 				$(e.target).find('form').submit();

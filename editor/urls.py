@@ -91,7 +91,7 @@ urlpatterns = patterns('',
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/restore-point$',
         login_required(exam.SetRestorePointView.as_view()), name='set_restore_point_on_exam'),
 
-    url(r'^exam/question-lists/$',
+    url(r'^exam/question-lists/(?P<pk>\d+)/$',
         exam.question_lists,
         name='question_lists'),
 

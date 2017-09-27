@@ -254,6 +254,8 @@ class Extension(models.Model):
     zipfile_folder = 'user-extensions'
     zipfile = models.FileField(upload_to=zipfile_folder+'/zips', blank=True, null=True, max_length=255, verbose_name='Extension package', help_text='A .zip package containing the extension\'s files')
 
+    class Meta:
+        ordering = ['name']
     def __str__(self):
         return self.name
 

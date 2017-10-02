@@ -988,6 +988,19 @@ var typeToTeX = jme.display.typeToTeX = {
 	}
 }
 
+/** Take a nested application of a single op, e.g. ((1*2)*3)*4, and flatten it so that the tree has one op two or more arguments
+ */
+function flatten(tree,op) {
+    if(!jme.isOp(tree.tok,op)) {
+        return [tree];
+    }
+    var args = [];
+    for(var i=0;i<tree.args.length;i++) {
+        args = args.concat(flatten(tree.args[i],op));
+    }
+    return args;
+}
+
 /** A dictionary of settings for {@link Numbas.jme.display.texify}.
  * @typedef texify_settings
  * @property {Boolean} fractionnumbers - Show all numbers as fractions?
@@ -1015,6 +1028,11 @@ var texify = Numbas.jme.display.texify = function(thing,settings)
 
 	if(!settings)
 		settings = {};
+
+    if(jme.isOp(thing.tok,'*')) {
+        // flatten nested multiplications, so a string of consecutive multiplications can be considered together
+        thing = {tok: thing.tok, args: flatten(thing,'*')};
+    }
 
 	if(thing.args)
 	{
@@ -1235,14 +1253,7 @@ var typeToJME = Numbas.jme.display.typeToJME = {
 		return tok.name;
 	},
 	'string': function(tree,tok,bits,settings) {
-		var str = tok.value
-					.replace(/\\/g,'\\\\')
-					.replace(/\\([{}])/g,'$1')
-					.replace(/\n/g,'\\n')
-					.replace(/"/g,'\\"')
-					.replace(/'/g,"\\'")
-		;
-		return '"'+str+'"';
+		return '"'+jme.escape(tok.value)+'"';
 	},
 	html: function(tree,tok,bits,settings) {
 		var html = $(tok.value).clone().wrap('<div>').parent().html();
@@ -1389,7 +1400,11 @@ var typeToJME = Numbas.jme.display.typeToJME = {
 	},
 
 	expression: function(tree,tok,bits,settings) {
-		return treeToJME(tok.tree);
+		var expr = treeToJME(tok.tree);
+        if(settings.wrapexpressions) {
+            expr = 'expression("'+jme.escape(expr)+'")';
+        }
+        return expr;
 	}
 }
 
@@ -1405,6 +1420,7 @@ var jmeFunctions = jme.display.jmeFunctions = {
  * @typedef jme_display_settings
  * @property {Boolean} fractionnumbers - Show all numbers as fractions?
  * @property {Boolean} niceNumber - Run numbers through {@link Numbas.math.niceNumber}?
+ * @property {Boolean} wrapexpressions - Wrap TExpression tokens in `expression("")`?
  * @property {Number} accuracy - Accuracy to use when finding rational approximations to numbers. See {@link Numbas.math.rationalApproximation}.
  */
 
@@ -2009,10 +2025,6 @@ var simplificationRules = jme.display.simplificationRules = {
 		['sinh(0)',[],'0'],
 		['tanh(0)',[],'0']
 	],
-
-    trigPowers: [
-        ['sin^(?;n)(?;x)',[],'sin(x)^n']
-    ],
 
 	otherNumbers: [
 		['?;n^?;m',['n isa "number"','m isa "number"'],'eval(n^m)']

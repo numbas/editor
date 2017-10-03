@@ -160,6 +160,8 @@ class Project(models.Model, ControlledObject):
     def has_access(self, user, levels):
         if user.is_anonymous():
             return False
+        if user==self.owner:
+            return True
         return ProjectAccess.objects.filter(project=self, user=user, access__in=levels).exists()
 
     def members(self):

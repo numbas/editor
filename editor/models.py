@@ -59,6 +59,9 @@ class ControlledObject(object):
         raise NotImplementedError
 
     def can_be_viewed_by(self, user):
+        if getattr(settings, 'EVERYTHING_VISIBLE', False):
+            return True
+        
         accept_levels = ('view', 'edit')
         try:
             if self.published and self.public_access in accept_levels:
@@ -86,6 +89,9 @@ class ControlledObject(object):
 
     @classmethod
     def filter_can_be_viewed_by(cls, user):
+        if getattr(settings, 'EVERYTHING_VISIBLE', False):
+            return Q()
+        
         view_perms = ('edit', 'view')
         if user.is_superuser:
             return Q()

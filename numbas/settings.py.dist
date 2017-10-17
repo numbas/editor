@@ -164,6 +164,8 @@ GLOBAL_SETTINGS = {
     #'MINIFIER_PATH': 'uglifyjs',
 }
 
+EVERYTHING_VISIBLE = False  # Set this to True to allow every user to see all content, regardless of access settings
+
 ALLOW_REGISTRATION = False
 ACCOUNT_ACTIVATION_DAYS = 10
 

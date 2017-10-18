@@ -52,6 +52,9 @@ number of items. Or <a href="{% querystring "order_by"="name" %}">order by name<
                     <span class="glyphicon glyphicon-copyright-mark"></span> Default licence: {{project.default_licence.short_name}}
                 </span>
                 {% endif %}
+                <span class="bit owner">
+                    Owner: {% user_link project.owner %}
+                </span>
             </div>
         </div>
     </li>

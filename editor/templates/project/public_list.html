@@ -21,9 +21,8 @@ name. Or <a href="{% querystring "order_by"="num_items" %}">order by number of i
 number of items. Or <a href="{% querystring "order_by"="name" %}">order by name</a> instead.
 {% endif %}
 <ol class="list-unstyled">
-{% for row in results.page.object_list %}
-{% with project=row.record %}
-{% with num_questions=project.items.questions.count num_exams=project.items.exams.count %}
+{% for row in projects %}
+{% with project=row.project %}
     <li class="project">
         <div class="row">
             <h3>
@@ -44,9 +43,9 @@ number of items. Or <a href="{% querystring "order_by"="name" %}">order by name<
                 </ul>
                 {% endif %}
                 <span class="bit num-items">
-                    <a href="{% url 'project_search' project.pk %}?item_types=questions"><span class="glyphicon glyphicon-file"></span> {{num_questions}} question{{num_questions|pluralize}}</a>
+                    <a href="{% url 'project_search' project.pk %}?item_types=questions"><span class="glyphicon glyphicon-file"></span> {{row.num_questions}} question{{row.num_questions|pluralize}}</a>
                     and 
-                    <a href="{% url 'project_search' project.pk %}?item_types=exams"><span class="glyphicon glyphicon-book"></span> {{num_exams}} exam{{num_exams|pluralize}}</a>
+                    <a href="{% url 'project_search' project.pk %}?item_types=exams"><span class="glyphicon glyphicon-book"></span> {{row.num_exams}} exam{{row.num_exams|pluralize}}</a>
                 </span>
                 {% if project.default_licence %}
                 <span class="bit default-licence">
@@ -56,7 +55,6 @@ number of items. Or <a href="{% querystring "order_by"="name" %}">order by name<
             </div>
         </div>
     </li>
-{% endwith %}
 {% endwith %}
 {% endfor %}
 </ol>

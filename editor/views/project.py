@@ -270,5 +270,13 @@ class PublicProjectsView(generic.ListView):
 
     def get_context_data(self, **kwargs):
         context = super(PublicProjectsView,self).get_context_data(**kwargs)
-        context['results'] = self.make_table()
+        table = context['results'] = self.make_table()
+        context['projects'] = [
+            {
+                'project': row.record, 
+                'num_questions': row.record.items.questions().filter(published=True).count(),
+                'num_exams': row.record.items.exams().filter(published=True).count(),
+            }
+            for row in table.page.object_list
+        ]
         return context

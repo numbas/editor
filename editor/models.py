@@ -571,6 +571,9 @@ class EditorItemManager(models.Manager):
     def exams(self):
         return self.exclude(exam=None)
 
+    def published(self):
+        return self.filter(published=True)
+
 
 @reversion.register
 class EditorItem(models.Model, NumbasObject, ControlledObject):

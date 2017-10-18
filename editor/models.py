@@ -171,7 +171,10 @@ class Project(models.Model, ControlledObject):
         return ProjectAccess.objects.filter(project=self, user=user, access__in=levels).exists()
 
     def members(self):
-        return [self.owner]+list(User.objects.filter(project_memberships__project=self).exclude(pk=self.owner.pk))
+        return [self.owner]+self.non_owner_members()
+
+    def non_owner_members(self):
+        return list(User.objects.filter(project_memberships__project=self).exclude(pk=self.owner.pk))
 
     def all_timeline(self):
         items = self.timeline.all() | TimelineItem.objects.filter(editoritems__project=self)
@@ -560,11 +563,21 @@ class NumbasObject(object):
     def __eq__(self, other):
         return self.content == other.content
 
+
+class EditorItemManager(models.Manager):
+    def questions(self):
+        return self.exclude(question=None)
+
+    def exams(self):
+        return self.exclude(exam=None)
+
+
 @reversion.register
 class EditorItem(models.Model, NumbasObject, ControlledObject):
     """
         Base model for exams and questions - each exam or question has a reference to an instance of this
     """
+    objects = EditorItemManager()
     name = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200, editable=False, unique=False)
 

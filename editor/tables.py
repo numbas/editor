@@ -1,6 +1,7 @@
 import django_tables2 as tables
+from django.db.models import Count
 from django_tables2.columns import Column
-from .models import EditorItem
+from .models import EditorItem, Project
 
 class ObjectTable(tables.Table):
     last_modified = Column()
@@ -18,3 +19,15 @@ class EditorItemTable(ObjectTable):
     class Meta(ObjectTable.Meta):
         model = EditorItem
         sequence = ('name', 'current_stamp', 'licence', 'author', 'last_modified')
+
+class NumItemsColumn(Column):
+    def order(self, queryset, is_descending):
+        queryset = queryset.annotate(num_items=Count('items')).order_by(('-' if is_descending else '')+'num_items')
+        return (queryset, True)
+
+class ProjectTable(tables.Table):
+    num_items = NumItemsColumn()
+
+    class Meta:
+        model = Project
+        sequence = ('name','num_items')

@@ -696,7 +696,7 @@ $(document).ready(function() {
             },this);
 
             this.canPublish = ko.computed(function() {
-                return !this.published() && this.all_sections_completed();
+                return !this.published() && (this.all_sections_completed() || this.ignored_publishing_criteria());
             },this);
         },
 

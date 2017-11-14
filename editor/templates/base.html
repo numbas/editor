@@ -39,19 +39,10 @@
 
         <!-- main body -->
         {% block body %}
-        <nav class="navbar navbar-default navbar-static-top">
-            <div class="container-fluid">
+        <nav id="top-nav" class="navbar navbar-default navbar-static-top">
                 <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse" aria-expanded="false">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
 					<a class="navbar-brand" href="{% url 'editor_index' %}"><img id="numbas-logo" src="{% sstatic 'images/numbas_logo.png' %}"></a>
                 </div>
-
-                <div class="collapse navbar-collapse" id="navbar-collapse">
 
 					<form id="search-bar" class="navbar-form navbar-left" role="search" method="get" action="{% block search_url %}{% url 'search' %}{% endblock search_url %}">
                         <div class="form-group">
@@ -70,6 +61,13 @@
                             </div>
                         </div>
                     </form>
+
+                    <ul id="explore-nav" class="nav navbar-nav navbar-left">
+                        <li>
+                            <a tabindex="2" href="{% url 'public_projects' %}"><span class="glyphicon glyphicon-globe"></span> Explore</a>
+                        </li>
+                    </ul>
+                    <div class="space"></div>
 
                     <ul id="session" class="nav navbar-nav navbar-right">
                         {% if user.is_authenticated %}
@@ -145,8 +143,6 @@
                             {%endif%}
                         {% endif %}
                     </ul>
-                </div>
-            </div>
         </nav>
 
 		<div id="content" role="main" class="{% block content_container %}container{% endblock content_container %}">

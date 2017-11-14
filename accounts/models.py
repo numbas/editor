@@ -50,7 +50,7 @@ class UserProfile(models.Model):
     language = models.CharField(max_length=100, default='en-GB')
     bio = SanitizedTextField(default='', allowed_tags=settings.SANITIZER_ALLOWED_TAGS, allowed_attributes=settings.SANITIZER_ALLOWED_ATTRIBUTES)
     question_basket = models.ManyToManyField(NewQuestion, blank=True, related_name='baskets', through='BasketQuestion')
-    personal_project = models.ForeignKey(Project, null=True, on_delete=models.SET_NULL)
+    personal_project = models.ForeignKey(Project, null=True, on_delete=models.SET_NULL,related_name='personal_project_of')
     avatar = ImageWithThumbsField(upload_to='avatars', sizes=((20, 20), (40, 40), (150, 150)), blank=True, null=True, max_length=255, verbose_name='Profile image')
     wrap_lines = models.BooleanField(default=False,verbose_name='Wrap long lines in the code editor?')
     mathjax_url = models.CharField(max_length=300,default='',blank=True,verbose_name='Preferred URL to load MathJax from')

@@ -16,6 +16,7 @@ urlpatterns = patterns('',
 
     # Projects
 
+	url(r'^projects/public$$', project.PublicProjectsView.as_view(), name='public_projects'),
 	url(r'^project/new$', login_required(project.CreateView.as_view()), name='project_new'),
     url(r'^project/(?P<pk>\d+)/$', project.IndexView.as_view(), name='project_index'),
     url(r'^project/(?P<pk>\d+)/delete$', project.DeleteView.as_view(), name='project_delete'),
@@ -91,7 +92,7 @@ urlpatterns = patterns('',
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/restore-point$',
         login_required(exam.SetRestorePointView.as_view()), name='set_restore_point_on_exam'),
 
-    url(r'^exam/question-lists/$',
+    url(r'^exam/question-lists/(?P<pk>\d+)/$',
         exam.question_lists,
         name='question_lists'),
 

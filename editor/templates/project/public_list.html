@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load django_tables2 %}
+{% load render_table from django_tables2 %}
+{% load user_link %}
+{% load sstatic %}
+{% load sanitizer %}
+
+{% block stylesheets %}
+    {{block.super}}
+    <link rel="stylesheet" href="{% sstatic 'css/public_projects.css' %}">
+{% endblock stylesheets %}
+
+{% block content %}
+<header><h1>Explore public projects</h1></header>
+<section>
+<p>
+{% with num_results=results.page.paginator.count %}{{num_results}} public project{{num_results|pluralize}}{% endwith %}, ordered by
+{% if results.order_by == "name" %}
+name. Or <a href="{% querystring "order_by"="num_items" %}">order by number of items</a> instead.
+{% else %}
+number of items. Or <a href="{% querystring "order_by"="name" %}">order by name</a> instead.
+{% endif %}
+<ol class="list-unstyled">
+{% for row in projects %}
+{% with project=row.project %}
+    <li class="project">
+        <div class="row">
+            <h3>
+                <span class="owner">{% user_thumbnail project.owner 40 36 link=True %}</span>
+                <a href="{{project.get_absolute_url}}">{{project.name}}</a>
+            </h3>
+            <div class="description">
+                {% if project.description %}
+                {{project.description|escape_html|safe}}
+                {% endif %}
+            </div>
+            <div class="info">
+                {% if project.non_owner_members %}
+                <ul class="bit members list-inline">
+                    {% for user in project.non_owner_members|slice:"3" %}
+                    <li>{% user_thumbnail user 20 18 link=True %}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                <span class="bit num-items">
+                    <a href="{% url 'project_search' project.pk %}?item_types=questions"><span class="glyphicon glyphicon-file"></span> {{row.num_questions}} question{{row.num_questions|pluralize}}</a>
+                    and 
+                    <a href="{% url 'project_search' project.pk %}?item_types=exams"><span class="glyphicon glyphicon-book"></span> {{row.num_exams}} exam{{row.num_exams|pluralize}}</a>
+                </span>
+                {% if project.default_licence %}
+                <span class="bit default-licence">
+                    <span class="glyphicon glyphicon-copyright-mark"></span> Default licence: {{project.default_licence.short_name}}
+                </span>
+                {% endif %}
+                <span class="bit owner">
+                    Owner: {% user_link project.owner %}
+                </span>
+            </div>
+        </div>
+    </li>
+{% endwith %}
+{% endfor %}
+</ol>
+{% include "pagination.html" %}
+{% endblock content %}

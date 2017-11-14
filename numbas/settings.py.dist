@@ -159,10 +159,12 @@ GLOBAL_SETTINGS = {
     'HELP_URL': 'http://numbas-editor.readthedocs.org',        # the URL of the Numbas webdocs
     'PYTHON_EXEC': '/usr/bin/python3',
     'NUMBAS_THEMES': [('Standard', 'default'), ('Printable worksheet', 'worksheet'), ('School', 'school')],
-    'NUMBAS_LOCALES': [('English', 'en-GB'), (u'Bokmål', 'nb-NO'), ('Nederlands', 'nl-NL'), (u'Español', 'es-ES')],
+    'NUMBAS_LOCALES': [('English', 'en-GB'), (u'Bokmål', 'nb-NO'), ('Nederlands', 'nl-NL'), (u'Español', 'es-ES'), ('School', 'en-school'), ('Shqip','sq-AL')],
     #Uncomment the line below and provide a path to a minification tool to minify javascript files
     #'MINIFIER_PATH': 'uglifyjs',
 }
+
+EVERYTHING_VISIBLE = False  # Set this to True to allow every user to see all content, regardless of access settings
 
 ALLOW_REGISTRATION = False
 ACCOUNT_ACTIVATION_DAYS = 10

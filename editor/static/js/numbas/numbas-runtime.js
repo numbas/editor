@@ -237,7 +237,6 @@ Numbas.checkAllScriptsLoaded = function() {
 
 })();
 
-
 /*
 Copyright 2011-14 Newcastle University
 
@@ -254,7 +253,7 @@ Copyright 2011-14 Newcastle University
    limitations under the License.
 */
 
-/** @file Sets up most of the JME stuff: compiler, built-in functions, and expression comparison functions.
+/** @file Sets up the JME compiler and evaluator.
  *
  * Provides {@link Numbas.jme}
  */
@@ -290,18 +289,20 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 	constants: {
 		'e': Math.E,
 		'pi': Math.PI,
+        'π': Math.PI,
 		'i': math.complex(0,1),
 		'infinity': Infinity,
 		'infty': Infinity,
-        'nan': NaN
+        'nan': NaN,
+        '∞': Infinity
 	},
 
 	/** Regular expressions to match tokens */
 	re: {
 		re_bool: /^(true|false)(?![a-zA-Z_0-9'])/i,
 		re_number: /^[0-9]+(?:\x2E[0-9]+)?/,
-		re_name: /^{?((?:(?:[a-zA-Z]+):)*)((?:\$?[a-zA-Z_][a-zA-Z0-9_]*'*)|\?\??)}?/i,
-		re_op: /^(\.\.|#|<=|>=|<>|&&|\|\||[\|*+\-\/\^<>=!&;]|(?:(not|and|or|xor|implies|isa|except|in|divides)([^a-zA-Z0-9_']|$)))/i,
+		re_name: /^{?((?:(?:[a-zA-Z]+):)*)((?:\$?[a-zA-Z_][a-zA-Z0-9_]*'*)|\?\??|[π∞])}?/i,
+		re_op: /^(\.\.|#|<=|>=|<>|&&|\|\||[\|*+\-\/\^<>=!&;÷×∈∧∨⟹≠≥≤]|(?:(not|and|or|xor|implies|isa|except|in|divides)([^a-zA-Z0-9_']|$)))/i,
 		re_punctuation: /^([\(\),\[\]])/,
 		re_string: /^("""|'''|['"])((?:[^\1\\]|\\.)*?)\1/,
 		re_comment: /^\/\/.*(?:\n|$)/,
@@ -412,29 +413,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 			{
 				var str = result[2];
 	
-				var estr = '';
-				while(true) {
-					var i = str.indexOf('\\');
-					if(i==-1)
-						break;
-					else {
-						estr += str.slice(0,i);
-						var c;
-						if((c=str.charAt(i+1))=='n') {
-							estr+='\n';
-						}
-						else if(c=='{' || c=='}') {
-							estr+='\\'+c;
-						}
-						else {
-							estr+=c;
-						}
-						str=str.slice(i+2);
-					}
-				}
-				estr+=str;
-
-				token = new TString(estr);
+				token = new TString(jme.unescape(str));
 			}
             else if(result = expr.match(jme.re.re_keypair)) {
                 if(tokens.length==0 || tokens[tokens.length-1].type!='string') {
@@ -463,6 +442,52 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 
 		return(tokens);
 	},
+
+    /** Escape a string so that it will be interpreted correctly by the JME parser
+     * @param {String} str
+     * @returns {String}
+     * @see Numbas.jme.unescape
+     */
+    escape: function(str) {
+		return str
+            .replace(/\\/g,'\\\\')
+            .replace(/\\([{}])/g,'$1')
+            .replace(/\n/g,'\\n')
+            .replace(/"/g,'\\"')
+            .replace(/'/g,"\\'")
+		;
+    },
+
+    /** Unescape a string - backslashes escape special characters
+     * @param {String} str
+     * @returns {String}
+     * @see Numbas.jme.escape
+     */
+    unescape: function(str) {
+        var estr = '';
+        while(true) {
+            var i = str.indexOf('\\');
+            if(i==-1)
+                break;
+            else {
+                estr += str.slice(0,i);
+                var c;
+                if((c=str.charAt(i+1))=='n') {
+                    estr+='\n';
+                }
+                else if(c=='{' || c=='}') {
+                    estr+='\\'+c;
+                }
+                else {
+                    estr+=c;
+                }
+                str=str.slice(i+2);
+            }
+        }
+        estr+=str;
+
+        return estr;
+    },
 
 	/** Shunt list of tokens into a syntax tree. Uses the shunting yard algorithm (wikipedia has a good description)
 	 * @param {Array.<Numbas.jme.token>} tokens
@@ -1988,7 +2013,16 @@ var opSynonyms = jme.opSynonyms = {
 	'&':'and',
 	'&&':'and',
 	'divides': '|',
-	'||':'or'
+	'||':'or',
+    '÷': '/',
+    '×': '*',
+    '∈': 'in',
+    '∧': 'and',
+    '∨': 'or',
+    '⟹': 'implies',
+    '≠': '<>',
+    '≥': '>=',
+    '≤': '<='
 }
 /** Synonyms of function names - keys in this dictionary are translated to their corresponding values 
  * @enum {String}
@@ -2560,7 +2594,865 @@ jme.compareTrees = function(a,b) {
 }
 
 });
+Numbas.queueScript('jme-rules',['base','math','jme-base','util'],function() {
 
+/** @file Code to do with JME pattern-matching rules.
+ *
+ * Provides {@link Numbas.jme.rules}
+ */
+
+var math = Numbas.math;
+var jme = Numbas.jme;
+var util = Numbas.util;
+
+jme.rules = {};
+
+/** Simplification rule
+ * @memberof Numbas.jme.rules
+ * @constructor
+ *
+ * @param {JME} pattern - expression pattern to match. Variables will match any sub-expression.
+ * @param {JME[]} conditions - conditions as JME expressions on the matched variables, which must all evaluate to true for the rule to match.
+ * @param {JME} result - expression pattern to rewrite to.
+ * 
+ * @property {JME} patternString - the JME string defining the pattern to match
+ * @property {JME} resultString - the JME string defining the result of the rule
+ * @property {JME} conditionStrings - JME strings defining the conditions
+ * @property {Numbas.jme.tree} tree - `patternString` compiled to a syntax tree
+ * @property {Numbas.jme.tree} result - `result` compiled to a syntax tree
+ * @property {Numbas.jme.tree[]} conditions `conditions` compiled to syntax trees
+ */
+var Rule = jme.rules.Rule = function(pattern,conditions,result)
+{
+	this.patternString = pattern;
+	this.tree = jme.compile(pattern,{},true);
+
+	this.resultString = result;
+	this.result = jme.compile(result,{},true);
+
+	this.conditionStrings = conditions.slice();
+	this.conditions = [];
+	for(var i=0;i<conditions.length;i++)
+	{
+		this.conditions.push(jme.compile(conditions[i],{},true));
+	}
+}
+
+Rule.prototype = /** @lends Numbas.jme.rules.Rule.prototype */ {
+	/** Match a rule on given syntax tree.
+	 * @memberof Numbas.jme.rules.Rule.prototype
+	 * @param {Numbas.jme.tree} exprTree - the syntax tree to test
+	 * @param {Numbas.jme.Scope} scope - used when checking conditions
+	 * @returns {Boolean|jme_pattern_match} - `false` if no match, or a dictionary of matched subtrees
+	 */
+	match: function(exprTree,scope)
+	{
+		//see if expression matches rule
+		var match = matchTree(this.tree,exprTree);
+		if(match==false)
+			return false;
+
+		//if expression matches rule, then match is a dictionary of matched variables
+		//check matched variables against conditions
+		if(this.matchConditions(match,scope))
+			return match;
+		else
+			return false;
+	},
+
+    matchAll: function(exprTree,scope) {
+        var r = this;
+        var matches = matchAllTree(this.tree,exprTree);
+        return matches.filter(function(match) {
+            return r.matchConditions(match,scope);
+        });
+    },
+
+	/** Check that a matched pattern satisfies all the rule's conditions
+	 * @memberof Numbas.jme.rules.Rule.prototype
+	 * @param {jme_pattern_match} match
+	 * @param {Numbas.jme.Scope} scope
+	 * @returns {Boolean}
+	 */
+	matchConditions: function(match,scope)
+	{
+		for(var i=0;i<this.conditions.length;i++)
+		{
+			var c = Numbas.util.copyobj(this.conditions[i],true);
+			c = jme.substituteTree(c,new jme.Scope([{variables:match}]));
+			try
+			{
+				var result = jme.evaluate(c,scope);
+				if(result.value==false)
+					return false;
+			}
+			catch(e)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+}
+
+var endTermNames = {
+	'??':true,
+	'm_nothing':true,
+    'm_number': true
+}
+function isEndTerm(term) {
+	while(term.tok.type=='function' && /^m_(?:all|pm|not|commute)$/.test(term.tok.name) || jme.isOp(term.tok,';')) {
+		term = term.args[0];
+	}
+	if(term.tok.type=='function' && term.tok.name=='m_any') {
+		for(var i=0;i<term.args.length;i++) {
+			if(isEndTerm(term.args[i])) {
+				return true;
+			}
+		}
+		return false;
+	}
+	return term.tok.type=='name' && endTermNames[term.tok.name];
+}
+
+/** Given a tree representing a series of terms t1 <op> t2 <op> t3 <op> ..., return the terms as a list.
+ * @param {Numbas.jme.tree} tree
+ * @param {string} op
+ * @param {Array<string>} names
+ * @returns {object} - {terms: a list of subtrees, termnames: the match names set in each term}
+ */
+var getCommutingTerms = Numbas.jme.rules.getCommutingTerms = function(tree,op,names) {
+	if(names===undefined) {
+		names = [];
+	}
+
+	if(op=='+' && jme.isOp(tree.tok,'-')) {
+		tree = {tok: new jme.types.TOp('+'), args: [tree.args[0],{tok: new jme.types.TOp('-u'), args: [tree.args[1]]}]};
+	}
+
+	if(!tree.args || tree.tok.name!=op) {
+		return {terms: [tree], termnames: names.slice()};
+	}
+
+	var terms = [];
+	var termnames = [];
+	var rest = [];
+	var restnames = [];
+	for(var i=0; i<tree.args.length;i++) {
+		var arg = tree.args[i];
+		var oarg = arg;
+		var argnames = names.slice();
+		while(jme.isOp(arg.tok,';')) {
+			argnames.push(arg.args[1].tok.name);
+			arg = arg.args[0];
+		}
+		if(jme.isOp(arg.tok,op) || (op=='+' && jme.isOp(arg.tok,'-'))) {
+			var sub = getCommutingTerms(arg,op,argnames);
+			terms = terms.concat(sub.terms);
+			termnames = termnames.concat(sub.termnames);
+		} else if(jme.isName(arg.tok,'?') || isEndTerm(arg)) {
+			rest.push(arg);
+			restnames.push(argnames);
+		} else {
+			terms.push(arg);
+			termnames.push(argnames);
+		}
+	}
+	if(rest.length) {
+		terms = terms.concat(rest);
+		termnames = termnames.concat(restnames);
+	}
+	return {terms: terms, termnames: termnames};
+}
+
+/** A dictionary representing the results of a JME pattern match.
+ * Maps variable names to trees.
+ * @typedef jme_pattern_match
+ * @type Object.<Numbas.jme.tree>
+ * @see Numbas.jme.display.matchTree
+ */
+
+/** Recursively check whether `exprTree` matches `ruleTree`. Variables in `ruleTree` match any subtree.
+ * @memberof Numbas.jme.rules
+ *
+ * @param {Numbas.jme.tree} ruleTree
+ * @param {Numbas.jme.tree} exprTree
+ * @param {Boolean} doCommute - take commutativity of operations into account, e.g. terms of a sum can be in any order.
+ * @returns {Boolean|jme_pattern_match} - `false` if no match, otherwise a dictionary of subtrees matched to variable names
+ */
+var matchTree = jme.rules.matchTree = function(ruleTree,exprTree,doCommute) {
+	if(doCommute===undefined) {
+		doCommute = false;
+	}
+	if(!exprTree)
+		return false;
+
+	var ruleTok = ruleTree.tok;
+	var exprTok = exprTree.tok;
+
+	if(jme.isOp(ruleTok,';')) {
+		if(ruleTree.args[1].tok.type!='name') {
+			throw(new Numbas.Error('jme.matchTree.group name not a name'));
+		}
+		var name = ruleTree.args[1].tok.name;
+		var m = matchTree(ruleTree.args[0],exprTree,doCommute);
+		if(m) {
+			m[name] = exprTree;
+			return m;
+		} else {
+			return false;
+		}
+	}
+
+	if(ruleTok.type=='name')
+	{
+		switch(ruleTok.name) {
+			case '?':
+			case '??':
+				return {};
+			case 'm_number':
+				return exprTok.type=='number' ? {} : false;
+		}
+	}
+
+	if(ruleTok.type=='function') {
+		switch(ruleTok.name) {
+			case 'm_any':
+				for(var i=0;i<ruleTree.args.length;i++) {
+					var m;
+					if(m=matchTree(ruleTree.args[i],exprTree,doCommute)) {
+						return m;
+					}
+				}
+				return false;
+
+			case 'm_all':
+				return matchTree(ruleTree.args[0],exprTree,doCommute);
+
+			case 'm_pm':
+				if(jme.isOp(exprTok,'-u')) {
+					return matchTree({tok: new jme.types.TOp('-u'),args: [ruleTree.args[0]]},exprTree,doCommute);
+				} else {
+					return matchTree(ruleTree.args[0],exprTree,doCommute);
+				}
+
+			case 'm_not':
+				if(!matchTree(ruleTree.args[0],exprTree,doCommute)) {
+					return {};
+				} else {
+					return false;
+				}
+
+			case 'm_and':
+				var d = {};
+				for(var i=0;i<ruleTree.args.length;i++) {
+					var m = matchTree(ruleTree.args[i],exprTree,doCommute);
+					if(m) {
+						for(var name in m) {
+							d[name] = m[name];
+						}
+					} else {
+						return false;
+					}
+				}
+				return d;
+
+			case 'm_uses':
+				var vars = jme.findvars(exprTree);
+				for(var i=0;i<ruleTree.args.length;i++) {
+					var name = ruleTree.args[i].tok.name;
+					if(!vars.contains(name)) {
+						return false;
+					}
+				}
+				return {};
+
+			case 'm_commute':
+				return matchTree(ruleTree.args[0],exprTree,true);
+
+			case 'm_type':
+				var wantedType = ruleTree.args[0].tok.name || ruleTree.args[0].tok.value;
+				if(exprTok.type==wantedType) {
+					return {};
+				} else {
+					return false;
+				}
+		}
+	}
+	if(jme.isName(ruleTok,'m_nothing')) {
+		return false;
+	} else if(jme.isName(ruleTok,'m_number')) {
+		if(exprTok.type=='number') {
+			return {};
+		} else {
+			return false;
+		}
+	}
+
+	if(ruleTok.type!='op' && ruleTok.type != exprTok.type)
+	{
+		return false;
+	}
+
+	switch(ruleTok.type)
+	{
+	case 'number':
+		if( !math.eq(ruleTok.value,exprTok.value) ) {
+			return false;
+		} else {
+			return {};
+		}
+
+	case 'string':
+	case 'boolean':
+	case 'special':
+	case 'range':
+		if(ruleTok.value != exprTok.value) {
+			return false;
+		} else {
+			return {};
+		}
+
+	case 'function':
+	case 'op':
+		var d = {};
+
+		if(doCommute && jme.commutative[ruleTok.name]) {
+			var commutingOp = ruleTok.name;
+
+			var ruleTerms = getCommutingTerms(ruleTree,commutingOp);
+			var exprTerms = getCommutingTerms(exprTree,commutingOp);
+			var rest = [];
+
+			var namedTerms = {};
+			var matchedRules = [];
+			var termMatches = [];
+
+			for(var i=0; i<exprTerms.terms.length; i++) {
+				var m = null;
+				var matched = false;
+				for(var j=0; j<ruleTerms.terms.length; j++) {
+					var ruleTerm = ruleTerms.terms[j];
+					m = matchTree(ruleTerm,exprTerms.terms[i],doCommute);
+					if((!matchedRules[j] || ruleTerm.tok.name=='m_all') && m) {
+						matched = true;
+						matchedRules[j] = true;
+						for(var name in m) {
+							if(!namedTerms[name]) {
+								namedTerms[name] = [];
+							}
+							namedTerms[name].push(m[name]);
+						}
+						var names = ruleTerms.termnames[j];
+						if(names) {
+							for(var k=0;k<names.length;k++) {
+								var name = names[k];
+								if(!namedTerms[name]) {
+									namedTerms[name] = [];
+								}
+								namedTerms[name].push(exprTerms.terms[i]);
+							}
+						}
+						break;
+					}
+				}
+				if(!matched) {
+					return false;
+				}
+			}
+			for(var i=0;i<ruleTerms.terms.length;i++) {
+				var term = ruleTerms.terms[i];
+				if(!isEndTerm(term) && !matchedRules[i]) {
+					return false;
+				}
+			}
+			for(var name in namedTerms) {
+				var terms = namedTerms[name];
+				var sub = terms[0];
+				for(var i=1;i<terms.length;i++) {
+					var op = new jme.types.TOp(commutingOp);
+					sub = {tok: op, args: [sub,terms[i]]};
+				}
+				d[name] = sub;
+			}
+			return d;
+		} else {
+			if(ruleTok.type!=exprTok.type || ruleTok.name!=exprTok.name) {
+				return false;
+			}
+            var i = 0;
+            var j = 0;
+			for(var i=0;i<ruleTree.args.length;i++)
+			{
+                if(jme.isFunction(ruleTree.args[i].tok,'m_all')) {
+                    while(j<exprTree.args.length) {
+                        var m = matchTree(ruleTree.args[i],exprTree.args[i],doCommute);
+                        if(!m) {
+                            break;
+                        }
+                        for(var x in m) {
+                            d[x]=m[x];
+                        }
+                        j += 1;
+                    }
+                } else if(jme.isName(ruleTree.args[i].tok,'m_nothing')) {
+                    continue;
+                } else {
+                    var m = matchTree(ruleTree.args[i],exprTree.args[j],doCommute);
+                    if(m===false) {
+                        return false;
+                    } else {
+                        for(var x in m) {
+                            d[x]=m[x];
+                        }
+                        j += 1;
+                    }
+                }
+			}
+            // if not all terms in the rule have been matched, the rule doesn't match
+            if(j<i) {
+                return false;
+            }
+			return d
+		}
+	case 'name':
+		if(ruleTok.name.toLowerCase()==exprTok.name.toLowerCase()) {
+			return {};
+		} else {
+			return false;
+		}
+	default:
+		return {};
+	}
+}
+
+var matchAllTree = jme.rules.matchAllTree = function(ruleTree,exprTree,doCommute) {
+    var matches = [];
+
+    var m = matchTree(ruleTree,exprTree,doCommute);
+    if(m) {
+        matches = [m];
+    }
+    if(exprTree.args) {
+        exprTree.args.forEach(function(arg) {
+            var submatches = matchAllTree(ruleTree,arg,doCommute);
+            matches = matches.concat(submatches);
+        });
+    }
+    return matches;
+}
+
+/** Match expresison against a pattern. Wrapper for {@link Numbas.jme.rules.matchTree}
+ *
+ * @memberof Numbas.jme.rules
+ * @method
+ *
+ * @param {JME} pattern
+ * @param {JME} expr
+ * @param {Boolean} doCommute
+ *
+ * @returns {Boolean|jme_pattern_match} - `false` if no match, otherwise a dictionary of subtrees matched to variable names
+ */
+var matchExpression = jme.rules.matchExpression = function(pattern,expr,doCommute) {
+	pattern = jme.compile(pattern);
+	expr = jme.compile(expr);
+	return matchTree(pattern,expr,doCommute);
+}
+
+/** Flags used to control the behaviour of JME display functions.
+ * Values are `undefined` so they can be overridden
+ * @memberof Numbas.jme.rules
+ */
+var displayFlags = jme.rules.displayFlags = {
+	fractionnumbers: undefined,
+	rowvector: undefined,
+    alwaystimes: undefined
+};
+
+/** Flags used in JME simplification rulesets
+ * @type Object.<Boolean>
+ * @typedef ruleset_flags
+ * @property {Boolean} fractionnumbers - Show all numbers as fractions?
+ * @property {Boolean} rowvector - Display vectors as a horizontal list of components?
+ * @property {Boolean} alwaystimes - Always show the multiplication symbol between multiplicands?
+ * @see Numbas.jme.Ruleset
+ */
+
+/** Set of simplification rules
+ * @constructor
+ * @memberof Numbas.jme.rules
+ * @param {rule[]} rules
+ * @param {ruleset_flags} flags
+ */
+var Ruleset = jme.rules.Ruleset = function(rules,flags) {
+	this.rules = rules;
+	this.flags = $.extend({},displayFlags,flags);
+}
+Ruleset.prototype = /** @lends Numbas.jme.rules.Ruleset.prototype */ {
+	/** Test whether flag is set 
+	 * @memberof Numbas.jme.rules.Ruleset.prototype
+	 */
+	flagSet: function(flag) {
+		flag = flag.toLowerCase();
+		if(this.flags.hasOwnProperty(flag))
+			return this.flags[flag];
+		else
+			return false;
+	}
+}
+
+var ruleSort = util.sortBy(['patternString','resultString','conditionStrings']);
+
+function mergeRulesets(r1,r2) {
+	var rules = r1.rules.merge(r2.rules,ruleSort);
+	var flags = $.extend({},r1.flags,r2.flags);
+	return new Ruleset(rules, flags);
+}
+
+/** Collect a ruleset together from a list of ruleset names, or rulesets.
+ * @param {String|Array.<String|Numbas.jme.Ruleset>} set - A comma-separated string of ruleset names, or an array of names/Ruleset objects.
+ * @param {Object.<Numbas.jme.Ruleset>} scopeSets - Dictionary of rulesets defined in the current scope.
+ * @returns Numbas.jme.Ruleset
+ */
+var collectRuleset = jme.rules.collectRuleset = function(set,scopeSets)
+{
+	scopeSets = util.copyobj(scopeSets);
+
+	if(!set)
+		return [];
+
+	if(!scopeSets)
+		throw(new Numbas.Error('jme.display.collectRuleset.no sets'));
+
+	var rules = [];
+	var flags = {};
+
+	if(typeof(set)=='string') {
+		set = set.split(',');
+        set.splice(0,0,'basic');
+	}
+	else {
+		flags = $.extend(flags,set.flags);
+		if(set.rules)
+			set = set.rules;
+	}
+
+	for(var i=0; i<set.length; i++ )
+	{
+		if(typeof(set[i])=='string')
+		{
+			var m = /^\s*(!)?(.*)\s*$/.exec(set[i]);
+			var neg = m[1]=='!' ? true : false;
+			var name = m[2].trim().toLowerCase();
+			if(name in displayFlags)
+			{
+				flags[name]= !neg;
+			}
+			else if(name.length>0)
+			{
+				if(!(name in scopeSets))
+				{
+					throw(new Numbas.Error('jme.display.collectRuleset.set not defined',{name:name}));
+				}
+
+				var sub = collectRuleset(scopeSets[name],scopeSets);
+
+				flags = $.extend(flags,sub.flags);
+
+				scopeSets[name] = sub;
+				if(neg)
+				{
+					for(var j=0; j<sub.rules.length; j++)
+					{
+						if((m=rules.indexOf(sub.rules[j]))>=0)
+						{
+							rules.splice(m,1);
+						}
+					}
+				}
+				else
+				{
+					for(var j=0; j<sub.rules.length; j++)
+					{
+						if(!(rules.contains(sub.rules[j])))
+						{
+							rules.push(sub.rules[j]);
+						}
+					}
+				}
+			}
+		}
+		else
+			rules.push(set[i]);
+	}
+	return new Ruleset(rules,flags);
+}
+
+
+/** Built-in simplification rules
+ * @enum {Numbas.jme.rules.Rule[]}
+ * @memberof Numbas.jme.rules
+ */
+var simplificationRules = jme.rules.simplificationRules = {
+	basic: [
+        ['?;x',['x isa "number"','x<0'],'-eval(-x)'],   // the value of a TNumber should be non-negative - pull the negation out as unary minus
+		['+(?;x)',[],'x'],					//get rid of unary plus
+		['?;x+(-?;y)',[],'x-y'],			//plus minus = minus
+		['?;x+?;y',['y isa "number"','y<0'],'x-eval(-y)'],
+		['?;x-?;y',['y isa "number"','y<0'],'x+eval(-y)'],
+		['?;x-(-?;y)',[],'x+y'],			//minus minus = plus
+		['-(-?;x)',[],'x'],				//unary minus minus = plus
+		['-?;x',['x isa "complex"','re(x)<0'],'eval(-x)'],
+		['?;x+?;y',['x isa "number"','y isa "complex"','re(y)=0'],'eval(x+y)'],
+		['-?;x+?;y',['x isa "number"','y isa "complex"','re(y)=0'],'-eval(x-y)'],
+		['(-?;x)/?;y',[],'-(x/y)'],			//take negation to left of fraction
+		['?;x/(-?;y)',[],'-(x/y)'],			
+		['(-?;x)*?;y',['not (x isa "complex")'],'-(x*y)'],			//take negation to left of multiplication
+		['?;x*(-?;y)',['not (y isa "complex")'],'-(x*y)'],		
+		['?;x+(?;y+?;z)',[],'(x+y)+z'],		//make sure sums calculated left-to-right
+		['?;x-(?;y+?;z)',[],'(x-y)-z'],
+		['?;x+(?;y-?;z)',[],'(x+y)-z'],
+		['?;x-(?;y-?;z)',[],'(x-y)+z'],
+		['(?;x*?;y)*?;z',[],'x*(y*z)'],		//make sure multiplications go right-to-left
+		['?;n*i',['n isa "number"'],'eval(n*i)'],			//always collect multiplication by i
+		['i*?;n',['n isa "number"'],'eval(n*i)']
+	],
+
+	unitFactor: [
+		['1*?;x',[],'x'],
+		['?;x*1',[],'x']
+	],
+
+	unitPower: [
+		['?;x^1',[],'x']
+	],
+
+	unitDenominator: [
+		['?;x/1',[],'x']
+	],
+
+	zeroFactor: [
+		['?;x*0',[],'0'],
+		['0*?;x',[],'0'],
+		['0/?;x',[],'0']
+	],
+
+	zeroTerm: [
+		['0+?;x',[],'x'],
+		['?;x+0',[],'x'],
+		['?;x-0',[],'x'],
+		['0-?;x',[],'-x']
+	],
+
+	zeroPower: [
+		['?;x^0',[],'1']
+	],
+
+	noLeadingMinus: [
+		['-?;x+?;y',[],'y-x'],											//don't start with a unary minus
+		['-0',[],'0']
+	],
+
+	collectNumbers: [
+		['-?;x-?;y',['x isa "number"','y isa "number"'],'-(x+y)'],										//collect minuses
+		['?;n+?;m',['n isa "number"','m isa "number"'],'eval(n+m)'],	//add numbers
+		['?;n-?;m',['n isa "number"','m isa "number"'],'eval(n-m)'],	//subtract numbers
+		['?;n+?;x',['n isa "number"','!(x isa "number")'],'x+n'],		//add numbers last
+
+		['(?;x+?;n)+?;m',['n isa "number"','m isa "number"'],'x+eval(n+m)'],	//collect number sums
+		['(?;x-?;n)+?;m',['n isa "number"','m isa "number"'],'x+eval(m-n)'],	
+		['(?;x+?;n)-?;m',['n isa "number"','m isa "number"'],'x+eval(n-m)'],	
+		['(?;x-?;n)-?;m',['n isa "number"','m isa "number"'],'x-eval(n+m)'],	
+		['(?;x+?;n)+?;y',['n isa "number"'],'(x+y)+n'],						//shift numbers to right hand side
+		['(?;x+?;n)-?;y',['n isa "number"'],'(x-y)+n'],
+		['(?;x-?;n)+?;y',['n isa "number"'],'(x+y)-n'],
+		['(?;x-?;n)-?;y',['n isa "number"'],'(x-y)-n'],
+
+		['?;n*?;m',['n isa "number"','m isa "number"'],'eval(n*m)'],		//multiply numbers
+		['?;x*?;n',['n isa "number"','!(x isa "number")','n<>i'],'n*x'],			//shift numbers to left hand side
+		['?;m*(?;n*?;x)',['m isa "number"','n isa "number"'],'eval(n*m)*x']
+	],
+
+	simplifyFractions: [
+		['?;n/?;m',['n isa "number"','m isa "number"','gcd_without_pi_or_i(n,m)>1'],'eval(n/gcd_without_pi_or_i(n,m))/eval(m/gcd_without_pi_or_i(n,m))'],			//cancel simple fraction
+		['(?;n*?;x)/?;m',['n isa "number"','m isa "number"','gcd_without_pi_or_i(n,m)>1'],'(eval(n/gcd_without_pi_or_i(n,m))*x)/eval(m/gcd_without_pi_or_i(n,m))'],	//cancel algebraic fraction
+		['?;n/(?;m*?;x)',['n isa "number"','m isa "number"','gcd_without_pi_or_i(n,m)>1'],'eval(n/gcd_without_pi_or_i(n,m))/(eval(m/gcd_without_pi_or_i(n,m))*x)'],	
+		['(?;n*?;x)/(?;m*?;y)',['n isa "number"','m isa "number"','gcd_without_pi_or_i(n,m)>1'],'(eval(n/gcd_without_pi_or_i(n,m))*x)/(eval(m/gcd_without_pi_or_i(n,m))*y)'],
+		['?;n/?;m',['n isa "complex"','m isa "complex"','re(n)=0','re(m)=0'],'eval(n/i)/eval(m/i)']			// cancel i when numerator and denominator are both purely imaginary
+	],
+
+	zeroBase: [
+		['0^?;x',[],'0']
+	],
+
+	constantsFirst: [
+		['?;x*?;n',['n isa "number"','!(x isa "number")','n<>i'],'n*x'],
+		['?;x*(?;n*?;y)',['n isa "number"','n<>i','!(x isa "number")'],'n*(x*y)']
+	],
+
+	sqrtProduct: [
+		['sqrt(?;x)*sqrt(?;y)',[],'sqrt(x*y)']
+	],
+
+	sqrtDivision: [
+		['sqrt(?;x)/sqrt(?;y)',[],'sqrt(x/y)']
+	],
+
+	sqrtSquare: [
+		['sqrt(?;x^2)',[],'x'],
+		['sqrt(?;x)^2',[],'x'],
+		['sqrt(?;n)',['n isa "number"','isint(sqrt(n))'],'eval(sqrt(n))']
+	],
+
+	trig: [
+		['sin(?;n)',['n isa "number"','isint(2*n/pi)'],'eval(sin(n))'],
+		['cos(?;n)',['n isa "number"','isint(2*n/pi)'],'eval(cos(n))'],
+		['tan(?;n)',['n isa "number"','isint(n/pi)'],'0'],
+		['cosh(0)',[],'1'],
+		['sinh(0)',[],'0'],
+		['tanh(0)',[],'0']
+	],
+
+    trigPowers: [
+        ['sin^(?;n)(?;x)',[],'sin(x)^n']
+    ],
+
+	otherNumbers: [
+		['?;n^?;m',['n isa "number"','m isa "number"'],'eval(n^m)']
+	],
+
+    cancelTerms: [
+        // x+y or rest+x+y
+        ['(?;rest+?;n*?;x) + ?;m*?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest+eval(n+m)*x'],
+        ['(?;rest+?;n*?;x) + ?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest+eval(n+1)*x'],
+        ['(?;rest+?;x) + ?;n*?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest+eval(n+1)*x'],
+        ['(?;rest+?;x) + ?;y',['canonical_compare(x,y)=0'],'rest+2*x'],
+        ['?;n*?;x+?;m*?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'eval(n+m)*x'],
+        ['?;n*?;x+?;y',['n isa "number"','canonical_compare(x,y)=0'],'eval(n+1)*x'],
+        ['-?;x+?;n*?;y',['n isa "number"','canonical_compare(x,y)=0'],'eval(n-1)*x'],
+        ['-?;x+?;y',['canonical_compare(x,y)=0'],'0*x'],
+        ['?;x+?;n*?;y',['n isa "number"','canonical_compare(x,y)=0'],'eval(n+1)*x'],
+        ['?;x+?;y',['canonical_compare(x,y)=0'],'2*x'],
+
+        // x-y or rest+x-y
+        ['(?;rest+?;n*?;x) - ?;m*?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest+eval(n-m)*x'],
+        ['(?;rest+?;n*?;x) - ?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest+eval(n-1)*x'],
+        ['(?;rest+?;x) - ?;n*?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest+eval(1-n)*x'],
+        ['(?;rest+?;x) - ?;y',['canonical_compare(x,y)=0'],'rest+0*x'],
+        ['?;n*?;x-?;m*?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'eval(n-m)*x'],
+        ['?;n*?;x-?;y',['n isa "number"','canonical_compare(x,y)=0'],'eval(n-1)*x'],
+        ['-?;x-?;n*?;y',['n isa "number"','canonical_compare(x,y)=0'],'eval(-1-n)*x'],
+        ['-?;x-?;y',['canonical_compare(x,y)=0'],'-2*x'],
+        ['?;x-?;n*?;y',['n isa "number"','canonical_compare(x,y)=0'],'eval(1-n)*x'],
+        ['?;x-?;y',['canonical_compare(x,y)=0'],'0*x'],
+
+        // rest-x-y or rest-x+y
+        ['(?;rest-?;n*?;x) + ?;m*?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest+eval(m-n)*x'],
+        ['(?;rest-?;n*?;x) + ?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest+eval(1-n)*x'],
+        ['(?;rest-?;x) + ?;n*?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest+eval(1-n)*x'],
+        ['(?;rest-?;n*?;x) - ?;m*?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest-eval(n+m)*x'],
+        ['(?;rest-?;n*?;x) - ?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest-eval(n+1)*x'],
+        ['(?;rest-?;x) - ?;n*?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest-eval(1+n)*x'],
+        ['(?;rest-?;x) - ?;y',['canonical_compare(x,y)=0'],'rest-2*x'],
+        ['(?;rest-?;x) + ?;y',['canonical_compare(x,y)=0'],'rest+0*x'],
+
+
+
+        ['(?;rest+?;n/?;x) + ?;m/?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest+eval(n+m)/x'],
+        ['(?;n)/(?;x)+(?;m)/(?;y)',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'eval(n+m)/x'],
+        ['(?;rest+?;n/?;x) - ?;m/?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest+eval(n-m)/x'],
+        ['?;n/?;x-?;m/?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'eval(n-m)/x'],
+        ['(?;rest-?;n/?;x) + ?;m/?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest+eval(m-n)/x'],
+        ['(?;rest-?;n/?;x) - ?;m/?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest-eval(n+m)/x']
+    ],
+
+    cancelFactors: [
+        // x*y or rest*x*y
+        ['(?;rest*(?;x)^(?;n)) * (?;y)^(?;m)',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest*x^(n+m)'],
+        ['(?;rest*(?;x)*(?;n)) * ?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest*x^eval(n+1)'],
+        ['(?;rest*?;x) * (?;y)^(?;n)',['n isa "number"','canonical_compare(x,y)=0'],'rest*x^eval(n+1)'],
+        ['(?;rest*?;x) * ?;y',['canonical_compare(x,y)=0'],'rest*x^2'],
+        ['(?;x)^(?;n)*(?;y)^(?;m)',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'x^eval(n+m)'],
+        ['(?;x)^(?;n)*?;y',['n isa "number"','canonical_compare(x,y)=0'],'x^eval(n+1)'],
+        ['?;x*(?;y)^(?;n)',['n isa "number"','canonical_compare(x,y)=0'],'x^eval(n+1)'],
+        ['?;x*?;y',['canonical_compare(x,y)=0'],'x^2'],
+
+        // x/y or rest*x/y
+        ['(?;rest*(?;x)^(?;n)) / ((?;y)^(?;m))',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest*x^eval(n-m)'],
+        ['(?;rest*(?;x)^(?;n)) / ?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest*x^eval(n-1)'],
+        ['(?;rest*?;x) / ((?;y)^(?;n))',['n isa "number"','canonical_compare(x,y)=0'],'rest*x^eval(1-n)'],
+        ['(?;rest*?;x) / ?;y',['canonical_compare(x,y)=0'],'rest*x^0'],
+        ['(?;x)^(?;n) / (?;y)^(?;m)',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'x^eval(n-m)'],
+        ['(?;x)^(?;n) / ?;y',['n isa "number"','canonical_compare(x,y)=0'],'x^eval(n-1)'],
+        ['?;x / ((?;y)^(?;n))',['n isa "number"','canonical_compare(x,y)=0'],'x^eval(1-n)'],
+        ['?;x / ?;y',['canonical_compare(x,y)=0'],'x^0'],
+
+        // rest/x/y or rest/x*y
+        ['(?;rest/((?;x)^(?;n))) * (?;y)^(?;m)',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest*x^eval(m-n)'],
+        ['(?;rest/((?;x)^(?;n))) * ?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest*x^eval(1-n)'],
+        ['(?;rest/?;x) * (?;y)^(?;n)',['n isa "number"','canonical_compare(x,y)=0'],'rest*x^eval(1-n)'],
+        ['(?;rest/((?;x)^(?;n))) / ((?;y)^(?;m))',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest/(x^eval(n+m))'],
+        ['(?;rest/((?;x)^(?;n))) / ?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest/(x^eval(n+1))'],
+        ['(?;rest/?;x) / ((?;y)^(?;n))',['n isa "number"','canonical_compare(x,y)=0'],'rest/(x^eval(1+n))'],
+        ['(?;rest/?;x) / ?;y',['canonical_compare(x,y)=0'],'rest/(x^2)'],
+        ['(?;rest/?;x) / ?;y',['canonical_compare(x,y)=0'],'rest/(x^0)']
+    ],
+
+    collectLikeFractions: [
+        ['?;a/?;b+?;c/?;d',['canonical_compare(b,d)=0'],'(a+c)/b']
+    ]
+};
+
+
+// these rules conflict with noLeadingMinus
+var canonicalOrderRules = [
+    ['?;x+?;y',['canonical_compare(x,y)=1'],'y+x'],
+    ['?;x-?;y',['canonical_compare(x,y)=1'],'(-y)+x'],
+    ['-?;x+?;y',['canonical_compare(x,y)=1'],'y-x'],
+    ['-?;x-?;y',['canonical_compare(x,y)=1'],'(-y)-x'],
+    ['(?;x+?;y)+?;z',['canonical_compare(y,z)=1'],'(x+z)+y'],
+
+    ['?;x*?;y',['canonical_compare(x,y)=-1'],'y*x'],
+    ['(?;x*?;y)*?;z',['canonical_compare(y,z)=-1'],'(x*z)*y']
+]
+
+var expandBracketsRules = [
+    ['(?;x+?;y)*?;z',[],'x*z+y*z'],
+    ['?;x*(?;y+?;z)',[],'x*y+x*z']
+]
+
+/** Compile an array of rules (in the form `[pattern,conditions[],result]` to {@link Numbas.jme.rules.Rule} objects
+ * @param {Array} rules
+ * @returns {Numbas.jme.Ruleset}
+ */
+var compileRules = jme.rules.compileRules = function(rules)
+{
+	for(var i=0;i<rules.length;i++)
+	{
+		var pattern = rules[i][0];
+		var conditions = rules[i][1];
+		var result = rules[i][2];
+		rules[i] = new Rule(pattern,conditions,result);
+	}
+	return new Ruleset(rules,{});
+}
+
+var all=[];
+var compiledSimplificationRules = {};
+var notAll = ['canonicalOrder','expandBrackets'];
+for(var x in simplificationRules)
+{
+	compiledSimplificationRules[x] = compiledSimplificationRules[x.toLowerCase()] = compileRules(simplificationRules[x]);
+    if(!notAll.contains(x)) {
+    	all = all.concat(compiledSimplificationRules[x].rules);
+    }
+}
+compiledSimplificationRules['canonicalorder'] = compileRules(canonicalOrderRules);
+compiledSimplificationRules['expandbrackets'] = compileRules(expandBracketsRules);
+compiledSimplificationRules['all'] = new Ruleset(all,{});
+jme.rules.simplificationRules = compiledSimplificationRules;
+
+});
 /*
 Copyright 2011-15 Newcastle University
 
@@ -2577,7 +3469,7 @@ Copyright 2011-15 Newcastle University
    limitations under the License.
 */
 
-/** @file Sets up most of the JME stuff: compiler, built-in functions, and expression comparison functions.
+/** @file Sets up JME built-in functions.
  *
  * Provides {@link Numbas.jme}
  */
@@ -3039,7 +3931,7 @@ newBuiltin('and', [TBool,TBool], TBool, function(a,b){return a&&b;}, {doc: {usag
 newBuiltin('not', [TBool], TBool, function(a){return !a;}, {doc: {usage: ['not x','!x'], description: 'Logical NOT.'}} );	
 newBuiltin('or', [TBool,TBool], TBool, function(a,b){return a||b;}, {doc: {usage: ['x || y','x or y'], description: 'Logical OR.'}} );
 newBuiltin('xor', [TBool,TBool], TBool, function(a,b){return (a || b) && !(a && b);}, {doc: {usage: 'a xor b', description: 'Logical XOR.', tags: ['exclusive or']}} );
-newBuiltin('implies', [TBool,TBool], TBool, function(a,b){return !a || b;}, {doc: {usage: 'a xor b', description: 'Logical XOR.', tags: ['exclusive or']}} );
+newBuiltin('implies', [TBool,TBool], TBool, function(a,b){return !a || b;}, {doc: {usage: 'a implies b', description: 'Logical implication.', tags: ['implication']}} );
 
 newBuiltin('abs', [TNum], TNum, math.abs, {doc: {usage: 'abs(x)', description: 'Absolute value of a number.', tags: ['norm','length','complex']}} );
 newBuiltin('abs', [TString], TNum, function(s){return s.length}, {doc: {usage: 'abs(x)', description: 'Absolute value of a number.', tags: ['norm','length','complex']}} );
@@ -4291,6 +5183,18 @@ newBuiltin('matches',[TExpression,TString],TBool,null, {
     }
 });
 
+newBuiltin('replace',[TString,TString,TExpression],TExpression,null,{
+    evaluate: function(args, scope) {
+        var pattern = args[0].value;
+        var repl = args[1].value;
+        var expr = args[2].tree;
+
+        var rule = new jme.rules.Rule(pattern,[],repl);
+        var set = new jme.rules.Ruleset([rule]);
+        return new TExpression(jme.display.simplifyTree(expr,set,scope,true));
+    }
+});
+
 newBuiltin('canonical_compare',['?','?'],TNum,null, {
     evaluate: function(args,scope) {
         var cmp = jme.compareTrees(args[0],args[1]);
@@ -4308,7 +5212,6 @@ newBuiltin('translate',[TString,TDict],TString,function(s,params) {
 
 ///end of builtins
 });
-
 /*
 Copyright 2011-14 Newcastle University
 
@@ -4423,11 +5326,12 @@ jme.display = /** @lends Numbas.jme.display */ {
 	 * @param {Numbas.jme.tree} exprTree
 	 * @param {Array.<String>|Numbas.jme.Ruleset} ruleset
 	 * @param {Numbas.jme.Scope} scope
+     * @param {Boolean} allowUnbound
 	 * @returns {Numbas.jme.tree}
 	 *
 	 * @see Numbas.jme.display.simplify
 	 */
-	simplifyTree: function(exprTree,ruleset,scope)
+	simplifyTree: function(exprTree,ruleset,scope,allowUnbound)
 	{
 		if(!scope)
 			throw(new Numbas.Error('jme.display.simplifyTree.no scope given'));
@@ -4454,7 +5358,7 @@ jme.display = /** @lends Numbas.jme.display */ {
 				{
 					for(var i=0;i<exprTree.args.length;i++)
 					{
-						exprTree.args[i] = jme.display.simplifyTree(exprTree.args[i],ruleset,scope);
+						exprTree.args[i] = jme.display.simplifyTree(exprTree.args[i],ruleset,scope,allowUnbound);
 					}
 				}
 				applied = false;
@@ -4463,7 +5367,7 @@ jme.display = /** @lends Numbas.jme.display */ {
 					var match;
 					if(match = rules[i].match(exprTree,scope))	//if rule can be applied, apply it!
 					{
-						exprTree = jme.substituteTree(Numbas.util.copyobj(rules[i].result,true),new jme.Scope([{variables:match}]));
+						exprTree = jme.substituteTree(Numbas.util.copyobj(rules[i].result,true),new jme.Scope([{variables:match}]),allowUnbound);
 						applied = true;
                         depth += 1;
                         if(depth > 100) {
@@ -4486,9 +5390,11 @@ jme.display = /** @lends Numbas.jme.display */ {
 /// all private methods below here
 
 
-function texifyWouldBracketOpArg(thing,i) {
+function texifyWouldBracketOpArg(thing,i, settings) {
+    settings = settings || {};
+    var tok = thing.args[i].tok;
 	var precedence = jme.precedence;
-	if(thing.args[i].tok.type=='op') {	//if this is an op applied to an op, might need to bracket
+	if(tok.type=='op') {	//if this is an op applied to an op, might need to bracket
 		var op1 = thing.args[i].tok.name;	//child op
 		var op2 = thing.tok.name;			//parent op
 		var p1 = precedence[op1];	//precedence of child op
@@ -4498,10 +5404,12 @@ function texifyWouldBracketOpArg(thing,i) {
 		return ( p1 > p2 || (p1==p2 && i>0 && !jme.commutative[op2]) || (op1=='-u' && precedence[op2]<=precedence['*']) )	
 	}
 	//complex numbers might need brackets round them when multiplied with something else or unary minusing
-	else if(thing.args[i].tok.type=='number' && thing.args[i].tok.value.complex && thing.tok.type=='op' && (thing.tok.name=='*' || thing.tok.name=='-u') ) {
+	else if(tok.type=='number' && tok.value.complex && thing.tok.type=='op' && (thing.tok.name=='*' || thing.tok.name=='-u' || i==0 && thing.tok.name=='^') ) {
 		var v = thing.args[i].tok.value;
 		return !(v.re==0 || v.im==0);
-	}
+	} else if(jme.isOp(thing.tok, '^') && settings.fractionnumbers && tok.type=='number' && texSpecialNumber(tok.value)===undefined && math.rationalApproximation(Math.abs(tok.value))[1] != 1) {
+        return true;
+    }
 	return false;
 }
 
@@ -4621,73 +5529,63 @@ var texOps = jme.display.texOps = {
 	'^': (function(thing,texArgs,settings) {
 		var tex0 = texArgs[0];
 		//if left operand is an operation, it needs brackets round it. Exponentiation is right-associative, so 2^3^4 won't get any brackets, but (2^3)^4 will.
-        if(thing.args[0].tok.type=='op' || (thing.args[0].tok.type=='function' && thing.args[0].tok.name=='exp')) {
+        if(thing.args[0].tok.type=='op' || (thing.args[0].tok.type=='function' && thing.args[0].tok.name=='exp') || texifyWouldBracketOpArg(thing, 0, settings)) {
             tex0 = '\\left ( ' +tex0+' \\right )';    
         }
         var trigFunctions = ['cos','sin','tan','sec','cosec','cot','arcsin','arccos','arctan','cosh','sinh','tanh','cosech','sech','coth','arccosh','arcsinh','arctanh'];
-        if(thing.args[0].tok.type=='function' && trigFunctions.contains(thing.args[0].tok.name)) {
+        if(thing.args[0].tok.type=='function' && trigFunctions.contains(thing.args[0].tok.name) && thing.args[1].tok.type=='number' && util.isInt(thing.args[1].tok.value) && thing.args[1].tok.value>0) {
             return texOps[thing.args[0].tok.name].code + '^{'+texArgs[1]+'}' + '\\left( '+texify(thing.args[0].args[0],settings)+' \\right)';
         }
 		return (tex0+'^{ '+texArgs[1]+' }');
 	}),
 
 
-	'*': (function(thing,texArgs) {
+	'*': (function(thing, texArgs, settings) {
 		var s = texifyOpArg(thing,texArgs,0);
 		for(var i=1; i<thing.args.length; i++ )
 		{
-            // if we'd end up with two digits next to each other, but from different arguments, we need a times symbol
-			if(util.isInt(texArgs[i-1].charAt(texArgs[i-1].length-1)) && util.isInt(texArgs[i].charAt(0)) && !texifyWouldBracketOpArg(thing,i))
-			{ 
-				s+=' \\times ';
-			}
-			//specials or subscripts
-			else if(thing.args[i-1].tok.type=='special' || thing.args[i].tok.type=='special')	
-			{
-				s+=' ';
-			}
-			//anything times e^(something) or (not number)^(something)
-			else if (jme.isOp(thing.args[i].tok,'^') && (thing.args[i].args[0].value==Math.E || thing.args[i].args[0].tok.type!='number'))	
-			{
-				s+=' ';
-			}
-			//real number times Pi or E
-			else if (thing.args[i].tok.type=='number' && (thing.args[i].tok.value==Math.PI || thing.args[i].tok.value==Math.E || thing.args[i].tok.value.complex) && thing.args[i-1].tok.type=='number' && !(thing.args[i-1].tok.value.complex))	
-			{
-				s+=' ';
-			}
-			//number times a power of i
-			else if (jme.isOp(thing.args[i].tok,'^') && thing.args[i].args[0].tok.type=='number' && math.eq(thing.args[i].args[0].tok.value,math.complex(0,1)) && thing.args[i-1].tok.type=='number')	
-			{
-				s+=' ';
-			}
-			// times sign when LHS or RHS is a factorial
-			else if((thing.args[i-1].tok.type=='function' && thing.args[i-1].tok.name=='fact') || (thing.args[i].tok.type=='function' && thing.args[i].tok.name=='fact')) {
-				s += ' \\times ';
-			}
-			//(anything except i) times i
-			else if ( !(thing.args[i-1].tok.type=='number' && math.eq(thing.args[i-1].tok.value,math.complex(0,1))) && thing.args[i].tok.type=='number' && math.eq(thing.args[i].tok.value,math.complex(0,1)))
-			{
-				s+=' ';
-			}
-			else if ( thing.args[i].tok.type=='number'
-					||
-						jme.isOp(thing.args[i].tok,'-u')
-					||
-					(
-						!jme.isOp(thing.args[i].tok,'-u') 
-						&& (thing.args[i].tok.type=='op' && jme.precedence[thing.args[i].tok.name]<=jme.precedence['*'] 
-							&& (thing.args[i].args[0].tok.type=='number' 
-							&& thing.args[i].args[0].tok.value!=Math.E)
-						)
-					)
-			)
-			{
-				s += ' \\times ';
-			}
-			else {
-				s+= ' ';
-			}
+            var left = thing.args[i-1];
+            var right = thing.args[i];
+            var use_symbol = false;
+
+            if(settings.alwaystimes) {
+                use_symbol = true;
+            } else {
+                // if we'd end up with two digits next to each other, but from different arguments, we need a times symbol
+                if(util.isInt(texArgs[i-1].charAt(texArgs[i-1].length-1)) && util.isInt(texArgs[i].charAt(0)) && !texifyWouldBracketOpArg(thing,i)) { 
+                    use_symbol = true;
+                //anything times e^(something) or (not number)^(something)
+                } else if (jme.isOp(right.tok,'^') && (right.args[0].value==Math.E || right.args[0].tok.type!='number')) {
+                    use_symbol = false;
+                //real number times Pi or E
+                } else if (right.tok.type=='number' && (right.tok.value==Math.PI || right.tok.value==Math.E || right.tok.value.complex) && left.tok.type=='number' && !(left.tok.value.complex)) {
+                    use_symbol = false
+                //number times a power of i
+                } else if (jme.isOp(right.tok,'^') && right.args[0].tok.type=='number' && math.eq(right.args[0].tok.value,math.complex(0,1)) && left.tok.type=='number')	{
+                    use_symbol = false;
+                // times sign when LHS or RHS is a factorial
+                } else if((left.tok.type=='function' && left.tok.name=='fact') || (right.tok.type=='function' && right.tok.name=='fact')) {
+                    use_symbol = true;
+                //(anything except i) times i
+                } else if ( !(left.tok.type=='number' && math.eq(left.tok.value,math.complex(0,1))) && right.tok.type=='number' && math.eq(right.tok.value,math.complex(0,1))) {
+                    use_symbol = false;
+                // anything times number, or (-anything), or an op with lower precedence than times, with leftmost arg a number
+                } else if ( right.tok.type=='number'
+                        ||
+                            jme.isOp(right.tok,'-u')
+                        ||
+                        (
+                            !jme.isOp(right.tok,'-u') 
+                            && (right.tok.type=='op' && jme.precedence[right.tok.name]<=jme.precedence['*'] 
+                                && (right.args[0].tok.type=='number' 
+                                && right.args[0].tok.value!=Math.E)
+                            )
+                        )
+                ) {
+                    use_symbol = true;
+                }
+            }
+            s += use_symbol ? ' \\times ' : ' ';
 			s += texifyOpArg(thing,texArgs,i);
 		}
 		return s;
@@ -4890,6 +5788,24 @@ var texOps = jme.display.texOps = {
 	}
 }
 
+/** Convert a special number to TeX, or return undefined if not a special number.
+ *  @memberof Numbas.jme.display
+ *  @private
+ *
+ *  @param {Number} n
+ *  @returns {TeX}
+ */
+var texSpecialNumber = jme.display.texSpecialNumber = function(value) {
+    var specials = jme.display.specialNumbers;
+    var pvalue = Math.abs(value);
+
+    for(var i=0;i<specials.length;i++) {
+        if(pvalue==specials[i].value) {
+            return (value<0 ? '-' : '') + specials[i].tex;
+        }
+    }
+}
+
 /** Convert a number to TeX, displaying it as a fractionm using {@link Numbas.math.rationalApproximation}
  * @memberof Numbas.jme.display
  * @private
@@ -4932,6 +5848,11 @@ var texRationalNumber = jme.display.texRationalNumber = function(n)
 	}
 	else
 	{
+        var special = texSpecialNumber(n);
+        if(special !== undefined) {
+            return special;
+        }
+
 		var piD;
 		if((piD = math.piDegree(n)) > 0)
 			n /= Math.pow(Math.PI,piD);
@@ -5014,10 +5935,10 @@ function texRealNumber(n)
 	}
 	else
 	{
-		if(n==Infinity)
-			return '\\infty';
-		else if(n==-Infinity)
-			return '-\\infty';
+        var special = texSpecialNumber(n);
+        if(special !== undefined) {
+            return special;
+        }
 
 		var piD;
 		if((piD = math.piDegree(n)) > 0)
@@ -5222,6 +6143,24 @@ var texName = jme.display.texName = function(name,annotations,longNameMacro)
 
 var greek = ['alpha','beta','gamma','delta','epsilon','zeta','eta','theta','iota','kappa','lambda','mu','nu','xi','omicron','pi','rho','sigma','tau','upsilon','phi','chi','psi','omega']
 
+/** Definition of a number with a special name
+ * @typedef special_number_definition
+ * @property {Number} value
+ * @property {TeX} tex - The TeX code for this number
+ * @property {JME} jme - The JME code for this number
+ */
+
+/** List of numbers with special names
+ *
+ * @memberof Numbas.jme.display
+ * @type {Array.<special_number_definition>}
+ */
+jme.display.specialNumbers = [
+    {value: Math.E, tex: 'e', jme: 'e'},
+    {value: Math.PI, tex: '\\pi', jme: 'pi'},
+    {value: Infinity, tex: '\\infty', jme: 'infinity'}
+];
+
 /** Dictionary of functions to turn {@link Numbas.jme.types} objects into TeX strings
  *
  * @enum
@@ -5229,12 +6168,7 @@ var greek = ['alpha','beta','gamma','delta','epsilon','zeta','eta','theta','iota
  */
 var typeToTeX = jme.display.typeToTeX = {
 	'number': function(thing,tok,texArgs,settings) {
-		if(tok.value==Math.E)
-			return 'e';
-		else if(tok.value==Math.PI)
-			return '\\pi';
-		else
-			return settings.texNumber(tok.value);
+		return settings.texNumber(tok.value);
 	},
 	'string': function(thing,tok,texArgs,settings) {
 		if(tok.latex)
@@ -5316,6 +6250,19 @@ var typeToTeX = jme.display.typeToTeX = {
 	}
 }
 
+/** Take a nested application of a single op, e.g. ((1*2)*3)*4, and flatten it so that the tree has one op two or more arguments
+ */
+function flatten(tree,op) {
+    if(!jme.isOp(tree.tok,op)) {
+        return [tree];
+    }
+    var args = [];
+    for(var i=0;i<tree.args.length;i++) {
+        args = args.concat(flatten(tree.args[i],op));
+    }
+    return args;
+}
+
 /** A dictionary of settings for {@link Numbas.jme.display.texify}.
  * @typedef texify_settings
  * @property {Boolean} fractionnumbers - Show all numbers as fractions?
@@ -5344,6 +6291,13 @@ var texify = Numbas.jme.display.texify = function(thing,settings)
 	if(!settings)
 		settings = {};
 
+	var tok = thing.tok || thing;
+
+    if(jme.isOp(tok,'*')) {
+        // flatten nested multiplications, so a string of consecutive multiplications can be considered together
+        thing = {tok: thing.tok, args: flatten(thing,'*')};
+    }
+
 	if(thing.args)
 	{
 		var texArgs = [];
@@ -5355,12 +6309,29 @@ var texify = Numbas.jme.display.texify = function(thing,settings)
 
 	settings.texNumber = settings.fractionnumbers ? texRationalNumber : texRealNumber;
 
-	var tok = thing.tok || thing;
 	if(tok.type in typeToTeX) {
 		return typeToTeX[tok.type](thing,tok,texArgs,settings);
 	} else {
 		throw(new Numbas.Error(R('jme.display.unknown token type',{type:tok.type})));
 	}
+}
+
+/** Convert a special number to JME, or return undefined if not a special number.
+ *  @memberof Numbas.jme.display
+ *  @private
+ *
+ *  @param {Number} n
+ *  @returns {TeX}
+ */
+var jmeSpecialNumber = jme.display.jmeSpecialNumber = function(value) {
+    var specials = jme.display.specialNumbers;
+    var pvalue = Math.abs(value);
+
+    for(var i=0;i<specials.length;i++) {
+        if(pvalue==specials[i].value) {
+            return (value<0 ? '-' : '') + specials[i].jme;
+        }
+    }
 }
 
 /** Write a number in JME syntax as a fraction, using {@link Numbas.math.rationalApproximation}
@@ -5408,6 +6379,11 @@ var jmeRationalNumber = jme.display.jmeRationalNumber = function(n,settings)
 	}
 	else
 	{
+        var special = jmeSpecialNumber(n);
+        if(special !== undefined) {
+            return special;
+        }
+
 		var piD;
 		if((piD = math.piDegree(n)) > 0)
 			n /= Math.pow(Math.PI,piD);
@@ -5498,10 +6474,10 @@ function jmeRealNumber(n,settings)
 	}
 	else
 	{
-		if(n==Infinity)
-			return 'infinity';
-		else if(n==-Infinity)
-			return '-infinity';
+        var special = jmeSpecialNumber(n);
+        if(special !== undefined) {
+            return special;
+        }
 
 		var piD;
 		if((piD = math.piDegree(n)) > 0)
@@ -5563,14 +6539,12 @@ var typeToJME = Numbas.jme.display.typeToJME = {
 		return tok.name;
 	},
 	'string': function(tree,tok,bits,settings) {
-		var str = tok.value
-					.replace(/\\/g,'\\\\')
-					.replace(/\\([{}])/g,'$1')
-					.replace(/\n/g,'\\n')
-					.replace(/"/g,'\\"')
-					.replace(/'/g,"\\'")
-		;
-		return '"'+str+'"';
+		var str = '"'+jme.escape(tok.value)+'"';
+        if(tok.latex) {
+            return 'latex('+str+')';
+        } else {
+            return str;
+        }
 	},
 	html: function(tree,tok,bits,settings) {
 		var html = $(tok.value).clone().wrap('<div>').parent().html();
@@ -5658,7 +6632,7 @@ var typeToJME = Numbas.jme.display.typeToJME = {
 		if(op=='*') {
 			//number or brackets followed by name or brackets doesn't need a times symbol
 			//except <anything>*(-<something>) does
-			if( ((args[0].tok.type=='number' && math.piDegree(args[0].tok.value)==0 && args[0].tok.value!=Math.E) || args[0].bracketed) && (args[1].tok.type == 'name' || args[1].bracketed && !jme.isOp(tree.args[1].tok,'-u')) )	
+			if(!settings.alwaystimes && ((args[0].tok.type=='number' && math.piDegree(args[0].tok.value)==0 && args[0].tok.value!=Math.E) || args[0].bracketed) && (args[1].tok.type == 'name' || args[1].bracketed && !jme.isOp(tree.args[1].tok,'-u')) )	
 			{
 				op = '';
 			}
@@ -5710,7 +6684,11 @@ var typeToJME = Numbas.jme.display.typeToJME = {
 	},
 
 	expression: function(tree,tok,bits,settings) {
-		return treeToJME(tok.tree);
+		var expr = treeToJME(tok.tree);
+        if(settings.wrapexpressions) {
+            expr = 'expression("'+jme.escape(expr)+'")';
+        }
+        return expr;
 	}
 }
 
@@ -5733,6 +6711,7 @@ var jmeFunctions = jme.display.jmeFunctions = {
  * @typedef jme_display_settings
  * @property {Boolean} fractionnumbers - Show all numbers as fractions?
  * @property {Boolean} niceNumber - Run numbers through {@link Numbas.math.niceNumber}?
+ * @property {Boolean} wrapexpressions - Wrap TExpression tokens in `expression("")`?
  * @property {Number} accuracy - Accuracy to use when finding rational approximations to numbers. See {@link Numbas.math.rationalApproximation}.
  */
 
@@ -5798,844 +6777,6 @@ var opBrackets = Numbas.jme.display.opBrackets = {
 });
 
 });
-
-Numbas.queueScript('jme-rules',['base','math','jme-base','util'],function() {
-
-var math = Numbas.math;
-var jme = Numbas.jme;
-var util = Numbas.util;
-
-jme.rules = {};
-
-/** Simplification rule
- * @memberof Numbas.jme.rules
- * @constructor
- *
- * @param {JME} pattern - expression pattern to match. Variables will match any sub-expression.
- * @param {JME[]} conditions - conditions as JME expressions on the matched variables, which must all evaluate to true for the rule to match.
- * @param {JME} result - expression pattern to rewrite to.
- * 
- * @property {JME} patternString - the JME string defining the pattern to match
- * @property {JME} resultString - the JME string defining the result of the rule
- * @property {JME} conditionStrings - JME strings defining the conditions
- * @property {Numbas.jme.tree} tree - `patternString` compiled to a syntax tree
- * @property {Numbas.jme.tree} result - `result` compiled to a syntax tree
- * @property {Numbas.jme.tree[]} conditions `conditions` compiled to syntax trees
- */
-var Rule = jme.rules.Rule = function(pattern,conditions,result)
-{
-	this.patternString = pattern;
-	this.tree = jme.compile(pattern,{},true);
-
-	this.resultString = result;
-	this.result = jme.compile(result,{},true);
-
-	this.conditionStrings = conditions.slice();
-	this.conditions = [];
-	for(var i=0;i<conditions.length;i++)
-	{
-		this.conditions.push(jme.compile(conditions[i],{},true));
-	}
-}
-
-Rule.prototype = /** @lends Numbas.jme.rules.Rule.prototype */ {
-	/** Match a rule on given syntax tree.
-	 * @memberof Numbas.jme.rules.Rule.prototype
-	 * @param {Numbas.jme.tree} exprTree - the syntax tree to test
-	 * @param {Numbas.jme.Scope} scope - used when checking conditions
-	 * @returns {boolean|object} - `false` if no match, or a dictionary of matched subtrees
-	 */
-	match: function(exprTree,scope)
-	{
-		//see if expression matches rule
-		var match = matchTree(this.tree,exprTree);
-		if(match==false)
-			return false;
-
-		//if expression matches rule, then match is a dictionary of matched variables
-		//check matched variables against conditions
-		if(this.matchConditions(match,scope))
-			return match;
-		else
-			return false;
-	},
-
-    matchAll: function(exprTree,scope) {
-        var r = this;
-        var matches = matchAllTree(this.tree,exprTree);
-        return matches.filter(function(match) {
-            return r.matchConditions(match,scope);
-        });
-    },
-
-	/** Check that a matched pattern satisfies all the rule's conditions
-	 * @memberof Numbas.jme.rules.Rule.prototype
-	 * @param {object} match
-	 * @param {Numbas.jme.Scope} scope
-	 * @returns {boolean}
-	 */
-	matchConditions: function(match,scope)
-	{
-		for(var i=0;i<this.conditions.length;i++)
-		{
-			var c = Numbas.util.copyobj(this.conditions[i],true);
-			c = jme.substituteTree(c,new jme.Scope([{variables:match}]));
-			try
-			{
-				var result = jme.evaluate(c,scope);
-				if(result.value==false)
-					return false;
-			}
-			catch(e)
-			{
-				return false;
-			}
-		}
-		return true;
-	}
-}
-
-var endTermNames = {
-	'??':true,
-	'm_nothing':true,
-	'm_number': true
-}
-function isEndTerm(term) {
-	while(term.tok.type=='function' && /^m_(?:all|pm|not|commute)$/.test(term.tok.name) || jme.isOp(term.tok,';')) {
-		term = term.args[0];
-	}
-	if(term.tok.type=='function' && term.tok.name=='m_any') {
-		for(var i=0;i<term.args.length;i++) {
-			if(isEndTerm(term.args[i])) {
-				return true;
-			}
-		}
-		return false;
-	}
-	return term.tok.type=='name' && endTermNames[term.tok.name];
-}
-
-/** Given a tree representing a series of terms t1 <op> t2 <op> t3 <op> ..., return the terms as a list.
- * @param {Numbas.jme.tree} tree
- * @param {string} op
- * @param {Array<string>} names
- * @returns {object} - {terms: a list of subtrees, termnames: the match names set in each term}
- */
-var getCommutingTerms = Numbas.jme.rules.getCommutingTerms = function(tree,op,names) {
-	if(names===undefined) {
-		names = [];
-	}
-
-	if(op=='+' && jme.isOp(tree.tok,'-')) {
-		tree = {tok: new jme.types.TOp('+'), args: [tree.args[0],{tok: new jme.types.TOp('-u'), args: [tree.args[1]]}]};
-	}
-
-	if(!tree.args || tree.tok.name!=op) {
-		return {terms: [tree], termnames: names.slice()};
-	}
-
-	var terms = [];
-	var termnames = [];
-	var rest = [];
-	var restnames = [];
-	for(var i=0; i<tree.args.length;i++) {
-		var arg = tree.args[i];
-		var oarg = arg;
-		var argnames = names.slice();
-		while(jme.isOp(arg.tok,';')) {
-			argnames.push(arg.args[1].tok.name);
-			arg = arg.args[0];
-		}
-		if(jme.isOp(arg.tok,op) || (op=='+' && jme.isOp(arg.tok,'-'))) {
-			var sub = getCommutingTerms(arg,op,argnames);
-			terms = terms.concat(sub.terms);
-			termnames = termnames.concat(sub.termnames);
-		} else if(jme.isName(arg.tok,'?') || isEndTerm(arg)) {
-			rest.push(arg);
-			restnames.push(argnames);
-		} else {
-			terms.push(arg);
-			termnames.push(argnames);
-		}
-	}
-	if(rest.length) {
-		terms = terms.concat(rest);
-		termnames = termnames.concat(restnames);
-	}
-	return {terms: terms, termnames: termnames};
-}
-
-/** Recursively check whether `exprTree` matches `ruleTree`. Variables in `ruleTree` match any subtree.
- * @memberof Numbas.jme.rules
- *
- * @param {Numbas.jme.tree} ruleTree
- * @param {Numbas.jme.tree} exprTree
- * @param {boolean} doCommute - take commutativity of operations into account, e.g. terms of a sum can be in any order.
- * @returns {boolean|object} - `false` if no match, otherwise a dictionary of subtrees matched to variable names
- */
-var matchTree = jme.rules.matchTree = function(ruleTree,exprTree,doCommute) {
-	if(doCommute===undefined) {
-		doCommute = false;
-	}
-	if(!exprTree)
-		return false;
-
-	var ruleTok = ruleTree.tok;
-	var exprTok = exprTree.tok;
-
-	if(jme.isOp(ruleTok,';')) {
-		if(ruleTree.args[1].tok.type!='name') {
-			throw(new Numbas.Error('jme.matchTree.group name not a name'));
-		}
-		var name = ruleTree.args[1].tok.name;
-		var m = matchTree(ruleTree.args[0],exprTree,doCommute);
-		if(m) {
-			m[name] = exprTree;
-			return m;
-		} else {
-			return false;
-		}
-	}
-
-	if(ruleTok.type=='name')
-	{
-		switch(ruleTok.name) {
-			case '?':
-			case '??':
-				return {};
-			case 'm_number':
-				return exprTok.type=='number' ? {} : false;
-		}
-	}
-
-	if(ruleTok.type=='function') {
-		switch(ruleTok.name) {
-			case 'm_any':
-				for(var i=0;i<ruleTree.args.length;i++) {
-					var m;
-					if(m=matchTree(ruleTree.args[i],exprTree,doCommute)) {
-						return m;
-					}
-				}
-				return false;
-
-			case 'm_all':
-				return matchTree(ruleTree.args[0],exprTree,doCommute);
-
-			case 'm_pm':
-				if(jme.isOp(exprTok,'-u')) {
-					return matchTree({tok: new jme.types.TOp('-u'),args: [ruleTree.args[0]]},exprTree,doCommute);
-				} else {
-					return matchTree(ruleTree.args[0],exprTree,doCommute);
-				}
-
-			case 'm_not':
-				if(!matchTree(ruleTree.args[0],exprTree,doCommute)) {
-					return {};
-				} else {
-					return false;
-				}
-
-			case 'm_and':
-				var d = {};
-				for(var i=0;i<ruleTree.args.length;i++) {
-					var m = matchTree(ruleTree.args[i],exprTree,doCommute);
-					if(m) {
-						for(var name in m) {
-							d[name] = m[name];
-						}
-					} else {
-						return false;
-					}
-				}
-				return d;
-
-			case 'm_uses':
-				var vars = jme.findvars(exprTree);
-				for(var i=0;i<ruleTree.args.length;i++) {
-					var name = ruleTree.args[i].tok.name;
-					if(!vars.contains(name)) {
-						return false;
-					}
-				}
-				return {};
-
-			case 'm_commute':
-				return matchTree(ruleTree.args[0],exprTree,true);
-
-			case 'm_type':
-				var wantedType = ruleTree.args[0].tok.name || ruleTree.args[0].tok.value;
-				if(exprTok.type==wantedType) {
-					return {};
-				} else {
-					return false;
-				}
-		}
-	}
-	if(jme.isName(ruleTok,'m_nothing')) {
-		return false;
-	} else if(jme.isName(ruleTok,'m_number')) {
-		if(exprTok.type=='number') {
-			return {};
-		} else {
-			return false;
-		}
-	}
-
-	if(ruleTok.type!='op' && ruleTok.type != exprTok.type)
-	{
-		return false;
-	}
-
-	switch(ruleTok.type)
-	{
-	case 'number':
-		if( !math.eq(ruleTok.value,exprTok.value) ) {
-			return false;
-		} else {
-			return {};
-		}
-
-	case 'string':
-	case 'boolean':
-	case 'special':
-	case 'range':
-		if(ruleTok.value != exprTok.value) {
-			return false;
-		} else {
-			return {};
-		}
-
-	case 'function':
-	case 'op':
-		var d = {};
-
-		if(doCommute && jme.commutative[ruleTok.name]) {
-			var commutingOp = ruleTok.name;
-
-			var ruleTerms = getCommutingTerms(ruleTree,commutingOp);
-			var exprTerms = getCommutingTerms(exprTree,commutingOp);
-			var rest = [];
-
-			var namedTerms = {};
-			var matchedRules = [];
-			var termMatches = [];
-
-			for(var i=0; i<exprTerms.terms.length; i++) {
-				var m = null;
-				var matched = false;
-				for(var j=0; j<ruleTerms.terms.length; j++) {
-					var ruleTerm = ruleTerms.terms[j];
-					m = matchTree(ruleTerm,exprTerms.terms[i],doCommute);
-					if((!matchedRules[j] || ruleTerm.tok.name=='m_all') && m) {
-						matched = true;
-						matchedRules[j] = true;
-						for(var name in m) {
-							if(!namedTerms[name]) {
-								namedTerms[name] = [];
-							}
-							namedTerms[name].push(m[name]);
-						}
-						var names = ruleTerms.termnames[j];
-						if(names) {
-							for(var k=0;k<names.length;k++) {
-								var name = names[k];
-								if(!namedTerms[name]) {
-									namedTerms[name] = [];
-								}
-								namedTerms[name].push(exprTerms.terms[i]);
-							}
-						}
-						break;
-					}
-				}
-				if(!matched) {
-					return false;
-				}
-			}
-			for(var i=0;i<ruleTerms.terms.length;i++) {
-				var term = ruleTerms.terms[i];
-				if(!isEndTerm(term) && !matchedRules[i]) {
-					return false;
-				}
-			}
-			for(var name in namedTerms) {
-				var terms = namedTerms[name];
-				var sub = terms[0];
-				for(var i=1;i<terms.length;i++) {
-					var op = new jme.types.TOp(commutingOp);
-					sub = {tok: op, args: [sub,terms[i]]};
-				}
-				d[name] = sub;
-			}
-			return d;
-		} else {
-			if(ruleTok.type!=exprTok.type || ruleTok.name!=exprTok.name) {
-				return false;
-			}
-            var i = 0;
-            var j = 0;
-			for(var i=0;i<ruleTree.args.length;i++)
-			{
-                if(jme.isFunction(ruleTree.args[i].tok,'m_all')) {
-                    while(j<exprTree.args.length) {
-                        var m = matchTree(ruleTree.args[i],exprTree.args[i],doCommute);
-                        if(!m) {
-                            break;
-                        }
-                        for(var x in m) {
-                            d[x]=m[x];
-                        }
-                        j += 1;
-                    }
-                } else if(jme.isName(ruleTree.args[i].tok,'m_nothing')) {
-                    continue;
-                } else {
-                    var m = matchTree(ruleTree.args[i],exprTree.args[j],doCommute);
-                    if(m===false) {
-                        return false;
-                    } else {
-                        for(var x in m) {
-                            d[x]=m[x];
-                        }
-                        j += 1;
-                    }
-                }
-			}
-            // if not all terms in the rule have been matched, the rule doesn't match
-            if(j<i) {
-                return false;
-            }
-			return d
-		}
-	case 'name':
-		if(ruleTok.name.toLowerCase()==exprTok.name.toLowerCase()) {
-			return {};
-		} else {
-			return false;
-		}
-	default:
-		return {};
-	}
-}
-
-var matchAllTree = jme.rules.matchAllTree = function(ruleTree,exprTree,doCommute) {
-    var matches = [];
-
-    var m = matchTree(ruleTree,exprTree,doCommute);
-    if(m) {
-        matches = [m];
-    }
-    if(exprTree.args) {
-        exprTree.args.forEach(function(arg) {
-            var submatches = matchAllTree(ruleTree,arg,doCommute);
-            matches = matches.concat(submatches);
-        });
-    }
-    return matches;
-}
-
-/** Match expresison against a pattern. Wrapper for {@link Numbas.jme.rules.matchTree}
- *
- * @memberof Numbas.jme.rules
- * @method
- *
- * @param {JME} pattern
- * @param {JME} expr
- * @param {boolean} doCommute
- *
- * @returns {boolean|object} - `false` if no match, otherwise a dictionary of subtrees matched to variable names
- */
-var matchExpression = jme.rules.matchExpression = function(pattern,expr,doCommute) {
-	pattern = jme.compile(pattern);
-	expr = jme.compile(expr);
-	return matchTree(pattern,expr,doCommute);
-}
-
-/** Flags used to control the behaviour of JME display functions.
- * Values are `undefined` so they can be overridden
- * @memberof Numbas.jme.rules
- */
-var displayFlags = jme.rules.displayFlags = {
-	fractionnumbers: undefined,
-	rowvector: undefined
-};
-/** Set of simplification rules
- * @constructor
- * @memberof Numbas.jme.rules
- * @param {rule[]} rules
- * @param {object} flags
- */
-var Ruleset = jme.rules.Ruleset = function(rules,flags) {
-	this.rules = rules;
-	this.flags = $.extend({},displayFlags,flags);
-}
-Ruleset.prototype = /** @lends Numbas.jme.rules.Ruleset.prototype */ {
-	/** Test whether flag is set 
-	 * @memberof Numbas.jme.rules.Ruleset.prototype
-	 */
-	flagSet: function(flag) {
-		flag = flag.toLowerCase();
-		if(this.flags.hasOwnProperty(flag))
-			return this.flags[flag];
-		else
-			return false;
-	}
-}
-
-var ruleSort = util.sortBy(['patternString','resultString','conditionStrings']);
-
-function mergeRulesets(r1,r2) {
-	var rules = r1.rules.merge(r2.rules,ruleSort);
-	var flags = $.extend({},r1.flags,r2.flags);
-	return new Ruleset(rules, flags);
-}
-
-/** Collect a ruleset together from a list of ruleset names, or rulesets.
- * @param {String|Array.<String|Numbas.jme.Ruleset>} set - A comma-separated string of ruleset names, or an array of names/Ruleset objects.
- * @param {Object.<Numbas.jme.Ruleset>} scopeSets - Dictionary of rulesets defined in the current scope.
- * @returns Numbas.jme.Ruleset
- */
-var collectRuleset = jme.rules.collectRuleset = function(set,scopeSets)
-{
-	scopeSets = util.copyobj(scopeSets);
-
-	if(!set)
-		return [];
-
-	if(!scopeSets)
-		throw(new Numbas.Error('jme.display.collectRuleset.no sets'));
-
-	var rules = [];
-	var flags = {};
-
-	if(typeof(set)=='string') {
-		set = set.split(',');
-        set.splice(0,0,'basic');
-	}
-	else {
-		flags = $.extend(flags,set.flags);
-		if(set.rules)
-			set = set.rules;
-	}
-
-	for(var i=0; i<set.length; i++ )
-	{
-		if(typeof(set[i])=='string')
-		{
-			var m = /^\s*(!)?(.*)\s*$/.exec(set[i]);
-			var neg = m[1]=='!' ? true : false;
-			var name = m[2].trim().toLowerCase();
-			if(name in displayFlags)
-			{
-				flags[name]= !neg;
-			}
-			else if(name.length>0)
-			{
-				if(!(name in scopeSets))
-				{
-					throw(new Numbas.Error('jme.display.collectRuleset.set not defined',{name:name}));
-				}
-
-				var sub = collectRuleset(scopeSets[name],scopeSets);
-
-				flags = $.extend(flags,sub.flags);
-
-				scopeSets[name] = sub;
-				if(neg)
-				{
-					for(var j=0; j<sub.rules.length; j++)
-					{
-						if((m=rules.indexOf(sub.rules[j]))>=0)
-						{
-							rules.splice(m,1);
-						}
-					}
-				}
-				else
-				{
-					for(var j=0; j<sub.rules.length; j++)
-					{
-						if(!(rules.contains(sub.rules[j])))
-						{
-							rules.push(sub.rules[j]);
-						}
-					}
-				}
-			}
-		}
-		else
-			rules.push(set[i]);
-	}
-	return new Ruleset(rules,flags);
-}
-
-
-/** Built-in simplification rules
- * @enum {Numbas.jme.rules.Rule[]}
- * @memberof Numbas.jme.rules
- */
-var simplificationRules = jme.rules.simplificationRules = {
-	basic: [
-        ['?;x',['x isa "number"','x<0'],'-eval(-x)'],   // the value of a TNumber should be non-negative - pull the negation out as unary minus
-		['+(?;x)',[],'x'],					//get rid of unary plus
-		['?;x+(-?;y)',[],'x-y'],			//plus minus = minus
-		['?;x+?;y',['y isa "number"','y<0'],'x-eval(-y)'],
-		['?;x-?;y',['y isa "number"','y<0'],'x+eval(-y)'],
-		['?;x-(-?;y)',[],'x+y'],			//minus minus = plus
-		['-(-?;x)',[],'x'],				//unary minus minus = plus
-		['-?;x',['x isa "complex"','re(x)<0'],'eval(-x)'],
-		['?;x+?;y',['x isa "number"','y isa "complex"','re(y)=0'],'eval(x+y)'],
-		['-?;x+?;y',['x isa "number"','y isa "complex"','re(y)=0'],'-eval(x-y)'],
-		['(-?;x)/?;y',[],'-(x/y)'],			//take negation to left of fraction
-		['?;x/(-?;y)',[],'-(x/y)'],			
-		['(-?;x)*?;y',['not (x isa "complex")'],'-(x*y)'],			//take negation to left of multiplication
-		['?;x*(-?;y)',['not (y isa "complex")'],'-(x*y)'],		
-		['?;x+(?;y+?;z)',[],'(x+y)+z'],		//make sure sums calculated left-to-right
-		['?;x-(?;y+?;z)',[],'(x-y)-z'],
-		['?;x+(?;y-?;z)',[],'(x+y)-z'],
-		['?;x-(?;y-?;z)',[],'(x-y)+z'],
-		['(?;x*?;y)*?;z',[],'x*(y*z)'],		//make sure multiplications go right-to-left
-		['?;n*i',['n isa "number"'],'eval(n*i)'],			//always collect multiplication by i
-		['i*?;n',['n isa "number"'],'eval(n*i)']
-	],
-
-	unitFactor: [
-		['1*?;x',[],'x'],
-		['?;x*1',[],'x']
-	],
-
-	unitPower: [
-		['?;x^1',[],'x']
-	],
-
-	unitDenominator: [
-		['?;x/1',[],'x']
-	],
-
-	zeroFactor: [
-		['?;x*0',[],'0'],
-		['0*?;x',[],'0'],
-		['0/?;x',[],'0']
-	],
-
-	zeroTerm: [
-		['0+?;x',[],'x'],
-		['?;x+0',[],'x'],
-		['?;x-0',[],'x'],
-		['0-?;x',[],'-x']
-	],
-
-	zeroPower: [
-		['?;x^0',[],'1']
-	],
-
-	noLeadingMinus: [
-		['-?;x+?;y',[],'y-x'],											//don't start with a unary minus
-		['-0',[],'0']
-	],
-
-	collectNumbers: [
-		['-?;x-?;y',['x isa "number"','y isa "number"'],'-(x+y)'],										//collect minuses
-		['?;n+?;m',['n isa "number"','m isa "number"'],'eval(n+m)'],	//add numbers
-		['?;n-?;m',['n isa "number"','m isa "number"'],'eval(n-m)'],	//subtract numbers
-		['?;n+?;x',['n isa "number"','!(x isa "number")'],'x+n'],		//add numbers last
-
-		['(?;x+?;n)+?;m',['n isa "number"','m isa "number"'],'x+eval(n+m)'],	//collect number sums
-		['(?;x-?;n)+?;m',['n isa "number"','m isa "number"'],'x+eval(m-n)'],	
-		['(?;x+?;n)-?;m',['n isa "number"','m isa "number"'],'x+eval(n-m)'],	
-		['(?;x-?;n)-?;m',['n isa "number"','m isa "number"'],'x-eval(n+m)'],	
-		['(?;x+?;n)+?;y',['n isa "number"'],'(x+y)+n'],						//shift numbers to right hand side
-		['(?;x+?;n)-?;y',['n isa "number"'],'(x-y)+n'],
-		['(?;x-?;n)+?;y',['n isa "number"'],'(x+y)-n'],
-		['(?;x-?;n)-?;y',['n isa "number"'],'(x-y)-n'],
-
-		['?;n*?;m',['n isa "number"','m isa "number"'],'eval(n*m)'],		//multiply numbers
-		['?;x*?;n',['n isa "number"','!(x isa "number")','n<>i'],'n*x'],			//shift numbers to left hand side
-		['?;m*(?;n*?;x)',['m isa "number"','n isa "number"'],'eval(n*m)*x']
-	],
-
-	simplifyFractions: [
-		['?;n/?;m',['n isa "number"','m isa "number"','gcd_without_pi_or_i(n,m)>1'],'eval(n/gcd_without_pi_or_i(n,m))/eval(m/gcd_without_pi_or_i(n,m))'],			//cancel simple fraction
-		['(?;n*?;x)/?;m',['n isa "number"','m isa "number"','gcd_without_pi_or_i(n,m)>1'],'(eval(n/gcd_without_pi_or_i(n,m))*x)/eval(m/gcd_without_pi_or_i(n,m))'],	//cancel algebraic fraction
-		['?;n/(?;m*?;x)',['n isa "number"','m isa "number"','gcd_without_pi_or_i(n,m)>1'],'eval(n/gcd_without_pi_or_i(n,m))/(eval(m/gcd_without_pi_or_i(n,m))*x)'],	
-		['(?;n*?;x)/(?;m*?;y)',['n isa "number"','m isa "number"','gcd_without_pi_or_i(n,m)>1'],'(eval(n/gcd_without_pi_or_i(n,m))*x)/(eval(m/gcd_without_pi_or_i(n,m))*y)'],
-		['?;n/?;m',['n isa "complex"','m isa "complex"','re(n)=0','re(m)=0'],'eval(n/i)/eval(m/i)']			// cancel i when numerator and denominator are both purely imaginary
-	],
-
-	zeroBase: [
-		['0^?;x',[],'0']
-	],
-
-	constantsFirst: [
-		['?;x*?;n',['n isa "number"','!(x isa "number")','n<>i'],'n*x'],
-		['?;x*(?;n*?;y)',['n isa "number"','n<>i','!(x isa "number")'],'n*(x*y)']
-	],
-
-	sqrtProduct: [
-		['sqrt(?;x)*sqrt(?;y)',[],'sqrt(x*y)']
-	],
-
-	sqrtDivision: [
-		['sqrt(?;x)/sqrt(?;y)',[],'sqrt(x/y)']
-	],
-
-	sqrtSquare: [
-		['sqrt(?;x^2)',[],'x'],
-		['sqrt(?;x)^2',[],'x'],
-		['sqrt(?;n)',['n isa "number"','isint(sqrt(n))'],'eval(sqrt(n))']
-	],
-
-	trig: [
-		['sin(?;n)',['n isa "number"','isint(2*n/pi)'],'eval(sin(n))'],
-		['cos(?;n)',['n isa "number"','isint(2*n/pi)'],'eval(cos(n))'],
-		['tan(?;n)',['n isa "number"','isint(n/pi)'],'0'],
-		['cosh(0)',[],'1'],
-		['sinh(0)',[],'0'],
-		['tanh(0)',[],'0']
-	],
-
-    trigPowers: [
-        ['sin^(?;n)(?;x)',[],'sin(x)^n']
-    ],
-
-	otherNumbers: [
-		['?;n^?;m',['n isa "number"','m isa "number"'],'eval(n^m)']
-	],
-
-    cancelTerms: [
-        // x+y or rest+x+y
-        ['(?;rest+?;n*?;x) + ?;m*?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest+eval(n+m)*x'],
-        ['(?;rest+?;n*?;x) + ?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest+eval(n+1)*x'],
-        ['(?;rest+?;x) + ?;n*?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest+eval(n+1)*x'],
-        ['(?;rest+?;x) + ?;y',['canonical_compare(x,y)=0'],'rest+2*x'],
-        ['?;n*?;x+?;m*?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'eval(n+m)*x'],
-        ['?;n*?;x+?;y',['n isa "number"','canonical_compare(x,y)=0'],'eval(n+1)*x'],
-        ['-?;x+?;n*?;y',['n isa "number"','canonical_compare(x,y)=0'],'eval(n-1)*x'],
-        ['-?;x+?;y',['canonical_compare(x,y)=0'],'0*x'],
-        ['?;x+?;n*?;y',['n isa "number"','canonical_compare(x,y)=0'],'eval(n+1)*x'],
-        ['?;x+?;y',['canonical_compare(x,y)=0'],'2*x'],
-
-        // x-y or rest+x-y
-        ['(?;rest+?;n*?;x) - ?;m*?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest+eval(n-m)*x'],
-        ['(?;rest+?;n*?;x) - ?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest+eval(n-1)*x'],
-        ['(?;rest+?;x) - ?;n*?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest+eval(1-n)*x'],
-        ['(?;rest+?;x) - ?;y',['canonical_compare(x,y)=0'],'rest+0*x'],
-        ['?;n*?;x-?;m*?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'eval(n-m)*x'],
-        ['?;n*?;x-?;y',['n isa "number"','canonical_compare(x,y)=0'],'eval(n-1)*x'],
-        ['-?;x-?;n*?;y',['n isa "number"','canonical_compare(x,y)=0'],'eval(-1-n)*x'],
-        ['-?;x-?;y',['canonical_compare(x,y)=0'],'-2*x'],
-        ['?;x-?;n*?;y',['n isa "number"','canonical_compare(x,y)=0'],'eval(1-n)*x'],
-        ['?;x-?;y',['canonical_compare(x,y)=0'],'0*x'],
-
-        // rest-x-y or rest-x+y
-        ['(?;rest-?;n*?;x) + ?;m*?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest+eval(m-n)*x'],
-        ['(?;rest-?;n*?;x) + ?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest+eval(1-n)*x'],
-        ['(?;rest-?;x) + ?;n*?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest+eval(1-n)*x'],
-        ['(?;rest-?;n*?;x) - ?;m*?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest-eval(n+m)*x'],
-        ['(?;rest-?;n*?;x) - ?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest-eval(n+1)*x'],
-        ['(?;rest-?;x) - ?;n*?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest-eval(1+n)*x'],
-        ['(?;rest-?;x) - ?;y',['canonical_compare(x,y)=0'],'rest-2*x'],
-        ['(?;rest-?;x) + ?;y',['canonical_compare(x,y)=0'],'rest+0*x'],
-
-
-
-        ['(?;rest+?;n/?;x) + ?;m/?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest+eval(n+m)/x'],
-        ['(?;n)/(?;x)+(?;m)/(?;y)',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'eval(n+m)/x'],
-        ['(?;rest+?;n/?;x) - ?;m/?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest+eval(n-m)/x'],
-        ['?;n/?;x-?;m/?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'eval(n-m)/x'],
-        ['(?;rest-?;n/?;x) + ?;m/?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest+eval(m-n)/x'],
-        ['(?;rest-?;n/?;x) - ?;m/?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest-eval(n+m)/x']
-    ],
-
-    cancelFactors: [
-        // x*y or rest*x*y
-        ['(?;rest*(?;x)^(?;n)) * (?;y)^(?;m)',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest*x^(n+m)'],
-        ['(?;rest*(?;x)*(?;n)) * ?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest*x^eval(n+1)'],
-        ['(?;rest*?;x) * (?;y)^(?;n)',['n isa "number"','canonical_compare(x,y)=0'],'rest*x^eval(n+1)'],
-        ['(?;rest*?;x) * ?;y',['canonical_compare(x,y)=0'],'rest*x^2'],
-        ['(?;x)^(?;n)*(?;y)^(?;m)',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'x^eval(n+m)'],
-        ['(?;x)^(?;n)*?;y',['n isa "number"','canonical_compare(x,y)=0'],'x^eval(n+1)'],
-        ['?;x*(?;y)^(?;n)',['n isa "number"','canonical_compare(x,y)=0'],'x^eval(n+1)'],
-        ['?;x*?;y',['canonical_compare(x,y)=0'],'x^2'],
-
-        // x/y or rest*x/y
-        ['(?;rest*(?;x)^(?;n)) / ((?;y)^(?;m))',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest*x^eval(n-m)'],
-        ['(?;rest*(?;x)^(?;n)) / ?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest*x^eval(n-1)'],
-        ['(?;rest*?;x) / ((?;y)^(?;n))',['n isa "number"','canonical_compare(x,y)=0'],'rest*x^eval(1-n)'],
-        ['(?;rest*?;x) / ?;y',['canonical_compare(x,y)=0'],'rest*x^0'],
-        ['(?;x)^(?;n) / (?;y)^(?;m)',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'x^eval(n-m)'],
-        ['(?;x)^(?;n) / ?;y',['n isa "number"','canonical_compare(x,y)=0'],'x^eval(n-1)'],
-        ['?;x / ((?;y)^(?;n))',['n isa "number"','canonical_compare(x,y)=0'],'x^eval(1-n)'],
-        ['?;x / ?;y',['canonical_compare(x,y)=0'],'x^0'],
-
-        // rest/x/y or rest/x*y
-        ['(?;rest/((?;x)^(?;n))) * (?;y)^(?;m)',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest*x^eval(m-n)'],
-        ['(?;rest/((?;x)^(?;n))) * ?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest*x^eval(1-n)'],
-        ['(?;rest/?;x) * (?;y)^(?;n)',['n isa "number"','canonical_compare(x,y)=0'],'rest*x^eval(1-n)'],
-        ['(?;rest/((?;x)^(?;n))) / ((?;y)^(?;m))',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'rest/(x^eval(n+m))'],
-        ['(?;rest/((?;x)^(?;n))) / ?;y',['n isa "number"','canonical_compare(x,y)=0'],'rest/(x^eval(n+1))'],
-        ['(?;rest/?;x) / ((?;y)^(?;n))',['n isa "number"','canonical_compare(x,y)=0'],'rest/(x^eval(1+n))'],
-        ['(?;rest/?;x) / ?;y',['canonical_compare(x,y)=0'],'rest/(x^2)'],
-        ['(?;rest/?;x) / ?;y',['canonical_compare(x,y)=0'],'rest/(x^0)']
-    ],
-
-    collectLikeFractions: [
-        ['?;a/?;b+?;c/?;d',['canonical_compare(b,d)=0'],'(a+c)/b']
-    ]
-};
-
-
-// these rules conflict with noLeadingMinus
-var canonicalOrderRules = [
-    ['?;x+?;y',['canonical_compare(x,y)=1'],'y+x'],
-    ['?;x-?;y',['canonical_compare(x,y)=1'],'(-y)+x'],
-    ['-?;x+?;y',['canonical_compare(x,y)=1'],'y-x'],
-    ['-?;x-?;y',['canonical_compare(x,y)=1'],'(-y)-x'],
-    ['(?;x+?;y)+?;z',['canonical_compare(y,z)=1'],'(x+z)+y'],
-
-    ['?;x*?;y',['canonical_compare(x,y)=-1'],'y*x'],
-    ['(?;x*?;y)*?;z',['canonical_compare(y,z)=-1'],'(x*z)*y']
-]
-
-var expandBracketsRules = [
-    ['(?;x+?;y)*?;z',[],'x*z+y*z'],
-    ['?;x*(?;y+?;z)',[],'x*y+x*z']
-]
-
-/** Compile an array of rules (in the form `[pattern,conditions[],result]` to {@link Numbas.jme.rules.Rule} objects
- * @param {Array} rules
- * @returns {Numbas.jme.Ruleset}
- */
-var compileRules = jme.rules.compileRules = function(rules)
-{
-	for(var i=0;i<rules.length;i++)
-	{
-		var pattern = rules[i][0];
-		var conditions = rules[i][1];
-		var result = rules[i][2];
-        rules[i] = new Rule(pattern,conditions,result);
-	}
-	return new Ruleset(rules,{});
-}
-
-var all=[];
-var compiledSimplificationRules = {};
-var notAll = ['canonicalOrder','expandBrackets'];
-for(var x in simplificationRules)
-{
-	compiledSimplificationRules[x] = compiledSimplificationRules[x.toLowerCase()] = compileRules(simplificationRules[x]);
-    if(!notAll.contains(x)) {
-    	all = all.concat(compiledSimplificationRules[x].rules);
-    }
-}
-compiledSimplificationRules['canonicalorder'] = compileRules(canonicalOrderRules);
-compiledSimplificationRules['expandbrackets'] = compileRules(expandBracketsRules);
-compiledSimplificationRules['all'] = new Ruleset(all,{});
-jme.rules.simplificationRules = compiledSimplificationRules;
-
-});
-
 /*
 Copyright 2011-14 Newcastle University
 
@@ -7187,27 +7328,6 @@ DOMcontentsubber.prototype = {
 }
 
 });
-
-Numbas.queueScript('localisation',['i18next','localisation-resources'],function() {
-    i18next.init({
-        lng: Numbas.locale.preferred_locale,
-        lowerCaseLng: true,
-        keySeparator: false,
-        nsSeparator: false,
-        interpolation: {
-            unescapePrefix: '-',
-            format: function(value,format) {
-                if(format=='niceNumber') {
-                    return Numbas.math.niceNumber(value);
-                }
-            }
-        },
-        resources: Numbas.locale.resources
-    });
-    window.R = function(){{ return i18next.t.apply(i18next,arguments) }};
-});
-
-
 /*
 Copyright 2011-14 Newcastle University
 
@@ -7412,9 +7532,11 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         // create the JME marking script for the part
         var markingScriptNode = this.xml.selectSingleNode('markingalgorithm');
         var markingScriptString = Numbas.xml.getTextContent(markingScriptNode).trim();
+        var markingScript = {};
+        tryGetAttribute(markingScript,this.xml,markingScriptNode,['extend']);
         if(markingScriptString) {
             // extend the base marking algorithm if asked to do so
-            var extend_base = markingScriptNode.getAttribute('extend') || true;
+            var extend_base = markingScript.extend;
             this.setMarkingScript(markingScriptString,extend_base);
         }
 
@@ -7972,7 +8094,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
 	 * @returns {Boolean}
 	 */
 	hasStagedAnswer: function() {
-		return !(this.stagedAnswer==undefined || this.stagedAnswer=='');
+		return !(this.stagedAnswer==undefined || this.stagedAnswer==='');
 	},
 
 	/** Called by another part when its marking means that the marking for this part might change (i.e., when this part replaces a variable with the answer from the other part)
@@ -8353,7 +8475,6 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
 
 
 });
-
 /*
 Copyright 2011-14 Newcastle University
 
@@ -8776,11 +8897,6 @@ Question.prototype = /** @lends Numbas.Question.prototype */
 	 */
 	score: 0,
 
-	/** Percentage score below which the advice is revealed
-	 * @type {Number}
-	 */
-	adviceThreshold: 0,
-
 	/** Has this question been seen by the student? For determining if you can jump back to this question, when {@link Numbas.Question.navigateBrowse} is disabled.
 	 * @type {Boolean}
 	 */
@@ -9029,7 +9145,6 @@ Question.prototype = /** @lends Numbas.Question.prototype */
 };
 
 });
-
 /*
 Copyright 2011-14 Newcastle University
 
@@ -9143,14 +9258,14 @@ Numbas.schedule = /** @lends Numbas.schedule */ {
 			task();
 		}
 		catch(e) {
-			Numbas.display.die(e);
+			Numbas.display && Numbas.display.die(e);
 			schedule.halt = true;
 		}
 		schedule.drop();
 
 		schedule.completed++;
 
-		Numbas.display.showLoadProgress();
+		Numbas.display && Numbas.display.showLoadProgress();
 	},
 
 	/** 'pick up' the current queue and put stuff in front. Called before running a task, so it can queue things which must be done before the rest of the queue is called */
@@ -9184,6 +9299,12 @@ SignalBox.prototype = {
             deferred.resolve = resolve;
             deferred.reject = reject;
         });
+        deferred.promise.catch(function(e) {
+            if(!Numbas.schedule.halt) {
+    			Numbas.display && Numbas.display.die(e);
+	    		Numbas.schedule.halt = true;
+            }
+        });
         return deferred;
     },
 
@@ -9206,6 +9327,9 @@ SignalBox.prototype = {
             promise = promise.then(function() {
                 return new Promise(function(resolve,reject) {
                     try {
+                        if(Numbas.schedule.halt) {
+                            reject()
+                        }
                         var result = fn();
                         resolve(result);
                     } catch(e) {
@@ -9233,7 +9357,6 @@ SignalBox.prototype = {
 }
 
 });
-
 Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
     var marking = Numbas.marking = {};
 
@@ -9676,7 +9799,55 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
         }
     }
 });
+/** @file Stuff to do with loading from JSON objects. Provides {@link Numbas.json}. */
 
+Numbas.queueScript('json',['base'],function() {
+/** @namespace Numbas.json */
+var json = Numbas.json = {
+    /** Try to load an attribute with name from `attr` from `source` into `target`.
+     *  Tries lower-case 
+     *  @param {Object} source - object to load value(s) from
+     *  @param {String|Array.<String>} attrs - the name, or list of names, of attributes to load
+     *  @param {Object} target - object to set values in
+     *  @param {String|Array.<String>} altnames - the name, or list of names, to set in the target object
+     */
+    tryLoad: function(source,attrs,target,altnames) {
+        if(!source) {
+            return;
+        }
+        if(typeof(attrs)=='string') {
+            attrs = [attrs];
+            altnames = altnames && [altnames];
+        }
+
+        altnames = altnames || [];
+
+        for(var i=0;i<attrs.length;i++) {
+            var attr = attrs[i];
+            var target_attr = altnames[i] || attr;
+            var value = json.tryGet(source, attr);
+            if(value!==undefined) {
+                if(target_attr in target && typeof target[target_attr] == 'string') {
+                    value += '';
+                }
+                target[target_attr] = value;
+            }
+        }
+    },
+
+    /** Try to load an attribute with the given name from `source`. The given name and its lower-case equivalent are tried.
+     * @param {Object} source
+     * @param {String} attr
+     */
+    tryGet: function(source, attr) {
+        if(attr in source) {
+            return source[attr];
+        } else if(attr.toLowerCase() in source) {
+            return source[attr.toLowerCase()]
+        }
+    }
+}
+});
 /*
 Copyright 2011-14 Newcastle University
 
@@ -11203,16 +11374,19 @@ var math = Numbas.math = /** @lends Numbas.math */ {
         var start = range[0];
         var end = range[1];
         var step_size = range[2];
-        if(step_size==0) {
-            throw(new Numbas.Error('math.rangeToList.zero step size'));
-        }
-        if(start!=end) {
-            step_size = Math.abs(step_size)*math.sign(end-start);
-        }
         var out = [];
         var n = 0;
         var t = start;
-        while(start<end ? t<=end : start>end ? t>=end : t==end)
+        if(step_size==0) {
+            throw(new Numbas.Error('math.rangeToList.zero step size'));
+        }
+        if((end-start)*step_size < 0) {
+            return [];
+        }
+        if(start==end) {
+            return [start];
+        }
+        while(start<end ? t<=end : t>=end)
         {
             out.push(t)
             n += 1;
@@ -11940,7 +12114,6 @@ var setmath = Numbas.setmath = {
 }
 
 });
-
 /*
 Copyright 2011-14 Newcastle University
 
@@ -14374,66 +14547,6 @@ var toObject = function (o) {
 });
 
 });
-
-Numbas.queueScript('i18next',[],function(module) {
-        var exports = {};
-
-!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):t.i18next=e()}(this,function(){"use strict";function t(t){return null==t?"":""+t}function e(t,e,n){t.forEach(function(t){e[t]&&(n[t]=e[t])})}function n(t,e,n){function o(t){return t&&t.indexOf("###")>-1?t.replace(/###/g,"."):t}function r(){return!t||"string"==typeof t}for(var i="string"!=typeof e?[].concat(e):e.split(".");i.length>1;){if(r())return{};var a=o(i.shift());!t[a]&&n&&(t[a]=new n),t=t[a]}return r()?{}:{obj:t,k:o(i.shift())}}function o(t,e,o){var r=n(t,e,Object),i=r.obj,a=r.k;i[a]=o}function r(t,e,o,r){var i=n(t,e,Object),a=i.obj,s=i.k;a[s]=a[s]||[],r&&(a[s]=a[s].concat(o)),r||a[s].push(o)}function i(t,e){var o=n(t,e),r=o.obj,i=o.k;if(r)return r[i]}function a(t,e,n){for(var o in e)o in t?"string"==typeof t[o]||t[o]instanceof String||"string"==typeof e[o]||e[o]instanceof String?n&&(t[o]=e[o]):a(t[o],e[o],n):t[o]=e[o];return t}function s(t){return t.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g,"\\$&")}function l(t){return"string"==typeof t?t.replace(/[&<>"'\/]/g,function(t){return E[t]}):t}function u(t){return t.interpolation={unescapeSuffix:"HTML"},t.interpolation.prefix=t.interpolationPrefix||"__",t.interpolation.suffix=t.interpolationSuffix||"__",t.interpolation.escapeValue=t.escapeInterpolation||!1,t.interpolation.nestingPrefix=t.reusePrefix||"$t(",t.interpolation.nestingSuffix=t.reuseSuffix||")",t}function c(t){return t.resStore&&(t.resources=t.resStore),t.ns&&t.ns.defaultNs?(t.defaultNS=t.ns.defaultNs,t.ns=t.ns.namespaces):t.defaultNS=t.ns||"translation",t.fallbackToDefaultNS&&t.defaultNS&&(t.fallbackNS=t.defaultNS),t.saveMissing=t.sendMissing,t.saveMissingTo=t.sendMissingTo||"current",t.returnNull=!t.fallbackOnNull,t.returnEmptyString=!t.fallbackOnEmpty,t.returnObjects=t.returnObjectTrees,t.joinArrays="\n",t.returnedObjectHandler=t.objectTreeKeyHandler,t.parseMissingKeyHandler=t.parseMissingKey,t.appendNamespaceToMissingKey=!0,t.nsSeparator=t.nsseparator||":",t.keySeparator=t.keyseparator||".","sprintf"===t.shortcutFunction&&(t.overloadTranslationOptionHandler=function(t){for(var e=[],n=1;n<t.length;n++)e.push(t[n]);return{postProcess:"sprintf",sprintf:e}}),t.whitelist=t.lngWhitelist,t.preload=t.preload,"current"===t.load&&(t.load="currentOnly"),"unspecific"===t.load&&(t.load="languageOnly"),t.backend=t.backend||{},t.backend.loadPath=t.resGetPath||"locales/__lng__/__ns__.json",t.backend.addPath=t.resPostPath||"locales/add/__lng__/__ns__",t.backend.allowMultiLoading=t.dynamicLoad,t.cache=t.cache||{},t.cache.prefix="res_",t.cache.expirationTime=6048e5,t.cache.enabled=t.useLocalStorage,t=u(t),t.defaultVariables&&(t.interpolation.defaultVariables=t.defaultVariables),t}function p(t){return t=u(t),t.joinArrays="\n",t}function f(t){return(t.interpolationPrefix||t.interpolationSuffix||void 0!==t.escapeInterpolation)&&(t=u(t)),t.nsSeparator=t.nsseparator,t.keySeparator=t.keyseparator,t.returnObjects=t.returnObjectTrees,t}function g(t){t.lng=function(){return C.deprecate("i18next.lng() can be replaced by i18next.language for detected language or i18next.languages for languages ordered by translation lookup."),t.services.languageUtils.toResolveHierarchy(t.language)[0]},t.preload=function(e,n){C.deprecate("i18next.preload() can be replaced with i18next.loadLanguages()"),t.loadLanguages(e,n)},t.setLng=function(e,n,o){return C.deprecate("i18next.setLng() can be replaced with i18next.changeLanguage() or i18next.getFixedT() to get a translation function with fixed language or namespace."),"function"==typeof n&&(o=n,n={}),n||(n={}),n.fixLng===!0&&o?o(null,t.getFixedT(e)):t.changeLanguage(e,o)},t.addPostProcessor=function(e,n){C.deprecate("i18next.addPostProcessor() can be replaced by i18next.use({ type: 'postProcessor', name: 'name', process: fc })"),t.use({type:"postProcessor",name:e,process:n})}}function h(t){return t.charAt(0).toUpperCase()+t.slice(1)}function d(){var t={};return H.forEach(function(e){e.lngs.forEach(function(n){t[n]={numbers:e.nr,plurals:U[e.fc]}})}),t}function y(t,e){for(var n=t.indexOf(e);n!==-1;)t.splice(n,1),n=t.indexOf(e)}function v(){return{debug:!1,initImmediate:!0,ns:["translation"],defaultNS:["translation"],fallbackLng:["dev"],fallbackNS:!1,whitelist:!1,nonExplicitWhitelist:!1,load:"all",preload:!1,simplifyPluralSuffix:!0,keySeparator:".",nsSeparator:":",pluralSeparator:"_",contextSeparator:"_",saveMissing:!1,saveMissingTo:"fallback",missingKeyHandler:!1,postProcess:!1,returnNull:!0,returnEmptyString:!0,returnObjects:!1,joinArrays:!1,returnedObjectHandler:function(){},parseMissingKeyHandler:!1,appendNamespaceToMissingKey:!1,appendNamespaceToCIMode:!1,overloadTranslationOptionHandler:function(t){return{defaultValue:t[1]}},interpolation:{escapeValue:!0,format:function(t,e,n){return t},prefix:"{{",suffix:"}}",formatSeparator:",",unescapePrefix:"-",nestingPrefix:"$t(",nestingSuffix:")",defaultVariables:void 0}}}function b(t){return"string"==typeof t.ns&&(t.ns=[t.ns]),"string"==typeof t.fallbackLng&&(t.fallbackLng=[t.fallbackLng]),"string"==typeof t.fallbackNS&&(t.fallbackNS=[t.fallbackNS]),t.whitelist&&t.whitelist.indexOf("cimode")<0&&t.whitelist.push("cimode"),t}function m(){}var x="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},S=function(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")},k=Object.assign||function(t){for(var e=1;e<arguments.length;e++){var n=arguments[e];for(var o in n)Object.prototype.hasOwnProperty.call(n,o)&&(t[o]=n[o])}return t},w=function(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e)},O=function(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!e||"object"!=typeof e&&"function"!=typeof e?t:e},L=function(){function t(t,e){var n=[],o=!0,r=!1,i=void 0;try{for(var a,s=t[Symbol.iterator]();!(o=(a=s.next()).done)&&(n.push(a.value),!e||n.length!==e);o=!0);}catch(t){r=!0,i=t}finally{try{!o&&s.return&&s.return()}finally{if(r)throw i}}return n}return function(e,n){if(Array.isArray(e))return e;if(Symbol.iterator in Object(e))return t(e,n);throw new TypeError("Invalid attempt to destructure non-iterable instance")}}(),j=function(t){if(Array.isArray(t)){for(var e=0,n=Array(t.length);e<t.length;e++)n[e]=t[e];return n}return Array.from(t)},N={type:"logger",log:function(t){this.output("log",t)},warn:function(t){this.output("warn",t)},error:function(t){this.output("error",t)},output:function(t,e){var n;console&&console[t]&&(n=console)[t].apply(n,j(e))}},P=function(){function t(e){var n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{};S(this,t),this.init(e,n)}return t.prototype.init=function(t){var e=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{};this.prefix=e.prefix||"i18next:",this.logger=t||N,this.options=e,this.debug=e.debug},t.prototype.setDebug=function(t){this.debug=t},t.prototype.log=function(){for(var t=arguments.length,e=Array(t),n=0;n<t;n++)e[n]=arguments[n];return this.forward(e,"log","",!0)},t.prototype.warn=function(){for(var t=arguments.length,e=Array(t),n=0;n<t;n++)e[n]=arguments[n];return this.forward(e,"warn","",!0)},t.prototype.error=function(){for(var t=arguments.length,e=Array(t),n=0;n<t;n++)e[n]=arguments[n];return this.forward(e,"error","")},t.prototype.deprecate=function(){for(var t=arguments.length,e=Array(t),n=0;n<t;n++)e[n]=arguments[n];return this.forward(e,"warn","WARNING DEPRECATED: ",!0)},t.prototype.forward=function(t,e,n,o){return o&&!this.debug?null:("string"==typeof t[0]&&(t[0]=""+n+this.prefix+" "+t[0]),this.logger[e](t))},t.prototype.create=function(e){return new t(this.logger,k({prefix:this.prefix+":"+e+":"},this.options))},t}(),C=new P,R=function(){function t(){S(this,t),this.observers={}}return t.prototype.on=function(t,e){var n=this;t.split(" ").forEach(function(t){n.observers[t]=n.observers[t]||[],n.observers[t].push(e)})},t.prototype.off=function(t,e){var n=this;this.observers[t]&&this.observers[t].forEach(function(){if(e){var o=n.observers[t].indexOf(e);o>-1&&n.observers[t].splice(o,1)}else delete n.observers[t]})},t.prototype.emit=function(t){for(var e=arguments.length,n=Array(e>1?e-1:0),o=1;o<e;o++)n[o-1]=arguments[o];if(this.observers[t]){var r=[].concat(this.observers[t]);r.forEach(function(t){t.apply(void 0,n)})}if(this.observers["*"]){var i=[].concat(this.observers["*"]);i.forEach(function(e){var o;e.apply(e,(o=[t]).concat.apply(o,n))})}},t}(),E={"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","/":"&#x2F;"},A=function(t){function e(){var n=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},o=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{ns:["translation"],defaultNS:"translation"};S(this,e);var r=O(this,t.call(this));return r.data=n,r.options=o,r}return w(e,t),e.prototype.addNamespaces=function(t){this.options.ns.indexOf(t)<0&&this.options.ns.push(t)},e.prototype.removeNamespaces=function(t){var e=this.options.ns.indexOf(t);e>-1&&this.options.ns.splice(e,1)},e.prototype.getResource=function(t,e,n){var o=arguments.length>3&&void 0!==arguments[3]?arguments[3]:{},r=o.keySeparator||this.options.keySeparator;void 0===r&&(r=".");var a=[t,e];return n&&"string"!=typeof n&&(a=a.concat(n)),n&&"string"==typeof n&&(a=a.concat(r?n.split(r):n)),t.indexOf(".")>-1&&(a=t.split(".")),i(this.data,a)},e.prototype.addResource=function(t,e,n,r){var i=arguments.length>4&&void 0!==arguments[4]?arguments[4]:{silent:!1},a=this.options.keySeparator;void 0===a&&(a=".");var s=[t,e];n&&(s=s.concat(a?n.split(a):n)),t.indexOf(".")>-1&&(s=t.split("."),r=e,e=s[1]),this.addNamespaces(e),o(this.data,s,r),i.silent||this.emit("added",t,e,n,r)},e.prototype.addResources=function(t,e,n){for(var o in n)"string"==typeof n[o]&&this.addResource(t,e,o,n[o],{silent:!0});this.emit("added",t,e,n)},e.prototype.addResourceBundle=function(t,e,n,r,s){var l=[t,e];t.indexOf(".")>-1&&(l=t.split("."),r=n,n=e,e=l[1]),this.addNamespaces(e);var u=i(this.data,l)||{};r?a(u,n,s):u=k({},u,n),o(this.data,l,u),this.emit("added",t,e,n)},e.prototype.removeResourceBundle=function(t,e){this.hasResourceBundle(t,e)&&delete this.data[t][e],this.removeNamespaces(e),this.emit("removed",t,e)},e.prototype.hasResourceBundle=function(t,e){return void 0!==this.getResource(t,e)},e.prototype.getResourceBundle=function(t,e){return e||(e=this.options.defaultNS),"v1"===this.options.compatibilityAPI?k({},this.getResource(t,e)):this.getResource(t,e)},e.prototype.toJSON=function(){return this.data},e}(R),T={processors:{},addPostProcessor:function(t){this.processors[t.name]=t},handle:function(t,e,n,o,r){var i=this;return t.forEach(function(t){i.processors[t]&&(e=i.processors[t].process(e,n,o,r))}),e}},M=function(t){function n(o){var r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{};S(this,n);var i=O(this,t.call(this));return e(["resourceStore","languageUtils","pluralResolver","interpolator","backendConnector"],o,i),i.options=r,i.logger=C.create("translator"),i}return w(n,t),n.prototype.changeLanguage=function(t){t&&(this.language=t)},n.prototype.exists=function(t){var e=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{interpolation:{}};return"v1"===this.options.compatibilityAPI&&(e=f(e)),void 0!==this.resolve(t,e)},n.prototype.extractFromKey=function(t,e){var n=e.nsSeparator||this.options.nsSeparator;void 0===n&&(n=":");var o=e.keySeparator||this.options.keySeparator||".",r=e.ns||this.options.defaultNS;if(n&&t.indexOf(n)>-1){var i=t.split(n);(n!==o||n===o&&this.options.ns.indexOf(i[0])>-1)&&(r=i.shift()),t=i.join(o)}return"string"==typeof r&&(r=[r]),{key:t,namespaces:r}},n.prototype.translate=function(t){var e=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{};if("object"!==("undefined"==typeof e?"undefined":x(e))?e=this.options.overloadTranslationOptionHandler(arguments):"v1"===this.options.compatibilityAPI&&(e=f(e)),void 0===t||null===t||""===t)return"";"number"==typeof t&&(t=String(t)),"string"==typeof t&&(t=[t]);var n=e.keySeparator||this.options.keySeparator||".",o=this.extractFromKey(t[t.length-1],e),r=o.key,i=o.namespaces,a=i[i.length-1],s=e.lng||this.language,l=e.appendNamespaceToCIMode||this.options.appendNamespaceToCIMode;if(s&&"cimode"===s.toLowerCase()){if(l){var u=e.nsSeparator||this.options.nsSeparator;return a+u+r}return r}var c=this.resolve(t,e),p=Object.prototype.toString.apply(c),g=["[object Number]","[object Function]","[object RegExp]"],h=void 0!==e.joinArrays?e.joinArrays:this.options.joinArrays;if(c&&"string"!=typeof c&&g.indexOf(p)<0&&(!h||"[object Array]"!==p)){if(!e.returnObjects&&!this.options.returnObjects)return this.logger.warn("accessing an object - but returnObjects options is not enabled!"),this.options.returnedObjectHandler?this.options.returnedObjectHandler(r,c,e):"key '"+r+" ("+this.language+")' returned an object instead of string.";if(e.keySeparator||this.options.keySeparator){var d="[object Array]"===p?[]:{};for(var y in c)Object.prototype.hasOwnProperty.call(c,y)&&(d[y]=this.translate(""+r+n+y,k({},e,{joinArrays:!1,ns:i})));c=d}}else if(h&&"[object Array]"===p)c=c.join(h),c&&(c=this.extendTranslation(c,r,e));else{var v=!1,b=!1;if(this.isValidLookup(c)||void 0===e.defaultValue||(v=!0,c=e.defaultValue),this.isValidLookup(c)||(b=!0,c=r),b||v){this.logger.log("missingKey",s,a,r,c);var m=[],S=this.languageUtils.getFallbackCodes(this.options.fallbackLng,e.lng||this.language);if("fallback"===this.options.saveMissingTo&&S&&S[0])for(var w=0;w<S.length;w++)m.push(S[w]);else"all"===this.options.saveMissingTo?m=this.languageUtils.toResolveHierarchy(e.lng||this.language):m.push(e.lng||this.language);this.options.saveMissing&&(this.options.missingKeyHandler?this.options.missingKeyHandler(m,a,r,c):this.backendConnector&&this.backendConnector.saveMissing&&this.backendConnector.saveMissing(m,a,r,c)),this.emit("missingKey",m,a,r,c)}c=this.extendTranslation(c,r,e),b&&c===r&&this.options.appendNamespaceToMissingKey&&(c=a+":"+r),b&&this.options.parseMissingKeyHandler&&(c=this.options.parseMissingKeyHandler(c))}return c},n.prototype.extendTranslation=function(t,e,n){var o=this;n.interpolation&&this.interpolator.init(k({},n,{interpolation:k({},this.options.interpolation,n.interpolation)}));var r=n.replace&&"string"!=typeof n.replace?n.replace:n;this.options.interpolation.defaultVariables&&(r=k({},this.options.interpolation.defaultVariables,r)),t=this.interpolator.interpolate(t,r,n.lng||this.language),n.nest!==!1&&(t=this.interpolator.nest(t,function(){return o.translate.apply(o,arguments)},n)),n.interpolation&&this.interpolator.reset();var i=n.postProcess||this.options.postProcess,a="string"==typeof i?[i]:i;return void 0!==t&&a&&a.length&&n.applyPostProcessor!==!1&&(t=T.handle(a,t,e,n,this)),t},n.prototype.resolve=function(t){var e=this,n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{},o=void 0;return"string"==typeof t&&(t=[t]),t.forEach(function(t){if(!e.isValidLookup(o)){var r=e.extractFromKey(t,n),i=r.key,a=r.namespaces;e.options.fallbackNS&&(a=a.concat(e.options.fallbackNS));var s=void 0!==n.count&&"string"!=typeof n.count,l=void 0!==n.context&&"string"==typeof n.context&&""!==n.context,u=n.lngs?n.lngs:e.languageUtils.toResolveHierarchy(n.lng||e.language);a.forEach(function(t){e.isValidLookup(o)||u.forEach(function(r){if(!e.isValidLookup(o)){var a=i,u=[a],c=void 0;s&&(c=e.pluralResolver.getSuffix(r,n.count)),s&&l&&u.push(a+c),l&&u.push(a+=""+e.options.contextSeparator+n.context),s&&u.push(a+=c);for(var p=void 0;p=u.pop();)e.isValidLookup(o)||(o=e.getResource(r,t,p,n))}})})}}),o},n.prototype.isValidLookup=function(t){return!(void 0===t||!this.options.returnNull&&null===t||!this.options.returnEmptyString&&""===t)},n.prototype.getResource=function(t,e,n){var o=arguments.length>3&&void 0!==arguments[3]?arguments[3]:{};return this.resourceStore.getResource(t,e,n,o)},n}(R),_=function(){function t(e){S(this,t),this.options=e,this.whitelist=this.options.whitelist||!1,this.logger=C.create("languageUtils")}return t.prototype.getScriptPartFromCode=function(t){if(!t||t.indexOf("-")<0)return null;var e=t.split("-");return 2===e.length?null:(e.pop(),this.formatLanguageCode(e.join("-")))},t.prototype.getLanguagePartFromCode=function(t){if(!t||t.indexOf("-")<0)return t;var e=t.split("-");return this.formatLanguageCode(e[0])},t.prototype.formatLanguageCode=function(t){if("string"==typeof t&&t.indexOf("-")>-1){var e=["hans","hant","latn","cyrl","cans","mong","arab"],n=t.split("-");return this.options.lowerCaseLng?n=n.map(function(t){return t.toLowerCase()}):2===n.length?(n[0]=n[0].toLowerCase(),n[1]=n[1].toUpperCase(),e.indexOf(n[1].toLowerCase())>-1&&(n[1]=h(n[1].toLowerCase()))):3===n.length&&(n[0]=n[0].toLowerCase(),2===n[1].length&&(n[1]=n[1].toUpperCase()),"sgn"!==n[0]&&2===n[2].length&&(n[2]=n[2].toUpperCase()),e.indexOf(n[1].toLowerCase())>-1&&(n[1]=h(n[1].toLowerCase())),e.indexOf(n[2].toLowerCase())>-1&&(n[2]=h(n[2].toLowerCase()))),n.join("-")}return this.options.cleanCode||this.options.lowerCaseLng?t.toLowerCase():t},t.prototype.isWhitelisted=function(t){return("languageOnly"===this.options.load||this.options.nonExplicitWhitelist)&&(t=this.getLanguagePartFromCode(t)),!this.whitelist||!this.whitelist.length||this.whitelist.indexOf(t)>-1},t.prototype.getFallbackCodes=function(t,e){if(!t)return[];if("string"==typeof t&&(t=[t]),"[object Array]"===Object.prototype.toString.apply(t))return t;if(!e)return t.default||[];var n=t[e];return n||(n=t[this.getScriptPartFromCode(e)]),n||(n=t[this.formatLanguageCode(e)]),n||(n=t.default),n||[]},t.prototype.toResolveHierarchy=function(t,e){var n=this,o=this.getFallbackCodes(e||this.options.fallbackLng||[],t),r=[],i=function(t){t&&(n.isWhitelisted(t)?r.push(t):n.logger.warn("rejecting non-whitelisted language code: "+t))};return"string"==typeof t&&t.indexOf("-")>-1?("languageOnly"!==this.options.load&&i(this.formatLanguageCode(t)),"languageOnly"!==this.options.load&&"currentOnly"!==this.options.load&&i(this.getScriptPartFromCode(t)),"currentOnly"!==this.options.load&&i(this.getLanguagePartFromCode(t))):"string"==typeof t&&i(this.formatLanguageCode(t)),o.forEach(function(t){r.indexOf(t)<0&&i(n.formatLanguageCode(t))}),r},t}(),H=[{lngs:["ach","ak","am","arn","br","fil","gun","ln","mfe","mg","mi","oc","tg","ti","tr","uz","wa"],nr:[1,2],fc:1},{lngs:["af","an","ast","az","bg","bn","ca","da","de","dev","el","en","eo","es","es_ar","et","eu","fi","fo","fur","fy","gl","gu","ha","he","hi","hu","hy","ia","it","kn","ku","lb","mai","ml","mn","mr","nah","nap","nb","ne","nl","nn","no","nso","pa","pap","pms","ps","pt","pt_br","rm","sco","se","si","so","son","sq","sv","sw","ta","te","tk","ur","yo"],nr:[1,2],fc:2},{lngs:["ay","bo","cgg","fa","id","ja","jbo","ka","kk","km","ko","ky","lo","ms","sah","su","th","tt","ug","vi","wo","zh"],nr:[1],fc:3},{lngs:["be","bs","dz","hr","ru","sr","uk"],nr:[1,2,5],fc:4},{lngs:["ar"],nr:[0,1,2,3,11,100],fc:5},{lngs:["cs","sk"],nr:[1,2,5],fc:6},{lngs:["csb","pl"],nr:[1,2,5],fc:7},{lngs:["cy"],nr:[1,2,3,8],fc:8},{lngs:["fr"],nr:[1,2],fc:9},{lngs:["ga"],nr:[1,2,3,7,11],fc:10},{lngs:["gd"],nr:[1,2,3,20],fc:11},{lngs:["is"],nr:[1,2],fc:12},{lngs:["jv"],nr:[0,1],fc:13},{lngs:["kw"],nr:[1,2,3,4],fc:14},{lngs:["lt"],nr:[1,2,10],fc:15},{lngs:["lv"],nr:[1,2,0],fc:16},{lngs:["mk"],nr:[1,2],fc:17},{lngs:["mnk"],nr:[0,1,2],fc:18},{lngs:["mt"],nr:[1,2,11,20],fc:19},{lngs:["or"],nr:[2,1],fc:2},{lngs:["ro"],nr:[1,2,20],fc:20},{lngs:["sl"],nr:[5,1,2,3],fc:21}],U={1:function(t){return Number(t>1)},2:function(t){return Number(1!=t)},3:function(t){return 0},4:function(t){return Number(t%10==1&&t%100!=11?0:t%10>=2&&t%10<=4&&(t%100<10||t%100>=20)?1:2)},5:function(t){return Number(0===t?0:1==t?1:2==t?2:t%100>=3&&t%100<=10?3:t%100>=11?4:5)},6:function(t){return Number(1==t?0:t>=2&&t<=4?1:2)},7:function(t){return Number(1==t?0:t%10>=2&&t%10<=4&&(t%100<10||t%100>=20)?1:2)},8:function(t){return Number(1==t?0:2==t?1:8!=t&&11!=t?2:3)},9:function(t){return Number(t>=2)},10:function(t){return Number(1==t?0:2==t?1:t<7?2:t<11?3:4)},11:function(t){return Number(1==t||11==t?0:2==t||12==t?1:t>2&&t<20?2:3)},12:function(t){return Number(t%10!=1||t%100==11)},13:function(t){return Number(0!==t)},14:function(t){return Number(1==t?0:2==t?1:3==t?2:3)},15:function(t){return Number(t%10==1&&t%100!=11?0:t%10>=2&&(t%100<10||t%100>=20)?1:2)},16:function(t){return Number(t%10==1&&t%100!=11?0:0!==t?1:2)},17:function(t){return Number(1==t||t%10==1?0:1)},18:function(t){return Number(0==t?0:1==t?1:2)},19:function(t){return Number(1==t?0:0===t||t%100>1&&t%100<11?1:t%100>10&&t%100<20?2:3)},20:function(t){return Number(1==t?0:0===t||t%100>0&&t%100<20?1:2)},21:function(t){return Number(t%100==1?1:t%100==2?2:t%100==3||t%100==4?3:0)}},V=function(){function t(e){var n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{};S(this,t),this.languageUtils=e,this.options=n,this.logger=C.create("pluralResolver"),this.rules=d()}return t.prototype.addRule=function(t,e){this.rules[t]=e},t.prototype.getRule=function(t){return this.rules[this.languageUtils.getLanguagePartFromCode(t)]},t.prototype.needsPlural=function(t){var e=this.getRule(t);return e&&e.numbers.length>1},t.prototype.getSuffix=function(t,e){var n=this,o=this.getRule(t);if(o){if(1===o.numbers.length)return"";var r=o.noAbs?o.plurals(e):o.plurals(Math.abs(e)),i=o.numbers[r];this.options.simplifyPluralSuffix&&2===o.numbers.length&&1===o.numbers[0]&&(2===i?i="plural":1===i&&(i=""));var a=function(){return n.options.prepend&&i.toString()?n.options.prepend+i.toString():i.toString()};return"v1"===this.options.compatibilityJSON?1===i?"":"number"==typeof i?"_plural_"+i.toString():a():"v2"===this.options.compatibilityJSON||2===o.numbers.length&&1===o.numbers[0]?a():2===o.numbers.length&&1===o.numbers[0]?a():this.options.prepend&&r.toString()?this.options.prepend+r.toString():r.toString()}return this.logger.warn("no plural rule found for: "+t),""},t}(),I=function(){function e(){var t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{};S(this,e),this.logger=C.create("interpolator"),this.init(t,!0)}return e.prototype.init=function(){var t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},e=arguments[1];e&&(this.options=t,this.format=t.interpolation&&t.interpolation.format||function(t){return t},this.escape=t.interpolation&&t.interpolation.escape||l),t.interpolation||(t.interpolation={escapeValue:!0});var n=t.interpolation;this.escapeValue=void 0===n.escapeValue||n.escapeValue,this.prefix=n.prefix?s(n.prefix):n.prefixEscaped||"{{",this.suffix=n.suffix?s(n.suffix):n.suffixEscaped||"}}",this.formatSeparator=n.formatSeparator?n.formatSeparator:n.formatSeparator||",",this.unescapePrefix=n.unescapeSuffix?"":n.unescapePrefix||"-",this.unescapeSuffix=this.unescapePrefix?"":n.unescapeSuffix||"",this.nestingPrefix=n.nestingPrefix?s(n.nestingPrefix):n.nestingPrefixEscaped||s("$t("),this.nestingSuffix=n.nestingSuffix?s(n.nestingSuffix):n.nestingSuffixEscaped||s(")"),this.resetRegExp()},e.prototype.reset=function(){this.options&&this.init(this.options)},e.prototype.resetRegExp=function(){var t=this.prefix+"(.+?)"+this.suffix;this.regexp=new RegExp(t,"g");var e=""+this.prefix+this.unescapePrefix+"(.+?)"+this.unescapeSuffix+this.suffix;this.regexpUnescape=new RegExp(e,"g");var n=this.nestingPrefix+"(.+?)"+this.nestingSuffix;this.nestingRegexp=new RegExp(n,"g")},e.prototype.interpolate=function(e,n,o){function r(t){return t.replace(/\$/g,"$$$$")}var a=this,s=void 0,l=void 0,u=function(t){if(t.indexOf(a.formatSeparator)<0)return i(n,t);var e=t.split(a.formatSeparator),r=e.shift().trim(),s=e.join(a.formatSeparator).trim();return a.format(i(n,r),s,o)};for(this.resetRegExp();s=this.regexpUnescape.exec(e);)l=u(s[1].trim()),e=e.replace(s[0],l),this.regexpUnescape.lastIndex=0;for(;s=this.regexp.exec(e);)l=u(s[1].trim()),"string"!=typeof l&&(l=t(l)),l||(this.logger.warn("missed to pass in variable "+s[1]+" for interpolating "+e),l=""),l=r(this.escapeValue?this.escape(l):l),e=e.replace(s[0],l),this.regexp.lastIndex=0;return e},e.prototype.nest=function(e,n){function o(t){if(t.indexOf(",")<0)return t;var e=t.split(",");t=e.shift();var n=e.join(",");n=this.interpolate(n,s),n=n.replace(/'/g,'"');try{s=JSON.parse(n)}catch(e){this.logger.error("failed parsing options string in nesting for key "+t,e)}return t}var r=arguments.length>2&&void 0!==arguments[2]?arguments[2]:{},i=void 0,a=void 0,s=k({},r);for(s.applyPostProcessor=!1;i=this.nestingRegexp.exec(e);){if(a=n(o.call(this,i[1].trim()),s),a&&i[0]===e&&"string"!=typeof a)return a;"string"!=typeof a&&(a=t(a)),a||(this.logger.warn("missed to resolve "+i[1]+" for nesting "+e),a=""),e=e.replace(i[0],a),this.regexp.lastIndex=0}return e},e}(),F=function(t){function e(n,o,r){var i=arguments.length>3&&void 0!==arguments[3]?arguments[3]:{};S(this,e);var a=O(this,t.call(this));return a.backend=n,a.store=o,a.services=r,a.options=i,a.logger=C.create("backendConnector"),a.state={},a.queue=[],a.backend&&a.backend.init&&a.backend.init(r,i.backend,i),a}return w(e,t),e.prototype.queueLoad=function(t,e,n){var o=this,r=[],i=[],a=[],s=[];return t.forEach(function(t){var n=!0;e.forEach(function(e){var a=t+"|"+e;o.store.hasResourceBundle(t,e)?o.state[a]=2:o.state[a]<0||(1===o.state[a]?i.indexOf(a)<0&&i.push(a):(o.state[a]=1,n=!1,i.indexOf(a)<0&&i.push(a),r.indexOf(a)<0&&r.push(a),s.indexOf(e)<0&&s.push(e)))}),n||a.push(t)}),(r.length||i.length)&&this.queue.push({pending:i,loaded:{},errors:[],callback:n}),{toLoad:r,pending:i,toLoadLanguages:a,toLoadNamespaces:s}},e.prototype.loaded=function(t,e,n){var o=this,i=t.split("|"),a=L(i,2),s=a[0],l=a[1];e&&this.emit("failedLoading",s,l,e),n&&this.store.addResourceBundle(s,l,n),this.state[t]=e?-1:2,this.queue.forEach(function(n){r(n.loaded,[s],l),y(n.pending,t),e&&n.errors.push(e),0!==n.pending.length||n.done||(o.emit("loaded",n.loaded),n.done=!0,n.errors.length?n.callback(n.errors):n.callback())}),this.queue=this.queue.filter(function(t){return!t.done})},e.prototype.read=function(t,e,n){var o=arguments.length>3&&void 0!==arguments[3]?arguments[3]:0,r=this,i=arguments.length>4&&void 0!==arguments[4]?arguments[4]:250,a=arguments[5];return t.length?this.backend[n](t,e,function(s,l){return s&&l&&o<5?void setTimeout(function(){r.read.call(r,t,e,n,o+1,2*i,a)},i):void a(s,l)}):a(null,{})},e.prototype.load=function(t,e,n){var o=this;if(!this.backend)return this.logger.warn("No backend was added via i18next.use. Will not load resources."),n&&n();var r=k({},this.backend.options,this.options.backend);"string"==typeof t&&(t=this.services.languageUtils.toResolveHierarchy(t)),"string"==typeof e&&(e=[e]);var a=this.queueLoad(t,e,n);return a.toLoad.length?void(r.allowMultiLoading&&this.backend.readMulti?this.read(a.toLoadLanguages,a.toLoadNamespaces,"readMulti",null,null,function(t,e){t&&o.logger.warn("loading namespaces "+a.toLoadNamespaces.join(", ")+" for languages "+a.toLoadLanguages.join(", ")+" via multiloading failed",t),!t&&e&&o.logger.log("successfully loaded namespaces "+a.toLoadNamespaces.join(", ")+" for languages "+a.toLoadLanguages.join(", ")+" via multiloading",e),a.toLoad.forEach(function(n){var r=n.split("|"),a=L(r,2),s=a[0],l=a[1],u=i(e,[s,l]);if(u)o.loaded(n,t,u);else{var c="loading namespace "+l+" for language "+s+" via multiloading failed";o.loaded(n,c),o.logger.error(c)}})}):a.toLoad.forEach(function(t){o.loadOne(t)})):(a.pending.length||n(),null)},e.prototype.reload=function(t,e){var n=this;this.backend||this.logger.warn("No backend was added via i18next.use. Will not load resources.");var o=k({},this.backend.options,this.options.backend);"string"==typeof t&&(t=this.services.languageUtils.toResolveHierarchy(t)),"string"==typeof e&&(e=[e]),o.allowMultiLoading&&this.backend.readMulti?this.read(t,e,"readMulti",null,null,function(o,r){o&&n.logger.warn("reloading namespaces "+e.join(", ")+" for languages "+t.join(", ")+" via multiloading failed",o),!o&&r&&n.logger.log("successfully reloaded namespaces "+e.join(", ")+" for languages "+t.join(", ")+" via multiloading",r),t.forEach(function(t){e.forEach(function(e){var a=i(r,[t,e]);if(a)n.loaded(t+"|"+e,o,a);else{var s="reloading namespace "+e+" for language "+t+" via multiloading failed";n.loaded(t+"|"+e,s),n.logger.error(s)}})})}):t.forEach(function(t){e.forEach(function(e){n.loadOne(t+"|"+e,"re")})})},e.prototype.loadOne=function(t){var e=this,n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:"",o=t.split("|"),r=L(o,2),i=r[0],a=r[1];this.read(i,a,"read",null,null,function(o,r){o&&e.logger.warn(n+"loading namespace "+a+" for language "+i+" failed",o),!o&&r&&e.logger.log(n+"loaded namespace "+a+" for language "+i,r),e.loaded(t,o,r)})},e.prototype.saveMissing=function(t,e,n,o){this.backend&&this.backend.create&&this.backend.create(t,e,n,o),t&&t[0]&&this.store.addResource(t[0],e,n,o)},e}(R),D=function(t){function e(n,o,r){var i=arguments.length>3&&void 0!==arguments[3]?arguments[3]:{};S(this,e);var a=O(this,t.call(this));return a.cache=n,a.store=o,a.services=r,a.options=i,a.logger=C.create("cacheConnector"),a.cache&&a.cache.init&&a.cache.init(r,i.cache,i),a}return w(e,t),e.prototype.load=function(t,e,n){var o=this;if(!this.cache)return n&&n();var r=k({},this.cache.options,this.options.cache),i="string"==typeof t?this.services.languageUtils.toResolveHierarchy(t):t;r.enabled?this.cache.load(i,function(t,e){if(t&&o.logger.error("loading languages "+i.join(", ")+" from cache failed",t),e)for(var r in e)if(Object.prototype.hasOwnProperty.call(e,r))for(var a in e[r])if(Object.prototype.hasOwnProperty.call(e[r],a)&&"i18nStamp"!==a){var s=e[r][a];s&&o.store.addResourceBundle(r,a,s)}n&&n()}):n&&n()},e.prototype.save=function(){this.cache&&this.options.cache&&this.options.cache.enabled&&this.cache.save(this.store.data)},e}(R),K=function(t){function e(){var n=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},o=arguments[1];S(this,e);var r=O(this,t.call(this));if(r.options=b(n),r.services={},r.logger=C,r.modules={external:[]},o&&!r.isInitialized&&!n.isClone){var i;if(!r.options.initImmediate)return i=r.init(n,o),O(r,i);setTimeout(function(){r.init(n,o)},0)}return r}return w(e,t),e.prototype.init=function(t,e){function n(t){return t?"function"==typeof t?new t:t:null}var o=this;if("function"==typeof t&&(e=t,t={}),t||(t={}),"v1"===t.compatibilityAPI?this.options=k({},v(),b(c(t)),{}):"v1"===t.compatibilityJSON?this.options=k({},v(),b(p(t)),{}):this.options=k({},v(),this.options,b(t)),this.format=this.options.interpolation.format,e||(e=m),!this.options.isClone){this.modules.logger?C.init(n(this.modules.logger),this.options):C.init(null,this.options);var r=new _(this.options);this.store=new A(this.options.resources,this.options);var i=this.services;i.logger=C,i.resourceStore=this.store,i.resourceStore.on("added removed",function(t,e){i.cacheConnector.save()}),i.languageUtils=r,i.pluralResolver=new V(r,{prepend:this.options.pluralSeparator,compatibilityJSON:this.options.compatibilityJSON,simplifyPluralSuffix:this.options.simplifyPluralSuffix}),i.interpolator=new I(this.options),i.backendConnector=new F(n(this.modules.backend),i.resourceStore,i,this.options),i.backendConnector.on("*",function(t){for(var e=arguments.length,n=Array(e>1?e-1:0),r=1;r<e;r++)n[r-1]=arguments[r];o.emit.apply(o,[t].concat(n))}),i.backendConnector.on("loaded",function(t){i.cacheConnector.save()}),i.cacheConnector=new D(n(this.modules.cache),i.resourceStore,i,this.options),i.cacheConnector.on("*",function(t){for(var e=arguments.length,n=Array(e>1?e-1:0),r=1;r<e;r++)n[r-1]=arguments[r];o.emit.apply(o,[t].concat(n))}),this.modules.languageDetector&&(i.languageDetector=n(this.modules.languageDetector),i.languageDetector.init(i,this.options.detection,this.options)),this.translator=new M(this.services,this.options),
-this.translator.on("*",function(t){for(var e=arguments.length,n=Array(e>1?e-1:0),r=1;r<e;r++)n[r-1]=arguments[r];o.emit.apply(o,[t].concat(n))}),this.modules.external.forEach(function(t){t.init&&t.init(o)})}var a=["getResource","addResource","addResources","addResourceBundle","removeResourceBundle","hasResourceBundle","getResourceBundle"];a.forEach(function(t){o[t]=function(){var e;return(e=o.store)[t].apply(e,arguments)}}),"v1"===this.options.compatibilityAPI&&g(this);var s=function(){o.changeLanguage(o.options.lng,function(t,n){o.isInitialized=!0,o.logger.log("initialized",o.options),o.emit("initialized",o.options),e(t,n)})};return this.options.resources||!this.options.initImmediate?s():setTimeout(s,0),this},e.prototype.loadResources=function(){var t=this,e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:m;if(this.options.resources)e(null);else{if(this.language&&"cimode"===this.language.toLowerCase())return e();var n=[],o=function(e){if(e){var o=t.services.languageUtils.toResolveHierarchy(e);o.forEach(function(t){n.indexOf(t)<0&&n.push(t)})}};if(this.language)o(this.language);else{var r=this.services.languageUtils.getFallbackCodes(this.options.fallbackLng);r.forEach(function(t){return o(t)})}this.options.preload&&this.options.preload.forEach(function(t){return o(t)}),this.services.cacheConnector.load(n,this.options.ns,function(){t.services.backendConnector.load(n,t.options.ns,e)})}},e.prototype.reloadResources=function(t,e){t||(t=this.languages),e||(e=this.options.ns),this.services.backendConnector.reload(t,e)},e.prototype.use=function(t){return"backend"===t.type&&(this.modules.backend=t),"cache"===t.type&&(this.modules.cache=t),("logger"===t.type||t.log&&t.warn&&t.error)&&(this.modules.logger=t),"languageDetector"===t.type&&(this.modules.languageDetector=t),"postProcessor"===t.type&&T.addPostProcessor(t),"3rdParty"===t.type&&this.modules.external.push(t),this},e.prototype.changeLanguage=function(t,e){var n=this,o=function(t,o){o&&(n.emit("languageChanged",o),n.logger.log("languageChanged",o)),e&&e(t,function(){return n.t.apply(n,arguments)})},r=function(t){t&&(n.language=t,n.languages=n.services.languageUtils.toResolveHierarchy(t),n.translator.changeLanguage(t),n.services.languageDetector&&n.services.languageDetector.cacheUserLanguage(t)),n.loadResources(function(e){o(e,t)})};t||!this.services.languageDetector||this.services.languageDetector.async?!t&&this.services.languageDetector&&this.services.languageDetector.async?this.services.languageDetector.detect(r):r(t):r(this.services.languageDetector.detect())},e.prototype.getFixedT=function(t,e){var n=this,o=function t(e){var o=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{},r=k({},o);return r.lng=r.lng||t.lng,r.lngs=r.lngs||t.lngs,r.ns=r.ns||t.ns,n.t(e,r)};return"string"==typeof t?o.lng=t:o.lngs=t,o.ns=e,o},e.prototype.t=function(){var t;return this.translator&&(t=this.translator).translate.apply(t,arguments)},e.prototype.exists=function(){var t;return this.translator&&(t=this.translator).exists.apply(t,arguments)},e.prototype.setDefaultNamespace=function(t){this.options.defaultNS=t},e.prototype.loadNamespaces=function(t,e){var n=this;return this.options.ns?("string"==typeof t&&(t=[t]),t.forEach(function(t){n.options.ns.indexOf(t)<0&&n.options.ns.push(t)}),void this.loadResources(e)):e&&e()},e.prototype.loadLanguages=function(t,e){"string"==typeof t&&(t=[t]);var n=this.options.preload||[],o=t.filter(function(t){return n.indexOf(t)<0});return o.length?(this.options.preload=n.concat(o),void this.loadResources(e)):e()},e.prototype.dir=function(t){if(t||(t=this.languages&&this.languages.length>0?this.languages[0]:this.language),!t)return"rtl";var e=["ar","shu","sqr","ssh","xaa","yhd","yud","aao","abh","abv","acm","acq","acw","acx","acy","adf","ads","aeb","aec","afb","ajp","apc","apd","arb","arq","ars","ary","arz","auz","avl","ayh","ayl","ayn","ayp","bbz","pga","he","iw","ps","pbt","pbu","pst","prp","prd","ur","ydd","yds","yih","ji","yi","hbo","men","xmn","fa","jpr","peo","pes","prs","dv","sam"];return e.indexOf(this.services.languageUtils.getLanguagePartFromCode(t))>=0?"rtl":"ltr"},e.prototype.createInstance=function(){var t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},n=arguments[1];return new e(t,n)},e.prototype.cloneInstance=function(){var t=this,n=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},o=arguments.length>1&&void 0!==arguments[1]?arguments[1]:m,r=k({},this.options,n,{isClone:!0}),i=new e(r,o),a=["store","services","language"];return a.forEach(function(e){i[e]=t[e]}),i.translator=new M(i.services,i.options),i.translator.on("*",function(t){for(var e=arguments.length,n=Array(e>1?e-1:0),o=1;o<e;o++)n[o-1]=arguments[o];i.emit.apply(i,[t].concat(n))}),i.init(r,o),i},e}(R),q=new K;return q})
-
-    window['i18next'] = module.exports;
-});
-
-/** @file Stuff to do with loading from JSON objects. Provides {@link Numbas.json}. */
-
-Numbas.queueScript('json',['base'],function() {
-/** @namespace Numbas.json */
-var json = Numbas.json = {
-    /** Try to load an attribute with name from `attr` from `source` into `target`.
-     *  Tries lower-case 
-     *  @param {Object} source - object to load value(s) from
-     *  @param {String|Array.<String>} attrs - the name, or list of names, of attributes to load
-     *  @param {Object} target - object to set values in
-     *  @param {String|Array.<String>} altnames - the name, or list of names, to set in the target object
-     */
-    tryLoad: function(source,attrs,target,altnames) {
-        if(!source) {
-            return;
-        }
-        if(typeof(attrs)=='string') {
-            attrs = [attrs];
-            altnames = altnames && [altnames];
-        }
-
-        altnames = altnames || [];
-
-        for(var i=0;i<attrs.length;i++) {
-            var attr = attrs[i];
-            var target_attr = altnames[i] || attr;
-            var value = json.tryGet(source, attr);
-            if(value!==undefined) {
-                if(target_attr in target && typeof target[target_attr] == 'string') {
-                    value += '';
-                }
-                target[target_attr] = value;
-            }
-        }
-    },
-
-    /** Try to load an attribute with the given name from `source`. The given name and its lower-case equivalent are tried.
-     * @param {Object} source
-     * @param {String} attr
-     */
-    tryGet: function(source, attr) {
-        if(attr in source) {
-            return source[attr];
-        } else if(attr.toLowerCase() in source) {
-            return source[attr.toLowerCase()]
-        }
-    }
-}
-});
-
 /*
 Copyright 2011-15 Newcastle University
 
@@ -14450,74 +14563,232 @@ Copyright 2011-15 Newcastle University
    limitations under the License.
 */
 
-/** @file The {@link Numbas.parts.} object */
+/** @file The {@link Numbas.parts.NumberEntryPart} object */
 
-Numbas.queueScript('parts/extension',['base','util','part'],function() {
+Numbas.queueScript('parts/numberentry',['base','jme','jme-variables','util','part','marking_scripts'],function() {
 
 var util = Numbas.util;
+var jme = Numbas.jme;
+var math = Numbas.math;
 
 var Part = Numbas.parts.Part;
 
-/** Extension part - validation and marking should be filled in by an extension, or custom javascript code belonging to the question.
+/** Number entry part - student's answer must be within given range, and written to required precision.
  * @constructor
  * @memberof Numbas.parts
  * @augments Numbas.parts.Part
  */
-var ExtensionPart = Numbas.parts.ExtensionPart = function(path, question, parentPart)
+var NumberEntryPart = Numbas.parts.NumberEntryPart = function(xml, path, question, parentPart, loading)
 {
+	var settings = this.settings;
+	util.copyinto(NumberEntryPart.prototype.settings,settings);
 }
-ExtensionPart.prototype = /** @lends Numbas.parts.ExtensionPart.prototype */ {
-    loadFromXML: function() {},
+NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
+{
+    loadFromXML: function(xml) {
+        var settings = this.settings;
+        var tryGetAttribute = Numbas.xml.tryGetAttribute;
 
-    loadFromJSON: function() {},
+        tryGetAttribute(settings,xml,'answer',['minvalue','maxvalue'],['minvalueString','maxvalueString'],{string:true});
+        tryGetAttribute(settings,xml,'answer',['correctanswerfraction','correctanswerstyle','allowfractions'],['correctAnswerFraction','correctAnswerStyle','allowFractions']);
+        tryGetAttribute(settings,xml,'answer',['mustbereduced','mustbereducedpc'],['mustBeReduced','mustBeReducedPC']);
+
+        var answerNode = xml.selectSingleNode('answer');
+        var notationStyles = answerNode.getAttribute('notationstyles');
+        if(notationStyles) {
+            settings.notationStyles = notationStyles.split(',');
+        }
+        
+        tryGetAttribute(settings,xml,'answer/precision',['type','partialcredit','strict','showprecisionhint'],['precisionType','precisionPC','strictPrecision','showPrecisionHint']);
+        tryGetAttribute(settings,xml,'answer/precision','precision','precisionString',{'string':true});
+
+        var messageNode = xml.selectSingleNode('answer/precision/message');
+        if(messageNode) {
+            settings.precisionMessage = $.xsl.transform(Numbas.xml.templates.question,messageNode).string;
+        }
+
+    },
+
+    loadFromJSON: function(data) {
+        var settings = this.settings;
+        var tryLoad = Numbas.json.tryLoad;
+
+        tryLoad(data, ['minValue', 'maxValue'], settings, ['minvalueString', 'maxvalueString']);
+        tryLoad(data, ['correctAnswerFraction', 'correctAnswerStyle', 'allowFractions'], settings);
+        tryLoad(data, ['mustBeReduced', 'mustBeReducedPC'], settings);
+        tryLoad(data, ['notationStyles'], settings);
+        tryLoad(data, ['precisionPartialCredit', 'strictPrecision', 'showPrecisionHint', 'precision', 'precisionType', 'precisionMessage'], settings, ['precisionPC', 'strictPrecision', 'showPrecisionHint', 'precisionString', 'precisionType', 'precisionMessage']);
+    },
 
     finaliseLoad: function() {
+        var settings = this.settings;
+        if(settings.precisionType!='none') {
+            settings.allowFractions = false;
+        }
+
+        try {
+            this.getCorrectAnswer(this.getScope());
+        } catch(e) {
+            this.error(e.message);
+        }
+
+        var displayAnswer = (settings.minvalue + settings.maxvalue)/2;
+        if(settings.correctAnswerFraction) {
+            var diff = Math.abs(settings.maxvalue-settings.minvalue)/2;
+            var accuracy = Math.max(15,Math.ceil(-Math.log(diff)));
+            settings.displayAnswer = jme.display.jmeRationalNumber(displayAnswer,{accuracy:accuracy});
+        } else {
+            settings.displayAnswer = math.niceNumber(displayAnswer,{precisionType: settings.precisionType,precision:settings.precision, style: settings.correctAnswerStyle});
+        }
+
+        this.stagedAnswer = [''];
+
         if(Numbas.display) {
-        	this.display = new Numbas.display.ExtensionPartDisplay(this);
+            this.display = new Numbas.display.NumberEntryPartDisplay(this);
         }
     },
 
-	validate: function() {
-        return false;
-	},
-
-	hasStagedAnswer: function() {
-		return true;
-	},
-
-	doesMarking: true,
-
-    mark: function() {
-        this.markingComment(R('part.extension.not implemented',{name:'mark'}));
-    },
-
-    /** Return suspend data for this part so it can be restored when resuming the exam - must be implemented by an extension or the question.
-     * @ returns {object}
-     */
-    createSuspendData: function() {
-        return {};
-    },
-
-    /** Get the suspend data created in a previous session for this part, if it exists.
-     * @ param {object} data
-     */
-    loadSuspendData: function(data) {
+    resume: function() {
         if(!this.store) {
             return;
         }
-        var pobj = this.store.loadExtensionPart(this);
-        if(pobj) {
-            return pobj.extension_data;
+		var pobj = this.store.loadNumberEntryPart(this);
+		this.stagedAnswer = [pobj.studentAnswer+''];
+    },
+
+	/** The student's last submitted answer */
+	studentAnswer: '',
+
+    /** The script to mark this part - assign credit, and give messages and feedback.
+     * @type {Numbas.marking.MarkingScript}
+     */
+    markingScript: Numbas.marking_scripts.numberentry,
+
+	/** Properties set when the part is generated
+	 * Extends {@link Numbas.parts.Part#settings}
+	 * @property {Number} minvalueString - definition of minimum value, before variables are substituted in
+	 * @property {Number} minvalue - minimum value marked correct
+	 * @property {Number} maxvalueString - definition of maximum value, before variables are substituted in
+	 * @property {Number} maxvalue - maximum value marked correct
+	 * @property {Number} correctAnswerFraction - display the correct answer as a fraction?
+	 * @property {Boolean} allowFractions - can the student enter a fraction as their answer?
+     * @property {Array.<String>} notationStyles - styles of notation to allow, other than `<digits>.<digits>`. See {@link Numbas.util.re_decimal}.
+	 * @property {Number} displayAnswer - representative correct answer to display when revealing answers
+	 * @property {String} precisionType - type of precision restriction to apply: `none`, `dp` - decimal places, or `sigfig` - significant figures
+	 * @property {Number} precisionString - definition of precision setting, before variables are substituted in
+     * @property {Boolean} strictPrecision - must the student give exactly the required precision? If false, omitting trailing zeros is allowed.
+	 * @property {Number} precision - how many decimal places or significant figures to require
+	 * @property {Number} precisionPC - partial credit to award if the answer is between `minvalue` and `maxvalue` but not given to the required precision
+	 * @property {String} precisionMessage - message to display in the marking feedback if their answer was not given to the required precision
+	 * @property {Boolean} mustBeReduced - should the student enter a fraction in lowest terms
+	 * @property {Number} mustBeReducedPC - partial credit to award if the answer is not a reduced fraction
+	 */
+	settings:
+	{
+        minvalueString: '0',
+        maxvalueString: '0',
+		minvalue: 0,
+		maxvalue: 0,
+		correctAnswerFraction: false,
+		allowFractions: false,
+        notationStyles: ['en','si-en'],
+		displayAnswer: 0,
+		precisionType: 'none',
+        precisionString: '0',
+        strictPrecision: false,
+		precision: 0,
+		precisionPC: 0,
+		mustBeReduced: false,
+		mustBeReducedPC: 0,
+		precisionMessage: R('You have not given your answer to the correct precision.'),
+        showPrecisionHint: true
+	},
+
+	/** Compute the correct answer, based on the given scope
+	 */
+	getCorrectAnswer: function(scope) {
+		var settings = this.settings;
+
+		var precision = jme.subvars(settings.precisionString, scope);
+		settings.precision = scope.evaluate(precision).value;
+
+        if(settings.precisionType=='sigfig' && settings.precision<=0) {
+            throw(new Numbas.Error('part.numberentry.zero sig fig'));
         }
-    }
+
+        if(settings.precisionType=='dp' && settings.precision<0) {
+            throw(new Numbas.Error('part.numberentry.negative decimal places'));
+        }
+
+		var minvalue = jme.subvars(settings.minvalueString,scope);
+		minvalue = scope.evaluate(minvalue);
+		if(minvalue && minvalue.type=='number') {
+			minvalue = minvalue.value;
+		} else {
+			throw(new Numbas.Error('part.setting not present',{property:R('minimum value')}));
+		}
+
+		var maxvalue = jme.subvars(settings.maxvalueString,scope);
+		maxvalue = scope.evaluate(maxvalue);
+		if(maxvalue && maxvalue.type=='number') {
+			maxvalue = maxvalue.value;
+		} else {
+			throw(new Numbas.Error('part.setting not present',{property:R('maximum value')}));
+		}
+
+		switch(settings.precisionType) {
+		case 'dp':
+			minvalue = math.precround(minvalue,settings.precision);
+			maxvalue = math.precround(maxvalue,settings.precision);
+			break;
+		case 'sigfig':
+			minvalue = math.siground(minvalue,settings.precision);
+			maxvalue = math.siground(maxvalue,settings.precision);
+			break;
+		}
+
+		var fudge = 0.00000000001;
+		settings.minvalue = minvalue - fudge;
+		settings.maxvalue = maxvalue + fudge;
+	},
+
+	/** Tidy up the student's answer - at the moment, just remove space.
+     * You could override this to do more substantial filtering of the student's answer.
+	 * @param {String} answer
+	 * @returns {String}
+	 */
+	cleanAnswer: function(answer) {
+		answer = answer.toString().trim();
+		return answer;
+	},
+
+	/** Save a copy of the student's answer as entered on the page, for use in marking.
+	 */
+	setStudentAnswer: function() {
+		this.studentAnswer = this.cleanAnswer(this.stagedAnswer);
+	},
+
+	/** Get the student's answer as it was entered as a JME data type, to be used in the custom marking algorithm
+	 * @abstract
+	 * @returns {Numbas.jme.token}
+	 */
+	rawStudentAnswerAsJME: function() {
+		return new Numbas.jme.types.TString(this.studentAnswer);
+	},
+
+    /** Get the student's answer as a floating point number
+     * @returns {Number}
+     */
+	studentAnswerAsFloat: function() {
+		return util.parseNumber(this.studentAnswer,this.settings.allowFractions,this.settings.notationStyles);
+	}
 };
-['finaliseLoad','loadFromXML','loadFromJSON'].forEach(function(method) {
-    ExtensionPart.prototype[method] = util.extend(Part.prototype[method],ExtensionPart.prototype[method]);
+['loadFromXML','loadFromJSON','resume','finaliseLoad'].forEach(function(method) {
+    NumberEntryPart.prototype[method] = util.extend(Part.prototype[method], NumberEntryPart.prototype[method]);
 });
 
-Numbas.partConstructors['extension'] = util.extend(Part,ExtensionPart);
+Numbas.partConstructors['numberentry'] = util.extend(Part,NumberEntryPart);
 });
-
 /*
 Copyright 2011-15 Newcastle University
 
@@ -14691,7 +14962,6 @@ GapFillPart.prototype = /** @lends Numbas.parts.GapFillPart.prototype */
 
 Numbas.partConstructors['gapfill'] = util.extend(Part,GapFillPart);
 });
-
 /*
 Copyright 2011-15 Newcastle University
 
@@ -14723,7 +14993,7 @@ var Part = Numbas.parts.Part;
  * @memberof Numbas.parts
  * @augments Numbas.parts.Part
  */
-var InformationPart = Numbas.parts.InformationPart = function(xml, path, question, parentPart, loading)
+var InformationPart = Numbas.parts.InformationPart = function(path, question, parentPart, loading)
 {
 }
 InformationPart.prototype = /** @lends Numbas.parts.InformationOnlyPart.prototype */ {
@@ -14767,7 +15037,6 @@ InformationPart.prototype = /** @lends Numbas.parts.InformationOnlyPart.prototyp
 
 Numbas.partConstructors['information'] = util.extend(Part,InformationPart);
 });
-
 /*
 Copyright 2011-15 Newcastle University
 
@@ -15044,243 +15313,6 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
 Numbas.partConstructors['jme'] = util.extend(Part,JMEPart);
 
 });
-
-/*
-Copyright 2011-15 Newcastle University
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-*/
-
-/** @file The {@link Numbas.parts.MatrixEntryPart} object */
-
-Numbas.queueScript('parts/matrixentry',['base','jme','jme-variables','util','part','marking_scripts'],function() {
-
-var util = Numbas.util;
-var jme = Numbas.jme;
-var math = Numbas.math;
-
-var Part = Numbas.parts.Part;
-
-/** Matrix entry part - student enters a matrix of numbers
- * @constructor
- * @memberof Numbas.parts
- * @augments Numbas.parts.Part
- */
-var MatrixEntryPart = Numbas.parts.MatrixEntryPart = function(xml, path, question, parentPart, loading) {
-	var settings = this.settings;
-	util.copyinto(MatrixEntryPart.prototype.settings,settings);
-
-
-}
-MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
-{
-    loadFromXML: function(xml) {
-        var settings = this.settings;
-        var tryGetAttribute = Numbas.xml.tryGetAttribute;
-        tryGetAttribute(settings,xml,'answer',['correctanswer'],['correctAnswerString'],{string:true});
-        tryGetAttribute(settings,xml,'answer',['correctanswerfractions','rows','columns','allowresize','tolerance','markpercell','allowfractions'],['correctAnswerFractions','numRows','numColumns','allowResize','tolerance','markPerCell','allowFractions']);
-        tryGetAttribute(settings,xml,'answer/precision',['type','partialcredit','strict'],['precisionType','precisionPC','strictPrecision']);
-        tryGetAttribute(settings,xml,'answer/precision','precision','precisionString',{'string':true});
-
-        var messageNode = xml.selectSingleNode('answer/precision/message');
-        if(messageNode) {
-            settings.precisionMessage = $.xsl.transform(Numbas.xml.templates.question,messageNode).string;
-        }
-
-    },
-
-    loadFromJSON: function(data) {
-        var settings = this.settings;
-        var tryLoad = Numbas.json.tryLoad;
-
-        tryLoad(data,['correctAnswer', 'correctAnswerFractions', 'numRows', 'numColumns', 'allowResize', 'tolerance', 'markPerCell', 'allowFractions'], settings, ['correctAnswerString', 'correctAnswerFractions', 'numRows', 'numColumns', 'allowResize', 'tolerance', 'markPerCell', 'allowFractions']);
-        tryLoad(data,['precisionType', 'precision', 'precisionPartialCredit', 'precisionMessage', 'strictPrecision'], settings, ['precisionType', 'precision', 'precisionPC', 'precisionMessage', 'strictPrecision']);
-    },
-
-    resume: function() {
-        if(!this.store) {
-            return;
-        }
-		var pobj = this.store.loadMatrixEntryPart(this);
-		if(pobj.studentAnswer) {
-			var rows = pobj.studentAnswer.length;
-			var columns = rows>0 ? pobj.studentAnswer[0].length : 0;
-			this.stagedAnswer = [rows, columns, pobj.studentAnswer];
-		}
-    },
-
-    finaliseLoad: function() {
-        var settings = this.settings;
-        var scope = this.getScope();
-        var numRows = jme.subvars(settings.numRows, scope);
-        settings.numRows = scope.evaluate(numRows).value;
-
-        var numColumns = jme.subvars(settings.numColumns, scope);
-        settings.numColumns = scope.evaluate(numColumns).value;
-
-        var tolerance = jme.subvars(settings.tolerance, scope);
-        settings.tolerance = scope.evaluate(tolerance).value;
-        settings.tolerance = Math.max(settings.tolerance,0.00000000001);
-
-        if(settings.precisionType!='none') {
-            settings.allowFractions = false;
-        }
-
-        this.studentAnswer = [];
-        for(var i=0;i<this.settings.numRows;i++) {
-            var row = [];
-            for(var j=0;j<this.settings.numColumns;j++) {
-                row.push('');
-            }
-            this.studentAnswer.push(row);
-        }
-        
-        this.getCorrectAnswer(scope);
-
-        if(!settings.allowResize && (settings.correctAnswer.rows!=settings.numRows || settings.correctAnswer.columns != settings.numColumns)) {
-            var correctSize = settings.correctAnswer.rows+'×'+settings.correctAnswer.columns;
-            var answerSize = settings.numRows+'×'+settings.numColumns;
-            throw(new Numbas.Error('part.matrix.size mismatch',{correct_dimensions:correctSize,input_dimensions:answerSize}));
-        }
-
-        if(Numbas.display) {
-            this.display = new Numbas.display.MatrixEntryPartDisplay(this);
-        }
-    },
-
-	/** The student's last submitted answer */
-	studentAnswer: '',
-
-    /** The script to mark this part - assign credit, and give messages and feedback.
-     * @type {Numbas.marking.MarkingScript}
-     */
-    markingScript: Numbas.marking_scripts.matrixentry,
-
-	/** Properties set when part is generated
-	 * Extends {@link Numbas.parts.Part#settings}
-	 * @property {matrix} correctAnswer - the correct answer to the part
-	 * @property {JME} numRows - default number of rows in the student's answer
-	 * @property {JME} numColumns - default number of columns in the student's answer
-	 * @property {Boolean} allowResize - allow the student to change the dimensions of their answer?
-	 * @property {JME} tolerance - allowed margin of error in each cell (if student's answer is within +/- `tolerance` of the correct answer (after rounding to , mark it as correct
-	 * @property {Boolean} markPerCell - should the student gain marks for each correct cell (true), or only if they get every cell right (false)?
-	 * @property {Boolean} allowFractions - can the student enter a fraction as their answer for a cell?
-	 * @property {String} precisionType - type of precision restriction to apply: `none`, `dp` - decimal places, or `sigfig` - significant figures
-	 * @property {Number} precision - how many decimal places or significant figures to require
-	 * @property {Number} precisionPC - partial credit to award if the answer is between `minvalue` and `maxvalue` but not given to the required precision
-	 * @property {String} precisionMessage - message to display in the marking feedback if their answer was not given to the required precision
-     * @property {Boolean} strictPrecision - must the student give exactly the required precision? If false, omitting trailing zeros is allowed.
-	 */
-	settings: {
-		correctAnswer: null,
-		correctAnswerFractions: false,
-		numRows: '3',
-		numColumns: '3',
-		allowResize: true,
-		tolerance: '0',
-		markPerCell: false,
-		allowFractions: false,
-		precisionType: 'none',	//'none', 'dp' or 'sigfig'
-        precisionString: '0',
-		precision: 0,
-		precisionPC: 0,
-		precisionMessage: R('You have not given your answer to the correct precision.'),
-        strictPrecision: true
-	},
-
-	/** Compute the correct answer, based on the given scope
-	 */
-	getCorrectAnswer: function(scope) {
-		var settings = this.settings;
-
-		var correctAnswer = jme.subvars(settings.correctAnswerString,scope);
-		correctAnswer = jme.evaluate(correctAnswer,scope);
-		if(correctAnswer && correctAnswer.type=='matrix') {
-			settings.correctAnswer = correctAnswer.value;
-		} else if(correctAnswer && correctAnswer.type=='vector') {
-			settings.correctAnswer = Numbas.vectormath.toMatrix(correctAnswer.value);
-		} else {
-			this.error('part.setting not present',{property:'correct answer'});
-		}
-
-		settings.precision = jme.subvars(settings.precisionString, scope);
-		settings.precision = jme.evaluate(settings.precision,scope).value;
-
-		switch(settings.precisionType) {
-		case 'dp':
-			settings.correctAnswer = Numbas.matrixmath.precround(settings.correctAnswer,settings.precision);
-			break;
-		case 'sigfig':
-			settings.correctAnswer = Numbas.matrixmath.siground(settings.correctAnswer,settings.precision);
-			break;
-		}
-
-	},
-
-	/** Save a copy of the student's answer as entered on the page, for use in marking.
-	 */
-	setStudentAnswer: function() {
-		this.studentAnswerRows = parseInt(this.stagedAnswer.rows);
-		this.studentAnswerColumns = parseInt(this.stagedAnswer.columns);
-		this.studentAnswer = this.stagedAnswer.matrix;
-	},
-
-	/** Get the student's answer as it was entered as a JME data type, to be used in the marking script
-	 * @abstract
-	 * @returns {Numbas.jme.token}
-	 */
-	rawStudentAnswerAsJME: function() {
-        return jme.wrapValue(this.studentAnswer);
-	},
-
-    /** Get the student's answer as a matrix
-     * @returns {matrix}
-     */
-	studentAnswerAsMatrix: function() {
-		var rows = this.studentAnswerRows;
-		var columns = this.studentAnswerColumns;
-
-		var studentMatrix = [];
-		for(var i=0;i<rows;i++) {
-			var row = [];
-			for(var j=0;j<columns;j++) {
-				var cell = this.studentAnswer[i][j];
-				var n = util.parseNumber(cell,this.settings.allowFractions);
-				
-				if(isNaN(n)) {
-					return null;
-				} else {
-					row.push(n);
-				}
-			}
-			studentMatrix.push(row);
-		}
-
-		studentMatrix.rows = rows;
-		studentMatrix.columns = columns;
-		
-		return studentMatrix;
-	}
-};
-['resume','finaliseLoad','loadFromXML','loadFromJSON'].forEach(function(method) {
-    MatrixEntryPart.prototype[method] = util.extend(Part.prototype[method], MatrixEntryPart.prototype[method]);
-});
-
-Numbas.partConstructors['matrix'] = util.extend(Part,MatrixEntryPart);
-
-});
-
-
 /*
 Copyright 2011-15 Newcastle University
 
@@ -15584,8 +15616,15 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
             }
         }
 
+        if(this.flipped) {
+            this.numAnswers = this.numChoices;
+            this.numChoices = 1;
+            this.answers = this.choices;
+            this.choices = null;
+        }
+
         tryLoad(data, ['distractors'], settings);
-        if(settings.distractors && this.type=='1_n_2' || this.type=='m_n_2') {
+        if(settings.distractors && (this.type=='1_n_2' || this.type=='m_n_2')) {
             settings.distractors = settings.distractors.map(function(d){return [d]});
         }
         if(!settings.distractors) {
@@ -15597,13 +15636,6 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
                 }
                 settings.distractors.push(row);
             }
-        }
-
-        if(this.flipped) {
-            this.numAnswers = this.numChoices;
-            this.numChoices = 1;
-            this.answers = this.choices;
-            this.choices = null;
         }
 
     },
@@ -16045,7 +16077,6 @@ Numbas.partConstructors['m_n_2'] = util.extend(Part,MultipleResponsePart);
 Numbas.partConstructors['m_n_x'] = util.extend(Part,MultipleResponsePart);
 });
 
-
 /*
 Copyright 2011-15 Newcastle University
 
@@ -16062,9 +16093,299 @@ Copyright 2011-15 Newcastle University
    limitations under the License.
 */
 
-/** @file The {@link Numbas.parts.NumberEntryPart} object */
+/** @file The {@link Numbas.parts.} object */
 
-Numbas.queueScript('parts/numberentry',['base','jme','jme-variables','util','part','marking_scripts'],function() {
+Numbas.queueScript('parts/custom_part_type',['base','jme','jme-variables','util','part'],function() {
+
+var util = Numbas.util;
+var jme = Numbas.jme;
+var math = Numbas.math;
+var types = Numbas.jme.types;
+
+var Part = Numbas.parts.Part;
+
+/** Custom part - a part type defined in {@link Numbas.custom_part_types}
+ * @constructor
+ * @memberof Numbas.parts
+ * @augments Numbas.parts.Part
+ */
+var CustomPart = Numbas.parts.CustomPart = function(path, question, parentPart, loading) {
+    this.raw_settings = {};
+    this.input_options = {};
+}
+CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
+    getDefinition: function() {
+        this.definition = Numbas.custom_part_types[this.type];
+        this.setMarkingScript(this.definition.marking_script);
+    },
+
+    loadFromXML: function(xml) {
+        var p = this;
+        var raw_settings = this.raw_settings;
+        this.getDefinition();
+        var tryGetAttribute = Numbas.xml.tryGetAttribute;
+
+        var settingNodes = xml.selectNodes('settings/setting');
+        settingNodes.forEach(function(settingNode) {
+            var name = settingNode.getAttribute('name');
+            var value = settingNode.getAttribute('value');
+            raw_settings[name] = JSON.parse(value);
+        });
+
+        // create the JME marking script for the part
+        var markingScriptNode = this.xml.selectSingleNode('markingalgorithm');
+        var markingScriptString = Numbas.xml.getTextContent(markingScriptNode).trim();
+        var markingScript = {};
+        tryGetAttribute(markingScript,this.xml,markingScriptNode,['extend']);
+        if(markingScriptString) {
+            // extend the base marking algorithm if asked to do so
+            var extend_base = markingScript.extend;
+            this.setMarkingScript(markingScriptString,extend_base);
+        }
+    },
+
+    loadFromJSON: function() {
+    },
+
+    finaliseLoad: function() {
+        var p = this;
+        var settings = this.settings;
+        var raw_settings = this.raw_settings;
+        var scope = this.getScope();
+
+        this.definition.settings.forEach(function(s) {
+            var name = s.name;
+            var value = raw_settings[name];
+            if(!p.setting_evaluators[s.input_type]) {
+                p.error('part.custom.unrecognised input type',{input_type:s.input_type});
+            }
+            settings[name] = p.setting_evaluators[s.input_type].call(p, s, value);
+        });
+
+        var settings_scope = new Numbas.jme.Scope([scope,{variables:{settings:new Numbas.jme.types.TDict(settings)}}]);
+        var raw_input_options = this.definition.input_options;
+
+        ['correctAnswer','hint'].forEach(function(option) {
+            if(raw_input_options[option]===undefined) {
+                p.error('part.custom.input option missing',{option:option});
+            }
+        })
+
+        for(var option in raw_input_options) {
+            try {
+                p.input_options[option] = Numbas.jme.unwrapValue(settings_scope.evaluate(raw_input_options[option]));
+            } catch(e) {
+                p.error('part.custom.error evaluating input option',{option:option,error:e.message});
+            }
+        }
+
+        try {
+            this.getCorrectAnswer(this.getScope());
+        } catch(e) {
+            this.error(e.message);
+        }
+
+        if(Numbas.display) {
+            this.display = new Numbas.display.CustomPartDisplay(this);
+        }
+    },
+
+    getCorrectAnswer: function(scope) {
+        var settings = this.settings;
+        this.correctAnswer = scope.evaluate(this.definition.input_options.correctAnswer, {settings: this.settings});
+    },
+
+    setStudentAnswer: function() {
+        this.studentAnswer = this.stagedAnswer;
+    },
+
+    rawStudentAnswerAsJME: function() {
+        return this.student_answer_jme_types[this.definition.input_widget](this.studentAnswer);
+    },
+
+    student_answer_jme_types: {
+        'string': function(answer) {
+            return new types.TString(answer);
+        },
+        'number': function(answer) {
+            return new types.TNum(util.parseNumber(answer));
+        },
+        'jme': function(answer) {
+            return new types.TExpression(answer);
+        },
+        'matrix': function(answer) {
+            return new types.TMatrix(answer);
+        },
+        'radios': function(answer) {
+            return new types.TNum(answer);
+        },
+        'checkboxes': function(answer) {
+            return new types.TList(answer.map(function(ticked){ return new types.TBool(ticked) }));
+        },
+        'dropdown': function(answer) {
+            return new types.TNum(answer);
+        }
+    },
+
+    setting_evaluators: {
+        'string': function(def, value) {
+            var scope = this.getScope();
+            if(def.subvars) {
+                value = jme.subvars(value, scope, true);
+            }
+            return new jme.types.TString(value);
+        },
+        'mathematical_expression': function(def, value) {
+            var scope = this.getScope();
+            if(def.subvars) {
+                value = jme.subvars(value, scope);
+            }
+            return new jme.types.TExpression(value);
+        },
+        'checkbox': function(def, value) {
+            return new jme.types.TBool(value);
+        },
+        'dropdown': function(def, value) {
+            return new jme.types.TString(value);
+        },
+        'code': function(def, value) {
+            var scope = this.getScope();
+            if(def.evaluate) {
+                return scope.evaluate(value);
+            } else {
+                return new jme.types.TString(value);
+            }
+        },
+        'percent': function(def, value) {
+            return new jme.types.TNum(value/100);
+        },
+        'html': function(def, value) {
+            var scope = this.getScope();
+            if(def.subvars) {
+                value = jme.contentsubvars(value, scope);
+            }
+            return new jme.types.TString(value);
+        },
+        'list_of_strings': function(def, value) {
+            return new jme.types.TList(value.map(function(s){ return new jme.types.TString(s) }));
+        },
+        'choose_several': function(def, value) {
+            var d = {};
+            for(var x in value) {
+                d[x] = new jme.types.TBool(value[x]);
+            }
+            return new jme.types.TDict(d);
+        }
+    }
+};
+['finaliseLoad','loadFromXML','loadFromJSON'].forEach(function(method) {
+    CustomPart.prototype[method] = util.extend(Part.prototype[method], CustomPart.prototype[method]);
+});
+
+CustomPart = Numbas.parts.CustomPart = util.extend(Part,CustomPart);
+});
+/*
+Copyright 2011-15 Newcastle University
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+/** @file The {@link Numbas.parts.} object */
+
+Numbas.queueScript('parts/extension',['base','util','part'],function() {
+
+var util = Numbas.util;
+
+var Part = Numbas.parts.Part;
+
+/** Extension part - validation and marking should be filled in by an extension, or custom javascript code belonging to the question.
+ * @constructor
+ * @memberof Numbas.parts
+ * @augments Numbas.parts.Part
+ */
+var ExtensionPart = Numbas.parts.ExtensionPart = function(path, question, parentPart)
+{
+}
+ExtensionPart.prototype = /** @lends Numbas.parts.ExtensionPart.prototype */ {
+    loadFromXML: function() {},
+
+    loadFromJSON: function() {},
+
+    finaliseLoad: function() {
+        if(Numbas.display) {
+        	this.display = new Numbas.display.ExtensionPartDisplay(this);
+        }
+    },
+
+	validate: function() {
+        return false;
+	},
+
+	hasStagedAnswer: function() {
+		return true;
+	},
+
+	doesMarking: true,
+
+    mark: function() {
+        this.markingComment(R('part.extension.not implemented',{name:'mark'}));
+    },
+
+    /** Return suspend data for this part so it can be restored when resuming the exam - must be implemented by an extension or the question.
+     * @ returns {object}
+     */
+    createSuspendData: function() {
+        return {};
+    },
+
+    /** Get the suspend data created in a previous session for this part, if it exists.
+     * @ param {object} data
+     */
+    loadSuspendData: function(data) {
+        if(!this.store) {
+            return;
+        }
+        var pobj = this.store.loadExtensionPart(this);
+        if(pobj) {
+            return pobj.extension_data;
+        }
+    }
+};
+['finaliseLoad','loadFromXML','loadFromJSON'].forEach(function(method) {
+    ExtensionPart.prototype[method] = util.extend(Part.prototype[method],ExtensionPart.prototype[method]);
+});
+
+Numbas.partConstructors['extension'] = util.extend(Part,ExtensionPart);
+});
+/*
+Copyright 2011-15 Newcastle University
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+/** @file The {@link Numbas.parts.MatrixEntryPart} object */
+
+Numbas.queueScript('parts/matrixentry',['base','jme','jme-variables','util','part','marking_scripts'],function() {
 
 var util = Numbas.util;
 var jme = Numbas.jme;
@@ -16072,33 +16393,25 @@ var math = Numbas.math;
 
 var Part = Numbas.parts.Part;
 
-/** Number entry part - student's answer must be within given range, and written to required precision.
+/** Matrix entry part - student enters a matrix of numbers
  * @constructor
  * @memberof Numbas.parts
  * @augments Numbas.parts.Part
  */
-var NumberEntryPart = Numbas.parts.NumberEntryPart = function(xml, path, question, parentPart, loading)
-{
+var MatrixEntryPart = Numbas.parts.MatrixEntryPart = function(xml, path, question, parentPart, loading) {
 	var settings = this.settings;
-	util.copyinto(NumberEntryPart.prototype.settings,settings);
+	util.copyinto(MatrixEntryPart.prototype.settings,settings);
+
+
 }
-NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
+MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
 {
     loadFromXML: function(xml) {
         var settings = this.settings;
         var tryGetAttribute = Numbas.xml.tryGetAttribute;
-
-        tryGetAttribute(settings,xml,'answer',['minvalue','maxvalue'],['minvalueString','maxvalueString'],{string:true});
-        tryGetAttribute(settings,xml,'answer',['correctanswerfraction','correctanswerstyle','allowfractions'],['correctAnswerFraction','correctAnswerStyle','allowFractions']);
-        tryGetAttribute(settings,xml,'answer',['mustbereduced','mustbereducedpc'],['mustBeReduced','mustBeReducedPC']);
-
-        var answerNode = xml.selectSingleNode('answer');
-        var notationStyles = answerNode.getAttribute('notationstyles');
-        if(notationStyles) {
-            settings.notationStyles = notationStyles.split(',');
-        }
-        
-        tryGetAttribute(settings,xml,'answer/precision',['type','partialcredit','strict','showprecisionhint'],['precisionType','precisionPC','strictPrecision','showPrecisionHint']);
+        tryGetAttribute(settings,xml,'answer',['correctanswer'],['correctAnswerString'],{string:true});
+        tryGetAttribute(settings,xml,'answer',['correctanswerfractions','rows','columns','allowresize','tolerance','markpercell','allowfractions'],['correctAnswerFractions','numRows','numColumns','allowResize','tolerance','markPerCell','allowFractions']);
+        tryGetAttribute(settings,xml,'answer/precision',['type','partialcredit','strict'],['precisionType','precisionPC','strictPrecision']);
         tryGetAttribute(settings,xml,'answer/precision','precision','precisionString',{'string':true});
 
         var messageNode = xml.selectSingleNode('answer/precision/message');
@@ -16112,47 +16425,59 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
         var settings = this.settings;
         var tryLoad = Numbas.json.tryLoad;
 
-        tryLoad(data, ['minValue', 'maxValue'], settings, ['minvalueString', 'maxvalueString']);
-        tryLoad(data, ['correctAnswerFraction', 'correctAnswerStyle', 'allowFractions'], settings);
-        tryLoad(data, ['mustBeReduced', 'mustBeReducedPC'], settings);
-        tryLoad(data, ['notationStyles'], settings);
-        tryLoad(data, ['precisionPartialCredit', 'strictPrecision', 'showPrecisionHint', 'precision', 'precisionType', 'precisionMessage'], settings, ['precisionPC', 'strictPrecision', 'showPrecisionHint', 'precisionString', 'precisionType', 'precisionMessage']);
-    },
-
-    finaliseLoad: function() {
-        var settings = this.settings;
-        if(settings.precisionType!='none') {
-            settings.allowFractions = false;
-        }
-
-        try {
-            this.getCorrectAnswer(this.getScope());
-        } catch(e) {
-            this.error(e.message);
-        }
-
-        var displayAnswer = (settings.minvalue + settings.maxvalue)/2;
-        if(settings.correctAnswerFraction) {
-            var diff = Math.abs(settings.maxvalue-settings.minvalue)/2;
-            var accuracy = Math.max(15,Math.ceil(-Math.log(diff)));
-            settings.displayAnswer = jme.display.jmeRationalNumber(displayAnswer,{accuracy:accuracy});
-        } else {
-            settings.displayAnswer = math.niceNumber(displayAnswer,{precisionType: settings.precisionType,precision:settings.precision, style: settings.correctAnswerStyle});
-        }
-
-        this.stagedAnswer = [''];
-
-        if(Numbas.display) {
-            this.display = new Numbas.display.NumberEntryPartDisplay(this);
-        }
+        tryLoad(data,['correctAnswer', 'correctAnswerFractions', 'numRows', 'numColumns', 'allowResize', 'tolerance', 'markPerCell', 'allowFractions'], settings, ['correctAnswerString', 'correctAnswerFractions', 'numRows', 'numColumns', 'allowResize', 'tolerance', 'markPerCell', 'allowFractions']);
+        tryLoad(data,['precisionType', 'precision', 'precisionPartialCredit', 'precisionMessage', 'strictPrecision'], settings, ['precisionType', 'precision', 'precisionPC', 'precisionMessage', 'strictPrecision']);
     },
 
     resume: function() {
         if(!this.store) {
             return;
         }
-		var pobj = this.store.loadNumberEntryPart(this);
-		this.stagedAnswer = [pobj.studentAnswer+''];
+		var pobj = this.store.loadMatrixEntryPart(this);
+		if(pobj.studentAnswer) {
+			var rows = pobj.studentAnswer.length;
+			var columns = rows>0 ? pobj.studentAnswer[0].length : 0;
+			this.stagedAnswer = [rows, columns, pobj.studentAnswer];
+		}
+    },
+
+    finaliseLoad: function() {
+        var settings = this.settings;
+        var scope = this.getScope();
+        var numRows = jme.subvars(settings.numRows, scope);
+        settings.numRows = scope.evaluate(numRows).value;
+
+        var numColumns = jme.subvars(settings.numColumns, scope);
+        settings.numColumns = scope.evaluate(numColumns).value;
+
+        var tolerance = jme.subvars(settings.tolerance, scope);
+        settings.tolerance = scope.evaluate(tolerance).value;
+        settings.tolerance = Math.max(settings.tolerance,0.00000000001);
+
+        if(settings.precisionType!='none') {
+            settings.allowFractions = false;
+        }
+
+        this.studentAnswer = [];
+        for(var i=0;i<this.settings.numRows;i++) {
+            var row = [];
+            for(var j=0;j<this.settings.numColumns;j++) {
+                row.push('');
+            }
+            this.studentAnswer.push(row);
+        }
+        
+        this.getCorrectAnswer(scope);
+
+        if(!settings.allowResize && (settings.correctAnswer.rows!=settings.numRows || settings.correctAnswer.columns != settings.numColumns)) {
+            var correctSize = settings.correctAnswer.rows+'×'+settings.correctAnswer.columns;
+            var answerSize = settings.numRows+'×'+settings.numColumns;
+            throw(new Numbas.Error('part.matrix.size mismatch',{correct_dimensions:correctSize,input_dimensions:answerSize}));
+        }
+
+        if(Numbas.display) {
+            this.display = new Numbas.display.MatrixEntryPartDisplay(this);
+        }
     },
 
 	/** The student's last submitted answer */
@@ -16161,46 +16486,38 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
     /** The script to mark this part - assign credit, and give messages and feedback.
      * @type {Numbas.marking.MarkingScript}
      */
-    markingScript: Numbas.marking_scripts.numberentry,
+    markingScript: Numbas.marking_scripts.matrixentry,
 
-	/** Properties set when the part is generated
+	/** Properties set when part is generated
 	 * Extends {@link Numbas.parts.Part#settings}
-	 * @property {Number} minvalueString - definition of minimum value, before variables are substituted in
-	 * @property {Number} minvalue - minimum value marked correct
-	 * @property {Number} maxvalueString - definition of maximum value, before variables are substituted in
-	 * @property {Number} maxvalue - maximum value marked correct
-	 * @property {Number} correctAnswerFraction - display the correct answer as a fraction?
-	 * @property {Boolean} allowFractions - can the student enter a fraction as their answer?
-     * @property {Array.<String>} notationStyles - styles of notation to allow, other than `<digits>.<digits>`. See {@link Numbas.util.re_decimal}.
-	 * @property {Number} displayAnswer - representative correct answer to display when revealing answers
+	 * @property {matrix} correctAnswer - the correct answer to the part
+	 * @property {JME} numRows - default number of rows in the student's answer
+	 * @property {JME} numColumns - default number of columns in the student's answer
+	 * @property {Boolean} allowResize - allow the student to change the dimensions of their answer?
+	 * @property {JME} tolerance - allowed margin of error in each cell (if student's answer is within +/- `tolerance` of the correct answer (after rounding to , mark it as correct
+	 * @property {Boolean} markPerCell - should the student gain marks for each correct cell (true), or only if they get every cell right (false)?
+	 * @property {Boolean} allowFractions - can the student enter a fraction as their answer for a cell?
 	 * @property {String} precisionType - type of precision restriction to apply: `none`, `dp` - decimal places, or `sigfig` - significant figures
-	 * @property {Number} precisionString - definition of precision setting, before variables are substituted in
-     * @property {Boolean} strictPrecision - must the student give exactly the required precision? If false, omitting trailing zeros is allowed.
 	 * @property {Number} precision - how many decimal places or significant figures to require
 	 * @property {Number} precisionPC - partial credit to award if the answer is between `minvalue` and `maxvalue` but not given to the required precision
 	 * @property {String} precisionMessage - message to display in the marking feedback if their answer was not given to the required precision
-	 * @property {Boolean} mustBeReduced - should the student enter a fraction in lowest terms
-	 * @property {Number} mustBeReducedPC - partial credit to award if the answer is not a reduced fraction
+     * @property {Boolean} strictPrecision - must the student give exactly the required precision? If false, omitting trailing zeros is allowed.
 	 */
-	settings:
-	{
-        minvalueString: '0',
-        maxvalueString: '0',
-		minvalue: 0,
-		maxvalue: 0,
-		correctAnswerFraction: false,
+	settings: {
+		correctAnswer: null,
+		correctAnswerFractions: false,
+		numRows: '3',
+		numColumns: '3',
+		allowResize: true,
+		tolerance: '0',
+		markPerCell: false,
 		allowFractions: false,
-        notationStyles: ['en','si-en'],
-		displayAnswer: 0,
-		precisionType: 'none',
+		precisionType: 'none',	//'none', 'dp' or 'sigfig'
         precisionString: '0',
-        strictPrecision: false,
 		precision: 0,
 		precisionPC: 0,
-		mustBeReduced: false,
-		mustBeReducedPC: 0,
 		precisionMessage: R('You have not given your answer to the correct precision.'),
-        showPrecisionHint: true
+        strictPrecision: true
 	},
 
 	/** Compute the correct answer, based on the given scope
@@ -16208,85 +16525,81 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
 	getCorrectAnswer: function(scope) {
 		var settings = this.settings;
 
-		var precision = jme.subvars(settings.precisionString, scope);
-		settings.precision = scope.evaluate(precision).value;
-
-        if(settings.precisionType=='sigfig' && settings.precision<=0) {
-            throw(new Numbas.Error('part.numberentry.zero sig fig'));
-        }
-
-        if(settings.precisionType=='dp' && settings.precision<0) {
-            throw(new Numbas.Error('part.numberentry.negative decimal places'));
-        }
-
-		var minvalue = jme.subvars(settings.minvalueString,scope);
-		minvalue = scope.evaluate(minvalue);
-		if(minvalue && minvalue.type=='number') {
-			minvalue = minvalue.value;
+		var correctAnswer = jme.subvars(settings.correctAnswerString,scope);
+		correctAnswer = jme.evaluate(correctAnswer,scope);
+		if(correctAnswer && correctAnswer.type=='matrix') {
+			settings.correctAnswer = correctAnswer.value;
+		} else if(correctAnswer && correctAnswer.type=='vector') {
+			settings.correctAnswer = Numbas.vectormath.toMatrix(correctAnswer.value);
 		} else {
-			throw(new Numbas.Error('part.setting not present',{property:R('minimum value')}));
+			this.error('part.setting not present',{property:'correct answer'});
 		}
 
-		var maxvalue = jme.subvars(settings.maxvalueString,scope);
-		maxvalue = scope.evaluate(maxvalue);
-		if(maxvalue && maxvalue.type=='number') {
-			maxvalue = maxvalue.value;
-		} else {
-			throw(new Numbas.Error('part.setting not present',{property:R('maximum value')}));
-		}
+		settings.precision = jme.subvars(settings.precisionString, scope);
+		settings.precision = jme.evaluate(settings.precision,scope).value;
 
 		switch(settings.precisionType) {
 		case 'dp':
-			minvalue = math.precround(minvalue,settings.precision);
-			maxvalue = math.precround(maxvalue,settings.precision);
+			settings.correctAnswer = Numbas.matrixmath.precround(settings.correctAnswer,settings.precision);
 			break;
 		case 'sigfig':
-			minvalue = math.siground(minvalue,settings.precision);
-			maxvalue = math.siground(maxvalue,settings.precision);
+			settings.correctAnswer = Numbas.matrixmath.siground(settings.correctAnswer,settings.precision);
 			break;
 		}
 
-		var fudge = 0.00000000001;
-		settings.minvalue = minvalue - fudge;
-		settings.maxvalue = maxvalue + fudge;
-	},
-
-	/** Tidy up the student's answer - at the moment, just remove space.
-     * You could override this to do more substantial filtering of the student's answer.
-	 * @param {String} answer
-	 * @returns {String}
-	 */
-	cleanAnswer: function(answer) {
-		answer = answer.toString().trim();
-		return answer;
 	},
 
 	/** Save a copy of the student's answer as entered on the page, for use in marking.
 	 */
 	setStudentAnswer: function() {
-		this.studentAnswer = this.cleanAnswer(this.stagedAnswer);
+		this.studentAnswerRows = parseInt(this.stagedAnswer.rows);
+		this.studentAnswerColumns = parseInt(this.stagedAnswer.columns);
+		this.studentAnswer = this.stagedAnswer.matrix;
 	},
 
-	/** Get the student's answer as it was entered as a JME data type, to be used in the custom marking algorithm
+	/** Get the student's answer as it was entered as a JME data type, to be used in the marking script
 	 * @abstract
 	 * @returns {Numbas.jme.token}
 	 */
 	rawStudentAnswerAsJME: function() {
-		return new Numbas.jme.types.TString(this.studentAnswer);
+        return jme.wrapValue(this.studentAnswer);
 	},
 
-    /** Get the student's answer as a floating point number
-     * @returns {Number}
+    /** Get the student's answer as a matrix
+     * @returns {matrix}
      */
-	studentAnswerAsFloat: function() {
-		return util.parseNumber(this.studentAnswer,this.settings.allowFractions,this.settings.notationStyles);
+	studentAnswerAsMatrix: function() {
+		var rows = this.studentAnswerRows;
+		var columns = this.studentAnswerColumns;
+
+		var studentMatrix = [];
+		for(var i=0;i<rows;i++) {
+			var row = [];
+			for(var j=0;j<columns;j++) {
+				var cell = this.studentAnswer[i][j];
+				var n = util.parseNumber(cell,this.settings.allowFractions);
+				
+				if(isNaN(n)) {
+					return null;
+				} else {
+					row.push(n);
+				}
+			}
+			studentMatrix.push(row);
+		}
+
+		studentMatrix.rows = rows;
+		studentMatrix.columns = columns;
+		
+		return studentMatrix;
 	}
 };
-['loadFromXML','loadFromJSON','resume','finaliseLoad'].forEach(function(method) {
-    NumberEntryPart.prototype[method] = util.extend(Part.prototype[method], NumberEntryPart.prototype[method]);
+['resume','finaliseLoad','loadFromXML','loadFromJSON'].forEach(function(method) {
+    MatrixEntryPart.prototype[method] = util.extend(Part.prototype[method], MatrixEntryPart.prototype[method]);
 });
 
-Numbas.partConstructors['numberentry'] = util.extend(Part,NumberEntryPart);
+Numbas.partConstructors['matrix'] = util.extend(Part,MatrixEntryPart);
+
 });
 
 /*
@@ -16427,4 +16740,30 @@ PatternMatchPart.prototype = /** @lends Numbas.PatternMatchPart.prototype */ {
 
 Numbas.partConstructors['patternmatch'] = util.extend(Part,PatternMatchPart);
 });
+Numbas.queueScript('localisation',['i18next','localisation-resources'],function() {
+    i18next.init({
+        lng: Numbas.locale.preferred_locale,
+        lowerCaseLng: true,
+        keySeparator: false,
+        nsSeparator: false,
+        interpolation: {
+            unescapePrefix: '-',
+            format: function(value,format) {
+                if(format=='niceNumber') {
+                    return Numbas.math.niceNumber(value);
+                }
+            }
+        },
+        resources: Numbas.locale.resources
+    });
+    window.R = function(){{ return i18next.t.apply(i18next,arguments) }};
+});
 
+Numbas.queueScript('i18next',[],function(module) {
+        var exports = {};
+
+!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):t.i18next=e()}(this,function(){"use strict";function t(t){return null==t?"":""+t}function e(t,e,n){t.forEach(function(t){e[t]&&(n[t]=e[t])})}function n(t,e,n){function o(t){return t&&t.indexOf("###")>-1?t.replace(/###/g,"."):t}function r(){return!t||"string"==typeof t}for(var i="string"!=typeof e?[].concat(e):e.split(".");i.length>1;){if(r())return{};var a=o(i.shift());!t[a]&&n&&(t[a]=new n),t=t[a]}return r()?{}:{obj:t,k:o(i.shift())}}function o(t,e,o){var r=n(t,e,Object),i=r.obj,a=r.k;i[a]=o}function r(t,e,o,r){var i=n(t,e,Object),a=i.obj,s=i.k;a[s]=a[s]||[],r&&(a[s]=a[s].concat(o)),r||a[s].push(o)}function i(t,e){var o=n(t,e),r=o.obj,i=o.k;if(r)return r[i]}function a(t,e,n){for(var o in e)o in t?"string"==typeof t[o]||t[o]instanceof String||"string"==typeof e[o]||e[o]instanceof String?n&&(t[o]=e[o]):a(t[o],e[o],n):t[o]=e[o];return t}function s(t){return t.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g,"\\$&")}function l(t){return"string"==typeof t?t.replace(/[&<>"'\/]/g,function(t){return E[t]}):t}function u(t){return t.interpolation={unescapeSuffix:"HTML"},t.interpolation.prefix=t.interpolationPrefix||"__",t.interpolation.suffix=t.interpolationSuffix||"__",t.interpolation.escapeValue=t.escapeInterpolation||!1,t.interpolation.nestingPrefix=t.reusePrefix||"$t(",t.interpolation.nestingSuffix=t.reuseSuffix||")",t}function c(t){return t.resStore&&(t.resources=t.resStore),t.ns&&t.ns.defaultNs?(t.defaultNS=t.ns.defaultNs,t.ns=t.ns.namespaces):t.defaultNS=t.ns||"translation",t.fallbackToDefaultNS&&t.defaultNS&&(t.fallbackNS=t.defaultNS),t.saveMissing=t.sendMissing,t.saveMissingTo=t.sendMissingTo||"current",t.returnNull=!t.fallbackOnNull,t.returnEmptyString=!t.fallbackOnEmpty,t.returnObjects=t.returnObjectTrees,t.joinArrays="\n",t.returnedObjectHandler=t.objectTreeKeyHandler,t.parseMissingKeyHandler=t.parseMissingKey,t.appendNamespaceToMissingKey=!0,t.nsSeparator=t.nsseparator||":",t.keySeparator=t.keyseparator||".","sprintf"===t.shortcutFunction&&(t.overloadTranslationOptionHandler=function(t){for(var e=[],n=1;n<t.length;n++)e.push(t[n]);return{postProcess:"sprintf",sprintf:e}}),t.whitelist=t.lngWhitelist,t.preload=t.preload,"current"===t.load&&(t.load="currentOnly"),"unspecific"===t.load&&(t.load="languageOnly"),t.backend=t.backend||{},t.backend.loadPath=t.resGetPath||"locales/__lng__/__ns__.json",t.backend.addPath=t.resPostPath||"locales/add/__lng__/__ns__",t.backend.allowMultiLoading=t.dynamicLoad,t.cache=t.cache||{},t.cache.prefix="res_",t.cache.expirationTime=6048e5,t.cache.enabled=t.useLocalStorage,t=u(t),t.defaultVariables&&(t.interpolation.defaultVariables=t.defaultVariables),t}function p(t){return t=u(t),t.joinArrays="\n",t}function f(t){return(t.interpolationPrefix||t.interpolationSuffix||void 0!==t.escapeInterpolation)&&(t=u(t)),t.nsSeparator=t.nsseparator,t.keySeparator=t.keyseparator,t.returnObjects=t.returnObjectTrees,t}function g(t){t.lng=function(){return C.deprecate("i18next.lng() can be replaced by i18next.language for detected language or i18next.languages for languages ordered by translation lookup."),t.services.languageUtils.toResolveHierarchy(t.language)[0]},t.preload=function(e,n){C.deprecate("i18next.preload() can be replaced with i18next.loadLanguages()"),t.loadLanguages(e,n)},t.setLng=function(e,n,o){return C.deprecate("i18next.setLng() can be replaced with i18next.changeLanguage() or i18next.getFixedT() to get a translation function with fixed language or namespace."),"function"==typeof n&&(o=n,n={}),n||(n={}),n.fixLng===!0&&o?o(null,t.getFixedT(e)):t.changeLanguage(e,o)},t.addPostProcessor=function(e,n){C.deprecate("i18next.addPostProcessor() can be replaced by i18next.use({ type: 'postProcessor', name: 'name', process: fc })"),t.use({type:"postProcessor",name:e,process:n})}}function h(t){return t.charAt(0).toUpperCase()+t.slice(1)}function d(){var t={};return H.forEach(function(e){e.lngs.forEach(function(n){t[n]={numbers:e.nr,plurals:U[e.fc]}})}),t}function y(t,e){for(var n=t.indexOf(e);n!==-1;)t.splice(n,1),n=t.indexOf(e)}function v(){return{debug:!1,initImmediate:!0,ns:["translation"],defaultNS:["translation"],fallbackLng:["dev"],fallbackNS:!1,whitelist:!1,nonExplicitWhitelist:!1,load:"all",preload:!1,simplifyPluralSuffix:!0,keySeparator:".",nsSeparator:":",pluralSeparator:"_",contextSeparator:"_",saveMissing:!1,saveMissingTo:"fallback",missingKeyHandler:!1,postProcess:!1,returnNull:!0,returnEmptyString:!0,returnObjects:!1,joinArrays:!1,returnedObjectHandler:function(){},parseMissingKeyHandler:!1,appendNamespaceToMissingKey:!1,appendNamespaceToCIMode:!1,overloadTranslationOptionHandler:function(t){return{defaultValue:t[1]}},interpolation:{escapeValue:!0,format:function(t,e,n){return t},prefix:"{{",suffix:"}}",formatSeparator:",",unescapePrefix:"-",nestingPrefix:"$t(",nestingSuffix:")",defaultVariables:void 0}}}function b(t){return"string"==typeof t.ns&&(t.ns=[t.ns]),"string"==typeof t.fallbackLng&&(t.fallbackLng=[t.fallbackLng]),"string"==typeof t.fallbackNS&&(t.fallbackNS=[t.fallbackNS]),t.whitelist&&t.whitelist.indexOf("cimode")<0&&t.whitelist.push("cimode"),t}function m(){}var x="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},S=function(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")},k=Object.assign||function(t){for(var e=1;e<arguments.length;e++){var n=arguments[e];for(var o in n)Object.prototype.hasOwnProperty.call(n,o)&&(t[o]=n[o])}return t},w=function(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e)},O=function(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!e||"object"!=typeof e&&"function"!=typeof e?t:e},L=function(){function t(t,e){var n=[],o=!0,r=!1,i=void 0;try{for(var a,s=t[Symbol.iterator]();!(o=(a=s.next()).done)&&(n.push(a.value),!e||n.length!==e);o=!0);}catch(t){r=!0,i=t}finally{try{!o&&s.return&&s.return()}finally{if(r)throw i}}return n}return function(e,n){if(Array.isArray(e))return e;if(Symbol.iterator in Object(e))return t(e,n);throw new TypeError("Invalid attempt to destructure non-iterable instance")}}(),j=function(t){if(Array.isArray(t)){for(var e=0,n=Array(t.length);e<t.length;e++)n[e]=t[e];return n}return Array.from(t)},N={type:"logger",log:function(t){this.output("log",t)},warn:function(t){this.output("warn",t)},error:function(t){this.output("error",t)},output:function(t,e){var n;console&&console[t]&&(n=console)[t].apply(n,j(e))}},P=function(){function t(e){var n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{};S(this,t),this.init(e,n)}return t.prototype.init=function(t){var e=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{};this.prefix=e.prefix||"i18next:",this.logger=t||N,this.options=e,this.debug=e.debug},t.prototype.setDebug=function(t){this.debug=t},t.prototype.log=function(){for(var t=arguments.length,e=Array(t),n=0;n<t;n++)e[n]=arguments[n];return this.forward(e,"log","",!0)},t.prototype.warn=function(){for(var t=arguments.length,e=Array(t),n=0;n<t;n++)e[n]=arguments[n];return this.forward(e,"warn","",!0)},t.prototype.error=function(){for(var t=arguments.length,e=Array(t),n=0;n<t;n++)e[n]=arguments[n];return this.forward(e,"error","")},t.prototype.deprecate=function(){for(var t=arguments.length,e=Array(t),n=0;n<t;n++)e[n]=arguments[n];return this.forward(e,"warn","WARNING DEPRECATED: ",!0)},t.prototype.forward=function(t,e,n,o){return o&&!this.debug?null:("string"==typeof t[0]&&(t[0]=""+n+this.prefix+" "+t[0]),this.logger[e](t))},t.prototype.create=function(e){return new t(this.logger,k({prefix:this.prefix+":"+e+":"},this.options))},t}(),C=new P,R=function(){function t(){S(this,t),this.observers={}}return t.prototype.on=function(t,e){var n=this;t.split(" ").forEach(function(t){n.observers[t]=n.observers[t]||[],n.observers[t].push(e)})},t.prototype.off=function(t,e){var n=this;this.observers[t]&&this.observers[t].forEach(function(){if(e){var o=n.observers[t].indexOf(e);o>-1&&n.observers[t].splice(o,1)}else delete n.observers[t]})},t.prototype.emit=function(t){for(var e=arguments.length,n=Array(e>1?e-1:0),o=1;o<e;o++)n[o-1]=arguments[o];if(this.observers[t]){var r=[].concat(this.observers[t]);r.forEach(function(t){t.apply(void 0,n)})}if(this.observers["*"]){var i=[].concat(this.observers["*"]);i.forEach(function(e){var o;e.apply(e,(o=[t]).concat.apply(o,n))})}},t}(),E={"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","/":"&#x2F;"},A=function(t){function e(){var n=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},o=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{ns:["translation"],defaultNS:"translation"};S(this,e);var r=O(this,t.call(this));return r.data=n,r.options=o,r}return w(e,t),e.prototype.addNamespaces=function(t){this.options.ns.indexOf(t)<0&&this.options.ns.push(t)},e.prototype.removeNamespaces=function(t){var e=this.options.ns.indexOf(t);e>-1&&this.options.ns.splice(e,1)},e.prototype.getResource=function(t,e,n){var o=arguments.length>3&&void 0!==arguments[3]?arguments[3]:{},r=o.keySeparator||this.options.keySeparator;void 0===r&&(r=".");var a=[t,e];return n&&"string"!=typeof n&&(a=a.concat(n)),n&&"string"==typeof n&&(a=a.concat(r?n.split(r):n)),t.indexOf(".")>-1&&(a=t.split(".")),i(this.data,a)},e.prototype.addResource=function(t,e,n,r){var i=arguments.length>4&&void 0!==arguments[4]?arguments[4]:{silent:!1},a=this.options.keySeparator;void 0===a&&(a=".");var s=[t,e];n&&(s=s.concat(a?n.split(a):n)),t.indexOf(".")>-1&&(s=t.split("."),r=e,e=s[1]),this.addNamespaces(e),o(this.data,s,r),i.silent||this.emit("added",t,e,n,r)},e.prototype.addResources=function(t,e,n){for(var o in n)"string"==typeof n[o]&&this.addResource(t,e,o,n[o],{silent:!0});this.emit("added",t,e,n)},e.prototype.addResourceBundle=function(t,e,n,r,s){var l=[t,e];t.indexOf(".")>-1&&(l=t.split("."),r=n,n=e,e=l[1]),this.addNamespaces(e);var u=i(this.data,l)||{};r?a(u,n,s):u=k({},u,n),o(this.data,l,u),this.emit("added",t,e,n)},e.prototype.removeResourceBundle=function(t,e){this.hasResourceBundle(t,e)&&delete this.data[t][e],this.removeNamespaces(e),this.emit("removed",t,e)},e.prototype.hasResourceBundle=function(t,e){return void 0!==this.getResource(t,e)},e.prototype.getResourceBundle=function(t,e){return e||(e=this.options.defaultNS),"v1"===this.options.compatibilityAPI?k({},this.getResource(t,e)):this.getResource(t,e)},e.prototype.toJSON=function(){return this.data},e}(R),T={processors:{},addPostProcessor:function(t){this.processors[t.name]=t},handle:function(t,e,n,o,r){var i=this;return t.forEach(function(t){i.processors[t]&&(e=i.processors[t].process(e,n,o,r))}),e}},M=function(t){function n(o){var r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{};S(this,n);var i=O(this,t.call(this));return e(["resourceStore","languageUtils","pluralResolver","interpolator","backendConnector"],o,i),i.options=r,i.logger=C.create("translator"),i}return w(n,t),n.prototype.changeLanguage=function(t){t&&(this.language=t)},n.prototype.exists=function(t){var e=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{interpolation:{}};return"v1"===this.options.compatibilityAPI&&(e=f(e)),void 0!==this.resolve(t,e)},n.prototype.extractFromKey=function(t,e){var n=e.nsSeparator||this.options.nsSeparator;void 0===n&&(n=":");var o=e.keySeparator||this.options.keySeparator||".",r=e.ns||this.options.defaultNS;if(n&&t.indexOf(n)>-1){var i=t.split(n);(n!==o||n===o&&this.options.ns.indexOf(i[0])>-1)&&(r=i.shift()),t=i.join(o)}return"string"==typeof r&&(r=[r]),{key:t,namespaces:r}},n.prototype.translate=function(t){var e=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{};if("object"!==("undefined"==typeof e?"undefined":x(e))?e=this.options.overloadTranslationOptionHandler(arguments):"v1"===this.options.compatibilityAPI&&(e=f(e)),void 0===t||null===t||""===t)return"";"number"==typeof t&&(t=String(t)),"string"==typeof t&&(t=[t]);var n=e.keySeparator||this.options.keySeparator||".",o=this.extractFromKey(t[t.length-1],e),r=o.key,i=o.namespaces,a=i[i.length-1],s=e.lng||this.language,l=e.appendNamespaceToCIMode||this.options.appendNamespaceToCIMode;if(s&&"cimode"===s.toLowerCase()){if(l){var u=e.nsSeparator||this.options.nsSeparator;return a+u+r}return r}var c=this.resolve(t,e),p=Object.prototype.toString.apply(c),g=["[object Number]","[object Function]","[object RegExp]"],h=void 0!==e.joinArrays?e.joinArrays:this.options.joinArrays;if(c&&"string"!=typeof c&&g.indexOf(p)<0&&(!h||"[object Array]"!==p)){if(!e.returnObjects&&!this.options.returnObjects)return this.logger.warn("accessing an object - but returnObjects options is not enabled!"),this.options.returnedObjectHandler?this.options.returnedObjectHandler(r,c,e):"key '"+r+" ("+this.language+")' returned an object instead of string.";if(e.keySeparator||this.options.keySeparator){var d="[object Array]"===p?[]:{};for(var y in c)Object.prototype.hasOwnProperty.call(c,y)&&(d[y]=this.translate(""+r+n+y,k({},e,{joinArrays:!1,ns:i})));c=d}}else if(h&&"[object Array]"===p)c=c.join(h),c&&(c=this.extendTranslation(c,r,e));else{var v=!1,b=!1;if(this.isValidLookup(c)||void 0===e.defaultValue||(v=!0,c=e.defaultValue),this.isValidLookup(c)||(b=!0,c=r),b||v){this.logger.log("missingKey",s,a,r,c);var m=[],S=this.languageUtils.getFallbackCodes(this.options.fallbackLng,e.lng||this.language);if("fallback"===this.options.saveMissingTo&&S&&S[0])for(var w=0;w<S.length;w++)m.push(S[w]);else"all"===this.options.saveMissingTo?m=this.languageUtils.toResolveHierarchy(e.lng||this.language):m.push(e.lng||this.language);this.options.saveMissing&&(this.options.missingKeyHandler?this.options.missingKeyHandler(m,a,r,c):this.backendConnector&&this.backendConnector.saveMissing&&this.backendConnector.saveMissing(m,a,r,c)),this.emit("missingKey",m,a,r,c)}c=this.extendTranslation(c,r,e),b&&c===r&&this.options.appendNamespaceToMissingKey&&(c=a+":"+r),b&&this.options.parseMissingKeyHandler&&(c=this.options.parseMissingKeyHandler(c))}return c},n.prototype.extendTranslation=function(t,e,n){var o=this;n.interpolation&&this.interpolator.init(k({},n,{interpolation:k({},this.options.interpolation,n.interpolation)}));var r=n.replace&&"string"!=typeof n.replace?n.replace:n;this.options.interpolation.defaultVariables&&(r=k({},this.options.interpolation.defaultVariables,r)),t=this.interpolator.interpolate(t,r,n.lng||this.language),n.nest!==!1&&(t=this.interpolator.nest(t,function(){return o.translate.apply(o,arguments)},n)),n.interpolation&&this.interpolator.reset();var i=n.postProcess||this.options.postProcess,a="string"==typeof i?[i]:i;return void 0!==t&&a&&a.length&&n.applyPostProcessor!==!1&&(t=T.handle(a,t,e,n,this)),t},n.prototype.resolve=function(t){var e=this,n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{},o=void 0;return"string"==typeof t&&(t=[t]),t.forEach(function(t){if(!e.isValidLookup(o)){var r=e.extractFromKey(t,n),i=r.key,a=r.namespaces;e.options.fallbackNS&&(a=a.concat(e.options.fallbackNS));var s=void 0!==n.count&&"string"!=typeof n.count,l=void 0!==n.context&&"string"==typeof n.context&&""!==n.context,u=n.lngs?n.lngs:e.languageUtils.toResolveHierarchy(n.lng||e.language);a.forEach(function(t){e.isValidLookup(o)||u.forEach(function(r){if(!e.isValidLookup(o)){var a=i,u=[a],c=void 0;s&&(c=e.pluralResolver.getSuffix(r,n.count)),s&&l&&u.push(a+c),l&&u.push(a+=""+e.options.contextSeparator+n.context),s&&u.push(a+=c);for(var p=void 0;p=u.pop();)e.isValidLookup(o)||(o=e.getResource(r,t,p,n))}})})}}),o},n.prototype.isValidLookup=function(t){return!(void 0===t||!this.options.returnNull&&null===t||!this.options.returnEmptyString&&""===t)},n.prototype.getResource=function(t,e,n){var o=arguments.length>3&&void 0!==arguments[3]?arguments[3]:{};return this.resourceStore.getResource(t,e,n,o)},n}(R),_=function(){function t(e){S(this,t),this.options=e,this.whitelist=this.options.whitelist||!1,this.logger=C.create("languageUtils")}return t.prototype.getScriptPartFromCode=function(t){if(!t||t.indexOf("-")<0)return null;var e=t.split("-");return 2===e.length?null:(e.pop(),this.formatLanguageCode(e.join("-")))},t.prototype.getLanguagePartFromCode=function(t){if(!t||t.indexOf("-")<0)return t;var e=t.split("-");return this.formatLanguageCode(e[0])},t.prototype.formatLanguageCode=function(t){if("string"==typeof t&&t.indexOf("-")>-1){var e=["hans","hant","latn","cyrl","cans","mong","arab"],n=t.split("-");return this.options.lowerCaseLng?n=n.map(function(t){return t.toLowerCase()}):2===n.length?(n[0]=n[0].toLowerCase(),n[1]=n[1].toUpperCase(),e.indexOf(n[1].toLowerCase())>-1&&(n[1]=h(n[1].toLowerCase()))):3===n.length&&(n[0]=n[0].toLowerCase(),2===n[1].length&&(n[1]=n[1].toUpperCase()),"sgn"!==n[0]&&2===n[2].length&&(n[2]=n[2].toUpperCase()),e.indexOf(n[1].toLowerCase())>-1&&(n[1]=h(n[1].toLowerCase())),e.indexOf(n[2].toLowerCase())>-1&&(n[2]=h(n[2].toLowerCase()))),n.join("-")}return this.options.cleanCode||this.options.lowerCaseLng?t.toLowerCase():t},t.prototype.isWhitelisted=function(t){return("languageOnly"===this.options.load||this.options.nonExplicitWhitelist)&&(t=this.getLanguagePartFromCode(t)),!this.whitelist||!this.whitelist.length||this.whitelist.indexOf(t)>-1},t.prototype.getFallbackCodes=function(t,e){if(!t)return[];if("string"==typeof t&&(t=[t]),"[object Array]"===Object.prototype.toString.apply(t))return t;if(!e)return t.default||[];var n=t[e];return n||(n=t[this.getScriptPartFromCode(e)]),n||(n=t[this.formatLanguageCode(e)]),n||(n=t.default),n||[]},t.prototype.toResolveHierarchy=function(t,e){var n=this,o=this.getFallbackCodes(e||this.options.fallbackLng||[],t),r=[],i=function(t){t&&(n.isWhitelisted(t)?r.push(t):n.logger.warn("rejecting non-whitelisted language code: "+t))};return"string"==typeof t&&t.indexOf("-")>-1?("languageOnly"!==this.options.load&&i(this.formatLanguageCode(t)),"languageOnly"!==this.options.load&&"currentOnly"!==this.options.load&&i(this.getScriptPartFromCode(t)),"currentOnly"!==this.options.load&&i(this.getLanguagePartFromCode(t))):"string"==typeof t&&i(this.formatLanguageCode(t)),o.forEach(function(t){r.indexOf(t)<0&&i(n.formatLanguageCode(t))}),r},t}(),H=[{lngs:["ach","ak","am","arn","br","fil","gun","ln","mfe","mg","mi","oc","tg","ti","tr","uz","wa"],nr:[1,2],fc:1},{lngs:["af","an","ast","az","bg","bn","ca","da","de","dev","el","en","eo","es","es_ar","et","eu","fi","fo","fur","fy","gl","gu","ha","he","hi","hu","hy","ia","it","kn","ku","lb","mai","ml","mn","mr","nah","nap","nb","ne","nl","nn","no","nso","pa","pap","pms","ps","pt","pt_br","rm","sco","se","si","so","son","sq","sv","sw","ta","te","tk","ur","yo"],nr:[1,2],fc:2},{lngs:["ay","bo","cgg","fa","id","ja","jbo","ka","kk","km","ko","ky","lo","ms","sah","su","th","tt","ug","vi","wo","zh"],nr:[1],fc:3},{lngs:["be","bs","dz","hr","ru","sr","uk"],nr:[1,2,5],fc:4},{lngs:["ar"],nr:[0,1,2,3,11,100],fc:5},{lngs:["cs","sk"],nr:[1,2,5],fc:6},{lngs:["csb","pl"],nr:[1,2,5],fc:7},{lngs:["cy"],nr:[1,2,3,8],fc:8},{lngs:["fr"],nr:[1,2],fc:9},{lngs:["ga"],nr:[1,2,3,7,11],fc:10},{lngs:["gd"],nr:[1,2,3,20],fc:11},{lngs:["is"],nr:[1,2],fc:12},{lngs:["jv"],nr:[0,1],fc:13},{lngs:["kw"],nr:[1,2,3,4],fc:14},{lngs:["lt"],nr:[1,2,10],fc:15},{lngs:["lv"],nr:[1,2,0],fc:16},{lngs:["mk"],nr:[1,2],fc:17},{lngs:["mnk"],nr:[0,1,2],fc:18},{lngs:["mt"],nr:[1,2,11,20],fc:19},{lngs:["or"],nr:[2,1],fc:2},{lngs:["ro"],nr:[1,2,20],fc:20},{lngs:["sl"],nr:[5,1,2,3],fc:21}],U={1:function(t){return Number(t>1)},2:function(t){return Number(1!=t)},3:function(t){return 0},4:function(t){return Number(t%10==1&&t%100!=11?0:t%10>=2&&t%10<=4&&(t%100<10||t%100>=20)?1:2)},5:function(t){return Number(0===t?0:1==t?1:2==t?2:t%100>=3&&t%100<=10?3:t%100>=11?4:5)},6:function(t){return Number(1==t?0:t>=2&&t<=4?1:2)},7:function(t){return Number(1==t?0:t%10>=2&&t%10<=4&&(t%100<10||t%100>=20)?1:2)},8:function(t){return Number(1==t?0:2==t?1:8!=t&&11!=t?2:3)},9:function(t){return Number(t>=2)},10:function(t){return Number(1==t?0:2==t?1:t<7?2:t<11?3:4)},11:function(t){return Number(1==t||11==t?0:2==t||12==t?1:t>2&&t<20?2:3)},12:function(t){return Number(t%10!=1||t%100==11)},13:function(t){return Number(0!==t)},14:function(t){return Number(1==t?0:2==t?1:3==t?2:3)},15:function(t){return Number(t%10==1&&t%100!=11?0:t%10>=2&&(t%100<10||t%100>=20)?1:2)},16:function(t){return Number(t%10==1&&t%100!=11?0:0!==t?1:2)},17:function(t){return Number(1==t||t%10==1?0:1)},18:function(t){return Number(0==t?0:1==t?1:2)},19:function(t){return Number(1==t?0:0===t||t%100>1&&t%100<11?1:t%100>10&&t%100<20?2:3)},20:function(t){return Number(1==t?0:0===t||t%100>0&&t%100<20?1:2)},21:function(t){return Number(t%100==1?1:t%100==2?2:t%100==3||t%100==4?3:0)}},V=function(){function t(e){var n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{};S(this,t),this.languageUtils=e,this.options=n,this.logger=C.create("pluralResolver"),this.rules=d()}return t.prototype.addRule=function(t,e){this.rules[t]=e},t.prototype.getRule=function(t){return this.rules[this.languageUtils.getLanguagePartFromCode(t)]},t.prototype.needsPlural=function(t){var e=this.getRule(t);return e&&e.numbers.length>1},t.prototype.getSuffix=function(t,e){var n=this,o=this.getRule(t);if(o){if(1===o.numbers.length)return"";var r=o.noAbs?o.plurals(e):o.plurals(Math.abs(e)),i=o.numbers[r];this.options.simplifyPluralSuffix&&2===o.numbers.length&&1===o.numbers[0]&&(2===i?i="plural":1===i&&(i=""));var a=function(){return n.options.prepend&&i.toString()?n.options.prepend+i.toString():i.toString()};return"v1"===this.options.compatibilityJSON?1===i?"":"number"==typeof i?"_plural_"+i.toString():a():"v2"===this.options.compatibilityJSON||2===o.numbers.length&&1===o.numbers[0]?a():2===o.numbers.length&&1===o.numbers[0]?a():this.options.prepend&&r.toString()?this.options.prepend+r.toString():r.toString()}return this.logger.warn("no plural rule found for: "+t),""},t}(),I=function(){function e(){var t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{};S(this,e),this.logger=C.create("interpolator"),this.init(t,!0)}return e.prototype.init=function(){var t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},e=arguments[1];e&&(this.options=t,this.format=t.interpolation&&t.interpolation.format||function(t){return t},this.escape=t.interpolation&&t.interpolation.escape||l),t.interpolation||(t.interpolation={escapeValue:!0});var n=t.interpolation;this.escapeValue=void 0===n.escapeValue||n.escapeValue,this.prefix=n.prefix?s(n.prefix):n.prefixEscaped||"{{",this.suffix=n.suffix?s(n.suffix):n.suffixEscaped||"}}",this.formatSeparator=n.formatSeparator?n.formatSeparator:n.formatSeparator||",",this.unescapePrefix=n.unescapeSuffix?"":n.unescapePrefix||"-",this.unescapeSuffix=this.unescapePrefix?"":n.unescapeSuffix||"",this.nestingPrefix=n.nestingPrefix?s(n.nestingPrefix):n.nestingPrefixEscaped||s("$t("),this.nestingSuffix=n.nestingSuffix?s(n.nestingSuffix):n.nestingSuffixEscaped||s(")"),this.resetRegExp()},e.prototype.reset=function(){this.options&&this.init(this.options)},e.prototype.resetRegExp=function(){var t=this.prefix+"(.+?)"+this.suffix;this.regexp=new RegExp(t,"g");var e=""+this.prefix+this.unescapePrefix+"(.+?)"+this.unescapeSuffix+this.suffix;this.regexpUnescape=new RegExp(e,"g");var n=this.nestingPrefix+"(.+?)"+this.nestingSuffix;this.nestingRegexp=new RegExp(n,"g")},e.prototype.interpolate=function(e,n,o){function r(t){return t.replace(/\$/g,"$$$$")}var a=this,s=void 0,l=void 0,u=function(t){if(t.indexOf(a.formatSeparator)<0)return i(n,t);var e=t.split(a.formatSeparator),r=e.shift().trim(),s=e.join(a.formatSeparator).trim();return a.format(i(n,r),s,o)};for(this.resetRegExp();s=this.regexpUnescape.exec(e);)l=u(s[1].trim()),e=e.replace(s[0],l),this.regexpUnescape.lastIndex=0;for(;s=this.regexp.exec(e);)l=u(s[1].trim()),"string"!=typeof l&&(l=t(l)),l||(this.logger.warn("missed to pass in variable "+s[1]+" for interpolating "+e),l=""),l=r(this.escapeValue?this.escape(l):l),e=e.replace(s[0],l),this.regexp.lastIndex=0;return e},e.prototype.nest=function(e,n){function o(t){if(t.indexOf(",")<0)return t;var e=t.split(",");t=e.shift();var n=e.join(",");n=this.interpolate(n,s),n=n.replace(/'/g,'"');try{s=JSON.parse(n)}catch(e){this.logger.error("failed parsing options string in nesting for key "+t,e)}return t}var r=arguments.length>2&&void 0!==arguments[2]?arguments[2]:{},i=void 0,a=void 0,s=k({},r);for(s.applyPostProcessor=!1;i=this.nestingRegexp.exec(e);){if(a=n(o.call(this,i[1].trim()),s),a&&i[0]===e&&"string"!=typeof a)return a;"string"!=typeof a&&(a=t(a)),a||(this.logger.warn("missed to resolve "+i[1]+" for nesting "+e),a=""),e=e.replace(i[0],a),this.regexp.lastIndex=0}return e},e}(),F=function(t){function e(n,o,r){var i=arguments.length>3&&void 0!==arguments[3]?arguments[3]:{};S(this,e);var a=O(this,t.call(this));return a.backend=n,a.store=o,a.services=r,a.options=i,a.logger=C.create("backendConnector"),a.state={},a.queue=[],a.backend&&a.backend.init&&a.backend.init(r,i.backend,i),a}return w(e,t),e.prototype.queueLoad=function(t,e,n){var o=this,r=[],i=[],a=[],s=[];return t.forEach(function(t){var n=!0;e.forEach(function(e){var a=t+"|"+e;o.store.hasResourceBundle(t,e)?o.state[a]=2:o.state[a]<0||(1===o.state[a]?i.indexOf(a)<0&&i.push(a):(o.state[a]=1,n=!1,i.indexOf(a)<0&&i.push(a),r.indexOf(a)<0&&r.push(a),s.indexOf(e)<0&&s.push(e)))}),n||a.push(t)}),(r.length||i.length)&&this.queue.push({pending:i,loaded:{},errors:[],callback:n}),{toLoad:r,pending:i,toLoadLanguages:a,toLoadNamespaces:s}},e.prototype.loaded=function(t,e,n){var o=this,i=t.split("|"),a=L(i,2),s=a[0],l=a[1];e&&this.emit("failedLoading",s,l,e),n&&this.store.addResourceBundle(s,l,n),this.state[t]=e?-1:2,this.queue.forEach(function(n){r(n.loaded,[s],l),y(n.pending,t),e&&n.errors.push(e),0!==n.pending.length||n.done||(o.emit("loaded",n.loaded),n.done=!0,n.errors.length?n.callback(n.errors):n.callback())}),this.queue=this.queue.filter(function(t){return!t.done})},e.prototype.read=function(t,e,n){var o=arguments.length>3&&void 0!==arguments[3]?arguments[3]:0,r=this,i=arguments.length>4&&void 0!==arguments[4]?arguments[4]:250,a=arguments[5];return t.length?this.backend[n](t,e,function(s,l){return s&&l&&o<5?void setTimeout(function(){r.read.call(r,t,e,n,o+1,2*i,a)},i):void a(s,l)}):a(null,{})},e.prototype.load=function(t,e,n){var o=this;if(!this.backend)return this.logger.warn("No backend was added via i18next.use. Will not load resources."),n&&n();var r=k({},this.backend.options,this.options.backend);"string"==typeof t&&(t=this.services.languageUtils.toResolveHierarchy(t)),"string"==typeof e&&(e=[e]);var a=this.queueLoad(t,e,n);return a.toLoad.length?void(r.allowMultiLoading&&this.backend.readMulti?this.read(a.toLoadLanguages,a.toLoadNamespaces,"readMulti",null,null,function(t,e){t&&o.logger.warn("loading namespaces "+a.toLoadNamespaces.join(", ")+" for languages "+a.toLoadLanguages.join(", ")+" via multiloading failed",t),!t&&e&&o.logger.log("successfully loaded namespaces "+a.toLoadNamespaces.join(", ")+" for languages "+a.toLoadLanguages.join(", ")+" via multiloading",e),a.toLoad.forEach(function(n){var r=n.split("|"),a=L(r,2),s=a[0],l=a[1],u=i(e,[s,l]);if(u)o.loaded(n,t,u);else{var c="loading namespace "+l+" for language "+s+" via multiloading failed";o.loaded(n,c),o.logger.error(c)}})}):a.toLoad.forEach(function(t){o.loadOne(t)})):(a.pending.length||n(),null)},e.prototype.reload=function(t,e){var n=this;this.backend||this.logger.warn("No backend was added via i18next.use. Will not load resources.");var o=k({},this.backend.options,this.options.backend);"string"==typeof t&&(t=this.services.languageUtils.toResolveHierarchy(t)),"string"==typeof e&&(e=[e]),o.allowMultiLoading&&this.backend.readMulti?this.read(t,e,"readMulti",null,null,function(o,r){o&&n.logger.warn("reloading namespaces "+e.join(", ")+" for languages "+t.join(", ")+" via multiloading failed",o),!o&&r&&n.logger.log("successfully reloaded namespaces "+e.join(", ")+" for languages "+t.join(", ")+" via multiloading",r),t.forEach(function(t){e.forEach(function(e){var a=i(r,[t,e]);if(a)n.loaded(t+"|"+e,o,a);else{var s="reloading namespace "+e+" for language "+t+" via multiloading failed";n.loaded(t+"|"+e,s),n.logger.error(s)}})})}):t.forEach(function(t){e.forEach(function(e){n.loadOne(t+"|"+e,"re")})})},e.prototype.loadOne=function(t){var e=this,n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:"",o=t.split("|"),r=L(o,2),i=r[0],a=r[1];this.read(i,a,"read",null,null,function(o,r){o&&e.logger.warn(n+"loading namespace "+a+" for language "+i+" failed",o),!o&&r&&e.logger.log(n+"loaded namespace "+a+" for language "+i,r),e.loaded(t,o,r)})},e.prototype.saveMissing=function(t,e,n,o){this.backend&&this.backend.create&&this.backend.create(t,e,n,o),t&&t[0]&&this.store.addResource(t[0],e,n,o)},e}(R),D=function(t){function e(n,o,r){var i=arguments.length>3&&void 0!==arguments[3]?arguments[3]:{};S(this,e);var a=O(this,t.call(this));return a.cache=n,a.store=o,a.services=r,a.options=i,a.logger=C.create("cacheConnector"),a.cache&&a.cache.init&&a.cache.init(r,i.cache,i),a}return w(e,t),e.prototype.load=function(t,e,n){var o=this;if(!this.cache)return n&&n();var r=k({},this.cache.options,this.options.cache),i="string"==typeof t?this.services.languageUtils.toResolveHierarchy(t):t;r.enabled?this.cache.load(i,function(t,e){if(t&&o.logger.error("loading languages "+i.join(", ")+" from cache failed",t),e)for(var r in e)if(Object.prototype.hasOwnProperty.call(e,r))for(var a in e[r])if(Object.prototype.hasOwnProperty.call(e[r],a)&&"i18nStamp"!==a){var s=e[r][a];s&&o.store.addResourceBundle(r,a,s)}n&&n()}):n&&n()},e.prototype.save=function(){this.cache&&this.options.cache&&this.options.cache.enabled&&this.cache.save(this.store.data)},e}(R),K=function(t){function e(){var n=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},o=arguments[1];S(this,e);var r=O(this,t.call(this));if(r.options=b(n),r.services={},r.logger=C,r.modules={external:[]},o&&!r.isInitialized&&!n.isClone){var i;if(!r.options.initImmediate)return i=r.init(n,o),O(r,i);setTimeout(function(){r.init(n,o)},0)}return r}return w(e,t),e.prototype.init=function(t,e){function n(t){return t?"function"==typeof t?new t:t:null}var o=this;if("function"==typeof t&&(e=t,t={}),t||(t={}),"v1"===t.compatibilityAPI?this.options=k({},v(),b(c(t)),{}):"v1"===t.compatibilityJSON?this.options=k({},v(),b(p(t)),{}):this.options=k({},v(),this.options,b(t)),this.format=this.options.interpolation.format,e||(e=m),!this.options.isClone){this.modules.logger?C.init(n(this.modules.logger),this.options):C.init(null,this.options);var r=new _(this.options);this.store=new A(this.options.resources,this.options);var i=this.services;i.logger=C,i.resourceStore=this.store,i.resourceStore.on("added removed",function(t,e){i.cacheConnector.save()}),i.languageUtils=r,i.pluralResolver=new V(r,{prepend:this.options.pluralSeparator,compatibilityJSON:this.options.compatibilityJSON,simplifyPluralSuffix:this.options.simplifyPluralSuffix}),i.interpolator=new I(this.options),i.backendConnector=new F(n(this.modules.backend),i.resourceStore,i,this.options),i.backendConnector.on("*",function(t){for(var e=arguments.length,n=Array(e>1?e-1:0),r=1;r<e;r++)n[r-1]=arguments[r];o.emit.apply(o,[t].concat(n))}),i.backendConnector.on("loaded",function(t){i.cacheConnector.save()}),i.cacheConnector=new D(n(this.modules.cache),i.resourceStore,i,this.options),i.cacheConnector.on("*",function(t){for(var e=arguments.length,n=Array(e>1?e-1:0),r=1;r<e;r++)n[r-1]=arguments[r];o.emit.apply(o,[t].concat(n))}),this.modules.languageDetector&&(i.languageDetector=n(this.modules.languageDetector),i.languageDetector.init(i,this.options.detection,this.options)),this.translator=new M(this.services,this.options),
+this.translator.on("*",function(t){for(var e=arguments.length,n=Array(e>1?e-1:0),r=1;r<e;r++)n[r-1]=arguments[r];o.emit.apply(o,[t].concat(n))}),this.modules.external.forEach(function(t){t.init&&t.init(o)})}var a=["getResource","addResource","addResources","addResourceBundle","removeResourceBundle","hasResourceBundle","getResourceBundle"];a.forEach(function(t){o[t]=function(){var e;return(e=o.store)[t].apply(e,arguments)}}),"v1"===this.options.compatibilityAPI&&g(this);var s=function(){o.changeLanguage(o.options.lng,function(t,n){o.isInitialized=!0,o.logger.log("initialized",o.options),o.emit("initialized",o.options),e(t,n)})};return this.options.resources||!this.options.initImmediate?s():setTimeout(s,0),this},e.prototype.loadResources=function(){var t=this,e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:m;if(this.options.resources)e(null);else{if(this.language&&"cimode"===this.language.toLowerCase())return e();var n=[],o=function(e){if(e){var o=t.services.languageUtils.toResolveHierarchy(e);o.forEach(function(t){n.indexOf(t)<0&&n.push(t)})}};if(this.language)o(this.language);else{var r=this.services.languageUtils.getFallbackCodes(this.options.fallbackLng);r.forEach(function(t){return o(t)})}this.options.preload&&this.options.preload.forEach(function(t){return o(t)}),this.services.cacheConnector.load(n,this.options.ns,function(){t.services.backendConnector.load(n,t.options.ns,e)})}},e.prototype.reloadResources=function(t,e){t||(t=this.languages),e||(e=this.options.ns),this.services.backendConnector.reload(t,e)},e.prototype.use=function(t){return"backend"===t.type&&(this.modules.backend=t),"cache"===t.type&&(this.modules.cache=t),("logger"===t.type||t.log&&t.warn&&t.error)&&(this.modules.logger=t),"languageDetector"===t.type&&(this.modules.languageDetector=t),"postProcessor"===t.type&&T.addPostProcessor(t),"3rdParty"===t.type&&this.modules.external.push(t),this},e.prototype.changeLanguage=function(t,e){var n=this,o=function(t,o){o&&(n.emit("languageChanged",o),n.logger.log("languageChanged",o)),e&&e(t,function(){return n.t.apply(n,arguments)})},r=function(t){t&&(n.language=t,n.languages=n.services.languageUtils.toResolveHierarchy(t),n.translator.changeLanguage(t),n.services.languageDetector&&n.services.languageDetector.cacheUserLanguage(t)),n.loadResources(function(e){o(e,t)})};t||!this.services.languageDetector||this.services.languageDetector.async?!t&&this.services.languageDetector&&this.services.languageDetector.async?this.services.languageDetector.detect(r):r(t):r(this.services.languageDetector.detect())},e.prototype.getFixedT=function(t,e){var n=this,o=function t(e){var o=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{},r=k({},o);return r.lng=r.lng||t.lng,r.lngs=r.lngs||t.lngs,r.ns=r.ns||t.ns,n.t(e,r)};return"string"==typeof t?o.lng=t:o.lngs=t,o.ns=e,o},e.prototype.t=function(){var t;return this.translator&&(t=this.translator).translate.apply(t,arguments)},e.prototype.exists=function(){var t;return this.translator&&(t=this.translator).exists.apply(t,arguments)},e.prototype.setDefaultNamespace=function(t){this.options.defaultNS=t},e.prototype.loadNamespaces=function(t,e){var n=this;return this.options.ns?("string"==typeof t&&(t=[t]),t.forEach(function(t){n.options.ns.indexOf(t)<0&&n.options.ns.push(t)}),void this.loadResources(e)):e&&e()},e.prototype.loadLanguages=function(t,e){"string"==typeof t&&(t=[t]);var n=this.options.preload||[],o=t.filter(function(t){return n.indexOf(t)<0});return o.length?(this.options.preload=n.concat(o),void this.loadResources(e)):e()},e.prototype.dir=function(t){if(t||(t=this.languages&&this.languages.length>0?this.languages[0]:this.language),!t)return"rtl";var e=["ar","shu","sqr","ssh","xaa","yhd","yud","aao","abh","abv","acm","acq","acw","acx","acy","adf","ads","aeb","aec","afb","ajp","apc","apd","arb","arq","ars","ary","arz","auz","avl","ayh","ayl","ayn","ayp","bbz","pga","he","iw","ps","pbt","pbu","pst","prp","prd","ur","ydd","yds","yih","ji","yi","hbo","men","xmn","fa","jpr","peo","pes","prs","dv","sam"];return e.indexOf(this.services.languageUtils.getLanguagePartFromCode(t))>=0?"rtl":"ltr"},e.prototype.createInstance=function(){var t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},n=arguments[1];return new e(t,n)},e.prototype.cloneInstance=function(){var t=this,n=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},o=arguments.length>1&&void 0!==arguments[1]?arguments[1]:m,r=k({},this.options,n,{isClone:!0}),i=new e(r,o),a=["store","services","language"];return a.forEach(function(e){i[e]=t[e]}),i.translator=new M(i.services,i.options),i.translator.on("*",function(t){for(var e=arguments.length,n=Array(e>1?e-1:0),o=1;o<e;o++)n[o-1]=arguments[o];i.emit.apply(i,[t].concat(n))}),i.init(r,o),i},e}(R),q=new K;return q})
+
+    window['i18next'] = module.exports;
+});

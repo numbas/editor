@@ -110,6 +110,9 @@
                 <li class="list-group-item" data-name="{{project.name|escape}}"><a href="{% url 'project_index' project.pk %}">{{project.name}}</a></li>
                 {% endfor %}
             </ul>
+            <div class="panel-footer">
+                <a class="btn btn-block btn-primary" href="{% url 'public_projects' %}"><span class="glyphicon glyphicon-globe"></span> Explore other projects</a>
+            </div>
         </div>
     </div>
 </div>

@@ -1,14 +1,18 @@
+from django.conf import settings
 from django.contrib import messages
+from django.db.models import Sum, When, Case, IntegerField
 from django.views import generic
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.shortcuts import redirect, render_to_response
 from django import http
 from django.core.exceptions import PermissionDenied
 from itertools import groupby
+from django_tables2.config import RequestConfig
 
 from editor.models import Project, ProjectAccess, STAMP_STATUS_CHOICES
 import editor.forms
 import editor.views.editoritem
+from editor.tables import ProjectTable
 
 class MustBeMemberMixin(object):
     def dispatch(self, request, *args, **kwargs):
@@ -239,3 +243,43 @@ class LeaveProjectView(ProjectContextMixin, MustBeMemberMixin, generic.DeleteVie
 
     def get_success_url(self):
         return reverse('editor_index')
+
+class PublicProjectsView(generic.ListView):
+    model = Project
+    template_name = 'project/public_list.html'
+    
+    def get_queryset(self):
+        query = super(PublicProjectsView,self).get_queryset() \
+                .exclude(items=None) \
+                .annotate(num_items=Sum(Case(When(items__published=True,then=1),default=0,output_field=IntegerField()))) \
+                .exclude(num_items=0)
+        if not getattr(settings,'EVERYTHING_VISIBLE',False):
+            query = query.filter(public_view=True)
+        return query
+
+    def make_table(self):
+        config = RequestConfig(self.request, paginate={'per_page': 5})
+        results = ProjectTable(self.object_list)
+
+        #order_by = self.form.cleaned_data.get('order_by')
+        order_by = self.request.GET.get('order_by','num_items')
+        if order_by in ('num_items',):
+            order_by = '-'+order_by
+        results.order_by = order_by
+
+        config.configure(results)
+
+        return results
+
+    def get_context_data(self, **kwargs):
+        context = super(PublicProjectsView,self).get_context_data(**kwargs)
+        table = context['results'] = self.make_table()
+        context['projects'] = [
+            {
+                'project': row.record, 
+                'num_questions': row.record.items.questions().filter(published=True).count(),
+                'num_exams': row.record.items.exams().filter(published=True).count(),
+            }
+            for row in table.page.object_list
+        ]
+        return context

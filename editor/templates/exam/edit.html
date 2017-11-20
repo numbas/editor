@@ -129,9 +129,9 @@
                                         <div class="title">
                                             <strong class="number" data-bind="text: number()===undefined ? '' : number()+'.'"></strong>
                                             <a data-bind="attr:{href: url}, text: name, mathjax: name" target="_blank"></a>
-                                            <span class="label label-default stamp" data-bind="visible: current_stamp, text: current_stamp_display, attr: {'data-stamp':current_stamp}"></span>
+                                            <span class="label label-default stamp" data-bind="visible: current_stamp, text: current_stamp_display, attr: {'data-stamp':current_stamp()}"></span>
                                         </div>
-                                        <div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
+                                        <div class="description" data-bind="visible: description().length>0, html: description, mathjax: true"></div>
                                         </li>
                                     </ul>
                                     <p class="nothing-here" data-bind="visible: questions().length==0">There are no questions in this group.</p>
@@ -323,7 +323,7 @@
                     (<span data-bind="text: author"></span>)
                 </div>
             </div>
-            <div class="description" data-bind="visible: description.length>0, html: description, mathjax: true"></div>
+            <div class="description" data-bind="visible: description().length>0, html: description, mathjax: true"></div>
         </li>
     </script>
     {% endverbatim %}

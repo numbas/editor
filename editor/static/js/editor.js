@@ -266,21 +266,24 @@ $(document).ready(function() {
     }
 
 	Editor.mappedObservableArray = function(map) {
-		var obj = {list: ko.observableArray([]), lastData: []};
+		var obj = {list: ko.observableArray([])};
 		var obs = ko.computed({
 			owner: obj,
 			read: obj.list,
 			write: function(l) {
+                var mapped_ids = {};
                 var current_mapped = obj.list();
-                var out = [];
-                for(var i=0;i<l.length;i++) {
-                    if(i<obj.lastData.length && l[i]==obj.lastData[i]) {
-                        out.push(current_mapped[i]);
+                current_mapped.forEach(function(o) {
+                    mapped_ids[o.id] = o;
+                });
+                l.forEach(function(d) {
+                    if(mapped_ids[d.id]) {
+                        mapped_ids[d.id].load(d);
                     } else {
-                        out.push(map(l[i]));
+                        mapped_ids[d.id] = map(d);
                     }
-                }
-                obj.lastData = l;
+                });
+                var out = l.map(function(d) { return mapped_ids[d.id]; });
                 this.list(out);
 			}
 		});
@@ -293,9 +296,6 @@ $(document).ready(function() {
 		obs.indexOf = function(o) {
 			return obj.list.indexOf(o);
 		}
-        obs.getLastData = function() {
-            return obj.lastData;
-        }
 		return obs;
 	}
 
@@ -474,6 +474,31 @@ $(document).ready(function() {
                 ei.currentTab(tab);
             }
         }
+
+        this.ready_to_download_checks = ko.observableArray([
+            function() {
+                if(ei.current_stamp().status!='ok') {
+                    return {ready:false, reason: 'it isn\'t labelled "ready to use"'}
+                }
+            }
+        ]);
+        this.ready_to_download_obj = ko.computed(function() {
+            var checks = this.ready_to_download_checks();
+            for(var i=0;i<checks.length;i++) {
+                var obj = checks[i]();
+                if(obj) {
+                    return obj;
+                }
+            }
+            return {ready:true};
+        },this);
+        this.ready_to_download = ko.computed(function() {
+            return this.ready_to_download_obj().ready;
+        },this);
+        this.ready_to_download_reason = ko.computed(function() {
+            return this.ready_to_download_obj().reason;
+        },this);
+
 
         this.ability_frameworks(item_json.ability_frameworks.map(function(d) {
             return new Editor.AbilityFramework(d);
@@ -732,45 +757,6 @@ $(document).ready(function() {
                     return promise;
                 }
             );
-
-            this.currentChange = ko.observable(new Editor.Change(this.versionJSON(),item_json.itemJSON.author));
-
-            // create a new version when the JSON changes
-            ko.computed(function() {
-                var currentChange = this.currentChange.peek();
-                var v = new Editor.Change(this.versionJSON(),item_json.itemJSON.author, currentChange);
-
-                //if the new version is different to the old one, keep the diff
-                if(!currentChange || v.diff.length!=0) {
-                    currentChange.next_version(v);
-                    this.currentChange(v);
-                }
-            },this).extend({throttle:1000});
-
-
-            this.rewindChange = function() {
-                var currentChange = ei.currentChange();
-                var prev_version = currentChange.prev_version();
-                if(!prev_version) {
-                    throw(new Error("Can't rewind - this is the first version"));
-                }
-                var data = ei.versionJSON();
-                data = jiff.patch(jiff.inverse(currentChange.diff),data);
-                ei.currentChange(prev_version);
-                ei.load(data);
-            };
-
-            this.forwardChange = function() {
-                var currentChange = ei.currentChange();
-                var next_version = currentChange.next_version();
-                if(!currentChange.next_version()) {
-                    throw(new Error("Can't go forward - this is the latest version"));
-                }
-                var data = ei.versionJSON();
-                data = jiff.patch(next_version.diff,data);
-                ei.currentChange(next_version);
-                ei.load(data);
-            };
 
         },
 

@@ -6,12 +6,24 @@ $(document).ready(function() {
 
         Editor.EditorItem.apply(this);
 
-        this.questions = ko.observableArray([]);
-
         this.question_groups = ko.observableArray([]);
         this.addQuestionGroup = function() {
             e.question_groups.push(new QuestionGroup(null,e));
         }
+
+        this.questions = ko.computed(function() {
+            var l = [];
+            this.question_groups().map(function(g) {
+                l = l.concat(g.questions());
+            });
+            return l
+        },this);
+
+        this.ready_to_download_checks.push(function() {
+            if(!e.questions().every(function(q) {return q.current_stamp()=='ok'})) {
+                return {ready: false, reason: 'not every question is labelled "Ready to use"'};
+            }
+        });
 
         this.showQuestionGroupNames = ko.observable(false);
 
@@ -97,26 +109,21 @@ $(document).ready(function() {
         this.basketQuestions = Editor.mappedObservableArray(function(d){ return new Question(d,e);});
         this.basketQuestions(data.basketQuestions);
 
-        function update_question_list(list,data) {
-            var odata = list.getLastData();
-            var ndata = [];
-            for(var i=0;i<data.length;i++) {
-                if(i>=odata.length || JSON.stringify(odata[i])!=JSON.stringify(data[i])) {
-                    ndata.push(data[i]);
-                } else {
-                    ndata.push(odata[i]);
-                }
-            }
-            list(ndata);
-        }
-
         function getQuestions() {
             var cookie = getCookie('csrftoken');
             if(cookie!==null) {
-                $.get('/exam/question-lists/')
+                $.get('/exam/question-lists/'+e.id)
                     .success(function(d) {
-                        update_question_list(e.recentQuestions,d.recent);
-                        update_question_list(e.basketQuestions,d.basket);
+                        e.recentQuestions(d.recent);
+                        e.basketQuestions(d.basket);
+
+                        var exam_question_by_pk = {};
+                        d.exam_questions.forEach(function(d) {
+                            exam_question_by_pk[d.id] = d;
+                        });
+                        e.questions().forEach(function(q) {
+                            q.load(exam_question_by_pk[q.id()]);
+                        });
                     })
                 ;
             }
@@ -208,23 +215,6 @@ $(document).ready(function() {
     }
     Exam.prototype = {
 
-        versionJSON: function() {
-            var obj = {
-                id: this.id,
-                author: item_json.itemJSON.author,
-                locale: item_json.itemJSON.locale,
-                JSONContent: this.toJSON(),
-                metadata: this.metadata(),
-                name: this.name(),
-                questions: this.questions().map(function(q){return q.toJSON()}),
-                theme: this.theme().path
-            }
-            if(item_json.editable) {
-                obj.public_access = this.public_access()
-            }
-            return obj;
-        },
-
         getTab: function(id) {
             return this.mainTabs().find(function(t){return t.id==id});
         },
@@ -281,7 +271,6 @@ $(document).ready(function() {
         },
 
         reset: function() {
-            this.questions([]);
         },
 
         load: function(data) {
@@ -478,22 +467,27 @@ $(document).ready(function() {
     function Question(data,exam) {
         var q = this;
         this.exam = exam;
-        this.id = ko.observable(data.id);
-        this.name = ko.observable(data.name);
-        this.created = ko.observable(data.created);
-        this.author = ko.observable(data.author);
-        this.url = ko.observable(data.url);
-        this.deleteURL = ko.observable(data.deleteURL);
-        this.last_modified = ko.observable(data.last_modified);
+        this.id = ko.observable();
+        this.name = ko.observable();
+        this.created = ko.observable();
+        this.author = ko.observable();
+        this.url = ko.observable();
+        this.deleteURL = ko.observable();
+        this.last_modified = ko.observable();
+        this.metadata = ko.observable();
+        this.current_stamp = ko.observable();
+        this.current_stamp_display = ko.observable();
+        this.load(data);
+
         this.previewURL = ko.computed(function() {
             return q.url()+'preview/';
         },this);
-        this.metadata = ko.observable(data.metadata);
-        var descriptionDiv = document.createElement('div');
-        descriptionDiv.innerHTML = this.metadata().description;
-        this.description = $(descriptionDiv).text();
-        this.current_stamp = data.current_stamp;
-        this.current_stamp_display = data.current_stamp_display;
+        this.description = ko.computed(function() {
+            var descriptionDiv = document.createElement('div');
+            descriptionDiv.innerHTML = this.metadata().description || '';
+            return $(descriptionDiv).text();
+        },this);
+
         this.question_group = ko.computed(function() {
             var groups = exam.question_groups();
             for(var i=0;i<groups.length;i++) {
@@ -533,6 +527,18 @@ $(document).ready(function() {
 
     }
     Question.prototype = {
+        load: function(data) {
+            this.id(data.id);
+            this.name(data.name);
+            this.created(data.created);
+            this.author(data.author);
+            this.url(data.url);
+            this.deleteURL(data.deleteURL);
+            this.last_modified(data.last_modified);
+            this.metadata(data.metadata);
+            this.current_stamp(data.current_stamp);
+            this.current_stamp_display(data.current_stamp_display);
+        },
         remove: function() {
             if(!this.question_group()) {
                 return;

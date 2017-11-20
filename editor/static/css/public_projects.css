@@ -1,0 +1,41 @@
+.project {
+    margin-bottom: 0.5em;
+}
+.project ~ .project {
+    padding-top: 0.5em;
+    border-top: 1px solid #eee;
+}
+
+.project .owner {
+    margin-right: 0.2em;
+}
+
+.project .info {
+    padding: 0.5em 0;
+    margin: 0.5em 0;
+}
+
+.project .info .bit ~ .bit {
+    margin-left: 1em;
+}
+
+.project .members {
+    display: inline;
+}
+
+.project .members li ~ li {
+  padding-left: 0;
+}
+.project .members li {
+  padding-right: 0;
+}
+
+
+.members .user-thumbnail img, .members .user-thumbnail .glyphicon {
+    vertical-align: baseline;
+}
+
+.project .description {
+    font-size: 1.2em;
+    margin: 0.7em 0;
+}

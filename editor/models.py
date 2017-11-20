@@ -59,6 +59,9 @@ class ControlledObject(object):
         raise NotImplementedError
 
     def can_be_viewed_by(self, user):
+        if getattr(settings, 'EVERYTHING_VISIBLE', False):
+            return True
+        
         accept_levels = ('view', 'edit')
         try:
             if self.published and self.public_access in accept_levels:
@@ -86,6 +89,9 @@ class ControlledObject(object):
 
     @classmethod
     def filter_can_be_viewed_by(cls, user):
+        if getattr(settings, 'EVERYTHING_VISIBLE', False):
+            return Q()
+        
         view_perms = ('edit', 'view')
         if user.is_superuser:
             return Q()
@@ -162,10 +168,15 @@ class Project(models.Model, ControlledObject):
     def has_access(self, user, levels):
         if user.is_anonymous():
             return False
+        if user==self.owner:
+            return True
         return ProjectAccess.objects.filter(project=self, user=user, access__in=levels).exists()
 
     def members(self):
-        return [self.owner]+list(User.objects.filter(project_memberships__project=self).exclude(pk=self.owner.pk))
+        return [self.owner]+self.non_owner_members()
+
+    def non_owner_members(self):
+        return list(User.objects.filter(project_memberships__project=self).exclude(pk=self.owner.pk))
 
     def all_timeline(self):
         items = self.timeline.all() | TimelineItem.objects.filter(editoritems__project=self)
@@ -256,6 +267,8 @@ class Extension(models.Model):
     zipfile_folder = 'user-extensions'
     zipfile = models.FileField(upload_to=zipfile_folder+'/zips', blank=True, null=True, max_length=255, verbose_name='Extension package', help_text='A .zip package containing the extension\'s files')
 
+    class Meta:
+        ordering = ['name']
     def __str__(self):
         return self.name
 
@@ -610,11 +623,24 @@ class NumbasObject(object):
     def __eq__(self, other):
         return self.content == other.content
 
+
+class EditorItemManager(models.Manager):
+    def questions(self):
+        return self.exclude(question=None)
+
+    def exams(self):
+        return self.exclude(exam=None)
+
+    def published(self):
+        return self.filter(published=True)
+
+
 @reversion.register
 class EditorItem(models.Model, NumbasObject, ControlledObject):
     """
         Base model for exams and questions - each exam or question has a reference to an instance of this
     """
+    objects = EditorItemManager()
     name = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200, editable=False, unique=False)
 

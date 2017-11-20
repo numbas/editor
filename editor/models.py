@@ -82,7 +82,13 @@ class ControlledObject(object):
         return user == self.owner
 
     def can_be_edited_by(self, user):
-        return self.public_access == 'edit' or (user.is_superuser) or (self.owner == user) or self.has_access(user, ('edit',))
+        try:
+            if self.public_access == 'edit':
+                return True
+        except AttributeError:
+            pass
+
+        return (user.is_superuser) or (self.owner == user) or self.has_access(user, ('edit',))
 
     def __eq__(self, other):
         return True
@@ -375,7 +381,7 @@ CUSTOM_PART_TYPE_INPUT_WIDGETS = [
     ('dropdown', 'Drop-down box'),
 ]
 
-class CustomPartType(models.Model):
+class CustomPartType(models.Model, ControlledObject):
     author = models.ForeignKey(User, related_name='own_custom_part_types')
     name = models.CharField(max_length=200, verbose_name='Name')
     short_name = models.CharField(max_length=200, unique=True, verbose_name='Unique identifier for this part type')
@@ -396,6 +402,17 @@ class CustomPartType(models.Model):
 
     def get_absolute_url(self):
         return reverse('custom_part_type_edit', args=(self.pk,))
+
+    @property
+    def owner(self):
+        return self.author
+
+    def has_access(self, user, levels):
+        if user.is_anonymous():
+            return False
+        if user==self.owner:
+            return True
+        return False
 
     def as_json(self):
         return {

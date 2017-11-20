@@ -1,17 +1,5 @@
 {% extends "layout.html" %}
 
-{% block javascripts %}
-{{block.super}}
-<script type="text/javascript">
-    $(document).ready(function() {
-        Editor.codemirror(document.getElementById('id_settings'), {mode:'json'});
-        Editor.codemirror(document.getElementById('id_marking_script'), {mode:'jme'});
-        Editor.codemirror(document.getElementById('id_input_options'), {mode:'jme'});
-        Editor.tinymce({selector:'#id_description'});
-    });
-</script>
-{% endblock %}
-
 {% block content %}
 <div class="page-header">
     <h1>{% block custom_part_type_page_header %}Create a new part type{% endblock %}</h1>
@@ -42,8 +30,4 @@
         </div>
     </div>
 </form>
-{#{{ formset.management_form }}#}
-{{ formset.errors }}
-{#{{ formset.non_form_errors }}#}
-<p></p>
 {% endblock content %}

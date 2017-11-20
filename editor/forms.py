@@ -380,9 +380,24 @@ class UpdateCustomPartTypeForm(forms.ModelForm):
         marking_script = self.cleaned_data.get('marking_script')
         return marking_script.replace('\r','')
 
-class NewCustomPartTypeForm(UpdateCustomPartTypeForm):
+class NewCustomPartTypeForm(forms.ModelForm):
     
     """Form for a new extension."""
+
+    class Meta:
+        model = CustomPartType
+        fields = ['name', 'short_name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control'}),
+            'short_name': forms.TextInput(attrs={'class':'form-control'}),
+        }
+
+    def clean_short_name(self):
+        short_name = self.cleaned_data.get('short_name')
+        built_in_part_types = ['jme','numberentry','patternmatch','matrix','gapfill','information','extension','1_n_2','m_n_2','m_n_x']
+        if short_name in built_in_part_types:
+            raise ValidationError("The unique identifier you chose is already in use.")
+        return short_name
     
     def __init__(self, *args, **kwargs):
         self._user = kwargs.pop('author')

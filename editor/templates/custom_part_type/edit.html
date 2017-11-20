@@ -1,5 +1,173 @@
-{% extends "custom_part_type/create.html" %}
+{% extends "layout.html" %}
+{% load can_edit %}
+{% load links %}
+{% load sanitizer %}
+{% load helplink %}
+{% load editor_controls %}
+{% load sstatic %}
+{% load json_filter %}
 
-{% block custom_part_type_page_header %}
-<span class="glyphicon glyphicon-pencil"></span> Editing part type "{{object.name}}"
+{% block javascripts %}
+    {{block.super}}
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            Editor.custom_part_type = {};
+            Editor.custom_part_type.input_widgets = {{CUSTOM_PART_TYPE_INPUT_WIDGETS|json|safe}}
+            Editor.custom_part_type.public_availability_choices = {{CUSTOM_PART_TYPE_PUBLIC_CHOICES|json|safe}}
+        });
+    </script>
+
+    <script type="text/javascript">
+        (function() {
+            window.item_json = {{item_json|json|safe}};
+        })();
+    </script>
+
+    <script src="{% sstatic 'js/custom_part_type/edit.js' %}"></script>
 {% endblock %}
+
+{% block content_container %}container-fluid{% endblock %}
+
+{% block content %}
+<div class="page-loading" data-bind="visible: false">
+    <h1>Loading...</h1>
+</div>
+
+<div class="page-error">
+    <div class="page-header text-danger">
+        <h2>Error</h2>
+    </div>
+    <p class="text-lg">There was an error loading the page.</p>
+
+    <pre class="trace"></pre>
+</div>
+
+<div class="loaded-content">
+    <div class="page-header">
+        {% block page_header %}
+        <h1 class="name-header">
+            <span class="glyphicon glyphicon-ok"></span> <span data-bind="text: name, click: edit_name">{{part_type.name}}</span>
+        </h1>
+        {% endblock page_header %}
+    </div>
+    <div class="row">
+        <div class="col-sm-1 col-md-2 tabs">
+            <div class="navbar navbar-blank">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#editor-controls-collapse" aria-expanded="false">
+                        <span class="sr-only">toggle editor controls</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+                <div class="collapse navbar-collapse" id="editor-controls-collapse">
+                    <ul class="nav nav-pills nav-stacked" data-bind="foreach: tabs">
+                        <li data-bind="visible: visible, css: {active: $root.currentTab() == $data}">
+                            <a href="#" data-bind="click: $root.currentTab">
+                                <span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> 
+                                <span class="hidden-sm" data-bind="text: title"></span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-11 col-md-10 editing">
+            <div class="tab-content">
+            {% block main_tab_content %}
+                <!-- Description -->
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='description'}">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-sm-8">
+                                <div class="form-group name">
+                                    <label>Name</label>
+                                    <input id="name-input" {% if not editable %}disabled{% endif %} class="form-control input-lg" data-bind="textInput: name">
+                                </div>
+
+                                <div class="form-group name">
+                                    <label>Unique identifier</label>
+                                    <input id="name-input" disabled class="form-control monospace" data-bind="textInput: short_name">
+                                </div>
+
+                                <div class="form-group description">
+                                    <label>Description</label>
+                                    <div id="description-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
+                                    <p class="help-block">
+                                        {% helplink 'http://numbas-editor.readthedocs.io/en/latest/custom_part_type/reference.html#term-description' subject='the description field' %}
+                                        Describe how this part type works, and what kinds of questions it is appropriate for.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Answer input -->
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='input'}">
+                    <form class="form-horizontal" data-bind="submit: Editor.noop">
+                        {% selectproperty 'input_type' 'Answer input method' options_text='niceName' options='Editor.custom_part_type.input_widgets' help_url='http://numbas-editor.readthedocs.io/en/latest/custom_part_type.html#term-answer-input-method' %}
+
+                        <div class="form-group">
+                            <label class="{{form_label_class}} control-label">
+                                Correct answer
+                            </label>
+                            <div class="{{form_control_class}}">
+                                <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: input_options.correctAnswer, codemirrorMode: 'jme'"></textarea>
+                            </div>
+                        </div>
+
+                        {% property 'input_options.hint' 'Input hint' %}
+                    </form>
+                </section>
+
+                <!-- Part options -->
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='options'}">
+                </section>
+
+                <!-- Marking algorithm -->
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='marking'}">
+                </section>
+            {% endblock main_tab_content %}
+            </div>
+        </div>
+    </div>
+
+
+<!-- 
+<div class="page-header">
+    <h1>
+        <span class="glyphicon glyphicon-pencil"></span> Editing part type "{{object.name}}"
+    </h1>
+</div>
+
+<form class="form-horizontal" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% for field in form %}
+        <div class="form-group {% if field.errors %}has-error{% endif %}">
+            <label class="col-sm-3 control-label">{{field.label}}</label>
+            <div class="col-sm-9">
+                {{field}}
+                {% if field.errors %}
+                    <ul class="help-block list-unstyled">
+                        {% for error in field.errors %}
+                        <li class="alert alert-danger">{{error}}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="help-block">{{field.help_text}}</div>
+            </div>
+        </div>
+    {% endfor %}
+    <div class="form-group">
+        <div class="col-sm-offset-3 col-sm-9">
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <a class="btn btn-link" href="{% url 'profile_custom_part_types' request.user.pk %}">Cancel</a>
+        </div>
+    </div>
+</form>
+-->
+{% endblock content %}

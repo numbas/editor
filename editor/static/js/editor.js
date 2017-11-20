@@ -124,7 +124,7 @@ $(document).ready(function() {
 		return s.trim().replace(/[^\w\s]/g,'').toLowerCase().replace(/\s/g,'-');
 	};
 
-	tryLoad = function(data,attr,obj,altname) {
+	tryLoad = Editor.tryLoad = function(data,attr,obj,altname) {
 		if(!data)
 			return;
 

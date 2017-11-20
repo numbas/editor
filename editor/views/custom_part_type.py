@@ -1,7 +1,7 @@
 from django.views import generic
 from django.core.urlresolvers import reverse
 
-from editor.models import CustomPartType
+from editor.models import CustomPartType, CUSTOM_PART_TYPE_PUBLIC_CHOICES, CUSTOM_PART_TYPE_INPUT_WIDGETS
 from editor.forms import NewCustomPartTypeForm, UpdateCustomPartTypeForm
 from editor.views.generic import AuthorRequiredMixin
 
@@ -22,9 +22,20 @@ class UpdateView(generic.UpdateView):
     model = CustomPartType
     form_class = UpdateCustomPartTypeForm
     template_name = 'custom_part_type/edit.html'
+    context_object_name = 'part_type'
 
     def get_success_url(self):
         return self.object.get_absolute_url()
+
+    def get_context_data(self, **kwargs):
+        context = super(UpdateView, self).get_context_data(**kwargs)
+
+        context['editable'] = self.object.can_be_edited_by(self.request.user)
+        context['item_json'] = self.object.as_json()
+        context['CUSTOM_PART_TYPE_PUBLIC_CHOICES'] = [{'name': value, 'niceName': label} for value, label in CUSTOM_PART_TYPE_PUBLIC_CHOICES]
+        context['CUSTOM_PART_TYPE_INPUT_WIDGETS'] = [{'name': value, 'niceName': label} for value, label in CUSTOM_PART_TYPE_INPUT_WIDGETS]
+
+        return context
 
 class DeleteView(AuthorRequiredMixin, generic.DeleteView):
     model = CustomPartType

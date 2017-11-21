@@ -385,7 +385,7 @@ class CustomPartType(models.Model, ControlledObject):
     author = models.ForeignKey(User, related_name='own_custom_part_types')
     name = models.CharField(max_length=200, verbose_name='Name')
     short_name = models.CharField(max_length=200, unique=True, verbose_name='Unique identifier for this part type')
-    description = models.TextField(default='', verbose_name='What\'s this part type for?')
+    description = models.TextField(default='', blank=True, verbose_name='What\'s this part type for?')
     input_widget = models.CharField(max_length=200, choices = CUSTOM_PART_TYPE_INPUT_WIDGETS, verbose_name='Answer input method')
     input_options = JSONField(blank=True, verbose_name='Options for the answer input method')
     can_be_gap = models.BooleanField(default=True, verbose_name='Can this part be a gap?')

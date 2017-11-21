@@ -124,6 +124,12 @@ $(document).ready(function() {
 		return s.trim().replace(/[^\w\s]/g,'').toLowerCase().replace(/\s/g,'-');
 	};
 
+    /** Try to load the given attribute(s) from data into obj
+     * @param {Object} data
+     * @param {String|Array.<String>} attr - the name of the attribute to load, or a list of names
+     * @param {Object} obj - the object to load the attribute into
+     * @param {String|Array.<String>} [altname] - the name(s) of the attribute to set in the destination object
+     */
 	tryLoad = Editor.tryLoad = function(data,attr,obj,altname) {
 		if(!data)
 			return;
@@ -151,6 +157,30 @@ $(document).ready(function() {
 		else if(attr.toLowerCase() in data)
 			set(data[attr.toLowerCase()]);
 	}
+
+    /** Given a source object `data` with string attribute `attr`, find the object in `options` with `id_key` equal to the value of `data[attr]`,
+     * and set `obj[attr]` to that object
+     */
+    tryLoadMatchingId = Editor.tryLoadMatchingId = function(data,attr,id_key,options,obj,altname) {
+        if(!data) {
+            return;
+        }
+
+        var val;
+        if(attr in data) {
+            val = data[attr];
+        } else if(attr.toLowerCase() in data) {
+            val = data[attr.toLowerCase()];
+        } else {
+            return;
+        }
+        altname = altname || attr;
+        for(var i=0;i<options.length;i++) {
+            if(options[i][id_key] == val) {
+                obj[altname](options[i]);
+            }
+        }
+    }
 
     Editor.numbasVersion = 'exam_question_groups';
 
@@ -359,15 +389,22 @@ $(document).ready(function() {
     //savefn is a function which does the save, and returns a deferred object which resolves when the save is done
     Editor.saver = function(obs,savefn) {
         var firstSave = true;
+        var firstData = null;
 
         return ko.computed(function() {
             var data = obs();
-			if(data===undefined) {
-				return;
-			}
-            if(firstSave) {
-                firstSave = false;
+            if(data===undefined) {
                 return;
+            }
+            debugger;
+            if(firstSave) {
+                var json = JSON.stringify(data);
+                if(firstData===null || firstData==json) {
+                    firstData = json;
+                    return;
+                } else {
+                    firstSave = false;
+                }
             }
             Editor.startSave();
             data.csrfmiddlewaretoken = getCookie('csrftoken');
@@ -382,7 +419,7 @@ $(document).ready(function() {
             } catch(e) {
                 Editor.abortSave(e.message);
             }
-        }).extend({throttle:1000});
+        }).extend({throttle:1000, deferred: true});
     }
 
     var Taxonomy = Editor.Taxonomy = function(data) {
@@ -713,7 +750,6 @@ $(document).ready(function() {
 
         init_save: function(callback) {
             var ei = this;
-			this.firstSave = true;
             this.autoSave = Editor.saver(
                 function() {
                     var data = ei.save();

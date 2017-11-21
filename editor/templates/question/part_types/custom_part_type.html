@@ -32,7 +32,7 @@
                 </div>
                 <div data-bind="if: input_type=='dropdown'">
                     <select {% if not editable %}disabled{% endif%} class="form-control" data-bind="value: value, foreach: data.choices">
-                        <option data-bind="value: name, text: label"></option>
+                        <option data-bind="value: value, text: label"></option>
                     </select>
                 </div>
                 <div data-bind="if: input_type=='code'">

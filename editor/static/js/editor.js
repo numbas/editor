@@ -899,33 +899,6 @@ $(document).ready(function() {
         access_options: [{value:'view',text:'Can view this'},{value:'edit',text:'Can edit this'}]
     }
 
-    // change applied in the editor
-	Editor.Change = function(data,author,prev_version) {
-		this.data = data;
-		this.author = author;
-
-		this.prev_version = ko.observable(prev_version);
-		this.next_version = ko.observable(null);
-
-		var old_data = {};
-
-		if(prev_version) {
-			old_data = prev_version.data;
-		}
-
-		this.diff = jiff.diff(old_data,data);
-
-		this.time = new Date();
-		this.timeSince = ko.observable(moment(this.time).fromNow());
-
-		this.hasPrevious = ko.computed(function() {
-			return this.prev_version() != null;
-		},this);
-		this.hasNext = ko.computed(function() {
-			return this.next_version() != null;
-		},this);
-	}
-
     Editor.Comment = function(data) {
         this.text = data.text;
         this.user = data.user;

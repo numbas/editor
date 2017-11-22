@@ -1,0 +1,19 @@
+{% load sstatic %}
+{% load raw_include %}
+<!-- Numbas runtime -->
+<script src="{% sstatic 'js/numbas/numbas-runtime.js' %}" type="text/javascript"></script>
+<script src="{% sstatic 'js/numbas/editor-extras.js' %}" type="text/javascript"></script>
+<script>
+    Numbas.queueScript('localisation-resources',['i18next'],function() {
+        Numbas.locale = {
+            preferred_locale: "en-GB",
+            resources: {
+                {% for locale in locale_files %}
+                "{{locale|lower}}": {"translation":{% raw_include "js/numbas/locales/"|add:locale|add:".json" %} },
+                {% endfor %}
+            }
+        }
+    });
+</script>
+
+<script src="{% sstatic 'js/numbas/marking_scripts.js' %}" type="text/javascript"></script>

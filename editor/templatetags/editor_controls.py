@@ -20,6 +20,19 @@ def property_tag(context, property_name, label, *args, **kwargs):
     })
     return context
 
+@register.inclusion_tag('editor-controls/jmeproperty.html', takes_context=True)
+def jmeproperty(context, property_name, label, *args, **kwargs):
+    context.update({
+        'property': property_name,
+        'label': label,
+        'dynamic_label': kwargs.get('dynamic_label', False),
+        'help_url': kwargs.get('help_url'),
+        'disable': kwargs.get('disable', False),
+        'form_label_class': context.get('form_label_class', 'col-sm-3'),
+        'form_control_class': context.get('form_control_class', 'col-sm-9'),
+    })
+    return context
+
 @register.inclusion_tag('editor-controls/percentproperty.html', takes_context=True)
 def percentproperty(context, property_name, label, *args, **kwargs):
     context.update({

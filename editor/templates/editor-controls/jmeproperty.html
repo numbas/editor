@@ -1,0 +1,16 @@
+{% load helplink %}
+<div class="form-group">
+    <label class="label-block">
+        <div class="{{form_label_class}} control-label">
+            {% if dynamic_label %}<span data-bind="text: {{label}}"></span>{% else %}{{label}}{% endif %}
+            {% if help_url %}{% helplink help_url %}{% endif %}
+        </div>
+        <div class="{{form_control_class}} jme-property">
+            <input {% if disable or not editable %}disabled{% endif%} class="form-control monospace" type="text" data-bind="
+                textInput: {{property}}, 
+                autosize: {max: 500, min: 30, padding: 10, value: {{property}} }
+            "/>
+            <span data-bind="JME: {{property}}" class="jme-preview"></span>
+        </div>
+    </label>
+</div>

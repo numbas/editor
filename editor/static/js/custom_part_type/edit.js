@@ -62,6 +62,10 @@ $(document).ready(function() {
             return setting;
         };
 
+        this.remove_setting = function(setting) {
+            pt.settings.remove(setting);
+        };
+
         this.marking_script = ko.observable('');
         this.marking_notes = ko.observableArray([]);
 
@@ -92,9 +96,15 @@ $(document).ready(function() {
         },
 
         load: function(data) {
+            var pt = this;
             tryLoad(data,['name','short_name','description'],this);
             tryLoadMatchingId(data,'input_widget','name',Editor.custom_part_type.input_widgets,this);
-            
+            if('settings' in data) {
+                data.settings.forEach(function(sd) {
+                    var setting = new Setting(sd);
+                    pt.settings.push(setting);
+                });
+            }
         },
 
         init_save: function() {
@@ -140,16 +150,16 @@ $(document).ready(function() {
             niceName: 'String',
             model: function() {
                 return {
-                    'default': ko.observable(''),
+                    'default_value': ko.observable(''),
                     subvars: ko.observable(false)
                 };
             },
             toJSON: function(data) {
-                data.default = this.default();
+                data.default_value = this.default_value();
                 data.subvars = this.subvars();
             },
             load: function(data) {
-                tryLoad(data,['default','subvars'],this);
+                tryLoad(data,['default_value','subvars'],this);
             }
         },
         {
@@ -157,16 +167,16 @@ $(document).ready(function() {
             niceName: 'Mathematical expression',
             model: function() {
                 return {
-                    'default': ko.observable(''),
+                    'default_value': ko.observable(''),
                     subvars: ko.observable(false)
                 };
             },
             toJSON: function(data) {
-                data.default = this.default();
+                data.default_value = this.default_value();
                 data.subvars = this.subvars();
             },
             load: function(data) {
-                tryLoad(data,['default','subvars'],this);
+                tryLoad(data,['default_value','subvars'],this);
             }
         },
         {
@@ -174,14 +184,14 @@ $(document).ready(function() {
             niceName: 'Checkbox',
             model: function() {
                 return {
-                    'default': ko.observable(false)
+                    'default_value': ko.observable(false)
                 };
             },
             toJSON: function(data) {
-                data.default = this.default();
+                data.default_value = this.default_value();
             },
             load: function(data) {
-                tryLoad(data,'default',this);
+                tryLoad(data,'default_value',this);
             }
         },
         {
@@ -189,18 +199,25 @@ $(document).ready(function() {
             niceName: 'Drop-down box',
             model: function() {
                 var model = {
-                    default: ko.observable(''),
+                    default_value: ko.observable(''),
                     choices: ko.observableArray([])
                 };
+                model.valid_choices = ko.computed(function() {
+                    return model.choices().filter(function(c) { return c.valid(); });
+                })
                 model.add_choice = function() {
                     var choice = {value: ko.observable(''), label: ko.observable('')};
+                    choice.valid = ko.computed(function() {
+                        return choice.value()!='' && choice.label();
+                    });
                     model.choices.push(choice);
                     return choice;
                 }
+                return model;
             },
             toJSON: function(data) {
-                var def = this.default();
-                data.default = def ? def.value() : null;
+                var def = this.default_value();
+                data.default_value = def ? def.value() : null;
                 data.choices = this.choices().map(function(c) {
                     return {value: c.value(), label: c.label()}
                 });
@@ -211,73 +228,7 @@ $(document).ready(function() {
                     var choice = m.add_choice();
                     tryLoad(c,['value','label'],choice);
                 });
-                tryLoadMatchingId(data,'default','value',this.choices(),this);
-            }
-        },
-        {
-            name: 'code',
-            niceName: 'JME code',
-            model: function() {
-                return {
-                    default: ko.observable(''),
-                    evaluate: ko.observable(false)
-                }
-            },
-            toJSON: function(data) {
-                data.default = this.default();
-                data.evaluate = this.evaluate();
-            },
-            load: function(data) {
-                tryLoad(data,['default','evaluate'],this);
-            }
-        },
-        {
-            name: 'percent',
-            niceName: 'Percentage',
-            model: function() {
-                return {
-                    default: ko.observable(0)
-                }
-            },
-            toJSON: function(data) {
-                data.default = this.default();
-            },
-            load: function(data) {
-                tryLoad(data,'default',this);
-            }
-        },
-        {
-            name: 'html',
-            niceName: 'HTML content',
-            model: function() {
-                return {
-                    default: ko.observable(''),
-                    subvars: ko.observable(false)
-                };
-            },
-            toJSON: function(data) {
-                data.default = this.default();
-                data.subvars = this.subvars();
-            },
-            load: function(data) {
-                tryLoad(data,['default','subvars'],this);
-            }
-        },
-        {
-            name: 'list_of_strings',
-            niceName: 'List of strings',
-            model: function() {
-                return {
-                    default: ko.observableArray([]),
-                    subvars: ko.observable(false)
-                }
-            },
-            toJSON: function(data) {
-                data.default = this.default();
-                data.subvars = this.subvars();
-            },
-            load: function(data) {
-                tryLoad(data,['default','subvars'],this);
+                tryLoadMatchingId(data,'default_value','value',this.choices(),this);
             }
         },
         {
@@ -287,24 +238,97 @@ $(document).ready(function() {
                 var model = {
                     choices: ko.observableArray([])
                 };
+                model.valid_choices = ko.computed(function() {
+                    return model.choices().filter(function(c) { return c.valid(); });
+                })
                 model.add_choice = function() {
-                    var choice = {value: ko.observable(''), label: ko.observable(''), default: ko.observable(false)};
+                    var choice = {value: ko.observable(''), label: ko.observable(''), default_value: ko.observable(false)};
+                    choice.valid = ko.computed(function() {
+                        return choice.value()!='' && choice.label();
+                    });
                     model.choices.push(choice);
                     return choice;
                 }
+                return model;
             },
             toJSON: function(data) {
-                var def = this.default();
+                var def = this.default_value();
                 data.choices = this.choices().map(function(c) {
-                    return {value: c.value(), label: c.label(), default: c.default()}
+                    return {value: c.value(), label: c.label(), default_value: c.default_value()}
                 });
             },
             load: function(data) {
                 var m = this;
                 data.choices.map(function(c) {
                     var choice = m.add_choice();
-                    tryLoad(c,['value','label','default'],choice);
+                    tryLoad(c,['value','label','default_value'],choice);
                 });
+            }
+        },
+        {
+            name: 'code',
+            niceName: 'JME code',
+            model: function() {
+                return {
+                    default_value: ko.observable(''),
+                    evaluate: ko.observable(false)
+                }
+            },
+            toJSON: function(data) {
+                data.default_value = this.default_value();
+                data.evaluate = this.evaluate();
+            },
+            load: function(data) {
+                tryLoad(data,['default_value','evaluate'],this);
+            }
+        },
+        {
+            name: 'percent',
+            niceName: 'Percentage',
+            model: function() {
+                return {
+                    default_value: ko.observable(0)
+                }
+            },
+            toJSON: function(data) {
+                data.default_value = this.default_value();
+            },
+            load: function(data) {
+                tryLoad(data,'default_value',this);
+            }
+        },
+        {
+            name: 'html',
+            niceName: 'HTML content',
+            model: function() {
+                return {
+                    default_value: ko.observable(''),
+                    subvars: ko.observable(false)
+                };
+            },
+            toJSON: function(data) {
+                data.default_value = this.default_value();
+                data.subvars = this.subvars();
+            },
+            load: function(data) {
+                tryLoad(data,['default_value','subvars'],this);
+            }
+        },
+        {
+            name: 'list_of_strings',
+            niceName: 'List of strings',
+            model: function() {
+                return {
+                    default_value: ko.observableArray([]),
+                    subvars: ko.observable(false)
+                }
+            },
+            toJSON: function(data) {
+                data.default_value = this.default_value();
+                data.subvars = this.subvars();
+            },
+            load: function(data) {
+                tryLoad(data,['default_value','subvars'],this);
             }
         }
     ];
@@ -331,6 +355,7 @@ $(document).ready(function() {
         var s = this;
         this.name = ko.observable('');
         this.label = ko.observable('');
+        this.help_url = ko.observable('');
         this.input_types = Editor.custom_part_type.setting_types.map(function(data) {
             return new SettingType(s,data);
         });
@@ -352,10 +377,16 @@ $(document).ready(function() {
             var out = {
                 name: this.name(),
                 label: this.label(),
+                help_url: this.help_url(),
                 input_type: this.input_type().name
             }
+            this.input_type().toJSON(out);
+            return out;
         },
         load: function(data) {
+            tryLoad(data,['name','label','help_url'],this);
+            this.set_type(data.input_type);
+            this.input_type().load(data);
         }
     };
 
@@ -365,22 +396,24 @@ $(document).ready(function() {
         this.code = ko.observable('');
     }
 
-    try {
-        viewModel = new CustomPartType(window.item_json.data, window.item_json.save_url);
-        ko.options.deferUpdates = true;
-        ko.applyBindings(viewModel);
+    Numbas.queueScript('start-editor',['jme-display','jme'],function() {
         try {
-            document.body.classList.add('loaded');
+            viewModel = new CustomPartType(window.item_json.data, window.item_json.save_url);
+            ko.options.deferUpdates = true;
+            ko.applyBindings(viewModel);
+            try {
+                document.body.classList.add('loaded');
+            } catch(e) {
+                document.body.className += ' loaded';
+            }
         } catch(e) {
-            document.body.className += ' loaded';
+            $('.page-loading').hide();
+            $('.page-error')
+                .show()
+                .find('.trace')
+                    .html(e.message)
+            ;
+            throw(e);
         }
-    } catch(e) {
-        $('.page-loading').hide();
-        $('.page-error')
-            .show()
-            .find('.trace')
-                .html(e.message)
-        ;
-        throw(e);
-    }
+    });
 });

@@ -91,6 +91,15 @@ body.mce-fullscreen .mce-fullscreen {
     margin-bottom: 2em;
 }
 
+.jme-property > input {
+    display: inline-block;
+}
+
+.jme-preview {
+	display: inline-block;
+	padding: 5px;
+}
+
 .jme-var {
 	color: olive;
 }

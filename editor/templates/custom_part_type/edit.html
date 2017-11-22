@@ -10,6 +10,8 @@
 {% block javascripts %}
     {{block.super}}
 
+    {% include 'numbas_runtime.html' %}
+
     <script type="text/javascript">
         $(document).ready(function() {
             Editor.custom_part_type = {};
@@ -85,11 +87,6 @@
                                     <input id="name-input" {% if not editable %}disabled{% endif %} class="form-control input-lg" data-bind="textInput: name">
                                 </div>
 
-                                <div class="form-group name">
-                                    <label>Unique identifier</label>
-                                    <input id="name-input" disabled class="form-control monospace" data-bind="textInput: short_name">
-                                </div>
-
                                 <div class="form-group description">
                                     <label>Description</label>
                                     <div id="description-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
@@ -123,6 +120,161 @@
 
                 <!-- Part settings -->
                 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='settings'}">
+                    <ul class="list-unstyled" data-bind="foreach: settings">
+                        <li>
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <div class="pull-right">
+                                        {% if editable %}
+                                        <button type="button" class="btn btn-link" data-bind="click: $parent.remove_setting" title="Remove this setting"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                                        {% endif %}
+                                    </div>
+
+                                    <span data-bind="visible: label"><span data-bind="text: label"></span>: </span><span data-bind="text: input_type().niceName"></span>
+                                </div>
+                                <div class="panel-body">
+                                    <form class="form-horizontal" data-bind="submit: Editor.noop">
+                                        {% property 'name' 'Name' monospace=True %}
+                                        {% property 'label' 'Label' %}
+                                        {% property 'help_url' 'Help URL' monospace=True%}
+
+                                        <!-- ko with: input_type().model -->
+
+                                        <!-- ko if: $parent.input_type().name == 'string' -->
+                                        {% property 'default_value' 'Default value' %}
+                                        {% booleanproperty 'subvars' 'Substitute variables into value?' %}
+                                        <!-- /ko -->
+
+                                        <!-- ko if: $parent.input_type().name == 'mathematical_expression' -->
+                                        {% jmeproperty 'default_value' 'Default value' %}
+                                        {% booleanproperty 'subvars' 'Substitute variables into value?' %}
+                                        <!-- /ko -->
+
+                                        <!-- ko if: $parent.input_type().name == 'checkbox' -->
+                                        {% booleanproperty 'default_value' 'Default value' %}
+                                        <!-- /ko -->
+
+                                        <!-- ko if: $parent.input_type().name == 'dropdown' -->
+                                        <div class="form-group">
+                                            <label class="label-block">
+                                                <div class="{{form_label_class}} control-label">
+                                                    Choices
+                                                </div>
+                                            </label>
+                                            <div class="{{form_control_class}}">
+                                                <ul class="list-unstyled" data-bind="foreach: choices">
+                                                    <li>
+                                                        <div class="form-group">
+                                                            <label class="col-xs-12 col-sm-6" data-bind="css: {'has-error': !value()}">
+                                                                Value
+                                                                <input {% if not editable %}disabled{% endif %} type="text" data-bind="textInput: value" class="form-control monospace">
+                                                            </label>
+                                                            <label class="col-xs-12 col-sm-6" data-bind="css: {'has-error': !label()}">
+                                                                Label
+                                                                <input {% if not editable %}disabled{% endif %} type="text" data-bind="textInput: label" class="form-control">
+                                                            </label>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                                {% if editable %}
+                                                <button type="button" class="btn btn-primary" data-bind="click: add_choice">
+                                                    <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: choices().length ? 'Add another choice' : 'Add a choice'"></span>
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <!-- ko if: valid_choices().length>0 -->
+                                        {% selectproperty 'default_value' 'Default value' options_text='label' options='valid_choices' %}
+                                        <!-- /ko -->
+                                        <!-- /ko -->
+
+                                        <!-- ko if: $parent.input_type().name == 'choose_several' -->
+                                        <div class="form-group">
+                                            <label class="label-block">
+                                                <div class="{{form_label_class}} control-label">
+                                                    Choices
+                                                </div>
+                                            </label>
+                                            <div class="{{form_control_class}}">
+                                                <ul class="list-unstyled" data-bind="foreach: choices">
+                                                    <li>
+                                                        <div class="form-group">
+                                                            <label class="col-xs-12 col-sm-4" data-bind="css: {'has-error': !value()}">
+                                                                Value
+                                                                <input {% if not editable %}disabled{% endif %} type="text" data-bind="textInput: value" class="form-control monospace">
+                                                            </label>
+                                                            <label class="col-xs-12 col-sm-2">
+                                                                Default value
+                                                                <input {% if not editable %}disabled{% endif %} type="checkbox" data-bind="checked: default_value">
+                                                            </label>
+                                                            <label class="col-xs-12 col-sm-6" data-bind="css: {'has-error': !label()}">
+                                                                Label
+                                                                <input {% if not editable %}disabled{% endif %} type="text" data-bind="textInput: label" class="form-control">
+                                                            </label>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                                {% if editable %}
+                                                <button type="button" class="btn btn-primary" data-bind="click: add_choice">
+                                                    <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: choices().length ? 'Add another choice' : 'Add a choice'"></span>
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <!-- /ko -->
+
+                                        <!-- ko if: $parent.input_type().name == 'code' -->
+                                        <div class="form-group">
+                                            <label class="label-block">
+                                                <div class="{{form_label_class}} control-label">
+                                                    Default value
+                                                </div>
+                                            </label>
+                                            <div class="{{form_control_class}}">
+                                                <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: default_value, codemirrorMode: 'jme'"></textarea>
+                                            </div>
+                                        </div>
+                                        {% booleanproperty 'evaluate' 'Evaluate?' %}
+                                        <!-- /ko -->
+
+                                        <!-- ko if: $parent.input_type().name == 'percent' -->
+                                        {% percentproperty 'default_value' 'Default value' %}
+                                        <!-- /ko -->
+
+                                        <!-- ko if: $parent.input_type().name == 'html' -->
+                                        <div class="form-group">
+                                            <label class="label-block">
+                                                <div class="{{form_label_class}} control-label">
+                                                    Default value
+                                                </div>
+                                            </label>
+                                            <div class="{{form_control_class}}">
+                                                <div {% if not editable %}disabled{% endif %} data-bind="writemaths: default_value"></div>
+                                            </div>
+                                        </div>
+                                        {% booleanproperty 'subvars' 'Substitute variables into value?' %}
+                                        <!-- /ko -->
+
+                                        <!-- ko if: $parent.input_type().name == 'list_of_strings' -->
+                                        <div class="form-group">
+                                            <label class="label-block">
+                                                <div class="{{form_label_class}} control-label">
+                                                    Default value
+                                                </div>
+                                            </label>
+                                            <div class="{{form_control_class}}">
+                                                <listbox params="items: default_value{% if not editable %}, disabled: true{% endif %}"></listbox>
+                                            </div>
+                                        </div>
+                                        {% booleanproperty 'subvars' 'Substitute variables into value?' %}
+                                        <!-- /ko -->
+
+                                        <!-- /ko -->
+                                    </form>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
                     {% if editable %}
                     <div class="btn-group">
                         <button id="add-setting-button" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-bind="css: {'btn-lg': settings().length==0}">

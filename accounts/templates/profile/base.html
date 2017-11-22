@@ -22,6 +22,7 @@
             <div class="nav nav-pills nav-stacked">
                 <li class="{% if profile_page == "bio" %}active{% endif %}"><a href="{% url 'view_profile' object.pk %}"><span class="glyphicon glyphicon-user"></span> Profile</a></li>
                 <li class="{% if profile_page == "projects" %}active{% endif %}"><a href="{% url 'profile_projects' object.pk %}"><span class="glyphicon glyphicon-briefcase"></span> Projects</a></li>
+                <li role="separator" class="nav-divider"></li>
                 <li class="{% if profile_page == "themes" %}active{% endif %}"><a href="{% url 'profile_themes' object.pk %}"><span class="glyphicon glyphicon-sunglasses"></span> Themes</a></li>
                 <li class="{% if profile_page == "extensions" %}active{% endif %}"><a href="{% url 'profile_extensions' object.pk %}"><span class="glyphicon glyphicon-wrench"></span> Extensions</a></li>
                 <li class="{% if profile_page == "custom_part_types" %}active{% endif %}"><a href="{% url 'profile_custom_part_types' object.pk %}"><span class="glyphicon glyphicon-ok"></span> Part types</a></li>

@@ -396,7 +396,6 @@ $(document).ready(function() {
             if(data===undefined) {
                 return;
             }
-            debugger;
             if(firstSave) {
                 var json = JSON.stringify(data);
                 if(firstData===null || firstData==json) {

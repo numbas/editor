@@ -8,7 +8,7 @@
         Numbas.locale = {
             preferred_locale: "en-GB",
             resources: {
-                {% for locale in locale_files %}
+                {% for name,locale in NUMBAS_LOCALES %}
                 "{{locale|lower}}": {"translation":{% raw_include "js/numbas/locales/"|add:locale|add:".json" %} },
                 {% endfor %}
             }

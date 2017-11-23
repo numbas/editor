@@ -360,7 +360,7 @@ class UpdateCustomPartTypeForm(forms.ModelForm):
     
     class Meta:
         model = CustomPartType
-        fields = ['name', 'short_name', 'description', 'input_widget', 'input_options', 'can_be_gap', 'can_be_step', 'settings', 'marking_script']
+        fields = ['name', 'short_name', 'description', 'input_widget', 'input_options', 'can_be_gap', 'can_be_step', 'settings', 'marking_script', 'marking_notes']
         widgets = {
             'name': forms.TextInput(attrs={'class':'form-control'}),
             'short_name': forms.TextInput(attrs={'class':'form-control'}),

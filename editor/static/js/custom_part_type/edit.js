@@ -44,6 +44,10 @@ $(document).ready(function() {
 
         this.currentTab = ko.observable(this.tabs[0]);
 
+        this.edit_name = function() {
+            pt.setTab('description')();
+        }
+        
         this.input_widget = ko.observable(Editor.custom_part_type.input_widgets[0]);
         this.input_options = {
             correctAnswer: ko.observable(''),
@@ -66,13 +70,32 @@ $(document).ready(function() {
             pt.settings.remove(setting);
         };
 
-        this.marking_script = ko.observable('');
         this.marking_notes = ko.observableArray([]);
-
-        this.edit_name = function() {
-            pt.setTab('description')();
+        this.current_marking_note = ko.observable(null);
+        this.getNote = function(name) {
+            var notes = this.marking_notes();
+            for(var i=0;i<notes.length;i++) {
+                if(notes[i].name().toLowerCase().trim()==name.toLowerCase().trim()) {
+                    return notes[i];
+                }
+            }
         }
-        
+
+        this.add_marking_note = function() {
+            var note = new Note(pt);
+            pt.marking_notes.push(note);
+            pt.current_marking_note(note);
+        };
+        this.remove_marking_note = function(note) {
+            pt.marking_notes.remove(note);
+        }
+
+        this.marking_script = ko.computed(function() {
+            return this.marking_notes().map(function(note) {
+                return note.name()+':\n'+note.definition();
+            }).join('\n\n');
+        },this);
+
         if(data) {
             this.load(data);
         }
@@ -104,6 +127,13 @@ $(document).ready(function() {
                     var setting = new Setting(sd);
                     pt.settings.push(setting);
                 });
+            }
+            if('marking_notes' in data) {
+                data.marking_notes.forEach(function(d) {
+                    var note = new Note(pt,d);
+                    pt.marking_notes.push(note);
+                });
+                pt.current_marking_note(pt.marking_notes()[0]);
             }
         },
 
@@ -139,7 +169,8 @@ $(document).ready(function() {
                 'can_be_gap': this.can_be_gap(),
                 'can_be_step': this.can_be_step(),
                 'settings': JSON.stringify(this.settings().map(function(s){ return s.toJSON() })),
-                'marking_script': this.marking_script()
+                'marking_script': this.marking_script(),
+                'marking_notes': JSON.stringify(this.marking_notes().map(function(n){ return n.toJSON() }))
             }
         }
     }
@@ -252,7 +283,6 @@ $(document).ready(function() {
                 return model;
             },
             toJSON: function(data) {
-                var def = this.default_value();
                 data.choices = this.choices().map(function(c) {
                     return {value: c.value(), label: c.label(), default_value: c.default_value()}
                 });
@@ -390,10 +420,107 @@ $(document).ready(function() {
         }
     };
 
-    var Note = Editor.custom_part_type.Note = function(data) {
-        this.name = ko.observable('');
+    var re_note_name = /^\$?[a-zA-Z_][a-zA-Z0-9_]*'*/i;
+
+    var reserved_names = ['path','studentanswer','settings','marks','parttype','gaps','steps'];
+
+    var Note = Editor.custom_part_type.Note = function(pt,data) {
+        this.pt = pt;
+        this._name = ko.observable('');
+        this.name = ko.computed({
+            read: function() {
+                return this._name().trim();
+            },
+            write: function(v) {
+                return this._name(v);
+            }
+        },this);
+
+		this.nameError = ko.computed(function() {
+			var name = this.name().toLowerCase();
+			if(name=='')
+				return '';
+
+			var notes = pt.marking_notes();
+			for(var i=0;i<notes.length;i++) {
+				var note = notes[i];
+				if(note!=this && note.name().toLowerCase()==name)
+					return 'There\'s already a marking note with this name.';
+			}
+
+			if(!re_note_name.test(name)) {
+				return 'This name is invalid.';
+			}
+
+			if(name in Numbas.jme.constants || reserved_names.contains(name)) {
+				return 'This name is reserved.';
+			}
+
+			return '';
+		},this);
+
         this.description = ko.observable('');
-        this.code = ko.observable('');
+
+        this.definition = ko.observable('');
+        this.definitionError = ko.observable('');
+
+        this.definition_tree = ko.computed(function() {
+            try {
+                var tree = Numbas.jme.compile(this.definition());
+                this.definitionError('');
+                return tree;
+            } catch(e) {
+                this.definitionError(e.message);
+                return null;
+            }
+        },this);
+
+        this.dependencies = ko.computed(function() {
+            if(this.definitionError() || !this.definition_tree()) {
+                return [];
+            }
+            var vars = Numbas.jme.findvars(this.definition_tree());
+            var note_names = pt.marking_notes().map(function(n) { return n.name() });
+            return vars
+                .filter(function(name) { return !reserved_names.contains(name.toLowerCase()) })
+                .map(function(name) {
+                    note = pt.getNote(name);
+                    return {name:name, exists: note_names.contains(name), note: note, title: name, go_to: function() {
+                        if(note) {
+                            pt.current_marking_note(note);
+                        }
+                    }};
+                })
+            ;
+        },this);
+
+        this.used_by = ko.computed(function() {
+            var n = this;
+            return pt.marking_notes().filter(function(note) {
+                var deps = note.dependencies();
+                for(var i=0;i<deps.length;i++) {
+                    if(deps[i].name.toLowerCase() == n.name().toLowerCase()) {
+                        return true;
+                    }
+                }
+            });
+        },this);
+
+        if(data) {
+            this.load(data);
+        }
+    }
+    Note.prototype = {
+        toJSON: function() {
+            return {
+                name: this.name(),
+                description: this.description(),
+                definition: this.definition()
+            }
+        },
+        load: function(data) {
+            tryLoad(data,['name','description','definition'],this);
+        }
     }
 
     Numbas.queueScript('start-editor',['jme-display','jme'],function() {

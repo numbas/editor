@@ -391,6 +391,7 @@ class CustomPartType(models.Model, ControlledObject):
     can_be_gap = models.BooleanField(default=True, verbose_name='Can this part be a gap?')
     can_be_step = models.BooleanField(default=True, verbose_name='Can this part be a step?')
     marking_script = models.TextField(default='', blank=True, verbose_name='Marking algorithm')
+    marking_notes = JSONField(blank=True,default='[]', verbose_name='Marking algorithm notes')
     settings = JSONField(blank=True)
     public_availability = models.CharField(max_length=10, choices=CUSTOM_PART_TYPE_PUBLIC_CHOICES, verbose_name='Public availability', default='restricted')
 
@@ -431,6 +432,7 @@ class CustomPartType(models.Model, ControlledObject):
             'can_be_gap': self.can_be_gap,
             'can_be_step': self.can_be_step,
             'marking_script': self.marking_script,
+            'marking_notes': self.marking_notes,
             'settings': self.settings,
         }
 

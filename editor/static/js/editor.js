@@ -176,7 +176,7 @@ $(document).ready(function() {
         }
         altname = altname || attr;
         for(var i=0;i<options.length;i++) {
-            if(options[i][id_key] == val) {
+            if(ko.unwrap(options[i][id_key]) == val) {
                 obj[altname](options[i]);
             }
         }

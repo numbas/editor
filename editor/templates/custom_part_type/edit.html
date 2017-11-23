@@ -79,24 +79,18 @@
             {% block main_tab_content %}
                 <!-- Description -->
                 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='description'}">
-                    <div class="container-fluid">
-                        <div class="row">
-                            <div class="col-sm-8">
-                                <div class="form-group name">
-                                    <label>Name</label>
-                                    <input id="name-input" {% if not editable %}disabled{% endif %} class="form-control input-lg" data-bind="textInput: name">
-                                </div>
+                    <div class="form-group name">
+                        <label>Name</label>
+                        <input id="name-input" {% if not editable %}disabled{% endif %} class="form-control input-lg" data-bind="textInput: name">
+                    </div>
 
-                                <div class="form-group description">
-                                    <label>Description</label>
-                                    <div id="description-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
-                                    <p class="help-block">
-                                        {% helplink 'http://numbas-editor.readthedocs.io/en/latest/custom_part_type/reference.html#term-description' subject='the description field' %}
-                                        Describe how this part type works, and what kinds of questions it is appropriate for.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="form-group description">
+                        <label>Description</label>
+                        <div id="description-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
+                        <p class="help-block">
+                            {% helplink 'http://numbas-editor.readthedocs.io/en/latest/custom_part_type/reference.html#term-description' subject='the description field' %}
+                            Describe how this part type works, and what kinds of questions it is appropriate for.
+                        </p>
                     </div>
                 </section>
 
@@ -107,10 +101,13 @@
 
                         <div class="form-group">
                             <label class="{{form_label_class}} control-label">
-                                Correct answer
+                                Expected answer
                             </label>
                             <div class="{{form_control_class}}">
                                 <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: input_options.correctAnswer, codemirrorMode: 'jme'"></textarea>
+                                <p class="help-block">
+                                    Give an expression which evaluates to the expected answer to the part. You can refer to any of the part's settings.
+                                </p>
                             </div>
                         </div>
 
@@ -130,7 +127,8 @@
                                         {% endif %}
                                     </div>
 
-                                    <span data-bind="visible: label"><span data-bind="text: label"></span>: </span><span data-bind="text: input_type().niceName"></span>
+                                    <span data-bind="visible: label"><strong data-bind="text: label"></strong> (<span data-bind="text: input_type().niceName"></span>)</span>
+                                    <span data-bind="visible: !label()"><span data-bind="text: input_type().niceName"></span></span>
                                 </div>
                                 <div class="panel-body">
                                     <form class="form-horizontal" data-bind="submit: Editor.noop">
@@ -289,6 +287,75 @@
 
                 <!-- Marking algorithm -->
                 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='marking'}">
+                    <div class="form-group">
+                        <label class="label-block">
+                            Marking script
+                        </label>
+                    </div>
+
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-sm-12 col-md-8 col-lg-9" data-bind="visible: marking_notes().length==0">
+                                <p class="nothing-here">No marking notes have been defined.</p>
+                            </div>
+                            <div class="col-sm-12 col-md-8 col-lg-9 note-definition" data-bind="visible: marking_notes().length, with: current_marking_note">
+                                <form data-bind="submit: Editor.noop">
+                                    <div class="form-group">
+                                        <label>Name</label>
+                                        <input {% if not editable %}disabled{% endif %} type="text" placeholder="Name" class="form-control name monospace" data-bind="textInput: _name"/>
+                                        <span class="name-error text-danger" data-bind="text: nameError, visible: nameError"></span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Definition</label>
+                                        <textarea {% if not editable %}disabled{% endif %} class="definition" data-bind="codemirror: definition"></textarea>
+                                        <div class="alert alert-danger" data-bind="visible: definitionError">
+                                            <p data-bind="html: definitionError"></p>
+                                        </div>
+                                        <p class="help-block text-right">
+                                            <a class="helplink text-info" href="http://numbas-editor.readthedocs.io/en/latest/jme-reference.html" target="_blank">JME function reference <span class="glyphicon glyphicon-question-sign"></span></a>
+                                        </p>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Description</label>
+                                        <div data-bind="writemaths: description"></div>
+                                    </div>
+
+                                </form>
+
+                                <div data-bind="visible: dependencies().length>0" class="inline-names">
+                                    <label>← Depends on:</label>
+                                    <ul class="list-inline" data-bind="foreach: dependencies">
+                                        <li><span class="btn btn-sm monospace" data-bind="click: go_to, text: name, css: {'btn-warning': !exists, 'btn-info': exists}, attr: {title: title}"></span></li>
+                                    </ul>
+                                </div>
+                                <div data-bind="visible: used_by().length>0" class="inline-names">
+                                    <label>→ Used by:</label>
+                                    <ul class="list-inline" data-bind="foreach: used_by">
+                                        <li><span class="btn btn-sm btn-info monospace" data-bind="click: $parents[1].current_marking_note, text: name"></span></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-12 col-md-4 col-lg-3">
+                                <div class="panel panel-info">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title">Marking notes</h3>
+                                    </div>
+                                    <ul class="list-group" data-bind="foreach: marking_notes">
+                                        <li class="list-group-item" data-bind="css: {active: $data == $parent.current_marking_note()}, click: $parent.current_marking_note"><span data-bind="css: {monospace: name()}, text: name() || 'Unnamed note'"></span></li>
+                                    </ul>
+                                    <div class="panel-footer">
+                                        {% if editable %}
+                                        <button type="button" class="btn btn-default add-marking-note" data-bind="click: add_marking_note">
+                                            <span class="glyphicon glyphicon-plus"></span>
+                                            Add a marking note
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </section>
             {% endblock main_tab_content %}
             </div>

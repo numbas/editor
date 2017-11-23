@@ -8,7 +8,8 @@ def global_settings(request):
         'CAN_LOGOUT': settings.CAN_LOGOUT,
         'CAN_CHANGE_PASSWORD': settings.CAN_CHANGE_PASSWORD,
         'SITE_TITLE': settings.SITE_TITLE,
-        'MATHJAX_URL': settings.MATHJAX_URL
+        'MATHJAX_URL': settings.MATHJAX_URL,
+        'NUMBAS_LOCALES': settings.GLOBAL_SETTINGS['NUMBAS_LOCALES'],
     }
 
 def site_root(request):

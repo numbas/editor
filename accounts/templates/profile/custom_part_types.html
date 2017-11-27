@@ -27,7 +27,7 @@
     <tbody>
     {% for custom_part_type in view_user.own_custom_part_types.all %}
     <tr>
-        <td>{{custom_part_type.name}}</a></td>
+        <td><a href="{% url 'custom_part_type_edit' custom_part_type.pk %}">{{custom_part_type.name}}</a></a></td>
         {% if is_me %}
         <td class="text-center">
             <a class="btn btn-link" href="{% url 'custom_part_type_edit' custom_part_type.pk %}" title="Edit this part type"><span class="glyphicon glyphicon-pencil text-success"></span></a>

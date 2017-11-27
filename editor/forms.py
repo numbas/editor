@@ -17,6 +17,8 @@ import editor.models
 from accounts.util import find_users
 from editor import jsonfield
 
+from uuslug import slugify
+
 class FixedSelectMultiple(SelectMultiple):
     def value_from_datadict(self, data, files, name):
         name += '[]'
@@ -386,26 +388,31 @@ class NewCustomPartTypeForm(forms.ModelForm):
 
     class Meta:
         model = CustomPartType
-        fields = ['name', 'short_name']
+        fields = ['name']
         widgets = {
             'name': forms.TextInput(attrs={'class':'form-control'}),
-            'short_name': forms.TextInput(attrs={'class':'form-control'}),
         }
 
-    def clean_short_name(self):
-        short_name = self.cleaned_data.get('short_name')
-        built_in_part_types = ['jme','numberentry','patternmatch','matrix','gapfill','information','extension','1_n_2','m_n_2','m_n_x']
-        if short_name in built_in_part_types:
-            raise ValidationError("The unique identifier you chose is already in use.")
-        return short_name
-    
     def __init__(self, *args, **kwargs):
         self._user = kwargs.pop('author')
         super(NewCustomPartTypeForm, self).__init__(*args, **kwargs)
 
     def save(self, commit=True):
         custom_part_type = super(NewCustomPartTypeForm, self).save(commit=False)
+
+        slug = slugify(custom_part_type.name)
+        built_in_part_types = ['jme','numberentry','patternmatch','matrix','gapfill','information','extension','1_n_2','m_n_2','m_n_x']
+        if slug in built_in_part_types:
+            slug = 'custom-'+slug
+        short_name = slug
+        i = 0
+        while CustomPartType.objects.filter(short_name=short_name).exists():
+            i += 1
+            short_name = '{}-{}'.format(slug,i)
+        custom_part_type.short_name = short_name
+        
         custom_part_type.author = self._user
+
         if commit:
             custom_part_type.save()
             self.save_m2m()

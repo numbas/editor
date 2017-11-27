@@ -1210,7 +1210,7 @@ class NewQuestion(models.Model):
         self.extensions.add(*other.extensions.all())
         self.save()
 
-@receiver(signals.pre_save, sender=NewQuestion)
+@receiver(signals.post_save, sender=NewQuestion)
 def set_question_custom_part_types(instance, **kwargs):
     q = instance
     c = NumbasObject.get_parsed_content(q.editoritem)

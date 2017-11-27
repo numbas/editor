@@ -103,12 +103,9 @@
 
                 {% if editable %}
                 <li class="">
-                    <a href="#" class="text-danger" data-bind="click: deleteItem" title="Delete this {{item_type}} permanently">
+                    <a href="{% editoritem_url 'delete' object %}" class="text-danger" title="Delete this {{item_type}} permanently">
                         <span class="glyphicon glyphicon-remove"></span> 
                         <span class="hidden-sm">Delete</span>
-                        <form class="hidden" action="{% editoritem_url 'delete' object %}" method="POST">
-                            {% csrf_token %}
-                        </form>
                     </a>
                 </li>
                 {% endif %}

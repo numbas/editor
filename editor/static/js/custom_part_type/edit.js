@@ -6,15 +6,99 @@ $(document).ready(function() {
 
 
     Editor.custom_part_type.input_widgets = [
-        {'name': 'string', 'niceName': 'String'},
-        {'name': 'number', 'niceName': 'Number'},
-        {'name': 'jme', 'niceName': 'Mathematical expression'},
-        {'name': 'matrix', 'niceName': 'Matrix'},
-        {'name': 'radios', 'niceName': 'Radio buttons'},
-        {'name': 'checkboxes', 'niceName': 'Choose several from a list'},
-        {'name': 'dropdown', 'niceName': 'Drop-down box'}
+        {
+            'name': 'string', 
+            'niceName': 'String',
+            model: function() {
+                return {};
+            },
+            load: function(data) {},
+            toJSON: function() {}
+        },
+        {
+            'name': 'number', 
+            'niceName': 'Number',
+            model: function() {
+                return {};
+            },
+            load: function(data) {},
+            toJSON: function() {}
+        },
+        {
+            'name': 'jme', 
+            'niceName': 'Mathematical expression',
+            model: function() {
+                return {};
+            },
+            load: function(data) {},
+            toJSON: function() {}
+        },
+        {
+            'name': 'matrix', 
+            'niceName': 'Matrix',
+            model: function() {
+                return {};
+            },
+            load: function(data) {},
+            toJSON: function() {}
+        },
+        {
+            'name': 'radios', 
+            'niceName': 'Radio buttons',
+            model: function() {
+                return {choices: ko.observable('')};
+            },
+            load: function(data) {
+                tryLoad(data,['choices'],this);
+            },
+            toJSON: function(data) {
+                data.choices = this.choices();
+            }
+        },
+        {
+            'name': 'checkboxes', 
+            'niceName': 'Choose several from a list',
+            model: function() {
+                return {choices: ko.observable('')};
+            },
+            load: function(data) {
+                tryLoad(data,['choices'],this);
+            },
+            toJSON: function(data) {
+                data.choices = this.choices();
+            }
+        },
+        {
+            'name': 'dropdown', 
+            'niceName': 'Drop-down box',
+            model: function() {
+                return {choices: ko.observable('')};
+            },
+            load: function(data) {
+                tryLoad(data,['choices'],this);
+            },
+            toJSON: function(data) {
+                data.choices = this.choices();
+            }
+        }
     ];
 
+    function InputWidget(pt,data) {
+        this.name = data.name;
+        this.niceName = data.niceName;
+        this.pt = pt;
+        this.model = data.model ? data.model(pt) : {};
+        this.toJSONFn = data.toJSON || function(data) {};
+        this.loadFn = data.load || function() {};
+    }
+    InputWidget.prototype = {
+        toJSON: function(data) {
+            return this.toJSONFn.apply(this.model,[data,this.pt]);
+        },
+        load: function(data) {
+            return this.loadFn.apply(this.model,[data,this.pt]);
+        }
+    };
 
 
     var CustomPartType = Editor.custom_part_type.CustomPartType = function(data, save_url) {
@@ -28,8 +112,8 @@ $(document).ready(function() {
 
         this.tabs = [
             new Editor.Tab('description','Description','cog'),
-            new Editor.Tab('input','Answer input','pencil'),
             new Editor.Tab('settings','Part settings','wrench'),
+            new Editor.Tab('input','Answer input','pencil'),
             new Editor.Tab('marking','Marking','check')
         ];
         this.getTab = function(id) {
@@ -48,10 +132,13 @@ $(document).ready(function() {
             pt.setTab('description')();
         }
         
+        this.input_widgets = Editor.custom_part_type.input_widgets.map(function(data) {
+            return new InputWidget(pt,data);
+        });
         this.input_widget = ko.observable(Editor.custom_part_type.input_widgets[0]);
         this.input_options = {
             correctAnswer: ko.observable(''),
-            hint: ko.observable('')
+            hint: ko.observable('""')
         }
 
         this.can_be_gap = ko.observable(true);
@@ -71,7 +158,20 @@ $(document).ready(function() {
         };
 
         this.marking_notes = ko.observableArray([]);
-        this.current_marking_note = ko.observable(null);
+        var _current_marking_note = ko.observable(null);
+        this.current_marking_note = ko.computed({
+            read: function() {
+                var n = _current_marking_note();
+                if(!pt.marking_notes().contains(n)) {
+                    return pt.marking_notes()[0];
+                } else {
+                    return n;
+                }
+            },
+            write: function(v) {
+                return _current_marking_note(v);
+            }
+        },this);
         this.getNote = function(name) {
             var notes = this.marking_notes();
             for(var i=0;i<notes.length;i++) {
@@ -87,7 +187,9 @@ $(document).ready(function() {
             pt.current_marking_note(note);
         };
         this.remove_marking_note = function(note) {
-            pt.marking_notes.remove(note);
+            if(!note.required()) {
+                pt.marking_notes.remove(note);
+            }
         }
 
         this.marking_script = ko.computed(function() {
@@ -100,6 +202,17 @@ $(document).ready(function() {
             this.load(data);
         }
         this.load_state();
+
+        var required_notes = ['mark','interpreted_answer'];
+        required_notes.forEach(function(name) {
+            var note = pt.getNote(name);
+            if(!note) {
+                var note = new Note(pt);
+                note.name(name);
+                pt.marking_notes.push(note);
+            }
+            note.required(true);
+        });
 
         this.init_save();
     }
@@ -121,8 +234,12 @@ $(document).ready(function() {
         load: function(data) {
             var pt = this;
             tryLoad(data,['name','short_name','description'],this);
-            tryLoadMatchingId(data,'input_widget','name',Editor.custom_part_type.input_widgets,this);
-            if('settings' in data) {
+            tryLoadMatchingId(data,'input_widget','name',this.input_widgets,this);
+            if('input_options' in data) {
+                tryLoad(data.input_options,['correctAnswer','hint'],this.input_options);
+                this.input_widget().load(data.input_options);
+            }
+            if('settings' in data && data.settings.forEach) {
                 data.settings.forEach(function(sd) {
                     var setting = new Setting(sd);
                     pt.settings.push(setting);
@@ -157,15 +274,18 @@ $(document).ready(function() {
         },
 
         toJSON: function() {
+            var input_options = {
+                correctAnswer: this.input_options.correctAnswer(),
+                hint: ''+this.input_options.hint()+''
+            };
+            this.input_widget().toJSON(input_options);
+
             return {
                 'name': this.name(),
                 'short_name': this.short_name(),
                 'description': this.description(),
                 'input_widget': this.input_widget().name,
-                'input_options': JSON.stringify({
-                    correctAnswer: this.input_options.correctAnswer(),
-                    hint: this.input_options.hint()
-                }),
+                'input_options': JSON.stringify(input_options),
                 'can_be_gap': this.can_be_gap(),
                 'can_be_step': this.can_be_step(),
                 'settings': JSON.stringify(this.settings().map(function(s){ return s.toJSON() })),
@@ -426,6 +546,9 @@ $(document).ready(function() {
 
     var Note = Editor.custom_part_type.Note = function(pt,data) {
         this.pt = pt;
+
+        this.required = ko.observable(false);
+
         this._name = ko.observable('');
         this.name = ko.computed({
             read: function() {

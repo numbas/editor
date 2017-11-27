@@ -183,6 +183,13 @@ editor-pager nav {
     padding-left: 1em;
 }
 
+.list-group-hover .list-group-item:hover {
+	cursor: pointer;
+}
+.list-group-hover .list-group-item:not(.active):hover {
+	background-color: #d6efff;
+}
+
 /*
 #name-header {
     padding: 0;

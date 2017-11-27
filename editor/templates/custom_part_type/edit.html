@@ -97,7 +97,7 @@
                 <!-- Answer input -->
                 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='input'}">
                     <form class="form-horizontal" data-bind="submit: Editor.noop">
-                        {% selectproperty 'input_widget' 'Answer input method' options_text='niceName' options='Editor.custom_part_type.input_widgets' help_url='http://numbas-editor.readthedocs.io/en/latest/custom_part_type.html#term-answer-input-method' %}
+                        {% selectproperty 'input_widget' 'Answer input method' options_text='niceName' options='input_widgets' help_url='http://numbas-editor.readthedocs.io/en/latest/custom_part_type.html#term-answer-input-method' %}
 
                         <div class="form-group">
                             <label class="{{form_label_class}} control-label">
@@ -106,12 +106,70 @@
                             <div class="{{form_control_class}}">
                                 <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: input_options.correctAnswer, codemirrorMode: 'jme'"></textarea>
                                 <p class="help-block">
-                                    Give an expression which evaluates to the expected answer to the part. You can refer to any of the part's settings.
+                                    An expression which evaluates to the expected answer to the part. You can refer to any of the part's settings.
                                 </p>
                             </div>
                         </div>
 
-                        {% property 'input_options.hint' 'Input hint' %}
+                        <div class="form-group">
+                            <label class="{{form_label_class}} control-label">
+                                Input hint
+                            </label>
+                            <div class="{{form_control_class}}">
+                                <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: input_options.hint, codemirrorMode: 'jme'"></textarea>
+                                <p class="help-block">
+                                    An expression which evaluates to a string giving the student any necessary information about how to enter their answer.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div data-bind="if: input_widget().name=='radios'">
+                        <!-- ko with: input_widget().model -->
+                            <div class="form-group">
+                                <label class="{{form_label_class}} control-label">
+                                    Choices
+                                </label>
+                                <div class="{{form_control_class}}">
+                                    <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: choices, codemirrorMode: 'jme'"></textarea>
+                                    <p class="help-block">
+                                        An expression which evaluates to a list of choices to present to the student.
+                                    </p>
+                                </div>
+                            </div>
+                        <!-- /ko -->
+                        </div>
+
+                        <div data-bind="if: input_widget().name=='checkboxes'">
+                        <!-- ko with: input_widget().model -->
+                            <div class="form-group">
+                                <label class="{{form_label_class}} control-label">
+                                    Choices
+                                </label>
+                                <div class="{{form_control_class}}">
+                                    <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: choices, codemirrorMode: 'jme'"></textarea>
+                                    <p class="help-block">
+                                        An expression which evaluates to a list of choices to present to the student.
+                                    </p>
+                                </div>
+                            </div>
+                        <!-- /ko -->
+                        </div>
+
+                        <div data-bind="if: input_widget().name=='dropdown'">
+                        <!-- ko with: input_widget().model -->
+                            <div class="form-group">
+                                <label class="{{form_label_class}} control-label">
+                                    Choices
+                                </label>
+                                <div class="{{form_control_class}}">
+                                    <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: choices, codemirrorMode: 'jme'"></textarea>
+                                    <p class="help-block">
+                                        An expression which evaluates to a list of choices to present to the student.
+                                    </p>
+                                </div>
+                            </div>
+                        <!-- /ko -->
+                        </div>
                     </form>
                 </section>
 
@@ -302,7 +360,8 @@
                                 <form data-bind="submit: Editor.noop">
                                     <div class="form-group">
                                         <label>Name</label>
-                                        <input {% if not editable %}disabled{% endif %} type="text" placeholder="Name" class="form-control name monospace" data-bind="textInput: _name"/>
+                                        <input {% if not editable %}disabled{% endif %} type="text" placeholder="Name" class="form-control name monospace" data-bind="textInput: _name, disable: required"/>
+                                        <p class="help-block" data-bind="visible: required">This note is required.</p>
                                         <span class="name-error text-danger" data-bind="text: nameError, visible: nameError"></span>
                                     </div>
                                     <div class="form-group">
@@ -341,8 +400,11 @@
                                     <div class="panel-heading">
                                         <h3 class="panel-title">Marking notes</h3>
                                     </div>
-                                    <ul class="list-group" data-bind="foreach: marking_notes">
-                                        <li class="list-group-item" data-bind="css: {active: $data == $parent.current_marking_note()}, click: $parent.current_marking_note"><span data-bind="css: {monospace: name()}, text: name() || 'Unnamed note'"></span></li>
+                                    <ul class="list-group list-group-hover" data-bind="foreach: marking_notes">
+                                        <li class="list-group-item" data-bind="css: {active: $data == $parent.current_marking_note()}, click: $parent.current_marking_note">
+                                            <button type="button" class="pull-right btn btn-link" data-bind="visible: !required(), click: $parent.remove_marking_note" title="Remove this marking note"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                                            <span data-bind="css: {monospace: name()}, text: name() || 'Unnamed note'"></span>
+                                        </li>
                                     </ul>
                                     <div class="panel-footer">
                                         {% if editable %}

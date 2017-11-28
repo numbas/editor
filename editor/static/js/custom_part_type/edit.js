@@ -4,6 +4,39 @@ $(document).ready(function() {
     var tryLoad = Editor.tryLoad;
     var tryLoadMatchingId = Editor.tryLoadMatchingId;
 
+    var reserved_names = ['path','studentanswer','settings','marks','parttype','gaps','steps'];
+
+    ko.components.register('undefined-variable-warning', {
+        viewModel: function(params) {
+            this.expr = params.expr;
+            this.error = ko.computed(function() {
+                var expr = ko.unwrap(this.expr);
+                try {
+                    var vars = Numbas.jme.findvars(Numbas.jme.compile(expr));
+                } catch(e) {
+                    return '';
+                }
+                console.log(params.expr(), vars);
+                var bad_vars = vars.filter(function(name) {
+                    return !reserved_names.contains(name);
+                });
+                if(bad_vars.length==1) {
+                    return 'The variable <code>'+bad_vars[0]+'</code> is not defined.';
+                } else if(bad_vars.length>1) {
+                    bad_vars.sort();
+                    bad_vars = bad_vars.map(function(x) { return '<code>'+x+'</code>' });
+                    var list = bad_vars.slice(0,bad_vars.length-1).join(', ')+' and '+bad_vars[bad_vars.length-1];
+                    return 'The variables '+list+' are not defined.';
+                } else {
+                    return '';
+                }
+            },this);
+        },
+        template: '\
+            <div data-bind="visible: error" class="alert alert-danger"><div data-bind="html: error"></div></div>\
+        '
+    });
+
 
     Editor.custom_part_type.input_widgets = [
         {
@@ -147,7 +180,7 @@ $(document).ready(function() {
         this.settings = ko.observableArray([]);
 
         this.add_setting = function(type) {
-            var setting = new Setting();
+            var setting = new Setting(pt);
             setting.set_type(type.name);
             pt.settings.push(setting);
             return setting;
@@ -203,14 +236,15 @@ $(document).ready(function() {
         }
         this.load_state();
 
-        var required_notes = ['mark','interpreted_answer'];
-        required_notes.forEach(function(name) {
-            var note = pt.getNote(name);
+        var required_notes = [{name: 'mark', description: 'This is the main marking note. It should award credit and provide feedback based on the student\'s answer.'},{name: 'interpreted_answer', description: 'A value representing the student\'s answer to this part.'}];
+        required_notes.forEach(function(def) {
+            var note = pt.getNote(def.name);
             if(!note) {
                 var note = new Note(pt);
-                note.name(name);
+                note.name(def.name);
                 pt.marking_notes.push(note);
             }
+            note.description(def.description);
             note.required(true);
         });
 
@@ -241,7 +275,7 @@ $(document).ready(function() {
             }
             if('settings' in data && data.settings.forEach) {
                 data.settings.forEach(function(sd) {
-                    var setting = new Setting(sd);
+                    var setting = new Setting(pt, sd);
                     pt.settings.push(setting);
                 });
             }
@@ -500,10 +534,28 @@ $(document).ready(function() {
         }
     };
 
-    var Setting = Editor.custom_part_type.Setting = function(data) {
+    var Setting = Editor.custom_part_type.Setting = function(pt, data) {
+        this.pt = pt;
         data = data || {};
         var s = this;
+
         this.name = ko.observable('');
+
+		this.nameError = ko.computed(function() {
+			var name = this.name().toLowerCase();
+			if(name=='')
+				return '';
+
+			var settings = pt.settings();
+			for(var i=0;i<settings.length;i++) {
+				var setting = settings[i];
+				if(setting!=this && setting.name().toLowerCase()==name)
+					return 'There\'s more than one setting with this name.';
+			}
+
+			return '';
+		},this);
+
         this.label = ko.observable('');
         this.help_url = ko.observable('');
         this.input_types = Editor.custom_part_type.setting_types.map(function(data) {
@@ -541,8 +593,6 @@ $(document).ready(function() {
     };
 
     var re_note_name = /^\$?[a-zA-Z_][a-zA-Z0-9_]*'*/i;
-
-    var reserved_names = ['path','studentanswer','settings','marks','parttype','gaps','steps'];
 
     var Note = Editor.custom_part_type.Note = function(pt,data) {
         this.pt = pt;

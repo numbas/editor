@@ -107,6 +107,7 @@
                             </label>
                             <div class="{{form_control_class}}">
                                 <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: input_options.correctAnswer, codemirrorMode: 'jme'"></textarea>
+                                <undefined-variable-warning params="expr: input_options.correctAnswer"></undefined-variable-warning>
                                 <p class="help-block">
                                     An expression which evaluates to the expected answer to the part. You can refer to any of the part's settings.
                                 </p>
@@ -119,6 +120,7 @@
                             </label>
                             <div class="{{form_control_class}}">
                                 <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: input_options.hint, codemirrorMode: 'jme'"></textarea>
+                                <undefined-variable-warning params="expr: input_options.hint"></undefined-variable-warning>
                                 <p class="help-block">
                                     An expression which evaluates to a string giving the student any necessary information about how to enter their answer.
                                 </p>
@@ -133,6 +135,7 @@
                                 </label>
                                 <div class="{{form_control_class}}">
                                     <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: choices, codemirrorMode: 'jme'"></textarea>
+                                    <undefined-variable-warning params="expr: choices"></undefined-variable-warning>
                                     <p class="help-block">
                                         An expression which evaluates to a list of choices to present to the student.
                                     </p>
@@ -192,7 +195,7 @@
                                 </div>
                                 <div class="panel-body">
                                     <form class="form-horizontal" data-bind="submit: Editor.noop">
-                                        {% property 'name' 'Name' monospace=True %}
+                                        {% property 'name' 'Name' monospace=True warning='nameError' %}
                                         {% property 'label' 'Label' %}
                                         {% property 'help_url' 'Help URL' monospace=True%}
 
@@ -378,7 +381,8 @@
                                     </div>
                                     <div class="form-group">
                                         <label>Description</label>
-                                        <div data-bind="writemaths: description"></div>
+                                        <div data-bind="visible: !required(), writemaths: description"></div>
+                                        <div data-bind="visible: required, html: description"></div>
                                     </div>
 
                                 </form>

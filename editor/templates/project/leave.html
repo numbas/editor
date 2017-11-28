@@ -1,5 +1,7 @@
 {% extends "project/project_base.html" %}
 
+{% block title %}Leave "{{project.name}}" - {{block.super}}{% endblock title %}
+
 {% block project_content %}
 <form method="post" action="">
     {% csrf_token %}

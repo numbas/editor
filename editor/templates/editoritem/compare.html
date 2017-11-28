@@ -3,6 +3,8 @@
 {% load links %}
 {% load user_link %}
 
+{% block title %} Compare two {{ei1.item_type}}s - {{block.super}}{% endblock title %}
+
 {% block stylesheets %}
 	{{ block.super }}
 	<link rel="stylesheet" type="text/css" href="{% sstatic 'css/editoritem/compare.css' %}"/>

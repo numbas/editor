@@ -1,5 +1,7 @@
 {% extends "layout.html" %}
 
+{% block title %}Delet extension "{{object.name}}" - {{block.super}}{% endblock title %}
+
 {% block content %}
 <div class="page-header">
     <h1>Delete extension <em>"{{object.name}}"</em></h1>

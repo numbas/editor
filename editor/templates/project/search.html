@@ -1,6 +1,8 @@
 {% extends "project/project_base.html" %}
 {% load django_tables2 %}
 
+{% block title %}Search - {{block.super}}{% endblock title %}
+
 {% block content_container %}container-fluid{% endblock content_container %}
 {% block project_container %}{% endblock project_container %}
 

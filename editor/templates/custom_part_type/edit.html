@@ -7,6 +7,8 @@
 {% load sstatic %}
 {% load json_filter %}
 
+{% block title %}{{object.name}} - {{block.super}}{% endblock %}
+
 {% block javascripts %}
     {{block.super}}
 

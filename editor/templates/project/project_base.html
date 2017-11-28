@@ -1,5 +1,7 @@
 {% extends "layout.html" %}
 
+{% block title %}{{project.name}} - {{block.super}}{% endblock title %}
+
 {% block search_url %}{% url 'project_search' project.pk %}{% endblock search_url %}
 
 {% block content %}

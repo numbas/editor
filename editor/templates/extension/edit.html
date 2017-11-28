@@ -1,5 +1,7 @@
 {% extends "layout.html" %}
 
+{% block title %}Edit extension "{{form.instance.name}}" - {{block.super}}{% endblock title %}
+
 {% block content %}
 <div class="page-header">
     <h1>Edit extension <em>"{{form.instance.name}}"</em></h1>

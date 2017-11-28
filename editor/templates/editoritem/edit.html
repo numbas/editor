@@ -10,6 +10,8 @@
 {% load json_filter %}
 {% load raw_include %}
 
+{% block title %}{{object.editoritem.name}} - {{block.super}}{% endblock title %}
+
 {% block skipMathJaxStartup %}true{% endblock %}
 
 {% block search_url %}{% url 'project_search' object.editoritem.project.pk %}{% endblock search_url %}

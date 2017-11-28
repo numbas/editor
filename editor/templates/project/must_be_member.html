@@ -1,6 +1,8 @@
 {% extends "project/project_base.html" %}
 {% load user_link %}
 
+{% block title %}Access forbidden - {{block.super}}{% endblock title %}
+
 {% block project_content %}
 <h2 class="text-warning"><span class="glyphicon glyphicon-warning-sign"></span> Forbidden</h2>
 <p>This project is visible only to its members.</p>

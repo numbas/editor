@@ -1,6 +1,8 @@
 {% extends "project/settings_base.html" %}
 {% load user_link %}
 
+{% block title %}Members - {{block.super}}{% endblock title %}
+
 {% block javascripts %}
 {{block.super}}
 <script type="text/javascript">

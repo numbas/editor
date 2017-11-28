@@ -2,6 +2,8 @@
 {% load links %}
 {% load user_link %}
 
+{% block title %}Create a pull request - {{destination.name}} - {{block.super}}{% endblock title %}
+
 {% block javascripts %}
 {{block.super}}
 <script type="text/javascript">

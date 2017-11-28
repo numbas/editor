@@ -1,5 +1,7 @@
 {% extends "layout.html" %}
 
+{% block title %}Delete theme "{{object.name}}" - {{block.super}}{% endblock title %}
+
 {% block content %}
 <div class="page-header">
     <h1>Delete theme <em>"{{object.name}}"</em></h1>

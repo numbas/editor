@@ -1,5 +1,7 @@
 {% extends "layout.html" %}
 
+{% block title %}Delete "{{object.editoritem.name}}" - {{block.super}}{% endblock title %}
+
 {% block content %}
 <div class="page-header">
     <h1>Delete question <em>"{{object.editoritem.name}}"</em></h1>

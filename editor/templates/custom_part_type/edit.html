@@ -372,6 +372,7 @@
                                     <div class="form-group">
                                         <label>Definition</label>
                                         <textarea {% if not editable %}disabled{% endif %} class="definition" data-bind="codemirror: definition"></textarea>
+                                        <undefined-variable-warning params="expr: definition, vars: $parent.marking_note_names"></undefined-variable-warning>
                                         <div class="alert alert-danger" data-bind="visible: definitionError">
                                             <p data-bind="html: definitionError"></p>
                                         </div>

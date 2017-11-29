@@ -9,6 +9,7 @@ $(document).ready(function() {
     ko.components.register('undefined-variable-warning', {
         viewModel: function(params) {
             this.expr = params.expr;
+            this.other_vars = params.vars || [];
             this.error = ko.computed(function() {
                 var expr = ko.unwrap(this.expr);
                 try {
@@ -16,9 +17,9 @@ $(document).ready(function() {
                 } catch(e) {
                     return '';
                 }
-                console.log(params.expr(), vars);
+                var defined_vars = reserved_names.concat(ko.unwrap(this.other_vars));
                 var bad_vars = vars.filter(function(name) {
-                    return !reserved_names.contains(name);
+                    return !defined_vars.contains(name);
                 });
                 if(bad_vars.length==1) {
                     return 'The variable <code>'+bad_vars[0]+'</code> is not defined.';
@@ -213,7 +214,6 @@ $(document).ready(function() {
                 }
             }
         }
-
         this.add_marking_note = function() {
             var note = new Note(pt);
             pt.marking_notes.push(note);
@@ -224,6 +224,12 @@ $(document).ready(function() {
                 pt.marking_notes.remove(note);
             }
         }
+
+        this.marking_note_names = ko.computed(function() {
+            return this.marking_notes().map(function(note) {
+                return note.name();
+            });
+        },this);
 
         this.marking_script = ko.computed(function() {
             return this.marking_notes().map(function(note) {

@@ -226,10 +226,28 @@ $(document).ready(function() {
 	};
 
 
+    // A task to make a string observable non-empty, e.g. give something a name.
     Editor.nonempty_task = function(text,observable,focus_on) {
         return {
             text: text, 
             done: ko.computed(function() {return observable() && true}),
+            focus_on: focus_on
+        };
+    }
+
+    // A task to make an observable a valid JME expression
+    Editor.valid_jme_task = function(text,observable,focus_on) {
+        return {
+            text: text, 
+            done: ko.computed(function() {
+                var expr = ko.unwrap(observable);
+                try {
+                    var tree = Numbas.jme.compile(expr);
+                    return tree != null;
+                } catch(e) {
+                    return false;
+                }
+            }),
             focus_on: focus_on
         };
     }
@@ -479,6 +497,44 @@ $(document).ready(function() {
         },this);
     }
 
+    Editor.TaskList = function(section_tasks) {
+        var ei = this;
+
+        this.section_tasks = section_tasks;
+        this.section_completed = {};
+        this.section_still_to_do = {};
+
+        function section_completed(tasks) {
+            return ko.computed(function() {
+                return tasks.every(function(t){return ko.unwrap(t.done)});
+            })
+        }
+
+        function section_still_to_do(tasks) {
+            return ko.computed(function() {
+                var task = tasks.filter(function(t){return !ko.unwrap(t.done)})[0];
+                function uncapitalise(str){ 
+                    return str.slice(0,1).toLowerCase()+str.slice(1);
+                }
+                return task ? uncapitalise(task.text) : '';
+            });
+        }
+
+        for(var section in this.section_tasks) {
+            this.section_completed[section] = section_completed(this.section_tasks[section]);
+            this.section_still_to_do[section] = section_still_to_do(this.section_tasks[section]);
+        }
+        
+        this.all_sections_completed = ko.computed(function() {
+            for(var key in this.section_completed) {
+                if(!this.section_completed[key]()) {
+                    return false;
+                }
+            }
+            return true;
+        },this);
+    }
+
     Editor.EditorItem = function() {
         if(this.__proto__.__proto__!==Editor.EditorItem.prototype) {
             for(var x in Editor.EditorItem.prototype) {
@@ -696,43 +752,9 @@ $(document).ready(function() {
     }
     Editor.EditorItem.prototype = {
         init_tasks: function() {
-            var ei = this;
-
-            this.section_completed = {};
-            this.section_still_to_do = {};
-
-            function section_completed(tasks) {
-                return ko.computed(function() {
-                    return tasks.every(function(t){return ko.unwrap(t.done)});
-                })
-            }
-
-            function section_still_to_do(tasks) {
-                return ko.computed(function() {
-                    var task = tasks.filter(function(t){return !ko.unwrap(t.done)})[0];
-                    function uncapitalise(str){ 
-                        return str.slice(0,1).toLowerCase()+str.slice(1);
-                    }
-                    return task ? uncapitalise(task.text) : '';
-                });
-            }
-
-            for(var section in this.section_tasks) {
-                this.section_completed[section] = section_completed(this.section_tasks[section]);
-                this.section_still_to_do[section] = section_still_to_do(this.section_tasks[section]);
-            }
-            
-            this.all_sections_completed = ko.computed(function() {
-                for(var key in this.section_completed) {
-                    if(!this.section_completed[key]()) {
-                        return false;
-                    }
-                }
-                return true;
-            },this);
-
+            this.task_list = new Editor.TaskList(this.section_tasks);
             this.canPublish = ko.computed(function() {
-                return !this.published() && this.all_sections_completed();
+                return !this.published() && this.task_list.all_sections_completed();
             },this);
         },
 
@@ -1409,35 +1431,41 @@ $(document).ready(function() {
             this.nextTab = params.nextTab ? editor.getTab(params.nextTab) : null;
             this.task_group = params.task_group;
             this.has_task = editor.section_tasks[this.task_group] !== undefined;
-            this.completed = this.has_task ? editor.section_completed[this.task_group] : true;
-            this.still_to_do = this.has_task ? editor.section_still_to_do[this.task_group] : false;
+            this.completed = this.has_task ? editor.task_list.section_completed[this.task_group] : true;
+            this.still_to_do = this.has_task ? editor.task_list.section_still_to_do[this.task_group] : false;
             this.current_task = ko.computed(function() {
-                if(!editor.section_tasks[this.task_group]) {
+                if(!editor.task_list.section_tasks[this.task_group]) {
                     return null;
                 } else {
-                    return editor.section_tasks[this.task_group].filter(function(t){return !t.done()})[0];
+                    return editor.task_list.section_tasks[this.task_group].filter(function(t){return !t.done()})[0];
                 }
             },this);
 
             this.focus = function() {
                 var task = p.current_task();
-                if(task && task.focus_on) {
-                    var s = $(task.focus_on);
-                    if(s.hasClass('wmTextArea')) {
-                        s.tinymce().focus();
-                    } else {
-                        s.focus();
+                if(task) {
+                    if(task.focus_on) {
+                        var s = $(task.focus_on);
+                        if(s.hasClass('wmTextArea')) {
+                            s.tinymce().focus();
+                        } else {
+                            s.focus();
+                        }
+                    }
+                    if(task.switch_action) {
+                        task.switch_action();
                     }
                 }
             }
+            this.visible = params.visible || true;
         },
         template: '\
-            <nav data-bind="visible: !editor.published()">\
+            <nav data-bind="visible: visible">\
                 <ul class="pager">\
                     <li class="previous" data-bind="if: previousTab">\
                         <a title="Back to the previous section" href="#" data-bind="click: editor.setTab(previousTab.id)">← <span data-bind="text: previousTab.title"></span></a>\
                     </li>\
-                    <span class="still-to-do text-warning" data-bind="if: has_task, visible: !ko.unwrap(completed), click: focus">Before moving on, you should <span data-bind="text: still_to_do"></span></span>\
+                    <span class="still-to-do text-warning" data-bind="if: has_task, visible: !ko.unwrap(completed), click: focus">Before moving on, you should <span data-bind="html: still_to_do"></span></span>\
                     <span data-bind="if: nextTab, visible: ko.unwrap(completed)" class="text-success">Move on when you\'re ready!</span>\
                     <li class="next" data-bind="if: nextTab, css: {ready: completed}">\
                         <a title="Proceed to the next section" href="#" data-bind="click: editor.setTab(nextTab.id)"><span data-bind="text: nextTab.title"></span> →</a>\

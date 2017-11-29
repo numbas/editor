@@ -255,6 +255,8 @@ $(document).ready(function() {
         });
 
         this.init_save();
+
+        this.init_tasks();
     }
     CustomPartType.prototype = {
 
@@ -292,6 +294,28 @@ $(document).ready(function() {
                 });
                 pt.current_marking_note(pt.marking_notes()[0]);
             }
+        },
+
+        init_tasks: function() {
+            this.section_tasks = {
+                'description': [
+                    Editor.nonempty_task('Give the part type a name.',this.name, '#name-input'),
+                    Editor.nonempty_task('Fill out the description.',this.description,'#description-input .wmTextArea'),
+                ],
+                'settings': [
+                    {text: 'Add at least one part setting.', done: ko.computed(function() {return this.settings().length>0},this)}
+                ],
+                'input': [
+                    Editor.valid_jme_task('Set the expected answer.', this.input_options.correctAnswer),
+                    Editor.valid_jme_task('Set the input hint.', this.input_options.hint),
+                ],
+                'marking': [
+                    {text: 'Set up the <code>mark</code> note.', done: ko.computed(function(){ return this.getNote('mark').valid() },this), switch_action: function() {pt.current_marking_note(pt.getNote('mark'))}},
+                    {text: 'Set up the <code>interpreted_answer</code> note.', done: ko.computed(function(){ return this.getNote('interpreted_answer').valid() },this), switch_action: function() {pt.current_marking_note(pt.getNote('interpreted_answer'))}}
+                ]
+            }
+
+            this.task_list = new Editor.TaskList(this.section_tasks);
         },
 
         init_save: function() {
@@ -672,6 +696,10 @@ $(document).ready(function() {
                 })
             ;
         },this);
+
+        this.valid = ko.computed(function() {
+            return !this.nameError() && this.definition_tree();
+        }, this);
 
         this.used_by = ko.computed(function() {
             var n = this;

@@ -326,7 +326,7 @@
                 {% if editable %}
                 <!-- Access -->
                 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='access'}">
-                    <div class="panel panel-warning" data-bind="visible: !published() && !all_sections_completed()">
+                    <div class="panel panel-warning" data-bind="visible: !published() && !task_list.all_sections_completed()">
                         <div class="panel-heading">
                             <h3 class="panel-title">Publish</h3>
                         </div>
@@ -334,9 +334,9 @@
                             <p>At the moment, access to this {{item_type}} is restricted to members of the project this {{item_type}} belongs to and any other users you've explicitly granted access to.</p>
                             <p>Complete each of the following tasks before you publish this {{item_type}}:</p>
                             <ul class="list-unstyled" data-bind="foreach: mainTabs">
-                                <li data-bind="visible: $root.section_completed[id]!==undefined">
-                                <h4><a href="#" data-bind="text: title, click: $root.setTab(id), css: {'text-success': $root.section_completed[id], 'text-danger': !ko.unwrap($root.section_completed[id])}"></a></h4>
-                                    <ul data-bind="foreach: $root.section_tasks[id]">
+                                <li data-bind="visible: $root.task_list.section_completed[id]!==undefined">
+                                <h4><a href="#" data-bind="text: title, click: $root.setTab(id), css: {'text-success': $root.task_list.section_completed[id], 'text-danger': !ko.unwrap($root.task_list.section_completed[id])}"></a></h4>
+                                    <ul data-bind="foreach: $root.task_list.section_tasks[id]">
                                         <li data-bind="css: {'text-success': done, 'text-danger': !done()}">
                                             <span class="glyphicon" data-bind="css:{'glyphicon-ok':done, 'glyphicon-alert':!done()}"></span>
                                             <span data-bind="text: text"></span> 

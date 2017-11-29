@@ -161,7 +161,7 @@
 {% block settings %}
 {{ block.super }}
 {% if editable %}
-    <editor-pager params="editor: $root, previousTab: 'advice', nextTab: 'access', task_group: 'settings'"></editor-pager>
+    <editor-pager params="visible: !$root.published(), editor: $root, previousTab: 'advice', nextTab: 'access', task_group: 'settings'"></editor-pager>
 {% endif %}
 {% endblock settings %}
 
@@ -189,7 +189,7 @@
         </div>
 
         {% if editable %}
-        <editor-pager params="editor: $root, nextTab: 'parts', task_group: 'statement'"></editor-pager>
+        <editor-pager params="visible: !$root.published(), editor: $root, nextTab: 'parts', task_group: 'statement'"></editor-pager>
         {% endif %}
     </section>
 
@@ -380,7 +380,7 @@
             </div>
         </div>
         {% if editable %}
-        <editor-pager params="editor: $root, previousTab: 'parts', nextTab: 'advice', task_group: 'variables'"></editor-pager>
+        <editor-pager params="visible: !$root.published(), editor: $root, previousTab: 'parts', nextTab: 'advice', task_group: 'variables'"></editor-pager>
         {% endif %}
     </section>
 
@@ -846,7 +846,7 @@
         {% endif %}
 
         {% if editable %}
-        <editor-pager params="editor: $root, previousTab: 'statement', nextTab: 'variables', task_group: 'parts'"></editor-pager>
+        <editor-pager params="visible: !$root.published(), editor: $root, previousTab: 'statement', nextTab: 'variables', task_group: 'parts'"></editor-pager>
         {% endif %}
     </section>
 
@@ -863,7 +863,7 @@
         </div>
 
         {% if editable %}
-        <editor-pager params="editor: $root, previousTab: 'variables', nextTab: 'settings', task_group: 'advice'"></editor-pager>
+        <editor-pager params="visible: !$root.published(), editor: $root, previousTab: 'variables', nextTab: 'settings', task_group: 'advice'"></editor-pager>
         {% endif %}
     </section>
 
@@ -1065,5 +1065,5 @@
 {% endblock main_tab_content %}
 
 {% block access_tab_nav %}
-    <editor-pager params="editor: $root, previousTab: 'settings', task_group: 'access'"></editor-pager>
+    <editor-pager params="visible: !$root.published(), editor: $root, previousTab: 'settings', task_group: 'access'"></editor-pager>
 {% endblock access_tab_nav %}

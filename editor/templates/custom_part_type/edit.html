@@ -94,7 +94,7 @@
                 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='settings'}">
                     <ul class="list-unstyled" data-bind="foreach: settings">
                         <li>
-                            <div class="panel panel-default">
+                            <div class="panel" data-bind="css: {'panel-default': valid(), 'panel-warning': !valid()}">
                                 <div class="panel-heading">
                                     <div class="pull-right">
                                         {% if editable %}
@@ -111,20 +111,20 @@
                                         {% property 'label' 'Label' warning='!label() ? \'A label is required\' : \'\'' %}
                                         {% property 'help_url' 'Help URL' monospace=True%}
 
-                                        <!-- ko with: input_type().model -->
+                                        <!-- ko with: input_type -->
 
                                         <!-- ko if: $parent.input_type().name == 'string' -->
-                                        {% property 'default_value' 'Default value' %}
-                                        {% booleanproperty 'subvars' 'Substitute variables into value?' %}
+                                        {% property 'model.default_value' 'Default value' %}
+                                        {% booleanproperty 'model.subvars' 'Substitute variables into value?' %}
                                         <!-- /ko -->
 
                                         <!-- ko if: $parent.input_type().name == 'mathematical_expression' -->
-                                        {% jmeproperty 'default_value' 'Default value' %}
-                                        {% booleanproperty 'subvars' 'Substitute variables into value?' %}
+                                        {% jmeproperty 'model.default_value' 'Default value' %}
+                                        {% booleanproperty 'model.subvars' 'Substitute variables into value?' %}
                                         <!-- /ko -->
 
                                         <!-- ko if: $parent.input_type().name == 'checkbox' -->
-                                        {% booleanproperty 'default_value' 'Default value' %}
+                                        {% booleanproperty 'model.default_value' 'Default value' %}
                                         <!-- /ko -->
 
                                         <!-- ko if: $parent.input_type().name == 'dropdown' -->
@@ -135,7 +135,7 @@
                                                 </div>
                                             </label>
                                             <div class="{{form_control_class}}">
-                                                <ul class="list-unstyled" data-bind="foreach: choices">
+                                                <ul class="list-unstyled" data-bind="foreach: model.choices">
                                                     <li>
                                                         <div class="form-group">
                                                             <label class="col-xs-12 col-sm-6" data-bind="css: {'has-error': !value()}">
@@ -150,14 +150,18 @@
                                                     </li>
                                                 </ul>
                                                 {% if editable %}
-                                                <button type="button" class="btn btn-primary" data-bind="click: add_choice">
-                                                    <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: choices().length ? 'Add another choice' : 'Add a choice'"></span>
+                                                <div data-bind="visible: !valid()" class="alert alert-danger">
+                                                    <p data-bind="visible: model.choices().length==0">Add at least one choice.</p>
+                                                    <p data-bind="visible: model.choices().length && model.valid_choices().length<model.choices().length">Complete every choice.</p>
+                                                </div>
+                                                <button type="button" class="btn btn-primary" data-bind="click: model.add_choice">
+                                                    <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: model.choices().length ? 'Add another choice' : 'Add a choice'"></span>
                                                 </button>
                                                 {% endif %}
                                             </div>
                                         </div>
-                                        <!-- ko if: valid_choices().length>0 -->
-                                        {% selectproperty 'default_value' 'Default value' options_text='label' options='valid_choices' %}
+                                        <!-- ko if: model.valid_choices().length>0 -->
+                                        {% selectproperty 'model.default_value' 'Default value' options_text='label' options='model.valid_choices' %}
                                         <!-- /ko -->
                                         <!-- /ko -->
 
@@ -169,27 +173,31 @@
                                                 </div>
                                             </label>
                                             <div class="{{form_control_class}}">
-                                                <ul class="list-unstyled" data-bind="foreach: choices">
+                                                <ul class="list-unstyled" data-bind="foreach: model.choices">
                                                     <li>
                                                         <div class="form-group">
                                                             <label class="col-xs-12 col-sm-4" data-bind="css: {'has-error': !value()}">
                                                                 Value
                                                                 <input {% if not editable %}disabled{% endif %} type="text" data-bind="textInput: value" class="form-control monospace">
                                                             </label>
-                                                            <label class="col-xs-12 col-sm-2">
-                                                                Default value
-                                                                <input {% if not editable %}disabled{% endif %} type="checkbox" data-bind="checked: default_value">
-                                                            </label>
                                                             <label class="col-xs-12 col-sm-6" data-bind="css: {'has-error': !label()}">
                                                                 Label
                                                                 <input {% if not editable %}disabled{% endif %} type="text" data-bind="textInput: label" class="form-control">
+                                                            </label>
+                                                            <label class="col-xs-12 col-sm-2">
+                                                                Default on?
+                                                                <input {% if not editable %}disabled{% endif %} type="checkbox" data-bind="checked: default_value">
                                                             </label>
                                                         </div>
                                                     </li>
                                                 </ul>
                                                 {% if editable %}
-                                                <button type="button" class="btn btn-primary" data-bind="click: add_choice">
-                                                    <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: choices().length ? 'Add another choice' : 'Add a choice'"></span>
+                                                <div data-bind="visible: !valid()" class="alert alert-danger">
+                                                    <p data-bind="visible: model.choices().length==0">Add at least one choice.</p>
+                                                    <p data-bind="visible: model.choices().length && model.valid_choices().length<model.choices().length">Complete every choice.</p>
+                                                </div>
+                                                <button type="button" class="btn btn-primary" data-bind="click: model.add_choice">
+                                                    <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: model.choices().length ? 'Add another choice' : 'Add a choice'"></span>
                                                 </button>
                                                 {% endif %}
                                             </div>
@@ -204,14 +212,14 @@
                                                 </div>
                                             </label>
                                             <div class="{{form_control_class}}">
-                                                <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: default_value, codemirrorMode: 'jme'"></textarea>
+                                                <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: model.default_value, codemirrorMode: 'jme'"></textarea>
                                             </div>
                                         </div>
-                                        {% booleanproperty 'evaluate' 'Evaluate?' %}
+                                        {% booleanproperty 'model.evaluate' 'Evaluate?' %}
                                         <!-- /ko -->
 
                                         <!-- ko if: $parent.input_type().name == 'percent' -->
-                                        {% percentproperty 'default_value' 'Default value' %}
+                                        {% percentproperty 'model.default_value' 'Default value' %}
                                         <!-- /ko -->
 
                                         <!-- ko if: $parent.input_type().name == 'html' -->
@@ -222,10 +230,10 @@
                                                 </div>
                                             </label>
                                             <div class="{{form_control_class}}">
-                                                <div {% if not editable %}disabled{% endif %} data-bind="writemaths: default_value"></div>
+                                                <div {% if not editable %}disabled{% endif %} data-bind="writemaths: model.default_value"></div>
                                             </div>
                                         </div>
-                                        {% booleanproperty 'subvars' 'Substitute variables into value?' %}
+                                        {% booleanproperty 'model.subvars' 'Substitute variables into value?' %}
                                         <!-- /ko -->
 
                                         <!-- ko if: $parent.input_type().name == 'list_of_strings' -->
@@ -236,10 +244,10 @@
                                                 </div>
                                             </label>
                                             <div class="{{form_control_class}}">
-                                                <listbox params="items: default_value{% if not editable %}, disabled: true{% endif %}"></listbox>
+                                                <listbox params="items: model.default_value{% if not editable %}, disabled: true{% endif %}"></listbox>
                                             </div>
                                         </div>
-                                        {% booleanproperty 'subvars' 'Substitute variables into value?' %}
+                                        {% booleanproperty 'model.subvars' 'Substitute variables into value?' %}
                                         <!-- /ko -->
 
                                         <!-- /ko -->

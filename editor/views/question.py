@@ -191,9 +191,15 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         extensions = extensions.distinct()
         self.item_json['numbasExtensions'] = context['extensions'] = [e.as_json() for e in extensions]
 
-        custom_part_types = CustomPartType.objects.filter(public_availability='always') | self.object.custom_part_types.all()
+        # get publicly available part types first
+        custom_part_types = CustomPartType.objects.filter(public_availability='always')
         if not self.request.user.is_anonymous():
+            # add in the user's own part types
             custom_part_types |= CustomPartType.objects.filter(author=self.request.user)
+        # only show part types ready to use
+        custom_part_types = custom_part_types.filter(ready_to_use=True)
+        # also include part types already in use in this question
+        custom_part_types = custom_part_types | self.object.custom_part_types.all()
         custom_part_types = custom_part_types.distinct()
         self.item_json['custom_part_types'] = context['custom_part_types'] = [c.as_json() for c in custom_part_types]
 

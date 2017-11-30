@@ -519,6 +519,7 @@
                                         </section>
 
                                         <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='notes'}">
+                                            <!-- ko if: runtime_part -->
                                             <form class="form-horizontal" data-bind="submit: Editor.noop">
                                                 <div class="form-group">
                                                     <label class="label-block">
@@ -526,7 +527,7 @@
                                                             Student's answer
                                                         </div>
                                                         <div class="col-sm-12 col-md-9">
-                                                            <div data-bind="component: {name: 'answer-widget', params: {answer: answer, widget: $parent.type().widget, part: $parent}}"></div>
+                                                            <div data-bind="component: {name: 'answer-widget', params: {answer: answer, widget: $parent.type().widget, part: runtime_part()}}"></div>
                                                         </div>
                                                     </label>
                                                 </div>
@@ -582,6 +583,7 @@
 
                                                 <button class="btn btn-primary" type="button" data-bind="click: $parent.addUnitTest, disable: !canCreateUnitTest()">Create a unit test</button>
                                             </div>
+                                            <!-- /ko -->
                                         </section>
                                     </div>
                                 </div>

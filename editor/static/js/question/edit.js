@@ -2085,24 +2085,51 @@ $(document).ready(function() {
 
         // The result of running the marking script
         this.last_run = ko.observable(null);
-        
-        // When something changes, run the marking script and store the result in `this.result`
+
+        this.question = ko.observable(null);
+        this.question_error = ko.observable(null);
         ko.computed(function() {
-            mt.answer();
             mt.part.path();
 
+            mt.question(null);
             try {
                 var q = mt.part.q.instance();
                 mt.variables().forEach(function(v) {
                     q.scope.setVariable(v.name, v.value);
                 });
                 q.signals.trigger('variablesSet');
+                q.signals.on('ready').then(function() {
+                    mt.question_error(null);
+                    mt.question(q);
+                }).catch(function(e) {
+                    mt.question_error(e);
+                });
             } catch(e) {
-                mt.last_run({error:e.message});
+                mt.question_error(e);
+            }
+        }, this);
+        this.runtime_part = ko.computed(function() {
+            var q = this.question();
+            if(!q) {
                 return;
             }
-            q.signals.on('ready').then(function() {
-                var part =  q.getPart(mt.part.path());
+            return q.getPart(mt.part.path());
+        }, this);
+        
+        // When something changes, run the marking script and store the result in `this.result`
+        ko.computed(function() {
+            mt.answer();
+            var q = mt.question();
+            if(mt.question_error()) {
+                mt.last_run({error: 'Error creating question: '+q.question_error().message});
+                return;
+            }
+            if(!q) {
+                mt.last_run({error: 'Question object not created yet.'});
+                return;
+            }
+            try {
+                var part =  mt.runtime_part();
                 if(!part) {
                     throw(new Error("Part not found"));
                 }
@@ -2110,9 +2137,9 @@ $(document).ready(function() {
                 part.setStudentAnswer();
                 var res = part.mark_answer(part.rawStudentAnswerAsJME());
                 mt.last_run({script: part.markingScript, result: res, marks: part.marks});
-            }).catch(function(e) {
-                mt.last_run({error:e.message});
-            });
+            } catch(e) {
+                mt.last_run({error: 'Error marking: '+e.message});
+            };
         },this).extend({throttle:300});
 
         this.last_run_error = ko.computed(function() {
@@ -2536,7 +2563,8 @@ $(document).ready(function() {
 	};
 
 
-    var deps = ['jme-display','jme-variables','jme','editor-extras','marking','json'];
+    Numbas.queueScript('knockout',[], function() {});
+    var deps = ['jme-display','jme-variables','jme','editor-extras','marking','json', 'answer-widgets'];
 	for(var i=0;i<item_json.numbasExtensions.length;i++) {
 		var extension = item_json.numbasExtensions[i];
 		if(extension.hasScript) {

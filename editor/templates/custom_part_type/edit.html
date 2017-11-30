@@ -108,7 +108,7 @@
                                 <div class="panel-body">
                                     <form class="form-horizontal" data-bind="submit: Editor.noop">
                                         {% property 'name' 'Name' monospace=True warning='nameError' %}
-                                        {% property 'label' 'Label' %}
+                                        {% property 'label' 'Label' warning='!label() ? \'A label is required\' : \'\'' %}
                                         {% property 'help_url' 'Help URL' monospace=True%}
 
                                         <!-- ko with: input_type().model -->

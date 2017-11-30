@@ -574,7 +574,7 @@ $(document).ready(function() {
 		this.nameError = ko.computed(function() {
 			var name = this.name().toLowerCase();
 			if(name=='')
-				return '';
+				return 'A name is required';
 
 			var settings = pt.settings();
 			for(var i=0;i<settings.length;i++) {

@@ -15,12 +15,13 @@
 <table class="custom_part_types table">
     <colgroup>
         <col class="name"></col>
-        <col class="controls"></col>
+        <col class="ready-to-use"></col>
         <col class="description"></col>
+        <col class="controls"></col>
     </colgroup>
     <thead>
         <th>Name</th>
-        <th></th>
+        <th>Ready to use?</th>
 		<th>What's it used for?</th>
         {% if is_me %}<th></th><!-- control links -->{% endif %}
     </thead>
@@ -28,12 +29,19 @@
     {% for custom_part_type in view_user.own_custom_part_types.all %}
     <tr>
         <td><a href="{% url 'custom_part_type_edit' custom_part_type.pk %}">{{custom_part_type.name}}</a></a></td>
+        <td>
+            {% if custom_part_type.ready_to_use %}
+                <span class="glyphicon glyphicon-ok-sign text-success" title="Ready to use"></span>
+            {% else %}
+                <span class="glyphicon glyphicon-remove-sign text-danger" title="Not ready to use"></span>
+            {% endif %}
+        </td>
+		<td>{{custom_part_type.description|strip_html|safe}}</td>
         {% if is_me %}
         <td class="text-center">
             <a class="btn btn-link" href="{% url 'custom_part_type_edit' custom_part_type.pk %}" title="Edit this part type"><span class="glyphicon glyphicon-pencil text-success"></span></a>
             <a class="btn btn-link" href="{% url 'custom_part_type_delete' custom_part_type.pk %}" title="Delete this part type"><span class="glyphicon glyphicon-remove text-danger"></span></a>
         </td>
-		<td>{{custom_part_type.description|strip_html|safe}}</td>
         {% endif %}
     </tr>
     {% endfor %}

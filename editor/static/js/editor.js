@@ -516,7 +516,7 @@ $(document).ready(function() {
                 function uncapitalise(str){ 
                     return str.slice(0,1).toLowerCase()+str.slice(1);
                 }
-                return task ? uncapitalise(task.text) : '';
+                return task ? uncapitalise(ko.unwrap(task.text)) : '';
             });
         }
 

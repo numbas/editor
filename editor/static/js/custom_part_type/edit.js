@@ -254,9 +254,13 @@ $(document).ready(function() {
             note.required(true);
         });
 
-        this.init_save();
-
         this.init_tasks();
+
+        this.ready_to_use = ko.computed(function() {
+            return this.task_list.all_sections_completed();
+        }, this);
+
+        this.init_save();
     }
     CustomPartType.prototype = {
 
@@ -303,7 +307,13 @@ $(document).ready(function() {
                     Editor.nonempty_task('Fill out the description.',this.description,'#description-input .wmTextArea'),
                 ],
                 'settings': [
-                    {text: 'Add at least one part setting.', done: ko.computed(function() {return this.settings().length>0},this)}
+                    {text: 'Add at least one part setting.', done: ko.computed(function() {return this.settings().length>0},this)},
+                    {
+                        text: 'Complete every setting.',
+                        done: ko.computed(function() {
+                            return this.settings().every(function(s) {return s.valid()});
+                        }, this)
+                    }
                 ],
                 'input': [
                     Editor.valid_jme_task('Set the expected answer.', this.input_options.correctAnswer),
@@ -354,7 +364,8 @@ $(document).ready(function() {
                 'can_be_step': this.can_be_step(),
                 'settings': JSON.stringify(this.settings().map(function(s){ return s.toJSON() })),
                 'marking_script': this.marking_script(),
-                'marking_notes': JSON.stringify(this.marking_notes().map(function(n){ return n.toJSON() }))
+                'marking_notes': JSON.stringify(this.marking_notes().map(function(n){ return n.toJSON() })),
+                'ready_to_use': this.ready_to_use()
             }
         }
     }
@@ -444,6 +455,9 @@ $(document).ready(function() {
                     tryLoad(c,['value','label'],choice);
                 });
                 tryLoadMatchingId(data,'default_value','value',this.choices(),this);
+            },
+            valid: function() {
+                return this.choices().length>0 && this.choices().every(function(c) {return c.valid()});
             }
         },
         {
@@ -477,6 +491,9 @@ $(document).ready(function() {
                     var choice = m.add_choice();
                     tryLoad(c,['value','label','default_value'],choice);
                 });
+            },
+            valid: function() {
+                return this.choices().length>0 && this.choices().every(function(c) {return c.valid()});
             }
         },
         {
@@ -554,6 +571,7 @@ $(document).ready(function() {
         this.model = data.model ? data.model(setting) : {};
         this.toJSONFn = data.toJSON || function() {return {}};
         this.loadFn = data.load || function() {};
+        this.validFn = data.valid || function() { return true };
     }
     SettingType.prototype = {
         toJSON: function(data) {
@@ -561,6 +579,9 @@ $(document).ready(function() {
         },
         load: function(data) {
             return this.loadFn.apply(this.model,[data,this.setting]);
+        },
+        valid: function() {
+            return this.validFn.apply(this.model);
         }
     };
 
@@ -592,6 +613,10 @@ $(document).ready(function() {
             return new SettingType(s,data);
         });
         this.input_type = ko.observable(this.input_types[0]);
+
+        this.valid = ko.computed(function() {
+            return !this.nameError() && this.label() && this.input_type().valid();
+        }, this);
 
         this.load(data);
     };

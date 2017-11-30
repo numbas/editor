@@ -394,6 +394,7 @@ class CustomPartType(models.Model, ControlledObject):
     marking_notes = JSONField(blank=True,default='[]', verbose_name='Marking algorithm notes')
     settings = JSONField(blank=True)
     public_availability = models.CharField(max_length=10, choices=CUSTOM_PART_TYPE_PUBLIC_CHOICES, verbose_name='Public availability', default='restricted')
+    ready_to_use = models.BooleanField(default=False, verbose_name='Ready to use?')
 
     def __str__(self):
         return self.name

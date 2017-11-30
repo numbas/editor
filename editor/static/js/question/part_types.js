@@ -919,7 +919,7 @@ CustomPartType.prototype = {
     make_settings: function(settings_def) {
         var pt = this;
         this.settings = settings_def.map(function(d) {
-            var value = $.isArray(d.default) ? ko.observableArray(d.default) : ko.observable(d.default);
+            var value = $.isArray(d.default_value) ? ko.observableArray(d.default_value) : ko.observable(d.default_value);
             return {
                 name: d.name,
                 value: value,

@@ -38,7 +38,7 @@
 	</div>
     <div data-bind="fadeVisible: precisionType().name!='none'">
         {% property 'precision' 'precisionWord' dynamic_label=True %}
-        {% booleanproperty 'strictPrecision' 'Require trailing zeros?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/matrixentry.html#term-require-trailing-zeroes' %}
+        {% booleanproperty 'strictPrecision' 'Require trailing zeros?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/matrixentry.html#term-require-trailing-zeros' %}
         {% percentproperty 'precisionPartialCredit' 'Partial credit for wrong precision' %}
         <div class="form-group">
             <label class="{{form_label_class}} control-label">

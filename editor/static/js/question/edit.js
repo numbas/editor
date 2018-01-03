@@ -2121,7 +2121,7 @@ $(document).ready(function() {
             mt.answer();
             var q = mt.question();
             if(mt.question_error()) {
-                mt.last_run({error: 'Error creating question: '+q.question_error().message});
+                mt.last_run({error: 'Error creating question: '+mt.question_error().message});
                 return;
             }
             if(!q) {

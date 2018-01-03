@@ -1767,7 +1767,7 @@ $(document).ready(function() {
         this.markingScriptError = ko.observable('');
         this.markingScript = ko.computed(function() {
             var base = Numbas.marking_scripts[this.type().name];
-            if(!this.use_custom_algorithm) {
+            if(!this.use_custom_algorithm()) {
                 return base;
             } else {
                 try {

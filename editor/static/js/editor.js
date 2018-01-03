@@ -1248,6 +1248,7 @@ $(document).ready(function() {
 					width: width,
 					verify_html: false,
 					autoresize_bottom_margin: 0,
+					autoresize_min_height: 30,
 					convert_urls: false,
 					verify_html: false,
 

@@ -1215,7 +1215,11 @@ class NewQuestion(models.Model):
 def set_question_custom_part_types(instance, **kwargs):
     q = instance
     c = NumbasObject.get_parsed_content(q.editoritem)
-    part_types = set(p['type'] for p in c.data.get('parts',[]))
+    parts = c.data.get('parts',[])
+    all_parts = parts[:]
+    for p in parts:
+        all_parts += [s for s in p.get('steps',[])] + [g for g in p.get('gaps',[])]
+    part_types = set(p['type'] for p in all_parts)
     q.custom_part_types.clear()
     custom_part_types = CustomPartType.objects.filter(short_name__in=part_types)
     q.custom_part_types.add(*custom_part_types)

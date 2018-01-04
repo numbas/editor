@@ -936,6 +936,7 @@ CustomPartType.prototype = {
                 value: value,
                 label: d.label,
                 input_type: d.input_type,
+                help_url: d.help_url,
                 hint: d.hint,
                 data: d
             }

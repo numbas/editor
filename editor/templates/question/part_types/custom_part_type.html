@@ -11,6 +11,9 @@
         <label class="label-block">
             <div class="{{form_label_class}} control-label">
                 <span data-bind="text: label"></span>
+                <span data-bind="if: help_url">
+                    <a class="helplink text-info" target="numbasquickhelp" data-bind="attr: {href: help_url, title: 'Help on '+ko.unwrap(label)}"><small class="glyphicon glyphicon-question-sign"></small></a>
+                </span>
             </div>
             <div class="{{form_control_class}}">
                 <div data-bind="if: input_type=='string'">
@@ -59,7 +62,7 @@
                     <multi-select-checkboxes params="options: data.choices, valueName: 'name', selectedOptions: value, labelProperty: 'label', helpProperty: 'hint'"></muli-select-checkboxes>
                 </div>
 
-                <p class="help-block" data-bind="visible: hint, html: hint"></p>
+                <p class="help-block" data-bind="visible: hint, latex: hint"></p>
             </div>
         </label>
     </div>

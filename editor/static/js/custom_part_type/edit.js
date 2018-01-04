@@ -609,6 +609,7 @@ $(document).ready(function() {
 
         this.label = ko.observable('');
         this.help_url = ko.observable('');
+        this.hint = ko.observable('');
         this.input_types = Editor.custom_part_type.setting_types.map(function(data) {
             return new SettingType(s,data);
         });
@@ -635,13 +636,14 @@ $(document).ready(function() {
                 name: this.name(),
                 label: this.label(),
                 help_url: this.help_url(),
+                hint: this.hint(),
                 input_type: this.input_type().name
             }
             this.input_type().toJSON(out);
             return out;
         },
         load: function(data) {
-            tryLoad(data,['name','label','help_url'],this);
+            tryLoad(data,['name','label','help_url','hint'],this);
             this.set_type(data.input_type);
             this.input_type().load(data);
         }

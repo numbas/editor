@@ -109,8 +109,7 @@
                                     <form class="form-horizontal" data-bind="submit: Editor.noop">
                                         {% property 'name' 'Name' monospace=True warning='nameError' %}
                                         {% property 'label' 'Label' warning='!label() ? \'A label is required\' : \'\'' %}
-                                        {% property 'help_url' 'Help URL' monospace=True%}
-
+                                        {% property 'help_url' 'Help URL' monospace=True %}
                                         <!-- ko with: input_type -->
 
                                         <!-- ko if: $parent.input_type().name == 'string' -->
@@ -251,6 +250,21 @@
                                         <!-- /ko -->
 
                                         <!-- /ko -->
+
+                                        <div class="form-group">
+                                            <label class="label-block">
+                                                <div class="{{form_label_class}} control-label">
+                                                    Input hint for question author
+                                                </div>
+                                            </label>
+                                            <div class="{{form_control_class}}">
+                                                <div {% if not editable %}disabled{% endif %} data-bind="writemaths: hint"></div>
+                                                <p class="help-block">
+                                                    Describe how this setting should be used.
+                                                </p>
+                                            </div>
+                                        </div>
+
                                     </form>
                                 </div>
                             </div>

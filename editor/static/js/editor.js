@@ -1623,6 +1623,13 @@ $(document).ready(function() {
 		}
 	};
 
+    ko.bindingHandlers.latex = {
+        update: function(element,valueAccessor) {
+            ko.bindingHandlers.html.update.apply(this,arguments);
+            $(element).mathjax();
+        }
+    }
+
     ko.bindingHandlers.fromNow = {
         init: function(element,valueAccessor) {
             var value = valueAccessor();

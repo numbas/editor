@@ -9,6 +9,8 @@ SITE_TITLE = 'Numbas'
 
 MATHJAX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0'
 
+DOCS_URL = 'https://numbas-editor.readthedocs.io/en/latest/'
+
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 DEBUG = True

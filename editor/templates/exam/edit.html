@@ -29,7 +29,7 @@
                 <label class="label-block">
                     <div class="col-sm-3 control-label">
                         Interface theme 
-                        {% helplink 'http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-theme' %}
+                        {% helplink 'exam/reference.html#term-theme' %}
                     </div>
                     <div class="col-sm-6">
                         <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.themes, value: theme, optionsText: 'name'"></select>
@@ -41,7 +41,7 @@
             <div class="form-group">
                 <label class="label-block">
                     <div class="col-sm-3 control-label">
-                        Interface language {% helplink 'http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-interface-language' %}
+                        Interface language {% helplink 'exam/reference.html#term-interface-language' %}
                     </div>
                     <div class="col-sm-6">
                         <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.locales, value: locale, optionsValue: 'code', optionsText: 'name'"></select>
@@ -66,7 +66,7 @@
                     <div class="panel-body">
                         <form class="form-horizontal" data-bind="submit: Editor.noop">
                             {% with form_label_class='col-sm-4' form_control_class='col-sm-8' %}
-                                {% booleanproperty 'showQuestionGroupNames' 'Show group names to student?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-show-group-names-to-student' %}
+                                {% booleanproperty 'showQuestionGroupNames' 'Show group names to student?' help_url='exam/reference.html#term-show-group-names-to-student' %}
                             {% endwith %}
                         </form>
                     </div>
@@ -100,12 +100,12 @@
                                             {% with form_label_class='' form_control_class='' %}
                                             <div class="form-group">
                                                 <label class="">
-                                                    <div class="control-label">Questions to use {% helplink 'http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-questions-to-use' %}</div>
+                                                    <div class="control-label">Questions to use {% helplink 'exam/reference.html#term-questions-to-use' %}</div>
                                                     <select class="form-control" data-bind="options: pickingStrategies, optionsText: 'niceName', value: pickingStrategy"></select>
                                                 </label>
                                             </div>
                                             <span data-bind="visible: pickingStrategy().name=='random-subset'">
-                                                {% property 'pickQuestions' 'Number of questions to choose' type='number' min=1 max='questions().length' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-number-of-questions-to-choose' %}
+                                                {% property 'pickQuestions' 'Number of questions to choose' type='number' min=1 max='questions().length' help_url='exam/reference.html#term-number-of-questions-to-choose' %}
                                             </span>
                                             {% endwith %}
                                         </div>
@@ -153,7 +153,7 @@
                     </div>
                     <div class="panel-footer" data-bind="fadeVisible: numQuestions()>0">
                         <div class="form-group">
-                            <label>Pass threshold {% helplink 'http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-pass-threshold' %}</label>
+                            <label>Pass threshold {% helplink 'exam/reference.html#term-pass-threshold' %}</label>
                             <input {% if not editable %}disabled{% endif %} type="range" min="0" max="100" data-bind="value: percentPass, valueUpdate: 'input'">
                             <span class="percentproperty value" data-bind="text: ko.unwrap(percentPass)+'%'">0%</span>
                         </div>
@@ -203,13 +203,13 @@
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='navigation'}">
         <form class="form-horizontal" data-bind="submit: Editor.noop">
             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
-            {% booleanproperty 'allowregen' 'Allow user to regenerate questions?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-allow-user-to-regenerate-questions' %}
-            {% booleanproperty 'reverse' 'Allow move to previous question?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-allow-move-to-previous-question' %}
-            {% booleanproperty 'browse' 'Allow to jump to any question?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-allow-jump-to-any-question' %}
-            {% booleanproperty 'showfrontpage' 'Show front page?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-show-front-page' %}
-            {% booleanproperty 'showresultspage' 'Show results page?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-show-results-page' %}
-            {% booleanproperty 'preventleave' 'Confirm before leaving the exam while it\'s running?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-confirm-before-leaving-the-exam-while-it-s-running' %}
-            {% exam_event 'onleave' 'On leaving a question' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-on-leaving-a-question' %}
+            {% booleanproperty 'allowregen' 'Allow user to regenerate questions?' help_url='exam/reference.html#term-allow-user-to-regenerate-questions' %}
+            {% booleanproperty 'reverse' 'Allow move to previous question?' help_url='exam/reference.html#term-allow-move-to-previous-question' %}
+            {% booleanproperty 'browse' 'Allow to jump to any question?' help_url='exam/reference.html#term-allow-jump-to-any-question' %}
+            {% booleanproperty 'showfrontpage' 'Show front page?' help_url='exam/reference.html#term-show-front-page' %}
+            {% booleanproperty 'showresultspage' 'Show results page?' help_url='exam/reference.html#term-show-results-page' %}
+            {% booleanproperty 'preventleave' 'Confirm before leaving the exam while it\'s running?' help_url='exam/reference.html#term-confirm-before-leaving-the-exam-while-it-s-running' %}
+            {% exam_event 'onleave' 'On leaving a question' help_url='exam/reference.html#term-on-leaving-a-question' %}
             {% endwith %}
         </form>
 
@@ -222,10 +222,10 @@
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='timing'}">
         <form class="form-horizontal" data-bind="submit: Editor.noop">
             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
-            {% property 'duration' 'Exam duration (minutes)' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-exam-duration' %}
-            {% booleanproperty 'allowPause' 'Allow pausing?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-allow-pausing' %}
-            {% exam_event 'timeout' 'On timeout' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-on-timeout-event' %}
-            {% exam_event 'timedwarning' '5 minutes before timeout' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-minutes-before-timeout-event' %}
+            {% property 'duration' 'Exam duration (minutes)' min=0 help_url='exam/reference.html#term-exam-duration' %}
+            {% booleanproperty 'allowPause' 'Allow pausing?' help_url='exam/reference.html#term-allow-pausing' %}
+            {% exam_event 'timeout' 'On timeout' help_url='exam/reference.html#term-on-timeout-event' %}
+            {% exam_event 'timedwarning' '5 minutes before timeout' help_url='exam/reference.html#term-minutes-before-timeout-event' %}
             {% endwith %}
         </form>
 
@@ -238,16 +238,16 @@
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='feedback'}">
         <form class="form-horizontal" data-bind="submit: Editor.noop">
             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' form_offset_class='col-sm-offset-3' %}
-            {% booleanproperty 'showactualmark' 'Show current score?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-show-current-score' %}
-            {% booleanproperty 'showtotalmark' 'Show maximum score?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-show-maximum-score' %}
-            {% booleanproperty 'showanswerstate' 'Show answer state?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-show-answer-state' %}
-            {% booleanproperty 'allowrevealanswer' 'Allow reveal answer?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-allow-reveal-answer' %}
-            {% booleanproperty 'showstudentname' 'Show student\'s name?' help_url='http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-show-students-name' %}
+            {% booleanproperty 'showactualmark' 'Show current score?' help_url='exam/reference.html#term-show-current-score' %}
+            {% booleanproperty 'showtotalmark' 'Show maximum score?' help_url='exam/reference.html#term-show-maximum-score' %}
+            {% booleanproperty 'showanswerstate' 'Show answer state?' help_url='exam/reference.html#term-show-answer-state' %}
+            {% booleanproperty 'allowrevealanswer' 'Allow reveal answer?' help_url='exam/reference.html#term-allow-reveal-answer' %}
+            {% booleanproperty 'showstudentname' 'Show student\'s name?' help_url='exam/reference.html#term-show-students-name' %}
 
             <div class="form-group">
                 <label class="{{form_label_class}} control-label">
                     Introduction
-                    {% helplink 'http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-introduction' subject='the exam introduction' %}
+                    {% helplink 'exam/reference.html#term-introduction' subject='the exam introduction' %}
                 </label>
                 <div class="{{form_control_class}}">
                     <div {% if not editable %}disabled{% endif %} data-bind="writemaths: intro"></div>
@@ -259,7 +259,7 @@
 
             <h4>
                 Feedback messages
-                {% helplink 'http://numbas-editor.readthedocs.io/en/latest/exam/reference.html#term-feedback-messages' subject='feedback messages' %}
+                {% helplink 'exam/reference.html#term-feedback-messages' subject='feedback messages' %}
             </h4>
             <ul class="feedback-messages list-unstyled list-group" data-bind="foreach: feedbackMessages">
                 <li class="feedback-message list-group-item clearfix">

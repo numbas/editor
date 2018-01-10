@@ -1755,9 +1755,9 @@ $(document).ready(function() {
 		},this);
 
 		this.scripts = [
-			new Script('constructor','When the part is created','after','http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-when-the-part-is-created'),
-			new Script('mark','Mark student\'s answer','instead','http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-mark-student-s-answer'),
-			new Script('validate','Validate student\'s answer','instead','http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-validate-student-s-answer')
+			new Script('constructor','When the part is created','after','question/reference.html#term-when-the-part-is-created'),
+			new Script('mark','Mark student\'s answer','instead','question/reference.html#term-mark-student-s-answer'),
+			new Script('validate','Validate student\'s answer','instead','question/reference.html#term-validate-student-s-answer')
 		];
 
         this.use_custom_algorithm = ko.observable(false);

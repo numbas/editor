@@ -3,9 +3,9 @@
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking-settings'}">
 <form class="form-horizontal" data-bind="submit: Editor.noop">
     <div class="main-settings">
-        {% property '$parent.marks' 'Marks' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-marks' %}
+        {% property '$parent.marks' 'Marks' min=0 help_url='question/reference.html#term-marks' %}
         <div data-bind="visible: $parent.steps().length">
-            {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-penalty-for-revealing-steps' %}
+            {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='question/reference.html#term-penalty-for-revealing-steps' %}
         </div>
 
         <div class="form-group">
@@ -21,16 +21,16 @@
     <h4>Advanced settings</h4>
     <hr>
 
-    {% property 'numRows' 'Number of rows' min=1 help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/matrixentry.html#term-number-of-rows' %}
-    {% property 'numColumns' 'Number of columns' min=1 help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/matrixentry.html#term-number-of-columns' %}
-    {% booleanproperty 'allowResize' 'Allow student to change size of matrix?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/matrixentry.html#term-allow-student-to-change-size-of-matrix' %}
-    {% property 'tolerance' 'Margin of error allowed in each cell' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/matrixentry.html#term-margin-of-error-allowed-in-each-cell' %}
-    {% booleanproperty 'markPerCell' 'Gain marks for each correct cell?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/matrixentry.html#term-gain-marks-for-each-cell' %}
+    {% property 'numRows' 'Number of rows' min=1 help_url='question/parts/matrixentry.html#term-number-of-rows' %}
+    {% property 'numColumns' 'Number of columns' min=1 help_url='question/parts/matrixentry.html#term-number-of-columns' %}
+    {% booleanproperty 'allowResize' 'Allow student to change size of matrix?' help_url='question/parts/matrixentry.html#term-allow-student-to-change-size-of-matrix' %}
+    {% property 'tolerance' 'Margin of error allowed in each cell' min=0 help_url='question/parts/matrixentry.html#term-margin-of-error-allowed-in-each-cell' %}
+    {% booleanproperty 'markPerCell' 'Gain marks for each correct cell?' help_url='question/parts/matrixentry.html#term-gain-marks-for-each-cell' %}
 
     <hr>
 	<div class="form-group">
 		<label class="{{form_label_class}} control-label">
-            Precision restriction {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/matrixentry.html#term-precision-restriction' %}
+            Precision restriction {% helplink 'question/parts/matrixentry.html#term-precision-restriction' %}
 		</label>
 		<div class="{{form_control_class}}">
 			<select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: precisionTypes, value: precisionType, optionsText: 'niceName'"></select>
@@ -38,7 +38,7 @@
 	</div>
     <div data-bind="fadeVisible: precisionType().name!='none'">
         {% property 'precision' 'precisionWord' dynamic_label=True %}
-        {% booleanproperty 'strictPrecision' 'Require trailing zeros?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/matrixentry.html#term-require-trailing-zeros' %}
+        {% booleanproperty 'strictPrecision' 'Require trailing zeros?' help_url='question/parts/matrixentry.html#term-require-trailing-zeros' %}
         {% percentproperty 'precisionPartialCredit' 'Partial credit for wrong precision' %}
         <div class="form-group">
             <label class="{{form_label_class}} control-label">
@@ -49,13 +49,13 @@
     </div>
 
     <div data-bind="fadeVisible: fractionPossible">
-        {% booleanproperty 'allowFractions' 'Allow the student to enter fractions?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/matrixentry.html#term-allow-the-student-to-enter-a-fraction' %}
-        {% booleanproperty 'correctAnswerFractions' 'Display numbers in the correct answer as fractions?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/matrixentry.html#term-display-numbers-in-the-correct-answer-as-fractions' %}
+        {% booleanproperty 'allowFractions' 'Allow the student to enter fractions?' help_url='question/parts/matrixentry.html#term-allow-the-student-to-enter-a-fraction' %}
+        {% booleanproperty 'correctAnswerFractions' 'Display numbers in the correct answer as fractions?' help_url='question/parts/matrixentry.html#term-display-numbers-in-the-correct-answer-as-fractions' %}
     </div>
 
     <hr>
-    {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-correct-answer-on-reveal' %}
-    {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-score-feedback-icon' %}	
+    {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='question/reference.html#term-show-correct-answer-on-reveal' %}
+    {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/reference.html#term-show-score-feedback-icon' %}	
 
 </form>
 </section>

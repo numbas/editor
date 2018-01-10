@@ -2,7 +2,7 @@
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking-settings'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div data-bind="fadeVisible: $parent.steps().length">
-            {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-penalty-for-revealing-steps' %}
+            {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='question/reference.html#term-penalty-for-revealing-steps' %}
         </div>
 	</form>
 </section>

@@ -174,7 +174,7 @@
                                     <label>Description</label>
                                     <div id="description-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
                                     <p class="help-block">
-                                        {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-description' subject='the description field' %}
+                                        {% helplink 'question/reference.html#term-description' subject='the description field' %}
                                         Describe what this {{item_type}} assesses, or how it is going to be used.
                                     </p>
                                 </div>
@@ -442,7 +442,7 @@
                         <div class="panel-body">
                             <p>Share these links to give automatic access to this {{item_type}}. Be careful about who you share these with - whoever clicks on the link will be given access.</p>
                             <div class="alert alert-warning">
-                                <p><span class="glyphicon glyphicon-warning-sign"></span> You should <strong>not</strong> give these links to students. To make a test available to students, <a href="http://numbas-editor.readthedocs.io/en/latest/tutorials/upload-vle.html" target="_blank">download a copy and upload it to your VLE or webspace</a>.</p>
+                                <p><span class="glyphicon glyphicon-warning-sign"></span> You should <strong>not</strong> give these links to students. To make a test available to students, <a href="{{DOCS_URL}}tutorials/upload-vle.html" target="_blank">download a copy and upload it to your VLE or webspace</a>.</p>
                             </div>
                         </div>
                         <ul class="share-links list-group">

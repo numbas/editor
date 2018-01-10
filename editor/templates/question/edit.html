@@ -183,7 +183,7 @@
             <label>Question statement</label>
             <div id="statement-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: statement, tinymce_plugins: ['jmevisible','preview']"></div>
             <p class="help-block">
-                {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#statement' subject='the question statement' %}
+                {% helplink 'question/reference.html#statement' subject='the question statement' %}
                 Give any introductory information the student needs. 
             </p>
         </div>
@@ -216,7 +216,7 @@
                             <div data-bind="visible: templateType().id=='anything'">
                                 <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: templateTypeValues.anything.definition, codemirrorMode: 'jme'"></textarea>
                                 <p class="help-block text-right">
-                                    <a class="helplink text-info" href="http://numbas-editor.readthedocs.io/en/latest/jme-reference.html" target="_blank">JME function reference <span class="glyphicon glyphicon-question-sign"></span></a>
+                                    <a class="helplink text-info" href="{{DOCS_URL}}jme-reference.html" target="_blank">JME function reference <span class="glyphicon glyphicon-question-sign"></span></a>
                                 </p>
                             </div>
                             <div data-bind="visible: templateType().id=='number'">
@@ -390,7 +390,7 @@
             <div class="form-group">
                 <label class="col-sm-3 control-label">
                     Condition to satisfy
-                    {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-condition-to-satisfy' %}
+                    {% helplink 'question/reference.html#term-condition-to-satisfy' %}
                 </label>
                 <div class="col-sm-9">
                     <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: variablesTest.condition, codemirrorMode: 'jme'"></textarea>
@@ -398,7 +398,7 @@
                 </div>
             </div>
             {% with form_label_class="col-sm-3" form_control_class="col-sm-9" %}
-            {% property 'variablesTest.maxRuns' 'Maximum number of runs' min=1 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-maximum-number-of-runs' %}
+            {% property 'variablesTest.maxRuns' 'Maximum number of runs' min=1 help_url='question/reference.html#term-maximum-number-of-runs' %}
             {% endwith %}
             <div class="form-group form-inline">
                 <div class="col-sm-offset-3">
@@ -453,7 +453,7 @@
                         <div class="col-sm-11 col-md-9 tab-content">
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='prompt'}">
                                 <p class="help-block">
-                                    {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-prompt' subject='the part prompt' %}
+                                    {% helplink 'question/reference.html#term-prompt' subject='the part prompt' %}
                                     Ask the student a question, and give any hints about how they should answer this part.
                                 </p>
 
@@ -477,10 +477,10 @@
 
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='marking-algorithm'}">
                                 <form class="form-horizontal" data-bind="submit: Editor.noop">
-                                    {% booleanproperty 'use_custom_algorithm' 'Use custom marking algorithm?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-use-custom-marking-algorithm' %}
+                                    {% booleanproperty 'use_custom_algorithm' 'Use custom marking algorithm?' help_url='question/reference.html#term-use-custom-marking-algorithm' %}
 
                                     <div data-bind="fadeVisible: use_custom_algorithm">
-                                        {% booleanproperty 'extendBaseMarkingAlgorithm' 'Extend base marking algorithm?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-extend-base-marking-algorithm' %}
+                                        {% booleanproperty 'extendBaseMarkingAlgorithm' 'Extend base marking algorithm?' help_url='question/reference.html#term-extend-base-marking-algorithm' %}
                                         <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: customMarkingAlgorithm, codemirrorMode: 'jme'"></textarea>
                                         <p class="alert alert-danger" data-bind="html: markingScriptError, visible: markingScriptError"></p>
                                     </div>
@@ -736,7 +736,7 @@
 
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='scripts'}">
                                 <p class="help-block">
-                                    {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#scripts' subject='part scripts' %}
+                                    {% helplink 'question/reference.html#scripts' subject='part scripts' %}
                                     When you need to change the way this part works beyond the available options, you can write JavaScript code to be executed at the times described below.
                                 </p>
                                 <form class="form-inline" data-bind="foreach: scripts, submit: Editor.noop">
@@ -758,7 +758,7 @@
                             </section>
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='adaptivemarking'}">
                                 <p class="help-block">
-                                    {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#adaptive-marking' subject='adaptive marking' %}
+                                    {% helplink 'question/reference.html#adaptive-marking' subject='adaptive marking' %}
                                     To account for errors made by the student in earlier calculations, replace question variables with answers to earlier parts.
                                 </p>
                                 <div class="variable-replacements">
@@ -792,7 +792,7 @@
 											<li><span class="btn btn-sm btn-danger monospace" data-bind="text: $data,click: $root.goToVariable" title="Edit this variable"></span></li>
 										</ul></p>
 										<p>These variables have some random elements, which means they're not guaranteed to have the same value each time the student submits an answer. You should define new variables to store the random elements, so that they remain the same each time this part is marked.</p>
-										<p><a href="http://numbas-editor.readthedocs.io/en/latest/question/reference.html#adaptive-marking">More information about this problem</a></p>
+                                        <p><a href="{{DOCS_URL}}question/reference.html#adaptive-marking">More information about this problem</a></p>
 									</div>
 
                                     <div class="text-right">
@@ -868,7 +868,7 @@
             <label>Advice</label>
             <div id="advice-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: advice, tinymce_plugins: ['jmevisible','preview']"></div>
             <p class="help-block">
-                {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#advice' subject='the advice section' %}
+                {% helplink 'question/reference.html#advice' subject='the advice section' %}
                 Give a worked solution to the whole question. 
             </p>
         </div>
@@ -885,7 +885,7 @@
                 <div class="col-sm-4">
                     <div class="panel panel-info">
                         <div class="panel-heading">
-                            <h4 class="panel-title">Extensions {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-extensions' %}</h4>
+                            <h4 class="panel-title">Extensions {% helplink 'question/reference.html#term-extensions' %}</h4>
                         </div>
                         <div class="panel-body">
                             <ul class="extensions" data-bind="foreach: extensions">
@@ -907,7 +907,7 @@
                     </div>
                     <div class="panel panel-info">
                         <div class="panel-heading">
-                            <h4 class="panel-title">Rulesets {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#rulesets' subject='rulesets' %}</h4>
+                            <h4 class="panel-title">Rulesets {% helplink 'question/reference.html#rulesets' subject='rulesets' %}</h4>
                         </div>
                         <ul class="list-group">
                             <!-- ko foreach: {data: rulesets, afterAdd: Editor.afterAdd} -->
@@ -934,7 +934,7 @@
                 <div class="col-sm-8">
                     <div id="functions" class="panel panel-default">
                         <div class="panel-heading">
-                            <h3 class="panel-title">Functions {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#functions-rulesets' subject='functions' %}</h3>
+                            <h3 class="panel-title">Functions {% helplink 'question/reference.html#functions-rulesets' subject='functions' %}</h3>
                         </div>
                         <ul class="list-group">
                             <!-- ko foreach: {data: functions, afterAdd: Editor.afterAdd} -->
@@ -942,13 +942,13 @@
                                 <div class="row">
                                     <div class="form-group col-sm-8">
                                         <label>
-                                            Name {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-name' %}
+                                            Name {% helplink 'question/reference.html#term-name' %}
                                         </label>
                                         <input {% if not editable %}disabled{% endif %} class="form-control" placeholder="Name" type="text" data-bind="textInput: name">
                                     </div>
                                     <div class="form-group col-sm-3">
                                         <label>
-                                            Language {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-language' subject='languages' %}
+                                            Language {% helplink 'question/reference.html#term-language' subject='languages' %}
                                         </label>
                                         <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: languages, value: language"></select>
                                     </div>
@@ -1002,7 +1002,7 @@
                         <div class="panel-heading">
                             <h3 class="panel-title">
                                 Preamble
-                                {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/reference.html#preamble' %}
+                                {% helplink 'question/reference.html#preamble' %}
                             </h3>
                         </div>
                         <div class="panel-body">

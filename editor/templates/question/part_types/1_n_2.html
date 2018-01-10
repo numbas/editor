@@ -4,9 +4,9 @@
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div class="main-settings">
             <div data-bind="visible: $parent.steps().length">
-                {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-penalty-for-revealing-steps' %}
+                {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='question/reference.html#term-penalty-for-revealing-steps' %}
             </div>
-            {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-shuffle-order-of-choices' %}
+            {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='question/parts/multiple-choice.html#term-shuffle-order-of-choices' %}
         </div>
 
         <h4>Advanced settings</h4>
@@ -14,7 +14,7 @@
 
         <div class="form-group">
             <label class="{{form_label_class}} control-label">
-                Selection type {% helplink 'http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-selection-type' %}
+                Selection type {% helplink 'question/parts/multiple-choice.html#term-selection-type' %}
             </label>
             <div class="{{form_control_class}}">
                 <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: displayTypes, value: displayType, optionsText: 'niceName'"></select>
@@ -22,25 +22,25 @@
         </div>
 
         <div data-bind="fadeVisible: displayType().name == 'radiogroup'">
-            {% property 'displayColumns' 'Number of display columns' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-number-of-display-columns' zero_means='not displayed in columns' %}
+            {% property 'displayColumns' 'Number of display columns' help_url='question/parts/multiple-choice.html#term-number-of-display-columns' zero_means='not displayed in columns' %}
         </div>
 
-        {% booleanproperty 'customMarking' 'Custom marking matrix?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-custom-marking-matrix' disable='customChoices' %}
+        {% booleanproperty 'customMarking' 'Custom marking matrix?' help_url='question/parts/multiple-choice.html#term-custom-marking-matrix' disable='customChoices' %}
         <div data-bind="fadeVisible: customMarking">
-            {% property 'customMatrix' 'Custom matrix expression' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-custom-matrix-expression' %}
+            {% property 'customMatrix' 'Custom matrix expression' monospace=True help_url='question/parts/multiple-choice.html#term-custom-matrix-expression' %}
         </div>
 
         <hr>
         
-        {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-correct-answer-on-reveal' %}	
-        {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/reference.html#term-show-score-feedback-icon' %}	
+        {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='question/reference.html#term-show-correct-answer-on-reveal' %}	
+        {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/reference.html#term-show-score-feedback-icon' %}	
 	</form>
 </section>
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='choices'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
-        {% booleanproperty 'customChoices' 'Variable list of choices?' help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-variable-list-of-choices' %}
+        {% booleanproperty 'customChoices' 'Variable list of choices?' help_url='question/parts/multiple-choice.html#term-variable-list-of-choices' %}
         <div data-bind="fadeVisible: customChoices">
-            {% property 'customChoicesExpression' 'List of choices' monospace=True help_url='http://numbas-editor.readthedocs.io/en/latest/question/parts/multiple-choice.html#term-list-of-choices' %}
+            {% property 'customChoicesExpression' 'List of choices' monospace=True help_url='question/parts/multiple-choice.html#term-list-of-choices' %}
         </div>
 	</form>
 	<ul class="choices list-unstyled list-group" data-bind="fadeVisible: !customChoices()">

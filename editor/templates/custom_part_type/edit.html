@@ -80,7 +80,7 @@
                         <label>Description</label>
                         <div id="description-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
                         <p class="help-block">
-                            {% helplink 'http://numbas-editor.readthedocs.io/en/latest/custom_part_type/reference.html#term-description' subject='the description field' %}
+                            {% helplink 'custom_part_type/reference.html#term-description' subject='the description field' %}
                             Describe how this part type works, and what kinds of questions it is appropriate for.
                         </p>
                     </div>
@@ -289,7 +289,7 @@
                 <!-- Answer input -->
                 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='input'}">
                     <form class="form-horizontal" data-bind="submit: Editor.noop">
-                        {% selectproperty 'input_widget' 'Answer input method' options_text='niceName' options='input_widgets' help_url='http://numbas-editor.readthedocs.io/en/latest/custom_part_type.html#term-answer-input-method' %}
+                        {% selectproperty 'input_widget' 'Answer input method' options_text='niceName' options='input_widgets' help_url='custom_part_type.html#term-answer-input-method' %}
 
                         <div class="form-group">
                             <label class="{{form_label_class}} control-label">
@@ -401,7 +401,7 @@
                                             <p data-bind="html: definitionError"></p>
                                         </div>
                                         <p class="help-block text-right">
-                                            <a class="helplink text-info" href="http://numbas-editor.readthedocs.io/en/latest/jme-reference.html" target="_blank">JME function reference <span class="glyphicon glyphicon-question-sign"></span></a>
+                                            <a class="helplink text-info" href="{{DOCS_URL}}jme-reference.html" target="_blank">JME function reference <span class="glyphicon glyphicon-question-sign"></span></a>
                                         </p>
                                     </div>
                                     <div class="form-group">

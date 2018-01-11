@@ -97,6 +97,12 @@
                             <div class="panel" data-bind="css: {'panel-default': valid(), 'panel-warning': !valid()}">
                                 <div class="panel-heading">
                                     <div class="pull-right">
+                                        <div class="btn-group">
+                                            {% if editable %}
+                                            <button type="button" class="btn btn-link" data-bind="click: moveUp, visible: canMove('up')" title="Move this setting up one place"><span class="glyphicon glyphicon-arrow-up"></span></button>
+                                            <button type="button" class="btn btn-link" data-bind="click: moveDown, visible: canMove('down')" title="Move this setting down one place"><span class="glyphicon glyphicon-arrow-down"></span></button>
+                                            {% endif %}
+                                        </div>
                                         {% if editable %}
                                         <button type="button" class="btn btn-link" data-bind="click: $parent.remove_setting" title="Remove this setting"><span class="glyphicon glyphicon-remove text-danger"></span></button>
                                         {% endif %}

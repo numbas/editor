@@ -631,6 +631,34 @@ $(document).ready(function() {
             }
         },
 
+		canMove: function(direction) {
+			var parentList = this.pt.settings();
+			switch(direction) {
+				case 'up':
+					return parentList.indexOf(this)>0;
+				case 'down':
+					return parentList.indexOf(this)<parentList.length-1;
+			}
+		},
+
+		moveUp: function() {
+			var parentList = this.pt.settings;
+			var i = parentList.indexOf(this);
+			if(i>0) {
+				parentList.remove(this);
+                ko.tasks.runEarly();
+				parentList.splice(i-1,0,this);
+			}
+		},
+
+		moveDown: function() {
+			var parentList = this.pt.settings;
+			var i = parentList.indexOf(this);
+			parentList.remove(this);
+            ko.tasks.runEarly();
+			parentList.splice(i+1,0,this);
+		},
+
         toJSON: function() {
             var out = {
                 name: this.name(),

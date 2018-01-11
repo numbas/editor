@@ -431,7 +431,7 @@
                                     <div class="panel-heading">
                                         <h3 class="panel-title">Marking notes</h3>
                                     </div>
-                                    <ul class="list-group list-group-hover" data-bind="foreach: marking_notes">
+                                    <ul class="list-group list-group-hover" data-bind="sortable: {foreach: marking_notes, group: 'marking_notes'}">
                                         <li class="list-group-item" data-bind="css: {active: $data == $parent.current_marking_note()}, click: $parent.current_marking_note">
                                             <button type="button" class="pull-right btn btn-link" data-bind="visible: !required(), click: $parent.remove_marking_note" title="Remove this marking note"><span class="glyphicon glyphicon-remove text-danger"></span></button>
                                             <span data-bind="css: {monospace: name()}, text: name() || 'Unnamed note'"></span>

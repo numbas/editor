@@ -1366,7 +1366,7 @@ $(document).ready(function() {
 		}
 	};
 
-    function displayJMEValue(v) {
+    var displayJMEValue = Editor.displayJMEValue = function(v) {
         switch(v.type) {
             case 'string':
                 return Numbas.util.escapeHTML(v.value);
@@ -1376,6 +1376,13 @@ $(document).ready(function() {
                     return s;
                 } else {
                     return 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
+                }
+            case 'dict':
+                var s = Numbas.jme.display.treeToJME({tok:v});
+                if(s.length<30) {
+                    return s;
+                } else {
+                    return 'Dictionary with '+Object.keys(v.value).length+" entries";
                 }
             case 'html':
                 if(v.value.length==1 && v.value[0].tagName=='IMG') {

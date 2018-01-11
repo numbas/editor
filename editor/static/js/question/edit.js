@@ -1364,30 +1364,10 @@ $(document).ready(function() {
 
 		this.display = ko.computed(function() {
 			var v;
-
 			if(this.anyError()) {
 				return this.anyError();
             } else if(v = this.value()) {
-				switch(v.type)
-				{
-				case 'string':
-					return Numbas.util.escapeHTML(v.value);
-				case 'list':
-                    var s = Numbas.jme.display.treeToJME({tok:v});
-                    if(s.length<30) {
-                        return s;
-                    } else {
-    					return 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
-                    }
-				case 'html':
-                    if(v.value.length==1 && v.value[0].tagName=='IMG') {
-                        var src = v.value[0].getAttribute('src');
-                        return '<img src="'+src+'" title="'+src+'">';
-                    }
-					return 'HTML node';
-				default:
-					return Numbas.jme.display.treeToJME({tok:v});
-				}
+                return Editor.displayJMEValue(v);
 			} else {
 				return '';
             }

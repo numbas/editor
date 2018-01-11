@@ -118,6 +118,7 @@
 .jme-value[data-jme-value-type="error"],
 .jme-value[data-jme-value-type="string"],
 .jme-value[data-jme-value-type="list"],
+.jme-value[data-jme-value-type="dict"],
 .jme-value[data-jme-value-type="html"] {
     font-family: inherit;
 }
@@ -154,6 +155,14 @@
 
 .table.notes col.name {
     width: 13em;
+}
+.table.notes col.feedback {
+    min-width: 13em;
+}
+.table.notes .note .value {
+    max-height: 5em;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /*

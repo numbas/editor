@@ -551,6 +551,8 @@
                                                 <table class="notes table">
                                                     <colgroup>
                                                         <col class="name"></col>
+                                                        <col class="value"></col>
+                                                        <col class="feedback"></col>
                                                     </colgroup>
                                                     <thead>
                                                         <tr>
@@ -572,7 +574,7 @@
                                                                 <span class="name monospace" data-bind="text: name, attr: {title: description}"></span> 
                                                             </td>
                                                             <td class="only-when-shown">
-                                                                <span class="value jme-value" data-bind="jmevalue: value, error: error"></span>
+                                                                <div class="value jme-value" data-bind="jmevalue: value, error: error"></div>
                                                             </td>
                                                             <td class="only-when-shown">
                                                                 <ul class="list-unstyled" data-bind="foreach: messages">

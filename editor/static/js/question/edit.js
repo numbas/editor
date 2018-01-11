@@ -1470,7 +1470,9 @@ $(document).ready(function() {
 
 		toggleLocked: function(v,e) {
 			this.thisLocked(!this.thisLocked());
-			e.preventDefault();
+			if(e) {
+                e.preventDefault();
+            }
 		}
     }
 
@@ -2038,7 +2040,9 @@ $(document).ready(function() {
                     return {
                         name: v.name(),
                         value: value,
-                        valueString: value ? Numbas.jme.display.treeToJME({tok:value},{bareExpression:false}) : ''
+                        valueString: value ? Numbas.jme.display.treeToJME({tok:value},{bareExpression:false}) : '',
+                        toggleLocked: function() { v.toggleLocked(); },
+                        locked: v.locked
                     }
                 }));
             }

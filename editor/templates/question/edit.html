@@ -513,17 +513,26 @@
                                             <table class="variables table table-striped">
                                                 <thead>
                                                     <tr>
+                                                        <th></th>
                                                         <th>Name</th>
                                                         <th>Value</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody data-bind="foreach: variables">
                                                     <tr class="variable">
+                                                        <td class="lock-cell">
+                                                            {% if editable %}
+                                                            <button type="button" class="btn btn-xs btn-link lock" data-bind="click: toggleLocked, css: {locked: locked}" title="Lock the value of this variable (editor only)">
+                                                                <span class="glyphicon glyphicon-lock"></span>
+                                                            </button>
+                                                            {% endif %}
+                                                        </td>
                                                         <td class="name monospace" data-bind="click: function(){$root.goToVariable(name)}, text: name ? name : 'Unnamed'"></td>
                                                         <td class="value jme-value" data-bind="jmevalue: value"></td>
                                                     </tr>
                                                 </tbody>
                                             </table>
+                                            <button class="btn btn-info btn-lg" type="button" data-bind="click: $root.regenerateVariables"><span class="glyphicon glyphicon-refresh"></span> Regenerate values</button>
                                         </section>
 
                                         <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='notes'}">

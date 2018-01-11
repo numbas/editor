@@ -41,7 +41,7 @@
 	display: inline;
 }
 
-.variable-selector button.lock.locked {
+.lock-cell button.lock.locked {
 	color: black;
 }
 

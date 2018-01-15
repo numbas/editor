@@ -957,7 +957,7 @@ CustomPartType.prototype = {
     },
     load: function(data) {
         this.settings.forEach(function(s) {
-            tryLoad(data,s.name,s,'value');
+            tryLoad(data.settings,s.name,s,'value');
         });
     }
 }

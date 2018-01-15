@@ -457,6 +457,7 @@
 
                 <!-- Access -->
                 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='access'}">
+                    {% if editable %}
                     <div class="panel panel-warning" data-bind="visible: !published() && !ready_to_use()">
                         <div class="panel-heading">
                             <h3 class="panel-title">Publish</h3>
@@ -503,8 +504,13 @@
                         </div>
                     </div>
                     
-                    {% if editable %}
                     <editor-pager params="editor: $root, previousTab: 'marking', task_group: 'access'"></editor-pager>
+                    {% else %}
+                    {% if object.published %}
+                    <p>This part type has been published to the public part type database.</p>
+                    {% else %}
+                    <p>This part type has not been published to the public part type database.</p>
+                    {% endif %}
                     {% endif %}
                 </section>
             {% endblock main_tab_content %}

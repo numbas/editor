@@ -168,7 +168,7 @@ urlpatterns = patterns('',
 
     # Custom part types
     url(r'^part_type/new/$', login_required(custom_part_type.CreateView.as_view()), name='custom_part_type_new'),
-    url(r'^part_type/(?P<pk>\d+)/edit$', login_required(custom_part_type.UpdateView.as_view()), name='custom_part_type_edit'),
+    url(r'^part_type/(?P<pk>\d+)/edit$', custom_part_type.UpdateView.as_view(), name='custom_part_type_edit'),
     url(r'^part_type/(?P<pk>\d+)/delete$', login_required(custom_part_type.DeleteView.as_view()), name='custom_part_type_delete'),
     url(r'^part_type/(?P<pk>\d+)/publish$', login_required(custom_part_type.PublishView.as_view()), name='custom_part_type_publish'),
     url(r'^part_type/(?P<pk>\d+)/unpublish$', login_required(custom_part_type.UnPublishView.as_view()), name='custom_part_type_unpublish'),

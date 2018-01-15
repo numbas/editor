@@ -1,7 +1,9 @@
 from django import http
+from django.contrib import messages
 from django.db import transaction
 from django.views import generic
 from django.core.urlresolvers import reverse
+from django.shortcuts import redirect
 
 from editor.models import CustomPartType, CUSTOM_PART_TYPE_PUBLIC_CHOICES, CUSTOM_PART_TYPE_INPUT_WIDGETS
 from editor.forms import NewCustomPartTypeForm, UpdateCustomPartTypeForm
@@ -83,3 +85,45 @@ class DeleteView(AuthorRequiredMixin, generic.DeleteView):
 
     def get_success_url(self):
         return reverse('profile_custom_part_types', args=(self.request.user.pk,))
+
+class PublishView(generic.UpdateView):
+    model = CustomPartType
+    fields = ['published']
+    
+    def get_success_url(self):
+        cpt = self.get_object()
+        return reverse('custom_part_type_edit', args=(cpt.pk,)) 
+
+    def dispatch(self, request, *args, **kwargs):
+        cpt = self.get_object()
+        if cpt.public_availability != 'restricted':
+            return http.HttpResponseForbidden
+        else:
+            return super(PublishView, self).dispatch(request, *args, **kwargs)
+
+    def get(self, *args, **kwargs):
+        cpt = self.get_object()
+        return redirect(reverse('custom_part_type_edit', args=(cpt.pk,)))
+
+    def post(self, request, *args, **kwargs):
+        cpt = self.get_object()
+        cpt.public_availability = 'select'
+        cpt.save()
+        messages.add_message(self.request, messages.SUCCESS, 'This custom part type has been published to the public database.')
+        return redirect(self.get_success_url())
+
+class UnPublishView(PublishView):
+    def dispatch(self, request, *args, **kwargs):
+        cpt = self.get_object()
+        if cpt.public_availability == 'restricted':
+            return redirect(reverse('custom_part_type_edit', args=(cpt.pk,)))
+        else:
+            return super(UnPublishView, self).dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        ei = self.get_object()
+        ei.unpublish()
+        ei.save()
+        messages.add_message(self.request, messages.INFO, 'This custom part type has been unpublished from the public database.')
+        return redirect(self.get_success_url())
+

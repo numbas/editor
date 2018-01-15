@@ -16,12 +16,14 @@
     <colgroup>
         <col class="name"></col>
         <col class="ready-to-use"></col>
+        <col class="public-availability"></col>
         <col class="description"></col>
         <col class="controls"></col>
     </colgroup>
     <thead>
         <th>Name</th>
         <th>Ready to use?</th>
+        <th>Public availability</th>
 		<th>What's it used for?</th>
         {% if is_me %}<th></th><!-- control links -->{% endif %}
     </thead>
@@ -36,6 +38,7 @@
                 <span class="glyphicon glyphicon-remove-sign text-danger" title="Not ready to use"></span>
             {% endif %}
         </td>
+        <td>{{custom_part_type.get_public_availability_display}}</td>
 		<td>{{custom_part_type.description|strip_html|safe}}</td>
         {% if is_me %}
         <td class="text-center">

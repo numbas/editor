@@ -148,7 +148,8 @@ $(document).ready(function() {
             new Editor.Tab('description','Description','cog'),
             new Editor.Tab('settings','Part settings','wrench'),
             new Editor.Tab('input','Answer input','pencil'),
-            new Editor.Tab('marking','Marking','check')
+            new Editor.Tab('marking','Marking','check'),
+            new Editor.Tab('access','Access','lock')
         ];
         this.getTab = function(id) {
             return pt.tabs.find(function(t){return t.id==id});
@@ -237,6 +238,8 @@ $(document).ready(function() {
             }).join('\n\n');
         },this);
 
+        this.published = ko.observable(false);
+
         if(data) {
             this.load(data);
         }
@@ -260,6 +263,11 @@ $(document).ready(function() {
             return this.task_list.all_sections_completed();
         }, this);
 
+        this.canPublish = ko.computed(function() {
+            return !this.published() && this.ready_to_use();
+        }, this);
+
+
         this.init_save();
     }
     CustomPartType.prototype = {
@@ -279,7 +287,7 @@ $(document).ready(function() {
 
         load: function(data) {
             var pt = this;
-            tryLoad(data,['name','short_name','description'],this);
+            tryLoad(data,['name','short_name','description','published'],this);
             tryLoadMatchingId(data,'input_widget','name',this.input_widgets,this);
             if('input_options' in data) {
                 tryLoad(data.input_options,['correctAnswer','hint'],this.input_options);

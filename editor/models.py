@@ -410,11 +410,21 @@ class CustomPartType(models.Model, ControlledObject):
         return self.author
 
     def has_access(self, user, levels):
+        if 'view' in levels:
+            if self.published:
+                return True
+
         if user.is_anonymous():
             return False
+
         if user==self.owner:
             return True
+
         return False
+
+    @property
+    def published(self):
+        return self.public_availability != 'restricted'
 
     def as_json(self):
         return {
@@ -435,6 +445,8 @@ class CustomPartType(models.Model, ControlledObject):
             'marking_script': self.marking_script,
             'marking_notes': self.marking_notes,
             'settings': self.settings,
+            'public_availability': self.public_availability,
+            'published': self.published,
         }
 
 class Resource(models.Model):

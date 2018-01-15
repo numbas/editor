@@ -451,7 +451,60 @@
                     </div>
 
                     {% if editable %}
-                    <editor-pager params="editor: $root, previousTab: 'input', task_group: 'marking'"></editor-pager>
+                    <editor-pager params="editor: $root, previousTab: 'input', nextTab: 'access', task_group: 'marking'"></editor-pager>
+                    {% endif %}
+                </section>
+
+                <!-- Access -->
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='access'}">
+                    <div class="panel panel-warning" data-bind="visible: !published() && !ready_to_use()">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Publish</h3>
+                        </div>
+                        <div class="panel-body">
+                            <p>At the moment, access to this {{item_type}} is restricted to members of the project this {{item_type}} belongs to and any other users you've explicitly granted access to.</p>
+                            <p>Complete each of the following tasks before you publish this {{item_type}}:</p>
+                            <ul class="list-unstyled" data-bind="foreach: tabs">
+                                <li data-bind="visible: $root.task_list.section_completed[id]!==undefined">
+                                <h4><a href="#" data-bind="text: title, click: $root.setTab(id), css: {'text-success': $root.task_list.section_completed[id], 'text-danger': !ko.unwrap($root.task_list.section_completed[id])}"></a></h4>
+                                    <ul data-bind="foreach: $root.task_list.section_tasks[id]">
+                                        <li data-bind="css: {'text-success': done, 'text-danger': !done()}">
+                                            <span class="glyphicon" data-bind="css:{'glyphicon-ok':done, 'glyphicon-alert':!done()}"></span>
+                                            <span data-bind="text: text"></span> 
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="panel panel-warning" data-bind="visible: canPublish">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Publish</h3>
+                        </div>
+                        <div class="panel-body">
+                            <p>At the moment, only you can use this part type.</p>
+                            <p>Publish your part type so that others can use it.</p>
+                            <form method="POST" id="publish-form" action="{% url 'custom_part_type_publish' object.pk %}">
+                                <button class="btn btn-danger" type="submit">Publish</button>
+                                {% csrf_token %}
+                            </form>
+                        </div>
+                    </div>
+                    <div class="panel panel-success" data-bind="visible: published">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Publish</h3>
+                        </div>
+                        <div class="panel-body">
+                            <p>This part type has been published to the public part type database.</p>
+                            <form method="POST" action="{% url 'custom_part_type_unpublish' object.pk %}">
+                                <button class="btn btn-danger" type="submit">Unpublish</button>
+                                {% csrf_token %}
+                            </form>
+                        </div>
+                    </div>
+                    
+                    {% if editable %}
+                    <editor-pager params="editor: $root, previousTab: 'marking', task_group: 'access'"></editor-pager>
                     {% endif %}
                 </section>
             {% endblock main_tab_content %}

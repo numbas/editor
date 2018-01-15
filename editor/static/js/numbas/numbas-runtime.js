@@ -3168,11 +3168,11 @@ newBuiltin('arccosh', [TNum], TNum, math.arccosh, {doc: {usage: 'arccosh(x)', de
 newBuiltin('arctanh', [TNum], TNum, math.arctanh, {doc: {usage: 'arctanh(x)', description: 'Inverse hyperbolic tangent.'}} );
 newBuiltin('ceil', [TNum], TNum, math.ceil, {doc: {usage: 'ceil(x)', description: 'Round up to nearest integer.', tags: ['ceiling']}} );
 newBuiltin('floor', [TNum], TNum, math.floor, {doc: {usage: 'floor(x)', description: 'Round down to nearest integer.'}} );
+newBuiltin('round', [TNum], TNum, math.round, {doc: {usage: 'round(x)', description: 'Round to nearest integer.', tags: ['whole number']}} );
 newBuiltin('trunc', [TNum], TNum, math.trunc, {doc: {usage: 'trunc(x)', description: 'If the argument is positive, round down to the nearest integer; if it is negative, round up to the nearest integer.', tags: ['truncate','integer part']}} );
 newBuiltin('fract', [TNum], TNum, math.fract, {doc: {usage: 'fract(x)', description: 'Fractional part of a number. Equivalent to @x-trunc(x)@.'}} );
 newBuiltin('degrees', [TNum], TNum, math.degrees, {doc: {usage: 'degrees(pi/2)', description: 'Convert radians to degrees.'}} );
 newBuiltin('radians', [TNum], TNum, math.radians, {doc: {usage: 'radians(90)', description: 'Convert degrees to radians.'}} );
-newBuiltin('round', [TNum], TNum, math.round, {doc: {usage: 'round(x)', description: 'Round to nearest integer.', tags: ['whole number']}} );
 newBuiltin('sign', [TNum], TNum, math.sign, {doc: {usage: 'sign(x)', description: 'Sign of a number. Equivalent to $\\frac{x}{|x|}$, or $0$ when $x=0$.', tags: ['positive','negative']}} );
 
 newBuiltin('rational_approximation',[TNum],TList,function(n) {
@@ -3237,17 +3237,14 @@ newBuiltin('parsenumber_or_fraction', [TString,TString], TNum, function(s,style)
 newBuiltin('parsenumber_or_fraction', [TString,TList], TNum, function(s,styles) {return util.parseNumber(s,true,styles);}, {unwrapValues: true});
 newBuiltin('togivenprecision', [TString,TString,TNum,TBool], TBool, math.toGivenPrecision);
 newBuiltin('withintolerance',[TNum,TNum,TNum],TBool, math.withinTolerance);
-newBuiltin('countdp',[TString],TNum,math.countDP);
-newBuiltin('countsigfigs',[TString],TNum,math.countSigFigs);
+newBuiltin('countdp',[TString],TNum, function(s) { return math.countDP(util.cleanNumber(s)); });
+newBuiltin('countsigfigs',[TString],TNum, function(s) { return math.countSigFigs(util.cleanNumber(s)); });
 newBuiltin('rationalapproximation',[TNum,TNum],TList,math.rationalApproximation,{unwrapValues:true});
 newBuiltin('isnan',[TNum],TBool,function(n) {
     return isNaN(n);
 });
-newBuiltin('isfloat',[TString],TBool,util.isfloat);
-newBuiltin('isfraction',[TString],TBool,util.isFraction);
-newBuiltin('isnumber',[TString],TBool,util.isNumber);
 newBuiltin('cleannumber',[TString,TList],TString,util.cleanNumber,{unwrapValues:true});
-newBuiltin('isbool',[TString],TBool,util.isfloat);
+newBuiltin('isbool',[TString],TBool,util.isBool);
 newBuiltin('perm', [TNum,TNum], TNum, math.permutations, {doc: {usage: 'perm(6,3)', description: 'Count permutations. $^n \\kern-2pt P_r$.', tags: ['combinatorics']}} );
 newBuiltin('comb', [TNum,TNum], TNum, math.combinations , {doc: {usage: 'comb(6,3)', description: 'Count combinations. $^n \\kern-2pt C_r$.', tags: ['combinatorics']}});
 newBuiltin('root', [TNum,TNum], TNum, math.root, {doc: {usage: ['root(8,3)','root(x,n)'], description: '$n$<sup>th</sup> root.', tags: ['cube']}} );
@@ -4207,17 +4204,11 @@ newBuiltin('table',[TList],THTML,
 	}
 );
 
-newBuiltin('parse',[TString],TExpression,function(expr) {
-    return jme.compile(expr);
+newBuiltin('parse',[TString],TExpression,function(str) {
+    return jme.compile(str);
 });
 newBuiltin('expression',[TString],TExpression,function(str) {
     return jme.compile(str);
-});
-
-newBuiltin('head',[TExpression],'?',null, {
-    evaluate: function(args,scope) {
-        return args[0].tree.tok;
-    }
 });
 
 newBuiltin('args',[TExpression],TList,null, {
@@ -4348,7 +4339,7 @@ newBuiltin('match',[TExpression,TString],TDict,null, {
     evaluate: function(args, scope) {
         var expr = args[0].tree;
         var pattern = Numbas.jme.compile(args[1].value);
-        var match = Numbas.jme.display.matchTree(pattern,expr,true);
+        var match = Numbas.jme.display.matchTree(pattern,expr,false);
         if(!match) {
             return jme.wrapValue({match: false, groups: {}});
         } else {
@@ -4368,7 +4359,7 @@ newBuiltin('matches',[TExpression,TString],TBool,null, {
     evaluate: function(args, scope) {
         var expr = args[0].tree;
         var pattern = Numbas.jme.compile(args[1].value);
-        var match = Numbas.jme.display.matchTree(pattern,expr,true);
+        var match = Numbas.jme.display.matchTree(pattern,expr,false);
         return new TBool(match && true);
     }
 });
@@ -7855,9 +7846,9 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
 	 * @property {Boolean} enableMinimumMarks - Is there a lower limit on the score the student can be awarded for this part?
 	 * @property {Number} minimumMarks - Lower limit on the score the student can be awarded for this part
 	 * @property {Boolean} showCorrectAnswer - Show the correct answer on reveal?
+     * @property {Boolean} showFeedbackIcon - Show the tick/cross feedback symbol after this part is submitted?
 	 * @property {Boolean} hasVariableReplacements - Does this part have any variable replacement rules?
      * @property {String} variableReplacementStrategy - `'originalfirst'` or `'alwaysreplace'`
-     * @property {Object} markingScript
 	 */
 	settings: 
 	{
@@ -7884,6 +7875,13 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
 		var niceName = Numbas.util.capitalise(util.nicePartName(this.path));
 		throw(new Numbas.Error('part.error',{path: niceName, message: message}));
 	},
+
+    /** The name of the input widget this part uses, if any.
+     * @returns {String}
+     */
+    input_widget: function() {
+        return null;
+    },
 
 	applyScripts: function() {
         var part = this;
@@ -12813,7 +12811,7 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 	 */
 	unPercent: function(s)
 	{
-		return (parseFloat(s.replace(/%/,''))/100);
+		return (util.parseNumber(s.replace(/%/,''))/100);
 	},
 
 
@@ -14797,7 +14795,11 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
             if(!p.setting_evaluators[s.input_type]) {
                 p.error('part.custom.unrecognised input type',{input_type:s.input_type});
             }
-            settings[name] = p.setting_evaluators[s.input_type].call(p, s, value);
+            try {
+                settings[name] = p.setting_evaluators[s.input_type].call(p, s, value);
+            } catch(e) {
+                throw(new Numbas.Error('part.custom.error evaluating setting',{setting: name, error: e.message}));
+            }
         });
 
         var settings_scope = new Numbas.jme.Scope([scope,{variables:{settings:new Numbas.jme.types.TDict(settings)}}]);
@@ -14838,8 +14840,12 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
         this.studentAnswer = this.stagedAnswer;
     },
 
+    input_widget: function() {
+        return this.definition.input_widget;
+    },
+
     rawStudentAnswerAsJME: function() {
-        return this.student_answer_jme_types[this.definition.input_widget](this.studentAnswer);
+        return this.student_answer_jme_types[this.input_widget()](this.studentAnswer);
     },
 
     student_answer_jme_types: {
@@ -15497,6 +15503,14 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
 		notAllowedShowStrings: false
 	},
 
+    /** The name of the input widget this part uses, if any.
+     * @returns {String}
+     */
+    input_widget: function() {
+        return 'jme';
+    },
+
+
 	/** Compute the correct answer, based on the given scope
 	 */
 	getCorrectAnswer: function(scope) {
@@ -15693,6 +15707,13 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
 		precisionMessage: R('You have not given your answer to the correct precision.'),
         strictPrecision: true
 	},
+
+    /** The name of the input widget this part uses, if any.
+     * @returns {String}
+     */
+    input_widget: function() {
+        return 'matrix';
+    },
 
 	/** Compute the correct answer, based on the given scope
 	 */
@@ -16295,13 +16316,13 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
      * Extends {@link Numbas.parts.Part#settings}
      * @property {Boolean} maxMarksEnabled - is there a maximum number of marks the student can get?
      * @property {String} minAnswersString - minimum number of responses the student must select, without variables substituted in.
-     * @property {String} maxAnswersString - maxmimum number of responses the student must select, without variables substituted in.
+     * @property {String} maxAnswersString - maximum number of responses the student must select, without variables substituted in.
      * @property {Number} minAnswers - minimum number of responses the student must select. Generated from `minAnswersString`.
-     * @property {Number} maxAnswers - maxmimum number of responses the student must select. Generated from `maxAnswersString`.
+     * @property {Number} maxAnswers - maximum number of responses the student must select. Generated from `maxAnswersString`.
      * @property {String} shuffleChoices - should the order of choices be randomised?
      * @property {String} shuffleAnswers - should the order of answers be randomised?
      * @property {Array.<Array.<Number>>} matrix - marks for each answer/choice pair. Arranged as `matrix[answer][choice]`
-     * @property {String} displayType - how to display the response selectors. Can be `radiogroup` or `checkbox`
+     * @property {String} displayType - how to display the response selectors. Can be `radiogroup`, `checkbox` or `dropdownlist`.
      * @property {String} warningType - what to do if the student picks the wrong number of responses? Either `none` (do nothing), `prevent` (don't let the student submit), or `warn` (show a warning but let them submit)
      * @property {String} layoutType - The kind of layout to use. See {@link Numbas.parts.MultipleResponsePart.layoutTypes}
      * @property {JME} layoutExpression - Expression giving a 2d array or matrix describing the layout when `layoutType` is `'expression'`.
@@ -16320,6 +16341,20 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         warningType: '',                //what to do if wrong number of responses
         layoutType: 'all',
         layoutExpression: ''
+    },
+
+    /** The name of the input widget this part uses, if any.
+     * @returns {String}
+     */
+    input_widget: function() {
+        switch(this.type) {
+            case '1_n_2':
+                return 'radios';
+            case 'm_n_2':
+                return 'checkboxes';
+            case 'm_n_x':
+                return 'm_n_x';
+        }
     },
 
     /** Compute the correct answer, based on the given scope
@@ -16699,6 +16734,13 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
         showPrecisionHint: true
 	},
 
+    /** The name of the input widget this part uses, if any.
+     * @returns {String}
+     */
+    input_widget: function() {
+        return 'number';
+    },
+
 	/** Compute the correct answer, based on the given scope
 	 */
 	getCorrectAnswer: function(scope) {
@@ -16875,6 +16917,7 @@ PatternMatchPart.prototype = /** @lends Numbas.PatternMatchPart.prototype */ {
 	 * @property {String} displayAnswer - a representative correct answer to display when answers are revealed
 	 * @property {Boolean} caseSensitive - does case matter?
 	 * @property {Number} partialCredit - partial credit to award if the student's answer matches, apart from case, and `caseSensitive` is `true`.
+     * @property {String} matchMode - Either "regex", for a regular expression, or "exact", for an exact match.
 	 */
 	settings: {
 	 	correctAnswerString: '.*',
@@ -16884,6 +16927,13 @@ PatternMatchPart.prototype = /** @lends Numbas.PatternMatchPart.prototype */ {
 	 	caseSensitive: false,
 	 	partialCredit: 0,
 	 	matchMode: 'regex'
+    },
+
+    /** The name of the input widget this part uses, if any.
+     * @returns {String}
+     */
+    input_widget: function() {
+        return 'string';
     },
 
 	/** Compute the correct answer, based on the given scope
@@ -17015,7 +17065,7 @@ Numbas.queueScript('answer-widgets',['knockout'],function() {
             this.answerJSON = params.answerJSON;
             var part = params.part;
             this.gaps = ko.computed(function() {
-                return part.gaps().map(function(gap) {
+                return Knockout.unwrap(part.gaps).map(function(gap) {
                     return {answerJSON: ko.observable(), part: gap};
                 });
             },this)
@@ -17028,7 +17078,7 @@ Numbas.queueScript('answer-widgets',['knockout'],function() {
                 <tbody data-bind="foreach: gaps">\
                     <tr>\
                         <th><span data-bind="text: part.header"></span></th>\
-                        <td><div data-bind="component: {name: \'answer-widget\', params: {answer: answerJSON, widget: part.type().widget, part: part}}"></div></td>\
+                        <td><div data-bind="component: {name: \'answer-widget\', params: {answer: answerJSON, widget: Knockout.unwrap(part.type).widget, part: part}}"></div></td>\
                     </tr>\
                 </tbody>\
             </table>\

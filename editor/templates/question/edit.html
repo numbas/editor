@@ -536,7 +536,7 @@
                                         </section>
 
                                         <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='notes'}">
-                                            <!-- ko if: runtime_part -->
+                                            <!-- ko if: ko.unwrap(runtime_part) && ko.unwrap($parent.type().widget) -->
                                             <form class="form-horizontal" data-bind="submit: Editor.noop">
                                                 <div class="form-group">
                                                     <label class="label-block">
@@ -544,7 +544,9 @@
                                                             Student's answer
                                                         </div>
                                                         <div class="col-sm-12 col-md-9">
-                                                            <div data-bind="component: {name: 'answer-widget', params: {answer: answer, widget: $parent.type().widget, part: runtime_part()}}"></div>
+                                                            <div data-bind="if: runtime_part().input_widget()">
+                                                                <div data-bind="component: {name: 'answer-widget', params: {answer: answer, widget: runtime_part().input_widget(), part: runtime_part()}}"></div>
+                                                            </div>
                                                         </div>
                                                     </label>
                                                 </div>

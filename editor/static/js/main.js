@@ -55,6 +55,7 @@ var MathJaxQueue;
 
 
 $(document).ready(function() {
+    window.Knockout = ko;
 	MathJaxQueue = MathJax.Callback.Queue(MathJax.Hub.Register.StartupHook('End',{}));
 	$.fn.mathjax = function() {
 		$(this).each(function() {

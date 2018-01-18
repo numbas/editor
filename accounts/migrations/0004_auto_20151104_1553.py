@@ -28,8 +28,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('qn_order', models.PositiveIntegerField()),
-                ('profile', models.ForeignKey(to='accounts.UserProfile')),
-                ('question', models.ForeignKey(to='editor.Question')),
+                ('profile', models.ForeignKey(to='accounts.UserProfile', on_delete=models.CASCADE)),
+                ('question', models.ForeignKey(to='editor.Question', on_delete=models.CASCADE)),
             ],
             options={
                 'ordering': ['qn_order'],

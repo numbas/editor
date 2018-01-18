@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='editoritem',
             name='licence',
-            field=models.ForeignKey(blank=True, to='editor.Licence', null=True),
+            field=models.ForeignKey(blank=True, to='editor.Licence', null=True, on_delete=models.CASCADE),
         ),
     ]

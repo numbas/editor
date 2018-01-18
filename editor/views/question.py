@@ -2,7 +2,7 @@ import json
 import traceback
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import transaction
 from django.http import Http404
 from django import http
@@ -178,7 +178,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         self.object.extensions.add(*form.cleaned_data['extensions'])
 
         resource_pks = [res['pk'] for res in self.resources]
-        self.object.resources = Resource.objects.filter(pk__in=resource_pks)
+        self.object.resources.set(Resource.objects.filter(pk__in=resource_pks))
 
     
     def get_context_data(self, **kwargs):
@@ -186,7 +186,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
 
         extensions = Extension.objects.filter(public=True) | self.object.extensions.all()
 
-        if not self.request.user.is_anonymous():
+        if not self.request.user.is_anonymous:
             extensions |= Extension.objects.filter(author=self.request.user) 
 
         extensions = extensions.distinct()

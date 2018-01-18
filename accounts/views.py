@@ -14,7 +14,7 @@ from django.conf import settings
 from django.views.generic import UpdateView, DetailView, ListView, TemplateView
 from django.contrib.auth.models import User
 from django.contrib.sites.requests import RequestSite
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib import messages
 from django.http import Http404, HttpResponse
 from django.template.defaultfilters import slugify

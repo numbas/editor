@@ -44,12 +44,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='basketquestion',
             name='profile',
-            field=models.ForeignKey(to='accounts.UserProfile'),
+            field=models.ForeignKey(to='accounts.UserProfile', on_delete=models.CASCADE),
         ),
         migrations.AddField(
             model_name='basketquestion',
             name='question',
-            field=models.ForeignKey(to='editor.NewQuestion'),
+            field=models.ForeignKey(to='editor.NewQuestion', on_delete=models.CASCADE),
         ),
         migrations.AddField(
             model_name='userprofile',

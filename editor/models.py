@@ -18,7 +18,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.staticfiles import finders
 from django.core.exceptions import ValidationError
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import models, transaction
 from django.db.models import signals, Max, Min
 from django.dispatch import receiver
@@ -33,6 +33,7 @@ from django.core.mail import send_mail
 from uuslug import slugify
 
 import reversion
+import reversion.models
 
 from notifications.signals import notify
 from notifications.models import Notification
@@ -95,7 +96,7 @@ class ControlledObject(object):
         view_perms = ('edit', 'view')
         if user.is_superuser:
             return Q()
-        elif user.is_anonymous():
+        elif user.is_anonymous:
             return Q(published=True, public_access__in=view_perms)
         else:
             return (Q(access__user=user, access__access__in=view_perms) 
@@ -139,7 +140,7 @@ LOCALE_CHOICES = [(y, x) for x, y in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']]
 
 class Project(models.Model, ControlledObject):
     name = models.CharField(max_length=200)
-    owner = models.ForeignKey(User, related_name='own_projects')
+    owner = models.ForeignKey(User, related_name='own_projects', on_delete=models.CASCADE)
 
     permissions = models.ManyToManyField(User, through='ProjectAccess')
 
@@ -152,7 +153,7 @@ class Project(models.Model, ControlledObject):
 
     description = models.TextField(blank=True)
     default_locale = models.CharField(max_length=10, editable=True, default='en-GB')
-    default_licence = models.ForeignKey('Licence', null=True, blank=True)
+    default_licence = models.ForeignKey('Licence', null=True, blank=True, on_delete=models.SET_NULL)
 
     def can_be_edited_by(self, user):
         return (user.is_superuser) or (self.owner == user) or self.has_access(user, ('edit',))
@@ -164,7 +165,7 @@ class Project(models.Model, ControlledObject):
         return reverse('project_index', args=(self.pk,))
 
     def has_access(self, user, levels):
-        if user.is_anonymous():
+        if user.is_anonymous:
             return False
         if user==self.owner:
             return True
@@ -189,8 +190,8 @@ class Project(models.Model, ControlledObject):
         return self.name
 
 class ProjectAccess(models.Model, TimelineMixin):
-    project = models.ForeignKey(Project)
-    user = models.ForeignKey(User, related_name='project_memberships')
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='project_memberships', on_delete=models.CASCADE)
     access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
 
     timelineitems = GenericRelation('TimelineItem', related_query_name='project_accesses', content_type_field='object_content_type', object_id_field='object_id')
@@ -213,9 +214,9 @@ class ProjectAccess(models.Model, TimelineMixin):
 
 class ProjectInvitation(models.Model):
     email = models.EmailField()
-    invited_by = models.ForeignKey(User)
+    invited_by = models.ForeignKey(User, on_delete=models.CASCADE)
     access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
-    project = models.ForeignKey(Project, related_name='invitations')
+    project = models.ForeignKey(Project, related_name='invitations', on_delete=models.CASCADE)
 
     def __str__(self):
         return "Invitation for {} to join {}".format(self.email, self.project)
@@ -260,7 +261,7 @@ class Extension(models.Model):
     url = models.CharField(max_length=300, blank=True, verbose_name='Documentation URL', help_text='Address of a page about the extension')
     public = models.BooleanField(default=False, help_text='Can this extension be seen by everyone?')
     slug = models.SlugField(max_length=200, editable=False, unique=False, default='an-extension')
-    author = models.ForeignKey(User, related_name='own_extensions', blank=True, null=True)
+    author = models.ForeignKey(User, related_name='own_extensions', blank=True, null=True, on_delete=models.CASCADE)
     last_modified = models.DateTimeField(auto_now=True)
     zipfile_folder = 'user-extensions'
     zipfile = models.FileField(upload_to=zipfile_folder+'/zips', blank=True, null=True, max_length=255, verbose_name='Extension package', help_text='A .zip package containing the extension\'s files')
@@ -327,7 +328,7 @@ class Theme(models.Model):
     name = models.CharField(max_length=200)
     public = models.BooleanField(default=False, help_text='Can this theme be seen by everyone?')
     slug = models.SlugField(max_length=200, editable=False, unique=False)
-    author = models.ForeignKey(User, related_name='own_themes')
+    author = models.ForeignKey(User, related_name='own_themes', on_delete=models.CASCADE)
     last_modified = models.DateTimeField(auto_now=True)
     zipfile_folder = 'user-themes'
     zipfile = models.FileField(upload_to=zipfile_folder+'/zips', max_length=255, verbose_name='Theme package', help_text='A .zip package containing the theme\'s files')
@@ -358,7 +359,7 @@ def reset_theme_on_delete(sender, instance, **kwargs):
         exam.save()
 
 class Resource(models.Model):
-    owner = models.ForeignKey(User, related_name='resources')
+    owner = models.ForeignKey(User, related_name='resources', on_delete=models.CASCADE)
     date_created = models.DateTimeField(auto_now_add=True)
     file = models.FileField(upload_to='question-resources/', max_length=255) 
 
@@ -425,7 +426,7 @@ class AbilityLevel(models.Model):
     description = models.TextField(blank=False)
     start = models.DecimalField(max_digits=ABILITY_PRECISION+1, decimal_places=ABILITY_PRECISION)
     end = models.DecimalField(max_digits=ABILITY_PRECISION+1, decimal_places=ABILITY_PRECISION)
-    framework = models.ForeignKey(AbilityFramework, related_name='levels')
+    framework = models.ForeignKey(AbilityFramework, related_name='levels', on_delete=models.CASCADE)
 
     class Meta:
         ordering = ('framework', 'start',)
@@ -490,7 +491,7 @@ class Taxonomy(models.Model):
 class TaxonomyNode(models.Model):
     name = models.CharField(max_length=200, blank=False, unique=False)
     parent = models.ForeignKey('TaxonomyNode', on_delete = models.CASCADE, related_name='children', blank=True, null=True)
-    taxonomy = models.ForeignKey(Taxonomy, related_name='nodes')
+    taxonomy = models.ForeignKey(Taxonomy, related_name='nodes', on_delete=models.CASCADE)
     code = models.CharField(max_length=200, blank=False)
 
     def __str__(self):
@@ -506,14 +507,14 @@ class AbilityLevelField(models.FloatField):
     pass
 
 class TaggedItem(taggit.models.GenericTaggedItemBase):
-    tag = models.ForeignKey(EditorTag, related_name='tagged_editoritems')
+    tag = models.ForeignKey(EditorTag, related_name='tagged_editoritems', on_delete=models.CASCADE)
 
 class TaggedQuestion(taggit.models.GenericTaggedItemBase):
-    tag = models.ForeignKey(EditorTag, related_name='tagged_items')
+    tag = models.ForeignKey(EditorTag, related_name='tagged_items', on_delete=models.CASCADE)
 
 class Access(models.Model, TimelineMixin):
-    item = models.ForeignKey('EditorItem')
-    user = models.ForeignKey(User)
+    item = models.ForeignKey('EditorItem', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
 
     timelineitems = GenericRelation('TimelineItem', related_query_name='item_accesses', content_type_field='object_content_type', object_id_field='object_id')
@@ -586,11 +587,11 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
 
     timeline = GenericRelation('TimelineItem', related_query_name='editoritems', content_type_field='timeline_content_type', object_id_field='timeline_id')
 
-    author = models.ForeignKey(User, related_name='own_items')
+    author = models.ForeignKey(User, related_name='own_items', on_delete=models.CASCADE)
     public_access = models.CharField(default='view', editable=True, choices=PUBLIC_ACCESS_CHOICES, max_length=6)
     access_rights = models.ManyToManyField(User, through='Access', blank=True, editable=False, related_name='accessed_questions+')
-    licence = models.ForeignKey(Licence, null=True, blank=True)
-    project = models.ForeignKey(Project, null=True, related_name='items')
+    licence = models.ForeignKey(Licence, null=True, blank=True, on_delete=models.SET_NULL)
+    project = models.ForeignKey(Project, null=True, related_name='items', on_delete=models.CASCADE)
 
     content = models.TextField(blank=True, validators=[validate_content])
     metadata = JSONField(blank=True)
@@ -640,7 +641,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
             return NewStampOfApproval(object=self,status='draft')
 
     def has_access(self, user, levels):
-        if user.is_anonymous():
+        if user.is_anonymous:
             return False
         return self.project.has_access(user, levels) or Access.objects.filter(item=self, user=user, access__in=levels).exists()
 
@@ -802,12 +803,12 @@ class PullRequest(models.Model, ControlledObject, TimelineMixin):
     objects = PullRequestManager()
 
     # user who created this request
-    owner = models.ForeignKey(User, related_name='pullrequests_created')
+    owner = models.ForeignKey(User, related_name='pullrequests_created', on_delete=models.CASCADE)
     # user who accepted or rejected this request
     closed_by = models.ForeignKey(User, related_name='pullrequests_closed', null=True, blank=True, on_delete=models.SET_NULL)
 
-    source = models.ForeignKey(EditorItem, related_name='outgoing_pull_requests')
-    destination = models.ForeignKey(EditorItem, related_name='incoming_pull_requests')
+    source = models.ForeignKey(EditorItem, related_name='outgoing_pull_requests', on_delete=models.CASCADE)
+    destination = models.ForeignKey(EditorItem, related_name='incoming_pull_requests', on_delete=models.CASCADE)
 
     open = models.BooleanField(default=True)
     accepted = models.BooleanField(default=False)
@@ -872,7 +873,7 @@ class Timeline(object):
 
         view_filter = Q(editoritems__published=True) | Q(object_content_type=ContentType.objects.get_for_model(SiteBroadcast), object_id__in=nonsticky_broadcasts)
 
-        if not self.viewing_user.is_anonymous():
+        if not self.viewing_user.is_anonymous:
             projects = self.viewing_user.own_projects.all() | Project.objects.filter(projectaccess__in=self.viewing_user.project_memberships.all()) | Project.objects.filter(watching_non_members=self.viewing_user)
             items_for_user = (
                 Q(editoritems__in=self.viewing_user.watched_items.all()) | 
@@ -882,7 +883,7 @@ class Timeline(object):
 
             view_filter = view_filter | items_for_user
         filtered_items = items.filter(view_filter)
-        if not self.viewing_user.is_anonymous():
+        if not self.viewing_user.is_anonymous:
             filtered_items = filtered_items.exclude(hidden_by=self.viewing_user)
         self.filtered_items = filtered_items
 
@@ -898,16 +899,16 @@ class TimelineItem(models.Model):
     objects = TimelineItemManager()
 
     # Object whose timeline this item belongs to
-    timeline_content_type = models.ForeignKey(ContentType, related_name='timelineitem_timeline', null=True)
+    timeline_content_type = models.ForeignKey(ContentType, related_name='timelineitem_timeline', null=True, on_delete=models.CASCADE)
     timeline_id = models.PositiveIntegerField(null=True)
     timeline = GenericForeignKey('timeline_content_type', 'timeline_id')
 
     # Reference to an object representing this item (e.g. a Comment)
-    object_content_type = models.ForeignKey(ContentType, related_name='timelineitem_object')
+    object_content_type = models.ForeignKey(ContentType, related_name='timelineitem_object', on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     object = GenericForeignKey('object_content_type', 'object_id')
 
-    user = models.ForeignKey(User, related_name='timelineitems', null=True)
+    user = models.ForeignKey(User, related_name='timelineitems', null=True, on_delete=models.CASCADE)
 
     hidden_by = models.ManyToManyField(User, related_name='hidden_timelineitems', blank=True)
 
@@ -941,7 +942,7 @@ class SiteBroadcastManager(models.Manager):
 class SiteBroadcast(models.Model, TimelineMixin):
     objects = SiteBroadcastManager()
 
-    author = models.ForeignKey(User, related_name='site_broadcasts')
+    author = models.ForeignKey(User, related_name='site_broadcasts', on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     text = models.TextField()
     sticky = models.BooleanField(default=False)
@@ -963,12 +964,12 @@ class SiteBroadcast(models.Model, TimelineMixin):
         return self.text[:50]
 
 class NewStampOfApproval(models.Model, TimelineMixin):
-    object = models.ForeignKey(EditorItem, related_name='stamps')
+    object = models.ForeignKey(EditorItem, related_name='stamps', on_delete=models.CASCADE)
 
     timelineitems = GenericRelation(TimelineItem, related_query_name='stamps', content_type_field='object_content_type', object_id_field='object_id')
     timelineitem_template = 'timeline/stamp.html'
 
-    user = models.ForeignKey(User, related_name='newstamps')
+    user = models.ForeignKey(User, related_name='newstamps', on_delete=models.CASCADE)
     status = models.CharField(choices=STAMP_STATUS_CHOICES, max_length=20)
 
     def __str__(self):
@@ -978,14 +979,14 @@ class NewStampOfApproval(models.Model, TimelineMixin):
         return self.object.can_be_viewed_by(user)
 
 class Comment(models.Model, TimelineMixin):
-    object_content_type = models.ForeignKey(ContentType)
+    object_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     object = GenericForeignKey('object_content_type', 'object_id')
 
     timelineitems = GenericRelation(TimelineItem, related_query_name='comments', content_type_field='object_content_type', object_id_field='object_id')
     timelineitem_template = 'timeline/comment.html'
 
-    user = models.ForeignKey(User, related_name='comments')
+    user = models.ForeignKey(User, related_name='comments', on_delete=models.CASCADE)
     text = models.TextField()
 
     def __str__(self):
@@ -995,15 +996,15 @@ class Comment(models.Model, TimelineMixin):
         return self.object.can_be_viewed_by(user)
 
 class RestorePoint(models.Model, TimelineMixin):
-    object = models.ForeignKey(EditorItem, related_name='restore_points')
+    object = models.ForeignKey(EditorItem, related_name='restore_points', on_delete=models.CASCADE)
 
     timelineitems = GenericRelation(TimelineItem, related_query_name='restore_points', content_type_field='object_content_type', object_id_field='object_id')
     timelineitem_template = 'timeline/restore_point.html'
 
-    user = models.ForeignKey(User, related_name='restore_points')
+    user = models.ForeignKey(User, related_name='restore_points', on_delete=models.CASCADE)
     description = models.TextField()
 
-    revision = models.ForeignKey(reversion.models.Revision)
+    revision = models.ForeignKey(reversion.models.Revision, on_delete=models.CASCADE)
     
     def __str__(self):
         return 'Restore point set by {} on {}: "{}"'.format(self.user.get_full_name(), str(self.object), self.description[:47]+'...' if len(self.description) > 50 else self.description)
@@ -1013,9 +1014,9 @@ class RestorePoint(models.Model, TimelineMixin):
 
 ITEM_CHANGED_VERBS = [('created', 'created')]
 class ItemChangedTimelineItem(models.Model, TimelineMixin):
-    object = models.ForeignKey(EditorItem)
+    object = models.ForeignKey(EditorItem, on_delete=models.CASCADE)
     verb = models.CharField(choices=ITEM_CHANGED_VERBS, editable=False, max_length=10)
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     timelineitems = GenericRelation(TimelineItem, related_query_name='item_changes', content_type_field='object_content_type', object_id_field='object_id')
     timelineitem_template = 'timeline/change.html'
@@ -1254,8 +1255,8 @@ class NewExamQuestion(models.Model):
     class Meta:
         ordering = ['qn_order']
         
-    exam = models.ForeignKey(NewExam)
-    question = models.ForeignKey(NewQuestion)
+    exam = models.ForeignKey(NewExam, on_delete=models.CASCADE)
+    question = models.ForeignKey(NewQuestion, on_delete=models.CASCADE)
     qn_order = models.PositiveIntegerField()
     group = models.PositiveIntegerField(default=0)
 
@@ -1288,7 +1289,7 @@ class EditorModel(models.Model):
     class Meta:
         abstract = True
 
-    licence = models.ForeignKey(Licence, null=True)
+    licence = models.ForeignKey(Licence, null=True, on_delete=models.SET_NULL)
 
     current_stamp = models.ForeignKey('StampOfApproval', blank=True, null=True, on_delete=models.SET_NULL)
 
@@ -1323,7 +1324,7 @@ class QuestionManager(models.Manager):
     def viewable_by(self, user):
         if user.is_superuser:
             return self.all()
-        elif user.is_anonymous():
+        elif user.is_anonymous:
             return self.filter(public_access__in=['edit', 'view'])
         else:
             mine_or_public_query = Q(public_access__in=['edit', 'view']) | Q(author=user)
@@ -1345,7 +1346,7 @@ class Question(EditorModel, NumbasObject, ControlledObject):
     name = models.CharField(max_length=200, default='Untitled Question')
     theme_path = 'question'
     slug = models.SlugField(max_length=200, editable=False, unique=False)
-    author = models.ForeignKey(User, related_name='own_questions')
+    author = models.ForeignKey(User, related_name='own_questions', on_delete=models.CASCADE)
     filename = models.CharField(max_length=200, editable=False, default='')
     content = models.TextField(blank=True, validators=[validate_content])
     metadata = JSONField(blank=True)
@@ -1437,7 +1438,7 @@ class Question(EditorModel, NumbasObject, ControlledObject):
         access.save()
 
     def get_access_for(self, user):
-        if user.is_anonymous():
+        if user.is_anonymous:
             return 'none'
         try:
             question_access = QuestionAccess.objects.get(question=self, user=user)
@@ -1460,8 +1461,8 @@ class Question(EditorModel, NumbasObject, ControlledObject):
         return self.exam_set.distinct()
 
 class QuestionAccess(models.Model):
-    question = models.ForeignKey(Question)
-    user = models.ForeignKey(User)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
 
 @receiver(signals.post_save, sender=QuestionAccess)
@@ -1473,17 +1474,17 @@ class QuestionHighlight(models.Model):
     class Meta:
         ordering = ['-date']
 
-    question = models.ForeignKey(Question)
-    picked_by = models.ForeignKey(User)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    picked_by = models.ForeignKey(User, on_delete=models.CASCADE)
     note = models.TextField(blank=True)
     date = models.DateTimeField(auto_now_add=True)
 
 class QuestionPullRequest(models.Model):
     objects = PullRequestManager()
 
-    owner = models.ForeignKey(User)
-    source = models.ForeignKey(Question, related_name='outgoing_pull_requests')
-    destination = models.ForeignKey(Question, related_name='incoming_pull_requests')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    source = models.ForeignKey(Question, related_name='outgoing_pull_requests', on_delete=models.CASCADE)
+    destination = models.ForeignKey(Question, related_name='incoming_pull_requests', on_delete=models.CASCADE)
     open = models.BooleanField(default=True)
     created = models.DateTimeField(auto_now_add=True)
     comment = models.TextField(blank=True)
@@ -1556,7 +1557,7 @@ class Exam(EditorModel, NumbasObject, ControlledObject):
     custom_theme = models.ForeignKey(Theme, null=True, blank=True, on_delete=models.SET_NULL, related_name='used_in_exams')
     locale = models.CharField(max_length=200, default='en-GB')
     slug = models.SlugField(max_length=200, editable=False, unique=False)
-    author = models.ForeignKey(User, related_name='own_exams')
+    author = models.ForeignKey(User, related_name='own_exams', on_delete=models.CASCADE)
     filename = models.CharField(max_length=200, editable=False, default='')
     content = models.TextField(blank=True, validators=[validate_content])
     created = models.DateTimeField(auto_now_add=True)
@@ -1666,7 +1667,7 @@ class Exam(EditorModel, NumbasObject, ControlledObject):
         access.save()
 
     def get_access_for(self, user):
-        if user.is_anonymous():
+        if user.is_anonymous:
             return 'none'
         try:
             exam_access = ExamAccess.objects.get(exam=self, user=user)
@@ -1684,14 +1685,14 @@ class ExamHighlight(models.Model):
     class Meta:
         ordering = ['-date']
 
-    exam = models.ForeignKey(Exam)
-    picked_by = models.ForeignKey(User)
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE)
+    picked_by = models.ForeignKey(User, on_delete=models.CASCADE)
     note = models.TextField(blank=True)
     date = models.DateTimeField(auto_now_add=True)
 
 class ExamAccess(models.Model):
-    exam = models.ForeignKey(Exam)
-    user = models.ForeignKey(User)
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
 
 @receiver(signals.post_save, sender=ExamAccess)
@@ -1706,8 +1707,8 @@ class ExamQuestion(models.Model):
     class Meta:
         ordering = ['qn_order']
         
-    exam = models.ForeignKey(Exam)
-    question = models.ForeignKey(Question)
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
     qn_order = models.PositiveIntegerField()
 
 class Image(models.Model):
@@ -1745,11 +1746,11 @@ class Image(models.Model):
         return json.dumps(self.as_json()),
 
 class StampOfApproval(models.Model, TimelineMixin):
-    object_content_type = models.ForeignKey(ContentType)
+    object_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     object = GenericForeignKey('object_content_type', 'object_id')
 
-    user = models.ForeignKey(User, related_name='stamps')
+    user = models.ForeignKey(User, related_name='stamps', on_delete=models.CASCADE)
     status = models.CharField(choices=STAMP_STATUS_CHOICES, max_length=20)
     date = models.DateTimeField(auto_now_add=True)
 

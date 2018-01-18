@@ -2,7 +2,7 @@
 from django.contrib.auth.models import User
 from django.views.generic import ListView
 from django.http import Http404, HttpResponse
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from accounts.util import find_users
 

@@ -18,9 +18,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('open', models.BooleanField(default=False)),
-                ('destination', models.ForeignKey(related_name='incoming_pull_requests', to='editor.Question')),
-                ('owner', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
-                ('source', models.ForeignKey(related_name='outgoing_pull_requests', to='editor.Question')),
+                ('destination', models.ForeignKey(related_name='incoming_pull_requests', to='editor.Question', on_delete=models.CASCADE)),
+                ('owner', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
+                ('source', models.ForeignKey(related_name='outgoing_pull_requests', to='editor.Question', on_delete=models.CASCADE)),
             ],
             options={
             },

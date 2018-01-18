@@ -22,14 +22,14 @@ class Migration(migrations.Migration):
                 ('text', models.TextField()),
                 ('sticky', models.BooleanField(default=False)),
                 ('show_until', models.DateTimeField(null=True, blank=True)),
-                ('author', models.ForeignKey(related_name='site_broadcasts', to=settings.AUTH_USER_MODEL)),
+                ('author', models.ForeignKey(related_name='site_broadcasts', to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
             bases=(models.Model, editor.models.TimelineMixin),
         ),
         migrations.AlterField(
             model_name='timelineitem',
             name='timeline_content_type',
-            field=models.ForeignKey(related_name='timelineitem_timeline', to='contenttypes.ContentType', null=True),
+            field=models.ForeignKey(related_name='timelineitem_timeline', to='contenttypes.ContentType', null=True, on_delete=models.CASCADE),
         ),
         migrations.AlterField(
             model_name='timelineitem',

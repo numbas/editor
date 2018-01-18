@@ -58,8 +58,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('access', models.CharField(default=b'view', max_length=6, choices=[(b'view', b'Public can view'), (b'edit', b'Public can edit')])),
-                ('exam', models.ForeignKey(to='editor.Exam')),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('exam', models.ForeignKey(to='editor.Exam', on_delete=models.CASCADE)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -71,8 +71,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('note', models.TextField(blank=True)),
                 ('date', models.DateTimeField(default=datetime.datetime(1970, 1, 1, 0, 0), auto_now_add=True)),
-                ('exam', models.ForeignKey(to='editor.Exam')),
-                ('picked_by', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('exam', models.ForeignKey(to='editor.Exam', on_delete=models.CASCADE)),
+                ('picked_by', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
             options={
                 'ordering': ['-date'],
@@ -84,7 +84,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('qn_order', models.PositiveIntegerField()),
-                ('exam', models.ForeignKey(to='editor.Exam')),
+                ('exam', models.ForeignKey(to='editor.Exam', on_delete=models.CASCADE)),
             ],
             options={
                 'ordering': ['qn_order'],
@@ -102,7 +102,7 @@ class Migration(migrations.Migration):
                 ('slug', models.SlugField(default=b'an-extension', max_length=200, editable=False)),
                 ('last_modified', models.DateTimeField(default=datetime.datetime(1970, 1, 1, 0, 0), auto_now=True)),
                 ('zipfile', models.FileField(upload_to=b'user-extensions/zips', max_length=255, blank=True, help_text=b"A .zip package containing the extension's files", null=True, verbose_name=b'Extension package')),
-                ('author', models.ForeignKey(related_name='own_extensions', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
+                ('author', models.ForeignKey(related_name='own_extensions', blank=True, to=settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -144,8 +144,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('access', models.CharField(default=b'view', max_length=6, choices=[(b'view', b'Public can view'), (b'edit', b'Public can edit')])),
-                ('question', models.ForeignKey(to='editor.Question')),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('question', models.ForeignKey(to='editor.Question', on_delete=models.CASCADE)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -157,8 +157,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('note', models.TextField(blank=True)),
                 ('date', models.DateTimeField(default=datetime.datetime(1970, 1, 1, 0, 0), auto_now_add=True)),
-                ('picked_by', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
-                ('question', models.ForeignKey(to='editor.Question')),
+                ('picked_by', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
+                ('question', models.ForeignKey(to='editor.Question', on_delete=models.CASCADE)),
             ],
             options={
                 'ordering': ['-date'],
@@ -170,8 +170,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.IntegerField(verbose_name='Object id', db_index=True)),
-                ('content_type', models.ForeignKey(related_name='editor_taggedquestion_tagged_items', verbose_name='Content type', to='contenttypes.ContentType')),
-                ('tag', models.ForeignKey(related_name='tagged_items', to='editor.EditorTag')),
+                ('content_type', models.ForeignKey(related_name='editor_taggedquestion_tagged_items', verbose_name='Content type', to='contenttypes.ContentType', on_delete=models.CASCADE)),
+                ('tag', models.ForeignKey(related_name='tagged_items', to='editor.EditorTag', on_delete=models.CASCADE)),
             ],
             options={
                 'abstract': False,
@@ -187,7 +187,7 @@ class Migration(migrations.Migration):
                 ('slug', models.SlugField(max_length=200, editable=False)),
                 ('last_modified', models.DateTimeField(default=datetime.datetime(1970, 1, 1, 0, 0), auto_now=True)),
                 ('zipfile', models.FileField(help_text=b"A .zip package containing the theme's files", upload_to=b'user-themes/zips', max_length=255, verbose_name=b'Theme package')),
-                ('author', models.ForeignKey(related_name='own_themes', to=settings.AUTH_USER_MODEL)),
+                ('author', models.ForeignKey(related_name='own_themes', to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -202,7 +202,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='question',
             name='author',
-            field=models.ForeignKey(related_name='own_questions', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(related_name='own_questions', to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(
@@ -232,7 +232,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='examquestion',
             name='question',
-            field=models.ForeignKey(to='editor.Question'),
+            field=models.ForeignKey(to='editor.Question', on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(
@@ -244,7 +244,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='exam',
             name='author',
-            field=models.ForeignKey(related_name='own_exams', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(related_name='own_exams', to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(

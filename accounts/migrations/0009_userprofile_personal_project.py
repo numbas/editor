@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userprofile',
             name='personal_project',
-            field=models.ForeignKey(to='editor.Project', null=True),
+            field=models.ForeignKey(to='editor.Project', null=True, on_delete=models.CASCADE),
         ),
     ]

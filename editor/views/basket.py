@@ -57,7 +57,7 @@ class BasketView(generic.ListView):
     model = NewQuestion
 
     def get_queryset(self):
-        if self.request.user.is_anonymous():
+        if self.request.user.is_anonymous:
             query = []
         else:
             query = self.request.user.userprofile.basketquestion_set.all()

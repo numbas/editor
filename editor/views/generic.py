@@ -17,7 +17,7 @@ class AuthorRequiredMixin(object):
         result = super(AuthorRequiredMixin, self).dispatch(request, *args, **kwargs)
         if self.object.author != self.request.user:
             template = get_template("403.html")
-            return http.HttpResponseForbidden(template.render(RequestContext(self.request)))
+            return http.HttpResponseForbidden(template.render(RequestContext(self.request).flatten()))
         return result
 
 class TimelineItemViewMixin(object):
@@ -30,7 +30,7 @@ class TimelineItemViewMixin(object):
 
     def object_html(self):
         template = get_template(self.item.timelineitem_template)
-        html = template.render(RequestContext(self.request, {'item': self.item.timelineitem, 'can_delete': self.item.can_be_deleted_by(self.request.user)}))
+        html = template.render(RequestContext(self.request, {'item': self.item.timelineitem, 'can_delete': self.item.can_be_deleted_by(self.request.user)}).flatten())
         return html
 
 class StampView(generic.UpdateView, TimelineItemViewMixin):
@@ -70,7 +70,7 @@ class SetRestorePointView(generic.UpdateView, TimelineItemViewMixin):
         obj = self.get_object()
     
         description = request.POST.get('text')
-        revision = reversion.get_for_object(obj).first().revision
+        revision = reversion.models.Version.objects.get_for_object(obj).first().revision
 
         self.item = RestorePoint.objects.create(user=request.user, object=obj.editoritem, description=description, revision=revision)
 

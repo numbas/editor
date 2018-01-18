@@ -6,12 +6,12 @@ from django.db import migrations, models
 
 def gen_uuid(apps, schema_editor):
     Exam = apps.get_model('editor', 'Exam')
-    Exam._meta.get_field_by_name('last_modified')[0].auto_now = False
+    Exam._meta.get_field('last_modified').auto_now = False
     for row in Exam.objects.all():
         row.share_uuid = uuid.uuid4()
         row.save()
     Question = apps.get_model('editor', 'Question')
-    Question._meta.get_field_by_name('last_modified')[0].auto_now = False
+    Question._meta.get_field('last_modified').auto_now = False
     for row in Question.objects.all():
         row.share_uuid = uuid.uuid4()
         row.save()

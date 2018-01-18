@@ -45,8 +45,6 @@ def load_json(value, load_kwargs):
 class JSONField(models.TextField):
     """JSONField is a generic textfield that serializes/unserializes JSON objects"""
 
-    __metaclass__ = models.SubfieldBase
-
     def __init__(self, *args, **kwargs):
         self.dump_kwargs = kwargs.pop('dump_kwargs', {'cls': DjangoJSONEncoder})
         self.load_kwargs = kwargs.pop('load_kwargs', {})
@@ -67,7 +65,7 @@ class JSONField(models.TextField):
         return json.dumps(value, **self.dump_kwargs)
 
     def value_to_string(self, obj):
-        value = self._get_val_from_obj(obj)
+        value = self.value_from_object(obj)
         return self.get_prep_value(value)
 
 

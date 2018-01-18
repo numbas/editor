@@ -46,7 +46,7 @@ class RegistrationProfile(regmodels.RegistrationProfile):
 
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     language = models.CharField(max_length=100, default='en-GB')
     bio = SanitizedTextField(default='', allowed_tags=settings.SANITIZER_ALLOWED_TAGS, allowed_attributes=settings.SANITIZER_ALLOWED_ATTRIBUTES)
     question_basket = models.ManyToManyField(NewQuestion, blank=True, related_name='baskets', through='BasketQuestion')
@@ -93,8 +93,8 @@ class BasketQuestion(models.Model):
         ordering = ['qn_order']
         unique_together = ('profile', 'question')
         
-    profile = models.ForeignKey(UserProfile)
-    question = models.ForeignKey(NewQuestion)
+    profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    question = models.ForeignKey(NewQuestion, on_delete=models.CASCADE)
     qn_order = models.PositiveIntegerField()
 
 

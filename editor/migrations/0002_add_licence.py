@@ -30,13 +30,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='exam',
             name='licence',
-            field=models.ForeignKey(to='editor.Licence', null=True),
+            field=models.ForeignKey(to='editor.Licence', null=True, on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='question',
             name='licence',
-            field=models.ForeignKey(to='editor.Licence', null=True),
+            field=models.ForeignKey(to='editor.Licence', null=True, on_delete=models.CASCADE),
             preserve_default=True,
         ),
     ]

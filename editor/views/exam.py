@@ -6,7 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.contrib import messages
 from django.template.loader import render_to_string
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import transaction
 from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django import http
@@ -253,7 +253,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         context = super(UpdateView, self).get_context_data(**kwargs)
 
         exam_dict = self.item_json['itemJSON']
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             exam_dict['recentQuestions'] = [q.summary() for q in NewQuestion.objects.filter(editoritem__author=self.request.user).order_by('-editoritem__last_modified')[:10]]
             exam_dict['basketQuestions'] = [q.summary() for q in self.request.user.userprofile.question_basket.all()]
         else:
@@ -268,7 +268,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
 
         context['locales'] = sorted([{'name': x[0], 'code': x[1]} for x in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']], key=operator.itemgetter('name'))
 
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             profile = self.request.user.userprofile
         else:
             profile = None
@@ -345,7 +345,7 @@ def question_lists(request, pk):
     exam_questions = exam.questions.all()
 
     user = request.user
-    if user.is_anonymous():
+    if user.is_anonymous:
         recent, basket = [], []
     else:
         recent = user.userprofile.recent_questions

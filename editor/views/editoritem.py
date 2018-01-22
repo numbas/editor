@@ -8,12 +8,12 @@ import re
 import os
 import subprocess
 
-from django.core.servers.basehttp import FileWrapper
+from wsgiref.util import FileWrapper
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.conf import settings
 from django.contrib import messages
 from django.template.loader import render_to_string
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db.models import Q, Min, Max, Count
 from django.db import transaction
 from django import http
@@ -139,7 +139,7 @@ class BaseUpdateView(generic.UpdateView):
         if not self.object.editoritem.can_be_viewed_by(request.user):
             return forbidden(request)
         else:
-            if not self.user.is_anonymous():
+            if not self.user.is_anonymous:
                 self.user.notifications.filter(target_object_id=self.object.pk).mark_all_as_read()
 
             return super(BaseUpdateView, self).get(request, *args, **kwargs)
@@ -222,7 +222,8 @@ class BaseUpdateView(generic.UpdateView):
 
         context['stamp_choices'] = editor.models.STAMP_STATUS_CHOICES
 
-        context['preferred_locale'] = self.request.user.userprofile.language if not self.request.user.is_anonymous() else 'en-GB'
+        context['preferred_locale'] = self.request.user.userprofile.language if not self.request.user.is_anonymous else 'en-GB'
+        context['locale_files'] = [code for name, code in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']]
 
         return context
 
@@ -392,7 +393,7 @@ class CompileObject():
     def get_locale(self, obj):
         if obj.item_type == 'exam':
             return obj.exam.locale
-        elif not self.request.user.is_anonymous():
+        elif not self.request.user.is_anonymous:
             return self.request.user.userprofile.language
         else:
             return 'en-GB'
@@ -433,12 +434,12 @@ class CompileObject():
         stdout, stderr = process.communicate(source.encode('utf-8'))
         code = process.poll()
         if code != 0:
-            raise CompileError('Compilation failed.', stdout=stdout, stderr=stderr, code=code)
+            raise CompileError('Compilation failed.', stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'), code=code)
         else:
             return output_location
 
     def get_mathjax_url(self):
-        if self.request.user.is_anonymous() or self.request.user.userprofile.mathjax_url=='':
+        if self.request.user.is_anonymous or self.request.user.userprofile.mathjax_url=='':
             return settings.MATHJAX_URL
         else:
             return self.request.user.userprofile.mathjax_url
@@ -450,7 +451,7 @@ class CompileObject():
             'stdout': error.stdout,
             'stderr': error.stderr,
             'code': error.code,
-        })))
+        }).flatten()))
 
 class PreviewView(generic.DetailView, CompileObject):
     def preview(self, obj):

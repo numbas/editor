@@ -1,10 +1,10 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from django.contrib.auth.decorators import login_required
 
 from .views import project, editoritem, exam, question, HomeView, theme, extension, generic, notification, resource, basket, timeline, custom_part_type
 
-urlpatterns = patterns('',
+urlpatterns = [
 
     # Home
 
@@ -203,4 +203,4 @@ urlpatterns = patterns('',
     url(r'^pullrequest/(?P<pk>\d+)/close$',
         editoritem.ClosePullRequestView.as_view(), name='pullrequest_close'),
 
-)
+]

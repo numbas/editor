@@ -1,8 +1,7 @@
 from django.db.models import Q
 from django.contrib.auth.models import User
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.template.loader import get_template
-from django.template import Context
 
 def find_users(name=''):
     q = Q()
@@ -26,6 +25,6 @@ def user_json(user):
         'id': user.pk, 
         'profile': reverse('view_profile', args=(user.pk,)), 
         'name': user.get_full_name(),
-        'link': get_template('links/user_link.html').render(Context({'user':user})),
-        'autocomplete_entry': get_template('autocomplete/user.html').render(Context({'user':user})),
+        'link': get_template('links/user_link.html').render({'user':user}),
+        'autocomplete_entry': get_template('autocomplete/user.html').render({'user':user}),
     }

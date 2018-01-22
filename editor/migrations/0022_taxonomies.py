@@ -30,8 +30,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(primary_key=True, verbose_name='ID', auto_created=True, serialize=False)),
                 ('name', models.CharField(max_length=200)),
                 ('code', models.CharField(max_length=200)),
-                ('parent', models.ForeignKey(related_name='children', to='editor.TaxonomyNode', null=True, blank=True)),
-                ('taxonomy', models.ForeignKey(related_name='nodes', to='editor.Taxonomy')),
+                ('parent', models.ForeignKey(related_name='children', to='editor.TaxonomyNode', null=True, blank=True, on_delete=models.CASCADE)),
+                ('taxonomy', models.ForeignKey(related_name='nodes', to='editor.Taxonomy', on_delete=models.CASCADE)),
             ],
         ),
         migrations.AddField(

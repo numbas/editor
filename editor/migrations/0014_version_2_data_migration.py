@@ -18,7 +18,7 @@ def old_to_new_questions(apps, schema_editor):
 
     editoritem_ct = ContentType.objects.get_for_model(EditorItem)
 
-    EditorItem._meta.get_field_by_name('last_modified')[0].auto_now = False
+    EditorItem._meta.get_field('last_modified').auto_now = False
 
     for q in Question.objects.all():
         nq = NewQuestion()
@@ -104,7 +104,7 @@ def old_exams_to_new(apps, schema_editor):
     NewExamQuestion = apps.get_model('editor', 'NewExamQuestion')
     User = apps.get_model('auth', 'User')
 
-    EditorItem._meta.get_field_by_name('last_modified')[0].auto_now = False
+    EditorItem._meta.get_field('last_modified').auto_now = False
 
     for e in Exam.objects.all():
         ne = NewExam()
@@ -409,7 +409,7 @@ def set_newstamp_dates(apps, schema_editor):
 def set_project(apps, schema_editor):
     EditorItem = apps.get_model('editor', 'EditorItem')
 
-    EditorItem._meta.get_field_by_name('last_modified')[0].auto_now = False
+    EditorItem._meta.get_field('last_modified').auto_now = False
 
     for e in EditorItem.objects.all():
         e.project = e.author.userprofile.personal_project

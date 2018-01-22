@@ -3,7 +3,7 @@ from editor.views.generic import user_json, stamp_json, comment_json
 from editor.models import TimelineItem
 from django.views import generic
 from django import http
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 event_json_views = {
     'stamp': stamp_json,

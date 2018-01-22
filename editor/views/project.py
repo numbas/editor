@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.db.models import Sum, When, Case, IntegerField
 from django.views import generic
-from django.core.urlresolvers import reverse, reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.shortcuts import redirect, render_to_response
 from django import http
 from django.core.exceptions import PermissionDenied
@@ -43,7 +43,7 @@ class ProjectContextMixin(object):
         context['project'] = project
         context['in_project'] = project is not None
         context['project_editable'] = project.can_be_edited_by(self.request.user)
-        context['member_of_project'] = self.request.user == project.owner or ((not self.request.user.is_anonymous()) and ProjectAccess.objects.filter(project=project, user=self.request.user).exists())
+        context['member_of_project'] = self.request.user == project.owner or ((not self.request.user.is_anonymous) and ProjectAccess.objects.filter(project=project, user=self.request.user).exists())
         return context
 
 class SettingsPageMixin(MustBeMemberMixin):

@@ -1,5 +1,5 @@
 from django.views import generic
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from editor.models import Theme
 from editor.forms import NewThemeForm, UpdateThemeForm

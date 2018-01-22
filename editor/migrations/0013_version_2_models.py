@@ -36,7 +36,7 @@ class Migration(migrations.Migration):
                 ('description', models.TextField()),
                 ('start', models.DecimalField(max_digits=11, decimal_places=10)),
                 ('end', models.DecimalField(max_digits=11, decimal_places=10)),
-                ('framework', models.ForeignKey(related_name='levels', to='editor.AbilityFramework')),
+                ('framework', models.ForeignKey(related_name='levels', to='editor.AbilityFramework', on_delete=models.CASCADE)),
             ],
         ),
         migrations.AddField(
@@ -156,9 +156,9 @@ class Migration(migrations.Migration):
                 ('ability_level_end', editor.models.AbilityLevelField(null=True)),
                 ('ability_levels', models.ManyToManyField(to='editor.AbilityLevel')),
                 ('access_rights', models.ManyToManyField(related_name='_editoritem_access_rights_+', editable=False, to=settings.AUTH_USER_MODEL, through='editor.Access', blank=True)),
-                ('author', models.ForeignKey(related_name='own_items', to=settings.AUTH_USER_MODEL)),
+                ('author', models.ForeignKey(related_name='own_items', to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
                 ('copy_of', models.ForeignKey(related_name='copies', on_delete=django.db.models.deletion.SET_NULL, to='editor.EditorItem', null=True)),
-                ('licence', models.ForeignKey(to='editor.Licence', null=True)),
+                ('licence', models.ForeignKey(to='editor.Licence', null=True, on_delete=models.CASCADE)),
                 ('subjects', models.ManyToManyField(to='editor.Subject')),
             ],
         ),
@@ -167,8 +167,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.IntegerField(verbose_name='Object id', db_index=True)),
-                ('content_type', models.ForeignKey(related_name='editor_taggeditem_tagged_items', verbose_name='Content type', to='contenttypes.ContentType')),
-                ('tag', models.ForeignKey(related_name='tagged_editoritems', to='editor.EditorTag')),
+                ('content_type', models.ForeignKey(related_name='editor_taggeditem_tagged_items', verbose_name='Content type', to='contenttypes.ContentType', on_delete=models.CASCADE)),
+                ('tag', models.ForeignKey(related_name='tagged_editoritems', to='editor.EditorTag', on_delete=models.CASCADE)),
             ],
             options={
                 'abstract': False,
@@ -192,12 +192,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='access',
             name='item',
-            field=models.ForeignKey(to='editor.EditorItem'),
+            field=models.ForeignKey(to='editor.EditorItem', on_delete=models.CASCADE),
         ),
         migrations.AddField(
             model_name='access',
             name='user',
-            field=models.ForeignKey(to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE),
         ),
 
         # add Resource model
@@ -207,7 +207,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('date_created', models.DateTimeField(auto_now_add=True)),
                 ('file', models.FileField(max_length=255, upload_to=b'question-resources/')),
-                ('owner', models.ForeignKey(related_name='resources', to=settings.AUTH_USER_MODEL)),
+                ('owner', models.ForeignKey(related_name='resources', to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
         ),
 
@@ -216,7 +216,7 @@ class Migration(migrations.Migration):
             name='NewQuestion',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('editoritem', models.OneToOneField(related_name='question', to='editor.EditorItem')),
+                ('editoritem', models.OneToOneField(related_name='question', to='editor.EditorItem', on_delete=models.CASCADE)),
                 ('extensions', models.ManyToManyField(to='editor.Extension', blank=True)),
                 ('resources', models.ManyToManyField(to='editor.Resource', blank=True)),
             ],
@@ -233,7 +233,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('theme', models.CharField(default=b'default', max_length=200, blank=True)),
                 ('custom_theme', models.ForeignKey(related_name='used_in_newexams', on_delete=django.db.models.deletion.SET_NULL, blank=True, to='editor.Theme', null=True)),
-                ('editoritem', models.OneToOneField(related_name='exam', to='editor.EditorItem')),
+                ('editoritem', models.OneToOneField(related_name='exam', to='editor.EditorItem', on_delete=models.CASCADE)),
                 ('locale', models.CharField(default=b'en-GB', max_length=200)),
             ],
         ),
@@ -242,8 +242,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('qn_order', models.PositiveIntegerField()),
-                ('exam', models.ForeignKey(to='editor.NewExam')),
-                ('question', models.ForeignKey(to='editor.NewQuestion')),
+                ('exam', models.ForeignKey(to='editor.NewExam', on_delete=models.CASCADE)),
+                ('question', models.ForeignKey(to='editor.NewQuestion', on_delete=models.CASCADE)),
             ],
             options={
                 'ordering': ['qn_order'],
@@ -261,8 +261,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('status', models.CharField(max_length=20, choices=[(b'ok', b'Ready to use'), (b'dontuse', b'Should not be used'), (b'problem', b'Has some problems'), (b'broken', b"Doesn't work"), (b'pleasetest', b'Needs to be tested')])),
-                ('object', models.ForeignKey(related_name='stamps', to='editor.EditorItem')),
-                ('user', models.ForeignKey(related_name='newstamps', to=settings.AUTH_USER_MODEL)),
+                ('object', models.ForeignKey(related_name='stamps', to='editor.EditorItem', on_delete=models.CASCADE)),
+                ('user', models.ForeignKey(related_name='newstamps', to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
             bases=(models.Model, editor.models.TimelineMixin),
         ),
@@ -278,9 +278,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(max_length=200)),
-                ('owner', models.ForeignKey(related_name='own_projects', to=settings.AUTH_USER_MODEL)),
+                ('owner', models.ForeignKey(related_name='own_projects', to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
                 ('description', models.TextField(blank=True)),
-                ('default_licence', models.ForeignKey(blank=True, to='editor.Licence', null=True)),
+                ('default_licence', models.ForeignKey(blank=True, to='editor.Licence', null=True, on_delete=models.CASCADE)),
                 ('default_locale', models.CharField(default=b'en-GB', max_length=10)),
             ],
             bases=(models.Model, editor.models.ControlledObject),
@@ -290,8 +290,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('access', models.CharField(default=b'view', max_length=6, choices=[(b'view', b'Can view'), (b'edit', b'Can edit')])),
-                ('project', models.ForeignKey(to='editor.Project')),
-                ('user', models.ForeignKey(related_name='project_memberships', to=settings.AUTH_USER_MODEL)),
+                ('project', models.ForeignKey(to='editor.Project', on_delete=models.CASCADE)),
+                ('user', models.ForeignKey(related_name='project_memberships', to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
         ),
         migrations.AlterField(
@@ -312,7 +312,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='editoritem',
             name='project',
-            field=models.ForeignKey(related_name='items', to='editor.Project', null=True),
+            field=models.ForeignKey(related_name='items', to='editor.Project', null=True, on_delete=models.CASCADE),
         ),
 
         # make project and user unique together on ProjectAccess
@@ -329,9 +329,9 @@ class Migration(migrations.Migration):
                 ('timeline_id', models.PositiveIntegerField()),
                 ('object_id', models.PositiveIntegerField()),
                 ('date', models.DateTimeField(auto_now_add=True)),
-                ('object_content_type', models.ForeignKey(related_name='timelineitem_object', to='contenttypes.ContentType')),
-                ('timeline_content_type', models.ForeignKey(related_name='timelineitem_timeline', to='contenttypes.ContentType')),
-                ('user', models.ForeignKey(related_name='timelineitems', to=settings.AUTH_USER_MODEL, null=True)),
+                ('object_content_type', models.ForeignKey(related_name='timelineitem_object', to='contenttypes.ContentType', on_delete=models.CASCADE)),
+                ('timeline_content_type', models.ForeignKey(related_name='timelineitem_timeline', to='contenttypes.ContentType', on_delete=models.CASCADE)),
+                ('user', models.ForeignKey(related_name='timelineitems', to=settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE)),
             ],
         ),
         migrations.AlterUniqueTogether(
@@ -371,9 +371,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('description', models.TextField()),
-                ('object', models.ForeignKey(related_name='restore_points', to='editor.EditorItem')),
-                ('revision', models.ForeignKey(to='reversion.Revision')),
-                ('user', models.ForeignKey(related_name='restore_points', to=settings.AUTH_USER_MODEL)),
+                ('object', models.ForeignKey(related_name='restore_points', to='editor.EditorItem', on_delete=models.CASCADE)),
+                ('revision', models.ForeignKey(to='reversion.Revision', on_delete=models.CASCADE)),
+                ('user', models.ForeignKey(related_name='restore_points', to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
             bases=(models.Model, editor.models.TimelineMixin),
         ),
@@ -384,8 +384,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('verb', models.CharField(max_length=10, editable=False, choices=[(b'created', b'created')])),
-                ('object', models.ForeignKey(to='editor.EditorItem')),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('object', models.ForeignKey(to='editor.EditorItem', on_delete=models.CASCADE)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
             bases=(models.Model, editor.models.TimelineMixin),
         ),
@@ -400,9 +400,9 @@ class Migration(migrations.Migration):
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('comment', models.TextField(blank=True)),
                 ('closed_by', models.ForeignKey(related_name='pullrequests_closed', on_delete=django.db.models.deletion.SET_NULL, blank=True, to=settings.AUTH_USER_MODEL, null=True)),
-                ('destination', models.ForeignKey(related_name='incoming_pull_requests', to='editor.EditorItem')),
-                ('owner', models.ForeignKey(related_name='pullrequests_created', to=settings.AUTH_USER_MODEL)),
-                ('source', models.ForeignKey(related_name='outgoing_pull_requests', to='editor.EditorItem')),
+                ('destination', models.ForeignKey(related_name='incoming_pull_requests', to='editor.EditorItem', on_delete=models.CASCADE)),
+                ('owner', models.ForeignKey(related_name='pullrequests_created', to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
+                ('source', models.ForeignKey(related_name='outgoing_pull_requests', to='editor.EditorItem', on_delete=models.CASCADE)),
             ],
             bases=(models.Model, editor.models.ControlledObject),
         ),
@@ -414,8 +414,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('email', models.EmailField(max_length=254)),
                 ('access', models.CharField(default=b'view', max_length=6, choices=[(b'view', b'Can view'), (b'edit', b'Can edit')])),
-                ('invited_by', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
-                ('project', models.ForeignKey(related_name='invitations', to='editor.Project')),
+                ('invited_by', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
+                ('project', models.ForeignKey(related_name='invitations', to='editor.Project', on_delete=models.CASCADE)),
             ],
         ),
     ]

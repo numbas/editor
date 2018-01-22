@@ -10,7 +10,6 @@ def global_settings(request):
         'SITE_TITLE': settings.SITE_TITLE,
         'MATHJAX_URL': settings.MATHJAX_URL,
         'NUMBAS_LOCALES': settings.GLOBAL_SETTINGS['NUMBAS_LOCALES'],
-        'DOCS_URL': settings.DOCS_URL,
     }
 
 def site_root(request):

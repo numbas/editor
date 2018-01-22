@@ -193,7 +193,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
 
         # get publicly available part types first
         custom_part_types = CustomPartType.objects.filter(public_availability='always')
-        if not self.request.user.is_anonymous():
+        if not self.request.user.is_anonymous:
             # add in the user's own part types
             custom_part_types |= CustomPartType.objects.filter(author=self.request.user)
         # only show part types ready to use

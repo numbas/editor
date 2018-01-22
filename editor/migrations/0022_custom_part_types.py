@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
                 ('marking_script', models.TextField(blank=True, default='', verbose_name='Marking algorithm')),
                 ('settings', editor.jsonfield.JSONField(blank=True)),
                 ('public_availability', models.CharField(default='restricted', max_length=10, choices=[('restricted', 'Only to permitted users'), ('always', 'Always available'), ('select', 'When selected')], verbose_name='Public availability')),
-                ('author', models.ForeignKey(related_name='own_custom_part_types', to=settings.AUTH_USER_MODEL)),
+                ('author', models.ForeignKey(related_name='own_custom_part_types', to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
         ),
         migrations.AddField(

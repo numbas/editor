@@ -216,7 +216,7 @@
                             <div data-bind="visible: templateType().id=='anything'">
                                 <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: templateTypeValues.anything.definition, codemirrorMode: 'jme'"></textarea>
                                 <p class="help-block text-right">
-                                    <a class="helplink text-info" href="{{DOCS_URL}}jme-reference.html" target="_blank">JME function reference <span class="glyphicon glyphicon-question-sign"></span></a>
+                                    <a class="helplink text-info" href="{{HELP_URL}}jme-reference.html" target="_blank">JME function reference <span class="glyphicon glyphicon-question-sign"></span></a>
                                 </p>
                             </div>
                             <div data-bind="visible: templateType().id=='number'">
@@ -805,7 +805,7 @@
 											<li><span class="btn btn-sm btn-danger monospace" data-bind="text: $data,click: $root.goToVariable" title="Edit this variable"></span></li>
 										</ul></p>
 										<p>These variables have some random elements, which means they're not guaranteed to have the same value each time the student submits an answer. You should define new variables to store the random elements, so that they remain the same each time this part is marked.</p>
-                                        <p><a href="{{DOCS_URL}}question/reference.html#adaptive-marking">More information about this problem</a></p>
+                                        <p><a href="{{HELP_URL}}question/reference.html#adaptive-marking">More information about this problem</a></p>
 									</div>
 
                                     <div class="text-right">

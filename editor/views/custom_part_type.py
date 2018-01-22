@@ -2,7 +2,7 @@ from django import http
 from django.contrib import messages
 from django.db import transaction
 from django.views import generic
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.shortcuts import redirect
 
 from editor.models import CustomPartType, CUSTOM_PART_TYPE_PUBLIC_CHOICES, CUSTOM_PART_TYPE_INPUT_WIDGETS

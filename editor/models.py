@@ -383,7 +383,7 @@ CUSTOM_PART_TYPE_INPUT_WIDGETS = [
 ]
 
 class CustomPartType(models.Model, ControlledObject):
-    author = models.ForeignKey(User, related_name='own_custom_part_types')
+    author = models.ForeignKey(User, related_name='own_custom_part_types', on_delete=models.CASCADE)
     name = models.CharField(max_length=200, verbose_name='Name')
     short_name = models.CharField(max_length=200, unique=True, verbose_name='Unique identifier for this part type')
     description = models.TextField(default='', blank=True, verbose_name='What\'s this part type for?')

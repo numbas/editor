@@ -5,4 +5,4 @@ register = Library()
 
 @register.inclusion_tag('helplink.html')
 def helplink(url, **kwargs):
-    return {'url': url, 'subject': kwargs.get('subject'), 'DOCS_URL': settings.DOCS_URL}
+    return {'url': url, 'subject': kwargs.get('subject'), 'HELP_URL': settings.GLOBAL_SETTINGS['HELP_URL']}

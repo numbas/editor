@@ -26,6 +26,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.forms import model_to_dict
+from django.utils import timezone
 from django.utils.deconstruct import deconstructible
 from django.db.models.signals import pre_delete
 from django.template.loader import get_template
@@ -739,7 +740,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
 
     def publish(self):
         self.published = True
-        self.published_date = datetime.now()
+        self.published_date = timezone.now()
 
     def unpublish(self):
         self.published = False
@@ -1029,7 +1030,7 @@ def delete_timelineitem_object(instance, *args, **kwargs):
 
 class SiteBroadcastManager(models.Manager):
     def visible_now(self):
-        return self.filter(Q(show_until__gte=datetime.now()) | Q(show_until=None))
+        return self.filter(Q(show_until__gte=timezone.now()) | Q(show_until=None))
 
 class SiteBroadcast(models.Model, TimelineMixin):
     objects = SiteBroadcastManager()

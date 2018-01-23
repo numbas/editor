@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from datetime import datetime
+from django.utils import timezone
 from django.db import migrations, models
 
 class Migration(migrations.Migration):
@@ -14,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='comment',
             name='date',
-            field=models.DateTimeField(auto_now_add=True, default=datetime.now),
+            field=models.DateTimeField(auto_now_add=True, default=timezone.now),
         ),
         migrations.AlterField(
             model_name='exam',

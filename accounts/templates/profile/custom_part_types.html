@@ -1,6 +1,7 @@
 {% extends "profile/base.html" %}
 {% load sstatic %}
 {% load sanitizer %}
+{% load can_edit %}
 
 {% block stylesheets %}
 	{{ block.super }}
@@ -23,12 +24,13 @@
     <thead>
         <th>Name</th>
         <th>Ready to use?</th>
-        <th>Public availability</th>
+        <th>Published?</th>
 		<th>What's it used for?</th>
         {% if is_me %}<th></th><!-- control links -->{% endif %}
     </thead>
     <tbody>
     {% for custom_part_type in view_user.own_custom_part_types.all %}
+    {% if custom_part_type|can_be_viewed_by:request.user %}
     <tr>
         <td><a href="{% url 'custom_part_type_edit' custom_part_type.pk %}">{{custom_part_type.name}}</a></a></td>
         <td>
@@ -38,7 +40,13 @@
                 <span class="glyphicon glyphicon-remove-sign text-danger" title="Not ready to use"></span>
             {% endif %}
         </td>
-        <td>{{custom_part_type.get_public_availability_display}}</td>
+        <td>
+            {% if custom_part_type.published %}
+                <span class="glyphicon glyphicon-ok-sign text-success" title="Ready to use"></span>
+            {% else %}
+                <span class="glyphicon glyphicon-remove-sign text-danger" title="Not ready to use"></span>
+            {% endif %}
+        </td>
 		<td>{{custom_part_type.description|strip_html|safe}}</td>
         {% if is_me %}
         <td class="text-center">
@@ -47,6 +55,7 @@
         </td>
         {% endif %}
     </tr>
+    {% endif %}
     {% endfor %}
     </tbody>
     {% if is_me %}

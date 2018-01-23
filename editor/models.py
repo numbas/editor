@@ -417,7 +417,7 @@ class CustomPartType(models.Model, ControlledObject):
             if self.published:
                 return True
 
-        if user.is_anonymous():
+        if user.is_anonymous:
             return False
 
         if user==self.owner:

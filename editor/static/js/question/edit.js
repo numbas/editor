@@ -81,7 +81,6 @@ $(document).ready(function() {
                         </div>\
                         <div class="modal-body">\
                             <input type="text" class="form-control" data-bind="textInput: search" placeholder="Enter keywords to search for">\
-                            <p data-bind="text: search">\
                             <ul class="list-unstyled part-types" data-bind="foreach: filtered_part_types">\
                                 <li class="part-type">\
                                     <button class="btn btn-sm btn-link use" title="Use this part type" data-bind="click: $parent.use"><span class="glyphicon glyphicon-plus" ></span></button>\

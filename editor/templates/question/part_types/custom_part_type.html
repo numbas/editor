@@ -1,6 +1,7 @@
 {% load editor_controls %}
 {% load helplink %}
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking-settings'}">
+<p><a class="helplink text-info" target="numbasquickhelp" data-bind="attr: {href: $parent.type().help_url}"><span class="glyphicon glyphicon-question-sign"></span> Help with this part type</a></p>
 <form class="form-horizontal" data-bind="submit: Editor.noop">
     {% property '$parent.marks' 'Marks' min=0 help_url='question/reference.html#term-marks' %}
     <div data-bind="visible: $parent.steps().length">

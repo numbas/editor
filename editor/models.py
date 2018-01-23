@@ -395,6 +395,7 @@ class CustomPartType(models.Model, ControlledObject):
     marking_script = models.TextField(default='', blank=True, verbose_name='Marking algorithm')
     marking_notes = JSONField(blank=True,default='[]', verbose_name='Marking algorithm notes')
     settings = JSONField(blank=True)
+    help_url = models.URLField(blank=True, verbose_name='URL of documentation')
     public_availability = models.CharField(max_length=10, choices=CUSTOM_PART_TYPE_PUBLIC_CHOICES, verbose_name='Public availability', default='restricted')
     ready_to_use = models.BooleanField(default=False, verbose_name='Ready to use?')
 
@@ -436,10 +437,12 @@ class CustomPartType(models.Model, ControlledObject):
                     'name': self.author.get_full_name(),
                     'pk': self.author.pk,
                 },
+                'edit_page': reverse('custom_part_type_edit', args=(self.pk,)),
             },
             'name': self.name,
             'short_name': self.short_name,
             'description': self.description,
+            'help_url': self.help_url,
             'input_widget': self.input_widget,
             'input_options': self.input_options,
             'can_be_gap': self.can_be_gap,

@@ -14,6 +14,95 @@ $(document).ready(function() {
 		}
 	}
 
+
+    function AddPartTypeModal(useFn, filter) {
+        var m = this;
+        this.show = ko.observable(false);
+        this.open = function() {
+            m.show(true);
+        }
+        this.useFn = useFn;
+        var part_types = Editor.part_types.models;
+        if(filter) {
+            part_types = part_types.filter(filter);
+        }
+        this.part_types = part_types.filter(function(pt) { return pt.is_custom_part_type; });
+    }
+
+
+    ko.bindingHandlers.showModal = {
+        init: function(element, valueAccessor) {
+            $(element).modal({show:false});
+
+            var value = valueAccessor();
+            if (ko.isObservable(value)) {
+                $(element).on('hide.bs.modal', function() {
+                   value(false);
+                });
+            }
+        },
+        update: function (element, valueAccessor) {
+            var value = valueAccessor();
+            if (ko.unwrap(value)) {
+                $(element).modal('show');
+            } else {
+                $(element).modal('hide');
+            }
+        }
+    };                 
+
+
+    ko.components.register('part-type-modal', {
+        viewModel: function(params) {
+            var vm = this;
+            this.show = params.data.show;
+            this.part_types = params.data.part_types;
+            this.search = ko.observable('');
+            this.filtered_part_types = ko.computed(function() {
+                var search = this.search();
+                var words = search.toLowerCase().split(/\s+/g).map(function(w){ return w.trim() });
+                return this.part_types.filter(function(pt) {
+                    return words.every(function(word){ return pt.search_text.contains(word) || !word; });
+                });
+            },this);
+            this.useFn = params.data.useFn;
+            this.use = function(pt) {
+                vm.show(false);
+                vm.useFn(pt);
+            }
+        },
+        template: '\
+            <div class="modal fade part-type-modal" tabindex="-1" role="dialog" aria-hidden="true" data-bind="showModal: show">\
+                <div class="modal-dialog">\
+                    <div class="modal-content">\
+                        <div class="modal-header">\
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>\
+                            <h3 class="modal-title">Choose a part type</h3>\
+                        </div>\
+                        <div class="modal-body">\
+                            <input type="text" class="form-control" data-bind="textInput: search" placeholder="Enter keywords to search for">\
+                            <p data-bind="text: search">\
+                            <ul class="list-unstyled part-types" data-bind="foreach: filtered_part_types">\
+                                <li class="part-type">\
+                                    <button class="btn btn-sm btn-link use" title="Use this part type" data-bind="click: $parent.use"><span class="glyphicon glyphicon-plus" ></span></button>\
+                                    <div class="details">\
+                                        <h4>\
+                                            <span data-bind="html: niceName, click: $parent.use"></span>\
+                                            <br>\
+                                            <small>by <span data-bind="text: source.author.name"></span></small>\
+                                        </h4>\
+                                        <div data-bind="html: description"></div>\
+                                        <p><a target="_blank" data-bind="attr: {href: help_url}"><span class="glyphicon glyphicon-question-sign"></span> More information</a></p>\
+                                    </div>\
+                                </li>\
+                            </ul>\
+                        </div>\
+                    </div>\
+                </div>\
+            </div>\
+        '
+    });
+
     var Question = Editor.question.Question = function(data)
     {
 		var q = this;
@@ -47,9 +136,30 @@ $(document).ready(function() {
 		};
         this.parts = ko.observableArray([]);
 
-        this.partTypes = Editor.part_types.models;
-        this.gapTypes = Editor.part_types.models.filter(function(t){ return t.can_be_gap!==false });
-        this.stepTypes = Editor.part_types.models.filter(function(t){ return t.can_be_step!==false });
+		// all parts in this question, including child parts such as gaps and steps
+		this.allParts = ko.computed(function() {
+			var o = [];
+			this.parts().map(function(p) {
+                o.push(p);
+                if(p.type().name=='gapfill') {
+                    o = o.concat(p.gaps());
+                }
+				o = o.concat(p.steps());
+			});
+			return o;
+		},this);
+
+        this.partTypes = ko.computed(function() {
+            return Editor.part_types.models.filter(function(pt) {
+                if(pt.is_custom_part_type) {
+                    return q.allParts().some(function(p){ return p.type().name==pt.name });
+                } else {
+                    return true;
+                }
+            });
+        }, this);
+        this.gapTypes = ko.computed(function(){ return q.partTypes().filter(function(t){ return t.can_be_gap!==false }); });
+        this.stepTypes = ko.computed(function(){ return q.partTypes().filter(function(t){ return t.can_be_step!==false }); });
 
 		//for image attribute modal
 		this.imageModal = {
@@ -126,6 +236,8 @@ $(document).ready(function() {
             q.parts.push(p);
 			return p;
         }
+
+        this.addPartTypeModal = new AddPartTypeModal(function(pt){ q.addPart(pt) });
 
 		this.baseVariableGroup = new VariableGroup(this,{name:'Ungrouped variables'});
 		this.baseVariableGroup.fixed = true;
@@ -211,18 +323,6 @@ $(document).ready(function() {
             });
         }
 
-		// all parts in this question, including child parts such as gaps and steps
-		this.allParts = ko.computed(function() {
-			var o = [];
-			this.parts().map(function(p) {
-                o.push(p);
-                if(p.type().name=='gapfill') {
-                    o = o.concat(p.gaps());
-                }
-				o = o.concat(p.steps());
-			});
-			return o;
-		},this);
 
 
 		ko.computed(function() {
@@ -1727,6 +1827,9 @@ $(document).ready(function() {
             p.steps.push(step);
         }
 
+        this.addGapTypeModal = new AddPartTypeModal(function(pt){ p.addGap(pt) }, function(pt){ return pt.can_be_gap });
+        this.addStepTypeModal = new AddPartTypeModal(function(pt){ p.addStep(pt) }, function(pt){ return pt.can_be_step });
+
 		this.showCorrectAnswer = ko.observable(true);
         this.showFeedbackIcon = ko.observable(true);
 
@@ -2560,6 +2663,7 @@ $(document).ready(function() {
 		this.name = data.name;
         this.widget = data.widget;
 		this.part = part;
+        this.help_url = data.help_url;
 		this.niceName = data.niceName;
 		this.has_marks = data.has_marks || false;
 		this.tabs = data.tabs || [];

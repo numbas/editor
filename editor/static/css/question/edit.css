@@ -165,6 +165,22 @@
     overflow-x: hidden;
 }
 
+.part-type-modal .part-types {
+    max-height: 66vh;
+    overflow-y: auto;
+}
+.part-type-modal .part-types > .part-type {
+    display: flex;
+    align-items: baseline;
+}
+.part-type-modal .part-types > .part-type > button.use {
+    margin-right: 0.5em;
+}
+.part-type-modal .part-types > .part-type ~ .part-type {
+    margin-top: 1em;
+}
+
+
 /*
 #question-name {
 	font-size: 2em;

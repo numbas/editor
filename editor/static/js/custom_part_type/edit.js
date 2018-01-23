@@ -143,6 +143,7 @@ $(document).ready(function() {
         this.name = ko.observable('');
         this.short_name = ko.observable('');
         this.description = ko.observable('');
+        this.help_url = ko.observable('');
 
         this.tabs = [
             new Editor.Tab('description','Description','cog'),
@@ -287,7 +288,7 @@ $(document).ready(function() {
 
         load: function(data) {
             var pt = this;
-            tryLoad(data,['name','short_name','description','published'],this);
+            tryLoad(data,['name','short_name','description','help_url','published'],this);
             tryLoadMatchingId(data,'input_widget','name',this.input_widgets,this);
             if('input_options' in data) {
                 tryLoad(data.input_options,['correctAnswer','hint'],this.input_options);
@@ -366,6 +367,7 @@ $(document).ready(function() {
                 'name': this.name(),
                 'short_name': this.short_name(),
                 'description': this.description(),
+                'help_url': this.help_url(),
                 'input_widget': this.input_widget().name,
                 'input_options': JSON.stringify(input_options),
                 'can_be_gap': this.can_be_gap(),

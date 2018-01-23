@@ -536,7 +536,7 @@
                                         </section>
 
                                         <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='notes'}">
-                                            <!-- ko if: ko.unwrap(runtime_part) && ko.unwrap($parent.type().widget) -->
+                                            <!-- ko if: ko.unwrap($data.runtime_part) && ko.unwrap($parent.type().widget) -->
                                             <form class="form-horizontal" data-bind="submit: Editor.noop">
                                                 <div class="form-group">
                                                     <label class="label-block">
@@ -837,19 +837,29 @@
                                 <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     <span class="glyphicon glyphicon-plus"></span> Add a gap to part <strong data-bind="text:indexLabel"></strong> <span class="caret"></span>
                                 </button>
-                                <ul class="dropdown-menu" data-bind="foreach: $root.gapTypes">
+                                <ul class="dropdown-menu">
+                                    <!-- ko foreach: $root.gapTypes -->
                                     <li><a href="#" data-bind="click: $parent.addGap, text: niceName"></a></li>
+                                    <!-- /ko -->
+                                    <li role="separator" class="divider"></li>
+                                    <li><a href="#" data-bind="click: addGapTypeModal.open">… More part types</a></li>
                                 </ul>
                             </div>
+                            <part-type-modal params="data: addGapTypeModal"></part-type-modal>
 
                             <div class="btn-group" data-bind="visible: isRootPart">
                                 <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     <span class="glyphicon glyphicon-plus"></span> Add a step to part <strong data-bind="text:indexLabel"></strong> <span class="caret"></span>
                                 </button>
-                                <ul class="dropdown-menu" data-bind="foreach: $root.stepTypes">
+                                <ul class="dropdown-menu">
+                                    <!-- ko foreach: $root.stepTypes -->
                                     <li><a href="#" data-bind="click: $parent.addStep, text: niceName"></a></li>
+                                    <!-- /ko -->
+                                    <li role="separator" class="divider"></li>
+                                    <li><a href="#" data-bind="click: addStepTypeModal.open">… More part types</a></li>
                                 </ul>
                             </div>
+                            <part-type-modal params="data: addStepTypeModal"></part-type-modal>
                         </div>
                     </div>
                     {% endif %}
@@ -863,10 +873,15 @@
             <button id="add-part-button" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-bind="css: {'btn-lg': parts().length==0}">
                 <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parts().length ? 'Add another part' : 'Add a part'"></span> <span class="caret"></span>
             </button>
-            <ul class="dropdown-menu" data-bind="foreach: partTypes">
+            <ul class="dropdown-menu">
+                <!-- ko foreach: partTypes -->
                 <li><a href="#" data-bind="click: $parent.addPart, text: niceName"></a></li>
+                <!-- /ko -->
+                <li role="separator" class="divider"></li>
+                <li><a href="#" data-bind="click: addPartTypeModal.open">… More part types</a></li>
             </ul>
         </div>
+        <part-type-modal params="data: addPartTypeModal"></part-type-modal>
         {% endif %}
 
         {% if editable %}

@@ -905,6 +905,7 @@ Numbas.custom_part_types = {};
 function CustomPartType(data) {
     this.name = data.short_name;
     this.niceName = data.name;
+    this.help_url = data.help_url || data.source.edit_page;
     this.description = data.description;
     this.widget = data.input_widget;
     this.has_marks = true;
@@ -916,6 +917,9 @@ function CustomPartType(data) {
     this.make_settings(data.settings);
     Numbas.partConstructors[this.name] = Numbas.parts.CustomPart;
     Numbas.custom_part_types[this.name] = data;
+
+    var element = document.createElement('div');
+    this.search_text = [this.niceName, this.name, this.description].join(' ').toLowerCase();
 }
 CustomPartType.prototype = {
     is_custom_part_type: true,

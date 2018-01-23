@@ -919,7 +919,7 @@ function CustomPartType(data) {
     Numbas.custom_part_types[this.name] = data;
 
     var element = document.createElement('div');
-    this.search_text = [this.niceName, this.name, this.description].join(' ').toLowerCase();
+    this.search_text = [this.niceName, this.name, this.source.author.name, this.description].join(' ').toLowerCase();
 }
 CustomPartType.prototype = {
     is_custom_part_type: true,

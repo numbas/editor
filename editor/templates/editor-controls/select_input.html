@@ -1,1 +1,1 @@
-<select {% if disable or not editable %}disabled{% endif%} class="form-control" data-bind="options: {{options}}, value: {{property}}, optionsText: '{{options_text}}'"></select>
+<select {% if not editable %}disabled{% endif%} class="form-control" data-bind="options: {{options}}, value: {{property}}, optionsText: '{{options_text}}'"></select>

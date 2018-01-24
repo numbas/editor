@@ -222,48 +222,7 @@ part_types.models = [
                 mustBeReducedPC: ko.observable(0)
             };
 
-            model.notationStyles = [
-                {
-                    code: 'plain',
-                    name: 'English (Plain)',
-                    description: 'No thousands separator; dot for decimal point.',
-                },
-                {
-                    code: 'en',
-                    name:'English',
-                    description:'Commas separate thousands; dot for decimal point.',
-                },
-                {
-                    code: 'si-en',
-                    name:'SI (English)',
-                    description:'Spaces separate thousands; dot for decimal point.',
-                },
-                {
-                    code: 'si-fr',
-                    name:'SI (French)',
-                    description:'Spaces separate thousands; comma for decimal point.',
-                },
-                {
-                    code: 'eu',
-                    name: 'Continental',
-                    description:'Dots separate thousands; comma for decimal point.',
-                },
-                {
-                    code: 'plain-eu',
-                    name:'Continental (Plain)',
-                    description:'No thousands separator; comma for decimal point.',
-                },
-                {
-                    code: 'ch',
-                    name:'Swiss',
-                    description:'Apostrophes separate thousands; dot for decimal point.',
-                },
-                {
-                    code: 'in',
-                    name:'Indian',
-                    description:'Commas separate groups; rightmost group is 3 digits, other groups 2 digits; dot for decimal point.',
-                }
-            ];
+            model.notationStyles = Editor.numberNotationStyles;
 
             model.allowedNotationStyles = ko.observableArray(model.notationStyles.filter(function(s){return ['plain','en','si-en'].contains(s.code)}));
 

@@ -4,40 +4,52 @@ $(document).ready(function() {
     var tryLoad = Editor.tryLoad;
     var tryLoadMatchingId = Editor.tryLoadMatchingId;
 
-    var reserved_names = ['path','studentanswer','settings','marks','parttype','gaps','steps'];
+    var marking_reserved_names = Editor.custom_part_type.marking_reserved_names = ['path','studentanswer','settings','marks','parttype','gaps','steps'];
 
-    ko.components.register('undefined-variable-warning', {
-        viewModel: function(params) {
-            this.expr = params.expr;
-            this.other_vars = params.vars || [];
-            this.error = ko.computed(function() {
-                var expr = ko.unwrap(this.expr);
-                try {
-                    var vars = Numbas.jme.findvars(Numbas.jme.compile(expr));
-                } catch(e) {
-                    return '';
-                }
-                var defined_vars = reserved_names.concat(ko.unwrap(this.other_vars));
-                var bad_vars = vars.filter(function(name) {
-                    return !defined_vars.contains(name);
-                });
-                if(bad_vars.length==1) {
-                    return 'The variable <code>'+bad_vars[0]+'</code> is not defined.';
-                } else if(bad_vars.length>1) {
-                    bad_vars.sort();
-                    bad_vars = bad_vars.map(function(x) { return '<code>'+x+'</code>' });
-                    var list = bad_vars.slice(0,bad_vars.length-1).join(', ')+' and '+bad_vars[bad_vars.length-1];
-                    return 'The variables '+list+' are not defined.';
-                } else {
-                    return '';
-                }
-            },this);
+    function ChoiceMaker() {
+        var cm = this;
+        this.choices = ko.observableArray([]);
+        this.valid_choices = ko.computed(function() {
+            return this.choices().filter(function(c) { return c.valid(); });
+        },this)
+        this.add_choice = function() {
+            var choice = {value: ko.observable(''), label: ko.observable('')};
+            choice.valid = ko.computed(function() {
+                return choice.value()!='' && choice.label();
+            });
+            cm.choices.push(choice);
+            return choice;
+        }
+    }
+    ChoiceMaker.prototype = {
+        load: function(data) {
+            var m = this;
+            data.map(function(c) {
+                var choice = m.add_choice();
+                tryLoad(c,['value','label'],choice);
+            });
         },
-        template: '\
-            <div data-bind="visible: error" class="alert alert-danger"><div data-bind="html: error"></div></div>\
-        '
-    });
+        toJSON: function(out) {
+            out.choices = this.choices().map(function(c) {
+                return {value: c.value(), label: c.label()}
+            });
+        },
+        valid: function() {
+            return this.choices().length>0 && this.choices().every(function(c) {return c.valid()});
+        }
+    };
 
+    ko.components.register('choice-maker',{
+        viewModel: function(params) {
+            var vm = this;
+            this.model = params.model;
+            this.disable = params.disable;
+            this.valid = function() {
+                return vm.model.valid();
+            }
+        },
+        template: {element: 'choice-maker-template'}
+    });
 
     Editor.custom_part_type.input_widgets = [
         {
@@ -53,66 +65,172 @@ $(document).ready(function() {
             'name': 'number', 
             'niceName': 'Number',
             model: function() {
-                return {};
+                var model = {
+                    allowFractions: new MaybeStaticOption(true, 'true')
+                };
+                model.notationStyles = Editor.numberNotationStyles;
+                var static_allowedNotationStyles = ko.observableArray(model.notationStyles.filter(function(s){return ['plain','en','si-en'].contains(s.code)}));
+                model.allowedNotationStyles = new MaybeStaticOption(
+                    static_allowedNotationStyles, 
+                    '["plain","en","si-en"]', 
+                    function(v) {
+                        return v.map(function(s){return s.code});
+                    },
+                    function(d) {
+                        return model.notationStyles.filter(function(s){return d.contains(s.code)});
+                    }
+                );
+
+
+                return model;
             },
-            load: function(data) {},
-            toJSON: function() {}
+            load: function(data) {
+                this.allowedNotationStyles.load(data.allowedNotationStyles);
+                this.allowFractions.load(data.allowFractions);
+            },
+            toJSON: function(out) {
+                out.allowedNotationStyles = this.allowedNotationStyles.toJSON();
+                out.allowFractions = this.allowFractions.toJSON();
+            }
         },
         {
             'name': 'jme', 
             'niceName': 'Mathematical expression',
             model: function() {
-                return {};
+                return {
+                    showPreview: new MaybeStaticOption(true,'true')
+                };
             },
-            load: function(data) {},
-            toJSON: function() {}
+            load: function(data) {
+                this.showPreview.load(data.showPreview);
+            },
+            toJSON: function(out) {
+                out.showPreview = this.showPreview.toJSON();
+            }
         },
         {
             'name': 'matrix', 
             'niceName': 'Matrix',
             model: function() {
-                return {};
+                var model = {
+                    parseCells: new MaybeStaticOption(true, 'true'),
+                    allowFractions: new MaybeStaticOption(true, 'true'),
+                    allowResize: new MaybeStaticOption(true,'true'),
+                    numRows: new MaybeStaticOption(1,'1'),
+                    numColumns: new MaybeStaticOption(1,'1')
+                };
+
+                model.notationStyles = Editor.numberNotationStyles;
+                var static_allowedNotationStyles = ko.observableArray(model.notationStyles.filter(function(s){return ['plain','en','si-en'].contains(s.code)}));
+                model.allowedNotationStyles = new MaybeStaticOption(
+                    static_allowedNotationStyles, 
+                    '["plain","en","si-en"]', 
+                    function(v) {
+                        return v.map(function(s){return s.code});
+                    },
+                    function(d) {
+                        return model.notationStyles.filter(function(s){return d.contains(s.code)});
+                    }
+                );
+
+                return model;
             },
-            load: function(data) {},
-            toJSON: function() {}
+            load: function(data) {
+                this.allowedNotationStyles.load(data.allowedNotationStyles);
+                this.allowFractions.load(data.allowFractions);
+                this.parseCells.load(data.parseCells)
+                this.allowResize.load(data.allowResize)
+                this.numRows.load(data.numRows)
+                this.numColumns.load(data.numColumns)
+            },
+            toJSON: function(out) {
+                out.allowedNotationStyles = this.allowedNotationStyles.toJSON();
+                out.allowFractions = this.allowFractions.toJSON();
+                out.parseCells = this.parseCells.toJSON();
+                out.allowResize = this.allowResize.toJSON();
+                out.numRows = this.numRows.toJSON();
+                out.numColumns = this.numColumns.toJSON();
+            }
         },
         {
             'name': 'radios', 
             'niceName': 'Radio buttons',
             model: function() {
-                return {choices: ko.observable('')};
+                var cm = new ChoiceMaker();
+                return {
+                    choices: new MaybeStaticOption(
+                        cm,
+                        '[]', 
+                        function(v) {
+                            var o = {};
+                            v.toJSON(o);
+                            return o.choices;
+                        },
+                        function(data) {
+                            cm.load(data);
+                        }
+                    )
+                };
             },
             load: function(data) {
-                tryLoad(data,['choices'],this);
+                this.choices.load(data.choices);
             },
-            toJSON: function(data) {
-                data.choices = this.choices();
+            toJSON: function(out) {
+                out.choices = this.choices.toJSON();
             }
         },
         {
             'name': 'checkboxes', 
             'niceName': 'Choose several from a list',
             model: function() {
-                return {choices: ko.observable('')};
+                var cm = new ChoiceMaker();
+                return {
+                    choices: new MaybeStaticOption(
+                        cm,
+                        '[]', 
+                        function(v) {
+                            var o = {};
+                            v.toJSON(o);
+                            return o.choices;
+                        },
+                        function(data) {
+                            cm.load(data);
+                        }
+                    )
+                };
             },
             load: function(data) {
-                tryLoad(data,['choices'],this);
+                this.choices.load(data.choices);
             },
-            toJSON: function(data) {
-                data.choices = this.choices();
+            toJSON: function(out) {
+                out.choices = this.choices.toJSON();
             }
         },
         {
             'name': 'dropdown', 
             'niceName': 'Drop-down box',
             model: function() {
-                return {choices: ko.observable('')};
+                var cm = new ChoiceMaker();
+                return {
+                    choices: new MaybeStaticOption(
+                        cm,
+                        '[]', 
+                        function(v) {
+                            var o = {};
+                            v.toJSON(o);
+                            return o.choices;
+                        },
+                        function(data) {
+                            cm.load(data);
+                        }
+                    )
+                };
             },
             load: function(data) {
-                tryLoad(data,['choices'],this);
+                this.choices.load(data.choices);
             },
-            toJSON: function(data) {
-                data.choices = this.choices();
+            toJSON: function(out) {
+                out.choices = this.choices.toJSON();
             }
         }
     ];
@@ -131,6 +249,44 @@ $(document).ready(function() {
         },
         load: function(data) {
             return this.loadFn.apply(this.model,[data,this.pt]);
+        }
+    };
+
+    function MaybeStaticOption(static_value, dynamic_value, save_staticFn, load_staticFn) {
+        this.static = ko.observable(true);
+        this.static_value = ko.isObservable(static_value) || typeof(static_value)=='object' ? static_value : ko.observable(static_value);
+        this.dynamic_value = ko.isObservable(dynamic_value) ? dynamic_value : ko.observable(dynamic_value);
+        this.save_staticFn = save_staticFn;
+        this.load_staticFn = load_staticFn;
+    }
+    MaybeStaticOption.prototype = {
+        load: function(data) {
+            if(!data) {
+                return;
+            }
+            tryLoad(data,['static'],this);
+            if(this.static()) {
+                var value = data.value;
+                if(this.load_staticFn && value!==undefined) {
+                    value = this.load_staticFn(value);
+                }
+                if(ko.isObservable(this.static_value)) {
+                    this.static_value(value);
+                }
+            } else {
+                this.dynamic_value(data.value);
+            }
+        },
+        toJSON: function() {
+            var static = this.static();
+            var value = static ? ko.unwrap(this.static_value) : this.dynamic_value();
+            if(static && this.save_staticFn) {
+                value = this.save_staticFn(value);
+            }
+            return {
+                static: static,
+                value: value
+            }
         }
     };
 
@@ -174,7 +330,7 @@ $(document).ready(function() {
         this.input_widget = ko.observable(Editor.custom_part_type.input_widgets[0]);
         this.input_options = {
             correctAnswer: ko.observable(''),
-            hint: ko.observable('""')
+            hint: new MaybeStaticOption('','""')
         }
 
         this.can_be_gap = ko.observable(true);
@@ -220,6 +376,7 @@ $(document).ready(function() {
             var note = new Note(pt);
             pt.marking_notes.push(note);
             pt.current_marking_note(note);
+            return note;
         };
         this.remove_marking_note = function(note) {
             if(!note.required()) {
@@ -232,6 +389,10 @@ $(document).ready(function() {
                 return note.name();
             });
         },this);
+        
+        this.marking_defined_names = ko.computed(function() {
+            return this.marking_note_names().concat(Editor.custom_part_type.marking_reserved_names);
+        }, this);
 
         this.marking_script = ko.computed(function() {
             return this.marking_notes().map(function(note) {
@@ -291,7 +452,8 @@ $(document).ready(function() {
             tryLoad(data,['name','short_name','description','help_url','published'],this);
             tryLoadMatchingId(data,'input_widget','name',this.input_widgets,this);
             if('input_options' in data) {
-                tryLoad(data.input_options,['correctAnswer','hint'],this.input_options);
+                tryLoad(data.input_options,['correctAnswer'],this.input_options);
+                this.input_options.hint.load(data.input_options.hint);
                 this.input_widget().load(data.input_options);
             }
             if('settings' in data && data.settings.forEach) {
@@ -359,7 +521,7 @@ $(document).ready(function() {
         toJSON: function() {
             var input_options = {
                 correctAnswer: this.input_options.correctAnswer(),
-                hint: ''+this.input_options.hint()+''
+                hint: this.input_options.hint.toJSON()
             };
             this.input_widget().toJSON(input_options);
 
@@ -436,38 +598,22 @@ $(document).ready(function() {
             model: function() {
                 var model = {
                     default_value: ko.observable(''),
-                    choices: ko.observableArray([])
+                    choice_maker: new ChoiceMaker()
                 };
-                model.valid_choices = ko.computed(function() {
-                    return model.choices().filter(function(c) { return c.valid(); });
-                })
-                model.add_choice = function() {
-                    var choice = {value: ko.observable(''), label: ko.observable('')};
-                    choice.valid = ko.computed(function() {
-                        return choice.value()!='' && choice.label();
-                    });
-                    model.choices.push(choice);
-                    return choice;
-                }
                 return model;
             },
             toJSON: function(data) {
                 var def = this.default_value();
                 data.default_value = def ? def.value() : null;
-                data.choices = this.choices().map(function(c) {
-                    return {value: c.value(), label: c.label()}
-                });
+                this.choice_maker.toJSON(data);
             },
             load: function(data) {
                 var m = this;
-                data.choices.map(function(c) {
-                    var choice = m.add_choice();
-                    tryLoad(c,['value','label'],choice);
-                });
-                tryLoadMatchingId(data,'default_value','value',this.choices(),this);
+                this.choice_maker.load(data.choices);
+                tryLoadMatchingId(data,'default_value','value',this.choice_maker.choices(),this);
             },
             valid: function() {
-                return this.choices().length>0 && this.choices().every(function(c) {return c.valid()});
+                return this.choice_maker.valid();
             }
         },
         {
@@ -720,7 +866,7 @@ $(document).ready(function() {
 				return 'This name is invalid.';
 			}
 
-			if(name in Numbas.jme.constants || reserved_names.contains(name)) {
+			if(name in Numbas.jme.constants || marking_reserved_names.contains(name)) {
 				return 'This name is reserved.';
 			}
 
@@ -748,15 +894,18 @@ $(document).ready(function() {
                 return [];
             }
             var vars = Numbas.jme.findvars(this.definition_tree());
-            var note_names = pt.marking_notes().map(function(n) { return n.name() });
+            var note_names = pt.marking_notes().map(function(n) { return n.name().toLowerCase() });
             return vars
-                .filter(function(name) { return !reserved_names.contains(name.toLowerCase()) })
+                .filter(function(name) { return !marking_reserved_names.contains(name.toLowerCase()) })
                 .map(function(name) {
                     note = pt.getNote(name);
                     return {name:name, exists: note_names.contains(name), note: note, title: name, go_to: function() {
-                        if(note) {
-                            pt.current_marking_note(note);
+                        var note = this.note;
+                        if(!note) {
+                            note = pt.add_marking_note();
+                            note.name(this.name);
                         }
+                        pt.current_marking_note(note);
                     }};
                 })
             ;

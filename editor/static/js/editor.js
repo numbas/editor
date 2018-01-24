@@ -1430,6 +1430,61 @@ $(document).ready(function() {
 		}
 	};
 
+    ko.components.register('undefined-variable-warning', {
+        viewModel: function(params) {
+            this.expr = params.expr;
+            this.vars = params.vars || [];
+            this.error = ko.computed(function() {
+                var expr = ko.unwrap(this.expr);
+                try {
+                    var vars = Numbas.jme.findvars(Numbas.jme.compile(expr));
+                } catch(e) {
+                    return '';
+                }
+                var defined_vars = ko.unwrap(this.vars).map(function(n){ return n.toLowerCase() });
+                var bad_vars = vars.filter(function(name) {
+                    return !defined_vars.contains(name);
+                });
+                if(bad_vars.length==1) {
+                    return 'The variable <code>'+bad_vars[0]+'</code> is not defined.';
+                } else if(bad_vars.length>1) {
+                    bad_vars.sort();
+                    bad_vars = bad_vars.map(function(x) { return '<code>'+x+'</code>' });
+                    var list = bad_vars.slice(0,bad_vars.length-1).join(', ')+' and '+bad_vars[bad_vars.length-1];
+                    return 'The variables '+list+' are not defined.';
+                } else {
+                    return '';
+                }
+            },this);
+        },
+        template: '\
+            <div data-bind="visible: error" class="alert alert-danger"><div data-bind="html: error"></div></div>\
+        '
+    });
+
+
+    ko.components.register('static-dynamic-setting', {
+        viewModel: function(params) {
+            this.static = params.option.static;
+            this.static_value = params.option.static_value;
+            this.dynamic_value = params.option.dynamic_value;
+        },
+        template: '\
+            <div class="control">\
+            <!-- ko if: static -->\
+                <div>\
+                    <!-- ko template: { nodes: $componentTemplateNodes} --><!-- /ko -->\
+                </div>\
+            <!-- /ko -->\
+            <!-- ko if: !static() -->\
+                <textarea disabled data-bind="codemirror: dynamic_value, codemirrorMode: \'jme\'"></textarea>\
+                <undefined-variable-warning params="expr: dynamic_value, vars: [\'settings\']"></undefined-variable-warning>\
+            <!-- /ko -->\
+            </div>\
+            <label class="static-switch"><input type="checkbox" data-bind="checked: static"> Static?</label>\
+        '
+    });
+
     ko.components.register('editor-pager', {
         viewModel: function(params) {
             var p = this;
@@ -1547,6 +1602,7 @@ $(document).ready(function() {
             var helpProperty = ko.unwrap(params.helpProperty);
             var selectedOptions = ko.unwrap(params.selectedOptions);
             var valueName = ko.unwrap(params.valueName);
+            this.disable = ko.unwrap(params.disabled) || false;
             this.options = ko.pureComputed(function() {
                 return ko.unwrap(params.options).map(function(option) {
                     var value = valueName ? ko.unwrap(option[valueName]) : option
@@ -1566,7 +1622,7 @@ $(document).ready(function() {
             <ul class="list-unstyled" data-bind="foreach: options"> \
                 <li>\
                     <label>\
-                        <input type="checkbox" data-bind="checked:checked">\
+                        <input type="checkbox" data-bind="checked:checked, disable: $parent.disable">\
                         <span data-bind="text:label"></span>\
                     </label>\
                     <span class="help-block help-block-inline" data-bind="text: help"></span>\
@@ -2012,4 +2068,47 @@ $(document).ready(function() {
     }
 
     Editor.noop = function() {}
+
+    Editor.numberNotationStyles = [
+        {
+            code: 'plain',
+            name: 'English (Plain)',
+            description: 'No thousands separator; dot for decimal point.',
+        },
+        {
+            code: 'en',
+            name:'English',
+            description:'Commas separate thousands; dot for decimal point.',
+        },
+        {
+            code: 'si-en',
+            name:'SI (English)',
+            description:'Spaces separate thousands; dot for decimal point.',
+        },
+        {
+            code: 'si-fr',
+            name:'SI (French)',
+            description:'Spaces separate thousands; comma for decimal point.',
+        },
+        {
+            code: 'eu',
+            name: 'Continental',
+            description:'Dots separate thousands; comma for decimal point.',
+        },
+        {
+            code: 'plain-eu',
+            name:'Continental (Plain)',
+            description:'No thousands separator; comma for decimal point.',
+        },
+        {
+            code: 'ch',
+            name:'Swiss',
+            description:'Apostrophes separate thousands; dot for decimal point.',
+        },
+        {
+            code: 'in',
+            name:'Indian',
+            description:'Commas separate groups; rightmost group is 3 digits, other groups 2 digits; dot for decimal point.',
+        }
+    ];
 });

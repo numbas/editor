@@ -7,7 +7,7 @@
 {% load sstatic %}
 {% load json_filter %}
 
-{% block title %}{{object.name}} - {{block.super}}{% endblock %}
+{% block title %}{{object.name}} - Custom part type - {{block.super}}{% endblock %}
 
 {% block javascripts %}
     {{block.super}}
@@ -32,6 +32,32 @@
 {% block content_container %}container-fluid{% endblock %}
 
 {% block content %}
+<template id="choice-maker-template">
+    <ul class="list-unstyled" data-bind="foreach: model.choices">
+        <li>
+            <div class="form-group">
+                <label class="col-xs-12 col-sm-6" data-bind="css: {'has-error': !value()}">
+                    Value
+                    {% text_input 'value' monospace=True %}
+                </label>
+                <label class="col-xs-12 col-sm-6" data-bind="css: {'has-error': !label()}">
+                    Label
+                    {% text_input 'label' %}
+                </label>
+            </div>
+        </li>
+    </ul>
+    <!-- ko if: !ko.unwrap(disable) -->
+    <div data-bind="visible: !valid()" class="alert alert-danger">
+        <p data-bind="visible: model.choices().length==0">Add at least one choice.</p>
+        <p data-bind="visible: model.choices().length && model.valid_choices().length<model.choices().length">Complete every choice.</p>
+    </div>
+    <button type="button" class="btn btn-primary" data-bind="click: model.add_choice">
+        <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: model.choices().length ? 'Add another choice' : 'Add a choice'"></span>
+    </button>
+    <!-- /ko -->
+</template>
+
 <div class="page-loading" data-bind="visible: false">
     <h1>Loading...</h1>
 </div>
@@ -145,33 +171,11 @@
                                                 </div>
                                             </label>
                                             <div class="{{form_control_class}}">
-                                                <ul class="list-unstyled" data-bind="foreach: model.choices">
-                                                    <li>
-                                                        <div class="form-group">
-                                                            <label class="col-xs-12 col-sm-6" data-bind="css: {'has-error': !value()}">
-                                                                Value
-                                                                <input {% if not editable %}disabled{% endif %} type="text" data-bind="textInput: value" class="form-control monospace">
-                                                            </label>
-                                                            <label class="col-xs-12 col-sm-6" data-bind="css: {'has-error': !label()}">
-                                                                Label
-                                                                <input {% if not editable %}disabled{% endif %} type="text" data-bind="textInput: label" class="form-control">
-                                                            </label>
-                                                        </div>
-                                                    </li>
-                                                </ul>
-                                                {% if editable %}
-                                                <div data-bind="visible: !valid()" class="alert alert-danger">
-                                                    <p data-bind="visible: model.choices().length==0">Add at least one choice.</p>
-                                                    <p data-bind="visible: model.choices().length && model.valid_choices().length<model.choices().length">Complete every choice.</p>
-                                                </div>
-                                                <button type="button" class="btn btn-primary" data-bind="click: model.add_choice">
-                                                    <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: model.choices().length ? 'Add another choice' : 'Add a choice'"></span>
-                                                </button>
-                                                {% endif %}
+                                                <choice-maker params="model: model.choice_maker{% if not editable %}, disable: true{% endif %}"></choice-maker>
                                             </div>
                                         </div>
-                                        <!-- ko if: model.valid_choices().length>0 -->
-                                        {% selectproperty 'model.default_value' 'Default value' options_text='label' options='model.valid_choices' %}
+                                        <!-- ko if: model.choice_maker.valid_choices().length>0 -->
+                                        {% selectproperty 'model.default_value' 'Default value' options_text='label' options='model.choice_maker.valid_choices' %}
                                         <!-- /ko -->
                                         <!-- /ko -->
 
@@ -188,15 +192,15 @@
                                                         <div class="form-group">
                                                             <label class="col-xs-12 col-sm-4" data-bind="css: {'has-error': !value()}">
                                                                 Value
-                                                                <input {% if not editable %}disabled{% endif %} type="text" data-bind="textInput: value" class="form-control monospace">
+                                                                {% text_input 'value' monospace=True %}
                                                             </label>
                                                             <label class="col-xs-12 col-sm-6" data-bind="css: {'has-error': !label()}">
                                                                 Label
-                                                                <input {% if not editable %}disabled{% endif %} type="text" data-bind="textInput: label" class="form-control">
+                                                                {% text_input 'label' %}
                                                             </label>
                                                             <label class="col-xs-12 col-sm-2">
                                                                 Default on?
-                                                                <input {% if not editable %}disabled{% endif %} type="checkbox" data-bind="checked: default_value">
+                                                                {% boolean_input 'default_value' %}
                                                             </label>
                                                         </div>
                                                     </li>
@@ -308,7 +312,7 @@
                             </label>
                             <div class="{{form_control_class}}">
                                 <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: input_options.correctAnswer, codemirrorMode: 'jme'"></textarea>
-                                <undefined-variable-warning params="expr: input_options.correctAnswer"></undefined-variable-warning>
+                                <undefined-variable-warning params="expr: input_options.correctAnswer, vars: ['settings']"></undefined-variable-warning>
                                 <p class="help-block">
                                     An expression which evaluates to the expected answer to the part. You can refer to any of the part's settings.
                                 </p>
@@ -320,12 +324,116 @@
                                 Input hint
                             </label>
                             <div class="{{form_control_class}}">
-                                <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: input_options.hint, codemirrorMode: 'jme'"></textarea>
-                                <undefined-variable-warning params="expr: input_options.hint"></undefined-variable-warning>
-                                <p class="help-block">
-                                    An expression which evaluates to a string giving the student any necessary information about how to enter their answer.
-                                </p>
+                                <static-dynamic-setting params="option: input_options.hint">
+                                    {% text_input 'static_value' %}
+                                </static-dynamic-setting>
+                                <p class="help-block">Give the student any necessary information about how to enter their answer.</p>
                             </div>
+                        </div>
+
+                        <div data-bind="if: input_widget().name=='number'">
+                        <!-- ko with: input_widget().model -->
+                            <div class="form-group">
+                                <label class="{{form_label_class}} control-label">
+                                    Allowed notation styles
+                                </label>
+                                <div class="{{form_control_class}}">
+                                    <static-dynamic-setting params="option: allowedNotationStyles">
+                                        <multi-select-checkboxes params="{% if not editable %}disabled: true, {%endif%}options: $parent.notationStyles, selectedOptions: static_value, labelProperty: 'name', helpProperty: 'description'"></muli-select-checkboxes>
+                                    </static-dynamic-setting>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="{{form_label_class}} control-label">
+                                    Allow fractions?
+                                </label>
+                                <div class="{{form_control_class}}">
+                                    <static-dynamic-setting params="option: allowFractions">
+                                        {% boolean_input 'static_value' %}
+                                    </static-dynamic-setting>
+                                </div>
+                            </div>
+                        <!-- /ko -->
+                        </div>
+
+                        <div data-bind="if: input_widget().name=='jme'">
+                        <!-- ko with: input_widget().model -->
+                            <div class="form-group">
+                                <label class="{{form_label_class}} control-label">
+                                    Show preview of student's answer?
+                                </label>
+                                <div class="{{form_control_class}}">
+                                    <static-dynamic-setting params="option: showPreview">
+                                        {% boolean_input 'static_value' %}
+                                    </static-dynamic-setting>
+                                </div>
+                            </div>
+                        <!-- /ko -->
+                        </div>
+
+                        <div data-bind="if: input_widget().name=='matrix'">
+                        <!-- ko with: input_widget().model -->
+                            <div class="form-group">
+                                <label class="{{form_label_class}} control-label">
+                                    Allowed notation styles
+                                </label>
+                                <div class="{{form_control_class}}">
+                                    <static-dynamic-setting params="option: allowedNotationStyles">
+                                        <multi-select-checkboxes params="{% if not editable %}disabled: true, {%endif%}options: $parent.notationStyles, selectedOptions: static_value, labelProperty: 'name', helpProperty: 'description'"></muli-select-checkboxes>
+                                    </static-dynamic-setting>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="{{form_label_class}} control-label">
+                                    Allow fractions?
+                                </label>
+                                <div class="{{form_control_class}}">
+                                    <static-dynamic-setting params="option: allowFractions">
+                                        {% boolean_input 'static_value' %}
+                                    </static-dynamic-setting>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="{{form_label_class}} control-label">
+                                    Parse cell values?
+                                </label>
+                                <div class="{{form_control_class}}">
+                                    <static-dynamic-setting params="option: parseCells">
+                                        {% boolean_input 'static_value' %}
+                                    </static-dynamic-setting>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="{{form_label_class}} control-label">
+                                    Allow student to change size of matrix?
+                                </label>
+                                <div class="{{form_control_class}}">
+                                    <static-dynamic-setting params="option: allowResize">
+                                        {% boolean_input 'static_value' %}
+                                    </static-dynamic-setting>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="{{form_label_class}} control-label">
+                                    Number of rows
+                                </label>
+                                <div class="{{form_control_class}}">
+                                    <static-dynamic-setting params="option: numRows">
+                                        {% text_input 'static_value' %}
+                                    </static-dynamic-setting>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="{{form_label_class}} control-label">
+                                    Number of columns
+                                </label>
+                                <div class="{{form_control_class}}">
+                                    <static-dynamic-setting params="option: numColumns">
+                                        {% text_input 'static_value' %}
+                                    </static-dynamic-setting>
+                                </div>
+                            </div>
+                        <!-- /ko -->
                         </div>
 
                         <div data-bind="if: input_widget().name=='radios'">
@@ -335,11 +443,9 @@
                                     Choices
                                 </label>
                                 <div class="{{form_control_class}}">
-                                    <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: choices, codemirrorMode: 'jme'"></textarea>
-                                    <undefined-variable-warning params="expr: choices"></undefined-variable-warning>
-                                    <p class="help-block">
-                                        An expression which evaluates to a list of choices to present to the student.
-                                    </p>
+                                    <static-dynamic-setting params="option: choices">
+                                        <choice-maker params="model: static_value"></choice-maker>
+                                    </static-dynamic-setting>
                                 </div>
                             </div>
                         <!-- /ko -->
@@ -352,10 +458,9 @@
                                     Choices
                                 </label>
                                 <div class="{{form_control_class}}">
-                                    <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: choices, codemirrorMode: 'jme'"></textarea>
-                                    <p class="help-block">
-                                        An expression which evaluates to a list of choices to present to the student.
-                                    </p>
+                                    <static-dynamic-setting params="option: choices">
+                                        <choice-maker params="model: static_value"></choice-maker>
+                                    </static-dynamic-setting>
                                 </div>
                             </div>
                         <!-- /ko -->
@@ -368,10 +473,9 @@
                                     Choices
                                 </label>
                                 <div class="{{form_control_class}}">
-                                    <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: choices, codemirrorMode: 'jme'"></textarea>
-                                    <p class="help-block">
-                                        An expression which evaluates to a list of choices to present to the student.
-                                    </p>
+                                    <static-dynamic-setting params="option: choices">
+                                        <choice-maker params="model: static_value"></choice-maker>
+                                    </static-dynamic-setting>
                                 </div>
                             </div>
                         <!-- /ko -->
@@ -401,7 +505,7 @@
                                     <div class="form-group">
                                         <label>Definition</label>
                                         <textarea {% if not editable %}disabled{% endif %} class="definition" data-bind="codemirror: definition"></textarea>
-                                        <undefined-variable-warning params="expr: definition, vars: $parent.marking_note_names"></undefined-variable-warning>
+                                        <undefined-variable-warning params="expr: definition, vars: $parent.marking_defined_names"></undefined-variable-warning>
                                         <div class="alert alert-danger" data-bind="visible: definitionError">
                                             <p data-bind="html: definitionError"></p>
                                         </div>

@@ -190,6 +190,28 @@ editor-pager nav {
 	background-color: #d6efff;
 }
 
+static-dynamic-setting {
+    display: flex;
+    align-items: start;
+    border-top: 1px dashed #ccc;
+}
+
+static-dynamic-setting .control {
+    flex-grow: 1;
+}
+
+
+static-dynamic-setting .static-switch {
+    font-size: 0.8em;
+    background: #eee;
+    padding: 0em 0.3em;
+    border-radius: 0 0 0.2em 0.2em;
+    float: right;
+    flex: 0 0 5em;
+    margin-left: 1em;
+
+}
+
 /*
 #name-header {
     padding: 0;

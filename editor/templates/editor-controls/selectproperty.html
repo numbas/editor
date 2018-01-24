@@ -1,4 +1,5 @@
 {% load helplink %}
+{% load editor_controls %}
 <div class="form-group">
     <label class="label-block">
         <div class="{{form_label_class}} control-label">
@@ -6,7 +7,7 @@
             {% if help_url %}{% helplink help_url %}{% endif %}
         </div>
         <div class="{{form_control_class}}">
-            <select {% if not editable %}disabled{% endif%} class="form-control" data-bind="options: {{options}}, value: {{property}}, optionsText: '{{options_text}}'"></select>
+            {% select_input property options=options options_text=options_text disable=disable %}
         </div>
     </label>
 </div>

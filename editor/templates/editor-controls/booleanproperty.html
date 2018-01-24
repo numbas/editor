@@ -1,4 +1,5 @@
 {% load helplink %}
+{% load editor_controls %}
 <div class="form-group">
     <label class="label-block">
         <div class="{{form_label_class}} control-label">
@@ -7,9 +8,7 @@
         </div>
         <div class="{{form_control_class}}">
             <div class="checkbox">
-                <label>
-                    <input {% if not editable %}disabled{% endif%} type="checkbox" data-bind="checked: {{property}}{% if disable %}, disable: {{disable}}{% endif %}"/>
-                </label>
+                {% boolean_input property disable=disable %}
             </div>
         </div>
     </label>

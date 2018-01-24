@@ -1,0 +1,12 @@
+<input
+    {% if not editable %}disabled{% endif%} 
+    data-bind="
+        value: {{property}}, 
+        inputValue: {{property}}
+    "
+    type="range"
+    step="5"
+    min="0"
+    max="100"
+/>
+<span class="percentproperty value" data-bind="text: ko.unwrap({{property}})+'%'"></span>

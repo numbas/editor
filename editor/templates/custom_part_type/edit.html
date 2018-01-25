@@ -324,7 +324,7 @@
                                 Input hint
                             </label>
                             <div class="{{form_control_class}}">
-                                <static-dynamic-setting params="option: input_options.hint">
+                                <static-dynamic-setting params="option: input_options.hint{% if not editable %}, disable: true{% endif %}">
                                     {% text_input 'static_value' %}
                                 </static-dynamic-setting>
                                 <p class="help-block">Give the student any necessary information about how to enter their answer.</p>
@@ -338,7 +338,7 @@
                                     Allowed notation styles
                                 </label>
                                 <div class="{{form_control_class}}">
-                                    <static-dynamic-setting params="option: allowedNotationStyles">
+                                    <static-dynamic-setting params="option: allowedNotationStyles{% if not editable %}, disable: true{% endif %}">
                                         <multi-select-checkboxes params="{% if not editable %}disabled: true, {%endif%}options: $parent.notationStyles, selectedOptions: static_value, labelProperty: 'name', helpProperty: 'description'"></muli-select-checkboxes>
                                     </static-dynamic-setting>
                                 </div>
@@ -348,7 +348,7 @@
                                     Allow fractions?
                                 </label>
                                 <div class="{{form_control_class}}">
-                                    <static-dynamic-setting params="option: allowFractions">
+                                    <static-dynamic-setting params="option: allowFractions{% if not editable %}, disable: true{% endif %}">
                                         {% boolean_input 'static_value' %}
                                     </static-dynamic-setting>
                                 </div>
@@ -363,7 +363,7 @@
                                     Show preview of student's answer?
                                 </label>
                                 <div class="{{form_control_class}}">
-                                    <static-dynamic-setting params="option: showPreview">
+                                    <static-dynamic-setting params="option: showPreview{% if not editable %}, disable: true{% endif %}">
                                         {% boolean_input 'static_value' %}
                                     </static-dynamic-setting>
                                 </div>
@@ -375,40 +375,10 @@
                         <!-- ko with: input_widget().model -->
                             <div class="form-group">
                                 <label class="{{form_label_class}} control-label">
-                                    Allowed notation styles
-                                </label>
-                                <div class="{{form_control_class}}">
-                                    <static-dynamic-setting params="option: allowedNotationStyles">
-                                        <multi-select-checkboxes params="{% if not editable %}disabled: true, {%endif%}options: $parent.notationStyles, selectedOptions: static_value, labelProperty: 'name', helpProperty: 'description'"></muli-select-checkboxes>
-                                    </static-dynamic-setting>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="{{form_label_class}} control-label">
-                                    Allow fractions?
-                                </label>
-                                <div class="{{form_control_class}}">
-                                    <static-dynamic-setting params="option: allowFractions">
-                                        {% boolean_input 'static_value' %}
-                                    </static-dynamic-setting>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="{{form_label_class}} control-label">
-                                    Parse cell values?
-                                </label>
-                                <div class="{{form_control_class}}">
-                                    <static-dynamic-setting params="option: parseCells">
-                                        {% boolean_input 'static_value' %}
-                                    </static-dynamic-setting>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="{{form_label_class}} control-label">
                                     Allow student to change size of matrix?
                                 </label>
                                 <div class="{{form_control_class}}">
-                                    <static-dynamic-setting params="option: allowResize">
+                                    <static-dynamic-setting params="option: allowResize{% if not editable %}, disable: true{% endif %}">
                                         {% boolean_input 'static_value' %}
                                     </static-dynamic-setting>
                                 </div>
@@ -418,7 +388,7 @@
                                     Number of rows
                                 </label>
                                 <div class="{{form_control_class}}">
-                                    <static-dynamic-setting params="option: numRows">
+                                    <static-dynamic-setting params="option: numRows{% if not editable %}, disable: true{% endif %}">
                                         {% text_input 'static_value' %}
                                     </static-dynamic-setting>
                                 </div>
@@ -428,8 +398,38 @@
                                     Number of columns
                                 </label>
                                 <div class="{{form_control_class}}">
-                                    <static-dynamic-setting params="option: numColumns">
+                                    <static-dynamic-setting params="option: numColumns{% if not editable %}, disable: true{% endif %}">
                                         {% text_input 'static_value' %}
+                                    </static-dynamic-setting>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="{{form_label_class}} control-label">
+                                    Parse cell values?
+                                </label>
+                                <div class="{{form_control_class}}">
+                                    <static-dynamic-setting params="option: parseCells{% if not editable %}, disable: true{% endif %}">
+                                        {% boolean_input 'static_value' %}
+                                    </static-dynamic-setting>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="{{form_label_class}} control-label">
+                                    Allowed notation styles
+                                </label>
+                                <div class="{{form_control_class}}">
+                                    <static-dynamic-setting params="option: allowedNotationStyles{% if not editable %}, disable: true{% endif %}">
+                                        <multi-select-checkboxes params="{% if not editable %}disabled: true, {%endif%}options: $parent.notationStyles, selectedOptions: static_value, labelProperty: 'name', helpProperty: 'description'"></muli-select-checkboxes>
+                                    </static-dynamic-setting>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="{{form_label_class}} control-label">
+                                    Allow fractions?
+                                </label>
+                                <div class="{{form_control_class}}">
+                                    <static-dynamic-setting params="option: allowFractions{% if not editable %}, disable: true{% endif %}">
+                                        {% boolean_input 'static_value' %}
                                     </static-dynamic-setting>
                                 </div>
                             </div>
@@ -443,7 +443,7 @@
                                     Choices
                                 </label>
                                 <div class="{{form_control_class}}">
-                                    <static-dynamic-setting params="option: choices">
+                                    <static-dynamic-setting params="option: choices{% if not editable %}, disable: true{% endif %}">
                                         <choice-maker params="model: static_value"></choice-maker>
                                     </static-dynamic-setting>
                                 </div>
@@ -458,7 +458,7 @@
                                     Choices
                                 </label>
                                 <div class="{{form_control_class}}">
-                                    <static-dynamic-setting params="option: choices">
+                                    <static-dynamic-setting params="option: choices{% if not editable %}, disable: true{% endif %}">
                                         <choice-maker params="model: static_value"></choice-maker>
                                     </static-dynamic-setting>
                                 </div>
@@ -473,7 +473,7 @@
                                     Choices
                                 </label>
                                 <div class="{{form_control_class}}">
-                                    <static-dynamic-setting params="option: choices">
+                                    <static-dynamic-setting params="option: choices{% if not editable %}, disable: true{% endif %}">
                                         <choice-maker params="model: static_value"></choice-maker>
                                     </static-dynamic-setting>
                                 </div>
@@ -580,7 +580,7 @@
                                     <ul data-bind="foreach: $root.task_list.section_tasks[id]">
                                         <li data-bind="css: {'text-success': done, 'text-danger': !done()}">
                                             <span class="glyphicon" data-bind="css:{'glyphicon-ok':done, 'glyphicon-alert':!done()}"></span>
-                                            <span data-bind="text: text"></span> 
+                                            <span data-bind="html: text"></span> 
                                         </li>
                                     </ul>
                                 </li>

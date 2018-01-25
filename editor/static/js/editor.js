@@ -1468,6 +1468,7 @@ $(document).ready(function() {
             this.static = params.option.static;
             this.static_value = params.option.static_value;
             this.dynamic_value = params.option.dynamic_value;
+            this.disable = params.disable;
         },
         template: '\
             <div class="control">\
@@ -1477,7 +1478,7 @@ $(document).ready(function() {
                 </div>\
             <!-- /ko -->\
             <!-- ko if: !static() -->\
-                <textarea disabled data-bind="codemirror: dynamic_value, codemirrorMode: \'jme\'"></textarea>\
+                <textarea data-bind="disable: disable, codemirror: dynamic_value, codemirrorMode: \'jme\'"></textarea>\
                 <undefined-variable-warning params="expr: dynamic_value, vars: [\'settings\']"></undefined-variable-warning>\
             <!-- /ko -->\
             </div>\

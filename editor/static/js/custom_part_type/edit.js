@@ -4,7 +4,7 @@ $(document).ready(function() {
     var tryLoad = Editor.tryLoad;
     var tryLoadMatchingId = Editor.tryLoadMatchingId;
 
-    var marking_reserved_names = Editor.custom_part_type.marking_reserved_names = ['path','studentanswer','settings','marks','parttype','gaps','steps'];
+    var marking_reserved_names = Editor.custom_part_type.marking_reserved_names = ['path','studentanswer','settings','marks','parttype','gaps','steps','input_options'];
 
     function ChoiceMaker() {
         var cm = this;

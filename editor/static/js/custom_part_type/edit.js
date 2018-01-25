@@ -255,6 +255,7 @@ $(document).ready(function() {
     function MaybeStaticOption(static_value, dynamic_value, save_staticFn, load_staticFn) {
         this.static = ko.observable(true);
         this.static_value = ko.isObservable(static_value) || typeof(static_value)=='object' ? static_value : ko.observable(static_value);
+        this.isNumber = typeof(ko.unwrap(static_value))=='number';
         this.dynamic_value = ko.isObservable(dynamic_value) ? dynamic_value : ko.observable(dynamic_value);
         this.save_staticFn = save_staticFn;
         this.load_staticFn = load_staticFn;
@@ -280,6 +281,9 @@ $(document).ready(function() {
         toJSON: function() {
             var static = this.static();
             var value = static ? ko.unwrap(this.static_value) : this.dynamic_value();
+            if(static && this.isNumber) {
+                value = parseFloat(value);
+            }
             if(static && this.save_staticFn) {
                 value = this.save_staticFn(value);
             }

@@ -60,7 +60,7 @@
                     <listbox params="items: value{% if not editable %}, disabled: true{% endif %}"></listbox>
                 </div>
                 <div data-bind="if: input_type=='choose_several'">
-                    <multi-select-checkboxes params="options: data.choices, valueName: 'name', selectedOptions: value, labelProperty: 'label', helpProperty: 'hint'"></muli-select-checkboxes>
+                    <multi-select-checkboxes params="options: data.choices, valueName: 'value', selectedOptions: value, labelProperty: 'label', helpProperty: 'hint'"></muli-select-checkboxes>
                 </div>
 
                 <p class="help-block" data-bind="visible: hint, latex: hint"></p>

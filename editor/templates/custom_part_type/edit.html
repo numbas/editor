@@ -9,6 +9,11 @@
 
 {% block title %}{{object.name}} - Custom part type - {{block.super}}{% endblock %}
 
+{% block stylesheets %}
+    {{block.super}}
+    <link href="{% sstatic 'css/custom_part_type/edit.css' %}" type="text/css" rel="stylesheet" />
+{% endblock %}
+
 {% block javascripts %}
     {{block.super}}
 
@@ -36,6 +41,8 @@
     <ul class="list-unstyled" data-bind="foreach: model.choices">
         <li>
             <div class="form-group">
+                <button type="button" class="btn btn-link" data-bind="click: $component.model.delete_choice" title="Delete this choice"><span class="text-danger glyphicon glyphicon-remove"></span></button>
+                <!-- ko if: $parent.useValues -->
                 <label class="col-xs-12 col-sm-6" data-bind="css: {'has-error': !value()}">
                     Value
                     {% text_input 'value' monospace=True %}
@@ -44,6 +51,12 @@
                     Label
                     {% text_input 'label' %}
                 </label>
+                <!-- /ko -->
+                <!-- ko ifnot: $parent.useValues -->
+                <label class="" data-bind="css: {'has-error': !label()}">
+                    {% text_input 'label' %}
+                </label>
+                <!-- /ko -->
             </div>
         </li>
     </ul>

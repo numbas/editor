@@ -6,8 +6,9 @@ $(document).ready(function() {
 
     var marking_reserved_names = Editor.custom_part_type.marking_reserved_names = ['path','studentanswer','settings','marks','parttype','gaps','steps','input_options'];
 
-    function ChoiceMaker() {
+    function ChoiceMaker(useValues) {
         var cm = this;
+        this.useValues = useValues;
         this.choices = ko.observableArray([]);
         this.valid_choices = ko.computed(function() {
             return this.choices().filter(function(c) { return c.valid(); });
@@ -15,10 +16,13 @@ $(document).ready(function() {
         this.add_choice = function() {
             var choice = {value: ko.observable(''), label: ko.observable('')};
             choice.valid = ko.computed(function() {
-                return choice.value()!='' && choice.label();
-            });
+                return !(choice.value()=='' && this.useValues) && choice.label()!='';
+            },this);
             cm.choices.push(choice);
             return choice;
+        }
+        this.delete_choice = function(choice) {
+            cm.choices.remove(choice);
         }
     }
     ChoiceMaker.prototype = {
@@ -26,12 +30,21 @@ $(document).ready(function() {
             var m = this;
             data.map(function(c) {
                 var choice = m.add_choice();
-                tryLoad(c,['value','label'],choice);
+                if(m.useValues) {
+                    tryLoad(c,['value','label'],choice);
+                } else {
+                    choice.label(c);
+                }
             });
         },
         toJSON: function(out) {
+            var cm = this;
             out.choices = this.choices().map(function(c) {
-                return {value: c.value(), label: c.label()}
+                if(cm.useValues) {
+                    return {value: c.value(), label: c.label()}
+                } else {
+                    return c.label();
+                }
             });
         },
         valid: function() {
@@ -43,6 +56,7 @@ $(document).ready(function() {
         viewModel: function(params) {
             var vm = this;
             this.model = params.model;
+            this.useValues = this.model.useValues || false;
             this.disable = params.disable;
             this.valid = function() {
                 return vm.model.valid();
@@ -602,7 +616,7 @@ $(document).ready(function() {
             model: function() {
                 var model = {
                     default_value: ko.observable(''),
-                    choice_maker: new ChoiceMaker()
+                    choice_maker: new ChoiceMaker(true)
                 };
                 return model;
             },

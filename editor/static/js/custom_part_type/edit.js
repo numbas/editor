@@ -929,8 +929,12 @@ $(document).ready(function() {
             ;
         },this);
 
+        this.dependencyError = ko.computed(function() {
+            return !this.dependencies().every(function(d){ return d.exists; });
+        }, this);
+
         this.valid = ko.computed(function() {
-            return !this.nameError() && this.definition_tree();
+            return !this.nameError() && this.definition_tree() && !this.dependencyError();
         }, this);
 
         this.used_by = ko.computed(function() {

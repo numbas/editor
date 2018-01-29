@@ -2170,7 +2170,7 @@ $(document).ready(function() {
         }
 
         // "Student's answer" in this test
-        this.answer = ko.observable(null);
+        this.answer = ko.observable({valid: false, value: null});
 
         // set answer for gapfill parts
         ko.computed(function() {
@@ -2246,7 +2246,7 @@ $(document).ready(function() {
                 if(!part) {
                     throw(new Error("Part not found"));
                 }
-                var answer = mt.answer();
+                var answer = mt.answer().value;
                 if(answer===null) {
                     throw(new Numbas.Error("Student's answer not set. There may be an error in the input widget."));
                 }

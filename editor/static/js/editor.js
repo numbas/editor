@@ -1434,10 +1434,16 @@ $(document).ready(function() {
         viewModel: function(params) {
             this.expr = params.expr;
             this.vars = params.vars || [];
+            this.show_syntax_errors = params.show_syntax_errors===undefined ? true : params.show_syntax_errors;
             this.error = ko.computed(function() {
                 var expr = ko.unwrap(this.expr);
                 try {
-                    var vars = Numbas.jme.findvars(Numbas.jme.compile(expr));
+                    var tree = Numbas.jme.compile(expr);
+                } catch(e) {
+                    return this.show_syntax_errors ? e.message : '';
+                }
+                try {
+                    var vars = Numbas.jme.findvars(tree);
                 } catch(e) {
                     return '';
                 }

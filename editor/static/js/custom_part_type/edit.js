@@ -70,10 +70,16 @@ $(document).ready(function() {
             'name': 'string', 
             'niceName': 'String',
             model: function() {
-                return {};
+                return {
+                    allowEmpty: new MaybeStaticOption(false, 'false')
+                };
             },
-            load: function(data) {},
-            toJSON: function() {}
+            load: function(data) {
+                this.allowEmpty.load(data.allowEmpty);
+            },
+            toJSON: function(out) {
+                out.allowEmpty = this.allowEmpty.toJSON();
+            }
         },
         {
             'name': 'number', 

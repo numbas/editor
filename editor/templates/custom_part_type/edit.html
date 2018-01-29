@@ -344,6 +344,21 @@
                             </div>
                         </div>
 
+                        <div data-bind="if: input_widget().name=='string'">
+                        <!-- ko with: input_widget().model -->
+                            <div class="form-group">
+                                <label class="{{form_label_class}} control-label">
+                                    Allow student to submit an empty string?
+                                </label>
+                                <div class="{{form_control_class}}">
+                                    <static-dynamic-setting params="option: allowEmpty, type_hint: 'boolean'{% if not editable %}, disable: true{% endif %}">
+                                        {% boolean_input 'static_value' %}
+                                    </static-dynamic-setting>
+                                </div>
+                            </div>
+                        <!-- /ko -->
+                        </div>
+
                         <div data-bind="if: input_widget().name=='number'">
                         <!-- ko with: input_widget().model -->
                             <div class="form-group">

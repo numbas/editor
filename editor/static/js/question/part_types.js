@@ -871,9 +871,9 @@ function CustomPartType(data) {
     this.tabs = [];
     this.can_be_gap = data.can_be_gap;
     this.can_be_step = data.can_be_step;
+    this.settings_def = data.settings;
     this.marking_script = data.marking_script;
     this.source = data.source;
-    this.make_settings(data.settings);
     Numbas.partConstructors[this.name] = Numbas.parts.CustomPart;
     Numbas.custom_part_types[this.name] = data;
 
@@ -883,9 +883,9 @@ function CustomPartType(data) {
 CustomPartType.prototype = {
     is_custom_part_type: true,
 
-    make_settings: function(settings_def) {
+    make_settings: function() {
         var pt = this;
-        this.settings = settings_def.map(function(d) {
+        return this.settings_def.map(function(d) {
             var value;
             switch(d.input_type) {
             case 'choose_several':
@@ -908,7 +908,7 @@ CustomPartType.prototype = {
     },
     model: function() {
         var pt = this;
-        var model = {settings: this.settings};
+        var model = {settings: this.make_settings()};
         return model;
     },
     toJSON: function(data) {

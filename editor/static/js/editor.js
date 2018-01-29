@@ -1469,6 +1469,7 @@ $(document).ready(function() {
             this.static_value = params.option.static_value;
             this.dynamic_value = params.option.dynamic_value;
             this.disable = params.disable;
+            this.type_hint = params.type_hint;
         },
         template: '\
             <div class="control">\
@@ -1480,6 +1481,7 @@ $(document).ready(function() {
             <!-- ko if: !static() -->\
                 <textarea data-bind="disable: disable, codemirror: dynamic_value, codemirrorMode: \'jme\'"></textarea>\
                 <undefined-variable-warning params="expr: dynamic_value, vars: [\'settings\']"></undefined-variable-warning>\
+                <p class="help-block" data-bind="if: type_hint">This should evaluate to a <code data-bind="text: type_hint"></code>.</p>\
             <!-- /ko -->\
             </div>\
             <label class="static-switch"><input type="checkbox" data-bind="checked: static"> Static?</label>\

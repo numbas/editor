@@ -1,3 +1,9 @@
+choice-maker .form-group {
+    display: flex;
+}
+choice-maker .form-group label {
+    flex-grow: 1;
+}
 .marking-notes .list-group-item.danger {
     background: #ebcccc;
     color: #222;

@@ -2,12 +2,12 @@ from operator import itemgetter
 
 from django.conf import settings
 from django.db import transaction
-from django.db.models.signals import post_save
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models import Q
+from django.db.models import signals, Q
 from django.db.models.functions import Lower
 from django.contrib.contenttypes.models import ContentType
+from django.dispatch import receiver
 
 from django_thumbs.db.models import ImageWithThumbsField
 
@@ -87,7 +87,7 @@ class UserProfile(models.Model):
 
     def public_timeline(self):
         return self.user.timelineitems.order_by('-date')
-        
+
 class BasketQuestion(models.Model):
     class Meta:
         ordering = ['qn_order']
@@ -98,13 +98,17 @@ class BasketQuestion(models.Model):
     qn_order = models.PositiveIntegerField()
 
 
-
-def createUserProfile(sender, instance, created, **kwargs):
-    """Create a UserProfile object each time a User is created ; and link it.
+@receiver(signals.post_save, sender=User)
+def createUserProfile(instance, created, **kwargs):
     """
+        Create a UserProfile and personal workspace
+    """
+    workspace_name = "{}'s workspace".format(instance.first_name)
     if created:
         profile = UserProfile.objects.create(user=instance)
-        profile.personal_project = Project.objects.create(name="{}'s workspace".format(instance.first_name), owner=instance)
+        profile.personal_project = Project.objects.create(name=workspace_name, owner=instance)
         profile.save()
-
-post_save.connect(createUserProfile, sender=User)
+    else:
+        if instance.userprofile and instance.userprofile.personal_project:
+            instance.userprofile.personal_project.name = workspace_name
+            instance.userprofile.personal_project.save()

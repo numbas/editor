@@ -351,7 +351,7 @@ $(document).ready(function() {
         this.input_widgets = Editor.custom_part_type.input_widgets.map(function(data) {
             return new InputWidget(pt,data);
         });
-        this.input_widget = ko.observable(Editor.custom_part_type.input_widgets[0]);
+        this.input_widget = ko.observable(this.input_widgets[0]);
         this.input_options = {
             correctAnswer: ko.observable(''),
             hint: new MaybeStaticOption('','""')
@@ -478,6 +478,7 @@ $(document).ready(function() {
             if('input_options' in data) {
                 tryLoad(data.input_options,['correctAnswer'],this.input_options);
                 this.input_options.hint.load(data.input_options.hint);
+                var widget = this.input_widget();
                 this.input_widget().load(data.input_options);
             }
             if('settings' in data && data.settings.forEach) {

@@ -122,9 +122,6 @@
 .jme-value[data-jme-value-type="html"] {
     font-family: inherit;
 }
-.note.invalid {
-    color: red;
-}
 
 .marking-test .nav-tabs,
 .unit-test .nav-tabs {
@@ -143,6 +140,9 @@
 }
 .marking-test .note:not(.show-note) {
     color: #555;
+}
+.marking-test .note.invalid {
+    color: red;
 }
 .marking-test .note:not(.show-note) > td {
     padding-top: 0;

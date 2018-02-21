@@ -499,6 +499,7 @@
                                     <div class="alert alert-danger">
                                         <p>There's an error which means the marking algorithm can't run:</p>   
                                         <p data-bind="html: question_error"></p>
+										<pre data-bind="text: ko.unwrap(question_error).stack"></pre>
                                     </div>
                                     <!-- /ko -->
 
@@ -536,16 +537,16 @@
                                         </section>
 
                                         <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='notes'}">
-                                            <!-- ko if: ko.unwrap($data.runtime_part) && ko.unwrap($parent.type().widget) -->
+                                            <!-- ko if: ko.unwrap($data.runtime_part)!==undefined && ko.unwrap($parent.type().widget) -->
                                             <form class="form-horizontal" data-bind="submit: Editor.noop">
                                                 <div class="form-group">
                                                     <label class="label-block">
                                                         <div class="col-sm-12 col-md-3">
                                                             Student's answer
                                                         </div>
-                                                        <div class="col-sm-12 col-md-9">
-                                                            <div data-bind="if: runtime_part().input_widget()">
-                                                                <div data-bind="component: {name: 'answer-widget', params: {answer: answer, widget: runtime_part().input_widget(), widget_options: runtime_part().input_options, part: runtime_part()}}"></div>
+                                                        <div class="col-sm-12 col-md-9" data-bind="with: runtime_part">
+                                                            <div data-bind="if: input_widget()">
+                                                                <div data-bind="component: {name: 'answer-widget', params: {answer: $parent.answer, widget: input_widget(), widget_options: input_options(), part: $data}}"></div>
                                                             </div>
                                                         </div>
                                                     </label>
@@ -556,6 +557,11 @@
                                             <div data-bind="if: last_run_error">
                                                 <div class="alert alert-danger">
                                                     <p data-bind="html: last_run_error"></p>
+													<!-- ko if: last_run().warnings -->
+													<ul data-bind="foreach: last_run().warnings">
+														<li data-bind="html: $data"></li>
+													</ul>
+													<!-- /ko -->
                                                 </div>
                                             </div>
                                             <div data-bind="visible: last_run() && sortedNotes().length>0">

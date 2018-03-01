@@ -1,6 +1,5 @@
-// Compiled using runtime/scripts/numbas.js, runtime/scripts/jme.js, runtime/scripts/jme-builtins.js, runtime/scripts/jme-display.js, runtime/scripts/jme-rules.js, runtime/scripts/jme-variables.js, runtime/scripts/localisation.js, runtime/scripts/part.js, runtime/scripts/question.js, runtime/scripts/schedule.js, runtime/scripts/marking.js, runtime/scripts/math.js, runtime/scripts/util.js, runtime/scripts/i18next/i18next.js, runtime/scripts/json.js, runtime/scripts/parts\custom_part_type.js, runtime/scripts/parts\extension.js, runtime/scripts/parts\gapfill.js, runtime/scripts/parts\information.js, runtime/scripts/parts\jme.js, runtime/scripts/parts\matrixentry.js, runtime/scripts/parts\multipleresponse.js, runtime/scripts/parts\numberentry.js, runtime/scripts/parts\patternmatch.js, themes/default/files/scripts/answer-widgets.js
+// Compiled using  runtime/scripts/numbas.js  runtime/scripts/jme.js  runtime/scripts/jme-builtins.js  runtime/scripts/jme-display.js  runtime/scripts/jme-rules.js  runtime/scripts/jme-variables.js  runtime/scripts/localisation.js  runtime/scripts/part.js  runtime/scripts/question.js  runtime/scripts/schedule.js  runtime/scripts/marking.js  runtime/scripts/math.js  runtime/scripts/util.js  runtime/scripts/i18next/i18next.js  runtime/scripts/json.js  themes/default/files/scripts/answer-widgets.js ../dev/runtime/scripts/parts/numberentry.js ../dev/runtime/scripts/parts/information.js ../dev/runtime/scripts/parts/custom_part_type.js ../dev/runtime/scripts/parts/gapfill.js ../dev/runtime/scripts/parts/patternmatch.js ../dev/runtime/scripts/parts/multipleresponse.js ../dev/runtime/scripts/parts/jme.js ../dev/runtime/scripts/parts/extension.js ../dev/runtime/scripts/parts/matrixentry.js
 // From the Numbas compiler directory
-
 /*
 Copyright 2011-14 Newcastle University
 
@@ -7453,17 +7452,18 @@ var partConstructors = Numbas.partConstructors = {};
  * @param {partpath} [path]
  * @param {Numbas.Question} [question]
  * @param {Numbas.parts.Part} [parentPart]
+ * @param {Numbas.storage.BlankStorage} [store] - the storage engine to use
  * @returns {Numbas.parts.Part}
  * @throws {Numbas.Error} "part.missing type attribute" if the top node in `xml` doesn't have a "type" attribute.
  */
-var createPartFromXML = Numbas.createPartFromXML = function(xml, path, question, parentPart) {
+var createPartFromXML = Numbas.createPartFromXML = function(xml, path, question, parentPart, store) {
     var tryGetAttribute = Numbas.xml.tryGetAttribute;
 
 	var type = tryGetAttribute(null,xml,'.','type',[]);
 	if(type==null) {
 		throw(new Numbas.Error('part.missing type attribute',{part:util.nicePartName(path)}));
 	}
-    var part = createPart(type, path, question, parentPart);
+    var part = createPart(type, path, question, parentPart, store);
     part.loadFromXML(xml);
     part.finaliseLoad();
     return part;
@@ -7475,14 +7475,15 @@ var createPartFromXML = Numbas.createPartFromXML = function(xml, path, question,
  * @param {partpath} [path]
  * @param {Numbas.Question} [question]
  * @param {Numbas.parts.Part} [parentPart]
+ * @param {Numbas.storage.BlankStorage} [store] - the storage engine to use
  * @returns {Numbas.parts.Part}
  * @throws {Numbas.Error} "part.missing type attribute" if `data` doesn't have a "type" attribute.
  */
-var createPartFromJSON = Numbas.createPartFromJSON = function(data, path, question, parentPart) {
+var createPartFromJSON = Numbas.createPartFromJSON = function(data, path, question, parentPart, store) {
     if(!data.type) {
 		throw(new Numbas.Error('part.missing type attribute',{part:util.nicePartName(path)}));
 	}
-    var part = createPart(data.type, path, question, parentPart);
+    var part = createPart(data.type, path, question, parentPart, store);
     part.loadFromJSON(data);
     part.finaliseLoad();
     return part;
@@ -7494,16 +7495,17 @@ var createPartFromJSON = Numbas.createPartFromJSON = function(data, path, questi
  * @param {partpath} path
  * @param {Numbas.Question} question
  * @param {Numbas.parts.Part} parentPart
+ * @param {Numbas.storage.BlankStorage} [store] - the storage engine to use
  * @returns {Numbas.parts.Part}
  * @throws {Numbas.Error} "part.unknown type" if the given part type is not in {@link Numbas.partConstructors}
  * @memberof Numbas
  */
-var createPart = Numbas.createPart = function(type, path, question, parentPart)
+var createPart = Numbas.createPart = function(type, path, question, parentPart, store)
 {
 	if(partConstructors[type])
 	{
 		var cons = partConstructors[type];
-		var part = new cons(path, question, parentPart);
+		var part = new cons(path, question, parentPart, store);
         part.type = type;
 		if(part.customConstructor) {
 			part.customConstructor.apply(part);
@@ -7524,9 +7526,11 @@ var createPart = Numbas.createPart = function(type, path, question, parentPart)
  * @param {Numbas.parts.Part} parentPart
  * @see Numbas.createPart
  */
-var Part = Numbas.parts.Part = function( path, question, parentPart)
+var Part = Numbas.parts.Part = function( path, question, parentPart, store)
 {
     var p = this;
+
+    this.store = store;
 
 	//remember parent question object
 	this.question = question;
@@ -7586,7 +7590,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         var stepNodes = this.xml.selectNodes('steps/part');
         for(var i=0; i<stepNodes.length; i++)
         {
-            var step = Numbas.createPartFromXML( stepNodes[i], this.path+'s'+i, this.question, this);
+            var step = Numbas.createPartFromXML( stepNodes[i], this.path+'s'+i, this.question, this, this.store);
             this.addStep(step,i);
         }
 
@@ -7645,7 +7649,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
 
         if('steps' in data) {
             data.steps.map(function(sd,i) {
-                var s = createPartFromJSON(sd, this.path+'s'+i, this.question, this);
+                var s = createPartFromJSON(sd, this.path+'s'+i, this.question, this, this.store);
                 p.addStep(sd,i);
             });
         }
@@ -7675,6 +7679,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
     },
 
     /** Load saved data about this part from storage
+     *  The part is not resubmitted - you must do this afterwards, once any steps or gaps have been resumed.
      */
     resume: function() {
         var part = this;
@@ -7686,11 +7691,11 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
 		this.stepsShown = pobj.stepsShown;
 		this.stepsOpen = pobj.stepsOpen;
 
-		if(this.answered) {
-			this.question && this.question.onHTMLAttached(function() {part.submit()});
-		}
-
         this.steps.forEach(function(s){ s.resume() });
+
+        this.display && this.question.signals.on(['ready','HTMLAttached'], function() {
+            part.display.restoreAnswer();
+        })
     },
 
     /** Add a step to this part
@@ -7891,6 +7896,13 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
     input_widget: function() {
         return null;
     },
+
+	/** Options for this part's input widget
+	 * @returns {Object}
+	 */
+	input_options: function() {
+		return {};
+	},
 
 	applyScripts: function() {
         var part = this;
@@ -8594,11 +8606,12 @@ var math = Numbas.math;
  * @param {Numbas.Exam} [exam] - the exam this question belongs to
  * @param {Numbas.QuestionGroup} [group] - the group this question belongs to
  * @param {Numbas.jme.Scope} [scope] - the global JME scope
+ * @param {Numbas.storage.BlankStorage} [store] - the storage engine to use
  * @returns Numbas.Question
  */
-var createQuestionFromXML = Numbas.createQuestionFromXML = function(xml, number, exam, group, gscope) {
+var createQuestionFromXML = Numbas.createQuestionFromXML = function(xml, number, exam, group, gscope, store) {
     try {
-        var q = new Question(number, exam, group, gscope);
+        var q = new Question(number, exam, group, gscope, store);
         q.loadFromXML(xml);
         q.finaliseLoad();
     } catch(e) {
@@ -8615,11 +8628,12 @@ var createQuestionFromXML = Numbas.createQuestionFromXML = function(xml, number,
  * @param {Numbas.Exam} [exam] - the exam this question belongs to
  * @param {Numbas.QuestionGroup} [group] - the group this question belongs to
  * @param {Numbas.jme.Scope} [scope] - the global JME scope
+ * @param {Numbas.storage.BlankStorage} [store] - the storage engine to use
  * @returns Numbas.Question
  */
-var createQuestionFromJSON = Numbas.createQuestionFromJSON = function(data, number, exam, group, gscope) {
+var createQuestionFromJSON = Numbas.createQuestionFromJSON = function(data, number, exam, group, gscope, store) {
     try {
-        var q = new Question(number, exam, group, gscope);
+        var q = new Question(number, exam, group, gscope, store);
         q.loadFromJSON(data);
         q.finaliseLoad();
     } catch(e) {
@@ -8638,11 +8652,12 @@ var createQuestionFromJSON = Numbas.createQuestionFromJSON = function(data, numb
  * @param {Numbas.Exam} [exam] - parent exam
  * @param {Numbas.QuestionGroup} [group] - group this question belongs to
  * @param {Numbas.jme.Scope} [gscope=Numbas.jme.builtinScope] - global JME scope
+ * @param {Numbas.storage.BlankStorage} [store] - the storage engine to use
  */
-var Question = Numbas.Question = function( number, exam, group, gscope)
+var Question = Numbas.Question = function( number, exam, group, gscope, store)
 {
-	var question = this;
-	var q = question;
+	var q = this;
+    q.store = store;
     q.signals = new Numbas.schedule.SignalBox(function(e) {
         e.message = R('question.error',{'number':q.number+1,message:e.message});
         throw(e);
@@ -8673,6 +8688,12 @@ var Question = Numbas.Question = function( number, exam, group, gscope)
 }
 Question.prototype = /** @lends Numbas.Question.prototype */ 
 {
+
+    /** Storage engine
+     * @type {Numbas.storage.BlankStorage}
+     */
+    store: undefined,
+
     /** Load the question's settings from an XML <question> node
      * @param {Element} xml
      */
@@ -8742,7 +8763,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             //load parts
             var partNodes = q.xml.selectNodes('parts/part');
             for(var j = 0; j<partNodes.length; j++) {
-                var part = Numbas.createPartFromXML(partNodes[j], 'p'+j,q,null);
+                var part = Numbas.createPartFromXML(partNodes[j], 'p'+j,q,null, q.store);
                 q.addPart(part,j);
             }
             q.signals.trigger('partsGenerated');
@@ -8816,7 +8837,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             var parts = tryGet(data,'parts');
             if(parts) {
                 parts.forEach(function(pd,i) {
-                    var p = Numbas.createPartFromJSON(pd, 'p'+i, q);
+                    var p = Numbas.createPartFromJSON(pd, 'p'+i, q, q.store);
                     q.addPart(p,i);
                 });
                 q.signals.trigger('partsGenerated');
@@ -8918,15 +8939,17 @@ Question.prototype = /** @lends Numbas.Question.prototype */
     /** Load saved data about this question from storage
      */
     resume: function() {
+        if(!this.store) {
+            return;
+        }
         var q = this;
 		// check the suspend data was for this question - if the test is updated and the question set changes, this won't be the case!
-		var qobj = Numbas.store.loadQuestion(q);
+		var qobj = this.store.loadQuestion(q);
 
 		if(qobj.name && qobj.name!=q.name) {
 			throw(new Numbas.Error('question.loaded name mismatch'));
 		}
 
-        var qobj = Numbas.store.loadQuestion(q);
         for(var x in qobj.variables) {
             q.scope.variables[x] = qobj.variables[x];
         }
@@ -8938,6 +8961,20 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                     part.resume();
                 }
             });
+
+            q.signals.on('ready',function() {
+                q.parts.forEach(function(part) {
+                    part.steps.forEach(function(step) {
+                        if(step.answered) {
+                            step.submit();
+                        }
+                    });
+                    if(part.answered) {
+                        part.submit();
+                    }
+                });
+            });
+
             q.signals.trigger('partsResumed');
         });
 
@@ -8954,10 +8991,6 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             } else if(q.adviceDisplayed) {
                 q.getAdvice(true);
             }
-
-            q.parts.forEach(function(p) {
-                p.display && p.display.restoreAnswer();
-            });
 
             q.updateScore();
         });
@@ -9079,8 +9112,8 @@ Question.prototype = /** @lends Numbas.Question.prototype */
 	{
 		this.adviceDisplayed = true;
     	this.display && this.display.showAdvice(true);
-		if(Numbas.store && !dontStore) {
-			Numbas.store.adviceDisplayed(this);
+		if(this.store && !dontStore) {
+			this.store.adviceDisplayed(this);
         }
 	},
 
@@ -9107,8 +9140,8 @@ Question.prototype = /** @lends Numbas.Question.prototype */
 	    	this.display.showScore();
         }
 
-		if(Numbas.store && !dontStore) {
-			Numbas.store.answerRevealed(this);
+		if(this.store && !dontStore) {
+			this.store.answerRevealed(this);
 		}
 
 		this.exam && this.exam.updateScore();
@@ -9202,7 +9235,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
 		if(this.exam && this.exam.adviceType == 'threshold' && 100*this.score/this.marks < this.adviceThreshold ) {
 			this.getAdvice();
 		}
-		Numbas.store && Numbas.store.questionSubmitted(this);
+		this.store && this.store.questionSubmitted(this);
 	},
 
 	/** Recalculate the student's score, update the display, and notify storage. */
@@ -9218,7 +9251,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
 	    this.display && this.display.showScore();
 
 		//notify storage
-		Numbas.store && Numbas.store.saveQuestion(this);
+		this.store && this.store.saveQuestion(this);
 	},
 
 	/** Add a callback function to run when the question's HTML is attached to the page
@@ -10505,6 +10538,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 	niceNumber: function(n,options)
 	{
 		options = options || {};
+        if(n===undefined) {
+            throw(new Numbas.Error('math.niceNumber.undefined'));
+        }
 		if(n.complex)
 		{
 			var re = math.niceNumber(n.re,options);
@@ -12432,6 +12468,20 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 		return !util.eq(a,b);
 	},
 
+	objects_equal: function(a,b) {
+		if(typeof(a)!=typeof(b)) {
+			return false;
+		}
+		if(typeof(a)=='object') {
+			if(Array.isArray(a) && Array.isArray(b)) {
+				return util.arraysEqual(a,b);
+			} else {
+				return Object.keys(a).every(function(k){ return util.objects_equal(a[k],b[k]) }) && Object.keys(b).every(function(k){ return a.hasOwnProperty(k); });
+			}
+		}
+		return a==b;
+	},
+
 	/** Are two arrays equal? True if their elements are all equal
 	 * @param {Array} a
 	 * @param {Array} b
@@ -12450,7 +12500,7 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 					return false;
 				}
 			} else {
-				if(a!=b) {
+				if(!util.objects_equal(a[i],b[i])) {
 					return false;
 				}
 			}
@@ -14757,6 +14807,741 @@ var json = Numbas.json = {
 }
 });
 
+Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],function() {
+
+    var util = Numbas.util;
+
+    ko.components.register('answer-widget', {
+        viewModel: function(params) {
+            this.answerJSON = params.answer;
+            this.part = params.part;
+            this.disable = params.disable;
+            this.widget = params.widget;
+            this.widget_options = params.widget_options;
+            this.classes = {'answer-widget':true};
+            this.classes['answer-widget-'+this.widget] = true;
+        },
+        template: '\
+        <span data-bind="css: classes, component: {name: \'answer-widget-\'+widget, params: {answerJSON: answerJSON, part: part, disable: disable, options: widget_options}}"></span>\
+        '
+    });
+
+    ko.components.register('answer-widget-string', {
+        viewModel: function(params) {
+            this.answerJSON = params.answerJSON;
+            var init = ko.unwrap(this.answerJSON);
+            this.input = ko.observable(init.valid ? init.value || '' : '');
+            this.part = params.part;
+            this.disable = params.disable;
+            this.options = params.options;
+            this.allowEmpty = this.options.allowEmpty;
+
+            var lastValue = this.input();
+
+            this.subscriptions = [
+                this.answerJSON.subscribe(function(v) {
+                    if(v.value!=this.input()) {
+                        this.input(v.value);
+                    }
+                },this),
+                this.input.subscribe(function(value) {
+                    var valid = value!='' || this.allowEmpty;
+                    if(value != lastValue) {
+                        this.answerJSON({valid: valid, value: value});
+                    }
+                    lastValue = value;
+                },this)
+            ];
+
+            this.dispose = function() {
+                this.subscriptions.forEach(function(sub) { sub.dispose(); });
+            }
+        },
+        template: '\
+            <input type="text" data-bind="event: part.inputEvents, textInput: input, autosize: true, disable: ko.unwrap(disable) || ko.unwrap(part.revealed)">\
+        '
+    });
+
+    ko.components.register('answer-widget-number', {
+        viewModel: function(params) {
+            var vm = this;
+            this.answerJSON = params.answerJSON;
+            this.part = params.part;
+            this.options = params.options;
+            this.allowFractions = this.options.allowFractions || false;
+            this.allowedNotationStyles = this.options.allowedNotationStyles || ['plain','en','si-en'];
+            this.disable = params.disable;
+
+            var init = ko.unwrap(this.answerJSON);
+
+            function cleanNumber(n) {
+                if(n===undefined) {
+                    return '';
+                }
+                return Numbas.math.niceNumber(n,{style: vm.allowedNotationStyles[0]}) || '';
+            }
+
+            this.input = ko.observable(init.valid ? cleanNumber(init.value) : '');
+
+            var lastValue = init.value;
+            this.result = ko.computed(function() {
+                var input = this.input().trim();
+                if(input=='') {
+                    return {valid:false};
+                }
+                if(!util.isNumber(input,this.allowFractions,this.allowedNotationStyles)) {
+                    if(util.isNumber(input, true, this.allowedNotationStyles)) {
+                        return {valid: false, warnings: [R('answer.number.fractions not allowed')]};
+                    } else {
+                        return {valid:false, warnings: [R('answer.number.not a number')]};
+                    }
+                } else {
+                    var n = Numbas.util.parseNumber(input,this.allowFractions,this.allowedNotationStyles);
+                    return {valid:true, value: n};
+                }
+            },this);
+
+            this.subscriptions = [
+                this.answerJSON.subscribe(function(v) {
+                    if(v.value==this.result().value) {
+                        return;
+                    }
+                    var s = cleanNumber(v.value);
+                    if(s!=this.input() && v.valid) {
+                        this.input(s);
+                    }
+                },this)
+            ];
+
+            this.setAnswerJSON = ko.computed(function() {
+                this.answerJSON(this.result())
+            },this);
+
+            this.dispose = function() {
+                this.subscriptions.forEach(function(sub) { sub.dispose(); });
+                this.result.dispose();
+                this.setAnswerJSON.dispose();
+            }
+
+        },
+        template: '\
+            <input type="text" data-bind="event: part.inputEvents, textInput: input, autosize: true, disable: ko.unwrap(disable) || ko.unwrap(part.revealed)">\
+        '
+    });
+
+    ko.components.register('answer-widget-jme', {
+        viewModel: function(params) {
+            this.answerJSON = params.answerJSON;
+
+            var p = this.part = params.part;
+            this.options = params.options;
+            this.showPreview = this.options.showPreview || false;
+
+            this.disable = params.disable;
+
+            var init = ko.unwrap(this.answerJSON);
+
+            function cleanExpression(expr) {
+                return Numbas.jme.display.treeToJME(expr) || '';
+            }
+
+            this.input = ko.observable(init.valid ? cleanExpression(init.value) : '');
+
+            this.latex = ko.computed(function() {
+                var input = this.input();
+                if(input==='') {
+                    return '';
+                }
+
+                try {
+                    var tex = Numbas.jme.display.exprToLaTeX(input,'',p.question.scope);
+                    if(tex===undefined) {
+                        throw(new Numbas.Error('display.part.jme.error making maths'));
+                    }
+                }
+                catch(e) {
+                    return '';
+                }
+
+                return tex;
+            },this).extend({throttle:100});
+
+            this.result = ko.computed(function() {
+                var input = this.input().trim();
+
+                if(input=='') {
+                    return {valid:false};
+                }
+
+                try {
+                    var expr = Numbas.jme.compile(input);
+                    var scope = p.getScope();
+                    var ruleset = new Numbas.jme.rules.Ruleset([],{});
+                    expr = Numbas.jme.display.simplifyTree(expr, ruleset, scope);
+                    return {valid: true, value: expr}
+                } catch(e) {
+                    return {valid: false, warnings: [R('answer.jme.invalid expression',{message:e.message})]};
+                }
+                
+            },this);
+
+            this.subscriptions = [
+                this.answerJSON.subscribe(function(v) {
+                    if(v.value==this.result().value) {
+                        return;
+                    }
+                    var s = cleanExpression(v.value);
+                    if(s!=this.input() && v.valid) {
+                        this.input(s);
+                    }
+                },this)
+            ];
+
+            var lastValue = this.input();
+            this.setAnswerJSON = ko.computed(function() {
+                if(this.input()!=lastValue) {
+                    this.answerJSON(this.result());
+                    lastValue = this.input();
+                }
+            },this);
+
+            this.dispose = function() {
+                this.subscriptions.forEach(function(sub) { sub.dispose(); });
+                this.latex.dispose();
+                this.result.dispose();
+                this.setAnswerJSON.dispose();
+            }
+        },
+        template: '\
+            <input type="text" data-bind="event: part.inputEvents, textInput: input, autosize: true, disable: ko.unwrap(disable) || ko.unwrap(part.revealed)">\
+            <span class="jme-preview" data-bind="visible: showPreview && latex(), maths: \'\\\\displaystyle{{\'+latex()+\'}}\'"></span>\
+        '
+    });
+
+    ko.components.register('answer-widget-gapfill', {
+        viewModel: function(params) {
+            this.answerJSON = params.answerJSON;
+            var part = params.part;
+            this.gaps = ko.computed(function() {
+                return Knockout.unwrap(part.gaps).map(function(gap) {
+                    return {answerJSON: ko.observable(), part: gap};
+                });
+            },this)
+            this.setAnswerJSON = ko.computed(function() {
+                this.answerJSON(this.gaps().map(function(g){return g.answerJSON()}));
+            },this);
+
+            this.dispose = function() {
+                this.gaps.dispose();
+                this.setAnswerJSON.dispose();
+            }
+        },
+        template: '\
+            <table class="table">\
+                <tbody data-bind="foreach: gaps">\
+                    <tr>\
+                        <th><span data-bind="text: part.header"></span></th>\
+                        <td><div data-bind="component: {name: \'answer-widget\', params: {answer: answerJSON, widget: Knockout.unwrap(part.type).widget, part: part}}"></div></td>\
+                    </tr>\
+                </tbody>\
+            </table>\
+        '
+    });
+
+    ko.components.register('answer-widget-matrix', {
+        viewModel: function(params) {
+            var vm = this;
+            this.answerJSON = params.answerJSON;
+            this.options = params.options;
+            this.disable = params.disable;
+            this.allowFractions = this.options.allowFractions || false;
+            this.allowedNotationStyles = this.options.allowedNotationStyles || ['plain','en','si-en'];
+            this.allowResize = this.options.allowResize===undefined ? true : this.options.allowResize;
+            this.numRows = this.options.numRows || 1;
+            this.numColumns = this.options.numColumns || 1;
+            this.parseCells = this.options.parseCells===undefined ? true : this.options.parseCells;
+
+            var init = ko.unwrap(this.answerJSON);
+            var value = init.value;
+            if(value!==undefined) {
+                value = value.map(function(r){ return r.map(function(c){ return vm.parseCells ? Numbas.math.niceNumber(c,{style: vm.allowedNotationStyles[0]}) || '' : c }) });
+            }
+            if(!value) {
+                value = [];
+                for(var i=0;i<this.numRows;i++) {
+                    var row = [];
+                    for(var j=0;j<this.numColumns;j++) {
+                        row.push('');
+                    }
+                    value.push(row);
+                }
+            }
+            this.input = ko.observable(value);
+
+            this.result = ko.computed(function() {
+                var value = this.input().slice().map(function(r){return r.slice()});
+                var cells = Array.prototype.concat.apply([],value);
+                if(this.parseCells) {
+                    var valid = cells.every(function(cell){ return cell.trim() && util.isNumber(cell,vm.allowFractions,vm.allowedNotationStyles) });
+                    if(!valid) {
+                        var validFractions = cells.every(function(cell){ return util.isNumber(cell,true,vm.allowedNotationStyles) });
+                        if(validFractions) {
+                            return {valid: false, warnings: [R('answer.matrix.fractions not allowed')]};
+                        } else {
+                            return {valid:false, warnings: [R('answer.matrix.some cell not a number')]};
+                        }
+                    } else {
+                        var matrix = value.map(function(row){ return row.map(function(cell){ return Numbas.util.parseNumber(cell,this.allowFractions,this.allowedNotationStyles) }) });
+                        matrix.rows = value.length;
+                        matrix.columns = matrix.rows>0 ? value[0].length : 0;
+                        return {valid:true, value: matrix};
+                    }
+                } else {
+                    return {valid: true, value: value};
+                }
+            },this);
+
+            this.subscriptions = [
+                this.answerJSON.subscribe(function(v) {
+                    if(util.objects_equal(v.value,this.result().value)) {
+                        return;
+                    }
+                    if(v.valid) {
+                        this.input(v.value);
+                    }
+                },this)
+            ];
+
+            var lastValue = this.result();
+            this.setAnswerJSON = ko.computed(function() {
+                var result = this.result();
+                var valuesSame = (!result.valid && !lastValue.valid) || ((result.value!==undefined && lastValue.value!==undefined) && result.value.length == lastValue.value.length && result.value.every(function(row,i) { return row.length== lastValue.value[i].length && row.every(function(cell,j){ return cell == lastValue.value[i][j] || isNaN(cell) && isNaN(lastValue.value[i][j]); }) }));
+                if(!valuesSame || result.valid!=lastValue.valid) {
+                    this.answerJSON(result);
+                }
+                lastValue = result;
+            },this);
+
+            this.dispose = function() {
+                this.subscriptions.forEach(function(sub) { sub.dispose(); });
+                this.result.dispose();
+                this.setAnswerJSON.dispose();
+            }
+        },
+        template: '\
+            <matrix-input params="value: input, allowResize: true, disable: disable, allowResize: allowResize, rows: numRows, columns: numColumns"></matrix-input>\
+        '
+    });
+
+    ko.components.register('matrix-input',{
+        viewModel: function(params) {
+            var vm = this;
+            this.allowResize = params.allowResize ? params.allowResize : ko.observable(false);
+            if(typeof params.rows=='function') {
+                this.numRows = params.rows;
+            } else {
+                this.numRows = ko.observable(params.rows || 2);
+            }
+            if(typeof params.columns=='function') {
+                this.numColumns = params.columns;
+            } else {
+                this.numColumns = ko.observable(params.columns || 2);
+            }
+
+            this.value = ko.observableArray([]);
+
+            var v = params.value();
+
+            function make_result() {
+                var v = vm.value().map(function(row,i){
+                    return row().map(function(cell,j){return cell.cell()})
+                })
+                vm.result(v);
+            };
+
+            function make_cell(c) {
+                var cell = {cell: ko.observable(c)};
+                cell.cell.subscribe(make_result);
+                return cell;
+            }
+
+            function setMatrix(v) {
+                vm.numRows(v.length || 1);
+                vm.numColumns(v.length ? v[0].length : 1);
+                vm.value(v.map(function(r){return ko.observableArray(r.map(function(c){return make_cell(c)}))}));
+            }
+            setMatrix(ko.unwrap(params.value));
+
+            this.disable = params.disable || false;
+
+            this.keydown = function(obj,e) {
+                this.oldPos = e.target.selectionStart;
+                return true;
+            }
+
+
+            this.moveArrow = function(obj,e) {
+                var cell = $(e.target).parent('td');
+                var selectionStart = e.target.selectionStart;
+                switch(e.which) {
+                case 39:
+                    if(e.target.selectionStart == this.oldPos && e.target.selectionStart==e.target.selectionEnd && e.target.selectionEnd==e.target.value.length) {
+                        cell.next().find('input').focus();
+                    }
+                    break;
+                case 37:
+                    if(e.target.selectionStart == this.oldPos && e.target.selectionStart==e.target.selectionEnd && e.target.selectionEnd==0) {
+                        cell.prev().find('input').focus();
+                    }
+                    break;
+                case 38:
+                    var e = cell.parents('tr').prev().children().eq(cell.index()).find('input');
+                    if(e.length) {
+                        e.focus();
+                        e[0].setSelectionRange(this.oldPos,this.oldPos);
+                    }
+                    break;
+                case 40:
+                    var e = cell.parents('tr').next().children().eq(cell.index()).find('input');
+                    if(e.length) {
+                        e.focus();
+                        e[0].setSelectionRange(this.oldPos,this.oldPos);
+                    }
+                    break;
+                }
+                return false;
+            }
+            
+            this.result = ko.observableArray([]);
+
+            make_result();
+            
+            this.update = function() {
+                // update value when number of rows or columns changes
+                var numRows = parseInt(this.numRows());
+                var numColumns = parseInt(this.numColumns());
+                var value = this.value();
+                if(numRows==value.length && (numRows==0 || numColumns==value[0]().length)) {
+                    return;
+                }
+                value.splice(numRows,value.length-numRows);
+                for(var i=0;i<numRows;i++) {
+                    var row;
+                    if(value.length<=i) {
+                        row = [];
+                        value.push(ko.observableArray(row));
+                    } else {
+                        row = value[i]();
+                    }
+                    row.splice(numColumns,row.length-numColumns);
+                    
+                    for(var j=0;j<numColumns;j++) {
+                        var cell;
+                        if(row.length<=j) {
+                            row.push(make_cell(''));
+                        } else {
+                            cell = row[j];
+                        }
+                    }
+                    value[i](row);
+                }
+                this.value(value.slice());
+                make_result();
+            }
+
+            this.updateComputed = ko.computed(this.update,this);
+
+            this.subscriptions = [
+                params.value.subscribe(function(v) {
+                    if(v==this.result()) {
+                        return;
+                    }
+                    setMatrix(v);
+                },this)
+            ];
+
+            var firstGo = true;
+            //update value with model
+            this.setValue = ko.computed(function() {
+                var v = this.result();
+                if(firstGo) {
+                    firstGo = false;
+                    return;
+                }
+                params.value(v);
+            },this)
+
+            this.dispose = function() {
+                this.subscriptions.forEach(function(sub) { sub.dispose(); });
+                this.updateComputed.dispose();
+                this.setValue.dispose();
+            }
+        },
+        template: 
+         '<div class="matrix-input">'
+        +'    <!-- ko if: allowResize --><div class="matrix-size">'
+        +'        <label class="num-rows">Rows: <input type="number" min="1" data-bind="value: numRows, autosize: true, disable: disable"/></label>'
+        +'        <label class="num-columns">Columns: <input type="number" min="1" data-bind="value: numColumns, autosize: true, disable: disable"/></label>'
+        +'    </div><!-- /ko -->'
+        +'    <div class="matrix-wrapper">'
+        +'        <span class="left-bracket"></span>'
+        +'        <table class="matrix">'
+        +'            <tbody data-bind="foreach: value">'
+        +'                <tr data-bind="foreach: $data">'
+        +'                    <td class="cell"><input type="text" data-bind="textInput: cell, autosize: true, disable: $parents[1].disable, event: {keydown: $parents[1].keydown, keyup: $parents[1].moveArrow}"></td>'
+        +'                </tr>'
+        +'            </tbody>'
+        +'        </table>'
+        +'        <span class="right-bracket"></span>'
+        +'    </div>'
+        +'</div>'
+        }
+    )
+
+    ko.components.register('answer-widget-radios', {
+        viewModel: function(params) {
+            this.part = params.part;
+            this.options = params.options;
+            this.choices = ko.observableArray(this.options.choices);
+            this.answerAsArray = this.options.answerAsArray;
+            this.choice = ko.observable(null);
+            this.answerJSON = params.answerJSON;
+            var init = ko.unwrap(this.answerJSON);
+            if(init.valid) {
+                this.choice(init.value);
+            }
+
+            this.choiceArray = ko.pureComputed(function() {
+                var choice = this.choice();
+                if(choice===null || choice===undefined) {
+                    return null;
+                }
+                return this.choices().map(function(c,i){ return [i==choice]; })
+            },this);
+
+            this.subscriptions = [
+                this.answerJSON.subscribe(function(v) {
+                    if(!v.valid) {
+                        this.choice(null);
+                        return;
+                    }
+                    var choice = this.answerAsArray ? v.value.findIndex(function(c){ return c[0]; }) : v.value;
+                    if(choice!=this.choice()) {
+                        this.choice(choice);
+                    }
+                },this)
+            ];
+
+            this.setAnswerJSON = ko.computed(function() {
+                var value = this.answerAsArray ? this.choiceArray() : this.choice();
+                this.answerJSON({valid: value!==null, value: value});
+            },this);
+
+            this.dispose = function() {
+                this.subscriptions.forEach(function(sub) { sub.dispose(); });
+                this.setAnswerJSON.dispose();
+            }
+        },
+        template: '\
+            <form>\
+            <ul class="list-unstyled" data-bind="foreach: choices">\
+                <li><label><input type="radio" name="choice" data-bind="checkedValue: $index, checked: $parent.choice"> <span data-bind="html: $data"></span></label></li>\
+            </ul>\
+            </form>\
+        '
+    });
+
+    ko.components.register('answer-widget-dropdown', {
+        viewModel: function(params) {
+            this.part = params.part;
+            this.options = params.options;
+            this.choices = this.options.choices.map(function(c,i){return {label: c, index: i}});
+            this.choices.splice(0,0,{label: '', index: null});
+            this.answerAsArray = this.options.answerAsArray;
+            this.choice = ko.observable(null);
+            this.answerJSON = params.answerJSON;
+            var init = ko.unwrap(this.answerJSON);
+            if(init.valid) {
+                this.choice(this.choices[init.value+1]);
+            }
+
+            this.subscriptions = [
+                this.answerJSON.subscribe(function(v) {
+                    if(!v.valid) {
+                        this.choice(null);
+                        return;
+                    }
+                    var current = this.choice()
+                    var choice = this.answerAsArray ? v.value.findIndex(function(c){ return c[0]; }) : v.value;
+                    if(!current || choice!=current.index) {
+                        this.choice(this.choices[choice+1]);
+                    }
+                },this)
+            ];
+
+            this.setAnswerJSON = ko.computed(function() {
+                var choice = this.choice();
+                if(choice && choice.index!==null) {
+                    var value;
+                    if(this.answerAsArray) {
+                        value = this.choices.slice(1).map(function(c,i){ return [i==choice.index]; });
+                    } else {
+                        value = choice.index;
+                    }
+                    this.answerJSON({valid: true, value: value});
+                } else {
+                    if(this.answerJSON().valid) {
+                        this.answerJSON({valid: false});
+                    }
+                }
+            },this);
+
+            this.dispose = function() {
+                this.subscriptions.forEach(function(sub) { sub.dispose(); });
+                this.setAnswerJSON.dispose();
+            }
+        },
+        template: '\
+            <select data-bind="options: choices, optionsText: \'label\', value: choice"></select>\
+        '
+    });
+
+    ko.components.register('answer-widget-checkboxes', {
+        viewModel: function(params) {
+            var vm = this;
+            this.part = params.part;
+            this.options = params.options;
+            this.answerJSON = params.answerJSON;
+            var init = ko.unwrap(this.answerJSON);
+
+            this.choices = ko.computed(function() {
+                return ko.unwrap(vm.options.choices).map(function(choice,i) {
+                    return {
+                        content: choice,
+                        ticked: ko.observable(init.valid ? init.value[i] : false)
+                    }
+                });
+            });
+
+            this.answerAsArray = this.options.answerAsArray;
+
+            this.subscriptions = [
+                this.answerJSON.subscribe(function(v) {
+                    var current = this.choices().map(function(c){ return c.ticked(); });
+                    var value = v.value;
+                    if(this.answerAsArray) {
+                        value = value.map(function(row){ return row[0]; });
+                    }
+                    if(current.length==value.length && current.every(function(t,i){ return t==value[i]; })) {
+                        return;
+                    }
+                    this.choices().map(function(c,i) { c.ticked(v.value[i]); });
+                }, this)
+            ];
+
+            this.make_result = function() {
+                var v = this.choices().map(function(c){ return c.ticked() });
+                if(this.answerAsArray) {
+                    return v.map(function(c){ return [c]; });
+                }
+            }
+
+            var lastValue = this.make_result();
+            this.setAnswerJSON = ko.computed(function() {
+                var value = this.make_result();
+                var same = util.objects_equal(value,lastValue);
+                if(!same) {
+                    this.answerJSON({valid: true, value: value});
+                }
+                lastValue = value;
+            },this);
+
+            this.dispose = function() {
+                this.subscriptions.forEach(function(sub) { sub.dispose(); });
+                this.setAnswerJSON.dispose();
+            }
+        },
+        template: '\
+            <form>\
+            <ul class="list-unstyled" data-bind="foreach: choices">\
+                <li><label><input type="checkbox" name="choice" data-bind="checked: ticked"> <span data-bind="html: content"></span></label></li>\
+            </ul>\
+            </form>\
+        '
+    });
+
+    ko.components.register('answer-widget-m_n_x', {
+        viewModel: function(params) {
+            this.part = params.part;
+            this.answerJSON = params.answerJSON;
+
+            this.options = params.options;
+            this.choices = ko.observableArray(this.options.choices);
+            this.answers = ko.observableArray(this.options.answers);
+            this.ticks = ko.computed(function() {
+                var choices = this.choices();
+                var answers = this.answers();
+                var ticks = [];
+                for(var i=0;i<choices.length;i++) {
+                    var row = [];
+                    for(var j=0;j<answers.length;j++) {
+                        row.push({ticked: ko.observable(false)});
+                    }
+                    ticks.push(row);
+                }
+                return ticks;
+            },this);
+
+            this.setAnswerJSON = ko.computed(function() {
+                var ticks = this.ticks().map(function(r){return r.map(function(d){return d.ticked()})});
+
+                // because of the never-ending madness to do with the order of matrices in multiple choice parts,
+                // this matrix needs to be transposed
+                // It makes more sense for the array to go [choice][answer], because that's how they're displayed, but 
+                // changing that would mean breaking old questions.
+                var numAnswers = this.answers().length;
+                var numChoices = this.choices().length;
+                var oticks = [];
+                for(var i=0;i<numAnswers;i++) {
+                    var row = [];
+                    oticks.push(row);
+                    for(var j=0;j<numChoices;j++) {
+                        row.push(ticks[j][i]);
+                    }
+                }
+                this.answerJSON(oticks);
+            },this);
+
+            this.dispose = function() {
+                this.ticks.dispose();
+                this.setAnswerJSON.dispose();
+            }
+        },
+        template: '\
+            <form>\
+                <table>\
+                <thead>\
+                <tr>\
+                    <td></td>\
+                    <!-- ko foreach: answers -->\
+                    <th><span data-bind="html: $data"></span></th>\
+                    <!-- /ko -->\
+                </tr>\
+                <tbody data-bind="foreach: ticks">\
+                    <tr>\
+                        <th><span data-bind="html: $parent.choices()[$index()]"></span></th>\
+                        <!-- ko foreach: $data -->\
+                        <td><input type="checkbox" data-bind="checked: ticked"></td>\
+                        <!-- /ko -->\
+                    </tr>\
+                </tbody>\
+                </table>\
+            </form>\
+        '
+    });
+
+});
+
 /*
 Copyright 2011-15 Newcastle University
 
@@ -14773,109 +15558,67 @@ Copyright 2011-15 Newcastle University
    limitations under the License.
 */
 
-/** @file The {@link Numbas.parts.} object */
+/** @file The {@link Numbas.parts.NumberEntryPart} object */
 
-Numbas.queueScript('parts/custom_part_type',['base','jme','jme-variables','util','part'],function() {
+Numbas.queueScript('parts/numberentry',['base','jme','jme-variables','util','part','marking_scripts'],function() {
 
 var util = Numbas.util;
 var jme = Numbas.jme;
 var math = Numbas.math;
-var types = Numbas.jme.types;
 
 var Part = Numbas.parts.Part;
 
-/** Custom part - a part type defined in {@link Numbas.custom_part_types}
+/** Number entry part - student's answer must be within given range, and written to required precision.
  * @constructor
  * @memberof Numbas.parts
  * @augments Numbas.parts.Part
  */
-var CustomPart = Numbas.parts.CustomPart = function(path, question, parentPart, loading) {
-    this.raw_settings = {};
-    this.input_options = {};
+var NumberEntryPart = Numbas.parts.NumberEntryPart = function(xml, path, question, parentPart, loading)
+{
+	var settings = this.settings;
+	util.copyinto(NumberEntryPart.prototype.settings,settings);
 }
-CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
-    getDefinition: function() {
-        this.definition = Numbas.custom_part_types[this.type];
-        this.setMarkingScript(this.definition.marking_script);
-        return this.definition;
-    },
-
+NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
+{
     loadFromXML: function(xml) {
-        var p = this;
-        var raw_settings = this.raw_settings;
-        this.getDefinition();
+        var settings = this.settings;
         var tryGetAttribute = Numbas.xml.tryGetAttribute;
 
-        var settingNodes = xml.selectNodes('settings/setting');
-        settingNodes.forEach(function(settingNode) {
-            var name = settingNode.getAttribute('name');
-            var value = settingNode.getAttribute('value');
-            raw_settings[name] = JSON.parse(value);
-        });
+        tryGetAttribute(settings,xml,'answer',['minvalue','maxvalue'],['minvalueString','maxvalueString'],{string:true});
+        tryGetAttribute(settings,xml,'answer',['correctanswerfraction','correctanswerstyle','allowfractions'],['correctAnswerFraction','correctAnswerStyle','allowFractions']);
+        tryGetAttribute(settings,xml,'answer',['mustbereduced','mustbereducedpc'],['mustBeReduced','mustBeReducedPC']);
+
+        var answerNode = xml.selectSingleNode('answer');
+        var notationStyles = answerNode.getAttribute('notationstyles');
+        if(notationStyles) {
+            settings.notationStyles = notationStyles.split(',');
+        }
+        
+        tryGetAttribute(settings,xml,'answer/precision',['type','partialcredit','strict','showprecisionhint'],['precisionType','precisionPC','strictPrecision','showPrecisionHint']);
+        tryGetAttribute(settings,xml,'answer/precision','precision','precisionString',{'string':true});
+
+        var messageNode = xml.selectSingleNode('answer/precision/message');
+        if(messageNode) {
+            settings.precisionMessage = $.xsl.transform(Numbas.xml.templates.question,messageNode).string;
+        }
+
     },
 
     loadFromJSON: function(data) {
-        var definition = this.getDefinition();
+        var settings = this.settings;
         var tryLoad = Numbas.json.tryLoad;
 
-        var raw_settings = this.raw_settings;
-        definition.settings.forEach(function(sdef) {
-            tryLoad(data.settings,sdef.name,raw_settings);
-        });
-    },
-
-    marking_parameters: function(studentAnswer) {
-        var o = Part.prototype.marking_parameters.apply(this,[studentAnswer]);
-        o.input_options = jme.wrapValue(this.input_options);
-        return o;
+        tryLoad(data, ['minValue', 'maxValue'], settings, ['minvalueString', 'maxvalueString']);
+        tryLoad(data, ['correctAnswerFraction', 'correctAnswerStyle', 'allowFractions'], settings);
+        tryLoad(data, ['mustBeReduced', 'mustBeReducedPC'], settings);
+        tryLoad(data, ['notationStyles'], settings);
+        tryLoad(data, ['precisionPartialCredit', 'strictPrecision', 'showPrecisionHint', 'precision', 'precisionType', 'precisionMessage'], settings, ['precisionPC', 'strictPrecision', 'showPrecisionHint', 'precisionString', 'precisionType', 'precisionMessage']);
     },
 
     finaliseLoad: function() {
-        var p = this;
         var settings = this.settings;
-        var raw_settings = this.raw_settings;
-        var scope = this.getScope();
-
-        this.definition.settings.forEach(function(s) {
-            var name = s.name;
-            var value = raw_settings[name];
-            if(!p.setting_evaluators[s.input_type]) {
-                p.error('part.custom.unrecognised input type',{input_type:s.input_type});
-            }
-            try {
-                settings[name] = p.setting_evaluators[s.input_type].call(p, s, value);
-            } catch(e) {
-                throw(new Numbas.Error('part.custom.error evaluating setting',{setting: name, error: e.message}));
-            }
-        });
-
-        var settings_scope = new jme.Scope([scope,{variables:{settings:new jme.types.TDict(settings)}}]);
-        var raw_input_options = this.definition.input_options;
-
-        ['correctAnswer','hint'].forEach(function(option) {
-            if(raw_input_options[option]===undefined) {
-                p.error('part.custom.input option missing',{option:option});
-            }
-        })
-
-        function evaluate_input_option(option) {
-            if(typeof(option)=='string') {
-                return jme.unwrapValue(settings_scope.evaluate(option));
-            } else {
-                if(option.static) {
-                    return option.value;
-                } else {
-                    return jme.unwrapValue(settings_scope.evaluate(option.value));
-                }
-            }
-        }
-
-        for(var option in raw_input_options) {
-            try {
-                p.input_options[option] = evaluate_input_option(raw_input_options[option]);
-            } catch(e) {
-                p.error('part.custom.error evaluating input option',{option:option,error:e.message});
-            }
+        if(settings.precisionType!='none') {
+            settings.allowFractions = false;
         }
 
         try {
@@ -14884,198 +15627,179 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
             this.error(e.message);
         }
 
+        var displayAnswer = (settings.minvalue + settings.maxvalue)/2;
+        if(settings.correctAnswerFraction) {
+            var diff = Math.abs(settings.maxvalue-settings.minvalue)/2;
+            var accuracy = Math.max(15,Math.ceil(-Math.log(diff)));
+            settings.displayAnswer = jme.display.jmeRationalNumber(displayAnswer,{accuracy:accuracy});
+        } else {
+            settings.displayAnswer = math.niceNumber(displayAnswer,{precisionType: settings.precisionType,precision:settings.precision, style: settings.correctAnswerStyle});
+        }
+
+        this.stagedAnswer = '';
+
         if(Numbas.display) {
-            this.display = new Numbas.display.CustomPartDisplay(this);
+            this.display = new Numbas.display.NumberEntryPartDisplay(this);
         }
     },
 
-    getCorrectAnswer: function(scope) {
-        var settings = this.settings;
-        this.correctAnswer = scope.evaluate(this.definition.input_options.correctAnswer, {settings: this.settings});
-    },
-
-    setStudentAnswer: function() {
-        this.studentAnswer = this.stagedAnswer;
-    },
-
-    input_widget: function() {
-        return this.definition.input_widget;
-    },
-
-    rawStudentAnswerAsJME: function() {
-        return this.student_answer_jme_types[this.input_widget()](this.studentAnswer, this.input_options);
-    },
-
-    student_answer_jme_types: {
-        'string': function(answer) {
-            return new types.TString(answer);
-        },
-        'number': function(answer) {
-            return new types.TNum(answer);
-        },
-        'jme': function(answer) {
-            return new types.TExpression(answer);
-        },
-        'matrix': function(answer,options) {
-            if(options.parseCells) {
-                return new types.TMatrix(answer);
-            } else {
-                return jme.wrapValue(answer);
-            }
-        },
-        'radios': function(answer) {
-            return new types.TNum(answer);
-        },
-        'checkboxes': function(answer) {
-            return new types.TList(answer.map(function(ticked){ return new types.TBool(ticked) }));
-        },
-        'dropdown': function(answer) {
-            return new types.TNum(answer);
-        }
-    },
-
-    setting_evaluators: {
-        'string': function(def, value) {
-            var scope = this.getScope();
-            if(def.subvars) {
-                value = jme.subvars(value, scope, true);
-            }
-            return new jme.types.TString(value);
-        },
-        'mathematical_expression': function(def, value) {
-            var scope = this.getScope();
-            if(def.subvars) {
-                value = jme.subvars(value, scope);
-            }
-            return new jme.types.TExpression(value);
-        },
-        'checkbox': function(def, value) {
-            return new jme.types.TBool(value);
-        },
-        'dropdown': function(def, value) {
-            return new jme.types.TString(value);
-        },
-        'code': function(def, value) {
-            var scope = this.getScope();
-            if(def.evaluate) {
-                return scope.evaluate(value);
-            } else {
-                return new jme.types.TString(value);
-            }
-        },
-        'percent': function(def, value) {
-            return new jme.types.TNum(value/100);
-        },
-        'html': function(def, value) {
-            var scope = this.getScope();
-            if(def.subvars) {
-                value = jme.contentsubvars(value, scope);
-            }
-            return new jme.types.TString(value);
-        },
-        'list_of_strings': function(def, value) {
-            var scope = this.getScope();
-            return new jme.types.TList(value.map(function(s){ 
-                if(def.subvars) {
-                    s = jme.subvars(s, scope);
-                }
-                return new jme.types.TString(s) 
-            }));
-        },
-        'choose_several': function(def, value) {
-            return new jme.wrapValue(value);
-        }
-    }
-};
-['finaliseLoad','loadFromXML','loadFromJSON'].forEach(function(method) {
-    CustomPart.prototype[method] = util.extend(Part.prototype[method], CustomPart.prototype[method]);
-});
-
-CustomPart = Numbas.parts.CustomPart = util.extend(Part,CustomPart);
-});
-
-/*
-Copyright 2011-15 Newcastle University
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-*/
-
-/** @file The {@link Numbas.parts.} object */
-
-Numbas.queueScript('parts/extension',['base','util','part'],function() {
-
-var util = Numbas.util;
-
-var Part = Numbas.parts.Part;
-
-/** Extension part - validation and marking should be filled in by an extension, or custom javascript code belonging to the question.
- * @constructor
- * @memberof Numbas.parts
- * @augments Numbas.parts.Part
- */
-var ExtensionPart = Numbas.parts.ExtensionPart = function(path, question, parentPart)
-{
-}
-ExtensionPart.prototype = /** @lends Numbas.parts.ExtensionPart.prototype */ {
-    loadFromXML: function() {},
-
-    loadFromJSON: function() {},
-
-    finaliseLoad: function() {
-        if(Numbas.display) {
-        	this.display = new Numbas.display.ExtensionPartDisplay(this);
-        }
-    },
-
-	validate: function() {
-        return false;
-	},
-
-	hasStagedAnswer: function() {
-		return true;
-	},
-
-	doesMarking: true,
-
-    mark: function() {
-        this.markingComment(R('part.extension.not implemented',{name:'mark'}));
-    },
-
-    /** Return suspend data for this part so it can be restored when resuming the exam - must be implemented by an extension or the question.
-     * @ returns {object}
-     */
-    createSuspendData: function() {
-        return {};
-    },
-
-    /** Get the suspend data created in a previous session for this part, if it exists.
-     * @ param {object} data
-     */
-    loadSuspendData: function(data) {
+    resume: function() {
         if(!this.store) {
             return;
         }
-        var pobj = this.store.loadExtensionPart(this);
-        if(pobj) {
-            return pobj.extension_data;
+		var pobj = this.store.loadPart(this);
+		this.stagedAnswer = pobj.studentAnswer+'';
+    },
+
+	/** The student's last submitted answer */
+	studentAnswer: '',
+
+    /** The script to mark this part - assign credit, and give messages and feedback.
+     * @type {Numbas.marking.MarkingScript}
+     */
+    markingScript: Numbas.marking_scripts.numberentry,
+
+	/** Properties set when the part is generated
+	 * Extends {@link Numbas.parts.Part#settings}
+	 * @property {Number} minvalueString - definition of minimum value, before variables are substituted in
+	 * @property {Number} minvalue - minimum value marked correct
+	 * @property {Number} maxvalueString - definition of maximum value, before variables are substituted in
+	 * @property {Number} maxvalue - maximum value marked correct
+	 * @property {Number} correctAnswerFraction - display the correct answer as a fraction?
+	 * @property {Boolean} allowFractions - can the student enter a fraction as their answer?
+     * @property {Array.<String>} notationStyles - styles of notation to allow, other than `<digits>.<digits>`. See {@link Numbas.util.re_decimal}.
+	 * @property {Number} displayAnswer - representative correct answer to display when revealing answers
+	 * @property {String} precisionType - type of precision restriction to apply: `none`, `dp` - decimal places, or `sigfig` - significant figures
+	 * @property {Number} precisionString - definition of precision setting, before variables are substituted in
+     * @property {Boolean} strictPrecision - must the student give exactly the required precision? If false, omitting trailing zeros is allowed.
+	 * @property {Number} precision - how many decimal places or significant figures to require
+	 * @property {Number} precisionPC - partial credit to award if the answer is between `minvalue` and `maxvalue` but not given to the required precision
+	 * @property {String} precisionMessage - message to display in the marking feedback if their answer was not given to the required precision
+	 * @property {Boolean} mustBeReduced - should the student enter a fraction in lowest terms
+	 * @property {Number} mustBeReducedPC - partial credit to award if the answer is not a reduced fraction
+	 */
+	settings:
+	{
+        minvalueString: '0',
+        maxvalueString: '0',
+		minvalue: 0,
+		maxvalue: 0,
+		correctAnswerFraction: false,
+		allowFractions: false,
+        notationStyles: ['en','si-en'],
+		displayAnswer: 0,
+		precisionType: 'none',
+        precisionString: '0',
+        strictPrecision: false,
+		precision: 0,
+		precisionPC: 0,
+		mustBeReduced: false,
+		mustBeReducedPC: 0,
+		precisionMessage: R('You have not given your answer to the correct precision.'),
+        showPrecisionHint: true
+	},
+
+    /** The name of the input widget this part uses, if any.
+     * @returns {String}
+     */
+    input_widget: function() {
+        return 'number';
+    },
+
+	/** Options for this part's input widget
+	 * @returns {Object}
+	 */
+	input_options: function() {
+		return {
+			allowFractions: this.settings.allowFractions,
+			allowedNotationStyles: this.settings.notationStyles
+		};
+	},
+
+	/** Compute the correct answer, based on the given scope
+	 */
+	getCorrectAnswer: function(scope) {
+		var settings = this.settings;
+
+		var precision = jme.subvars(settings.precisionString, scope);
+		settings.precision = scope.evaluate(precision).value;
+
+        if(settings.precisionType=='sigfig' && settings.precision<=0) {
+            throw(new Numbas.Error('part.numberentry.zero sig fig'));
         }
-    }
+
+        if(settings.precisionType=='dp' && settings.precision<0) {
+            throw(new Numbas.Error('part.numberentry.negative decimal places'));
+        }
+
+		var minvalue = jme.subvars(settings.minvalueString,scope);
+		minvalue = scope.evaluate(minvalue);
+		if(minvalue && minvalue.type=='number') {
+			minvalue = minvalue.value;
+		} else {
+			throw(new Numbas.Error('part.setting not present',{property:R('minimum value')}));
+		}
+
+		var maxvalue = jme.subvars(settings.maxvalueString,scope);
+		maxvalue = scope.evaluate(maxvalue);
+		if(maxvalue && maxvalue.type=='number') {
+			maxvalue = maxvalue.value;
+		} else {
+			throw(new Numbas.Error('part.setting not present',{property:R('maximum value')}));
+		}
+
+		switch(settings.precisionType) {
+		case 'dp':
+			minvalue = math.precround(minvalue,settings.precision);
+			maxvalue = math.precround(maxvalue,settings.precision);
+			break;
+		case 'sigfig':
+			minvalue = math.siground(minvalue,settings.precision);
+			maxvalue = math.siground(maxvalue,settings.precision);
+			break;
+		}
+
+		var fudge = 0.00000000001;
+		settings.minvalue = minvalue - fudge;
+		settings.maxvalue = maxvalue + fudge;
+	},
+
+	/** Tidy up the student's answer - at the moment, just remove space.
+     * You could override this to do more substantial filtering of the student's answer.
+	 * @param {String} answer
+	 * @returns {String}
+	 */
+	cleanAnswer: function(answer) {
+		answer = answer.toString().trim();
+		return answer;
+	},
+
+	/** Save a copy of the student's answer as entered on the page, for use in marking.
+	 */
+	setStudentAnswer: function() {
+		this.studentAnswer = this.cleanAnswer(this.stagedAnswer);
+	},
+
+	/** Get the student's answer as it was entered as a JME data type, to be used in the custom marking algorithm
+	 * @abstract
+	 * @returns {Numbas.jme.token}
+	 */
+	rawStudentAnswerAsJME: function() {
+		return new Numbas.jme.types.TString(this.studentAnswer);
+	},
+
+    /** Get the student's answer as a floating point number
+     * @returns {Number}
+     */
+	studentAnswerAsFloat: function() {
+		return util.parseNumber(this.studentAnswer,this.settings.allowFractions,this.settings.notationStyles);
+	}
 };
-['finaliseLoad','loadFromXML','loadFromJSON'].forEach(function(method) {
-    ExtensionPart.prototype[method] = util.extend(Part.prototype[method],ExtensionPart.prototype[method]);
+['loadFromXML','loadFromJSON','resume','finaliseLoad'].forEach(function(method) {
+    NumberEntryPart.prototype[method] = util.extend(Part.prototype[method], NumberEntryPart.prototype[method]);
 });
 
-Numbas.partConstructors['extension'] = util.extend(Part,ExtensionPart);
+Numbas.partConstructors['numberentry'] = util.extend(Part,NumberEntryPart);
 });
 
 /*
@@ -15121,7 +15845,7 @@ GapFillPart.prototype = /** @lends Numbas.parts.GapFillPart.prototype */
         this.marks = 0;
 
         for( var i=0 ; i<gapXML.length; i++ ) {
-            var gap = Numbas.createPartFromXML(gapXML[i], this.path+'g'+i, this.question, this);
+            var gap = Numbas.createPartFromXML(gapXML[i], this.path+'g'+i, this.question, this, this.store);
             this.addGap(gap,i);
         }
     },
@@ -15130,7 +15854,7 @@ GapFillPart.prototype = /** @lends Numbas.parts.GapFillPart.prototype */
         var p = this;
         if('gaps' in data) {
             data.gaps.forEach(function(gd,i) {
-                var gap = Numbas.createPartFromJSON(gd, p.path+'g'+i, p.question, p);
+                var gap = Numbas.createPartFromJSON(gd, p.path+'g'+i, p.question, p, p.store);
                 p.addGap(gap, i)
             });
         }
@@ -15156,7 +15880,7 @@ GapFillPart.prototype = /** @lends Numbas.parts.GapFillPart.prototype */
         var p = this;
         this.gaps.forEach(function(g){ 
             g.resume(); 
-            p.answered = p.answered || gap.answered;
+            p.answered = p.answered || g.answered;
         });
     },
 
@@ -15475,12 +16199,12 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         if(!this.store) {
             return;
         }
-		var pobj = this.store.loadJMEPart(this);
-		this.stagedAnswer = [pobj.studentAnswer];
+		var pobj = this.store.loadPart(this);
+		this.stagedAnswer = pobj.studentAnswer;
     },
 
     finaliseLoad: function() {
-        this.stagedAnswer = [''];
+        this.stagedAnswer = '';
         this.getCorrectAnswer(this.getScope());
         if(Numbas.display) {
             this.display = new Numbas.display.JMEPartDisplay(this);
@@ -15568,6 +16292,15 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         return 'jme';
     },
 
+    /** Options for this part's input widget
+     * @returns {Object}
+     */
+    input_options: function() {
+        return {
+            showPreview: this.settings.showPreview
+        };
+    },
+
 
 	/** Compute the correct answer, based on the given scope
 	 */
@@ -15612,249 +16345,6 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
 Numbas.partConstructors['jme'] = util.extend(Part,JMEPart);
 
 });
-
-/*
-Copyright 2011-15 Newcastle University
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-*/
-
-/** @file The {@link Numbas.parts.MatrixEntryPart} object */
-
-Numbas.queueScript('parts/matrixentry',['base','jme','jme-variables','util','part','marking_scripts'],function() {
-
-var util = Numbas.util;
-var jme = Numbas.jme;
-var math = Numbas.math;
-
-var Part = Numbas.parts.Part;
-
-/** Matrix entry part - student enters a matrix of numbers
- * @constructor
- * @memberof Numbas.parts
- * @augments Numbas.parts.Part
- */
-var MatrixEntryPart = Numbas.parts.MatrixEntryPart = function(xml, path, question, parentPart, loading) {
-	var settings = this.settings;
-	util.copyinto(MatrixEntryPart.prototype.settings,settings);
-
-
-}
-MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
-{
-    loadFromXML: function(xml) {
-        var settings = this.settings;
-        var tryGetAttribute = Numbas.xml.tryGetAttribute;
-        tryGetAttribute(settings,xml,'answer',['correctanswer'],['correctAnswerString'],{string:true});
-        tryGetAttribute(settings,xml,'answer',['correctanswerfractions','rows','columns','allowresize','tolerance','markpercell','allowfractions'],['correctAnswerFractions','numRows','numColumns','allowResize','tolerance','markPerCell','allowFractions']);
-        tryGetAttribute(settings,xml,'answer/precision',['type','partialcredit','strict'],['precisionType','precisionPC','strictPrecision']);
-        tryGetAttribute(settings,xml,'answer/precision','precision','precisionString',{'string':true});
-
-        var messageNode = xml.selectSingleNode('answer/precision/message');
-        if(messageNode) {
-            settings.precisionMessage = $.xsl.transform(Numbas.xml.templates.question,messageNode).string;
-        }
-
-    },
-
-    loadFromJSON: function(data) {
-        var settings = this.settings;
-        var tryLoad = Numbas.json.tryLoad;
-
-        tryLoad(data,['correctAnswer', 'correctAnswerFractions', 'numRows', 'numColumns', 'allowResize', 'tolerance', 'markPerCell', 'allowFractions'], settings, ['correctAnswerString', 'correctAnswerFractions', 'numRows', 'numColumns', 'allowResize', 'tolerance', 'markPerCell', 'allowFractions']);
-        tryLoad(data,['precisionType', 'precision', 'precisionPartialCredit', 'precisionMessage', 'strictPrecision'], settings, ['precisionType', 'precision', 'precisionPC', 'precisionMessage', 'strictPrecision']);
-    },
-
-    resume: function() {
-        if(!this.store) {
-            return;
-        }
-		var pobj = this.store.loadMatrixEntryPart(this);
-		if(pobj.studentAnswer) {
-			var rows = pobj.studentAnswer.length;
-			var columns = rows>0 ? pobj.studentAnswer[0].length : 0;
-			this.stagedAnswer = [rows, columns, pobj.studentAnswer];
-		}
-    },
-
-    finaliseLoad: function() {
-        var settings = this.settings;
-        var scope = this.getScope();
-        var numRows = jme.subvars(settings.numRows, scope);
-        settings.numRows = scope.evaluate(numRows).value;
-
-        var numColumns = jme.subvars(settings.numColumns, scope);
-        settings.numColumns = scope.evaluate(numColumns).value;
-
-        var tolerance = jme.subvars(settings.tolerance, scope);
-        settings.tolerance = scope.evaluate(tolerance).value;
-        settings.tolerance = Math.max(settings.tolerance,0.00000000001);
-
-        if(settings.precisionType!='none') {
-            settings.allowFractions = false;
-        }
-
-        this.studentAnswer = [];
-        for(var i=0;i<this.settings.numRows;i++) {
-            var row = [];
-            for(var j=0;j<this.settings.numColumns;j++) {
-                row.push('');
-            }
-            this.studentAnswer.push(row);
-        }
-        
-        this.getCorrectAnswer(scope);
-
-        if(!settings.allowResize && (settings.correctAnswer.rows!=settings.numRows || settings.correctAnswer.columns != settings.numColumns)) {
-            var correctSize = settings.correctAnswer.rows+'×'+settings.correctAnswer.columns;
-            var answerSize = settings.numRows+'×'+settings.numColumns;
-            throw(new Numbas.Error('part.matrix.size mismatch',{correct_dimensions:correctSize,input_dimensions:answerSize}));
-        }
-
-        if(Numbas.display) {
-            this.display = new Numbas.display.MatrixEntryPartDisplay(this);
-        }
-    },
-
-	/** The student's last submitted answer */
-	studentAnswer: '',
-
-    /** The script to mark this part - assign credit, and give messages and feedback.
-     * @type {Numbas.marking.MarkingScript}
-     */
-    markingScript: Numbas.marking_scripts.matrixentry,
-
-	/** Properties set when part is generated
-	 * Extends {@link Numbas.parts.Part#settings}
-	 * @property {matrix} correctAnswer - the correct answer to the part
-	 * @property {JME} numRows - default number of rows in the student's answer
-	 * @property {JME} numColumns - default number of columns in the student's answer
-	 * @property {Boolean} allowResize - allow the student to change the dimensions of their answer?
-	 * @property {JME} tolerance - allowed margin of error in each cell (if student's answer is within +/- `tolerance` of the correct answer (after rounding to , mark it as correct
-	 * @property {Boolean} markPerCell - should the student gain marks for each correct cell (true), or only if they get every cell right (false)?
-	 * @property {Boolean} allowFractions - can the student enter a fraction as their answer for a cell?
-	 * @property {String} precisionType - type of precision restriction to apply: `none`, `dp` - decimal places, or `sigfig` - significant figures
-	 * @property {Number} precision - how many decimal places or significant figures to require
-	 * @property {Number} precisionPC - partial credit to award if the answer is between `minvalue` and `maxvalue` but not given to the required precision
-	 * @property {String} precisionMessage - message to display in the marking feedback if their answer was not given to the required precision
-     * @property {Boolean} strictPrecision - must the student give exactly the required precision? If false, omitting trailing zeros is allowed.
-	 */
-	settings: {
-		correctAnswer: null,
-		correctAnswerFractions: false,
-		numRows: '3',
-		numColumns: '3',
-		allowResize: true,
-		tolerance: '0',
-		markPerCell: false,
-		allowFractions: false,
-		precisionType: 'none',	//'none', 'dp' or 'sigfig'
-        precisionString: '0',
-		precision: 0,
-		precisionPC: 0,
-		precisionMessage: R('You have not given your answer to the correct precision.'),
-        strictPrecision: true
-	},
-
-    /** The name of the input widget this part uses, if any.
-     * @returns {String}
-     */
-    input_widget: function() {
-        return 'matrix';
-    },
-
-	/** Compute the correct answer, based on the given scope
-	 */
-	getCorrectAnswer: function(scope) {
-		var settings = this.settings;
-
-		var correctAnswer = jme.subvars(settings.correctAnswerString,scope);
-		correctAnswer = jme.evaluate(correctAnswer,scope);
-		if(correctAnswer && correctAnswer.type=='matrix') {
-			settings.correctAnswer = correctAnswer.value;
-		} else if(correctAnswer && correctAnswer.type=='vector') {
-			settings.correctAnswer = Numbas.vectormath.toMatrix(correctAnswer.value);
-		} else {
-			this.error('part.setting not present',{property:'correct answer'});
-		}
-
-		settings.precision = jme.subvars(settings.precisionString, scope);
-		settings.precision = jme.evaluate(settings.precision,scope).value;
-
-		switch(settings.precisionType) {
-		case 'dp':
-			settings.correctAnswer = Numbas.matrixmath.precround(settings.correctAnswer,settings.precision);
-			break;
-		case 'sigfig':
-			settings.correctAnswer = Numbas.matrixmath.siground(settings.correctAnswer,settings.precision);
-			break;
-		}
-
-	},
-
-	/** Save a copy of the student's answer as entered on the page, for use in marking.
-	 */
-	setStudentAnswer: function() {
-		this.studentAnswerRows = parseInt(this.stagedAnswer.rows);
-		this.studentAnswerColumns = parseInt(this.stagedAnswer.columns);
-		this.studentAnswer = this.stagedAnswer.matrix;
-	},
-
-	/** Get the student's answer as it was entered as a JME data type, to be used in the marking script
-	 * @abstract
-	 * @returns {Numbas.jme.token}
-	 */
-	rawStudentAnswerAsJME: function() {
-        return jme.wrapValue(this.studentAnswer);
-	},
-
-    /** Get the student's answer as a matrix
-     * @returns {matrix}
-     */
-	studentAnswerAsMatrix: function() {
-		var rows = this.studentAnswerRows;
-		var columns = this.studentAnswerColumns;
-
-		var studentMatrix = [];
-		for(var i=0;i<rows;i++) {
-			var row = [];
-			for(var j=0;j<columns;j++) {
-				var cell = this.studentAnswer[i][j];
-				var n = util.parseNumber(cell,this.settings.allowFractions);
-				
-				if(isNaN(n)) {
-					return null;
-				} else {
-					row.push(n);
-				}
-			}
-			studentMatrix.push(row);
-		}
-
-		studentMatrix.rows = rows;
-		studentMatrix.columns = columns;
-		
-		return studentMatrix;
-	}
-};
-['resume','finaliseLoad','loadFromXML','loadFromJSON'].forEach(function(method) {
-    MatrixEntryPart.prototype[method] = util.extend(Part.prototype[method], MatrixEntryPart.prototype[method]);
-});
-
-Numbas.partConstructors['matrix'] = util.extend(Part,MatrixEntryPart);
-
-});
-
 
 /*
 Copyright 2011-15 Newcastle University
@@ -15937,7 +16427,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
             this.error('part.mcq.choices missing');
         }
 
-        tryGetAttribute(settings,null,choicesNode,['minimumexpected','maximumexpected','shuffleChoices','displayType'],['minAnswersString','maxAnswersString','shuffleChoices']);
+        tryGetAttribute(settings,null,choicesNode,['minimumexpected','maximumexpected','shuffle','displayType'],['minAnswersString','maxAnswersString','shuffleChoices']);
 
         var choiceNodes = choicesNode.selectNodes('choice');
 
@@ -15955,7 +16445,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
             this.numChoices = choiceNodes.length;
             answersNode = xml.selectSingleNode('answers');
             if(answersNode) {
-                tryGetAttribute(settings,null,answersNode,'shuffleAnswers','shuffleAnswers');
+                tryGetAttribute(settings,null,answersNode,'shuffle','shuffleAnswers');
                 answerNodes = answersNode.selectNodes('answer');
                 this.numAnswers = answerNodes.length;
             }
@@ -16187,23 +16677,16 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         if(!this.store) {
             return;
         }
-        var pobj = this.store.loadMultipleResponsePart(this);
+        var pobj = this.store.loadPart(this);
         this.shuffleChoices = pobj.shuffleChoices;
         this.shuffleAnswers = pobj.shuffleAnswers;
-        this.ticks = pobj.ticks;
+        this.ticks = pobj.studentAnswer;
 
         this.stagedAnswer = [];
         for( i=0; i<this.numAnswers; i++ ) {
             this.stagedAnswer.push([]);
             for( var j=0; j<this.numChoices; j++ ) {
-                this.stagedAnswer[i].push(false);
-            }
-        }
-        for( i=0;i<this.numAnswers;i++) {
-            for(j=0;j<this.numChoices;j++) {
-                if(pobj.ticks[i][j]) {
-                    this.stagedAnswer[i][j] = true;
-                }
+                this.stagedAnswer[i].push(pobj.studentAnswer[i][j] || false);
             }
         }
     },
@@ -16402,18 +16885,34 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
     },
 
     /** The name of the input widget this part uses, if any.
+
      * @returns {String}
      */
     input_widget: function() {
         switch(this.type) {
             case '1_n_2':
-                return 'radios';
+				switch(this.settings.displayType) {
+					case 'radiogroup':
+		                return 'radios'	;
+					case 'dropdownlist':
+						return 'dropdown';
+				}
             case 'm_n_2':
                 return 'checkboxes';
             case 'm_n_x':
                 return 'm_n_x';
         }
     },
+	/** Options for this part's input widget
+	 * @returns {Object}
+	 */
+	input_options: function() {
+		return {
+			choices: this.settings.choices,
+			answers: this.settings.answers,
+			answerAsArray: true
+		};
+	},
 
     /** Compute the correct answer, based on the given scope
      */
@@ -16511,6 +17010,29 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
             }
         }
 
+        switch(this.type) {
+        case '1_n_2':
+            var max = 0, maxi = null;
+            for(var i=0;i<this.numAnswers;i++) {
+                if(matrix[i][0]>max || maxi===null) {
+                    max = matrix[i][0];
+                    maxi = i;
+                }
+            }
+            var best = [];
+            for(var i=0;i<this.numAnswers;i++) {
+                best.push([i==maxi]);
+            }
+            settings.maxMatrix = best;
+            break;
+        case 'm_n_2':
+            settings.maxMatrix = matrix.map(function(r){ return [r[0]>0]; });
+            break;
+        case 'm_n_x':
+            settings.maxMatrix = matrix.map(function(r){ return r.map(function(c){return c>0; }) });
+            break;
+        }
+
         settings.matrix = matrix;
     },
 
@@ -16531,7 +17053,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         case 'dropdownlist':
             for(var i=0; i<this.numAnswers; i++)
             {
-                this.stagedAnswer[i][choiceIndex]= i===answerIndex;
+                this.stagedAnswer[i][choiceIndex] = i===answerIndex;
             }
             break;
         default:
@@ -16651,9 +17173,345 @@ Copyright 2011-15 Newcastle University
    limitations under the License.
 */
 
-/** @file The {@link Numbas.parts.NumberEntryPart} object */
+/** @file The {@link Numbas.parts.} object */
 
-Numbas.queueScript('parts/numberentry',['base','jme','jme-variables','util','part','marking_scripts'],function() {
+Numbas.queueScript('parts/custom_part_type',['base','jme','jme-variables','util','part'],function() {
+
+var util = Numbas.util;
+var jme = Numbas.jme;
+var math = Numbas.math;
+var types = Numbas.jme.types;
+
+var Part = Numbas.parts.Part;
+
+/** Custom part - a part type defined in {@link Numbas.custom_part_types}
+ * @constructor
+ * @memberof Numbas.parts
+ * @augments Numbas.parts.Part
+ */
+var CustomPart = Numbas.parts.CustomPart = function(path, question, parentPart, loading) {
+    this.raw_settings = {};
+    this.resolved_input_options = {};
+}
+CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
+
+    is_custom_part_type: true,
+
+    getDefinition: function() {
+        this.definition = Numbas.custom_part_types[this.type];
+        this.setMarkingScript(this.definition.marking_script);
+        return this.definition;
+    },
+
+    loadFromXML: function(xml) {
+        var p = this;
+        var raw_settings = this.raw_settings;
+        this.getDefinition();
+        var tryGetAttribute = Numbas.xml.tryGetAttribute;
+
+        var settingNodes = xml.selectNodes('settings/setting');
+        settingNodes.forEach(function(settingNode) {
+            var name = settingNode.getAttribute('name');
+            var value = settingNode.getAttribute('value');
+            raw_settings[name] = JSON.parse(value);
+        });
+    },
+
+    loadFromJSON: function(data) {
+        var definition = this.getDefinition();
+        var tryLoad = Numbas.json.tryLoad;
+
+        var raw_settings = this.raw_settings;
+        definition.settings.forEach(function(sdef) {
+            tryLoad(data.settings,sdef.name,raw_settings);
+        });
+    },
+
+    marking_parameters: function(studentAnswer) {
+        var o = Part.prototype.marking_parameters.apply(this,[studentAnswer]);
+        o.input_options = jme.wrapValue(this.input_options());
+        return o;
+    },
+
+    resume: function() {
+        if(!this.store) {
+            return;
+        }
+        var pobj = this.store.loadPart(this);
+        this.stagedAnswer = pobj.studentAnswer;
+    },
+
+    finaliseLoad: function() {
+        var p = this;
+        var settings = this.settings;
+        var raw_settings = this.raw_settings;
+        var scope = this.getScope();
+
+        this.definition.settings.forEach(function(s) {
+            var name = s.name;
+            var value = raw_settings[name];
+            if(!p.setting_evaluators[s.input_type]) {
+                p.error('part.custom.unrecognised input type',{input_type:s.input_type});
+            }
+            try {
+                settings[name] = p.setting_evaluators[s.input_type].call(p, s, value);
+            } catch(e) {
+                throw(new Numbas.Error('part.custom.error evaluating setting',{setting: name, error: e.message}));
+            }
+        });
+
+        var settings_scope = new jme.Scope([scope,{variables:{settings:new jme.types.TDict(settings)}}]);
+        var raw_input_options = this.definition.input_options;
+
+        ['correctAnswer','hint'].forEach(function(option) {
+            if(raw_input_options[option]===undefined) {
+                p.error('part.custom.input option missing',{option:option});
+            }
+        })
+
+        function evaluate_input_option(option) {
+            if(typeof(option)=='string') {
+                return jme.unwrapValue(settings_scope.evaluate(option));
+            } else {
+                if(option.static) {
+                    return option.value;
+                } else {
+                    return jme.unwrapValue(settings_scope.evaluate(option.value));
+                }
+            }
+        }
+
+        for(var option in raw_input_options) {
+            try {
+                p.resolved_input_options[option] = evaluate_input_option(raw_input_options[option]);
+            } catch(e) {
+                p.error('part.custom.error evaluating input option',{option:option,error:e.message});
+            }
+        }
+
+        try {
+            this.getCorrectAnswer(this.getScope());
+        } catch(e) {
+            this.error(e.message);
+        }
+
+        if(Numbas.display) {
+            this.display = new Numbas.display.CustomPartDisplay(this);
+        }
+    },
+
+    getCorrectAnswer: function(scope) {
+        var settings = this.settings;
+        this.correctAnswer = scope.evaluate(this.definition.input_options.correctAnswer, {settings: this.settings});
+    },
+
+    setStudentAnswer: function() {
+        this.studentAnswer = this.stagedAnswer;
+    },
+
+    input_widget: function() {
+        return this.definition.input_widget;
+    },
+
+    input_options: function() {
+        return this.resolved_input_options;
+    },
+
+    rawStudentAnswerAsJME: function() {
+        return this.student_answer_jme_types[this.input_widget()](this.studentAnswer, this.input_options());
+    },
+
+    student_answer_jme_types: {
+        'string': function(answer) {
+            return new types.TString(answer);
+        },
+        'number': function(answer) {
+            return new types.TNum(answer);
+        },
+        'jme': function(answer) {
+            return new types.TExpression(answer);
+        },
+        'matrix': function(answer,options) {
+            if(options.parseCells) {
+                return new types.TMatrix(answer);
+            } else {
+                return jme.wrapValue(answer);
+            }
+        },
+        'radios': function(answer) {
+            return new types.TNum(answer);
+        },
+        'checkboxes': function(answer) {
+            return new types.TList(answer.map(function(ticked){ return new types.TBool(ticked) }));
+        },
+        'dropdown': function(answer) {
+            return new types.TNum(answer);
+        }
+    },
+
+    setting_evaluators: {
+        'string': function(def, value) {
+            var scope = this.getScope();
+            if(def.subvars) {
+                value = jme.subvars(value, scope, true);
+            }
+            return new jme.types.TString(value);
+        },
+        'mathematical_expression': function(def, value) {
+            var scope = this.getScope();
+            if(def.subvars) {
+                value = jme.subvars(value, scope);
+            }
+            return new jme.types.TExpression(value);
+        },
+        'checkbox': function(def, value) {
+            return new jme.types.TBool(value);
+        },
+        'dropdown': function(def, value) {
+            return new jme.types.TString(value);
+        },
+        'code': function(def, value) {
+            var scope = this.getScope();
+            if(def.evaluate) {
+                return scope.evaluate(value);
+            } else {
+                return new jme.types.TString(value);
+            }
+        },
+        'percent': function(def, value) {
+            return new jme.types.TNum(value/100);
+        },
+        'html': function(def, value) {
+            var scope = this.getScope();
+            if(def.subvars) {
+                value = jme.contentsubvars(value, scope);
+            }
+            return new jme.types.TString(value);
+        },
+        'list_of_strings': function(def, value) {
+            var scope = this.getScope();
+            return new jme.types.TList(value.map(function(s){ 
+                if(def.subvars) {
+                    s = jme.subvars(s, scope);
+                }
+                return new jme.types.TString(s) 
+            }));
+        },
+        'choose_several': function(def, value) {
+            return new jme.wrapValue(value);
+        }
+    }
+};
+['resume','finaliseLoad','loadFromXML','loadFromJSON'].forEach(function(method) {
+    CustomPart.prototype[method] = util.extend(Part.prototype[method], CustomPart.prototype[method]);
+});
+
+CustomPart = Numbas.parts.CustomPart = util.extend(Part,CustomPart);
+});
+
+/*
+Copyright 2011-15 Newcastle University
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+/** @file The {@link Numbas.parts.} object */
+
+Numbas.queueScript('parts/extension',['base','util','part'],function() {
+
+var util = Numbas.util;
+
+var Part = Numbas.parts.Part;
+
+/** Extension part - validation and marking should be filled in by an extension, or custom javascript code belonging to the question.
+ * @constructor
+ * @memberof Numbas.parts
+ * @augments Numbas.parts.Part
+ */
+var ExtensionPart = Numbas.parts.ExtensionPart = function(path, question, parentPart)
+{
+}
+ExtensionPart.prototype = /** @lends Numbas.parts.ExtensionPart.prototype */ {
+    loadFromXML: function() {},
+
+    loadFromJSON: function() {},
+
+    finaliseLoad: function() {
+        if(Numbas.display) {
+        	this.display = new Numbas.display.ExtensionPartDisplay(this);
+        }
+    },
+
+	validate: function() {
+        return false;
+	},
+
+	hasStagedAnswer: function() {
+		return true;
+	},
+
+	doesMarking: true,
+
+    mark: function() {
+        this.markingComment(R('part.extension.not implemented',{name:'mark'}));
+    },
+
+    /** Return suspend data for this part so it can be restored when resuming the exam - must be implemented by an extension or the question.
+     * @ returns {object}
+     */
+    createSuspendData: function() {
+        return {};
+    },
+
+    /** Get the suspend data created in a previous session for this part, if it exists.
+     * @ param {object} data
+     */
+    loadSuspendData: function(data) {
+        if(!this.store) {
+            return;
+        }
+        var pobj = this.store.loadExtensionPart(this);
+        if(pobj) {
+            return pobj.extension_data;
+        }
+    }
+};
+['finaliseLoad','loadFromXML','loadFromJSON'].forEach(function(method) {
+    ExtensionPart.prototype[method] = util.extend(Part.prototype[method],ExtensionPart.prototype[method]);
+});
+
+Numbas.partConstructors['extension'] = util.extend(Part,ExtensionPart);
+});
+
+/*
+Copyright 2011-15 Newcastle University
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+/** @file The {@link Numbas.parts.MatrixEntryPart} object */
+
+Numbas.queueScript('parts/matrixentry',['base','jme','jme-variables','util','part','marking_scripts'],function() {
 
 var util = Numbas.util;
 var jme = Numbas.jme;
@@ -16661,33 +17519,25 @@ var math = Numbas.math;
 
 var Part = Numbas.parts.Part;
 
-/** Number entry part - student's answer must be within given range, and written to required precision.
+/** Matrix entry part - student enters a matrix of numbers
  * @constructor
  * @memberof Numbas.parts
  * @augments Numbas.parts.Part
  */
-var NumberEntryPart = Numbas.parts.NumberEntryPart = function(xml, path, question, parentPart, loading)
-{
+var MatrixEntryPart = Numbas.parts.MatrixEntryPart = function(xml, path, question, parentPart, loading) {
 	var settings = this.settings;
-	util.copyinto(NumberEntryPart.prototype.settings,settings);
+	util.copyinto(MatrixEntryPart.prototype.settings,settings);
+
+
 }
-NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
+MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
 {
     loadFromXML: function(xml) {
         var settings = this.settings;
         var tryGetAttribute = Numbas.xml.tryGetAttribute;
-
-        tryGetAttribute(settings,xml,'answer',['minvalue','maxvalue'],['minvalueString','maxvalueString'],{string:true});
-        tryGetAttribute(settings,xml,'answer',['correctanswerfraction','correctanswerstyle','allowfractions'],['correctAnswerFraction','correctAnswerStyle','allowFractions']);
-        tryGetAttribute(settings,xml,'answer',['mustbereduced','mustbereducedpc'],['mustBeReduced','mustBeReducedPC']);
-
-        var answerNode = xml.selectSingleNode('answer');
-        var notationStyles = answerNode.getAttribute('notationstyles');
-        if(notationStyles) {
-            settings.notationStyles = notationStyles.split(',');
-        }
-        
-        tryGetAttribute(settings,xml,'answer/precision',['type','partialcredit','strict','showprecisionhint'],['precisionType','precisionPC','strictPrecision','showPrecisionHint']);
+        tryGetAttribute(settings,xml,'answer',['correctanswer'],['correctAnswerString'],{string:true});
+        tryGetAttribute(settings,xml,'answer',['correctanswerfractions','rows','columns','allowresize','tolerance','markpercell','allowfractions'],['correctAnswerFractions','numRows','numColumns','allowResize','tolerance','markPerCell','allowFractions']);
+        tryGetAttribute(settings,xml,'answer/precision',['type','partialcredit','strict'],['precisionType','precisionPC','strictPrecision']);
         tryGetAttribute(settings,xml,'answer/precision','precision','precisionString',{'string':true});
 
         var messageNode = xml.selectSingleNode('answer/precision/message');
@@ -16701,47 +17551,57 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
         var settings = this.settings;
         var tryLoad = Numbas.json.tryLoad;
 
-        tryLoad(data, ['minValue', 'maxValue'], settings, ['minvalueString', 'maxvalueString']);
-        tryLoad(data, ['correctAnswerFraction', 'correctAnswerStyle', 'allowFractions'], settings);
-        tryLoad(data, ['mustBeReduced', 'mustBeReducedPC'], settings);
-        tryLoad(data, ['notationStyles'], settings);
-        tryLoad(data, ['precisionPartialCredit', 'strictPrecision', 'showPrecisionHint', 'precision', 'precisionType', 'precisionMessage'], settings, ['precisionPC', 'strictPrecision', 'showPrecisionHint', 'precisionString', 'precisionType', 'precisionMessage']);
-    },
-
-    finaliseLoad: function() {
-        var settings = this.settings;
-        if(settings.precisionType!='none') {
-            settings.allowFractions = false;
-        }
-
-        try {
-            this.getCorrectAnswer(this.getScope());
-        } catch(e) {
-            this.error(e.message);
-        }
-
-        var displayAnswer = (settings.minvalue + settings.maxvalue)/2;
-        if(settings.correctAnswerFraction) {
-            var diff = Math.abs(settings.maxvalue-settings.minvalue)/2;
-            var accuracy = Math.max(15,Math.ceil(-Math.log(diff)));
-            settings.displayAnswer = jme.display.jmeRationalNumber(displayAnswer,{accuracy:accuracy});
-        } else {
-            settings.displayAnswer = math.niceNumber(displayAnswer,{precisionType: settings.precisionType,precision:settings.precision, style: settings.correctAnswerStyle});
-        }
-
-        this.stagedAnswer = [''];
-
-        if(Numbas.display) {
-            this.display = new Numbas.display.NumberEntryPartDisplay(this);
-        }
+        tryLoad(data,['correctAnswer', 'correctAnswerFractions', 'numRows', 'numColumns', 'allowResize', 'tolerance', 'markPerCell', 'allowFractions'], settings, ['correctAnswerString', 'correctAnswerFractions', 'numRows', 'numColumns', 'allowResize', 'tolerance', 'markPerCell', 'allowFractions']);
+        tryLoad(data,['precisionType', 'precision', 'precisionPartialCredit', 'precisionMessage', 'strictPrecision'], settings, ['precisionType', 'precision', 'precisionPC', 'precisionMessage', 'strictPrecision']);
     },
 
     resume: function() {
         if(!this.store) {
             return;
         }
-		var pobj = this.store.loadNumberEntryPart(this);
-		this.stagedAnswer = [pobj.studentAnswer+''];
+		var pobj = this.store.loadPart(this);
+		if(pobj.studentAnswer!==undefined) {
+			this.stagedAnswer = pobj.studentAnswer;
+		}
+    },
+
+    finaliseLoad: function() {
+        var settings = this.settings;
+        var scope = this.getScope();
+        var numRows = jme.subvars(settings.numRows, scope);
+        settings.numRows = scope.evaluate(numRows).value;
+
+        var numColumns = jme.subvars(settings.numColumns, scope);
+        settings.numColumns = scope.evaluate(numColumns).value;
+
+        var tolerance = jme.subvars(settings.tolerance, scope);
+        settings.tolerance = scope.evaluate(tolerance).value;
+        settings.tolerance = Math.max(settings.tolerance,0.00000000001);
+
+        if(settings.precisionType!='none') {
+            settings.allowFractions = false;
+        }
+
+        this.studentAnswer = [];
+        for(var i=0;i<this.settings.numRows;i++) {
+            var row = [];
+            for(var j=0;j<this.settings.numColumns;j++) {
+                row.push('');
+            }
+            this.studentAnswer.push(row);
+        }
+        
+        this.getCorrectAnswer(scope);
+
+        if(!settings.allowResize && (settings.correctAnswer.rows!=settings.numRows || settings.correctAnswer.columns != settings.numColumns)) {
+            var correctSize = settings.correctAnswer.rows+'×'+settings.correctAnswer.columns;
+            var answerSize = settings.numRows+'×'+settings.numColumns;
+            throw(new Numbas.Error('part.matrix.size mismatch',{correct_dimensions:correctSize,input_dimensions:answerSize}));
+        }
+
+        if(Numbas.display) {
+            this.display = new Numbas.display.MatrixEntryPartDisplay(this);
+        }
     },
 
 	/** The student's last submitted answer */
@@ -16750,140 +17610,148 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
     /** The script to mark this part - assign credit, and give messages and feedback.
      * @type {Numbas.marking.MarkingScript}
      */
-    markingScript: Numbas.marking_scripts.numberentry,
+    markingScript: Numbas.marking_scripts.matrixentry,
 
-	/** Properties set when the part is generated
+	/** Properties set when part is generated
 	 * Extends {@link Numbas.parts.Part#settings}
-	 * @property {Number} minvalueString - definition of minimum value, before variables are substituted in
-	 * @property {Number} minvalue - minimum value marked correct
-	 * @property {Number} maxvalueString - definition of maximum value, before variables are substituted in
-	 * @property {Number} maxvalue - maximum value marked correct
-	 * @property {Number} correctAnswerFraction - display the correct answer as a fraction?
-	 * @property {Boolean} allowFractions - can the student enter a fraction as their answer?
-     * @property {Array.<String>} notationStyles - styles of notation to allow, other than `<digits>.<digits>`. See {@link Numbas.util.re_decimal}.
-	 * @property {Number} displayAnswer - representative correct answer to display when revealing answers
+	 * @property {matrix} correctAnswer - the correct answer to the part
+	 * @property {JME} numRows - default number of rows in the student's answer
+	 * @property {JME} numColumns - default number of columns in the student's answer
+	 * @property {Boolean} allowResize - allow the student to change the dimensions of their answer?
+	 * @property {JME} tolerance - allowed margin of error in each cell (if student's answer is within +/- `tolerance` of the correct answer (after rounding to , mark it as correct
+	 * @property {Boolean} markPerCell - should the student gain marks for each correct cell (true), or only if they get every cell right (false)?
+	 * @property {Boolean} allowFractions - can the student enter a fraction as their answer for a cell?
 	 * @property {String} precisionType - type of precision restriction to apply: `none`, `dp` - decimal places, or `sigfig` - significant figures
-	 * @property {Number} precisionString - definition of precision setting, before variables are substituted in
-     * @property {Boolean} strictPrecision - must the student give exactly the required precision? If false, omitting trailing zeros is allowed.
 	 * @property {Number} precision - how many decimal places or significant figures to require
 	 * @property {Number} precisionPC - partial credit to award if the answer is between `minvalue` and `maxvalue` but not given to the required precision
 	 * @property {String} precisionMessage - message to display in the marking feedback if their answer was not given to the required precision
-	 * @property {Boolean} mustBeReduced - should the student enter a fraction in lowest terms
-	 * @property {Number} mustBeReducedPC - partial credit to award if the answer is not a reduced fraction
+     * @property {Boolean} strictPrecision - must the student give exactly the required precision? If false, omitting trailing zeros is allowed.
 	 */
-	settings:
-	{
-        minvalueString: '0',
-        maxvalueString: '0',
-		minvalue: 0,
-		maxvalue: 0,
-		correctAnswerFraction: false,
+	settings: {
+		correctAnswer: null,
+		correctAnswerFractions: false,
+		numRows: '3',
+		numColumns: '3',
+		allowResize: true,
+		tolerance: '0',
+		markPerCell: false,
 		allowFractions: false,
-        notationStyles: ['en','si-en'],
-		displayAnswer: 0,
-		precisionType: 'none',
+		precisionType: 'none',	//'none', 'dp' or 'sigfig'
         precisionString: '0',
-        strictPrecision: false,
 		precision: 0,
 		precisionPC: 0,
-		mustBeReduced: false,
-		mustBeReducedPC: 0,
 		precisionMessage: R('You have not given your answer to the correct precision.'),
-        showPrecisionHint: true
+        strictPrecision: true
 	},
 
     /** The name of the input widget this part uses, if any.
      * @returns {String}
      */
     input_widget: function() {
-        return 'number';
+        return 'matrix';
     },
+
+	/** Options for this part's input widget
+	 * @returns {Object}
+	 */
+	input_options: function() {
+		return {
+			allowFractions: this.settings.allowFractions,
+			allowedNotationStyles: ['plain','en','si-en'],
+			allowResize: this.settings.allowResize,
+			numRows: this.settings.numRows,
+			numColumns: this.settings.numColumns,
+			parseCells: false
+		};
+	},
 
 	/** Compute the correct answer, based on the given scope
 	 */
 	getCorrectAnswer: function(scope) {
 		var settings = this.settings;
 
-		var precision = jme.subvars(settings.precisionString, scope);
-		settings.precision = scope.evaluate(precision).value;
-
-        if(settings.precisionType=='sigfig' && settings.precision<=0) {
-            throw(new Numbas.Error('part.numberentry.zero sig fig'));
-        }
-
-        if(settings.precisionType=='dp' && settings.precision<0) {
-            throw(new Numbas.Error('part.numberentry.negative decimal places'));
-        }
-
-		var minvalue = jme.subvars(settings.minvalueString,scope);
-		minvalue = scope.evaluate(minvalue);
-		if(minvalue && minvalue.type=='number') {
-			minvalue = minvalue.value;
+		var correctAnswer = jme.subvars(settings.correctAnswerString,scope);
+		correctAnswer = jme.evaluate(correctAnswer,scope);
+		if(correctAnswer && correctAnswer.type=='matrix') {
+			settings.correctAnswer = correctAnswer.value;
+		} else if(correctAnswer && correctAnswer.type=='vector') {
+			settings.correctAnswer = Numbas.vectormath.toMatrix(correctAnswer.value);
 		} else {
-			throw(new Numbas.Error('part.setting not present',{property:R('minimum value')}));
+			this.error('part.setting not present',{property:'correct answer'});
 		}
 
-		var maxvalue = jme.subvars(settings.maxvalueString,scope);
-		maxvalue = scope.evaluate(maxvalue);
-		if(maxvalue && maxvalue.type=='number') {
-			maxvalue = maxvalue.value;
-		} else {
-			throw(new Numbas.Error('part.setting not present',{property:R('maximum value')}));
-		}
+		settings.precision = jme.subvars(settings.precisionString, scope);
+		settings.precision = jme.evaluate(settings.precision,scope).value;
 
 		switch(settings.precisionType) {
 		case 'dp':
-			minvalue = math.precround(minvalue,settings.precision);
-			maxvalue = math.precround(maxvalue,settings.precision);
+			settings.correctAnswer = Numbas.matrixmath.precround(settings.correctAnswer,settings.precision);
 			break;
 		case 'sigfig':
-			minvalue = math.siground(minvalue,settings.precision);
-			maxvalue = math.siground(maxvalue,settings.precision);
+			settings.correctAnswer = Numbas.matrixmath.siground(settings.correctAnswer,settings.precision);
 			break;
 		}
 
-		var fudge = 0.00000000001;
-		settings.minvalue = minvalue - fudge;
-		settings.maxvalue = maxvalue + fudge;
-	},
-
-	/** Tidy up the student's answer - at the moment, just remove space.
-     * You could override this to do more substantial filtering of the student's answer.
-	 * @param {String} answer
-	 * @returns {String}
-	 */
-	cleanAnswer: function(answer) {
-		answer = answer.toString().trim();
-		return answer;
 	},
 
 	/** Save a copy of the student's answer as entered on the page, for use in marking.
 	 */
 	setStudentAnswer: function() {
-		this.studentAnswer = this.cleanAnswer(this.stagedAnswer);
+		if(this.stagedAnswer !== undefined) {
+			this.studentAnswerRows = parseInt(this.stagedAnswer.rows);
+			this.studentAnswerColumns = parseInt(this.stagedAnswer.columns);
+		} else {
+			this.studentAnswerRows = 0;
+			this.studentAnswerColumns = 0;
+		}
+			this.studentAnswer = this.stagedAnswer;
 	},
 
-	/** Get the student's answer as it was entered as a JME data type, to be used in the custom marking algorithm
+	/** Get the student's answer as it was entered as a JME data type, to be used in the marking script
 	 * @abstract
 	 * @returns {Numbas.jme.token}
 	 */
 	rawStudentAnswerAsJME: function() {
-		return new Numbas.jme.types.TString(this.studentAnswer);
+        return jme.wrapValue(this.studentAnswer);
 	},
 
-    /** Get the student's answer as a floating point number
-     * @returns {Number}
+    /** Get the student's answer as a matrix
+     * @returns {matrix}
      */
-	studentAnswerAsFloat: function() {
-		return util.parseNumber(this.studentAnswer,this.settings.allowFractions,this.settings.notationStyles);
+	studentAnswerAsMatrix: function() {
+		var rows = this.studentAnswerRows;
+		var columns = this.studentAnswerColumns;
+
+		var studentMatrix = [];
+		for(var i=0;i<rows;i++) {
+			var row = [];
+			for(var j=0;j<columns;j++) {
+				var cell = this.studentAnswer[i][j];
+				var n = util.parseNumber(cell,this.settings.allowFractions);
+				
+				if(isNaN(n)) {
+					return null;
+				} else {
+					row.push(n);
+				}
+			}
+			studentMatrix.push(row);
+		}
+
+		studentMatrix.rows = rows;
+		studentMatrix.columns = columns;
+		
+		return studentMatrix;
 	}
 };
-['loadFromXML','loadFromJSON','resume','finaliseLoad'].forEach(function(method) {
-    NumberEntryPart.prototype[method] = util.extend(Part.prototype[method], NumberEntryPart.prototype[method]);
+['resume','finaliseLoad','loadFromXML','loadFromJSON'].forEach(function(method) {
+    MatrixEntryPart.prototype[method] = util.extend(Part.prototype[method], MatrixEntryPart.prototype[method]);
 });
 
-Numbas.partConstructors['numberentry'] = util.extend(Part,NumberEntryPart);
+Numbas.partConstructors['matrix'] = util.extend(Part,MatrixEntryPart);
+
 });
+
 
 /*
 Copyright 2011-15 Newcastle University
@@ -16953,8 +17821,8 @@ PatternMatchPart.prototype = /** @lends Numbas.PatternMatchPart.prototype */ {
         if(!this.store) {
             return;
         }
- 		var pobj = this.store.loadPatternMatchPart(this);
- 		this.stagedAnswer = [pobj.studentAnswer];
+ 		var pobj = this.store.loadPart(this);
+ 		this.stagedAnswer = pobj.studentAnswer;
     },
 
 	/** The student's last submitted answer 
@@ -16994,6 +17862,15 @@ PatternMatchPart.prototype = /** @lends Numbas.PatternMatchPart.prototype */ {
         return 'string';
     },
 
+	/** Options for this part's input widget
+	 * @returns {Object}
+	 */
+	input_options: function() {
+		return {
+			allowEmpty: false
+		}
+	},
+
 	/** Compute the correct answer, based on the given scope
 	 */
 	getCorrectAnswer: function(scope) {
@@ -17030,508 +17907,5 @@ PatternMatchPart.prototype = /** @lends Numbas.PatternMatchPart.prototype */ {
 });
 
 Numbas.partConstructors['patternmatch'] = util.extend(Part,PatternMatchPart);
-});
-
-Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],function() {
-
-    var util = Numbas.util;
-
-    ko.components.register('answer-widget', {
-        viewModel: function(params) {
-            this.answerJSON = params.answer;
-            this.part = params.part;
-            this.partDisplay = params.partDisplay;
-            this.disable = params.disable;
-            this.widget = params.widget;
-            this.widget_options = params.widget_options;
-            this.classes = {'answer-widget':true};
-            this.classes['answer-widget-'+this.widget] = true;
-        },
-        template: '\
-        <span data-bind="css: classes, component: {name: \'answer-widget-\'+widget, params: {answerJSON: answerJSON, part: part, disable: disable, options: widget_options}}"></span>\
-        '
-    });
-
-    ko.components.register('answer-widget-string', {
-        viewModel: function(params) {
-            this.answerJSON = params.answerJSON;
-            var init = ko.unwrap(this.answerJSON);
-            this.input = ko.observable(init.valid ? init.value || '' : '');
-            this.part = params.part;
-            this.disable = params.disable;
-            this.options = params.options;
-            this.allowEmpty = this.options.allowEmpty;
-            ko.computed(function() {
-                var value = this.input();
-                var valid = value!='' || this.allowEmpty;
-                this.answerJSON({valid: valid, value: value});
-            },this);
-        },
-        template: '\
-            <input type="text" data-bind="event: part.inputEvents, textInput: input, autosize: true, disable: ko.unwrap(disable) || ko.unwrap(part.revealed)">\
-        '
-    });
-
-    ko.components.register('answer-widget-number', {
-        viewModel: function(params) {
-            this.answerJSON = params.answerJSON;
-            this.part = params.part.part;
-            this.options = params.options;
-            this.allowFractions = this.options.allowFractions || false;
-            this.allowedNotationStyles = this.options.allowedNotationStyles || ['plain','en','si-en'];
-            this.disable = params.disable;
-
-            var init = ko.unwrap(this.answerJSON);
-            this.input = ko.observable(init.valid ? Numbas.math.niceNumber(init.value,{style: this.allowedNotationStyles[0]}) || '' : '');
-
-            this.result = ko.computed(function() {
-                var input = this.input().trim();
-                if(input=='') {
-                    return {valid:false};
-                }
-                if(!util.isNumber(input,this.allowFractions,this.allowedNotationStyles)) {
-                    if(util.isNumber(input, true, this.allowedNotationStyles)) {
-                        return {valid: false, warnings: [R('answer.number.fractions not allowed')]};
-                    } else {
-                        return {valid:false, warnings: [R('answer.number.not a number')]};
-                    }
-                } else {
-                    var n = Numbas.util.parseNumber(input,this.allowFractions,this.allowedNotationStyles);
-                    return {valid:true, value: n};
-                }
-            },this);
-            ko.computed(function() {
-                this.answerJSON(this.result())
-            },this);
-        },
-        template: '\
-            <input type="text" data-bind="event: part.inputEvents, textInput: input, autosize: true, disable: ko.unwrap(disable) || ko.unwrap(part.revealed)">\
-        '
-    });
-
-    ko.components.register('answer-widget-jme', {
-        viewModel: function(params) {
-            this.answerJSON = params.answerJSON;
-
-            this.part = params.part;
-            var p = this.part.part;
-            this.options = params.options;
-            this.showPreview = this.options.showPreview || false;
-
-            this.disable = params.disable;
-
-            var init = ko.unwrap(this.answerJSON);
-            this.input = ko.observable(init.valid ? Numbas.jme.display.treeToJME(init.value) || '' : '');
-
-            this.latex = ko.computed(function() {
-                var input = this.input();
-                if(input==='') {
-                    return '';
-                }
-
-                try {
-                    var tex = Numbas.jme.display.exprToLaTeX(input,'',p.question.scope);
-                    if(tex===undefined) {
-                        throw(new Numbas.Error('display.part.jme.error making maths'));
-                    }
-                }
-                catch(e) {
-                    return '';
-                }
-
-                return tex;
-            },this).extend({throttle:100});
-
-            this.result = ko.computed(function() {
-                var input = this.input().trim();
-
-                if(input=='') {
-                    return {valid:false};
-                }
-
-                try {
-                    var expr = Numbas.jme.compile(input);
-                    var scope = p.getScope();
-                    var ruleset = new Numbas.jme.rules.Ruleset([],{});
-                    expr = Numbas.jme.display.simplifyTree(expr, ruleset, scope);
-                    return {valid: true, value: expr}
-                } catch(e) {
-                    return {valid: false, warnings: [R('answer.jme.invalid expression',{message:e.message})]};
-                }
-                
-            },this);
-            ko.computed(function() {
-                this.answerJSON(this.result())
-            },this);
-        },
-        template: '\
-            <input type="text" data-bind="event: part.inputEvents, textInput: input, autosize: true, disable: ko.unwrap(disable) || ko.unwrap(part.revealed)">\
-            <span class="jme-preview" data-bind="visible: showPreview && latex(), maths: \'\\\\displaystyle{{\'+latex()+\'}}\'"></span>\
-        '
-    });
-
-    ko.components.register('answer-widget-gapfill', {
-        viewModel: function(params) {
-            this.answerJSON = params.answerJSON;
-            var part = params.part;
-            this.gaps = ko.computed(function() {
-                return Knockout.unwrap(part.gaps).map(function(gap) {
-                    return {answerJSON: ko.observable(), part: gap};
-                });
-            },this)
-            ko.computed(function() {
-                this.answerJSON(this.gaps().map(function(g){return g.answerJSON()}));
-            },this);
-        },
-        template: '\
-            <table class="table">\
-                <tbody data-bind="foreach: gaps">\
-                    <tr>\
-                        <th><span data-bind="text: part.header"></span></th>\
-                        <td><div data-bind="component: {name: \'answer-widget\', params: {answer: answerJSON, widget: Knockout.unwrap(part.type).widget, part: part}}"></div></td>\
-                    </tr>\
-                </tbody>\
-            </table>\
-        '
-    });
-
-    ko.components.register('answer-widget-matrix', {
-        viewModel: function(params) {
-            var vm = this;
-            this.answerJSON = params.answerJSON;
-            this.options = params.options;
-            this.disable = params.disable;
-            this.allowFractions = this.options.allowFractions || false;
-            this.allowedNotationStyles = this.options.allowedNotationStyles || ['plain','en','si-en'];
-            this.allowResize = this.options.allowResize===undefined ? true : this.options.allowResize;
-            this.numRows = this.options.numRows || 1;
-            this.numColumns = this.options.numColumns || 1;
-            this.parseCells = this.options.parseCells===undefined ? true : this.options.parseCells;
-
-            var init = ko.unwrap(this.answerJSON);
-            var value = init.value;
-            if(!value) {
-                value = [];
-                for(var i=0;i<this.numRows;i++) {
-                    var row = [];
-                    for(var j=0;j<this.numColumns;j++) {
-                        row.push('');
-                    }
-                    value.push(row);
-                }
-            }
-            this.input = ko.observable(value);
-
-            this.result = ko.computed(function() {
-                var value = this.input().slice().map(function(r){return r.slice()});
-                var cells = Array.prototype.concat.apply([],value);
-                if(this.parseCells) {
-                    var valid = cells.every(function(cell){ return util.isNumber(cell,vm.allowFractions,vm.allowedNotationStyles) });
-                    if(!valid) {
-                        var validFractions = cells.every(function(cell){ return util.isNumber(cell,true,vm.allowedNotationStyles) });
-                        if(validFractions) {
-                            return {valid: false, warnings: [R('answer.matrix.fractions not allowed')]};
-                        } else {
-                            return {valid:false, warnings: [R('answer.matrix.some cell not a number')]};
-                        }
-                    } else {
-                        var matrix = value.map(function(row){ return row.map(function(cell){ return Numbas.util.parseNumber(cell,this.allowFractions,this.allowedNotationStyles) }) });
-                        matrix.rows = value.length;
-                        matrix.columns = matrix.rows>0 ? value[0].length : 0;
-                        return {valid:true, value: matrix};
-                    }
-                } else {
-                    return {valid: true, value: value};
-                }
-            },this);
-            ko.computed(function() {
-                this.answerJSON(this.result());
-            },this);
-        },
-        template: '\
-            <matrix-input params="value: input, allowResize: true, disable: disable, allowResize: allowResize, rows: numRows, columns: numColumns"></matrix-input>\
-        '
-    });
-
-    ko.components.register('matrix-input',{
-        viewModel: function(params) {
-            this.allowResize = params.allowResize ? params.allowResize : ko.observable(false);
-            if(typeof params.rows=='function') {
-                this.numRows = params.rows;
-            } else {
-                this.numRows = ko.observable(params.rows || 2);
-            }
-            if(typeof params.columns=='function') {
-                this.numColumns = params.columns;
-            } else {
-                this.numColumns = ko.observable(params.columns || 2);
-            }
-
-            var v = params.value();
-            this.numRows(v.length || 1);
-            this.numColumns(v.length ? v[0].length : 1);
-            this.value = ko.observableArray(v.map(function(r){return ko.observableArray(r.map(function(c){return {cell:ko.observable(c)}}))}));
-
-            this.disable = params.disable || false;
-
-            this.keydown = function(obj,e) {
-                this.oldPos = e.target.selectionStart;
-                return true;
-            }
-
-
-            this.moveArrow = function(obj,e) {
-                var cell = $(e.target).parent('td');
-                var selectionStart = e.target.selectionStart;
-                switch(e.which) {
-                case 39:
-                    if(e.target.selectionStart == this.oldPos && e.target.selectionStart==e.target.selectionEnd && e.target.selectionEnd==e.target.value.length) {
-                        cell.next().find('input').focus();
-                    }
-                    break;
-                case 37:
-                    if(e.target.selectionStart == this.oldPos && e.target.selectionStart==e.target.selectionEnd && e.target.selectionEnd==0) {
-                        cell.prev().find('input').focus();
-                    }
-                    break;
-                case 38:
-                    var e = cell.parents('tr').prev().children().eq(cell.index()).find('input');
-                    if(e.length) {
-                        e.focus();
-                        e[0].setSelectionRange(this.oldPos,this.oldPos);
-                    }
-                    break;
-                case 40:
-                    var e = cell.parents('tr').next().children().eq(cell.index()).find('input');
-                    if(e.length) {
-                        e.focus();
-                        e[0].setSelectionRange(this.oldPos,this.oldPos);
-                    }
-                    break;
-                }
-                return false;
-            }
-            
-            this.update = function() {
-                // update value when number of rows or columns changes
-                var numRows = parseInt(this.numRows());
-                var numColumns = parseInt(this.numColumns());
-                var value = this.value();
-                if(numRows==value.length && (numRows==0 || numColumns==value[0]().length)) {
-                    return;
-                }
-                value.splice(numRows,value.length-numRows);
-                for(var i=0;i<numRows;i++) {
-                    var row;
-                    if(value.length<=i) {
-                        row = [];
-                        value.push(ko.observableArray(row));
-                    } else {
-                        row = value[i]();
-                    }
-                    row.splice(numColumns,row.length-numColumns);
-                    
-                    for(var j=0;j<numColumns;j++) {
-                        var cell;
-                        if(row.length<=j) {
-                            cell = ko.observable('');
-                            row.push({cell:cell});
-                        } else {
-                            cell = row[j];
-                        }
-                    }
-                    value[i](row);
-                }
-                this.value(value);
-            }
-
-            ko.computed(this.update,this);
-            
-            var firstGo = true;
-            //update value with model
-            ko.computed(function() {
-                var v = this.value().map(function(row,i){
-                    return row().map(function(cell,j){return cell.cell()})
-                })
-                if(firstGo) {
-                    firstGo = false;
-                    return;
-                }
-                params.value(v);
-            },this)
-        },
-        template: 
-         '<div class="matrix-input">'
-        +'	<!-- ko if: allowResize --><div class="matrix-size">'
-        +'		<label class="num-rows">Rows: <input type="number" min="1" data-bind="value: numRows, autosize: true, disable: disable"/></label>'
-        +'		<label class="num-columns">Columns: <input type="number" min="1" data-bind="value: numColumns, autosize: true, disable: disable"/></label>'
-        +'	</div><!-- /ko -->'
-        +'	<div class="matrix-wrapper">'
-        +'		<span class="left-bracket"></span>'
-        +'		<table class="matrix">'
-        +'			<tbody data-bind="foreach: value">'
-        +'				<tr data-bind="foreach: $data">'
-        +'					<td class="cell"><input type="text" data-bind="textInput: cell, autosize: true, disable: $parents[1].disable, event: {keydown: $parents[1].keydown, keyup: $parents[1].moveArrow}"></td>'
-        +'				</tr>'
-        +'			</tbody>'
-        +'		</table>'
-        +'		<span class="right-bracket"></span>'
-        +'	</div>'
-        +'</div>'
-        }
-    )
-
-    ko.components.register('answer-widget-radios', {
-        viewModel: function(params) {
-            this.part = params.part;
-            this.choices = ko.observableArray(this.part.input_options.choices);
-            this.choice = ko.observable(null);
-            this.answerJSON = params.answerJSON;
-            var init = ko.unwrap(this.answerJSON);
-            if(init.valid) {
-                this.choice(init.value);
-            }
-
-            ko.computed(function() {
-                var choice = this.choice();
-                this.answerJSON({valid: choice!==null, value: choice});
-            },this);
-        },
-        template: '\
-            <form>\
-            <ul class="list-unstyled" data-bind="foreach: choices">\
-                <li><label><input type="radio" name="choice" data-bind="checkedValue: $index, checked: $parent.choice"> <span data-bind="html: $data"></span></label></li>\
-            </ul>\
-            </form>\
-        '
-    });
-
-    ko.components.register('answer-widget-dropdown', {
-        viewModel: function(params) {
-            this.part = params.part;
-            this.choices = this.part.input_options.choices.map(function(c,i){return {label: c, index: i}});
-            this.choices.splice(0,0,{label: '', index: null});
-            this.choice = ko.observable(null);
-            this.answerJSON = params.answerJSON;
-            var init = ko.unwrap(this.answerJSON);
-            if(init.valid) {
-                this.choice(this.choices[init.value]+1);
-            }
-
-            ko.computed(function() {
-                var choice = this.choice();
-                if(choice && choice.index!==null) {
-                    this.answerJSON({valid: true, value: choice.index});
-                } else {
-                    this.answerJSON({valid: false});
-                }
-            },this);
-        },
-        template: '\
-            <select data-bind="options: choices, optionsText: \'label\', value: choice"></select>\
-        '
-    });
-
-    ko.components.register('answer-widget-checkboxes', {
-        viewModel: function(params) {
-            this.part = params.part;
-            this.answerJSON = params.answerJSON;
-            var init = ko.unwrap(this.answerJSON);
-
-            this.choices = ko.observableArray(this.part.input_options.choices.map(function(choice,i) {
-                return {
-                    content: choice,
-                    ticked: ko.observable(init.valid ? init.value[i] : false)
-                }
-            }));
-
-            ko.computed(function() {
-                this.answerJSON({valid: true, value: this.choices().map(function(c){return c.ticked()})});
-            },this);
-        },
-        template: '\
-            <form>\
-            <ul class="list-unstyled" data-bind="foreach: choices">\
-                <li><label><input type="checkbox" name="choice" data-bind="checked: ticked"> <span data-bind="html: content"></span></label></li>\
-            </ul>\
-            </form>\
-        '
-    });
-
-    ko.components.register('answer-widget-m_n_x', {
-        viewModel: function(params) {
-            this.part = params.part;
-            this.answerJSON = params.answerJSON;
-            this.choices = ko.computed(function() {
-                try {
-                    return this.part.type().model.choices().map(function(c){return c.content()});
-                } catch(e) {
-                    return [];
-                }
-            },this);
-            this.answers = ko.computed(function() {
-                try {
-                    return this.part.type().model.answers().map(function(c){return c.content()});
-                } catch(e) {
-                    return [];
-                }
-            },this);
-            this.ticks = ko.computed(function() {
-                var choices = this.choices();
-                var answers = this.answers();
-                var ticks = [];
-                for(var i=0;i<choices.length;i++) {
-                    var row = [];
-                    for(var j=0;j<answers.length;j++) {
-                        row.push({ticked: ko.observable(false)});
-                    }
-                    ticks.push(row);
-                }
-                return ticks;
-            },this);
-
-            ko.computed(function() {
-                var ticks = this.ticks().map(function(r){return r.map(function(d){return d.ticked()})});
-
-                // because of the never-ending madness to do with the order of matrices in multiple choice parts,
-                // this matrix needs to be transposed
-                // It makes more sense for the array to go [choice][answer], because that's how they're displayed, but 
-                // changing that would mean breaking old questions.
-                var numAnswers = this.answers().length;
-                var numChoices = this.choices().length;
-                var oticks = [];
-                for(var i=0;i<numAnswers;i++) {
-                    var row = [];
-                    oticks.push(row);
-                    for(var j=0;j<numChoices;j++) {
-                        row.push(ticks[j][i]);
-                    }
-                }
-                this.answerJSON(oticks);
-            },this);
-        },
-        template: '\
-            <form>\
-                <table>\
-                <thead>\
-                <tr>\
-                    <td></td>\
-                    <!-- ko foreach: answers -->\
-                    <th><span data-bind="html: $data"></span></th>\
-                    <!-- /ko -->\
-                </tr>\
-                <tbody data-bind="foreach: ticks">\
-                    <tr>\
-                        <th><span data-bind="html: $parent.choices()[$index()]"></span></th>\
-                        <!-- ko foreach: $data -->\
-                        <td><input type="checkbox" data-bind="checked: ticked"></td>\
-                        <!-- /ko -->\
-                    </tr>\
-                </tbody>\
-                </table>\
-            </form>\
-        '
-    });
-
 });
 

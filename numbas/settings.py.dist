@@ -145,7 +145,22 @@ GLOBAL_SETTINGS = {
     'HELP_URL': 'http://numbas-editor.readthedocs.org',        # the URL of the Numbas webdocs
     'PYTHON_EXEC': '/usr/bin/python3',
     'NUMBAS_THEMES': [('Standard', 'default'), ('Printable worksheet', 'worksheet'), ('School', 'school')],
-    'NUMBAS_LOCALES': [('English', 'en-GB'), (u'Bokmål', 'nb-NO'), ('Nederlands', 'nl-NL'), (u'Español', 'es-ES'), ('School', 'en-school'), ('Shqip','sq-AL')],
+    'NUMBAS_LOCALES': [
+        ('English','en-GB'),
+        ('Français','fr-FR'),
+        ('Español','es-ES'),
+        ('Svenska','sv-SE'),
+        ('Nederlands','nl-NL'),
+        ('Norsk bokmål','nb-NO'),
+        ('Shqip','sq-AL'),
+        ('Polski (incomplete)','pl-PL'),
+        ('ﺎﻠﻋﺮﺒﻳﺓ (incomplete)','ar-SA'),
+        ('Italiano (incomplete)','it-IT'),
+        ('Deutsch (incomplete)','de-DE'),
+        ('한국어 (incomplete)','ko-KR'),
+        ('Português brasileiro (incomplete)','pt-BR'),
+        ('School English','en-school'),
+    ],
     #Uncomment the line below and provide a path to a minification tool to minify javascript files
     #'MINIFIER_PATH': 'uglifyjs',
 }

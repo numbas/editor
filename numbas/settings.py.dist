@@ -9,11 +9,10 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 import os
 import sys
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '$v959fg^*x5umf6x5#99@ay#j5%%_(n^+c0%vs5n=e$vwfzcu5'
+SECRET_KEY = ''
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -130,7 +129,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = 'static/'
 
-
 SITE_TITLE = 'Numbas'
 
 MATHJAX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0'
@@ -168,7 +166,7 @@ GLOBAL_SETTINGS = {
 
 EVERYTHING_VISIBLE = False  # Set this to True to allow every user to see all content, regardless of access settings
 
-ALLOW_REGISTRATION = False
+ALLOW_REGISTRATION = True
 ACCOUNT_ACTIVATION_DAYS = 10
 
 LOGIN_REDIRECT_URL = '/'

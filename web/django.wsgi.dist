@@ -1,5 +1,4 @@
-import os, site, sys
-site.addsitedir('/path/to/virtualenv/lib/python-version/site-packages')
+import os, sys
 sys.path.append('/srv/www/numbas_editor')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'numbas.settings'
 

@@ -2,13 +2,17 @@ from django.conf.urls import url
 
 from django.contrib.auth.decorators import login_required
 
-from .views import project, editoritem, exam, question, HomeView, theme, extension, generic, notification, resource, basket, timeline, custom_part_type
+from .views import project, editoritem, exam, question, HomeView, TermsOfUseView, theme, extension, generic, notification, resource, basket, timeline, custom_part_type
 
 urlpatterns = [
 
     # Home
 
     url(r'^$', HomeView.as_view(), name='editor_index'),
+
+    # Terms of use
+
+    url(r'^terms-of-use/$', TermsOfUseView.as_view(), name='terms_of_use'),
 
     # Search
 

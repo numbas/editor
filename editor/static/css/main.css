@@ -7,6 +7,11 @@
     margin-left: 0.5em;
 }
 
+body > footer {
+	margin-top: 5em;
+	padding: 1em 0;
+}
+
 @media screen and (max-width:768px) {
     #top-nav > * ~ * {
         flex-basis: 100%;

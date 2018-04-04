@@ -11,7 +11,7 @@ django-tables2==1.17.*
 django-taggit==0.22.2
 django-uuslug==1.1.*
 git+git://github.com/numbas/django-thumbs
-git+git://github.com/phamk/django-notifications@django-2.0
+django-notifications
 html5lib==1.0.*
 python-slugify==1.2.*
 six==1.11.*

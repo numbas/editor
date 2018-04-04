@@ -34,6 +34,7 @@ from numbas import settings
 urlpatterns = [
     url(r'^users/search/$', UserSearchView.as_view(), name='user_search'),
 
+    url(r'^accounts/deactivate/$', accounts.views.DeactivateUserView.as_view(), name='user_deactivate'),
     url(r'^accounts/password/change/done/$',
         auth_views.password_change_done,
         name='auth_password_change_done'),

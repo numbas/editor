@@ -91,8 +91,43 @@ class ChangePasswordForm(forms.ModelForm):
 
 
     def save(self, *args, **kwargs):
-        print('save!')
         password = self.cleaned_data.get('password1')
 
         self.instance.set_password(password)
         self.instance.save()
+
+class DeactivateUserForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = []
+
+    confirm_text = forms.CharField()
+    magic_word = 'DEACTIVATE'
+
+    def clean_confirm_text(self):
+        magic_word = self.magic_word
+        confirm_text = self.cleaned_data.get('confirm_text').strip().upper()
+        if confirm_text != magic_word:
+            raise forms.ValidationError("You must type {} in the box.".format(magic_word))
+        return confirm_text
+
+    def save(self, *args, **kwargs):
+        user = self.instance
+
+        user.is_active = False
+        user.username = 'deactivated_user_{}!'.format(user.pk)
+        user.password = ''
+        user.email = ''
+        user.last_login = None
+        user.first_name = ''
+        user.last_name = ''
+        user.save()
+
+        user.userprofile.bio = ''
+        user.userprofile.question_basket.clear()
+        user.userprofile.avatar = None
+        user.userprofile.mathjax_url = ''
+        user.userprofile.save()
+
+        user.userprofile.personal_project.name = "Deactivated user's workspace"
+        user.userprofile.personal_project.save()

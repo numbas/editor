@@ -6,7 +6,7 @@ try:
 except ImportError:
     from io import StringIO
 
-from accounts.forms import NumbasRegistrationForm
+from accounts.forms import NumbasRegistrationForm, DeactivateUserForm
 from accounts.forms import UserProfileForm, ChangePasswordForm
 from accounts.models import RegistrationProfile
 from accounts.util import find_users, user_json
@@ -219,3 +219,11 @@ class UserEditorItemSearchView(editoritem.SearchView):
         context = super(UserEditorItemSearchView, self).get_context_data(*args, **kwargs)
         context['view_user'] = self.user
         return context
+
+class DeactivateUserView(CurrentUserUpdateView):
+    model = User
+    template_name = 'profile/deactivate.html'
+    form_class = DeactivateUserForm
+
+    def get_success_url(self):
+        return reverse('logout')

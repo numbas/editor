@@ -26,6 +26,10 @@
                 <li class="{% if profile_page == "themes" %}active{% endif %}"><a href="{% url 'profile_themes' object.pk %}"><span class="glyphicon glyphicon-sunglasses"></span> Themes</a></li>
                 <li class="{% if profile_page == "extensions" %}active{% endif %}"><a href="{% url 'profile_extensions' object.pk %}"><span class="glyphicon glyphicon-wrench"></span> Extensions</a></li>
                 <li class="{% if profile_page == "custom_part_types" %}active{% endif %}"><a href="{% url 'profile_custom_part_types' object.pk %}"><span class="glyphicon glyphicon-ok"></span> Part types</a></li>
+				{% if view_user == request.user %}
+                <li role="separator" class="nav-divider"></li>
+                <li><a class="text-danger" href="{% url 'user_deactivate' %}"><span class="glyphicon glyphicon-remove"></span> Deactivate your account</a></li>
+				{% endif %}
             </div>
         </div>
         <div class="col-sm-9">

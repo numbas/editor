@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<header class="page-header">
+    <h1 class="big-name">
+        Deactivate your account
+    </h1>
+</header>
+
+<main>
+	<form method="POST">
+		{% csrf_token %}
+		<p>{{user.first_name}}, are you sure you want to deactivate your account?</p>
+		<p class="text-danger">This is <strong>IRREVERSIBLE</strong>.</p>
+		<p>All personally identifying information will be removed from your account, and you will not be able to log back in. Any content you have created will remain on the site, and any access privileges you have granted to other users will remain.</p>
+		<p>If you want to delete anything or revoke access, do that before deactivating your account.</p>
+		<p>Type <strong>{{form.magic_word}}</strong> in the box below to confirm you want to deactivate your account.</p>
+		<p>{{form.confirm_text}}</p>
+		{% if form.confirm_text.errors %}
+		<ol class="list-unstyled">
+			{% for error in form.confirm_text.errors %}
+			<li class="text-warning">{{error}}</li>
+			{% endfor %}
+		</ol>
+		{% endif %}
+		<button class="btn btn-danger btn-lg" type="submit">Deactivate my account</button> <a class="btn btn-link" href="{% url 'editor_index' %}">Cancel</a>
+	</form>
+</main>
+
+{% endblock content %}
+

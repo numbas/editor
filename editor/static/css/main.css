@@ -83,6 +83,9 @@ body:not(.loaded) .loaded-content {
     color: black !important;
     vertical-align: middle;
 }
+.user-thumbnail.deactivated .glyphicon {
+	color: #777 !important;
+}
 
 .stamp {
     font-weight: bold;

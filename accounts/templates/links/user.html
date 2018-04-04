@@ -1,1 +1,1 @@
-<a class="user-link"{% if new_window %} target="_blank"{% endif %} href="{% url 'view_profile' user.pk %}">{{text}}</a>
+{% if user.is_active %}<a class="user-link"{% if new_window %} target="_blank"{% endif %} href="{% url 'view_profile' user.pk %}">{{text}}</a>{% else %}<span class="text-muted">{{text}}</span>{% endif %}

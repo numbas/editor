@@ -499,7 +499,7 @@
                                     <div class="alert alert-danger">
                                         <p>There's an error which means the marking algorithm can't run:</p>   
                                         <p data-bind="html: question_error"></p>
-										<pre data-bind="text: ko.unwrap(question_error).stack"></pre>
+                                        <pre data-bind="text: ko.unwrap(question_error).stack"></pre>
                                     </div>
                                     <!-- /ko -->
 
@@ -557,11 +557,11 @@
                                             <div data-bind="if: last_run_error">
                                                 <div class="alert alert-danger">
                                                     <p data-bind="html: last_run_error"></p>
-													<!-- ko if: last_run().warnings -->
-													<ul data-bind="foreach: last_run().warnings">
-														<li data-bind="html: $data"></li>
-													</ul>
-													<!-- /ko -->
+                                                    <!-- ko if: last_run().warnings -->
+                                                    <ul data-bind="foreach: last_run().warnings">
+                                                        <li data-bind="html: $data"></li>
+                                                    </ul>
+                                                    <!-- /ko -->
                                                 </div>
                                             </div>
                                             <div data-bind="visible: last_run() && sortedNotes().length>0">
@@ -747,7 +747,7 @@
                                                             </table>
                                                             <button class="btn btn-primary" type="button" data-bind="click: $parent.addUnitTest, disable: !canCreateUnitTest()">Create a unit test</button>
                                                         </div>
-														<!-- /ko -->
+                                                        <!-- /ko -->
                                                     </section>
                                                 </div>
                                             </div>
@@ -807,16 +807,16 @@
                                                 </td>
                                             </tr>
                                         </tbody>
-									</table>
+                                    </table>
 
-									<div data-bind="fadeVisible: replacementRandomDependencies().length" class="alert alert-danger">
-										<p>The variable replacements you've chosen will cause the following variables to be regenerated each time the student submits an answer to this part:</p>
-										<p><ul class="list-inline" data-bind="foreach: replacementRandomDependencies">
-											<li><span class="btn btn-sm btn-danger monospace" data-bind="text: $data,click: $root.goToVariable" title="Edit this variable"></span></li>
-										</ul></p>
-										<p>These variables have some random elements, which means they're not guaranteed to have the same value each time the student submits an answer. You should define new variables to store the random elements, so that they remain the same each time this part is marked.</p>
+                                    <div data-bind="fadeVisible: replacementRandomDependencies().length" class="alert alert-danger">
+                                        <p>The variable replacements you've chosen will cause the following variables to be regenerated each time the student submits an answer to this part:</p>
+                                        <p><ul class="list-inline" data-bind="foreach: replacementRandomDependencies">
+                                            <li><span class="btn btn-sm btn-danger monospace" data-bind="text: $data,click: $root.goToVariable" title="Edit this variable"></span></li>
+                                        </ul></p>
+                                        <p>These variables have some random elements, which means they're not guaranteed to have the same value each time the student submits an answer. You should define new variables to store the random elements, so that they remain the same each time this part is marked.</p>
                                         <p><a href="{{HELP_URL}}question/reference.html#adaptive-marking">More information about this problem</a></p>
-									</div>
+                                    </div>
 
                                     <div class="text-right">
                                         {% if editable %}<button class="btn btn-sm btn-primary add-variable-replacement" data-bind="click: addVariableReplacement"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: variableReplacements().length? 'Add another replacement' : 'Add a variable replacement'">Add a variable replacement</span></button>{% endif %}

@@ -2256,11 +2256,11 @@ $(document).ready(function() {
                     throw(new Numbas.Error("Student's answer not set. There may be an error in the input widget."));
                 }
                 if(!answer.valid) {
-					if(answer.value === undefined) {
-						mt.last_run({error: ''})
-					} else {
-	                    mt.last_run({error: "This answer is not valid.", warnings: answer.warnings});
-					}
+                    if(answer.value === undefined) {
+                        mt.last_run({error: ''})
+                    } else {
+                        mt.last_run({error: "This answer is not valid.", warnings: answer.warnings});
+                    }
                     return;
                 }
                 part.storeAnswer(answer.value);

@@ -675,14 +675,17 @@
                                                     </section>
 
                                                     <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='notes'}">
+                                                        <!-- ko if: ko.unwrap($data.runtime_part)!==undefined && ko.unwrap($parent.type().widget) -->
                                                         <form class="form-horizontal" data-bind="submit: Editor.noop">
                                                             <div class="form-group">
                                                                 <label class="label-block">
                                                                     <div class="col-sm-12 col-md-3">
                                                                         Student's answer
                                                                     </div>
-                                                                    <div class="col-sm-12 col-md-9">
-                                                                        <div data-bind="component: {name: 'answer-widget', params: {answer: answer, widget: $parent.type().widget, part: $parent}}"></div>
+                                                                    <div class="col-sm-12 col-md-9" data-bind="with: runtime_part">
+                                                                        <div data-bind="if: input_widget()">
+                                                                            <div data-bind="component: {name: 'answer-widget', params: {answer: $parent.answer, widget: input_widget(), widget_options: input_options(), part: $data, disable: true}}"></div>
+                                                                        </div>
                                                                     </div>
                                                                 </label>
                                                             </div>
@@ -744,6 +747,7 @@
                                                             </table>
                                                             <button class="btn btn-primary" type="button" data-bind="click: $parent.addUnitTest, disable: !canCreateUnitTest()">Create a unit test</button>
                                                         </div>
+														<!-- /ko -->
                                                     </section>
                                                 </div>
                                             </div>

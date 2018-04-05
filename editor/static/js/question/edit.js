@@ -2256,7 +2256,11 @@ $(document).ready(function() {
                     throw(new Numbas.Error("Student's answer not set. There may be an error in the input widget."));
                 }
                 if(!answer.valid) {
-                    mt.last_run({error: "This answer is not valid.", warnings: answer.warnings});
+					if(answer.value === undefined) {
+						mt.last_run({error: ''})
+					} else {
+	                    mt.last_run({error: "This answer is not valid.", warnings: answer.warnings});
+					}
                     return;
                 }
                 part.storeAnswer(answer.value);
@@ -2287,7 +2291,7 @@ $(document).ready(function() {
 
             // If either the script or result aren't there, or the script produced an error,
             // set every note as missing and reset its value
-            if(!last_run || last_run.error) {
+            if(!last_run || last_run.error !== undefined) {
                 this.notes().forEach(function(n) {
                     n.missing(true);
                     n.value(null);

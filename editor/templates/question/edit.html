@@ -440,7 +440,7 @@
                     <h3 class="panel-title form-inline" clickable>
                         <span clickable class="glyphicon" data-bind="css: {'glyphicon-triangle-right': !open(), 'glyphicon-triangle-bottom': open}"></span>
                         <strong clickable data-bind="text: header"></strong>
-                        <select {% if not editable %}disabled{% endif %} class="form-control type" data-bind="options: availableTypes, value:type, optionsText: 'niceName'"></select>
+                        <span clickable class="type-name" data-bind="text: type().niceName"></span>
                     </h3>
                 </div>
                 <div data-bind="fadeVisible: open">

@@ -2201,22 +2201,32 @@ $(document).ready(function() {
         });
 
         this.question = ko.observable(null);
+        this.current_question_instance = null;
+        this.last_question_json = null;
         this.question_error = ko.observable(null);
-        ko.computed(function() {
+        this.make_question = ko.computed(function() {
             mt.part.path();
-
-            mt.question(null);
 
             if(!mt.part.q.variablesReady()) {
                 return;
             }
             try {
+                var json = mt.part.q.toJSON();
+                if(Numbas.util.objects_equal(json,mt.last_question_json)) {
+                    return;
+                }
+                mt.question(null);
+                mt.last_question_json = json;
                 var q = mt.part.q.instance();
+                mt.current_question_instance = q;
                 mt.variables().forEach(function(v) {
                     q.scope.setVariable(v.name, v.value);
                 });
                 q.signals.trigger('variablesSet');
                 q.signals.on('ready').then(function() {
+                    if(q!=mt.current_question_instance) {
+                        return;
+                    }
                     mt.question_error(null);
                     mt.question(q);
                 }).catch(function(e) {

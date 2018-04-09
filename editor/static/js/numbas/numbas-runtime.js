@@ -12473,6 +12473,9 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 			return false;
 		}
 		if(typeof(a)=='object') {
+			if(a===null || b===null) {
+				return a===b;
+			}
 			if(Array.isArray(a) && Array.isArray(b)) {
 				return util.arraysEqual(a,b);
 			} else {
@@ -14814,10 +14817,10 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
     ko.components.register('answer-widget', {
         viewModel: function(params) {
             this.answerJSON = params.answer;
-            this.part = params.part;
+            this.part = ko.unwrap(params.part);
             this.disable = params.disable;
-            this.widget = params.widget;
-            this.widget_options = params.widget_options;
+            this.widget = params.widget || this.part.input_widget();
+            this.widget_options = params.widget_options || this.part.input_options();
             this.classes = {'answer-widget':true};
             this.classes['answer-widget-'+this.widget] = true;
         },

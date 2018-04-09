@@ -1880,6 +1880,17 @@ $(document).ready(function() {
 
         this.unit_tests = ko.observableArray([]);
         this.marking_test = ko.observable(new MarkingTest(this,this.q.questionScope()));
+        ko.computed(function() {
+            var mt = this.marking_test();
+            mt.answer();
+            mt.run();
+        },this);
+
+        this.run_all_tests = function() {
+            p.unit_tests().forEach(function(mt) {
+                mt.run();
+            });
+        }
 
         this.addUnitTest = function(test) {
             test.editing(false);
@@ -2204,16 +2215,14 @@ $(document).ready(function() {
         this.current_question_instance = null;
         this.last_question_json = null;
         this.question_error = ko.observable(null);
-        this.make_question = ko.computed(function() {
-            mt.part.path();
-
+        this.make_question = function() {
             if(!mt.part.q.variablesReady()) {
                 return;
             }
             try {
                 var json = mt.part.q.toJSON();
                 if(Numbas.util.objects_equal(json,mt.last_question_json)) {
-                    return;
+                    return mt.question();
                 }
                 mt.question(null);
                 mt.last_question_json = json;
@@ -2223,7 +2232,7 @@ $(document).ready(function() {
                     q.scope.setVariable(v.name, v.value);
                 });
                 q.signals.trigger('variablesSet');
-                q.signals.on('ready').then(function() {
+                var promise = q.signals.on('ready').then(function() {
                     if(q!=mt.current_question_instance) {
                         return;
                     }
@@ -2232,10 +2241,11 @@ $(document).ready(function() {
                 }).catch(function(e) {
                     mt.question_error(e);
                 });
+                return q;
             } catch(e) {
                 mt.question_error(e);
             }
-        }, this);
+        }
         this.runtime_part = ko.computed(function() {
             var q = this.question();
             if(!q) {
@@ -2245,7 +2255,7 @@ $(document).ready(function() {
         }, this);
         
         // When something changes, run the marking script and store the result in `this.result`
-        ko.computed(function() {
+        this.mark = function() {
             mt.answer();
             var q = mt.question();
             if(mt.question_error()) {
@@ -2286,7 +2296,15 @@ $(document).ready(function() {
             } catch(e) {
                 mt.last_run({error: 'Error marking: '+e.message});
             };
-        },this).extend({throttle:300});
+        }
+        this.run = function() {
+            var q = mt.make_question();
+            if(q) {
+                q.signals.on('ready').then(function() {
+                    mt.mark();
+                });
+            }
+        }
 
         this.last_run_error = ko.computed(function() {
             if(this.last_run()) {

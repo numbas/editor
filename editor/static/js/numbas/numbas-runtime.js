@@ -14939,13 +14939,22 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             var p = this.part = params.part;
             this.options = params.options;
             this.showPreview = this.options.showPreview || false;
+            this.returnString = this.options.returnString || false;
 
             this.disable = params.disable;
 
             var init = ko.unwrap(this.answerJSON);
 
             function cleanExpression(expr) {
-                return Numbas.jme.display.treeToJME(expr) || '';
+                if(typeof(expr)=='string') {
+                    return expr;
+                }
+                try {
+                    return Numbas.jme.display.treeToJME(expr) || '';
+                } catch(e) {
+                    console.warn(expr);
+                    throw(e);
+                }
             }
 
             this.input = ko.observable(init.valid ? cleanExpression(init.value) : '');
@@ -14976,14 +14985,18 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                     return {valid:false};
                 }
 
-                try {
-                    var expr = Numbas.jme.compile(input);
-                    var scope = p.getScope();
-                    var ruleset = new Numbas.jme.rules.Ruleset([],{});
-                    expr = Numbas.jme.display.simplifyTree(expr, ruleset, scope);
-                    return {valid: true, value: expr}
-                } catch(e) {
-                    return {valid: false, warnings: [R('answer.jme.invalid expression',{message:e.message})]};
+                if(this.options.returnString) {
+                    return {valid: true, value: input};
+                } else {
+                    try {
+                        var expr = Numbas.jme.compile(input);
+                        var scope = p.getScope();
+                        var ruleset = new Numbas.jme.rules.Ruleset([],{});
+                        expr = Numbas.jme.display.simplifyTree(expr, ruleset, scope);
+                        return {valid: true, value: expr}
+                    } catch(e) {
+                        return {valid: false, warnings: [R('answer.jme.invalid expression',{message:e.message})]};
+                    }
                 }
                 
             },this);
@@ -16305,7 +16318,8 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
      */
     input_options: function() {
         return {
-            showPreview: this.settings.showPreview
+            showPreview: this.settings.showPreview,
+            returnString: true
         };
     },
 

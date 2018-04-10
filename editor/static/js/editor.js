@@ -1368,6 +1368,8 @@ $(document).ready(function() {
 
     var displayJMEValue = Editor.displayJMEValue = function(v) {
         switch(v.type) {
+            case 'nothing':
+                return 'Nothing';
             case 'string':
                 return Numbas.util.escapeHTML(v.value);
             case 'list':

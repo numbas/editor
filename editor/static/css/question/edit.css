@@ -117,6 +117,7 @@
 }
 .jme-value[data-jme-value-type="error"],
 .jme-value[data-jme-value-type="string"],
+.jme-value[data-jme-value-type="nothing"],
 .jme-value[data-jme-value-type="list"],
 .jme-value[data-jme-value-type="dict"],
 .jme-value[data-jme-value-type="html"] {

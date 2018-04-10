@@ -15387,7 +15387,14 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.answerJSON = params.answerJSON;
             var init = ko.unwrap(this.answerJSON);
             if(init.valid) {
-                this.choice(this.choices[init.value+1]);
+                if(this.answerAsArray) {
+                    var choice = init.value.findIndex(function(c){ return c[0]; });
+                    if(choice>=0) {
+                        this.choice(this.choices[choice+1]);
+                    }
+                } else {
+                    this.choice(this.choices[init.value+1]);
+                }
             }
 
             this.subscriptions = [
@@ -15439,17 +15446,16 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.options = params.options;
             this.answerJSON = params.answerJSON;
             var init = ko.unwrap(this.answerJSON);
+            this.answerAsArray = this.options.answerAsArray;
 
             this.choices = ko.computed(function() {
                 return ko.unwrap(this.options.choices).map(function(choice,i) {
                     return {
                         content: choice,
-                        ticked: ko.observable(init.valid ? init.value[i] : false)
+                        ticked: ko.observable(init.valid ? vm.answerAsArray ? init.value[i][0] : init.value[i] : false)
                     }
                 });
             },this);
-
-            this.answerAsArray = this.options.answerAsArray;
 
             this.subscriptions = [
                 this.answerJSON.subscribe(function(v) {
@@ -15519,6 +15525,17 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                 return ticks;
             },this);
 
+
+            var init = ko.unwrap(this.answerJSON);
+            if(init.valid) {
+                var ticks = this.ticks();
+                for(var i=0;i<ticks.length;i++) {
+                    for(var j=0;j<ticks[i].length;j++) {
+                        ticks[i][j].ticked(init.value[i][j]);
+                    }
+                }
+            }
+
             this.setAnswerJSON = ko.computed(function() {
                 var ticks = this.ticks().map(function(r){return r.map(function(d){return d.ticked()})});
 
@@ -15536,7 +15553,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                         row.push(ticks[j][i]);
                     }
                 }
-                this.answerJSON(oticks);
+                this.answerJSON({valid: true, value: oticks});
             },this);
 
             this.dispose = function() {

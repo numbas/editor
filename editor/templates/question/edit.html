@@ -616,9 +616,12 @@
 
                                 <hr>
                                 <h4>Unit tests</h4>
-                                <button class="btn btn-default" data-bind="visible: unit_tests().length>0, click: run_all_tests"><span class="glyphicon glyphicon-play"></span> Run all unit tests</button>
                                 <div class="nothing-here" data-bind="fadeVisible: unit_tests().length==0">
-                                    <p>No unit tests have been defined. Select one or more notes above, and click the "Create a unit test" button.</p>
+                                    <p>No unit tests have been defined. Enter an answer above, select one or more notes, and click the "Create a unit test" button.</p>
+                                </div>
+                                <div data-bind="fadeVisible: unit_tests().length>0">
+                                    <p>The following tests check that the question is behaving as desired.</p>
+                                    <button class="btn btn-default" data-bind="click: run_all_tests"><span class="glyphicon glyphicon-play"></span> Run all unit tests</button>
                                 </div>
                                 <div class="panel-group unit-tests">
                                     <!-- ko foreach: unit_tests -->
@@ -638,8 +641,8 @@
                                                 </span>
                                                 <span clickable role="button" class="glyphicon" data-bind="css: {'glyphicon-triangle-right': !open(), 'glyphicon-triangle-bottom': open}"></span>
                                                 <strong data-bind="text: header" clickable></strong>
-                                                <span data-bind="visible: !open(), text: name()" clickable></span>
-                                                <input type="text" class="form-control" data-bind="visible: open, textInput: name" placeholder="Describe this test">
+                                                <span data-bind="visible: !item_json.editable || !open(), text: displayName" clickable></span>
+                                                <input type="text" class="form-control" data-bind="visible: item_json.editable && open(), textInput: name" placeholder="Describe this test">
                                             </h3>
                                         </div>
 
@@ -756,7 +759,7 @@
                                                         <p>This test has not yet been run.</p>
                                                     </div>
                                                 </div>
-                                                <button class="btn btn-primary" type="button" data-bind="click: run"><span class="glyphicon glyphicon-play"></span> Run this test</button>
+                                                <button class="btn btn-primary" type="button" data-bind="click: run"><span class="glyphicon glyphicon-play"></span><span data-bind="text: last_run() ? 'Run this test again' : 'Run this test'"></span></button>
                                             </div>
                                         </div>
                                     </div>

@@ -14952,7 +14952,6 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                 try {
                     return Numbas.jme.display.treeToJME(expr) || '';
                 } catch(e) {
-                    console.warn(expr);
                     throw(e);
                 }
             }
@@ -15326,7 +15325,14 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.answerJSON = params.answerJSON;
             var init = ko.unwrap(this.answerJSON);
             if(init.valid) {
-                this.choice(init.value);
+                if(this.answerAsArray) {
+                    var choice = init.value.findIndex(function(c){ return c[0]; });
+                    if(choice>=0) {
+                        this.choice(choice);
+                    }
+                } else {
+                    this.choice(init.value);
+                }
             }
 
             this.choiceArray = ko.pureComputed(function() {

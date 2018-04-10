@@ -2155,6 +2155,9 @@ $(document).ready(function() {
         this.editing = ko.observable(true);
         this.open = ko.observable(true).toggleable();
         this.name = ko.observable();
+        this.displayName = ko.pureComputed(function() {
+            return this.name() || 'Unnamed test';
+        }, this);
 
         // Values of variables used in this test
         this.variables = ko.observableArray([]);

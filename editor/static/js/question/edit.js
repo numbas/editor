@@ -1880,11 +1880,19 @@ $(document).ready(function() {
 
         this.unit_tests = ko.observableArray([]);
         this.marking_test = ko.observable(new MarkingTest(this,this.q.questionScope()));
+        function subscribe_to_answer(mt) {
+            console.log('marking test changed');
+            mt.answer.subscribe(function() {
+                console.log('answer changed!');
+                mt.run();
+            });
+        }
+        subscribe_to_answer(this.marking_test());
+        this.marking_test.subscribe(subscribe_to_answer);
         ko.computed(function() {
             var mt = this.marking_test();
-            mt.answer();
-            mt.run();
-        },this);
+            mt.make_question();
+        },this).extend({throttle:1000});
 
         this.run_all_tests = function() {
             p.unit_tests().forEach(function(mt) {

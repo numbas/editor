@@ -621,7 +621,7 @@
                         </div>
                         <div class="panel-body">
                             <p>At the moment, only you can use this part type.</p>
-                            <p>Publish your part type so that others can use it.</p>
+                            <p>If you publish your part type, others will be able to use it.</p>
                             <form method="POST" id="publish-form" action="{% url 'custom_part_type_publish' object.pk %}">
                                 <button class="btn btn-danger" type="submit">Publish</button>
                                 {% csrf_token %}

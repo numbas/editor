@@ -1174,6 +1174,7 @@ $(document).ready(function() {
 
 			var height = allBindingsAccessor.hasOwnProperty('wmHeight') ? allBindingsAccessor.wmHeight : 200;
 			var width = allBindingsAccessor.hasOwnProperty('wmWidth') ? allBindingsAccessor.wmWidth : '';
+			var para = allBindingsAccessor.hasOwnProperty('wmPara') ? allBindingsAccessor.wmPara : true;
 
 			var preambleCSSAccessor = allBindingsAccessor.preambleCSS;
 
@@ -1251,6 +1252,8 @@ $(document).ready(function() {
 					autoresize_min_height: 30,
 					convert_urls: false,
 					verify_html: false,
+
+                    forced_root_block: para ? 'p' : false,
 
 					paste_postprocess: function(ed,args) {
 						remove_empty_spans(args.node);

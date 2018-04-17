@@ -285,6 +285,9 @@ $(document).ready(function() {
             if(!data) {
                 return;
             }
+            if(typeof data == 'string') {
+                data = {static: false, value: data};
+            }
             tryLoad(data,['static'],this);
             if(this.static()) {
                 var value = data.value;

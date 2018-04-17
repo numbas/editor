@@ -240,11 +240,19 @@ Numbas.queueScript('jme',['jme-base','jme-builtins','jme-rules'],function(){
 Numbas.queueScript('jme-base',['base','math','util'],function() {
 var util = Numbas.util;
 var math = Numbas.math;
+
+/** A JME expression.
+ * @typedef JME
+ * @type {String}
+ * @see {@link http://numbas-editor.readthedocs.io/en/latest/jme-reference.html}
+ */
+
 /** @typedef Numbas.jme.tree
   * @type {Object}
   * @property {Array.<Numbas.jme.tree>} args - the token's arguments (if it's an op or function)
   * @property {Numbas.jme.token} tok - the token at this node
   */
+
 /** @namespace Numbas.jme */
 var jme = Numbas.jme = /** @lends Numbas.jme */ {
     /** Mathematical constants */
@@ -272,18 +280,37 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
             .replace(/'/g,"\\'")
         ;
     },
+
+    /** Wrapper around {@link Numbas.jme.Parser#compile}
+     * @param {JME} expr
+     * @see Numbas.jme.Parser#compile
+     * @returns {Numbas.jme.tree}
+     */
     compile: function(expr) {
-        var parser = new jme.Parser(jme.builtinScope);
+        var parser = new jme.Parser();
         return parser.compile(expr);
     },
+
+    /** Wrapper around {@link Numbas.jme.Parser#tokenise}
+     * @param {JME} expr
+     * @see Numbas.jme.Parser#tokenise
+     * @returns {Numbas.jme.token[]}
+     */
     tokenise: function(expr) {
-        var parser = new jme.Parser(jme.builtinScope);
+        var parser = new jme.Parser();
         return parser.tokenise(expr);
     },
+
+    /** Wrapper around {@link Numbas.jme.Parser#shunt}
+     * @param {Numbas.jme.token[]} tokens
+     * @see Numbas.jme.Parser#shunt
+     * @returns {Numbas.jme.tree}
+     */
     shunt: function(tokens) {
-        var parser = new jme.Parser(jme.builtinScope);
+        var parser = new jme.Parser();
         return parser.shunt(expr);
     },
+
     /** Unescape a string - backslashes escape special characters
      * @param {String} str
      * @returns {String}
@@ -762,16 +789,34 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
         }
     }
 };
-jme.Parser = function(scope, options) {
-    this.scope = scope;
+
+/** Options for {@link Numbas.jme.Parser}
+ *
+ * @typedef {Object} Numbas.jme.parser_options
+ * @property {Boolean} closeMissingBrackets - Silently ignore "missing right bracket" errors?
+ * @property {Boolean} addMissingArguments - When an op or function call is missing required arguments, insert `?` as a placeholder.
+ */
+
+/** A parser for {@link JME} expressions
+ * @memberof Numbas.jme
+ * @constructor
+ * 
+ * @param {Numbas.jme.parser_options} options
+ */
+var Parser = jme.Parser = function(options) {
     this.options = util.extend_object({}, this.option_defaults, options);
 }
-jme.Parser.prototype = {
+jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
+    /** Default options for new parsers
+     * @type {Numbas.jme.parser_options}
+     */
     option_defaults: {
         closeMissingBrackets: false,
         addMissingArguments: false
     },
-    /** Regular expressions to match tokens */
+    /** Regular expressions to match tokens 
+     * @type {Object.<RegExp>}
+     */
     re: {
         re_bool: /^(true|false)(?![a-zA-Z_0-9'])/i,
         re_number: /^[0-9]+(?:\x2E[0-9]+)?/,
@@ -785,7 +830,7 @@ jme.Parser.prototype = {
     /** Convert given expression string to a list of tokens. Does some tidying, e.g. inserts implied multiplication symbols.
      * @param {JME} expr
      * @returns {Array.<Numbas.jme.token>}
-     * @see Numbas.jme.compile
+     * @see Numbas.jme.Parser#compile
      */
     tokenise: function(expr) {
         if(!expr)
@@ -878,12 +923,8 @@ jme.Parser.prototype = {
             } else if(expr.length) {
                 //invalid character or not able to match a token
                 var position = oexpr.length - expr.length;
-                if(oexpr.length>20) {
-                    var nearby = oexpr.slice(Math.max(0,position-5), position+5);
-                    throw(new Numbas.Error('jme.tokenise.invalid near',{expression:oexpr, position: position, nearby: nearby}));
-                } else {
-                    throw(new Numbas.Error('jme.tokenise.invalid',{expression:oexpr}));
-                }
+                var nearby = oexpr.slice(Math.max(0,position), position+5);
+                throw(new Numbas.Error('jme.tokenise.invalid near',{expression:oexpr, position: position, nearby: nearby}));
             } else {
                 break;
             }
@@ -897,8 +938,8 @@ jme.Parser.prototype = {
     /** Shunt list of tokens into a syntax tree. Uses the shunting yard algorithm (wikipedia has a good description)
      * @param {Array.<Numbas.jme.token>} tokens
      * @returns {Numbas.jme.tree}
-     * @see Numbas.jme.tokenise
-     * @see Numbas.jme.compile
+     * @see Numbas.jme.Parser#tokenise
+     * @see Numbas.jme.Parser#compile
      */
     shunt: function(tokens) {
         var parser = this;
@@ -1086,10 +1127,11 @@ jme.Parser.prototype = {
         }
         return(output[0]);
     },
+
     /** Compile an expression string to a syntax tree. (Runs {@link Numbas.jme.tokenise} then {@Link Numbas.jme.shunt})
      * @param {JME} expr
-     * @see Numbas.jme.tokenise
-     * @see Numbas.jme.shunt
+     * @see Numbas.jme.Parser#tokenise
+     * @see Numbas.jme.Parser#shunt
      * @returns {Numbas.jme.tree}
      */
     compile: function(expr) {
@@ -1111,14 +1153,22 @@ jme.Parser.prototype = {
 /** Regular expression to match whitespace (because '\s' doesn't match *everything*) */
 jme.Parser.prototype.re.re_whitespace = '(?:[\\s \\f\\n\\r\\t\\v\\u00A0\\u2028\\u2029]|(?:\&nbsp;))';
 jme.Parser.prototype.re.re_strip_whitespace = new RegExp('^'+jme.Parser.prototype.re.re_whitespace+'+');
+
+/** Regular expressions for parser tokens.
+ * Included for backwards-compatibility
+ * @type {Object.<RegExp>}
+ * @see {Numbas.jme.Parser.re}
+ */
 jme.re = jme.Parser.prototype.re;
+
 var fnSort = util.sortBy('id');
 /** Options for the {@link Numbas.jme.funcObj} constructor
- * @typedef {Object} scope_deletions
+ * @typedef {Object} Numbas.jme.scope_deletions
  * @property {Object} variables - Names of deleted variables.
  * @property {Object} functions - Names of deleted functions.
  * @property {Object} rulesets - Names of deleted rulesets.
  */
+
 /**
  * A JME evaluation environment.
  * Stores variable, function, and ruleset definitions.
@@ -1129,8 +1179,8 @@ var fnSort = util.sortBy('id');
  * @constructor
  * @property {Object.<Numbas.jme.token>} variables - Dictionary of variables defined **at this level in the scope**. To resolve a variable in the scope, use {@link Numbas.jme.Scope.getVariable}.
  * @property {Object.<Array.<Numbas.jme.funcObj>>} functions - Dictionary of functions defined at this level in the scope. Function names map to lists of functions: there can be more than one function for each name because of multiple dispatch. To resolve a function name in the scope, use {@link Numbas.jme.Scope.getFunction}.
- * @property {Object.<Numbas.jme.Ruleset>} rulesets - Dictionary of rulesets defined at this level in the scope. To resolve a ruleset in the scope, use {@link Numbas.jme.Scope.getRuleset}.
- * @property {scope_deletions} deleted - Names of deleted variables/functions/rulesets.
+ * @property {Object.<Numbas.jme.rules.Ruleset>} rulesets - Dictionary of rulesets defined at this level in the scope. To resolve a ruleset in the scope, use {@link Numbas.jme.Scope.getRuleset}.
+ * @property {Numbas.jme.scope_deletions} deleted - Names of deleted variables/functions/rulesets.
  * @property {Numbas.Question} question - The question this scope belongs to.
  *
  * @param {Numbas.jme.Scope[]} scopes - Either: nothing, in which case this scope has no parents; a parent Scope object; a list whose first element is a parent scope, and the second element is a dictionary of extra variables/functions/rulesets to store in this scope
@@ -1183,15 +1233,15 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
         }
     },
     /** Mark the given variable name as deleted from the scope.
-     * @param {string} name
+     * @param {String} name
      */
     deleteVariable: function(name) {
         this.deleted.variables[name] = true;
     },
     /** Get the object with given name from the given collection
-     * @param {string} collection - name of the collection. A property of this Scope object, i.e. one of `variables`, `functions`, `rulesets`.
-     * @param {string} name - the name of the object to retrieve
-     * @returns {object}
+     * @param {String} collection - name of the collection. A property of this Scope object, i.e. one of `variables`, `functions`, `rulesets`.
+     * @param {String} name - the name of the object to retrieve
+     * @returns {Object}
      */
     resolve: function(collection,name) {
         var scope = this;
@@ -1206,21 +1256,21 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
         }
     },
     /** Find the value of the variable with the given name, if it's defined
-     * @param {string} name
+     * @param {String} name
      * @returns {Numbas.jme.token}
      */
     getVariable: function(name) {
         return this.resolve('variables',name.toLowerCase());
     },
     /** Set the given variable name
-     * @param {string} name
+     * @param {String} name
      * @param {Numbas.jme.token} value
      */
     setVariable: function(name, value) {
         this.variables[name.toLowerCase()] = value;
     },
     /** Get all definitions of the given function name.
-     * @param {string} name
+     * @param {String} name
      * @returns {Numbas.jme.funcObj[]} A list of all definitions of the given name.
      */
     getFunction: function(name) {
@@ -1238,22 +1288,22 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
         return this._resolved_functions[name];
     },
     /** Get the ruleset with the gien name
-     * @param {string} name
-     * @returns {Numbas.jme.Ruleset}
+     * @param {String} name
+     * @returns {Numbas.jme.rules.Ruleset}
      */
     getRuleset: function(name) {
         return this.resolve('rulesets',name);
     },
     /** Set the given ruleset name
-     * @param {string} name
-     * @param {Numbas.jme.Ruleset[]} rules
+     * @param {String} name
+     * @param {Numbas.jme.rules.Ruleset[]} rules
      */
     setRuleset: function(name, rules) {
         this.rulesets[name] = this.rulesets[name.toLowerCase()] = rules;
     },
     /** Collect together all items from the given collection
-     * @param {string} collection - name of the collection. A property of this Scope object, i.e. one of `variables`, `functions`, `rulesets`.
-     * @returns {object} a dictionary of names to values
+     * @param {String} collection - name of the collection. A property of this Scope object, i.e. one of `variables`, `functions`, `rulesets`.
+     * @returns {Object} a dictionary of names to values
      */
     collect: function(collection,name) {
         var scope = this;
@@ -1274,13 +1324,13 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
         return out;
     },
     /** Gather all variables defined in this scope
-     * @returns {object} a dictionary of variables
+     * @returns {Object.<Numbas.jme.token>} a dictionary of variables
      */
     allVariables: function() {
         return this.collect('variables');
     },
     /** Gather all rulesets defined in this scope
-     * @returns {object} a dictionary of rulesets
+     * @returns {Object.<Numbas.jme.rules.Ruleset>} a dictionary of rulesets
      */
     allRulesets: function() {
         if(!this._allRulesets) {
@@ -1289,7 +1339,7 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
         return this._allRulesets;
     },
     /** Gather all functions defined in this scope
-     * @returns {object} a dictionary of function definitions: each name maps to a list of @link{Numbas.jme.funcObj}
+     * @returns {Object.<Numbas.jme.funcObj[]>} a dictionary of function definitions: each name maps to a list of @link{Numbas.jme.funcObj}
      */
     allFunctions: function() {
         var scope = this;
@@ -2400,6 +2450,7 @@ jme.compareTrees = function(a,b) {
     return 0;
 }
 });
+
 /*
 Copyright 2011-15 Newcastle University
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -2648,6 +2699,9 @@ newBuiltin('formatstring',[TString,TList],TString,function(str,extra) {
 newBuiltin('unpercent',[TString],TNum,util.unPercent);
 newBuiltin('letterordinal',[TNum],TString,util.letterOrdinal);
 newBuiltin('html',[TString],THTML,function(html) { return $(html) });
+newBuiltin('nonemptyhtml',[TString],TBool,function(html) {
+    return util.isNonemptyHTML(html);
+});
 newBuiltin('image',[TString],THTML,function(url){ return $('<img/>').attr('src',url); });
 newBuiltin('latex',[TString],TString,null,{
     evaluate: function(args,scope) {
@@ -2679,6 +2733,7 @@ newBuiltin('join',[TList,TString],TString,function(list,delimiter) {
 newBuiltin('split',[TString,TString],TList, function(str,delimiter) {
     return str.split(delimiter).map(function(s){return new TString(s)});
 });
+newBuiltin('trim',[TString],TString, function(str) { return str.trim(); });
 newBuiltin('currency',[TNum,TString,TString],TString,util.currency);
 newBuiltin('separateThousands',[TNum,TString],TString,util.separateThousands);
 newBuiltin('listval',[TString,TNum],TString,function(s,i) {return s[i]});
@@ -2908,10 +2963,6 @@ newBuiltin('lcm', [TList], TNum, function(l){
     {unwrapValues: true}
 );
 newBuiltin('|', [TNum,TNum], TBool, math.divides );
-newBuiltin('diff', ['?','?',TNum], '?', null);
-newBuiltin('pdiff', ['?',TName,TNum], '?', null);
-newBuiltin('int', ['?','?'], '?', null);
-newBuiltin('defint', ['?','?',TNum,TNum], '?', null);
 newBuiltin('sum',[TList],TNum,math.sum,{unwrapValues: true});
 newBuiltin('sum',[TVector],TNum,math.sum);
 newBuiltin('deal',[TNum],TList,
@@ -3826,20 +3877,18 @@ Numbas.queueScript('jme-display',['base','math','jme','util','jme-rules'],functi
 var math = Numbas.math;
 var jme = Numbas.jme;
 var util = Numbas.util;
-/** A JME expression
- * @typedef JME
- * @type {String}
- */
+
 /** A LaTeX string
  * @typedef TeX
  * @type {String}
  */
+
 /** @namespace Numbas.jme.display */
 jme.display = /** @lends Numbas.jme.display */ {
     /** Convert a JME expression to LaTeX.
      *
      * @param {JME} expr
-     * @param {Array.<String>|Numbas.jme.Ruleset} ruleset - can be anything accepted by {@link Numbas.jme.display.collectRuleset}
+     * @param {Array.<String>|Numbas.jme.rules.Ruleset} ruleset - can be anything accepted by {@link Numbas.jme.display.collectRuleset}
      * @param {Numbas.jme.Scope} scope
      * @returns {TeX}
      */
@@ -3858,7 +3907,7 @@ jme.display = /** @lends Numbas.jme.display */ {
     /** Simplify a JME expression string according to the given ruleset and return it as a JME string
      *
      * @param {JME} expr
-     * @param {Array.<String>|Numbas.jme.Ruleset} ruleset - can be anything accepted by {@link Numbas.jme.display.collectRuleset}
+     * @param {Array.<String>|Numbas.jme.rules.Ruleset} ruleset - can be anything accepted by {@link Numbas.jme.display.collectRuleset}
      * @param {Numbas.jme.Scope} scope
      * @returns {JME}
      *
@@ -3873,7 +3922,7 @@ jme.display = /** @lends Numbas.jme.display */ {
     /** Simplify a JME expression string according to given ruleset and return it as a syntax tree
      *
      * @param {JME} expr
-     * @param {Array.<String>|Numbas.jme.Ruleset} ruleset
+     * @param {Array.<String>|Numbas.jme.rules.Ruleset} ruleset
      * @param {Numbas.jme.Scope} scope
      * @returns {Numbas.jme.tree}
      *
@@ -3901,7 +3950,7 @@ jme.display = /** @lends Numbas.jme.display */ {
     /** Simplify a syntax tree according to the given ruleset
      *
      * @param {Numbas.jme.tree} exprTree
-     * @param {Array.<String>|Numbas.jme.Ruleset} ruleset
+     * @param {Array.<String>|Numbas.jme.rules.Ruleset} ruleset
      * @param {Numbas.jme.Scope} scope
      * @param {Boolean} allowUnbound
      * @returns {Numbas.jme.tree}
@@ -3910,6 +3959,9 @@ jme.display = /** @lends Numbas.jme.display */ {
      */
     simplifyTree: function(exprTree,ruleset,scope,allowUnbound)
     {
+        if(!exprTree) {
+            throw(new Numbas.Error('jme.display.simplifyTree.empty expression'));
+        }
         if(!scope)
             throw(new Numbas.Error('jme.display.simplifyTree.no scope given'));
         scope = Numbas.util.copyobj(scope);
@@ -4524,7 +4576,7 @@ function texRealNumber(n)
  * @private
  *
  * @param {Array.<Number>|Numbas.jme.tree} v
- * @param {texify_settings} settings
+ * @param {Numbas.jme.display.texify_settings} settings
  * @returns {TeX}
  */
 function texVector(v,settings)
@@ -4548,7 +4600,7 @@ function texVector(v,settings)
  * @private
  *
  * @param {Array.<Array.<Number>>|Numbas.jme.tree} m
- * @param {texify_settings} settings
+ * @param {Numbas.jme.display.texify_settings} settings
  * @param {Boolean} parens - enclose the matrix in parentheses?
  * @returns {TeX}
  */
@@ -4671,7 +4723,7 @@ var texName = jme.display.texName = function(name,annotations,longNameMacro)
 }
 var greek = ['alpha','beta','gamma','delta','epsilon','zeta','eta','theta','iota','kappa','lambda','mu','nu','xi','omicron','pi','rho','sigma','tau','upsilon','phi','chi','psi','omega']
 /** Definition of a number with a special name
- * @typedef special_number_definition
+ * @typedef Numbas.jme.display.special_number_definition
  * @property {Number} value
  * @property {TeX} tex - The TeX code for this number
  * @property {JME} jme - The JME code for this number
@@ -4679,7 +4731,7 @@ var greek = ['alpha','beta','gamma','delta','epsilon','zeta','eta','theta','iota
 /** List of numbers with special names
  *
  * @memberof Numbas.jme.display
- * @type {Array.<special_number_definition>}
+ * @type {Array.<Numbas.jme.display.special_number_definition>}
  */
 jme.display.specialNumbers = [
     {value: Math.E, tex: 'e', jme: 'e'},
@@ -4790,7 +4842,7 @@ function flatten(tree,op) {
     return args;
 }
 /** A dictionary of settings for {@link Numbas.jme.display.texify}.
- * @typedef texify_settings
+ * @typedef Numbas.jme.display.texify_settings
  * @property {Boolean} fractionnumbers - Show all numbers as fractions?
  * @property {Boolean} nicenumber - Run numbers through {@link Numbas.math.niceNumber}?
  * @property {Number} accuracy - Accuracy to use when finding rational approximations to numbers. See {@link Numbas.math.rationalApproximation}.
@@ -4804,7 +4856,7 @@ function flatten(tree,op) {
  * @method
  *
  * @param {Numbas.jme.tree} thing
- * @param {texify_settings} settings
+ * @param {Numbas.jme.display.texify_settings} settings
  *
  * @returns {TeX}
  */
@@ -4856,7 +4908,7 @@ var jmeSpecialNumber = jme.display.jmeSpecialNumber = function(value) {
  * @private
  *
  * @param {Number} n
- * @param {jme_display_settings} settings - if `settings.niceNumber===false`, don't round off numbers
+ * @param {Numbas.jme.display.jme_display_settings} settings - if `settings.niceNumber===false`, don't round off numbers
  * @returns {JME}
  */
 var jmeRationalNumber = jme.display.jmeRationalNumber = function(n,settings)
@@ -4939,7 +4991,7 @@ var jmeRationalNumber = jme.display.jmeRationalNumber = function(n,settings)
  * @private
  *
  * @param {Number} n
- * @param {jme_display_settings} settings - if `settings.niceNumber===false`, don't round off numbers
+ * @param {Numbas.jme.display.jme_display_settings} settings - if `settings.niceNumber===false`, don't round off numbers
  * @returns {JME}
  */
 function jmeRealNumber(n,settings)
@@ -5202,7 +5254,7 @@ var jmeFunctions = jme.display.jmeFunctions = {
     }
 }
 /** A dictionary of settings for {@link Numbas.jme.display.treeToJME}.
- * @typedef jme_display_settings
+ * @typedef Numbas.jme.display.jme_display_settings
  * @property {Boolean} fractionnumbers - Show all numbers as fractions?
  * @property {Boolean} niceNumber - Run numbers through {@link Numbas.math.niceNumber}?
  * @property {Boolean} wrapexpressions - Wrap TExpression tokens in `expression("")`?
@@ -5213,7 +5265,7 @@ var jmeFunctions = jme.display.jmeFunctions = {
  * @method
  *
  * @param {Numbas.jme.tree} tree
- * @param {jme_display_settings} settings
+ * @param {Numbas.jme.display.jme_display_settings} settings
  * @returns {JME}
  */
 var treeToJME = jme.display.treeToJME = function(tree,settings)
@@ -5261,11 +5313,13 @@ var opBrackets = Numbas.jme.display.opBrackets = {
     jme.display[name] = jme.rules[name];
 });
 });
+
 Numbas.queueScript('jme-rules',['base','math','jme-base','util'],function() {
 /** @file Code to do with JME pattern-matching rules.
  *
  * Provides {@link Numbas.jme.rules}
  */
+/** @namespace Numbas.jme.rules */
 var math = Numbas.math;
 var jme = Numbas.jme;
 var util = Numbas.util;
@@ -5303,7 +5357,7 @@ Rule.prototype = /** @lends Numbas.jme.rules.Rule.prototype */ {
      * @memberof Numbas.jme.rules.Rule.prototype
      * @param {Numbas.jme.tree} exprTree - the syntax tree to test
      * @param {Numbas.jme.Scope} scope - used when checking conditions
-     * @returns {Boolean|jme_pattern_match} - `false` if no match, or a dictionary of matched subtrees
+     * @returns {Boolean|Numbas.jme.rules.jme_pattern_match} - `false` if no match, or a dictionary of matched subtrees
      */
     match: function(exprTree,scope)
     {
@@ -5327,7 +5381,7 @@ Rule.prototype = /** @lends Numbas.jme.rules.Rule.prototype */ {
     },
     /** Check that a matched pattern satisfies all the rule's conditions
      * @memberof Numbas.jme.rules.Rule.prototype
-     * @param {jme_pattern_match} match
+     * @param {Numbas.jme.rules.jme_pattern_match} match
      * @param {Numbas.jme.Scope} scope
      * @returns {Boolean}
      */
@@ -5372,9 +5426,9 @@ function isEndTerm(term) {
 }
 /** Given a tree representing a series of terms t1 <op> t2 <op> t3 <op> ..., return the terms as a list.
  * @param {Numbas.jme.tree} tree
- * @param {string} op
- * @param {Array<string>} names
- * @returns {object} - {terms: a list of subtrees, termnames: the match names set in each term}
+ * @param {String} op
+ * @param {String[]} names
+ * @returns {Object} - {terms: a list of subtrees, termnames: the match names set in each term}
  */
 var getCommutingTerms = Numbas.jme.rules.getCommutingTerms = function(tree,op,names) {
     if(names===undefined) {
@@ -5418,9 +5472,9 @@ var getCommutingTerms = Numbas.jme.rules.getCommutingTerms = function(tree,op,na
 }
 /** A dictionary representing the results of a JME pattern match.
  * Maps variable names to trees.
- * @typedef jme_pattern_match
+ * @typedef Numbas.jme.rules.jme_pattern_match
  * @type Object.<Numbas.jme.tree>
- * @see Numbas.jme.display.matchTree
+ * @see {Numbas.jme.rules#matchTree}
  */
 /** Recursively check whether `exprTree` matches `ruleTree`. Variables in `ruleTree` match any subtree.
  * @memberof Numbas.jme.rules
@@ -5428,7 +5482,7 @@ var getCommutingTerms = Numbas.jme.rules.getCommutingTerms = function(tree,op,na
  * @param {Numbas.jme.tree} ruleTree
  * @param {Numbas.jme.tree} exprTree
  * @param {Boolean} doCommute - take commutativity of operations into account, e.g. terms of a sum can be in any order.
- * @returns {Boolean|jme_pattern_match} - `false` if no match, otherwise a dictionary of subtrees matched to variable names
+ * @returns {Boolean|Numbas.jme.rules.jme_pattern_match} - `false` if no match, otherwise a dictionary of subtrees matched to variable names
  */
 var matchTree = jme.rules.matchTree = function(ruleTree,exprTree,doCommute) {
     if(doCommute===undefined) {
@@ -5679,7 +5733,7 @@ var matchAllTree = jme.rules.matchAllTree = function(ruleTree,exprTree,doCommute
  * @param {JME} expr
  * @param {Boolean} doCommute
  *
- * @returns {Boolean|jme_pattern_match} - `false` if no match, otherwise a dictionary of subtrees matched to variable names
+ * @returns {Boolean|Numbas.jme.rules.jme_pattern_match} - `false` if no match, otherwise a dictionary of subtrees matched to variable names
  */
 var matchExpression = jme.rules.matchExpression = function(pattern,expr,doCommute) {
     pattern = jme.compile(pattern);
@@ -5697,17 +5751,17 @@ var displayFlags = jme.rules.displayFlags = {
 };
 /** Flags used in JME simplification rulesets
  * @type Object.<Boolean>
- * @typedef ruleset_flags
+ * @typedef Numbas.jme.rules.ruleset_flags
  * @property {Boolean} fractionnumbers - Show all numbers as fractions?
  * @property {Boolean} rowvector - Display vectors as a horizontal list of components?
  * @property {Boolean} alwaystimes - Always show the multiplication symbol between multiplicands?
- * @see Numbas.jme.Ruleset
+ * @see Numbas.jme.rules.Ruleset
  */
 /** Set of simplification rules
  * @constructor
  * @memberof Numbas.jme.rules
- * @param {rule[]} rules
- * @param {ruleset_flags} flags
+ * @param {Numbas.jme.rules.Rule[]} rules
+ * @param {Numbas.jme.rules.ruleset_flags} flags
  */
 var Ruleset = jme.rules.Ruleset = function(rules,flags) {
     this.rules = rules;
@@ -5732,9 +5786,9 @@ function mergeRulesets(r1,r2) {
     return new Ruleset(rules, flags);
 }
 /** Collect a ruleset together from a list of ruleset names, or rulesets.
- * @param {String|Array.<String|Numbas.jme.Ruleset>} set - A comma-separated string of ruleset names, or an array of names/Ruleset objects.
- * @param {Object.<Numbas.jme.Ruleset>} scopeSets - Dictionary of rulesets defined in the current scope.
- * @returns Numbas.jme.Ruleset
+ * @param {String|Array.<String|Numbas.jme.rules.Ruleset>} set - A comma-separated string of ruleset names, or an array of names/Ruleset objects.
+ * @param {Object.<Numbas.jme.rules.Ruleset>} scopeSets - Dictionary of rulesets defined in the current scope.
+ * @returns Numbas.jme.rules.Ruleset
  */
 var collectRuleset = jme.rules.collectRuleset = function(set,scopeSets)
 {
@@ -6001,7 +6055,7 @@ var expandBracketsRules = [
 ]
 /** Compile an array of rules (in the form `[pattern,conditions[],result]` to {@link Numbas.jme.rules.Rule} objects
  * @param {Array} rules
- * @returns {Numbas.jme.Ruleset}
+ * @returns {Numbas.jme.rules.Ruleset}
  */
 var compileRules = jme.rules.compileRules = function(rules)
 {
@@ -6029,6 +6083,7 @@ compiledSimplificationRules['expandbrackets'] = compileRules(expandBracketsRules
 compiledSimplificationRules['all'] = new Ruleset(all,{});
 jme.rules.simplificationRules = compiledSimplificationRules;
 });
+
 /*
 Copyright 2011-14 Newcastle University
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -6051,9 +6106,26 @@ Numbas.queueScript('jme-variables',['base','jme','util'],function() {
 var jme = Numbas.jme;
 var util = Numbas.util;
 /** @namespace Numbas.jme.variables */
+
+/** A dictionary describing a variable to be evaluated
+ * @typedef {Object} Numbas.jme.variables.variable_data_dict
+ * @property {Numbas.jme.tree} tree - definition of variable
+ * @property {String[]} vars - names of variables this variable depends on
+ */
+
+/** The definition of a custom JME function.
+ * @typedef Numbas.jme.variables.func_data
+ * @type {Object}
+ * @property {String} name
+ * @property {String} definition - definition of the function, either in {@link JME} or JavaScript
+ * @property {String} language - either `"jme"` or `"javascript"`
+ * @property {String} outtype - name of the {@link Numbas.jme.token} type this function returns
+ * @property {Array.<Object>} parameters - Definition of the function's calling signature: an array of objects with properties `name` and `type` for each of the function's parameters.
+ */
+
 jme.variables = /** @lends Numbas.jme.variables */ {
     /** Make a new function, whose definition is written in JME.
-     * @param {object} fn - contains `definition` and `paramNames`.
+     * @param {Object} fn - contains `definition` and `paramNames`.
      * @param {Numbas.jme.Scope} scope
      * @returns {function} - function which evaluates arguments and adds them to the scope, then evaluates `fn.definition` over that scope.
      */
@@ -6073,8 +6145,8 @@ jme.variables = /** @lends Numbas.jme.variables */ {
      *
      * The JavaScript is wrapped with `(function(<paramNames>){ ` and ` }`)
      *
-     * @param {object} fn - contains `definition` and `paramNames`.
-     * @param {object} withEnv - dictionary of local variables for javascript functions
+     * @param {Object} fn - contains `definition` and `paramNames`.
+     * @param {Object} withEnv - dictionary of local variables for javascript functions
      * @returns {function} - function which evaluates arguments, unwraps them to JavaScript values, then evalutes the JavaScript function and returns the result, wrapped as a {@link Numbas.jme.token}
      */
     makeJavascriptFunction: function(fn,withEnv) {
@@ -6112,10 +6184,10 @@ jme.variables = /** @lends Numbas.jme.variables */ {
     },
     /** Make a custom function.
      *
-     * @param {object} tmpfn - contains `definition`, `name`, `language`, `parameters`
+     * @param {Object} tmpfn - contains `definition`, `name`, `language`, `parameters`
      * @param {Numbas.jme.Scope} scope
-     * @param {object} withEnv - dictionary of local variables for javascript functions
-     * @returns {object} - contains `outcons`, `intype`, `evaluate`
+     * @param {Object} withEnv - dictionary of local variables for javascript functions
+     * @returns {Object} - contains `outcons`, `intype`, `evaluate`
      */
     makeFunction: function(tmpfn,scope,withEnv) {
         var intype = [],
@@ -6148,10 +6220,10 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         return fn
     },
     /** Make up custom functions
-     * @param {object[]} tmpFunctions
+     * @param {Numbas.jme.variables.func_data[]} tmpFunctions
      * @param {Numbas.jme.Scope} scope
-     * @param {object} withEnv - dictionary of local variables for javascript functions
-     * @returns {object[]}
+     * @param {Object} withEnv - dictionary of local variables for javascript functions
+     * @returns {Object.<Numbas.jme.funcObj>}
      * @see Numbas.jme.variables.makeFunction
      */
     makeFunctions: function(tmpFunctions,scope,withEnv)
@@ -6169,10 +6241,10 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         return functions;
     },
     /** Evaluate a variable, evaluating all its dependencies first.
-     * @param {string} name - the name of the variable to evaluate
-     * @param {object} todo - dictionary of variables still to evaluate
+     * @param {String} name - the name of the variable to evaluate
+     * @param {Numbas.jme.variables.variable_data_dict} todo - dictionary of variables still to evaluate
      * @param {Numbas.jme.Scope} scope
-     * @param {string[]} path - Breadcrumbs - variable names currently being evaluated, so we can detect circular dependencies
+     * @param {String[]} path - Breadcrumbs - variable names currently being evaluated, so we can detect circular dependencies
      * @returns {Numbas.jme.token}
      */
     computeVariable: function(name,todo,scope,path,computeFn)
@@ -6220,11 +6292,11 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         return scope.variables[name];
     },
     /** Evaluate dictionary of variables
-     * @param {object} todo - dictionary of variables mapped to their definitions
+     * @param {Numbas.jme.variables.variable_data_dict} todo - dictionary of variables mapped to their definitions
      * @param {Numbas.jme.Scope} scope
      * @param {Numbas.jme.tree} condition - condition on the values of the variables which must be satisfied
      * @param {function} computeFn - a function to compute a variable. Default is Numbas.jme.variables.computeVariable
-     * @returns {object} - {variables: dictionary of evaluated variables, conditionSatisfied: was the condition satisfied?}
+     * @returns {Object} - {variables: dictionary of evaluated variables, conditionSatisfied: was the condition satisfied?}
      */
     makeVariables: function(todo,scope,condition,computeFn)
     {
@@ -6247,11 +6319,11 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         return {variables: scope.variables, conditionSatisfied: conditionSatisfied, scope: scope};
     },
     /** Collect together a ruleset, evaluating all its dependencies first.
-     * @param {string} name - the name of the ruleset to evaluate
-     * @param {object} todo - dictionary of rulesets still to evaluate
+     * @param {String} name - the name of the ruleset to evaluate
+     * @param {Object.<String[]>} todo - dictionary of rulesets still to evaluate
      * @param {Numbas.jme.Scope} scope
-     * @param {string[]} path - Breadcrumbs - rulesets names currently being evaluated, so we can detect circular dependencies
-     * @returns {Numbas.jme.Ruleset}
+     * @param {String[]} path - Breadcrumbs - rulesets names currently being evaluated, so we can detect circular dependencies
+     * @returns {Numbas.jme.rules.Ruleset}
      */
     computeRuleset: function(name,todo,scope,path) {
         if(scope.getRuleset(name.toLowerCase()) || (name.toLowerCase() in jme.displayFlags)) {
@@ -6273,14 +6345,14 @@ jme.variables = /** @lends Numbas.jme.variables */ {
             var name2 = m[2].trim();
             jme.variables.computeRuleset(name2,todo,scope,newpath);
         });
-        var ruleset = Numbas.jme.collectRuleset(todo[name],scope.rulesets);
+        var ruleset = Numbas.jme.collectRuleset(todo[name],scope.allRulesets());
         scope.setRuleset(name,ruleset);
         return ruleset;
     },
     /** Gather together a set of ruleset definitions
-     * @param {object} todo - a dictionary mapping ruleset names to definitions
+     * @param {Object.<String[]>} todo - a dictionary mapping ruleset names to definitions
      * @param {Numbas.jme.Scope} scope - the scope to gather the rulesets in. The rulesets are added to this scope as a side-effect.
-     * @returns {object} a dictionary of rulesets
+     * @returns {Object.<Numbas.jme.rules.Ruleset>} a dictionary of rulesets
      */
     makeRulesets: function(todo,scope) {
         var out = {};
@@ -6290,9 +6362,9 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         return out;
     },
     /** Given a todo dictionary of variables, return a dictionary with only the variables depending on the given list of variables
-     * @param {object} todo - dictionary of variables mapped to their definitions
-     * @param {string[]} ancestors - list of variable names whose dependants we should find
-     * @returns {object} - a copy of the todo list, only including the dependants of the given variables
+     * @param {Object} todo - dictionary of variables mapped to their definitions
+     * @param {String[]} ancestors - list of variable names whose dependants we should find
+     * @returns {Object} - a copy of the todo list, only including the dependants of the given variables
      */
     variableDependants: function(todo,ancestors) {
         // a dictionary mapping variable names to lists of names of variables they depend on
@@ -6351,7 +6423,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         return subber.subvars(element);
     },
     /** Substitute variables into the contents of a text node. Substituted values might contain HTML elements, so the return value is a collection of DOM elements, not another string.
-     * @param {string} str - the contents of the text node
+     * @param {String} str - the contents of the text node
      * @param {Numbas.jme.Scope} scope
      * @param {Document} doc - the document the text node belongs to.
      * @returns {Node[]} - array of DOM nodes to replace the string with
@@ -6523,6 +6595,7 @@ DOMcontentsubber.prototype = {
     }
 }
 });
+
 Numbas.queueScript('localisation',['i18next','localisation-resources'],function() {
     i18next.init({
         lng: Numbas.locale.preferred_locale,
@@ -6560,7 +6633,7 @@ var jme = Numbas.jme;
 var math = Numbas.math;
 var marking = Numbas.marking;
 /** A unique identifier for a {@link Numbas.parts.Part} object, of the form `qXpY[gZ|sZ]`. Numbering starts from zero, and the `gZ` bit is used only when the part is a gap, and `sZ` is used if it's a step.
- * @typedef partpath
+ * @typedef Numbas.parts.partpath
  * @type {String}
  */
 /** Part type constructors
@@ -6579,7 +6652,7 @@ var partConstructors = Numbas.partConstructors = {};
 /** Create a question part based on an XML definition.
  * @memberof Numbas
  * @param {Element} xml
- * @param {partpath} [path]
+ * @param {Numbas.parts.partpath} [path]
  * @param {Numbas.Question} [question]
  * @param {Numbas.parts.Part} [parentPart]
  * @param {Numbas.storage.BlankStorage} [store] - the storage engine to use
@@ -6600,7 +6673,7 @@ var createPartFromXML = Numbas.createPartFromXML = function(xml, path, question,
 /** Create a question part based on an XML definition.
  * @memberof Numbas
  * @param {Object} data
- * @param {partpath} [path]
+ * @param {Numbas.parts.partpath} [path]
  * @param {Numbas.Question} [question]
  * @param {Numbas.parts.Part} [parentPart]
  * @param {Numbas.storage.BlankStorage} [store] - the storage engine to use
@@ -6619,7 +6692,7 @@ var createPartFromJSON = Numbas.createPartFromJSON = function(data, path, questi
 /** Create a new question part.
  * @see Numbas.partConstructors
  * @param {String} type
- * @param {partpath} path
+ * @param {Numbas.parts.partpath} path
  * @param {Numbas.Question} question
  * @param {Numbas.parts.Part} parentPart
  * @param {Numbas.storage.BlankStorage} [store] - the storage engine to use
@@ -6643,11 +6716,12 @@ var createPart = Numbas.createPart = function(type, path, question, parentPart, 
         throw(new Numbas.Error('part.unknown type',{part:util.nicePartName(path),type:type}));
     }
 }
+
 /** Base question part object
  * @constructor
  * @memberof Numbas.parts
  * @param {Element} xml
- * @param {partpath} [path='p0']
+ * @param {Numbas.parts.partpath} [path='p0']
  * @param {Numbas.Question} Question
  * @param {Numbas.parts.Part} parentPart
  * @see Numbas.createPart
@@ -6855,7 +6929,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      */
     parentPart: undefined,
     /** A question-wide unique 'address' for this part.
-     * @type {partpath}
+     * @type {Numbas.parts.partpath}
      */
     path: '',
     /** This part's type, e.g. "jme", "numberentry", ...
@@ -6894,10 +6968,12 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @type {Array.<String>}
      */
     stagedAnswer: undefined,
+
     /** Has this part been answered?
      * @type {Boolean}
      */
     answered: false,
+
     /** Child gapfill parts
      * @type {Numbas.parts.Part[]}
      */
@@ -6935,17 +7011,19 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
     settings:
     {
         stepsPenalty: 0,
-        enableMinimumMarks: false,
+        enableMinimumMarks: true,
         minimumMarks: 0,
         showCorrectAnswer: true,
         showFeedbackIcon: true,
         hasVariableReplacements: false,
         variableReplacementStrategy: 'originalfirst'
     },
+
     /** The script to mark this part - assign credit, and give messages and feedback.
      * @type {Numbas.marking.MarkingScript}
      */
     markingScript: null,
+
     /** Throw an error, with the part's identifier prepended to the message
      * @param {String} message
      * @returns {Numbas.Error}
@@ -7056,8 +7134,11 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
             var stepsFraction = Math.max(Math.min(1-this.credit,1),0);    //any credit not earned in main part can be earned back in steps
             this.score += stepsScore;                        //add score from steps to total score
             this.score = Math.min(this.score,this.marks - this.settings.stepsPenalty)    //if too many marks are awarded for steps, it's possible that getting all the steps right leads to a higher score than just getting the part right. Clip the score to avoid this.
-            if(this.settings.enableMinimumMarks)                                //make sure awarded score is not less than minimum allowed
-                this.score = Math.max(this.score,this.settings.minimumMarks);
+            if(this.settings.enableMinimumMarks && this.score<this.settings.minimumMarks) {
+                this.score = this.settings.minimumMarks;
+                this.credit = this.marks!=0 ? this.settings.minimumMarks/this.marks : 0;
+                this.markingComment(R('part.marking.minimum score applied',{score:this.settings.minimumMarks}));
+            }
             if(stepsMarks!=0 && stepsScore!=0)
             {
                 if(this.credit==1)
@@ -7072,9 +7153,11 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         else
         {
             this.score = this.credit * this.marks;
-            //make sure awarded score is not less than minimum allowed
-            if(this.settings.enableMinimumMarks && this.credit*this.marks<this.settings.minimumMarks)
-                this.score = Math.max(this.score,this.settings.minimumMarks);
+            if(this.settings.enableMinimumMarks && this.score<this.settings.minimumMarks) {
+                this.score = this.settings.minimumMarks;
+                this.credit = this.marks!=0 ? this.settings.minimumMarks/this.marks : 0;
+                this.markingComment(R('part.marking.minimum score applied',{score:this.settings.minimumMarks}));
+            }
         }
         if(this.revealed) {
             this.score = 0;
@@ -7325,8 +7408,8 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
     },
     /** Function which marks the student's answer: run `this.settings.markingScript`, which sets the credit for the student's answer to a number between 0 and 1 and produces a list of feedback messages and warnings.
      * If the question has been answered in a way that can be marked, `this.answered` should be set to `true`.
-     * @see Numbas.parts.Part.settings.markingScript
-     * @see Numbas.parts.Part.answered
+     * @see Numbas.parts.Part#markingScript
+     * @see Numbas.parts.Part#answered
      * @returns {Numbas.marking.finalised_state}
      */
     mark: function() {
@@ -7342,7 +7425,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         return finalised_result;
     },
     /** Apply a finalised list of feedback states to this part.
-     * @param {object[]} feedback
+     * @param {Numbas.marking.feedback_item[]} feedback
      * @see Numbas.marking.finalise_state
      */
     apply_feedback: function(feedback) {
@@ -7355,28 +7438,29 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         var scale = 1;
         while(i<states.length) {
             var state = states[i];
+            var FeedbackOps = Numbas.marking.FeedbackOps;
             switch(state.op) {
-                case 'set_credit':
-                    part.setCredit(scale*state.credit, state.message);
+                case FeedbackOps.SET_CREDIT:
+                    part.setCredit(scale*state.credit, state.message, state.reason);
                     break;
-                case 'multiply_credit':
+                case FeedbackOps.MULTIPLY_CREDIT:
                     part.multCredit(scale*state.factor, state.message);
                     break;
-                case 'add_credit':
+                case FeedbackOps.ADD_CREDIT:
                     part.addCredit(scale*state.credit, state.message);
                     break;
-                case 'sub_credit':
+                case FeedbackOps.SUB_CREDIT:
                     part.subCredit(scale*state.credit, state.message);
                     break;
-                case 'warning':
+                case FeedbackOps.WARNING:
                     part.giveWarning(state.message);
                     break;
-                case 'feedback':
+                case FeedbackOps.FEEDBACK:
                     part.markingComment(state.message);
                     break;
-                case 'end':
+                case FeedbackOps.END:
                     if(lifts.length) {
-                        while(i+1<states.length && states[i+1].op!='end_lift') {
+                        while(i+1<states.length && states[i+1].op!="end_lift") {
                             i += 1;
                         }
                     } else {
@@ -7386,7 +7470,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
                         }
                     }
                     break;
-                case 'start_lift':
+                case "start_lift":
                     lifts.push({credit: this.credit,scale:scale});
                     this.credit = 0;
                     scale = state.scale;
@@ -7421,7 +7505,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * This does NOT apply the feedback and credit to the part object, it just returns it.
      * @param {Numbas.jme.token} studentAnswer
      * @see Numbas.parts.Part#mark
-     * @returns {object} a dictionary `{states, values, scope, state_valid, state_errors}`
+     * @returns {Numbas.marking.marking_script_result}
      */
     mark_answer: function(studentAnswer) {
         try {
@@ -7440,15 +7524,17 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
     /** Set the `credit` to an absolute value
      * @param {Number} credit
      * @param {String} message - message to show in feedback to explain this action
+     * @param {String} reason - why was the credit set to this value? If given, either 'correct' or 'incorrect'.
      */
-    setCredit: function(credit,message)
+    setCredit: function(credit,message,reason)
     {
         var oCredit = this.credit;
         this.credit = credit;
         this.markingFeedback.push({
-            op: 'add_credit',
+            op: 'set_credit',
             credit: this.credit - oCredit,
-            message: message
+            message: message,
+            reason: reason
         });
     },
     /** Add an absolute value to `credit`
@@ -7465,14 +7551,14 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         });
     },
     /** Subtract an absolute value from `credit`
-     * @param {number} credit - amount to subtract
-     * @param {string} message - message to show in feedback to explain this action
+     * @param {Number} credit - amount to subtract
+     * @param {String} message - message to show in feedback to explain this action
      */
     subCredit: function(credit,message)
     {
         this.credit -= credit;
         this.markingFeedback.push({
-            op: 'subCredit',
+            op: 'sub_credit',
             credit: credit,
             message: message
         });
@@ -7486,7 +7572,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         var oCredit = this.credit
         this.credit *= factor;
         this.markingFeedback.push({
-            op: 'add_credit',
+            op: 'mult_credit',
             credit: this.credit - oCredit,
             message: message
         });
@@ -8007,7 +8093,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
         this.signals.trigger('preambleRun');
     },
     /** Get the part object corresponding to a path
-     * @param {partpath} path
+     * @param {Numbas.parts.partpath} path
      * @returns {Numbas.parts.Part}
      */
     getPart: function(path)
@@ -8154,6 +8240,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
     }
 };
 });
+
 /*
 Copyright 2011-14 Newcastle University
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -8340,7 +8427,9 @@ SignalBox.prototype = {
 }
 });
 Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
+    /** @namespace Numbas.marking */
     var marking = Numbas.marking = {};
+
     var jme = Numbas.jme;
     var math = Numbas.math;
     var TNothing = jme.types.TNothing;
@@ -8350,6 +8439,49 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
     var TNum = jme.types.TNum;
     var TBool = jme.types.TBool;
     var TDict = jme.types.TDict;
+
+    /** A line of feedback to give to the student, produced while marking their answer.
+     * Can modify the credit awarded.
+     *
+     * @typedef {Object} Numbas.marking.feedback_item
+     *
+     * @property {String} op - The operation to perform. See {@link Numbas.marking.FeedbackOps}
+     * @property {Number} [credit] - Parameter to change the credit awarded. The exact meaning depends on `op`.
+     * @property {String} [reason] - An extra note about why the op is being applied. For 'correct' and 'incorrect' feedback, this helps distinguish cases when the credit awarded doesn't change. 'invalid' means the answer could not be marked.
+     * @property {String} [message] - A message to display to the student.
+     */
+
+    /** Kinds of feedback item
+     * @readonly
+     * @enum {String}
+     * @memberof Numbas.marking
+     */
+    var FeedbackOps = Numbas.marking.FeedbackOps = {
+        /** Set the credit to the given value */
+        SET_CREDIT: 'set_credit',
+
+        /** Add the given amount of credit */
+        ADD_CREDIT: 'add_credit',
+
+        /** Multiply the current credit by the given amount */
+        MULTIPLY_CREDIT: 'multiply_credit',
+
+        /** Subtract the given amount of credit */
+        SUB_CREDIT: 'sub_credit',
+
+        /** End marking */
+        END: 'end',
+
+        /** Give the student a warning next to the answer widget */
+        WARNING: 'warning',
+
+        /** Give the student a message */
+        FEEDBACK: 'feedback',
+
+        /** Add the given list of items to the end of the current list of feedback items */
+        CONCAT: 'concat'
+    }
+
     function state_fn(name, args, outtype, fn) {
         return new jme.funcObj(name,args,outtype,null,{
             evaluate: function(args, scope) {
@@ -8367,37 +8499,38 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
             }
         });
     }
+
     var state_functions = [];
     state_functions.push(state_fn('correct',[],TBool,function(message) {
         return {
             return: true,
-            state: [{op:"set_credit", credit:1, message:R('part.marking.correct')}]
+            state: [{op:FeedbackOps.SET_CREDIT, reason: 'correct', credit:1, message:R('part.marking.correct')}]
         };
     }));
     state_functions.push(state_fn('correct',[TString],TBool,function(message) {
         return {
             return: true,
-            state: [{op:"set_credit", credit:1, message:message}]
+            state: [{op:FeedbackOps.SET_CREDIT, reason: 'correct', credit:1, message:message}]
         };
     }));
     state_functions.push(state_fn('incorrect',[],TBool,function(message) {
         return {
             return: false,
-            state: [{op:"set_credit", credit:0, message:R('part.marking.incorrect')}]
+            state: [{op:FeedbackOps.SET_CREDIT, reason: 'incorrect', credit:0, message:R('part.marking.incorrect')}]
         };
     }));
     state_functions.push(state_fn('incorrect',[TString],TBool,function(message) {
         return {
             return: false,
-            state: [{op:"set_credit", credit:0, message:message}]
+            state: [{op:FeedbackOps.SET_CREDIT, reason: 'incorrect', credit:0, message:message}]
         };
     }));
     correctif = function(condition,correctMessage,incorrectMessage) {
         var state;
         if(condition) {
-            state = [{op:"set_credit", credit:1, message: correctMessage || R('part.marking.correct')}];
+            state = [{op:FeedbackOps.SET_CREDIT, credit:1, reason: 'correct', message: correctMessage || R('part.marking.correct')}];
         } else {
-            state = [{op:"set_credit", credit:0, message: incorrectMessage || R('part.marking.incorrect')}];
+            state = [{op:FeedbackOps.SET_CREDIT, credit:0, reason: 'incorrect', message: incorrectMessage || R('part.marking.incorrect')}];
         }
         return {
             return: condition,
@@ -8409,39 +8542,39 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
     state_functions.push(state_fn('set_credit',[TNum,TString],TNum,function(n, message) {
         return {
             return: n,
-            state: [{op:"set_credit", credit:n, message: message}]
+            state: [{op:FeedbackOps.SET_CREDIT, credit:n, message: message}]
         }
     }));
     state_functions.push(state_fn('multiply_credit',[TNum,TString],TNum,function(n, message) {
         return {
             return: n,
-            state: [{op:"multiply_credit", factor: n, message: message}]
+            state: [{op:FeedbackOps.MULTIPLY_CREDIT, factor: n, message: message}]
         }
     }));
     state_functions.push(state_fn('add_credit',[TNum,TString],TNum,function(n, message) {
         return {
             return: n,
-            state: [{op:"add_credit", credit:n, message: message}]
+            state: [{op:FeedbackOps.ADD_CREDIT, credit:n, message: message}]
         }
     }));
     state_functions.push(state_fn('sub_credit',[TNum,TString],TNum,function(n, message) {
         return {
             return: n,
-            state: [{op:"sub_credit", credit:n, message: message}]
+            state: [{op:FeedbackOps.SUB_CREDIT, credit:n, message: message}]
         }
     }));
     state_functions.push(state_fn('end',[],TBool,function() {
         return {
             return: true,
-            state: [{op:"end"}]
+            state: [{op:FeedbackOps.END}]
         }
     }));
     state_functions.push(state_fn('fail',[TString],TString,function(message) {
         return {
             return: message,
             state: [
-                {op:"set_credit", credit:0, message:message},
-                {op:"end", invalid:true}
+                {op:FeedbackOps.SET_CREDIT, credit:0, message:message, reason: 'invalid'},
+                {op:FeedbackOps.END, invalid:true}
             ]
         };
     }));
@@ -8548,10 +8681,26 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
     state_functions.push(state_fn('concat_feedback',[TList,TNum],TList,function(feedback, scale) {
         return {
             return: feedback,
-            state: {op: "concat", messages: feedback, scale: scale}
+            state: {op: FeedbackOps.CONCAT, messages: feedback, scale: scale}
         }
     }));
-    var StatefulScope = function() {
+
+
+    /** A JME scope with marking state attached.
+     *  The "current" state is a list of feedback items. 
+     *  The scope can also refer to previously computed states by name.
+     *  The state can be modified by functions as they are called.
+     *  This should be the base 
+     *
+     *  @memberof Numbas.marking
+     *  @augments Numbas.jme.Scope
+     *  @constructor
+     *  @property {Numbas.marking.feedback_item[]} state
+     *  @property {Object.<Numbas.marking.feedback_item[]>} states - Previously computed states
+     *  @property {Object.<Boolean>} state_valid - Record of whether previously computed states were valid
+     *  @property {Object.<Error>} state_errors - The errors that caused states to become invalid, if any.
+     */
+    var StatefulScope = marking.StatefulScope = function() {
         this.new_state = true;
         this.state = [];
         this.states = {};
@@ -8562,7 +8711,7 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
             scope.addFunction(fn);
         });
     }
-    StatefulScope.prototype = {
+    StatefulScope.prototype = /** @lends Numbas.marking.StatefulScope.prototype */ { 
         evaluate: function(expr, variables) {
             var is_top = this.state===undefined || this.new_state;
             this.new_state = false;
@@ -8582,7 +8731,31 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
         }
     }
     StatefulScope = marking.StatefulScope = Numbas.util.extend(jme.Scope,StatefulScope);
+
     var re_note = /^(\$?[a-zA-Z_][a-zA-Z0-9_]*'*)(?:\s*\(([^)]*)\))?\s*:\s*((?:.|\n)*)$/m;
+
+
+    /** A definition of a marking note.
+     *
+     *  The note's name, followed by an optional description enclosed in parentheses, then a colon, and finally a {@link JME} expression to evaluate.
+     *
+     * @typedef {String} Numbas.marking.note_definition
+     */
+
+    /** A note forming part of a marking script.
+     *  Evaluates to a JME value and a list of feedback items.
+     *
+     *  @memberof Numbas.marking
+     *  @constructor
+     *
+     *  @property {String} name
+     *  @property {String} description
+     *  @property {Numbas.marking.note_definition} expr - The JME expression to evaluate to compute this note.
+     *  @property {Numbas.jme.tree} tree - The compiled form of the expression
+     *  @property {String[]} vars - The names of the variables this note depends on
+     *  
+     *  @param {JME} source
+     */
     var MarkingNote = marking.MarkingNote = function(source) {
         source = source.trim();
         var m = re_note.exec(source);
@@ -8608,6 +8781,33 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
         }
         this.vars = jme.findvars(this.tree);
     }
+
+    /** The result of a marking script.
+     *
+     * @typedef {Object} Numbas.marking.marking_script_result
+     *
+     * @property {Object.<Numbas.marking.feedback_item[]>} states - the feedback resulting from each of the notes
+     * @property {Object.<Numbas.jme.token>} values - the values of each of the notes
+     * @property {Object.<Boolean>} state_valid - See {@link Numbas.marking.StatefulScope#state_valid}
+     * @property {Object.<Error>} state_errors - See {@link Numbas.marking.StatefulScope#state_errors}
+     */
+
+    /** A script to mark a part.
+     *  A list of notes, which can refer to each other. The dependencies must form a directed acyclic graph, like for JME variables.
+     *
+     *  Two notes are required:
+     *  
+     *  * The `mark` note is the final note, used to provide feedback on the part.
+     *  * The value of the `interpreted_answer` note is used to represent the student's answer, as the script interpreted it.
+     *  
+     *  @memberof Numbas.marking
+     *  @constructor
+     *  
+     *  @param {String} source - The definitions of the script's notes.
+     *  @param {Numbas.marking.MarkingScript} [base] - a base script to extend.
+     *
+     *  @property {Numbas.marking.MarkingNote[]} notes
+     */
     var MarkingScript = marking.MarkingScript = function(source, base) {
         try {
             var notes = source.split(/\n(\s*\n)+/);
@@ -8634,7 +8834,15 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
         }
         this.notes = todo;
     }
-    MarkingScript.prototype = {
+    MarkingScript.prototype = /** @lends Numbas.marking.MarkingScript.prototype */ {
+
+        /** Evaluate all of this script's notes in the given scope.
+         *
+         * @param {Numbas.jme.Scope} scope
+         * @param {Object.<Numbas.jme.token>} - Extra variables defined in the scope
+         *
+         * @returns {Numbas.marking.marking_script_result}
+         */
         evaluate: function(scope, variables) {
             scope = new StatefulScope([
                 scope, {variables: variables}
@@ -8643,12 +8851,24 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
             return {
                 states: scope.states,
                 values: result.variables,
-                scope: result.scope,
                 state_valid: scope.state_valid,
                 state_errors: scope.state_errors
             };
         }
     }
+
+    /** Compute the marking note with the given name in the given scope
+     *
+     * @memberof Numbas.marking
+     * @function
+     * @see Numbas.jme.variables.computeVariable
+     *
+     * @param {String} name
+     * @param {Object} todo - dictionary of notes still to evaluate
+     * @param {Numbas.marking.StatefulScope} scope
+     *
+     * @returns {Numbas.jme.token}
+     */
     var compute_note = marking.compute_note = function(name,todo,scope) {
         if(scope.getVariable(name)) {
             return;
@@ -8667,7 +8887,8 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
             } catch(e) {
                 scope.state_errors[name] = e;
                 var invalid_dep = null;
-                for(var x of todo[name].vars) {
+                for(var i=0;i<todo[name].vars.length;i++) {
+                    var x = todo[name].vars[i];
                     if(x in todo) {
                         if(!scope.state_valid[x]) {
                             invalid_dep = x;
@@ -8685,18 +8906,23 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
         }
         return scope.variables[name];
     }
-    /** @typedef Numbas.marking.finalised_state
+    /** The result of attempting to mark a part.
+     * @typedef Numbas.marking.finalised_state
      * @type {Object}
      * @property {Boolean} valid - Can the answer be marked?
      * @property {Number} credit - Proportion of the credit to award
      * @property {Array.<Object>} states - Feedback actions
      */
+
     /** Run through a sequence of state operations, accumulating credit.
      * It might look like this is duplicated in `Numbas.parts.Part#apply_feedback`, but we need to be able to get a description of what a sequence of operations does in abstract so it can be reused in marking scripts for parent parts.
      * @see Numbas.parts.Part#apply_feedback
-     * @returns {Numbas.marking.finalised_state} a dictionary `{valid: boolean, credit: number, states: object[]}`
+     * @function
+     * @memberof Numbas.marking
+     * @param {Numbas.marking.feedback_item[]} states
+     * @returns {Numbas.marking.finalised_state}
      */
-    marking.finalise_state = function(states) {
+    var finalise_state = marking.finalise_state = function(states) {
         var valid = true;
         var end = false;
         var credit = 0;
@@ -8705,25 +8931,25 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
         for(var i=0;i<states.length;i++) {
             var state = states[i];
             switch(state.op) {
-                case 'set_credit':
+                case FeedbackOps.SET_CREDIT:
                     out_states.push(state);
                     credit = state.credit;
                     break;
-                case 'multiply_credit':
+                case FeedbackOps.MULTIPLY_CREDIT:
                     out_states.push(state);
                     credit *= state.factor;
                     break;
-                case 'add_credit':
+                case FeedbackOps.ADD_CREDIT:
                     out_states.push(state);
                     credit += state.credit;
                     break;
-                case 'sub_credit':
+                case FeedbackOps.SUB_CREDIT:
                     out_states.push(state);
                     credit -= state.credit;
                     break;
-                case 'end':
+                case FeedbackOps.END:
                     if(num_lifts) {
-                        while(i+1<states.length && states[i+1].op!='end_lift') {
+                        while(i+1<states.length && states[i+1].op!="end_lift") {
                             i += 1;
                         }
                     } else {
@@ -8733,7 +8959,7 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
                         }
                     }
                     break;
-                case 'concat':
+                case FeedbackOps.CONCAT:
                     states = states.slice(0,i+1).concat(
                         [{op:"start_lift",scale:state.scale}],
                         state.messages,
@@ -8741,11 +8967,11 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
                         states.slice(i+1)
                     );
                     break;
-                case 'start_lift':
+                case "start_lift":
                     num_lifts += 1;
                     out_states.push(state);
                     break;
-                case 'end_lift':
+                case "end_lift":
                     num_lifts -= 1;
                     out_states.push(state);
                     break;
@@ -8763,6 +8989,7 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
         }
     }
 });
+
 /*
 Copyright 2011-14 Newcastle University
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -9281,13 +9508,13 @@ var math = Numbas.math = /** @lends Numbas.math */ {
         }
     },
     /** Settings for {@link Numbas.math.niceNumber}
-     * @typedef niceNumber_settings
+     * @typedef Numbas.math.niceNumber_settings
      * @property {String} precisionType - Either `"dp"` or `"sigfig"`.
      * @property {String} style - Name of a notational style to use. See {@link Numbas.util.numberNotationStyles}.
      */
     /** Display a number nicely - rounds off to 10dp so floating point errors aren't displayed
      * @param {Number} n
-     * @param {niceNumber_settings} options - `precisionType` is either "dp" or "sigfig". `style` is an optional notation style to use.
+     * @param {Numbas.math.niceNumber_settings} options - `precisionType` is either "dp" or "sigfig". `style` is an optional notation style to use.
      * @see Numbas.util.numberNotationStyles
      * @returns {String}
      */
@@ -10181,7 +10408,7 @@ var math = Numbas.math = /** @lends Numbas.math */ {
     },
     /** Convert a range to a list - enumerate all the elements of the range
      * @param {range} range
-     * @returns {number[]}
+     * @returns {Number[]}
      */
     rangeToList: function(range) {
         var start = range[0];
@@ -10209,7 +10436,7 @@ var math = Numbas.math = /** @lends Numbas.math */ {
     },
     /** Calculate the number of elements in a range
      * @param {range} range
-     * @returns {number}
+     * @returns {Number}
      */
     rangeSize: function(range) {
         var diff = range[1]-range[0];
@@ -10866,6 +11093,7 @@ var setmath = Numbas.setmath = {
     }
 }
 });
+
 /*
 Copyright 2011-14 Newcastle University
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13200,9 +13428,10 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                     }
                 },this),
                 this.input.subscribe(function(value) {
-                    var valid = value!='' || this.allowEmpty;
+                    var empty = value=='';
+                    var valid = !empty || this.allowEmpty;
                     if(value != lastValue) {
-                        this.answerJSON({valid: valid, value: value});
+                        this.answerJSON({valid: valid, value: value, empty: empty});
                     }
                     lastValue = value;
                 },this)
@@ -13236,7 +13465,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.result = ko.computed(function() {
                 var input = this.input().trim();
                 if(input=='') {
-                    return {valid:false};
+                    return {valid:false, empty: true};
                 }
                 if(!util.isNumber(input,this.allowFractions,this.allowedNotationStyles)) {
                     if(util.isNumber(input, true, this.allowedNotationStyles)) {
@@ -13312,7 +13541,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.result = ko.computed(function() {
                 var input = this.input().trim();
                 if(input=='') {
-                    return {valid:false};
+                    return {valid:false,empty:true};
                 }
                 if(this.options.returnString) {
                     return {valid: true, value: input};
@@ -13418,6 +13647,10 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.result = ko.computed(function() {
                 var value = this.input().slice().map(function(r){return r.slice()});
                 var cells = Array.prototype.concat.apply([],value);
+                var empty = cells.every(function(cell){return !cell.trim()});
+                if(empty) {
+                    return {valid: false, empty: true};
+                }
                 if(this.parseCells) {
                     var valid = cells.every(function(cell){ return cell.trim() && util.isNumber(cell,vm.allowFractions,vm.allowedNotationStyles) });
                     if(!valid) {
@@ -13654,7 +13887,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             ];
             this.setAnswerJSON = ko.computed(function() {
                 var value = this.answerAsArray ? this.choiceArray() : this.choice();
-                this.answerJSON({valid: value!==null, value: value});
+                this.answerJSON({valid: value!==null, value: value, empty: value===null});
             },this);
             this.dispose = function() {
                 this.subscriptions.forEach(function(sub) { sub.dispose(); });
@@ -13715,7 +13948,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                     this.answerJSON({valid: true, value: value});
                 } else {
                     if(this.answerJSON().valid) {
-                        this.answerJSON({valid: false});
+                        this.answerJSON({valid: false, empty: true});
                     }
                 }
             },this);
@@ -13762,6 +13995,8 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
                 var v = this.choices().map(function(c){ return c.ticked() });
                 if(this.answerAsArray) {
                     return v.map(function(c){ return [c]; });
+                } else {
+                    return v;
                 }
             }
             var lastValue = this.make_result();
@@ -13862,6 +14097,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
         '
     });
 });
+
 /*
 Copyright 2011-15 Newcastle University
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15245,8 +15481,9 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
 ['revealAnswer'].forEach(function(method) {
     MultipleResponsePart.prototype[method] = util.extend(MultipleResponsePart.prototype[method], Part.prototype[method]);
 });
+
 /** Layouts for multiple response types
- * @type {Object.<function>
+ * @type {Object.<function>}
  */
 Numbas.parts.MultipleResponsePart.layoutTypes = {
     all: function(row,column) { return true; },

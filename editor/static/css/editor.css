@@ -212,6 +212,11 @@ static-dynamic-setting .static-switch {
 
 }
 
+.label-block .checkbox input[type="checkbox"] {
+    position: initial;
+    margin-left: 0;
+}
+
 /*
 #name-header {
     padding: 0;

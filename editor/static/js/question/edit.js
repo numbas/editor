@@ -1881,9 +1881,7 @@ $(document).ready(function() {
         this.unit_tests = ko.observableArray([]);
         this.marking_test = ko.observable(new MarkingTest(this,this.q.questionScope()));
         function subscribe_to_answer(mt) {
-            console.log('marking test changed');
             mt.answer.subscribe(function() {
-                console.log('answer changed!');
                 mt.run();
             });
         }
@@ -2287,7 +2285,7 @@ $(document).ready(function() {
                     throw(new Numbas.Error("Student's answer not set. There may be an error in the input widget."));
                 }
                 if(!answer.valid) {
-                    if(answer.value === undefined) {
+                    if(answer.empty) {
                         mt.last_run({error: ''})
                     } else {
                         mt.last_run({error: "This answer is not valid.", warnings: answer.warnings});

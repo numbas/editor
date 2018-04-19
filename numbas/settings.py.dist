@@ -140,7 +140,7 @@ GLOBAL_SETTINGS = {
     'NUMBAS_PATH': '/srv/numbas/compiler',
     'PREVIEW_PATH': '/srv/numbas/previews',
     'PREVIEW_URL': 'http://server.domain/numbas-previews/',    # a URL which serves files from PREVIEW_PATH
-    'HELP_URL': 'http://numbas-editor.readthedocs.org',        # the URL of the Numbas webdocs
+    'HELP_URL': 'https://docs.numbas.org.uk/en/latest/',        # the URL of the Numbas webdocs
     'PYTHON_EXEC': '/usr/bin/python3',
     'NUMBAS_THEMES': [('Standard', 'default'), ('Printable worksheet', 'worksheet'), ('School', 'school')],
     'NUMBAS_LOCALES': [

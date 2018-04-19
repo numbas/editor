@@ -107,7 +107,7 @@ class PublishView(generic.UpdateView):
 
     def post(self, request, *args, **kwargs):
         cpt = self.get_object()
-        cpt.public_availability = 'select'
+        cpt.public_availability = 'always'
         cpt.save()
         messages.add_message(self.request, messages.SUCCESS, 'This custom part type has been published to the public database.')
         return redirect(self.get_success_url())

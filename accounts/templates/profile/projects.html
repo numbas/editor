@@ -4,6 +4,8 @@
 
 {% block profile_header %}{{view_user.get_full_name}}'s projects{% endblock %}
 
+{% block title %}Projects - {{block.super}}{% endblock %}
+
 {% block profile_content %}
 <ul class="list-unstyled">
     {% for project in projects %}

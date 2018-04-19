@@ -6,6 +6,8 @@
     <link href="{% sstatic 'css/theme.css' %}" type="text/css" rel="stylesheet" />
 {% endblock stylesheets %}
 
+{% block title %}Themes - {{block.super}}{% endblock %}
+
 {% block profile_header %}{{view_user.get_full_name}}'s themes{% endblock %}
 
 {% block profile_content %}
@@ -50,6 +52,6 @@
 {% endif %}
 {% endif %}
 
-<p><a target="numbasquickhelp" href="http://numbas-editor.readthedocs.io/en/latest/themes.html"><span class="glyphicon glyphicon-question-sign"></span> Help with themes</a></p>
+<p><a target="numbasquickhelp" href="{{HELP_URL}}themes.html"><span class="glyphicon glyphicon-question-sign"></span> Help with themes</a></p>
 
 {% endblock profile_content %}

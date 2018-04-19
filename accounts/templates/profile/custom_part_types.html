@@ -10,6 +10,8 @@
 
 {% block profile_header %}{{view_user.get_full_name}}'s part types{% endblock %}
 
+{% block title %}Part types - {{block.super}}{% endblock %}
+
 {% block profile_content %}
 
 {% if view_user.own_custom_part_types.exists %}
@@ -76,6 +78,6 @@
 {% endif %}
 {% endif %}
 
-<p><a target="numbasquickhelp" href="http://numbas-editor.readthedocs.io/en/latest/custom_part_types.html"><span class="glyphicon glyphicon-question-sign"></span> Help with custom part types</a></p>
+<p><a target="numbasquickhelp" href="{{HELP_URL}}custom_part_types.html"><span class="glyphicon glyphicon-question-sign"></span> Help with custom part types</a></p>
 
 {% endblock profile_content %}

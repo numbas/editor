@@ -4,6 +4,8 @@
 
 {% block content_container %}container-fluid{% endblock content_container %}
 
+{% block title %}{{view_user.get_full_name}}'s content - {{block.super}}{% endblock %}
+
 {% block results_top %}
 
 {% endblock results_top %}

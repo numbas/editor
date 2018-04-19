@@ -6,6 +6,8 @@
 <link href="{{ STATIC_URL }}css/profile-view.css" type="text/css" rel="stylesheet" />
 {% endblock stylesheets %}
 
+{% block title %}{{view_user.get_full_name}}- {{block.super}}{% endblock %}
+
 {% block content %}
 {% with object.userprofile as profile %}
 

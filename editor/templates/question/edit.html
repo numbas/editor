@@ -890,7 +890,9 @@
 
         {% if editable %}
         <div class="btn-group">
-            <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parts().length ? 'Add another part' : 'Add a part'"></span>
+            <h3>
+                <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parts().length ? 'Add another part' : 'Add a part'"></span>
+            </h3>
             <ul class="list-inline add-part">
                 <!-- ko foreach: partTypes -->
                 <li><button type="button" class="btn btn-default" data-bind="text: niceName, click: $parent.addPart"></button></li>

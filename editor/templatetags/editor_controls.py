@@ -114,7 +114,7 @@ def booleanproperty(context, property_name, label, *args, **kwargs):
         'property': property_name,
         'label': label,
         'help_url': kwargs.get('help_url'),
-        'disable': kwargs.get('disable', 'false'),
+        'disable': kwargs.get('disable', False),
         'form_label_class': context.get('form_label_class', 'col-sm-3'),
         'form_control_class': context.get('form_control_class', 'col-sm-9'),
     })

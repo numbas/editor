@@ -118,15 +118,23 @@
                     <div class="form-group description">
                         <label>Description</label>
                         <div id="description-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
+                        {% if editable %}
                         <p class="help-block">
                             {% helplink 'custom_part_type/reference.html#term-description' subject='the description field' %}
                             Describe how this part type works, and what kinds of questions it is appropriate for.
                         </p>
+                        {% endif %}
                     </div>
 
                     <div class="form-group">
-                        <label>URL of documentation</label>
-                        <input {% if not editable %}disabled{% endif %} class="form-control" data-bind="textInput: help_url">
+                        {% if editable %}
+                            <input class="form-control" data-bind="textInput: help_url">
+                            <label>URL of documentation</label>
+                        {% else %}
+                            {% if object.help_url %}
+                                <a class="helplink" href="{{object.help_url}}" target="_blank"><span class="glyphicon glyphicon-question-sign"></span> Documentation for this part type</a>
+                            {% endif %}
+                        {% endif %}
                     </div>
 
                     {% if editable %}
@@ -287,9 +295,11 @@
                                             </label>
                                             <div class="{{form_control_class}}">
                                                 <div {% if not editable %}disabled{% endif %} data-bind="writemaths: hint, wmPara: false"></div>
+                                                {% if editable %}
                                                 <p class="help-block">
                                                     Describe how this setting should be used.
                                                 </p>
+                                                {% endif %}
                                             </div>
                                         </div>
 
@@ -326,9 +336,11 @@
                             <div class="{{form_control_class}}">
                                 <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: input_options.correctAnswer, codemirrorMode: 'jme'"></textarea>
                                 <undefined-variable-warning params="expr: input_options.correctAnswer, vars: ['settings']"></undefined-variable-warning>
+                                {% if editable %}
                                 <p class="help-block">
                                     An expression which evaluates to the expected answer to the part. You can refer to any of the part's settings.
                                 </p>
+                                {% endif %}
                             </div>
                         </div>
 
@@ -340,7 +352,9 @@
                                 <static-dynamic-setting params="option: input_options.hint, type_hint: 'string'{% if not editable %}, disable: true{% endif %}">
                                     {% text_input 'static_value' %}
                                 </static-dynamic-setting>
+                                {% if editable %}
                                 <p class="help-block">Give the student any necessary information about how to enter their answer.</p>
+                                {% endif %}
                             </div>
                         </div>
 

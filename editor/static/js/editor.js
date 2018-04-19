@@ -1495,7 +1495,7 @@ $(document).ready(function() {
                 <p class="help-block" data-bind="if: type_hint">This should evaluate to a <code data-bind="text: type_hint"></code>.</p>\
             <!-- /ko -->\
             </div>\
-            <label class="static-switch"><input type="checkbox" data-bind="checked: static"> Static?</label>\
+            <label class="static-switch"><input type="checkbox" data-bind="checked: static, disable: disable"> Static?</label>\
         '
     });
 

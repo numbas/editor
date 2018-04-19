@@ -890,15 +890,12 @@
 
         {% if editable %}
         <div class="btn-group">
-            <button id="add-part-button" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-bind="css: {'btn-lg': parts().length==0}">
-                <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parts().length ? 'Add another part' : 'Add a part'"></span> <span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu">
+            <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parts().length ? 'Add another part' : 'Add a part'"></span>
+            <ul class="list-inline add-part">
                 <!-- ko foreach: partTypes -->
-                <li><a href="#" data-bind="click: $parent.addPart, text: niceName"></a></li>
+                <li><button type="button" class="btn btn-default" data-bind="text: niceName, click: $parent.addPart"></button></li>
                 <!-- /ko -->
-                <li role="separator" class="divider"></li>
-                <li><a href="#" data-bind="click: addPartTypeModal.open">… More part types</a></li>
+                <li><button type="button" class="btn btn-link" data-bind="click: addPartTypeModal.open">… More part types</button></li>
             </ul>
         </div>
         <part-type-modal params="data: addPartTypeModal"></part-type-modal>

@@ -86,7 +86,7 @@ $(document).ready(function() {
                                     <button class="btn btn-sm btn-link use" title="Use this part type" data-bind="click: $parent.use"><span class="glyphicon glyphicon-plus" ></span></button>\
                                     <div class="details">\
                                         <h4>\
-                                            <span data-bind="html: niceName, click: $parent.use"></span>\
+                                            <span role="button" class="name" data-bind="html: niceName, click: $parent.use"></span>\
                                             <br>\
                                             <small>by <span data-bind="text: source.author.name"></span></small>\
                                         </h4>\

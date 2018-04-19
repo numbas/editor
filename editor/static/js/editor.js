@@ -671,7 +671,7 @@ $(document).ready(function() {
 		},this);
 
         ko.computed(function() {
-            document.title = this.name() ? this.name()+' - Numbas Editor' : 'Numbas Editor';
+            document.title = this.name() ? this.name()+' - '+Editor.SITE_TITLE : Editor.SITE_TITLE;
         },this);
 
         if(item_json.editable) {

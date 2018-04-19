@@ -1711,7 +1711,7 @@ $(document).ready(function() {
         this.type = ko.observable(this.availableTypes()[0]);
 
         this.canBeReplacedWithGap = ko.computed(function() {
-            return !(this.isGap() || this.isStep() || t.can_be_gap===false);
+            return !(this.type().name=='gapfill' || this.isGap() || this.isStep() || t.can_be_gap===false);
         },this);
 
         this.indexLabel = ko.computed(function() {

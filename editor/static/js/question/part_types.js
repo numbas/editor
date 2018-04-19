@@ -864,7 +864,7 @@ Numbas.custom_part_types = {};
 function CustomPartType(data) {
     this.name = data.short_name;
     this.niceName = data.name;
-    this.help_url = data.help_url || data.source.edit_page;
+    this.help_url = data.source.edit_page;
     this.description = data.description;
     this.widget = data.input_widget;
     this.has_marks = true;

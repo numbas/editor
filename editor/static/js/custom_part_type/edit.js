@@ -776,20 +776,20 @@ $(document).ready(function() {
 
         this.name = ko.observable('');
 
-		this.nameError = ko.computed(function() {
-			var name = this.name().toLowerCase();
-			if(name=='')
-				return 'A name is required';
+        this.nameError = ko.computed(function() {
+            var name = this.name().toLowerCase();
+            if(name=='')
+                return 'A name is required';
 
-			var settings = pt.settings();
-			for(var i=0;i<settings.length;i++) {
-				var setting = settings[i];
-				if(setting!=this && setting.name().toLowerCase()==name)
-					return 'There\'s more than one setting with this name.';
-			}
+            var settings = pt.settings();
+            for(var i=0;i<settings.length;i++) {
+                var setting = settings[i];
+                if(setting!=this && setting.name().toLowerCase()==name)
+                    return 'There\'s more than one setting with this name.';
+            }
 
-			return '';
-		},this);
+            return '';
+        },this);
 
         this.label = ko.observable('');
         this.help_url = ko.observable('');
@@ -815,33 +815,33 @@ $(document).ready(function() {
             }
         },
 
-		canMove: function(direction) {
-			var parentList = this.pt.settings();
-			switch(direction) {
-				case 'up':
-					return parentList.indexOf(this)>0;
-				case 'down':
-					return parentList.indexOf(this)<parentList.length-1;
-			}
-		},
+        canMove: function(direction) {
+            var parentList = this.pt.settings();
+            switch(direction) {
+                case 'up':
+                    return parentList.indexOf(this)>0;
+                case 'down':
+                    return parentList.indexOf(this)<parentList.length-1;
+            }
+        },
 
-		moveUp: function() {
-			var parentList = this.pt.settings;
-			var i = parentList.indexOf(this);
-			if(i>0) {
-				parentList.remove(this);
+        moveUp: function() {
+            var parentList = this.pt.settings;
+            var i = parentList.indexOf(this);
+            if(i>0) {
+                parentList.remove(this);
                 ko.tasks.runEarly();
-				parentList.splice(i-1,0,this);
-			}
-		},
+                parentList.splice(i-1,0,this);
+            }
+        },
 
-		moveDown: function() {
-			var parentList = this.pt.settings;
-			var i = parentList.indexOf(this);
-			parentList.remove(this);
+        moveDown: function() {
+            var parentList = this.pt.settings;
+            var i = parentList.indexOf(this);
+            parentList.remove(this);
             ko.tasks.runEarly();
-			parentList.splice(i+1,0,this);
-		},
+            parentList.splice(i+1,0,this);
+        },
 
         toJSON: function() {
             var out = {
@@ -878,28 +878,28 @@ $(document).ready(function() {
             }
         },this);
 
-		this.nameError = ko.computed(function() {
-			var name = this.name().toLowerCase();
-			if(name=='')
-				return '';
+        this.nameError = ko.computed(function() {
+            var name = this.name().toLowerCase();
+            if(name=='')
+                return '';
 
-			var notes = pt.marking_notes();
-			for(var i=0;i<notes.length;i++) {
-				var note = notes[i];
-				if(note!=this && note.name().toLowerCase()==name)
-					return 'There\'s already a marking note with this name.';
-			}
+            var notes = pt.marking_notes();
+            for(var i=0;i<notes.length;i++) {
+                var note = notes[i];
+                if(note!=this && note.name().toLowerCase()==name)
+                    return 'There\'s already a marking note with this name.';
+            }
 
-			if(!re_note_name.test(name)) {
-				return 'This name is invalid.';
-			}
+            if(!re_note_name.test(name)) {
+                return 'This name is invalid.';
+            }
 
-			if(name in Numbas.jme.constants || marking_reserved_names.contains(name)) {
-				return 'This name is reserved.';
-			}
+            if(name in Numbas.jme.constants || marking_reserved_names.contains(name)) {
+                return 'This name is reserved.';
+            }
 
-			return '';
-		},this);
+            return '';
+        },this);
 
         this.description = ko.observable('');
 

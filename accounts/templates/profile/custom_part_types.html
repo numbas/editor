@@ -4,7 +4,7 @@
 {% load can_edit %}
 
 {% block stylesheets %}
-	{{ block.super }}
+    {{ block.super }}
     <link href="{% sstatic 'css/custom_part_types.css' %}" type="text/css" rel="stylesheet" />
 {% endblock stylesheets %}
 
@@ -27,7 +27,7 @@
         <th>Name</th>
         <th>Ready to use?</th>
         <th>Published?</th>
-		<th>What's it used for?</th>
+        <th>What's it used for?</th>
         {% if is_me %}<th></th><!-- control links -->{% endif %}
     </thead>
     <tbody>
@@ -49,7 +49,7 @@
                 <span class="glyphicon glyphicon-remove-sign text-danger" title="Not ready to use"></span>
             {% endif %}
         </td>
-		<td>{{custom_part_type.description|strip_html|safe}}</td>
+        <td>{{custom_part_type.description|strip_html|safe}}</td>
         {% if is_me %}
         <td class="text-center">
             <a class="btn btn-link" href="{% url 'custom_part_type_edit' custom_part_type.pk %}" title="Edit this part type"><span class="glyphicon glyphicon-pencil text-success"></span></a>

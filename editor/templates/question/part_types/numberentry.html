@@ -14,14 +14,14 @@
 
     <h4>Advanced settings</h4>
     <hr>
-	<div class="form-group">
-		<label class="{{form_label_class}} control-label">
+    <div class="form-group">
+        <label class="{{form_label_class}} control-label">
             Precision restriction {% helplink 'question/parts/numberentry.html#term-precision-restriction' %}
-		</label>
-		<div class="{{form_control_class}}">
-			<select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: precisionTypes, value: precisionType, optionsText: 'niceName'"></select>
-		</div>
-	</div>
+        </label>
+        <div class="{{form_control_class}}">
+            <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: precisionTypes, value: precisionType, optionsText: 'niceName'"></select>
+        </div>
+    </div>
     <div data-bind="fadeVisible: fractionPossible">
         {% booleanproperty 'allowFractions' 'Allow the student to enter a fraction?' help_url='question/parts/numberentry.html#term-allow-the-student-to-enter-a-fraction' %}
     </div>
@@ -54,6 +54,6 @@
     {% selectproperty 'correctAnswerStyle' 'Correct answer style' options_text='name' options='allowedNotationStyles' help_url='question/parts/numberentry.html#term-correct-answer-style' %}
     <hr>
     {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='question/parts/numberentry.html#term-show-correct-answer-on-reveal' %}
-    {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/reference.html#term-show-score-feedback-icon' %}	
+    {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/reference.html#term-show-score-feedback-icon' %}    
 </form>
 </section>

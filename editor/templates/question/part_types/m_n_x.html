@@ -52,7 +52,7 @@
         <hr>
 
         {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='question/reference.html#term-show-correct-answer-on-reveal' %}
-        {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/reference.html#term-show-score-feedback-icon' %}	
+        {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/reference.html#term-show-score-feedback-icon' %}    
     </form>
 </section>
 
@@ -61,8 +61,8 @@
         {% booleanproperty 'customChoices' 'Variable list of choices?' help_url='question/parts/multiple-choice.html#term-variable-list-of-choices' %}
         <div data-bind="fadeVisible: customChoices">
             {% property 'customChoicesExpression' 'List of choices' monospace=True help_url='question/parts/multiple-choice.html#term-list-of-choices' %}
-		</div>
-	</form>
+        </div>
+    </form>
     <ul class="choices list-unstyled list-group" data-bind="fadeVisible: !customChoices()">
         <!-- ko foreach: {data: choices, afterAdd: Editor.afterAdd} -->
         <li class="choice form-inline list-group-item clearfix">
@@ -83,8 +83,8 @@
         {% booleanproperty 'customAnswers' 'Variable list of answers?' help_url='question/parts/multiple-choice.html#term-variable-list-of-answers' %}
         <div data-bind="fadeVisible: customAnswers">
             {% property 'customAnswersExpression' 'List of answers' monospace=True help_url='question/parts/multiple-choice.html#term-list-of-answers' %}
-		</div>
-	</form>
+        </div>
+    </form>
     <ul class="answers list-unstyled list-group" data-bind="fadeVisible: !customAnswers()">
         <!-- ko foreach: {data: answers, afterAdd: Editor.afterAdd} -->
         <li class="answer form-inline list-group-item clearfix">

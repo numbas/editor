@@ -17,7 +17,7 @@
 }
 
 .part-tabs {
-	margin-bottom: 1em;
+    margin-bottom: 1em;
 }
 
 .part-tabs li.more-important + li:not(.more-important) {
@@ -38,11 +38,11 @@
 }
 
 .part .form-horizontal .form-control {
-	display: inline;
+    display: inline;
 }
 
 .lock-cell button.lock.locked {
-	color: black;
+    color: black;
 }
 
 .panel.variable-groups {
@@ -74,11 +74,11 @@
 }
 
 .variable-list tbody.ko_container.empty {
-	display: block;
-	min-height: 3em;
+    display: block;
+    min-height: 3em;
     background: #fefbfb;
-	width: 100%;
-	position: absolute;
+    width: 100%;
+    position: absolute;
     box-sizing: border-box;
     padding: 1em;
 }
@@ -86,18 +86,18 @@
     cursor: pointer;
 }
 .variable-selector .value {
-	text-align: left;
-	display: inline-block;
-	max-height: 5em;
-	overflow-y: hidden;
-	overflow-x: hidden;
+    text-align: left;
+    display: inline-block;
+    max-height: 5em;
+    overflow-y: hidden;
+    overflow-x: hidden;
     word-break: break-word;
 }
 
 .variable-selector.error .value {
-	color: red;
-	font-weight: bold;
-	max-height: none;
+    color: red;
+    font-weight: bold;
+    max-height: none;
 }
 .variable-selector .value img {
     max-height: 5em;

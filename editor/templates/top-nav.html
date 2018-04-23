@@ -5,108 +5,108 @@
 {% notifications_unread as unread_notifications %}
 
 <nav id="top-nav" class="navbar navbar-default navbar-static-top">
-	<div class="navbar-header">
-		<a class="navbar-brand" href="{% url 'editor_index' %}"><img id="numbas-logo" src="{% sstatic 'images/numbas_logo.png' %}"></a>
-	</div>
+    <div class="navbar-header">
+        <a class="navbar-brand" href="{% url 'editor_index' %}"><img id="numbas-logo" src="{% sstatic 'images/numbas_logo.png' %}"></a>
+    </div>
 
-	<form id="search-bar" class="navbar-form navbar-left" role="search" method="get" action="{% block search_url %}{% url 'search' %}{% endblock search_url %}">
-		<div class="form-group">
-			<div class="input-group">
-				<input name="query" type="text" class="form-control" id="top-search-bar" placeholder="Search by name or keyword{% if in_project %} in this project{% endif %}" value="{{search_query}}"/>
-				<div class="input-group-btn">
-				{% if search_query %}
-					<a class="btn btn-default" href="{% querystring "query"="" %}">
-						<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-					</a>
-				{% endif %}
-					<button type="submit" class="btn btn-default" aria-label="Search">
-						<span class="glyphicon glyphicon-search" aria-hidden="true"></span>
-					</button>
-				</div>
-			</div>
-		</div>
-	</form>
+    <form id="search-bar" class="navbar-form navbar-left" role="search" method="get" action="{% block search_url %}{% url 'search' %}{% endblock search_url %}">
+        <div class="form-group">
+            <div class="input-group">
+                <input name="query" type="text" class="form-control" id="top-search-bar" placeholder="Search by name or keyword{% if in_project %} in this project{% endif %}" value="{{search_query}}"/>
+                <div class="input-group-btn">
+                {% if search_query %}
+                    <a class="btn btn-default" href="{% querystring "query"="" %}">
+                        <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                    </a>
+                {% endif %}
+                    <button type="submit" class="btn btn-default" aria-label="Search">
+                        <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
 
-	<ul id="explore-nav" class="nav navbar-nav navbar-left">
-		<li>
-			<a tabindex="2" href="{% url 'public_projects' %}"><span class="glyphicon glyphicon-globe"></span> Explore</a>
-		</li>
-	</ul>
-	<div class="space"></div>
+    <ul id="explore-nav" class="nav navbar-nav navbar-left">
+        <li>
+            <a tabindex="2" href="{% url 'public_projects' %}"><span class="glyphicon glyphicon-globe"></span> Explore</a>
+        </li>
+    </ul>
+    <div class="space"></div>
 
-	<ul id="session" class="nav navbar-nav navbar-right">
-		{% if user.is_authenticated %}
-			<li id="create-new-dropdown">
-				<a role="button" class="dropdown-toggle" data-toggle="dropdown">
-				<span class="glyphicon glyphicon-plus"></span> New <span class="caret"></span>
-				</a>
-				<ul class="dropdown-menu">
-					<li><a href="{% url 'question_new' %}{% if project %}?project={{project.pk}}{% endif %}"><span class="glyphicon glyphicon-file"></span> Question</a></li>
-					<li><a href="{% url 'exam_new' %}{% if project %}?project={{project.pk}}{% endif %}"><span class="glyphicon glyphicon-book"></span> Exam</a></li>
-					<li role="separator" class="divider"></li>
-					<li><a href="{% url 'project_new' %}"><span class="glyphicon glyphicon-briefcase"></span> Project</a></li>
-					<li role="separator" class="divider"></li>
-					<li><a href="{% url 'exam_upload' %}{% if project %}?project={{project.pk}}{% endif %}"><span class="glyphicon glyphicon-upload"></span> Upload</a></li>
-				</ul>
-			</li>
-			<li id="notifications" class="{% if unread_notifications %}unread{% endif %}">
-				<a role="button" class="dropdown-toggle {% if not unread_notifications %}disabled{% endif %}" data-toggle="dropdown" title="{{unread_notifications}} unread notification{{unread_notifications|pluralize}}">
-					<span class="glyphicon glyphicon-bell"></span>
-					<span class="badge noselect">{% if unread_notifications %}{{unread_notifications}}{% endif %}</span>
-					<span class="visible-xs-inline">Notifications</span>
-				</a>
-				<ul class="dropdown-menu">
-					{% include "notifications/list.html" %}
-				</ul>
-			</li>
-			{% with basket_size=user.userprofile.question_basket.count %}
-			<li id="question_basket" class="counter-icon {% if basket_size %}nonempty{% endif %}">
-					<a role="button" class="dropdown-toggle {% if not basket_size %}disabled{% endif %}" data-toggle="dropdown" title="{{basket_size}} question{{basket_size|pluralize}} in your basket">
-						<span class="glyphicon glyphicon-shopping-cart"></span>
-						<span class="badge noselect">{% if basket_size %}{{basket_size}}{% endif %}</span>
-						<span class="visible-xs-inline">Question Basket</span>
-					</a>
-					<ul class="dropdown-menu basket">
-						{% include "basket/list.html" %}
-					</ul>
-				</li>
-			{% endwith %}
-			<li class="dropdown">
-			<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% user_thumbnail user 20 15 %} <span class="visible-xs-inline">Logged in as <strong>{{user.get_full_name}}</strong></span> <span class="caret"></span></a>
-				<ul class="dropdown-menu">
-				<li class="readonly hidden-xs"><a tabindex="2">Logged in as <strong>{{user.get_full_name}}</strong></a></li>
-				<li role="separator" class="divider hidden-xs"></li>
-				<li><a tabindex="2" href="{% url 'editor_index' %}"><span class="glyphicon glyphicon-home"></span> Home</a></li>
-				<li><a tabindex="2" href="{% url 'view_profile' user.pk %}"><span class="glyphicon glyphicon-user"></span> Profile</a></li>
-				<li><a tabindex="2" href="{% url 'profile_projects' user.pk %}"><span class="glyphicon glyphicon-briefcase"></span> Projects</a></li>
-				<li role="separator" class="divider"></li>
-				<li><a tabindex="2" href="{% url 'edit_profile' %}"><span class="glyphicon glyphicon-cog"></span> Settings</a></li>
-				{% if CAN_LOGOUT %}
-				<li><a tabindex="2" href="{% url 'logout' %}?next={{request.path|escape}}"><span class="glyphicon glyphicon-log-out"></span> Log out</a></li>
-				{% endif %}
-				</ul>
-			</li>
-			<li>
-				<a href="{{HELP_URL}}" target="_blank">
-					<span class="text-info">
-						<span class="glyphicon glyphicon-question-sign"></span> <strong>Help</strong>
-					</span>
-				</a>
-			</li>
-		{% else %}
-			<li>
-				<a tabindex="2" href="{% url 'login' %}?next={{request.path|escape}}">
-					<button type="button" class="btn btn-primary">Log in</button>
-				</a>
-			</li>
-			{% if ALLOW_REGISTRATION %}
-			<li>
-				<a tabindex="2" href="{% url 'registration_register' %}">
-					<button type="button" class="btn btn-success">Create an account</button>
-				</a>
-			</li>
-			{%endif%}
-		{% endif %}
-	</ul>
+    <ul id="session" class="nav navbar-nav navbar-right">
+        {% if user.is_authenticated %}
+            <li id="create-new-dropdown">
+                <a role="button" class="dropdown-toggle" data-toggle="dropdown">
+                <span class="glyphicon glyphicon-plus"></span> New <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="{% url 'question_new' %}{% if project %}?project={{project.pk}}{% endif %}"><span class="glyphicon glyphicon-file"></span> Question</a></li>
+                    <li><a href="{% url 'exam_new' %}{% if project %}?project={{project.pk}}{% endif %}"><span class="glyphicon glyphicon-book"></span> Exam</a></li>
+                    <li role="separator" class="divider"></li>
+                    <li><a href="{% url 'project_new' %}"><span class="glyphicon glyphicon-briefcase"></span> Project</a></li>
+                    <li role="separator" class="divider"></li>
+                    <li><a href="{% url 'exam_upload' %}{% if project %}?project={{project.pk}}{% endif %}"><span class="glyphicon glyphicon-upload"></span> Upload</a></li>
+                </ul>
+            </li>
+            <li id="notifications" class="{% if unread_notifications %}unread{% endif %}">
+                <a role="button" class="dropdown-toggle {% if not unread_notifications %}disabled{% endif %}" data-toggle="dropdown" title="{{unread_notifications}} unread notification{{unread_notifications|pluralize}}">
+                    <span class="glyphicon glyphicon-bell"></span>
+                    <span class="badge noselect">{% if unread_notifications %}{{unread_notifications}}{% endif %}</span>
+                    <span class="visible-xs-inline">Notifications</span>
+                </a>
+                <ul class="dropdown-menu">
+                    {% include "notifications/list.html" %}
+                </ul>
+            </li>
+            {% with basket_size=user.userprofile.question_basket.count %}
+            <li id="question_basket" class="counter-icon {% if basket_size %}nonempty{% endif %}">
+                    <a role="button" class="dropdown-toggle {% if not basket_size %}disabled{% endif %}" data-toggle="dropdown" title="{{basket_size}} question{{basket_size|pluralize}} in your basket">
+                        <span class="glyphicon glyphicon-shopping-cart"></span>
+                        <span class="badge noselect">{% if basket_size %}{{basket_size}}{% endif %}</span>
+                        <span class="visible-xs-inline">Question Basket</span>
+                    </a>
+                    <ul class="dropdown-menu basket">
+                        {% include "basket/list.html" %}
+                    </ul>
+                </li>
+            {% endwith %}
+            <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% user_thumbnail user 20 15 %} <span class="visible-xs-inline">Logged in as <strong>{{user.get_full_name}}</strong></span> <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                <li class="readonly hidden-xs"><a tabindex="2">Logged in as <strong>{{user.get_full_name}}</strong></a></li>
+                <li role="separator" class="divider hidden-xs"></li>
+                <li><a tabindex="2" href="{% url 'editor_index' %}"><span class="glyphicon glyphicon-home"></span> Home</a></li>
+                <li><a tabindex="2" href="{% url 'view_profile' user.pk %}"><span class="glyphicon glyphicon-user"></span> Profile</a></li>
+                <li><a tabindex="2" href="{% url 'profile_projects' user.pk %}"><span class="glyphicon glyphicon-briefcase"></span> Projects</a></li>
+                <li role="separator" class="divider"></li>
+                <li><a tabindex="2" href="{% url 'edit_profile' %}"><span class="glyphicon glyphicon-cog"></span> Settings</a></li>
+                {% if CAN_LOGOUT %}
+                <li><a tabindex="2" href="{% url 'logout' %}?next={{request.path|escape}}"><span class="glyphicon glyphicon-log-out"></span> Log out</a></li>
+                {% endif %}
+                </ul>
+            </li>
+            <li>
+                <a href="{{HELP_URL}}" target="_blank">
+                    <span class="text-info">
+                        <span class="glyphicon glyphicon-question-sign"></span> <strong>Help</strong>
+                    </span>
+                </a>
+            </li>
+        {% else %}
+            <li>
+                <a tabindex="2" href="{% url 'login' %}?next={{request.path|escape}}">
+                    <button type="button" class="btn btn-primary">Log in</button>
+                </a>
+            </li>
+            {% if ALLOW_REGISTRATION %}
+            <li>
+                <a tabindex="2" href="{% url 'registration_register' %}">
+                    <button type="button" class="btn btn-success">Create an account</button>
+                </a>
+            </li>
+            {%endif%}
+        {% endif %}
+    </ul>
 </nav>
 

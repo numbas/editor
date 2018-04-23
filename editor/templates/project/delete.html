@@ -6,10 +6,10 @@
 <form method="post">
     <div class="alert alert-danger">
         <h4>Are you sure you want to delete this project?</h4>
-		<p>If you delete this project, all questions and exams will be reassigned to the personal projects of their authors.</p>
-		<p><strong>This can not be undone.</strong></p>
-	</div>
-	{% csrf_token %}
+        <p>If you delete this project, all questions and exams will be reassigned to the personal projects of their authors.</p>
+        <p><strong>This can not be undone.</strong></p>
+    </div>
+    {% csrf_token %}
     <button type="submit" class="btn btn-danger">Delete this project</button>
 </form>
 {% endblock project_content %}

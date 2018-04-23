@@ -13,24 +13,24 @@
     <hr>
     {% property 'answerSimplification' 'Answer simplification rules' monospace=True help_url='question/parts/mathematical-expression.html#term-answer-simplification-rules' %}
     {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='question/reference.html#term-show-correct-answer-on-reveal' %}
-    {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/reference.html#term-show-score-feedback-icon' %}	
+    {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/reference.html#term-show-score-feedback-icon' %}    
     {% booleanproperty 'showPreview' 'Show preview of student\'s answer?' help_url='question/parts/mathematical-expression.html#term-show-preview-of-student-s-answer' %}
 </form>
 </section>
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='checking-accuracy'}">
 <form class="form-horizontal" data-bind="submit: Editor.noop">
-	<h4>Checking accuracy</h4>
+    <h4>Checking accuracy</h4>
     <p class="help-block">
         {% helplink 'question/parts/mathematical-expression.html#string-restrictions' subject='the advice section' %}
         Define the range of points over which the student's answer will be compared with the correct answer, and the method used to compare them.
     </p>
-	<div class="form-group">
-		<label class="{{form_label_class}} control-label">
+    <div class="form-group">
+        <label class="{{form_label_class}} control-label">
             Checking type {% helplink 'question/parts/mathematical-expression.html#term-checking-type' %}
-		</label>
-		<div class="{{form_control_class}}">
-			<select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: checkingTypes, value: checkingType, optionsText:'niceName'"></select>
-		</div>
+        </label>
+        <div class="{{form_control_class}}">
+            <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: checkingTypes, value: checkingType, optionsText:'niceName'"></select>
+        </div>
     </div>
     {% property 'checkingType().accuracy' 'Checking accuracy' min=0 help_url='question/parts/mathematical-expression.html#term-checking-accuracy' %}
     {% property 'vset.points' 'Points to check' help_url='question/parts/mathematical-expression.html#term-points-to-check' %}

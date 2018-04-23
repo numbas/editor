@@ -2,7 +2,7 @@
 {% load sstatic %}
 
 {% block stylesheets %}
-	{{ block.super }}
+    {{ block.super }}
     <link href="{% sstatic 'css/theme.css' %}" type="text/css" rel="stylesheet" />
 {% endblock stylesheets %}
 
@@ -30,7 +30,7 @@
             <a class="btn btn-link" href="{% url 'theme_delete' theme.pk %}" title="Delete this theme"><span class="glyphicon glyphicon-remove text-danger"></span></a>
         </td>
         {% endif %}
-		<td>{{theme.last_modified}}</td>
+        <td>{{theme.last_modified}}</td>
     </tr>
     {% endfor %}
     </tbody>

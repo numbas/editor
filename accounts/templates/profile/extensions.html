@@ -2,7 +2,7 @@
 {% load sstatic %}
 
 {% block stylesheets %}
-	{{ block.super }}
+    {{ block.super }}
     <link href="{% sstatic 'css/extension.css' %}" type="text/css" rel="stylesheet" />
 {% endblock stylesheets %}
 
@@ -15,8 +15,8 @@
 {% if view_user.own_extensions.exists %}
 <table class="extensions table">
     <thead>
-		<th>Name</th>
-		<th>Short name</th>
+        <th>Name</th>
+        <th>Short name</th>
         {% if is_me %}<th></th><!-- control links -->{% endif %}
         <th>Last modified</th>
     </thead>
@@ -24,7 +24,7 @@
     {% for extension in view_user.own_extensions.all %}
     <tr>
         <td>{{extension.name}}</td>
-		<td class="monospace">{{extension.location}}</td>
+        <td class="monospace">{{extension.location}}</td>
         {% if is_me %}
         <td class="text-center">
             <a class="btn btn-link" href="{% url 'extension_edit' extension.pk %}" title="Edit this extension"><span class="glyphicon glyphicon-pencil text-warning"></span></a>
@@ -36,7 +36,7 @@
             <a class="btn btn-link" href="{% url 'extension_delete' extension.pk %}" title="Delete this extension"><span class="glyphicon glyphicon-remove text-danger"></span></a>
         </td>
         {% endif %}
-		<td>{{extension.last_modified}}</td>
+        <td>{{extension.last_modified}}</td>
     </tr>
     {% endfor %}
     </tbody>

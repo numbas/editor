@@ -8,8 +8,8 @@
 }
 
 body > footer {
-	margin-top: 5em;
-	padding: 1em 0;
+    margin-top: 5em;
+    padding: 1em 0;
 }
 
 @media screen and (max-width:768px) {
@@ -45,7 +45,7 @@ body > footer {
 }
 
 .navbar-brand img {
-	max-height: 100%;
+    max-height: 100%;
 }
 
 #top-nav > .space {
@@ -53,11 +53,11 @@ body > footer {
 }
 
 .monospace {
-	font-family: monospace;
+    font-family: monospace;
 }
 
 .page-error {
-	display: none;
+    display: none;
 }
 body:not(.loaded) .loaded-content {
     display: none;
@@ -89,7 +89,7 @@ body:not(.loaded) .loaded-content {
     vertical-align: middle;
 }
 .user-thumbnail.deactivated .glyphicon {
-	color: #777 !important;
+    color: #777 !important;
 }
 
 .stamp {
@@ -97,32 +97,32 @@ body:not(.loaded) .loaded-content {
 }
 
 .stamp[data-stamp="draft"]{
-	background-color: #eee;
+    background-color: #eee;
     color: #000;
 }
 
 .stamp[data-stamp="ok"]{
-	background-color: green;
-	color: white;
+    background-color: green;
+    color: white;
 }
 
 .stamp[data-stamp="problem"]{
-	background-color: #888;
-	color: white;
+    background-color: #888;
+    color: white;
 }
 
 .stamp[data-stamp="broken"]{
-	background-color: red;
-	color: white;
+    background-color: red;
+    color: white;
 }
 
 .stamp[data-stamp="dontuse"]{
-	background-color: black;
-	color: yellow;
+    background-color: black;
+    color: yellow;
 }
 
 .stamp[data-stamp="pleasetest"]{
-	background-color: #ffbf00;
+    background-color: #ffbf00;
 }
 
 .ui-autocomplete {

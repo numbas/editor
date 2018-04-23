@@ -1,31 +1,31 @@
 var prettyData,tryLoad,slugify;
 if(!window.Editor)
-	window.Editor = {};
+    window.Editor = {};
 
 $(document).ready(function() {
 
-	function texJMEBit(expr,rules) {
-		rules = rules || [];
-		var scope = new Numbas.jme.Scope(Numbas.jme.builtinScope,{rulesets: Numbas.jme.display.simplificationRules});
-		try{
-			if(viewModel && viewModel.rulesets) {
-				viewModel.rulesets().map(function(r) {
-					scope.rulesets[r.name()] = Numbas.jme.collectRuleset(r.sets(),scope.rulesets);
-				});
-			}
-			var sbits = Numbas.util.splitbrackets(expr,'{','}');
-			var expr = '';
-			for(var j=0;j<sbits.length;j+=1)
-			{
-				expr += j%2 ? ' subvar('+sbits[j]+')' : sbits[j]; //subvar here instead of \\color because we're still in JME
-			}
-			expr = {tex: Numbas.jme.display.exprToLaTeX(expr,rules,scope), error: false};
-			return expr;
-		} catch(e) {
+    function texJMEBit(expr,rules) {
+        rules = rules || [];
+        var scope = new Numbas.jme.Scope(Numbas.jme.builtinScope,{rulesets: Numbas.jme.display.simplificationRules});
+        try{
+            if(viewModel && viewModel.rulesets) {
+                viewModel.rulesets().map(function(r) {
+                    scope.rulesets[r.name()] = Numbas.jme.collectRuleset(r.sets(),scope.rulesets);
+                });
+            }
+            var sbits = Numbas.util.splitbrackets(expr,'{','}');
+            var expr = '';
+            for(var j=0;j<sbits.length;j+=1)
+            {
+                expr += j%2 ? ' subvar('+sbits[j]+')' : sbits[j]; //subvar here instead of \\color because we're still in JME
+            }
+            expr = {tex: Numbas.jme.display.exprToLaTeX(expr,rules,scope), error: false};
+            return expr;
+        } catch(e) {
             var tex = e.message.replace(/<\/?(code|em|strong)>/g,'');
-			return {message: e.message, tex: '\\color{red}{\\text{'+tex+'}}', error: true};
-		}
-	}
+            return {message: e.message, tex: '\\color{red}{\\text{'+tex+'}}', error: true};
+        }
+    }
 
     var currentScope = null;
 
@@ -33,18 +33,18 @@ $(document).ready(function() {
         currentScope = null;
     });
 
-	MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
+    MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
 
-		var TEX = MathJax.InputJax.TeX;
+        var TEX = MathJax.InputJax.TeX;
 
-		TEX.prefilterHooks.Add(function(data) {
-			currentScope = $(data.script).parents('.jme-scope').first().data('jme-scope');
-		});
+        TEX.prefilterHooks.Add(function(data) {
+            currentScope = $(data.script).parents('.jme-scope').first().data('jme-scope');
+        });
 
-		TEX.Definitions.Add({macros: {
-			'var': 'JMEvar', 
-			'simplify': 'JMEsimplify'
-		}});
+        TEX.Definitions.Add({macros: {
+            'var': 'JMEvar', 
+            'simplify': 'JMEsimplify'
+        }});
 
         function JMEvarsub(name) {
             var settings_string = this.GetBrackets(name);
@@ -86,43 +86,43 @@ $(document).ready(function() {
             this.Push(mml);
         }
 
-		TEX.Parse.Augment({
-			JMEvar: function(name) {
+        TEX.Parse.Augment({
+            JMEvar: function(name) {
                 if(currentScope) {
                     JMEvarsub.apply(this,[name]);
                     return;
                 }
-				var rules = this.GetBrackets(name);
-				var expr = this.GetArgument(name);
+                var rules = this.GetBrackets(name);
+                var expr = this.GetArgument(name);
 
-				var res = texJMEBit(expr,rules);
+                var res = texJMEBit(expr,rules);
                 expr = res.tex || res.message;
-				var tex = '\\class{jme-var}{\\left\\{'+expr+'\\right\\}}';
-				var mml = TEX.Parse(tex,this.stack.env).mml();
-				this.Push(mml);
-			},
+                var tex = '\\class{jme-var}{\\left\\{'+expr+'\\right\\}}';
+                var mml = TEX.Parse(tex,this.stack.env).mml();
+                this.Push(mml);
+            },
 
-			JMEsimplify: function(name) {
+            JMEsimplify: function(name) {
                 if(currentScope) {
                     JMEsimplifysub.apply(this,[name]);
                     return;
                 }
-				var rules = this.GetBrackets(name);
-				var expr = this.GetArgument(name);
-				var res = texJMEBit(expr,rules);
+                var rules = this.GetBrackets(name);
+                var expr = this.GetArgument(name);
+                var res = texJMEBit(expr,rules);
                 expr = res.tex || res.message;
-				var tex = ' \\class{jme-simplify}{\\left\\{'+expr+'\\right\\}}'
-				var mml = TEX.Parse(tex,this.stack.env).mml();
-				this.Push(mml);
-			}
-		})
-	});
+                var tex = ' \\class{jme-simplify}{\\left\\{'+expr+'\\right\\}}'
+                var mml = TEX.Parse(tex,this.stack.env).mml();
+                this.Push(mml);
+            }
+        })
+    });
 
-	$.noty.defaultOptions.theme = 'noty_theme_twitter';
+    $.noty.defaultOptions.theme = 'noty_theme_twitter';
 
-	slugify = function(s) {
-		return s.trim().replace(/[^\w\s]/g,'').toLowerCase().replace(/\s/g,'-');
-	};
+    slugify = function(s) {
+        return s.trim().replace(/[^\w\s]/g,'').toLowerCase().replace(/\s/g,'-');
+    };
 
     /** Try to load the given attribute(s) from data into obj
      * @param {Object} data
@@ -130,33 +130,33 @@ $(document).ready(function() {
      * @param {Object} obj - the object to load the attribute into
      * @param {String|Array.<String>} [altname] - the name(s) of the attribute to set in the destination object
      */
-	tryLoad = Editor.tryLoad = function(data,attr,obj,altname) {
-		if(!data)
-			return;
+    tryLoad = Editor.tryLoad = function(data,attr,obj,altname) {
+        if(!data)
+            return;
 
-		if(attr instanceof Array)
-		{
-			if(!altname)
-				altname=[];
-			for(var i=0;i<attr.length;i++)
-			{
-				tryLoad(data,attr[i],obj,altname[i] || attr[i]);
-			}
-			return;
-		}
-		altname = altname || attr;
+        if(attr instanceof Array)
+        {
+            if(!altname)
+                altname=[];
+            for(var i=0;i<attr.length;i++)
+            {
+                tryLoad(data,attr[i],obj,altname[i] || attr[i]);
+            }
+            return;
+        }
+        altname = altname || attr;
 
-		function set(value) {
-			if(altname in obj && typeof obj[altname]() == 'string')
-				value+='';
-			obj[altname](value);
-		}
+        function set(value) {
+            if(altname in obj && typeof obj[altname]() == 'string')
+                value+='';
+            obj[altname](value);
+        }
 
-		if(attr in data)
-			set(data[attr]);
-		else if(attr.toLowerCase() in data)
-			set(data[attr.toLowerCase()]);
-	}
+        if(attr in data)
+            set(data[attr]);
+        else if(attr.toLowerCase() in data)
+            set(data[attr.toLowerCase()]);
+    }
 
     /** Given a source object `data` with string attribute `attr`, find the object in `options` with `id_key` equal to the value of `data[attr]`,
      * and set `obj[attr]` to that object
@@ -184,46 +184,46 @@ $(document).ready(function() {
 
     Editor.numbasVersion = 'exam_question_groups';
 
-	Editor.parseExam = function(source) {
-		var content = /\/\/(.*?)\n(.*)/.exec(source)[2]
-		return JSON.parse(content);
-	}
+    Editor.parseExam = function(source) {
+        var content = /\/\/(.*?)\n(.*)/.exec(source)[2]
+        return JSON.parse(content);
+    }
 
-	// save the value of a computed observable in history.state
-	Editor.computedReplaceState = function(key,observable) {
-		if(window.history === undefined) {
-			return;
-		}
-		ko.computed(function() {
-			var state = history.state || {};
-			state[key] = observable();
+    // save the value of a computed observable in history.state
+    Editor.computedReplaceState = function(key,observable) {
+        if(window.history === undefined) {
+            return;
+        }
+        ko.computed(function() {
+            var state = history.state || {};
+            state[key] = observable();
             if(history.replaceState) {
-    			history.replaceState(state,window.title);
+                history.replaceState(state,window.title);
             }
-		});
-	}
+        });
+    }
 
-	Editor.Tab = function(id,title,icon,visible,more_important) {
-		this.id = id;
-		this.title = title;
+    Editor.Tab = function(id,title,icon,visible,more_important) {
+        this.id = id;
+        this.title = title;
         this.icon = icon;
-		this.visible = visible === undefined ? true : visible;
+        this.visible = visible === undefined ? true : visible;
         this.more_important = more_important;
-	}
+    }
 
-	Editor.contentObservable = function(val) {
-		var obs = ko.observable(val);
+    Editor.contentObservable = function(val) {
+        var obs = ko.observable(val);
         return ko.computed({
             read: obs,
             write: function(v) {
-				try {
-	                obs(HTMLtoXML(v+''));
-				}
-				catch(e) {
-				}
+                try {
+                    obs(HTMLtoXML(v+''));
+                }
+                catch(e) {
+                }
             }
         });
-	};
+    };
 
 
     // A task to make a string observable non-empty, e.g. give something a name.
@@ -254,8 +254,8 @@ $(document).ready(function() {
 
 
     Editor.searchBinding = function(search,url,makeQuery) {
-		search.results.error = ko.observable('');
-		search.searching = ko.observable(false);
+        search.results.error = ko.observable('');
+        search.searching = ko.observable(false);
 
         if('page' in search.results) {
             search.results.pages = ko.computed(function() {
@@ -273,13 +273,13 @@ $(document).ready(function() {
             },search.results);
         }
 
-		search.submit = function() {
+        search.submit = function() {
             var data = makeQuery();
-			if(!data) {
-				search.results.raw([]);
-				search.lastID = null;
-				return;
-			}
+            if(!data) {
+                search.results.raw([]);
+                search.lastID = null;
+                return;
+            }
 
             data.id = search.lastID = Math.random()+'';
             if(search.restorePage)
@@ -287,38 +287,38 @@ $(document).ready(function() {
             else
                 data.page = 1;
 
-			search.results.error('');
+            search.results.error('');
             search.searching(true);
 
             $.getJSON(url,data)
                 .success(function(response) {
-					if(response.id != search.lastID)
-						return;
-					search.results.raw(response.object_list);
+                    if(response.id != search.lastID)
+                        return;
+                    search.results.raw(response.object_list);
                     if('page' in search.results)
                         search.results.page(parseInt(response.page) || 1);
                 })
                 .error(function() {
-					if('console' in window)
-	                    console.log(arguments);
-					search.results.raw([]);
-					search.results.error('Error fetching results: '+arguments[2]);
+                    if('console' in window)
+                        console.log(arguments);
+                    search.results.raw([]);
+                    search.results.error('Error fetching results: '+arguments[2]);
                 })
                 .complete(function() {
                     search.searching(false);
                 });
             ;
 
-		};
-		search.submit();
+        };
+        search.submit();
     }
 
-	Editor.mappedObservableArray = function(map) {
-		var obj = {list: ko.observableArray([])};
-		var obs = ko.computed({
-			owner: obj,
-			read: obj.list,
-			write: function(l) {
+    Editor.mappedObservableArray = function(map) {
+        var obj = {list: ko.observableArray([])};
+        var obs = ko.computed({
+            owner: obj,
+            read: obj.list,
+            write: function(l) {
                 var mapped_ids = {};
                 var current_mapped = obj.list();
                 current_mapped.forEach(function(o) {
@@ -333,34 +333,34 @@ $(document).ready(function() {
                 });
                 var out = l.map(function(d) { return mapped_ids[d.id]; });
                 this.list(out);
-			}
-		});
-		obs.remove = function(o) {
-			return obj.list.remove(o);
-		}
-		obs.push = function(o) {
-			return obj.list.push(map(o));
-		}
-		obs.indexOf = function(o) {
-			return obj.list.indexOf(o);
-		}
-		return obs;
-	}
+            }
+        });
+        obs.remove = function(o) {
+            return obj.list.remove(o);
+        }
+        obs.push = function(o) {
+            return obj.list.push(map(o));
+        }
+        obs.indexOf = function(o) {
+            return obj.list.indexOf(o);
+        }
+        return obs;
+    }
 
-	Editor.beforeRemove = function(elem) {
-		if(elem.nodeType==elem.ELEMENT_NODE) {
-			$(elem).stop().slideUp(150,function(){$(this).remove()});
-		}
-		else {
-			$(elem).remove();
-		}
-	};
+    Editor.beforeRemove = function(elem) {
+        if(elem.nodeType==elem.ELEMENT_NODE) {
+            $(elem).stop().slideUp(150,function(){$(this).remove()});
+        }
+        else {
+            $(elem).remove();
+        }
+    };
 
-	Editor.afterAdd = function(elem) {
-		if(elem.nodeType==elem.ELEMENT_NODE) {
-			$(elem).stop().hide().slideDown(150);
-		}
-	}
+    Editor.afterAdd = function(elem) {
+        if(elem.nodeType==elem.ELEMENT_NODE) {
+            $(elem).stop().hide().slideDown(150);
+        }
+    }
 
     Editor.savers = 0;
     //fn should do the save and return a promise which resolves when the save is done
@@ -552,13 +552,13 @@ $(document).ready(function() {
         this.current_stamp = ko.observable(item_json.current_stamp);
         this.licence = ko.observable();
         this.ability_frameworks = ko.observableArray([]);
-		this.realtags = ko.observableArray([]);
-		this.description = ko.observable('');
+        this.realtags = ko.observableArray([]);
+        this.description = ko.observable('');
         this.ignored_publishing_criteria = ko.observable(false);
 
-		this.mainTabs = ko.observableArray([]);
+        this.mainTabs = ko.observableArray([]);
 
-		this.currentTab = ko.observable();
+        this.currentTab = ko.observable();
 
         this.setTab = function(id) {
             return function() {
@@ -621,21 +621,21 @@ $(document).ready(function() {
             return new Taxonomy(t);
         });
 
-		this.realName = ko.computed(function() {
-			var name = this.name()
-			return name.length>0 ? name : 'Untitled Question';
-		},this);
+        this.realName = ko.computed(function() {
+            var name = this.name()
+            return name.length>0 ? name : 'Untitled Question';
+        },this);
 
         this.tags = ko.computed({
             read: function() {
-				return this.realtags().sort(function(a,b) {
-					a = a.toLowerCase();
-					b = b.toLowerCase();
-					return a>b ? 1 : a<b ? -1 : 0;
-				});
-			},
+                return this.realtags().sort(function(a,b) {
+                    a = a.toLowerCase();
+                    b = b.toLowerCase();
+                    return a>b ? 1 : a<b ? -1 : 0;
+                });
+            },
             write: function(newtags) {
-				newtags = newtags.slice();
+                newtags = newtags.slice();
                 for(var i=newtags.length-1;i>=0;i--)
                 {
                     if(newtags.indexOf(newtags[i])<i)
@@ -647,8 +647,8 @@ $(document).ready(function() {
 
         this.tags.push = function(thing) {
             thing = thing.trim();
-			if(thing.length==0)
-				return;
+            if(thing.length==0)
+                return;
             if(ei.realtags().indexOf(thing)==-1) {
                 ei.realtags.push(thing);
             }
@@ -659,16 +659,16 @@ $(document).ready(function() {
         this.tags.splice = function(i,n) {
             return ei.realtags.splice(i,n);
         }
-		this.tags.remove = function(q) {
-			return ei.realtags.remove(q);
-		}
+        this.tags.remove = function(q) {
+            return ei.realtags.remove(q);
+        }
 
-		this.metadata = ko.computed(function() {
-			return {
-				description: this.description(),
+        this.metadata = ko.computed(function() {
+            return {
+                description: this.description(),
                 licence: this.licence_name()
-			};
-		},this);
+            };
+        },this);
 
         ko.computed(function() {
             document.title = this.name() ? this.name()+' - '+Editor.SITE_TITLE : Editor.SITE_TITLE;
@@ -890,10 +890,10 @@ $(document).ready(function() {
             } 
         },
 
-		applyDiff: function(version) {
-			viewModel.currentChange(version);
-			viewModel.load(version.data);
-		},
+        applyDiff: function(version) {
+            viewModel.currentChange(version);
+            viewModel.load(version.data);
+        },
 
         getTab: function(id) {
             return this.mainTabs().find(function(t){return t.id==id});
@@ -986,151 +986,151 @@ $(document).ready(function() {
     };
 
 
-	/* Resizable 2d grid of observables.
-	 * Returns a 2d array of objects, each created by calling cell(row,column)
-	 */
-	Editor.editableGrid = function(rows,cols,cell) {
-		var grid = [];
-		var outGrid = ko.computed(function() {
-			var numRows = parseInt(rows());
-			var numCols = parseInt(cols());
-			if(numRows==0 || numCols==0) {
-				grid = [];
-				return grid;
-			}
-			var rowsNow = grid.length;
-			var colsNow = rowsNow>0 ? grid[0]().length : 0;
-			if(numCols<colsNow) {
-				for(var i=0;i<rowsNow;i++) {
-					grid[i](grid[i]().slice(0,numCols));
-				}
-			} else if(numCols>colsNow) {
-				for(var i=0;i<rowsNow;i++) {
-					for(var j=colsNow;j<numCols;j++) {
-						grid[i].push(cell(i,j));
-					}
-				}
-			}
-			if(numRows<rowsNow) {
-				grid = grid.slice(0,numRows);
-			} else if(numRows>rowsNow) {
-				for(var i=rowsNow;i<numRows;i++) {
-					var row = ko.observableArray([]);
-					for(var j=0;j<numCols;j++) {
-						row.push(cell(i,j));
-					}
-					grid.push(row);
-				}
-			}
+    /* Resizable 2d grid of observables.
+     * Returns a 2d array of objects, each created by calling cell(row,column)
+     */
+    Editor.editableGrid = function(rows,cols,cell) {
+        var grid = [];
+        var outGrid = ko.computed(function() {
+            var numRows = parseInt(rows());
+            var numCols = parseInt(cols());
+            if(numRows==0 || numCols==0) {
+                grid = [];
+                return grid;
+            }
+            var rowsNow = grid.length;
+            var colsNow = rowsNow>0 ? grid[0]().length : 0;
+            if(numCols<colsNow) {
+                for(var i=0;i<rowsNow;i++) {
+                    grid[i](grid[i]().slice(0,numCols));
+                }
+            } else if(numCols>colsNow) {
+                for(var i=0;i<rowsNow;i++) {
+                    for(var j=colsNow;j<numCols;j++) {
+                        grid[i].push(cell(i,j));
+                    }
+                }
+            }
+            if(numRows<rowsNow) {
+                grid = grid.slice(0,numRows);
+            } else if(numRows>rowsNow) {
+                for(var i=rowsNow;i<numRows;i++) {
+                    var row = ko.observableArray([]);
+                    for(var j=0;j<numCols;j++) {
+                        row.push(cell(i,j));
+                    }
+                    grid.push(row);
+                }
+            }
 
-			return grid;
-		})
-		
-		return outGrid;
-	}
+            return grid;
+        })
+        
+        return outGrid;
+    }
 
 
 
-	//represent a JSON-esque object in the Numbas .exam format
-	prettyData = function(data){
-		switch(typeof(data))
-		{
-		case 'number':
-			return data+'';
-		case 'string':
-			//this tries to use as little extra syntax as possible. Quotes or triple-quotes are only used if necessary.
-			if(data.toLowerCase()=='infinity')
-				return '"infinity"';
-			else if(data.contains('"') || data.contains("'"))
-				return '"""'+data+'"""';
-			else if(data.search(/[:\n,\{\}\[\] ]|\/\//)>=0)
-				return '"'+data+'"';
-			else if(!data.trim())
-				return '""';
-			else
-				return data;
-		case 'boolean':
-			return data ? 'true' : 'false';
-		case 'object':
-			if($.isArray(data))	//data is an array
-			{
-				if(!data.length)
-					return '[]';	//empty array
+    //represent a JSON-esque object in the Numbas .exam format
+    prettyData = function(data){
+        switch(typeof(data))
+        {
+        case 'number':
+            return data+'';
+        case 'string':
+            //this tries to use as little extra syntax as possible. Quotes or triple-quotes are only used if necessary.
+            if(data.toLowerCase()=='infinity')
+                return '"infinity"';
+            else if(data.contains('"') || data.contains("'"))
+                return '"""'+data+'"""';
+            else if(data.search(/[:\n,\{\}\[\] ]|\/\//)>=0)
+                return '"'+data+'"';
+            else if(!data.trim())
+                return '""';
+            else
+                return data;
+        case 'boolean':
+            return data ? 'true' : 'false';
+        case 'object':
+            if($.isArray(data))    //data is an array
+            {
+                if(!data.length)
+                    return '[]';    //empty array
 
-				data = data.map(prettyData);	//pretty-print each of the elements
+                data = data.map(prettyData);    //pretty-print each of the elements
 
-				//decide if the array can be rendered on a single line
-				//if any element contains a linebreak, render array over several lines
-				var multiline=false;
-				for(var i=0;i<data.length;i++)
-				{
-					if(data[i].contains('\n'))
-						multiline = true;
-				}
-				if(multiline)
-				{
-					return '[\n'+data.join('\n')+'\n]';
-				}
-				else
-				{
-					return '[ '+data.join(', ')+' ]';
-				}
-			}
-			else	//data is an object
-			{
-				if(!Object.keys(data).filter(function(x){return x}).length)
-					return '{}';
-				var o='{\n';
-				for(var x in data)
-				{
-					if(x)
-						o += x+': '+prettyData(data[x])+'\n';
-				}
-				o+='}';
-				return o;
-			}
-		}
-	};
+                //decide if the array can be rendered on a single line
+                //if any element contains a linebreak, render array over several lines
+                var multiline=false;
+                for(var i=0;i<data.length;i++)
+                {
+                    if(data[i].contains('\n'))
+                        multiline = true;
+                }
+                if(multiline)
+                {
+                    return '[\n'+data.join('\n')+'\n]';
+                }
+                else
+                {
+                    return '[ '+data.join(', ')+' ]';
+                }
+            }
+            else    //data is an object
+            {
+                if(!Object.keys(data).filter(function(x){return x}).length)
+                    return '{}';
+                var o='{\n';
+                for(var x in data)
+                {
+                    if(x)
+                        o += x+': '+prettyData(data[x])+'\n';
+                }
+                o+='}';
+                return o;
+            }
+        }
+    };
 
-	ko.bindingHandlers.codemirror = {
-		init: function(element,valueAccessor,allBindingsAccessor) {
-			var value = valueAccessor();
-			var allBindings = allBindingsAccessor();
+    ko.bindingHandlers.codemirror = {
+        init: function(element,valueAccessor,allBindingsAccessor) {
+            var value = valueAccessor();
+            var allBindings = allBindingsAccessor();
 
-			$(element).val(ko.utils.unwrapObservable(value));
-			
-			var mode = ko.utils.unwrapObservable(allBindings.codemirrorMode) || 'javascript';
-			var readOnly = ko.utils.unwrapObservable(allBindings.readOnly) || element.hasAttribute('disabled') || false;
+            $(element).val(ko.utils.unwrapObservable(value));
+            
+            var mode = ko.utils.unwrapObservable(allBindings.codemirrorMode) || 'javascript';
+            var readOnly = ko.utils.unwrapObservable(allBindings.readOnly) || element.hasAttribute('disabled') || false;
 
-			function onChange(editor,change) {
-				if(typeof value=='function') {
-					value(editor.getValue());
-				}
-			}
+            function onChange(editor,change) {
+                if(typeof value=='function') {
+                    value(editor.getValue());
+                }
+            }
 
-			//from https://github.com/marijnh/CodeMirror/issues/988
-			function betterTab(cm) {
-			  if (cm.somethingSelected()) {
-				cm.indentSelection("add");
-			  } else {
-				cm.replaceSelection(cm.getOption("indentWithTabs")? "\t":
-				  Array(cm.getOption("indentUnit") + 1).join(" "), "end", "+input");
-			  }
-			}
+            //from https://github.com/marijnh/CodeMirror/issues/988
+            function betterTab(cm) {
+              if (cm.somethingSelected()) {
+                cm.indentSelection("add");
+              } else {
+                cm.replaceSelection(cm.getOption("indentWithTabs")? "\t":
+                  Array(cm.getOption("indentUnit") + 1).join(" "), "end", "+input");
+              }
+            }
 
-			var mc = CodeMirror.fromTextArea(element,{
-				lineNumbers: true,
-				styleActiveLine: true,
-				matchBrackets: true,
+            var mc = CodeMirror.fromTextArea(element,{
+                lineNumbers: true,
+                styleActiveLine: true,
+                matchBrackets: true,
                 mode: mode,
-				indentWithTabs: false,
-				indentUnit: 2,
-				extraKeys: { Tab: betterTab },
-				readOnly: readOnly,
+                indentWithTabs: false,
+                indentUnit: 2,
+                extraKeys: { Tab: betterTab },
+                readOnly: readOnly,
                 lineWrapping: Editor.wrapLines
-			});
-			mc.on('change',onChange);
-			ko.utils.domData.set(element,'codemirror',mc);
+            });
+            mc.on('change',onChange);
+            ko.utils.domData.set(element,'codemirror',mc);
 
             setInterval(function() {
                 var visible = $(element).parents('.tab-pane:not(.active)').length==0;
@@ -1144,23 +1144,23 @@ $(document).ready(function() {
                     ko.utils.domData.set(element,'cm-visible-refresh',false);
                 }
             },100);
-		},
-		update: function(element,valueAccessor,allBindingsAccessor) {
-			var mc = ko.utils.domData.get(element,'codemirror');
-			var value = ko.utils.unwrapObservable(valueAccessor());
-			if(value!=mc.getValue()) {
-				mc.setValue(value);
-			}
-			var allBindings = allBindingsAccessor();
-			var mode = ko.utils.unwrapObservable(allBindings.codemirrorMode) || 'javascript';
-			mc.setOption('mode',mode);
-		}
-	}
+        },
+        update: function(element,valueAccessor,allBindingsAccessor) {
+            var mc = ko.utils.domData.get(element,'codemirror');
+            var value = ko.utils.unwrapObservable(valueAccessor());
+            if(value!=mc.getValue()) {
+                mc.setValue(value);
+            }
+            var allBindings = allBindingsAccessor();
+            var mode = ko.utils.unwrapObservable(allBindings.codemirrorMode) || 'javascript';
+            mc.setOption('mode',mode);
+        }
+    }
 
-	ko.bindingHandlers.writemaths = {
-		init: function(element,valueAccessor,allBindingsAccessor) {
+    ko.bindingHandlers.writemaths = {
+        init: function(element,valueAccessor,allBindingsAccessor) {
             valueAccessor = valueAccessor();
-			allBindingsAccessor = allBindingsAccessor();
+            allBindingsAccessor = allBindingsAccessor();
 
             if(element.hasAttribute('disabled')) {
                 try {
@@ -1172,37 +1172,37 @@ $(document).ready(function() {
                 return;
             }
 
-			var height = allBindingsAccessor.hasOwnProperty('wmHeight') ? allBindingsAccessor.wmHeight : 200;
-			var width = allBindingsAccessor.hasOwnProperty('wmWidth') ? allBindingsAccessor.wmWidth : '';
-			var para = allBindingsAccessor.hasOwnProperty('wmPara') ? allBindingsAccessor.wmPara : true;
+            var height = allBindingsAccessor.hasOwnProperty('wmHeight') ? allBindingsAccessor.wmHeight : 200;
+            var width = allBindingsAccessor.hasOwnProperty('wmWidth') ? allBindingsAccessor.wmWidth : '';
+            var para = allBindingsAccessor.hasOwnProperty('wmPara') ? allBindingsAccessor.wmPara : true;
 
-			var preambleCSSAccessor = allBindingsAccessor.preambleCSS;
+            var preambleCSSAccessor = allBindingsAccessor.preambleCSS;
 
-			var tinymce_plugins = ko.utils.unwrapObservable(allBindingsAccessor.tinymce_plugins) || [];
+            var tinymce_plugins = ko.utils.unwrapObservable(allBindingsAccessor.tinymce_plugins) || [];
 
             var t = $('<div class="wmTextArea" style="width:100%"/>');
 
             $(element)
-				.css('width',width)
+                .css('width',width)
                 .append(t)
             ;
 
-			function remove_empty_spans(node) {
-				if(node.nodeType==1) {
-					for(var i=0;i<node.childNodes.length;i++) {
-						var child = node.childNodes[i];
-						if(child.nodeType==1) {
-							remove_empty_spans(child);
-							if(child.nodeName=='SPAN' && child.attributes.length==0) {
-								for(var j=0;j<child.childNodes.length;j++) {
-									node.insertBefore(child.childNodes[j],child);
-								}
-								node.removeChild(child);
-							}
-						}
-					}
-				}
-			}
+            function remove_empty_spans(node) {
+                if(node.nodeType==1) {
+                    for(var i=0;i<node.childNodes.length;i++) {
+                        var child = node.childNodes[i];
+                        if(child.nodeType==1) {
+                            remove_empty_spans(child);
+                            if(child.nodeName=='SPAN' && child.attributes.length==0) {
+                                for(var j=0;j<child.childNodes.length;j++) {
+                                    node.insertBefore(child.childNodes[j],child);
+                                }
+                                node.removeChild(child);
+                            }
+                        }
+                    }
+                }
+            }
             
             var plugins = [
                 'anchor',
@@ -1226,11 +1226,11 @@ $(document).ready(function() {
             ]
             .concat(tinymce_plugins);
 
-			//tinyMCE
+            //tinyMCE
             t
                 .tinymce({
                     theme: 'modern',
-					skin: 'lightgray',
+                    skin: 'lightgray',
                     plugins: plugins,
 
                     menu: {
@@ -1244,43 +1244,43 @@ $(document).ready(function() {
                     
                     toolbar: "undo redo | styleselect | bullist numlist | bold italic removeformat | alignleft aligncenter alignright | bullist numlist outdent indent | link image gapfill jmevisible | fullscreen preview code",
 
-					statusbar: false,
-					media_strict: false,
-					width: width,
-					verify_html: false,
-					autoresize_bottom_margin: 0,
-					autoresize_min_height: 30,
-					convert_urls: false,
-					verify_html: false,
+                    statusbar: false,
+                    media_strict: false,
+                    width: width,
+                    verify_html: false,
+                    autoresize_bottom_margin: 0,
+                    autoresize_min_height: 30,
+                    convert_urls: false,
+                    verify_html: false,
 
                     forced_root_block: para ? 'p' : false,
 
-					paste_postprocess: function(ed,args) {
-						remove_empty_spans(args.node);
-					},
+                    paste_postprocess: function(ed,args) {
+                        remove_empty_spans(args.node);
+                    },
 
-					init_instance_callback: function(ed) { 
-						$(element).writemaths({iFrame: true, position: 'center top', previewPosition: 'center bottom'}); 
-						function onMCEChange() {
-							valueAccessor(ed.getContent());
-						}
-						ed.on('change',onMCEChange);
-						ed.on('keyup',onMCEChange);
-						ed.on('paste',onMCEChange);
-						if(preambleCSSAccessor !== undefined) {
-							var s = ed.dom.create('style',{type:'text/css',id:'preamblecss'});
-							ed.dom.doc.head.appendChild(s);
-							ko.computed(function() {
-								s.textContent = ko.utils.unwrapObservable(preambleCSSAccessor);
-							});
-						}
-						ed.on('keyup',function(e) {
-							if(e.which==27 && ed.plugins.fullscreen.isFullscreen()) {
-								ed.execCommand('mceFullScreen');
-							}
-						});
+                    init_instance_callback: function(ed) { 
+                        $(element).writemaths({iFrame: true, position: 'center top', previewPosition: 'center bottom'}); 
+                        function onMCEChange() {
+                            valueAccessor(ed.getContent());
+                        }
+                        ed.on('change',onMCEChange);
+                        ed.on('keyup',onMCEChange);
+                        ed.on('paste',onMCEChange);
+                        if(preambleCSSAccessor !== undefined) {
+                            var s = ed.dom.create('style',{type:'text/css',id:'preamblecss'});
+                            ed.dom.doc.head.appendChild(s);
+                            ko.computed(function() {
+                                s.textContent = ko.utils.unwrapObservable(preambleCSSAccessor);
+                            });
+                        }
+                        ed.on('keyup',function(e) {
+                            if(e.which==27 && ed.plugins.fullscreen.isFullscreen()) {
+                                ed.execCommand('mceFullScreen');
+                            }
+                        });
 
-						ed.setContent(ko.unwrap(valueAccessor));
+                        ed.setContent(ko.unwrap(valueAccessor));
                         ed.undoManager.clear();
                         ed.on('focus',function() {
                             $(ed.getContainer()).addClass('wm-focus');
@@ -1304,13 +1304,13 @@ $(document).ready(function() {
                             },this);
                         }
 
-					}
+                    }
                 })
             ;
 
-		},
-		update: function(element, valueAccessor) {
-			var value = ko.utils.unwrapObservable(valueAccessor()) || '';
+        },
+        update: function(element, valueAccessor) {
+            var value = ko.utils.unwrapObservable(valueAccessor()) || '';
 
             if(element.hasAttribute('disabled')) {
                 $(element).html(value).mathjax();
@@ -1320,27 +1320,27 @@ $(document).ready(function() {
                 return;
             }
 
-			var tinymce = $(element).find('iframe').contents().find('body');
+            var tinymce = $(element).find('iframe').contents().find('body');
 
             if (!tinymce.is(':focus')) {
-				var ed = $(element).children('.wmTextArea').tinymce();
-				if(ed && ed.initialized) {
-					ed.setContent(value);
+                var ed = $(element).children('.wmTextArea').tinymce();
+                if(ed && ed.initialized) {
+                    ed.setContent(value);
                 }
-			}
-		}
-	};
+            }
+        }
+    };
 
-	$.fn.unselectable = function() {
-		$(this).on('mousedown',function(e){ e.preventDefault(); });
-	};
+    $.fn.unselectable = function() {
+        $(this).on('mousedown',function(e){ e.preventDefault(); });
+    };
 
-	ko.bindingHandlers.debug = {
-		update: function(element,valueAccessor) {
-			var value = valueAccessor();
-			console.log(value,ko.utils.unwrapObservable(value));
-		}
-	}
+    ko.bindingHandlers.debug = {
+        update: function(element,valueAccessor) {
+            var value = valueAccessor();
+            console.log(value,ko.utils.unwrapObservable(value));
+        }
+    }
 
     ko.bindingHandlers.restrictedClick = {
         init: function(element,valueAccessor, allBindings, viewModel, bindingContext) {
@@ -1356,18 +1356,18 @@ $(document).ready(function() {
         }
     }
 
-	ko.bindingHandlers.foldlist = {
-		init: function(element,valueAccessor,allBindingsAccessor,viewModel)
-		{
-			var value = valueAccessor(), allBindings = allBindingsAccessor();
-			var show = allBindings.show;
+    ko.bindingHandlers.foldlist = {
+        init: function(element,valueAccessor,allBindingsAccessor,viewModel)
+        {
+            var value = valueAccessor(), allBindings = allBindingsAccessor();
+            var show = allBindings.show;
 
-			element=$(element);
-			var b = $('<button type="button" class="delete" data-bind="click:remove" value="Delete"></button>');
-			b.click(function(){viewModel.remove()});
-			element.append(b);
-		}
-	};
+            element=$(element);
+            var b = $('<button type="button" class="delete" data-bind="click:remove" value="Delete"></button>');
+            b.click(function(){viewModel.remove()});
+            element.append(b);
+        }
+    };
 
     var displayJMEValue = Editor.displayJMEValue = function(v) {
         switch(v.type) {
@@ -1422,18 +1422,18 @@ $(document).ready(function() {
     }
 
 
-	ko.bindingHandlers.fadeVisible = {
-		init: function (element, valueAccessor) {
-			// Initially set the element to be instantly visible/hidden depending on the value
-			var value = valueAccessor();
-			$(element).toggle(ko.utils.unwrapObservable(value)); // Use "unwrapObservable" so we can handle values that may or may not be observable
-		},
-		update: function (element, valueAccessor) {
-			// Whenever the value subsequently changes, slowly fade the element in or out
-			var value = valueAccessor();
-			ko.utils.unwrapObservable(value) ? $(element).slideDown(150) : $(element).slideUp(150);
-		}
-	};
+    ko.bindingHandlers.fadeVisible = {
+        init: function (element, valueAccessor) {
+            // Initially set the element to be instantly visible/hidden depending on the value
+            var value = valueAccessor();
+            $(element).toggle(ko.utils.unwrapObservable(value)); // Use "unwrapObservable" so we can handle values that may or may not be observable
+        },
+        update: function (element, valueAccessor) {
+            // Whenever the value subsequently changes, slowly fade the element in or out
+            var value = valueAccessor();
+            ko.utils.unwrapObservable(value) ? $(element).slideDown(150) : $(element).slideUp(150);
+        }
+    };
 
     ko.components.register('undefined-variable-warning', {
         viewModel: function(params) {
@@ -1576,7 +1576,7 @@ $(document).ready(function() {
             }
             this.keydown = function(lb,e) {
                 var input = e.target;
-				switch(e.which) {
+                switch(e.which) {
                     case 13:
                     case 188:
                         // enter or comma
@@ -1599,7 +1599,7 @@ $(document).ready(function() {
                         break;
                     default:
                         return true;
-				}
+                }
             }
         },
         template: '\
@@ -1664,41 +1664,41 @@ $(document).ready(function() {
         '
     });
 
-	ko.bindingHandlers.dragOut = {
-		init: function(element, valueAccessor) {
-			var obj = {
-				data: null,
-				sortable: ''
-			};
-			obj = $.extend(obj,valueAccessor());
-			$(element)
-				.draggable({
-					handle: '.handle',
-					revert: true, 
-					revertDuration: 100,
-					helper: 'clone',
-					connectToSortable: obj.sortable
-				})
-			;
-		}
-	};
+    ko.bindingHandlers.dragOut = {
+        init: function(element, valueAccessor) {
+            var obj = {
+                data: null,
+                sortable: ''
+            };
+            obj = $.extend(obj,valueAccessor());
+            $(element)
+                .draggable({
+                    handle: '.handle',
+                    revert: true, 
+                    revertDuration: 100,
+                    helper: 'clone',
+                    connectToSortable: obj.sortable
+                })
+            ;
+        }
+    };
 
-	ko.bindingHandlers.JME = {
-		update: function(element,valueAccessor) {
-			var value = ko.utils.unwrapObservable(valueAccessor());
-			var res = texJMEBit(value);
+    ko.bindingHandlers.JME = {
+        update: function(element,valueAccessor) {
+            var value = ko.utils.unwrapObservable(valueAccessor());
+            var res = texJMEBit(value);
             $(element).toggleClass('jme-error',res.error);
             if(res.error) {
                 $(element).html(res.message);
             } else {
-				var tex = res.tex;
+                var tex = res.tex;
                 if(tex.length>0)
                     $(element).html('$'+tex+'$').mathjax();
                 else
                     $(element).html('');
             }
-		}
-	};
+        }
+    };
 
     ko.bindingHandlers.latex = {
         update: function(element,valueAccessor) {
@@ -1765,40 +1765,40 @@ $(document).ready(function() {
         this.used = ko.observable(false);
     }
 
-	var Resource = Editor.Resource = function(data) {
-		this.progress = ko.observable(0);
-		this.url = ko.observable('');
-		this.name = ko.observable('');
-		this.pk = ko.observable(0);
+    var Resource = Editor.Resource = function(data) {
+        this.progress = ko.observable(0);
+        this.url = ko.observable('');
+        this.name = ko.observable('');
+        this.pk = ko.observable(0);
 
-		if(data) {
-			this.load(data);
-			this.progress(1);
-		}
-	}
-	Resource.prototype = {
-		load: function(data) {
-			this.url(data.url);
-			this.name(data.name);
-			this.pk(data.pk);
-			this.deleteURL = data.delete_url;
-		},
-		filePatterns: {
-			'html': /\.html?$/i,
-			'img': /\.(png|jpg|gif|bmp|jpeg|webp|tiff|tif|raw|svg)$/i
-		},
-		filetype: function() {
-			var name = this.name();
-			for(var type in this.filePatterns) {
-				if(this.filePatterns[type].test(name))
-					return type;
-			}
-		},
+        if(data) {
+            this.load(data);
+            this.progress(1);
+        }
+    }
+    Resource.prototype = {
+        load: function(data) {
+            this.url(data.url);
+            this.name(data.name);
+            this.pk(data.pk);
+            this.deleteURL = data.delete_url;
+        },
+        filePatterns: {
+            'html': /\.html?$/i,
+            'img': /\.(png|jpg|gif|bmp|jpeg|webp|tiff|tif|raw|svg)$/i
+        },
+        filetype: function() {
+            var name = this.name();
+            for(var type in this.filePatterns) {
+                if(this.filePatterns[type].test(name))
+                    return type;
+            }
+        },
         can_embed: function() {
             var type = this.filetype();
             return type=='img' || type=='html';
         }
-	};
+    };
 
     var CommentWriter = Editor.CommentWriter = function() {
         this.writingComment = ko.observable(false);
@@ -1885,53 +1885,53 @@ $(document).ready(function() {
         ;
     });
 
-	ko.bindingHandlers.fileupload = {
-		init: function(element, valueAccessor, allBindingsAccessor) {
-			var fileArray = valueAccessor();
-			var allBindings = allBindingsAccessor();
-			var afterUpload = allBindings.afterupload;
+    ko.bindingHandlers.fileupload = {
+        init: function(element, valueAccessor, allBindingsAccessor) {
+            var fileArray = valueAccessor();
+            var allBindings = allBindingsAccessor();
+            var afterUpload = allBindings.afterupload;
 
-			$(element).fileupload({
-				dataType: 'json',
-				dropZone: $(element),
+            $(element).fileupload({
+                dataType: 'json',
+                dropZone: $(element),
 
-				done: function (e, data) {
-					data.res.load(data.result);
-					if(afterUpload)
-						afterUpload(data.res);
-				},
-				add: function(e, data) {
-					data.res = new Resource();
-					fileArray.splice(0,0,data.res);
-					data.process().done(function() {
-						data.submit();
-					});
-				},
+                done: function (e, data) {
+                    data.res.load(data.result);
+                    if(afterUpload)
+                        afterUpload(data.res);
+                },
+                add: function(e, data) {
+                    data.res = new Resource();
+                    fileArray.splice(0,0,data.res);
+                    data.process().done(function() {
+                        data.submit();
+                    });
+                },
 
-				progress: function(e,data) {
-					data.res.progress(data.loaded/data.total);
-				}
+                progress: function(e,data) {
+                    data.res.progress(data.loaded/data.total);
+                }
 
-			});
-		}
-	}
+            });
+        }
+    }
 
-	function update_notifications() {
-		var num_notifications = $('#notifications .dropdown-menu .notification').length;
-		$('#notifications .dropdown-toggle').attr('title',num_notifications+' unread '+(num_notifications==1 ? 'notification' : 'notifications'));
-		$('#notifications .badge').text(num_notifications>0 ? num_notifications : '');
-		if(num_notifications) {
-			$('#notifications').addClass('active');
-			$('#notifications .dropdown-toggle').removeClass('disabled');
-		} else {
-			$('#notifications').removeClass('active open');
-			$('#notifications .dropdown-toggle').addClass('disabled');
-		}
-	}
+    function update_notifications() {
+        var num_notifications = $('#notifications .dropdown-menu .notification').length;
+        $('#notifications .dropdown-toggle').attr('title',num_notifications+' unread '+(num_notifications==1 ? 'notification' : 'notifications'));
+        $('#notifications .badge').text(num_notifications>0 ? num_notifications : '');
+        if(num_notifications) {
+            $('#notifications').addClass('active');
+            $('#notifications .dropdown-toggle').removeClass('disabled');
+        } else {
+            $('#notifications').removeClass('active open');
+            $('#notifications .dropdown-toggle').addClass('disabled');
+        }
+    }
 
     $('#notifications').on('click','.mark-all-as-read',function(e) {
-		$('#notifications .dropdown-menu').html('');
-		update_notifications();
+        $('#notifications .dropdown-menu').html('');
+        update_notifications();
 
         var url = $(this).attr('href');
         $.post(url,{csrfmiddlewaretoken: getCookie('csrftoken')});
@@ -1939,32 +1939,32 @@ $(document).ready(function() {
         return false;
     });
 
-	var old_notifications = $('#notifications .dropdown-menu').html()
-	setInterval(function() {
-		if(!document.hasFocus()) {
-			return;
-		}
-		$.get('/notifications/unread/').success(function(response) {
-			if(response!=old_notifications) {
-				old_notifications = response;
-				$('#notifications .dropdown-menu').html(response);
-				update_notifications();
-			}
-		});
-	},5000);
+    var old_notifications = $('#notifications .dropdown-menu').html()
+    setInterval(function() {
+        if(!document.hasFocus()) {
+            return;
+        }
+        $.get('/notifications/unread/').success(function(response) {
+            if(response!=old_notifications) {
+                old_notifications = response;
+                $('#notifications .dropdown-menu').html(response);
+                update_notifications();
+            }
+        });
+    },5000);
 
-	update_notifications();
+    update_notifications();
 
     function update_basket(response) {
-		var num_questions = $('#question_basket .dropdown-menu .question').length;
-		$('#question_basket .dropdown-toggle').attr('title',num_questions+' '+(num_questions==1 ? 'question' : 'questions')+' in your basket');
-		$('#question_basket .badge').text(num_questions>0 ? num_questions : '');
-		if(num_questions) {
-			$('#question_basket .dropdown-toggle').removeClass('disabled');
-		} else {
-			$('#question_basket').removeClass('active open');
-			$('#question_basket .dropdown-toggle').addClass('disabled');
-		}
+        var num_questions = $('#question_basket .dropdown-menu .question').length;
+        $('#question_basket .dropdown-toggle').attr('title',num_questions+' '+(num_questions==1 ? 'question' : 'questions')+' in your basket');
+        $('#question_basket .badge').text(num_questions>0 ? num_questions : '');
+        if(num_questions) {
+            $('#question_basket .dropdown-toggle').removeClass('disabled');
+        } else {
+            $('#question_basket').removeClass('active open');
+            $('#question_basket .dropdown-toggle').addClass('disabled');
+        }
         var ids = $('#question_basket .dropdown-menu .question').map(function(){return parseInt($(this).attr('data-id'))});
         $('.add-to-basket[data-question-id]').each(function() {
             var id = parseInt($(this).attr('data-question-id'));
@@ -1978,49 +1978,49 @@ $(document).ready(function() {
     Editor.add_question_to_basket = function(id) {
         $.post('/question_basket/add/',{csrfmiddlewaretoken: getCookie('csrftoken'), id: id})
             .success(function(response) {
-				$('#question_basket .dropdown-menu').html(response);
-				update_basket();
+                $('#question_basket .dropdown-menu').html(response);
+                update_basket();
             })
         ;
     }
-	Editor.remove_question_from_basket = function(id) {
+    Editor.remove_question_from_basket = function(id) {
         $.post('/question_basket/remove/',{csrfmiddlewaretoken: getCookie('csrftoken'), id: id})
             .success(function(response) {
-				$('#question_basket .dropdown-menu').html(response);
-				update_basket();
+                $('#question_basket .dropdown-menu').html(response);
+                update_basket();
             })
         ;
-	}
+    }
     Editor.empty_basket = function() {
         $.post('/question_basket/empty/',{csrfmiddlewaretoken: getCookie('csrftoken')})
             .success(function(response) {
-				$('#question_basket .dropdown-menu').html(response);
-				update_basket();
+                $('#question_basket .dropdown-menu').html(response);
+                update_basket();
             })
         ;
     }
     $('#question_basket').on('click','.empty-basket',function(e) {
         e.preventDefault();
-		e.stopPropagation();
+        e.stopPropagation();
         Editor.empty_basket();
     });
-	$('#question_basket').on('click','.question .btn-remove',function(e) {
-		e.preventDefault();
-		e.stopPropagation();
-		Editor.remove_question_from_basket($(this).attr('data-id'));
-		$(this).parent('.question').remove();
-	});
-	$('#question_basket').on('click','.question .remove',function(e) {
-		e.preventDefault();
-		e.stopPropagation();
-		Editor.remove_question_from_basket($(this).attr('data-id'));
-		$(this).parent('.question').remove();
-	});
-	$('body').on('click','.add-to-basket',function(e) {
-		e.preventDefault();
-		e.stopPropagation();
-		Editor.add_question_to_basket($(this).attr('data-question-id'));
-	});
+    $('#question_basket').on('click','.question .btn-remove',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        Editor.remove_question_from_basket($(this).attr('data-id'));
+        $(this).parent('.question').remove();
+    });
+    $('#question_basket').on('click','.question .remove',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        Editor.remove_question_from_basket($(this).attr('data-id'));
+        $(this).parent('.question').remove();
+    });
+    $('body').on('click','.add-to-basket',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        Editor.add_question_to_basket($(this).attr('data-question-id'));
+    });
 
 
     Editor.user_search_autocomplete = function(element,options) {

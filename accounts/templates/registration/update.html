@@ -13,8 +13,8 @@
 
 {% block profile_content %}
     <form method="post" action="" enctype="multipart/form-data">
-		{% csrf_token %} 
-		{{form.non_field_errors}}
+        {% csrf_token %} 
+        {{form.non_field_errors}}
         <div class="row form-group">
             <div class="col-xs-6">
                 <label for="{{form.first_name.auto_id}}">{{form.first_name.label}}</label>
@@ -63,8 +63,8 @@
             {% endif %}
             <div class="help-block">{{form.mathjax_url.help_text}}</div>
         </div>
-		<div class="form-group">
+        <div class="form-group">
             <button type="submit" class="btn btn-primary">Update</button>
-		</div>
+        </div>
     </form>
 {% endblock profile_content %}

@@ -2,53 +2,53 @@
 {% load verbatim %}
 
 {% block stylesheets %}
-	<link rel="stylesheet" type="text/css" href="{% sstatic 'css/noneditable.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% sstatic 'css/noneditable.css' %}">
 {% endblock stylesheets %}
 
 {% verbatim %}
-	<script type="text/html" id="property">
-		<label>
-			<span class="control-label" data-bind="html: label"></span>
-			<div class="controls">
-				<span class="value" data-bind="text: property, css: {monospace: 'monospace' in $data ? monospace : false}"></span>
-			</div>
-		</label>
-	</script>
+    <script type="text/html" id="property">
+        <label>
+            <span class="control-label" data-bind="html: label"></span>
+            <div class="controls">
+                <span class="value" data-bind="text: property, css: {monospace: 'monospace' in $data ? monospace : false}"></span>
+            </div>
+        </label>
+    </script>
 
-	<script type="text/html" id="booleanproperty">
-		<label>
-			<span class="control-label" data-bind="html: label"></span>
-			<div class="controls">
-				<span class="value" data-bind="text: property() ? 'Yes' : 'No'"></span>
-			</div>
-		</label>
-	</script>
+    <script type="text/html" id="booleanproperty">
+        <label>
+            <span class="control-label" data-bind="html: label"></span>
+            <div class="controls">
+                <span class="value" data-bind="text: property() ? 'Yes' : 'No'"></span>
+            </div>
+        </label>
+    </script>
 
-	<script type="text/html" id="percentproperty">
-		<label>
-			<span class="control-label" data-bind="html: label"></span>
-			<div class="controls">
-				<span class="percentproperty value" data-bind="text: ko.utils.unwrapObservable(property)+'%'"></span>
-			</div>
-		</label>
-	</script>
+    <script type="text/html" id="percentproperty">
+        <label>
+            <span class="control-label" data-bind="html: label"></span>
+            <div class="controls">
+                <span class="percentproperty value" data-bind="text: ko.utils.unwrapObservable(property)+'%'"></span>
+            </div>
+        </label>
+    </script>
 
-	<script type="text/html" id="jmeproperty">
-		<label>
-			<span data-bind="html: label"></span>
-			<div class="controls">
-				<span class="value" data-bind="JME: property"></span>
-			</div>
-		</label>
-	</script>
+    <script type="text/html" id="jmeproperty">
+        <label>
+            <span data-bind="html: label"></span>
+            <div class="controls">
+                <span class="value" data-bind="JME: property"></span>
+            </div>
+        </label>
+    </script>
 
-	<script type="text/html" id="selectproperty">
-		<label>
-			<span class="control-label" data-bind="html: label"></span>
-			<div class="controls">
-				<span class="value" data-bind="text: $data.optionsText===undefined ? property : ko.utils.unwrapObservable(property)[ko.utils.unwrapObservable($data.optionsText)]"></span>
-			</div>
-		</label>
-	</script>
+    <script type="text/html" id="selectproperty">
+        <label>
+            <span class="control-label" data-bind="html: label"></span>
+            <div class="controls">
+                <span class="value" data-bind="text: $data.optionsText===undefined ? property : ko.utils.unwrapObservable(property)[ko.utils.unwrapObservable($data.optionsText)]"></span>
+            </div>
+        </label>
+    </script>
 
 {% endverbatim %}

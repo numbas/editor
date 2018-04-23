@@ -20,8 +20,8 @@ urlpatterns = [
 
     # Projects
 
-	url(r'^projects/public$$', project.PublicProjectsView.as_view(), name='public_projects'),
-	url(r'^project/new$', login_required(project.CreateView.as_view()), name='project_new'),
+    url(r'^projects/public$$', project.PublicProjectsView.as_view(), name='public_projects'),
+    url(r'^project/new$', login_required(project.CreateView.as_view()), name='project_new'),
     url(r'^project/(?P<pk>\d+)/$', project.IndexView.as_view(), name='project_index'),
     url(r'^project/(?P<pk>\d+)/delete$', project.DeleteView.as_view(), name='project_delete'),
     url(r'^project/(?P<pk>\d+)/settings/options$', project.OptionsView.as_view(), name='project_settings_options'),

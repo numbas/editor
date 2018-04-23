@@ -25,7 +25,7 @@
             <link href="{% sstatic 'css/noty_theme_twitter.css' %}" rel="stylesheet" type="text/css" />
             <link href="{% sstatic 'css/jquery-ui.css' %}" rel="stylesheet" type="text/css" />
 
-			<link href="{% sstatic 'css/main.css' %}" type="text/css" rel="stylesheet" />
+            <link href="{% sstatic 'css/main.css' %}" type="text/css" rel="stylesheet" />
         {% endblock stylesheets %}
 
         {% analytical_head_bottom %}
@@ -36,10 +36,10 @@
 
         <!-- main body -->
         {% block body %}
-		
-		{% include "top-nav.html" %}
+        
+        {% include "top-nav.html" %}
 
-		<main id="content" class="{% block content_container %}container{% endblock content_container %}">
+        <main id="content" class="{% block content_container %}container{% endblock content_container %}">
             {% if messages %}
             <ul class="messages list-unstyled">
                 {% for message in messages %}
@@ -51,7 +51,7 @@
             {% endblock content %}
         </main>
 
-		{% include "footer.html" %}
+        {% include "footer.html" %}
         {% endblock body %}
 
         {% block javascripts %}

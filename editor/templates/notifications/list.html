@@ -3,12 +3,12 @@
 {% notifications_unread as unread_notifications %}
 
 {% for notification in user.notifications.unread %}
-	<li class="notification">
+    <li class="notification">
         <a tabindex="-1" href="{% url 'open_notification' notification.pk %}">
             <div class="description">{{notification.actor.get_full_name}} {{notification.verb}} <span class="target">{{notification.target}}</span></div>
             <div class="time">{{notification.timestamp|naturaltime}}</div>
         </a>
-	</li>
+    </li>
 {% endfor %}
 {% if unread_notifications %}
     <li role="separator" class="divider"></li>

@@ -1,26 +1,26 @@
 ﻿.variable .def {
-	text-align: left;
+    text-align: left;
     word-wrap: break-word;
     max-height: 8em;
-	overflow-x: auto;
+    overflow-x: auto;
     overflow-y: auto;
 }
 
 .tags {
     display: inline;
-   	list-style: none;
+       list-style: none;
     padding: 0;
-	margin: 0;
-	background: inherit !important;
-	line-height: 24px;
+    margin: 0;
+    background: inherit !important;
+    line-height: 24px;
 }
 
 .tag {
     display: inline-block;
     margin-right: 0.4em;
-	background: white;
-	padding: 3px;
-	font-family: monospace;
+    background: white;
+    padding: 3px;
+    font-family: monospace;
 }
 
 li.choice  {
@@ -32,12 +32,12 @@ li.choice  {
 }
 
 .function .parameters .list {
-	float: right;
-	margin-bottom: 0.5em;
+    float: right;
+    margin-bottom: 0.5em;
 }
 
 .function .parameters .list {
-	margin-bottom: 0.5em;
+    margin-bottom: 0.5em;
     border-bottom: #ccc 1px solid;
 }
 
@@ -50,10 +50,10 @@ li.choice  {
 }
 
 .editlist.normal > li {
-	background-color: #eee;
-	line-height: 1.5em;
-	position: relative;
-	padding-right: 2em;
+    background-color: #eee;
+    line-height: 1.5em;
+    position: relative;
+    padding-right: 2em;
 }
 
 .jmestrings {
@@ -68,6 +68,6 @@ li.choice  {
 }
 
 .part-edit ul.choices, .part-edit ul.answers {
-	list-style-type: decimal;
-	margin-left: 25px;
+    list-style-type: decimal;
+    margin-left: 25px;
 }

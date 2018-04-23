@@ -3,17 +3,17 @@
 {% block body %}
 <div class="container">
     <div class="page-header">
-    	<h1 class="text-warning">Compilation Error</h1>
+        <h1 class="text-warning">Compilation Error</h1>
     </div>
     <p><small>Attempted to compile at {% now "Y-m-d H:i:s" %}</small></p>
-	{% autoescape on %}
+    {% autoescape on %}
     <p id="message">{{message}}</p>
     {% if stderr %}
-	<h3>STDERR</h3>
+    <h3>STDERR</h3>
     <pre id="stderr"><code>{{stderr}}</code></pre>
     {% endif %}
     {% if stdout %}
-	<h3>STDOUT</h3>
+    <h3>STDOUT</h3>
     <pre id="stdout"><code>{{stdout}}</code></pre>
     {% endif %}
     {% endautoescape %}

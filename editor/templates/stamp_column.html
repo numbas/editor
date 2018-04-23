@@ -1,6 +1,6 @@
 {% load humanize %}
 {% if record.get_current_stamp %}
-	{% with record.get_current_stamp as stamp %}
+    {% with record.get_current_stamp as stamp %}
         <span class="label label-default stamp-status" data-stamp="{{stamp.status}}" title="by {{stamp.user.get_full_name}}, {{stamp.date|naturaltime}}">{{stamp.get_status_display}}</span>
-	{% endwith %}
+    {% endwith %}
 {% endif %}

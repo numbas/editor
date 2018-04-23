@@ -28,14 +28,14 @@
     {% booleanproperty 'markPerCell' 'Gain marks for each correct cell?' help_url='question/parts/matrixentry.html#term-gain-marks-for-each-cell' %}
 
     <hr>
-	<div class="form-group">
-		<label class="{{form_label_class}} control-label">
+    <div class="form-group">
+        <label class="{{form_label_class}} control-label">
             Precision restriction {% helplink 'question/parts/matrixentry.html#term-precision-restriction' %}
-		</label>
-		<div class="{{form_control_class}}">
-			<select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: precisionTypes, value: precisionType, optionsText: 'niceName'"></select>
-		</div>
-	</div>
+        </label>
+        <div class="{{form_control_class}}">
+            <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: precisionTypes, value: precisionType, optionsText: 'niceName'"></select>
+        </div>
+    </div>
     <div data-bind="fadeVisible: precisionType().name!='none'">
         {% property 'precision' 'precisionWord' dynamic_label=True %}
         {% booleanproperty 'strictPrecision' 'Require trailing zeros?' help_url='question/parts/matrixentry.html#term-require-trailing-zeros' %}
@@ -55,7 +55,7 @@
 
     <hr>
     {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='question/reference.html#term-show-correct-answer-on-reveal' %}
-    {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/reference.html#term-show-score-feedback-icon' %}	
+    {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/reference.html#term-show-score-feedback-icon' %}    
 
 </form>
 </section>

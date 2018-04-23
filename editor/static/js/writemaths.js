@@ -115,9 +115,9 @@ function findMaths(txt,target) {
             var environment = m[1];
             re_end = new RegExp('[^\\\\]\\\\end\\{'+environment+'\\}');    // don't ask if this copes with nested environments
         }
-		else if(startDelimiter.match(/.\$/)) {
-			re_end = endDelimiters[startDelimiter.slice(1)];
-		} else {
+        else if(startDelimiter.match(/.\$/)) {
+            re_end = endDelimiters[startDelimiter.slice(1)];
+        } else {
             re_end = endDelimiters[startDelimiter];    // get the corresponding end delimiter for the matched start delimiter
         }
         
@@ -155,28 +155,28 @@ function findMaths(txt,target) {
 jQuery(function() {
     jQuery("<style type='text/css'> .wm_preview { z-index: 1001; position: absolute; display: none; border: 1px solid; padding: 0.2em; width: auto; margin: 0 auto; background: white;} </style>").appendTo("head");
 
-	jQuery.fn.writemaths = function(custom_options) {
+    jQuery.fn.writemaths = function(custom_options) {
 
         jQuery(this).each(function() {
-			var options = jQuery.extend({
-				cleanMaths: function(m){ return m; },
-				callback: function() {},
-				iFrame: false,
-				position: 'left top',
-				previewPosition: 'left top'
-			},custom_options);
+            var options = jQuery.extend({
+                cleanMaths: function(m){ return m; },
+                callback: function() {},
+                iFrame: false,
+                position: 'left top',
+                previewPosition: 'left top'
+            },custom_options);
 
             var textarea = jQuery(this).is('textarea,input');
 
-			var root = this;
-			var el;
-			var iframe;
+            var root = this;
+            var el;
+            var iframe;
 
-			if(options.of=='this')
-				options.of = root;
+            if(options.of=='this')
+                options.of = root;
 
             if(options.iFrame) {
-    			iframe = jQuery(this).find('iframe')[0];
+                iframe = jQuery(this).find('iframe')[0];
                 el = jQuery(iframe).contents().find('body');
             }
             else
@@ -185,17 +185,17 @@ jQuery(function() {
             }
             el.addClass('writemaths tex2jax_ignore');
             var previewElement = jQuery('<div class="wm_preview"/>');
-			jQuery('body').append(previewElement);
+            jQuery('body').append(previewElement);
 
             var queue = MathJax.Callback.Queue(MathJax.Hub.Register.StartupHook("End",{}));
 
-			var txt, sel, range;
-			function positionPreview() {
-				var of = options.of ? options.of : options.iFrame ? iframe : textarea ? root : document;
-				previewElement.position({my: options.previewPosition, at: options.position, of: of, collision: 'fit'})
-			}
+            var txt, sel, range;
+            function positionPreview() {
+                var of = options.of ? options.of : options.iFrame ? iframe : textarea ? root : document;
+                previewElement.position({my: options.previewPosition, at: options.position, of: of, collision: 'fit'})
+            }
 
-			function updatePreview(e) {
+            function updatePreview(e) {
                 previewElement.hide();
 
                 if(textarea) {
@@ -209,14 +209,14 @@ jQuery(function() {
 
                     range = sel.getRangeAt(0);
 
-					if(anchor.nodeType == anchor.TEXT_NODE) {	
-						while(anchor.previousSibling) {
-							anchor = anchor.previousSibling;
-							range.startOffset += anchor.textContent.length;
-							range.endOffset += anchor.textContent.length;
-						}
-						anchor = anchor.parentNode;
-					}
+                    if(anchor.nodeType == anchor.TEXT_NODE) {    
+                        while(anchor.previousSibling) {
+                            anchor = anchor.previousSibling;
+                            range.startOffset += anchor.textContent.length;
+                            range.endOffset += anchor.textContent.length;
+                        }
+                        anchor = anchor.parentNode;
+                    }
 
                     if(jQuery(anchor).add(jQuery(anchor).parents()).filter('code,pre,.wm_ignore').length)
                         return;
@@ -228,67 +228,67 @@ jQuery(function() {
                 if(range.startOffset != range.endOffset)
                     return;
 
-				var target = range.startOffset;
+                var target = range.startOffset;
 
-				var q = findMaths(txt,target);
+                var q = findMaths(txt,target);
 
-				if(!q)
-					return;
+                if(!q)
+                    return;
 
                 var math;
-				if(q.startDelimiter.match(/^\\begin/))
-					math = q.startDelimiter + q.math + (q.endDelimiter ? q.endDelimiter : '');
-				else
-					math = q.math;
+                if(q.startDelimiter.match(/^\\begin/))
+                    math = q.startDelimiter + q.math + (q.endDelimiter ? q.endDelimiter : '');
+                else
+                    math = q.math;
 
                 if(!math.length)
                     return;
 
                 previewElement.show();
 
-				if(math!=$(this).data('writemaths-lastMath')) {
-					var script = document.createElement('script');
-					script.setAttribute('type','math/tex');
-					script.textContent = options.cleanMaths(math);
-					previewElement.html(script);
-					$(this).data('writemaths-lastMath',math);
-					queue.Push(['Typeset',MathJax.Hub,previewElement[0]]);
-					queue.Push(positionPreview);
-					queue.Push(options.callback);
-				}
+                if(math!=$(this).data('writemaths-lastMath')) {
+                    var script = document.createElement('script');
+                    script.setAttribute('type','math/tex');
+                    script.textContent = options.cleanMaths(math);
+                    previewElement.html(script);
+                    $(this).data('writemaths-lastMath',math);
+                    queue.Push(['Typeset',MathJax.Hub,previewElement[0]]);
+                    queue.Push(positionPreview);
+                    queue.Push(options.callback);
+                }
 
                 positionPreview();
 
             }
 
-			updatePreview = $.throttle(100,updatePreview);
+            updatePreview = $.throttle(100,updatePreview);
 
 
-			// periodically check the iFrame still exists 
-			if(options.iFrame) {
-				function still_there() {
-					if(!jQuery(iframe).parents('html').length) {
-						previewElement.remove();
-						clearInterval(still_there_interval);
-						el.off();
-					}
-				}
-				var still_there_interval = setInterval(still_there,100);
-			}
+            // periodically check the iFrame still exists 
+            if(options.iFrame) {
+                function still_there() {
+                    if(!jQuery(iframe).parents('html').length) {
+                        previewElement.remove();
+                        clearInterval(still_there_interval);
+                        el.off();
+                    }
+                }
+                var still_there_interval = setInterval(still_there,100);
+            }
 
             el
-			.on('blur',function(e) {
-				previewElement.hide();
-			})
-			.on('keyup click',updatePreview);
-			if(options.iFrame)
-				$(el[0].ownerDocument).on('scroll',updatePreview);
-			else
-				el.on('scroll',updatePreview);
+            .on('blur',function(e) {
+                previewElement.hide();
+            })
+            .on('keyup click',updatePreview);
+            if(options.iFrame)
+                $(el[0].ownerDocument).on('scroll',updatePreview);
+            else
+                el.on('scroll',updatePreview);
 
         });
-		return this;
-	}
+        return this;
+    }
 });
 
 /*

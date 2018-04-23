@@ -1,19 +1,19 @@
 #newExamForm, #newQuestionForm {
-	display: none;
+    display: none;
 }
 
 .upload {
-	visibility: hidden;
-	position: absolute;
-	top: 0;
+    visibility: hidden;
+    position: absolute;
+    top: 0;
 }
 
 #uploadForm {
-	display: inline-block;
+    display: inline-block;
 }
 
 #uploadForm.over button {
-	border: red;
+    border: red;
 }
 
 

@@ -18,7 +18,7 @@ part_types.models = [
         has_marks: true,
         can_be_gap: false,
         can_be_step: false,
-        widget: 'gapfill',
+        widget: '',
 
         toJSON: function(data,part) {
             if(part.gaps().length)

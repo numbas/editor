@@ -537,7 +537,8 @@
                                         </section>
 
                                         <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='notes'}">
-                                            <!-- ko if: ko.unwrap($data.runtime_part)!==undefined && ko.unwrap($parent.type().widget) -->
+                                            <!-- ko if: ko.unwrap($data.runtime_part)!==undefined -->
+                                            <!-- ko if: ko.unwrap($parent.type().widget) -->
                                             <form class="form-horizontal" data-bind="submit: Editor.noop">
                                                 <div class="form-group">
                                                     <label class="label-block">
@@ -550,6 +551,7 @@
                                                     </label>
                                                 </div>
                                             </form>
+                                            <!-- /ko -->
 
 
                                             <div data-bind="if: last_run_error">

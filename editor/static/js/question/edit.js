@@ -2280,7 +2280,28 @@ $(document).ready(function() {
                 if(!part) {
                     throw(new Error("Part not found"));
                 }
-                var answer = mt.answer();
+                var answer;
+                if(mt.part.type().name=='gapfill') {
+                    var gap_answers = mt.part.gaps().map(function(g) {
+                        return g.marking_test().answer();
+                    });
+                    var invalid_gaps = [];
+                    gap_answers.forEach(function(x,i) {
+                        if(!x.valid) {
+                            invalid_gaps.push(i);
+                        }
+                    });
+                    if(invalid_gaps.length==1) {
+                        answer = {valid: false, warnings: ['Gap '+invalid_gaps[0]+' has not been answered.']};
+                    } else if(invalid_gaps.length>1) {
+                        answer = {valid: false, warnings: ['Gaps '+invalid_gaps.slice(0,invalid_gaps.length-1).join(', ')+' and '+invalid_gaps[invalid_gaps.length-1]+' have not been answered.']};
+                    } else {
+                        var answers = gap_answers.map(function(x){ return x.value; });
+                        answer = {valid: true, value: answers};
+                    }
+                } else {
+                    var answer = mt.answer();
+                }
                 if(!answer) {
                     throw(new Numbas.Error("Student's answer not set. There may be an error in the input widget."));
                 }

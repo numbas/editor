@@ -56,17 +56,6 @@ body.mce-fullscreen .mce-fullscreen {
     z-index: 1000;
 }
 
-/*
-.mce-tinymce:not(.wm-focus) .mce-toolbar,
-.mce-tinymce:not(.wm-focus) .mce-toolbar-grp 
-{
-    display: none;
-}
-.mce-tinymce:not(.wm-focus) .mce-edit-area {
-    border: none !important;
-}
-    */
-
 .mce-container .mce-preview-footer {
     bottom: 0em;
     background: hsl(0,100%,90%);
@@ -161,6 +150,14 @@ editor-pager nav {
         padding-right: 5px;
         text-align: center;
     }
+}
+
+.name-header {
+    display: flex;
+}
+.name-header > .name {
+    flex-grow: 1;
+    margin: 0 0.2em;
 }
 
 .taxonomy .panel-heading {

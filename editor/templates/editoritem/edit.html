@@ -53,33 +53,32 @@
             <small><span class="glyphicon glyphicon-briefcase"></span> <a href="{% url 'project_index' object.editoritem.project.pk %}">{{object.editoritem.project.name}}</a></small>
         </h2>
         <h1 class="name-header">
-            <span class="glyphicon glyphicon-{{object.icon}}"></span> <span data-bind="mathjaxHTML: name, click: edit_name">{{object.name}}</span>
-            <small class="pull-right">
-                {% if user.is_authenticated %}
-                    <div class="btn-group">
-                        <button type="button" class="stamp btn btn-lg btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-bind="attr: {'data-stamp':current_stamp().status}">
-                            Status: <span data-bind="text: current_stamp().status_display"></span> <span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu">
-                        {% for name,description in stamp_choices %}
-                            <li><a class="stamp" data-stamp="{{name}}" tabindex="-1" href="#" data-bind="click: addStamp('{{name}}')">{{description}}</a></li>
-                        {% endfor %}
-                            <li role="separator" class="divider"></li>
-                            <li>
-                            <a tabindex="-1" href="#" {% if editable %}data-bind="click: setTab('access')"{% endif %}>
-                                    {% if object.editoritem.published %}
-                                    <span class="text-success"><span class="glyphicon glyphicon-ok"></span> Published</span>
-                                    {% else %}
-                                    <span class="text-muted"><span class="glyphicon glyphicon-lock"></span> Not published</span>
-                                    {% endif %}
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                {% else %}
-                    <span class="label label-default stamp" data-bind="text: current_stamp().status_display, attr: {'data-stamp':current_stamp().status}"></span>
-                {% endif %}
-            </small>
+            <span class="glyphicon glyphicon-{{object.icon}}"></span> 
+            <span class="name" data-bind="mathjaxHTML: name, click: edit_name">{{object.name}}</span>
+            {% if user.is_authenticated %}
+                <div class="btn-group">
+                    <button type="button" class="stamp btn btn-lg btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-bind="attr: {'data-stamp':current_stamp().status}">
+                        Status: <span data-bind="text: current_stamp().status_display"></span> <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                    {% for name,description in stamp_choices %}
+                        <li><a class="stamp" data-stamp="{{name}}" tabindex="-1" href="#" data-bind="click: addStamp('{{name}}')">{{description}}</a></li>
+                    {% endfor %}
+                        <li role="separator" class="divider"></li>
+                        <li>
+                        <a tabindex="-1" href="#" {% if editable %}data-bind="click: setTab('access')"{% endif %}>
+                                {% if object.editoritem.published %}
+                                <span class="text-success"><span class="glyphicon glyphicon-ok"></span> Published</span>
+                                {% else %}
+                                <span class="text-muted"><span class="glyphicon glyphicon-lock"></span> Not published</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            {% else %}
+                <span class="label label-default stamp" data-bind="text: current_stamp().status_display, attr: {'data-stamp':current_stamp().status}"></span>
+            {% endif %}
         </h1>
         {% endblock page_header %}
     </div>

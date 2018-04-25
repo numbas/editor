@@ -41,6 +41,7 @@ part_types.models = [
         name:'jme', 
         niceName: 'Mathematical expression', 
         has_marks: true, 
+        has_marking_settings: true,
         tabs: [
             new Editor.Tab('restrictions','String restrictions','text-background'),
             new Editor.Tab('checking-accuracy','Accuracy','scale')
@@ -199,6 +200,7 @@ part_types.models = [
         name:'numberentry', 
         niceName: 'Number entry', 
         has_marks: true,
+        has_marking_settings: true,
         tabs: [],
         widget: 'number',
 
@@ -292,6 +294,7 @@ part_types.models = [
         name: 'matrix',
         niceName: 'Matrix entry',
         has_marks: true,
+        has_marking_settings: true,
         tabs: [],
         widget: 'matrix',
 
@@ -363,6 +366,7 @@ part_types.models = [
         name:'patternmatch', 
         niceName: 'Match text pattern', 
         has_marks: true,
+        has_marking_settings: true,
         tabs: [],
         widget: 'string',
 

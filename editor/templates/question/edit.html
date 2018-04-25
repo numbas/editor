@@ -412,45 +412,44 @@
 
     <!-- Parts -->
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='parts'}">
-
-        <p class="text-right">
-            <button type="button" class="btn btn-link" data-bind="click: expand_all_parts"><span class="glyphicon glyphicon-expand"></span> Expand every part</button>
-            <button type="button" class="btn btn-link" data-bind="click: collapse_all_parts"><span class="glyphicon glyphicon-collapse-up"></span> Collapse every part</button>
-        </p>
-
         <div class="panel-group parts" role="tablist" aria-multiselectable="true">
-            <!-- ko foreach: allParts-->
-            <div class="panel part" data-bind="
-                    visible: isRootPart() || parent().open(), 
-                    attr: {'data-path': path},
-                    css: {'open': open, 'panel-primary': isRootPart, 'panel-success': isGap, 'panel-info': isStep, 'root': isRootPart, 'gap': isGap, 'step': isStep}
-                ">
-                <div class="panel-heading" data-bind="restrictedClick: toggleOpen" clickable>
-                    <div class="pull-right">
-                        <div class="btn-group part-header-controls">
-                            {% if editable %}
-                            <button type="button" class="btn btn-link" data-bind="click: moveUp, visible: canMove('up')" title="Move this part up one place"><span class="glyphicon glyphicon-arrow-up"></span></button>
-                            <button type="button" class="btn btn-link" data-bind="click: moveDown, visible: canMove('down')" title="Move this part down one place"><span class="glyphicon glyphicon-arrow-down"></span></button>
-                            {% endif %}
-                        </div>
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-12 col-md-8 col-lg-9 part">
+                        <!-- ko if: !currentPart() && !addingPart() -->
+                        <!-- ko if: parts().length==0 -->
+                            <p class="nothing-here">No parts have been defined in this question.</p>
+                        <!-- /ko -->
+                        <!-- ko if: parts().length>0 -->
+                            <p class="nothing-here">Select a part to edit.</p>
+                        <!-- /ko -->
+                        <!-- /ko -->
+                        <!-- ko with: currentPart -->
+                        <h3>
+                            <strong data-bind="text: header"></strong>
+                            <span data-bind="text: type().niceName"></span>
+                        </h3>
                         {% if editable %}
-                        <button type="button" class="btn btn-link" data-bind="click: remove, attr: {title: 'Remove this '+levelName()}"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                        <div class="part-controls">
+                            <button type="button" class="btn btn-sm btn-default" data-bind="click: copy"><span class="glyphicon glyphicon-duplicate"></span> Copy this <span data-bind="text: levelName"></span></button>
+                            <button type="button" class="btn btn-sm btn-default" data-bind="click: replaceWithGapfill, visible: canBeReplacedWithGap"><span class="glyphicon glyphicon-tasks"></span> Replace this part with a gapfill</button>
+                            <button type="button" class="btn btn-sm btn-default" data-bind="visible: type().name=='gapfill', click: startAddingGap">
+                                <span class="glyphicon glyphicon-plus"></span> Add a gap to this part
+                            </button>
+                            <button type="button" class="btn btn-sm btn-info" data-bind="visible: isRootPart, click: startAddingStep">
+                                <span class="glyphicon glyphicon-plus"></span> Add a step to this part
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger" data-bind="click: remove">
+                                <span class="glyphicon glyphicon-remove"></span> Delete this <span data-bind="text: levelName"></span>
+                            </button>
+                        </div>
                         {% endif %}
-                    </div>
-                    <h3 class="panel-title form-inline" clickable>
-                        <span clickable class="glyphicon" data-bind="css: {'glyphicon-triangle-right': !open(), 'glyphicon-triangle-bottom': open}"></span>
-                        <strong clickable data-bind="text: header"></strong>
-                        <span clickable class="type-name" data-bind="text: type().niceName"></span>
-                    </h3>
-                </div>
-                <div data-bind="fadeVisible: open">
-                    <div class="panel-body">
-                        <ul class="col-sm-1 col-md-3 nav nav-pills nav-stacked part-tabs" data-bind="foreach: tabs">
+                        <ul class="col-sm-1 col-md-3 col-lg-2 nav nav-pills nav-stacked part-tabs" data-bind="foreach: tabs">
                             <li data-bind="css: {active: ko.unwrap($parent.currentTab().id) == $data.id, 'more-important': $data.more_important}">
                                 <a href="#" data-bind="click: $parent.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> <span class="hidden-sm" data-bind="text: title"></span></a>
                             </li>
                         </ul>
-                        <div class="col-sm-11 col-md-9 tab-content">
+                        <div class="col-sm-11 col-md-9 col-lg-10 tab-content">
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='prompt'}">
                                 <p class="help-block">
                                     {% helplink 'question/reference.html#term-prompt' subject='the part prompt' %}
@@ -847,60 +846,80 @@
                                 </div>
                             </section>
                         </div>
+                        <!-- /ko -->
+                        <!-- ko with: addingPart -->
+                        <h3>
+                            <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parentList().length ? 'Add another '+kind : 'Add a '+kind"></span>
+                            <span data-bind="if: $data.parent">to <span data-bind="text: $data.parent.levelName()+' '+$data.parent.indexLabel()"></span>
+                        </h3>
+                        <ul class="list-inline add-part">
+                            <!-- ko foreach: availableTypes -->
+                            <li><button type="button" class="btn btn-default" data-bind="text: niceName, click: $parents[1].addPart"></button></li>
+                            <!-- /ko -->
+                            <li><button type="button" class="btn btn-link" data-bind="click: $parent.addPartTypeModal.open">… More part types</button></li>
+                        </ul>
+                        <button class="btn btn-link" type="button" data-bind="visible: $data.parent, click: function() {$parent.currentPart($data.parent)}">Cancel</button>
+                        <!-- /ko -->
                     </div>
-                    {% if editable %}
-                    <div class="panel-footer clearfix">
-                        <div class="pull-left">
-                            <button type="button" class="btn btn-default" data-bind="click: copy"><span class="glyphicon glyphicon-duplicate"></span> Copy this <span data-bind="text: levelName"></span></button>
-                            <button type="button" class="btn btn-default" data-bind="click: replaceWithGapfill, visible: canBeReplacedWithGap"><span class="glyphicon glyphicon-tasks"></span> Replace part <strong data-bind="text:indexLabel"></strong> with a gapfill</button>
-                        </div>
-                        <div class="pull-right">
-                            <div class="btn-group" data-bind="visible: type().name=='gapfill'">
-                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <span class="glyphicon glyphicon-plus"></span> Add a gap to part <strong data-bind="text:indexLabel"></strong> <span class="caret"></span>
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <!-- ko foreach: $root.gapTypes -->
-                                    <li><a href="#" data-bind="click: $parent.addGap, text: niceName"></a></li>
-                                    <!-- /ko -->
-                                    <li role="separator" class="divider"></li>
-                                    <li><a href="#" data-bind="click: addGapTypeModal.open">… More part types</a></li>
-                                </ul>
-                            </div>
-                            <part-type-modal params="data: addGapTypeModal"></part-type-modal>
 
-                            <div class="btn-group" data-bind="visible: isRootPart">
-                                <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <span class="glyphicon glyphicon-plus"></span> Add a step to part <strong data-bind="text:indexLabel"></strong> <span class="caret"></span>
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <!-- ko foreach: $root.stepTypes -->
-                                    <li><a href="#" data-bind="click: $parent.addStep, text: niceName"></a></li>
-                                    <!-- /ko -->
-                                    <li role="separator" class="divider"></li>
-                                    <li><a href="#" data-bind="click: addStepTypeModal.open">… More part types</a></li>
-                                </ul>
+                    <div class="col-sm-12 col-md-4 col-lg-3">
+                        <div class="panel panel-info parts-tree">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Parts</h3>
                             </div>
-                            <part-type-modal params="data: addStepTypeModal"></part-type-modal>
+                            <div class="list-group">
+                                <div data-bind="sortable: {
+                                    foreach: parts,
+                                    options: {
+                                        group: 'parts',
+                                        filter: '.gap, .step'
+                                    }
+                                }">
+                                    <a role="button" class="list-group-item part root" data-bind="
+                                        click: $parent.currentPart, 
+                                        css: {active: $data==$parent.currentPart()}
+                                    ">
+                                        <strong data-bind="text: header"></strong>
+                                        <span class="type-name" data-bind="text: type().niceName"></span>
+                                        <small class="children-description text-muted" data-bind="text: childrenDescription"></small>
+                                    </a>
+                                    <!-- ko if: showChildren -->
+                                    <!-- ko foreach: gaps -->
+                                    <a role="button" class="list-group-item part gap" data-bind="
+                                        click: $parents[1].currentPart, 
+                                        css: {active: $data==$parents[1].currentPart()}
+                                    ">
+                                        <strong data-bind="text: header"></strong>
+                                        <span class="type-name" data-bind="text: type().niceName"></span>
+                                    </a>
+                                    <!-- /ko -->
+                                    <!-- ko foreach: steps -->
+                                    <a role="button" class="list-group-item part step" data-bind="
+                                        click: $parents[1].currentPart, 
+                                        css: {active: $data==$parents[1].currentPart()}
+                                    ">
+                                        <strong data-bind="text: header"></strong>
+                                        <span class="type-name" data-bind="text: type().niceName"></span>
+                                    </a>
+                                    <!-- /ko -->
+                                    <!-- /ko -->
+                                </div>
+                            </div>
+                            {% if editable %}
+                            <div class="panel-footer">
+                                <button type="button" class="btn btn-block btn-primary" data-bind="click: startAddingPart">
+                                    <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parts().length ? 'Add another part' : 'Add a part'"></span>
+                                </button>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
-                    {% endif %}
                 </div>
             </div>
-            <!-- /ko -->
         </div>
 
         {% if editable %}
         <div class="btn-group">
-            <h3>
-                <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parts().length ? 'Add another part' : 'Add a part'"></span>
-            </h3>
-            <ul class="list-inline add-part">
-                <!-- ko foreach: partTypes -->
-                <li><button type="button" class="btn btn-default" data-bind="text: niceName, click: $parent.addPart"></button></li>
-                <!-- /ko -->
-                <li><button type="button" class="btn btn-link" data-bind="click: addPartTypeModal.open">… More part types</button></li>
-            </ul>
         </div>
         <part-type-modal params="data: addPartTypeModal"></part-type-modal>
         {% endif %}

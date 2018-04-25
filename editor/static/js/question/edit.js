@@ -15,8 +15,9 @@ $(document).ready(function() {
     }
 
 
-    function AddPartTypeModal(useFn, filter) {
+    function AddPartTypeModal(question,useFn, filter) {
         var m = this;
+        this.question = question;
         this.show = ko.observable(false);
         this.open = function() {
             m.show(true);
@@ -148,6 +149,9 @@ $(document).ready(function() {
             return o;
         },this);
 
+        this.currentPart = ko.observable(null);
+        this.addingPart = ko.observable(null);
+
         this.partTypes = ko.computed(function() {
             return Editor.part_types.models.filter(function(pt) {
                 if(pt.is_custom_part_type) {
@@ -229,14 +233,32 @@ $(document).ready(function() {
             js: ko.observable('')
         };
 
-        this.addPart = function(type) {
-            var p = new Part(q,null,q.parts);
-            p.setType(type.name);
-            q.parts.push(p);
-            return p;
+        this.startAddingPart = function() {
+            q.addingPart({kind:'part', parent:null, parentList: q.parts, availableTypes: q.partTypes});
         }
 
-        this.addPartTypeModal = new AddPartTypeModal(function(pt){ q.addPart(pt) });
+        this.addPart = function(type) {
+            var adding = q.addingPart();
+            console.log(adding);
+            var p = new Part(q,adding.parent,adding.parentList);
+            p.setType(type.name);
+            adding.parentList.push(p);
+            q.currentPart(p);
+            q.addingPart(null);
+            return p;
+        }
+        this.currentPart.subscribe(function(p) {
+            if(p) {
+                q.addingPart(null);
+            }
+        });
+        this.addingPart.subscribe(function(adding) {
+            if(adding) {
+                q.currentPart(null);
+            }
+        });
+
+        this.addPartTypeModal = new AddPartTypeModal(this,function(pt){ q.addPart(pt) });
 
         this.baseVariableGroup = new VariableGroup(this,{name:'Ungrouped variables'});
         this.baseVariableGroup.fixed = true;
@@ -433,6 +455,15 @@ $(document).ready(function() {
                     }
                 });
             }
+            if('currentPart' in state) {
+                this.currentPart(this.getPart(state.currentPart));
+            }
+            Editor.computedReplaceState('currentPart',ko.computed(function() {
+                var p = this.currentPart();
+                if(p) {
+                    return p.path();
+                }
+            },this));
             Editor.computedReplaceState('currentPartTabs',ko.computed(function() {
                 var d = {};
                 q.allParts().forEach(function(p) {
@@ -1006,6 +1037,9 @@ $(document).ready(function() {
                 contentData.parts.map(function(pd) {
                     this.loadPart(pd);
                 },this);
+            }
+            if(this.parts().length) {
+                this.currentPart(this.parts()[0]);
             }
 
             try{
@@ -1680,10 +1714,28 @@ $(document).ready(function() {
         this.parent = ko.observable(parent);
         this.parentList = parentList;
 
-        this.open = ko.observable(true);
-        this.toggleOpen = function() {
-            p.open(!p.open());
-        }
+        this.showChildren = ko.pureComputed(function() {
+            var currentPart = q.currentPart();
+            while(currentPart) {
+                if(currentPart==this) {
+                    return true;
+                }
+                currentPart = currentPart.parent();
+            }
+            return false;
+        },this);
+        this.childrenDescription = ko.pureComputed(function() {
+            var out = [];
+            if(this.type().name=='gapfill') {
+                var numGaps = this.gaps().length;
+                out.push(numGaps+' gap'+(numGaps==1 ? '' : 's'));
+            }
+            if(this.steps().length>0) {
+                var numSteps = this.steps().length;
+                out.push(numSteps+' step'+(numSteps==1 ? '' : 's'));
+            }
+            return out.join(', ');
+        },this);
 
         this.types = Editor.part_types.models.map(function(data){return new PartType(p,data);});
 
@@ -1757,8 +1809,10 @@ $(document).ready(function() {
                 tabs.push(new Editor.Tab('prompt','Prompt','blackboard',true,true));
             }
 
-            if(this.type().has_marks) {
+            if(this.type().has_marking_settings) {
                 tabs.push(new Editor.Tab('marking-settings','Marking settings','pencil',true,true));
+            }
+            if(this.type().has_marks) {
                 tabs.push(new Editor.Tab('marking-algorithm','Marking algorithm','ok'));
             }
 
@@ -1814,20 +1868,13 @@ $(document).ready(function() {
         this.stepsPenalty = ko.observable(0);
 
         this.gaps = ko.observableArray([]);
-        this.addGap = function(type) {
-            var gap = new Part(p.q,p,p.gaps);
-            gap.setType(type.name);
-            p.gaps.push(gap);
-        }
 
-        this.addStep = function(type) {
-            var step = new Part(p.q,p,p.steps);
-            step.setType(type.name);
-            p.steps.push(step);
+        this.startAddingGap = function() {
+            q.addingPart({kind:'gap',parent:p, parentList: p.gaps, availableTypes: q.gapTypes});
         }
-
-        this.addGapTypeModal = new AddPartTypeModal(function(pt){ p.addGap(pt) }, function(pt){ return pt.can_be_gap });
-        this.addStepTypeModal = new AddPartTypeModal(function(pt){ p.addStep(pt) }, function(pt){ return pt.can_be_step });
+        this.startAddingStep = function() {
+            q.addingPart({kind:'step',parent:p, parentList: p.steps, availableTypes: q.stepTypes});
+        }
 
         this.showCorrectAnswer = ko.observable(true);
         this.showFeedbackIcon = ko.observable(true);
@@ -1958,6 +2005,9 @@ $(document).ready(function() {
             if(confirm("Remove "+this.levelName()+" "+this.indexLabel()+"?"))
             {
                 this.parentList.remove(this);
+                if(this.q.currentPart()==this) {
+                    this.q.currentPart(null);
+                }
             }
         },
 
@@ -2742,6 +2792,7 @@ $(document).ready(function() {
         this.help_url = data.help_url;
         this.niceName = data.niceName;
         this.has_marks = data.has_marks || false;
+        this.has_marking_settings = data.has_marking_settings || false;
         this.tabs = data.tabs || [];
         this.model = data.model ? data.model(part) : {};
         this.is_custom_part_type = data.is_custom_part_type;

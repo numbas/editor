@@ -2,6 +2,16 @@
     margin-top: 1em;
 }
 
+.part .part-controls {
+    margin: 1em 0;
+}
+.part .part-controls > button {
+    margin: 0.2em 0;
+}
+.part.active > .children-description {
+    color: #ddd;
+}
+
 .part > .panel-heading,
 .unit-test > .panel-heading {
     cursor: s-resize;
@@ -11,10 +21,15 @@
     cursor: n-resize;
 }
 
-.part.gap, .part.step {
-    margin-left: 2em;
-    margin-right: 1em;
+.parts-tree > .list-group {
+    max-height: 60vh;
+    overflow-y: auto;
 }
+
+.parts-tree .part.gap, .parts-tree .part.step {
+    margin-left: 2em;
+}
+
 
 .part-tabs {
     margin-bottom: 1em;

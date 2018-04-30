@@ -10,6 +10,7 @@ from accounts.forms import NumbasRegistrationForm, DeactivateUserForm
 from accounts.forms import UserProfileForm, ChangePasswordForm
 from accounts.models import RegistrationProfile
 from accounts.util import find_users, user_json
+from django import apps
 from django.conf import settings
 from django.views.generic import UpdateView, DetailView, ListView, TemplateView
 from django.contrib.auth.models import User
@@ -79,6 +80,9 @@ class UserUpdateView(CurrentUserUpdateView):
         context = super(UserUpdateView, self).get_context_data(*args, **kwargs)
         context['profile_page'] = 'bio'
         context['view_user'] = self.get_object()
+        context['mailing_list_active'] = apps.registry.apps.is_installed('numbasmailing')
+        if context['mailing_list_active']:
+            context['unsubscribe_url'] = settings.MAILCHIMP.get('UNSUBSCRIBE_URL')
         return context
 
     def form_valid(self, form):

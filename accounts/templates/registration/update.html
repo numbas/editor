@@ -1,4 +1,6 @@
 {% extends "profile/base.html" %}
+{% load json_filter %}
+
 
 {% block javascripts %}
 {{block.super}}
@@ -51,6 +53,13 @@
             <label for="{{form.avatar.auto_id}}">{{form.avatar.label}}</label>
             {{form.avatar}}
         </div>
+        {% if mailing_list_active and unsubscribe_url %}
+        <div class="form-group mailing-list">
+            <label>Mailing list subscription</label>
+            <p><a href="{{unsubscribe_url}}">Click here to unsubscribe from the Numbas newsletter mailing list</a></p>
+        </section>
+        {% endif %}
+
         <div class="form-group {% if form.mathjax_url.errors %}has-error{% endif %}">
             <label for="{{form.mathjax_url.auto_id}}">{{form.mathjax_url.label}}</label>
             {{form.mathjax_url}}
@@ -63,8 +72,10 @@
             {% endif %}
             <div class="help-block">{{form.mathjax_url.help_text}}</div>
         </div>
+
         <div class="form-group">
             <button type="submit" class="btn btn-primary">Update</button>
         </div>
     </form>
+
 {% endblock profile_content %}

@@ -12,3 +12,5 @@ class HomeView(TemplateView):
 
 class TermsOfUseView(TemplateView):
     template_name = 'terms_of_use.html'
+class PrivacyPolicyView(TemplateView):
+    template_name = 'privacy_policy.html'

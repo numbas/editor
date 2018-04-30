@@ -2,21 +2,10 @@
 
 {% block content %}
 
-<section>
 	<header>
 		<h1>Terms of use</h1>
 	</header>
 
-	<p>The site administrator needs to put the terms of use go here.</p>
-</section>
-
-<section>
-	<header>
-		<h1>Privacy policy</h1>
-	</header>
-
-	<p>The site administrator needs to put the privacy policy here.</p>
-	<p>For sites based in the UK, <a href="https://ico.org.uk/for-organisations/guide-to-data-protection/privacy-notices-transparency-and-control/">the ICO provides good advice</a> on writing a privacy notice.</p>
-</section>
+	<p>The site administrator needs to put the terms of use here.</p>
 
 {% endblock content %}

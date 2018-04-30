@@ -2,7 +2,7 @@ from django.conf.urls import url
 
 from django.contrib.auth.decorators import login_required
 
-from .views import project, editoritem, exam, question, HomeView, TermsOfUseView, theme, extension, generic, notification, resource, basket, timeline, custom_part_type
+from .views import project, editoritem, exam, question, HomeView, TermsOfUseView, PrivacyPolicyView, theme, extension, generic, notification, resource, basket, timeline, custom_part_type
 
 urlpatterns = [
 
@@ -13,6 +13,7 @@ urlpatterns = [
     # Terms of use
 
     url(r'^terms-of-use/$', TermsOfUseView.as_view(), name='terms_of_use'),
+    url(r'^privacy-policy/$', PrivacyPolicyView.as_view(), name='privacy_policy'),
 
     # Search
 

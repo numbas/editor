@@ -229,5 +229,10 @@ class DeactivateUserView(CurrentUserUpdateView):
     template_name = 'profile/deactivate.html'
     form_class = DeactivateUserForm
 
+    def get_context_data(self, *args, **kwargs):
+        context = super(DeactivateUserView, self).get_context_data(*args, **kwargs)
+        context['mailing_list_active'] = apps.registry.apps.is_installed('numbasmailing')
+        return context
+
     def get_success_url(self):
         return reverse('logout')

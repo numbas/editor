@@ -26,6 +26,9 @@
             {% endfor %}
         </ol>
         {% endif %}
+        {% if mailing_list_active %}
+        <p><label>{{form.unsubscribe}} Unsubscribe from the Numbas newsletter?</label></p>
+        {% endif %}
         <button class="btn btn-danger btn-lg" type="submit">Deactivate my account</button> <a class="btn btn-link" href="{% url 'editor_index' %}">Cancel</a>
     </form>
 </main>

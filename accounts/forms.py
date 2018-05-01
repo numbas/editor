@@ -102,6 +102,8 @@ class DeactivateUserForm(forms.ModelForm):
         fields = []
 
     confirm_text = forms.CharField()
+    if apps.registry.apps.is_installed('numbasmailing'):
+        unsubscribe = forms.BooleanField(initial=True, label=_('Unsubscribe from the Numbas newsletter'), required=False)
     magic_word = 'DEACTIVATE'
 
     def clean_confirm_text(self):
@@ -113,6 +115,10 @@ class DeactivateUserForm(forms.ModelForm):
 
     def save(self, *args, **kwargs):
         user = self.instance
+
+        if self.cleaned_data.get('unsubscribe'):
+            import numbasmailing
+            numbasmailing.delete(user.email)
 
         user.is_active = False
         user.username = 'deactivated_user_{}!'.format(user.pk)

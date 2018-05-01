@@ -135,7 +135,8 @@ class Command(object):
             (r"Welcome to (the Numbas editor)", 'SITE_TITLE'),
         ]
         self.sub_file('editor/templates/index_message.html', index_subs)
-        self.sub_file('editor/templates/terms_of_use.html', [])
+        self.sub_file('editor/templates/terms_of_use_content.html', [])
+        self.sub_file('editor/templates/privacy_policy_content.html', [])
 
         if len(self.written_files):
             print_notice("The following files have been written. You should look at them now to see if you need to make any more changes.")

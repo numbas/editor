@@ -257,6 +257,11 @@ $(document).ready(function() {
                 q.currentPart(null);
             }
         });
+        ko.computed(function() {
+            if(this.parts().length==0 && !this.addingPart()) {
+                this.startAddingPart();
+            }
+        },this);
 
         this.addPartTypeModal = new AddPartTypeModal(this,function(pt){ q.addPart(pt) });
 
@@ -541,6 +546,9 @@ $(document).ready(function() {
         getPart: function(path) {
             var re_path = /^p(\d+)(?:g(\d+)|s(\d+))?$/;
             var m = re_path.exec(path);
+            if(!m) {
+                return;
+            }
             var i = parseInt(m[1]);
             var p = this.parts()[i];
             if(!p) {

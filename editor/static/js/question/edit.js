@@ -594,6 +594,9 @@ $(document).ready(function() {
                 } else {
                     v.dependencies([]);
                 }
+
+                var is_random = Numbas.jme.isRandom(Numbas.jme.compile(v.definition()),prep.scope);
+                v.random(is_random);
             });
 
             var conditionSatisfied = false;
@@ -1237,6 +1240,7 @@ $(document).ready(function() {
             }
         },this);
         this.group = ko.observable(null);
+        this.random = ko.observable(null);
         this.nameError = ko.computed(function() {
             var name = this.name();
             if(name=='')

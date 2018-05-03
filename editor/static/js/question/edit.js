@@ -1386,11 +1386,9 @@ $(document).ready(function() {
                 var wrapValue = Numbas.jme.wrapValue;
                 try {
                     var tokens = Numbas.jme.tokenise(val.definition());
-                    if(tokens.length > 1) {
-                        if(tokens[0].type == 'name' && tokens[1].type == 'op') {
-                            if(tokens[0].name == this.name() && tokens[1].name == '=') {
-                                throw("You don't need to include <code>"+this.name()+" =</code> at the start of your definition.");
-                            }
+                    if(tokens.length > 2) {
+                        if(Numbas.jme.isName(tokens[0],this.name()) && Numbas.jme.isOp(tokens[1],'=')) {
+                            throw("You don't need to include <code>"+this.name()+" =</code> at the start of your definition.");
                         }
                     }
                     switch(templateType) {

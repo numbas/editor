@@ -118,6 +118,11 @@
     max-height: 5em;
 }
 
+.variable-selector .is-random {
+    line-height: 1em;
+    font-size: 13px;
+}
+
 
 .empty-receiver * {
     opacity: 0;

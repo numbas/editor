@@ -497,6 +497,17 @@ $(document).ready(function() {
             }
             return null;
         },this);
+
+        this.usedInExam = ko.computed(function() {
+            var questions = exam.questions();
+            for(var i=0;i<questions.length;i++) {
+                if(this.id() == questions[i].id()) {
+                    return true;
+                }
+            }
+            return false;
+        }, this);
+
         this.number = ko.computed(function() {
             var g = this.question_group();
             if(!g) {

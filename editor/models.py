@@ -1300,7 +1300,7 @@ class NewExam(models.Model):
             Dictionary of information passed to update view 
         """
         exam_dict = self.editoritem.edit_dict()
-        exam_dict['local'] = self.locale
+        exam_dict['locale'] = self.locale
         exam_dict['custom_theme'] = self.custom_theme_id
         exam_dict['theme'] = self.theme
         groups = groupby(self.newexamquestion_set.order_by('group', 'qn_order'), key=lambda q: q.group)

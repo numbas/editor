@@ -595,8 +595,16 @@ $(document).ready(function() {
                     v.dependencies([]);
                 }
 
-                var is_random = Numbas.jme.isRandom(Numbas.jme.compile(v.definition()),prep.scope);
-                v.random(is_random);
+                try {
+                    var tree = Numbas.jme.compile(v.definition());
+                    if(!tree) {
+                        throw("no tree");
+                    }
+                    var is_random = Numbas.jme.isRandom(tree,prep.scope);
+                    v.random(is_random);
+                } catch(e) {
+                    v.random(false);
+                }
             });
 
             var conditionSatisfied = false;

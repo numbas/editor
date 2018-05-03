@@ -1248,7 +1248,18 @@ $(document).ready(function() {
             if(name.toLowerCase() in Numbas.jme.constants) {
                 return 'This variable name is reserved.';
             }
-            
+
+            var nameTok = Numbas.jme.tokenise(name);
+            if(nameTok.length != 1){
+                return 'This variable name is invalid.';
+            }
+            if(nameTok[0].type != 'name') {
+                return 'This variable name is reserved.';
+            }
+
+            if(typeof Numbas.jme.builtinScope.getVariable(name) !== 'undefined'){
+                return 'This variable name is reserved.';
+            }
 
             return '';
         },this);

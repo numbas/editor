@@ -380,31 +380,23 @@
                     </div>
                     <div class="panel panel-primary">
                         <div class="panel-heading">
-                            <h3 class="panel-title">Access rights</h3>
+                            <h3 class="panel-title">Who has access to this content?</h3>
                         </div>
                         <table class="table">
                             <thead>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><span class="glyphicon glyphicon-globe"></span> Public access</td>
+                                    <td>{% user_thumbnail object.editoritem.author 20 15 %} {% user_link object.editoritem.author new_window=True%} (Owner)</td>
                                     <td>
-                                        <span data-bind="text: public_access_text"></span>
-                                        <em data-bind="visible: !ko.unwrap(published)">This {{item_type}} has not been published</em>
-                                    </td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td>{% user_thumbnail object.editoritem.author 20 15 %} {% user_link object.editoritem.author new_window=True%}</td>
-                                    <td>
-                                        Owner
+                                        Can edit this.
                                     </td>
                                     <td></td>
                                 </tr>
                                 <tr>
                                     <td><span class="glyphicon glyphicon-briefcase"></span> Members of <a href="{% url 'project_index' object.editoritem.project.pk %}">{{object.editoritem.project.name}}</a></td>
                                     <td>
-                                        Access granted by project owner
+                                        Access granted by project owner.
                                     </td>
                                     <td></td>
                                 </tr>
@@ -419,6 +411,14 @@
                                     </td>
                                 </tr>
                                 <!-- /ko -->
+                                <tr>
+                                    <td><span class="glyphicon glyphicon-globe"></span> Anybody else</td>
+                                    <td>
+                                        <span data-bind="visible: ko.unwrap(published)">Can view this.</span>
+                                        <span data-bind="visible: !ko.unwrap(published)">Can not view this.</span>
+                                    </td>
+                                    <td></td>
+                                </tr>
                             </tbody>
                         </table>
                         <div class="panel-body">

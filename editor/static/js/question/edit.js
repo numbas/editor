@@ -1249,11 +1249,11 @@ $(document).ready(function() {
                 return 'This variable name is reserved.';
             }
 
-            var nameTok = Numbas.jme.tokenise(name);
-            if(nameTok.length != 1){
+            var tokens = Numbas.jme.tokenise(name);
+            if(tokens.length != 1) {
                 return 'This variable name is invalid.';
             }
-            if(nameTok[0].type != 'name') {
+            if(tokens[0].type != 'name') {
                 return 'This variable name is reserved.';
             }
 

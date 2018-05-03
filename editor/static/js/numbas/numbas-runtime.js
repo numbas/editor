@@ -15910,7 +15910,9 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
         }
         var pobj = this.store.loadPart(this);
         if(pobj.studentAnswer!==undefined) {
-            this.stagedAnswer = pobj.studentAnswer;
+            this.stagedAnswer = pobj.studentAnswer.matrix;
+            this.stagedAnswer.rows = pobj.studentAnswer.rows;
+            this.stagedAnswer.columns = pobj.studentAnswer.columns;
         }
     },
     finaliseLoad: function() {
@@ -16073,6 +16075,7 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
 });
 Numbas.partConstructors['matrix'] = util.extend(Part,MatrixEntryPart);
 });
+
 /*
 Copyright 2011-15 Newcastle University
 Licensed under the Apache License, Version 2.0 (the "License");

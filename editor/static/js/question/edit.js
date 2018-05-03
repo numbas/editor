@@ -701,7 +701,7 @@ $(document).ready(function() {
                     return;
                 }
                 if(v.definitionError()) {
-                    v.error(v.definitionError());
+                    v.error(v.definitionError().message);
                     return;
                 }
                 if(!v.definition()) {

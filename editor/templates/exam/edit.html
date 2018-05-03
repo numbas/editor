@@ -310,7 +310,7 @@
 
     <script type="text/html" id="questionResult">
         <li class="question question-result list-group-item">
-            <span class="handle btn btn-link pull-left" data-bind="click: add, visible: item_json.editable"><span class="glyphicon glyphicon-plus"></span></span>
+            <span class="handle btn btn-link pull-left" data-bind="click: add, visible: item_json.editable"><span data-bind="css: {'text-success': usedInExam()}" class="glyphicon glyphicon-plus"></span></span>
             <div class="controls pull-right">
                 <a class="preview btn btn-link" data-bind="attr: {href: previewURL()}" target="_blank" title="Preview this question"><span class="glyphicon glyphicon-play text-success"></span></a>
             </div>

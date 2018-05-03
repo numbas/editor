@@ -19,7 +19,7 @@
         <section>
 		<h2>Installation</h2>
 		<ol>
-            <li>Install Python 3 from <a href="http://python.org/download/">python.org/download</a>.</li>
+            <li>Install Python 3 from <a href="http://python.org/download/">python.org/download</a>. Don't install Python 3.6, since it won't work with the rest of the installation.</li>
             <li>
                 <em>If you already have two versions of Python installed on your PC, the command <code>python</code> might run the wrong version. The easiest way of making sure you use the right one is to create a virtual environment. Here's how to do that:</em>
                 <code class="shell">pip3 install virtualenv</code>
@@ -39,20 +39,19 @@
 				<code class="shell">git clone git://github.com/numbas/editor.git numbas_editor</code>
 			</li>
 			<li>
+					Install Pillow 3.4.2 or whichever version of Pillow matches your version of Python.
+					<ul>
+							<li>Download <a href="https://pypi.python.org/packages/0a/b1/d5b77dc8d399072d7564a849b5cedd40bfabbcfe8981c1a0352033e7280e/Pillow-3.4.2-cp35-cp35m-win32.whl#md5=82e3c3e7caa0ff3bfdaba2e80e55e3d7">Pillow-3.4.2-cp35-cp35m-win32.whl</a> from the Python package index (on 64-bit systems, it's <a href="https://pypi.python.org/packages/13/97/893f8c74e829464f86110f8a0ddefd3886f03cc45af9799185294d7c45e3/Pillow-3.4.2-cp35-cp35m-win_amd64.whl#md5=d034bb805314429fa2afe8da7ecaa935">Pillow-3.4.2-cp35-cp35m-win_amd64.whl</a></li>
+							<li>
+									Run
+									<code class="shell">pip3 install Pillow-3.4.2-cp35-cp35m-win32.whl</code>
+							</li>
+					</ul>
+			</li>
+			<li>
 				Install all the required Python modules:
                 <code class="shell">pip3 install -r numbas_editor/requirements.txt</code>
                 <code class="shell">pip3 install -r numbas_runtime/requirements.txt</code>
-            </li>
-            <li>
-                <em>You may have some trouble installing <code>Pillow</code>. If so, try installing it using a wheel file:</em>
-                <ul>
-                    <li>Download <a href="https://pypi.python.org/packages/0a/b1/d5b77dc8d399072d7564a849b5cedd40bfabbcfe8981c1a0352033e7280e/Pillow-3.4.2-cp35-cp35m-win32.whl#md5=82e3c3e7caa0ff3bfdaba2e80e55e3d7">Pillow-3.4.2-cp35-cp35m-win32.whl</a> from the Python package index (on 64-bit systems, it's <a href="https://pypi.python.org/packages/13/97/893f8c74e829464f86110f8a0ddefd3886f03cc45af9799185294d7c45e3/Pillow-3.4.2-cp35-cp35m-win_amd64.whl#md5=d034bb805314429fa2afe8da7ecaa935">Pillow-3.4.2-cp35-cp35m-win_amd64.whl</a></li>
-                    <li>
-                        Run 
-                        <code class="shell">pip3 install Pillow-3.4.2-cp35-cp35m-win32.whl</code>
-                    </li>
-                    <li>Once Pillow is successfully installed, try again to install the rest of the required modules.</li>
-                </ul>
             </li>
         </ol>
         </section>
@@ -80,6 +79,10 @@
                 </ul>
             </li>
 
+						<li>
+								If you run migrate now, you'll get an html5lib error, so you need to reinstall html5lib first:
+								<code class="shell">pip3 install -U html5lib</code>
+						</li>
             <li>
                 Sync the database:
                 <code class="shell">python manage.py migrate</code>

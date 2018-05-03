@@ -705,7 +705,7 @@ $(document).ready(function() {
                     scope.variables[v.name()] = v.value();
                 } 
                 try {
-                    var tree = jme.compile(v.definition(),scope,true);
+                    var tree = jme.compile(v.definition());
                     if(!tree) {
                         throw(new Numbas.Error('jme.variables.empty definition',{name:name}));
                     }

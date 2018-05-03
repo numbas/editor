@@ -1385,6 +1385,12 @@ $(document).ready(function() {
                 var treeToJME = Numbas.jme.display.treeToJME;
                 var wrapValue = Numbas.jme.wrapValue;
                 try {
+                    var tokens = Numbas.jme.tokenise(val.definition());
+                    if(tokens.length > 2) {
+                        if(Numbas.jme.isName(tokens[0],this.name()) && Numbas.jme.isOp(tokens[1],'=')) {
+                            throw("You don't need to include <code>"+this.name()+" =</code> at the start of your definition.");
+                        }
+                    }
                     switch(templateType) {
                     case 'anything':
                         return val.definition()+'';

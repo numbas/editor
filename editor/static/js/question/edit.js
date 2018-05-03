@@ -1256,7 +1256,18 @@ $(document).ready(function() {
             if(name.toLowerCase() in Numbas.jme.constants) {
                 return 'This variable name is reserved.';
             }
-            
+
+            var tokens = Numbas.jme.tokenise(name);
+            if(tokens.length != 1) {
+                return 'This variable name is invalid.';
+            }
+            if(tokens[0].type != 'name') {
+                return 'This variable name is reserved.';
+            }
+
+            if(typeof Numbas.jme.builtinScope.getVariable(name) !== 'undefined'){
+                return 'This variable name is reserved.';
+            }
 
             return '';
         },this);

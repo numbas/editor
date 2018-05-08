@@ -75,11 +75,18 @@
         </ul>
         </section>
 
-        <section>
-		<h2>Configuration</h2>
+		<section>
+		<h2>Database</h2>
 		<ul>
-			<li>Create database <code>numbas_editor</code></li>
-			<li>Create database user and grant privileges on
+			<li>
+				Create a MySQL database called <code>numbas_editor</code>:
+				<ul>
+					<li>
+						<code class="shell mysql">create database numbas_editor;</code>
+					</li>
+				</ul>
+			</li>
+			<li>Create a database user and grant privileges on
 			<code>numbas_editor</code> database, with a password of your choice:
 				<ul>
 					<li><code class="shell mysql">grant all privileges on numbas_editor.* to
@@ -87,15 +94,20 @@
 					</li>
 				</ul>
 			</li>
-			<li>Create Numbas directories outside the webroot:
+		</ul>
+		</section>
+
+		<section>
+		<h2>Create directories and set permissions</h2>
+		<ul>
+			<li>Create the following directories outside the web root, so they're not accessible to the public:
 			 <code class="shell">mkdir /srv/numbas</code>
 			 <code class="shell">mkdir /srv/numbas/compiler</code>
 			 <code class="shell">mkdir /srv/numbas/media</code>
 			 <code class="shell">mkdir /srv/numbas/previews</code>
 			 <code class="shell">mkdir /srv/numbas/static</code>
 			</li>
-			<li>Set the correct ownership and permissions (need file system ACLs
-            enabled on <code>/srv</code>):
+			<li>Set the correct ownership and permissions:
                 <code class="shell">cd /srv/numbas</code>
 				<code class="shell">chmod 2770 media previews</code>
 				<code class="shell">chmod 2750 compiler static</code>
@@ -103,6 +115,12 @@
 				<code class="shell">setfacl -dR -m g::rwX media previews</code>
 				<code class="shell">setfacl -dR -m g::rX compiler static</code>
 			</li>
+		</ul>
+		</section>
+
+		<section>
+		<h2>Clone the editor and compiler repositories</h2>
+		<ul>
 			<li>Clone the Numbas repository: <code class="shell">git clone git://github.com/numbas/Numbas /srv/numbas/compiler</code></li>
 			<li>Clone the editor under the webroot directory: <code class="shell">git clone git://github.com/numbas/editor /srv/www/numbas_editor</code></li>
 			<li>Install the Python module dependencies of the editor (in the virtualenv): 
@@ -110,57 +128,18 @@
 				<code class="shell">pip install -r /srv/numbas/compiler/requirements.txt</code>
 				<code class="shell">pip install mysqlclient mod_wsgi</code>
 			</li>
-			<li>Copy the editor distribution database and settings files:
-					<code class="shell">cd /srv/www/numbas_editor/numbas</code>
-					<code class="shell">cp database.py.dist database.py</code>
-					<code class="shell">cp settings.py.dist settings.py</code>
-			</li>
-			<li>Edit <code>database.py</code>
-				<ul>
-					<li>Set <code>ENGINE</code> to
-					<code>django.db.backends.mysql</code></li>
-					<li>Set <code>NAME</code> to the database name
-					(<code>numbas_editor</code>)</li>
-					<li>Set <code>USER</code> to the database user
-					(<code>numbas</code>)</li>
-					<li>Set <code>PASSWORD</code> to the database password you chose earlier.</li>
-				</ul>
-			</li>
-			<li>Edit <code>settings.py</code>:
-				<ul>
-					<li>Make sure settings in <code>GLOBAL_SETTINGS</code>,
-						<code>MEDIA_ROOT</code>, and <code>STATIC_ROOT</code> match those
-						above.</li>
-					<li><code>PREVIEW_URL</code> should be set to the URL at which
-					preview exams can be viewed (see Apache 2 config file).</li>
-					<li><code>PYTHON_EXEC</code> is the path to the Python 3
-                    executable: <code>/opt/python/numbas-editor/bin/python</code></li>
-				</ul>
-			</li>
-			<li>Sync the database:
-				<ul>
-					<li><code class="shell">cd /srv/www/numbas_editor</code></li>
-					<li><code class="shell">python manage.py migrate</code></li>
-				</ul>
-            </li>
+		</ul>
+		</section>
+
+        <section>
+		<h2>Configuration</h2>
+        <ul>
             <li>
-                Create a superuser:
-                <code>python manage.py createsuperuser</code>
+                <p>Run <code class="shell">python first_setup.py</code></p>
+                <p>This will configure the editor based on your answers to a few questions, and write <code>numbas/settings.py</code>.</p>
+                <p>If you've been following these instructions exactly, you can accept the defaults for most of the questions.</p>
+                <p>If you make any mistakes, you can run the script again, or edit <code>numbas/settings.py</code> directly.</p>
             </li>
-			<li>Set up static files: <code class="shell">python manage.py collectstatic --noinput</code></li>
-            <li>
-                Copy <code>editor/templates/index_message.html.dist</code> to <code>editor/templates/index_message.html</code>, and customise to your liking.
-            </li>
-            <li>
-                Copy <code>web/django.wsgi.dist</code> to <code>web/django.wsgi</code> and edit:
-				<ul>
-					<li>Make sure the <code>sys.path.append</code> line matches the
-					path to the editor on the file system.</li>
-					<li><code>DJANGO_SETTINGS_MODULE</code> should be set to
-					<code>numbas.settings</code> (if following the above naming
-					scheme).</li>
-				</ul>
-			</li>
 			<li>Create apache config file and enable the site.
 				<ul>
 					<li>Edit <code>/etc/apache2/sites-available/numbas_editor.conf</code> with
@@ -175,81 +154,6 @@
 				</ul>
 			</li>
 			<li>Point a web browser at the server hosting the editor.</li>
-        </ul>
-        </section>
-
-        <section>
-		<h2>Self registration</h2>
-		<p>
-			To allow users to register themselves within the editor, edit
-			<code>settings.py</code> and set <code>ALLOW_REGISTRATION = True</code>.
-			An e-mail is sent to the user, providing a link that they must click on
-			to complete the registration process.	To complete the self registration
-			configuration do the following:
-		</p>
-		<ul>
-			<li>
-				Set <code>DEFAULT_FROM_EMAIL</code> to something sensible.	This is
-				where the self-registration e-mails will appear to come from.
-			</li>
-			<li>
-				Log in to the admin interface of the editor (by going to
-                <code>http://<span class="shell-variable">server.domain</span>/admin/</code>) as the admin user you created
-				earlier.	Click on <code>Sites</code>, then <code>example.com</code>,
-				then change both fields to <code>server.domain</code>.	This sets the
-				URL that will appear in the self-registration e-mails.
-			</li>
-        </ul>
-        </section>
-
-        <section>
-		<h2>LDAP authentication</h2>
-		<p>
-			LDAP authentication is possible within the editor.	This can work in
-			combination with the default Django Model authentication backend.
-		</p>
-		
-		<ul>
-            <li>
-                Install required packages:
-                <code class="shell">apt-get install libldap2-dev libsasl2-dev</code>
-			    <code class="shell">pip install django-auth-ldap</code>
-            </li>
-			<li>GnuTLS is required if you need to perform secure LDAP lookups: <code class="shell">apt-get install libgnutls30</code></li>
-		
-			<li>Copy <code>numbas/ldap_auth.py.dist</code> to <code>numbas/ldap_auth.py</code> and edit, following the comments in that file.</li>
-    		<li>In <code>numbas/settings.py</code> uncomment the LDAP auth line in <code>AUTHENTICATION_BACKENDS</code> and the <code>ldap_auth</code> import line.</li>
-        </ul>
-        </section>
-
-        <section>
-		<h2>Shibboleth authentication</h2>
-		<p>
-			The editor also supports Shibboleth authentication, using the Django
-			Remote User backend and the <a
-				href="https://github.com/Brown-University-Library/django-shibboleth-remoteuser">django-shibboleth-remoteuser</a>
-			middleware.
-        </p>
-
-        <ul>
-            <li>
-                Install the required package:
-                <code class="shell">pip install git+https://github.com/Brown-University-Library/django-shibboleth-remoteuser.git</code>
-            </li>
-
-    		<li>
-    			Apache setup for a Shibboleth service provider (SP) is beyond the scope
-	    		of this installation guide, and depends on the setup of the local
-		    	Identity Provider (IdP).
-    		</li>
-
-			<li>Copy <code>numbas/shib_auth.py.dist</code> to <code>numbas/shib_auth.py</code>
-				and edit, following the comments in that file.</li>
-			<li>In <code>numbas/settings.py</code> uncomment the relevant line in
-				<code>MIDDLEWARE_CLASSES</code>, the <code>RemoteUser</code> backend in
-				<code>AUTHENTICATION_BACKENDS</code>, and the <code>shib_auth</code>
-                import line.
-            </li>
         </ul>
         </section>
 

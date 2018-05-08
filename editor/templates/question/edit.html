@@ -1135,7 +1135,7 @@
             <ul class="exams-list">
             {% for exam in object.exams_using_this.all %}
                 <li class="exam">
-                    <a href="{% url 'exam_edit' exam.pk exam.editoritem.slug %}">{{exam.editoritem.name}}</a> by {% user_link exam.editoritem.author %}  (<a href="{% url 'project_index' exam.editoritem.project.pk %}">{{exam.editoritem.project.name}})</a>
+                    <a href="{% url 'exam_edit' exam.pk exam.editoritem.slug %}">{{exam.editoritem.name}}</a> by {% user_link exam.editoritem.author %} in <a href="{% url 'project_index' exam.editoritem.project.pk %}">{{exam.editoritem.project.name}}</a>.
                 </li>
             {% endfor %}
             </ul>

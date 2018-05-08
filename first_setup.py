@@ -2,6 +2,7 @@ import random
 import re
 import os
 import traceback
+import urllib.parse
 
 def print_notice(s):
     print('\033[92m'+s+'\033[0m\n')
@@ -36,6 +37,7 @@ class Command(object):
         Question('PYTHON_EXEC', 'Python command:','python3'),
         Question('SITE_TITLE', 'Title of the site:','Numbas'),
         Question('ALLOW_REGISTRATION', 'Allow new users to register themselves?', True),
+        Question('DEFAULT_FROM_EMAIL', 'Address to send emails from:', ''),
     ]
     db_questions = [
         Question('DB_NAME', 'Name of the database:','numbas_editor'),
@@ -71,14 +73,25 @@ class Command(object):
 
         self.write_files()
 
+        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "numbas.settings")
+
         print_notice("Now we'll check that everything works properly")
+
         self.run_management_command('check')
 
         if self.get_input('Would you like to automatically set up the database now?',True):
             self.run_management_command('migrate')
 
-        if self.get_input('Would you like to create an admin user now?',True):
-            self.run_management_command('createsuperuser')
+        import django
+        django.setup()
+        from django.contrib.auth.models import User
+        superusers = User.objects.filter(is_superuser=True)
+        if superusers.exists():
+            if self.get_input("There's already at least one admin user.\nWould you like to create another admin user now?",False):
+                self.run_management_command('createsuperuser')
+        else:
+            if self.get_input('Would you like to create an admin user now?',True):
+                self.run_management_command('createsuperuser')
 
         print_notice("Done!")
 
@@ -144,7 +157,8 @@ class Command(object):
             (r"^SITE_TITLE = '(Numbas)'", 'SITE_TITLE'),
             (r"^DATABASES = {.*^}", set_database),
             (r"^SECRET_KEY = '()'", 'SECRET_KEY'),
-            (r"^ALLOW_REGISTRATION = (True)", 'ALLOW_REGISTRATION')
+            (r"^ALLOW_REGISTRATION = (True)", 'ALLOW_REGISTRATION'),
+            (r"^DEFAULT_FROM_EMAIL = '(admin@numbas)'", 'DEFAULT_FROM_EMAIL'),
         ]
         self.sub_file('numbas/settings.py', settings_subs)
 
@@ -155,7 +169,9 @@ class Command(object):
             (r"Welcome to (the Numbas editor)", 'SITE_TITLE'),
         ]
         self.sub_file('editor/templates/index_message.html', index_subs)
+
         self.sub_file('editor/templates/terms_of_use_content.html', [])
+
         self.sub_file('editor/templates/privacy_policy_content.html', [])
 
         if len(self.written_files):
@@ -207,7 +223,6 @@ class Command(object):
         return pattern.sub(fix, source)
 
     def run_management_command(self, *args):
-        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "numbas.settings")
         from django.core.management import ManagementUtility
         args = ['manage.py'] + list(args)
         utility = ManagementUtility(args)

@@ -1,13 +1,16 @@
 body {
 	font-size: 16px;
-	line-height: 24px;
+	line-height: 1.5em;
 	max-width: 900px;
 	margin-left: 2em;
 }
+h1,h2,h3,h4,h5,h6 {
+    line-height: 1em;
+}
 
 .index-link {
-	margin-left: -16px;
-	font-size: 12px;
+	margin-left: -1em;
+	font-size: 0.75em;
 }
 
 h2 {
@@ -30,7 +33,7 @@ code.shell {
 	border: 1px solid #bbb;
 	border-radius: 2px;
 	display: block;
-	margin: 10px 0;
+	margin: 0.5em 0;
 	color: black;
 }
 

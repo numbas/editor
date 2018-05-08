@@ -59,42 +59,19 @@
 
         <section>
 		<h2>Configuration</h2>
-        <ol>
+        <ul>
             <li>
-                Copy <code>numbas_editor/numbas/settings.py.dist</code> to <code>numbas_editor/numbas/settings.py</code>
-                <ul>
-                    <li>Change <code>MEDIA_ROOT</code> to <code>'media'</code></li>
-                    <li>Change <code>STATIC_ROOT</code> to <code>'editor/static'</code></li>
-                    <li>Change <code>NUMBAS_PATH</code> to <code>'../numbas_runtime'</code></li>
-                    <li>Change <code>PREVIEW_PATH</code> to <code>'editor/static/previews'</code>, and create that directory.</li>
-                    <li>Change <code>PREVIEW_URL</code> to <code>'/static/previews/'</code></li>
-                    <li>Change <code>PYTHON_EXEC</code> to <code>'c:/python35/python'</code> (the exact location will depend on which version of python 3 you've installed. If it's 3.3 for example, it'll be <code>c:/python33/python</code>)</li>
-                </ul>
-            </li>
-
-            <li>
-                Copy <code>database.py.dist</code> to <code>database.py</code>
-                <ul>
-                    <li>Change <code>ENGINE</code> to <code>'django.db.backends.sqlite3'</code></li>
-                    <li>Change <code>NAME</code> to <code>'database.sqlite'</code></li>
-                </ul>
-            </li>
-
-            <li>
-                Sync the database:
-                <code class="shell">python manage.py migrate</code>
-            </li>
-            <li>Copy <code>editor/templates/index_message.html.dist</code> to <code>editor/templates/index_message.html</code>, and customise it to your liking.</li>
-            <li>
-                Create a superuser (you'll be asked for a username, email address and password - the email address isn't used).
-                <code class="shell">python manage.py createsuperuser</code></li>
+                <p>Run <code class="shell">python first_setup.py</code></p>
+                <p>This will configure the editor based on your answers to a few questions, and write <code>numbas/settings.py</code>.</p>
+                <p>The default answers for most of the questions apply only to Linux systems; make the appropriate changes using the paths described in the earlier steps.</p>
+                <p>If you make any mistakes, you can run the script again, or edit <code>numbas/settings.py</code> directly.</p>
             </li>
             <li>
                 Start the server
                 <code class="shell">python manage.py runserver</code></li>
             </li>
-            <li>Open <a href="http://localhost:8000">htttp://localhost:8000</a> in your web browser. You will be able to log in using the credentials you created earlier.</li>
-        </ol>
+            <li>Open <a href="http://localhost:8000">htttp://localhost:8000</a> in your web browser.</li>
+        </ul>
         </section>
 
         <section>
@@ -105,8 +82,10 @@
             <code class="shell">cd numbas_editor</code>
             <code class="shell">git pull origin master</code>
             <code class="shell">python manage.py migrate</code>
+            <code class="shell">pip install -r requirements.txt</code>
             <code class="shell">cd ../numbas_runtime</code>
             <code class="shell">git pull origin master</code>
+            <code class="shell">pip install -r requirements.txt</code>
         </p>
 
         <p>The admin site, where you can manually edit entries in the database, is at <a href="http://localhost:8000/admin">http://localhost:8000/admin</a>.</p>

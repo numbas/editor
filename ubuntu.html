@@ -165,10 +165,12 @@
             <code class="shell">source /opt/python/numbas-editor/bin/activate</code>
             <code class="shell">cd /srv/numbas/compiler</code>
             <code class="shell">git pull origin master</code>
+            <code class="shell">pip install -r requirements.txt</code>
             <code class="shell">cd /srv/www/numbas_editor</code>
             <code class="shell">git pull origin master</code>
             <code class="shell">python manage.py migrate</code>
             <code class="shell">python manage.py collectstatic --noinput</code>
+            <code class="shell">pip install -r requirements.txt</code>
             <code class="shell">touch web/django.wsgi</code>
         </p>
 		<p>

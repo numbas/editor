@@ -1,29 +1,47 @@
 import random
 import re
 import os
+import traceback
 
 def print_notice(s):
     print('\033[92m'+s+'\033[0m\n')
 
+def path_exists(path):
+    if not os.path.exists(path):
+        print("That path doesn't exist")
+        return False
+    else:
+        return True
+
+class Question(object):
+    def __init__(self, key, question, default, validation=None):
+        self.key = key
+        self.question = question
+        self.default = default
+        self.validation = validation
+
+    def validate(self, value):
+        return self.validation is None or self.validation(value)
+
 class Command(object):
 
     questions = [
-        ('DEBUG', 'Is this installation for development?', False),
-        ('NUMBAS_PATH', 'Path of the Numbas compiler:','/srv/numbas/compiler/'),
-        ('DB_ENGINE', 'Which database engine are you using?', 'sqlite3'),
-        ('STATIC_ROOT', 'Where are static files stored?','/srv/numbas/static/'),
-        ('MEDIA_ROOT', 'Where are uploaded files stored?','/srv/numbas/media/'),
-        ('PREVIEW_PATH', 'Where are preview exams stored?','/srv/numbas/previews/'),
-        ('PREVIEW_URL', 'Base URL of previews:','/previews/'),
-        ('PYTHON_EXEC', 'Python command:','python3'),
-        ('SITE_TITLE', 'Title of the site:','Numbas'),
-        ('ALLOW_REGISTRATION', 'Allow users to register themselves?', True),
+        Question('DEBUG', 'Is this installation for development?', False),
+        Question('NUMBAS_PATH', 'Path of the Numbas compiler:','/srv/numbas/compiler/', validation=path_exists),
+        Question('DB_ENGINE', 'Which database engine are you using?', 'mysql'),
+        Question('STATIC_ROOT', 'Where are static files stored?','/srv/numbas/static/', validation=path_exists),
+        Question('MEDIA_ROOT', 'Where are uploaded files stored?','/srv/numbas/media/', validation=path_exists),
+        Question('PREVIEW_PATH', 'Where are preview exams stored?','/srv/numbas/previews/', validation=path_exists),
+        Question('PREVIEW_URL', 'Base URL of previews:','/previews/'),
+        Question('PYTHON_EXEC', 'Python command:','python3'),
+        Question('SITE_TITLE', 'Title of the site:','Numbas'),
+        Question('ALLOW_REGISTRATION', 'Allow new users to register themselves?', True),
     ]
     db_questions = [
-        ('DB_NAME', 'Name of the database:','numbas_editor'),
-        ('DB_USER', 'Database user:', 'numbas_editor'),
-        ('DB_PASSWORD', 'Database password:', ''),
-        ('DB_HOST', 'Database host:', 'localhost'),
+        Question('DB_NAME', 'Name of the database:','numbas_editor'),
+        Question('DB_USER', 'Database user:', 'numbas_editor'),
+        Question('DB_PASSWORD', 'Database password:', ''),
+        Question('DB_HOST', 'Database host:', 'localhost'),
     ]
 
     sqlite_template = """DATABASES = {{
@@ -53,6 +71,7 @@ class Command(object):
 
         self.write_files()
 
+        print_notice("Now we'll check that everything works properly")
         self.run_management_command('check')
 
         if self.get_input('Would you like to automatically set up the database now?',True):
@@ -75,12 +94,12 @@ class Command(object):
         self.values['SECRET_KEY'] =''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(50))
         self.values['PWD'] = os.getcwd()
 
-        for key, question, default in self.questions:
-            self.get_value(key,question,default)
-            if key=='DB_ENGINE':
-                if 'sqlite' not in self.values[key]:
-                    for key,question,default in self.db_questions:
-                        self.get_value(key,question,default)
+        for question in self.questions:
+            self.get_value(question)
+            if question.key=='DB_ENGINE':
+                if 'sqlite' not in self.values[question.key]:
+                    for question in self.db_questions:
+                        self.get_value(question)
                 else:
                     self.values['DB_NAME'] = self.get_input('Name of the database file:','db.sqlite3')
 
@@ -92,19 +111,20 @@ class Command(object):
 
         self.rvalues = {key: enrep(value) for key, value in self.values.items()}
 
-    def get_value(self, key, question, default):
+    def get_value(self, question):
         if os.path.exists('numbas/settings.py'):
             import numbas.settings
+            default = question.default
             try:
-                default = getattr(numbas.settings,key)
+                default = getattr(numbas.settings,question.key)
             except AttributeError:
-                if key in numbas.settings.GLOBAL_SETTINGS:
-                    default = numbas.settings.GLOBAL_SETTINGS[key]
-                elif key=='DB_ENGINE':
+                if question.key in numbas.settings.GLOBAL_SETTINGS:
+                    default = numbas.settings.GLOBAL_SETTINGS[question.key]
+                elif question.key=='DB_ENGINE':
                     default = numbas.settings.DATABASES['default']['ENGINE'].replace('django.db.backends.','')
-                elif key[:3]=='DB_' and key[3:] in numbas.settings.DATABASES['default']:
-                    default = numbas.settings.DATABASES['default'][key[3:]]
-        self.values[key] = self.get_input(question,default)
+                elif question.key[:3]=='DB_' and question.key[3:] in numbas.settings.DATABASES['default']:
+                    default = numbas.settings.DATABASES['default'][question.key[3:]]
+        self.values[question.key] = self.get_input(question.question, default, question.validation)
 
 
     def write_files(self):
@@ -195,8 +215,9 @@ class Command(object):
             utility.execute()
         except SystemExit:
             pass
+        print('')
 
-    def get_input(self, question, default):
+    def get_input(self, question, default, validation=None):
         v = None
         try:
             while v is None:
@@ -222,6 +243,8 @@ class Command(object):
                         v = default
                     if t:
                         v = t
+                if validation is not None and not validation(v):
+                    v = None
         except KeyboardInterrupt:
             print('')
             raise SystemExit
@@ -231,4 +254,8 @@ class Command(object):
 
 if __name__ == '__main__':
     command = Command()
-    command.handle()
+    try:
+        command.handle()
+    except Exception as e:
+        traceback.print_exc()
+        print_notice("The setup script failed. Look at the error message above for a description of why.")

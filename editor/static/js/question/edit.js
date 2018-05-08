@@ -2310,6 +2310,7 @@ $(document).ready(function() {
         this.question = ko.observable(null);
         this.current_question_instance = null;
         this.last_question_json = null;
+        this.last_variables = null;
         this.question_error = ko.observable(null);
         this.make_question = function() {
             if(!mt.part.q.variablesReady()) {
@@ -2317,11 +2318,13 @@ $(document).ready(function() {
             }
             try {
                 var json = mt.part.q.toJSON();
-                if(Numbas.util.objects_equal(json,mt.last_question_json)) {
+                var variables = mt.variables().map(function(v){ return {name: v.name, value: v.value} });
+                if(Numbas.util.objects_equal(json,mt.last_question_json) && Numbas.util.objects_equal(variables, mt.last_variables)) {
                     return mt.question();
                 }
                 mt.question(null);
                 mt.last_question_json = json;
+                mt.last_variables = variables;
                 var q = mt.part.q.instance();
                 mt.current_question_instance = q;
                 mt.variables().forEach(function(v) {

@@ -1,5 +1,6 @@
 ﻿from django.conf import settings
 from django.contrib.sites.models import Site
+from urllib.parse import urlunparse
 
 def global_settings(request):
     return {
@@ -13,8 +14,6 @@ def global_settings(request):
     }
 
 def site_root(request):
-    site = Site.objects.get_current()
-    protocol = 'https' if request.is_secure() else 'http'
     return {
-        'SITE_ROOT': '{}://{}'.format(protocol, site.domain)
+        'SITE_ROOT': urlunparse((request.scheme, request.get_host(), '', '', '', ''))
     }

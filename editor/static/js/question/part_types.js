@@ -875,6 +875,7 @@ function CustomPartType(data) {
     this.tabs = [];
     this.can_be_gap = data.can_be_gap;
     this.can_be_step = data.can_be_step;
+    this.has_marking_settings = true;
     this.settings_def = data.settings;
     this.marking_script = data.marking_script;
     this.source = data.source;

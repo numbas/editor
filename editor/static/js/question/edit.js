@@ -652,16 +652,14 @@ $(document).ready(function() {
         prepareVariables: function() {
             var jme = Numbas.jme;
 
-            var scopes = [jme.builtinScope];
+            var scope = new jme.Scope(jme.builtinScope);
             var extensions = this.extensions().filter(function(e){return e.used()});
             for(var i=0;i<extensions.length;i++) {
                 var extension = extensions[i].location;
                 if(extension in Numbas.extensions && 'scope' in Numbas.extensions[extension]) {
-                    scopes.push(Numbas.extensions[extension].scope);
+                    scope = new jme.Scope([scope,Numbas.extensions[extension].scope]);
                 }
             }
-
-            var scope = new jme.Scope(scopes);
 
             //create functions
             this.functions().map(function(f) {

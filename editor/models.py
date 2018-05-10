@@ -398,6 +398,17 @@ class CustomPartType(models.Model, ControlledObject):
     help_url = models.URLField(blank=True, verbose_name='URL of documentation')
     public_availability = models.CharField(max_length=10, choices=CUSTOM_PART_TYPE_PUBLIC_CHOICES, verbose_name='Public availability', default='restricted')
     ready_to_use = models.BooleanField(default=False, verbose_name='Ready to use?')
+    copy_of = models.ForeignKey('self', null=True, related_name='copies', on_delete=models.SET_NULL)
+
+    def copy(self, author, name):
+        new_type = CustomPartType.objects.get(pk=self.pk)
+        new_type.pk = None
+        new_type.id = None
+        new_type.author = author
+        new_type.name = name
+        new_type.set_short_name(slugify(name))
+        new_type.copy_of = self
+        return new_type
 
     def __str__(self):
         return self.name
@@ -412,6 +423,17 @@ class CustomPartType(models.Model, ControlledObject):
     def owner(self):
         return self.author
 
+    def set_short_name(self, slug):
+        built_in_part_types = ['jme','numberentry','patternmatch','matrix','gapfill','information','extension','1_n_2','m_n_2','m_n_x']
+        if slug in built_in_part_types:
+            slug = 'custom-'+slug
+        short_name = slug
+        i = 0
+        while CustomPartType.objects.exclude(pk=self.pk).filter(short_name=short_name).exists():
+            i += 1
+            short_name = '{}-{}'.format(slug,i)
+        self.short_name = short_name
+
     def has_access(self, user, levels):
         if 'view' in levels:
             if self.published:
@@ -424,6 +446,9 @@ class CustomPartType(models.Model, ControlledObject):
             return True
 
         return False
+
+    def can_be_copied_by(self, user):
+        return user.is_superuser or self.owner == user or self.published
 
     @property
     def published(self):

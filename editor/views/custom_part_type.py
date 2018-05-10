@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.shortcuts import redirect
 
 from editor.models import CustomPartType, CUSTOM_PART_TYPE_PUBLIC_CHOICES, CUSTOM_PART_TYPE_INPUT_WIDGETS
-from editor.forms import NewCustomPartTypeForm, UpdateCustomPartTypeForm
+from editor.forms import NewCustomPartTypeForm, UpdateCustomPartTypeForm, CopyCustomPartTypeForm
 from editor.views.generic import AuthorRequiredMixin
 
 import json
@@ -127,3 +127,27 @@ class UnPublishView(PublishView):
         messages.add_message(self.request, messages.INFO, 'This custom part type has been unpublished from the public database.')
         return redirect(self.get_success_url())
 
+class CopyView(generic.FormView, generic.edit.ModelFormMixin):
+
+    model = CustomPartType
+    template_name = 'custom_part_type/copy.html'
+    form_class = CopyCustomPartTypeForm
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return super(CopyView, self).dispatch(request, *args, **kwargs)
+
+    def get_initial(self):
+        data = self.initial.copy()
+        data['name'] = "{}'s copy of {}".format(self.request.user.first_name, self.object.name)
+        return data
+
+    def form_valid(self, form):
+        obj = self.get_object()
+        if not obj.can_be_copied_by(self.request.user):
+            return http.HttpResponseForbidden("You may not copy this custom part type.")
+
+        new_obj = obj.copy(author=self.request.user, name=form.cleaned_data.get('name'))
+        new_obj.save()
+
+        return redirect(new_obj.get_absolute_url())

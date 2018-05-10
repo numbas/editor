@@ -543,15 +543,7 @@ class NewCustomPartTypeForm(forms.ModelForm):
         custom_part_type = super(NewCustomPartTypeForm, self).save(commit=False)
 
         slug = slugify(custom_part_type.name)
-        built_in_part_types = ['jme','numberentry','patternmatch','matrix','gapfill','information','extension','1_n_2','m_n_2','m_n_x']
-        if slug in built_in_part_types:
-            slug = 'custom-'+slug
-        short_name = slug
-        i = 0
-        while CustomPartType.objects.filter(short_name=short_name).exists():
-            i += 1
-            short_name = '{}-{}'.format(slug,i)
-        custom_part_type.short_name = short_name
+        custom_part_type.set_short_name(slug)
         
         custom_part_type.author = self._user
 
@@ -559,6 +551,20 @@ class NewCustomPartTypeForm(forms.ModelForm):
             custom_part_type.save()
             self.save_m2m()
         return custom_part_type
+
+class CopyCustomPartTypeForm(forms.ModelForm):
+    class Meta:
+        model = CustomPartType
+        fields = ('name',)
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control'}),
+        }
+
+    def clean_name(self):
+        name = self.cleaned_data.get('name')
+        if name == self.instance.name:
+            raise forms.ValidationError("Please pick a new name.")
+        return name
 
 class BootstrapFieldMixin(object):
     def widget_attrs(self, widget):

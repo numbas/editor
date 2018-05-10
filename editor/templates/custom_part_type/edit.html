@@ -94,13 +94,26 @@
     <div class="row">
         <div class="col-sm-1 col-md-2 tabs">
             <div class="navbar navbar-blank">
-                <ul class="nav nav-pills nav-stacked" data-bind="foreach: tabs">
+                <ul class="nav nav-pills nav-stacked">
+                    {% with can_copy=object|can_be_copied_by:request.user %}
+                    <li class="{% if not can_copy %}disabled{% endif %}">
+                        <a class="text-warning" href="{% if can_copy %}{% url 'custom_part_type_copy' object.pk %}{% endif %}" target="_blank" title="{% if can_copy %}Create your own copy of this part type{% else %}This item's licence doesn't allow you to modify it.{% endif %}">
+                            <span class="glyphicon glyphicon-duplicate"></span>
+                            <span class="hidden-sm">Make a copy</span>
+                        </a>
+                    </li>
+                    {% endwith %}
+
+                    <li role="separator" class="divider"></li>
+
+                    <!-- ko foreach: tabs -->
                     <li data-bind="visible: visible, css: {active: $root.currentTab() == $data}">
                         <a href="#" data-bind="click: $root.currentTab">
                             <span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> 
                             <span class="hidden-sm" data-bind="text: title"></span>
                         </a>
                     </li>
+                    <!-- /ko -->
                 </ul>
             </div>
         </div>
@@ -128,8 +141,8 @@
 
                     <div class="form-group">
                         {% if editable %}
-                            <input class="form-control" data-bind="textInput: help_url">
                             <label>URL of documentation</label>
+                            <input class="form-control" data-bind="textInput: help_url">
                         {% else %}
                             {% if object.help_url %}
                                 <a class="helplink" href="{{object.help_url}}" target="_blank"><span class="glyphicon glyphicon-question-sign"></span> Documentation for this part type</a>

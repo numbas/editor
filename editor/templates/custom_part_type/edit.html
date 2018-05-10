@@ -112,10 +112,11 @@
                         </a>
                     </li>
                     {% endif %}
+                </ul>
 
-                    <li role="separator" class="divider"></li>
+                <hr>
 
-                    <!-- ko foreach: tabs -->
+                <ul class="nav nav-pills nav-stacked" data-bind="foreach: tabs">
                     <li data-bind="visible: visible, css: {active: $root.currentTab() == $data}">
                         <a href="#" data-bind="click: $root.currentTab">
                             <span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> 

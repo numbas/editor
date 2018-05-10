@@ -1,3 +1,6 @@
+.name-header .glyphicon {
+    margin-right: 0.2em;
+}
 choice-maker .form-group {
     display: flex;
 }

@@ -484,6 +484,9 @@ class Resource(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     file = models.FileField(upload_to='question-resources/', max_length=255) 
 
+    def __str__(self):
+        return self.file.name
+
     @property
     def resource_url(self):
         return 'resources/%s' % self.file.name
@@ -738,7 +741,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
 
     subjects = models.ManyToManyField(Subject)
     topics = models.ManyToManyField(Topic)
-    taxonomy_nodes = models.ManyToManyField(TaxonomyNode)
+    taxonomy_nodes = models.ManyToManyField(TaxonomyNode, related_name='editoritems')
 
     watching_users = models.ManyToManyField(User, related_name='watched_items')
 
@@ -1492,7 +1495,7 @@ class Question(EditorModel, NumbasObject, ControlledObject):
     metadata = JSONField(blank=True)
     created = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
-    resources = models.ManyToManyField('Image', blank=True)
+    resources = models.ManyToManyField('Image', blank=True, related_name='questions')
     copy_of = models.ForeignKey('self', null=True, related_name='copies', on_delete=models.SET_NULL)
     extensions = models.ManyToManyField(Extension, blank=True)
 

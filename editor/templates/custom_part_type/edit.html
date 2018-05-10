@@ -104,6 +104,15 @@
                     </li>
                     {% endwith %}
 
+                    {% if editable %}
+                    <li class="">
+                        <a href="{% url 'custom_part_type_delete' object.pk %}" class="text-danger" title="Delete this part type permanently">
+                            <span class="glyphicon glyphicon-remove"></span> 
+                            <span class="hidden-sm">Delete</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
                     <li role="separator" class="divider"></li>
 
                     <!-- ko foreach: tabs -->

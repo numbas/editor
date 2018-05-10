@@ -8,6 +8,7 @@ from django.db.models import signals, Q
 from django.db.models.functions import Lower
 from django.contrib.contenttypes.models import ContentType
 from django.dispatch import receiver
+from django.urls import reverse
 
 from django_thumbs.db.models import ImageWithThumbsField
 
@@ -87,6 +88,9 @@ class UserProfile(models.Model):
 
     def public_timeline(self):
         return self.user.timelineitems.order_by('-date')
+
+    def get_absolute_url(self):
+        return reverse('view_profile', args=(self.pk,))
 
 class BasketQuestion(models.Model):
     class Meta:

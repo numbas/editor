@@ -15,6 +15,7 @@ class ImageWithThumbnailField(serializers.ImageField):
             return None
 
         use_url = getattr(self, 'use_url', api_settings.UPLOADED_FILES_USE_URL)
+        request = self.context.get('request', None)
 
         if use_url:
             if not getattr(value, 'url', None):
@@ -22,18 +23,23 @@ class ImageWithThumbnailField(serializers.ImageField):
                 return None
             if self.size:
                 url = value._url_for_size(self.size)
+                if request is not None:
+                    return request.build_absolute_uri(url)
+                return url
             else:
-                url = value.url
-            request = self.context.get('request', None)
-            if request is not None:
-                return request.build_absolute_uri(url)
-            return url
+                out = {}
+                for w,h in value.field.sizes:
+                    url = value._url_for_size((w,h))
+                    if request is not None:
+                        url = request.build_absolute_uri(url)
+                    out['{}x{}'.format(w,h)] = url
+                return out
         return value.name
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     profile = serializers.HyperlinkedIdentityField(view_name='view_profile')
     full_name = serializers.CharField(source='get_full_name')
-    avatar = ImageWithThumbnailField(source='userprofile.avatar',use_url=True,size=(150,150))
+    avatar = ImageWithThumbnailField(source='userprofile.avatar',use_url=True)
     class Meta:
         model = User
         fields = ('url', 'profile', 'full_name','pk', 'avatar')

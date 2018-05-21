@@ -3,22 +3,51 @@ from editor.models import Project, NewExam, NewQuestion, EditorItem, Resource
 import editor.models
 from django.contrib.auth.models import User
 from rest_framework import serializers
+from rest_framework.settings import api_settings
+
+class ImageWithThumbnailField(serializers.ImageField):
+    def __init__(self,*args,**kwargs):
+        self.size = kwargs.pop('size') if 'size' in kwargs else None
+        super(ImageWithThumbnailField,self).__init__(*args,**kwargs)
+
+    def to_representation(self, value):
+        if not value:
+            return None
+
+        use_url = getattr(self, 'use_url', api_settings.UPLOADED_FILES_USE_URL)
+
+        if use_url:
+            if not getattr(value, 'url', None):
+                # If the file has not been saved it may not have a URL.
+                return None
+            if self.size:
+                url = value._url_for_size(self.size)
+            else:
+                url = value.url
+            request = self.context.get('request', None)
+            if request is not None:
+                return request.build_absolute_uri(url)
+            return url
+        return value.name
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     profile = serializers.HyperlinkedIdentityField(view_name='view_profile')
     full_name = serializers.CharField(source='get_full_name')
+    avatar = ImageWithThumbnailField(source='userprofile.avatar',use_url=True,size=(150,150))
     class Meta:
         model = User
-        fields = ('url', 'profile', 'full_name','pk')
+        fields = ('url', 'profile', 'full_name','pk', 'avatar')
 
 
 class ProjectSerializer(serializers.HyperlinkedModelSerializer):
     homepage = serializers.HyperlinkedIdentityField(view_name='project_index')
     url = serializers.HyperlinkedIdentityField(view_name='project-detail')
     owner = UserSerializer()
+    num_questions = serializers.IntegerField(source='num_published_questions')
+    num_exams = serializers.IntegerField(source='num_published_exams')
     class Meta:
         model = Project
-        fields = ('name','pk','description','owner','homepage','url')
+        fields = ('name','pk','description','owner','homepage','url','num_questions','num_exams')
         depth=2
 
 class EditorItemHyperlinkedIdentityField(serializers.HyperlinkedIdentityField):

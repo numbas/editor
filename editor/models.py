@@ -198,6 +198,12 @@ class Project(models.Model, ControlledObject):
     def __str__(self):
         return self.name
 
+    def num_published_questions(self):
+        return self.items.questions().filter(published=True).count()
+
+    def num_published_exams(self):
+        return self.items.exams().filter(published=True).count()
+
 class ProjectAccess(models.Model, TimelineMixin):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='project_memberships', on_delete=models.CASCADE)

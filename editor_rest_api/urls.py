@@ -1,4 +1,4 @@
-from django.conf.urls import patterns,url,include
+from django.conf.urls import url,include
 
 from rest_framework import routers
 from . import viewsets
@@ -11,7 +11,7 @@ router.register(r'questions', viewsets.QuestionViewSet,base_name='question')
 router.register(r'resources',viewsets.ResourceViewSet)
 router.register(r'available-exams', viewsets.AvailableExamsViewSet,base_name='available-exams')
 
-urls = patterns('',
+urls = [
     url(r'^', include(router.urls)),
     url(r'^handshake$',viewsets.handshake),
-)
+]

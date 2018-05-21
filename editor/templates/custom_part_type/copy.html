@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block title %}Copy {{object.name}} - {{block.super}}{% endblock title %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{% block custom_part_type_page_header %}Copy {{object.name}}{% endblock %}</h1>
+</div>
+
+<p>Please pick a new name for your copy of {{object.name}}.</p>
+<form class="form-horizontal" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% for field in form %}
+        <div class="form-group {% if field.errors %}has-error{% endif %}">
+            <label class="col-sm-3 control-label">{{field.label}}</label>
+            <div class="col-sm-9">
+                {{field}}
+                {% if field.errors %}
+                    <ul class="help-block list-unstyled">
+                        {% for error in field.errors %}
+                        <li class="alert alert-danger">{{error}}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="help-block">{{field.help_text}}</div>
+            </div>
+        </div>
+    {% endfor %}
+    <div class="form-group">
+        <div class="col-sm-offset-3 col-sm-9">
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <a class="btn btn-link" href="{{object.get_absolute_url}}">Cancel</a>
+        </div>
+    </div>
+</form>
+{% endblock content %}

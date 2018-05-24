@@ -239,7 +239,6 @@ $(document).ready(function() {
 
         this.addPart = function(type) {
             var adding = q.addingPart();
-            console.log(adding);
             var p = new Part(q,adding.parent,adding.parentList);
             p.setType(type.name);
             adding.parentList.push(p);

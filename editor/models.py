@@ -1249,8 +1249,8 @@ class NewQuestion(models.Model):
         q2.editoritem = ei2
         q2.save()
 
-        q2.resources = self.resources.all()
-        q2.extensions = self.extensions.all()
+        q2.resources.set(self.resources.all())
+        q2.extensions.set(self.extensions.all())
         q2.save()
 
         return q2

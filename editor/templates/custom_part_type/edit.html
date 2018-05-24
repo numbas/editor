@@ -153,6 +153,10 @@
                         {% if editable %}
                             <label>URL of documentation</label>
                             <input class="form-control" data-bind="textInput: help_url">
+                            <p class="help-block">
+                                {% helplink 'custom-part-types/reference.html#term-url-of-documentation' subject='the URL of documentation field' %}
+                                Provide a link to any more documentation about your custom part type.
+                            </p>
                         {% else %}
                             {% if object.help_url %}
                                 <a class="helplink" href="{{object.help_url}}" target="_blank"><span class="glyphicon glyphicon-question-sign"></span> Documentation for this part type</a>
@@ -167,6 +171,7 @@
 
                 <!-- Part settings -->
                 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='settings'}">
+                    <p><a target="numbasquickhelp" href="{{HELP_URL}}custom-part-types/reference.html#part-settings"><span class="glyphicon glyphicon-question-sign"></span> Help with part settings</a></p>
                     <ul class="list-unstyled" data-bind="foreach: settings">
                         <li>
                             <div class="panel" data-bind="css: {'panel-default': valid(), 'panel-warning': !valid()}">
@@ -349,12 +354,14 @@
 
                 <!-- Answer input -->
                 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='input'}">
+                    <p><a target="numbasquickhelp" href="{{HELP_URL}}custom-part-types/reference.html#answer-input"><span class="glyphicon glyphicon-question-sign"></span> Help with answer input methods</a></p>
                     <form class="form-horizontal" data-bind="submit: Editor.noop">
-                        {% selectproperty 'input_widget' 'Answer input method' options_text='niceName' options='input_widgets' help_url='custom_part_type.html#term-answer-input-method' %}
+                        {% selectproperty 'input_widget' 'Answer input method' options_text='niceName' options='input_widgets' help_url='custom-part-types/reference.html#answer-input-methods' %}
 
                         <div class="form-group">
                             <label class="{{form_label_class}} control-label">
                                 Expected answer
+                                {% helplink 'custom-part-types/reference.html#term-expected-answer' subject='the expected answer field' %}
                             </label>
                             <div class="{{form_control_class}}">
                                 <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: input_options.correctAnswer, codemirrorMode: 'jme'"></textarea>
@@ -370,13 +377,16 @@
                         <div class="form-group">
                             <label class="{{form_label_class}} control-label">
                                 Input hint
+                                {% helplink 'custom-part-types/reference.html#term-input-hint' subject='the input hint field' %}
                             </label>
                             <div class="{{form_control_class}}">
                                 <static-dynamic-setting params="option: input_options.hint, type_hint: 'string'{% if not editable %}, disable: true{% endif %}">
                                     {% text_input 'static_value' %}
                                 </static-dynamic-setting>
                                 {% if editable %}
-                                <p class="help-block">Give the student any necessary information about how to enter their answer.</p>
+                                <p class="help-block">
+                                    Give the student any necessary information about how to enter their answer.
+                                </p>
                                 {% endif %}
                             </div>
                         </div>
@@ -554,6 +564,7 @@
 
                 <!-- Marking algorithm -->
                 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='marking'}">
+                    <p><a target="numbasquickhelp" href="{{HELP_URL}}custom-part-types/reference.html#marking"><span class="glyphicon glyphicon-question-sign"></span> Help with marking</a></p>
                     <div class="container-fluid">
                         <div class="row">
                             <div class="col-sm-12 col-md-8 col-lg-9" data-bind="visible: marking_notes().length==0">

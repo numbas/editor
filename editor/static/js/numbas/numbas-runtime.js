@@ -6389,23 +6389,22 @@ jme.variables = /** @lends Numbas.jme.variables */ {
      */
     makeVariables: function(todo,scope,condition,computeFn)
     {
-        var nscope = new jme.Scope(scope);
         computeFn = computeFn || jme.variables.computeVariable;
         var conditionSatisfied = true;
         if(condition) {
             var condition_vars = jme.findvars(condition);
             condition_vars.map(function(v) {
-                computeFn(v,todo,nscope,undefined,computeFn);
+                computeFn(v,todo,scope,undefined,computeFn);
             });
-            conditionSatisfied = jme.evaluate(condition,nscope).value;
+            conditionSatisfied = jme.evaluate(condition,scope).value;
         }
         if(conditionSatisfied) {
             for(var x in todo)
             {
-                computeFn(x,todo,nscope,undefined,computeFn);
+                computeFn(x,todo,scope,undefined,computeFn);
             }
         }
-        return {variables: nscope.variables, conditionSatisfied: conditionSatisfied, scope: nscope};
+        return {variables: scope.variables, conditionSatisfied: conditionSatisfied, scope: scope};
     },
     /** Collect together a ruleset, evaluating all its dependencies first.
      * @param {String} name - the name of the ruleset to evaluate
@@ -15662,13 +15661,14 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
         this.definition.settings.forEach(function(s) {
             var name = s.name;
             var value = raw_settings[name];
+            console.log(name,s.input_type,value);
             if(!p.setting_evaluators[s.input_type]) {
                 p.error('part.custom.unrecognised input type',{input_type:s.input_type});
             }
             try {
                 settings[name] = p.setting_evaluators[s.input_type].call(p, s, value);
             } catch(e) {
-                throw(new Numbas.Error('part.custom.error evaluating setting',{setting: name, error: e.message}));
+                p.error('part.custom.error evaluating setting',{setting: name, error: e.message});
             }
         });
         var settings_scope = new jme.Scope([scope,{variables:{settings:new jme.types.TDict(settings)}}]);
@@ -15758,10 +15758,13 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
         },
         'mathematical_expression': function(def, value) {
             var scope = this.getScope();
+            if(!value.trim()) {
+                throw(new Numbas.Error("part.custom.empty setting"));
+            }
             if(def.subvars) {
                 value = jme.subvars(value, scope);
             }
-            return new jme.types.TExpression(value);
+            var result = new jme.types.TExpression(value);
         },
         'checkbox': function(def, value) {
             return new jme.types.TBool(value);
@@ -15771,6 +15774,9 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
         },
         'code': function(def, value) {
             var scope = this.getScope();
+            if(!value.trim()) {
+                throw(new Numbas.Error('part.custom.empty setting'));
+            }
             if(def.evaluate) {
                 return scope.evaluate(value);
             } else {
@@ -15806,6 +15812,7 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
 });
 CustomPart = Numbas.parts.CustomPart = util.extend(Part,CustomPart);
 });
+
 /*
 Copyright 2011-15 Newcastle University
    Licensed under the Apache License, Version 2.0 (the "License");

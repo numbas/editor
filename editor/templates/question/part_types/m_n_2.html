@@ -4,7 +4,7 @@
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div class="main-settings">
             <div data-bind="visible: $parent.steps().length">
-                {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='question/reference.html#term-penalty-for-revealing-steps' %}
+                {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='question/parts/reference.html#term-penalty-for-revealing-steps' %}
             </div>
             {% property 'minMarks' 'Minimum marks' help_url='question/parts/multiple-choice.html#term-minimum-marks' %}
             {% property 'maxMarks' 'Maximum marks' min='minMarks' help_url='question/parts/multiple-choice.html#term-maximum-marks' zero_means='no maximum' %}
@@ -31,8 +31,8 @@
         </div>
 
         <hr>
-        {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='question/reference.html#term-show-correct-answer-on-reveal' %}
-        {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/reference.html#term-show-score-feedback-icon' %}    
+        {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='question/parts/reference.html#term-show-correct-answer-on-reveal' %}
+        {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/parts/reference.html#term-show-score-feedback-icon' %}    
     </form>
 </section>
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='choices'}">

@@ -455,7 +455,7 @@
                         <div class="col-sm-11 col-md-9 col-lg-10 tab-content">
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='prompt'}">
                                 <p class="help-block">
-                                    {% helplink 'question/reference.html#term-prompt' subject='the part prompt' %}
+                                    {% helplink 'question/parts/reference.html#term-prompt' subject='the part prompt' %}
                                     Ask the student a question, and give any hints about how they should answer this part.
                                 </p>
 
@@ -479,10 +479,10 @@
 
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='marking-algorithm'}">
                                 <form class="form-horizontal" data-bind="submit: Editor.noop">
-                                    {% booleanproperty 'use_custom_algorithm' 'Use custom marking algorithm?' help_url='question/reference.html#term-use-custom-marking-algorithm' %}
+                                    {% booleanproperty 'use_custom_algorithm' 'Use custom marking algorithm?' help_url='question/parts/reference.html#term-use-custom-marking-algorithm' %}
 
                                     <div data-bind="fadeVisible: use_custom_algorithm">
-                                        {% booleanproperty 'extendBaseMarkingAlgorithm' 'Extend base marking algorithm?' help_url='question/reference.html#term-extend-base-marking-algorithm' %}
+                                        {% booleanproperty 'extendBaseMarkingAlgorithm' 'Extend base marking algorithm?' help_url='question/parts/reference.html#term-extend-base-marking-algorithm' %}
                                         <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: customMarkingAlgorithm, codemirrorMode: 'jme'"></textarea>
                                         <p class="alert alert-danger" data-bind="html: markingScriptError, visible: markingScriptError"></p>
                                     </div>
@@ -773,7 +773,7 @@
 
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='scripts'}">
                                 <p class="help-block">
-                                    {% helplink 'question/reference.html#scripts' subject='part scripts' %}
+                                    {% helplink 'question/parts/reference.html#scripts' subject='part scripts' %}
                                     When you need to change the way this part works beyond the available options, you can write JavaScript code to be executed at the times described below.
                                 </p>
                                 <form class="form-inline" data-bind="foreach: scripts, submit: Editor.noop">
@@ -795,7 +795,7 @@
                             </section>
                             <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='adaptivemarking'}">
                                 <p class="help-block">
-                                    {% helplink 'question/reference.html#adaptive-marking' subject='adaptive marking' %}
+                                    {% helplink 'question/parts/reference.html#adaptive-marking' subject='adaptive marking' %}
                                     To account for errors made by the student in earlier calculations, replace question variables with answers to earlier parts.
                                 </p>
                                 <div class="variable-replacements">
@@ -829,7 +829,7 @@
                                             <li><span class="btn btn-sm btn-danger monospace" data-bind="text: $data,click: $root.goToVariable" title="Edit this variable"></span></li>
                                         </ul></p>
                                         <p>These variables have some random elements, which means they're not guaranteed to have the same value each time the student submits an answer. You should define new variables to store the random elements, so that they remain the same each time this part is marked.</p>
-                                        <p><a href="{{HELP_URL}}question/reference.html#adaptive-marking">More information about this problem</a></p>
+                                        <p><a href="{{HELP_URL}}question/parts/reference.html#adaptive-marking">More information about this problem</a></p>
                                     </div>
 
                                     <div class="text-right">

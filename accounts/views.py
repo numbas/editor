@@ -15,6 +15,7 @@ from django.conf import settings
 from django.views.generic import UpdateView, DetailView, ListView, TemplateView
 from django.contrib.auth.models import User
 from django.contrib.sites.requests import RequestSite
+from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from django.contrib import messages
 from django.http import Http404, HttpResponse
@@ -56,7 +57,7 @@ class ActivationView(registration.views.ActivationView):
     template_name = 'registration/activation_complete.html'
 
     def activate(self, activation_key):
-        activated_user = RegistrationProfile.objects.activate_user(activation_key)
+        activated_user = RegistrationProfile.objects.activate_user(activation_key, get_current_site(self.request))
         if activated_user:
             signals.user_activated.send(sender=self.__class__,
                                         user=activated_user,

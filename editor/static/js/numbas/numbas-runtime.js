@@ -8001,8 +8001,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             while(runs<q.variablesTest.maxRuns && !conditionSatisfied) {
                 runs += 1;
                 scope = new jme.Scope([q.scope]);
-                var result = jme.variables.makeVariables(q.variablesTodo,q.scope,condition);
-                scope.variables = result.variables;
+                var result = jme.variables.makeVariables(q.variablesTodo,scope,condition);
                 conditionSatisfied = result.conditionSatisfied;
             }
             if(!conditionSatisfied) {
@@ -15661,7 +15660,6 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
         this.definition.settings.forEach(function(s) {
             var name = s.name;
             var value = raw_settings[name];
-            console.log(name,s.input_type,value);
             if(!p.setting_evaluators[s.input_type]) {
                 p.error('part.custom.unrecognised input type',{input_type:s.input_type});
             }

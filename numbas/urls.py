@@ -2,6 +2,7 @@ from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.conf import settings
 from django.contrib import admin
+from django.urls import path
 import django.contrib.auth.views
 import notifications.urls
 
@@ -14,6 +15,7 @@ urlpatterns = [
     url(r'^logout/', django.contrib.auth.views.logout, {'next_page':'/'}, name='logout'),
 
     url(r'', include('accounts.urls')),
+    path('auth/', include('django.contrib.auth.urls')),
 ]
 
 if 'editor_rest_api' in settings.INSTALLED_APPS:

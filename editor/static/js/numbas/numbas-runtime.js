@@ -1272,6 +1272,7 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
             this.functions[fn.name].push(fn);
             delete this._resolved_functions[fn.name];
         }
+        this.deleted.functions[fn.name] = false;
     },
     /** Mark the given variable name as deleted from the scope.
      * @param {String} name
@@ -1308,7 +1309,9 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
      * @param {Numbas.jme.token} value
      */
     setVariable: function(name, value) {
-        this.variables[name.toLowerCase()] = value;
+        name = name.toLowerCase();
+        this.variables[name] = value;
+        this.deleted.variables[name] = false;
     },
     /** Get all definitions of the given function name.
      * @param {String} name
@@ -1341,6 +1344,7 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
      */
     setRuleset: function(name, rules) {
         this.rulesets[name] = this.rulesets[name.toLowerCase()] = rules;
+        this.deleted.rulesets[name.toLowerCase()] = false;
     },
     /** Collect together all items from the given collection
      * @param {String} collection - name of the collection. A property of this Scope object, i.e. one of `variables`, `functions`, `rulesets`.
@@ -1408,14 +1412,15 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
     /** Evaluate an expression in this scope - equivalent to `Numbas.jme.evaluate(expr,this)`
      * @param {JME} expr
      * @param {Object.<Numbas.jme.token|Object>} [variables] - Dictionary of variables to sub into expression. Values are automatically wrapped up as JME types, so you can pass raw JavaScript values.
+     * @param {Boolean} [noSubstitution] - if true, don't substitute variable values from the scope into the expression.
      * @returns {Numbas.jme.token}
      */
-    evaluate: function(expr,variables) {
+    evaluate: function(expr,variables, noSubstitution) {
         var scope = this;
         if(variables) {
             scope = new Scope([this]);
             for(var name in variables) {
-                scope.variables[name] = jme.wrapValue(variables[name]);
+                scope.setVariable(name,jme.wrapValue(variables[name]));
             }
         }
         //if a string is given instead of an expression tree, compile it to a tree
@@ -1428,7 +1433,9 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
         if(!tree) {
             return null;
         }
-        tree = jme.substituteTree(tree,scope,true);
+        if(!noSubstitution) {
+            tree = jme.substituteTree(tree,scope,true);
+        }
         var tok = tree.tok;
         switch(tok.type)
         {
@@ -1442,7 +1449,7 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
                 var value = [];
                 for(var i=0;i<tree.args.length;i++)
                 {
-                    value[i] = jme.evaluate(tree.args[i],scope);
+                    value[i] = scope.evaluate(tree.args[i],null,noSubstitution);
                 }
                 tok = new TList(value);
             }
@@ -1452,7 +1459,7 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
                 var value = {};
                 for(var i=0;i<tree.args.length;i++) {
                     var kp = tree.args[i];
-                    value[kp.tok.key] = jme.evaluate(kp.args[0],scope);
+                    value[kp.tok.key] = scope.evaluate(kp.args[0],null,noSubstitution);
                 }
                 tok = new TDict(value);
             }
@@ -1469,7 +1476,7 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
             }
         case 'name':
             var v = scope.getVariable(tok.name.toLowerCase());
-            if(v) {
+            if(v && !noSubstitution) {
                 return v;
             } else {
                 tok = new TName(tok.name);
@@ -1484,7 +1491,7 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
             }
             else {
                 for(var i=0;i<tree.args.length;i++) {
-                    tree.args[i] = jme.evaluate(tree.args[i],scope);
+                    tree.args[i] = scope.evaluate(tree.args[i],null,noSubstitution);
                 }
                 var matchedFunction;
                 var fns = scope.getFunction(op);
@@ -3293,10 +3300,10 @@ jme.substituteTreeOps.isset = function(tree,scope,allowUnbound) {
 function mapOverList(lambda,names,list,scope) {
     var olist = list.map(function(v) {
         if(typeof(names)=='string') {
-            scope.variables[names] = v;
+            scope.setVariables(names,v);
         } else {
             names.forEach(function(name,i) {
-                scope.variables[name] = v.value[i];
+                scope.setVariable(name,v.value[i]);
             });
         }
         return scope.evaluate(lambda);
@@ -3317,7 +3324,7 @@ jme.mapFunctions = {
     },
     'matrix': function(lambda,name,matrix,scope) {
         return new TMatrix(matrixmath.map(matrix,function(n) {
-            scope.variables[name] = new TNum(n);
+            scope.setVariable(name,new TNum(n));
             var o = scope.evaluate(lambda);
             if(o.type!='number') {
                 throw(new Numbas.Error("jme.map.matrix map returned non number"))
@@ -3327,7 +3334,7 @@ jme.mapFunctions = {
     },
     'vector': function(lambda,name,vector,scope) {
         return new TVector(vectormath.map(vector,function(n) {
-            scope.variables[name] = new TNum(n);
+            scope.setVariable(name,new TNum(n));
             var o = scope.evaluate(lambda);
             if(o.type!='number') {
                 throw(new Numbas.Error("jme.map.vector map returned non number"))
@@ -3393,7 +3400,7 @@ newBuiltin('filter',['?',TName,'?'],TList,null, {
         scope = new Scope(scope);
         var name = args[1].tok.name;
         var value = list.filter(function(v) {
-            scope.variables[name] = v;
+            scope.setVariable(name,v);
             return jme.evaluate(lambda,scope).value;
         });
         return new TList(value);
@@ -5468,18 +5475,16 @@ Rule.prototype = /** @lends Numbas.jme.rules.Rule.prototype */ {
      */
     matchConditions: function(match,scope)
     {
+        scope = new Numbas.jme.Scope(scope);
         for(var i=0;i<this.conditions.length;i++)
         {
-            var c = Numbas.util.copyobj(this.conditions[i],true);
-            c = jme.substituteTree(c,new jme.Scope([{variables:match}]));
-            try
-            {
-                var result = jme.evaluate(c,scope);
+            var condition_tree = Numbas.util.copyobj(this.conditions[i],true);
+            condition_tree = jme.substituteTree(condition_tree,new jme.Scope([{variables:match}]));
+            try {
+                var result = scope.evaluate(condition_tree, null, true);
                 if(result.value==false)
                     return false;
-            }
-            catch(e)
-            {
+            } catch(e) {
                 return false;
             }
         }
@@ -6225,7 +6230,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
             scope = new jme.Scope(scope);
             for(var j=0;j<args.length;j++)
             {
-                scope.variables[fn.paramNames[j]] = args[j];
+                scope.setVariable(fn.paramNames[j],args[j]);
             }
             return jme.evaluate(this.tree,scope);
         }
@@ -6374,11 +6379,12 @@ jme.variables = /** @lends Numbas.jme.variables */ {
             throw(new Numbas.Error('jme.variables.empty definition',{name:name}));
         }
         try {
-            scope.variables[name] = jme.evaluate(v.tree,scope);
+            var value = jme.evaluate(v.tree,scope);
+            scope.setVariable(name,value);
         } catch(e) {
             throw(new Numbas.Error('jme.variables.error evaluating variable',{name:name,message:e.message}));
         }
-        return scope.variables[name];
+        return value;
     },
     /** Evaluate dictionary of variables
      * @param {Numbas.jme.variables.variable_data_dict} todo - dictionary of variables mapped to their definitions
@@ -7327,6 +7333,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
                         try {
                             var scope = this.errorCarriedForwardScope();
                         } catch(e) {
+                            console.log(e);
                             if(!result) {
                                 this.giveWarning(e.originalMessage);
                                 this.answered = false;
@@ -8057,7 +8064,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             throw(new Numbas.Error('question.loaded name mismatch'));
         }
         for(var x in qobj.variables) {
-            q.scope.variables[x] = qobj.variables[x];
+            q.scope.setVariable(x,qobj.variables[x]);
         }
         q.signals.trigger('variablesSet');
         q.signals.on('partsGenerated', function() {

@@ -8,17 +8,20 @@
 	</head>
 	<body>
 		<a class="index-link" href="index.html">&larr; Numbas installation instructions</a>
-		<h1>Running a personal instance of the editor on a Mac</h1>
+		<h1>Running a personal instance of the editor on Ubuntu</h1>
 
 		<p>
-			These are outline instructions on setting up the Numbas editor on a Mac, for personal use.
-            For instances where multiple users need access to the editor, we recommend following the <a href="ubuntu.html">Ubuntu</a> installation instructions.
+			These are outline instructions on setting up the Numbas editor on a machine running Ubuntu 16.04+, for personal use.
+            For instances where multiple users need access to the editor, we recommend following the <a href="ubuntu-web.html">Ubuntu web server</a> installation instructions.
         </p>
 
         <section>
 		<h2>Installation</h2>
 		<ol>
-			<li>Install Python 3 <a href="http://python.org/download/">python.org/download</a>.</li>
+			<li>
+				Install Git and Python 3 using the packaging system: 
+                <code class="shell">apt install git python3</code>
+			</li>
             <li>
                 <em>If you already have two versions of Python installed on your PC, the command <code>python</code> might run the wrong version. The easiest way of making sure you use the right one is to create a virtual environment. Here's how to do that:</em>
                 <code class="shell">pip3 install virtualenv</code>
@@ -27,11 +30,11 @@
                 You'll need to activate the virtual environment each time you want to use it.
             </li>
 			<li>
-            Either download the Numbas runtime tools <a href="https://github.com/numbas/Numbas/archive/master.zip">from github</a> and extract to a folder called <code>numbas_runtime</code>, or use <a href="https://git-scm.com/">git</a> to clone the repository:
+                Either download the Numbas runtime tools <a href="https://github.com/numbas/Numbas/archive/master.zip">from github</a> and extract to a folder called <code>numbas_runtime</code>, or use <a href="https://git-scm.com/">git</a> to clone the repository:
 				<code class="shell">git clone git://github.com/numbas/Numbas.git numbas_runtime</code>
 			</li>
 			<li>
-			Either download the Numbas editor <a href="https://github.com/numbas/editor/archive/master.zip">from github</a> and extract to a folder called <code>numbas_editor</code>, or use git to clone the repository:
+    			Either download the Numbas editor <a href="https://github.com/numbas/editor/archive/master.zip">from github</a> and extract to a folder called <code>numbas_editor</code>, or use git to clone the repository:
 				<code class="shell">git clone git://github.com/numbas/editor.git numbas_editor</code>
 			</li>
 			<li>
@@ -48,7 +51,7 @@
             <li>
                 <p>Run <code class="shell">python first_setup.py</code></p>
                 <p>This will configure the editor based on your answers to a few questions, and write <code>numbas/settings.py</code>.</p>
-                <p>The default answers for most of the questions apply only to Linux systems; make the appropriate changes using the paths described in the earlier steps.</p>
+                <p>The default answers for most of the questions apply only to multi-user instances; make the appropriate changes using the paths described in the earlier steps.</p>
                 <p>If you make any mistakes, you can run the script again, or edit <code>numbas/settings.py</code> directly.</p>
             </li>
             <li>

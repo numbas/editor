@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Numbas editor - Installation instructions</title>
+        <link rel="stylesheet" href="normalize.css"></link>
+        <link rel="stylesheet" href="style.css"></link>
+    </head>
+    <body>
+		<a class="index-link" href="index.html">&larr; Numbas installation instructions</a>
+
+        <h1>Upgrading from Numbas 2.0 to 3.0</h1>
+
+        <p>Follow the instructions below, using a shell in your <code>numbas_editor</code> directory.</p>
+        <ul>
+            <li>
+                Get the latest code:
+                <code class="shell">git pull</code>
+            </li>
+            <li>
+                Upgrade Python libraries:
+                <code class="shell">pip install --upgrade -r requirements.txt</code>
+            </li>
+            <li>
+                Run the new setup script. It will use your existing settings and perform the rest of the upgrade jobs.
+                <code class="shell">python first_setup.py</code>
+            </li>
+            <li>
+                The editor now has "terms of use" and "privacy policy" pages. You must edit those: <code>editor/templates/terms_of_use_content.html</code> and <code>editor/templates/privacy_policy_content.html</code>.
+            </li>
+        </ul>
+        <p>That's it!</p>
+        <p>If you have any problems, email <a href="mailto:numbas@ncl.ac.uk">numbas@ncl.ac.uk</a>.</p>
+
+        <footer>
+            <p><a href="http://www.numbas.org.uk">Numbas</a> is an open-source, web-based e-assessment system.</p>
+        </footer>
+    </body>
+</html>

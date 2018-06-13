@@ -647,10 +647,8 @@ $(document).ready(function() {
             this.questionScope(results.scope);
         },
 
-        // get everything ready to compute variables - make functions, and work out dependency graph
-        prepareVariables: function() {
+        baseScope: function() {
             var jme = Numbas.jme;
-
             var scope = new jme.Scope(jme.builtinScope);
             var extensions = this.extensions().filter(function(e){return e.used()});
             for(var i=0;i<extensions.length;i++) {
@@ -659,6 +657,14 @@ $(document).ready(function() {
                     scope = new jme.Scope([scope,Numbas.extensions[extension].scope]);
                 }
             }
+            return scope;
+        },
+
+        // get everything ready to compute variables - make functions, and work out dependency graph
+        prepareVariables: function() {
+            var jme = Numbas.jme;
+
+            var scope = this.baseScope();
 
             //create functions
             this.functions().map(function(f) {
@@ -1071,7 +1077,7 @@ $(document).ready(function() {
          * Returns a promise which resolves once the question is ready to use
          */
         instance: function() {
-            var q = Numbas.createQuestionFromJSON(this.toJSON());
+            var q = Numbas.createQuestionFromJSON(this.toJSON(),1,null,null,this.baseScope());
             return q;
         },
 

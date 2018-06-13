@@ -13515,6 +13515,9 @@ var json = Numbas.json = {
                 if(target_attr in target && typeof target[target_attr] == 'string') {
                     value += '';
                 }
+                if(target_attr in target && typeof target[target_attr] == 'number') {
+                    value = parseFloat(value);
+                }
                 target[target_attr] = value;
             }
         }
@@ -14364,7 +14367,7 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
      * @returns {String}
      */
     input_widget: function() {
-        return 'number';
+        return 'string';
     },
     /** Options for this part's input widget
      * @returns {Object}
@@ -14456,6 +14459,7 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
 });
 Numbas.partConstructors['numberentry'] = util.extend(Part,NumberEntryPart);
 });
+
 /*
 Copyright 2011-15 Newcastle University
    Licensed under the Apache License, Version 2.0 (the "License");

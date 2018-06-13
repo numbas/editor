@@ -6498,7 +6498,8 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         var out = {};
         for(var name in dependants) {
             for(var i=0;i<ancestors.length;i++) {
-                if(dependants[name].contains(ancestors[i])) {
+                var ancestor = ancestors[i].toLowerCase()
+                if(dependants[name].contains(ancestor)) {
                     out[name] = todo[name];
                     break;
                 }
@@ -7349,6 +7350,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
                         var result_replacement = this.markAgainstScope(scope,existing_feedback);
                         if(!(result_original) || (result_replacement.answered && result_replacement.credit>result_original.credit)) {
                             result = result_replacement;
+                            result.finalised_result.states.splice(0,0,{op: Numbas.marking.FeedbackOps.FEEDBACK, message: R('part.marking.used variable replacements')});
                             result.markingFeedback.splice(0,0,{op: 'comment', message: R('part.marking.used variable replacements')});
                         }
                     }

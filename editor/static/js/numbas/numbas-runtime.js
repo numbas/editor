@@ -6532,14 +6532,12 @@ jme.variables = /** @lends Numbas.jme.variables */ {
             switch(token.type){
             case 'html':
                 return token.value;
-            case 'number':
-                return Numbas.math.niceNumber(token.value);
             case 'string':
                 return token.value.replace(/\\([{}])/g,'$1');
             case 'list':
                 return '[ '+token.value.map(function(item){return doToken(item)}).join(', ')+' ]';
             default:
-                return jme.display.treeToJME({tok:token});
+                return jme.tokenToDisplayString(token);
             }
         }
         var out = [];
@@ -7684,6 +7682,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         this.credit *= factor;
         this.markingFeedback.push({
             op: 'multiply_credit',
+            credit: this.credit - oCredit,
             factor: factor,
             message: message
         });

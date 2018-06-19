@@ -16,9 +16,25 @@ part_types.models = [
         name: 'gapfill', 
         niceName: 'Gap-fill', 
         has_marks: true,
+        has_marking_settings: true,
         can_be_gap: false,
         can_be_step: false,
         widget: '',
+
+        model: function(part) {
+            var model = {
+                all_gaps_same_type: ko.computed(function() {
+                    var gaps = part.gaps();
+                    if(gaps.length==0) {
+                        return true;
+                    }
+                    var type = gaps[0].type().name;
+                    return gaps.every(function(g) { return g.type().name==type; });
+                }),
+                sortAnswers: ko.observable(false)
+            };
+            return model;
+        },
 
         toJSON: function(data,part) {
             if(part.gaps().length)
@@ -27,6 +43,7 @@ part_types.models = [
                     return g.toJSON();
                 });
             }
+            data.sortAnswers = this.sortAnswers();
         },
         load: function(data,part) {
             if(data.gaps)
@@ -35,6 +52,7 @@ part_types.models = [
                     part.gaps.push(new Editor.question.Part(part.q,part,part.gaps,g));
                 });
             }
+            tryLoad(data,['sortAnswers'],this);
         }
     },
     {

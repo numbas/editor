@@ -4,5 +4,8 @@
         <div data-bind="fadeVisible: $parent.steps().length">
             {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='question/parts/reference.html#term-penalty-for-revealing-steps' %}
         </div>
+        <div data-bind="fadeVisible: all_gaps_same_type">
+            {% booleanproperty 'sortAnswers' 'Sort student\'s answers before marking?' help_url='question/parts/numberentry.html#term-sort-students-answers-before-marking' %}
+        </div>
     </form>
 </section>

@@ -1777,6 +1777,11 @@ $(document).ready(function() {
             return out.join(', ');
         },this);
 
+        this.steps = ko.observableArray([]);
+        this.stepsPenalty = ko.observable(0);
+
+        this.gaps = ko.observableArray([]);
+
         this.types = Editor.part_types.models.map(function(data){return new PartType(p,data);});
 
         this.isRootPart = ko.computed(function() {
@@ -1903,11 +1908,6 @@ $(document).ready(function() {
                 return this.marks();
             }
         },this);
-
-        this.steps = ko.observableArray([]);
-        this.stepsPenalty = ko.observable(0);
-
-        this.gaps = ko.observableArray([]);
 
         this.startAddingGap = function() {
             q.addingPart({kind:'gap',parent:p, parentList: p.gaps, availableTypes: q.gapTypes});

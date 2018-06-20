@@ -2432,6 +2432,29 @@ var varsUsed = jme.varsUsed = function(tree) {
             return [];
     }
 };
+
+/** Compare two tokens, for the purposes of sorting.
+ * Uses JavaScript comparison for numbers, strings and booleans, and {@link Numbas.jme.compareTrees} for everything else, or when types differ.
+ *
+ * @param {Numbas.jme.token} a
+ * @param {Numbas.jme.token} b
+ * @returns {Number} -1 if `a < b`, 1 if `a > b`, else 0.
+ */
+var compareTokens = jme.compareTokens = function(a,b) {
+    if(a.type!=b.type) {
+        return jme.compareTrees({tok:a},{tok:b});
+    } else {
+        switch(a.type) {
+            case 'number':
+            case 'string':
+            case 'boolean':
+                return a.value>b.value ? 1 : a.value<b.value ? -1 : 0;
+            default:
+                return jme.compareTrees({tok:a},{tok:b});
+        }
+    }
+}
+
 /** Compare two trees.
  *
  * * Compare lists of variables lexically using {@link Numbas.jme.varsUsed}; longest goes first if one is a prefix of the other
@@ -2523,6 +2546,8 @@ var compareTrees = jme.compareTrees = function(a,b) {
                 }
             }
             break;
+        case 'expression':
+            return jme.compareTrees(a.tok.tree, b.tok.tree);
         case 'number':
             var na = a.tok.value;
             var nb = b.tok.value;
@@ -2679,18 +2704,6 @@ newBuiltin('in',[TNum,TRange],TBool,function(x,r) {
 newBuiltin('list',[TRange],TList,function(range) {
     return math.rangeToList(range).map(function(n){return new TNum(n)});
 });
-newBuiltin('dict',[TList],TDict,null, {
-    evaluate: function(args,scope) {
-        var value = {};
-        if(args.length>0) {
-            var items = scope.evaluate(args[0]).value;
-            items.forEach(function(item) {
-                value[item.value[0].value] = item.value[1];
-            });
-        }
-        return new TDict(value);
-    }
-});
 newBuiltin('dict',['*keypair'],TDict,null,{
     evaluate: function(args,scope) {
         if(args.length==0) {
@@ -2701,11 +2714,17 @@ newBuiltin('dict',['*keypair'],TDict,null,{
             args.forEach(function(kp) {
                 value[kp.tok.key] = jme.evaluate(kp.args[0],scope);
             });
-        } else {
+        } else if(args.length==1) {
             var list = scope.evaluate(args[0]);
-            list.value.forEach(function(pair) {
-                value[pair.value[0].value] = pair.value[1];
+            var items = list.value;
+            if(list.type!='list' || !items.every(function(item) {return item.type=='list' && item.value.length==2 && item.value[0].type=='string';})) {
+                throw(new Numbas.Error('jme.typecheck.no right type definition',{op:'dict'}));
+            }
+            items.forEach(function(item) {
+                value[item.value[0].value] = item.value[1];
             });
+        } else {
+            throw(new Numbas.Error('jme.typecheck.no right type definition',{op:'dict'}));
         }
         return new TDict(value);
     }
@@ -3488,14 +3507,7 @@ newBuiltin('sort',[TList],TList, null, {
     {
         var list = args[0];
         var newlist = new TList(list.vars);
-        newlist.value = list.value.slice().sort(function(a,b){
-            if(math.gt(a.value,b.value))
-                return 1;
-            else if(math.lt(a.value,b.value))
-                return -1;
-            else
-                return 0;
-        });
+        newlist.value = list.value.slice().sort(jme.compareTokens);
         return newlist;
     }
 });
@@ -3503,13 +3515,8 @@ newBuiltin('sort_destinations',[TList],TList,null, {
     evaluate: function(args,scope) {
         var list = args[0];
         var newlist = new TList(list.vars);
-        var sorted = list.value.map(function(v,i){ return {value:v.value,i:i} }).sort(function(a,b){
-            if(math.gt(a.value,b.value))
-                return 1;
-            else if(math.lt(a.value,b.value))
-                return -1;
-            else
-                return 0;
+        var sorted = list.value.map(function(v,i){ return {tok:v,i:i} }).sort(function(a,b){
+            return jme.compareTokens(a.tok,b.tok);
         });
         var inverse = [];
         for(var i=0;i<sorted.length;i++) {
@@ -8777,10 +8784,13 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
     }
 
     function submit_part(part,answer) {
+        var originalAnswer = part.stagedAnswer;
         if(answer!==undefined) {
             part.stagedAnswer = answer;
         }
         part.submit();
+        part.stagedAnswer = originalAnswer;
+        part.setStudentAnswer();
         return jme.wrapValue({
             credit: part.credit,
             marks: part.marks,

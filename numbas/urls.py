@@ -9,13 +9,10 @@ import notifications.urls
 admin.autodiscover()
 
 urlpatterns = [
-        url(r'^admin/', admin.site.urls),
+    url(r'^admin/', admin.site.urls),
 
-    url(r'^login/', django.contrib.auth.views.login, {'template_name':'auth/login.html'}, name='login'),
-    url(r'^logout/', django.contrib.auth.views.logout, {'next_page':'/'}, name='logout'),
-
+    path('', include('django.contrib.auth.urls')),
     url(r'', include('accounts.urls')),
-    path('auth/', include('django.contrib.auth.urls')),
 ]
 
 if 'editor_rest_api' in settings.INSTALLED_APPS:

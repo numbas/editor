@@ -2002,12 +2002,7 @@ $(document).ready(function() {
             var data = this.toJSON();
             var p = new Part(this.q,this.parent(),this.parentList,data);
             this.parentList.push(p);
-            p.scrollTo();
-        },
-
-        scrollTo: function() {
-            var p = this;
-            setTimeout(function() {window.scrollTo(0,$('.part[data-path="'+p.path()+'"]').offset().top-10)},0);
+            this.q.currentPart(p);
         },
 
         replaceWithGapfill: function() {
@@ -2057,7 +2052,6 @@ $(document).ready(function() {
                 this.parentList.remove(this);
                 ko.tasks.runEarly();
                 this.parentList.splice(i-1,0,this);
-                this.scrollTo();
             }
         },
 
@@ -2066,7 +2060,6 @@ $(document).ready(function() {
             this.parentList.remove(this);
             ko.tasks.runEarly();
             this.parentList.splice(i+1,0,this);
-            this.scrollTo();
         },
 
         setType: function(name) {

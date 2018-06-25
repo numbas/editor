@@ -11,5 +11,9 @@
 {% block timelineitem_class %}less-important{% endblock %}
 
 {% block content %}
-{% if not include_object_link %}{{item.object.verb|capfirst}} this.{% endif %}
+{% if item.object.verb == "created" and item.timeline.copy_of %}
+    Created this as a copy of <a href="{{item.timeline.copy_of.get_absolute_url}}">{{item.timeline.copy_of.name}}</a>.
+{% else %}
+    {% if not include_object_link %}{{item.object.verb|capfirst}} this.{% endif %}
+{% endif %}
 {% endblock content %}

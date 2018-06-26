@@ -288,7 +288,7 @@
                 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='history'}">
 
                     <div class="contributors">
-                        <h4>Contributors</h4>
+                        <h3>Contributors</h3>
                         <ul class="list-inline">
                             {% for contributor in object.editoritem.contributors.all %}
                             <li class="contributor">
@@ -303,6 +303,8 @@
                             {% endfor %}
                         </ul>
                     </div>
+
+                    <h3>History and Feedback</h3>
 
                     <div data-bind="visible: !commentwriter.writingComment() && !restorepointwriter.writingComment()">
                         <button class="btn btn-primary" data-bind="click: commentwriter.writingComment" type="button"><span class="glyphicon glyphicon-comment"></span> Write a comment</button>

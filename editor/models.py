@@ -1355,7 +1355,12 @@ class NewExam(models.Model):
                 questions = question_groups[i]
             else:
                 questions = []
-            g['questions'] = [q.editoritem.as_numbasobject(request).data for q in questions]
+            def question_object(q):
+                data = q.editoritem.as_numbasobject(request).data
+                del data['question_groups']
+                data.update(q.editoritem.parsed_content.data)
+                return data
+            g['questions'] = [question_object(q) for q in questions]
         data['resources'] = self.resource_paths
         
         return obj

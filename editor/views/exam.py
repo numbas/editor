@@ -6,7 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.contrib import messages
 from django.template.loader import render_to_string
-from django.urls import reverse
+from django.urls import reverse, resolve, Resolver404
 from django.db import transaction
 from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django import http
@@ -68,24 +68,8 @@ class ZipView(editor.views.editoritem.ZipView):
 
 
 class SourceView(editor.views.editoritem.SourceView):
-
     """Return the .exam version of an exam"""
-
     model = NewExam
-
-    def get(self, request, *args, **kwargs):
-        try:
-            e = self.get_object()
-        except (NewExam.DoesNotExist, TypeError) as err:
-            status = {
-                "result": "error",
-                "message": str(err),
-                "traceback": traceback.format_exc(),
-            }
-            return HttpResponseServerError(json.dumps(status),
-                                           content_type='application/json')
-        else:
-            return self.source(e.editoritem)
     
     
 class CreateView(editor.views.editoritem.CreateView):
@@ -105,6 +89,7 @@ class CreateView(editor.views.editoritem.CreateView):
         with transaction.atomic(), reversion.create_revision():
             self.make_exam(form)
             self.exam.save()
+            reversion.set_user(self.user)
 
         return redirect(self.get_success_url())
 
@@ -131,6 +116,20 @@ class UploadView(editor.views.editoritem.CreateView):
 
         ei.save()
         ei.set_licence(project.default_licence)
+        contributors = content.get('contributors',[])
+        root = self.request.build_absolute_uri('/')
+        for c in contributors:
+            if c['profile_url'][:len(root)]==root:
+                rest = c['profile_url'][len(root):]
+                try:
+                    match = resolve(rest)
+                    if match.url_name != 'view_profile':
+                        raise Resolver404()
+                    pk = match.kwargs['pk']
+                    user = User.objects.get(pk=pk)
+                    Contributor.objects.create(item=ei,user=user)
+                except (Resolver404,User.DoesNotExist):
+                    Contributor.objects.create(item=ei,name=c['name'],profile_url=c['profile_url'])
 
         exam = NewExam()
         exam.editoritem = ei

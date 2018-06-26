@@ -15,7 +15,7 @@ from django.contrib import messages
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.db.models import Q, Min, Max, Count
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django import http
 from django.shortcuts import redirect
 from django.views import generic
@@ -27,7 +27,7 @@ import reversion
 from django_tables2.config import RequestConfig
 
 from editor.tables import EditorItemTable
-from editor.models import EditorItem, Project, Access, Licence, PullRequest, Taxonomy
+from editor.models import EditorItem, Project, Access, Licence, PullRequest, Taxonomy, Contributor
 import editor.models
 import editor.views.generic
 from editor.views.errors import forbidden
@@ -104,6 +104,11 @@ class CopyView(ProjectQuerysetMixin, generic.FormView, generic.edit.ModelFormMix
         obj2.editoritem.project = form.cleaned_data.get('project')
         obj2.editoritem.save()
         obj2.editoritem.access_rights.clear()
+        for c in obj.editoritem.contributors.all():
+            try:
+                Contributor.objects.create(item=obj2.editoritem,user=c.user,name=c.name,profile_url=c.profile_url)
+            except IntegrityError:
+                continue
 
         if self.request.is_ajax():
             return http.HttpResponse(json.dumps(obj2.summary()), content_type='application/json')
@@ -163,6 +168,7 @@ class BaseUpdateView(generic.UpdateView):
             self.object.editoritem.ability_levels.clear()
             self.object.editoritem.ability_levels.add(*form.cleaned_data['ability_levels'])
             self.object.editoritem.tags.set(*[t.strip() for t in self.data.get('tags', [])])
+            Contributor.objects.get_or_create(item=self.object.editoritem,user=self.user)
 
             self.object.save()
 
@@ -455,7 +461,7 @@ class CompileObject():
 
 class PreviewView(generic.DetailView, CompileObject):
     def preview(self, obj):
-        numbasobject = obj.as_numbasobject    #need to catch errors
+        numbasobject = obj.as_numbasobject(self.request)
         location = obj.filename
         switches = ['-c']
         try:
@@ -468,7 +474,7 @@ class PreviewView(generic.DetailView, CompileObject):
         
 class ZipView(generic.DetailView, CompileObject):
     def download(self, obj, scorm=False):
-        numbasobject = obj.as_numbasobject    #need to catch errors
+        numbasobject = obj.as_numbasobject(self.request)
 
         switches = ['-cz']
 
@@ -492,12 +498,32 @@ class ZipView(generic.DetailView, CompileObject):
             return response
 
 class SourceView(generic.DetailView):
-    def source(self, obj):
-        source = str(obj.as_numbasobject)
-        response = http.HttpResponse(source, 'text/plain')
-        response['Content-Disposition'] = 'attachment; filename={}.exam'.format(obj.filename)
+
+    def get_editoritem(self):
+        obj = self.get_object()
+        self.editoritem = obj.editoritem
+        return self.editoritem
+
+    def get(self, request, *args, **kwargs):
+        try:
+            ei = self.get_editoritem()
+        except (ObjectDoesNotExist, TypeError) as err:
+            status = {
+                "result": "error",
+                "message": str(err),
+                "traceback": traceback.format_exc(),}
+            return http.HttpResponseServerError(json.dumps(status),
+                                           content_type='application/json')
+
+        source = self.get_source()
+        response = http.HttpResponse(str(source), 'text/plain')
+        response['Content-Disposition'] = 'attachment; filename={}.exam'.format(ei.filename)
         response['Cache-Control'] = 'max-age=0,no-cache,no-store'
         return response
+
+    def get_source(self):
+        source = self.editoritem.as_numbasobject(self.request)
+        return source
 
 class PublishView(generic.UpdateView):
     model = EditorItem

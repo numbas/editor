@@ -6,13 +6,20 @@
 
 {% block heading %}<span class="glyphicon glyphicon-{{item.object.icon}}"></span> {% user_link item.object.user %}{% endblock %}
 
-{% block on_object %}{{item.object.verb}} <a href="{{item.timeline.get_absolute_url}}"><span class="glyphicon glyphicon-{{item.timeline.icon}}"></span> {{item.timeline.name}}</a>{% endblock on_object %}
+{% block on_object %}
+{% if item.object.verb == "created" and item.timeline.copy_of %}
+copied <a href="{{item.timeline.copy_of.get_absolute_url}}">{{item.timeline.copy_of.name}}</a> to 
+{% else %}
+{{item.object.verb}} 
+{% endif %}
+<a href="{{item.timeline.get_absolute_url}}"><span class="glyphicon glyphicon-{{item.timeline.icon}}"></span> {{item.timeline.name}}</a>
+{% endblock on_object %}
 
 {% block timelineitem_class %}less-important{% endblock %}
 
 {% block content %}
 {% if item.object.verb == "created" and item.timeline.copy_of %}
-    Created this as a copy of <a href="{{item.timeline.copy_of.get_absolute_url}}">{{item.timeline.copy_of.name}}</a>.
+    {% if not include_object_link %}Created this as a copy of <a href="{{item.timeline.copy_of.get_absolute_url}}">{{item.timeline.copy_of.name}}</a>.{% endif %}
 {% else %}
     {% if not include_object_link %}{{item.object.verb|capfirst}} this.{% endif %}
 {% endif %}

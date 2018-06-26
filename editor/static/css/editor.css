@@ -76,6 +76,10 @@ body.mce-fullscreen .mce-fullscreen {
     padding: 3px 2px;
 }
 
+.contributors {
+    margin-bottom: 3em;
+}
+
 .timeline-write-comment {
     margin-bottom: 2em;
 }

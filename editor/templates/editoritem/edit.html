@@ -287,6 +287,23 @@
                 <!-- Editing history -->
                 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='history'}">
 
+                    <div class="contributors">
+                        <h4>Contributors</h4>
+                        <ul class="list-inline">
+                            {% for contributor in object.editoritem.contributors.all %}
+                            <li class="contributor">
+                                {% if contributor.user %}
+                                    {% user_thumbnail contributor.user 40 36 link=True %}
+                                    {% user_link contributor.user %}
+                                {% else %}
+                                    {% user_thumbnail None 40 36 link=True full_name=contributor.name url=contributor.profile_url %}
+                                    <a class="user-link" target="_blank" href="{{contributor.profile_url}}">{{contributor.name}}</a>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
                     <div data-bind="visible: !commentwriter.writingComment() && !restorepointwriter.writingComment()">
                         <button class="btn btn-primary" data-bind="click: commentwriter.writingComment" type="button"><span class="glyphicon glyphicon-comment"></span> Write a comment</button>
                         <button class="btn btn-success" data-bind="click: restorepointwriter.writingComment" type="button"><span class="glyphicon glyphicon-save"></span> Set a checkpoint</button>

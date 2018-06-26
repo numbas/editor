@@ -16,6 +16,7 @@ except ImportError:
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.staticfiles import finders
 from django.core.exceptions import ValidationError
 from django.urls import reverse
@@ -705,6 +706,34 @@ class EditorItemManager(models.Manager):
     def published(self):
         return self.filter(published=True)
 
+class Contributor(models.Model):
+    item = models.ForeignKey('EditorItem', on_delete=models.CASCADE, related_name='contributors')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+    name = models.CharField(max_length=200,blank=True)
+    profile_url = models.URLField(blank=True)
+
+    def __str__(self):
+        name = self.user.get_full_name() if self.user else self.name
+        return '{} on "{}"'.format(name,self.item)
+
+    def as_json(self, request):
+        if self.user:
+            user = self.user
+            profile_url = reverse('view_profile',args=(user.pk,))
+            if request:
+                profile_url = request.build_absolute_uri(profile_url)
+            return {
+                'name': user.get_full_name(),
+                'profile_url': profile_url,
+            }
+        else:
+            return {
+                'name': self.name,
+                'profile_url': self.profile_url,
+            }
+
+    class Meta:
+        unique_together = (("item","user"))
 
 @reversion.register
 class EditorItem(models.Model, NumbasObject, ControlledObject):
@@ -719,7 +748,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
 
     author = models.ForeignKey(User, related_name='own_items', on_delete=models.CASCADE)
     public_access = models.CharField(default='view', editable=True, choices=PUBLIC_ACCESS_CHOICES, max_length=6)
-    access_rights = models.ManyToManyField(User, through='Access', blank=True, editable=False, related_name='accessed_questions+')
+    access_rights = models.ManyToManyField(User, through='Access', blank=True, editable=False, related_name='accessed_items')
     licence = models.ForeignKey(Licence, null=True, blank=True, on_delete=models.SET_NULL)
     project = models.ForeignKey(Project, null=True, related_name='items', on_delete=models.CASCADE)
 
@@ -819,12 +848,11 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
         elif hasattr(self, 'question'):
             return self.question
 
-    @property
-    def as_numbasobject(self):
-        if self.item_type == 'exam':
-            return self.exam.as_numbasobject
-        elif self.item_type == 'question':
-            return self.question.as_numbasobject
+    def as_numbasobject(self,request):
+        obj = self.exam if self.item_type=='exam' else self.question
+        numbasobj= obj.as_numbasobject(request)
+        numbasobj.data['contributors'] = [c.as_json(request) for c in self.contributors.all()]
+        return numbasobj
 
     @property
     def icon(self):
@@ -906,6 +934,11 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
 def author_watches_editoritem(instance, created, **kwargs):
     if created:
         instance.watching_users.add(instance.author)
+
+@receiver(signals.post_save, sender=EditorItem)
+def author_contributes_to_editoritem(instance, created, **kwargs):
+    if created:
+        Contributor.objects.get_or_create(item=instance,user=instance.author)
 
 @receiver(signals.pre_save, sender=EditorItem)
 def set_editoritem_name(instance, **kwargs):
@@ -1209,8 +1242,7 @@ class NewQuestion(models.Model):
     def resource_paths(self):
         return [(r.file.name, r.file.path) for r in self.resources.all()]
 
-    @property
-    def as_numbasobject(self):
+    def as_numbasobject(self,request):
         self.editoritem.get_parsed_content()
         data = OrderedDict([
             ('name', self.editoritem.name),
@@ -1218,7 +1250,7 @@ class NewQuestion(models.Model):
             ('custom_part_types', [p.as_json() for p in self.custom_part_types.all()]),
             ('resources', self.resource_paths),
             ('navigation', {'allowregen': True, 'showfrontpage': False, 'preventleave': False}),
-            ('question_groups', [{'pickingStrategy':'all-ordered', 'questions':[self.editoritem.parsed_content.data]}])
+            ('question_groups', [{'pickingStrategy':'all-ordered', 'questions':[self.editoritem.parsed_content.data]}]),
         ])
         obj = numbasobject.NumbasObject(data=data, version=self.editoritem.parsed_content.version)
         return obj
@@ -1311,8 +1343,7 @@ class NewExam(models.Model):
         else:
             return os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'], 'themes', self.theme)
 
-    @property
-    def as_numbasobject(self):
+    def as_numbasobject(self,request):
         obj = numbasobject.NumbasObject(self.editoritem.content)
         data = obj.data
         question_groups = self.question_groups
@@ -1324,7 +1355,7 @@ class NewExam(models.Model):
                 questions = question_groups[i]
             else:
                 questions = []
-            g['questions'] = [numbasobject.NumbasObject(q.editoritem.content).data for q in questions]
+            g['questions'] = [q.editoritem.as_numbasobject(request).data for q in questions]
         data['resources'] = self.resource_paths
         
         return obj

@@ -75,24 +75,8 @@ class ZipView(editor.views.editoritem.ZipView):
 
 
 class SourceView(editor.views.editoritem.SourceView):
-
-    """Compile a question as a SCORM package and return the .zip file"""
-
+    """Serve the source .exam file for this question"""
     model = NewQuestion
-
-    def get(self, request, *args, **kwargs):
-        try:
-            q = self.get_object()
-        except (NewQuestion.DoesNotExist, TypeError) as err:
-            status = {
-                "result": "error",
-                "message": str(err),
-                "traceback": traceback.format_exc(),}
-            return http.HttpResponseServerError(json.dumps(status),
-                                           content_type='application/json')
-        else:
-            return self.source(q.editoritem)
-
 
 class CreateView(editor.views.editoritem.CreateView):
     
@@ -109,6 +93,7 @@ class CreateView(editor.views.editoritem.CreateView):
             self.question = NewQuestion()
             self.question.editoritem = ei
             self.question.save()
+            reversion.set_user(self.user)
 
         return redirect(self.get_success_url())
     

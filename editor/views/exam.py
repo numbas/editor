@@ -117,22 +117,26 @@ class UploadView(editor.views.editoritem.CreateView):
         ei.save()
         ei.set_licence(project.default_licence)
         obj = ei.get_parsed_content()
+
+        def add_contributors(item,contributor_data):
+            root = self.request.build_absolute_uri('/')
+            for c in contributor_data:
+                if c['profile_url'][:len(root)]==root:
+                    rest = c['profile_url'][len(root):]
+                    try:
+                        match = resolve(rest)
+                        if match.url_name != 'view_profile':
+                            raise Resolver404()
+                        pk = match.kwargs['pk']
+                        user = User.objects.get(pk=pk)
+                        Contributor.objects.create(item=item,user=user)
+                    except (Resolver404,User.DoesNotExist):
+                        Contributor.objects.create(item=item,name=c['name'],profile_url=c['profile_url'])
+                else:
+                    Contributor.objects.create(item=item,name=c['name'],profile_url=c['profile_url'])
+
         contributors = obj.data.get('contributors',[])
-        root = self.request.build_absolute_uri('/')
-        for c in contributors:
-            if c['profile_url'][:len(root)]==root:
-                rest = c['profile_url'][len(root):]
-                try:
-                    match = resolve(rest)
-                    if match.url_name != 'view_profile':
-                        raise Resolver404()
-                    pk = match.kwargs['pk']
-                    user = User.objects.get(pk=pk)
-                    Contributor.objects.create(item=ei,user=user)
-                except (Resolver404,User.DoesNotExist):
-                    Contributor.objects.create(item=ei,name=c['name'],profile_url=c['profile_url'])
-            else:
-                Contributor.objects.create(item=ei,name=c['name'],profile_url=c['profile_url'])
+        add_contributors(ei,contributors)
 
         exam = NewExam()
         exam.editoritem = ei
@@ -161,6 +165,10 @@ class UploadView(editor.views.editoritem.CreateView):
                 extensions = Extension.objects.filter(location__in=exam_object.data['extensions'])
                 qo.extensions.add(*extensions)
                 qs.append(qo.pk)
+
+                contributors = q.get('contributors',[])
+                add_contributors(qei,contributors)
+
             groups.append(qs)
         exam.set_question_groups(groups)
 

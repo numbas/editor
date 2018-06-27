@@ -61,4 +61,4 @@ def contributor_thumbnail(contributor, size=None, glyphicon_size=None, link=Fals
     if contributor.user:
         return user_thumbnail(contributor.user,size,glyphicon_size,link)
     else:
-        return user_thumbnail(None,size,glyphicon_size,link,full_name=contributor.name, profile_url=contributor.profile_url)
+        return user_thumbnail(None,size,glyphicon_size,link,full_name=contributor.name, url=contributor.profile_url)

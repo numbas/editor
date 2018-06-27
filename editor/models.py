@@ -850,8 +850,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
 
     def as_numbasobject(self,request):
         obj = self.exam if self.item_type=='exam' else self.question
-        numbasobj= obj.as_numbasobject(request)
-        numbasobj.data['contributors'] = [c.as_json(request) for c in self.contributors.all()]
+        numbasobj = obj.as_numbasobject(request)
         return numbasobj
 
     @property
@@ -1244,14 +1243,18 @@ class NewQuestion(models.Model):
 
     def as_numbasobject(self,request):
         self.editoritem.get_parsed_content()
+        contributor_data = [c.as_json(request) for c in self.editoritem.contributors.all()]
+        question_data = self.editoritem.parsed_content.data
+        question_data['contributors'] = contributor_data
         data = OrderedDict([
             ('name', self.editoritem.name),
             ('extensions', [e.location for e in self.extensions.all()]),
             ('custom_part_types', [p.as_json() for p in self.custom_part_types.all()]),
             ('resources', self.resource_paths),
             ('navigation', {'allowregen': True, 'showfrontpage': False, 'preventleave': False}),
-            ('question_groups', [{'pickingStrategy':'all-ordered', 'questions':[self.editoritem.parsed_content.data]}]),
+            ('question_groups', [{'pickingStrategy':'all-ordered', 'questions':[question_data]}]),
         ])
+        data['contributors'] = contributor_data
         obj = numbasobject.NumbasObject(data=data, version=self.editoritem.parsed_content.version)
         return obj
 
@@ -1347,6 +1350,7 @@ class NewExam(models.Model):
         obj = numbasobject.NumbasObject(self.editoritem.content)
         data = obj.data
         question_groups = self.question_groups
+        data['contributors'] = [c.as_json(request) for c in self.editoritem.contributors.all()]
         data['extensions'] = [e.location for e in self.extensions]
         data['custom_part_types'] = [p.as_json() for p in self.custom_part_types]
         data['name'] = self.editoritem.name

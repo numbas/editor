@@ -18,7 +18,7 @@ import reversion
 from editor.forms import ExamForm, NewExamForm, UploadExamForm
 from editor.models import NewExam, NewQuestion, EditorItem
 import editor.models
-from editor.models import Theme, Extension
+from editor.models import Theme, Extension, Contributor
 import editor.views.editoritem
 import editor.views.generic
 
@@ -131,6 +131,8 @@ class UploadView(editor.views.editoritem.CreateView):
                     Contributor.objects.create(item=ei,user=user)
                 except (Resolver404,User.DoesNotExist):
                     Contributor.objects.create(item=ei,name=c['name'],profile_url=c['profile_url'])
+            else:
+                Contributor.objects.create(item=ei,name=c['name'],profile_url=c['profile_url'])
 
         exam = NewExam()
         exam.editoritem = ei

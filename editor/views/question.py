@@ -93,7 +93,7 @@ class CreateView(editor.views.editoritem.CreateView):
             self.question = NewQuestion()
             self.question.editoritem = ei
             self.question.save()
-            reversion.set_user(self.user)
+            reversion.set_user(ei.author)
 
         return redirect(self.get_success_url())
     

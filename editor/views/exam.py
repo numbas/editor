@@ -89,7 +89,7 @@ class CreateView(editor.views.editoritem.CreateView):
         with transaction.atomic(), reversion.create_revision():
             self.make_exam(form)
             self.exam.save()
-            reversion.set_user(self.user)
+            reversion.set_user(self.exam.editoritem.author)
 
         return redirect(self.get_success_url())
 

@@ -139,7 +139,13 @@
                             <h4><a href="{% url item.item_type|add:'_edit' item.rel_obj.pk item.slug %}">{{item.name}}</a></h4>
                             <div class="fields">
                                 <p class="author">
+                                by
                                 {% user_thumbnail item.author 20 15 %} {% user_link item.author %}
+                                {% with others=item.contributors.count|add:-1 %}
+                                {% if others > 0 %}
+                                and {{item.contributors.count|add:-1}} other{{others|pluralize}}
+                                {% endif %}
+                                {% endwith %}
                                 </p>
                             </div>
                             <div class="description">

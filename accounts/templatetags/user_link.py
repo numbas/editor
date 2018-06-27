@@ -55,3 +55,10 @@ def user_thumbnail(user, size=None, glyphicon_size=None, link=False, full_name=N
             })
 
     return context
+
+@register.inclusion_tag('links/user_thumbnail.html')
+def contributor_thumbnail(contributor, size=None, glyphicon_size=None, link=False):
+    if contributor.user:
+        return user_thumbnail(contributor.user,size,glyphicon_size,link)
+    else:
+        return user_thumbnail(None,size,glyphicon_size,link,full_name=contributor.name, profile_url=contributor.profile_url)

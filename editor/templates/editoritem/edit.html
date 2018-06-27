@@ -285,18 +285,17 @@
                 </section>
 
                 <!-- Editing history -->
-                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='history'}">
+                <section class="editing-history tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='history'}">
 
                     <div class="contributors">
                         <h3>Contributors</h3>
                         <ul class="list-inline">
                             {% for contributor in object.editoritem.contributors.all %}
                             <li class="contributor">
+                                {% contributor_thumbnail contributor 40 36 link=True %}
                                 {% if contributor.user %}
-                                    {% user_thumbnail contributor.user 40 36 link=True %}
                                     {% user_link contributor.user %}
                                 {% else %}
-                                    {% user_thumbnail None 40 36 link=True full_name=contributor.name url=contributor.profile_url %}
                                     <a class="user-link" target="_blank" href="{{contributor.profile_url}}">{{contributor.name}}</a>
                                 {% endif %}
                             </li>

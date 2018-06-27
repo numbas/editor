@@ -116,7 +116,8 @@ class UploadView(editor.views.editoritem.CreateView):
 
         ei.save()
         ei.set_licence(project.default_licence)
-        contributors = content.get('contributors',[])
+        obj = ei.get_parsed_content()
+        contributors = obj.data.get('contributors',[])
         root = self.request.build_absolute_uri('/')
         for c in contributors:
             if c['profile_url'][:len(root)]==root:

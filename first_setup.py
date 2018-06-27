@@ -125,6 +125,7 @@ class Command(object):
         self.rvalues = {key: enrep(value) for key, value in self.values.items()}
 
     def get_value(self, question):
+        default = None
         if os.path.exists('numbas/settings.py'):
             import numbas.settings
             default = question.default

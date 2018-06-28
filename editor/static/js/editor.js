@@ -38,6 +38,7 @@ $(document).ready(function() {
         var TEX = MathJax.InputJax.TeX;
 
         TEX.prefilterHooks.Add(function(data) {
+            console.log($(data.script).parents('.jme-scope'));
             currentScope = $(data.script).parents('.jme-scope').first().data('jme-scope');
         });
 

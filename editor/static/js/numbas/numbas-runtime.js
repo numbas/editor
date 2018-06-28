@@ -3057,6 +3057,7 @@ newBuiltin('gcd_without_pi_or_i', [TNum,TNum], TNum, function(a,b) {    // take 
         b = b/math.pow(Math.PI,math.piDegree(b));
         return math.gcf(a,b);
 } );
+newBuiltin('coprime',[TNum,TNum], TBool, math.coprime);
 newBuiltin('lcm', [TNum,TNum], TNum, math.lcm );
 newBuiltin('lcm', [TList], TNum, function(l){
         if(l.length==0) {
@@ -3255,7 +3256,18 @@ newBuiltin('listval',[TList,TRange],TList, null, {
         var size = list.vars;
         var start = util.wrapListIndex(range[0],size);
         var end = util.wrapListIndex(range[1]),size;
-        var value = list.value.slice(start,end);
+        var step = range[2];
+        var value;
+        if(step!=1) {
+            value = [];
+            for(var i=start;i<end;i += step) {
+                if(i%1==0) {
+                    value.push(list.value[i]);
+                }
+            }
+        } else {
+            value = list.value.slice(start,end);
+        }
         return new TList(value);
     }
 });
@@ -10532,6 +10544,19 @@ var math = Numbas.math = /** @lends Numbas.math */ {
         }
         return b;
     },
+    /** Are `a` and `b` coprime? If either of `a` or `b` is not an integer, return `false`.
+     * Equivalent to `gcd(a,b) = 1`.
+     * @param {Number} a
+     * @param {Number} b
+     * @see Numbas.math.gcd
+     * @returns {Boolean}
+     */
+    coprime: function(a,b) {
+        if(a.complex || b.complex || !Numbas.util.isInt(a) || !Numbas.util.isInt(b)) {
+            return true;
+        }
+        return math.gcd(a,b) == 1;
+    },
     /** Lowest common multiple (LCM) of `a` and `b`.
      * @param {Number} a
      * @param {Number} b
@@ -15015,6 +15040,9 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         }
         //work out marks available
         tryGetAttribute(settings,xml,'marking/maxmarks','enabled','maxMarksEnabled');
+        if(this.type=='1_n_2') {
+            settings.maxMarksEnabled = false;
+        }
         if(settings.maxMarksEnabled) {
             tryGetAttribute(this,xml,'marking/maxmarks','value','marks');
         } else {
@@ -15022,6 +15050,9 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         }
         //get minimum marks setting
         tryGetAttribute(settings,xml,'marking/minmarks','enabled','minMarksEnabled');
+        if(this.type=='1_n_2') {
+            settings.minMarksEnabled = false;
+        }
         if(settings.minMarksEnabled) {
             tryGetAttribute(settings,xml,'marking/minmarks','value','minimumMarks');
         }

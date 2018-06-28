@@ -6,11 +6,11 @@ $(document).ready(function() {
 
     function texJMEBit(expr,rules) {
         rules = rules || [];
-        var scope = new Numbas.jme.Scope(Numbas.jme.builtinScope,{rulesets: Numbas.jme.display.simplificationRules});
+        var scope = new Numbas.jme.Scope(Numbas.jme.builtinScope);
         try{
             if(viewModel && viewModel.rulesets) {
                 viewModel.rulesets().map(function(r) {
-                    scope.rulesets[r.name()] = Numbas.jme.collectRuleset(r.sets(),scope.rulesets);
+                    scope.setRuleset(r.name(), Numbas.jme.collectRuleset(r.sets(),scope.allRulesets()));
                 });
             }
             var sbits = Numbas.util.splitbrackets(expr,'{','}');
@@ -38,7 +38,6 @@ $(document).ready(function() {
         var TEX = MathJax.InputJax.TeX;
 
         TEX.prefilterHooks.Add(function(data) {
-            console.log($(data.script).parents('.jme-scope'));
             currentScope = $(data.script).parents('.jme-scope').first().data('jme-scope');
         });
 

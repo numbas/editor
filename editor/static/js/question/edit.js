@@ -645,7 +645,6 @@ $(document).ready(function() {
             Numbas.jme.variables.makeRulesets(rulesetTodo,results.scope);
 
             this.questionScope(results.scope);
-            $('body').data('jme-scope',this.questionScope()).addClass('jme-scope');
         },
 
         baseScope: function() {

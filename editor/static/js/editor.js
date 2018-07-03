@@ -1369,6 +1369,14 @@ $(document).ready(function() {
         }
     };
 
+    function truncate_string(str,maxlength) {
+        if(str.length>maxlength) {
+            return str.slice(0,maxlength-3)+'...';
+        } else {
+            return str;
+        }
+    }
+
     var displayJMEValue = Editor.displayJMEValue = function(v) {
         switch(v.type) {
             case 'nothing':

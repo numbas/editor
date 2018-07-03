@@ -309,6 +309,8 @@
                             <thead>
                                 <tr>
                                     <th></th>
+                                    <th></th>
+                                    <th></th>
                                     <th class="name">Name</th>
                                     <th class="value">Generated Value</th>
                                     <th></th>
@@ -326,17 +328,19 @@
                                         <button type="button" class="btn btn-xs btn-link lock" data-bind="click: toggleLocked, css: {locked: locked}" title="Lock the value of this variable (editor only)">
                                             <span class="glyphicon glyphicon-lock"></span>
                                         </button>
-                                        <button type="button" class="btn btn-xs btn-link" title="This variable is used in the testing condition">
-                                            <span class="glyphicon glyphicon-flag" data-bind="visible: usedInTestCondition, click: $root.setTab('variabletesting')"></span>
-                                        </button>
                                         {% endif %}
+                                    </td>
+                                    <td class="testing-cell">
+                                        <button type="button" class="btn btn-xs btn-link" title="This variable is used in the testing condition" data-bind="click: $root.setTab('variabletesting')">
+                                            <span class="glyphicon glyphicon-flag" data-bind="visible: usedInTestCondition"></span>
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <span title="This variable is a source of randomisation"  data-bind="visible: random(), click: $root.currentVariable" class="glyphicon glyphicon-random is-random text-muted"></span>
                                     </td>
                                     <td class="name monospace" data-bind="click: $root.currentVariable, text: name() ? name() : 'Unnamed', css: {'name-error': nameError()!='','text-danger': nameError()!=''}"></td>
                                     <td class="value-cell" data-bind="click: $root.currentVariable">
                                         <div class="value jme-value" data-bind="jmevalue: value, error: anyError"></div>
-                                    </td>
-                                    <td>
-                                        <span title="This variable is a source of randomisation"  data-bind="visible: random()" class="glyphicon glyphicon-random is-random text-muted"></span>
                                     </td>
                                     <td>
                                         {% if editable %}

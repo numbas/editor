@@ -56,6 +56,21 @@
     display: inline;
 }
 
+table.variable-list > tbody > tr > td {
+    padding: 8px 0;
+}
+.variable-list .name, .variable-list .value-cell {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+table.variable-list .value-cell {
+    width: 100%;
+}
+table.variable-list .value-cell .value {
+  max-width: 100%;
+  height: 1.5em;
+}
+
 .lock-cell button.lock.locked {
     color: black;
 }
@@ -100,6 +115,10 @@
 .variable-selector {
     cursor: pointer;
 }
+.variable-selector .name {
+    width: 40%;
+    word-break: break-all;
+}
 .variable-selector .value {
     text-align: left;
     display: inline-block;
@@ -115,7 +134,7 @@
     max-height: none;
 }
 .variable-selector .value img {
-    max-height: 5em;
+    height: 100%;
 }
 
 .variable-selector .is-random {

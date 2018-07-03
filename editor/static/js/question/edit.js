@@ -1948,6 +1948,15 @@ $(document).ready(function() {
         this.use_custom_algorithm = ko.observable(false);
         this.customMarkingAlgorithm = ko.observable('');
         this.extendBaseMarkingAlgorithm = ko.observable(true);
+        this.baseMarkingAlgorithm = ko.computed(function() {
+            var type = this.type();
+            if(type.is_custom_part_type) {
+                return Numbas.custom_part_types[type.name].marking_script;
+            } else {
+                var script = Numbas.partConstructors[type.name].prototype.markingScript;
+                return script ? script.source : '';
+            }
+        },this);
 
         this.markingScriptError = ko.observable('');
         this.markingScript = ko.computed(function() {

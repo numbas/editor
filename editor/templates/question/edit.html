@@ -483,6 +483,11 @@
 
                                     <div data-bind="fadeVisible: use_custom_algorithm">
                                         {% booleanproperty 'extendBaseMarkingAlgorithm' 'Extend base marking algorithm?' help_url='question/parts/reference.html#term-extend-base-marking-algorithm' %}
+                                        <div class="base-marking-algorithm" data-bind="fadeVisible: extendBaseMarkingAlgorithm">
+                                            <h5>Base marking algorithm</h5>
+                                            <pre data-bind="text: baseMarkingAlgorithm"></pre>
+                                        </div>
+                                        <h5>Custom marking algorithm</h5>
                                         <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: customMarkingAlgorithm, codemirrorMode: 'jme'"></textarea>
                                         <p class="alert alert-danger" data-bind="html: markingScriptError, visible: markingScriptError"></p>
                                     </div>

@@ -144,6 +144,12 @@
     font-family: inherit;
 }
 
+.base-marking-algorithm pre {
+  max-height: 20em;
+  overflow-y: auto;
+  margin-bottom: 1em;
+}
+
 .marking-test .nav-tabs,
 .unit-test .nav-tabs {
     margin-bottom: 1em;

@@ -56,3 +56,10 @@ footer {
 section ~ section {
     margin-top: 3em;
 }
+
+dl {
+  padding-left: 1em;
+}
+dt {
+  font-style: italic;
+}

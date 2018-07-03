@@ -15,6 +15,12 @@
             For instances where multiple users need access to the editor, we recommend following the <a href="ubuntu-web.html">Ubuntu web server</a> installation instructions.
         </p>
 
+        <p>
+            The Numbas editor uses <a href="https://www.djangoproject.com/">Django</a>, a web framework written in the Python programming language.
+            Django has many configuration options, which we won't detail here.
+            For more information, consult <a href="https://docs.djangoproject.com/en/2.0/">the Django documentation</a>.
+        </p>
+
         <section>
 		<h2>Installation</h2>
 		<ol>
@@ -52,6 +58,26 @@
                 <p>Run <code class="shell">python first_setup.py</code></p>
                 <p>This will configure the editor based on your answers to a few questions, and write <code>numbas/settings.py</code>.</p>
                 <p>The default answers for most of the questions apply only to multi-user instances; make the appropriate changes using the paths described in the earlier steps.</p>
+                <p>If you've followed these instructions exactly, use the following values:</p>
+                <dl>
+                    <dt>Path of the Numbas compiler</dt>
+                    <dd><code>../numbas_runtime</code></dd>
+
+                    <dt>Which database engine are you using?</dt>
+                    <dd><code>sqlite3</code></dd>
+
+                    <dt>Where are static files stored?</dt>
+                    <dd><code>static/</code></dd>
+
+                    <dt>Where are uploaded files stored?</dt>
+                    <dd><code>media/</code></dd>
+
+                    <dt>Where are preview exams stored?</dt>
+                    <dd><code>static/previews/</code></dd>
+
+                    <dt>Base URL of previews</dt>
+                    <dd><code>/static/previews/</code></dd>
+                </dl>
                 <p>If you make any mistakes, you can run the script again, or edit <code>numbas/settings.py</code> directly.</p>
             </li>
             <li>

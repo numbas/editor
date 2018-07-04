@@ -2032,7 +2032,7 @@ $(document).ready(function() {
 
 
     Editor.user_search_autocomplete = function(element,options) {
-        var url = '/users/search';
+        var url = '/accounts/search';
         source = function(req,callback) {
             element.addClass('loading');
             $.getJSON(url,{q:req.term})

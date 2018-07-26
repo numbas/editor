@@ -3040,6 +3040,10 @@ newBuiltin('countsigfigs',[TString],TNum, function(s) { return math.countSigFigs
 newBuiltin('isnan',[TNum],TBool,function(n) {
     return isNaN(n);
 });
+newBuiltin('matchnumber',[TString,TList],TList,function(s,styles) {
+    var result = util.matchNotationStyle(s,styles,true);
+    return [new TString(result.matched), new TNum(util.parseNumber(result.cleaned,false,['plain'],true))];
+},{unwrapValues:true});
 newBuiltin('cleannumber',[TString,TList],TString,util.cleanNumber,{unwrapValues:true});
 newBuiltin('isbool',[TString],TBool,util.isBool);
 newBuiltin('perm', [TNum,TNum], TNum, math.permutations );
@@ -3864,7 +3868,11 @@ newBuiltin('try',['?',TName,'?'],'?',null, {
 });
 Numbas.jme.lazyOps.push('try');
 jme.findvarsOps.try = function(tree,boundvars,scope) {
-    return [];
+    var try_boundvars = boundvars.slice();
+    try_boundvars.push(tree.args[1].tok.name.toLowerCase());
+    vars = jme.findvars(tree.args[0],boundvars,scope);
+    vars = vars.merge(jme.findvars(tree.args[2],try_boundvars,scope));
+    return vars;
 }
 newBuiltin('exec',[TOp,TList],TExpression,null, {
     evaluate: function(args, scope) {
@@ -4263,7 +4271,7 @@ var texOps = jme.display.texOps = {
         }
         else if(thing.args[0].tok.type=='number' && thing.args[0].tok.value.complex) {
             var value = thing.args[0].tok.value;
-            return settings.texNumber({complex:true,re:-value.re,im:-value.im});
+            return settings.texNumber({complex:true,re:-value.re,im:-value.im}, settings);
         }
         return '-'+tex;
     }),
@@ -4343,7 +4351,7 @@ var texOps = jme.display.texOps = {
         var a = thing.args[0];
         var b = thing.args[1];
         if(b.tok.type=='number' && b.tok.value.complex && b.tok.value.re!=0) {
-            var texb = settings.texNumber(math.complex(b.tok.value.re,-b.tok.value.im));
+            var texb = settings.texNumber(math.complex(b.tok.value.re,-b.tok.value.im), settings);
             return texArgs[0]+' - '+texb;
         }
         else{
@@ -4547,14 +4555,15 @@ var texSpecialNumber = jme.display.texSpecialNumber = function(value) {
  * @private
  *
  * @param {Number} n
+ * @param {Numbas.jme.display.texify_settings} settings
  * @returns {TeX}
  */
-var texRationalNumber = jme.display.texRationalNumber = function(n)
+var texRationalNumber = jme.display.texRationalNumber = function(n, settings)
 {
     if(n.complex)
     {
-        var re = texRationalNumber(n.re);
-        var im = texRationalNumber(n.im)+' i';
+        var re = texRationalNumber(n.re, settings);
+        var im = texRationalNumber(n.im, settings)+' i';
         if(n.im==0)
             return re;
         else if(n.re==0)
@@ -4600,10 +4609,18 @@ var texRationalNumber = jme.display.texRationalNumber = function(n)
             return mantissa+' \\times 10^{'+exponent+'}';
         }
         var f = math.rationalApproximation(Math.abs(n));
-        if(f[1]==1)
+        if(f[1]==1) {
             out = Math.abs(f[0]).toString();
-        else
-            out = '\\frac{'+f[0]+'}{'+f[1]+'}';
+        } else {
+            if(settings.mixedfractions && f[0] > f[1]) {
+                var properNumerator = math.mod(f[0], f[1]);
+                var mixedInteger = (f[0]-properNumerator)/f[1];
+                out = mixedInteger+' \\frac{'+properNumerator+'}{'+f[1]+'}';
+            }
+            else {
+                out = '\\frac{'+f[0]+'}{'+f[1]+'}';
+            }
+        }
         if(n<0)
             out='-'+out;
         switch(piD)
@@ -4628,14 +4645,15 @@ var texRationalNumber = jme.display.texRationalNumber = function(n)
  * @private
  *
  * @param {Number} n
+ * @param {Numbas.jme.display.texify_settings} settings
  * @returns {TeX}
  */
-function texRealNumber(n)
+function texRealNumber(n, settings)
 {
     if(n.complex)
     {
-        var re = texRealNumber(n.re);
-        var im = texRealNumber(n.im)+' i';
+        var re = texRealNumber(n.re, settings);
+        var im = texRealNumber(n.im, settings)+' i';
         if(n.im==0)
             return re;
         else if(n.re==0)
@@ -4717,7 +4735,7 @@ function texVector(v,settings)
         elements = v.args.map(function(x){return texify(x,settings)});
     } else {
         var texNumber = settings.fractionnumbers ? texRationalNumber : texRealNumber;
-        elements = v.map(function(x){return texNumber(x)});
+        elements = v.map(function(x){return texNumber(x, settings)});
     }
     if(settings.rowvector)
         out = elements.join(' , ');
@@ -4755,7 +4773,7 @@ function texMatrix(m,settings,parens)
     {
         var texNumber = settings.fractionnumbers ? texRationalNumber : texRealNumber;
         var rows = m.map(function(x){
-            return x.map(function(y){ return texNumber(y) });
+            return x.map(function(y){ return texNumber(y, settings) });
         });
     }
     if(rows.length==1) {
@@ -4878,7 +4896,7 @@ var typeToTeX = jme.display.typeToTeX = {
         return '\\text{nothing}';
     },
     'number': function(thing,tok,texArgs,settings) {
-        return settings.texNumber(tok.value);
+        return settings.texNumber(tok.value, settings);
     },
     'string': function(thing,tok,texArgs,settings) {
         if(tok.latex)
@@ -5875,7 +5893,8 @@ var matchExpression = jme.rules.matchExpression = function(pattern,expr,doCommut
 var displayFlags = jme.rules.displayFlags = {
     fractionnumbers: undefined,
     rowvector: undefined,
-    alwaystimes: undefined
+    alwaystimes: undefined,
+    mixedfractions: undefined
 };
 /** Flags used in JME simplification rulesets
  * @type Object.<Boolean>
@@ -7896,14 +7915,77 @@ var Question = Numbas.Question = function( number, exam, group, gscope, store)
     q.parts = [];
     q.partDictionary = {};
 }
+
+/** The question preamble has been loaded but not run yet- this happens before any variables, functions, rulesets or parts are generated.
+ * @event Numbas.Question#preambleLoaded
+ * @see Numbas.Question#event:preambleRun
+ */
+/** The question preamble has been run.
+ * @event Numbas.Question#preambleRun
+ */
+/** The question's function definitions have been loaded, but the corresponding {@link Numbas.jme.funcObj} objects have not been added to the scope yet.
+ * @event Numbas.Question#functionsLoaded
+ * @see Numbas.Question#event:functionsMade
+ */
+/** The question's functions have been made and added to the question's scope.
+ * @event Numbas.Question#functionsMade
+ */
+/** The question's ruleset  definitions have been loaded, but the {@link Numbas.jme.rules.Ruleset} objects have not been added to the scope yet.
+ * @event Numbas.Question#rulesetsLoaded
+ * @see Numbas.Question#event:rulesetsMade
+ */
+/** The question's rulesets have been made and added to the question's scope.
+ * @event Numbas.Question#rulesetsMade
+ */
+/** Trigger this when you're ready to evaluate the question's variables. In an exam context, the {@link Numbas.Exam} object triggers this event.
+ * If the question has been created standalone, this event must be triggered in order for the question to finish loading.
+ * @event Numbas.Question#generateVariables
+ */
+/** The variable definitions have been loaded, but their values have not been generated yet.
+ * @event Numbas.Question#variableDefinitionsLoaded
+ * @see Numbas.Question#event:variablesSet
+ * @see Numbas.Question#event:variablesGenerated
+ */
+/** The parts of the question have been generated.
+ * If resuming an attempt, the parts have not yet been restored to the saved state.
+ * @event Numbas.Question#partsGenerated
+ * @see Numbas.Question#event:partsResumed
+ */
+/** Triggered when resuming a saved attempt: the question's parts have been restored to the saved state.
+ * @event Numbas.Question#partsResumed
+ */
+/** The variables have been evaluated, but {@link Numbas.Question.unwrappedVariables} has not been set yet.
+ * @event Numbas.Question#variablesSet
+ */
+/** The variables have been generated and added to the scope, and are ready to use.
+ * @event Numbas.Question#variablesGenerated
+ */
+/** The question is fully loaded and ready to use.
+ * @event Numbas.Question#ready
+ */
+/** The question's HTML has been generated and attached to the page.
+ * @event Numbas.Question#HTMLAttached
+ */
+
 Question.prototype = /** @lends Numbas.Question.prototype */
 {
+    /** Signals produced while loading this question.
+     * @type {Numbas.schedule.SignalBox} 
+     * */
+    signals: undefined,
+
     /** Storage engine
      * @type {Numbas.storage.BlankStorage}
      */
     store: undefined,
     /** Load the question's settings from an XML <question> node
      * @param {Element} xml
+     * @fires Numbas.Question#preambleLoaded
+     * @fires Numbas.Question#functionsLoaded
+     * @fires Numbas.Question#rulesetsLoaded
+     * @fires Numbas.Question#variableDefinitionsLoaded
+     * @fires Numbas.Question#partsGenerated
+     * @listens Numbas.Question#event:variablesGenerated
      */
     loadFromXML: function(xml) {
         var q = this;
@@ -7968,6 +8050,12 @@ Question.prototype = /** @lends Numbas.Question.prototype */
     },
     /** Load the question's settings from a JSON object
      * @param {Object} data
+     * @fires Numbas.Question#preambleLoaded
+     * @fires Numbas.Question#functionsLoaded
+     * @fires Numbas.Question#rulesetsLoaded
+     * @fires Numbas.Question#variableDefinitionsLoaded
+     * @fires Numbas.Question#partsGenerated
+     * @listens Numbas.Question#event:variablesGenerated
      */
     loadFromJSON: function(data) {
         var q = this;
@@ -8043,6 +8131,23 @@ Question.prototype = /** @lends Numbas.Question.prototype */
         this.marks += part.marks;
     },
     /** Perform any tidying up or processing that needs to happen once the question's definition has been loaded
+     * @fires Numbas.Question#functionsMade
+     * @fires Numbas.Question#rulesetsMade
+     * @fires Numbas.Question#variablesSet
+     * @fires Numbas.Question#variablesGenerated
+     * @fires Numbas.Question#ready
+     * @listens Numbas.Question#event:preambleLoaded
+     * @listens Numbas.Question#event:functionsLoaded
+     * @listens Numbas.Question#event:rulesetsLoaded
+     * @listens Numbas.Question#event:generateVariables
+     * @listens Numbas.Question#event:functionsMade
+     * @listens Numbas.Question#event:rulesetsMade
+     * @listens Numbas.Question#event:variableDefinitionsLoaded
+     * @listens Numbas.Question#event:variablesSet
+     * @listens Numbas.Question#event:variablesGenerated
+     * @listens Numbas.Question#event:partsGenerated
+     * @listens Numbas.Question#event:ready
+     * @listens Numbas.Question#event:HTMLAttached
      */
     finaliseLoad: function() {
         var q = this;
@@ -8109,6 +8214,10 @@ Question.prototype = /** @lends Numbas.Question.prototype */
         this.signals.trigger('generateVariables');
     },
     /** Load saved data about this question from storage
+     * @fires Numbas.Question#variablesSet
+     * @fires Numbas.Question#partsResumed
+     * @listens Numbas.Question#event:partsGenerated
+     * @listens Numbas.Question#event:ready
      */
     resume: function() {
         if(!this.store) {
@@ -8228,7 +8337,9 @@ Question.prototype = /** @lends Numbas.Question.prototype */
     leave: function() {
     this.display && this.display.leave();
     },
-    /** Execute the question's JavaScript preamble - should happen as soon as the configuration has been loaded from XML, before variables are generated. */
+    /** Execute the question's JavaScript preamble - should happen as soon as the configuration has been loaded from XML, before variables are generated. 
+     * @fires Numbas.Question#preambleRun
+     */
     runPreamble: function() {
         with({
             question: this
@@ -8376,6 +8487,8 @@ Question.prototype = /** @lends Numbas.Question.prototype */
     /** Add a callback function to run when the question's HTML is attached to the page
      *
      * @param {function} fn
+     * @deprecated Use {@link Numbas.Question#signals} instead.
+     * @listens Numbas.Question#event:HTMLAttached
      */
     onHTMLAttached: function(fn) {
         this.signals.on('HTMLAttached',fn);
@@ -8383,6 +8496,8 @@ Question.prototype = /** @lends Numbas.Question.prototype */
     /** Add a callback function to run when the question's variables are generated (but before the HTML is attached)
      *
      * @param {function} fn
+     * @deprecated Use {@link Numbas.Question#signals} instead.
+     * @listens Numbas.Question#event:variablesGenerated
      */
     onVariablesGenerated: function(fn) {
         this.signals.on('variablesGenerated',fn);
@@ -8510,10 +8625,34 @@ var schedule = Numbas.schedule = /** @lends Numbas.schedule */ {
         schedule.calls = schedule.calls.concat(schedule.lifts.pop());
     },
 };
+
+/** Coordinates Promises corresponding to different stages in the loading process.
+ * @constructor
+ * @memberof Numbas.schedule
+ */
 var SignalBox = schedule.SignalBox = function() {
     this.callbacks = {};
 }
-SignalBox.prototype = {
+SignalBox.prototype = { /** @lends Numbas.schedule.SignalBox.prototype */
+    /** @typedef Numbas.schedule.callback
+     * @type {Object}
+     * @property {Promise} Promise
+     * @property {function} resolve - the promise's `resolve` function
+     * @property {function} reject - the promise's `reject` function
+     * @property {Boolean} resolved - has the promise been resolved?
+     */
+
+    /** Dictionary of registered callbacks.
+     * @type {Object.<Numbas.schedule.callback>}
+     * @private
+     */
+    callbacks: {},
+
+    /** Get a callback object for the event with the hiven name.
+     * If the callback hasn't been accessed before, it's created.
+     * @param {String} name
+     * @returns {Numbas.schedule.callback}
+     */
     getCallback: function(name) {
         if(this.callbacks[name]) {
             return this.callbacks[name];
@@ -8528,6 +8667,12 @@ SignalBox.prototype = {
         });
         return deferred;
     },
+
+    /** Once the given event(s) have resolved, run the given callback function. Returns a Promise, so can be used without a callback.
+     * @param {String|Array.<String>} events - the name of an event, or a list of event names
+     * @param {function} [fn] - a callback function to run
+     * @returns {Promise} Resolves when all of the events have resolved, or rejects if the signal box is in an error state.
+     */
     on: function(events, fn) {
         var sb = this;
         if(sb.error) {
@@ -8565,6 +8710,10 @@ SignalBox.prototype = {
         }
         return promise;
     },
+
+    /** Notify the signal box that the event with the given name has happened.
+     * @param {String} name
+     */
     trigger: function(name) {
         var callback = this.getCallback(name);
         if(this.error) {
@@ -8575,6 +8724,7 @@ SignalBox.prototype = {
     }
 }
 });
+
 Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
     /** @namespace Numbas.marking */
     var marking = Numbas.marking = {};
@@ -11722,24 +11872,27 @@ var util = Numbas.util = /** @lends Numbas.util */ {
             return s;
         }
     },
-    /** Clean a string potentially representing a number.
-     * Remove space, and then try to identify a notation style.
-     *
-     * If `styles` is given, `s` will be tested against the given styles. If it matches, the string will be rewritten using the matched integer and decimal parts, with punctuation removed and the decimal point changed to a dot.
+
+    /** Try to match a string representing a number in any of the given styles at the start of the given string, and return both the matched text and a JavaScript number literal equivalent.
      *
      * @param {String} s - the string potentially representing a number.
      * @param {String|String[]} styles - styles of notation to allow, e.g. `['en','si-en']`
-     * @param {Boolean} strictStyle - if false or not given, strings which do not match any of the allowed styles but are valid JavaScript number literals will be allowed. If true, these strings will return 'NaN'.
-     * @returns {String}
+     * @param {Boolean} [strictStyle] - if false or not given, strings which do not match any of the allowed styles but are valid JavaScript number literals will be allowed. If true, these strings will return 'NaN'.
+     * @param {Boolean} [mustMatchAll] - if true, then the string must contain only the matched number.
+     * @returns {[String,String]|null}
      *
      * @see Numbas.util.numberNotationStyles
      */
-    cleanNumber: function(s,styles,strictStyle) {
-        s = s.toString().trim();
-        var match_neg = /^(-)?(.*)/.exec(s);
+    matchNotationStyle: function(s,styles,strictStyle,mustMatchAll) {
+        var pos = 0;
+        s = s.toString();
+        var match_neg = /^\s*(-)?\s*/.exec(s);
         var minus = match_neg[1] || '';
-        s = match_neg[2];
+        pos += match_neg[0].length;
+
         var matched = false;
+        var cleaned = s;
+        var bestpos = pos;
         if(styles!==undefined) {
             if(typeof styles=='string') {
                 styles = [styles];
@@ -11751,23 +11904,49 @@ var util = Numbas.util = /** @lends Numbas.util */ {
                 }
                 var re = style.re;
                 var m;
-                if(re && (m=re.exec(s))) {
+                if(re && (m=re.exec(s.slice(pos))) && (!mustMatchAll || s.slice(pos+m[0].length).trim()=='')) {
                     matched = true;
                     var integer = m[1].replace(/\D/g,'');
+                    var mcleaned;
                     if(m[2]) {
                         var decimal = m[2].replace(/\D/g,'');
-                        s = integer+'.'+decimal
+                        mcleaned = minus + integer + '.' + decimal
                     } else {
-                        s = integer;
+                        mcleaned = minus + integer;
                     }
-                    break;
+                    var mpos = pos + m[0].length;
+                    if(mpos > bestpos) {
+                        bestpos = mpos;
+                        cleaned = mcleaned;
+                    }
                 }
             }
         }
+        pos = bestpos;
         if(strictStyle && !matched) {
-            return 'NaN';
+            cleaned = 'NaN';
         }
-        return minus+s;
+        return {
+            matched: matched ? s.slice(0,pos) : '',
+            cleaned: cleaned
+        }
+    },
+
+    /** Clean a string potentially representing a number.
+     * Remove space, and then try to identify a notation style.
+     *
+     * If `styles` is given, `s` will be tested against the given styles. If it matches, the string will be rewritten using the matched integer and decimal parts, with punctuation removed and the decimal point changed to a dot.
+     *
+     * @param {String} s - the string potentially representing a number.
+     * @param {String|String[]} styles - styles of notation to allow, e.g. `['en','si-en']`
+     * @param {Boolean} [strictStyle] - if false or not given, strings which do not match any of the allowed styles but are valid JavaScript number literals will be allowed. If true, these strings will return 'NaN'.
+     * @returns {String}
+     *
+     * @see Numbas.util.numberNotationStyles
+     */
+    cleanNumber: function(s,styles,strictStyle) {
+        var result = util.matchNotationStyle(s,styles,strictStyle,true);
+        return result.cleaned;
     },
     /** Parse a number - either parseFloat, or parse a fraction.
      * @param {String} s
@@ -12280,7 +12459,7 @@ var util = Numbas.util = /** @lends Numbas.util */ {
 var numberNotationStyles = util.numberNotationStyles = {
     // Plain English style - no thousands separator, dot for decimal point
     'plain': {
-        re: /^([0-9]+)(\x2E[0-9]+)?$/,
+        re: /^([0-9]+)(\x2E[0-9]+)?/,
         format: function(integer,decimal) {
             if(decimal) {
                 return integer+'.'+decimal;
@@ -12291,27 +12470,27 @@ var numberNotationStyles = util.numberNotationStyles = {
     },
     // English style - commas separate thousands, dot for decimal point
     'en': {
-        re: /^(\d{1,3}(?:,\d{3})*)(\x2E\d+)?$/,
+        re: /^(\d{1,3}(?:,\d{3})*)(\x2E\d+)?/,
         format: util.standardNumberFormatter(',','.')
     },
     // English SI style - spaces separate thousands, dot for decimal point
     'si-en': {
-        re: /^(\d{1,3}(?: +\d{3})*)(\x2E(?:\d{3} )*\d{1,3})?$/,
+        re: /^(\d{1,3}(?: +\d{3})*)(\x2E(?:\d{3} )*\d{1,3})?/,
         format: util.standardNumberFormatter(' ','.',true)
     },
     // French SI style - spaces separate thousands, comma for decimal point
     'si-fr': {
-        re: /^(\d{1,3}(?: +\d{3})*)(,(?:\d{3} )*\d{1,3})?$/,
+        re: /^(\d{1,3}(?: +\d{3})*)(,(?:\d{3} )*\d{1,3})?/,
         format: util.standardNumberFormatter(' ',',',true)
     },
     // Continental European style - dots separate thousands, comma for decimal point
     'eu': {
-        re: /^(\d{1,3}(?:\x2E\d{3})*)(,\d+)?$/,
+        re: /^(\d{1,3}(?:\x2E\d{3})*)(,\d+)?/,
         format: util.standardNumberFormatter('.',',')
     },
     // Plain French style - no thousands separator, comma for decimal point
     'plain-eu': {
-        re: /^([0-9]+)(,[0-9]+)?$/,
+        re: /^([0-9]+)(,[0-9]+)?/,
         format: function(integer,decimal) {
             if(decimal) {
                 return integer+','+decimal;
@@ -12322,12 +12501,12 @@ var numberNotationStyles = util.numberNotationStyles = {
     },
     // Swiss style - apostrophes separate thousands, dot for decimal point
     'ch': {
-        re: /^(\d{1,3}(?:'\d{3})*)(\x2E\d+)?$/,
+        re: /^(\d{1,3}(?:'\d{3})*)(\x2E\d+)?/,
         format: util.standardNumberFormatter('\'','.')
     },
     // Indian style - commas separate groups, dot for decimal point. The rightmost group is three digits, other groups are two digits.
     'in': {
-        re: /^((?:\d{1,2}(?:,\d{2})*,\d{3})|\d{1,3})(\x2E\d+)?$/,
+        re: /^((?:\d{1,2}(?:,\d{2})*,\d{3})|\d{1,3})(\x2E\d+)?/,
         format: function(integer,decimal) {
             integer = integer+'';
             if(integer.length>3) {

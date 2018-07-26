@@ -327,9 +327,11 @@ $(document).ready(function() {
         this.short_name = ko.observable('');
         this.description = ko.observable('');
         this.help_url = ko.observable('');
+        this.extensions = ko.observableArray([]);
 
         this.tabs = [
             new Editor.Tab('description','Description','cog'),
+            new Editor.Tab('extensions','Required extensions','transfer'),
             new Editor.Tab('settings','Part settings','wrench'),
             new Editor.Tab('input','Answer input','pencil'),
             new Editor.Tab('marking','Marking','check'),
@@ -346,6 +348,15 @@ $(document).ready(function() {
         }
 
         this.currentTab = ko.observable(this.tabs[0]);
+
+        for(var i=0;i<item_json.numbasExtensions.length;i++) {
+            var ext = item_json.numbasExtensions[i];
+            ext.used = ko.observable(false);
+            this.extensions.push(ext);
+        }
+        this.usedExtensions = ko.computed(function() {
+            return this.extensions().filter(function(e){return e.used()});
+        },this);
 
         this.edit_name = function() {
             pt.setTab('description')();
@@ -478,6 +489,13 @@ $(document).ready(function() {
             var pt = this;
             tryLoad(data,['name','short_name','description','help_url','published'],this);
             tryLoadMatchingId(data,'input_widget','name',this.input_widgets,this);
+
+            if('extensions' in data) {
+                this.extensions().map(function(e) {
+                    if(data.extensions.indexOf(e.location)>=0)
+                        e.used(true);
+                });
+            }
             if('input_options' in data) {
                 tryLoad(data.input_options,['correctAnswer'],this.input_options);
                 this.input_options.hint.load(data.input_options.hint);
@@ -565,7 +583,8 @@ $(document).ready(function() {
                 'settings': JSON.stringify(this.settings().map(function(s){ return s.toJSON() })),
                 'marking_script': this.marking_script(),
                 'marking_notes': JSON.stringify(this.marking_notes().map(function(n){ return n.toJSON() })),
-                'ready_to_use': this.ready_to_use()
+                'ready_to_use': this.ready_to_use(),
+                'extensions': this.usedExtensions().map(function(e){return e.pk})
             }
         }
     }

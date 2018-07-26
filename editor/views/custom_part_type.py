@@ -1,11 +1,12 @@
 from django import http
 from django.contrib import messages
 from django.db import transaction
+from django.db.models.functions import Lower
 from django.views import generic
 from django.urls import reverse
 from django.shortcuts import redirect
 
-from editor.models import CustomPartType, CUSTOM_PART_TYPE_PUBLIC_CHOICES, CUSTOM_PART_TYPE_INPUT_WIDGETS
+from editor.models import CustomPartType, CUSTOM_PART_TYPE_PUBLIC_CHOICES, CUSTOM_PART_TYPE_INPUT_WIDGETS, Extension
 from editor.forms import NewCustomPartTypeForm, UpdateCustomPartTypeForm, CopyCustomPartTypeForm
 from editor.views.generic import AuthorRequiredMixin
 
@@ -50,6 +51,7 @@ class UpdateView(generic.UpdateView):
     def form_valid(self, form):
         with transaction.atomic(), reversion.create_revision():
             self.object = form.save(commit=False)
+            self.object.extensions.set(form.cleaned_data['extensions'])
             self.object.save()
             reversion.set_user(self.request.user)
 
@@ -74,8 +76,18 @@ class UpdateView(generic.UpdateView):
     def get_context_data(self, **kwargs):
         context = super(UpdateView, self).get_context_data(**kwargs)
 
+        extensions = Extension.objects.filter(public=True) | self.object.extensions.all()
+        if not self.request.user.is_anonymous:
+            extensions |= Extension.objects.filter(author=self.request.user) 
+        extensions = extensions.distinct().order_by(Lower('name'))
+        context['extensions'] = [e.as_json() for e in extensions]
+
         context['editable'] = self.object.can_be_edited_by(self.request.user)
-        context['item_json'] = {'data': self.object.as_json(), 'save_url': self.object.get_absolute_url()}
+        context['item_json'] = {
+            'data': self.object.as_json(), 
+            'save_url': self.object.get_absolute_url(), 
+            'numbasExtensions': context['extensions']
+        }
 
         return context
 

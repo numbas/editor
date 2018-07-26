@@ -406,6 +406,7 @@ class CustomPartType(models.Model, ControlledObject):
     public_availability = models.CharField(max_length=10, choices=CUSTOM_PART_TYPE_PUBLIC_CHOICES, verbose_name='Public availability', default='restricted')
     ready_to_use = models.BooleanField(default=False, verbose_name='Ready to use?')
     copy_of = models.ForeignKey('self', null=True, related_name='copies', on_delete=models.SET_NULL)
+    extensions = models.ManyToManyField(Extension, blank=True)
 
     def copy(self, author, name):
         new_type = CustomPartType.objects.get(pk=self.pk)
@@ -415,6 +416,7 @@ class CustomPartType(models.Model, ControlledObject):
         new_type.name = name
         new_type.set_short_name(slugify(name))
         new_type.copy_of = self
+        new_type.extensions.set(self.extensions)
         return new_type
 
     def __str__(self):
@@ -484,6 +486,7 @@ class CustomPartType(models.Model, ControlledObject):
             'settings': self.settings,
             'public_availability': self.public_availability,
             'published': self.published,
+            'extensions': [e.location for e in self.extensions.all()],
         }
 
 class Resource(models.Model):

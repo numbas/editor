@@ -169,6 +169,25 @@
                     {% endif %}
                 </section>
 
+                <!-- Required extensions -->
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='extensions'}">
+                    <div class="form-group">
+                        <p class="help-block">
+                            Select any extensions that are required for this part to work.
+                        </p>
+                        <ul class="extensions" data-bind="foreach: extensions">
+                            <li class="extension">
+                                <label>
+                                    <span class="checkbox"><input {% if not editable %}disabled{% endif %} type="checkbox" data-bind="checked: used"></span>
+                                    <span data-bind="text:name"></span> 
+                                    <a data-bind="if: url, attr: {href:url, title: 'Documentation on the '+name+' extension'}" target="_blank"><small class="glyphicon glyphicon-book"></small></a>
+                                    {% if not user.is_anonymous %}<a data-bind="if: author=={{user.pk}}, attr: {href: edit_url, title: 'Edit the '+name+' extension'}" target="_blank"><small class="glyphicon glyphicon-pencil"></small></a>{% endif %}
+                                </label>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+
                 <!-- Part settings -->
                 <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='settings'}">
                     <p><a target="numbasquickhelp" href="{{HELP_URL}}custom-part-types/reference.html#part-settings"><span class="glyphicon glyphicon-question-sign"></span> Help with part settings</a></p>

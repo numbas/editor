@@ -164,6 +164,12 @@ $(document).ready(function() {
         this.gapTypes = ko.computed(function(){ return q.partTypes().filter(function(t){ return t.can_be_gap!==false }); });
         this.stepTypes = ko.computed(function(){ return q.partTypes().filter(function(t){ return t.can_be_step!==false }); });
 
+        this.usedPartTypes = ko.computed(function() {
+            return Editor.part_types.models.filter(function(pt) {
+                return q.allParts().some(function(p){ return p.type().name==pt.name });
+            })
+        }, this);
+
         //for image attribute modal
         this.imageModal = {
             width: ko.observable(0),
@@ -215,13 +221,31 @@ $(document).ready(function() {
             return out;
         },this);
 
+        function Extension(q,data) {
+            var ext = this;
+            ["location","name","edit_url","hasScript","url","scriptURL","author","pk"].forEach(function(k) {
+                ext[k] = data[k];
+            });
+            this.used = ko.observable(false);
+            this.required = ko.computed(function() {
+                return q.usedPartTypes().some(function(p){ return p.required_extensions && p.required_extensions.indexOf(ext.location) != -1 });
+            }, this);
+            this.used_or_required = ko.computed({
+                read: function() {
+                    return this.used() || this.required();
+                },
+                write: function(v) {
+                    return this.used(v);
+                }
+            }, ext);
+
+        }
+
         for(var i=0;i<item_json.numbasExtensions.length;i++) {
-            var ext = item_json.numbasExtensions[i];
-            ext.used = ko.observable(false);
-            this.extensions.push(ext);
+            this.extensions.push(new Extension(this,item_json.numbasExtensions[i]));
         }
         this.usedExtensions = ko.computed(function() {
-            return this.extensions().filter(function(e){return e.used()});
+            return this.extensions().filter(function(e){return e.used_or_required()});
         },this);
 
         this.allsets = ko.computed(function() {
@@ -2840,6 +2864,7 @@ $(document).ready(function() {
         this.has_marking_settings = data.has_marking_settings || false;
         this.tabs = data.tabs || [];
         this.model = data.model ? data.model(part) : {};
+        this.required_extensions = data.required_extensions || [];
         this.is_custom_part_type = data.is_custom_part_type;
         this.toJSONFn = data.toJSON || function() {};
         this.loadFn = data.load || function() {};

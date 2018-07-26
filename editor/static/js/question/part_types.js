@@ -897,6 +897,7 @@ function CustomPartType(data) {
     this.settings_def = data.settings;
     this.marking_script = data.marking_script;
     this.source = data.source;
+    this.required_extensions = data.extensions || [];
     Numbas.partConstructors[this.name] = Numbas.parts.CustomPart;
     Numbas.custom_part_types[this.name] = data;
 

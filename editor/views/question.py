@@ -4,6 +4,7 @@ import traceback
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from django.db import transaction
+from django.db.models.functions import Lower
 from django.http import Http404
 from django import http
 from django.shortcuts import redirect
@@ -173,7 +174,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         extensions = Extension.objects.filter(public=True) | self.object.extensions.all()
         if not self.request.user.is_anonymous:
             extensions |= Extension.objects.filter(author=self.request.user) 
-        extensions = extensions.distinct()
+        extensions = extensions.distinct().order_by(Lower('name'))
         self.item_json['numbasExtensions'] = context['extensions'] = [e.as_json() for e in extensions]
 
         # get publicly available part types first

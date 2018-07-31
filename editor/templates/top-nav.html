@@ -10,6 +10,7 @@
     </div>
 
     <form id="search-bar" class="navbar-form navbar-left" role="search" method="get" action="{% block search_url %}{% url 'search' %}{% endblock search_url %}">
+    	{% for field in form %}{% if field.name != 'query' %}{{field.as_hidden}}{% endif %}{% endfor %}
         <div class="form-group">
             <div class="input-group">
                 <input name="query" type="text" class="form-control" id="top-search-bar" placeholder="Search by name or keyword{% if in_project %} in this project{% endif %}" value="{{search_query}}"/>

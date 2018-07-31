@@ -1404,6 +1404,9 @@ $(document).ready(function() {
                 }
                 return 'HTML node';
             default:
+                if(Numbas.jme.typeToDisplayString[v.type]) {
+                    return Numbas.jme.tokenToDisplayString(v);
+                }
                 return Numbas.jme.display.treeToJME({tok:v});
         }
     }

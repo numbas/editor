@@ -4287,7 +4287,7 @@ function infixTex(code)
 {
     return function(thing,texArgs)
     {
-        var arity = jme.builtinScope.getFunction(thing.tok.name)[0].intype.length;
+        var arity = thing.args.length;
         if( arity == 1 )    //if operation is unary, prepend argument with code
         {
             return code+texArgs[0];
@@ -5043,7 +5043,9 @@ var typeToTeX = jme.display.typeToTeX = {
         return texArgs.join(' ');
     },
     op: function(thing,tok,texArgs,settings) {
-        return texOps[tok.name.toLowerCase()](thing,texArgs,settings);
+        var name = tok.name.toLowerCase();
+        var fn = name in texOps ? texOps[name] : infixTex('\\, \\operatorname{'+name+'} \\,');
+        return fn(thing,texArgs,settings);
     },
     'function': function(thing,tok,texArgs,settings) {
         var lowerName = tok.name.toLowerCase();
@@ -7398,7 +7400,9 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
                 else
                 {
                     var change = this.score - oScore;
-                    this.markingComment(R('part.marking.steps change',{count:change}));
+                    if(this.submitting) {
+                        this.markingComment(R('part.marking.steps change',{count:change}));
+                    }
                 }
             }
         }
@@ -7462,6 +7466,9 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         this.markingFeedback = [];
         this.finalised_result = [];
         this.submitting = true;
+        if(this.parentPart && !this.parentPart.submitting) {
+            this.parentPart.setDirty(true);
+        }
         if(this.stepsShown)
         {
             var stepsMax = this.marks - this.settings.stepsPenalty;
@@ -7533,11 +7540,12 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         this.question && this.question.updateScore();
         if(this.answered)
         {
-            if(!(this.parentPart && this.parentPart.type=='gapfill') && this.settings.showFeedbackIcon)
+            if(!(this.parentPart && this.parentPart.type=='gapfill') && this.settings.showFeedbackIcon) {
                 this.markingComment(
                     R('part.marking.total score',{count:this.score})
                 );
-                this.display && this.display.showScore(this.answered);
+            }
+            this.display && this.display.showScore(this.answered);
         }
         this.store && this.store.partAnswered(this);
         this.submitting = false;

@@ -9,8 +9,12 @@ def print_notice(s):
 
 def path_exists(path):
     if not os.path.exists(path):
-        print("That path doesn't exist")
-        return False
+        answer = input("That path doesn't exist. Create it? [y/n]").strip().lower()
+        if answer=='y':
+            os.makedirs(path)
+            return True
+        else:
+            return False
     else:
         return True
 
@@ -125,19 +129,18 @@ class Command(object):
         self.rvalues = {key: enrep(value) for key, value in self.values.items()}
 
     def get_value(self, question):
-        default = None
+        default = question.default
         if os.path.exists('numbas/settings.py'):
-            import numbas.settings
-            default = question.default
+            import numbasltiprovider.settings
             try:
-                default = getattr(numbas.settings,question.key)
+                default = getattr(numbasltiprovider.settings, question.key)
+                if isinstance(default,list):
+                    default = default[0] if len(default)==1 else ''
             except AttributeError:
-                if question.key in numbas.settings.GLOBAL_SETTINGS:
-                    default = numbas.settings.GLOBAL_SETTINGS[question.key]
-                elif question.key=='DB_ENGINE':
-                    default = numbas.settings.DATABASES['default']['ENGINE'].replace('django.db.backends.','')
-                elif question.key[:3]=='DB_' and question.key[3:] in numbas.settings.DATABASES['default']:
-                    default = numbas.settings.DATABASES['default'][question.key[3:]]
+                if question.key=='DB_ENGINE':
+                    default = numbasltiprovider.settings.DATABASES['default']['ENGINE'].replace('django.db.backends.', '')
+                elif question.key[:3]=='DB_' and question.key[3:] in numbasltiprovider.settings.DATABASES['default']:
+                    default = numbasltiprovider.settings.DATABASES['default'][question.key[3:]]
         self.values[question.key] = self.get_input(question.question, default, question.validation)
 
 

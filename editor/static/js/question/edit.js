@@ -1977,14 +1977,14 @@ $(document).ready(function() {
             if(type.is_custom_part_type) {
                 return Numbas.custom_part_types[type.name].marking_script;
             } else {
-                var script = Numbas.partConstructors[type.name].prototype.markingScript;
+                var script = Numbas.partConstructors[type.name].prototype.baseMarkingScript();
                 return script ? script.source : '';
             }
         },this);
 
         this.markingScriptError = ko.observable('');
         this.markingScript = ko.computed(function() {
-            var base = Numbas.marking_scripts[this.type().name];
+            var base = new Numbas.marking.MarkingScript(this.baseMarkingAlgorithm());
             if(!this.use_custom_algorithm()) {
                 return base;
             } else {

@@ -674,7 +674,7 @@ $(document).ready(function() {
         baseScope: function() {
             var jme = Numbas.jme;
             var scope = new jme.Scope(jme.builtinScope);
-            var extensions = this.extensions().filter(function(e){return e.used()});
+            var extensions = this.extensions().filter(function(e){return e.used_or_required()});
             for(var i=0;i<extensions.length;i++) {
                 var extension = extensions[i].location;
                 if(extension in Numbas.extensions && 'scope' in Numbas.extensions[extension]) {

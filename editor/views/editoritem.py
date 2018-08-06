@@ -282,11 +282,9 @@ class SearchView(ListView):
 
         # filter based on tags
         tags = self.tags = form.cleaned_data.get('tags')
-        self.filter_tags = Q()
         if tags:
             for tag in tags:
-                self.filter_tags = self.filter_tags & Q(tags__name__icontains=tag)
-            items = items.filter(self.filter_tags)
+                items = items.filter(tags__name__icontains=tag)
 
         exclude_tags = self.exclude_tags = form.cleaned_data.get('exclude_tags')
         self.filter_exclude_tags = Q()

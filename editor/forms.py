@@ -167,6 +167,10 @@ class NewQuestionForm(forms.ModelForm):
             'author': forms.HiddenInput(),
             'project': BootstrapSelect,
         }
+    def clean(self):
+        cleaned_data=super(NewQuestionForm, self).clean()
+        cleaned_data['name'] = strip_tags(cleaned_data['name'])
+        return cleaned_data
 
 class ExamForm(EditorItemForm):
     class Meta:

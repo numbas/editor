@@ -11,6 +11,7 @@ from django.utils.encoding import force_text
 from django.db.models import Q, Count
 from django.core.validators import validate_email
 from django.contrib.auth.models import User
+from django.utils.html import strip_tags
 
 from editor.models import NewExam, NewQuestion, EditorItem, Access, Theme, Extension, PullRequest, CustomPartType
 import editor.models
@@ -182,6 +183,10 @@ class NewExamForm(forms.ModelForm):
             'project': BootstrapSelect,
         }
 
+    def clean(self):
+        cleaned_data=super(NewExamForm, self).clean()
+        cleaned_data['name'] = strip_tags(cleaned_data['name'])
+        return cleaned_data
 def validate_exam_file(f):
     try:
         content = f.read().decode('utf-8')

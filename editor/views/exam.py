@@ -80,6 +80,7 @@ class CreateView(editor.views.editoritem.CreateView):
         ei = form.save()
         ei.set_licence(ei.project.default_licence)
         ei.locale = ei.project.default_locale
+        ei.clean()
         ei.save()
         self.exam = NewExam()
         self.exam.editoritem = ei

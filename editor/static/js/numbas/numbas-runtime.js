@@ -10927,8 +10927,12 @@ var math = Numbas.math = /** @lends Numbas.math */ {
      */
     rationalApproximation: function(n,accuracy)
     {
-        if(accuracy===undefined)
+        if(accuracy===undefined) {
             accuracy = 15;
+        }
+        if(accuracy>30) {
+            accuracy = 30;
+        }
         accuracy = Math.exp(-accuracy);
         var on = n;
         var e = Math.floor(n);
@@ -10936,7 +10940,7 @@ var math = Numbas.math = /** @lends Numbas.math */ {
             return [n,1];
         var l = 0;
         var frac = [];
-        while(Math.abs(on-e)>accuracy)
+        while(l<100 && Math.abs(on-e)>accuracy)
         {
             l+=1;
             var i = Math.floor(n);

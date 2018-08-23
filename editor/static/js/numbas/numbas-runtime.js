@@ -866,7 +866,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 
     /** Is this a monomial - a single term of the form x^n or m*x^n, where m and n are numbers?
      * @param {Numbas.jme.tree}
-     * @returns {Object} the degree of the monomial
+     * @returns {Object} the base, degree and coefficient of the monomial, as trees.
      */
     isMonomial: function(tree) {
         function unwrapUnaryMinus(tree) {
@@ -889,10 +889,10 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
             coefficient = {tok:new TNum(1)};
         }
         if(tree.tok.type=='name') {
-            return {base:tree, degree:1, coefficient: coefficient};
+            return {base:tree, degree:{tok:new TNum(1)}, coefficient: coefficient};
         }
         if(jme.isOp(tree.tok,'^') && tree.args[0].tok.type=='name' && unwrapUnaryMinus(tree.args[1]).tok.type=='number') {
-            return {base:tree.args[0], degree:tree.args[1].tok.value, coefficient: coefficient};
+            return {base:tree.args[0], degree:tree.args[1], coefficient: coefficient};
         }
         return false;
     }
@@ -2592,7 +2592,8 @@ var compareTrees = jme.compareTrees = function(a,b) {
     if(isma && ismb && !(a.tok.type=='name' && b.tok.type=='name')) {
         var d = jme.compareTrees(ma.base,mb.base);
         if(d==0) {
-            return ma.degree<mb.degree ? 1 : ma.degree>mb.degree ? -1 : compareTrees(ma.coefficient,mb.coefficient);
+            var dd = jme.compareTrees(mb.degree,ma.degree);
+            return dd!=0 ? dd : compareTrees(ma.coefficient,mb.coefficient);
         } else {
             return d;
         }
@@ -5577,8 +5578,9 @@ jme.rules = {};
  * @property {Numbas.jme.tree} result - `result` compiled to a syntax tree
  * @property {Numbas.jme.tree[]} conditions `conditions` compiled to syntax trees
  */
-var Rule = jme.rules.Rule = function(pattern,conditions,result)
+var Rule = jme.rules.Rule = function(pattern,conditions,result,name)
 {
+    this.name = name;
     this.patternString = pattern;
     this.tree = jme.compile(pattern,{},true);
     this.resultString = result;
@@ -6225,6 +6227,8 @@ var simplificationRules = jme.rules.simplificationRules = {
         ['?;n*?;x-?;y',['n isa "number"','canonical_compare(x,y)=0'],'eval(n-1)*x'],
         ['-?;x-?;n*?;y',['n isa "number"','canonical_compare(x,y)=0'],'eval(-1-n)*x'],
         ['-?;x-?;y',['canonical_compare(x,y)=0'],'-2*x'],
+        ['-(?;n*?;x)-?;m*?;y',['n isa "number"','m isa "number"','canonical_compare(x,y)=0'],'eval(-n-m)*x'],
+        ['-(?;n*?;x)-?;y',['n isa "number"','canonical_compare(x,y)=0'],'eval(-n-1)*x'],
         ['?;x-?;n*?;y',['n isa "number"','canonical_compare(x,y)=0'],'eval(1-n)*x'],
         ['?;x-?;y',['canonical_compare(x,y)=0'],'0*x'],
         // rest-x-y or rest-x+y
@@ -6302,14 +6306,14 @@ var expandBracketsRules = [
  * @param {Array} rules
  * @returns {Numbas.jme.rules.Ruleset}
  */
-var compileRules = jme.rules.compileRules = function(rules)
+var compileRules = jme.rules.compileRules = function(rules,name)
 {
     for(var i=0;i<rules.length;i++)
     {
         var pattern = rules[i][0];
         var conditions = rules[i][1];
         var result = rules[i][2];
-        rules[i] = new Rule(pattern,conditions,result);
+        rules[i] = new Rule(pattern,conditions,result,name);
     }
     return new Ruleset(rules,{});
 }
@@ -6318,7 +6322,7 @@ var compiledSimplificationRules = {};
 var notAll = ['canonicalOrder','expandBrackets'];
 for(var x in simplificationRules)
 {
-    compiledSimplificationRules[x] = compiledSimplificationRules[x.toLowerCase()] = compileRules(simplificationRules[x]);
+    compiledSimplificationRules[x] = compiledSimplificationRules[x.toLowerCase()] = compileRules(simplificationRules[x],x);
     if(!notAll.contains(x)) {
     all = all.concat(compiledSimplificationRules[x].rules);
     }
@@ -9030,9 +9034,14 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
     state_functions.push(state_fn('apply',[TName],TName,function(args,scope) {
         if(args[0].tok.type=='name') {
             var name = args[0].tok.name.toLowerCase();
+            var p = scope;
+            while(p && p.state===undefined) {
+                p = p.parent;
+            }
+            var state = p.states[name];
             return {
                 return: new TNothing(),
-                state: scope.states[name] || []
+                state: state || []
             };
         } else {
             var feedback = scope.evaluate(args[0]);
@@ -9152,7 +9161,7 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
      *  @property {Object.<Error>} state_errors - The errors that caused states to become invalid, if any.
      */
     var StatefulScope = marking.StatefulScope = function() {
-        this.new_state = true;
+        this.nesting_depth = 0;
         this.state = [];
         this.states = {};
         this.state_valid = {};
@@ -9164,20 +9173,18 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
     }
     StatefulScope.prototype = /** @lends Numbas.marking.StatefulScope.prototype */ { 
         evaluate: function(expr, variables) {
-            var is_top = this.state===undefined || this.new_state;
-            this.new_state = false;
+            var is_top = this.state===undefined || this.nesting_depth==0;
+            this.nesting_depth += 1;
             var old_state = is_top ? [] : (this.state || []);
             this.state = [];
             try {
                 var v = jme.Scope.prototype.evaluate.apply(this,[expr, variables]);
             } catch(e) {
-                this.new_state = true;
+                this.nesting_depth -= 1;
                 throw(e);
             }
+            this.nesting_depth -= 1;
             this.state = old_state.concat(this.state);
-            if(is_top) {
-                this.new_state = true;
-            }
             return v;
         }
     }
@@ -10924,8 +10931,12 @@ var math = Numbas.math = /** @lends Numbas.math */ {
      */
     rationalApproximation: function(n,accuracy)
     {
-        if(accuracy===undefined)
+        if(accuracy===undefined) {
             accuracy = 15;
+        }
+        if(accuracy>30) {
+            accuracy = 30;
+        }
         accuracy = Math.exp(-accuracy);
         var on = n;
         var e = Math.floor(n);
@@ -10933,7 +10944,7 @@ var math = Numbas.math = /** @lends Numbas.math */ {
             return [n,1];
         var l = 0;
         var frac = [];
-        while(Math.abs(on-e)>accuracy)
+        while(l<100 && Math.abs(on-e)>accuracy)
         {
             l+=1;
             var i = Math.floor(n);

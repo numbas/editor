@@ -5,6 +5,7 @@ import operator
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.models import User
 from django.template.loader import render_to_string
 from django.urls import reverse, resolve, Resolver404
 from django.db import transaction

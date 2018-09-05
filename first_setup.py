@@ -131,16 +131,16 @@ class Command(object):
     def get_value(self, question):
         default = question.default
         if os.path.exists('numbas/settings.py'):
-            import numbasltiprovider.settings
+            import numbas.settings
             try:
-                default = getattr(numbasltiprovider.settings, question.key)
+                default = getattr(numbas.settings, question.key)
                 if isinstance(default,list):
                     default = default[0] if len(default)==1 else ''
             except AttributeError:
                 if question.key=='DB_ENGINE':
-                    default = numbasltiprovider.settings.DATABASES['default']['ENGINE'].replace('django.db.backends.', '')
-                elif question.key[:3]=='DB_' and question.key[3:] in numbasltiprovider.settings.DATABASES['default']:
-                    default = numbasltiprovider.settings.DATABASES['default'][question.key[3:]]
+                    default = numbas.settings.DATABASES['default']['ENGINE'].replace('django.db.backends.', '')
+                elif question.key[:3]=='DB_' and question.key[3:] in numbas.settings.DATABASES['default']:
+                    default = numbas.settings.DATABASES['default'][question.key[3:]]
         self.values[question.key] = self.get_input(question.question, default, question.validation)
 
 

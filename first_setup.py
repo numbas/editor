@@ -118,7 +118,7 @@ class Command(object):
                     for question in self.db_questions:
                         self.get_value(question)
                 else:
-                    self.values['DB_NAME'] = self.get_input('Name of the database file:','db.sqlite3')
+                    self.get_value(Question('DB_NAME', 'Name of the database file:','db.sqlite3'))
 
         def enrep(value):
             rep = repr(value)
@@ -133,14 +133,19 @@ class Command(object):
         if os.path.exists('numbas/settings.py'):
             import numbas.settings
             try:
-                default = getattr(numbas.settings, question.key)
-                if isinstance(default,list):
-                    default = default[0] if len(default)==1 else ''
-            except AttributeError:
                 if question.key=='DB_ENGINE':
                     default = numbas.settings.DATABASES['default']['ENGINE'].replace('django.db.backends.', '')
                 elif question.key[:3]=='DB_' and question.key[3:] in numbas.settings.DATABASES['default']:
                     default = numbas.settings.DATABASES['default'][question.key[3:]]
+                else:
+                    try:
+                        default = getattr(numbas.settings, question.key)
+                    except AttributeError:
+                        default = numbas.settings.GLOBAL_SETTINGS[question.key]
+                    if isinstance(default,list):
+                        default = default[0] if len(default)==1 else ''
+            except (AttributeError,KeyError):
+                pass
         self.values[question.key] = self.get_input(question.question, default, question.validation)
 
 

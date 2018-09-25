@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+f w
+
 {% load humanize %}
 {% load sstatic %}
 
@@ -16,19 +18,19 @@
             <a class="stat-card" href="{% url 'search' %}?item_types=questions">
                 <h4>{{counts.questions|intcomma}}</h4>
                 questions, of which
-                <strong>{{counts.public_questions}}</strong> published.
+                <strong>{{counts.public_questions|intcomma}}</strong> published.
             </a>
 
             <a class="stat-card" href="{% url 'search' %}?item_types=exams">
                 <h4>{{counts.exams|intcomma}}</h4>
                 exams, of which
-                <strong>{{counts.public_exams}}</strong> published.
+                <strong>{{counts.public_exams|intcomma}}</strong> published.
             </a>
 
             <a class="stat-card" href="{% url 'public_projects' %}">
                 <h4>{{counts.projects|intcomma}}</h4>
                 projects, of which
-                <strong>{{counts.public_projects}}</strong> published.
+                <strong>{{counts.public_projects|intcomma}}</strong> published.
             </a>
 
             <a class="stat-card" href="{{HELP_URL}}extensions.html">
@@ -48,7 +50,7 @@
 
             <div class="stat-card">
                 <h4>{{counts.users|intcomma}}</h4>
-                users, from <strong>{{counts.user_domains}}</strong> institutions (approximately).
+                users, from <strong>{{counts.user_domains|intcomma}}</strong> institutions (approximately).
             </div>
         </div>
     </div>

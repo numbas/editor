@@ -38,7 +38,7 @@ a.stat-card {
     word-break: keep-all;
     overflow-wrap: normal;
     list-style: none;
-    margin: 0.5rem;
+    padding: 0 0.5rem;
     text-align: center;
 }
 .word-cloud a {

@@ -23,3 +23,25 @@ a.stat-card {
 .recent-data td, .recent-data thead th {
     text-align: right;
 }
+
+.word-cloud {
+    padding: 0;
+    font-size: 3rem;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 50rem;
+    margin: 1rem auto;
+}
+.word-cloud > li {
+    display: inline-block;
+    word-break: keep-all;
+    overflow-wrap: normal;
+    list-style: none;
+    margin: 0.5rem;
+    text-align: center;
+}
+.word-cloud a {
+    color: inherit;
+}

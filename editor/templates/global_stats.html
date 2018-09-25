@@ -94,4 +94,11 @@ f w
             </table>
         </div>
     </div>
+    <div class="row">
+        <ul class="word-cloud">
+            {% for word,size in word_cloud %}
+            <li style="font-size: {{size}}em;"><a href="{% url 'search' %}?query={{word}}">{{word}}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
 {% endblock content %}

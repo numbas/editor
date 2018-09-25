@@ -5,6 +5,10 @@ from django.utils.timezone import now
 from datetime import timedelta
 from editor.models import EditorItem, NewQuestion, NewExam, Project, Extension, Theme, CustomPartType, TimelineItem
 from django.contrib.auth.models import User
+from collections import defaultdict
+import re
+from math import sqrt
+from random import shuffle
 
 class HomeView(TemplateView):
     template_name = 'index.html'
@@ -58,4 +62,28 @@ class GlobalStatsView(TemplateView):
             'users': active_users.count(),
             'user_domains': len(set(u.email.split('@')[1] for u in active_users if '@' in u.email)),
         }
+        context['word_cloud'] = word_cloud(EditorItem.objects.filter(published=True))
         return context
+
+def word_cloud(items):
+    all_words = defaultdict(lambda: 0)
+    stopwords = 'are,for,from,how,that,the,this,was,what,when,where,question,exam,copy,one,two,three,four,five,six,seven,eight,nine,ten'.split(',')
+    print(stopwords)
+    for e in items:
+        words = [re.sub(r'\W*(\w.*?)\W*$',r'\1',w.lower()) for w in re.split(r'\s',e.name)]
+        words = [w for w in words if len(w)>2 and w not in stopwords and not re.search(r'(\d|\'s)',w) and re.match(r'\w+',w)]
+        for w in words:
+            all_words[w] += 1
+
+    counts = defaultdict(lambda: 0)
+    for k,v in all_words.items():
+        if k[-1]=='s' and k[:-1] in all_words:
+            k = k[:-1]
+        counts[k] += v
+
+    if not counts:
+        return []
+    top = max(counts.values())
+    chart = [(k,sqrt(v/top)) for k,v in counts.items() if v>=top*0.1]
+    shuffle(chart)
+    return chart[:30]

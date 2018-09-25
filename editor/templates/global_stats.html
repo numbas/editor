@@ -65,17 +65,17 @@
                 <tr>
                     <th>Items created</th>
                     <td></td>
-                    {% for period in recent_data %}<td>{{period.created}}</td>{% endfor %}
+                    {% for period in recent_data %}<td>{{period.created|intcomma}}</td>{% endfor %}
                 </tr>
                 <tr>
                     <th>Items modified</th>
                     <td></td>
-                    {% for period in recent_data %}<td>{{period.modified}}</td>{% endfor %}
+                    {% for period in recent_data %}<td>{{period.modified|intcomma}}</td>{% endfor %}
                 </tr>
                 <tr>
                     <th>Users active</th>
                     <td></td>
-                    {% for period in recent_data %}<td>{{period.users_active}}</td>{% endfor %}
+                    {% for period in recent_data %}<td>{{period.users_active|intcomma}}</td>{% endfor %}
                 </tr>
             </tbody>
         </table>

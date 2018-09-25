@@ -35,6 +35,7 @@ class GlobalStatsView(TemplateView):
             {
                 'created': EditorItem.objects.filter(created__gt=t-d).count(),
                 'modified': EditorItem.objects.filter(last_modified__gt=t-d).count(),
+                'users_joined': User.objects.filter(date_joined__gt=t-d).count(),
                 'users_active': User.objects.filter(timelineitems__date__gt=t-d).distinct().count(),
             }
             for d in periods
@@ -47,6 +48,7 @@ class GlobalStatsView(TemplateView):
             'public_questions': NewQuestion.objects.filter(editoritem__published=True).count(),
             'exams': NewExam.objects.count(),
             'public_exams': NewExam.objects.filter(editoritem__published=True).count(),
+            'open_access_items': EditorItem.objects.filter(licence__can_reuse=True,published=True).count(),
             'projects': Project.objects.count(),
             'public_projects': Project.objects.filter(public_view=True).count(),
             'extensions': Extension.objects.count(),

@@ -27,6 +27,11 @@ f w
                 <strong>{{counts.public_exams|intcomma}}</strong> published.
             </a>
 
+            <a class="stat-card" href="{% url 'search' %}?usage=reuse">
+                <h4>{{counts.open_access_items|intcomma}}</h4>
+                items released for free reuse under an open access licence.
+            </a>
+
             <a class="stat-card" href="{% url 'public_projects' %}">
                 <h4>{{counts.projects|intcomma}}</h4>
                 projects, of which
@@ -73,6 +78,11 @@ f w
                     <th>Items modified</th>
                     <td></td>
                     {% for period in recent_data %}<td>{{period.modified|intcomma}}</td>{% endfor %}
+                </tr>
+                <tr>
+                    <th>Users registered</th>
+                    <td></td>
+                    {% for period in recent_data %}<td>{{period.users_joined|intcomma}}</td>{% endfor %}
                 </tr>
                 <tr>
                     <th>Users active</th>

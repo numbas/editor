@@ -61,7 +61,7 @@ class GlobalStatsView(TemplateView):
             'users': active_users.count(),
             'user_domains': len(set(u.email.split('@')[1] for u in active_users if '@' in u.email)),
         }
-        context['word_cloud'] = word_cloud(EditorItem.objects.filter(published=True))
+        context['word_cloud'] = word_cloud(EditorItem.objects.filter(published=True,last_modified__gt=now()-timedelta(days=90)))
         return context
 
 def word_cloud(items):
@@ -83,6 +83,8 @@ def word_cloud(items):
     if not counts:
         return []
     top = max(counts.values())
-    chart = sorted([(k,(v/top)**(1/3)) for k,v in counts.items() if v>=top*0.1],key=lambda x:x[1])[:100]
+    chart = sorted([(k,v) for k,v in counts.items() if v>=top*0.1],key=lambda x:x[1])[:100]
+    mean = sum(v for k,v in chart)/len(chart)
+    chart = [(k,(v/mean)**(1/3)) for k,v in chart]
     shuffle(chart)
     return chart

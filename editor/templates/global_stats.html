@@ -97,8 +97,8 @@ f w
     <hr>
     <div class="row">
         <ul class="word-cloud">
-            {% for word,size in word_cloud %}
-            <li style="font-size: {{size}}em;"><a href="{% url 'search' %}?query={{word}}">{{word}}</a></li>
+            {% for word,size,hue in word_cloud %}
+            <li style="font-size: {{size}}em;color: hsl({{hue}},50%,30%);"><a href="{% url 'search' %}?query={{word}}">{{word}}</a></li>
             {% endfor %}
         </ul>
     </div>

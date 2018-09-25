@@ -85,6 +85,6 @@ def word_cloud(items):
     top = max(counts.values())
     chart = sorted([(k,v) for k,v in counts.items() if v>=top*0.1],key=lambda x:x[1])[:100]
     mean = sum(v for k,v in chart)/len(chart)
-    chart = [(k,(v/mean)**(1/3)) for k,v in chart]
+    chart = [(x[0],(x[1]/mean)**(1/3),i*1.618*360) for i,x in enumerate(chart)]
     shuffle(chart)
     return chart

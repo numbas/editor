@@ -31,8 +31,7 @@ a.stat-card {
     align-items: baseline;
     justify-content: center;
     flex-wrap: wrap;
-    max-width: 50rem;
-    margin: 1rem auto;
+    margin: 1rem;
 }
 .word-cloud > li {
     display: inline-block;

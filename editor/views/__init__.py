@@ -7,7 +7,6 @@ from editor.models import EditorItem, NewQuestion, NewExam, Project, Extension, 
 from django.contrib.auth.models import User
 from collections import defaultdict
 import re
-from math import sqrt
 from random import shuffle
 
 class HomeView(TemplateView):
@@ -67,7 +66,7 @@ class GlobalStatsView(TemplateView):
 
 def word_cloud(items):
     all_words = defaultdict(lambda: 0)
-    stopwords = 'are,for,from,how,that,the,this,was,what,when,where,question,exam,copy,one,two,three,four,five,six,seven,eight,nine,ten'.split(',')
+    stopwords = 'and,are,for,from,how,that,the,this,was,what,when,where,question,exam,copy,one,two,three,four,five,six,seven,eight,nine,ten'.split(',')
     print(stopwords)
     for e in items:
         words = [re.sub(r'\W*(\w.*?)\W*$',r'\1',w.lower()) for w in re.split(r'\s',e.name)]
@@ -84,6 +83,6 @@ def word_cloud(items):
     if not counts:
         return []
     top = max(counts.values())
-    chart = [(k,sqrt(v/top)) for k,v in counts.items() if v>=top*0.1]
+    chart = sorted([(k,(v/top)**(1/3)) for k,v in counts.items() if v>=top*0.1],key=lambda x:x[1])[:100]
     shuffle(chart)
-    return chart[:30]
+    return chart

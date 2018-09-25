@@ -12,84 +12,86 @@ f w
 {% block content %}
 <div class="row">
     <p>This page presents some statistics about activity on {{SITE_TITLE}}.</p>
-<div class="row">
-    <div class="col-md-6">
-        <div class="stat-cards">
-            <a class="stat-card" href="{% url 'search' %}?item_types=questions">
-                <h4>{{counts.questions|intcomma}}</h4>
-                questions, of which
-                <strong>{{counts.public_questions|intcomma}}</strong> published.
-            </a>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="stat-cards">
+                <a class="stat-card" href="{% url 'search' %}?item_types=questions">
+                    <h4>{{counts.questions|intcomma}}</h4>
+                    questions, of which
+                    <strong>{{counts.public_questions|intcomma}}</strong> published.
+                </a>
 
-            <a class="stat-card" href="{% url 'search' %}?item_types=exams">
-                <h4>{{counts.exams|intcomma}}</h4>
-                exams, of which
-                <strong>{{counts.public_exams|intcomma}}</strong> published.
-            </a>
+                <a class="stat-card" href="{% url 'search' %}?item_types=exams">
+                    <h4>{{counts.exams|intcomma}}</h4>
+                    exams, of which
+                    <strong>{{counts.public_exams|intcomma}}</strong> published.
+                </a>
 
-            <a class="stat-card" href="{% url 'search' %}?usage=reuse">
-                <h4>{{counts.open_access_items|intcomma}}</h4>
-                items released for free reuse under an open access licence.
-            </a>
+                <a class="stat-card" href="{% url 'search' %}?usage=reuse">
+                    <h4>{{counts.open_access_items|intcomma}}</h4>
+                    items released for free reuse under an open access licence.
+                </a>
 
-            <a class="stat-card" href="{% url 'public_projects' %}">
-                <h4>{{counts.projects|intcomma}}</h4>
-                projects, of which
-                <strong>{{counts.public_projects|intcomma}}</strong> published.
-            </a>
+                <div class="stat-card">
+                    <h4>{{counts.users|intcomma}}</h4>
+                    users, from <strong>{{counts.user_domains|intcomma}}</strong> institutions (approximately).
+                </div>
 
-            <a class="stat-card" href="{{HELP_URL}}extensions.html">
-                <h4>{{counts.extensions|intcomma}}</h4>
-                extensions.
-            </a>
+                <a class="stat-card" href="{% url 'public_projects' %}">
+                    <h4>{{counts.projects|intcomma}}</h4>
+                    projects, of which
+                    <strong>{{counts.public_projects|intcomma}}</strong> published.
+                </a>
 
-            <a class="stat-card" href="{{HELP_URL}}themes.html">
-                <h4>{{counts.themes|intcomma}}</h4>
-                themes.
-            </a>
+                <a class="stat-card" href="{{HELP_URL}}extensions.html">
+                    <h4>{{counts.extensions|intcomma}}</h4>
+                    extensions.
+                </a>
 
-            <a class="stat-card" href="{{HELP_URL}}custom-part-types/reference.html">
-                <h4>{{counts.custom_part_types|intcomma}}</h4>
-                custom part types.
-            </a>
+                <a class="stat-card" href="{{HELP_URL}}themes.html">
+                    <h4>{{counts.themes|intcomma}}</h4>
+                    themes.
+                </a>
 
-            <div class="stat-card">
-                <h4>{{counts.users|intcomma}}</h4>
-                users, from <strong>{{counts.user_domains|intcomma}}</strong> institutions (approximately).
+                <a class="stat-card" href="{{HELP_URL}}custom-part-types/reference.html">
+                    <h4>{{counts.custom_part_types|intcomma}}</h4>
+                    custom part types.
+                </a>
             </div>
         </div>
-    </div>
-    <div class="col-md-6">
-        <table class="table recent-data">
-            <thead>
-                <th></th>
-                <th>in the past</th>
-                <th>day</th>
-                <th>week</th>
-                <th>month</th>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>Items created</th>
-                    <td></td>
-                    {% for period in recent_data %}<td>{{period.created|intcomma}}</td>{% endfor %}
-                </tr>
-                <tr>
-                    <th>Items modified</th>
-                    <td></td>
-                    {% for period in recent_data %}<td>{{period.modified|intcomma}}</td>{% endfor %}
-                </tr>
-                <tr>
-                    <th>Users registered</th>
-                    <td></td>
-                    {% for period in recent_data %}<td>{{period.users_joined|intcomma}}</td>{% endfor %}
-                </tr>
-                <tr>
-                    <th>Users active</th>
-                    <td></td>
-                    {% for period in recent_data %}<td>{{period.users_active|intcomma}}</td>{% endfor %}
-                </tr>
-            </tbody>
-        </table>
+        <div class="col-md-6">
+            <table class="table recent-data">
+                <thead>
+                    <th></th>
+                    <th>in the past</th>
+                    <th>day</th>
+                    <th>week</th>
+                    <th>month</th>
+                    <th>year</th>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Items created</th>
+                        <td></td>
+                        {% for period in recent_data %}<td>{{period.created|intcomma}}</td>{% endfor %}
+                    </tr>
+                    <tr>
+                        <th>Items modified</th>
+                        <td></td>
+                        {% for period in recent_data %}<td>{{period.modified|intcomma}}</td>{% endfor %}
+                    </tr>
+                    <tr>
+                        <th>Users registered</th>
+                        <td></td>
+                        {% for period in recent_data %}<td>{{period.users_joined|intcomma}}</td>{% endfor %}
+                    </tr>
+                    <tr>
+                        <th>Users active</th>
+                        <td></td>
+                        {% for period in recent_data %}<td>{{period.users_active|intcomma}}</td>{% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 {% endblock content %}

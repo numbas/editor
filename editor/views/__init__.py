@@ -30,6 +30,7 @@ class GlobalStatsView(TemplateView):
             timedelta(days=1),
             timedelta(days=7),
             timedelta(days=30),
+            timedelta(days=365),
         ]
         context['recent_data'] = [
             {

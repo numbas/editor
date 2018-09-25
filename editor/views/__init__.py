@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.views.generic import TemplateView
 from django.db.models import Q
 from editor.models import SiteBroadcast
@@ -61,7 +62,10 @@ class GlobalStatsView(TemplateView):
             'users': active_users.count(),
             'user_domains': len(set(u.email.split('@')[1] for u in active_users if '@' in u.email)),
         }
-        context['word_cloud'] = word_cloud(EditorItem.objects.filter(published=True,last_modified__gt=now()-timedelta(days=90)))
+        word_cloud_items = EditorItem.objects.filter(last_modified__gt=now()-timedelta(days=90))
+        if not settings.EVERYTHING_VISIBLE:
+            word_cloud_items = word_cloud_items.filter(published=True)
+        context['word_cloud'] = word_cloud(word_cloud_items)
         return context
 
 def word_cloud(items):

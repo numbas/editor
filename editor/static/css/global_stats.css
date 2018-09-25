@@ -20,3 +20,6 @@ a.stat-card {
     display: block;
 }
 
+.recent-data td, .recent-data thead th {
+    text-align: right;
+}

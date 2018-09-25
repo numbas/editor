@@ -49,7 +49,7 @@ class GlobalStatsView(TemplateView):
             'exams': NewExam.objects.count(),
             'public_exams': NewExam.objects.filter(editoritem__published=True).count(),
             'open_access_items': EditorItem.objects.filter(licence__can_reuse=True,published=True).count(),
-            'projects': Project.objects.count(),
+            'projects': Project.objects.filter(personal_project_of=None).count(),
             'public_projects': Project.objects.filter(public_view=True).count(),
             'extensions': Extension.objects.count(),
             'themes': Theme.objects.count(),

@@ -2,13 +2,17 @@ from django.conf.urls import url
 
 from django.contrib.auth.decorators import login_required
 
-from .views import project, editoritem, exam, question, HomeView, TermsOfUseView, PrivacyPolicyView, theme, extension, generic, notification, resource, basket, timeline, custom_part_type
+from .views import project, editoritem, exam, question, HomeView, GlobalStatsView, TermsOfUseView, PrivacyPolicyView, theme, extension, generic, notification, resource, basket, timeline, custom_part_type
 
 urlpatterns = [
 
     # Home
 
     url(r'^$', HomeView.as_view(), name='editor_index'),
+
+    # Global stats
+
+    url(r'^stats/$', GlobalStatsView.as_view(), name='global_stats'),
 
     # Terms of use
 

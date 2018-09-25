@@ -1,0 +1,22 @@
+.stat-cards {
+    display: flex;
+    flex-wrap: wrap;
+}
+.stat-card {
+    background: #acdeff;
+    padding: 1rem 2rem;
+    border-radius: 0.5em;
+    text-align: center;
+    margin: 1rem;
+    flex: 1 0 12em;
+}
+.stat-card > h4 {
+    margin: 0 0 1rem 0;
+    font-weight: bold;
+}
+a.stat-card {
+    color: inherit;
+    text-decoration: none;
+    display: block;
+}
+

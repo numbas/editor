@@ -5,7 +5,7 @@ if(!window.Editor)
 $(document).ready(function() {
 
     function texJMEBit(expr,rules) {
-        rules = rules || [];
+        rules = rules || 'basic';
         var scope = new Numbas.jme.Scope(Numbas.jme.builtinScope);
         try{
             if(viewModel && viewModel.rulesets) {

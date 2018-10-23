@@ -105,6 +105,11 @@ part_types.models = [
                     partialCredit: ko.observable(0),
                     message: Editor.contentObservable('')
                 },
+                mustmatchpattern: {
+                    pattern: ko.observable(''),
+                    partialCredit: ko.observable(0),
+                    message: ko.observable('')
+                },
                 checkVariableNames: ko.observable(false),
                 expectedVariableNames: ko.observableArray([])
             };
@@ -140,7 +145,10 @@ part_types.models = [
                     failureRate: model.failureRate(),
                     checkVariableNames: model.checkVariableNames(),
                     showPreview: model.showPreview(),
-                    expectedVariableNames: model.expectedVariableNames()
+                    expectedVariableNames: model.expectedVariableNames(),
+                    mustmatchpattern: model.mustmatchpattern.pattern(),
+                    mustMatchPC: model.mustmatchpattern.partialCredit(),
+                    mustMatchMessage: model.mustmatchpattern.message()
                 };
             });
 
@@ -193,6 +201,13 @@ part_types.models = [
                     message: this.notallowed.message()
                 };
             }
+            if(this.mustmatchpattern.pattern().trim()) {
+                data.mustmatchpattern = {
+                    pattern: this.mustmatchpattern.pattern(),
+                    partialCredit: this.mustmatchpattern.partialCredit(),
+                    message: this.mustmatchpattern.message()
+                }
+            }
         },
         load: function(data) {
             tryLoad(data,['answer','answerSimplification','checkVariableNames','expectedVariableNames','showPreview'],this);
@@ -211,7 +226,8 @@ part_types.models = [
             tryLoad(data.maxlength,['length','partialCredit','message'],this.maxlength);
             tryLoad(data.minlength,['length','partialCredit','message'],this.minlength);
             tryLoad(data.musthave,['strings','showStrings','partialCredit','message'],this.musthave);
-            tryLoad(data.notallowed,['strings','showStrings','partialCredt','message'],this.notallowed);
+            tryLoad(data.notallowed,['strings','showStrings','partialCredit','message'],this.notallowed);
+            tryLoad(data.mustmatchpattern,['pattern','partialCredit','message'],this.mustmatchpattern);
         }
     },
     {

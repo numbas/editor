@@ -41,6 +41,24 @@
 </section>
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='restrictions'}">
     <div class="main-settings">
+    <h4>Pattern restriction</h4>
+    <form class="form-horizontal" data-bind="submit: Editor.noop">
+        {% jmeproperty 'mustmatchpattern.pattern' 'Pattern student\'s answer must match' help_url='question/parts/mathematical-expression.html#term-pattern-student-s-answer-must-match' %}
+        <div data-bind="fadeVisible: mustmatchpattern.pattern">
+            {% percentproperty 'mustmatchpattern.partialCredit' 'Partial credit for not matching pattern' %}
+            <div class="form-group">
+                <label class="{{form_label_class}} control-label">
+                    Warning message
+                </label>
+                <div class="{{form_control_class}}">
+                    <div {% if not editable %}disabled{% endif %} data-bind="writemaths: mustmatchpattern.message, wmPara: false, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','preview']"></div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <hr>
+
     <h4>Variables</h4>
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         {% booleanproperty 'checkVariableNames' 'Warn if student uses an unexpected variable name?' %}
@@ -54,8 +72,8 @@
         </div>
     </form>
     </div>
-    <hr>
 
+    <hr>
 
     <h4>Length restriction</h4>
     <form class="form-horizontal" data-bind="submit: Editor.noop">

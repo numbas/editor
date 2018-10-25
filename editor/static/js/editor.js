@@ -4,7 +4,16 @@ if(!window.Editor)
 
 $(document).ready(function() {
 
-    function texJMEBit(expr,rules) {
+    function wrap_subvar(expr) {
+        var sbits = Numbas.util.splitbrackets(expr,'{','}');
+        var out = '';
+        for(var j=0;j<sbits.length;j+=1) {
+            out += j%2 ? ' subvar('+sbits[j]+')' : sbits[j]; //subvar here instead of \\color because we're still in JME
+        }
+        return out;
+    }
+
+    function texJMEBit(expr,rules,parser) {
         rules = rules || 'basic';
         var scope = new Numbas.jme.Scope(Numbas.jme.builtinScope);
         try{
@@ -13,14 +22,9 @@ $(document).ready(function() {
                     scope.setRuleset(r.name(), Numbas.jme.collectRuleset(r.sets(),scope.allRulesets()));
                 });
             }
-            var sbits = Numbas.util.splitbrackets(expr,'{','}');
-            var expr = '';
-            for(var j=0;j<sbits.length;j+=1)
-            {
-                expr += j%2 ? ' subvar('+sbits[j]+')' : sbits[j]; //subvar here instead of \\color because we're still in JME
-            }
-            expr = {tex: Numbas.jme.display.exprToLaTeX(expr,rules,scope), error: false};
-            return expr;
+            expr = wrap_subvar(expr);
+            var tex = Numbas.jme.display.exprToLaTeX(expr,rules,scope,parser);
+            return {tex: tex, error: false};
         } catch(e) {
             var tex = e.message.replace(/<\/?(code|em|strong)>/g,'');
             return {message: e.message, tex: '\\color{red}{\\text{'+tex+'}}', error: true};
@@ -1695,9 +1699,11 @@ $(document).ready(function() {
     };
 
     ko.bindingHandlers.JME = {
-        update: function(element,valueAccessor) {
+        update: function(element,valueAccessor,allBindingsAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor());
-            var res = texJMEBit(value);
+            var allBindings = allBindingsAccessor();
+            var parser = allBindings.parser || Numbas.jme.standardParser;
+            var res = texJMEBit(value,null,parser);
             $(element).toggleClass('jme-error',res.error);
             if(res.error) {
                 $(element).html(res.message);

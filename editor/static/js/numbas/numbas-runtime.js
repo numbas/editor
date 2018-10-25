@@ -509,6 +509,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
      * @property {Number} vsetRangePoints - The number of values to pick for each variable.
      * @property {Number} checkingAccuracy - A parameter for the checking function to determine if two results are equal. See {@link Numbas.jme.checkingFunctions}.
      * @property {Number} failureRate - The number of times the comparison must fail to declare that the expressions are unequal.
+     * @property {Boolean} sameVars - if true, then both expressions should have exactly the same free variables
      */
     /** Compare two expressions over some randomly selected points in the space of variables, to decide if they're equal.
      * @param {JME} expr1
@@ -517,16 +518,20 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
      * @param {Numbas.jme.Scope} scope
      * @returns {Boolean}
      */
-    compare: function(expr1,expr2,settings,scope) {
-        expr1 += '';
-        expr2 += '';
-        var compile = jme.compile, evaluate = jme.evaluate;
+    compare: function(tree1,tree2,settings,scope) {
+        var default_settings = {
+            vsetRangeStart: 0,
+            vsetRangeEnd: 1,
+            vsetRangePoints: 5,
+            checkingType: 'absdiff',
+            checkingAccuracy: 0.0001,
+            failureRate: 1
+        }
+        settings = util.extend_object({},default_settings,settings);
         var checkingFunction = checkingFunctions[settings.checkingType.toLowerCase()];    //work out which checking type is being used
         try {
-            var tree1 = compile(expr1,scope);
-            var tree2 = compile(expr2,scope);
-            if(tree1 == null || tree2 == null)
-            {    //one or both expressions are invalid, can't compare
+            if(tree1 == null || tree2 == null) {    
+                //one or both expressions are invalid, can't compare
                 return false;
             }
             //find variable names used in both expressions - can't compare if different
@@ -536,33 +541,33 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
                 delete vars1[v];
                 delete vars2[v];
             }
-            if( !varnamesAgree(vars1,vars2) )
-            {    //whoops, differing variables
-                return false;
-            }
-            if(vars1.length)
-            {    // if variables are used,  evaluate both expressions over a random selection of values and compare results
-                var errors = 0;
-                var rs = randoms(vars1, settings.vsetRangeStart, settings.vsetRangeEnd, settings.vsetRangePoints);
-                for(var i = 0; i<rs.length; i++) {
-                    var nscope = new jme.Scope([scope,{variables:rs[i]}]);
-                    var r1 = evaluate(tree1,nscope);
-                    var r2 = evaluate(tree2,nscope);
-                    if( !resultsEqual(r1,r2,checkingFunction,settings.checkingAccuracy) ) { errors++; }
-                }
-                if(errors < settings.failureRate) {
-                    return true;
-                }else{
+            if(settings.sameVars) {
+                if( !varnamesAgree(vars1,vars2) ) {    //whoops, differing variables
                     return false;
                 }
-            } else {
-                //if no variables used, can just evaluate both expressions once and compare
-                r1 = evaluate(tree1,scope);
-                r2 = evaluate(tree2,scope);
-                return resultsEqual(r1,r2,checkingFunction,settings.checkingAccuracy);
+            } else { 
+                vars2.forEach(function(n) {
+                    if(vars1.indexOf(n)==-1) {
+                        vars1.push(n);
+                    }
+                });
             }
-        }
-        catch(e) {
+            var hasNames = vars1.length > 0;
+            var numRuns = hasNames ? settings.vsetRangePoints: 1;
+            var failureRate = hasNames ? settings.failureRate : 1;
+            // if variables are used,  evaluate both expressions over a random selection of values and compare results
+            var errors = 0;
+            var rs = randoms(vars1, settings.vsetRangeStart, settings.vsetRangeEnd, numRuns);
+            for(var i = 0; i<rs.length; i++) {
+                var nscope = new jme.Scope([scope,{variables:rs[i]}]);
+                var r1 = nscope.evaluate(tree1);
+                var r2 = nscope.evaluate(tree2);
+                if( !resultsEqual(r1,r2,checkingFunction,settings.checkingAccuracy) ) { 
+                    errors++; 
+                }
+            }
+            return errors < failureRate;
+        } catch(e) {
             return false;
         }
     },
@@ -2432,7 +2437,7 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
  */
 function randoms(varnames,min,max,times)
 {
-    times *= varnames.length;
+    times *= varnames.length || 1;
     var rs = [];
     for( var i=0; i<times; i++ )
     {
@@ -4208,7 +4213,7 @@ newBuiltin('args',[TExpression],TList,null, {
 });
 newBuiltin('type',[TExpression],TString,null, {
     evaluate: function(args,scope) {
-        return args[0].tree.tok.type;
+        return new TString(args[0].tree.tok.type);
     }
 });
 newBuiltin('name',[TString],TName,function(name){ return name });
@@ -4345,7 +4350,7 @@ newBuiltin('match',[TExpression,TString],TDict,null, {
     evaluate: function(args, scope) {
         var expr = args[0].tree;
         var pattern = args[1].value;
-        var options = 'acg';
+        var options = 'ac';
         return match_subexpression(expr,pattern,options,scope);
     }
 });
@@ -4376,7 +4381,7 @@ newBuiltin('matches',[TExpression,TString],TBool,null, {
     evaluate: function(args, scope) {
         var expr = args[0].tree;
         var pattern = args[1].value;
-        var options = 'acg';
+        var options = 'ac';
         return matches_subexpression(expr,pattern,options,scope);
     }
 });
@@ -4428,6 +4433,15 @@ newBuiltin('canonical_compare',['?','?'],TNum,null, {
     }
 });
 jme.lazyOps.push('canonical_compare');
+
+newBuiltin('numerical_compare',[TExpression,TExpression],TBool,null,{
+    evaluate: function(args,scope) {
+        var a = args[0].tree;
+        var b = args[1].tree;
+        return new TBool(jme.compare(a,b,{},scope));
+    }
+});
+
 newBuiltin('translate',[TString],TString,function(s) {
     return R(s);
 });
@@ -4470,9 +4484,10 @@ jme.display = /** @lends Numbas.jme.display */ {
      * @param {JME} expr
      * @param {Array.<String>|Numbas.jme.rules.Ruleset} ruleset - can be anything accepted by {@link Numbas.jme.display.collectRuleset}
      * @param {Numbas.jme.Scope} scope
+     * @param {Numbas.jme.Parser} [parser=Numbas.jme.standardParser]
      * @returns {TeX}
      */
-    exprToLaTeX: function(expr,ruleset,scope)
+    exprToLaTeX: function(expr,ruleset,scope,parser)
     {
         if(!ruleset)
             ruleset = jme.rules.simplificationRules.basic;
@@ -4480,7 +4495,7 @@ jme.display = /** @lends Numbas.jme.display */ {
         expr+='';    //make sure expr is a string
         if(!expr.trim().length)    //if expr is the empty string, don't bother going through the whole compilation proces
             return '';
-        var tree = jme.display.simplify(expr,ruleset,scope); //compile the expression to a tree and simplify it
+        var tree = jme.display.simplify(expr,ruleset,scope,parser); //compile the expression to a tree and simplify it
         var tex = texify(tree,ruleset.flags); //render the tree as TeX
         return tex;
     },
@@ -4504,21 +4519,22 @@ jme.display = /** @lends Numbas.jme.display */ {
      * @param {JME} expr
      * @param {Array.<String>|Numbas.jme.rules.Ruleset} ruleset
      * @param {Numbas.jme.Scope} scope
+     * @param {Numbas.jme.Parser} [parser=Numbas.jme.standardParser]
      * @returns {Numbas.jme.tree}
      *
      * @see Numbas.jme.display.simplifyExpression
      * @see Numbas.jme.display.simplifyTree
      */
-    simplify: function(expr,ruleset,scope)
+    simplify: function(expr,ruleset,scope,parser)
     {
         if(expr.trim()=='')
             return;
         if(!ruleset)
             ruleset = jme.rules.simplificationRules.basic;
         ruleset = jme.collectRuleset(ruleset,scope.allRulesets());        //collect the ruleset - replace set names with the appropriate Rule objects
-        try
-        {
-            var exprTree = jme.compile(expr,{},true);    //compile the expression to a tree. notypecheck is true, so undefined function names can be used.
+        parser = parser || Numbas.jme.standardParser;
+        try {
+            var exprTree = parser.compile(expr,{},true);    //compile the expression to a tree. notypecheck is true, so undefined function names can be used.
             return jme.display.simplifyTree(exprTree,ruleset,scope);    // simplify the tree
         }
         catch(e)
@@ -5915,6 +5931,7 @@ function parse_options(str) {
         commutative: str.match(/c/),
         associative: str.match(/a/),
         allowOtherTerms: str.match(/g/),
+        gatherList: str.match(/l/),
         strictPlus: str.match(/p/)
     };
 }
@@ -5932,6 +5949,7 @@ var extend_options = Numbas.jme.rules.extend_options = function(a,b) {
         commutative: b.commutative===undefined ? a.commutative : b.commutative,
         associative: b.associative===undefined ? a.associative : b.associative,
         allowOtherTerms: b.allowOtherTerms===undefined ? a.allowOtherTerms : b.allowOtherTerms,
+        gatherList: b.gatherList===undefined ? a.gatherList : b.gatherList,
         strictPlus: b.strictPlus===undefined ? a.strictPlus : b.strictPlus,
         scope: b.scope===undefined ? a.scope : b.scope
     };
@@ -6292,6 +6310,9 @@ var number_conditions = jme.rules.number_conditions = {
     },
     'integer': function(tok) {
         return Numbas.util.isInt(tok.value);
+    },
+    'decimal': function(tok) {
+        return Numbas.math.countDP(tok.originalValue)>0;
     }
 }
 
@@ -6404,6 +6425,8 @@ var specialMatchFunctions = jme.rules.specialMatchFunctions = {
     'm_associative': setMatchOptions({associative:true}),
     'm_nonassociative': setMatchOptions({associative:false}),
     'm_strictplus': setMatchOptions({strictPlus:true}),
+    'm_gather': setMatchOptions({gatherList:false}),
+    'm_nogather': setMatchOptions({gatherList:true}),
     'm_type': function(ruleTree,exprTree,options) {
         var wantedType = ruleTree.args[0].tok.name || ruleTree.args[0].tok.value;
         return matchType(wantedType,exprTree);
@@ -6608,16 +6631,35 @@ function matchOrdinaryFunction(ruleTree,exprTree,options) {
 
     options = extend_options(options,{allowOtherTerms:false, commutative: false});
 
-    var namedTerms = matchTermSequence(ruleArgs,exprArgs,false,options);
+    var namedTerms = matchTermSequence(ruleArgs,exprArgs,false,false,options);
     if(namedTerms===false) {
+        return false;
+    }
+
+    function name_captured(name,tree) {
+        if(jme.isOp(tree.tok,';')) {
+            var res = resolveName(tree.args[1]);
+            if(res.name==name) {
+                return true;
+            }
+        }
+        if(tree.args) {
+            return tree.args.some(function(t2){ return name_captured(name,t2); });
+        }
         return false;
     }
 
     // collate the named groups
     var match = {};
     for(var name in namedTerms) {
+        var occurrences = 0;
+        for(var i=0;i<ruleTree.args.length;i++) {
+            if(name_captured(name,ruleTree.args[i])) {
+                occurrences += 1;
+            }
+        }
         var terms = namedTerms[name];
-        match[name] = {tok: new jme.types.TList(terms.length), args: terms};
+        match[name] = occurrences<=1 ? terms[0] : {tok: new jme.types.TList(terms.length), args: terms};
     }
     return match;
 }
@@ -6648,7 +6690,7 @@ function matchList(ruleTree,exprTree,options) {
 
     options = extend_options(options,{allowOtherTerms:false});
 
-    var namedTerms = matchTermSequence(ruleElements,exprElements,false,options);
+    var namedTerms = matchTermSequence(ruleElements,exprElements,false,false,options);
     if(namedTerms===false) {
         return false;
     }
@@ -6718,7 +6760,7 @@ function matchOrdinaryOp(ruleTree,exprTree,options) {
         }
     }
 
-    var namedTerms = matchTermSequence(ruleTerms,exprTerms,commuting,options);
+    var namedTerms = matchTermSequence(ruleTerms,exprTerms,commuting,options.allowOtherTerms && associating, options);
     if(namedTerms===false) {
         return false;
     }
@@ -6727,11 +6769,15 @@ function matchOrdinaryOp(ruleTree,exprTree,options) {
     var match = {};
     for(var name in namedTerms) {
         var terms = namedTerms[name];
-        var sub = terms[0];
-        for(var i=1;i<terms.length;i++) {
-            sub = {tok: new jme.types.TOp(op), args: [sub,terms[i]]};
+        if(options.gatherList) {
+            match[name] = {tok: new jme.types.TList(terms.length), args: terms.map(function(t){ return {tok: new jme.types.TExpression(t)} })};
+        } else {
+            var sub = terms[0];
+            for(var i=1;i<terms.length;i++) {
+                sub = {tok: new jme.types.TOp(op), args: [sub,terms[i]]};
+            }
+            match[name] = sub;
         }
-        match[name] = sub;
     }
     match['__op__'] = op;
 
@@ -6744,10 +6790,11 @@ function matchOrdinaryOp(ruleTree,exprTree,options) {
  * @param {Array.<Numbas.jme.rules.Term>} ruleTerms - the terms in the pattern
  * @param {Array.<Numbas.jme.rules.Term>} exprTerms - the terms in the expression
  * @param {Boolean} commuting - can the terms match in any order?
+ * @param {Boolean} allowOtherTerms - allow extra terms which don't match any of the pattern terms?
  * @param {Numbas.jme.rules.matchTree_options} options
  * @returns {Boolean|Object.<Numbas.jme.jme_pattern_match>} - false if no match, or a dictionary mapping names to lists of subexpressions matching those names (it's up to whatever called this to join together subexpressions matched under the same name)
  */
-function matchTermSequence(ruleTerms, exprTerms, commuting, options) {
+function matchTermSequence(ruleTerms, exprTerms, commuting, allowOtherTerms, options) {
     var matches = {};
     exprTerms.forEach(function(_,i){ matches[i] = {} });
 
@@ -6765,8 +6812,9 @@ function matchTermSequence(ruleTerms, exprTerms, commuting, options) {
             var equalnames = {};
             ruleTerm.equalnames.forEach(function(nameTree) {
                 var name = nameTree.tok.name;
-                var t = m[name] || resolveName(nameTree,exprTerm.term).value;
-                equalnames[name] = t;
+                if(m[name]) {
+                    equalnames[name] = m[name];
+                }
             });
             matches[ic][pc] = {
                 match: m,
@@ -6790,13 +6838,13 @@ function matchTermSequence(ruleTerms, exprTerms, commuting, options) {
             return true;
         }
         var ok = assignment.every(function(p,i) {
-            if(p<0 || p==pc || p>=ruleTerms.length) {
+            if(p<0 || p>=ruleTerms.length) {
                 return true;
             }
             var m2 = matches[i][p];
             return equalnames.every(function(nameTree) {
                 var name = nameTree.tok.name;
-                if(m2.equalnames[name]===undefined) {
+                if(m.equalnames[name]===undefined || m2.equalnames[name]===undefined) {
                     return true;
                 }
                 return jme.compareTrees(m.equalnames[name], m2.equalnames[name]) == 0;
@@ -6805,7 +6853,7 @@ function matchTermSequence(ruleTerms, exprTerms, commuting, options) {
         return ok;
     }
 
-    var assignment = match_sequence(ruleTerms,exprTerms,{checkFn: term_ok, constraintFn: constraint_ok, commutative: commuting, allowOtherTerms: options.allowOtherTerms});
+    var assignment = match_sequence(ruleTerms,exprTerms,{checkFn: term_ok, constraintFn: constraint_ok, commutative: commuting, allowOtherTerms: allowOtherTerms});
     if(assignment===false) {
         return false;
     }
@@ -6969,7 +7017,7 @@ var match_sequence = jme.rules.match_sequence = function(pattern,input,options) 
     function advance_input() {
         ic += 1;
         if(options.commutative) {
-            pc = start;
+            pc = 0;
         }
     }
     var steps = 0;
@@ -7028,7 +7076,7 @@ var match_sequence = jme.rules.match_sequence = function(pattern,input,options) 
         return false;
     }
     var result = pattern.map(function(p,i) {
-        return capture.map(function(_,j){return j}).filter(function(j){ return capture[j] == i;}).map(function(j){ return j+start});
+        return capture.map(function(_,j){return j}).filter(function(j){ return capture[j] == i;});
     });
     var ignored_start_terms = input.slice(0,start).map(function(_,j){return j});
     var ignored_end_terms = capture.map(function(_,j){return j}).filter(function(j){return capture[j]==pattern.length});
@@ -7213,14 +7261,14 @@ function mergeMatches(matches) {
  */
 var applyPostReplacement = jme.rules.applyPostReplacement = function(tree,options) {
     var tok = tree.tok;
-    if(jme.isFunction(tok,'eval')) {
-        return {tok: jme.evaluate(tree.args[0],options.scope)};
-    }
     if(tree.args) {
         var args = tree.args.map(function(arg) {
             return applyPostReplacement(arg,options);
         });
-        return {tok:tok, args: args};
+        tree = {tok:tok, args: args};
+    }
+    if(jme.isFunction(tok,'eval')) {
+        return {tok: jme.evaluate(tree.args[0],options.scope)};
     }
     return tree;
 }
@@ -7321,6 +7369,7 @@ var matchExpression = jme.rules.matchExpression = function(pattern,expr,options)
         commutative: true,
         associative: true,
         allowOtherTerms: true,
+        gatherList: false,
         strictPlus: false,
         scope: Numbas.jme.builtinScope
     };
@@ -7487,13 +7536,15 @@ var simplificationRules = jme.rules.simplificationRules = {
         ['?;x+(-?;y)','g','x-y'],            //plus minus = minus
         ['?;x-(-?;y)','g','x+y'],            //minus minus = plus
         ['-(-?;x)','','x'],                //unary minus minus = plus
-        ['-complex:negative:m_number;x','','eval(-x)'],   // negation of a complex number with negative real part
-        ['(`+- real:m_number);x + (`+- imaginary:m_number);y','cg','eval(x+y)'],    // collect the two parts of a complex number
         ['(-?;x)/?;y','','-(x/y)'],            //take negation to left of fraction
         ['?;x/(-?;y)','','-(x/y)'],
-        ['(-(real:m_number `| `!m_number);x)*?;y','acg','-(x*y)'],            //take negation to left of multiplication
-        ['m_number;n*i','acg','eval(n*i)'],            //always collect multiplication by i
+        ['`!-? `& (-(real:m_number `| `!m_number);x)*?;y','acg','-(x*y)'],            //take negation to left of multiplication
         ['-(?;a+?`+;b)','','-a-b']
+    ],
+    collectComplex: [
+        ['-complex:negative:m_number;x','','eval(-x)'],   // negation of a complex number with negative real part
+        ['(`+- real:m_number);x + (`+- imaginary:m_number);y','cg','eval(x+y)'],    // collect the two parts of a complex number
+        ['m_number;n*i','acg','eval(n*i)'],            //always collect multiplication by i
     ],
     unitFactor: [
         ['1*?;x','acg','x'],
@@ -16626,6 +16677,17 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
             if(messageNode)
                 settings.notAllowedMessage = $.xsl.transform(Numbas.xml.templates.question,messageNode).string;
         }
+        //get pattern the student's answer must match
+        var mustMatchNode = xml.selectSingleNode('answer/mustmatchpattern');
+        if(mustMatchNode) {
+            //partial credit for failing not-allowed test
+            tryGetAttribute(settings,xml,mustMatchNode,['pattern','partialCredit'],['mustMatchPattern','mustMatchPC']);
+            var messageNode = mustMatchNode.selectSingleNode('message');
+            if(messageNode) {
+                settings.mustMatchMessage = $.xsl.transform(Numbas.xml.templates.question,messageNode).string;
+            }
+        }
+
         tryGetAttribute(settings,xml,parametersPath,['checkVariableNames','showPreview']);
         var expectedVariableNamesNode = xml.selectSingleNode('answer/expectedvariablenames');
         if(expectedVariableNamesNode)
@@ -16644,6 +16706,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         tryLoad(data.minlength, ['length', 'partialCredit', 'message'], settings, ['minLength', 'minLengthPC', 'minLengthMessage']);
         tryLoad(data.musthave, ['strings', 'showStrings', 'partialCredit', 'message'], settings, ['mustHave', 'mustHaveShowStrings', 'mustHavePC', 'mustHaveMessage']);
         tryLoad(data.notallowed, ['strings', 'showStrings', 'partialCredit', 'message'], settings, ['notAllowed', 'notAllowedShowStrings', 'notAllowedPC', 'notAllowedMessage']);
+        tryLoad(data.mustmatchpattern, ['pattern', 'partialCredit', 'message'], settings, ['mustMatchPattern', 'mustMatchPC', 'mustMatchMessage']);
         tryLoad(data, ['checkVariableNames', 'expectedVariableNames', 'showPreview'], settings);
     },
     resume: function() {
@@ -16695,6 +16758,9 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
      * @property {Number} notAllowedPC - partial credit to award if any not-allowed string is present
      * @property {String} notAllowedMessage - message to add to the marking feedback if the student's answer contains a not-allowed string.
      * @property {Boolean} notAllowedShowStrings - tell the students which strings must not be included in the marking feedback, if they've used a not-allowed string?
+     * @property {String} mustMatchPattern - A pattern that the student's answer must match
+     * @property {Number} mustMatchPC - partial credit to award if the student's answer does not match the pattern
+     * @property {String} mustMatchMessage - message to add to the marking feedback if the student's answer does not match the pattern
      */
     settings:
     {
@@ -16721,7 +16787,10 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         notAllowed: [],
         notAllowedPC: 0,
         notAllowedMessage: '',
-        notAllowedShowStrings: false
+        notAllowedShowStrings: false,
+        mustMatchPattern: '',
+        mustMatchPC: 0,
+        mustMatchMessage: ''
     },
     /** The name of the input widget this part uses, if any.
      * @returns {String}
@@ -16743,11 +16812,11 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
      */
     getCorrectAnswer: function(scope) {
         var settings = this.settings;
-        settings.answerSimplification = Numbas.jme.collectRuleset(settings.answerSimplificationString,scope.allRulesets());
+        var answerSimplification = Numbas.jme.collectRuleset(settings.answerSimplificationString,scope.allRulesets());
         var expr = jme.subvars(settings.correctAnswerString,scope);
         settings.correctAnswer = jme.display.simplifyExpression(
             expr,
-            settings.answerSimplification,
+            answerSimplification,
             scope
         );
         if(settings.correctAnswer == '' && this.marks>0) {

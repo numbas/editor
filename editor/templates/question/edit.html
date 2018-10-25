@@ -268,7 +268,7 @@
                             </div>
                             </div>
                             <div class="help-block">
-                                <div class="value-error alert alert-danger" data-bind="visible: error().length>0, html: error">
+                                <div class="value-error alert alert-danger" data-bind="visible: error() && error().length>0, html: error">
                                 <div class="html-type-warning value-error alert alert-danger" data-bind="visible: value() && value().type=='html'">
                                     <p>This variable is an HTML node. HTML nodes can not be relied upon to work correctly when resuming a session - for example, attached event callbacks will be lost, and mathematical notation will likely also break.</p>
                                     <p>If this causes problems, try to create HTML nodes where you use them in content areas, instead of storing them in variables.</p>

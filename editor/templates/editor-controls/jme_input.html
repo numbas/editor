@@ -2,4 +2,4 @@
     textInput: {{property}}, 
     autosize: {max: 500, min: 30, padding: 10, value: {{property}} }
 "/>
-<span data-bind="JME: {{property}}" class="jme-preview"></span>
+<span data-bind="JME: {{property}}{% if parser %}, parser: {{parser}}{% endif %}" class="jme-preview"></span>

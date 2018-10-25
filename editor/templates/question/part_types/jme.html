@@ -43,7 +43,7 @@
     <div class="main-settings">
     <h4>Pattern restriction</h4>
     <form class="form-horizontal" data-bind="submit: Editor.noop">
-        {% jmeproperty 'mustmatchpattern.pattern' 'Pattern student\'s answer must match' help_url='question/parts/mathematical-expression.html#term-pattern-student-s-answer-must-match' %}
+        {% jmeproperty 'mustmatchpattern.pattern' 'Pattern student\'s answer must match' parser='Numbas.jme.rules.patternParser' help_url='question/parts/mathematical-expression.html#term-pattern-student-s-answer-must-match' %}
         <div data-bind="fadeVisible: mustmatchpattern.pattern">
             {% percentproperty 'mustmatchpattern.partialCredit' 'Partial credit for not matching pattern' %}
             <div class="form-group">

@@ -43,7 +43,16 @@
     <div class="main-settings">
     <h4>Pattern restriction</h4>
     <form class="form-horizontal" data-bind="submit: Editor.noop">
-        {% jmeproperty 'mustmatchpattern.pattern' 'Pattern student\'s answer must match' parser='Numbas.jme.rules.patternParser' help_url='question/parts/mathematical-expression.html#term-pattern-student-s-answer-must-match' %}
+        <div class="form-group">
+            <label class="col-sm-3 control-label">
+                Pattern student's answer must match
+                {% helplink 'question/reference.html#term-pattern-student-s-answer-must-match' %}
+            </label>
+            <div class="col-sm-9">
+                <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: mustmatchpattern.pattern, codemirrorMode: 'jme'"></textarea>
+                <span data-bind="JME: mustmatchpattern.pattern, parser: Numbas.jme.rules.patternParser" class="jme-preview"></span>
+            </div>
+        </div>
         <div data-bind="fadeVisible: mustmatchpattern.pattern">
             {% percentproperty 'mustmatchpattern.partialCredit' 'Partial credit for not matching pattern' %}
             <div class="form-group">

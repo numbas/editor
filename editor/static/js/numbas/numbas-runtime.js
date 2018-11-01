@@ -738,6 +738,8 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
                 return v.name;
             case 'expression':
                 return v.tree;
+            case 'nothing':
+                return undefined;
             default:
                 return v.value;
         }
@@ -7487,7 +7489,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         this.shouldResubmit = false;
         this.credit = 0;
         this.markingFeedback = [];
-        this.finalised_result = [];
+        this.finalised_result = {valid: false, credit: 0, states: []};
         this.submitting = true;
         if(this.parentPart && !this.parentPart.submitting) {
             this.parentPart.setDirty(true);
@@ -7899,6 +7901,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         } else {
             this.calculateScore();
         }
+        this.display && this.display.showSteps();
         if(!dontStore) {
             this.store && this.store.stepsShown(this);
         }
@@ -9135,7 +9138,19 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
     state_functions.push(new jme.funcObj('mark_part',[TString,'?'],TDict,null,{
         evaluate: function(args, scope) {
             var part = scope.question.getPart(args[0].value);
-            var part_result = part.mark_answer(args[1]);
+            var answer = args[1];
+            var part_result;
+            if(answer.type=='nothing') {
+                part.setCredit(0,R('part.marking.nothing entered'));
+                part_result = {
+                    states: {mark: []},
+                    state_valid: {},
+                    state_errors: {},
+                    values: {interpreted_answer:answer}
+                }
+            } else {
+                var part_result = part.mark_answer(answer);
+            }
             var result = marking.finalise_state(part_result.states.mark);
             return jme.wrapValue({
                 marks: part.marks,
@@ -14961,6 +14976,9 @@ GapFillPart.prototype = /** @lends Numbas.parts.GapFillPart.prototype */
      * @returns {Numbas.jme.token}
      */
     rawStudentAnswerAsJME: function() {
+        if(this.gaps.some(function(g){ return g.rawStudentAnswerAsJME()===undefined; })) {
+            return undefined;
+        }
         return new Numbas.jme.types.TList(this.gaps.map(function(g){return g.rawStudentAnswerAsJME()}));
     },
     storeAnswer: function(answer) {
@@ -14980,37 +14998,6 @@ GapFillPart.prototype = /** @lends Numbas.parts.GapFillPart.prototype */
      */
     studentAnswerAsJME: function() {
         return new Numbas.jme.types.TList(this.gaps.map(function(g){return g.studentAnswerAsJME()}));
-    },
-    /** Mark this part - add up the scores from each of the child gaps.
-     */
-    mark_old: function()
-    {
-        this.credit=0;
-        if(this.marks>0)
-        {
-            for(var i=0; i<this.gaps.length; i++)
-            {
-                var gap = this.gaps[i];
-            gap.submit();
-                this.credit += gap.credit*gap.marks;
-                if(this.gaps.length>1)
-                    this.markingComment(R('part.gapfill.feedback header',{index:i+1}));
-                for(var j=0;j<gap.markingFeedback.length;j++)
-                {
-                    var action = util.copyobj(gap.markingFeedback[j]);
-                    action.gap = i;
-                    this.markingFeedback.push(action);
-                }
-            }
-            this.credit/=this.marks;
-        }
-        //go through all gaps, and if any one fails to validate then
-        //whole part fails to validate
-        var success = true;
-        for(var i=0; i<this.gaps.length; i++) {
-            success = success && this.gaps[i].answered;
-        }
-        this.answered = success;
     }
 };
 ['loadFromXML','resume','finaliseLoad','loadFromJSON','storeAnswer'].forEach(function(method) {
@@ -15681,8 +15668,10 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
                 // it's easier for question authors to go [row][column] because that's how they're displayed, but it's too late to change the internals of the part to match that now
                 // I have only myself to thank for this - CP
                 var layoutMatrix = jme.unwrapValue(jme.evaluate(settings.layoutExpression,scope));
+                var layoutFunction = function(row,column) { return layoutMatrix[row][column]; };
+            } else {
+                var layoutFunction = MultipleResponsePart.layoutTypes[settings.layoutType];
             }
-            var layoutFunction = MultipleResponsePart.layoutTypes[settings.layoutType];
             for(var i=0;i<this.numAnswers;i++) {
                 var row = [];
                 for(var j=0;j<this.numChoices;j++) {
@@ -16055,8 +16044,7 @@ Numbas.parts.MultipleResponsePart.layoutTypes = {
     lowertriangle: function(row,column) { return row>=column; },
     strictlowertriangle: function(row,column) { return row>column; },
     uppertriangle: function(row,column) { return row<=column; },
-    strictuppertriangle: function(row,column) { return row<column; },
-    expression: function(row,column) { return layoutMatrix[row][column]; }
+    strictuppertriangle: function(row,column) { return row<column; }
 };
 Numbas.partConstructors['1_n_2'] = util.extend(Part,MultipleResponsePart);
 Numbas.partConstructors['m_n_2'] = util.extend(Part,MultipleResponsePart);
@@ -16198,6 +16186,9 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
         return this.resolved_input_options;
     },
     rawStudentAnswerAsJME: function() {
+        if(this.studentAnswer===undefined) {
+            return new types.TNothing();
+        }
         return this.student_answer_jme_types[this.input_widget()](this.studentAnswer, this.input_options());
     },
     student_answer_jme_types: {

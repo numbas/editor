@@ -439,6 +439,7 @@ part_types.models = [
                 displayColumns: ko.observable(0),
                 customMatrix: ko.observable(''),
                 displayType:ko.observable(''),
+                showCellAnswerState: ko.observable(true),
                 customChoices: ko.observable(false),
                 customChoicesExpression: ko.observable(''),
                 displayTypes: [
@@ -485,6 +486,7 @@ part_types.models = [
             data.shuffleChoices = this.shuffleChoices();
             data.displayType = this.displayType().name;
             data.displayColumns = this.displayColumns();
+            data.showCellAnswerState = this.showCellAnswerState();
 
             if(this.customChoices()) {
                 data.choices = this.customChoicesExpression();
@@ -509,7 +511,7 @@ part_types.models = [
             }
         },
         load: function(data) {
-            tryLoad(data,['minMarks','maxMarks','shuffleChoices','displayColumns'],this);
+            tryLoad(data,['minMarks','maxMarks','shuffleChoices','displayColumns','showCellAnswerState'],this);
             if(typeof data.matrix == 'string') {
                 this.customMarking(true);
                 this.customMatrix(data.matrix);
@@ -559,6 +561,7 @@ part_types.models = [
                 displayColumns: ko.observable(0),
                 customMatrix: ko.observable(''),
                 warningType: ko.observable(''),
+                showCellAnswerState: ko.observable(true),
 
                 warningTypes: [
                     {name: 'none', niceName: 'Do nothing'},
@@ -612,6 +615,7 @@ part_types.models = [
             data.minAnswers = this.minAnswers();
             data.maxAnswers = this.maxAnswers();
             data.warningType = this.warningType().name;
+            data.showCellAnswerState = this.showCellAnswerState();
 
             if(this.customChoices()) {
                 data.choices = this.customChoicesExpression();
@@ -636,7 +640,7 @@ part_types.models = [
             }
         },
         load: function(data) {
-            tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','displayColumns'],this);
+            tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','displayColumns','showCellAnswerState'],this);
             if(typeof data.matrix == 'string') {
                 this.customMarking(true);
                 this.customMatrix(data.matrix);
@@ -691,6 +695,7 @@ part_types.models = [
                 displayType:ko.observable(''),
                 customMatrix: ko.observable(''),
                 warningType: ko.observable(''),
+                showCellAnswerState: ko.observable(true),
 
                 warningTypes: [
                     {name: 'none', niceName: 'Do nothing'},
@@ -800,6 +805,7 @@ part_types.models = [
             data.shuffleAnswers = this.shuffleAnswers();
             data.displayType = this.displayType().name;
             data.warningType = this.warningType().name;
+            data.showCellAnswerState = this.showCellAnswerState();
 
             if(this.customChoices()) {
                 data.choices = this.customChoicesExpression();
@@ -824,7 +830,7 @@ part_types.models = [
             }
         },
         load: function(data) {
-            tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','shuffleAnswers'],this);
+            tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','shuffleAnswers','showCellAnswerState'],this);
             for(var i=0;i<this.warningTypes.length;i++)
             {
                 if(this.warningTypes[i].name==data.warningType) {

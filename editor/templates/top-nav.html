@@ -9,8 +9,10 @@
         <a class="navbar-brand" href="{% url 'editor_index' %}"><img id="numbas-logo" src="{% sstatic 'images/numbas_logo.png' %}"></a>
     </div>
 
-    <form id="search-bar" class="navbar-form navbar-left" role="search" method="get" action="{% block search_url %}{% url 'search' %}{% endblock search_url %}">
-        {% for key,value in request.GET.items %}<input type="hidden" name="{{key}}" value="{{value}}">{% endfor %}
+    <form id="search-bar" class="navbar-form navbar-left" role="search" method="get" action="{% if in_project %}{% url 'project_search' project.pk %}{% else %}{% url 'search' %}{% endif %}">
+        {% if search_params %}
+            {% for key,value in search_params %}{% if value is not None %}<input type="hidden" name="{{key}}" value="{{value}}">{% endif %}{% endfor %}
+        {% endif %}
         <div class="form-group">
             <div class="input-group">
                 <input name="query" type="text" class="form-control" id="top-search-bar" placeholder="Search by name or keyword{% if in_project %} in this project{% endif %}" value="{{search_query}}"/>

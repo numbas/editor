@@ -1,5 +1,6 @@
 $(document).ready(function() {
 var part_types = Editor.part_types = {};
+var tryGetAttribute = Editor.tryGetAttribute;
 
 part_types.models = [
     {
@@ -196,22 +197,23 @@ part_types.models = [
         },
         load: function(data) {
             tryLoad(data,['answer','answerSimplification','checkVariableNames','expectedVariableNames','showPreview'],this);
-            for(var i=0;i<this.checkingTypes.length;i++)
-            {
-                if(this.checkingTypes[i].name == data.checkingtype)
+            var checkingType = tryGetAttribute(data,'checkingType');
+            for(var i=0;i<this.checkingTypes.length;i++) {
+                if(this.checkingTypes[i].name == checkingType)
                     this.checkingType(this.checkingTypes[i]);
             }
             tryLoad(data,'checkingaccuracy',this.checkingType(),'accuracy');
             tryLoad(data,'vsetrangepoints',this.vset,'points');
-            if('vsetrange' in data) {
-                this.vset.start(data.vsetrange[0]);
-                this.vset.end(data.vsetrange[1]);
+            var vsetrange = tryGetAttribute(data,'vSetRange');
+            if(vsetrange) {
+                this.vset.start(vsetrange[0]);
+                this.vset.end(vsetrange[1]);
             }
 
-            tryLoad(data.maxlength,['length','partialCredit','message'],this.maxlength);
-            tryLoad(data.minlength,['length','partialCredit','message'],this.minlength);
-            tryLoad(data.musthave,['strings','showStrings','partialCredit','message'],this.musthave);
-            tryLoad(data.notallowed,['strings','showStrings','partialCredt','message'],this.notallowed);
+            tryLoad(tryGetAttribute(data,'maxLength'),['length','partialCredit','message'],this.maxlength);
+            tryLoad(tryGetAttribute(data,'minLength'),['length','partialCredit','message'],this.minlength);
+            tryLoad(tryGetAttribute(data,'mustHave'),['strings','showStrings','partialCredit','message'],this.musthave);
+            tryLoad(tryGetAttribute(data,'notAllowed'),['strings','showStrings','partialCredt','message'],this.notallowed);
         }
     },
     {
@@ -295,13 +297,15 @@ part_types.models = [
                 if(this.precisionTypes[i].name == this.precisionType())
                     this.precisionType(this.precisionTypes[i]);
             }
-            if('notationStyles' in data) {
+            var notationStyles = tryGetAttribute(data,'notationStyles');
+            if(notationStyles) {
                 this.allowedNotationStyles(this.notationStyles.filter(function(s) {
-                    return data.notationStyles.contains(s.code);
+                    return notationStyles.contains(s.code);
                 }));
             }
-            if('correctAnswerStyle' in data) {
-                var style = this.notationStyles.filter(function(s){return s.code==data.correctAnswerStyle})[0];
+            var correctAnswerStyle = tryGetAttribute(data,'correctAnswerStyle');
+            if(correctAnswerStyle) {
+                var style = this.notationStyles.filter(function(s){return s.code==correctAnswerStyle})[0];
                 if(style) {
                     this.correctAnswerStyle(style);
                 }
@@ -831,15 +835,17 @@ part_types.models = [
         },
         load: function(data) {
             tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','shuffleAnswers','showCellAnswerState'],this);
+            var warningType = tryGetAttribute(data,'warningType');
             for(var i=0;i<this.warningTypes.length;i++)
             {
-                if(this.warningTypes[i].name==data.warningType) {
+                if(this.warningTypes[i].name==warningType) {
                     this.warningType(this.warningTypes[i]);
                 }
             }
+            var displayType = tryGetAttribute(data,'displayType');
             for(var i=0;i<this.displayTypes.length;i++)
             {
-                if(this.displayTypes[i].name==data.displayType) {
+                if(this.displayTypes[i].name==displayType) {
                     this.displayType(this.displayTypes[i]);
                 }
             }

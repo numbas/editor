@@ -377,6 +377,7 @@ class SearchView(ListView):
         context['item_types'] = self.form.cleaned_data.get('item_types')
         context['search_query'] = self.query
         context['ability_level_field'] = zip(self.form.fields['ability_levels'].queryset, self.form['ability_levels'])
+        context['search_params'] = [(k,self.request.GET.get(k,None)) for k in self.form.data if k not in ['query','page']]
 
         return context
 

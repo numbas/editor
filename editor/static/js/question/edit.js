@@ -2074,7 +2074,7 @@ $(document).ready(function() {
             {
                 this.parentList.remove(this);
                 if(this.q.currentPart()==this) {
-                    this.q.currentPart(null);
+                    this.q.currentPart(this.parent() || null);
                 }
             }
         },

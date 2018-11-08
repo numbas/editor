@@ -33,6 +33,7 @@
         <hr>
         {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='question/parts/reference.html#term-show-correct-answer-on-reveal' %}
         {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/parts/reference.html#term-show-score-feedback-icon' %}    
+        {% booleanproperty 'showCellAnswerState' 'Show choice feedback state?' help_url='question/parts/reference.html#term-show-choice-feedback-state' %}    
     </form>
 </section>
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='choices'}">

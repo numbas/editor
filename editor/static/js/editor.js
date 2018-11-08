@@ -128,6 +128,19 @@ $(document).ready(function() {
         return s.trim().replace(/[^\w\s]/g,'').toLowerCase().replace(/\s/g,'-');
     };
 
+    var tryGetAttribute = Editor.tryGetAttribute = function(data,name) {
+        if(name in data) {
+            return data[name];
+        } else {
+            name = name.toLowerCase();
+            for(var x in data) {
+                if(x.toLowerCase()==name) {
+                    return data[x];
+                }
+            }
+        }
+    }
+
     /** Try to load the given attribute(s) from data into obj
      * @param {Object} data
      * @param {String|Array.<String>} attr - the name of the attribute to load, or a list of names
@@ -150,16 +163,13 @@ $(document).ready(function() {
         }
         altname = altname || attr;
 
-        function set(value) {
-            if(altname in obj && typeof obj[altname]() == 'string')
-                value+='';
+        var value = tryGetAttribute(data,attr);
+        if(value!==undefined) {
+            if(altname in obj && typeof obj[altname]() == 'string') {
+                value += '';
+            }
             obj[altname](value);
         }
-
-        if(attr in data)
-            set(data[attr]);
-        else if(attr.toLowerCase() in data)
-            set(data[attr.toLowerCase()]);
     }
 
     /** Given a source object `data` with string attribute `attr`, find the object in `options` with `id_key` equal to the value of `data[attr]`,

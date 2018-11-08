@@ -1,4 +1,4 @@
-// Compiled using  runtime/scripts/numbas.js  runtime/scripts/jme.js  runtime/scripts/jme-builtins.js  runtime/scripts/jme-display.js  runtime/scripts/jme-rules.js  runtime/scripts/jme-variables.js  runtime/scripts/localisation.js  runtime/scripts/part.js  runtime/scripts/question.js  runtime/scripts/schedule.js  runtime/scripts/marking.js  runtime/scripts/math.js  runtime/scripts/util.js  runtime/scripts/i18next/i18next.js  runtime/scripts/json.js  runtime/scripts/es5-shim.js  themes/default/files/scripts/answer-widgets.js ../dev/runtime/scripts/parts/numberentry.js ../dev/runtime/scripts/parts/information.js ../dev/runtime/scripts/parts/custom_part_type.js ../dev/runtime/scripts/parts/gapfill.js ../dev/runtime/scripts/parts/patternmatch.js ../dev/runtime/scripts/parts/multipleresponse.js ../dev/runtime/scripts/parts/jme.js ../dev/runtime/scripts/parts/extension.js ../dev/runtime/scripts/parts/matrixentry.js
+// Compiled using  runtime/scripts/numbas.js  runtime/scripts/jme.js  runtime/scripts/jme-builtins.js  runtime/scripts/jme-display.js  runtime/scripts/jme-rules.js  runtime/scripts/jme-variables.js  runtime/scripts/localisation.js  runtime/scripts/part.js  runtime/scripts/question.js  runtime/scripts/schedule.js  runtime/scripts/marking.js  runtime/scripts/math.js  runtime/scripts/util.js  runtime/scripts/i18next/i18next.js  runtime/scripts/json.js  themes/default/files/scripts/answer-widgets.js ../dev/runtime/scripts/parts/numberentry.js ../dev/runtime/scripts/parts/information.js ../dev/runtime/scripts/parts/custom_part_type.js ../dev/runtime/scripts/parts/gapfill.js ../dev/runtime/scripts/parts/patternmatch.js ../dev/runtime/scripts/parts/multipleresponse.js ../dev/runtime/scripts/parts/jme.js ../dev/runtime/scripts/parts/extension.js ../dev/runtime/scripts/parts/matrixentry.js
 // From the Numbas compiler directory
 /*
 Copyright 2011-14 Newcastle University
@@ -724,6 +724,8 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
                 return v.name;
             case 'expression':
                 return v.tree;
+            case 'nothing':
+                return undefined;
             default:
                 return v.value;
         }
@@ -2225,9 +2227,9 @@ var funcSynonyms = jme.funcSynonyms = {
 /** Operations which evaluate lazily - they don't need to evaluate all of their arguments
  * @memberof Numbas.jme
  */
-var lazyOps = jme.lazyOps = ['if','switch','repeat','map','let','isa','satisfy','filter','isset','dict','safe'];
+var lazyOps = jme.lazyOps = [];
 
-/** Operations which are right-associative
+/** Right-associative operations
  * @memberof Numbas.jme
  */
 var rightAssociative = jme.rightAssociative = {
@@ -3039,6 +3041,7 @@ newBuiltin('numcolumns',[TMatrix], TNum, function(m){ return m.columns });
 newBuiltin('angle',[TVector,TVector],TNum,vectormath.angle);
 newBuiltin('transpose',[TVector],TMatrix, vectormath.transpose);
 newBuiltin('transpose',[TMatrix],TMatrix, matrixmath.transpose);
+newBuiltin('is_zero',[TVector],TBool, vectormath.is_zero);
 newBuiltin('id',[TNum],TMatrix, matrixmath.id);
 newBuiltin('sum_cells',[TMatrix],TNum,matrixmath.sum_cells);
 newBuiltin('..', [TNum,TNum], TRange, math.defineRange);
@@ -3086,6 +3089,7 @@ newBuiltin('dict',['*keypair'],TDict,null,{
         return new TDict(value);
     }
 });
+Numbas.jme.lazyOps.push('dict');
 newBuiltin('keys',[TDict],TList,function(d) {
     var o = [];
     Object.keys(d).forEach(function(key) {
@@ -3185,6 +3189,7 @@ newBuiltin('safe',[TString],TString,null, {
         return variables.length==1 && variables[0].type=='string';
     }
 });
+Numbas.jme.lazyOps.push('safe');
 jme.findvarsOps.safe = function(tree,boundvars,scope) {
     return [];
 }
@@ -3472,6 +3477,7 @@ newBuiltin('if', [TBool,'?','?'], '?',null, {
             return jme.evaluate(args[2],scope);
     }
 });
+Numbas.jme.lazyOps.push('if');
 newBuiltin('switch',[],'?', null, {
     typecheck: function(variables)
     {
@@ -3511,6 +3517,7 @@ newBuiltin('switch',[],'?', null, {
             throw(new Numbas.Error('jme.func.switch.no default case'));
     }
 });
+Numbas.jme.lazyOps.push('switch');
 newBuiltin('isa',['?',TString],TBool, null, {
     evaluate: function(args,scope)
     {
@@ -3529,6 +3536,7 @@ newBuiltin('isa',['?',TString],TBool, null, {
         return new TBool(match);
     }
 });
+Numbas.jme.lazyOps.push('isa');
 // repeat(expr,n) evaluates expr n times and returns a list of the results
 newBuiltin('repeat',['?',TNum],TList, null, {
     evaluate: function(args,scope)
@@ -3542,6 +3550,8 @@ newBuiltin('repeat',['?',TNum],TList, null, {
         return new TList(value);
     }
 });
+Numbas.jme.lazyOps.push('repeat');
+
 /** Evaluate the given expressions until the list of conditions is satisfied
  * @param {Array.<String>} names - names for each expression
  * @param {Array.<Numbas.jme.tree>} definitions - definition of each expression
@@ -3592,6 +3602,7 @@ newBuiltin('satisfy', [TList,TList,TList,TNum], TList, null, {
         return new TList(names.map(function(name){ return variables[name]; }));
     }
 });
+Numbas.jme.lazyOps.push('satisfy');
 jme.findvarsOps.satisfy = function(tree,boundvars,scope) {
     var names = tree.args[0].args.map(function(t){return t.tok.name});
     boundvars = boundvars.concat(0,0,names);
@@ -3687,6 +3698,7 @@ newBuiltin('isset',[TName],TBool,null, {
         return new TBool(name in scope.variables);
     }
 });
+Numbas.jme.lazyOps.push('isset');
 jme.findvarsOps.isset = function(tree,boundvars,scope) {
     boundvars = boundvars.slice();
     boundvars.push(tree.args[1].tok.name.toLowerCase());
@@ -3770,6 +3782,7 @@ newBuiltin('map',['?',TName,'?'],TList, null, {
         return jme.mapFunctions[value.type](lambda,names,value.value,scope);
     }
 });
+Numbas.jme.lazyOps.push('map');
 jme.findvarsOps.map = function(tree,boundvars,scope) {
     var mapped_boundvars = boundvars.slice();
     if(tree.args[1].tok.type=='list') {
@@ -3814,6 +3827,7 @@ newBuiltin('filter',['?',TName,'?'],TList,null, {
         return new TList(value);
     }
 });
+Numbas.jme.lazyOps.push('filter');
 jme.findvarsOps.filter = function(tree,boundvars,scope) {
     var mapped_boundvars = boundvars.slice();
     if(tree.args[1].tok.type=='list') {
@@ -3832,6 +3846,65 @@ jme.substituteTreeOps.filter = function(tree,scope,allowUnbound) {
     tree.args[2] = jme.substituteTree(tree.args[2],scope,allowUnbound);
     return tree;
 }
+
+
+newBuiltin('take',[TNum,'?',TName,'?'],TList,null, {
+    evaluate: function(args,scope) {
+        var n = scope.evaluate(args[0]).value;
+        var lambda = args[1];
+        var list = scope.evaluate(args[3]);
+        switch(list.type) {
+        case 'list':
+            list = list.value;
+            break;
+        case 'range':
+            list = math.rangeToList(list.value);
+            for(var i=0;i<list.length;i++) {
+                list[i] = new TNum(list[i]);
+            }
+            break;
+        default:
+            throw(new Numbas.Error('jme.typecheck.map not on enumerable',list.type));
+        }
+        scope = new Scope(scope);
+        var name = args[2].tok.name;
+        var value = [];
+        for(var i=0;i<list.length && value.length<n;i++) {
+            var v = list[i];
+            scope.setVariable(name,v);
+            var ok = scope.evaluate(lambda).value;
+            if(ok) {
+                value.push(v);
+            }
+        };
+        return new TList(value);
+    }
+});
+Numbas.jme.lazyOps.push('take');
+jme.findvarsOps.take = function(tree,boundvars,scope) {
+    var mapped_boundvars = boundvars.slice();
+    if(tree.args[2].tok.type=='list') {
+        var names = tree.args[2].args;
+        for(var i=0;i<names.length;i++) {
+            mapped_boundvars.push(names[i].tok.name.toLowerCase());
+        }
+    } else {
+        mapped_boundvars.push(tree.args[2].tok.name.toLowerCase());
+    }
+    var vars = jme.findvars(tree.args[1],mapped_boundvars,scope);
+    vars = vars.merge(jme.findvars(tree.args[0],boundvars,scope));
+    vars = vars.merge(jme.findvars(tree.args[3],boundvars,scope));
+    return vars;
+}
+jme.substituteTreeOps.take = function(tree,scope,allowUnbound) {
+    var args = tree.args.slice();
+    args[0] = jme.substituteTree(args[0],scope,allowUnbound);
+    args[3] = jme.substituteTree(args[3],scope,allowUnbound);
+    return {tok:tree.tok, args: args};
+}
+
+
+
 /** Is the given token the value `true`?
  * @param {Numbas.jme.token} item
  * @returns {Boolean}
@@ -3875,6 +3948,7 @@ newBuiltin('let',['?'],TList, null, {
         }
     }
 });
+Numbas.jme.lazyOps.push('let');
 jme.findvarsOps.let = function(tree,boundvars,scope) {
     // find vars used in variable assignments
     var vars = [];
@@ -3988,6 +4062,11 @@ newBuiltin('product',['?'],TList,function() {
         return true;
     }
 });
+
+newBuiltin('product',[TList,TNum],TList,function(l,n) {
+    return util.cartesian_power(l,n).map(function(sl){ return new TList(sl); });
+});
+
 newBuiltin('zip',['?'],TList,function() {
     var lists = Array.prototype.slice.call(arguments);
     var zipped = util.zip(lists);
@@ -8839,7 +8918,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         this.shouldResubmit = false;
         this.credit = 0;
         this.markingFeedback = [];
-        this.finalised_result = [];
+        this.finalised_result = {valid: false, credit: 0, states: []};
         this.submitting = true;
         if(this.parentPart && !this.parentPart.submitting) {
             this.parentPart.setDirty(true);
@@ -8873,28 +8952,30 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
                     if(this.settings.variableReplacementStrategy=='alwaysreplace' || try_replacement) {
                         try {
                             var scope = this.errorCarriedForwardScope();
-                        } catch(e) {
-                            if(!result) {
-                                this.giveWarning(e.originalMessage);
-                                this.answered = false;
-                                throw(e);
+                            var result_replacement = this.markAgainstScope(scope,existing_feedback);
+                            if(!(result_original) || (result_replacement.answered && result_replacement.credit>result_original.credit)) {
+                                result = result_replacement;
+                                result.finalised_result.states.splice(0,0,{op: Numbas.marking.FeedbackOps.FEEDBACK, message: R('part.marking.used variable replacements')});
+                                result.markingFeedback.splice(0,0,{op: 'comment', message: R('part.marking.used variable replacements')});
                             }
-                        }
-                        var result_replacement = this.markAgainstScope(scope,existing_feedback);
-                        if(!(result_original) || (result_replacement.answered && result_replacement.credit>result_original.credit)) {
-                            result = result_replacement;
-                            result.finalised_result.states.splice(0,0,{op: Numbas.marking.FeedbackOps.FEEDBACK, message: R('part.marking.used variable replacements')});
-                            result.markingFeedback.splice(0,0,{op: 'comment', message: R('part.marking.used variable replacements')});
+                        } catch(e) {
+                            try{
+                                this.error(e.message);
+                            } catch(pe) {
+                                console.error(pe.message);
+                            }
                         }
                     }
                     if(!result) {
-                        this.error('part.marking.no result');
+                        this.setCredit(0,R('part.marking.no result after replacement'));
+                        this.answered = true;
+                    } else {
+                        this.setWarnings(result.warnings);
+                        this.markingFeedback = result.markingFeedback;
+                        this.finalised_result = result.finalised_result;
+                        this.credit = result.credit;
+                        this.answered = result.answered;
                     }
-                    this.setWarnings(result.warnings);
-                    this.markingFeedback = result.markingFeedback;
-                    this.finalised_result = result.finalised_result;
-                    this.credit = result.credit;
-                    this.answered = result.answered;
                 } catch(e) {
                     throw(new Numbas.Error('part.marking.uncaught error',{part:util.nicePartName(this.path),message:e.message}));
                 }
@@ -10506,7 +10587,19 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
     state_functions.push(new jme.funcObj('mark_part',[TString,'?'],TDict,null,{
         evaluate: function(args, scope) {
             var part = scope.question.getPart(args[0].value);
-            var part_result = part.mark_answer(args[1]);
+            var answer = args[1];
+            var part_result;
+            if(answer.type=='nothing') {
+                part.setCredit(0,R('part.marking.nothing entered'));
+                part_result = {
+                    states: {mark: []},
+                    state_valid: {},
+                    state_errors: {},
+                    values: {interpreted_answer:answer}
+                }
+            } else {
+                var part_result = part.mark_answer(answer);
+            }
             var result = marking.finalise_state(part_result.states.mark);
             return jme.wrapValue({
                 marks: part.marks,
@@ -12672,6 +12765,12 @@ var vectormath = Numbas.vectormath = {
         m.rows = m.length;
         m.columns = 1;
         return m;
+    },
+
+    /** Is every component of this vector zero?
+     */
+    is_zero: function(v) {
+        return v.every(function(c){return c==0;});
     }
 }
 /** A two-dimensional matrix: an array of rows, each of which is an array of numbers.
@@ -13873,6 +13972,28 @@ var util = Numbas.util = /** @lends Numbas.util */ {
         }
         return out;
     },
+
+    /** Cartesian product of list, repeated n times
+     * @param {Array} l
+     * @param {Number} n
+     * @returns {Array}
+     */
+    cartesian_power: function(l,n) {
+        var o = [[]];
+        for(var i=0;i<n;i++) {
+            var no = [];
+            o.forEach(function(ol) {
+                l.forEach(function(x) {
+                    var nl = ol.slice();
+                    nl.push(x);
+                    no.push(nl);
+                })
+            });
+            o = no;
+        }
+        return o;
+    },
+
     /** Zip lists together: given lists [a,b,c,...], [x,y,z,...], return [[a,x],[b,y],[c,z], ...]
      * @param {Array} lists - list of arrays
      * @returns {Array}
@@ -14379,1035 +14500,6 @@ var json = Numbas.json = {
         }
     }
 }
-});
-
-Numbas.queueScript('es5-shim',[],function() {
-// es5-shim.min.js 24/09/2012
-//
-// -- kriskowal Kris Kowal Copyright (C) 2009-2011 MIT License
-// -- tlrobinson Tom Robinson Copyright (C) 2009-2010 MIT License (Narwhal Project)
-// -- dantman Daniel Friesen Copyright (C) 2010 XXX TODO License or CLA
-// -- fschaefer Florian Schäfer Copyright (C) 2010 MIT License
-// -- Gozala Irakli Gozalishvili Copyright (C) 2010 MIT License
-// -- kitcambridge Kit Cambridge Copyright (C) 2011 MIT License
-// -- kossnocorp Sasha Koss XXX TODO License or CLA
-// -- bryanforbes Bryan Forbes XXX TODO License or CLA
-// -- killdream Quildreen Motta Copyright (C) 2011 MIT Licence
-// -- michaelficarra Michael Ficarra Copyright (C) 2011 3-clause BSD License
-// -- sharkbrainguy Gerard Paapu Copyright (C) 2011 MIT License
-// -- bbqsrc Brendan Molloy (C) 2011 Creative Commons Zero (public domain)
-// -- iwyg XXX TODO License or CLA
-// -- DomenicDenicola Domenic Denicola Copyright (C) 2011 MIT License
-// -- xavierm02 Montillet Xavier Copyright (C) 2011 MIT License
-// -- Raynos Jake Verbaten Copyright (C) 2011 MIT Licence
-// -- samsonjs Sami Samhuri Copyright (C) 2010 MIT License
-// -- rwldrn Rick Waldron Copyright (C) 2011 MIT License
-// -- lexer Alexey Zakharov XXX TODO License or CLA
-/*!
-    Copyright (c) 2009, 280 North Inc. http://280north.com/
-    MIT License. http://github.com/280north/narwhal/blob/master/README.md
-*/
-// Module systems magic dance
-(function (definition) {
-    // RequireJS
-    if (typeof define == "function") {
-        define(definition);
-    // CommonJS and <script>
-    } else {
-        definition();
-    }
-})(function () {
-/**
- * Brings an environment as close to ECMAScript 5 compliance
- * as is possible with the facilities of erstwhile engines.
- *
- * Annotated ES5: http://es5.github.com/ (specific links below)
- * ES5 Spec: http://www.ecma-international.org/publications/files/ECMA-ST/Ecma-262.pdf
- * Required reading: http://javascriptweblog.wordpress.com/2011/12/05/extending-javascript-natives/
- */
-//
-// Function
-// ========
-//
-// ES-5 15.3.4.5
-// http://es5.github.com/#x15.3.4.5
-if (!Function.prototype.bind) {
-    Function.prototype.bind = function bind(that) { // .length is 1
-        // 1. Let Target be the this value.
-        var target = this;
-        // 2. If IsCallable(Target) is false, throw a TypeError exception.
-        if (typeof target != "function") {
-            throw new TypeError("Function.prototype.bind called on incompatible " + target);
-        }
-        // 3. Let A be a new (possibly empty) internal list of all of the
-        //   argument values provided after thisArg (arg1, arg2 etc), in order.
-        // XXX slicedArgs will stand in for "A" if used
-        var args = slice.call(arguments, 1); // for normal call
-        // 4. Let F be a new native ECMAScript object.
-        // 11. Set the [[Prototype]] internal property of F to the standard
-        //   built-in Function prototype object as specified in 15.3.3.1.
-        // 12. Set the [[Call]] internal property of F as described in
-        //   15.3.4.5.1.
-        // 13. Set the [[Construct]] internal property of F as described in
-        //   15.3.4.5.2.
-        // 14. Set the [[HasInstance]] internal property of F as described in
-        //   15.3.4.5.3.
-        var bound = function () {
-            if (this instanceof bound) {
-                // 15.3.4.5.2 [[Construct]]
-                // When the [[Construct]] internal method of a function object,
-                // F that was created using the bind function is called with a
-                // list of arguments ExtraArgs, the following steps are taken:
-                // 1. Let target be the value of F's [[TargetFunction]]
-                //   internal property.
-                // 2. If target has no [[Construct]] internal method, a
-                //   TypeError exception is thrown.
-                // 3. Let boundArgs be the value of F's [[BoundArgs]] internal
-                //   property.
-                // 4. Let args be a new list containing the same values as the
-                //   list boundArgs in the same order followed by the same
-                //   values as the list ExtraArgs in the same order.
-                // 5. Return the result of calling the [[Construct]] internal
-                //   method of target providing args as the arguments.
-                var F = function(){};
-                F.prototype = target.prototype;
-                var self = new F;
-                var result = target.apply(
-                    self,
-                    args.concat(slice.call(arguments))
-                );
-                if (Object(result) === result) {
-                    return result;
-                }
-                return self;
-            } else {
-                // 15.3.4.5.1 [[Call]]
-                // When the [[Call]] internal method of a function object, F,
-                // which was created using the bind function is called with a
-                // this value and a list of arguments ExtraArgs, the following
-                // steps are taken:
-                // 1. Let boundArgs be the value of F's [[BoundArgs]] internal
-                //   property.
-                // 2. Let boundThis be the value of F's [[BoundThis]] internal
-                //   property.
-                // 3. Let target be the value of F's [[TargetFunction]] internal
-                //   property.
-                // 4. Let args be a new list containing the same values as the
-                //   list boundArgs in the same order followed by the same
-                //   values as the list ExtraArgs in the same order.
-                // 5. Return the result of calling the [[Call]] internal method
-                //   of target providing boundThis as the this value and
-                //   providing args as the arguments.
-                // equiv: target.call(this, ...boundArgs, ...args)
-                return target.apply(
-                    that,
-                    args.concat(slice.call(arguments))
-                );
-            }
-        };
-        // XXX bound.length is never writable, so don't even try
-        //
-        // 15. If the [[Class]] internal property of Target is "Function", then
-        //     a. Let L be the length property of Target minus the length of A.
-        //     b. Set the length own property of F to either 0 or L, whichever is
-        //       larger.
-        // 16. Else set the length own property of F to 0.
-        // 17. Set the attributes of the length own property of F to the values
-        //   specified in 15.3.5.1.
-        // TODO
-        // 18. Set the [[Extensible]] internal property of F to true.
-        // TODO
-        // 19. Let thrower be the [[ThrowTypeError]] function Object (13.2.3).
-        // 20. Call the [[DefineOwnProperty]] internal method of F with
-        //   arguments "caller", PropertyDescriptor {[[Get]]: thrower, [[Set]]:
-        //   thrower, [[Enumerable]]: false, [[Configurable]]: false}, and
-        //   false.
-        // 21. Call the [[DefineOwnProperty]] internal method of F with
-        //   arguments "arguments", PropertyDescriptor {[[Get]]: thrower,
-        //   [[Set]]: thrower, [[Enumerable]]: false, [[Configurable]]: false},
-        //   and false.
-        // TODO
-        // NOTE Function objects created using Function.prototype.bind do not
-        // have a prototype property or the [[Code]], [[FormalParameters]], and
-        // [[Scope]] internal properties.
-        // XXX can't delete prototype in pure-js.
-        // 22. Return F.
-        return bound;
-    };
-}
-// Shortcut to an often accessed properties, in order to avoid multiple
-// dereference that costs universally.
-// _Please note: Shortcuts are defined after `Function.prototype.bind` as we
-// us it in defining shortcuts.
-var call = Function.prototype.call;
-var prototypeOfArray = Array.prototype;
-var prototypeOfObject = Object.prototype;
-var slice = prototypeOfArray.slice;
-// Having a toString local variable name breaks in Opera so use _toString.
-var _toString = call.bind(prototypeOfObject.toString);
-var owns = call.bind(prototypeOfObject.hasOwnProperty);
-// If JS engine supports accessors creating shortcuts.
-var defineGetter;
-var defineSetter;
-var lookupGetter;
-var lookupSetter;
-var supportsAccessors;
-if ((supportsAccessors = owns(prototypeOfObject, "__defineGetter__"))) {
-    defineGetter = call.bind(prototypeOfObject.__defineGetter__);
-    defineSetter = call.bind(prototypeOfObject.__defineSetter__);
-    lookupGetter = call.bind(prototypeOfObject.__lookupGetter__);
-    lookupSetter = call.bind(prototypeOfObject.__lookupSetter__);
-}
-//
-// Array
-// =====
-//
-// ES5 15.4.3.2
-// http://es5.github.com/#x15.4.3.2
-// https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/isArray
-if (!Array.isArray) {
-    Array.isArray = function isArray(obj) {
-        return _toString(obj) == "[object Array]";
-    };
-}
-// The IsCallable() check in the Array functions
-// has been replaced with a strict check on the
-// internal class of the object to trap cases where
-// the provided function was actually a regular
-// expression literal, which in V8 and
-// JavaScriptCore is a typeof "function".  Only in
-// V8 are regular expression literals permitted as
-// reduce parameters, so it is desirable in the
-// general case for the shim to match the more
-// strict and common behavior of rejecting regular
-// expressions.
-// ES5 15.4.4.18
-// http://es5.github.com/#x15.4.4.18
-// https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/array/forEach
-if (!Array.prototype.forEach) {
-    Array.prototype.forEach = function forEach(fun /*, thisp*/) {
-        var self = toObject(this),
-            thisp = arguments[1],
-            i = -1,
-            length = self.length >>> 0;
-        // If no callback function or if callback is not a callable function
-        if (_toString(fun) != "[object Function]") {
-            throw new TypeError(); // TODO message
-        }
-        while (++i < length) {
-            if (i in self) {
-                // Invoke the callback function with call, passing arguments:
-                // context, property value, property key, thisArg object context
-                fun.call(thisp, self[i], i, self);
-            }
-        }
-    };
-}
-// ES5 15.4.4.19
-// http://es5.github.com/#x15.4.4.19
-// https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Objects/Array/map
-if (!Array.prototype.map) {
-    Array.prototype.map = function map(fun /*, thisp*/) {
-        var self = toObject(this),
-            length = self.length >>> 0,
-            result = Array(length),
-            thisp = arguments[1];
-        // If no callback function or if callback is not a callable function
-        if (_toString(fun) != "[object Function]") {
-            throw new TypeError(fun + " is not a function");
-        }
-        for (var i = 0; i < length; i++) {
-            if (i in self)
-                result[i] = fun.call(thisp, self[i], i, self);
-        }
-        return result;
-    };
-}
-// ES5 15.4.4.20
-// http://es5.github.com/#x15.4.4.20
-// https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Objects/Array/filter
-if (!Array.prototype.filter) {
-    Array.prototype.filter = function filter(fun /*, thisp */) {
-        var self = toObject(this),
-            length = self.length >>> 0,
-            result = [],
-            value,
-            thisp = arguments[1];
-        // If no callback function or if callback is not a callable function
-        if (_toString(fun) != "[object Function]") {
-            throw new TypeError(fun + " is not a function");
-        }
-        for (var i = 0; i < length; i++) {
-            if (i in self) {
-                value = self[i];
-                if (fun.call(thisp, value, i, self)) {
-                    result.push(value);
-                }
-            }
-        }
-        return result;
-    };
-}
-// ES5 15.4.4.16
-// http://es5.github.com/#x15.4.4.16
-// https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/every
-if (!Array.prototype.every) {
-    Array.prototype.every = function every(fun /*, thisp */) {
-        var self = toObject(this),
-            length = self.length >>> 0,
-            thisp = arguments[1];
-        // If no callback function or if callback is not a callable function
-        if (_toString(fun) != "[object Function]") {
-            throw new TypeError(fun + " is not a function");
-        }
-        for (var i = 0; i < length; i++) {
-            if (i in self && !fun.call(thisp, self[i], i, self)) {
-                return false;
-            }
-        }
-        return true;
-    };
-}
-// ES5 15.4.4.17
-// http://es5.github.com/#x15.4.4.17
-// https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/some
-if (!Array.prototype.some) {
-    Array.prototype.some = function some(fun /*, thisp */) {
-        var self = toObject(this),
-            length = self.length >>> 0,
-            thisp = arguments[1];
-        // If no callback function or if callback is not a callable function
-        if (_toString(fun) != "[object Function]") {
-            throw new TypeError(fun + " is not a function");
-        }
-        for (var i = 0; i < length; i++) {
-            if (i in self && fun.call(thisp, self[i], i, self)) {
-                return true;
-            }
-        }
-        return false;
-    };
-}
-// ES5 15.4.4.21
-// http://es5.github.com/#x15.4.4.21
-// https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Objects/Array/reduce
-if (!Array.prototype.reduce) {
-    Array.prototype.reduce = function reduce(fun /*, initial*/) {
-        var self = toObject(this),
-            length = self.length >>> 0;
-        // If no callback function or if callback is not a callable function
-        if (_toString(fun) != "[object Function]") {
-            throw new TypeError(fun + " is not a function");
-        }
-        // no value to return if no initial value and an empty array
-        if (!length && arguments.length == 1) {
-            throw new TypeError('reduce of empty array with no initial value');
-        }
-        var i = 0;
-        var result;
-        if (arguments.length >= 2) {
-            result = arguments[1];
-        } else {
-            do {
-                if (i in self) {
-                    result = self[i++];
-                    break;
-                }
-                // if array contains no values, no initial value to return
-                if (++i >= length) {
-                    throw new TypeError('reduce of empty array with no initial value');
-                }
-            } while (true);
-        }
-        for (; i < length; i++) {
-            if (i in self) {
-                result = fun.call(void 0, result, self[i], i, self);
-            }
-        }
-        return result;
-    };
-}
-// ES5 15.4.4.22
-// http://es5.github.com/#x15.4.4.22
-// https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Objects/Array/reduceRight
-if (!Array.prototype.reduceRight) {
-    Array.prototype.reduceRight = function reduceRight(fun /*, initial*/) {
-        var self = toObject(this),
-            length = self.length >>> 0;
-        // If no callback function or if callback is not a callable function
-        if (_toString(fun) != "[object Function]") {
-            throw new TypeError(fun + " is not a function");
-        }
-        // no value to return if no initial value, empty array
-        if (!length && arguments.length == 1) {
-            throw new TypeError('reduceRight of empty array with no initial value');
-        }
-        var result, i = length - 1;
-        if (arguments.length >= 2) {
-            result = arguments[1];
-        } else {
-            do {
-                if (i in self) {
-                    result = self[i--];
-                    break;
-                }
-                // if array contains no values, no initial value to return
-                if (--i < 0) {
-                    throw new TypeError('reduceRight of empty array with no initial value');
-                }
-            } while (true);
-        }
-        do {
-            if (i in this) {
-                result = fun.call(void 0, result, self[i], i, self);
-            }
-        } while (i--);
-        return result;
-    };
-}
-// ES5 15.4.4.14
-// http://es5.github.com/#x15.4.4.14
-// https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/indexOf
-if (!Array.prototype.indexOf) {
-    Array.prototype.indexOf = function indexOf(sought /*, fromIndex */ ) {
-        var self = toObject(this),
-            length = self.length >>> 0;
-        if (!length) {
-            return -1;
-        }
-        var i = 0;
-        if (arguments.length > 1) {
-            i = toInteger(arguments[1]);
-        }
-        // handle negative indices
-        i = i >= 0 ? i : Math.max(0, length + i);
-        for (; i < length; i++) {
-            if (i in self && self[i] === sought) {
-                return i;
-            }
-        }
-        return -1;
-    };
-}
-// ES5 15.4.4.15
-// http://es5.github.com/#x15.4.4.15
-// https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/lastIndexOf
-if (!Array.prototype.lastIndexOf) {
-    Array.prototype.lastIndexOf = function lastIndexOf(sought /*, fromIndex */) {
-        var self = toObject(this),
-            length = self.length >>> 0;
-        if (!length) {
-            return -1;
-        }
-        var i = length - 1;
-        if (arguments.length > 1) {
-            i = Math.min(i, toInteger(arguments[1]));
-        }
-        // handle negative indices
-        i = i >= 0 ? i : length - Math.abs(i);
-        for (; i >= 0; i--) {
-            if (i in self && sought === self[i]) {
-                return i;
-            }
-        }
-        return -1;
-    };
-}
-//
-// Object
-// ======
-//
-// ES5 15.2.3.2
-// http://es5.github.com/#x15.2.3.2
-if (!Object.getPrototypeOf) {
-    // https://github.com/kriskowal/es5-shim/issues#issue/2
-    // http://ejohn.org/blog/objectgetprototypeof/
-    // recommended by fschaefer on github
-    Object.getPrototypeOf = function getPrototypeOf(object) {
-        return object.__proto__ || (
-            object.constructor
-                ? object.constructor.prototype
-                : prototypeOfObject
-        );
-    };
-}
-// ES5 15.2.3.3
-// http://es5.github.com/#x15.2.3.3
-if (!Object.getOwnPropertyDescriptor) {
-    var ERR_NON_OBJECT = "Object.getOwnPropertyDescriptor called on a non-object: ";
-    Object.getOwnPropertyDescriptor = function getOwnPropertyDescriptor(object, property) {
-        if ((typeof object != "object" && typeof object != "function") || object === null) {
-            throw new TypeError(ERR_NON_OBJECT + object);
-        }
-        // If object does not owns property return undefined immediately.
-        if (!owns(object, property)) {
-            return;
-        }
-        // If object has a property then it's for sure both `enumerable` and
-        // `configurable`.
-        var descriptor =  { enumerable: true, configurable: true };
-        // If JS engine supports accessor properties then property may be a
-        // getter or setter.
-        if (supportsAccessors) {
-            // Unfortunately `__lookupGetter__` will return a getter even
-            // if object has own non getter property along with a same named
-            // inherited getter. To avoid misbehavior we temporary remove
-            // `__proto__` so that `__lookupGetter__` will return getter only
-            // if it's owned by an object.
-            var prototype = object.__proto__;
-            object.__proto__ = prototypeOfObject;
-            var getter = lookupGetter(object, property);
-            var setter = lookupSetter(object, property);
-            // Once we have getter and setter we can put values back.
-            object.__proto__ = prototype;
-            if (getter || setter) {
-                if (getter) {
-                    descriptor.get = getter;
-                }
-                if (setter) {
-                    descriptor.set = setter;
-                }
-                // If it was accessor property we're done and return here
-                // in order to avoid adding `value` to the descriptor.
-                return descriptor;
-            }
-        }
-        // If we got this far we know that object has an own property that is
-        // not an accessor so we set it as a value and return descriptor.
-        descriptor.value = object[property];
-        return descriptor;
-    };
-}
-// ES5 15.2.3.4
-// http://es5.github.com/#x15.2.3.4
-if (!Object.getOwnPropertyNames) {
-    Object.getOwnPropertyNames = function getOwnPropertyNames(object) {
-        return Object.keys(object);
-    };
-}
-// ES5 15.2.3.5
-// http://es5.github.com/#x15.2.3.5
-if (!Object.create) {
-    Object.create = function create(prototype, properties) {
-        var object;
-        if (prototype === null) {
-            object = { "__proto__": null };
-        } else {
-            if (typeof prototype != "object") {
-                throw new TypeError("typeof prototype["+(typeof prototype)+"] != 'object'");
-            }
-            var Type = function () {};
-            Type.prototype = prototype;
-            object = new Type();
-            // IE has no built-in implementation of `Object.getPrototypeOf`
-            // neither `__proto__`, but this manually setting `__proto__` will
-            // guarantee that `Object.getPrototypeOf` will work as expected with
-            // objects created using `Object.create`
-            object.__proto__ = prototype;
-        }
-        if (properties !== void 0) {
-            Object.defineProperties(object, properties);
-        }
-        return object;
-    };
-}
-// ES5 15.2.3.6
-// http://es5.github.com/#x15.2.3.6
-// Patch for WebKit and IE8 standard mode
-// Designed by hax <hax.github.com>
-// related issue: https://github.com/kriskowal/es5-shim/issues#issue/5
-// IE8 Reference:
-//     http://msdn.microsoft.com/en-us/library/dd282900.aspx
-//     http://msdn.microsoft.com/en-us/library/dd229916.aspx
-// WebKit Bugs:
-//     https://bugs.webkit.org/show_bug.cgi?id=36423
-function doesDefinePropertyWork(object) {
-    try {
-        Object.defineProperty(object, "sentinel", {});
-        return "sentinel" in object;
-    } catch (exception) {
-        // returns falsy
-    }
-}
-// check whether defineProperty works if it's given. Otherwise,
-// shim partially.
-if (Object.defineProperty) {
-    var definePropertyWorksOnObject = doesDefinePropertyWork({});
-    var definePropertyWorksOnDom = typeof document == "undefined" ||
-        doesDefinePropertyWork(document.createElement("div"));
-    if (!definePropertyWorksOnObject || !definePropertyWorksOnDom) {
-        var definePropertyFallback = Object.defineProperty;
-    }
-}
-if (!Object.defineProperty || definePropertyFallback) {
-    var ERR_NON_OBJECT_DESCRIPTOR = "Property description must be an object: ";
-    var ERR_NON_OBJECT_TARGET = "Object.defineProperty called on non-object: "
-    var ERR_ACCESSORS_NOT_SUPPORTED = "getters & setters can not be defined " +
-                                      "on this javascript engine";
-    Object.defineProperty = function defineProperty(object, property, descriptor) {
-        if ((typeof object != "object" && typeof object != "function") || object === null) {
-            throw new TypeError(ERR_NON_OBJECT_TARGET + object);
-        }
-        if ((typeof descriptor != "object" && typeof descriptor != "function") || descriptor === null) {
-            throw new TypeError(ERR_NON_OBJECT_DESCRIPTOR + descriptor);
-        }
-        // make a valiant attempt to use the real defineProperty
-        // for I8's DOM elements.
-        if (definePropertyFallback) {
-            try {
-                return definePropertyFallback.call(Object, object, property, descriptor);
-            } catch (exception) {
-                // try the shim if the real one doesn't work
-            }
-        }
-        // If it's a data property.
-        if (owns(descriptor, "value")) {
-            // fail silently if "writable", "enumerable", or "configurable"
-            // are requested but not supported
-            /*
-            // alternate approach:
-            if ( // can't implement these features; allow false but not true
-                !(owns(descriptor, "writable") ? descriptor.writable : true) ||
-                !(owns(descriptor, "enumerable") ? descriptor.enumerable : true) ||
-                !(owns(descriptor, "configurable") ? descriptor.configurable : true)
-            )
-                throw new RangeError(
-                    "This implementation of Object.defineProperty does not " +
-                    "support configurable, enumerable, or writable."
-                );
-            */
-            if (supportsAccessors && (lookupGetter(object, property) ||
-                                      lookupSetter(object, property)))
-            {
-                // As accessors are supported only on engines implementing
-                // `__proto__` we can safely override `__proto__` while defining
-                // a property to make sure that we don't hit an inherited
-                // accessor.
-                var prototype = object.__proto__;
-                object.__proto__ = prototypeOfObject;
-                // Deleting a property anyway since getter / setter may be
-                // defined on object itself.
-                delete object[property];
-                object[property] = descriptor.value;
-                // Setting original `__proto__` back now.
-                object.__proto__ = prototype;
-            } else {
-                object[property] = descriptor.value;
-            }
-        } else {
-            if (!supportsAccessors) {
-                throw new TypeError(ERR_ACCESSORS_NOT_SUPPORTED);
-            }
-            // If we got that far then getters and setters can be defined !!
-            if (owns(descriptor, "get")) {
-                defineGetter(object, property, descriptor.get);
-            }
-            if (owns(descriptor, "set")) {
-                defineSetter(object, property, descriptor.set);
-            }
-        }
-        return object;
-    };
-}
-// ES5 15.2.3.7
-// http://es5.github.com/#x15.2.3.7
-if (!Object.defineProperties) {
-    Object.defineProperties = function defineProperties(object, properties) {
-        for (var property in properties) {
-            if (owns(properties, property) && property != "__proto__") {
-                Object.defineProperty(object, property, properties[property]);
-            }
-        }
-        return object;
-    };
-}
-// ES5 15.2.3.8
-// http://es5.github.com/#x15.2.3.8
-if (!Object.seal) {
-    Object.seal = function seal(object) {
-        // this is misleading and breaks feature-detection, but
-        // allows "securable" code to "gracefully" degrade to working
-        // but insecure code.
-        return object;
-    };
-}
-// ES5 15.2.3.9
-// http://es5.github.com/#x15.2.3.9
-if (!Object.freeze) {
-    Object.freeze = function freeze(object) {
-        // this is misleading and breaks feature-detection, but
-        // allows "securable" code to "gracefully" degrade to working
-        // but insecure code.
-        return object;
-    };
-}
-// detect a Rhino bug and patch it
-try {
-    Object.freeze(function () {});
-} catch (exception) {
-    Object.freeze = (function freeze(freezeObject) {
-        return function freeze(object) {
-            if (typeof object == "function") {
-                return object;
-            } else {
-                return freezeObject(object);
-            }
-        };
-    })(Object.freeze);
-}
-// ES5 15.2.3.10
-// http://es5.github.com/#x15.2.3.10
-if (!Object.preventExtensions) {
-    Object.preventExtensions = function preventExtensions(object) {
-        // this is misleading and breaks feature-detection, but
-        // allows "securable" code to "gracefully" degrade to working
-        // but insecure code.
-        return object;
-    };
-}
-// ES5 15.2.3.11
-// http://es5.github.com/#x15.2.3.11
-if (!Object.isSealed) {
-    Object.isSealed = function isSealed(object) {
-        return false;
-    };
-}
-// ES5 15.2.3.12
-// http://es5.github.com/#x15.2.3.12
-if (!Object.isFrozen) {
-    Object.isFrozen = function isFrozen(object) {
-        return false;
-    };
-}
-// ES5 15.2.3.13
-// http://es5.github.com/#x15.2.3.13
-if (!Object.isExtensible) {
-    Object.isExtensible = function isExtensible(object) {
-        // 1. If Type(O) is not Object throw a TypeError exception.
-        if (Object(object) !== object) {
-            throw new TypeError(); // TODO message
-        }
-        // 2. Return the Boolean value of the [[Extensible]] internal property of O.
-        var name = '';
-        while (owns(object, name)) {
-            name += '?';
-        }
-        object[name] = true;
-        var returnValue = owns(object, name);
-        delete object[name];
-        return returnValue;
-    };
-}
-// ES5 15.2.3.14
-// http://es5.github.com/#x15.2.3.14
-if (!Object.keys) {
-    // http://whattheheadsaid.com/2010/10/a-safer-object-keys-compatibility-implementation
-    var hasDontEnumBug = true,
-        dontEnums = [
-            "toString",
-            "toLocaleString",
-            "valueOf",
-            "hasOwnProperty",
-            "isPrototypeOf",
-            "propertyIsEnumerable",
-            "constructor"
-        ],
-        dontEnumsLength = dontEnums.length;
-    for (var key in {"toString": null}) {
-        hasDontEnumBug = false;
-    }
-    Object.keys = function keys(object) {
-        if ((typeof object != "object" && typeof object != "function") || object === null) {
-            throw new TypeError("Object.keys called on a non-object");
-        }
-        var keys = [];
-        for (var name in object) {
-            if (owns(object, name)) {
-                keys.push(name);
-            }
-        }
-        if (hasDontEnumBug) {
-            for (var i = 0, ii = dontEnumsLength; i < ii; i++) {
-                var dontEnum = dontEnums[i];
-                if (owns(object, dontEnum)) {
-                    keys.push(dontEnum);
-                }
-            }
-        }
-        return keys;
-    };
-}
-//
-// Date
-// ====
-//
-// ES5 15.9.5.43
-// http://es5.github.com/#x15.9.5.43
-// This function returns a String value represent the instance in time
-// represented by this Date object. The format of the String is the Date Time
-// string format defined in 15.9.1.15. All fields are present in the String.
-// The time zone is always UTC, denoted by the suffix Z. If the time value of
-// this object is not a finite Number a RangeError exception is thrown.
-if (!Date.prototype.toISOString ||
-    (new Date(-1).toISOString() !== '1969-12-31T23:59:59.999Z') ||
-    (new Date(-62198755200000).toISOString().indexOf('-000001') === -1)) {
-    Date.prototype.toISOString = function toISOString() {
-        var result, length, value, year, month;
-        if (!isFinite(this)) {
-            throw new RangeError("Date.prototype.toISOString called on non-finite value.");
-        }
-        year = this.getUTCFullYear();
-        month = this.getUTCMonth();
-        // see https://github.com/kriskowal/es5-shim/issues/111
-        year += Math.floor(month / 12);
-        month = (month % 12 + 12) % 12;
-        // the date time string format is specified in 15.9.1.15.
-        result = [month + 1, this.getUTCDate(),
-            this.getUTCHours(), this.getUTCMinutes(), this.getUTCSeconds()];
-        year = (year < 0 ? '-' : (year > 9999 ? '+' : '')) + ('00000' + Math.abs(year)).slice(0 <= year && year <= 9999 ? -4 : -6);
-        length = result.length;
-        while (length--) {
-            value = result[length];
-            // pad months, days, hours, minutes, and seconds to have two digits.
-            if (value < 10) {
-                result[length] = "0" + value;
-            }
-        }
-        // pad milliseconds to have three digits.
-        return year + "-" + result.slice(0, 2).join("-") + "T" + result.slice(2).join(":") + "." +
-            ("000" + this.getUTCMilliseconds()).slice(-3) + "Z";
-    }
-}
-// ES5 15.9.4.4
-// http://es5.github.com/#x15.9.4.4
-if (!Date.now) {
-    Date.now = function now() {
-        return new Date().getTime();
-    };
-}
-// ES5 15.9.5.44
-// http://es5.github.com/#x15.9.5.44
-// This function provides a String representation of a Date object for use by
-// JSON.stringify (15.12.3).
-function isPrimitive(input) {
-    var t = typeof input;
-    return input === null || t === "undefined" || t === "boolean" || t === "number" || t === "string";
-}
-function ToPrimitive(input) {
-    var val, valueOf, toString;
-    if (isPrimitive(input)) {
-        return input;
-    }
-    valueOf = input.valueOf;
-    if (typeof valueOf === "function") {
-        val = valueOf.call(input);
-        if (isPrimitive(val)) {
-            return val;
-        }
-    }
-    toString = input.toString;
-    if (typeof toString === "function") {
-        val = toString.call(input);
-        if (isPrimitive(val)) {
-            return val;
-        }
-    }
-    throw new TypeError();
-}
-var dateToJSONIsSupported = false;
-try {
-    dateToJSONIsSupported = Date.prototype.toJSON && new Date(NaN).toJSON() === null;
-} catch (e) {}
-if (!dateToJSONIsSupported) {
-    Date.prototype.toJSON = function toJSON(key) {
-        // When the toJSON method is called with argument key, the following
-        // steps are taken:
-        // 1.  Let O be the result of calling ToObject, giving it the this
-        // value as its argument.
-        // 2. Let tv be ToPrimitive(O, hint Number).
-        var o = Object(this),
-            tv = ToPrimitive(o),
-            toISO;
-        // 3. If tv is a Number and is not finite, return null.
-        if (typeof tv === 'number' && !isFinite(tv)) {
-            return null;
-        }
-        // 4. Let toISO be the result of calling the [[Get]] internal method of
-        // O with argument "toISOString".
-        toISO = o.toISOString;
-        // 5. If IsCallable(toISO) is false, throw a TypeError exception.
-        if (typeof toISO != "function") {
-            throw new TypeError('toISOString property is not callable');
-        }
-        // 6. Return the result of calling the [[Call]] internal method of
-        //  toISO with O as the this value and an empty argument list.
-        return toISO.call(o);
-        // NOTE 1 The argument is ignored.
-        // NOTE 2 The toJSON function is intentionally generic; it does not
-        // require that its this value be a Date object. Therefore, it can be
-        // transferred to other kinds of objects for use as a method. However,
-        // it does require that any such object have a toISOString method. An
-        // object is free to use the argument key to filter its
-        // stringification.
-    };
-}
-// ES5 15.9.4.2
-// http://es5.github.com/#x15.9.4.2
-// based on work shared by Daniel Friesen (dantman)
-// http://gist.github.com/303249
-if (!Date.parse || "Date.parse is buggy") {
-    // XXX global assignment won't work in embeddings that use
-    // an alternate object for the context.
-    Date = (function(NativeDate) {
-        // Date.length === 7
-        var Date = function Date(Y, M, D, h, m, s, ms) {
-            var length = arguments.length;
-            if (this instanceof NativeDate) {
-                var date = length == 1 && String(Y) === Y ? // isString(Y)
-                    // We explicitly pass it through parse:
-                    new NativeDate(Date.parse(Y)) :
-                    // We have to manually make calls depending on argument
-                    // length here
-                    length >= 7 ? new NativeDate(Y, M, D, h, m, s, ms) :
-                    length >= 6 ? new NativeDate(Y, M, D, h, m, s) :
-                    length >= 5 ? new NativeDate(Y, M, D, h, m) :
-                    length >= 4 ? new NativeDate(Y, M, D, h) :
-                    length >= 3 ? new NativeDate(Y, M, D) :
-                    length >= 2 ? new NativeDate(Y, M) :
-                    length >= 1 ? new NativeDate(Y) :
-                                  new NativeDate();
-                // Prevent mixups with unfixed Date object
-                date.constructor = Date;
-                return date;
-            }
-            return NativeDate.apply(this, arguments);
-        };
-        // 15.9.1.15 Date Time String Format.
-        var isoDateExpression = new RegExp("^" +
-            "(\\d{4}|[\+\-]\\d{6})" + // four-digit year capture or sign + 6-digit extended year
-            "(?:-(\\d{2})" + // optional month capture
-            "(?:-(\\d{2})" + // optional day capture
-            "(?:" + // capture hours:minutes:seconds.milliseconds
-                "T(\\d{2})" + // hours capture
-                ":(\\d{2})" + // minutes capture
-                "(?:" + // optional :seconds.milliseconds
-                    ":(\\d{2})" + // seconds capture
-                    "(?:\\.(\\d{3}))?" + // milliseconds capture
-                ")?" +
-            "(" + // capture UTC offset component
-                "Z|" + // UTC capture
-                "(?:" + // offset specifier +/-hours:minutes
-                    "([-+])" + // sign capture
-                    "(\\d{2})" + // hours offset capture
-                    ":(\\d{2})" + // minutes offset capture
-                ")" +
-            ")?)?)?)?" +
-        "$");
-        var monthes = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365];
-        function dayFromMonth(year, month) {
-            var t = month > 1 ? 1 : 0;
-            return monthes[month] + Math.floor((year - 1969 + t) / 4) - Math.floor((year - 1901 + t) / 100) + Math.floor((year - 1601 + t) / 400) + 365 * (year - 1970);
-        }
-        // Copy any custom methods a 3rd party library may have added
-        for (var key in NativeDate) {
-            Date[key] = NativeDate[key];
-        }
-        // Copy "native" methods explicitly; they may be non-enumerable
-        Date.now = NativeDate.now;
-        Date.UTC = NativeDate.UTC;
-        Date.prototype = NativeDate.prototype;
-        Date.prototype.constructor = Date;
-        // Upgrade Date.parse to handle simplified ISO 8601 strings
-        Date.parse = function parse(string) {
-            var match = isoDateExpression.exec(string);
-            if (match) {
-                // parse months, days, hours, minutes, seconds, and milliseconds
-                // provide default values if necessary
-                // parse the UTC offset component
-                var year = Number(match[1]),
-                    month = Number(match[2] || 1) - 1,
-                    day = Number(match[3] || 1) - 1,
-                    hour = Number(match[4] || 0),
-                    minute = Number(match[5] || 0),
-                    second = Number(match[6] || 0),
-                    millisecond = Number(match[7] || 0),
-                    // When time zone is missed, local offset should be used (ES 5.1 bug)
-                    // see https://bugs.ecmascript.org/show_bug.cgi?id=112
-                    offset = !match[4] || match[8] ? 0 : Number(new Date(1970, 0)),
-                    signOffset = match[9] === "-" ? 1 : -1,
-                    hourOffset = Number(match[10] || 0),
-                    minuteOffset = Number(match[11] || 0),
-                    result;
-                if (hour < (minute > 0 || second > 0 || millisecond > 0 ? 24 : 25) &&
-                    minute < 60 && second < 60 && millisecond < 1000 &&
-                    month > -1 && month < 12 && hourOffset < 24 && minuteOffset < 60 && // detect invalid offsets
-                    day > -1 && day < dayFromMonth(year, month + 1) - dayFromMonth(year, month)) {
-                    result = ((dayFromMonth(year, month) + day) * 24 + hour + hourOffset * signOffset) * 60;
-                    result = ((result + minute + minuteOffset * signOffset) * 60 + second) * 1000 + millisecond + offset;
-                    if (-8.64e15 <= result && result <= 8.64e15) {
-                        return result;
-                    }
-                }
-                return NaN;
-            }
-            return NativeDate.parse.apply(this, arguments);
-        };
-        return Date;
-    })(Date);
-}
-//
-// String
-// ======
-//
-// ES5 15.5.4.20
-// http://es5.github.com/#x15.5.4.20
-var ws = "\x09\x0A\x0B\x0C\x0D\x20\xA0\u1680\u180E\u2000\u2001\u2002\u2003" +
-    "\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028" +
-    "\u2029\uFEFF";
-if (!String.prototype.trim || ws.trim()) {
-    // http://blog.stevenlevithan.com/archives/faster-trim-javascript
-    // http://perfectionkills.com/whitespace-deviations/
-    ws = "[" + ws + "]";
-    var trimBeginRegexp = new RegExp("^" + ws + ws + "*"),
-        trimEndRegexp = new RegExp(ws + ws + "*$");
-    String.prototype.trim = function trim() {
-        if (this === undefined || this === null) {
-            throw new TypeError("can't convert "+this+" to object");
-        }
-        return String(this).replace(trimBeginRegexp, "").replace(trimEndRegexp, "");
-    };
-}
-//
-// Util
-// ======
-//
-// ES5 9.4
-// http://es5.github.com/#x9.4
-// http://jsperf.com/to-integer
-var toInteger = function (n) {
-    n = +n;
-    if (n !== n) { // isNaN
-        n = 0;
-    } else if (n !== 0 && n !== (1/0) && n !== -(1/0)) {
-        n = (n > 0 || -1) * Math.floor(Math.abs(n));
-    }
-    return n;
-};
-var prepareString = "a"[0] != "a";
-    // ES5 9.9
-    // http://es5.github.com/#x9.9
-var toObject = function (o) {
-    if (o == null) { // this matches both null and undefined
-        throw new TypeError("can't convert "+o+" to object");
-    }
-    // If the implementation doesn't support by-index access of
-    // string characters (ex. IE < 9), split the string
-    if (prepareString && typeof o == "string" && o) {
-        return o.split("");
-    }
-    return Object(o);
-};
-});
 });
 
 Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],function() {
@@ -16450,6 +15542,9 @@ GapFillPart.prototype = /** @lends Numbas.parts.GapFillPart.prototype */
      * @returns {Numbas.jme.token}
      */
     rawStudentAnswerAsJME: function() {
+        if(this.gaps.some(function(g){ return g.rawStudentAnswerAsJME()===undefined; })) {
+            return undefined;
+        }
         return new Numbas.jme.types.TList(this.gaps.map(function(g){return g.rawStudentAnswerAsJME()}));
     },
     storeAnswer: function(answer) {
@@ -16469,37 +15564,6 @@ GapFillPart.prototype = /** @lends Numbas.parts.GapFillPart.prototype */
      */
     studentAnswerAsJME: function() {
         return new Numbas.jme.types.TList(this.gaps.map(function(g){return g.studentAnswerAsJME()}));
-    },
-    /** Mark this part - add up the scores from each of the child gaps.
-     */
-    mark_old: function()
-    {
-        this.credit=0;
-        if(this.marks>0)
-        {
-            for(var i=0; i<this.gaps.length; i++)
-            {
-                var gap = this.gaps[i];
-            gap.submit();
-                this.credit += gap.credit*gap.marks;
-                if(this.gaps.length>1)
-                    this.markingComment(R('part.gapfill.feedback header',{index:i+1}));
-                for(var j=0;j<gap.markingFeedback.length;j++)
-                {
-                    var action = util.copyobj(gap.markingFeedback[j]);
-                    action.gap = i;
-                    this.markingFeedback.push(action);
-                }
-            }
-            this.credit/=this.marks;
-        }
-        //go through all gaps, and if any one fails to validate then
-        //whole part fails to validate
-        var success = true;
-        for(var i=0; i<this.gaps.length; i++) {
-            success = success && this.gaps[i].answered;
-        }
-        this.answered = success;
     }
 };
 ['loadFromXML','resume','finaliseLoad','loadFromJSON','storeAnswer'].forEach(function(method) {
@@ -16899,6 +15963,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
             this.flipped = false;
         }
         //work out marks available
+        tryGetAttribute(settings,xml,'.','showCellAnswerState');
         tryGetAttribute(settings,xml,'marking/maxmarks','enabled','maxMarksEnabled');
         if(this.type=='1_n_2') {
             settings.maxMarksEnabled = false;
@@ -17208,8 +16273,10 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
                 // it's easier for question authors to go [row][column] because that's how they're displayed, but it's too late to change the internals of the part to match that now
                 // I have only myself to thank for this - CP
                 var layoutMatrix = jme.unwrapValue(jme.evaluate(settings.layoutExpression,scope));
+                var layoutFunction = function(row,column) { return layoutMatrix[row][column]; };
+            } else {
+                var layoutFunction = MultipleResponsePart.layoutTypes[settings.layoutType];
             }
-            var layoutFunction = MultipleResponsePart.layoutTypes[settings.layoutType];
             for(var i=0;i<this.numAnswers;i++) {
                 var row = [];
                 for(var j=0;j<this.numChoices;j++) {
@@ -17585,8 +16652,7 @@ Numbas.parts.MultipleResponsePart.layoutTypes = {
     lowertriangle: function(row,column) { return row>=column; },
     strictlowertriangle: function(row,column) { return row>column; },
     uppertriangle: function(row,column) { return row<=column; },
-    strictuppertriangle: function(row,column) { return row<column; },
-    expression: function(row,column) { return layoutMatrix[row][column]; }
+    strictuppertriangle: function(row,column) { return row<column; }
 };
 Numbas.partConstructors['1_n_2'] = util.extend(Part,MultipleResponsePart);
 Numbas.partConstructors['m_n_2'] = util.extend(Part,MultipleResponsePart);
@@ -17736,6 +16802,9 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
         return this.resolved_input_options;
     },
     rawStudentAnswerAsJME: function() {
+        if(this.studentAnswer===undefined) {
+            return new types.TNothing();
+        }
         return this.student_answer_jme_types[this.input_widget()](this.studentAnswer, this.input_options());
     },
     student_answer_jme_types: {
@@ -18073,13 +17142,14 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
      */
     setStudentAnswer: function() {
         if(this.stagedAnswer !== undefined) {
-            this.studentAnswerRows = parseInt(this.stagedAnswer.rows);
-            this.studentAnswerColumns = parseInt(this.stagedAnswer.columns);
+            var m = this.stagedAnswer;
+            this.studentAnswerRows = m.length;
+            this.studentAnswerColumns = this.studentAnswerRows>0 ? m[0].length : 0;
         } else {
             this.studentAnswerRows = 0;
             this.studentAnswerColumns = 0;
         }
-            this.studentAnswer = this.stagedAnswer;
+        this.studentAnswer = this.stagedAnswer;
     },
     /** Get the student's answer as it was entered as a JME data type, to be used in the marking script
      * @abstract

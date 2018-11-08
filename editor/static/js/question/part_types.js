@@ -109,12 +109,32 @@ part_types.models = [
                 mustmatchpattern: {
                     pattern: ko.observable(''),
                     partialCredit: ko.observable(0),
-                    message: ko.observable('')
+                    message: ko.observable(''),
+                    nameToCompare: ko.observable('')
                 },
                 checkVariableNames: ko.observable(false),
                 expectedVariableNames: ko.observableArray([])
             };
             model.checkingType = ko.observable(model.checkingTypes[0]);
+
+            model.mustmatchpattern.capturedNames = ko.computed(function() {
+                var pattern = this.mustmatchpattern.pattern();
+                try {
+                    var expr = Numbas.jme.rules.patternParser.compile(pattern);
+                } catch(e) {
+                    return [];
+                }
+                if(!expr) {
+                    return [];
+                }
+                return Numbas.jme.rules.findCapturedNames(expr);
+            },model);
+
+            model.mustmatchpattern.capturedNameOptions = ko.computed(function() {
+                var l = model.mustmatchpattern.capturedNames().map(function(n) {return {name: n, label: n}});
+                l.splice(0,0,{name:'',label:'Whole expression'});
+                return l;
+            },model);
 
             model.markingSettings = ko.computed(function() {
                 try {
@@ -149,7 +169,8 @@ part_types.models = [
                     expectedVariableNames: model.expectedVariableNames(),
                     mustmatchpattern: model.mustmatchpattern.pattern(),
                     mustMatchPC: model.mustmatchpattern.partialCredit(),
-                    mustMatchMessage: model.mustmatchpattern.message()
+                    mustMatchMessage: model.mustmatchpattern.message(),
+                    matchNameToCompare: model.mustmatchpattern.nameToCompare()
                 };
             });
 
@@ -206,7 +227,8 @@ part_types.models = [
                 data.mustmatchpattern = {
                     pattern: this.mustmatchpattern.pattern(),
                     partialCredit: this.mustmatchpattern.partialCredit(),
-                    message: this.mustmatchpattern.message()
+                    message: this.mustmatchpattern.message(),
+                    nameToCompare: this.mustmatchpattern.nameToCompare()
                 }
             }
         },
@@ -229,6 +251,7 @@ part_types.models = [
             tryLoad(tryGetAttribute(data,'minLength'),['length','partialCredit','message'],this.minlength);
             tryLoad(tryGetAttribute(data,'mustHave'),['strings','showStrings','partialCredit','message'],this.musthave);
             tryLoad(tryGetAttribute(data,'notAllowed'),['strings','showStrings','partialCredt','message'],this.notallowed);
+            tryLoad(tryGetAttribute(data,'mustMatchPattern'),['pattern','partialCredt','message','nameToCompare'],this.mustmatchpattern);
         }
     },
     {

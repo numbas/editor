@@ -744,6 +744,37 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
                 return v.value;
         }
     },
+
+    /** Mark a token as 'safe', so it doesn't have {@link Numbas.jme.subvars} applied to it, or any strings it contains, when it's evaluated
+     * @param {Numbas.jme.token} t
+     * @returns {Numbas.jme.token}
+     */
+    makeSafe: function(t) {
+        if(!t) {
+            return t;
+        }
+        switch(t.type) {
+            case 'string':
+                t.safe = true;
+                var t2 = new TString(t.value);
+                if(t.latex!==undefined) {
+                    t2.latex = t.latex;
+                }
+                t2.safe = true;
+                return t2;
+            case 'list':
+                return new TList(t.value.map(jme.makeSafe));
+            case 'dict':
+                var o = {};
+                for(var x in t.value) {
+                    o[x] = jme.makeSafe(t.value[x]);
+                }
+                return new TDict(o);
+            default:
+                return t;
+        }
+    },
+
     /** Wrap up a plain JavaScript value (number, string, bool or array) as a {@link Numbas.jme.token}.
      * @param {Object} v
      * @param {String} typeHint - name of the expected type (to differentiate between, for example, matrices, vectors and lists
@@ -1356,6 +1387,18 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
     deleteVariable: function(name) {
         this.deleted.variables[name] = true;
     },
+    /** Mark the given function name as deleted from the scope.
+     * @param {String} name
+     */
+    deleteFunction: function(name) {
+        this.deleted.functions[name] = true;
+    },
+    /** Mark the given ruleset name as deleted from the scope.
+     * @param {String} name
+     */
+    deleteRuleset: function(name) {
+        this.deleted.rulesets[name] = true;
+    },
     /** Get the object with given name from the given collection
      * @param {String} collection - name of the collection. A property of this Scope object, i.e. one of `variables`, `functions`, `rulesets`.
      * @param {String} name - the name of the object to retrieve
@@ -1485,6 +1528,31 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
         this.variables = this.allVariables();
         this.rulesets = this.allRulesets();
     },
+
+    /** Return a new scope created by unsetting the members specified by the given object.
+     * @param {Object} defs - a dictionary with elements `variables`, `rulesets` and `functions`, each lists of names to unset.
+     * @returns {Numbas.jme.Scope}
+     */
+    unset: function(defs) {
+        var s = new Scope([this]);
+        if(defs.variables) {
+            defs.variables.forEach(function(v) {
+                s.deleteVariable(v);
+            });
+        }
+        if(defs.functions) {
+            defs.functions.forEach(function(f) {
+                s.deleteFunction(f);
+            });
+        }
+        if(defs.rulesets) {
+            defs.rulesets.forEach(function(r) {
+                s.deleteRuleset(r);
+            });
+        }
+        return s;
+    },
+
     /** Evaluate an expression in this scope - equivalent to `Numbas.jme.evaluate(expr,this)`
      * @param {JME} expr
      * @param {Object.<Numbas.jme.token|Object>} [variables] - Dictionary of variables to sub into expression. Values are automatically wrapped up as JME types, so you can pass raw JavaScript values.
@@ -1545,7 +1613,9 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
             if(!tok.safe && value.contains('{')) {
                 value = jme.contentsubvars(value,scope)
                 var t = new TString(value);
-                t.latex = tok.latex
+                if(tok.latex!==undefined) {
+                    t.latex = tok.latex
+                }
                 return t;
             } else {
                 return tok;
@@ -3681,6 +3751,16 @@ jme.substituteTreeOps.let = function(tree,scope,allowUnbound) {
         tree.args[i] = jme.substituteTree(tree.args[i],scope,allowUnbound);
     }
 }
+
+newBuiltin('unset',[TDict,'?'],'?',null,{
+    evaluate: function(args,scope) {
+        var defs = jme.unwrapValue(scope.evaluate(args[0]));
+        var nscope = scope.unset(defs);
+        return nscope.evaluate(args[1]);
+    }
+});
+Numbas.jme.lazyOps.push('unset');
+
 newBuiltin('sort',[TList],TList, null, {
     evaluate: function(args,scope)
     {
@@ -5491,7 +5571,7 @@ var typeToJME = Numbas.jme.display.typeToJME = {
                 arg_op = args[i].tok.name;
             } else if(arg_type=='number' && arg_value.complex && arg_value.im!=0) {
                 if(arg_value.re!=0) {
-                    arg_op = arg_value.im<0 ? '-' : '+';   // implied addition/subtraction becuase this number will be written in the form 'a+bi'
+                    arg_op = arg_value.im<0 ? '-' : '+';   // implied addition/subtraction because this number will be written in the form 'a+bi'
                 } else if(arg_value.im!=1) {
                     arg_op = '*';   // implied multiplication because this number will be written in the form 'bi'
                 }
@@ -5627,7 +5707,7 @@ var opBrackets = Numbas.jme.display.opBrackets = {
     '-': [{},{'+':true,'-':true}],
     '*': [{'+u':true,'-u':true,'+':true, '-':true, '/':true},{'+u':true,'-u':true,'+':true, '-':true, '/':true}],
     '/': [{'+u':true,'-u':true,'+':true, '-':true, '*':false},{'+u':true,'-u':true,'+':true, '-':true, '*':true}],
-    '^': [{'+u':true,'-u':true,'+':true, '-':true, '*':true, '/':true},{'+u':true,'-u':true,'+':true, '-':true, '*':true, '/':true}],
+    '^': [{'+u':true,'-u':true,'+':true, '-':true, '*':true, '/':true, '^': true},{'+u':true,'-u':true,'+':true, '-':true, '*':true, '/':true}],
     'and': [{'or':true, 'xor':true},{'or':true, 'xor':true}],
     'or': [{'xor':true},{'xor':true}],
     'xor':[{},{}],
@@ -6968,6 +7048,13 @@ var util = Numbas.util;
 var jme = Numbas.jme;
 var math = Numbas.math;
 var marking = Numbas.marking;
+
+/** Definitions of custom part types
+ * @name custom_part_types
+ * @type {Object}
+ * @memberof Numbas
+ */
+
 /** A unique identifier for a {@link Numbas.parts.Part} object, of the form `qXpY[gZ|sZ]`. Numbering starts from zero, and the `gZ` bit is used only when the part is a gap, and `sZ` is used if it's a step.
  * @typedef Numbas.parts.partpath
  * @type {String}
@@ -7053,10 +7140,10 @@ var createPart = Numbas.createPart = function(type, path, question, parentPart, 
 /** Base question part object
  * @constructor
  * @memberof Numbas.parts
- * @param {Element} xml
  * @param {Numbas.parts.partpath} [path='p0']
- * @param {Numbas.Question} Question
+ * @param {Numbas.Question} question
  * @param {Numbas.parts.Part} parentPart
+ * @param {Numbas.storage.BlankStorage} [store]
  * @see Numbas.createPart
  */
 var Part = Numbas.parts.Part = function( path, question, parentPart, store)
@@ -7381,7 +7468,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
 
     /** Throw an error, with the part's identifier prepended to the message
      * @param {String} message
-     * @returns {Numbas.Error}
+     * @throws {Numbas.Error}
      */
     error: function(message) {
         message = R.apply(this,arguments);
@@ -7413,20 +7500,34 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
                     break;
                 default:
                     var originalScript = this[name];
+                    /** Create a function which runs `script` (instead of the built-in script)
+                     * @param {Function} script
+                     * @returns {Function}
+                     */
                     function instead(script) {
                         return function() {
                             return script.apply(part,arguments);
                         }
                     }
+                    /** Create a function which runs `script` before `originalScript`
+                     * @param {Function} script
+                     * @param {Function} originalScript
+                     * @returns {Function}
+                     */
                     function before(script,originalScript) {
                         return function() {
                             script.apply(part,arguments);
-                            return originalScript.apply(this,arguments);
+                            return originalScript.apply(part,arguments);
                         }
                     }
+                    /** Create a function which runs `script` after `originalScript`
+                     * @param {Function} script
+                     * @param {Function} originalScript
+                     * @returns {Function}
+                     */
                     function after(script,originalScript) {
                         return function() {
-                            originalScript.apply(this,arguments);
+                            originalScript.apply(part,arguments);
                             return script.apply(part,arguments);
                         }
                     }
@@ -7698,8 +7799,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         this.markingFeedback = feedback.markingFeedback.slice();
         var finalised_result = {states: [], valid: false, credit: 0};
         try {
-            this.getCorrectAnswer(scope);
-            finalised_result = this.mark();
+            finalised_result = this.mark(scope);
         } catch(e) {
             this.giveWarning(e.message);
         }
@@ -7779,15 +7879,16 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * If the question has been answered in a way that can be marked, `this.answered` should be set to `true`.
      * @see Numbas.parts.Part#markingScript
      * @see Numbas.parts.Part#answered
+     * @param {Numbas.jme.Scope} scope
      * @returns {Numbas.marking.finalised_state}
      */
-    mark: function() {
+    mark: function(scope) {
         var studentAnswer = this.rawStudentAnswerAsJME();
         if(studentAnswer==undefined) {
             this.setCredit(0,R('part.marking.nothing entered'));
             return;
         }
-        var result = this.mark_answer(studentAnswer);
+        var result = this.mark_answer(studentAnswer,scope);
         var finalised_result = marking.finalise_state(result.states.mark)
         this.apply_feedback(finalised_result);
         this.interpretedStudentAnswer = result.values['interpreted_answer'];
@@ -7860,8 +7961,10 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         part.answered = valid;
     },
     marking_parameters: function(studentAnswer) {
+        studentAnswer = jme.makeSafe(studentAnswer);
         return {
             path: jme.wrapValue(this.path),
+            question_definitions: jme.wrapValue(this.question ? this.question.local_definitions : {}),
             studentAnswer: studentAnswer,
             settings: jme.wrapValue(this.settings),
             marks: new jme.types.TNum(this.marks),
@@ -7873,13 +7976,15 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
     /** Run the marking script against the given answer.
      * This does NOT apply the feedback and credit to the part object, it just returns it.
      * @param {Numbas.jme.token} studentAnswer
+     * @param {Numbas.jme.Scope} scope
      * @see Numbas.parts.Part#mark
      * @returns {Numbas.marking.marking_script_result}
      */
-    mark_answer: function(studentAnswer) {
+    mark_answer: function(studentAnswer,scope) {
         try {
+            this.getCorrectAnswer(scope);
             var result = this.markingScript.evaluate(
-                this.getScope(),
+                scope,
                 this.marking_parameters(studentAnswer)
             );
         } catch(e) {
@@ -8383,6 +8488,11 @@ Question.prototype = /** @lends Numbas.Question.prototype */
         q.signals.on('variablesSet',function() {
             q.scope = new jme.Scope([q.scope]);
             q.scope.flatten();
+            q.local_definitions = {
+                variables: Object.keys(q.variablesTodo),
+                functions: Object.keys(q.functionsTodo),
+                rulesets: Object.keys(q.rulesets)
+            };
             q.unwrappedVariables = {};
             var all_variables = q.scope.allVariables()
             for(var name in all_variables) {
@@ -9227,7 +9337,7 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
                     values: {interpreted_answer:answer}
                 }
             } else {
-                var part_result = part.mark_answer(answer);
+                var part_result = part.mark_answer(answer,scope);
             }
             var result = marking.finalise_state(part_result.states.mark);
             return jme.wrapValue({
@@ -9959,8 +10069,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
      * @returns {Boolean}
      */
     eq: function(a,b) {
-        if(isNaN(a)) {
-            return isNaN(b);
+        if(typeof(a)!=='object' && isNaN(a)) {
+            return typeof(b)!='object' && isNaN(b);
         }
         if(a.complex)
         {
@@ -16623,13 +16733,14 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
      */
     setStudentAnswer: function() {
         if(this.stagedAnswer !== undefined) {
-            this.studentAnswerRows = parseInt(this.stagedAnswer.rows);
-            this.studentAnswerColumns = parseInt(this.stagedAnswer.columns);
+            var m = this.stagedAnswer;
+            this.studentAnswerRows = m.length;
+            this.studentAnswerColumns = this.studentAnswerRows>0 ? m[0].length : 0;
         } else {
             this.studentAnswerRows = 0;
             this.studentAnswerColumns = 0;
         }
-            this.studentAnswer = this.stagedAnswer;
+        this.studentAnswer = this.stagedAnswer;
     },
     /** Get the student's answer as it was entered as a JME data type, to be used in the marking script
      * @abstract

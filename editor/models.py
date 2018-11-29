@@ -281,6 +281,7 @@ class Extension(models.Model):
     last_modified = models.DateTimeField(auto_now=True)
     zipfile_folder = 'user-extensions'
     zipfile = models.FileField(upload_to=zipfile_folder+'/zips', blank=True, null=True, max_length=255, verbose_name='Extension package', help_text='A .zip package containing the extension\'s files')
+    runs_headless = models.BooleanField(default=True, help_text='Can this extension run outside a browser?')
 
     class Meta:
         ordering = ['name']

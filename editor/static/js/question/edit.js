@@ -2434,7 +2434,7 @@ $(document).ready(function() {
                 }
                 part.storeAnswer(answer.value);
                 part.setStudentAnswer();
-                var res = part.mark_answer(part.rawStudentAnswerAsJME());
+                var res = part.mark_answer(part.rawStudentAnswerAsJME(),part.getScope());
                 var out = {script: part.markingScript, result: res, marks: part.marks};
                 if(!res.state_valid.mark) {
                     out.error = 'This answer is not valid.';

@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -30,6 +31,7 @@ class HeadlessTest(CompileObject):
             raise HeadlessError('Error while running the question', stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'), code=code)
         result = json.loads(stdout.decode('utf-8').strip())
         result['stderr'] = stderr.decode('utf-8')
+        result['question'] = self.question
         return result
 
 def test_question(q):
@@ -61,27 +63,37 @@ class Command(BaseCommand):
         self.start_time = datetime.now()
 
     def add_arguments(self, parser):
-        parser.add_argument('question_id',nargs='*', type=int)
+        parser.add_argument('--question',dest='question_id',nargs='+', type=int)
         parser.add_argument('--project')
         parser.add_argument('--only-ready', action='store_true')
         parser.add_argument('--all', action='store_true')
         parser.add_argument('--hide-successes', action='store_false', dest='show_successes')
         parser.add_argument('--ignore-bad-extensions', action='store_true')
+        parser.add_argument('--exam',dest='exam_ids',nargs='+', type=int)
 
     def handle(self, *args, **options):
         self.options = options
         if options['project']:
             self.test_project(options['project'])
 
-        if len(options['question_id']):
+        if options['question_id']:
             self.test_questions(NewQuestion.objects.filter(pk__in=options['question_id']))
 
         if options['all']:
             self.test_all()
 
+        if options['exam_ids']:
+            self.test_questions(NewQuestion.objects.filter(exams__pk__in=options['exam_ids']).distinct())
+
         end_time = datetime.now()
         failures = [r for r in self.results if not r['success']]
-        print('\nTesting finished in {}.\n{}/{} questions failed'.format((end_time-self.start_time), len(failures),len(self.results)))
+        print('Testing finished in {}.'.format((end_time-self.start_time)))
+        if len(failures)>0:
+            print('\x1b[31m{}/{} questions failed\x1b[0m'.format(len(failures),len(self.results)))
+        else:
+            print('\x1b[32mEvery question worked!\x1b[0m')
+
+        self.summarise_results()
 
     def test_project(self,pk):
         try:
@@ -97,6 +109,8 @@ class Command(BaseCommand):
         self.test_questions(NewQuestion.objects.all())
 
     def test_questions(self,questions):
+        questions = questions.exclude(editoritem__current_stamp__status__in=('dontuse','problem','broken'))
+
         if self.options['only_ready']:
             questions = questions.filter(editoritem__current_stamp__status='ok')
         if self.options['ignore_bad_extensions']:
@@ -110,16 +124,31 @@ class Command(BaseCommand):
         result = test_question(q)
         if result['success']:
             if self.options['show_successes']:
-                print('\x1b[32m✔ Question {} "{}" ran OK\x1b[0m'.format(q.pk, q.editoritem.name))
+                print('\x1b[32m✔ Question {} "{}" ran OK\x1b[0m\n'.format(q.pk, q.editoritem.name))
         else:
             url = urlunparse(('http',Site.objects.first().domain,q.get_absolute_url(),'','',''))
-            print('\x1b[31m✖ Question {pk} "{name}" failed: {message}\n  Error codes: {originalMessages}\n  Edit this question at {url}\x1b[0m'.format(
+            error_template = """\x1b[31m✖ Question {pk} "{name}" failed: {message}
+  Error codes: {originalMessages}\n
+  Edit this question at {url}\x1b[0m
+"""
+            print(error_template.format(
                 pk=q.pk, 
                 name=q.editoritem.name, 
                 message=result.get('message',''), 
                 originalMessages = ', '.join(result.get('originalMessages',[])),
                 url=url
             ))
-            if result.get('stderr'):
-                print(result['stderr'])
+        if result.get('stderr'):
+            print(result['stderr'])
         self.results.append(result)
+
+    def summarise_results(self):
+        error_codes = defaultdict(list)
+        for result in self.results:
+            for code in result.get('originalMessages',[]):
+                error_codes[code].append(result)
+        if len(error_codes):
+            print('Breakdown of error codes:')
+            print('Freq.\tCode')
+            for code,results in sorted(error_codes.items(),key=lambda x:len(x[1])):
+                print('{}\t{}'.format(len(results), code))

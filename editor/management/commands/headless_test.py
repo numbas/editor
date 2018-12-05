@@ -1,14 +1,34 @@
 from collections import defaultdict
 from datetime import datetime
+from distutils.util import strtobool
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand, CommandError
-from editor.models import NewQuestion, Project
+from django.db.models import Q
+from editor.models import NewQuestion, Project, NewStampOfApproval, Comment
 from editor.views.editoritem import CompileObject, CompileError, ExtensionNotFoundCompileError
 import json
 import os
 import subprocess
+import sys
 from urllib.parse import urlunparse
+
+
+def yes_no(question,default=False):
+    response = input('{} [{}] '.format(question,'Y/n' if default else 'y/N'))
+    try:
+        return strtobool(response.lower())==1
+    except ValueError:
+        return False
+
+def input_choice(question,choices):
+    choice_display = ', '.join('{} ({})'.format(choice,short.upper()) for choice,short in choices)
+    while True:
+        response = input('{} [{}] '.format(question,choice_display)).lower().strip()
+        for choice,short in choices:
+            if response in (choice.lower(),short.lower()):
+                return choice
 
 class HeadlessError(CompileError):
     pass
@@ -54,8 +74,17 @@ def test_question(q):
             'originalMessages': []
         }
 
+STATUS_CHOICES = [
+    ('no','n'),
+    ('dontuse', 'd'),
+    ('problem', 'p'),
+    ('broken', 'b'),
+]
+
 class Command(BaseCommand):
     help = 'Test a question headlessly'
+
+    last_success = False
 
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
@@ -65,11 +94,21 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--question',dest='question_id',nargs='+', type=int)
         parser.add_argument('--project')
-        parser.add_argument('--only-ready', action='store_true')
         parser.add_argument('--all', action='store_true')
-        parser.add_argument('--hide-successes', action='store_false', dest='show_successes')
-        parser.add_argument('--ignore-bad-extensions', action='store_true')
         parser.add_argument('--exam',dest='exam_ids',nargs='+', type=int)
+
+        parser.add_argument('--repeat',type=int,default=1)
+
+        parser.add_argument('--stamp',action='store_true')
+        group = parser.add_argument_group('stamp_status')
+        group.add_argument('--broken',dest='stamp_status',action='store_const',const='broken')
+        group.add_argument('--dontuse',dest='stamp_status',action='store_const',const='dontuse')
+        group.add_argument('--problem',dest='stamp_status',action='store_const',const='problem')
+        group.add_argument('--pleasetest',dest='stamp_status',action='store_const',const='pleasetest')
+
+        parser.add_argument('--only-ready', action='store_true')
+        parser.add_argument('--show-successes', action='store_true', dest='show_successes')
+        parser.add_argument('--try-bad-extensions', dest='ignore_bad_extensions', action='store_false')
 
     def handle(self, *args, **options):
         self.options = options
@@ -109,23 +148,36 @@ class Command(BaseCommand):
         self.test_questions(NewQuestion.objects.all())
 
     def test_questions(self,questions):
-        questions = questions.exclude(editoritem__current_stamp__status__in=('dontuse','problem','broken'))
+        bad_stamp = Q(editoritem__current_stamp__status__in=('dontuse','problem','broken'))
+        questions = questions.exclude(bad_stamp)
 
         if self.options['only_ready']:
             questions = questions.filter(editoritem__current_stamp__status='ok')
         if self.options['ignore_bad_extensions']:
             questions = questions.exclude(extensions__runs_headless=False)
-        print("Testing {} questions".format(questions.count()))
+        print("Testing {} question{}".format(questions.count(),'s' if questions.count()!=1 else ''))
         for q in questions:
             result = self.test_question(q)
 
     def test_question(self,q):
         #print("Testing question {}: \"{}\"".format(q.pk,q.editoritem.name))
-        result = test_question(q)
+        for i in range(self.options['repeat']):
+            result = test_question(q)
+            if not result['success']:
+                break
+
         if result['success']:
             if self.options['show_successes']:
                 print('\x1b[32m✔ Question {} "{}" ran OK\x1b[0m\n'.format(q.pk, q.editoritem.name))
+            else:
+                sys.stdout.write('✔')
+                sys.stdout.flush()
+                self.last_success = True
         else:
+            if self.last_success:
+                sys.stdout.write('\n\n')
+                sys.stdout.flush()
+            self.last_success = False
             url = urlunparse(('http',Site.objects.first().domain,q.get_absolute_url(),'','',''))
             error_template = """\x1b[31m✖ Question {pk} "{name}" failed: {message}
   Error codes: {originalMessages}\n
@@ -138,8 +190,26 @@ class Command(BaseCommand):
                 originalMessages = ', '.join(result.get('originalMessages',[])),
                 url=url
             ))
-        if result.get('stderr'):
-            print(result['stderr'])
+
+            if result.get('stderr'):
+                print(result['stderr'])
+
+            if self.options['stamp']:
+                status = self.options['stamp_status'] or input_choice('Stamp this question?', STATUS_CHOICES)
+                if status != 'no':
+                    user = User.objects.filter(is_superuser=True).first()
+                    comment_template = """<p>Automatic testing has identified a problem with this question:</p>
+    <blockquote>{message}</blockquote>"""
+                    comment = Comment.objects.create(
+                        object = q.editoritem,
+                        user = user,
+                        text = comment_template.format(**result)
+                    )
+                    stamp = NewStampOfApproval.objects.create(
+                        object = q.editoritem,
+                        user = user,
+                        status = status
+                    )
         self.results.append(result)
 
     def summarise_results(self):

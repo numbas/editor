@@ -985,6 +985,7 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
      * @param {String} name - the name of the operator
      * @param {Numbas.jme.operatorOptions} options
      */
+<<<<<<< HEAD
     setOperatorProperties: function(name,options) {
         if(!options) {
             return;
@@ -1114,6 +1115,46 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
             parse: function(result,tokens,expr,pos) {
                 var matched_name = result[0];
                 var name = matched_name.toLowerCase();
+=======
+    tokenise: function(expr) {
+        if(!expr)
+            return [];
+        expr += '';
+        var oexpr = expr;
+        var pos = 0;
+        var olen = expr.length;
+        expr = expr.replace(this.re.re_strip_whitespace, '');    //get rid of whitespace
+        pos += olen - expr.length;
+        var tokens = [];
+        var i = 0;
+        var re_op = new RegExp(this.re.re_op.source.replace('__ANY_OP__',this.ops.join('|')),'i');
+        while( expr.length ) {
+            olen = expr.length;
+            expr = expr.replace(this.re.re_strip_whitespace, '');    //get rid of whitespace
+            pos += olen-expr.length;
+            var token_pos= pos;
+            var result;
+            var token;
+            while(result=expr.match(this.re.re_comment)) {
+                olen = expr.length;
+                expr=expr.slice(result[0].length).replace(this.re.re_strip_whitespace,'');
+                pos += olen-expr.length;
+            }
+            if(result = expr.match(this.re.re_number)) {
+                token = new TNum(result[0]);
+                if(tokens.length>0 && (tokens[tokens.length-1].type==')' || tokens[tokens.length-1].type=='name'))    //right bracket followed by a number is interpreted as multiplying contents of brackets by number
+                {
+                    tokens.push(new TOp('*'));
+                }
+            } else if (result = expr.match(this.re.re_bool)) {
+                token = new TBool(util.parseBool(result[0]));
+                result[0] = result[1];
+            } else if (result = expr.match(re_op)) {
+                if(result[2])        //if word-ish operator
+                    result[0] = result[2];
+                token = result[0].toLowerCase();
+                //work out if operation is being used prefix or postfix
+>>>>>>> headless_testing
                 var nt;
                 var postfix = false;
                 var prefix = false;

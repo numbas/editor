@@ -389,8 +389,11 @@ class CompileError(Exception):
         self.stderr = stderr
         self.code = code
     def __str__(self):
-        return 'Compilation failed: {}\n Stdout: {}\nStderr: {}\nExit code: {}'.format(self.message, self.stderr, self.stdout, self.code)
+        return 'Compilation failed: {}\n\nStdout:\n{}\nStderr:\n{}\nExit code: {}'.format(self.message, self.stdout, self.stderr, self.code)
     
+class ExtensionNotFoundCompileError(CompileError):
+    pass
+
 class CompileObject():
     
     """Compile an exam or question."""
@@ -403,6 +406,12 @@ class CompileObject():
         else:
             return 'en-GB'
 
+    def add_extensions(self,numbasobject):
+        extensions = editor.models.Extension.objects.filter(location__in=numbasobject.data.get('extensions', []))
+        numbasobject.data['extensions'] = [os.path.join(os.getcwd(), e.extracted_path) for e in extensions]
+        for extracted_path in numbasobject.data['extensions']:
+            if not os.path.exists(extracted_path):
+                raise ExtensionNotFoundCompileError("Extension not found at {}. Is MEDIA_ROOT configured correctly? It should be the absolute path to your editor media directory.".format(extracted_path))
 
     def compile(self, numbasobject, switches, location, obj, locale='en-GB'):
         """
@@ -410,10 +419,7 @@ class CompileObject():
             Returns the path to the output produced
         """
 
-        numbasobject.data['extensions'] = [os.path.join(os.getcwd(), e.extracted_path) for e in editor.models.Extension.objects.filter(location__in=numbasobject.data.get('extensions', []))]
-        for extracted_path in numbasobject.data['extensions']:
-            if not os.path.exists(extracted_path):
-                raise CompileError("Extension not found at {}. Is MEDIA_ROOT configured correctly? It should be the absolute path to your editor media directory.".format(extracted_path))
+        self.add_extensions(numbasobject)
         source = str(numbasobject)
 
         theme_path = obj.theme_path if hasattr(obj, 'theme_path') else 'default'

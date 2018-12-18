@@ -1007,6 +1007,10 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
         }
     },
 
+    addTokenType: function(re,parse) {
+        this.tokeniser_types.splice(0,0,{re:re,parse:parse});
+    },
+
     /** Add an operator to the parser
      * @param {String} name
      * @see Numbas.jme.Parser#addBinaryOperator
@@ -1109,7 +1113,7 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
             re: 're_op',
             parse: function(result,tokens,expr,pos) {
                 var matched_name = result[0];
-                var name = matched_name;
+                var name = matched_name.toLowerCase();
                 var nt;
                 var postfix = false;
                 var prefix = false;
@@ -1229,7 +1233,7 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
             var got = false;
             for(var i=0;i<this.tokeniser_types.length;i++) {
                 var tt = this.tokeniser_types[i];
-                var regex = tt.re=='re_op' ? re_op : this.re[tt.re];
+                var regex = (tt.re instanceof RegExp) ? tt.re : (tt.re=='re_op' ? re_op : this.re[tt.re]);
                 var m = expr.slice(pos).match(regex);
                 if(m) {
                     var result = tt.parse.apply(this,[m,tokens,expr,pos]);
@@ -4721,7 +4725,7 @@ jme.display = /** @lends Numbas.jme.display */ {
      *
      * @see Numbas.jme.rules.Ruleset#simplify
      * @param {Numbas.jme.tree} exprTree
-     * @param {Array.<String>|Numbas.jme.rules.Ruleset} ruleset
+     * @param {Numbas.jme.rules.Ruleset} ruleset
      * @param {Numbas.jme.Scope} scope
      * @param {Boolean} allowUnbound
      * @returns {Numbas.jme.tree}
@@ -5137,19 +5141,19 @@ var texOps = jme.display.texOps = {
     '`!': infixTex(patternName('\\neg')),
     '`where': infixTex(patternName('where')),
     '`@': infixTex(patternName('@')),
-    '`?': infixTex(patternName('{}^{?}')),
-    '`*': infixTex(patternName('{}^{\\ast}')),
-    '`+': infixTex(patternName('{}^{+}')),
+    '`?': unaryPatternTex(patternName('?')),
+    '`*': unaryPatternTex(patternName('\\ast')),
+    '`+': unaryPatternTex(patternName('+')),
     '`:': infixTex(patternName(':')),
     ';': function(thing,texArgs,settings) {
-        return '\\underbrace{'+texArgs[0]+'}_{'+texArgs[1]+'}';
+        return '\\underset{\\color{grey}{'+texArgs[1]+'}}{'+texArgs[0]+'}';
     },
     ';=': function(thing,texArgs,settings) {
-        return '\\underbrace{'+texArgs[0]+'}_{= '+texArgs[1]+'}';
+        return '\\underset{\\color{grey}{='+texArgs[1]+'}}{'+texArgs[0]+'}';
     },
     'm_uses': funcTex(patternName('uses')),
     'm_type': funcTex(patternName('type')),
-    'm_exactly': funcTex(patternName('exactly')),
+    'm_exactly': overbraceTex('exactly'),
     'm_commutative': overbraceTex('commutative'),
     'm_noncommutative': overbraceTex('non-commutative'),
     'm_associative': overbraceTex('associative'),
@@ -5171,6 +5175,13 @@ function overbraceTex(label) {
         return '\\overbrace{'+texArgs[0]+'}^{\\text{'+label+'}}';
     }
 }
+
+function unaryPatternTex(code) {
+    return function(thing,texArgs) {
+        return '{'+texArgs[0]+'}^{'+code+'}';
+    }
+}
+
 /** Convert a special number to TeX, or return undefined if not a special number.
  *  @memberof Numbas.jme.display
  *  @private
@@ -5544,9 +5555,9 @@ function texPatternName(display) {
  * @type {Object.<String>}
  */
 var specialNames = jme.display.specialNames = {
-    'm_nothing': texPatternName('nothing'),
-    'm_number': texPatternName('number'),
-    'm_name': texPatternName('name')
+    '$z': texPatternName('nothing'),
+    '$n': texPatternName('number'),
+    '$v': texPatternName('name')
 }
 
 var greek = ['alpha','beta','gamma','delta','epsilon','zeta','eta','theta','iota','kappa','lambda','mu','nu','xi','omicron','pi','rho','sigma','tau','upsilon','phi','chi','psi','omega']
@@ -6158,6 +6169,101 @@ var opBrackets = Numbas.jme.display.opBrackets = {
     '=': [{},{}],
     'fact': [{'+': true, '-': true}]
 };
+
+function align(name,items) {
+    function centre(line,n) {
+        if(line.length>=n) {
+            return line;
+        }
+        var npad = (n-line.length)/2;
+        var nlpad = Math.floor(npad);
+        var nrpad = Math.ceil(npad);
+        for(var i=0;i<nlpad;i++) {
+            line = ' '+line;
+        }
+        for(var i=0;i<nrpad;i++) {
+            line = line+' ';
+        }
+        return line;
+    }
+    
+    var item_lines = items.map(function(item){return item.split('\n')});
+    var item_widths = item_lines.map(function(lines) {return lines.reduce(function(m,l){return Math.max(l.length,m)},0)});
+    var num_lines = item_lines.reduce(function(t,ls){return Math.max(ls.length,t)},0);
+    item_lines = item_lines.map(function(lines,i) {
+        var w = item_widths[i];
+        var o = [];
+        for(var j=0;j<num_lines;j++) {
+            var l = lines[j] || '';
+            for(var i=l.length;i<w;i++) {
+                l += ' ';
+            }
+            o.push(l);
+        }
+        return o;
+    });
+    var bottom_lines = [];
+    for(var i=0;i<num_lines;i++) {
+        bottom_lines.push(item_lines.map(function(lines){return lines[i]}).join('  '));
+    }
+    var bottom_line = bottom_lines.join('\n');
+    var width = item_widths.reduce(function(t,w){return t+w},0)+2*(items.length-1);
+    var ci = Math.floor(width/2-0.5);
+    var top_line = '';
+    top_line = centre(name,width);
+    var middle_line;
+    if(items.length==1) {
+        middle_line = '';
+        for(var i=0;i<width;i++) {
+            middle_line += i==ci ? '│' : ' ';
+        }
+    } else {
+        middle_line = items.map(function(rarg,i) {
+            var s = '';
+            var mid = Math.floor(item_widths[i]/2-0.5);
+            for(var j=0;j<item_widths[i];j++) {
+                if(i==0) {
+                    s += j<mid ? ' ' : j==mid ? '┌' : '─';
+                } else if(i==items.length-1) {
+                    s += j<mid ? '─' : j==mid ? '┐' : ' ';
+                } else {
+                    s += j==mid ? '┬' : '─';
+                }
+            }
+            return s;
+        }).join('──');
+    }
+    var top_joins = {
+        '│': '│',
+        '┌': '├',
+        '┐': '┤',
+        '─': '┴',
+        '┬': '┼'
+    }
+    var mid = top_joins[middle_line[ci]];
+    middle_line = middle_line.slice(0,ci)+mid+middle_line.slice(ci+1);
+    if(top_line.length>bottom_line.length) {
+        middle_line = centre(middle_line,name.length);
+        bottom_line = centre(bottom_line,name.length);
+    }
+    return [top_line,middle_line,bottom_line].join('\n');
+}
+
+/** Display a tree as a diagram using
+ * @param {Numbas.jme.tree} tree
+ * @returns {String}
+ */
+var tree_diagram = Numbas.jme.display.tree_diagram = function(tree) {
+    switch(tree.tok.type) {
+        case 'op':
+        case 'function':
+            var args = tree.args.map(function(arg){ return tree_diagram(arg); });
+            return align(tree.tok.name, args);
+        default:
+            return treeToJME(tree);
+    }
+};
+
 /** For backwards compatibility, copy references from some Numbas.jme.rules members to Numbas.jme.display.
  *  These used to belong to Numbas.jme.display, but were moved into a separate file.
  */
@@ -6194,11 +6300,11 @@ jme.rules = {};
  */
 function parse_options(str) {
     return {
-        commutative: str.match(/c/),
-        associative: str.match(/a/),
-        allowOtherTerms: str.match(/g/),
-        gatherList: str.match(/l/),
-        strictPlus: str.match(/s/)
+        commutative: str.match(/c/) !== null,
+        associative: str.match(/a/) !== null,
+        allowOtherTerms: str.match(/g/) !== null,
+        gatherList: str.match(/l/) !== null,
+        strictPlus: str.match(/s/) !== null
     };
 }
 
@@ -6336,10 +6442,12 @@ Rule.prototype = /** @lends Numbas.jme.rules.Rule.prototype */ {
  */
 var Term = Numbas.jme.rules.Term = function(tree) {
     var names = [];
-    var equalnames = [];
+    var inside_equalnames = [];
+    var outside_equalnames = [];
+    var equalnames = outside_equalnames;
     var quantifier = '1';
     var defaultValue = null;
-    if(jme.isName(tree.tok,'m_nothing')) {
+    if(jme.isName(tree.tok,'$z')) {
         quantifier = '0';
     }
     var quantifier_combo = {
@@ -6349,20 +6457,27 @@ var Term = Numbas.jme.rules.Term = function(tree) {
         '`*': {'`?': '`*', '`*': '`*', '`+': '`*', '`:': '`*'},
         '`+': {'`?': '`*', '`*': '`*', '`+': '`+', '`:': '`*'}
     };
+    /** Unwrap quantifiers from the top of the tree
+     */
     while(tree.tok.type=='op') {
         var op = tree.tok.name;
         if(op==';') {
             names.push(tree.args[1]);
         } else if(op==';=') {
             names.push(tree.args[1]);
-            equalnames.push(tree.args[1]);
+            equalnames.push(resolveName(tree.args[1]).name);
         } else if(op=='`?' || op=='`*' || op=='`+') {
             quantifier = quantifier_combo[quantifier][tree.tok.name];
+            equalnames = inside_equalnames;
         } else if(op=='`:') {
             quantifier = quantifier_combo[quantifier][tree.tok.name];
             if(defaultValue===null) {
                 defaultValue = tree.args[1];
             }
+        } else if(tree.args.length==1 && tree.args[0].tok.type=='op' && ['`?','`*','`+','`:'].indexOf(tree.args[0].tok.name)>=0) {
+            // pull quantifiers through unary operations, so "-(x`?)" is equivalent to "(-x)`?".
+            tree = {tok:tree.args[0].tok, args: [{tok:tree.tok, args: tree.args[0].args}]};
+            continue;
         } else {
             break;
         }
@@ -6374,8 +6489,16 @@ var Term = Numbas.jme.rules.Term = function(tree) {
      * @param {Numbas.jme.tree} tree
      */
     function find_equal_names(tree) {
-        if(jme.isOp(tree.tok,';=')) {
-            equalnames.push(tree.args[1]);
+        if(tree.tok.type=='op') {
+            switch(tree.tok.name) {
+                case ';=':
+                    equalnames.push(resolveName(tree.args[1]).name);
+                    break;
+                case '`+':
+                case '`?':
+                case '`*':
+                    return;
+            }
         }
         if(tree.args) {
             tree.args.forEach(find_equal_names);
@@ -6385,7 +6508,8 @@ var Term = Numbas.jme.rules.Term = function(tree) {
 
     this.term = tree;
     this.names = names;
-    this.equalnames = equalnames;
+    this.inside_equalnames = inside_equalnames;
+    this.outside_equalnames = outside_equalnames;
     this.quantifier = quantifier;
     this.min = quantifier_limits[quantifier][0];
     this.max = quantifier_limits[quantifier][1];
@@ -6444,7 +6568,7 @@ function unwrapCapture(tree) {
     }
     while(jme.isOp(tree.tok,';=')) {
         names.push(tree.args[1]);
-        equalnames.push(tree.args[1]);
+        equalnames.push(resolveName(tree.args[1]).name);
         tree = tree.args[0];
     }
 
@@ -6471,7 +6595,8 @@ var getTerms = Numbas.jme.rules.getTerms = function(tree,op,options,calculate_mi
             return {
                 term: item.term, 
                 names: existing_names.concat(item.names),
-                equalnames: existing_equal_names.concat(item.equalnames),
+                inside_equalnames: item.inside_equalnames,
+                outside_equalnames: existing_equal_names.concat(item.outside_equalnames),
                 quantifier: item.quantifier, 
                 min: item.min, 
                 max: item.max,
@@ -6538,7 +6663,7 @@ var getTerms = Numbas.jme.rules.getTerms = function(tree,op,options,calculate_mi
         var argtok = res.tree.tok;
         if(options.associative && (isThisOp(argtok) || (!options.strictPlus && op=='+' && jme.isOp(argtok,'-')))) {
             var sub = getTerms(res.tree,op,options,false);
-            sub = add_existing_names(sub,item.names,item.equalnames);
+            sub = add_existing_names(sub,item.names,item.outside_equalnames);
             if(item.quantifier!='1') {
                 sub = sub.map(function(t){ t.quantifier = quantifier_combo[t.quantifier][item.quantifier]; });
             }
@@ -6625,34 +6750,37 @@ var matchTree = jme.rules.matchTree = function(ruleTree,exprTree,options) {
     return preserve_match(m,exprTree);
 }
 
-/** Conditions for the `m_number` rule
+/** Conditions for the `$n` rule
  * @enum {Function}
  * @memberof Numbas.jme.rules
  */
 var number_conditions = jme.rules.number_conditions = {
-    'complex': function(tok) {
-        return tok.value.complex;
+    'complex': function(exprTree) {
+        return exprTree.tok.type=='number' && exprTree.tok.value.complex;
     },
-    'imaginary': function(tok) {
-        return tok.value.complex && Numbas.math.re(tok.value)==0;
+    'imaginary': function(exprTree) {
+        return exprTree.tok.type=='number' && exprTree.tok.value.complex && Numbas.math.re(exprTree.tok.value)==0;
     },
-    'real': function(tok) {
-        return Numbas.math.im(tok.value)==0;
+    'real': function(exprTree) {
+        return exprTree.tok.type=='number' && Numbas.math.im(exprTree.tok.value)==0;
     },
-    'positive': function(tok) {
-        return Numbas.math.positive(tok.value);
+    'positive': function(exprTree) {
+        return exprTree.tok.type=='number' && Numbas.math.positive(exprTree.tok.value);
     },
-    'nonnegative': function(tok) {
-        return Numbas.math.nonnegative(tok.value);
+    'nonnegative': function(exprTree) {
+        return exprTree.tok.type=='number' && Numbas.math.nonnegative(exprTree.tok.value);
     },
-    'negative': function(tok) {
-        return Numbas.math.negative(tok.value);
+    'negative': function(exprTree) {
+        return exprTree.tok.type=='number' && Numbas.math.negative(exprTree.tok.value);
     },
-    'integer': function(tok) {
-        return Numbas.util.isInt(tok.value);
+    'integer': function(exprTree) {
+        return exprTree.tok.type=='number' && Numbas.util.isInt(exprTree.tok.value);
     },
-    'decimal': function(tok) {
-        return Numbas.math.countDP(tok.originalValue)>0;
+    'decimal': function(exprTree) {
+        return exprTree.tok.type=='number' && Numbas.math.countDP(exprTree.tok.originalValue)>0;
+    },
+    'rational': function(exprTree,options) {
+        return matchTree(patternParser.compile('integer:$n/integer:$n`?'),exprTree,options);
     }
 }
 
@@ -6664,36 +6792,37 @@ var specialMatchNames = jme.rules.specialMatchNames = {
     '?': function(ruleTree,exprTree,options) {
         return {};
     },
-    'm_number': function(ruleTree,exprTree,options) {
+    '$n': function(ruleTree,exprTree,options) {
         var ruleTok = ruleTree.tok;
         var exprTok = exprTree.tok;
-        if(exprTok.type!='number') {
-            return false;
-        }
         if(ruleTok.annotation!==undefined) {
             var satisfies = ruleTok.annotation.every(function(condition) {
                 var test = number_conditions[condition];
-                return !test || test(exprTok);
+                return !test || test(exprTree,options);
             });
             if(!satisfies) {
+                return false;
+            }
+        } else {
+            if(exprTok.type!='number') {
                 return false;
             }
         }
         return {};
     },
-    'm_name': function(ruleTree,exprTree,options) {
+    '$v': function(ruleTree,exprTree,options) {
         var exprTok = exprTree.tok;
         if(exprTok.type!='name') {
             return false;
         }
         return {};
     },
-    'm_nothing': function(ruleTree,exprTree,options) {
+    '$z': function(ruleTree,exprTree,options) {
         return false;
     }
 }
 
-/** Match a name token. `?` matches any name, `m_number` matches a number, with constraints specified by annotations, `m_nothing` never matches.
+/** Match a name token. `?` matches any name, `$n` matches a number, with constraints specified by annotations, `$z` never matches.
  * Otherwise, the name matches if the expression being considered is exactly the same name, ignoring case.
  * @param {Numbas.jme.tree} ruleTree - the pattern to match. The top token is assumed to be a name.
  * @param {Numbas.jme.tree} exprTree - the expression being considered.
@@ -6869,10 +6998,10 @@ var specialMatchOps = jme.rules.specialMatchOps = {
         return matchDefault(ruleTree.args[0],ruleTree.args[1],exprTree,options);
     },
     '`+-': function(ruleTree,exprTree,options) {
-        return matchOptionalPrefix('-u',ruleTree.args[0],exprTree,options);
+        return matchOptionalPrefix(['-u','+u'],ruleTree.args[0],exprTree,options);
     },
     '`*/': function(ruleTree,exprTree,options) {
-        return matchOptionalPrefix('/u',ruleTree.args[0],exprTree,options);
+        return matchOptionalPrefix(['/u'],ruleTree.args[0],exprTree,options);
     },
     '`!': function(ruleTree,exprTree,options) {
         return matchNot(ruleTree.args[0],exprTree,options);
@@ -7176,8 +7305,10 @@ function matchOrdinaryOp(ruleTree,exprTree,options) {
     var match = {};
     for(var name in namedTerms) {
         var terms = namedTerms[name];
-        if(options.gatherList) {
-            match[name] = {tok: new jme.types.TList(terms.length), args: terms.map(function(t){ return {tok: new jme.types.TExpression(t)} })};
+        if(terms.length==1) {
+            match[name] = terms[0];
+        } else if(options.gatherList) {
+            match[name] = {tok: new jme.types.TList(terms.length), args: terms.map(function(t){ return {tok: new jme.types.TExpression(removeUnaryDivision(t))} })};
         } else {
             var sub = terms[0];
             for(var i=1;i<terms.length;i++) {
@@ -7219,16 +7350,26 @@ function matchTermSequence(ruleTerms, exprTerms, commuting, allowOtherTerms, opt
     function term_ok(exprTerm,ruleTerm,ic,pc) {
         if(matches[ic][pc]===undefined) {
             var m = matchTree(ruleTerm.term,exprTerm.term,options);
-            var equalnames = {};
-            ruleTerm.equalnames.forEach(function(nameTree) {
-                var name = nameTree.tok.name;
+            var inside_equalnames = {};
+            ruleTerm.inside_equalnames.forEach(function(name) {
                 if(m[name]) {
-                    equalnames[name] = m[name];
+                    inside_equalnames[name] = m[name];
+                } else if(ruleTerm.names.some(function(n){return resolveName(n).name==name})) {
+                    inside_equalnames[name] = m._match;
+                }
+            });
+            var outside_equalnames = {};
+            ruleTerm.outside_equalnames.forEach(function(name) {
+                if(m[name]) {
+                    outside_equalnames[name] = m[name];
+                } else if(ruleTerm.names.some(function(n){return resolveName(n).name==name})) {
+                    outside_equalnames[name] = m._match;
                 }
             });
             matches[ic][pc] = {
                 match: m,
-                equalnames: equalnames
+                inside_equalnames: inside_equalnames,
+                outside_equalnames: outside_equalnames
             }
         }
         return matches[ic][pc].match!==false; 
@@ -7242,9 +7383,9 @@ function matchTermSequence(ruleTerms, exprTerms, commuting, allowOtherTerms, opt
      * @returns {Boolean}
      */
     function constraint_ok(assignment,ic,pc) {
-        var m = matches[ic][pc];
-        var equalnames = ruleTerms[pc].equalnames;
-        if(!equalnames.length) {
+        var m1 = matches[ic][pc];
+        var ruleTerm = ruleTerms[pc];
+        if(ruleTerm.inside_equalnames.length==0 && ruleTerm.outside_equalnames.length==0) {
             return true;
         }
         var ok = assignment.every(function(p,i) {
@@ -7252,12 +7393,15 @@ function matchTermSequence(ruleTerms, exprTerms, commuting, allowOtherTerms, opt
                 return true;
             }
             var m2 = matches[i][p];
-            return equalnames.every(function(nameTree) {
-                var name = nameTree.tok.name;
-                if(m.equalnames[name]===undefined || m2.equalnames[name]===undefined) {
+            var equalnames = p==pc ? 'inside_equalnames' : 'outside_equalnames';
+            return ruleTerm[equalnames].every(function(name) {
+                var e1 = m1[equalnames][name];
+                var e2 = m2[equalnames][name];
+                if(e1===undefined || e2===undefined) {
                     return true;
                 }
-                return jme.compareTrees(m.equalnames[name], m2.equalnames[name]) == 0;
+                var res = jme.compareTrees(e1, e2) == 0;
+                return res;
             });
         });
         return ok;
@@ -7271,28 +7415,29 @@ function matchTermSequence(ruleTerms, exprTerms, commuting, allowOtherTerms, opt
     var namedTerms = {};
 
     var identified_names = {};
-    ruleTerms.forEach(function(ruleTerm) {
-        ruleTerm.equalnames.forEach(function(nameTree) {
-            var name = nameTree.tok.name;
-            identified_names[name] = (identified_names[name] || 0) + 1;
+    ruleTerms.forEach(function(ruleTerm,i) {
+        var equalnames = ruleTerm.outside_equalnames;
+        equalnames.forEach(function(name) {
+            identified_names[name] = identified_names[name] || ruleTerm;
         });
     });
-    /** Record that `term` was captured with the given name.
+    /** Record that `exprTree` was captured with the given name.
      * @param {String} name
-     * @param {Numbas.jme.tree} term
+     * @param {Numbas.jme.tree} exprTree
+     * @param {Numbas.jme.rules.Term} ruleTerm
      * @param {Boolean} allowReservedName - if `false`, reserved names such as `_match` and `_rest`, which are introduced by the matching algorithm, will be ignored.
      */
-    function nameTerm(name,term,allowReservedName) {
+    function nameTerm(name,exprTree,ruleTerm,allowReservedName) {
         if(!allowReservedName && name.match(/^_/)) {
             return;
         }
         if(!namedTerms[name]) {
             namedTerms[name] = [];
         }
-        if(identified_names[name]>1 && namedTerms[name].length) {
+        if(identified_names[name]!==undefined && identified_names[name]!==ruleTerm && namedTerms[name].length) {
             return;
         }
-        namedTerms[name].push(term);
+        namedTerms[name].push(exprTree);
     }
     /** Record that `exprTree` was matched against `ruleTerm` - add `exprTree` to all of `ruleTerm`'s names.
      * @param {Numbas.jme.rules.term} ruleTerm
@@ -7301,7 +7446,7 @@ function matchTermSequence(ruleTerms, exprTerms, commuting, allowOtherTerms, opt
     function matchTerm(ruleTerm,exprTree){ 
         ruleTerm.names.forEach(function(name) {
             var o = resolveName(name,exprTree);
-            nameTerm(o.name,o.value);
+            nameTerm(o.name,o.value,ruleTerm);
         });
     }
 
@@ -7312,7 +7457,7 @@ function matchTermSequence(ruleTerms, exprTerms, commuting, allowOtherTerms, opt
             is.forEach(function(i) {
                 var match = matches[i][j].match;
                 for(var name in match) {
-                    nameTerm(name,match[name]);
+                    nameTerm(name,match[name],ruleTerm);
                 }
                 matchTerm(ruleTerm,exprTerms[i].term);
             });
@@ -7321,12 +7466,12 @@ function matchTermSequence(ruleTerms, exprTerms, commuting, allowOtherTerms, opt
         }
     });
     assignment.ignored_start_terms.forEach(function(i) {
-        nameTerm('_rest',exprTerms[i].term,true);
-        nameTerm('_rest_start',exprTerms[i].term,true);
+        nameTerm('_rest',exprTerms[i].term,undefined,true);
+        nameTerm('_rest_start',exprTerms[i].term,undefined,true);
     });
     assignment.ignored_end_terms.forEach(function(i) {
-        nameTerm('_rest',exprTerms[i].term,true);
-        nameTerm('_rest_end',exprTerms[i].term,true);
+        nameTerm('_rest',exprTerms[i].term,undefined,true);
+        nameTerm('_rest_end',exprTerms[i].term,undefined,true);
     });
 
     return namedTerms;
@@ -7488,8 +7633,21 @@ var findSequenceMatch = jme.rules.findSequenceMatch = function(pattern,input,opt
     var result = pattern.map(function(p,i) {
         return capture.map(function(_,j){return j}).filter(function(j){ return capture[j] == i;});
     });
-    var ignored_start_terms = input.slice(0,start).map(function(_,j){return j});
-    var ignored_end_terms = capture.map(function(_,j){return j}).filter(function(j){return capture[j]==pattern.length});
+    if(options.commutative) {
+        var ignored_start_terms = [];
+        var ignored_end_terms = [];
+        var ignored = ignored_start_terms;
+        capture.forEach(function(p,i) {
+            if(p==pattern.length) {
+                ignored.push(i);
+            } else {
+                ignored = ignored_end_terms;
+            }
+        });
+    } else {
+        var ignored_start_terms = input.slice(0,start).map(function(_,j){return j});
+        var ignored_end_terms = capture.map(function(_,j){return j}).filter(function(j){return capture[j]==pattern.length});
+    }
     //debug(result);
     return {ignored_start_terms: ignored_start_terms, result: result, ignored_end_terms: ignored_end_terms};
 }
@@ -7545,18 +7703,22 @@ function extractLeadingMinus(tree) {
     }
 }
 
-/** Match `rule`, or `prefix(rule)` - allow an optional unary operator at the top of the tree
- * @param {String} prefix - the name of the optional operator
+/** Match `rule`, or `prefix(rule)` - allow any of a list of optional unary operators at the top of the tree
+ * @param {Array.<String>} prefixes - the names of the optional operators
  * @param {Numbas.jme.tree} ruleTree
  * @param {Numbas.jme.tree} exprTree
  * @param {Numbas.jme.rules.matchTree_options} options
  * @returns {Boolean|Numbas.jme.rules.jme_pattern_match}
  */
-function matchOptionalPrefix(prefix,ruleTree,exprTree,options) {
+function matchOptionalPrefix(prefixes,ruleTree,exprTree,options) {
     var originalExpr = exprTree;
     exprTree = extractLeadingMinus(exprTree);
-    if(jme.isOp(exprTree.tok,prefix)) {
-        exprTree = exprTree.args[0];
+    for(var i=0;i<prefixes.length;i++) {
+        var prefix = prefixes[i];
+        if(jme.isOp(exprTree.tok,prefix)) {
+            exprTree = exprTree.args[0];
+            break;
+        }
     }
     var m = matchTree(ruleTree,exprTree,options);
     if(m) {
@@ -7747,6 +7909,16 @@ var transformAll = jme.rules.transformAll = function(ruleTree,resultTree,exprTre
  * @memberof Numbas.jme.rules
  */
 var patternParser = jme.rules.patternParser = new jme.Parser();
+patternParser.addTokenType(
+    /^\$[a-zA-Z_]+/,
+    function(result,tokens,expr,pos) {
+        var name = result[0];
+        var token;
+        var lname = name.toLowerCase();
+        token = new jme.types.TName(name);
+        return {tokens: [token], start: pos, end: pos+result[0].length};
+    }
+);
 patternParser.addPostfixOperator('`?','`?',{precedence: 0.5});  // optional
 patternParser.addPostfixOperator('`*','`*',{precedence: 0.5}); // any number of times
 patternParser.addPostfixOperator('`+','`+',{precedence: 0.5}); // at least one time
@@ -7755,8 +7927,8 @@ patternParser.addPrefixOperator('`!','`!',{precedence: 0.5});  // not
 patternParser.addPrefixOperator('`+-','`+-',{precedence: 0.5});  // unary plus or minus
 patternParser.addPrefixOperator('`*/','`*/',{precedence: 0.5});  // unary multiply or divide
 
-patternParser.addBinaryOperator(';', {precedence: 0});
-patternParser.addBinaryOperator(';=', {precedence: 0});
+patternParser.addBinaryOperator(';', {precedence: 0.5});
+patternParser.addBinaryOperator(';=', {precedence: 0.5});
 patternParser.addBinaryOperator('`|', {precedence: 1000000});   // or
 patternParser.addBinaryOperator('`:', {precedence: 1000000});   // default value
 patternParser.addBinaryOperator('`&',{precedence: 100000});     // and
@@ -7817,6 +7989,9 @@ var Ruleset = jme.rules.Ruleset = function(rules,flags) {
     this.rules = rules;
     this.flags = util.extend_object({},displayFlags,flags);
 }
+
+var poo = 0;
+var pd = '';
 Ruleset.prototype = /** @lends Numbas.jme.rules.Ruleset.prototype */ {
     /** Test whether flag is set
      * @param {String} flag
@@ -7838,10 +8013,15 @@ Ruleset.prototype = /** @lends Numbas.jme.rules.Ruleset.prototype */ {
      * @returns {Numbas.jme.tree}
      */
     simplify: function(exprTree,scope) {
+        pd += '  ';
+        poo += 1;
+        if(poo>100) {
+            //throw(new Error("Poo"));
+        }
         var rs = this;
         var changed = true;
         var depth = 0;
-        var applied = []
+        var seen = [];
         while(changed) {
             if(exprTree.args) {
                 var nargs = exprTree.args.map(function(arg) { return rs.simplify(arg,scope); });
@@ -7851,20 +8031,21 @@ Ruleset.prototype = /** @lends Numbas.jme.rules.Ruleset.prototype */ {
             for(var i=0;i<this.rules.length;i++) {
                 var result = this.rules[i].replace(exprTree,scope);
                 if(result.changed) {
+                    if(depth > 100) {
+                        var str = Numbas.jme.display.treeToJME(exprTree);
+                        if(seen.indexOf(str)!=-1) {
+                            throw(new Numbas.Error("jme.display.simplifyTree.stuck in a loop",{expr:str}));
+                        }
+                        seen.push(str);
+                    }
                     changed = true;
                     exprTree = result.expression;
                     depth += 1;
-                    if(applied.indexOf(this.rules[i])==-1) {
-                        applied.push(this.rules[i]);
-                    }
-                    if(depth > 100) {
-                        var str = Numbas.jme.display.treeToJME(exprTree);
-                        throw(new Numbas.Error("jme.display.simplifyTree.stuck in a loop",{expr:str}));
-                    }
                     break;
                 }
             }
         }
+        pd = pd.slice(2);
         return exprTree;
     }
 }
@@ -7946,24 +8127,25 @@ var collectRuleset = jme.rules.collectRuleset = function(set,scopeSets)
  */
 var simplificationRules = jme.rules.simplificationRules = {
     basic: [
-        ['negative:m_number;x','','-eval(-x)'],   // the value of a TNumber should be non-negative - pull the negation out as unary minus
-        ['+(?;x)','','x'],                    //get rid of unary plus
-        ['?;x+(-?;y)','g','x-y'],            //plus minus = minus
-        ['?;x-(-?;y)','g','x+y'],            //minus minus = plus
-        ['?;x/(/?;y)','g','x*y'],            //minus minus = plus
-        ['-(-?;x)','','x'],                //unary minus minus = plus
+        ['negative:$n;x','','-eval(-x)'],   // the value of a TNumber should be non-negative - pull the negation out as unary minus
+        ['+(?;x)','s','x'],                    //get rid of unary plus
+        ['?;x+(-?;y)','gs','x-y'],            //plus minus = minus
+        ['?;x-(-?;y)','gs','x+y'],            //minus minus = plus
+        ['-(-?;x)','s','x'],                //unary minus minus = plus
         ['(-?;x)/?;y','s','-(x/y)'],            //take negation to left of fraction
         ['?;x/(-?;y)','s','-(x/y)'],
-        ['`!-? `& (-(real:m_number `| `!m_number);x)*?;y','acg','-(x*y)'],            //take negation to left of multiplication
-        ['-(?;a+?`+;b)','','-a-b']
+        ['-(`! complex:$n);x * (-?;y)','asg','x*y'],
+        ['`!-? `& (-(real:$n `| `!$n);x) * ?;y','asgc','-(x*y)'],            //take negation to left of multiplication
+        ['-(?;a+?`+;b)','','-a-b'],
+        ['?;a+(-?;b-?;c)','','a-b-c']
     ],
     collectComplex: [
-        ['-complex:negative:m_number;x','','eval(-x)'],   // negation of a complex number with negative real part
-        ['(`+- real:m_number);x + (`+- imaginary:m_number);y','cg','eval(x+y)'],    // collect the two parts of a complex number
-        ['m_number;n*i','acsg','eval(n*i)'],            //always collect multiplication by i
+        ['-complex:negative:$n;x','','eval(-x)'],   // negation of a complex number with negative real part
+        ['(`+- real:$n);x + (`+- imaginary:$n);y','cg','eval(x+y)'],    // collect the two parts of a complex number
+        ['$n;n*i','acsg','eval(n*i)'],            //always collect multiplication by i
     ],
     unitFactor: [
-        ['1*(`! (/?));x','acg','x'],
+        ['1*(`! (/?));x','acgs','x'],
     ],
     unitPower: [
         ['?;x^1','','x']
@@ -7986,19 +8168,19 @@ var simplificationRules = jme.rules.simplificationRules = {
         ['-0','','0']
     ],
     collectNumbers: [
-        ['(`+- m_number);n1 + (`+- m_number)`+;n2','acg','eval(n1+n2)'],
-        ['m_number;n * m_number;m','acg','eval(n*m)'],        //multiply numbers
-        ['(`! m_number)`+;x * real:m_number;n','acgs','n*x']            //shift numbers to left hand side
+        ['(`+- $n);n1 + (`+- $n)`+;n2','acg','eval(n1+n2)'],
+        ['$n;n * $n;m','acg','eval(n*m)'],        //multiply numbers
+        ['(`! $n)`+;x * real:$n;n','acgs','n*x']            //shift numbers to left hand side
     ],
     simplifyFractions: [
-        ['(m_number;n * (?`* `: 1);top) / (m_number;m * (?`* `: 1);bottom) `where gcd_without_pi_or_i(n,m)>1','acg','(eval(n/gcd_without_pi_or_i(n,m))*top)/(eval(m/gcd_without_pi_or_i(n,m))*bottom)'],
-        ['imaginary:m_number;n / imaginary:m_number;m','','eval(n/i)/eval(m/i)']            // cancel i when numerator and denominator are both purely imaginary
+        ['($n;n * (?`* `: 1);top) / ($n;m * (?`* `: 1);bottom) `where gcd_without_pi_or_i(n,m)>1','acg','(eval(n/gcd_without_pi_or_i(n,m))*top)/(eval(m/gcd_without_pi_or_i(n,m))*bottom)'],
+        ['imaginary:$n;n / imaginary:$n;m','','eval(n/i)/eval(m/i)']            // cancel i when numerator and denominator are both purely imaginary
     ],
     zeroBase: [
         ['0^?;x','','0']
     ],
     constantsFirst: [
-        ['(`! m_number);x * real:m_number;n','ag','n*x']
+        ['(`! $n);x * (real:$n/real:$n`?);n','asg','n*x']
     ],
     sqrtProduct: [
         ['sqrt(?;x)*sqrt(?;y)','','sqrt(x*y)']
@@ -8009,21 +8191,21 @@ var simplificationRules = jme.rules.simplificationRules = {
     sqrtSquare: [
         ['sqrt(?;x^2)','','x'],
         ['sqrt(?;x)^2','','x'],
-        ['sqrt(integer:m_number;n) `where isint(sqrt(n))','','eval(sqrt(n))']
+        ['sqrt(integer:$n;n) `where isint(sqrt(n))','','eval(sqrt(n))']
     ],
     trig: [
-        ['sin(m_number;n) `where isint(2*n/pi)','','eval(sin(n))'],
-        ['cos(m_number;n) `where isint(2*n/pi)','','eval(cos(n))'],
-        ['tan(m_number;n) `where isint(n/pi)','','0'],
+        ['sin($n;n) `where isint(2*n/pi)','','eval(sin(n))'],
+        ['cos($n;n) `where isint(2*n/pi)','','eval(cos(n))'],
+        ['tan($n;n) `where isint(n/pi)','','0'],
         ['cosh(0)','','1'],
         ['sinh(0)','','0'],
         ['tanh(0)','','0']
     ],
     otherNumbers: [
-        ['m_number;n ^ m_number;m','','eval(n^m)']
+        ['$n;n ^ $n;m','','eval(n^m)']
     ],
     cancelTerms: [
-        ['((`+- ? `: 1);n * (?`+ `& `! -?);=x `| -?;=x;n:-1) + ((`+- ? `: 1);m * (?`+ `& `! -?);=x `| -?;=x;m:-1)','acg','(n+m)*x']
+        ['m_exactly((`+- $n `: 1);n * (?`+ `& `! -?);=x `| -?;=x;n:-1) + m_exactly((`+- $n `: 1);m * (?`+ `& `! -?);=x `| -?;=x;m:-1)','acg','eval(n+m)*x']
     ],
     cancelFactors: [
         ['?;=x^(? `: 1);n * ?;=x^(? `: 1);m','acg','x^(m+n)'],
@@ -11702,7 +11884,6 @@ var math = Numbas.math = /** @lends Numbas.math */ {
      * @returns {Boolean}
      */
     eq: function(a,b) {
-<<<<<<< HEAD
         if(a.complex) {
             if(b.complex) {
                 return math.eq(a.re,b.re) && math.eq(a.im,b.im);
@@ -11716,23 +11897,6 @@ var math = Numbas.math = /** @lends Numbas.math */ {
                 if(isNaN(a)) {
                     return isNaN(b);
                 }
-=======
-        if(typeof(a)!=='object' && isNaN(a)) {
-            return typeof(b)!='object' && isNaN(b);
-        }
-        if(a.complex)
-        {
-            if(b.complex)
-                return (a.re==b.re && a.im==b.im);
-            else
-                return (a.re==b && a.im==0);
-        }
-        else
-        {
-            if(b.complex)
-                return (a==b.re && b.im==0);
-            else
->>>>>>> master
                 return a==b;
             }
         }

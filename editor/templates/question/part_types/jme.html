@@ -94,7 +94,7 @@
 
     <hr>
 
-    <h4>Length restriction</h4>
+    <h4>String restrictions</h4>
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         {% property 'minlength.length' 'Minimum length' min=0 help_url='question/parts/mathematical-expression.html#term-minimum-length-restriction' %}
         <div data-bind="fadeVisible: minlength.length()>0">
@@ -120,7 +120,6 @@
         </div>
     </form>
 
-    <h4>String restriction</h4>
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div class="form-group">
             <label class="{{form_label_class}} control-label">

@@ -62,7 +62,7 @@ part_types.models = [
         has_marks: true, 
         has_marking_settings: true,
         tabs: [
-            new Editor.Tab('restrictions','String restrictions','text-background'),
+            new Editor.Tab('restrictions','Restrictions','text-background'),
             new Editor.Tab('checking-accuracy','Accuracy','scale')
         ],
         widget: 'jme',

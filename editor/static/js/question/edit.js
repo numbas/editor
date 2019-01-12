@@ -2242,6 +2242,11 @@ $(document).ready(function() {
     function VariableReplacement(part,data) {
         this.part = part;
         this.variable = ko.observable('');
+	this.variableDisplay = ko.computed(function(){
+		return this.part.q.variables().map(function(v){
+			return v.name();
+		});
+	},this);
         this.replacement = ko.observable(null);
         this.must_go_first = ko.observable(false);
         this.availableParts = ko.computed(function() {

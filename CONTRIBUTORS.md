@@ -12,5 +12,6 @@
 * [Gerlou Shyy](https://github.com/gerlou)
 * [Jake Steele](https://github.com/jastee07)
 * [Mohit Jayanti Gurumukhani](https://github.com/mjguru)
+* [Adarsh Shetty] (https://github.com/akshett)
 
 *Add your name here - [contribute to the Numbas project](http://www.numbas.org.uk/contributing-to-numbas/)!*

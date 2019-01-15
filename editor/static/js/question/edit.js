@@ -1950,6 +1950,9 @@ $(document).ready(function() {
         this.deleteVariableReplacement = function(vr) {
             p.variableReplacements.remove(vr);
         }
+        this.canMakeVariableReplacement = ko.computed(function() {
+            return q.variables().length>0 && q.allParts().length>1;
+        },this);
 
         this.variableReplacementStrategies = [
             {name: 'originalfirst', niceName: 'Try without replacements first'},
@@ -2242,6 +2245,11 @@ $(document).ready(function() {
     function VariableReplacement(part,data) {
         this.part = part;
         this.variable = ko.observable('');
+        this.variableDisplay = ko.computed(function(){
+            return this.part.q.variables().map(function(v){
+                return v.name();
+            });
+        },this);
         this.replacement = ko.observable(null);
         this.must_go_first = ko.observable(false);
         this.availableParts = ko.computed(function() {

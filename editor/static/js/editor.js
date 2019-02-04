@@ -1397,6 +1397,13 @@ $(document).ready(function() {
                 return 'Nothing';
             case 'string':
                 return Numbas.util.escapeHTML(v.value);
+            case 'set':
+                var s = Numbas.jme.display.treeToJME({tok:v});
+                if(s.length<30) {
+                    return s;
+                } else {
+                    return 'Set of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
+                }
             case 'list':
                 var s = Numbas.jme.display.treeToJME({tok:v});
                 if(s.length<30) {

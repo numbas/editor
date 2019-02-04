@@ -49,14 +49,14 @@ Numbas.showError = function(e)
     var message = (e || e.message)+'';
     message += ' <br> ' + e.stack.replace(/\n/g,'<br>\n');
     Numbas.debug(message);
-    Numbas.display.showAlert(message);
+    Numbas.display && Numbas.display.showAlert(message);
     throw(e);
 };
 /** Generic error class. Extends JavaScript's Error
  * @constructor
  * @param {String} message - A description of the error. Localised by R.js.
  */
-Numbas.Error = function(message)
+Numbas.Error = function(message, args, originalError)
 {
     Error.call(this);
     if(Error.captureStackTrace) {
@@ -64,7 +64,14 @@ Numbas.Error = function(message)
     }
     this.name="Numbas Error";
     this.originalMessage = message;
-    this.message = R.apply(this,arguments);
+    this.message = R.apply(this,[message,args]);
+    this.originalMessages = [message];
+    if(originalError!==undefined) {
+        this.originalError = originalError;
+        if(originalError.originalMessages) {
+            this.originalMessages = this.originalMessages.concat(originalError.originalMessages.filter(function(m){return m!=message}));
+        }
+    }
 }
 Numbas.Error.prototype = Error.prototype;
 Numbas.Error.prototype.constructor = Numbas.Error;
@@ -80,19 +87,39 @@ var scriptreqs = {};
  * @property {Array.<String>} fdeps - Scripts which this one depends on (it must run after them)
  * @property {Function} callback - The function to run when all this script's dependencies have run (this is the script itself)
  */
-function RequireScript(file)
+var RequireScript = Numbas.RequireScript = function(file,fdeps,callback)
 {
     this.file = file;
     scriptreqs[file] = this;
     this.backdeps = [];
-    this.fdeps = [];
+    this.fdeps = fdeps || [];
+    this.callback = callback;
 }
 RequireScript.prototype = {
     loaded: false,
     executed: false,
     backdeps: [],
     fdeps: [],
-    callback: null
+    callback: null,
+
+    
+    /** Try to run this script. It will run if all of its dependencies have run.
+     * Once it has run, every script which depends on it will try to run.
+     */
+    tryRun: function() {
+        if(this.loaded && !this.executed) {
+            var dependencies_executed = this.fdeps.every(function(r){ return scriptreqs[r].executed; });
+            if(dependencies_executed) {
+                if(this.callback) {
+                    this.callback({exports:window});
+                }
+                this.executed = true;
+                this.backdeps.forEach(function(r) {
+                    scriptreqs[r].tryRun();
+                });
+            }
+        }
+    }
 };
 /** Ask to load a javascript file. Unless `noreq` is set, the file's code must be wrapped in a call to Numbas.queueScript with its filename as the first parameter.
  * @memberof Numbas
@@ -104,9 +131,11 @@ var loadScript = Numbas.loadScript = function(file,noreq)
     if(!noreq)
     {
         if(scriptreqs[file]!==undefined)
-            return;
+            return scriptreqs[file];
         var req = new RequireScript(file);
+        return req;
     }
+    return scriptreqs[file];
 }
 /**
  * Queue up a file's code to be executed.
@@ -115,10 +144,7 @@ var loadScript = Numbas.loadScript = function(file,noreq)
  * @param {Array.<String>} deps - A list of other scripts which need to be run before this one can be run
  * @param {Function} callback - A function wrapping up this file's code
  */
-Numbas.queueScript = function(file, deps, callback)
-{
-    // find a RequireScript
-    var req = scriptreqs[file] || new RequireScript(file);
+Numbas.queueScript = function(file, deps, callback) {
     if(typeof(deps)=='string')
         deps = [deps];
     for(var i=0;i<deps.length;i++)
@@ -128,8 +154,14 @@ Numbas.queueScript = function(file, deps, callback)
         loadScript(dep);
         scriptreqs[dep].backdeps.push(file);
     }
-    req.fdeps = deps;
-    req.callback = callback;
+
+    var req = scriptreqs[file];
+    if(req) {
+        req.fdeps = deps;
+        req.callback = callback;
+    } else {
+        req = new RequireScript(file,deps,callback);
+    }
     req.loaded = true;
     Numbas.tryInit();
 }
@@ -141,35 +173,10 @@ Numbas.tryInit = function()
     }
     //put all scripts in a list and go through evaluating the ones that can be evaluated, until everything has been evaluated
     var stack = [];
-    /** Try to run the given requirement
-     * @param {RequireScript} req
-     */
-    function tryRun(req) {
-        if(req.loaded && !req.executed) {
-            var go = true;
-            for(var j=0;j<req.fdeps.length;j++)
-            {
-                if(!scriptreqs[req.fdeps[j]].executed) {
-                    go=false;
-                    break;
-                }
-            }
-            if(go)
-            {
-                if(req.callback) {
-                    req.callback({exports:window});
-                }
-                req.executed=true;
-                for(var j=0;j<req.backdeps.length;j++) {
-                    tryRun(scriptreqs[req.backdeps[j]]);
-                }
-            }
-        }
-    }
     for(var x in scriptreqs)
     {
         try {
-            tryRun(scriptreqs[x]);
+            scriptreqs[x].tryRun();
         } catch(e) {
             alert(e+'');
             Numbas.debug(e.stack);
@@ -178,6 +185,27 @@ Numbas.tryInit = function()
         }
     }
 }
+
+Numbas.runImmediately = function(deps,fn) {
+    var missing_dependencies = deps.filter(function(r) {
+        if(!scriptreqs[r]) {
+            //console.error("Dependency "+r+" does not exist");
+            return true;
+        } else if(!scriptreqs[r].loaded) {
+            //console.error("Dependency "+r+" has not been loaded");
+            return true;
+        } else if(!scriptreqs[r].executed) {
+            //console.error("Dependency "+r+" has not been executed");
+            //console.error(scriptreqs[r].fdeps.map(function(d){return d+': '+loadScript(d).executed}).join(', '));
+            return true;
+        }
+    });
+    if(missing_dependencies.length) {
+        throw(new Error("Can't run because the following dependencies have not run: "+missing_dependencies.join(', ')));
+    }
+    fn();
+}
+
 /** A wrapper round {@link Numbas.queueScript} to register extensions easily.
  * @param {String} name - unique name of the extension
  * @param {Array.<String>} deps - A list of other scripts which need to be run before this one can be run
@@ -202,7 +230,6 @@ Numbas.checkAllScriptsLoaded = function() {
         }
         if(req.fdeps.every(function(f){return scriptreqs[f].executed})) {
             var err = new Numbas.Error('die.script not loaded',{file:file});
-            console.log(err.message);
             Numbas.display && Numbas.display.die(err);
             break;
         }
@@ -942,16 +969,16 @@ var Parser = jme.Parser = function(options) {
     this.ops = this.ops.slice();
     this.re = util.extend_object({},this.re);
     this.tokeniser_types = this.tokeniser_types.slice();
-    this.constants = util.extend_object({}, jme.constants);
-    this.prefixForm = util.extend_object({}, jme.prefixForm);
-    this.postfixForm = util.extend_object({}, jme.postfixForm);
-    this.arity = util.extend_object({}, jme.arity);
-    this.precedence = util.extend_object({}, jme.precedence);
-    this.commutative = util.extend_object({}, jme.commutative);
-    this.associative = util.extend_object({}, jme.associative);
-    this.funcSynonyms = util.extend_object({}, jme.funcSynonyms);
-    this.opSynonyms = util.extend_object({}, jme.opSynonyms);
-    this.rightAssociative = util.extend_object({}, jme.rightAssociative);
+    this.constants = {};
+    this.prefixForm = {};
+    this.postfixForm = {};
+    this.arity = {};
+    this.precedence = {};
+    this.commutative = {};
+    this.associative = {};
+    this.funcSynonyms = {};
+    this.opSynonyms = {};
+    this.rightAssociative = {};
 }
 jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
     /** Default options for new parsers
@@ -961,6 +988,84 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
         closeMissingBrackets: false,
         addMissingArguments: false
     },
+
+    /** There are many dictionaries storing definitions of things like constants and alternate names, which are defined both globally in Numbas.jme and locally in a Parser.
+     * This is a wrapper to load the value of the setting if it exists, and return `undefined` otherwise.
+     * @param {String} setting - the name of the dictionary. Both `this` and of `Numbas.jme` must have members with this name.
+     * @param {String} name - the name of the setting to try to load from the dictionary.
+     * @returns {*}
+     */
+    getSetting: function(setting,name) {
+        if(name in this[setting]) {
+            return this[setting][name];
+        }
+        if(name in jme[setting]) {
+            return jme[setting][name];
+        }
+        return undefined;
+    },
+
+    /** If the given name is defined as a constant, return its value, otherwise return `undefined`.
+     * @param {String} name
+     * @returns {Number}
+     */
+    getConstant: function(name) { return this.getSetting('constants',name); },
+
+    /** If the given operator name has a defined prefix form, return it, otherwise return `undefined`.
+     * @param {String} name
+     * @returns {String}
+     */
+    getPrefixForm: function(name) { return this.getSetting('prefixForm',name); },
+
+    /** If the given operator name has a defined postfix form, return it, otherwise return `undefined`.
+     * @param {String} name
+     * @returns {String}
+     */
+    getPostfixForm: function(name) { return this.getSetting('postfixForm',name); },
+
+    /** Get the arity of the given operator.
+     * @param {String} name
+     * @returns {Number}
+     */
+    getArity: function(name) { return this.getSetting('arity',name) || 2; },
+
+    /** Get the precedence of the given operator.
+     * @param {String} name
+     * @returns {Number}
+     */
+    getPrecedence: function(name) { return this.getSetting('precedence',name); },
+
+    /** Is the given operator commutative?
+     * @param {String} name
+     * @returns {Boolean}
+     */
+    isCommutative: function(name) { return this.getSetting('commutative',name) || false; },
+
+    /** Is the given operator associative?
+     * @param {String} name
+     * @returns {Boolean}
+     */
+    isAssociative: function(name) { return this.getSetting('associative',name) || false; },
+
+    /** Is the given operator right-associative?
+     * @param {String} name
+     * @returns {Boolean}
+     */
+    isRightAssociative: function(name) { return this.getSetting('rightAssociative',name) || false; },
+
+    /** If the given function name has a synonym, use it, otherwise return the original name.
+     * @see Numbas.jme.funcSynonyms
+     * @param {String} name
+     * @returns {String}
+     */
+    funcSynonym: function(name) { return this.getSetting('funcSynonyms',name) || name; },
+
+    /** If the given operator name has a synonym, use it, otherwise return the original name.
+     * @see Numbas.jme.opSynonyms
+     * @param {String} name
+     * @returns {String}
+     */
+    opSynonym: function(name) { return this.getSetting('opSynonyms',name) || name; },
 
     /** Binary operations
      * @type {Array.<String>}
@@ -985,7 +1090,6 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
      * @param {String} name - the name of the operator
      * @param {Numbas.jme.operatorOptions} options
      */
-<<<<<<< HEAD
     setOperatorProperties: function(name,options) {
         if(!options) {
             return;
@@ -1061,12 +1165,9 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
     },
 
     op: function(name,postfix,prefix) {
-        var arity = 2;
-        if(this.arity[name]!==undefined) {
-            arity = this.arity[name];
-        }
-        var commutative = arity>1 && this.commutative[name] || false;
-        var associative = arity>1 && this.associative[name] || false;
+        var arity = this.getArity(name);
+        var commutative = arity>1 && this.isCommutative(name);
+        var associative = arity>1 && this.isAssociative(name);
 
         return new TOp(name,postfix,prefix,arity,commutative,associative);
     },
@@ -1115,60 +1216,20 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
             parse: function(result,tokens,expr,pos) {
                 var matched_name = result[0];
                 var name = matched_name.toLowerCase();
-=======
-    tokenise: function(expr) {
-        if(!expr)
-            return [];
-        expr += '';
-        var oexpr = expr;
-        var pos = 0;
-        var olen = expr.length;
-        expr = expr.replace(this.re.re_strip_whitespace, '');    //get rid of whitespace
-        pos += olen - expr.length;
-        var tokens = [];
-        var i = 0;
-        var re_op = new RegExp(this.re.re_op.source.replace('__ANY_OP__',this.ops.join('|')),'i');
-        while( expr.length ) {
-            olen = expr.length;
-            expr = expr.replace(this.re.re_strip_whitespace, '');    //get rid of whitespace
-            pos += olen-expr.length;
-            var token_pos= pos;
-            var result;
-            var token;
-            while(result=expr.match(this.re.re_comment)) {
-                olen = expr.length;
-                expr=expr.slice(result[0].length).replace(this.re.re_strip_whitespace,'');
-                pos += olen-expr.length;
-            }
-            if(result = expr.match(this.re.re_number)) {
-                token = new TNum(result[0]);
-                if(tokens.length>0 && (tokens[tokens.length-1].type==')' || tokens[tokens.length-1].type=='name'))    //right bracket followed by a number is interpreted as multiplying contents of brackets by number
-                {
-                    tokens.push(new TOp('*'));
-                }
-            } else if (result = expr.match(this.re.re_bool)) {
-                token = new TBool(util.parseBool(result[0]));
-                result[0] = result[1];
-            } else if (result = expr.match(re_op)) {
-                if(result[2])        //if word-ish operator
-                    result[0] = result[2];
-                token = result[0].toLowerCase();
-                //work out if operation is being used prefix or postfix
->>>>>>> headless_testing
                 var nt;
                 var postfix = false;
                 var prefix = false;
-                if(name in this.opSynonyms) {
-                    name = this.opSynonyms[name];
-                }
+                name = this.opSynonym(name);
                 if( tokens.length==0 || (nt=tokens[tokens.length-1].type)=='(' || nt==',' || nt=='[' || (nt=='op' && !tokens[tokens.length-1].postfix) || nt=='keypair' ) {
-                    if(name in this.prefixForm) {
-                        name = this.prefixForm[name];
+                    var prefixForm = this.getPrefixForm(name);
+                    if(prefixForm!==undefined) {
+                        name = prefixForm;
                         prefix = true;
                     }
                 } else {
-                    if(name in this.postfixForm) {
-                        name = this.postfixForm[name];
+                    var postfixForm = this.getPostfixForm(name);
+                    if(postfixForm !== undefined) {
+                        name = postfixForm;
                         postfix = true;
                     }
                 }
@@ -1185,8 +1246,9 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
                 if(!annotation) {
                     var lname = name.toLowerCase();
                     // fill in constants here to avoid having more 'variables' than necessary
-                    if(lname in this.constants) {
-                        token = new TNum(this.constants[lname]);
+                    var constant = this.getConstant(lname);
+                    if(constant !== undefined) {
+                        token = new TNum(constant);
                     } else {
                         token = new TName(name);
                     }
@@ -1303,9 +1365,7 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
             var i = this.i;
             // if followed by an open bracket, this is a function application
             if( i<this.tokens.length-1 && this.tokens[i+1].type=="(") {
-                    if(this.funcSynonyms[tok.name]) {
-                        tok.name = this.funcSynonyms[tok.name];
-                    }
+                    tok.name = this.funcSynonym(tok.name);
                     this.stack.push(new TFunc(tok.name,tok.annotation));
                     this.numvars.push(0);
                     this.olength.push(this.output.length);
@@ -1326,7 +1386,7 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
         },
         'op': function(tok) {
             if(!tok.prefix) {
-                var o1 = this.precedence[tok.name];
+                var o1 = this.getPrecedence(tok.name);
                 //while ops on stack have lower precedence, pop them onto output because they need to be calculated before this one. left-associative operators also pop off operations with equal precedence
                 
                 /** Should the next token on the stack be popped off?
@@ -1337,7 +1397,7 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
                         return false;
                     }
                     var prev = this.stack[this.stack.length-1];
-                    if(prev.type=="op" && ((o1 > this.precedence[prev.name]) || (!this.rightAssociative[tok.name] && o1 == this.precedence[prev.name]))) {
+                    if(prev.type=="op" && ((o1 > this.getPrecedence(prev.name)) || (!this.isRightAssociative(tok.name) && o1 == this.getPrecedence(prev.name)))) {
                         return true;
                     }
                     if(prev.type=='keypair' && prev.pairmode=='match') {
@@ -1625,30 +1685,34 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
      * @param {Numbas.jme.funcObj} fn - function to add
      */
     addFunction: function(fn) {
-        if(!(fn.name in this.functions)) {
-            this.functions[fn.name] = [fn];
+        var name = fn.name.toLowerCase();
+        if(!(name in this.functions)) {
+            this.functions[name] = [fn];
         } else {
-            this.functions[fn.name].push(fn);
-            delete this._resolved_functions[fn.name];
+            this.functions[name].push(fn);
+            delete this._resolved_functions[name];
         }
-        this.deleted.functions[fn.name] = false;
+        this.deleted.functions[name] = false;
     },
     /** Mark the given variable name as deleted from the scope.
      * @param {String} name
      */
     deleteVariable: function(name) {
+        name = name.toLowerCase();
         this.deleted.variables[name] = true;
     },
     /** Mark the given function name as deleted from the scope.
      * @param {String} name
      */
     deleteFunction: function(name) {
+        name = name.toLowerCase();
         this.deleted.functions[name] = true;
     },
     /** Mark the given ruleset name as deleted from the scope.
      * @param {String} name
      */
     deleteRuleset: function(name) {
+        name = name.toLowerCase();
         this.deleted.rulesets[name] = true;
     },
     /** Get the object with given name from the given collection
@@ -1658,6 +1722,7 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
      */
     resolve: function(collection,name) {
         var scope = this;
+        name = name.toLowerCase();
         while(scope) {
             if(scope.deleted[collection][name]) {
                 return;
@@ -1673,7 +1738,7 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
      * @returns {Numbas.jme.token}
      */
     getVariable: function(name) {
-        return this.resolve('variables',name.toLowerCase());
+        return this.resolve('variables',name);
     },
     /** Set the given variable name
      * @param {String} name
@@ -1689,6 +1754,7 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
      * @returns {Numbas.jme.funcObj[]} A list of all definitions of the given name.
      */
     getFunction: function(name) {
+        name = name.toLowerCase();
         if(!this._resolved_functions[name]) {
             var scope = this;
             var o = [];
@@ -1714,8 +1780,9 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
      * @param {Numbas.jme.rules.Ruleset[]} rules
      */
     setRuleset: function(name, rules) {
-        this.rulesets[name] = this.rulesets[name.toLowerCase()] = rules;
-        this.deleted.rulesets[name.toLowerCase()] = false;
+        name = name.toLowerCase();
+        this.rulesets[name] = rules;
+        this.deleted.rulesets[name] = false;
     },
     /** Collect together all items from the given collection
      * @param {String} collection - name of the collection. A property of this Scope object, i.e. one of `variables`, `functions`, `rulesets`.
@@ -2428,7 +2495,7 @@ var funcObjAcc = 0;    //accumulator for ids for funcObjs, so they can be sorted
  * @memberof Numbas.jme
  * @constructor
  * @param {String} name
- * @param {Array.<Function|String>} intype - A list of data type constructors for the function's paramters' types. Use the string '?' to match any type. Or, give the type's name with a '*' in front to match any number of that type. If `null`, then `options.typecheck` is used.
+ * @param {Array.<Function|String>} intype - A list of data type constructors for the function's parameters' types. Use the string '?' to match any type. Or, give the type's name with a '*' in front to match any number of that type. If `null`, then `options.typecheck` is used.
  * @param {Function} outcons - The constructor for the output value of the function
  * @param {Numbas.jme.evaluate_fn} fn - JavaScript code which evaluates the function.
  * @param {Numbas.jme.funcObj_options} options
@@ -3041,6 +3108,130 @@ var compareTrees = jme.compareTrees = function(a,b) {
     }
     return sign_a==sign_b ? 0 : sign_a ? 1 : -1;
 }
+
+/** Infer the types of variables in an expression, by trying all definitions of functions and returning only those that can be satisfied by an assignment of types to variable names.
+ * Doesn't work well on functions with unknown return type, like `if` and `switch`. In these cases, it assumes the return type of the function is whatever it needs to be, even if that is inconsistent with what the function would actually do.
+ * Returns a list of possible assignments of types, arranged in order of preference: numbers are preferred to matrices, for example, and then by specificity (number of variables assigned a type).
+ * @param {Numbas.jme.tree} tree
+ * @param {Numbas.jme.Scope} scope
+ * @param {String} outtype - the desired return type of the expression
+ * @param {Object.<String>} assigned_types - types of variables which have already been inferred
+ * @returns {Array.<Object.<String>>}
+ */
+var inferVariableTypes = jme.inferVariableTypes = function(tree, scope, outtype, assigned_types) {
+    /** Deduplicate a list of objects
+     * Return only items with unique sets of entries
+     * @param {Array.<Object>} objs
+     * @returns {Arra.<Object>}
+     */
+    function dedup(objs) {
+        if(!objs.length) {
+            return [];
+        }
+        function compare(a,b) {
+            var as = Object.entries(a).sort();
+            var bs = Object.entries(b).sort();
+            for(var i=0;i<Math.max(as.length,bs.length);i++) {
+                if(i>=as.length) {
+                    return -1;
+                }
+                if(i>=bs.length) {
+                    return 1;
+                }
+                var ai = as[i][0];
+                var bi = bs[i][0];
+                var av = as[i][1];
+                var bv = bs[i][1];
+                var r = ai>bi ? 1 : ai<bi ? -1 : av>bv ? 1 : av<bv ? -1 : 0;
+                if(r!=0) {
+                    return r;
+                }
+            }
+            return 0;
+        }
+        objs.sort(compare);
+        var out = [objs[0]];
+
+        for(var i=1;i<objs.length;i++) {
+            if(compare(objs[i],objs[i-1])!=0) {
+                out.push(objs[i]);
+            }
+        }
+        return out;
+    }
+
+    assigned_types = assigned_types || {};
+    //console.log(`infer for ${Numbas.jme.display.treeToJME(tree)}, want ${outtype}, assigned ${JSON.stringify(assigned_types)}`);
+    if(outtype=='?') {
+        outtype = undefined;
+    }
+    switch(tree.tok.type) {
+        case 'name':
+            var name = tree.tok.name.toLowerCase();
+            if(assigned_types[name] !== undefined) {
+                if(!outtype || outtype==assigned_types[name]) {
+                    return [assigned_types];
+                } else {
+                    return [];
+                }
+            } else {
+                var assignment = util.copyobj(assigned_types);
+                if(outtype) {
+                    assignment[name] = outtype;
+                }
+                return [assignment];
+            }
+        case 'op':
+        case 'function':
+            var name = tree.tok.name.toLowerCase();
+            var functions = scope.getFunction(name.toLowerCase());
+            var assignments = [];
+            functions.forEach(function(fn) {
+                //console.log(`try ${name} : ${fn.intype} -> ${fn.outtype}`);
+                var fn_assignments = [assigned_types];
+                for(var i=0;i<tree.args.length;i++) {
+                    var nassignments = [];
+                    fn_assignments.forEach(function(assignment) {
+                        var res = inferVariableTypes(tree.args[i],scope,fn.intype[i],assignment);
+                        nassignments = nassignments.concat(res);
+                    });
+                    fn_assignments = nassignments;
+                }
+                assignments = assignments.concat(fn_assignments);
+            });
+            assignments = dedup(assignments);
+            //console.log('Decision:');
+            //assignments.forEach(r=>console.log(`* ${JSON.stringify(r)}`));
+            var type_preference_order = ['number','matrix','vector','boolean','set'];
+            function preference(type) {
+                var i = type_preference_order.indexOf(type);
+                return i==-1 ? Infinity : i;
+            }
+            assignments.sort(function(a,b) {
+                var as = Object.keys(a).sort();
+                var bs = Object.keys(b).sort();
+                for(var i=0;i<Math.max(as.length,bs.length);i++) {
+                    if(i>=as.length) {
+                        return -1;
+                    }
+                    if(i>=bs.length) {
+                        return 1;
+                    }
+                    var ai = preference(a[as[i]]);
+                    var bi = preference(b[bs[i]]);
+                    var r = ai>bi ? 1 : ai<bi ? -1 : 0;
+                    if(r!=0) {
+                        return r;
+                    }
+                }
+                return 0;
+            });
+            return assignments;
+        default:
+            return [assigned_types];
+    }
+}
+
 });
 
 /*
@@ -3701,12 +3892,12 @@ function satisfy(names,definitions,conditions,scope,maxRuns) {
             runs += 1;
             var variables = {};
             for(var i=0; i<names.length; i++) {
-                variables[names[i]] = jme.evaluate(definitions[i],scope);
+                variables[names[i]] = scope.evaluate(definitions[i]);
             }
             var nscope = new jme.Scope([scope,{variables:variables}]);
             satisfied = true;
             for(var i=0; i<conditions.length; i++) {
-                var ok = jme.evaluate(conditions[i],nscope);
+                var ok = nscope.evaluate(conditions[i]);
                 if(ok.type!='boolean') {
                     throw(new Numbas.Error('jme.func.satisfy.condition not a boolean'));
                 }
@@ -3727,7 +3918,7 @@ newBuiltin('satisfy', [TList,TList,TList,TNum], TList, null, {
         var names = args[0].args.map(function(t){ return t.tok.name; });
         var definitions = args[1].args;
         var conditions = args[2].args;
-        var maxRuns = args.length>3 ? jme.evaluate(args[3]).value : 100;
+        var maxRuns = args.length>3 ? scope.evaluate(args[3]).value : 100;
         var variables = satisfy(names,definitions,conditions,scope,maxRuns);
         return new TList(names.map(function(name){ return variables[name]; }));
     }
@@ -4538,6 +4729,14 @@ newBuiltin('resultsequal',['?','?',TString,TNum],TBool,null, {
     }
 });
 
+newBuiltin('infer_variable_types',[TExpression],TDict,null, {
+    evaluate: function(args, scope) {
+        var expr = args[0];
+        var assignments = jme.inferVariableTypes(expr.tree,scope);
+        return jme.wrapValue(assignments);
+    }
+});
+
 /** Helper function for the JME `match` function
  * @param {Numbas.jme.tree} expr
  * @param {String} pattern
@@ -5017,7 +5216,7 @@ var texOps = jme.display.texOps = {
     '>': infixTex('\\gt'),
     '<=': infixTex('\\leq'),
     '>=': infixTex('\\geq'),
-    '<>': infixTex('\neq'),
+    '<>': infixTex('\\neq'),
     '=': infixTex('='),
     'and': infixTex('\\wedge'),
     'or': infixTex('\\vee'),
@@ -6154,6 +6353,9 @@ var jmeFunctions = jme.display.jmeFunctions = {
         } else {
             return '( '+bits[0]+' )!';
         }
+    },
+    'listval': function(tree,tok,bits,settings) {
+        return bits[0]+'['+bits[1]+']';
     }
 }
 /** A dictionary of settings for {@link Numbas.jme.display.treeToJME}.
@@ -6201,8 +6403,8 @@ var opBrackets = Numbas.jme.display.opBrackets = {
     '-u':[{'+':true,'-':true}],
     '+': [{},{}],
     '-': [{},{'+':true,'-':true}],
-    '*': [{'+u':true,'-u':true,'+':true, '-':true, '/':true},{'+u':true,'-u':true,'+':true, '-':true, '/':true}],
-    '/': [{'+u':true,'-u':true,'+':true, '-':true, '*':false},{'+u':true,'-u':true,'+':true, '-':true, '*':true}],
+    '*': [{'+u':true,'+':true, '-':true, '/':true},{'+u':true,'-u':true,'+':true, '-':true, '/':true}],
+    '/': [{'+u':true,'+':true, '-':true, '*':false},{'+u':true,'-u':true,'+':true, '-':true, '*':true}],
     '^': [{'+u':true,'-u':true,'+':true, '-':true, '*':true, '/':true, '^': true},{'+u':true,'-u':true,'+':true, '-':true, '*':true, '/':true}],
     'and': [{'or':true, 'xor':true},{'or':true, 'xor':true}],
     'or': [{'xor':true},{'xor':true}],
@@ -6330,7 +6532,7 @@ jme.rules = {};
  * @property {Boolean} commutative - should the commutativity of operations be used? If `false`, terms must appear in the same order as in the pattern.
  * @property {Boolean} associative - should the associativity of operations be used? If `true`, all terms in nested applications of associative ops are gathered together before comparing.
  * @property {Boolean} allowOtherTerms - when matching an associative op, if the expression contains terms that don't match any of the pattern, should they be ignored? If `false`, every term in the expression must match a term in the pattern.
- * @property {Boolean} strictPlus - If `false`, `a-b` will be interpreted as `a+(-b)` when finding additive terms.
+ * @property {Boolean} strictInverse - If `false`, `a-b` will be interpreted as `a+(-b)` when finding additive terms.
  * @property {Numbas.jme.Scope} scope - A JME scope in which to evaluate conditions.
  */
 
@@ -6345,7 +6547,7 @@ function parse_options(str) {
         associative: str.match(/a/) !== null,
         allowOtherTerms: str.match(/g/) !== null,
         gatherList: str.match(/l/) !== null,
-        strictPlus: str.match(/s/) !== null
+        strictInverse: str.match(/s/) !== null
     };
 }
 
@@ -6363,7 +6565,7 @@ var extend_options = Numbas.jme.rules.extend_options = function(a,b) {
         associative: b.associative===undefined ? a.associative : b.associative,
         allowOtherTerms: b.allowOtherTerms===undefined ? a.allowOtherTerms : b.allowOtherTerms,
         gatherList: b.gatherList===undefined ? a.gatherList : b.gatherList,
-        strictPlus: b.strictPlus===undefined ? a.strictPlus : b.strictPlus,
+        strictInverse: b.strictInverse===undefined ? a.strictInverse : b.strictInverse,
         scope: b.scope===undefined ? a.scope : b.scope
     };
 }
@@ -6455,7 +6657,7 @@ Rule.prototype = /** @lends Numbas.jme.rules.Rule.prototype */ {
  * @type Object
  * @property {Boolean} commutative - should the operator be considered as commutative, for the purposes of matching ops with opposites? If yes, `a>c` will produce terms `c` and `a` when `op='<'`.
  * @property {Boolean} associative - should the operator be considered as associative? If yes, `(a+b)+c` will produce three terms `a`,`b` and `c`. If no, it will produce two terms, `(a+b)` and `c`.
- * @property {Boolean} strictPlus - if `false`, `a-b` will be interpreted as `a+(-b)` when finding additive terms.
+ * @property {Boolean} strictInverse - if `false`, `a-b` will be interpreted as `a+(-b)` when finding additive terms.
  */
 
 /** Information to do with a term found in an expression by {@link Numbas.jme.rules.getTerms}.
@@ -6570,7 +6772,8 @@ var nonStrictReplacements = {
     },
     '*': { 
         '/': function(tree) {
-            return {tok: new jme.types.TOp('*',false,false,2,true,true), args: [tree.args[0],{tok:new jme.types.TOp('/u',false,true,1,false,false),args:[tree.args[1]]}]};
+            tree = {tok: new jme.types.TOp('*',false,false,2,true,true), args: [tree.args[0],{tok:new jme.types.TOp('/u',false,true,1,false,false),args:[tree.args[1]]}]};
+            return tree;
         }
     }
 };
@@ -6590,6 +6793,8 @@ var nonStrictCanonicalOps = {
  */
 function insertUnaryMinus(tree) {
     if(jme.isOp(tree.tok,'*')) {
+        return {tok: tree.tok, args: [insertUnaryMinus(tree.args[0]),tree.args[1]]};
+    } else if(jme.isOp(tree.tok,'/')) {
         return {tok: tree.tok, args: [insertUnaryMinus(tree.args[0]),tree.args[1]]};
     } else {
         return {tok: new jme.types.TOp('-u',false,true,1,false,false), args: [tree]};
@@ -6654,7 +6859,7 @@ var getTerms = Numbas.jme.rules.getTerms = function(tree,op,options,calculate_mi
     if(intree.terms[op] === undefined) {
         intree.terms[op] = {};
     }
-    var option_signature = options.associative*2 + (options.strictPlus);
+    var option_signature = options.associative*2 + (options.strictInverse);
 
     if(intree.terms[op][option_signature]) {
         return intree.terms[op][option_signature];
@@ -6665,7 +6870,7 @@ var getTerms = Numbas.jme.rules.getTerms = function(tree,op,options,calculate_mi
         tree = insertUnaryMinus(tree.args[0]);
     }
 
-    if(!options.strictPlus && op in nonStrictReplacements) {
+    if(!options.strictInverse && op in nonStrictReplacements) {
         for(var subop in nonStrictReplacements[op]) {
             if(jme.isOp(tree.tok,subop)) {
                 tree = nonStrictReplacements[op][subop](tree);
@@ -6685,7 +6890,7 @@ var getTerms = Numbas.jme.rules.getTerms = function(tree,op,options,calculate_mi
         if(options.commutative && jme.converseOps[op] && jme.isOp(tok,jme.converseOps[op])) {
             return true;
         }
-        if(!options.strictPlus && op in nonStrictReplacements && tok.type=='op' && tok.name in nonStrictReplacements[op]) {
+        if(!options.strictInverse && op in nonStrictReplacements && tok.type=='op' && tok.name in nonStrictReplacements[op]) {
             return true;
         }
     }
@@ -6702,7 +6907,10 @@ var getTerms = Numbas.jme.rules.getTerms = function(tree,op,options,calculate_mi
         var item = new Term(arg);
         var res = unwrapCapture(arg);
         var argtok = res.tree.tok;
-        if(options.associative && (isThisOp(argtok) || (!options.strictPlus && op=='+' && jme.isOp(argtok,'-')))) {
+        if(op=='*' && jme.isOp(argtok,'-u')) {
+            argtok = unwrapCapture(args[i].args[0]).tree.tok;
+        }
+        if(options.associative && (isThisOp(argtok) || (!options.strictInverse && op=='+' && jme.isOp(argtok,'-')))) {
             var sub = getTerms(res.tree,op,options,false);
             sub = add_existing_names(sub,item.names,item.outside_equalnames);
             if(item.quantifier!='1') {
@@ -6934,7 +7142,7 @@ var specialMatchFunctions = jme.rules.specialMatchFunctions = {
     'm_noncommutative': setMatchOptions({commutative:false}),
     'm_associative': setMatchOptions({associative:true}),
     'm_nonassociative': setMatchOptions({associative:false}),
-    'm_strictplus': setMatchOptions({strictPlus:true}),
+    'm_strictinverse': setMatchOptions({strictInverse:true}),
     'm_gather': setMatchOptions({gatherList:false}),
     'm_nogather': setMatchOptions({gatherList:true}),
     'm_type': function(ruleTree,exprTree,options) {
@@ -7319,12 +7527,12 @@ function matchOrdinaryOp(ruleTree,exprTree,options) {
     var op = ruleTok.name;
     var commuting = options.commutative && ruleTok.commutative;
     var associating = options.associative && ruleTok.associative;
-    if(!options.strictPlus && nonStrictCanonicalOps[op]) {
+    if(!options.strictInverse && nonStrictCanonicalOps[op]) {
         op = nonStrictCanonicalOps[op];
         commuting = options.commutative && jme.commutative[op];
         associating = options.associative && jme.associative[op];
     }
-    var term_options = {commutative: options.commutative, associative: associating, strictPlus: options.strictPlus};
+    var term_options = {commutative: options.commutative, associative: associating, strictInverse: options.strictInverse};
     var ruleTerms = getTerms(ruleTree,op,term_options,true);
     var exprTerms = getTerms(exprTree,op,term_options,false);
     if(exprTerms.length<ruleTerms.min_total) {
@@ -7347,7 +7555,7 @@ function matchOrdinaryOp(ruleTree,exprTree,options) {
     for(var name in namedTerms) {
         var terms = namedTerms[name];
         if(terms.length==1) {
-            match[name] = terms[0];
+            match[name] = removeUnaryDivision(terms[0]);
         } else if(options.gatherList) {
             match[name] = {tok: new jme.types.TList(terms.length), args: terms.map(function(t){ return {tok: new jme.types.TExpression(removeUnaryDivision(t))} })};
         } else {
@@ -7598,6 +7806,9 @@ var findSequenceMatch = jme.rules.findSequenceMatch = function(pattern,input,opt
             if(options.allowOtherTerms && start<input.length-1) {
                 capture = [];
                 increment_start();
+                for(var i=0;i<start;i++) {
+                    capture.push(-1);
+                }
                 return;
             } else {
                 failed = true;
@@ -7974,7 +8185,7 @@ patternParser.addBinaryOperator('`|', {precedence: 1000000});   // or
 patternParser.addBinaryOperator('`:', {precedence: 1000000});   // default value
 patternParser.addBinaryOperator('`&',{precedence: 100000});     // and
 patternParser.addBinaryOperator('`where', {precedence: 1000000});   // condition
-patternParser.addBinaryOperator('`@', {precedence: 1000000});   // macro
+patternParser.addBinaryOperator('`@', {precedence: 1000000, rightAssociative: true});   // macro
 
 
 /** Match expression against a pattern. Wrapper for {@link Numbas.jme.rules.matchTree}
@@ -7994,7 +8205,7 @@ var matchExpression = jme.rules.matchExpression = function(pattern,expr,options)
         associative: true,
         allowOtherTerms: true,
         gatherList: false,
-        strictPlus: false,
+        strictInverse: false,
         scope: Numbas.jme.builtinScope
     };
     options = extend_options(default_options,options);
@@ -8031,8 +8242,6 @@ var Ruleset = jme.rules.Ruleset = function(rules,flags) {
     this.flags = util.extend_object({},displayFlags,flags);
 }
 
-var poo = 0;
-var pd = '';
 Ruleset.prototype = /** @lends Numbas.jme.rules.Ruleset.prototype */ {
     /** Test whether flag is set
      * @param {String} flag
@@ -8054,11 +8263,6 @@ Ruleset.prototype = /** @lends Numbas.jme.rules.Ruleset.prototype */ {
      * @returns {Numbas.jme.tree}
      */
     simplify: function(exprTree,scope) {
-        pd += '  ';
-        poo += 1;
-        if(poo>100) {
-            //throw(new Error("Poo"));
-        }
         var rs = this;
         var changed = true;
         var depth = 0;
@@ -8086,7 +8290,6 @@ Ruleset.prototype = /** @lends Numbas.jme.rules.Ruleset.prototype */ {
                 }
             }
         }
-        pd = pd.slice(2);
         return exprTree;
     }
 }
@@ -8209,6 +8412,7 @@ var simplificationRules = jme.rules.simplificationRules = {
         ['-0','','0']
     ],
     collectNumbers: [
+        ['$n;a * 1/$n;b','ag','a/b'],
         ['(`+- $n);n1 + (`+- $n)`+;n2','acg','eval(n1+n2)'],
         ['$n;n * $n;m','acg','eval(n*m)'],        //multiply numbers
         ['(`! $n)`+;x * real:$n;n','acgs','n*x']            //shift numbers to left hand side
@@ -8439,7 +8643,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         fn.intype = intype;
         fn.paramNames = paramNames;
         fn.definition = tmpfn.definition;
-        fn.name = tmpfn.name;
+        fn.name = tmpfn.name.toLowerCase();
         fn.language = tmpfn.language;
         try {
             switch(fn.language)
@@ -8471,9 +8675,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         for(var i=0;i<tmpFunctions.length;i++)
         {
             var cfn = jme.variables.makeFunction(tmpFunctions[i],scope,withEnv);
-            if(functions[cfn.name]===undefined)
-                functions[cfn.name] = [];
-            functions[cfn.name].push(cfn);
+            scope.addFunction(cfn);
         }
         return functions;
     },
@@ -8514,7 +8716,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
                     if(e.originalMessage == 'jme.variables.circular reference' || e.originalMessage == 'jme.variables.variable not defined') {
                         throw(e);
                     } else {
-                        throw(new Numbas.Error('jme.variables.error computing dependency',{name:x, message: e.message}));
+                        throw(new Numbas.Error('jme.variables.error computing dependency',{name:x, message: e.message},e));
                     }
                 }
             }
@@ -8526,7 +8728,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
             var value = jme.evaluate(v.tree,scope);
             scope.setVariable(name,value);
         } catch(e) {
-            throw(new Numbas.Error('jme.variables.error evaluating variable',{name:name,message:e.message}));
+            throw(new Numbas.Error('jme.variables.error evaluating variable',{name:name,message:e.message},e));
         }
         return value;
     },
@@ -9060,8 +9262,8 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         }
         if('steps' in data) {
             data.steps.map(function(sd,i) {
-                var s = createPartFromJSON(sd, this.path+'s'+i, this.question, this, this.store);
-                p.addStep(sd,i);
+                var s = createPartFromJSON(sd, p.path+'s'+i, p.question, p, p.store);
+                p.addStep(s,i);
             });
         }
         var marking = {};
@@ -9083,7 +9285,11 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
     finaliseLoad: function() {
         this.applyScripts();
         if(this.customConstructor) {
-            this.customConstructor.apply(this);
+            try {
+                this.customConstructor.apply(this);
+            } catch(e) {
+                throw(e);
+            }
         }
         if(Numbas.display) {
             this.display = new Numbas.display.PartDisplay(this);
@@ -9166,7 +9372,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
             script = 'var res = (function() {'+script+'\n}).apply(this); this.answered = true; return res || {states: this.markingFeedback.slice(), valid: true, credit: this.credit};';
         }
         with(withEnv) {
-            script = eval('(function(){try{'+script+'\n}catch(e){Numbas.showError(new Numbas.Error(\'part.script.error\',{path:util.nicePartName(this.path),script:name,message:e.message}))}})');
+            script = eval('(function(){try{'+script+'\n}catch(e){e = new Numbas.Error(\'part.script.error\',{path:util.nicePartName(this.path),script:name,message:e.message}); Numbas.showError(e); throw(e);}})');
         }
         this.scripts[name] = {script: script, order: order};
     },
@@ -9282,10 +9488,14 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @param {String} message
      * @throws {Numbas.Error}
      */
-    error: function(message) {
-        message = R.apply(this,arguments);
+    error: function(message,args, originalError) {
+        var nmessage = R.apply(this,[message,args]);
+        if(nmessage!=message) {
+            originalError = new Error(nmessage);
+            originalError.originalMessages = [message].concat(originalError.originalMessages || []);
+        }
         var niceName = Numbas.util.capitalise(util.nicePartName(this.path));
-        throw(new Numbas.Error('part.error',{path: niceName, message: message}));
+        throw(new Numbas.Error('part.error',{path: niceName, message: nmessage},originalError));
     },
     /** The name of the input widget this part uses, if any.
      * @returns {String}
@@ -9402,11 +9612,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
             var stepsFraction = Math.max(Math.min(1-this.credit,1),0);    //any credit not earned in main part can be earned back in steps
             this.score += stepsScore;                        //add score from steps to total score
             this.score = Math.min(this.score,this.marks - this.settings.stepsPenalty)    //if too many marks are awarded for steps, it's possible that getting all the steps right leads to a higher score than just getting the part right. Clip the score to avoid this.
-            if(this.settings.enableMinimumMarks && this.score<this.settings.minimumMarks) {
-                this.score = this.settings.minimumMarks;
-                this.credit = this.marks!=0 ? this.settings.minimumMarks/this.marks : 0;
-                this.markingComment(R('part.marking.minimum score applied',{score:this.settings.minimumMarks}));
-            }
+            this.applyScoreLimits();
             if(stepsMarks!=0 && stepsScore!=0)
             {
                 if(this.credit==1)
@@ -9423,11 +9629,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         else
         {
             this.score = this.credit * this.marks;
-            if(this.settings.enableMinimumMarks && this.score<this.settings.minimumMarks) {
-                this.score = this.settings.minimumMarks;
-                this.credit = this.marks!=0 ? this.settings.minimumMarks/this.marks : 0;
-                this.markingComment(R('part.marking.minimum score applied',{score:this.settings.minimumMarks}));
-            }
+            this.applyScoreLimits();
         }
         if(this.revealed) {
             this.score = 0;
@@ -9436,6 +9638,23 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
             this.parentPart.calculateScore();
         this.display && this.display.showScore(this.answered);
     },
+
+    /** Make sure the awarded score is between the minimum and maximum available.
+     */
+    applyScoreLimits: function() {
+        if(this.settings.enableMinimumMarks && this.score<this.settings.minimumMarks) {
+            this.score = this.settings.minimumMarks;
+            this.credit = this.marks!=0 ? this.settings.minimumMarks/this.marks : 0;
+            this.markingComment(R('part.marking.minimum score applied',{score:this.settings.minimumMarks}));
+        }
+        if(this.score>this.marks) {
+            this.finalised_result.states.push(Numbas.marking.feedback.sub_credit(this.credit-1, R('part.marking.maximum score applied',{score:this.marks})));
+            this.score = this.marks;
+            this.credit = 1;
+            this.markingComment(R('part.marking.maximum score applied',{score:this.marks}));
+        }
+    },
+
     /** Update the stored answer from the student (called when the student changes their answer, but before submitting)
      * @param {*} answer
      * @see {Numbas.parts.Part.stagedAnswer}
@@ -9515,12 +9734,12 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
                             var result_replacement = this.markAgainstScope(scope,existing_feedback);
                             if(!(result_original) || (result_replacement.answered && result_replacement.credit>result_original.credit)) {
                                 result = result_replacement;
-                                result.finalised_result.states.splice(0,0,{op: Numbas.marking.FeedbackOps.FEEDBACK, message: R('part.marking.used variable replacements')});
+                                result.finalised_result.states.splice(0,0,Numbas.marking.feedback.feedback(R('part.marking.used variable replacements')));
                                 result.markingFeedback.splice(0,0,{op: 'comment', message: R('part.marking.used variable replacements')});
                             }
                         } catch(e) {
                             try{
-                                this.error(e.message);
+                                this.error(e.message,{},e);
                             } catch(pe) {
                                 console.error(pe.message);
                             }
@@ -9989,7 +10208,7 @@ var createQuestionFromJSON = Numbas.createQuestionFromJSON = function(data, numb
         q.loadFromJSON(data);
         q.finaliseLoad();
     } catch(e) {
-        throw(new Numbas.Error('question.error creating question',{number: number, message: e.message}));
+        throw(new Numbas.Error('question.error creating question',{number: number, message: e.message},e));
     }
     return q;
 }
@@ -10211,13 +10430,17 @@ Question.prototype = /** @lends Numbas.Question.prototype */
         if(variables) {
             Object.keys(variables).map(function(name) {
                 var vd = variables[name];
+                var definition = vd.definition+'';
+                if(definition=='') {
+                    throw(new Numbas.Error('jme.variables.empty definition',{name:name}));
+                }
                 try {
-                    var tree = Numbas.jme.compile(vd.definition);
+                    var tree = Numbas.jme.compile(definition);
                 } catch(e) {
                     throw(new Numbas.Error('variable.error in variable definition',{name:name}));
                 }
                 var vars = Numbas.jme.findvars(tree);
-                q.variablesTodo[name] = {
+                q.variablesTodo[name.toLowerCase()] = {
                     tree: tree,
                     vars: vars
                 }
@@ -10235,8 +10458,8 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                     var p = Numbas.createPartFromJSON(pd, 'p'+i, q, q.store);
                     q.addPart(p,i);
                 });
-                q.signals.trigger('partsGenerated');
             }
+            q.signals.trigger('partsGenerated');
         });
     },
     /** Add a part to the question
@@ -10828,7 +11051,6 @@ SignalBox.prototype = { /** @lends Numbas.schedule.SignalBox.prototype */
                 for(var x in sb.callbacks) {
                     sb.callbacks[x].reject(e);
                 }
-                return Promise.reject(e);
             });
         }
         return promise;
@@ -11169,7 +11391,7 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
                     values: {interpreted_answer:answer}
                 }
             } else {
-                var part_result = part.mark_answer(answer,scope);
+                var part_result = part.mark_answer(answer,part.getScope());
             }
             var result = marking.finalise_state(part_result.states.mark);
             return jme.wrapValue({
@@ -11353,9 +11575,17 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
          * @returns {Numbas.marking.marking_script_result}
          */
         evaluate: function(scope, variables) {
+            scope = new jme.Scope([scope]);
+
+            // if any names used by notes are already defined as variables in this scope, delete them
+            Object.keys(this.notes).forEach(function(name) {
+                scope.deleteVariable(name);
+            });
+
             scope = new StatefulScope([
                 scope, {variables: variables}
             ]);
+
             var result = jme.variables.makeVariables(this.notes,scope,null,compute_note);
             return {
                 states: scope.states,
@@ -14083,9 +14313,13 @@ var util = Numbas.util = /** @lends Numbas.util */ {
      * @returns {Boolean}
      */
     isNonemptyHTML: function(html) {
-        var d = document.createElement('div');
-        d.innerHTML = html;
-        return $(d).text().trim().length>0;
+        if(window.document) {
+            var d = document.createElement('div');
+            d.innerHTML = html;
+            return $(d).text().trim().length>0;
+        } else {
+            return html.trim() != '';
+        }
     },
     /** Parse parameter as a boolean. The boolean value `true` and the strings 'true' and 'yes' are parsed as the value `true`, everything else is `false`.
      * @param {Object} b
@@ -16883,6 +17117,9 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
     loadFromJSON: function(data) {
         var settings = this.settings;
         var tryLoad = Numbas.json.tryLoad;
+        if('answer' in data) {
+            settings.minvalueString = settings.maxvalueString = data.answer+'';
+        }
         tryLoad(data, ['minValue', 'maxValue'], settings, ['minvalueString', 'maxvalueString']);
         tryLoad(data, ['correctAnswerFraction', 'correctAnswerStyle', 'allowFractions'], settings);
         tryLoad(data, ['mustBeReduced', 'mustBeReducedPC'], settings);
@@ -16897,7 +17134,7 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
         try {
             this.getCorrectAnswer(this.getScope());
         } catch(e) {
-            this.error(e.message);
+            this.error(e.message,{},e);
         }
         this.stagedAnswer = '';
         if(Numbas.display) {
@@ -17009,6 +17246,7 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
         var fudge = 0.00000000001;
         settings.minvalue = minvalue - fudge;
         settings.maxvalue = maxvalue + fudge;
+        return settings.displayAnswer;
     },
     /** Tidy up the student's answer - at the moment, just remove space.
      * You could override this to do more substantial filtering of the student's answer.
@@ -17166,6 +17404,10 @@ GapFillPart.prototype = /** @lends Numbas.parts.GapFillPart.prototype */
      */
     studentAnswerAsJME: function() {
         return new Numbas.jme.types.TList(this.gaps.map(function(g){return g.studentAnswerAsJME()}));
+    },
+
+    getCorrectAnswer: function(scope) {
+        return this.gaps.map(function(g){ return g.getCorrectAnswer(scope); });
     }
 };
 ['loadFromXML','resume','finaliseLoad','loadFromJSON','storeAnswer'].forEach(function(method) {
@@ -17275,6 +17517,7 @@ var JMEPart = Numbas.parts.JMEPart = function(path, question, parentPart)
 {
     var settings = this.settings;
     util.copyinto(JMEPart.prototype.settings,settings);
+    settings.valueGenerators = {};
     settings.mustHave = [];
     settings.notAllowed = [];
     settings.expectedVariableNames = [];
@@ -17295,6 +17538,17 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         var parametersPath = 'answer';
         tryGetAttribute(settings,xml,parametersPath+'/checking',['type','accuracy','failurerate'],['checkingType','checkingAccuracy','failureRate']);
         tryGetAttribute(settings,xml,parametersPath+'/checking/range',['start','end','points'],['vsetRangeStart','vsetRangeEnd','vsetRangePoints']);
+        
+        var valueGeneratorsNode = xml.selectSingleNode('answer/checking/valuegenerators');
+        if(valueGeneratorsNode) {
+            var valueGenerators = valueGeneratorsNode.selectNodes('generator');
+            for(var i=0;i<valueGenerators.length;i++) {
+                var generator = {};
+                tryGetAttribute(generator,xml,valueGenerators[i],['name','value']);
+                this.addValueGenerator(generator.name, generator.value);
+            }
+        }
+
         //max length and min length
         tryGetAttribute(settings,xml,parametersPath+'/maxlength',['length','partialcredit'],['maxLength','maxLengthPC']);
         var messageNode = xml.selectSingleNode('answer/maxlength/message');
@@ -17364,16 +17618,30 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         }
     },
     loadFromJSON: function(data) {
+        var p = this;
         var settings = this.settings;
         var tryLoad = Numbas.json.tryLoad;
+        var tryGet = Numbas.json.tryGet;
         tryLoad(data, ['answer', 'answerSimplification'], settings, ['correctAnswerString', 'answerSimplificationString']);
         tryLoad(data, ['checkingType', 'checkingAccuracy', 'failureRate'], settings, ['checkingType', 'checkingAccuracy', 'failureRate']);
+        tryLoad(data, ['vsetRangePoints'], settings);
+        var vsetRange = tryGet(data,'vsetRange');
+        if(vsetRange) {
+            settings.vsetRangeStart = vsetRange[0];
+            settings.vsetRangeEnd = vsetRange[1];
+        }
         tryLoad(data.maxlength, ['length', 'partialCredit', 'message'], settings, ['maxLength', 'maxLengthPC', 'maxLengthMessage']);
         tryLoad(data.minlength, ['length', 'partialCredit', 'message'], settings, ['minLength', 'minLengthPC', 'minLengthMessage']);
         tryLoad(data.musthave, ['strings', 'showStrings', 'partialCredit', 'message'], settings, ['mustHave', 'mustHaveShowStrings', 'mustHavePC', 'mustHaveMessage']);
         tryLoad(data.notallowed, ['strings', 'showStrings', 'partialCredit', 'message'], settings, ['notAllowed', 'notAllowedShowStrings', 'notAllowedPC', 'notAllowedMessage']);
         tryLoad(data.mustmatchpattern, ['pattern', 'partialCredit', 'message', 'nameToCompare'], settings, ['mustMatchPattern', 'mustMatchPC', 'mustMatchMessage', 'nameToCompare']);
         tryLoad(data, ['checkVariableNames', 'expectedVariableNames', 'showPreview'], settings);
+        var valuegenerators = tryGet(data,'valuegenerators');
+        if(valuegenerators) {
+            valuegenerators.forEach(function(g) {
+                p.addValueGenerator(g.name,g.value);
+            });
+        }
     },
     resume: function() {
         if(!this.store) {
@@ -17492,6 +17760,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         }
         this.markingScope = new jme.Scope(this.getScope());
         this.markingScope.variables = {};
+        return settings.correctAnswer;
     },
     /** Save a copy of the student's answer as entered on the page, for use in marking.
      */
@@ -17504,6 +17773,21 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
      */
     rawStudentAnswerAsJME: function() {
         return new Numbas.jme.types.TString(this.studentAnswer);
+    },
+
+    /** Add a value generator expression to the list in this part's settings.
+     * @param {String} name
+     * @param {JME} expr
+     */
+    addValueGenerator: function(name, expr) {
+        try {
+            var expression = new jme.types.TExpression(expr);
+            if(expression.tree) {
+                this.settings.valueGenerators[name] = expression;
+            }
+        } catch(e) {
+            this.error('part.jme.invalid value generator expression',{name: name, expr: expr, message: e.message}, e);
+        }
     }
 };
 ['resume','finaliseLoad','loadFromXML','loadFromJSON'].forEach(function(method) {
@@ -17752,7 +18036,9 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         } else {
             this.flipped = false;
         }
-        tryLoad(data, ['maxMarks'], this, ['marks']);
+        if(this.type!='1_n_2') {
+            tryLoad(data, ['maxMarks'], this, ['marks']);
+        }
         tryLoad(data, ['minMarks'], settings, ['minimumMarks']);
         tryLoad(data, ['minAnswers', 'maxAnswers', 'shuffleChoices', 'shuffleAnswers', 'displayType'], settings, ['minAnswersString', 'maxAnswersString', 'shuffleChoices', 'shuffleAnswers', 'displayType']);
         tryLoad(data, ['warningType'], settings);
@@ -17760,7 +18046,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         if('choices' in data) {
             if(typeof(data.choices)=='string') {
                 choices = jme.evaluate(data.choices, scope);
-                if(settings.choices.type!='list') {
+                if(!choices || choices.type!='list') {
                     this.error('part.mcq.options def not a list',{properties: 'choice'});
                 }
                 settings.choices = jme.unwrapValue(choices);
@@ -17772,7 +18058,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         if('answers' in data) {
             if(typeof(data.answers)=='string') {
                 answers = jme.evaluate(data.answers, scope);
-                if(settings.answers.type!='list') {
+                if(!answers || answers.type!='list') {
                     this.error('part.mcq.options def not a list',{properties: 'answer'});
                 }
                 settings.answers = jme.unwrapValue(answers);
@@ -18002,8 +18288,8 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         shuffleChoices: false,
         shuffleAnswers: false,
         matrix: [],                    //marks matrix
-        displayType: '',            //how to display the responses? can be: radiogroup, dropdownlist, buttonimage, checkbox, choicecontent
-        warningType: '',                //what to do if wrong number of responses
+        displayType: 'radiogroup',            //how to display the responses? can be: radiogroup, dropdownlist, buttonimage, checkbox, choicecontent
+        warningType: 'none',                //what to do if wrong number of responses
         layoutType: 'all',
         layoutExpression: ''
     },
@@ -18145,10 +18431,29 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
             settings.maxMatrix = matrix.map(function(r){ return [r[0]>0]; });
             break;
         case 'm_n_x':
-            settings.maxMatrix = matrix.map(function(r){ return r.map(function(c){return c>0; }) });
+            switch(this.settings.displayType) {
+                case 'radiogroup':
+                    var correctTicks = [];
+                    for(var i=0; i<this.numChoices; i++) {
+                        var maxj=-1,max=0;
+                        for(var j=0;j<this.numAnswers; j++) {
+                            if(maxj==-1 || matrix[j][i]>max) {
+                                maxj = j;
+                                max = matrix[j][i];
+                            }
+                        }
+                        correctTicks.push(maxj);
+                    }
+                    settings.maxMatrix = matrix.map(function(r,j) { return r.map(function(c,i) { return j==correctTicks[i]; }) });
+                    break;
+                case 'checkbox':
+                    settings.maxMatrix = matrix.map(function(r) { return r.map(function(c){ return c>0; }) });
+                    break;
+            }
             break;
         }
         settings.matrix = matrix;
+        return settings.maxMatrix;
     },
     /** Store the student's choices 
      * @param {Object} answer - object with properties `answer` and `choice`, giving the index of the chosen item
@@ -18351,7 +18656,7 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
             try {
                 settings[name] = p.setting_evaluators[s.input_type].call(p, s, value);
             } catch(e) {
-                p.error('part.custom.error evaluating setting',{setting: name, error: e.message});
+                p.error('part.custom.error evaluating setting',{setting: name, error: e.message},e);
             }
         });
         var settings_scope = new jme.Scope([scope,{variables:{settings:new jme.types.TDict(settings)}}]);
@@ -18380,13 +18685,13 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
             try {
                 p.resolved_input_options[option] = evaluate_input_option(raw_input_options[option]);
             } catch(e) {
-                p.error('part.custom.error evaluating input option',{option:option,error:e.message});
+                p.error('part.custom.error evaluating input option',{option:option,error:e.message},e);
             }
         }
         try {
             this.getCorrectAnswer(this.getScope());
         } catch(e) {
-            this.error(e.message);
+            this.error(e.message,{},e);
         }
         if(Numbas.display) {
             this.display = new Numbas.display.CustomPartDisplay(this);
@@ -18395,6 +18700,14 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
     getCorrectAnswer: function(scope) {
         var settings = this.settings;
         this.correctAnswer = scope.evaluate(this.definition.input_options.correctAnswer, {settings: this.settings});
+        switch(this.definition.input_widget) {
+            case 'jme':
+                return jme.display.treeToJME(this.correctAnswer.tree);
+            case 'checkboxes':
+                return this.correctAnswer.value.map(function(c){ return c.value; });
+            default:
+                return this.correctAnswer.value;
+        }
     },
     setStudentAnswer: function() {
         this.studentAnswer = this.stagedAnswer;
@@ -18741,6 +19054,21 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
         }
         settings.precision = jme.subvars(settings.precisionString, scope);
         settings.precision = jme.evaluate(settings.precision,scope).value;
+
+        var correctInput = settings.correctAnswer.map(function(row) {
+            return row.map(function(c) {
+                if(settings.allowFractions) {
+                    var f = math.rationalApproximation(c);
+                    if(f[1]!=1) {
+                        return f[0]+'/'+f[1];
+                    }
+                }
+                return math.niceNumber(c,{precisionType: settings.precisionType, precision:settings.precision, style: settings.correctAnswerStyle});
+            });
+        });
+        correctInput.rows = settings.correctAnswer.rows;
+        correctInput.columns = settings.correctAnswer.columns;
+        return correctInput;
     },
     /** Save a copy of the student's answer as entered on the page, for use in marking.
      */
@@ -18816,7 +19144,7 @@ PatternMatchPart.prototype = /** @lends Numbas.PatternMatchPart.prototype */ {
         var settings = this.settings;
         var tryLoad = Numbas.json.tryLoad;
         tryLoad(data, ['answer', 'displayAnswer'], settings, ['correctAnswerString', 'displayAnswerString']);
-        tryLoad(data, ['caseSensitive', 'partialCredit'], settings);
+        tryLoad(data, ['caseSensitive', 'partialCredit','matchMode'], settings);
     },
     finaliseLoad: function() {
         this.getCorrectAnswer(this.getScope());
@@ -18884,6 +19212,7 @@ PatternMatchPart.prototype = /** @lends Numbas.PatternMatchPart.prototype */ {
                 break;
         }
         settings.displayAnswer = jme.subvars(settings.displayAnswerString,scope, true);
+        return settings.displayAnswer;
     },
     /** Save a copy of the student's answer as entered on the page, for use in marking.
      */

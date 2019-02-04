@@ -37,6 +37,27 @@
     {% property 'failureRate' 'Maximum no. of failures' min=0 max='vset.points' help_url='question/parts/mathematical-expression.html#term-maximum-no-of-failures' %}
     {% property 'vset.start' 'Checking range start' max='vset.end' help_url='question/parts/mathematical-expression.html#term-checking-range-start' %}
     {% property 'vset.end' 'Checking range end' help_url='question/parts/mathematical-expression.html#term-checking-range-end' %}
+
+    <div data-bind="visible: valueGenerators().length">
+        <h4>Variable value generators</h4>
+        <p class="help-block">
+            {% helplink 'question/parts/mathematical-expression.html#variable-value-generators' subject='the advice section' %}
+            Give expressions which produce values for each of the variables in the expected answer. Leave blank to pick a random value from the range defined above, following the inferred type of the variable.
+        </p>
+        <div data-bind="foreach: valueGenerators">
+            <div class="form-group">
+                <label class="label-block">
+                    <div class="{{form_label_class}} control-label">
+                        <span><code data-bind="text: name"></code></span>
+                    </div>
+                    <div class="{{form_control_class}} jme-property">
+                        {% jme_input 'value' %}
+                        <span class="help-block help-block-inline" data-bind="visible: inferredType">(this might be a <span data-bind="text: inferredType"></span>)</span>
+                    </div>
+                </label>
+            </div>
+        </div>
+    </div>
 </form>
 </section>
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='restrictions'}">

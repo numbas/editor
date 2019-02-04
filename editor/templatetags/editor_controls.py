@@ -39,7 +39,7 @@ def property_tag(context, property_name, label, *args, **kwargs):
 def jme_input(context, property_name, *args, **kwargs):
     context.update({
         'property': property_name,
-        'parser': kwargs.get('parser','blarg'),
+        'parser': kwargs.get('parser'),
         'disable': kwargs.get('disable', False),
     })
     return context

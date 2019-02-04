@@ -117,6 +117,38 @@ part_types.models = [
             };
             model.checkingType = ko.observable(model.checkingTypes[0]);
 
+            model.variableNames = ko.computed(function() {
+                try {
+                    var answer = Numbas.jme.compile(this.answer());
+                    var names = Numbas.jme.findvars(answer);
+                    return names.sort();
+                } catch(e) {
+                    return [];
+                }
+            },model);
+
+            var valueGenerators = {};
+            var valueGeneratorFactory = ko.computed(function() {
+                this.variableNames().forEach(function(name) {
+                    if(!valueGenerators[name]) {
+                        valueGenerators[name] = ko.observable('');
+                    }
+                });
+            },model);
+
+            model.valueGenerators = ko.computed(function() {
+                valueGeneratorFactory();
+                var inferredTypes;
+                try {
+                    inferredTypes = Numbas.jme.inferVariableTypes(Numbas.jme.compile(model.answer()),Numbas.jme.builtinScope)[0] || {};
+                } catch(e) {
+                    inferredTypes = {};
+                }
+                return this.variableNames().map(function(n) {
+                    return {name: n, value: valueGenerators[n], inferredType: inferredTypes[n]};
+                });
+            },model);
+
             model.mustmatchpattern.capturedNames = ko.computed(function() {
                 var pattern = this.mustmatchpattern.pattern();
                 try {
@@ -170,7 +202,10 @@ part_types.models = [
                     mustmatchpattern: model.mustmatchpattern.pattern(),
                     mustMatchPC: model.mustmatchpattern.partialCredit(),
                     mustMatchMessage: model.mustmatchpattern.message(),
-                    matchNameToCompare: model.mustmatchpattern.nameToCompare()
+                    matchNameToCompare: model.mustmatchpattern.nameToCompare(),
+                    valueGenerators: model.valueGenerators().map(function(d) {
+                        return {name: d.name, value: d.value()}
+                    })
                 };
             });
 
@@ -231,6 +266,9 @@ part_types.models = [
                     nameToCompare: this.mustmatchpattern.nameToCompare()
                 }
             }
+            data.valuegenerators = this.valueGenerators().map(function(d) {
+                return {name: d.name, value: d.value()};
+            });
         },
         load: function(data) {
             tryLoad(data,['answer','answerSimplification','checkVariableNames','expectedVariableNames','showPreview'],this);
@@ -252,6 +290,17 @@ part_types.models = [
             tryLoad(tryGetAttribute(data,'mustHave'),['strings','showStrings','partialCredit','message'],this.musthave);
             tryLoad(tryGetAttribute(data,'notAllowed'),['strings','showStrings','partialCredt','message'],this.notallowed);
             tryLoad(tryGetAttribute(data,'mustMatchPattern'),['pattern','partialCredt','message','nameToCompare'],this.mustmatchpattern);
+            
+            var valueGenerators = tryGetAttribute(data,'valueGenerators');
+            if(valueGenerators) {
+                var d = {};
+                valueGenerators.forEach(function(def) {
+                    d[def.name] = def.value;
+                });
+                this.valueGenerators().forEach(function(g) {
+                    g.value(d[g.name] || '');
+                });
+            }
         }
     },
     {

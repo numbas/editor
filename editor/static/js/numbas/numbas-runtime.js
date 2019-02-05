@@ -3616,6 +3616,7 @@ newBuiltin('=', ['?','?'], TBool, null, {
         return new TBool(util.eq(args[0],args[1]));
     }
 });
+newBuiltin('isclose', [TNum,TNum,TNum,TNum], TBool, math.isclose);
 newBuiltin('and', [TBool,TBool], TBool, function(a,b){return a&&b;} );
 newBuiltin('not', [TBool], TBool, function(a){return !a;} );
 newBuiltin('or', [TBool,TBool], TBool, function(a,b){return a||b;} );
@@ -4734,6 +4735,37 @@ newBuiltin('infer_variable_types',[TExpression],TDict,null, {
         var expr = args[0];
         var assignments = jme.inferVariableTypes(expr.tree,scope);
         return jme.wrapValue(assignments);
+    }
+});
+
+newBuiltin('make_variables',[TDict],TDict,null, {
+    evaluate: function(args,scope) {
+        var todo = {};
+        var scope = new jme.Scope([scope]);
+        for(var x in args[0].value) {
+            scope.deleteVariable(x);
+            var tree = args[0].value[x].tree;
+            var vars = jme.findvars(tree);
+            todo[x] = {tree: args[0].value[x].tree, vars: vars};
+        }
+        var result = jme.variables.makeVariables(todo,scope);
+        var out = {};
+        for(var x in result.variables) {
+            out[x] = result.variables[x];
+        }
+        return new TDict(out);
+    },
+    typecheck: function(variables) {
+        if(variables.length!=1) {
+            return false;
+        }
+        var d = variables[0];
+        for(var x in d.value) {
+            if(d.value[x].type!='expression') {
+                return false;
+            }
+        }
+        return true;
     }
 });
 
@@ -12111,7 +12143,7 @@ var math = Numbas.math = /** @lends Numbas.math */ {
     {
         if(a.complex || b.complex)
             throw(new Numbas.Error('math.order complex numbers'));
-        return a<b;
+        return !math.geq(a,b);
     },
     /** Is `a` greater than `b`?
      * @throws {Numbas.Error} `math.order complex numbers` if `a` or `b` are complex numbers.
@@ -12123,7 +12155,7 @@ var math = Numbas.math = /** @lends Numbas.math */ {
     {
         if(a.complex || b.complex)
             throw(new Numbas.Error('math.order complex numbers'));
-        return a>b;
+        return !math.leq(a,b);
     },
     /** Is `a` less than or equal to `b`?
      * @throws {Numbas.Error} `math.order complex numbers` if `a` or `b` are complex numbers.
@@ -12135,7 +12167,7 @@ var math = Numbas.math = /** @lends Numbas.math */ {
     {
         if(a.complex || b.complex)
             throw(new Numbas.Error('math.order complex numbers'));
-        return a<=b;
+        return a<b || math.eq(a,b);
     },
     /** Is `a` greater than or equal to `b`?
      * @throws {Numbas.Error} `math.order complex numbers` if `a` or `b` are complex numbers.
@@ -12147,7 +12179,7 @@ var math = Numbas.math = /** @lends Numbas.math */ {
     {
         if(a.complex || b.complex)
             throw(new Numbas.Error('math.order complex numbers'));
-        return a>=b;
+        return a>b || math.eq(a,b);
     },
     /** Is `a` equal to `b`?
      * @param {Number} a
@@ -12168,10 +12200,23 @@ var math = Numbas.math = /** @lends Numbas.math */ {
                 if(isNaN(a)) {
                     return isNaN(b);
                 }
-                return a==b;
+                return a==b || math.isclose(a,b);
             }
         }
     },
+
+    /** Is `a` close to `b`?
+     * @param {Number} a
+     * @param {Number} b
+     * @param {Number} [rel_tol=1e-12] - relative tolerance: amount of error relative to `max(abs(a),abs(b))`.
+     * @param {Number} [abs_tol=0] - absolute tolerance: maximum absolute difference between `a` and `b`.
+     */
+    isclose: function(a,b,rel_tol,abs_tol) {
+        rel_tol = rel_tol===undefined ? 1e-15 : rel_tol;
+        abs_tol = abs_tol===undefined ? 0 : rel_tol;
+        return Math.abs(a-b) <= Math.max( rel_tol * Math.max(Math.abs(a), Math.abs(b)), abs_tol );
+    },
+
     /** Greatest of two numbers - wraps `Math.max`
      * @throws {Numbas.Error} `math.order complex numbers` if `a` or `b` are complex numbers.
      * @param {Number} a

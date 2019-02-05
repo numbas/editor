@@ -117,9 +117,19 @@ part_types.models = [
             };
             model.checkingType = ko.observable(model.checkingTypes[0]);
 
-            model.variableNames = ko.computed(function() {
+            model.answerIsEquation = ko.computed(function() {
                 try {
                     var answer = Numbas.jme.compile(this.answer());
+                    return Numbas.jme.isOp(answer.tok,'=');
+                } catch(e) {
+                    return false;
+                }
+            }, model);
+
+            model.variableNames = ko.computed(function() {
+                try {
+                    var correctAnswer = Numbas.jme.subvars(this.answer(),part.q.questionScope());
+                    var answer = Numbas.jme.compile(correctAnswer);
                     var names = Numbas.jme.findvars(answer);
                     return names.sort();
                 } catch(e) {

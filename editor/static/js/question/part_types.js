@@ -112,8 +112,7 @@ part_types.models = [
                     message: ko.observable(''),
                     nameToCompare: ko.observable('')
                 },
-                checkVariableNames: ko.observable(false),
-                expectedVariableNames: ko.observableArray([])
+                checkVariableNames: ko.observable(false)
             };
             model.checkingType = ko.observable(model.checkingTypes[0]);
 
@@ -185,7 +184,6 @@ part_types.models = [
                     correctAnswer = '';
                 }
                 return {
-                    expectedVariableNames: model.expectedVariableNames(),
                     minLength: model.minlength.length(),
                     minLengthPC: model.minlength.partialCredit(),
                     minLengthMessage: model.minlength.message(),
@@ -208,7 +206,6 @@ part_types.models = [
                     failureRate: model.failureRate(),
                     checkVariableNames: model.checkVariableNames(),
                     showPreview: model.showPreview(),
-                    expectedVariableNames: model.expectedVariableNames(),
                     mustmatchpattern: model.mustmatchpattern.pattern(),
                     mustMatchPC: model.mustmatchpattern.partialCredit(),
                     mustMatchMessage: model.mustmatchpattern.message(),
@@ -233,7 +230,6 @@ part_types.models = [
             data.vsetRangePoints = this.vset.points();
             data.vsetRange = [this.vset.start(),this.vset.end()];
             data.checkVariableNames = this.checkVariableNames();
-            data.expectedVariableNames = this.expectedVariableNames();
             if(this.maxlength.length())
             {
                 data.maxlength = {
@@ -281,7 +277,7 @@ part_types.models = [
             });
         },
         load: function(data) {
-            tryLoad(data,['answer','answerSimplification','checkVariableNames','expectedVariableNames','showPreview'],this);
+            tryLoad(data,['answer','answerSimplification','checkVariableNames','showPreview'],this);
             var checkingType = tryGetAttribute(data,'checkingType');
             for(var i=0;i<this.checkingTypes.length;i++) {
                 if(this.checkingTypes[i].name == checkingType)

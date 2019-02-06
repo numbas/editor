@@ -104,15 +104,7 @@
 
     <h4>Variables</h4>
     <form class="form-horizontal" data-bind="submit: Editor.noop">
-        {% booleanproperty 'checkVariableNames' 'Warn if student uses an unexpected variable name?' %}
-        <div class="form-group" data-bind="fadeVisible:checkVariableNames">
-            <label class="{{form_label_class}} control-label">
-                Expected variable names {% helplink 'question/parts/mathematical-expression.html#term-expected-variable-names' %}
-            </label>
-            <div class="{{form_control_class}}">
-                <listbox params="items: expectedVariableNames{% if not editable %}, disabled: true{% endif %}"></listbox>
-            </div>
-        </div>
+        {% booleanproperty 'checkVariableNames' 'Warn if student uses an unexpected variable name?' help_url='question/parts/mathematical-expression.html#term-warn-if-student-uses-an-unexpected-variable-name' %}
     </form>
     </div>
 

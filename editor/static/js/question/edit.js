@@ -1388,10 +1388,12 @@ $(document).ready(function() {
                 step: ko.observable(1)
             },
             'string': {
-                value: ko.observable('')
+                value: ko.observable(''),
+                isTemplate: ko.observable(false)
             },
             'long string': {
-                value: ko.observable('')
+                value: ko.observable(''),
+                isTemplate: ko.observable(false)
             },
             'list of numbers': {
                 values: InexhaustibleList(),
@@ -1475,7 +1477,11 @@ $(document).ready(function() {
                         return treeToJME(tree);
                     case 'string':
                     case 'long string':
-                        return treeToJME({tok: wrapValue(val.value())});
+                        var s = treeToJME({tok: wrapValue(val.value())});
+                        if(val.isTemplate()) {
+                            s = 'safe('+s+')';
+                        }
+                        return s;
                     case 'list of numbers':
                         var values = val.values().filter(function(n){return n!=''});
                         if(!values.every(function(n){return Numbas.util.isNumber(n,true)})) {
@@ -1662,7 +1668,12 @@ $(document).ready(function() {
                     break;
                 case 'string':
                 case 'long string':
-                    templateTypeValues.value(tree.tok.value);
+                    if(Numbas.jme.isFunction(tree.tok,'safe')) {
+                        templateTypeValues.isTemplate(true);
+                        templateTypeValues.value(tree.args[0].tok.value);
+                    } else {
+                        templateTypeValues.value(tree.tok.value);
+                    }
                     break;
                 case 'list of numbers':
                     templateTypeValues.values(tree.args.map(function(t){return Numbas.jme.display.treeToJME(t);}));

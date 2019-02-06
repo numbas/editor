@@ -242,6 +242,7 @@
                             <div data-bind="visible: templateType().id=='string'">
                                 <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: templateTypeValues.string.value, autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.string.value}"/> 
                                 <p class="help-block">(text string)</p>
+                                <p><label><input type="checkbox" data-bind="checked: templateTypeValues.string.isTemplate" {% if not editable %}disabled{% endif %}> Is this a template?</p>
                             </div>
                             <div data-bind="visible: templateType().id=='long string'">
                                 <div {% if not editable %}disabled{% endif %} data-bind="writemaths: templateTypeValues['long string'].value"></div>

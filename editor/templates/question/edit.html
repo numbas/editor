@@ -246,6 +246,7 @@
                             </div>
                             <div data-bind="visible: templateType().id=='long string'">
                                 <div {% if not editable %}disabled{% endif %} data-bind="writemaths: templateTypeValues['long string'].value"></div>
+                                <p><label><input type="checkbox" data-bind="checked: templateTypeValues.string.isTemplate" {% if not editable %}disabled{% endif %}> Is this a template?</p>
                             </div>
                             <div data-bind="visible: templateType().id=='list of numbers', with: templateTypeValues['list of numbers']">
                                 <ul class="list-unstyled" data-bind="foreach: values.edit">

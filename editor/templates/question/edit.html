@@ -807,7 +807,10 @@
                                     {% helplink 'question/parts/reference.html#adaptive-marking' subject='adaptive marking' %}
                                     To account for errors made by the student in earlier calculations, replace question variables with answers to earlier parts.
                                 </p>
-                                <div class="variable-replacements">
+                                <p class="nothing-here" data-bind="visible: !canMakeVariableReplacement()">
+                                    In order to create a variable replacement, you must define at least one variable and one other part.
+                                </p>
+                                <div class="variable-replacements" data-bind="visible: canMakeVariableReplacement">
                                     <table class="table" data-bind="fadeVisible: variableReplacements().length">
                                         <thead>
                                             <tr>
@@ -818,7 +821,7 @@
                                         </thead>
                                         <tbody data-bind="foreach: variableReplacements">
                                             <tr>
-                                                <td><input {% if not editable %}disabled{% endif %} class="form-control variable-name monospace" data-bind="value: variable"/></td>
+                                                <td><select {% if not editable %}disabled{% endif %} class="form-control name-to-replace" data-bind="options: variableDisplay, value: variable"/></td>
                                                 <td>
                                                     <select {% if not editable %}disabled{% endif %} class="form-control replace-with" data-bind="options: availableParts, optionsText: 'nicePath', optionsValue: 'path', value: replacement"/>
                                                 </td>

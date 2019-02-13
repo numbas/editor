@@ -435,7 +435,7 @@
                         <!-- /ko -->
                         <!-- ko with: currentPart -->
                         <h3>
-                            <strong data-bind="text: header"></strong>
+                            <input type="text" class="custom-name" data-bind="textInput: customName, autosize: name, attr: {placeholder: standardName}">
                             <span data-bind="text: type().niceName"></span>
                         </h3>
                         {% if editable %}
@@ -825,7 +825,7 @@
                                             <tr>
                                                 <td><select {% if not editable %}disabled{% endif %} class="form-control name-to-replace" data-bind="options: variableDisplay, value: variable"/></td>
                                                 <td>
-                                                    <select {% if not editable %}disabled{% endif %} class="form-control replace-with" data-bind="options: availableParts, optionsText: 'nicePath', optionsValue: 'path', value: replacement"/>
+                                                    <select {% if not editable %}disabled{% endif %} class="form-control replace-with" data-bind="options: availableParts, optionsText: 'name', optionsValue: 'path', value: replacement"/>
                                                 </td>
                                                 <td>
                                                     <input {% if not editable %}disabled{% endif %} type="checkbox" data-bind="checked: must_go_first"/>

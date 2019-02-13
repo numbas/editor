@@ -10,7 +10,7 @@ if(!Array.prototype.contains)
 
 //get size of contents of an input
 //from http://stackoverflow.com/questions/118241/calculate-text-width-with-javascript
-$.textMetrics = function(el) {
+$.textMetrics = function(el,val) {
     var h = 0, w = 0;
 
     var div = document.createElement('div');
@@ -22,7 +22,7 @@ $.textMetrics = function(el) {
         display: 'none'
     });
 
-    var val = $(el).val();
+    val = val || $(el).val();
     var replacements = {
         '&nbsp': / /g,
         '&lt;': /</g,
@@ -168,12 +168,14 @@ $(document).ready(function() {
             var settings = { max: null, min: 60, padding: 30 };
 
             var value = ko.utils.unwrapObservable(valueAccessor());
+            var str = value;
             if(typeof value == 'object') {
                 settings = $.extend(settings,value);
                 value = ko.utils.unwrapObservable(settings.value);
+                str = settings.useValue ? value : '';
             }
 
-            var w = $.textMetrics(element).width + settings.padding;
+            var w = $.textMetrics(element,str).width + settings.padding;
             w = Math.max(w,settings.min||0);
             if(settings.max!=null)
                 w = Math.min(w,settings.max);

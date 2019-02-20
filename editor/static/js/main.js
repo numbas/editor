@@ -168,7 +168,7 @@ $(document).ready(function() {
             var settings = { max: null, min: 60, padding: 30 };
 
             var value = ko.utils.unwrapObservable(valueAccessor());
-            var str = value;
+            var str = value+'';
             if(typeof value == 'object') {
                 settings = $.extend(settings,value);
                 value = ko.utils.unwrapObservable(settings.value);

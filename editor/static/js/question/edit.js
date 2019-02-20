@@ -1868,7 +1868,7 @@ $(document).ready(function() {
             } else {
                 i = Numbas.util.letterOrdinal(i);
             }
-            return i;
+            return i+'';
         },this);
         this.levelName = ko.computed(function() {
             return this.isGap() ? 'gap' : this.isStep() ? 'step' : 'part';

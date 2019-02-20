@@ -333,6 +333,7 @@ part_types.models = [
                 precisionMessage: ko.observable('You have not given your answer to the correct precision.'),
                 strictPrecision: ko.observable(true),
                 showPrecisionHint: ko.observable(true),
+                showFractionHint: ko.observable(true),
                 mustBeReduced: ko.observable(false),
                 mustBeReducedPC: ko.observable(0)
             };
@@ -374,6 +375,8 @@ part_types.models = [
                 data.precisionMessage = this.precisionMessage();
                 data.strictPrecision = this.strictPrecision();
                 data.showPrecisionHint = this.showPrecisionHint();
+            } else {
+                data.showFractionHint = this.showFractionHint();
             }
             data.notationStyles = this.allowedNotationStyles().map(function(s){return s.code});
             if(this.correctAnswerStyle()) {
@@ -381,7 +384,7 @@ part_types.models = [
             }
         },
         load: function(data) {
-            tryLoad(data,['minValue','maxValue','correctAnswerFraction','allowFractions','mustBeReduced','mustBeReducedPC','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision','showPrecisionHint'],this);
+            tryLoad(data,['minValue','maxValue','correctAnswerFraction','allowFractions','mustBeReduced','mustBeReducedPC','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision','showPrecisionHint','showFractionHint'],this);
             if('answer' in data) {
                 this.minValue(data.answer);
                 this.maxValue(data.answer);

@@ -2121,42 +2121,47 @@ $(document).ready(function() {
         {
             code: 'plain',
             name: 'English (Plain)',
-            description: 'No thousands separator; dot for decimal point.',
+            description: 'No thousands separator; dot for decimal point.'
         },
         {
             code: 'en',
             name:'English',
-            description:'Commas separate thousands; dot for decimal point.',
+            description:'Commas separate thousands; dot for decimal point.'
         },
         {
             code: 'si-en',
             name:'SI (English)',
-            description:'Spaces separate thousands; dot for decimal point.',
+            description:'Spaces separate thousands; dot for decimal point.'
         },
         {
             code: 'si-fr',
             name:'SI (French)',
-            description:'Spaces separate thousands; comma for decimal point.',
+            description:'Spaces separate thousands; comma for decimal point.'
         },
         {
             code: 'eu',
             name: 'Continental',
-            description:'Dots separate thousands; comma for decimal point.',
+            description:'Dots separate thousands; comma for decimal point.'
         },
         {
             code: 'plain-eu',
             name:'Continental (Plain)',
-            description:'No thousands separator; comma for decimal point.',
+            description:'No thousands separator; comma for decimal point.'
         },
         {
             code: 'ch',
             name:'Swiss',
-            description:'Apostrophes separate thousands; dot for decimal point.',
+            description:'Apostrophes separate thousands; dot for decimal point.'
         },
         {
             code: 'in',
             name:'Indian',
-            description:'Commas separate groups; rightmost group is 3 digits, other groups 2 digits; dot for decimal point.',
+            description:'Commas separate groups; rightmost group is 3 digits, other groups 2 digits; dot for decimal point.'
+        },
+        {
+            code: 'scientific',
+            name: 'Scientific',
+            description:'A significand followed by the letter \'e\' and an integer exponent.'
         }
     ];
 });

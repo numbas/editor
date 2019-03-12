@@ -455,19 +455,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(old_to_new_questions, remove_new_questions),
-        migrations.RunSQL(
-        """
-            SELECT ei.id, et.id, ct.id 
-            FROM editor_taggedquestion as tq 
-            JOIN editor_editortag as et ON tq.tag_id=et.id 
-            JOIN editor_question AS q ON q.id=tq.object_id 
-            JOIN editor_newquestion AS nq on nq.id=q.id 
-            JOIN editor_editoritem AS ei ON ei.id=nq.editoritem_id
-            JOIN django_content_type as ct ON ct.app_label="editor" AND ct.model="editoritem"
-        """,
-        """
-            DELETE FROM editor_taggeditem
-        """),
         migrations.RunPython(old_exams_to_new, remove_new_exams),
         migrations.RunPython(itemchanged_timeline_items, remove_itemchanged_timeline_items),
         migrations.RunPython(copy_revisions, delete_new_revisions),

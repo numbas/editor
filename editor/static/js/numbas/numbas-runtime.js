@@ -1,4 +1,4 @@
-// Compiled using  runtime/scripts/numbas.js  runtime/scripts/jme.js  runtime/scripts/jme-builtins.js  runtime/scripts/jme-display.js  runtime/scripts/jme-rules.js  runtime/scripts/jme-variables.js  runtime/scripts/localisation.js  runtime/scripts/part.js  runtime/scripts/question.js  runtime/scripts/schedule.js  runtime/scripts/marking.js  runtime/scripts/math.js  runtime/scripts/util.js  runtime/scripts/i18next/i18next.js  runtime/scripts/json.js  runtime/scripts/es5-shim.js  themes/default/files/scripts/answer-widgets.js ../dev/runtime/scripts/parts/numberentry.js ../dev/runtime/scripts/parts/information.js ../dev/runtime/scripts/parts/custom_part_type.js ../dev/runtime/scripts/parts/gapfill.js ../dev/runtime/scripts/parts/patternmatch.js ../dev/runtime/scripts/parts/multipleresponse.js ../dev/runtime/scripts/parts/jme.js ../dev/runtime/scripts/parts/extension.js ../dev/runtime/scripts/parts/matrixentry.js
+// Compiled using  runtime/scripts/numbas.js  runtime/scripts/jme.js  runtime/scripts/jme-builtins.js  runtime/scripts/jme-display.js  runtime/scripts/jme-rules.js  runtime/scripts/jme-variables.js  runtime/scripts/localisation.js  runtime/scripts/part.js  runtime/scripts/question.js  runtime/scripts/schedule.js  runtime/scripts/marking.js  runtime/scripts/math.js  runtime/scripts/util.js  runtime/scripts/i18next/i18next.js  runtime/scripts/json.js  runtime/scripts/es5-shim.js  runtime/scripts/decimal/decimal.js  themes/default/files/scripts/answer-widgets.js ../dev/runtime/scripts/parts/numberentry.js ../dev/runtime/scripts/parts/information.js ../dev/runtime/scripts/parts/custom_part_type.js ../dev/runtime/scripts/parts/gapfill.js ../dev/runtime/scripts/parts/patternmatch.js ../dev/runtime/scripts/parts/multipleresponse.js ../dev/runtime/scripts/parts/jme.js ../dev/runtime/scripts/parts/extension.js ../dev/runtime/scripts/parts/matrixentry.js
 // From the Numbas compiler directory
 /*
 Copyright 2011-14 Newcastle University
@@ -115,7 +115,7 @@ RequireScript.prototype = {
             var dependencies_executed = this.fdeps.every(function(r){ return scriptreqs[r].executed; });
             if(dependencies_executed) {
                 if(this.callback) {
-                    this.callback({exports:window});
+                    this.callback.apply(window,[{exports:window}]);
                 }
                 this.executed = true;
                 this.backdeps.forEach(function(r) {
@@ -206,6 +206,7 @@ Numbas.runImmediately = function(deps,fn) {
         }
     });
     if(missing_dependencies.length) {
+        console.log(deps.filter(function(r){return scriptreqs[r].executed}));
         throw(new Error("Can't run because the following dependencies have not run: "+missing_dependencies.join(', ')));
     }
     fn();
@@ -745,7 +746,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
                 if(display) {
                     v = jme.tokenToDisplayString(v);
                 } else {
-                    if(v.type=='number') {
+                    if(jme.isType(v,'number')) {
                         v = '('+Numbas.jme.display.treeToJME({tok:v},{niceNumber: false})+')';
                     } else if(v.type=='string') {
                         v = "'"+v.value+"'";
@@ -853,6 +854,10 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
                             v = v.map(jme.wrapValue);
                             return new jme.types.TList(v);
                         }
+                    } else if(v instanceof Decimal) {
+                        return new jme.types.TDecimal(v);
+                    } else if(v instanceof math.Fraction) {
+                        return new jme.types.TRational(v);
                     } else if(v===null || v===undefined) { // CONTROVERSIAL! Cast null to the empty string, because we don't have a null type.
                         return new jme.types.TString('');
                     } else if(v!==null && typeof v=='object' && v.type===undefined) {
@@ -863,6 +868,94 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
                         return new jme.types.TDict(o);
                     }
                     return v;
+            }
+        }
+    },
+    /** Is a token of the given type, or can it be automatically cast to the given type?
+     * @param {Numbas.jme.token} tok
+     * @param {String} type
+     * @returns {Boolean}
+     */
+    isType: function(tok,type) {
+        if(!tok) {
+            return false;
+        }
+        if(tok.type==type) {
+            return true;
+        }
+        if(tok.casts) {
+            return tok.casts[type]!==undefined;
+        }
+        return false;
+    },
+    /** Cast a token to the given type, if possible
+     * @param {Numbas.jme.token} tok
+     * @param {String|Object} type
+     * @returns {Numbas.jme.token}
+     */
+    castToType: function(tok,type) {
+        var typeDescription = {};
+        if(typeof(type)=='object') {
+            typeDescription = type;
+            type = typeDescription.type;
+        }
+        var ntok;
+        if(tok.type!=type) {
+            if(!tok.casts || !tok.casts[type]) {
+                throw(new Numbas.Error('jme.type.no cast method',{from: tok.type, to: type}));
+            }
+            ntok = tok.casts[type](tok);
+        } else {
+            ntok = tok;
+        }
+        if(type=='dict' && typeDescription.items) {
+            ntok = new TDict(ntok.value);
+            for(var x in typeDescription.items) {
+                ntok.value[x] = jme.castToType(ntok.value[x],typeDescription.items[x]);
+            }
+        }
+        if(type=='list' && typeDescription.items) {
+            ntok = new TList(ntok.value);
+            ntok.value = ntok.value.map(function(item,i) {
+                return jme.castToType(item,typeDescription.items[i]);
+            });
+        }
+        return ntok;
+    },
+    /** Find a type that both types `a` and `b` can be automatically cast to, or return `undefined`.
+     *
+     * @param {String} a
+     * @param {String} b
+     * @returns {String}
+     */
+    findCompatibleType: function(a,b) {
+        a = jme.types[a];
+        b = jme.types[b];
+        if(a===undefined || b===undefined) {
+            return undefined;
+        }
+        a = a.prototype;
+        b = b.prototype;
+        if(a.type==b.type) {
+            return a.type;
+        }
+        if(a.casts) {
+            if(a.casts[b.type]) {
+                return b.type;
+            }
+            if(b.casts) {
+                if(b.casts[a.type]) {
+                    return a.type;
+                }
+                for(var x in a.casts) {
+                    if(b.casts[x]) {
+                        return x;
+                    }
+                }
+            }
+        } else if(b.casts) {
+            if(b.casts[a.type]) {
+                return a.type;
             }
         }
     },
@@ -959,7 +1052,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
         }
         var coefficient;
         if(jme.isOp(tree.tok,'*')) {
-            if(unwrapUnaryMinus(tree.args[0]).tok.type!='number') {
+            if(!jme.isType(unwrapUnaryMinus(tree.args[0]).tok,'number')) {
                 return false;
             }
             coefficient = tree.args[0];
@@ -971,9 +1064,9 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
             coefficient = {tok:new TNum(1)};
         }
         if(tree.tok.type=='name') {
-            return {base:tree, degree:{tok:new TNum(1)}, coefficient: coefficient};
+            return {base:tree, degree:{tok:new TInt(1)}, coefficient: coefficient};
         }
-        if(jme.isOp(tree.tok,'^') && tree.args[0].tok.type=='name' && unwrapUnaryMinus(tree.args[1]).tok.type=='number') {
+        if(jme.isOp(tree.tok,'^') && jme.isType(tree.args[0].tok,'name') && jme.isType(unwrapUnaryMinus(tree.args[1]).tok,'number')) {
             return {base:tree.args[0], degree:tree.args[1], coefficient: coefficient};
         }
         return false;
@@ -1099,13 +1192,14 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
     /** Binary operations
      * @type {Array.<String>}
      */
-    ops: ['not','and','or','xor','implies','isa','except','in','divides'],
+    ops: ['not','and','or','xor','implies','isa','except','in','divides','as'],
 
     /** Regular expressions to match tokens 
      * @type {Object.<RegExp>}
      */
     re: {
         re_bool: /^(true|false)(?![a-zA-Z_0-9'])/i,
+        re_integer: /^[0-9]+(?!\x2E|[0-9])/,
         re_number: /^[0-9]+(?:\x2E[0-9]+)?/,
         re_name: /^{?((?:(?:[a-zA-Z]+):)*)((?:\$?[a-zA-Z_][a-zA-Z0-9_]*'*)|\?\??|[π∞])}?/i,
         re_op: /^(?:\.\.|#|<=|>=|<>|&&|\|\||[\|*+\-\/\^<>=!&÷×∈∧∨⟹≠≥≤]|__OTHER_OPS__)/i,
@@ -1220,6 +1314,20 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
             }
         },
         {
+            re: 're_integer',
+            parse: function(result,tokens,expr,pos) {
+                var token = new TInt(result[0]);
+                var new_tokens = [token];
+                if(tokens.length>0) {
+                    var prev = tokens[tokens.length-1];
+                    if(prev.type==')' || prev.type=='name') {    //right bracket followed by a number is interpreted as multiplying contents of brackets by number
+                        new_tokens.splice(0,0,this.op('*'));
+                    }
+                }
+                return {tokens: new_tokens, start: pos, end: pos+result[0].length};
+            }
+        },
+        {
             re: 're_number',
             parse: function(result,tokens,expr,pos) {
                 var token = new TNum(result[0]);
@@ -1287,7 +1395,7 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
                 var new_tokens = [token];
                 if(tokens.length>0) {
                     var prev = tokens[tokens.length-1];
-                    if(prev.type=='number' || prev.type=='name' || prev.type==')') {    //number or right bracket or name followed by a name, eg '3y', is interpreted to mean multiplication, eg '3*y'
+                    if(jme.isType(prev,'number') || jme.isType(prev,'name') || jme.isType(prev,')')) {    //number or right bracket or name followed by a name, eg '3y', is interpreted to mean multiplication, eg '3*y'
                         new_tokens.splice(0,0,this.op('*'));
                     }
                 }
@@ -1300,7 +1408,7 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
                 var new_tokens = [new TPunc(result[0])];
                 if(result[0]=='(' && tokens.length>0) {
                     var prev = tokens[tokens.length-1];
-                    if(prev.type=='number' || prev.type==')') {    //number or right bracket followed by left parenthesis is also interpreted to mean multiplication
+                    if(jme.isType(prev,'number') || jme.isType(prev,')')) {    //number or right bracket followed by left parenthesis is also interpreted to mean multiplication
                         new_tokens.splice(0,0,this.op('*'));
                     }
                 }
@@ -1388,6 +1496,7 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
 
     shunt_type_actions: {
         'number': function(tok) { this.addoutput(tok); },
+        'integer': function(tok) { this.addoutput(tok); },
         'string': function(tok) { this.addoutput(tok); },
         'boolean': function(tok) { this.addoutput(tok); },
         'name': function(tok) {
@@ -1805,6 +1914,100 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
         }
         return this._resolved_functions[name];
     },
+    /** Get the definition of the function with the given name which matches the types of the given arguments
+     * @param {Numbas.jme.token} tok - the token of the function or operator
+     * @param {Array.<Numbas.jme.token} args
+     * @returns {Numbas.jme.funcObj}
+     */
+    matchFunctionToArguments: function(tok,args) {
+        var op = tok.name.toLowerCase();
+        var fns = this.getFunction(op);
+        if(fns.length==0) {
+            if(tok.type=='function') {
+                //check if the user typed something like xtan(y), when they meant x*tan(y)
+                var possibleOp = op.slice(1);
+                if(op.length>1 && this.getFunction(possibleOp).length) {
+                    throw(new Numbas.Error('jme.typecheck.function maybe implicit multiplication',{name:op,first:op[0],possibleOp:possibleOp}));
+                } else {
+                    throw(new Numbas.Error('jme.typecheck.function not defined',{op:op,suggestion:op}));
+                }
+            }
+            else {
+                throw(new Numbas.Error('jme.typecheck.op not defined',{op:op}));
+            }
+        }
+        function type_difference(tok,typeDescription) {
+            if(tok.type!=typeDescription.type) {
+                return [typeDescription.type];
+            }
+            var out = [typeDescription.nonspecific ? tok.type : null];
+            switch(typeDescription.type) {
+                case 'list':
+                    if(typeDescription.items) {
+                        for(var i=0;i<tok.value.length;i++) {
+                            out = out.concat(type_difference(tok.value[i],typeDescription.items[i]));
+                        }
+                    }
+            }
+            return out;
+        }
+        function compare_matches(m1,m2) {
+            for(var i=0;i<args.length;i++) {
+                var d1 = type_difference(args[i],m1[i]);
+                var d2 = type_difference(args[i],m2[i]);
+                for(var j=0;j<d1.length && j<d2.length;j++) {
+                    if(j>=d1.length) {
+                        return 1;
+                    } else if(j>=d2.length) {
+                        return -1;
+                    }
+                    if(d1[j]===null) {
+                        if(d2[j]===null) {
+                            continue;
+                        } else {
+                            return -1;
+                        }
+                    } else {
+                        if(d2[j]===null) {
+                            return 1;
+                        } else {
+                            if(args[i].casts) {
+                                var casts = Object.keys(args[i].casts);
+                                var i1 = casts.indexOf(d1[j]);
+                                if(i1==-1) {
+                                    i1 = Infinity;
+                                }
+                                var i2 = casts.indexOf(d2[j]);
+                                if(i2==-1) {
+                                    i2 = Infinity;
+                                }
+                                if(i1!=i2) {
+                                    return i1<i2 ? -1 : 1;
+                                }
+                            }
+                            continue;
+                        }
+                    }
+                }
+            }
+            return 0;
+        }
+        var candidate = null;
+        for(var j=0;j<fns.length; j++) {
+            var fn = fns[j];
+            if(fn.typecheck(args)) {
+                var match = fn.intype(args);
+                if(match.every(function(m,i) { return args[i].type==m; })) {
+                    return {fn: fn, signature: match};
+                }
+                var pcandidate = {fn: fn, signature: match};
+                if(candidate===null || compare_matches(pcandidate.signature, candidate.signature)==-1) {
+                    candidate = pcandidate;
+                }
+            }
+        }
+        return candidate;
+    },
     /** Get the ruleset with the gien name
      * @param {String} name
      * @returns {Numbas.jme.rules.Ruleset}
@@ -2000,35 +2203,14 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
                 for(var i=0;i<tree.args.length;i++) {
                     eargs.push(scope.evaluate(tree.args[i],null,noSubstitution));
                 }
-                var matchedFunction;
-                var fns = scope.getFunction(op);
-                if(fns.length==0)
-                {
-                    if(tok.type=='function') {
-                        //check if the user typed something like xtan(y), when they meant x*tan(y)
-                        var possibleOp = op.slice(1);
-                        if(op.length>1 && scope.getFunction(possibleOp).length) {
-                            throw(new Numbas.Error('jme.typecheck.function maybe implicit multiplication',{name:op,first:op[0],possibleOp:possibleOp}));
-                        } else {
-                            throw(new Numbas.Error('jme.typecheck.function not defined',{op:op,suggestion:op}));
-                        }
-                    }
-                    else {
-                        throw(new Numbas.Error('jme.typecheck.op not defined',{op:op}));
-                    }
-                }
-                for(var j=0;j<fns.length; j++)
-                {
-                    var fn = fns[j];
-                    if(fn.typecheck(eargs))
-                    {
-                        matchedFunction = fn;
-                        break;
-                    }
-                }
-                if(matchedFunction)
-                    return matchedFunction.evaluate(eargs,scope);
-                else {
+                var matchedFunction = scope.matchFunctionToArguments(tok,eargs);
+                if(matchedFunction) {
+                    var signature = matchedFunction.signature;
+                    var castargs = eargs.map(function(arg,i) { 
+                        return jme.castToType(arg,signature[i]); 
+                    });
+                    return matchedFunction.fn.evaluate(castargs,scope);
+                } else {
                     for(var i=0;i<=eargs.length;i++) {
                         if(eargs[i] && eargs[i].unboundName) {
                             throw(new Numbas.Error('jme.typecheck.no right type unbound name',{name:eargs[i].name}));
@@ -2050,13 +2232,23 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
  * @namespace Numbas.jme.types
  */
 var types = jme.types = {}
+
+jme.registerType = function(constructor,name,casts) {
+    if(jme.types[name]) {
+        throw(new Numbas.Error('jme.type.type already registered',{type:name}));
+    }
+    jme.types[name] = constructor;
+    constructor.prototype.type = name;
+    constructor.prototype.casts = casts;
+}
+
 /** Nothing type.
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
  * @constructor
  */
-var TNothing = types.TNothing = types.nothing = function() {};
-TNothing.prototype.type = 'nothing';
+var TNothing = types.TNothing = function() {};
+jme.registerType(TNothing,'nothing');
 /** Number type.
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
@@ -2066,8 +2258,7 @@ TNothing.prototype.type = 'nothing';
  * @constructor
  * @param {Number} num
  */
-var TNum = types.TNum = types.number = function(num)
-{
+var TNum = types.TNum = function(num) {
     if(num===undefined)
         return;
     this.originalValue = num;
@@ -2088,7 +2279,70 @@ var TNum = types.TNum = types.number = function(num)
     }
     this.value = num.complex ? num : parseFloat(num);
 }
-TNum.prototype.type = 'number';
+jme.registerType(
+    TNum,
+    'number', 
+    {
+        'decimal': function(n) {
+            return new TDecimal(new Decimal(n.value));
+        }
+    }
+);
+
+var TInt = types.TInt = function(num) {
+    this.originalValue = num;
+    this.value = Math.round(num);
+}
+jme.registerType(
+    TInt,
+    'integer',
+    {
+        'number': function(n) {
+            var t = new TNum(n.value);
+            t.originalValue = this.originalValue;
+            return t;
+        },
+        'rational': function(n) {
+            return new TRational(new math.Fraction(n.value,1));
+        },
+        'decimal': function(n) {
+            return new TDecimal(new Decimal(n.value));
+        }
+    }
+);
+
+var TRational = types.TRational = function(value) {
+    this.value = value;
+}
+jme.registerType(
+    TRational,
+    'rational',
+    {
+        'number': function(n) {
+            return new TNum(n.value.numerator/n.value.denominator);
+        },
+        'decimal': function(n) {
+            return new TDecimal((new Decimal(n.value.numerator)).dividedBy(new Decimal(n.value.denominator)));
+        }
+    }
+);
+
+/** A Decimal number.
+ *  Powered by [decimal.js](http://mikemcl.github.io/decimal.js/)
+ */
+var TDecimal = types.TDecimal = function(value) {
+    this.value = value;
+}
+jme.registerType(
+    TDecimal,
+    'decimal',
+    {
+        'number': function(n) {
+            return new TNum(n.value.toNumber());
+        }
+    }
+);
+
 /** String type.
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
@@ -2099,11 +2353,11 @@ TNum.prototype.type = 'number';
  * @constructor
  * @param {String} s
  */
-var TString = types.TString = types.string = function(s)
-{
+var TString = types.TString = function(s) {
     this.value = s;
 }
-TString.prototype.type = 'string';
+jme.registerType(TString,'string');
+
 /** Boolean type
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
@@ -2112,11 +2366,11 @@ TString.prototype.type = 'string';
  * @constructor
  * @param {Boolean} b
  */
-var TBool = types.TBool = types.boolean = function(b)
-{
+var TBool = types.TBool = function(b) {
     this.value = b;
 }
-TBool.prototype.type = 'boolean';
+jme.registerType(TBool,'boolean');
+
 /** HTML DOM element
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
@@ -2125,7 +2379,7 @@ TBool.prototype.type = 'boolean';
  * @constructor
  * @param {Element} html
  */
-var THTML = types.THTML = types.html = function(html) {
+var THTML = types.THTML = function(html) {
     if(html.ownerDocument===undefined && !html.jquery) {
         throw(new Numbas.Error('jme.thtml.not html'));
     }
@@ -2141,7 +2395,8 @@ var THTML = types.THTML = types.html = function(html) {
         this.value = elem.children;
     }
 }
-THTML.prototype.type = 'html';
+jme.registerType(THTML,'html');
+
 /** List of elements of any data type
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
@@ -2151,22 +2406,21 @@ THTML.prototype.type = 'html';
  * @constructor
  * @param {Number|Array.<Numbas.jme.token>} value - Either the size of the list, or an array of values
  */
-var TList = types.TList = types.list = function(value)
-{
-    switch(typeof(value))
-    {
-    case 'number':
-        this.vars = value;
-        break;
-    case 'object':
-        this.value = value;
-        this.vars = value.length;
-        break;
-    default:
-        this.vars = 0;
+var TList = types.TList = function(value) {
+    switch(typeof(value)) {
+        case 'number':
+            this.vars = value;
+            break;
+        case 'object':
+            this.value = value;
+            this.vars = value.length;
+            break;
+        default:
+            this.vars = 0;
     }
 }
-TList.prototype.type = 'list';
+jme.registerType(TList,'list');
+
 /** Key-value pair assignment
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
@@ -2174,13 +2428,14 @@ TList.prototype.type = 'list';
  * @constructor
  * @param {String} key
  */
-var TKeyPair = types.TKeyPair = types.keypair = function(key) {
+var TKeyPair = types.TKeyPair = function(key) {
     this.key = key;
 }
 TKeyPair.prototype = {
-    type: 'keypair',
     vars: 1
 }
+jme.registerType(TKeyPair,'keypair');
+
 /** Dictionary: map strings to values
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
@@ -2189,12 +2444,11 @@ TKeyPair.prototype = {
  * @constructor
  * @param {Object.<Numbas.jme.token>} value
  */
-var TDict = types.TDict = types.dict = function(value) {
+var TDict = types.TDict = function(value) {
     this.value = value;
 }
-TDict.prototype = {
-    type: 'dict'
-}
+jme.registerType(TDict,'dict');
+
 /** Set type: a collection of elements, with no duplicates
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
@@ -2203,10 +2457,19 @@ TDict.prototype = {
  * @constructor
  * @param {Array.<Numbas.jme.token>} value
  */
-var TSet = types.TSet = types.set = function(value) {
+var TSet = types.TSet = function(value) {
     this.value = value;
 }
-TSet.prototype.type = 'set';
+jme.registerType(
+    TSet,
+    'set',
+    {
+        'list': function(s) {
+            return new TList(s.value);
+        }
+    }
+);
+
 /** Vector type
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
@@ -2215,11 +2478,19 @@ TSet.prototype.type = 'set';
  * @constructor
  * @param {Array.<Number>} value
  */
-var TVector = types.TVector = types.vector = function(value)
-{
+var TVector = types.TVector = function(value) {
     this.value = value;
 }
-TVector.prototype.type = 'vector';
+jme.registerType(
+    TVector,
+    'vector',
+    {
+        'list': function(v) {
+            return new TList(v.value.map(function(n){ return new TNum(n); }));
+        }
+    }
+);
+
 /** Matrix type
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
@@ -2228,8 +2499,7 @@ TVector.prototype.type = 'vector';
  * @constructor
  * @param {matrix} value
  */
-var TMatrix = types.TMatrix = types.matrix = function(value)
-{
+var TMatrix = types.TMatrix = function(value) {
     this.value = value;
     if(arguments.length>0) {
         if(value.length!=value.rows) {
@@ -2240,7 +2510,16 @@ var TMatrix = types.TMatrix = types.matrix = function(value)
         }
     }
 }
-TMatrix.prototype.type = 'matrix';
+jme.registerType(
+    TMatrix,
+    'matrix',
+    {
+        'list': function(m) {
+            return new TList(m.value.map(function(r){return new TVector(r)}));
+        }
+    }
+);
+
 /** A range of numerical values - either discrete or continuous
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
@@ -2253,8 +2532,7 @@ TMatrix.prototype.type = 'matrix';
  * @constructor
  * @param {Array.<Number>} range - `[start,end,step]`
  */
-var TRange = types.TRange = types.range = function(range)
-{
+var TRange = types.TRange = function(range) {
     this.value = range;
     if(this.value!==undefined)
     {
@@ -2264,7 +2542,16 @@ var TRange = types.TRange = types.range = function(range)
         this.size = Math.floor((this.end-this.start)/this.step);
     }
 }
-TRange.prototype.type = 'range';
+jme.registerType(
+    TRange,
+    'range',
+    {
+        'list': function(r) {
+            return new TList(math.rangeToList(r.value).map(function(n){return new TNum(n)}));
+        }
+    }
+);
+
 /** Variable name token
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
@@ -2276,13 +2563,13 @@ TRange.prototype.type = 'range';
  * @param {String} name
  * @param {Array.<String>} annotation
  */
-var TName = types.TName = types.name = function(name,annotation)
-{
+var TName = types.TName = function(name,annotation) {
     this.name = name;
     this.value = name;
     this.annotation = annotation;
 }
-TName.prototype.type = 'name';
+jme.registerType(TName,'name');
+
 /** JME function token
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
@@ -2294,13 +2581,15 @@ TName.prototype.type = 'name';
  * @param {String} name
  * @param {Array.<String>} [annotation] - any annotations for the function's name
  */
-var TFunc = types.TFunc = types['function'] = function(name,annotation)
-{
+var TFunc = types.TFunc = function(name,annotation) {
     this.name = name;
     this.annotation = annotation;
 }
-TFunc.prototype.type = 'function';
-TFunc.prototype.vars = 0;
+TFunc.prototype = {
+    vars: 0
+}
+jme.registerType(TFunc,'function');
+
 /** Unary/binary operation token
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
@@ -2319,8 +2608,7 @@ TFunc.prototype.vars = 0;
  * @param {Boolean} commutative
  * @param {Boolean} associative
  */
-var TOp = types.TOp = types.op = function(op,postfix,prefix,arity,commutative,associative)
-{
+var TOp = types.TOp = function(op,postfix,prefix,arity,commutative,associative) {
     this.name = op;
     this.postfix = postfix || false;
     this.prefix = prefix || false;
@@ -2328,7 +2616,8 @@ var TOp = types.TOp = types.op = function(op,postfix,prefix,arity,commutative,as
     this.commutative = commutative || false;
     this.associative = associative || false;
 }
-TOp.prototype.type = 'op';
+jme.registerType(TOp,'op');
+
 /** Punctuation token
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
@@ -2336,19 +2625,24 @@ TOp.prototype.type = 'op';
  * @constructor
  * @param {String} kind - The punctuation character
  */
-var TPunc = types.TPunc = function(kind)
-{
+var TPunc = types.TPunc = function(kind) {
     this.type = kind;
 }
-var TExpression = types.TExpression = types.expression = function(tree) {
+
+/** A JME expression, as a token.
+ * @memberof Numbas.jme.types
+ * @augments Numbas.jme.token
+ * @property {Numbas.jme.tree} tree
+ * @constructor
+ * @param {String|Numbas.jme.tree} tree
+ */
+var TExpression = types.TExpression = function(tree) {
     if(typeof(tree)=='string') {
         tree = jme.compile(tree);
     }
     this.tree = tree;
 }
-TExpression.prototype = {
-    type: 'expression'
-}
+jme.registerType(TExpression,'expression');
 
 /** Arities of built-in operations
  * @readonly
@@ -2448,7 +2742,8 @@ var funcSynonyms = jme.funcSynonyms = {
     'sgn':'sign',
     'len': 'abs',
     'length': 'abs',
-    'verb': 'verbatim'
+    'verb': 'verbatim',
+    'dec': 'decimal'
 };
 /** Operations which evaluate lazily - they don't need to evaluate all of their arguments
  * @memberof Numbas.jme
@@ -2551,44 +2846,52 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
      */
     this.id = funcObjAcc++;
     options = options || {};
-    for(var i=0;i<intype.length;i++)
-    {
-        if(intype[i]!='?' && intype[i]!='*?')
-        {
-            if(intype[i][0]=='*')
-            {
-                var type = types[intype[i].slice(1)];
-                intype[i] = '*'+type.prototype.type;
+
+    function parse_signature(sig) {
+        if(typeof(sig)=='function') {
+            if(sig.kind!==undefined) {
+                return sig;
             }
-            else
-            {
-                intype[i]=intype[i].prototype.type;
+            return jme.signature.type(sig.prototype.type);
+        } else {
+            if(sig[0]=='*') {
+                return jme.signature.multiple(parse_signature(sig.slice(1)));
+            } else if(sig.match(/^\[(.*?)\]$/)) {
+                return jme.signature.optional(parse_signature(sig.slice(1,sig.length-1)));
             }
+            if(sig=='?') {
+                return jme.signature.anything();
+            }
+            return jme.signature.type(jme.types[sig].prototype.type);
         }
     }
+
     name = name.toLowerCase();
     /** Name
      * @name name
      * @member {String}
      * @memberof Numbas.jme.funcObj
      */
-    this.name=name;
-    /** Calling signature of this function. A list of types - either token constructors; '?', representing any type; a type name. A type name or '?' followed by '*' means any number of arguments matching that type.
+    this.name = name;
+    /** Check the given list of arguments against this function's calling signature.
      *
      * @name intype
-     * @member {Array.<Numbas.jme.token|String>}
      * @memberof Numbas.jme.funcObj
+     * @member {function}
+     * @param {Array.<Numbas.jme.token>}
+     * @returns {Array.<String>|Boolean} `false` if the given arguments are not valid for this function, or a list giving the desired type for each argument - arguments shouldbe cast to these types before evaluating.
      */
-    this.intype = intype;
+    this.intype = jme.signature.sequence.apply(this,intype.map(parse_signature));
     /** The return type of this function. Either a Numbas.jme.token constructor function, or the string '?', meaning unknown type.
      * @name outtype
      * @member {function|String}
      * @memberof Numbas.jme.funcObj
      */
-    if(typeof(outcons)=='function')
+    if(typeof(outcons)=='function') {
         this.outtype = outcons.prototype.type;
-    else
+    } else {
         this.outtype = '?';
+    }
     this.outcons = outcons;
     /** Javascript function for the body of this function
      * @name fn
@@ -2602,35 +2905,11 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
      * @returns {Boolean}
      * @memberof Numbas.jme.funcObj
      */
-    this.typecheck = options.typecheck || function(variables)
-    {
-        variables = variables.slice();    //take a copy of the array
-        for( var i=0; i<this.intype.length; i++ )
-        {
-            if(this.intype[i][0]=='*')    //arbitrarily many
-            {
-                var ntype = this.intype[i].slice(1);
-                while(variables.length)
-                {
-                    if(variables[0].type==ntype || ntype=='?' || variables[0].type=='?')
-                        variables = variables.slice(1);
-                    else
-                        break;
-                }
-            }else{
-                if(variables.length==0)
-                    return false;
-                if(variables[0].type==this.intype[i] || this.intype[i]=='?' || variables[0].type=='?')
-                    variables = variables.slice(1);
-                else
-                    return false;
-            }
-        }
-        if(variables.length>0)    //too many args supplied
-            return false;
-        else
-            return true;
-    };
+    var check_signature = this.intype;
+    this.typecheck = options.typecheck || function(variables) {
+        var match = check_signature(variables);
+        return match!==false && match.length==variables.length;
+    }
     /** Evaluate this function on the given arguments, in the given scope.
      *
      * @function evaluate
@@ -2981,6 +3260,12 @@ var compareTokensByValue = jme.compareTokensByValue = function(a,b) {
  */
 var tokenComparisons = Numbas.jme.tokenComparisons = {
     'number': compareTokensByValue,
+    'integer': compareTokensByValue,
+    'rational': function(a,b) {
+        a = a.toFloat();
+        b = b.toFloat();
+        return a.value>b.value ? 1 : a.value<b.value ? -1 : 0;
+    },
     'string': compareTokensByValue,
     'boolean': compareTokensByValue
 }
@@ -3154,17 +3439,19 @@ var compareTrees = jme.compareTrees = function(a,b) {
             break;
         case 'expression':
             return jme.compareTrees(a.tok.tree, b.tok.tree);
-        case 'number':
-            var na = a.tok.value;
-            var nb = b.tok.value;
-            if(na.complex || nb.complex) {
-                na = na.complex ? na : {re:na,im:0};
-                nb = nb.complex ? nb : {re:nb,im:0};
-                var gt = na.re > nb.re || (na.re==nb.re && na.im>nb.im);
-                var eq = na.re==nb.re && na.im==nb.im && sign_a==sign_b;
-                return gt ? 1 : eq ? 0 : -1;
-            } else {
-                return a.tok.value<b.tok.value ? -1 : a.tok.value>b.tok.value ? 1 : sign_a==sign_b ? 0 : sign_a ? 1 : -1;
+        default:
+            if(jme.isType(a.tok,'number')) {
+                var na = jme.castToType(a.tok,'number').value;
+                var nb = jme.castToType(b.tok,'number').value;
+                if(na.complex || nb.complex) {
+                    na = na.complex ? na : {re:na,im:0};
+                    nb = nb.complex ? nb : {re:nb,im:0};
+                    var gt = na.re > nb.re || (na.re==nb.re && na.im>nb.im);
+                    var eq = na.re==nb.re && na.im==nb.im && sign_a==sign_b;
+                    return gt ? 1 : eq ? 0 : -1;
+                } else {
+                    return na<nb ? -1 : na>nb ? 1 : sign_a==sign_b ? 0 : sign_a ? 1 : -1;
+                }
             }
     }
     return sign_a==sign_b ? 0 : sign_a ? 1 : -1;
@@ -3172,132 +3459,456 @@ var compareTrees = jme.compareTrees = function(a,b) {
 
 /** Infer the types of variables in an expression, by trying all definitions of functions and returning only those that can be satisfied by an assignment of types to variable names.
  * Doesn't work well on functions with unknown return type, like `if` and `switch`. In these cases, it assumes the return type of the function is whatever it needs to be, even if that is inconsistent with what the function would actually do.
- * Returns a list of possible assignments of types, arranged in order of preference: numbers are preferred to matrices, for example, and then by specificity (number of variables assigned a type).
  * @param {Numbas.jme.tree} tree
  * @param {Numbas.jme.Scope} scope
- * @param {String} outtype - the desired return type of the expression
- * @param {Object.<String>} assigned_types - types of variables which have already been inferred
- * @returns {Array.<Object.<String>>}
+ * @returns {Object.<String>} a dictionary mapping names to types.
  */
-var inferVariableTypes = jme.inferVariableTypes = function(tree, scope, outtype, assigned_types) {
-    /** Deduplicate a list of objects
-     * Return only items with unique sets of entries
-     * @param {Array.<Object>} objs
-     * @returns {Arra.<Object>}
+jme.inferVariableTypes = function(tree,scope) {
+    /** Create an annotated copy of the tree, fetching definitions for functions, and storing state to enumerate function definitions
      */
-    function dedup(objs) {
-        if(!objs.length) {
-            return [];
+    function AnnotatedTree(tree) {
+        this.tok = tree.tok;
+        if(tree.args) {
+            this.args = tree.args.map(function(a){ return new AnnotatedTree(a); });
         }
-        /** Compare two assignment dictionaries.
-         * @param {Object} a
-         * @param {Object} b
-         * @returns {Number}
+        switch(tree.tok.type) {
+            case 'op':
+            case 'function':
+                this.fns = scope.getFunction(tree.tok.name);
+                this.pos = 0;
+                this.signature_enumerators = this.fns.map(function(fn){ return new SignatureEnumerator(fn.intype) });
+                break;
+            default:
+                break;
+        }
+    }
+    AnnotatedTree.prototype = {
+
+        toString: function() {
+            var args;
+            if(this.args) {
+                args = this.args.map(function(arg){ return arg.toString(); });
+            }
+            switch(this.tok.type) {
+                case 'op':
+                case 'function':
+                    var header = this.tok.name+': '+this.signature_enumerators[this.pos].signature().join('->')+'->'+this.fns[this.pos].outtype;
+                    return jme.display.align_text_blocks(header, args);
+                default:
+                    if(args) {
+                        return jme.display.align_text_blocks(this.tok.type,args);
+                    } else {
+                        return jme.display.treeToJME({tok:this.tok});
+                    }
+            }
+        },
+
+        /** Reset this tree to its initial state
          */
-        function compare(a,b) {
-            var as = Object.entries(a).sort();
-            var bs = Object.entries(b).sort();
-            for(var i=0;i<Math.max(as.length,bs.length);i++) {
-                if(i>=as.length) {
-                    return -1;
-                }
-                if(i>=bs.length) {
-                    return 1;
-                }
-                var ai = as[i][0];
-                var bi = bs[i][0];
-                var av = as[i][1];
-                var bv = bs[i][1];
-                var r = ai>bi ? 1 : ai<bi ? -1 : av>bv ? 1 : av<bv ? -1 : 0;
-                if(r!=0) {
-                    return r;
-                }
+        backtrack: function() {
+            if(this.args) {
+                this.args.forEach(function(t){t.backtrack();});
             }
-            return 0;
-        }
-        objs.sort(compare);
-        var out = [objs[0]];
+            switch(this.tok.type) {
+                case 'op':
+                case 'function':
+                    this.pos = 0;
+                    this.signature_enumerators.forEach(function(se){se.backtrack();});
+                    break;
+            }
+        },
 
-        for(var i=1;i<objs.length;i++) {
-            if(compare(objs[i],objs[i-1])!=0) {
-                out.push(objs[i]);
+        /** Find an assignment of types to variables in this tree which produces the given output type
+         */
+        assign: function(outtype,assignments) {
+            if(outtype=='?') {
+                outtype = undefined;
             }
-        }
-        return out;
-    }
+            function mutually_compatible_type(types) {
+                for(var x in jme.types) {
+                    var casts = jme.types[x].casts || {};
+                    if(types.every(function(t) { return t==x || casts[t]; })) {
+                        return x;
+                    }
+                }
+            }
 
-    assigned_types = assigned_types || {};
-    if(outtype=='?') {
-        outtype = undefined;
-    }
-    switch(tree.tok.type) {
-        case 'name':
-            var name = tree.tok.name.toLowerCase();
-            if(assigned_types[name] !== undefined) {
-                if(!outtype || outtype==assigned_types[name]) {
-                    return [assigned_types];
-                } else {
-                    return [];
-                }
-            } else {
-                var assignment = util.copyobj(assigned_types);
-                if(outtype) {
-                    assignment[name] = outtype;
-                }
-                return [assignment];
+            switch(this.tok.type) {
+                case 'name':
+                    var name = this.tok.name.toLowerCase();
+                    if(outtype===undefined || assignments[name]==outtype) {
+                        return assignments;
+                    } else if(assignments[name]!==undefined && assignments[name].type!=outtype) {
+                        assignments = util.copyobj(assignments,true);
+                        assignments[name].casts[outtype] = true;
+                        var type = mutually_compatible_type(Object.keys(assignments[name].casts));
+                        if(type) {
+                            return assignments;
+                        } else {
+                            console.log(this.toString());
+                            console.log(`${name} wants to be ${outtype} but is ${assignments[name].type}`);
+                            return false;
+                        }
+                    } else {
+                        assignments = util.copyobj(assignments,true);
+                        assignments[name] = {
+                            type: outtype,
+                            casts: {outtype:true}
+                        }
+                        return assignments;
+                    }
+                case 'op':
+                case 'function':
+                    if(outtype && !jme.findCompatibleType(this.fns[this.pos].outtype,outtype)) {
+                        console.log(this.toString());
+                        console.log(`wrong return type for ${this.tok.name}: want ${outtype} but is ${this.fns[this.pos].outtype}`);
+                        return false;
+                    }
+                    var sig = this.signature_enumerators[this.pos].signature();
+                    if(sig.length!=this.args.length) {
+                        console.log(this.toString());
+                        console.log(`wrong number of arguments for ${this.tok.name}`);
+                        return false;
+                    }
+                    return this.assign_args(assignments,sig);
+                default:
+                    if(outtype && !jme.findCompatibleType(this.tok.type,outtype)) {
+                        console.log(this.toString());
+                        console.log(`wanted ${outtype} but was ${this.tok.type}`);
+                        return false;
+                    }
+                    return this.assign_args(assignments);
             }
-        case 'op':
-        case 'function':
-            var name = tree.tok.name.toLowerCase();
-            var functions = scope.getFunction(name.toLowerCase());
-            var assignments = [];
-            functions.forEach(function(fn) {
-                var fn_assignments = [assigned_types];
-                for(var i=0;i<tree.args.length;i++) {
-                    var nassignments = [];
-                    fn_assignments.forEach(function(assignment) {
-                        var res = inferVariableTypes(tree.args[i],scope,fn.intype[i],assignment);
-                        nassignments = nassignments.concat(res);
-                    });
-                    fn_assignments = nassignments;
-                }
-                assignments = assignments.concat(fn_assignments);
-            });
-            assignments = dedup(assignments);
-            var type_preference_order = ['number','vector','matrix','boolean','set'];
-            /** Preference rating for the given type. A lower value is more preferred. Unrecognised types produce `Infinity`.
-             * @param {String} type
-             * @returns {Number}
-             */
-            function preference(type) {
-                var i = type_preference_order.indexOf(type);
-                return i==-1 ? Infinity : i;
+        },
+
+        /** Find an assignment based on this tree's arguments, with optional specified types for each of the arguments.
+         */
+        assign_args: function(assignments,signature) {
+            if(!this.args) {
+                return assignments;
             }
-            assignments.sort(function(a,b) {
-                var as = Object.keys(a).sort();
-                var bs = Object.keys(b).sort();
-                for(var i=0;i<Math.max(as.length,bs.length);i++) {
-                    if(i>=as.length) {
-                        return -1;
-                    }
-                    if(i>=bs.length) {
-                        return 1;
-                    }
-                    var ai = preference(a[as[i]]);
-                    var bi = preference(b[bs[i]]);
-                    var r = ai>bi ? 1 : ai<bi ? -1 : 0;
-                    if(r!=0) {
-                        return r;
-                    }
+            for(var i=0;i<this.args.length;i++) {
+                var outtype = signature!==undefined ? signature[i] : undefined;
+                assignments = this.args[i].assign(outtype,assignments);
+                if(assignments===false) {
+                    return false;
                 }
-                return 0;
-            });
+            }
             return assignments;
+        },
+
+        /** Advance to the next state
+         * @returns {Boolean} true if successful
+         */
+        next: function() {
+            if(this.args) {
+                for(var i=0;i<this.args.length;i++) {
+                    if(this.args[i].next()) {
+                        for(i++;i<this.args.length;i++) {
+                            this.args[i].backtrack();
+                        }
+                        return true;
+                    }
+                }
+            }
+            switch(this.tok.type) {
+                case 'op':
+                case 'function':
+                    var s = this.signature_enumerators[this.pos].next();
+                    if(s) {
+                        this.args.forEach(function(arg){ arg.backtrack(); });
+                        return true;
+                    } else if(this.pos<this.fns.length-1) {
+                        this.pos += 1;
+                        this.signature_enumerators[this.pos].backtrack();
+                        this.args.forEach(function(arg){ arg.backtrack(); });
+                        return true;
+                    } else {
+                        return false;
+                    }
+                default:
+                    return false;
+            }
+        }
+    }
+
+    var at = new AnnotatedTree(tree);
+    do {
+        console.log(at.toString());
+        var res = at.assign(undefined,{});
+        if(res!==false) {
+            var o = {};
+            for(var x in res) {
+                o[x] = res[x].type;
+            }
+            return o;
+        }
+    } while(at.next());
+
+    return false;
+}
+
+var SignatureEnumerator = jme.SignatureEnumerator = function(sig) {
+    this.sig = sig;
+    switch(sig.kind) {
+        case 'multiple':
+            this.children = [];
+            break;
+        case 'optional':
+            this.child = new SignatureEnumerator(sig.signature);
+            this.include = false;
+            break;
+        case 'sequence':
+            this.children = sig.signatures.map(function(s){ return new SignatureEnumerator(s)});
+            break;
+        case 'or':
+            this.children = sig.signatures.map(function(s){ return new SignatureEnumerator(s)});
+            this.pos = 0;
+            break;
+        case 'type':
+        case 'anything':
         default:
-            return [assigned_types];
+            break;
+    }
+}
+SignatureEnumerator.prototype = {
+    /** The length of the signature corresponding to the current state of the enumerator
+     * @returns {Number}
+     */
+    length: function() {
+        switch(this.sig.kind) {
+            case 'optional':
+                return this.include ? this.child.length() : 0;
+            case 'sequence':
+            case 'multiple':
+                return this.children.map(function(c){return c.length()}).reduce(function(t,c){return t+c},0);
+            case 'or':
+                return this.children[this.pos].length();
+            case 'type':
+                return 1;
+            case 'anything':
+                return 1;
+            case 'list':
+                return 1;
+            case 'dict':
+                return 1;
+        }
+    },
+    /** Get the signature corresponding to the current state of the enumerator
+     * @returns {Array.<String>}
+     */
+    signature: function() {
+        switch(this.sig.kind) {
+            case 'optional':
+                return this.include ? this.child.signature() : [];
+            case 'sequence':
+            case 'multiple':
+                return this.children.map(function(c){return c.signature()}).reduce(function(args,c){return args.concat(c)},[]);
+            case 'or':
+                return this.children[this.pos].signature();
+            case 'type':
+                return [this.sig.type];
+            case 'anything':
+                return ['?'];
+            case 'list':
+                return ['list'];
+            case 'dict':
+                return ['dict'];
+            default:
+                return ['?'];
+        }
+    },
+    /** Advance to the next state, if possible.
+     * @returns {Boolean} true if the enumerator could advance
+     */
+    next: function() {
+        switch(this.sig.kind) {
+            case 'optional':
+                return false;
+            case 'or':
+                if(!this.children[this.pos].next()) {
+                    this.pos += 1;
+                    return this.pos<this.children.length;
+                }
+                return true;
+            case 'sequence':
+            case 'multiple':
+                for(var i=this.children.length-1;i>=0;i--) {
+                    if(this.children[i].next()) {
+                        return true;
+                    }
+                    this.children[i].backtrack();
+                }
+                return false;
+            case 'type':
+            case 'anything':
+            default:
+                return false;
+        }
+    },
+    /** Reset the enumerator to its initial state
+     */
+    backtrack: function() {
+        switch(this.sig.kind) {
+            case 'optional':
+                this.child.backtrack();
+                break;
+            case 'or':
+                this.children.forEach(function(c){ c.backtrack(); });
+                this.pos = 0;
+                break;
+            case 'sequence':
+                this.children.forEach(function(c){ c.backtrack(); });
+                break;
+            case 'multiple':
+                this.children = [];
+                break;
+            default:
+                break;
+        }
     }
 }
 
+jme.signature = {
+    anything: function() {
+        var f = function(args) {
+            return args.length>0 ? [{type: args[0].type, nonspecific: true}] : false;
+        }
+        f.kind = 'anything';
+        return f;
+    },
+    type: function(type) {
+        var f = function(args) {
+            if(args.length==0) {
+                return false;
+            }
+            if(args[0].type!=type) {
+                var casts = args[0].casts;
+                if(!casts || !casts[type]) {
+                    return false;
+                }
+            }
+            return [{type: type}];
+        }
+        f.kind = 'type';
+        f.type = type;
+        return f;
+    },
+    multiple: function(sig) {
+        var f = function(args) {
+            var got = [];
+            while(true) {
+                var match = sig(args);
+                if(match===false) {
+                    break;
+                }
+                args = args.slice(match.length);
+                got = got.concat(match);
+                if(match.length==0) {
+                    break;
+                }
+            }
+            return got;
+        };
+        f.kind = 'multiple';
+        f.signature = sig;
+        return f;
+    },
+    optional: function(sig) {
+        var f = function(args) {
+            var match = sig(args);
+            if(match) {
+                return match;
+            } else {
+                return [];
+            }
+        }
+        f.kind = 'optional';
+        f.signature = sig;
+        return f;
+    },
+    sequence: function() {
+        var bits = Array.prototype.slice.apply(arguments);
+        var f = function(args) {
+            var match  = [];
+            for(var i=0;i<bits.length;i++) {
+                var bitmatch = bits[i](args);
+                if(bitmatch===false) {
+                    return false;
+                }
+                match = match.concat(bitmatch);
+                args = args.slice(bitmatch.length);
+            }
+            return match;
+        }
+        f.kind = 'sequence';
+        f.signatures = bits;
+        return f;
+    },
+    list: function() {
+        var bits = Array.prototype.slice.apply(arguments);
+        var seq = jme.signature.sequence.apply(this,bits);
+        var f = function(args) {
+            if(args.length==0) {
+                return false;
+            }
+            if(!jme.isType(args[0],'list')) {
+                return false;
+            }
+            var items = seq(args[0].value);
+            if(items===false || items.length!=args[0].value.length) {
+                return false;
+            }
+            return [{type: 'list', items: items}];
+        }
+        f.kind = 'list';
+        f.signatures = bits;
+        return f;
+    },
+    listof: function(sig) {
+        return jme.signature.list(jme.signature.multiple(sig));
+    },
+    dict: function(sig) {
+        var f = function(args) {
+            if(args.length==0) {
+                return false;
+            }
+            if(!jme.isType(args[0],'dict')) {
+                return false;
+            }
+            var items = {};
+            var entries = Object.entries(args[0].value);
+            for(var i=0;i<entries.length;i++) {
+                var key = entries[i][0];
+                var value = entries[i][1];
+                var m = sig([value]);
+                if(m===false) {
+                    return false;
+                }
+                items[key] = m[0];
+            }
+            return [{type: 'dict', items: items}];
+        }
+        f.kind = 'dict';
+        f.signature = sig;
+        return f;
+    },
+    or: function() {
+        var bits = Array.prototype.slice.apply(arguments);
+        var f = function(args) {
+            for(var i=0;i<bits.length;i++) {
+                var m = bits[i](args);
+                if(m!==false) {
+                    return m;
+                }
+            }
+            return false;
+        }
+        f.kind = 'or';
+        f.signatures = bits;
+        return f;
+    }
+};
 });
 
 /*
@@ -3323,10 +3934,15 @@ var vectormath = Numbas.vectormath;
 var matrixmath = Numbas.matrixmath;
 var setmath = Numbas.setmath;
 var jme = Numbas.jme;
-var types = Numbas.jme.types;
+
 var Scope = jme.Scope;
 var funcObj = jme.funcObj;
+
+var types = Numbas.jme.types;
 var TNum = types.TNum;
+var TInt = types.TInt;
+var TRational = types.TRational;
+var TDecimal = types.TDecimal;
 var TString = types.TString;
 var TBool = types.TBool;
 var THTML = types.THTML;
@@ -3339,7 +3955,10 @@ var TRange = types.TRange;
 var TSet = types.TSet;
 var TVector = types.TVector;
 var TExpression = types.TExpression;
-var TOp = Numbas.jme.types.TOp;
+var TOp = types.TOp;
+
+var sig = jme.signature;
+
 /** The built-in JME evaluation scope
  * @type {Numbas.jme.Scope}
  * @memberof Numbas.jme
@@ -3360,6 +3979,91 @@ var funcs = {};
 function newBuiltin(name,intype,outcons,fn,options) {
     return builtinScope.addFunction(new funcObj(name,intype,outcons,fn,options));
 }
+
+var Fraction = math.Fraction;
+var ScientificNumber = math.ScientificNumber;
+
+// Integer arithmetic
+newBuiltin('int',[TNum],TInt, function(n){ return n; });
+newBuiltin('+u', [TInt], TInt, function(a){return a;});
+newBuiltin('-u', [TInt], TInt, math.negate);
+newBuiltin('+', [TInt,TInt], TInt, math.add);
+newBuiltin('-', [TInt,TInt], TInt, math.sub);
+newBuiltin('*', [TInt,TInt], TInt, math.mul );
+newBuiltin('/', [TInt,TInt], TRational, function(a,b) { return new Fraction(a,b); });
+newBuiltin('^', [TInt,TInt], TDecimal, function(a,b) { return (new Decimal(a)).pow(b); });
+newBuiltin('string',[TInt], TString, function(a) { return a+''; });
+
+// Rational arithmetic
+newBuiltin('rational',[TNum],TRational,Fraction.fromFloat);
+newBuiltin('+u', [TRational], TRational, function(a){return a;});
+newBuiltin('-u', [TRational], TRational, function(r){ return r.negate(); });
+newBuiltin('+', [TRational,TRational], TRational, function(a,b){ return a.add(b); });
+newBuiltin('-', [TRational,TRational], TRational, function(a,b){ return a.subtract(b); });
+newBuiltin('*', [TRational,TRational], TRational, function(a,b){ return a.multiply(b); });
+newBuiltin('/', [TRational,TRational], TRational, function(a,b){ return a.divide(b); });
+newBuiltin('string',[TRational], TString, function(a) { return a.toString(); });
+
+//Decimal arithmetic
+newBuiltin('string',[TDecimal], TString, function(a) { return a.toString(); });
+newBuiltin('decimal',[TNum],TDecimal,function(x){return new Decimal(x)});
+newBuiltin('decimal',[TString],TDecimal,function(x){return new Decimal(x)});
+newBuiltin('+u', [TDecimal], TDecimal, function(a){return a;});
+newBuiltin('-u', [TDecimal], TDecimal, function(a){ return a.negated(); });
+newBuiltin('+', [TDecimal,TDecimal], TDecimal, function(a,b){ return a.plus(b); });
+newBuiltin('+', [TNum,TDecimal], TDecimal, function(a,b){ return (new Decimal(a)).plus(b); });
+newBuiltin('-', [TDecimal,TDecimal], TDecimal, function(a,b){ return a.minus(b); });
+newBuiltin('-', [TNum,TDecimal], TDecimal, function(a,b){ return (new Decimal(a)).minus(b); });
+newBuiltin('*', [TDecimal,TDecimal], TDecimal, function(a,b){ return a.times(b); });
+newBuiltin('*', [TNum,TDecimal], TDecimal, function(a,b){ return (new Decimal(a)).times(b); });
+newBuiltin('/', [TDecimal,TDecimal], TDecimal, function(a,b){ return a.dividedBy(b); });
+newBuiltin('/', [TNum,TDecimal], TDecimal, function(a,b){ return (new Decimal(a)).dividedBy(b); });
+newBuiltin('abs', [TDecimal], TDecimal, function(a){ return a.absoluteValue(); });
+newBuiltin('ceil', [TDecimal], TDecimal, function(a){ return a.ceil(); });
+newBuiltin('cos', [TDecimal], TDecimal, function(a){ return a.cos(); });
+newBuiltin('countdp', [TDecimal], TInt, function(a){ return a.decimalPlaces(); });
+newBuiltin('floor', [TDecimal], TDecimal, function(a){ return a.floor(); });
+newBuiltin('>', [TDecimal,TDecimal], TBool, function(a,b){ return a.greaterThan(b); });
+newBuiltin('>=', [TDecimal,TDecimal], TBool, function(a,b){ return a.greaterThanOrEqualTo(b); });
+newBuiltin('cosh', [TDecimal], TDecimal, function(a){ return a.cosh(); });
+newBuiltin('sinh', [TDecimal], TDecimal, function(a){ return a.sinh(); });
+newBuiltin('tanh', [TDecimal], TDecimal, function(a){ return a.tanh(); });
+newBuiltin('arccos', [TDecimal], TDecimal, function(a){ return a.acos(); });
+newBuiltin('arccosh', [TDecimal], TDecimal, function(a){ return a.acosh(); });
+newBuiltin('arcsinh', [TDecimal], TDecimal, function(a){ return a.asinh(); });
+newBuiltin('arctanh', [TDecimal], TDecimal, function(a){ return a.atanh(); });
+newBuiltin('asin', [TDecimal], TDecimal, function(a){ return a.asin(); });
+newBuiltin('atan', [TDecimal], TDecimal, function(a){ return a.atan(); });
+newBuiltin('isint',[TDecimal], TBool, function(a) {return a.isInt(); })
+newBuiltin('isnan',[TDecimal], TBool, function(a) {return a.isNaN(); })
+newBuiltin('iszero',[TDecimal], TBool, function(a) {return a.isZero(); })
+newBuiltin('<', [TDecimal,TDecimal], TBool, function(a,b){ return a.lessThan(b); });
+newBuiltin('<=', [TDecimal,TDecimal], TBool, function(a,b){ return a.lessThanOrEqualTo(b); });
+newBuiltin('log',[TDecimal], TDecimal, function(a) {return a.log(); })
+newBuiltin('mod', [TDecimal,TDecimal], TDecimal, function(a,b){ 
+    var m = a.mod(b);
+    if(m.isNegative()) {
+        m = m.plus(b);
+    }
+    return m;
+});
+newBuiltin('exp',[TDecimal], TDecimal, function(a) {return a.exp(); });
+newBuiltin('ln',[TDecimal], TDecimal, function(a) {return a.ln(); });
+newBuiltin('countsigfigs',[TDecimal], TInt, function(a) {return a.countSigFigs(); });
+newBuiltin('round',[TDecimal], TDecimal, function(a) {return a.round(); });
+newBuiltin('sin',[TDecimal], TDecimal, function(a) {return a.sin(); });
+newBuiltin('sqrt',[TDecimal], TDecimal, function(a) {return a.sqrt(); });
+newBuiltin('tan',[TDecimal], TDecimal, function(a) {return a.tan(); });
+newBuiltin('precround',[TDecimal,TInt], TDecimal, function(a,dp) {return a.toDecimalPlaces(dp); });
+newBuiltin('dpformat',[TDecimal,TInt], TString, function(a,dp) {return a.toFixed(dp); });
+newBuiltin('tonearest',[TDecimal,TDecimal], TDecimal, function(a,x) {return a.toNearest(x); });
+newBuiltin('number',[TDecimal], TDecimal, function(a) {return a.toNumber(); });
+newBuiltin('^',[TDecimal,TDecimal], TDecimal, function(a,b) {return a.pow(b); });
+newBuiltin('sigformat',[TDecimal,TInt], TString, function(a,sf) {return a.toPrecision(sf); });
+newBuiltin('siground',[TDecimal,TInt], TDecimal, function(a,sf) {return a.toSignificantDigits(sf); });
+newBuiltin('trunc',[TDecimal], TDecimal, function(a) {return a.trunc(); });
+newBuiltin('fract',[TDecimal], TDecimal, function(a) {return a.minus(a.trunc()); });
+
 newBuiltin('+u', [TNum], TNum, function(a){return a;});
 newBuiltin('+u', [TVector], TVector, function(a){return a;});
 newBuiltin('+u', [TMatrix], TMatrix, function(a){return a;});
@@ -3491,7 +4195,7 @@ newBuiltin('values',[TDict],TList,function(d) {
     })
     return o;
 });
-newBuiltin('values',[TDict,TList],TList,function(d,keys) {
+newBuiltin('values',[TDict,sig.listof(sig.type('string'))],TList,function(d,keys) {
     return keys.map(function(key) {
         if(!d.hasOwnProperty(key.value)) {
             throw(new Numbas.Error('jme.func.listval.key not in dict',{key:key}));
@@ -3550,8 +4254,8 @@ newBuiltin('json_encode', ['?'], TString, null, {
 });
 newBuiltin('lpad',[TString,TNum,TString],TString,util.lpad);
 newBuiltin('formatstring',[TString,TList],TString,function(str,extra) {
-    return util.formatString.apply(util,[str].concat(extra));
-},{unwrapValues:true});
+    return util.formatString.apply(util,[str].concat(extra.map(jme.tokenToDisplayString)));
+});
 newBuiltin('unpercent',[TString],TNum,util.unPercent);
 newBuiltin('letterordinal',[TNum],TString,util.letterOrdinal);
 newBuiltin('html',[TString],THTML,function(html) { return $(html) });
@@ -3571,24 +4275,18 @@ newBuiltin('safe',[TString],TString,null, {
         var t = args[0].tok;
         t.safe = true;
         return t;
-    },
-    typecheck: function(variables) {
-        return variables.length==1 && variables[0].type=='string';
     }
 });
 Numbas.jme.lazyOps.push('safe');
 jme.findvarsOps.safe = function(tree,boundvars,scope) {
     return [];
 }
-newBuiltin('render',[TString,TDict],TString, null, {
+newBuiltin('render',[TString,sig.optional(sig.type('dict'))],TString, null, {
     evaluate: function(args,scope) {
         var str = args[0].value;
         var variables = args.length>1 ? args[1].value : {};
         scope = new Scope([scope,{variables: variables}]);
         return new TString(jme.contentsubvars(str,scope,true));
-    },
-    typecheck: function(variables) {
-        return variables[0].type=='string' && (variables.length==1 || variables[1].type=='dict');
     }
 });
 jme.findvarsOps.render = function(tree,boundvars,scope) {
@@ -3774,9 +4472,8 @@ newBuiltin('random',[TList],'?',null, {
         return math.choose(args[0].value);
     }
 });
-newBuiltin( 'random',[],'?', null, {
+newBuiltin( 'random',['*?'],'?', null, {
     random:true,
-    typecheck: function() { return true; },
     evaluate: function(args,scope) { return math.choose(args);}
 });
 newBuiltin('mod', [TNum,TNum], TNum, math.mod );
@@ -3797,9 +4494,9 @@ newBuiltin('sigformat', [TNum,TNum,TString], TString, function(n,p,style) {retur
 newBuiltin('formatnumber', [TNum,TString], TString, function(n,style) {return math.niceNumber(n,{style:style});});
 newBuiltin('string', [TNum], TString, math.niceNumber);
 newBuiltin('parsenumber', [TString,TString], TNum, function(s,style) {return util.parseNumber(s,false,style,true);});
-newBuiltin('parsenumber', [TString,TList], TNum, function(s,styles) {return util.parseNumber(s,false,styles,true);}, {unwrapValues: true});
+newBuiltin('parsenumber', [TString,sig.listof(sig.type('string'))], TNum, function(s,styles) {return util.parseNumber(s,false,styles,true);}, {unwrapValues: true});
 newBuiltin('parsenumber_or_fraction', [TString,TString], TNum, function(s,style) {return util.parseNumber(s,true,style,true);});
-newBuiltin('parsenumber_or_fraction', [TString,TList], TNum, function(s,styles) {return util.parseNumber(s,true,styles,true);}, {unwrapValues: true});
+newBuiltin('parsenumber_or_fraction', [TString,sig.listof(sig.type('string'))], TNum, function(s,styles) {return util.parseNumber(s,true,styles,true);}, {unwrapValues: true});
 newBuiltin('togivenprecision', [TString,TString,TNum,TBool], TBool, math.toGivenPrecision);
 newBuiltin('withintolerance',[TNum,TNum,TNum],TBool, math.withinTolerance);
 newBuiltin('countdp',[TString],TNum, function(s) { return math.countDP(util.cleanNumber(s)); });
@@ -3807,11 +4504,11 @@ newBuiltin('countsigfigs',[TString],TNum, function(s) { return math.countSigFigs
 newBuiltin('isnan',[TNum],TBool,function(n) {
     return isNaN(n);
 });
-newBuiltin('matchnumber',[TString,TList],TList,function(s,styles) {
+newBuiltin('matchnumber',[TString,sig.listof(sig.type('string'))],TList,function(s,styles) {
     var result = util.matchNotationStyle(s,styles,true);
     return [new TString(result.matched), new TNum(util.parseNumber(result.cleaned,false,['plain'],true))];
 },{unwrapValues:true});
-newBuiltin('cleannumber',[TString,TList],TString,util.cleanNumber,{unwrapValues:true});
+newBuiltin('cleannumber',[TString,sig.listof(sig.type('string'))],TString,util.cleanNumber,{unwrapValues:true});
 newBuiltin('isbool',[TString],TBool,util.isBool);
 newBuiltin('perm', [TNum,TNum], TNum, math.permutations );
 newBuiltin('comb', [TNum,TNum], TNum, math.combinations );
@@ -3831,7 +4528,7 @@ newBuiltin('gcd_without_pi_or_i', [TNum,TNum], TNum, function(a,b) {    // take 
 } );
 newBuiltin('coprime',[TNum,TNum], TBool, math.coprime);
 newBuiltin('lcm', [TNum,TNum], TNum, math.lcm );
-newBuiltin('lcm', [TList], TNum, function(l){
+newBuiltin('lcm', [sig.listof(sig.type('number'))], TNum, function(l){
         if(l.length==0) {
             return 1;
         } else if(l.length==1) {
@@ -3843,7 +4540,7 @@ newBuiltin('lcm', [TList], TNum, function(l){
     {unwrapValues: true}
 );
 newBuiltin('|', [TNum,TNum], TBool, math.divides );
-newBuiltin('sum',[TList],TNum,math.sum,{unwrapValues: true});
+newBuiltin('sum',[sig.listof(sig.type('number'))],TNum,math.sum,{unwrapValues: true});
 newBuiltin('sum',[TVector],TNum,math.sum);
 newBuiltin('deal',[TNum],TList,
     function(n) {
@@ -3884,33 +4581,8 @@ newBuiltin('if', [TBool,'?','?'], '?',null, {
     }
 });
 Numbas.jme.lazyOps.push('if');
-newBuiltin('switch',[],'?', null, {
-    typecheck: function(variables)
-    {
-        //should take alternating booleans and [any value]
-        //final odd-numbered argument is the 'otherwise' option
-        if(variables.length <2)
-            return false;
-        var check=0;
-        if(variables.length % 2 == 0)
-            check = variables.length;
-        else
-            check = variables.length-1;
-        for( var i=0; i<check; i+=2 )
-        {
-            switch(variables[i].tok.type)
-            {
-            case '?':
-            case 'boolean':
-                break;
-            default:
-                return false;
-            }
-        }
-        return true;
-    },
-    evaluate: function(args,scope)
-    {
+newBuiltin('switch',[sig.multiple(sig.sequence(sig.type('boolean'),sig.anything())),'?'],'?', null, {
+    evaluate: function(args,scope) {
         for(var i=0; i<args.length-1; i+=2 )
         {
             var result = jme.evaluate(args[i],scope).value;
@@ -3937,7 +4609,7 @@ newBuiltin('isa',['?',TString],TBool, null, {
         }
         else
         {
-            match = args[0].tok.type == kind;
+            match = jme.isType(args[0].tok, kind);
         }
         return new TBool(match);
     }
@@ -4152,20 +4824,20 @@ jme.mapFunctions = {
         return new TMatrix(matrixmath.map(matrix,function(n) {
             scope.setVariable(name,new TNum(n));
             var o = scope.evaluate(lambda);
-            if(o.type!='number') {
+            if(!jme.isType(o,'number')) {
                 throw(new Numbas.Error("jme.map.matrix map returned non number"))
             }
-            return o.value;
+            return jme.castToType(o,'number').value;
         }));
     },
     'vector': function(lambda,name,vector,scope) {
         return new TVector(vectormath.map(vector,function(n) {
             scope.setVariable(name,new TNum(n));
             var o = scope.evaluate(lambda);
-            if(o.type!='number') {
+            if(!jme.isType(o,'number')) {
                 throw(new Numbas.Error("jme.map.vector map returned non number"))
             }
-            return o.value;
+            return jme.castToType(o,'number').value;
         }));
     }
 }
@@ -4316,22 +4988,31 @@ jme.substituteTreeOps.take = function(tree,scope,allowUnbound) {
  * @returns {Boolean}
  */
 function tok_is_true(item){return item.type=='boolean' && item.value}
-newBuiltin('all',[TList],TBool,function(list) {
+newBuiltin('all',[sig.listof(sig.type('boolean'))],TBool,function(list) {
     return list.every(tok_is_true);
 });
-newBuiltin('some',[TList],TBool,function(list) {
+newBuiltin('some',[sig.listof(sig.type('boolean'))],TBool,function(list) {
     return list.some(tok_is_true);
 });
-newBuiltin('let',['?'],TList, null, {
-    evaluate: function(args,scope)
-    {
-        var lambda = args[args.length-1];
-        var variables = {};
-        if(args[0].tok.type=='dict') {
+
+var let_sig_dict = sig.sequence(sig.type('dict'),sig.anything());
+var let_sig_names = sig.multiple(
+                    sig.or(
+                        sig.sequence(sig.type('name'),sig.anything()),
+                        sig.sequence(sig.listof(sig.type('name')),sig.listof(sig.anything()))
+                    )
+                );
+newBuiltin('let',[sig.or(let_sig_dict, let_sig_names),'?'],TList, null, {
+    evaluate: function(args,scope) {
+        if(let_sig_dict(args)) {
             var d = scope.evaluate(args[0]);
-            variables = d.value;
+            var variables = d.value;
+            var lambda = args[1];
             var nscope = new Scope([scope,{variables:variables}]);
+            return nscope.evaluate(lambda);
         } else {
+            var lambda = args[args.length-1];
+            var variables = {};
             var nscope = new Scope([scope]);
             for(var i=0;i<args.length-1;i+=2) {
                 var value = nscope.evaluate(args[i+1]);
@@ -4340,32 +5021,13 @@ newBuiltin('let',['?'],TList, null, {
                     nscope.setVariable(name,value);
                 } else if(args[i].tok.type=='list') {
                     var names = args[i].args.map(function(t){return t.tok.name});
-                    if(value.type!='list') {
-                        throw(new Numbas.Error("jme.let.list assignment not a list"));
-                    }
                     var values = value.value;
-                    if(values.length<names.length) {
-                        throw(new Numbas.Error("jme.let.list not long enough"));
-                    }
                     for(var j=0;j<names.length;j++) {
                         nscope.setVariable(names[j],values[j]);
                     }
                 }
             }
-        }
-        return nscope.evaluate(lambda);
-    },
-    typecheck: function(variables) {
-        if(variables.length==2 && variables[0].tok.type=='dict') {
-            return true;
-        }
-        if(variables.length<3 || (variables.length%2)!=1) {
-            return false;
-        }
-        for(var i=0;i<variables.length-1;i+=2) {
-            if(variables[i].tok.type!='name' && variables[i].tok.type!='list') {
-                return false;
-            }
+            return nscope.evaluate(lambda);
         }
     }
 });
@@ -4409,51 +5071,23 @@ newBuiltin('sort',[TList],TList, null, {
         return newlist;
     }
 });
-newBuiltin('sort_by',[TNum,TList],TList, null, {
+newBuiltin('sort_by',[TNum,sig.listof(sig.type('list'))],TList, null, {
     evaluate: function(args,scope) {
         var index = args[0].value;
         var list = args[1];
         var newlist = new TList(list.vars);
         newlist.value = list.value.slice().sort(jme.sortTokensBy(function(x){ return x.value[index]; }));
         return newlist;
-    },
-    typecheck: function(variables) {
-        if(variables[0].type!='number') {
-            return false;
-        }
-        if(variables[1].type!='list') {
-            return false;
-        }
-        for(var i=0;i<variables[1].value.length; i++) {
-            if(variables[1].value[i].type!='list') {
-                return false;
-            }
-        }
-        return true;
     }
 });
 
-newBuiltin('sort_by',[TString,TList],TList, null, {
+newBuiltin('sort_by',[TString,sig.listof(sig.type('dict'))],TList, null, {
     evaluate: function(args,scope) {
         var index = args[0].value;
         var list = args[1];
         var newlist = new TList(list.vars);
         newlist.value = list.value.slice().sort(jme.sortTokensBy(function(x){ return x.value[index]; }));
         return newlist;
-    },
-    typecheck: function(variables) {
-        if(variables[0].type!='string') {
-            return false;
-        }
-        if(variables[1].type!='list') {
-            return false;
-        }
-        for(var i=0;i<variables[1].value.length; i++) {
-            if(variables[1].value[i].type!='dict') {
-                return false;
-            }
-        }
-        return true;
     }
 });
 
@@ -4475,7 +5109,7 @@ newBuiltin('sort_destinations',[TList],TList,null, {
     }
 });
 
-newBuiltin('group_by',[TNum,TList],TList,null, {
+newBuiltin('group_by',[TNum,sig.listof(sig.type('list'))],TList,null, {
     evaluate: function(args,scope) {
         var index = args[0].value;
         var list = args[1];
@@ -4495,24 +5129,10 @@ newBuiltin('group_by',[TNum,TList],TList,null, {
             out.push(new TList([key,new TList(values)]));
         }
         return new TList(out);
-    },
-    typecheck: function(variables) {
-        if(variables[0].type!='number') {
-            return false;
-        }
-        if(variables[1].type!='list') {
-            return false;
-        }
-        for(var i=0;i<variables[1].value.length; i++) {
-            if(variables[1].value[i].type!='list') {
-                return false;
-            }
-        }
-        return true;
     }
 });
 
-newBuiltin('group_by',[TString,TList],TList,null, {
+newBuiltin('group_by',[TString,sig.listof(sig.type('dict'))],TList,null, {
     evaluate: function(args,scope) {
         var index = args[0].value;
         var list = args[1];
@@ -4532,20 +5152,6 @@ newBuiltin('group_by',[TString,TList],TList,null, {
             out.push(new TList([key,new TList(values)]));
         }
         return new TList(out);
-    },
-    typecheck: function(variables) {
-        if(variables[0].type!='string') {
-            return false;
-        }
-        if(variables[1].type!='list') {
-            return false;
-        }
-        for(var i=0;i<variables[1].value.length; i++) {
-            if(variables[1].value[i].type!='dict') {
-                return false;
-            }
-        }
-        return true;
     }
 });
 
@@ -4575,12 +5181,9 @@ newBuiltin('set',[TList],TSet,function(l) {
 newBuiltin('set',[TRange],TSet,function(r) {
     return math.rangeToList(r).map(function(n){return new TNum(n)});
 });
-newBuiltin('set', ['?'], TSet, null, {
+newBuiltin('set', ['*?'], TSet, null, {
     evaluate: function(args,scope) {
         return new TSet(util.distinct(args));
-    },
-    typecheck: function() {
-        return true;
     }
 });
 newBuiltin('list',[TSet],TList,function(set) {
@@ -4601,66 +5204,34 @@ newBuiltin('in',['?',TSet],TBool,null,{
         return new TBool(util.contains(args[1].value,args[0]));
     }
 });
-newBuiltin('product',['?'],TList,function() {
+newBuiltin('product',[sig.multiple(sig.type('list'))],TList,function() {
     var lists = Array.prototype.slice.call(arguments);
     var prod = util.product(lists);
     return prod.map(function(l){ return new TList(l); });
-}, {
-    typecheck: function(variables) {
-        for(var i=0;i<variables.length;i++) {
-            var t = variables[i].type;
-            if(!(t=='list' || t=='set')) {
-                return false;
-            }
-        }
-        return true;
-    }
 });
 
 newBuiltin('product',[TList,TNum],TList,function(l,n) {
     return util.cartesian_power(l,n).map(function(sl){ return new TList(sl); });
 });
 
-newBuiltin('zip',['?'],TList,function() {
+newBuiltin('zip',[sig.multiple(sig.type('list'))],TList,function() {
     var lists = Array.prototype.slice.call(arguments);
     var zipped = util.zip(lists);
     return zipped.map(function(l){ return new TList(l); });
-}, {
-    typecheck: function(variables) {
-        for(var i=0;i<variables.length;i++) {
-            var t = variables[i].type;
-            if(!(t=='list' || t=='set')) {
-                return false;
-            }
-        }
-        return true;
-    }
 });
-newBuiltin('combinations',['?',TNum],TList,function(list,r) {
+newBuiltin('combinations',[TList,TNum],TList,function(list,r) {
     var prod = util.combinations(list,r);
     return prod.map(function(l){ return new TList(l); });
-}, {
-    typecheck: function(variables) {
-        return (variables[0].type=='set' || variables[0].type=='list') && variables[1].type=='number';
-    }
 });
-newBuiltin('combinations_with_replacement',['?',TNum],TList,function(list,r) {
+newBuiltin('combinations_with_replacement',[TList,TNum],TList,function(list,r) {
     var prod = util.combinations_with_replacement(list,r);
     return prod.map(function(l){ return new TList(l); });
-}, {
-    typecheck: function(variables) {
-        return (variables[0].type=='set' || variables[0].type=='list') && variables[1].type=='number';
-    }
 });
-newBuiltin('permutations',['?',TNum],TList,function(list,r) {
+newBuiltin('permutations',[TList,TNum],TList,function(list,r) {
     var prod = util.permutations(list,r);
     return prod.map(function(l){ return new TList(l); });
-}, {
-    typecheck: function(variables) {
-        return (variables[0].type=='set' || variables[0].type=='list') && variables[1].type=='number';
-    }
 });
-newBuiltin('vector',['*TNum'],TVector, null, {
+newBuiltin('vector',[sig.multiple(sig.type('number'))],TVector, null, {
     evaluate: function(args,scope)
     {
         var value = [];
@@ -4671,7 +5242,7 @@ newBuiltin('vector',['*TNum'],TVector, null, {
         return new TVector(value);
     }
 });
-newBuiltin('vector',[TList],TVector, null, {
+newBuiltin('vector',[sig.listof(sig.type('number'))],TVector, null, {
     evaluate: function(args,scope)
     {
         var list = args[0];
@@ -4679,7 +5250,7 @@ newBuiltin('vector',[TList],TVector, null, {
         return new TVector(value);
     }
 });
-newBuiltin('matrix',[TList],TMatrix,null, {
+newBuiltin('matrix',[sig.listof(sig.type('vector'))],TMatrix,null, {
     evaluate: function(args,scope)
     {
         var list = args[0];
@@ -4690,27 +5261,29 @@ newBuiltin('matrix',[TList],TMatrix,null, {
             rows = 0;
             columns = 0;
         } else {
-            switch(list.value[0].type)
-            {
-            case 'number':
-                value = [list.value.map(function(e){return e.value})];
-                rows = 1;
-                columns = list.vars;
-                break;
-            case 'vector':
-                value = list.value.map(function(v){return v.value});
-                columns = list.value[0].value.length;
-                break;
-            case 'list':
-                for(var i=0;i<rows;i++)
-                {
-                    var row = list.value[i].value;
-                    value.push(row.map(function(x){return x.value}));
-                    columns = Math.max(columns,row.length);
-                }
-                break;
-            default:
-                throw(new Numbas.Error('jme.func.matrix.invalid row type',{type:list.value[0].type}));
+            value = list.value.map(function(v){return v.value});
+            columns = list.value[0].value.length;
+        }
+        value.rows = rows;
+        value.columns = columns;
+        return new TMatrix(value);
+    }
+});
+newBuiltin('matrix',[sig.listof(sig.listof(sig.type('number')))],TMatrix,null, {
+    evaluate: function(args,scope)
+    {
+        var list = args[0];
+        var rows = list.vars;
+        var columns = 0;
+        var value = [];
+        if(!list.value.length) {
+            rows = 0;
+            columns = 0;
+        } else {
+            for(var i=0;i<rows;i++) {
+                var row = list.value[i].value;
+                value.push(row.map(function(x){return x.value}));
+                columns = Math.max(columns,row.length);
             }
         }
         value.rows = rows;
@@ -4718,7 +5291,27 @@ newBuiltin('matrix',[TList],TMatrix,null, {
         return new TMatrix(value);
     }
 });
-newBuiltin('matrix',['*list'],TMatrix, null, {
+newBuiltin('matrix',[sig.listof(sig.type('number'))],TMatrix,null, {
+    evaluate: function(args,scope)
+    {
+        var list = args[0];
+        var rows = list.vars;
+        var columns = 0;
+        var value = [];
+        if(!list.value.length) {
+            rows = 0;
+            columns = 0;
+        } else {
+            value = [list.value.map(function(e){return jme.castToType(e,'number').value})];
+            rows = 1;
+            columns = list.vars;
+        }
+        value.rows = rows;
+        value.columns = columns;
+        return new TMatrix(value);
+    }
+});
+newBuiltin('matrix',[sig.multiple(sig.listof(sig.type('number')))],TMatrix, null, {
     evaluate: function(args,scope)
     {
         var rows = args.length;
@@ -4735,7 +5328,7 @@ newBuiltin('matrix',['*list'],TMatrix, null, {
         return new TMatrix(value);
     }
 });
-newBuiltin('rowvector',['*number'],TMatrix, null, {
+newBuiltin('rowvector',[sig.multiple(sig.type('number'))],TMatrix, null, {
     evaluate: function(args,scope)
     {
         var row = [];
@@ -4749,7 +5342,7 @@ newBuiltin('rowvector',['*number'],TMatrix, null, {
         return new TMatrix(matrix);
     }
 });
-newBuiltin('rowvector',[TList],TMatrix, null, {
+newBuiltin('rowvector',[sig.listof(sig.type('number'))],TMatrix, null, {
     evaluate: function(args,scope)
     {
         var list = args[0];
@@ -4783,48 +5376,50 @@ newBuiltin('list',[TMatrix],TList,null, {
         return new TList(value);
     }
 });
-newBuiltin('table',[TList,TList],THTML,
+function set_html_content(element,tok) {
+    if(tok.type!='html') {
+        element.innerHTML = jme.typeToDisplayString(tok);
+    } else {
+        element.appendChild(tok.value);
+    }
+}
+newBuiltin('table',[TList,sig.listof(sig.type('list'))],THTML,
     function(data,headers) {
-        var table = $('<table/>');
-        var thead = $('<thead/>');
-        table.append(thead);
+        var table = document.createElement('table');
+        var thead = document.createElement('thead');
+        table.appendChild(thead);
         for(var i=0;i<headers.length;i++) {
-            var cell = headers[i];
-            if(typeof cell=='number')
-                cell = Numbas.math.niceNumber(cell);
-            thead.append($('<th/>').html(cell));
+            var th = document.createElement('th');
+            set_html_content(th,headers[i]);
+            thead.appendChild(th);
         }
-        var tbody=$('<tbody/>');
-        table.append(tbody);
+        var tbody = document.createElement('tbody');
+        table.appendChild(tbody);
         for(var i=0;i<data.length;i++) {
-            var row = $('<tr/>');
-            tbody.append(row);
-            for(var j=0;j<data[i].length;j++) {
-                var cell = data[i][j];
-                if(typeof cell=='number')
-                    cell = Numbas.math.niceNumber(cell);
-                row.append($('<td/>').html(cell));
+            var row = document.createElement('tr');
+            tbody.appendChild(row);
+            for(var j=0;j<data[i].value.length;j++) {
+                var cell = data[i].value[j];
+                var td = document.createElement('td');
+                set_html_content(td,data[i].value[j]);
+                row.appendChild(td);
             }
         }
         return new THTML(table);
-    },
-    {
-        unwrapValues: true
     }
 );
 newBuiltin('table',[TList],THTML,
     function(data) {
-        var table = $('<table/>');
-        var tbody=$('<tbody/>');
-        table.append(tbody);
+        var table = document.createElement('table');
+        var tbody = document.createElement('tbody');
+        table.appendChild(tbody);
         for(var i=0;i<data.length;i++) {
-            var row = $('<tr/>');
-            tbody.append(row);
-            for(var j=0;j<data[i].length;j++) {
-                var cell = data[i][j];
-                if(typeof cell=='number')
-                    cell = Numbas.math.niceNumber(cell);
-                row.append($('<td/>').html(cell));
+            var row = document.createElement('tr');
+            tbody.appendChild(row);
+            for(var j=0;j<data[i].value.length;j++) {
+                var td = document.createElement('td');
+                set_html_content(td,data[i].value[j]);
+                row.appendChild(td);
             }
         }
         return new THTML(table);
@@ -4842,6 +5437,12 @@ newBuiltin('expression',[TString],TExpression,function(str) {
 newBuiltin('args',[TExpression],TList,null, {
     evaluate: function(args, scope) {
         return new TList(args[0].tree.args.map(function(tree){ return new TExpression(tree); }));
+    }
+});
+newBuiltin('as',['?',TString],'?',null, {
+    evaluate: function(args,scope) {
+        var target = args[1].value;
+        return jme.castToType(args[0],target);
     }
 });
 newBuiltin('type',[TExpression],TString,null, {
@@ -4960,7 +5561,7 @@ newBuiltin('infer_variable_types',[TExpression],TDict,null, {
     }
 });
 
-newBuiltin('make_variables',[TDict],TDict,null, {
+newBuiltin('make_variables',[sig.dict(sig.type('expression'))],TDict,null, {
     evaluate: function(args,scope) {
         var todo = {};
         var scope = new jme.Scope([scope]);
@@ -4976,18 +5577,6 @@ newBuiltin('make_variables',[TDict],TDict,null, {
             out[x] = result.variables[x];
         }
         return new TDict(out);
-    },
-    typecheck: function(variables) {
-        if(variables.length!=1) {
-            return false;
-        }
-        var d = variables[0];
-        for(var x in d.value) {
-            if(d.value[x].type!='expression') {
-                return false;
-            }
-        }
-        return true;
     }
 });
 
@@ -5121,6 +5710,7 @@ newBuiltin('translate',[TString,TDict],TString,function(s,params) {
     return R(s,params);
 },{unwrapValues:true});
 ///end of builtins
+
 });
 
 /*
@@ -5257,7 +5847,7 @@ function texifyWouldBracketOpArg(thing,i, settings) {
     else if(tok.type=='number' && tok.value.complex && thing.tok.type=='op' && (thing.tok.name=='*' || thing.tok.name=='-u' || i==0 && thing.tok.name=='^') ) {
         var v = thing.args[i].tok.value;
         return !(v.re==0 || v.im==0);
-    } else if(jme.isOp(thing.tok, '^') && settings.fractionnumbers && tok.type=='number' && texSpecialNumber(tok.value)===undefined && math.rationalApproximation(Math.abs(tok.value))[1] != 1) {
+    } else if(jme.isOp(thing.tok, '^') && settings.fractionnumbers && jme.isType(tok,'number') && texSpecialNumber(tok.value)===undefined && math.rationalApproximation(Math.abs(tok.value))[1] != 1) {
         return true;
     }
     return false;
@@ -5379,7 +5969,7 @@ var texOps = jme.display.texOps = {
             tex0 = '\\left ( ' +tex0+' \\right )';
         }
         var trigFunctions = ['cos','sin','tan','sec','cosec','cot','arcsin','arccos','arctan','cosh','sinh','tanh','cosech','sech','coth','arccosh','arcsinh','arctanh'];
-        if(thing.args[0].tok.type=='function' && trigFunctions.contains(thing.args[0].tok.name) && thing.args[1].tok.type=='number' && util.isInt(thing.args[1].tok.value) && thing.args[1].tok.value>0) {
+        if(thing.args[0].tok.type=='function' && trigFunctions.contains(thing.args[0].tok.name) && jme.isType(thing.args[1].tok,'number') && util.isInt(thing.args[1].tok.value) && thing.args[1].tok.value>0) {
             return texOps[thing.args[0].tok.name].code + '^{'+texArgs[1]+'}' + '\\left( '+texify(thing.args[0].args[0],settings)+' \\right)';
         }
         return (tex0+'^{ '+texArgs[1]+' }');
@@ -5398,29 +5988,29 @@ var texOps = jme.display.texOps = {
                 if(util.isInt(texArgs[i-1].charAt(texArgs[i-1].length-1)) && util.isInt(texArgs[i].charAt(0)) && !texifyWouldBracketOpArg(thing,i)) {
                     use_symbol = true;
                 //anything times e^(something) or (not number)^(something)
-                } else if (jme.isOp(right.tok,'^') && (right.args[0].value==Math.E || right.args[0].tok.type!='number')) {
+                } else if (jme.isOp(right.tok,'^') && (right.args[0].value==Math.E || !jme.isType(right.args[0].tok,'number'))) {
                     use_symbol = false;
                 //real number times Pi or E
-                } else if (right.tok.type=='number' && (right.tok.value==Math.PI || right.tok.value==Math.E || right.tok.value.complex) && left.tok.type=='number' && !(left.tok.value.complex)) {
+                } else if (jme.isType(right.tok,'number') && (right.tok.value==Math.PI || right.tok.value==Math.E || right.tok.value.complex) && jme.isType(left.tok,'number') && !(left.tok.value.complex)) {
                     use_symbol = false
                 //number times a power of i
-                } else if (jme.isOp(right.tok,'^') && right.args[0].tok.type=='number' && math.eq(right.args[0].tok.value,math.complex(0,1)) && left.tok.type=='number') {
+                } else if (jme.isOp(right.tok,'^') && jme.isType(right.args[0].tok,'number') && math.eq(right.args[0].tok.value,math.complex(0,1)) && jme.isType(left.tok,'number')) {
                     use_symbol = false;
                 // times sign when LHS or RHS is a factorial
                 } else if((left.tok.type=='function' && left.tok.name=='fact') || (right.tok.type=='function' && right.tok.name=='fact')) {
                     use_symbol = true;
                 //(anything except i) times i
-                } else if ( !(left.tok.type=='number' && math.eq(left.tok.value,math.complex(0,1))) && right.tok.type=='number' && math.eq(right.tok.value,math.complex(0,1))) {
+                } else if ( !(jme.isType(left.tok,'number') && math.eq(left.tok.value,math.complex(0,1))) && jme.isType(right.tok,'number') && math.eq(right.tok.value,math.complex(0,1))) {
                     use_symbol = false;
                 // anything times number, or (-anything), or an op with lower precedence than times, with leftmost arg a number
-                } else if ( right.tok.type=='number'
+                } else if ( jme.isType(right.tok,'number')
                         ||
                             jme.isOp(right.tok,'-u')
                         ||
                         (
                             !jme.isOp(right.tok,'-u')
                             && (right.tok.type=='op' && jme.precedence[right.tok.name]<=jme.precedence['*']
-                                && (right.args[0].tok.type=='number'
+                                && (jme.isType(right.args[0].tok,'number')
                                 && right.args[0].tok.value!=Math.E)
                             )
                         )
@@ -5497,12 +6087,9 @@ var texOps = jme.display.texOps = {
     'exp': (function(thing,texArgs) { return ('e^{ '+texArgs[0]+' }'); }),
     'fact': (function(thing,texArgs)
             {
-                if(thing.args[0].tok.type=='number' || thing.args[0].tok.type=='name')
-                {
+                if(jme.isType(thing.args[0].tok,'number') || thing.args[0].tok.type=='name') {
                     return texArgs[0]+'!';
-                }
-                else
-                {
+                } else {
                     return '\\left ('+texArgs[0]+' \\right )!';
                 }
             }),
@@ -5512,19 +6099,16 @@ var texOps = jme.display.texOps = {
     'defint': (function(thing,texArgs) { return ('\\int_{'+texArgs[2]+'}^{'+texArgs[3]+'} \\! '+texArgs[0]+' \\, \\mathrm{d}'+texArgs[1]); }),
     'diff': (function(thing,texArgs)
             {
-                var degree = (thing.args[2].tok.type=='number' && thing.args[2].tok.value==1) ? '' : '^{'+texArgs[2]+'}';
-                if(thing.args[0].tok.type=='name')
-                {
+                var degree = (jme.isType(thing.args[2].tok,'number') && jme.castToType(thing.args[2].tok,'number').value==1) ? '' : '^{'+texArgs[2]+'}';
+                if(thing.args[0].tok.type=='name') {
                     return ('\\frac{\\mathrm{d}'+degree+texArgs[0]+'}{\\mathrm{d}'+texArgs[1]+degree+'}');
-                }
-                else
-                {
+                } else {
                     return ('\\frac{\\mathrm{d}'+degree+'}{\\mathrm{d}'+texArgs[1]+degree+'} \\left ('+texArgs[0]+' \\right )');
                 }
             }),
     'partialdiff': (function(thing,texArgs)
             {
-                var degree = (thing.args[2].tok.type=='number' && thing.args[2].tok.value==1) ? '' : '^{'+texArgs[2]+'}';
+                var degree = (jme.isType(thing.args[2].tok,'number') && jme.castToType(thing.args[2].tok,'number').value==1) ? '' : '^{'+texArgs[2]+'}';
                 if(thing.args[0].tok.type=='name')
                 {
                     return ('\\frac{\\partial '+degree+texArgs[0]+'}{\\partial '+texArgs[1]+degree+'}');
@@ -5748,7 +6332,7 @@ var texRationalNumber = jme.display.texRationalNumber = function(n, settings)
             n /= Math.pow(Math.PI,piD);
         var out = math.niceNumber(n);
         if(out.length>20) {
-            var bits = math.parseScientific(math.scientific(n));
+            var bits = math.parseScientific(n.toExponential());
             return bits.significand+' \\times 10^{'+bits.exponent+'}';
         }
         var f = math.rationalApproximation(Math.abs(n));
@@ -5834,7 +6418,7 @@ function texRealNumber(n, settings)
             n /= Math.pow(Math.PI,piD);
         var out = math.niceNumber(n);
         if(out.length>20) {
-            var bits = math.parseScientific(math.scientific(n));
+            var bits = math.parseScientific(n.toExponential());
             return bits.significand+' \\times 10^{'+bits.exponent+'}';
         }
         switch(piD)
@@ -6077,6 +6661,15 @@ var typeToTeX = jme.display.typeToTeX = {
     'nothing': function(thing,tok,texArgs,settings) {
         return '\\text{nothing}';
     },
+    'integer': function(thing,tok,texArgs,settings) {
+        return settings.texNumber(tok.value, settings);
+    },
+    'rational': function(thing,tok,texArgs,settings) {
+        return settings.texNumber(tok.value.toFloat(), settings);
+    },
+    'decimal': function(thing,tok,texArgs,settings) {
+        return settings.texNumber(tok.value.toNumber(), settings);
+    },
     'number': function(thing,tok,texArgs,settings) {
         return settings.texNumber(tok.value, settings);
     },
@@ -6299,7 +6892,7 @@ var jmeRationalNumber = jme.display.jmeRationalNumber = function(n,settings)
             out = math.niceNumber(n);
         }
         if(out.length>20) {
-            var bits = math.parseScientific(math.scientific(n));
+            var bits = math.parseScientific(n.toExponential());
             return bits.significand+'*10^('+bits.exponent+')';
         }
         var f = math.rationalApproximation(Math.abs(n),settings.accuracy);
@@ -6382,7 +6975,7 @@ function jmeRealNumber(n,settings)
             out = math.niceNumber(n);
         }
         if(out.length>20) {
-            var bits = math.parseScientific(math.scientific(n));
+            var bits = math.parseScientific(n.toExponential());
             return bits.significand+'*10^('+bits.exponent+')';
         }
         switch(piD)
@@ -6410,6 +7003,15 @@ function jmeRealNumber(n,settings)
 var typeToJME = Numbas.jme.display.typeToJME = {
     'nothing': function(tree,tok,bits,settings) {
         return 'nothing';
+    },
+    'integer': function(tree,tok,bits,settings) {
+        return settings.jmeNumber(tok.value,settings);
+    },
+    'rational': function(tree,tok,bits,settings) {
+        return settings.jmeNumber(tok.value.toFloat(),settings);
+    },
+    'decimal': function(tree,tok,bits,settings) {
+        return settings.jmeNumber(tok.value.toNumber(),settings);
     },
     'number': function(tree,tok,bits,settings) {
         switch(tok.value)
@@ -6505,21 +7107,23 @@ var typeToJME = Numbas.jme.display.typeToJME = {
         var op = tok.name;
         var args = tree.args, l = args.length;
         for(var i=0;i<l;i++) {
-            var arg_type = args[i].tok.type;
-            var arg_value = args[i].tok.value;
+            var arg = args[i].tok;
+            var isNumber = jme.isType(arg,'number');
+            var arg_type = arg.type;
+            var arg_value = arg.value;
             var pd;
             var arg_op = null;
             if(arg_type=='op') {
                 arg_op = args[i].tok.name;
-            } else if(arg_type=='number' && arg_value.complex && arg_value.im!=0) {
+            } else if(isNumber && arg_value.complex && arg_value.im!=0) {
                 if(arg_value.re!=0) {
                     arg_op = arg_value.im<0 ? '-' : '+';   // implied addition/subtraction because this number will be written in the form 'a+bi'
                 } else if(arg_value.im!=1) {
                     arg_op = '*';   // implied multiplication because this number will be written in the form 'bi'
                 }
-            } else if(arg_type=='number' && (pd = math.piDegree(args[i].tok.value))>0 && arg_value/math.pow(Math.PI,pd)>1) {
+            } else if(isNumber && (pd = math.piDegree(args[i].tok.value))>0 && arg_value/math.pow(Math.PI,pd)>1) {
                 arg_op = '*';   // implied multiplication because this number will be written in the form 'a*pi'
-            } else if(arg_type=='number' && bits[i].indexOf('/')>=0) {
+            } else if(isNumber && bits[i].indexOf('/')>=0) {
                 arg_op = '/';   // implied division because this number will be written in the form 'a/b'
             }
             var bracketArg = arg_op!=null && op in opBrackets && opBrackets[op][i][arg_op]==true;
@@ -6532,7 +7136,7 @@ var typeToJME = Numbas.jme.display.typeToJME = {
         if(op=='*') {
             //number or brackets followed by name or brackets doesn't need a times symbol
             //except <anything>*(-<something>) does
-            if(!settings.alwaystimes && ((args[0].tok.type=='number' && math.piDegree(args[0].tok.value)==0 && args[0].tok.value!=Math.E) || args[0].bracketed) && (args[1].tok.type == 'name' || args[1].bracketed && !jme.isOp(tree.args[1].tok,'-u')) )
+            if(!settings.alwaystimes && ((jme.isType(args[0].tok,'number') && math.piDegree(args[0].tok.value)==0 && args[0].tok.value!=Math.E) || args[0].bracketed) && (jme.isType(args[1].tok,'name') || args[1].bracketed && !jme.isOp(tree.args[1].tok,'-u')) )
             {
                 op = '';
             }
@@ -6591,7 +7195,7 @@ var typeToJME = Numbas.jme.display.typeToJME = {
 var jmeFunctions = jme.display.jmeFunctions = {
     'dict': typeToJME.dict,
     'fact': function(tree,tok,bits,settings) {
-        if(tree.args[0].tok.type=='number' || tree.args[0].tok.type=='name') {
+        if(jme.isType(tree.args[0].tok,'number') || tree.args[0].tok.type=='name') {
             return bits[0]+'!';
         } else {
             return '( '+bits[0]+' )!';
@@ -6661,7 +7265,7 @@ var opBrackets = Numbas.jme.display.opBrackets = {
  * @param {Array.<String>} items
  * @returns {String}
  */
-function align(header,items) {
+var align_text_blocks = jme.display.align_text_blocks = function(header,items) {
     /** Pad a lien of text so it's in the centre of a line of length `n`.
      * @param {String} line
      * @param {Number} n
@@ -6754,7 +7358,7 @@ var tree_diagram = Numbas.jme.display.tree_diagram = function(tree) {
         case 'op':
         case 'function':
             var args = tree.args.map(function(arg){ return tree_diagram(arg); });
-            return align(tree.tok.name, args);
+            return align_text_blocks(tree.tok.name, args);
         default:
             return treeToJME(tree);
     }
@@ -7258,30 +7862,76 @@ var matchTree = jme.rules.matchTree = function(ruleTree,exprTree,options) {
  */
 var number_conditions = jme.rules.number_conditions = {
     'complex': function(exprTree) {
-        return exprTree.tok.type=='number' && exprTree.tok.value.complex;
+        try {
+            var tok = jme.castToType(exprTree.tok,'number');
+        } catch(e) {
+            return false;
+        }
+        return tok.value.complex;
     },
     'imaginary': function(exprTree) {
-        return exprTree.tok.type=='number' && exprTree.tok.value.complex && Numbas.math.re(exprTree.tok.value)==0;
+        try {
+            var tok = jme.castToType(exprTree.tok,'number');
+        } catch(e) {
+            return false;
+        }
+        return tok.value.complex && Numbas.math.re(tok.value)==0;
     },
     'real': function(exprTree) {
-        return exprTree.tok.type=='number' && Numbas.math.im(exprTree.tok.value)==0;
+        try {
+            var tok = jme.castToType(exprTree.tok,'number');
+        } catch(e) {
+            return false;
+        }
+        return Numbas.math.im(tok.value)==0;
     },
     'positive': function(exprTree) {
-        return exprTree.tok.type=='number' && Numbas.math.positive(exprTree.tok.value);
+        try {
+            var tok = jme.castToType(exprTree.tok,'number');
+        } catch(e) {
+            return false;
+        }
+        return Numbas.math.positive(tok.value);
     },
     'nonnegative': function(exprTree) {
-        return exprTree.tok.type=='number' && Numbas.math.nonnegative(exprTree.tok.value);
+        try {
+            var tok = jme.castToType(exprTree.tok,'number');
+        } catch(e) {
+            return false;
+        }
+        return Numbas.math.nonnegative(tok.value);
     },
     'negative': function(exprTree) {
-        return exprTree.tok.type=='number' && Numbas.math.negative(exprTree.tok.value);
+        try {
+            var tok = jme.castToType(exprTree.tok,'number');
+        } catch(e) {
+            return false;
+        }
+        return Numbas.math.negative(tok.value);
     },
     'integer': function(exprTree) {
-        return exprTree.tok.type=='number' && Numbas.util.isInt(exprTree.tok.value);
+        if(exprTree.tok.type=='integer') {
+            return true;
+        }
+        try {
+            var tok = jme.castToType(exprTree.tok,'number');
+        } catch(e) {
+            return false;
+        }
+        return Numbas.util.isInt(tok.value);
     },
     'decimal': function(exprTree) {
-        return exprTree.tok.type=='number' && Numbas.math.countDP(exprTree.tok.originalValue)>0;
+        try {
+            var tok = jme.castToType(exprTree.tok,'number');
+        } catch(e) {
+            return false;
+        }
+        return Numbas.math.countDP(exprTree.tok.originalValue)>0;
     },
     'rational': function(exprTree,options) {
+        if(exprTree.tok.type=='rational') {
+            return true;
+        }
         return matchTree(patternParser.compile('integer:$n/integer:$n`?'),exprTree,options);
     }
 }
@@ -7306,7 +7956,7 @@ var specialMatchNames = jme.rules.specialMatchNames = {
                 return false;
             }
         } else {
-            if(exprTok.type!='number') {
+            if(!jme.isType(exprTok,'number')) {
                 return false;
             }
         }
@@ -7692,9 +8342,6 @@ function matchList(ruleTree,exprTree,options) {
 function matchToken(ruleTree,exprTree,options) {
     var ruleTok = ruleTree.tok;
     var exprTok = exprTree.tok;
-    if(ruleTok.type!=exprTok.type) {
-        return false;
-    }
     return util.eq(ruleTok,exprTok) ? {} : false;
 }
 
@@ -8881,7 +9528,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
      * @param {Object} tmpfn - contains `definition`, `name`, `language`, `parameters`
      * @param {Numbas.jme.Scope} scope
      * @param {Object} withEnv - dictionary of local variables for javascript functions
-     * @returns {Object} - contains `outcons`, `intype`, `evaluate`
+     * @returns {Numbas.jme.funcObj}
      */
     makeFunction: function(tmpfn,scope,withEnv) {
         var intype = [],
@@ -8892,8 +9539,6 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         });
         var outcons = jme.types[tmpfn.outtype];
         var fn = new jme.funcObj(tmpfn.name,intype,outcons,null,true);
-        fn.outcons = outcons;
-        fn.intype = intype;
         fn.paramNames = paramNames;
         fn.definition = tmpfn.definition;
         fn.name = tmpfn.name.toLowerCase();
@@ -9426,6 +10071,8 @@ var Part = Numbas.parts.Part = function( path, question, parentPart, store)
     //remember a path for this part, for stuff like marking and warnings
     this.path = path || 'p0';
 
+    this.name = util.capitalise(util.nicePartName(path));
+
     this.label = '';
 
     if(this.question) {
@@ -9445,6 +10092,18 @@ var Part = Numbas.parts.Part = function( path, question, parentPart, store)
     this.finalised_result = {valid: false, credit: 0, states: []};
     this.warnings = [];
     this.scripts = {};
+
+    Object.defineProperty(this,"credit", {
+        /** Proportion of available marks awarded to the student - i.e. `score/marks`. Penalties will affect this instead of the raw score, because of things like the steps marking algorithm.
+         * @type {Number}
+         */
+        get: function() {
+            return this.creditFraction.toFloat();
+        },
+        set: function(credit) {
+            this.creditFraction = math.Fraction.fromFloat(credit);
+        }
+    });
 }
 Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
     /** Storage engine
@@ -9694,10 +10353,10 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @type {Number}
      */
     stepsMarks: 0,
-    /** Proportion of available marks awarded to the student - i.e. `score/marks`. Penalties will affect this instead of the raw score, because of things like the steps marking algorithm.
-     * @type {Number}
+    /** Credit as a fraction. Used to avoid simple floating point errors.
+     * @type {Numbas.math.Fraction}
      */
-    credit: 0,
+    creditFraction: new math.Fraction(0,1),
     /** Student's score on this part
      * @type {Number}
      */
@@ -9940,13 +10599,13 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
     applyScoreLimits: function() {
         if(this.settings.enableMinimumMarks && this.score<this.settings.minimumMarks) {
             this.score = this.settings.minimumMarks;
-            this.credit = this.marks!=0 ? this.settings.minimumMarks/this.marks : 0;
+            this.creditFraction = this.marks!=0 ? math.Fraction.fromFloat(this.settings.minimumMarks,this.marks) : 0;
             this.markingComment(R('part.marking.minimum score applied',{score:this.settings.minimumMarks}));
         }
         if(this.score>this.marks) {
             this.finalised_result.states.push(Numbas.marking.feedback.sub_credit(this.credit-1, R('part.marking.maximum score applied',{score:this.marks})));
             this.score = this.marks;
-            this.credit = 1;
+            this.creditFraction = math.Fraction.one;
             this.markingComment(R('part.marking.maximum score applied',{score:this.marks}));
         }
     },
@@ -10270,14 +10929,14 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
                     }
                     break;
                 case "start_lift":
-                    lifts.push({credit: this.credit,scale:scale});
+                    lifts.push({credit: this.credit, creditFraction: this.creditFraction, scale:scale});
                     this.credit = 0;
                     scale = state.scale;
                     break;
                 case 'end_lift':
                     var last_lift = lifts.pop();
                     var lift_credit = this.credit;
-                    this.credit = last_lift.credit;
+                    this.creditFraction = last_lift.creditFraction;
                     this.addCredit(lift_credit*last_lift.scale);
                     scale = last_lift.scale;
                     break;
@@ -10332,12 +10991,12 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      */
     setCredit: function(credit,message,reason)
     {
-        var oCredit = this.credit;
-        this.credit = credit;
+        var oCredit = this.creditFraction;
+        this.creditFraction = math.Fraction.fromFloat(credit);
         if(this.settings.showFeedbackIcon) {
             this.markingFeedback.push({
                 op: 'set_credit',
-                credit: this.credit - oCredit,
+                credit: this.creditFraction.subtract(oCredit).toFloat(),
                 message: message,
                 reason: reason
             });
@@ -10349,7 +11008,8 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      */
     addCredit: function(credit,message)
     {
-        this.credit += credit;
+        var creditFraction = math.Fraction.fromFloat(credit);
+        this.creditFraction = this.creditFraction.add(creditFraction);
         if(this.settings.showFeedbackIcon) {
             this.markingFeedback.push({
                 op: 'add_credit',
@@ -10364,7 +11024,8 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      */
     subCredit: function(credit,message)
     {
-        this.credit -= credit;
+        var creditFraction = math.Fraction.fromFloat(credit);
+        this.creditFraction = this.creditFraction.subtract(creditFraction);
         if(this.settings.showFeedbackIcon) {
             this.markingFeedback.push({
                 op: 'sub_credit',
@@ -10379,12 +11040,12 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      */
     multCredit: function(factor,message)
     {
-        var oCredit = this.credit
-        this.credit *= factor;
+        var oCreditFraction = this.creditFraction;
+        this.creditFraction = this.creditFraction.multiply(math.Fraction.fromFloat(factor));
         if(this.settings.showFeedbackIcon) {
             this.markingFeedback.push({
                 op: 'multiply_credit',
-                credit: this.credit - oCredit,
+                credit: this.creditFraction.subtract(oCreditFraction).toFloat(),
                 factor: factor,
                 message: message
             });
@@ -10459,6 +11120,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         }
     }
 };
+
 });
 
 /*
@@ -12086,7 +12748,13 @@ Copyright 2011-14 Newcastle University
  *
  * Provides {@link Numbas.math}, {@link Numbas.vectormath} and {@link Numbas.matrixmath}
  */
-Numbas.queueScript('math',['base'],function() {
+Numbas.queueScript('math',['base','decimal'],function() {
+    
+    Decimal.set({ 
+        precision: 40,
+        modulo: Decimal.EUCLID 
+    });
+
 /** Mathematical functions, providing stuff that the built-in `Math` object doesn't
  * @namespace Numbas.math */
 /** A complex number.
@@ -12684,9 +13352,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
                 n /= Math.pow(Math.PI,piD);
             var out;
             if(options.style=='scientific') {
-                var s = math.scientific(n);
+                var s = n.toExponential();
                 var bits = math.parseScientific(s);
-                var noptions = {precisionType: options.precisionType, precision: options.precision};
+                var noptions = {precisionType: options.precisionType, precision: options.precision, style: 'si-en'};
                 var significand = math.niceNumber(bits.significand,noptions);
                 var exponent = bits.exponent;
                 if(exponent>=0) {
@@ -12861,33 +13529,23 @@ var math = Numbas.math = /** @lends Numbas.math */ {
      * @returns {{significand: Number, exponent: Number}}
      */
     parseScientific: function(str) {
-        var m = /(-?\d+(?:\.\d+)?)e([\-+]?\d+)/i.exec(str);
-        if(!m) {
-            debugger;
-        }
-        return {significand: parseFloat(m[1]), exponent: parseInt(m[2])};
+        var m = /(-?\d[ \d]*(?:\.\d[ \d]*)?)e([\-+]?\d[ \d]*)/i.exec(str);
+        return {significand: parseFloat(m[1].replace(' ','')), exponent: parseInt(m[2].replace(' ',''))};
     },
 
-    /** Write the given number in "scientific" notation, like 1e2.
-     * @param {Number} n
-     * @returns {String}
-     */
-    scientific: function(n) {
-        return n.toExponential();
-    },
     /** If the given string is scientific notation representing a number, return a string of the form \d+\.\d+
      * For example, '1.23e-5' is returned as '0.0000123'
      * @param {String} str
      * @returns {String}
      */
     unscientific: function(str) {
-        var m = /(-)?(\d+)(?:\.(\d+))?e([\-+]?\d+)/i.exec(str);
+        var m = /(-)?([ \d]+)(?:\.([ \d]+))?e([\-+]?[\d ]+)/i.exec(str);
         if(!m) {
             return str;
         }
         var minus = m[1] || '';
-        var digits = m[2]+(m[3] || '');
-        var pow = parseInt(m[4]);
+        var digits = (m[2]+(m[3] || '')).replace(' ','');
+        var pow = parseInt(m[4].replace(' ',''));
         var l = digits.length;
         var out;
         if(pow>=l-1) {
@@ -13615,46 +14273,69 @@ var math = Numbas.math = /** @lends Numbas.math */ {
      *
      * If `accuracy` is given, the returned answer will be within `Math.exp(-accuracy)` of the original number
      *
+     * Based on frap.c by David Eppstein - https://www.ics.uci.edu/~eppstein/numth/frap.c
+     *
      * @param {Number} n
      * @param {Number} [accuracy]
      * @returns {Array.<Number>} - [numerator,denominator]
      */
-    rationalApproximation: function(n,accuracy)
-    {
-        if(accuracy===undefined) {
-            accuracy = 15;
-        }
-        if(accuracy>30) {
-            accuracy = 30;
-        }
-        accuracy = Math.exp(-accuracy);
-        var on = n;
-        var e = Math.floor(n);
-        if(e==n)
-            return [n,1];
-        var l = 0;
-        var frac = [];
-        while(l<100 && Math.abs(on-e)>accuracy)
-        {
-            l+=1;
-            var i = Math.floor(n);
-            frac.push(i);
-            n = 1/(n-i);
-            var e = Infinity;
-            for(var j=l-1;j>=0;j--)
-            {
-                e = frac[j]+1/e;
+    rationalApproximation: function(n, accuracy) {
+        /** Find a rational approximation to `t` with maximum denominator `limit`.
+         * @param {Number} limit
+         * @param {Number} t
+         * @returns {Array.<Number>} `[error,numerator,denominator]`
+         */
+        function rat_to_limit(limit,t) {
+            limit = Math.max(limit,1);
+            if(t==0) {
+                return [0,t,1,0];
+            }
+            var m00 = 1, m01 = 0;
+            var m10 = 0, m11 = 1;
+
+            var x = t;
+            var ai = Math.floor(x);
+            while((m10*ai + m11) <= limit) {
+                var tmp = m00*ai+m01;
+                m01 = m00;
+                m00 = tmp;
+                tmp = m10*ai+m11;
+                m11 = m10;
+                m10 = tmp;
+                if(x==ai) {
+                    break;
+                }
+                x = 1/(x-ai);
+                ai = Math.floor(x);
+            }
+
+            var n1 = m00;
+            var d1 = m10;
+            var err1 = (t-n1/d1);
+
+            ai = Math.floor((limit-m11)/m10);
+            var n2 = m00*ai + m01;
+            var d2 = m10*ai+m11;
+            var err2 = (t-n2/d2);
+            if(Math.abs(err1)<=Math.abs(err2)) {
+                return [err1,n1,d1];
+            } else {
+                return [err2,n2,d2];
             }
         }
-        if(l==0) {
-            return [e,1];
+
+        if(accuracy==undefined) {
+            accuracy = 15;
         }
-        var f = [1,0];
-        for(j=l-1;j>=0;j--)
-        {
-            f = [frac[j]*f[0]+f[1],f[0]];
+        var err_in = Math.exp(-accuracy);
+        var limit = 100000000000;
+        var l_curr = 1;
+        var res = rat_to_limit(l_curr,n);
+        while(Math.abs(res[0])>err_in && l_curr<limit) {
+            l_curr *= 10;
+            res = rat_to_limit(l_curr,n);
         }
-        return f;
+        return [res[1],res[2]];
     },
     /** The first 1000 primes */
     primes: [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257,263,269,271,277,281,283,293,307,311,313,317,331,337,347,349,353,359,367,373,379,383,389,397,401,409,419,421,431,433,439,443,449,457,461,463,467,479,487,491,499,503,509,521,523,541,547,557,563,569,571,577,587,593,599,601,607,613,617,619,631,641,643,647,653,659,661,673,677,683,691,701,709,719,727,733,739,743,751,757,761,769,773,787,797,809,811,821,823,827,829,839,853,857,859,863,877,881,883,887,907,911,919,929,937,941,947,953,967,971,977,983,991,997,1009,1013,1019,1021,1031,1033,1039,1049,1051,1061,1063,1069,1087,1091,1093,1097,1103,1109,1117,1123,1129,1151,1153,1163,1171,1181,1187,1193,1201,1213,1217,1223,1229,1231,1237,1249,1259,1277,1279,1283,1289,1291,1297,1301,1303,1307,1319,1321,1327,1361,1367,1373,1381,1399,1409,1423,1427,1429,1433,1439,1447,1451,1453,1459,1471,1481,1483,1487,1489,1493,1499,1511,1523,1531,1543,1549,1553,1559,1567,1571,1579,1583,1597,1601,1607,1609,1613,1619,1621,1627,1637,1657,1663,1667,1669,1693,1697,1699,1709,1721,1723,1733,1741,1747,1753,1759,1777,1783,1787,1789,1801,1811,1823,1831,1847,1861,1867,1871,1873,1877,1879,1889,1901,1907,1913,1931,1933,1949,1951,1973,1979,1987,1993,1997,1999,2003,2011,2017,2027,2029,2039,2053,2063,2069,2081,2083,2087,2089,2099,2111,2113,2129,2131,2137,2141,2143,2153,2161,2179,2203,2207,2213,2221,2237,2239,2243,2251,2267,2269,2273,2281,2287,2293,2297,2309,2311,2333,2339,2341,2347,2351,2357,2371,2377,2381,2383,2389,2393,2399,2411,2417,2423,2437,2441,2447,2459,2467,2473,2477,2503,2521,2531,2539,2543,2549,2551,2557,2579,2591,2593,2609,2617,2621,2633,2647,2657,2659,2663,2671,2677,2683,2687,2689,2693,2699,2707,2711,2713,2719,2729,2731,2741,2749,2753,2767,2777,2789,2791,2797,2801,2803,2819,2833,2837,2843,2851,2857,2861,2879,2887,2897,2903,2909,2917,2927,2939,2953,2957,2963,2969,2971,2999,3001,3011,3019,3023,3037,3041,3049,3061,3067,3079,3083,3089,3109,3119,3121,3137,3163,3167,3169,3181,3187,3191,3203,3209,3217,3221,3229,3251,3253,3257,3259,3271,3299,3301,3307,3313,3319,3323,3329,3331,3343,3347,3359,3361,3371,3373,3389,3391,3407,3413,3433,3449,3457,3461,3463,3467,3469,3491,3499,3511,3517,3527,3529,3533,3539,3541,3547,3557,3559,3571,3581,3583,3593,3607,3613,3617,3623,3631,3637,3643,3659,3671,3673,3677,3691,3697,3701,3709,3719,3727,3733,3739,3761,3767,3769,3779,3793,3797,3803,3821,3823,3833,3847,3851,3853,3863,3877,3881,3889,3907,3911,3917,3919,3923,3929,3931,3943,3947,3967,3989,4001,4003,4007,4013,4019,4021,4027,4049,4051,4057,4073,4079,4091,4093,4099,4111,4127,4129,4133,4139,4153,4157,4159,4177,4201,4211,4217,4219,4229,4231,4241,4243,4253,4259,4261,4271,4273,4283,4289,4297,4327,4337,4339,4349,4357,4363,4373,4391,4397,4409,4421,4423,4441,4447,4451,4457,4463,4481,4483,4493,4507,4513,4517,4519,4523,4547,4549,4561,4567,4583,4591,4597,4603,4621,4637,4639,4643,4649,4651,4657,4663,4673,4679,4691,4703,4721,4723,4729,4733,4751,4759,4783,4787,4789,4793,4799,4801,4813,4817,4831,4861,4871,4877,4889,4903,4909,4919,4931,4933,4937,4943,4951,4957,4967,4969,4973,4987,4993,4999,5003,5009,5011,5021,5023,5039,5051,5059,5077,5081,5087,5099,5101,5107,5113,5119,5147,5153,5167,5171,5179,5189,5197,5209,5227,5231,5233,5237,5261,5273,5279,5281,5297,5303,5309,5323,5333,5347,5351,5381,5387,5393,5399,5407,5413,5417,5419,5431,5437,5441,5443,5449,5471,5477,5479,5483,5501,5503,5507,5519,5521,5527,5531,5557,5563,5569,5573,5581,5591,5623,5639,5641,5647,5651,5653,5657,5659,5669,5683,5689,5693,5701,5711,5717,5737,5741,5743,5749,5779,5783,5791,5801,5807,5813,5821,5827,5839,5843,5849,5851,5857,5861,5867,5869,5879,5881,5897,5903,5923,5927,5939,5953,5981,5987,6007,6011,6029,6037,6043,6047,6053,6067,6073,6079,6089,6091,6101,6113,6121,6131,6133,6143,6151,6163,6173,6197,6199,6203,6211,6217,6221,6229,6247,6257,6263,6269,6271,6277,6287,6299,6301,6311,6317,6323,6329,6337,6343,6353,6359,6361,6367,6373,6379,6389,6397,6421,6427,6449,6451,6469,6473,6481,6491,6521,6529,6547,6551,6553,6563,6569,6571,6577,6581,6599,6607,6619,6637,6653,6659,6661,6673,6679,6689,6691,6701,6703,6709,6719,6733,6737,6761,6763,6779,6781,6791,6793,6803,6823,6827,6829,6833,6841,6857,6863,6869,6871,6883,6899,6907,6911,6917,6947,6949,6959,6961,6967,6971,6977,6983,6991,6997,7001,7013,7019,7027,7039,7043,7057,7069,7079,7103,7109,7121,7127,7129,7151,7159,7177,7187,7193,72077211,7213,7219,7229,7237,7243,7247,7253,7283,7297,7307,7309,7321,7331,7333,7349,7351,7369,7393,7411,7417,7433,7451,7457,7459,7477,7481,7487,7489,7499,7507,7517,7523,7529,7537,7541,7547,7549,7559,7561,7573,7577,7583,7589,7591,7603,7607,7621,7639,7643,7649,7669,7673,7681,7687,7691,7699,7703,7717,7723,7727,7741,7753,7757,7759,7789,7793,7817,7823,7829,7841,7853,7867,7873,7877,7879,7883,7901,7907,7919],
@@ -13701,6 +14382,113 @@ var math = Numbas.math = /** @lends Numbas.math */ {
 };
 math.gcf = math.gcd;
 var add = math.add, sub = math.sub, mul = math.mul, div = math.div, eq = math.eq, neq = math.neq, negate = math.negate;
+
+
+/** A rational number.
+ * @constructor
+ * @param {Number} numerator
+ * @param {Number} denominator
+ *
+ * @property {Number} numerator
+ * @property {Number} denominator
+ */
+var Fraction = math.Fraction = function(numerator,denominator) {
+    this.numerator = Math.round(numerator);
+    this.denominator = Math.round(denominator);
+}
+Fraction.prototype = {
+    toString: function() {
+        return this.numerator+'/'+this.denominator;
+    },
+    toFloat: function() {
+        return this.numerator / this.denominator;
+    },
+    reduce: function() {
+        if(this.denominator==0) {
+            return;
+        }
+        if(this.denominator<0) {
+            this.numerator = -this.numerator;
+            this.denominator = -this.denominator;
+        }
+        var g = math.gcd(this.numerator,this.denominator);
+        this.numerator /= g;
+        this.denominator /= g;
+    },
+    add: function(b) {
+        if(typeof(b)==='number') {
+            b = Fraction.fromFloat(b);
+        }
+        var numerator, denominator;
+        if(this.denominator == b.denominator) {
+            numerator = this.numerator + b.numerator;
+            denominator = this.denominator;
+        } else {
+            numerator = this.numerator*b.denominator + b.numerator*this.denominator;
+            denominator = this.denominator * b.denominator;
+        }
+        var f = new Fraction(numerator, denominator);
+        f.reduce();
+        return f;
+    },
+    subtract: function(b) {
+        if(typeof(b)==='number') {
+            b = Fraction.fromFloat(b);
+        }
+        var numerator;
+        var numerator, denominator;
+        if(this.denominator == b.denominator) {
+            numerator = this.numerator - b.numerator;
+            denominator = this.denominator;
+        } else {
+            numerator = this.numerator*b.denominator - b.numerator*this.denominator;
+            denominator = this.denominator * b.denominator;
+        }
+        var f = new Fraction(numerator, denominator);
+        f.reduce();
+        return f;
+    },
+    multiply: function(b) {
+        if(typeof(b)==='number') {
+            b = Fraction.fromFloat(b);
+        }
+        var numerator = this.numerator * b.numerator;
+        var denominator = this.denominator * b.denominator;
+        var f = new Fraction(numerator, denominator);
+        f.reduce();
+        return f;
+    },
+    divide: function(b) {
+        if(typeof(b)==='number') {
+            b = Fraction.fromFloat(b);
+        }
+        var numerator = this.numerator * b.denominator;
+        var denominator = this.denominator * b.numerator;
+        var f = new Fraction(numerator, denominator);
+        f.reduce();
+        return f;
+    },
+    reciprocal: function() {
+        return new Fraction(this.denominator, this.numerator);
+    },
+    negate: function() {
+        return new Fraction(-this.numerator, this.denominator);
+    },
+    equals: function(b) {
+        return this.subtract(b).numerator==0;
+    }
+}
+Fraction.zero = new Fraction(0,1);
+Fraction.one = new Fraction(1,1);
+Fraction.fromFloat = function(n) {
+    var approx = math.rationalApproximation(n);
+    return new Fraction(approx[0],approx[1]);
+}
+Fraction.fromDecimal = function(n) {
+    var approx = n.toFraction();
+    return new Fraction(approx[0].toNumber(),approx[1].toNumber());
+}
+
 /** A list of a vector's components.
  * @typedef vector
  *  @type {Array.<Number>}
@@ -14431,8 +15219,15 @@ var util = Numbas.util = /** @lends Numbas.util */ {
      * @returns {Boolean}
      */
     eq: function(a,b) {
-        if(a.type != b.type)
-            return false;
+        if(a.type != b.type) {
+            var type = Numbas.jme.findCompatibleType(a.type,b.type);
+            if(type) {
+                a = Numbas.jme.castToType(a,type);
+                b = Numbas.jme.castToType(b,type);
+            } else {
+                return false;
+            }
+        }
         if(a.type in util.equalityTests) {
             return util.equalityTests[a.type](a,b);
         } else {
@@ -14467,7 +15262,7 @@ var util = Numbas.util = /** @lends Numbas.util */ {
             return true;
         },
         'expression': function(a,b) {
-            return jme.treesSame(a.tree,b.tree);
+            return Numbas.jme.treesSame(a.tree,b.tree);
         },
         'function': function(a,b) {
             return a.name==b.name;
@@ -14492,6 +15287,15 @@ var util = Numbas.util = /** @lends Numbas.util */ {
         },
         'number': function(a,b) {
             return Numbas.math.eq(a.value,b.value);
+        },
+        'integer': function(a,b) {
+            return Numbas.math.eq(a.value,b.value);
+        },
+        'rational': function(a,b) {
+            return a.value.equals(b.value);
+        },
+        'decimal': function(a,b) {
+            return a.value.equals(b.value);
         },
         'op': function(a,b) {
             return a.name==b.name;
@@ -15438,12 +16242,12 @@ var numberNotationStyles = util.numberNotationStyles = {
     },
     // Significand-exponent ("scientific") style
     'scientific': {
-        re: /^([0-9]+)(\x2E[0-9]+)?[eE]([\-+]?[0-9]+)/,
+        re: /^(\d[ \d]*)(\x2E\d[ \d]*)?[eE]([\-+]?\d[ \d]*)/,
         clean: function(m) {
             return Numbas.math.unscientific(m[0]);
         },
         format: function(integer, decimal) {
-            return Numbas.math.scientific(parseFloat(integer+'.'+decimal));
+            return Numbas.math.niceNumber(parseFloat(integer+'.'+decimal),{style:'scientific'});
         }
     }
 }
@@ -16741,6 +17545,14 @@ var toObject = function (o) {
 });
 });
 
+Numbas.queueScript('decimal',[],function() {
+/* decimal.js v10.1.1 https://github.com/MikeMcl/decimal.js/LICENCE */
+if(typeof module !='undefined') {
+    module = undefined;
+}
+!function(n){"use strict";var h,R,e,o,u=9e15,g=1e9,m="0123456789abcdef",t="2.3025850929940456840179914546843642076011014886287729760333279009675726096773524802359972050895982983419677840422862486334095254650828067566662873690987816894829072083255546808437998948262331985283935053089653777326288461633662222876982198867465436674744042432743651550489343149393914796194044002221051017141748003688084012647080685567743216228355220114804663715659121373450747856947683463616792101806445070648000277502684916746550586856935673420670581136429224554405758925724208241314695689016758940256776311356919292033376587141660230105703089634572075440370847469940168269282808481184289314848524948644871927809676271275775397027668605952496716674183485704422507197965004714951050492214776567636938662976979522110718264549734772662425709429322582798502585509785265383207606726317164309505995087807523710333101197857547331541421808427543863591778117054309827482385045648019095610299291824318237525357709750539565187697510374970888692180205189339507238539205144634197265287286965110862571492198849978748873771345686209167058",r="3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491298336733624406566430860213949463952247371907021798609437027705392171762931767523846748184676694051320005681271452635608277857713427577896091736371787214684409012249534301465495853710507922796892589235420199561121290219608640344181598136297747713099605187072113499999983729780499510597317328160963185950244594553469083026425223082533446850352619311881710100031378387528865875332083814206171776691473035982534904287554687311595628638823537875937519577818577805321712268066130019278766111959092164201989380952572010654858632789",c={precision:20,rounding:4,modulo:1,toExpNeg:-7,toExpPos:21,minE:-u,maxE:u,crypto:!1},N=!0,f="[DecimalError] ",w=f+"Invalid argument: ",s=f+"Precision limit exceeded",a=f+"crypto unavailable",L=Math.floor,v=Math.pow,l=/^0b([01]+(\.[01]*)?|\.[01]+)(p[+-]?\d+)?$/i,d=/^0x([0-9a-f]+(\.[0-9a-f]*)?|\.[0-9a-f]+)(p[+-]?\d+)?$/i,p=/^0o([0-7]+(\.[0-7]*)?|\.[0-7]+)(p[+-]?\d+)?$/i,b=/^(\d+(\.\d*)?|\.\d+)(e[+-]?\d+)?$/i,T=1e7,U=7,E=t.length-1,x=r.length-1,y={name:"[object Decimal]"};function M(n){var e,i,t,r=n.length-1,s="",o=n[0];if(0<r){for(s+=o,e=1;e<r;e++)t=n[e]+"",(i=U-t.length)&&(s+=C(i)),s+=t;o=n[e],(i=U-(t=o+"").length)&&(s+=C(i))}else if(0===o)return"0";for(;o%10==0;)o/=10;return s+o}function q(n,e,i){if(n!==~~n||n<e||i<n)throw Error(w+n)}function O(n,e,i,t){var r,s,o;for(s=n[0];10<=s;s/=10)--e;return--e<0?(e+=U,r=0):(r=Math.ceil((e+1)/U),e%=U),s=v(10,U-e),o=n[r]%s|0,null==t?e<3?(0==e?o=o/100|0:1==e&&(o=o/10|0),i<4&&99999==o||3<i&&49999==o||5e4==o||0==o):(i<4&&o+1==s||3<i&&o+1==s/2)&&(n[r+1]/s/100|0)==v(10,e-2)-1||(o==s/2||0==o)&&0==(n[r+1]/s/100|0):e<4?(0==e?o=o/1e3|0:1==e?o=o/100|0:2==e&&(o=o/10|0),(t||i<4)&&9999==o||!t&&3<i&&4999==o):((t||i<4)&&o+1==s||!t&&3<i&&o+1==s/2)&&(n[r+1]/s/1e3|0)==v(10,e-3)-1}function D(n,e,i){for(var t,r,s=[0],o=0,u=n.length;o<u;){for(r=s.length;r--;)s[r]*=e;for(s[0]+=m.indexOf(n.charAt(o++)),t=0;t<s.length;t++)s[t]>i-1&&(void 0===s[t+1]&&(s[t+1]=0),s[t+1]+=s[t]/i|0,s[t]%=i)}return s.reverse()}y.absoluteValue=y.abs=function(){var n=new this.constructor(this);return n.s<0&&(n.s=1),_(n)},y.ceil=function(){return _(new this.constructor(this),this.e+1,2)},y.comparedTo=y.cmp=function(n){var e,i,t,r,s=this,o=s.d,u=(n=new s.constructor(n)).d,c=s.s,f=n.s;if(!o||!u)return c&&f?c!==f?c:o===u?0:!o^c<0?1:-1:NaN;if(!o[0]||!u[0])return o[0]?c:u[0]?-f:0;if(c!==f)return c;if(s.e!==n.e)return s.e>n.e^c<0?1:-1;for(e=0,i=(t=o.length)<(r=u.length)?t:r;e<i;++e)if(o[e]!==u[e])return o[e]>u[e]^c<0?1:-1;return t===r?0:r<t^c<0?1:-1},y.cosine=y.cos=function(){var n,e,i=this,t=i.constructor;return i.d?i.d[0]?(n=t.precision,e=t.rounding,t.precision=n+Math.max(i.e,i.sd())+U,t.rounding=1,i=function(n,e){var i,t,r=e.d.length;t=r<32?(i=Math.ceil(r/3),Math.pow(4,-i).toString()):(i=16,"2.3283064365386962890625e-10");n.precision+=i,e=W(n,1,e.times(t),new n(1));for(var s=i;s--;){var o=e.times(e);e=o.times(o).minus(o).times(8).plus(1)}return n.precision-=i,e}(t,J(t,i)),t.precision=n,t.rounding=e,_(2==o||3==o?i.neg():i,n,e,!0)):new t(1):new t(NaN)},y.cubeRoot=y.cbrt=function(){var n,e,i,t,r,s,o,u,c,f,a=this,h=a.constructor;if(!a.isFinite()||a.isZero())return new h(a);for(N=!1,(s=a.s*Math.pow(a.s*a,1/3))&&Math.abs(s)!=1/0?t=new h(s.toString()):(i=M(a.d),(s=((n=a.e)-i.length+1)%3)&&(i+=1==s||-2==s?"0":"00"),s=Math.pow(i,1/3),n=L((n+1)/3)-(n%3==(n<0?-1:2)),(t=new h(i=s==1/0?"5e"+n:(i=s.toExponential()).slice(0,i.indexOf("e")+1)+n)).s=a.s),o=(n=h.precision)+3;;)if(f=(c=(u=t).times(u).times(u)).plus(a),t=F(f.plus(a).times(u),f.plus(c),o+2,1),M(u.d).slice(0,o)===(i=M(t.d)).slice(0,o)){if("9999"!=(i=i.slice(o-3,o+1))&&(r||"4999"!=i)){+i&&(+i.slice(1)||"5"!=i.charAt(0))||(_(t,n+1,1),e=!t.times(t).times(t).eq(a));break}if(!r&&(_(u,n+1,0),u.times(u).times(u).eq(a))){t=u;break}o+=4,r=1}return N=!0,_(t,n,h.rounding,e)},y.decimalPlaces=y.dp=function(){var n,e=this.d,i=NaN;if(e){if(i=((n=e.length-1)-L(this.e/U))*U,n=e[n])for(;n%10==0;n/=10)i--;i<0&&(i=0)}return i},y.dividedBy=y.div=function(n){return F(this,new this.constructor(n))},y.dividedToIntegerBy=y.divToInt=function(n){var e=this.constructor;return _(F(this,new e(n),0,1,1),e.precision,e.rounding)},y.equals=y.eq=function(n){return 0===this.cmp(n)},y.floor=function(){return _(new this.constructor(this),this.e+1,3)},y.greaterThan=y.gt=function(n){return 0<this.cmp(n)},y.greaterThanOrEqualTo=y.gte=function(n){var e=this.cmp(n);return 1==e||0===e},y.hyperbolicCosine=y.cosh=function(){var n,e,i,t,r,s=this,o=s.constructor,u=new o(1);if(!s.isFinite())return new o(s.s?1/0:NaN);if(s.isZero())return u;i=o.precision,t=o.rounding,o.precision=i+Math.max(s.e,s.sd())+4,o.rounding=1,e=(r=s.d.length)<32?(n=Math.ceil(r/3),Math.pow(4,-n).toString()):(n=16,"2.3283064365386962890625e-10"),s=W(o,1,s.times(e),new o(1),!0);for(var c,f=n,a=new o(8);f--;)c=s.times(s),s=u.minus(c.times(a.minus(c.times(a))));return _(s,o.precision=i,o.rounding=t,!0)},y.hyperbolicSine=y.sinh=function(){var n,e,i,t,r=this,s=r.constructor;if(!r.isFinite()||r.isZero())return new s(r);if(e=s.precision,i=s.rounding,s.precision=e+Math.max(r.e,r.sd())+4,s.rounding=1,(t=r.d.length)<3)r=W(s,2,r,r,!0);else{n=16<(n=1.4*Math.sqrt(t))?16:0|n,r=W(s,2,r=r.times(Math.pow(5,-n)),r,!0);for(var o,u=new s(5),c=new s(16),f=new s(20);n--;)o=r.times(r),r=r.times(u.plus(o.times(c.times(o).plus(f))))}return _(r,s.precision=e,s.rounding=i,!0)},y.hyperbolicTangent=y.tanh=function(){var n,e,i=this,t=i.constructor;return i.isFinite()?i.isZero()?new t(i):(n=t.precision,e=t.rounding,t.precision=n+7,t.rounding=1,F(i.sinh(),i.cosh(),t.precision=n,t.rounding=e)):new t(i.s)},y.inverseCosine=y.acos=function(){var n,e=this,i=e.constructor,t=e.abs().cmp(1),r=i.precision,s=i.rounding;return-1!==t?0===t?e.isNeg()?P(i,r,s):new i(0):new i(NaN):e.isZero()?P(i,r+4,s).times(.5):(i.precision=r+6,i.rounding=1,e=e.asin(),n=P(i,r+4,s).times(.5),i.precision=r,i.rounding=s,n.minus(e))},y.inverseHyperbolicCosine=y.acosh=function(){var n,e,i=this,t=i.constructor;return i.lte(1)?new t(i.eq(1)?0:NaN):i.isFinite()?(n=t.precision,e=t.rounding,t.precision=n+Math.max(Math.abs(i.e),i.sd())+4,t.rounding=1,N=!1,i=i.times(i).minus(1).sqrt().plus(i),N=!0,t.precision=n,t.rounding=e,i.ln()):new t(i)},y.inverseHyperbolicSine=y.asinh=function(){var n,e,i=this,t=i.constructor;return!i.isFinite()||i.isZero()?new t(i):(n=t.precision,e=t.rounding,t.precision=n+2*Math.max(Math.abs(i.e),i.sd())+6,t.rounding=1,N=!1,i=i.times(i).plus(1).sqrt().plus(i),N=!0,t.precision=n,t.rounding=e,i.ln())},y.inverseHyperbolicTangent=y.atanh=function(){var n,e,i,t,r=this,s=r.constructor;return r.isFinite()?0<=r.e?new s(r.abs().eq(1)?r.s/0:r.isZero()?r:NaN):(n=s.precision,e=s.rounding,t=r.sd(),Math.max(t,n)<2*-r.e-1?_(new s(r),n,e,!0):(s.precision=i=t-r.e,r=F(r.plus(1),new s(1).minus(r),i+n,1),s.precision=n+4,s.rounding=1,r=r.ln(),s.precision=n,s.rounding=e,r.times(.5))):new s(NaN)},y.inverseSine=y.asin=function(){var n,e,i,t,r=this,s=r.constructor;return r.isZero()?new s(r):(e=r.abs().cmp(1),i=s.precision,t=s.rounding,-1!==e?0===e?((n=P(s,i+4,t).times(.5)).s=r.s,n):new s(NaN):(s.precision=i+6,s.rounding=1,r=r.div(new s(1).minus(r.times(r)).sqrt().plus(1)).atan(),s.precision=i,s.rounding=t,r.times(2)))},y.inverseTangent=y.atan=function(){var n,e,i,t,r,s,o,u,c,f=this,a=f.constructor,h=a.precision,l=a.rounding;if(f.isFinite()){if(f.isZero())return new a(f);if(f.abs().eq(1)&&h+4<=x)return(o=P(a,h+4,l).times(.25)).s=f.s,o}else{if(!f.s)return new a(NaN);if(h+4<=x)return(o=P(a,h+4,l).times(.5)).s=f.s,o}for(a.precision=u=h+10,a.rounding=1,n=i=Math.min(28,u/U+2|0);n;--n)f=f.div(f.times(f).plus(1).sqrt().plus(1));for(N=!1,e=Math.ceil(u/U),t=1,c=f.times(f),o=new a(f),r=f;-1!==n;)if(r=r.times(c),s=o.minus(r.div(t+=2)),r=r.times(c),void 0!==(o=s.plus(r.div(t+=2))).d[e])for(n=e;o.d[n]===s.d[n]&&n--;);return i&&(o=o.times(2<<i-1)),N=!0,_(o,a.precision=h,a.rounding=l,!0)},y.isFinite=function(){return!!this.d},y.isInteger=y.isInt=function(){return!!this.d&&L(this.e/U)>this.d.length-2},y.isNaN=function(){return!this.s},y.isNegative=y.isNeg=function(){return this.s<0},y.isPositive=y.isPos=function(){return 0<this.s},y.isZero=function(){return!!this.d&&0===this.d[0]},y.lessThan=y.lt=function(n){return this.cmp(n)<0},y.lessThanOrEqualTo=y.lte=function(n){return this.cmp(n)<1},y.logarithm=y.log=function(n){var e,i,t,r,s,o,u,c,f=this,a=f.constructor,h=a.precision,l=a.rounding;if(null==n)n=new a(10),e=!0;else{if(i=(n=new a(n)).d,n.s<0||!i||!i[0]||n.eq(1))return new a(NaN);e=n.eq(10)}if(i=f.d,f.s<0||!i||!i[0]||f.eq(1))return new a(i&&!i[0]?-1/0:1!=f.s?NaN:i?0:1/0);if(e)if(1<i.length)s=!0;else{for(r=i[0];r%10==0;)r/=10;s=1!==r}if(N=!1,o=V(f,u=h+5),t=e?Z(a,u+10):V(n,u),O((c=F(o,t,u,1)).d,r=h,l))do{if(o=V(f,u+=10),t=e?Z(a,u+10):V(n,u),c=F(o,t,u,1),!s){+M(c.d).slice(r+1,r+15)+1==1e14&&(c=_(c,h+1,0));break}}while(O(c.d,r+=10,l));return N=!0,_(c,h,l)},y.minus=y.sub=function(n){var e,i,t,r,s,o,u,c,f,a,h,l,d=this,p=d.constructor;if(n=new p(n),!d.d||!n.d)return d.s&&n.s?d.d?n.s=-n.s:n=new p(n.d||d.s!==n.s?d:NaN):n=new p(NaN),n;if(d.s!=n.s)return n.s=-n.s,d.plus(n);if(f=d.d,l=n.d,u=p.precision,c=p.rounding,!f[0]||!l[0]){if(l[0])n.s=-n.s;else{if(!f[0])return new p(3===c?-0:0);n=new p(d)}return N?_(n,u,c):n}if(i=L(n.e/U),a=L(d.e/U),f=f.slice(),s=a-i){for(o=(h=s<0)?(e=f,s=-s,l.length):(e=l,i=a,f.length),(t=Math.max(Math.ceil(u/U),o)+2)<s&&(s=t,e.length=1),e.reverse(),t=s;t--;)e.push(0);e.reverse()}else{for((h=(t=f.length)<(o=l.length))&&(o=t),t=0;t<o;t++)if(f[t]!=l[t]){h=f[t]<l[t];break}s=0}for(h&&(e=f,f=l,l=e,n.s=-n.s),o=f.length,t=l.length-o;0<t;--t)f[o++]=0;for(t=l.length;s<t;){if(f[--t]<l[t]){for(r=t;r&&0===f[--r];)f[r]=T-1;--f[r],f[t]+=T}f[t]-=l[t]}for(;0===f[--o];)f.pop();for(;0===f[0];f.shift())--i;return f[0]?(n.d=f,n.e=S(f,i),N?_(n,u,c):n):new p(3===c?-0:0)},y.modulo=y.mod=function(n){var e,i=this,t=i.constructor;return n=new t(n),!i.d||!n.s||n.d&&!n.d[0]?new t(NaN):!n.d||i.d&&!i.d[0]?_(new t(i),t.precision,t.rounding):(N=!1,9==t.modulo?(e=F(i,n.abs(),0,3,1)).s*=n.s:e=F(i,n,0,t.modulo,1),e=e.times(n),N=!0,i.minus(e))},y.naturalExponential=y.exp=function(){return B(this)},y.naturalLogarithm=y.ln=function(){return V(this)},y.negated=y.neg=function(){var n=new this.constructor(this);return n.s=-n.s,_(n)},y.plus=y.add=function(n){var e,i,t,r,s,o,u,c,f,a,h=this,l=h.constructor;if(n=new l(n),!h.d||!n.d)return h.s&&n.s?h.d||(n=new l(n.d||h.s===n.s?h:NaN)):n=new l(NaN),n;if(h.s!=n.s)return n.s=-n.s,h.minus(n);if(f=h.d,a=n.d,u=l.precision,c=l.rounding,!f[0]||!a[0])return a[0]||(n=new l(h)),N?_(n,u,c):n;if(s=L(h.e/U),t=L(n.e/U),f=f.slice(),r=s-t){for((o=(o=r<0?(i=f,r=-r,a.length):(i=a,t=s,f.length))<(s=Math.ceil(u/U))?s+1:o+1)<r&&(r=o,i.length=1),i.reverse();r--;)i.push(0);i.reverse()}for((o=f.length)-(r=a.length)<0&&(r=o,i=a,a=f,f=i),e=0;r;)e=(f[--r]=f[r]+a[r]+e)/T|0,f[r]%=T;for(e&&(f.unshift(e),++t),o=f.length;0==f[--o];)f.pop();return n.d=f,n.e=S(f,t),N?_(n,u,c):n},y.precision=y.sd=function(n){var e;if(void 0!==n&&n!==!!n&&1!==n&&0!==n)throw Error(w+n);return this.d?(e=k(this.d),n&&this.e+1>e&&(e=this.e+1)):e=NaN,e},y.round=function(){var n=this.constructor;return _(new n(this),this.e+1,n.rounding)},y.sine=y.sin=function(){var n,e,i=this,t=i.constructor;return i.isFinite()?i.isZero()?new t(i):(n=t.precision,e=t.rounding,t.precision=n+Math.max(i.e,i.sd())+U,t.rounding=1,i=function(n,e){var i,t=e.d.length;if(t<3)return W(n,2,e,e);i=16<(i=1.4*Math.sqrt(t))?16:0|i,e=e.times(Math.pow(5,-i)),e=W(n,2,e,e);for(var r,s=new n(5),o=new n(16),u=new n(20);i--;)r=e.times(e),e=e.times(s.plus(r.times(o.times(r).minus(u))));return e}(t,J(t,i)),t.precision=n,t.rounding=e,_(2<o?i.neg():i,n,e,!0)):new t(NaN)},y.squareRoot=y.sqrt=function(){var n,e,i,t,r,s,o=this,u=o.d,c=o.e,f=o.s,a=o.constructor;if(1!==f||!u||!u[0])return new a(!f||f<0&&(!u||u[0])?NaN:u?o:1/0);for(N=!1,t=0==(f=Math.sqrt(+o))||f==1/0?(((e=M(u)).length+c)%2==0&&(e+="0"),f=Math.sqrt(e),c=L((c+1)/2)-(c<0||c%2),new a(e=f==1/0?"1e"+c:(e=f.toExponential()).slice(0,e.indexOf("e")+1)+c)):new a(f.toString()),i=(c=a.precision)+3;;)if(t=(s=t).plus(F(o,s,i+2,1)).times(.5),M(s.d).slice(0,i)===(e=M(t.d)).slice(0,i)){if("9999"!=(e=e.slice(i-3,i+1))&&(r||"4999"!=e)){+e&&(+e.slice(1)||"5"!=e.charAt(0))||(_(t,c+1,1),n=!t.times(t).eq(o));break}if(!r&&(_(s,c+1,0),s.times(s).eq(o))){t=s;break}i+=4,r=1}return N=!0,_(t,c,a.rounding,n)},y.tangent=y.tan=function(){var n,e,i=this,t=i.constructor;return i.isFinite()?i.isZero()?new t(i):(n=t.precision,e=t.rounding,t.precision=n+10,t.rounding=1,(i=i.sin()).s=1,i=F(i,new t(1).minus(i.times(i)).sqrt(),n+10,0),t.precision=n,t.rounding=e,_(2==o||4==o?i.neg():i,n,e,!0)):new t(NaN)},y.times=y.mul=function(n){var e,i,t,r,s,o,u,c,f,a=this.constructor,h=this.d,l=(n=new a(n)).d;if(n.s*=this.s,!(h&&h[0]&&l&&l[0]))return new a(!n.s||h&&!h[0]&&!l||l&&!l[0]&&!h?NaN:h&&l?0*n.s:n.s/0);for(i=L(this.e/U)+L(n.e/U),(c=h.length)<(f=l.length)&&(s=h,h=l,l=s,o=c,c=f,f=o),s=[],t=o=c+f;t--;)s.push(0);for(t=f;0<=--t;){for(e=0,r=c+t;t<r;)u=s[r]+l[t]*h[r-t-1]+e,s[r--]=u%T|0,e=u/T|0;s[r]=(s[r]+e)%T|0}for(;!s[--o];)s.pop();return e?++i:s.shift(),n.d=s,n.e=S(s,i),N?_(n,a.precision,a.rounding):n},y.toBinary=function(n,e){return z(this,2,n,e)},y.toDecimalPlaces=y.toDP=function(n,e){var i=this,t=i.constructor;return i=new t(i),void 0===n?i:(q(n,0,g),void 0===e?e=t.rounding:q(e,0,8),_(i,n+i.e+1,e))},y.toExponential=function(n,e){var i,t=this,r=t.constructor;return i=void 0===n?A(t,!0):(q(n,0,g),void 0===e?e=r.rounding:q(e,0,8),A(t=_(new r(t),n+1,e),!0,n+1)),t.isNeg()&&!t.isZero()?"-"+i:i},y.toFixed=function(n,e){var i,t,r=this,s=r.constructor;return i=void 0===n?A(r):(q(n,0,g),void 0===e?e=s.rounding:q(e,0,8),A(t=_(new s(r),n+r.e+1,e),!1,n+t.e+1)),r.isNeg()&&!r.isZero()?"-"+i:i},y.toFraction=function(n){var e,i,t,r,s,o,u,c,f,a,h,l,d=this,p=d.d,g=d.constructor;if(!p)return new g(d);if(f=i=new g(1),o=(s=(e=new g(t=c=new g(0))).e=k(p)-d.e-1)%U,e.d[0]=v(10,o<0?U+o:o),null==n)n=0<s?e:f;else{if(!(u=new g(n)).isInt()||u.lt(f))throw Error(w+u);n=u.gt(e)?0<s?e:f:u}for(N=!1,u=new g(M(p)),a=g.precision,g.precision=s=p.length*U*2;h=F(u,e,0,1,1),1!=(r=i.plus(h.times(t))).cmp(n);)i=t,t=r,r=f,f=c.plus(h.times(r)),c=r,r=e,e=u.minus(h.times(r)),u=r;return r=F(n.minus(i),t,0,1,1),c=c.plus(r.times(f)),i=i.plus(r.times(t)),c.s=f.s=d.s,l=F(f,t,s,1).minus(d).abs().cmp(F(c,i,s,1).minus(d).abs())<1?[f,t]:[c,i],g.precision=a,N=!0,l},y.toHexadecimal=y.toHex=function(n,e){return z(this,16,n,e)},y.toNearest=function(n,e){var i=this,t=i.constructor;if(i=new t(i),null==n){if(!i.d)return i;n=new t(1),e=t.rounding}else{if(n=new t(n),void 0===e?e=t.rounding:q(e,0,8),!i.d)return n.s?i:n;if(!n.d)return n.s&&(n.s=i.s),n}return n.d[0]?(N=!1,i=F(i,n,0,e,1).times(n),N=!0,_(i)):(n.s=i.s,i=n),i},y.toNumber=function(){return+this},y.toOctal=function(n,e){return z(this,8,n,e)},y.toPower=y.pow=function(n){var e,i,t,r,s,o,u=this,c=u.constructor,f=+(n=new c(n));if(!(u.d&&n.d&&u.d[0]&&n.d[0]))return new c(v(+u,f));if((u=new c(u)).eq(1))return u;if(t=c.precision,s=c.rounding,n.eq(1))return _(u,t,s);if((e=L(n.e/U))>=n.d.length-1&&(i=f<0?-f:f)<=9007199254740991)return r=I(c,u,i,t),n.s<0?new c(1).div(r):_(r,t,s);if((o=u.s)<0){if(e<n.d.length-1)return new c(NaN);if(0==(1&n.d[e])&&(o=1),0==u.e&&1==u.d[0]&&1==u.d.length)return u.s=o,u}return(e=0!=(i=v(+u,f))&&isFinite(i)?new c(i+"").e:L(f*(Math.log("0."+M(u.d))/Math.LN10+u.e+1)))>c.maxE+1||e<c.minE-1?new c(0<e?o/0:0):(N=!1,c.rounding=u.s=1,i=Math.min(12,(e+"").length),(r=B(n.times(V(u,t+i)),t)).d&&O((r=_(r,t+5,1)).d,t,s)&&(e=t+10,+M((r=_(B(n.times(V(u,e+i)),e),e+5,1)).d).slice(t+1,t+15)+1==1e14&&(r=_(r,t+1,0))),r.s=o,N=!0,_(r,t,c.rounding=s))},y.toPrecision=function(n,e){var i,t=this,r=t.constructor;return i=void 0===n?A(t,t.e<=r.toExpNeg||t.e>=r.toExpPos):(q(n,1,g),void 0===e?e=r.rounding:q(e,0,8),A(t=_(new r(t),n,e),n<=t.e||t.e<=r.toExpNeg,n)),t.isNeg()&&!t.isZero()?"-"+i:i},y.toSignificantDigits=y.toSD=function(n,e){var i=this.constructor;return void 0===n?(n=i.precision,e=i.rounding):(q(n,1,g),void 0===e?e=i.rounding:q(e,0,8)),_(new i(this),n,e)},y.toString=function(){var n=this,e=n.constructor,i=A(n,n.e<=e.toExpNeg||n.e>=e.toExpPos);return n.isNeg()&&!n.isZero()?"-"+i:i},y.truncated=y.trunc=function(){return _(new this.constructor(this),this.e+1,1)},y.valueOf=y.toJSON=function(){var n=this,e=n.constructor,i=A(n,n.e<=e.toExpNeg||n.e>=e.toExpPos);return n.isNeg()?"-"+i:i};var F=function(){function S(n,e,i){var t,r=0,s=n.length;for(n=n.slice();s--;)t=n[s]*e+r,n[s]=t%i|0,r=t/i|0;return r&&n.unshift(r),n}function Z(n,e,i,t){var r,s;if(i!=t)s=t<i?1:-1;else for(r=s=0;r<i;r++)if(n[r]!=e[r]){s=n[r]>e[r]?1:-1;break}return s}function P(n,e,i,t){for(var r=0;i--;)n[i]-=r,r=n[i]<e[i]?1:0,n[i]=r*t+n[i]-e[i];for(;!n[0]&&1<n.length;)n.shift()}return function(n,e,i,t,r,s){var o,u,c,f,a,h,l,d,p,g,m,w,v,N,b,E,x,y,M,q,O=n.constructor,D=n.s==e.s?1:-1,F=n.d,A=e.d;if(!(F&&F[0]&&A&&A[0]))return new O(n.s&&e.s&&(F?!A||F[0]!=A[0]:A)?F&&0==F[0]||!A?0*D:D/0:NaN);for(u=s?(a=1,n.e-e.e):(s=T,a=U,L(n.e/a)-L(e.e/a)),M=A.length,x=F.length,g=(p=new O(D)).d=[],c=0;A[c]==(F[c]||0);c++);if(A[c]>(F[c]||0)&&u--,null==i?(N=i=O.precision,t=O.rounding):N=r?i+(n.e-e.e)+1:i,N<0)g.push(1),h=!0;else{if(N=N/a+2|0,c=0,1==M){for(A=A[f=0],N++;(c<x||f)&&N--;c++)b=f*s+(F[c]||0),g[c]=b/A|0,f=b%A|0;h=f||c<x}else{for(1<(f=s/(A[0]+1)|0)&&(A=S(A,f,s),F=S(F,f,s),M=A.length,x=F.length),E=M,w=(m=F.slice(0,M)).length;w<M;)m[w++]=0;for((q=A.slice()).unshift(0),y=A[0],A[1]>=s/2&&++y;f=0,(o=Z(A,m,M,w))<0?(v=m[0],M!=w&&(v=v*s+(m[1]||0)),1<(f=v/y|0)?(s<=f&&(f=s-1),1==(o=Z(l=S(A,f,s),m,d=l.length,w=m.length))&&(f--,P(l,M<d?q:A,d,s))):(0==f&&(o=f=1),l=A.slice()),(d=l.length)<w&&l.unshift(0),P(m,l,w,s),-1==o&&(o=Z(A,m,M,w=m.length))<1&&(f++,P(m,M<w?q:A,w,s)),w=m.length):0===o&&(f++,m=[0]),g[c++]=f,o&&m[0]?m[w++]=F[E]||0:(m=[F[E]],w=1),(E++<x||void 0!==m[0])&&N--;);h=void 0!==m[0]}g[0]||g.shift()}if(1==a)p.e=u,R=h;else{for(c=1,f=g[0];10<=f;f/=10)c++;p.e=c+u*a-1,_(p,r?i+p.e+1:i,t,h)}return p}}();function _(n,e,i,t){var r,s,o,u,c,f,a,h,l,d=n.constructor;n:if(null!=e){if(!(h=n.d))return n;for(r=1,u=h[0];10<=u;u/=10)r++;if((s=e-r)<0)s+=U,o=e,c=(a=h[l=0])/v(10,r-o-1)%10|0;else if(l=Math.ceil((s+1)/U),(u=h.length)<=l){if(!t)break n;for(;u++<=l;)h.push(0);a=c=0,o=(s%=U)-U+(r=1)}else{for(a=u=h[l],r=1;10<=u;u/=10)r++;c=(o=(s%=U)-U+r)<0?0:a/v(10,r-o-1)%10|0}if(t=t||e<0||void 0!==h[l+1]||(o<0?a:a%v(10,r-o-1)),f=i<4?(c||t)&&(0==i||i==(n.s<0?3:2)):5<c||5==c&&(4==i||t||6==i&&(0<s?0<o?a/v(10,r-o):0:h[l-1])%10&1||i==(n.s<0?8:7)),e<1||!h[0])return h.length=0,f?(e-=n.e+1,h[0]=v(10,(U-e%U)%U),n.e=-e||0):h[0]=n.e=0,n;if(0==s?(h.length=l,u=1,l--):(h.length=l+1,u=v(10,U-s),h[l]=0<o?(a/v(10,r-o)%v(10,o)|0)*u:0),f)for(;;){if(0==l){for(s=1,o=h[0];10<=o;o/=10)s++;for(o=h[0]+=u,u=1;10<=o;o/=10)u++;s!=u&&(n.e++,h[0]==T&&(h[0]=1));break}if(h[l]+=u,h[l]!=T)break;h[l--]=0,u=1}for(s=h.length;0===h[--s];)h.pop()}return N&&(n.e>d.maxE?(n.d=null,n.e=NaN):n.e<d.minE&&(n.e=0,n.d=[0])),n}function A(n,e,i){if(!n.isFinite())return j(n);var t,r=n.e,s=M(n.d),o=s.length;return e?(i&&0<(t=i-o)?s=s.charAt(0)+"."+s.slice(1)+C(t):1<o&&(s=s.charAt(0)+"."+s.slice(1)),s=s+(n.e<0?"e":"e+")+n.e):r<0?(s="0."+C(-r-1)+s,i&&0<(t=i-o)&&(s+=C(t))):o<=r?(s+=C(r+1-o),i&&0<(t=i-r-1)&&(s=s+"."+C(t))):((t=r+1)<o&&(s=s.slice(0,t)+"."+s.slice(t)),i&&0<(t=i-o)&&(r+1===o&&(s+="."),s+=C(t))),s}function S(n,e){var i=n[0];for(e*=U;10<=i;i/=10)e++;return e}function Z(n,e,i){if(E<e)throw N=!0,i&&(n.precision=i),Error(s);return _(new n(t),e,1,!0)}function P(n,e,i){if(x<e)throw Error(s);return _(new n(r),e,i,!0)}function k(n){var e=n.length-1,i=e*U+1;if(e=n[e]){for(;e%10==0;e/=10)i--;for(e=n[0];10<=e;e/=10)i++}return i}function C(n){for(var e="";n--;)e+="0";return e}function I(n,e,i,t){var r,s=new n(1),o=Math.ceil(t/U+4);for(N=!1;;){if(i%2&&G((s=s.times(e)).d,o)&&(r=!0),0===(i=L(i/2))){i=s.d.length-1,r&&0===s.d[i]&&++s.d[i];break}G((e=e.times(e)).d,o)}return N=!0,s}function H(n){return 1&n.d[n.d.length-1]}function i(n,e,i){for(var t,r=new n(e[0]),s=0;++s<e.length;){if(!(t=new n(e[s])).s){r=t;break}r[i](t)&&(r=t)}return r}function B(n,e){var i,t,r,s,o,u,c,f=0,a=0,h=0,l=n.constructor,d=l.rounding,p=l.precision;if(!n.d||!n.d[0]||17<n.e)return new l(n.d?n.d[0]?n.s<0?0:1/0:1:n.s?n.s<0?0:n:NaN);for(c=null==e?(N=!1,p):e,u=new l(.03125);-2<n.e;)n=n.times(u),h+=5;for(c+=t=Math.log(v(2,h))/Math.LN10*2+5|0,i=s=o=new l(1),l.precision=c;;){if(s=_(s.times(n),c,1),i=i.times(++a),M((u=o.plus(F(s,i,c,1))).d).slice(0,c)===M(o.d).slice(0,c)){for(r=h;r--;)o=_(o.times(o),c,1);if(null!=e)return l.precision=p,o;if(!(f<3&&O(o.d,c-t,d,f)))return _(o,l.precision=p,d,N=!0);l.precision=c+=10,i=s=u=new l(1),a=0,f++}o=u}}function V(n,e){var i,t,r,s,o,u,c,f,a,h,l,d=1,p=n,g=p.d,m=p.constructor,w=m.rounding,v=m.precision;if(p.s<0||!g||!g[0]||!p.e&&1==g[0]&&1==g.length)return new m(g&&!g[0]?-1/0:1!=p.s?NaN:g?0:p);if(a=null==e?(N=!1,v):e,m.precision=a+=10,t=(i=M(g)).charAt(0),!(Math.abs(s=p.e)<15e14))return f=Z(m,a+2,v).times(s+""),p=V(new m(t+"."+i.slice(1)),a-10).plus(f),m.precision=v,null==e?_(p,v,w,N=!0):p;for(;t<7&&1!=t||1==t&&3<i.charAt(1);)t=(i=M((p=p.times(n)).d)).charAt(0),d++;for(s=p.e,1<t?(p=new m("0."+i),s++):p=new m(t+"."+i.slice(1)),c=o=p=F((h=p).minus(1),p.plus(1),a,1),l=_(p.times(p),a,1),r=3;;){if(o=_(o.times(l),a,1),M((f=c.plus(F(o,new m(r),a,1))).d).slice(0,a)===M(c.d).slice(0,a)){if(c=c.times(2),0!==s&&(c=c.plus(Z(m,a+2,v).times(s+""))),c=F(c,new m(d),a,1),null!=e)return m.precision=v,c;if(!O(c.d,a-10,w,u))return _(c,m.precision=v,w,N=!0);m.precision=a+=10,f=o=p=F(h.minus(1),h.plus(1),a,1),l=_(p.times(p),a,1),r=u=1}c=f,r+=2}}function j(n){return String(n.s*n.s/0)}function $(n,e){var i,t,r;for(-1<(i=e.indexOf("."))&&(e=e.replace(".","")),0<(t=e.search(/e/i))?(i<0&&(i=t),i+=+e.slice(t+1),e=e.substring(0,t)):i<0&&(i=e.length),t=0;48===e.charCodeAt(t);t++);for(r=e.length;48===e.charCodeAt(r-1);--r);if(e=e.slice(t,r)){if(r-=t,n.e=i=i-t-1,n.d=[],t=(i+1)%U,i<0&&(t+=U),t<r){for(t&&n.d.push(+e.slice(0,t)),r-=U;t<r;)n.d.push(+e.slice(t,t+=U));e=e.slice(t),t=U-e.length}else t-=r;for(;t--;)e+="0";n.d.push(+e),N&&(n.e>n.constructor.maxE?(n.d=null,n.e=NaN):n.e<n.constructor.minE&&(n.e=0,n.d=[0]))}else n.e=0,n.d=[0];return n}function W(n,e,i,t,r){var s,o,u,c,f=n.precision,a=Math.ceil(f/U);for(N=!1,c=i.times(i),u=new n(t);;){if(o=F(u.times(c),new n(e++*e++),f,1),u=r?t.plus(o):t.minus(o),t=F(o.times(c),new n(e++*e++),f,1),void 0!==(o=u.plus(t)).d[a]){for(s=a;o.d[s]===u.d[s]&&s--;);if(-1==s)break}s=u,u=t,t=o,o=s,0}return N=!0,o.d.length=a+1,o}function J(n,e){var i,t=e.s<0,r=P(n,n.precision,1),s=r.times(.5);if((e=e.abs()).lte(s))return o=t?4:1,e;if((i=e.divToInt(r)).isZero())o=t?3:2;else{if((e=e.minus(i.times(r))).lte(s))return o=H(i)?t?2:3:t?4:1,e;o=H(i)?t?1:4:t?3:2}return e.minus(r).abs()}function z(n,e,i,t){var r,s,o,u,c,f,a,h,l,d=n.constructor,p=void 0!==i;if(p?(q(i,1,g),void 0===t?t=d.rounding:q(t,0,8)):(i=d.precision,t=d.rounding),n.isFinite()){for(p?(r=2,16==e?i=4*i-3:8==e&&(i=3*i-2)):r=e,0<=(o=(a=A(n)).indexOf("."))&&(a=a.replace(".",""),(l=new d(1)).e=a.length-o,l.d=D(A(l),10,r),l.e=l.d.length),s=c=(h=D(a,10,r)).length;0==h[--c];)h.pop();if(h[0]){if(o<0?s--:((n=new d(n)).d=h,n.e=s,h=(n=F(n,l,i,t,0,r)).d,s=n.e,f=R),o=h[i],u=r/2,f=f||void 0!==h[i+1],f=t<4?(void 0!==o||f)&&(0===t||t===(n.s<0?3:2)):u<o||o===u&&(4===t||f||6===t&&1&h[i-1]||t===(n.s<0?8:7)),h.length=i,f)for(;++h[--i]>r-1;)h[i]=0,i||(++s,h.unshift(1));for(c=h.length;!h[c-1];--c);for(o=0,a="";o<c;o++)a+=m.charAt(h[o]);if(p){if(1<c)if(16==e||8==e){for(o=16==e?4:3,--c;c%o;c++)a+="0";for(c=(h=D(a,r,e)).length;!h[c-1];--c);for(o=1,a="1.";o<c;o++)a+=m.charAt(h[o])}else a=a.charAt(0)+"."+a.slice(1);a=a+(s<0?"p":"p+")+s}else if(s<0){for(;++s;)a="0"+a;a="0."+a}else if(++s>c)for(s-=c;s--;)a+="0";else s<c&&(a=a.slice(0,s)+"."+a.slice(s))}else a=p?"0p+0":"0";a=(16==e?"0x":2==e?"0b":8==e?"0o":"")+a}else a=j(n);return n.s<0?"-"+a:a}function G(n,e){if(n.length>e)return n.length=e,!0}function K(n){return new this(n).abs()}function Q(n){return new this(n).acos()}function X(n){return new this(n).acosh()}function Y(n,e){return new this(n).plus(e)}function nn(n){return new this(n).asin()}function en(n){return new this(n).asinh()}function tn(n){return new this(n).atan()}function rn(n){return new this(n).atanh()}function sn(n,e){n=new this(n),e=new this(e);var i,t=this.precision,r=this.rounding,s=t+4;return n.s&&e.s?n.d||e.d?!e.d||n.isZero()?(i=e.s<0?P(this,t,r):new this(0)).s=n.s:!n.d||e.isZero()?(i=P(this,s,1).times(.5)).s=n.s:i=e.s<0?(this.precision=s,this.rounding=1,i=this.atan(F(n,e,s,1)),e=P(this,s,1),this.precision=t,this.rounding=r,n.s<0?i.minus(e):i.plus(e)):this.atan(F(n,e,s,1)):(i=P(this,s,1).times(0<e.s?.25:.75)).s=n.s:i=new this(NaN),i}function on(n){return new this(n).cbrt()}function un(n){return _(n=new this(n),n.e+1,2)}function cn(n){if(!n||"object"!=typeof n)throw Error(f+"Object expected");var e,i,t,r=!0===n.defaults,s=["precision",1,g,"rounding",0,8,"toExpNeg",-u,0,"toExpPos",0,u,"maxE",0,u,"minE",-u,0,"modulo",0,9];for(e=0;e<s.length;e+=3)if(i=s[e],r&&(this[i]=c[i]),void 0!==(t=n[i])){if(!(L(t)===t&&s[e+1]<=t&&t<=s[e+2]))throw Error(w+i+": "+t);this[i]=t}if(i="crypto",r&&(this[i]=c[i]),void 0!==(t=n[i])){if(!0!==t&&!1!==t&&0!==t&&1!==t)throw Error(w+i+": "+t);if(t){if("undefined"==typeof crypto||!crypto||!crypto.getRandomValues&&!crypto.randomBytes)throw Error(a);this[i]=!0}else this[i]=!1}return this}function fn(n){return new this(n).cos()}function an(n){return new this(n).cosh()}function hn(n,e){return new this(n).div(e)}function ln(n){return new this(n).exp()}function dn(n){return _(n=new this(n),n.e+1,3)}function pn(){var n,e,i=new this(0);for(N=!1,n=0;n<arguments.length;)if((e=new this(arguments[n++])).d)i.d&&(i=i.plus(e.times(e)));else{if(e.s)return N=!0,new this(1/0);i=e}return N=!0,i.sqrt()}function gn(n){return n instanceof h||n&&"[object Decimal]"===n.name||!1}function mn(n){return new this(n).ln()}function wn(n,e){return new this(n).log(e)}function vn(n){return new this(n).log(2)}function Nn(n){return new this(n).log(10)}function bn(){return i(this,arguments,"lt")}function En(){return i(this,arguments,"gt")}function xn(n,e){return new this(n).mod(e)}function yn(n,e){return new this(n).mul(e)}function Mn(n,e){return new this(n).pow(e)}function qn(n){var e,i,t,r,s=0,o=new this(1),u=[];if(void 0===n?n=this.precision:q(n,1,g),t=Math.ceil(n/U),this.crypto)if(crypto.getRandomValues)for(e=crypto.getRandomValues(new Uint32Array(t));s<t;)429e7<=(r=e[s])?e[s]=crypto.getRandomValues(new Uint32Array(1))[0]:u[s++]=r%1e7;else{if(!crypto.randomBytes)throw Error(a);for(e=crypto.randomBytes(t*=4);s<t;)214e7<=(r=e[s]+(e[s+1]<<8)+(e[s+2]<<16)+((127&e[s+3])<<24))?crypto.randomBytes(4).copy(e,s):(u.push(r%1e7),s+=4);s=t/4}else for(;s<t;)u[s++]=1e7*Math.random()|0;for(t=u[--s],n%=U,t&&n&&(r=v(10,U-n),u[s]=(t/r|0)*r);0===u[s];s--)u.pop();if(s<0)u=[i=0];else{for(i=-1;0===u[0];i-=U)u.shift();for(t=1,r=u[0];10<=r;r/=10)t++;t<U&&(i-=U-t)}return o.e=i,o.d=u,o}function On(n){return _(n=new this(n),n.e+1,this.rounding)}function Dn(n){return(n=new this(n)).d?n.d[0]?n.s:0*n.s:n.s||NaN}function Fn(n){return new this(n).sin()}function An(n){return new this(n).sinh()}function Sn(n){return new this(n).sqrt()}function Zn(n,e){return new this(n).sub(e)}function Pn(n){return new this(n).tan()}function Rn(n){return new this(n).tanh()}function Ln(n){return _(n=new this(n),n.e+1,1)}(h=function n(e){var i,t,r;function s(n){var e,i,t,r=this;if(!(r instanceof s))return new s(n);if(n instanceof(r.constructor=s))return r.s=n.s,void(N?!n.d||n.e>s.maxE?(r.e=NaN,r.d=null):n.e<s.minE?(r.e=0,r.d=[0]):(r.e=n.e,r.d=n.d.slice()):(r.e=n.e,r.d=n.d?n.d.slice():n.d));if("number"==(t=typeof n)){if(0===n)return r.s=1/n<0?-1:1,r.e=0,void(r.d=[0]);if(r.s=n<0?(n=-n,-1):1,n===~~n&&n<1e7){for(e=0,i=n;10<=i;i/=10)e++;return void(r.d=N?s.maxE<e?(r.e=NaN,null):e<s.minE?[r.e=0]:(r.e=e,[n]):(r.e=e,[n]))}return 0*n!=0?(n||(r.s=NaN),r.e=NaN,void(r.d=null)):$(r,n.toString())}if("string"!==t)throw Error(w+n);return 45===n.charCodeAt(0)?(n=n.slice(1),r.s=-1):r.s=1,b.test(n)?$(r,n):function(n,e){var i,t,r,s,o,u,c,f,a;if("Infinity"===e||"NaN"===e)return+e||(n.s=NaN),n.e=NaN,n.d=null,n;if(d.test(e))i=16,e=e.toLowerCase();else if(l.test(e))i=2;else{if(!p.test(e))throw Error(w+e);i=8}for(o=0<=(s=(e=0<(s=e.search(/p/i))?(c=+e.slice(s+1),e.substring(2,s)):e.slice(2)).indexOf(".")),t=n.constructor,o&&(s=(u=(e=e.replace(".","")).length)-s,r=I(t,new t(i),s,2*s)),s=a=(f=D(e,i,T)).length-1;0===f[s];--s)f.pop();return s<0?new t(0*n.s):(n.e=S(f,a),n.d=f,N=!1,o&&(n=F(n,r,4*u)),c&&(n=n.times(Math.abs(c)<54?Math.pow(2,c):h.pow(2,c))),N=!0,n)}(r,n)}if(s.prototype=y,s.ROUND_UP=0,s.ROUND_DOWN=1,s.ROUND_CEIL=2,s.ROUND_FLOOR=3,s.ROUND_HALF_UP=4,s.ROUND_HALF_DOWN=5,s.ROUND_HALF_EVEN=6,s.ROUND_HALF_CEIL=7,s.ROUND_HALF_FLOOR=8,s.EUCLID=9,s.config=s.set=cn,s.clone=n,s.isDecimal=gn,s.abs=K,s.acos=Q,s.acosh=X,s.add=Y,s.asin=nn,s.asinh=en,s.atan=tn,s.atanh=rn,s.atan2=sn,s.cbrt=on,s.ceil=un,s.cos=fn,s.cosh=an,s.div=hn,s.exp=ln,s.floor=dn,s.hypot=pn,s.ln=mn,s.log=wn,s.log10=Nn,s.log2=vn,s.max=bn,s.min=En,s.mod=xn,s.mul=yn,s.pow=Mn,s.random=qn,s.round=On,s.sign=Dn,s.sin=Fn,s.sinh=An,s.sqrt=Sn,s.sub=Zn,s.tan=Pn,s.tanh=Rn,s.trunc=Ln,void 0===e&&(e={}),e&&!0!==e.defaults)for(r=["precision","rounding","toExpNeg","toExpPos","maxE","minE","modulo","crypto"],i=0;i<r.length;)e.hasOwnProperty(t=r[i++])||(e[t]=this[t]);return s.config(e),s}(c)).default=h.Decimal=h,t=new h(t),r=new h(r),"function"==typeof define&&define.amd?define(function(){return h}):"undefined"!=typeof module&&module.exports?("function"==typeof Symbol&&"symbol"==typeof Symbol.iterator&&(y[Symbol.for("nodejs.util.inspect.custom")]=y.toString,y[Symbol.toStringTag]="Decimal"),module.exports=h):(n||(n="undefined"!=typeof self&&self&&self.self==self?self:window),e=n.Decimal,h.noConflict=function(){return n.Decimal=e,h},n.Decimal=h)}(this);
+});
+
 Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],function() {
     var util = Numbas.util;
     Knockout.components.register('answer-widget', {
@@ -17659,29 +18471,27 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
         }
         var minvalue = jme.subvars(settings.minvalueString,scope);
         minvalue = scope.evaluate(minvalue);
-        if(minvalue && minvalue.type=='number') {
-            minvalue = minvalue.value;
-        } else {
-            throw(new Numbas.Error('part.setting not present',{property:R('minimum value')}));
+        try {
+            minvalue = jme.castToType(minvalue,'decimal').value;
+            settings.minvalue = minvalue;
+        } catch(e) {
+            this.error('part.setting not present',{property:R('minimum value')});
         }
         var maxvalue = jme.subvars(settings.maxvalueString,scope);
         maxvalue = scope.evaluate(maxvalue);
-        if(maxvalue && maxvalue.type=='number') {
-            maxvalue = maxvalue.value;
-        } else {
-            throw(new Numbas.Error('part.setting not present',{property:R('maximum value')}));
+        try {
+            maxvalue = jme.castToType(maxvalue,'decimal').value;
+            settings.maxvalue = maxvalue;
+        } catch(e) {
+            this.error('part.setting not present',{property:R('maximum value')});
         }
-        var displayAnswer = (minvalue + maxvalue)/2;
+        var displayAnswer = minvalue.add(maxvalue).dividedBy(2);
         if(settings.correctAnswerFraction) {
-            var diff = Math.abs(maxvalue-minvalue)/2;
-            var accuracy = Math.max(15,Math.ceil(-Math.log(diff)));
-            settings.displayAnswer = jme.display.jmeRationalNumber(displayAnswer,{accuracy:accuracy});
+            var frac = math.Fraction.fromDecimal(displayAnswer);
+            settings.displayAnswer = frac.toString();
         } else {
             settings.displayAnswer = math.niceNumber(displayAnswer,{precisionType: settings.precisionType, precision:settings.precision, style: settings.correctAnswerStyle});
         }
-        var fudge = 0.00000000001;
-        settings.minvalue = minvalue - fudge;
-        settings.maxvalue = maxvalue + fudge;
         return settings.displayAnswer;
     },
     /** Tidy up the student's answer - at the moment, just remove space.
@@ -18340,10 +19150,10 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
          */
         function loadDef(def,scope,topNode,nodeName) {
             var values = jme.evaluate(def,scope);
-            if(values.type!='list') {
+            if(!jme.isType(values,'list')) {
                 p.error('part.mcq.options def not a list',{properties: nodeName});
             }
-            var numValues = values.value.length;
+            var numValues = jme.castToType(values,'list').value.length;
             values.value.map(function(value) {
                 var node = xml.ownerDocument.createElement(nodeName);
                 var content = xml.ownerDocument.createElement('content');
@@ -18351,24 +19161,26 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
                 content.appendChild(span);
                 node.appendChild(content);
                 topNode.appendChild(node);
-                switch(value.type) {
-                case 'string':
-                case 'number':
+                function load_string(str) {
                     var d = document.createElement('d');
-                    d.innerHTML = value.type == 'string' ? value.value : Numbas.math.niceNumber(value.value);
+                    d.innerHTML = str;
                     var newNode;
                     try {
                         newNode = xml.ownerDocument.importNode(d,true);
                     } catch(e) {
-                        d = Numbas.xml.dp.parseFromString('<d>'+value.value.replace(/&(?!amp;)/g,'&amp;')+'</d>','text/xml').documentElement;
+                        d = Numbas.xml.dp.parseFromString('<d>'+str.replace(/&(?!amp;)/g,'&amp;')+'</d>','text/xml').documentElement;
                         newNode = xml.ownerDocument.importNode(d,true);
                     }
                     while(newNode.childNodes.length) {
                         span.appendChild(newNode.childNodes[0]);
                     }
-                    break;
-                case 'html':
-                    var selection = $(value.value);
+                }
+                if(jme.isType(value,'string')) {
+                    load_string(jme.castToType(value,'string').value);
+                } else if(jme.isType(value,'number')) {
+                    load_string(Numbas.math.niceNumber(jme.castToType(value,'string')));
+                } else if(jme.isType(value,'html')) {
+                    var selection = $(jme.castToType(value,'html').value);
                     for(var i=0;i<selection.length;i++) {
                         try {
                             span.appendChild(xml.ownerDocument.importNode(selection[i],true));
@@ -18380,8 +19192,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
                             }
                         }
                     }
-                    break;
-                default:
+                } else {
                     span.appendChild(xml.ownerDocument.createTextNode(value));
                 }
             });
@@ -18482,10 +19293,10 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         if('choices' in data) {
             if(typeof(data.choices)=='string') {
                 choices = jme.evaluate(data.choices, scope);
-                if(!choices || choices.type!='list') {
+                if(!choices || !jme.isType(choices,'list')) {
                     this.error('part.mcq.options def not a list',{properties: 'choice'});
                 }
-                settings.choices = jme.unwrapValue(choices);
+                settings.choices = jme.unwrapValue(jme.castToType(choices,'list'));
             } else {
                 settings.choices = data.choices;
             }
@@ -18494,10 +19305,10 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         if('answers' in data) {
             if(typeof(data.answers)=='string') {
                 answers = jme.evaluate(data.answers, scope);
-                if(!answers || answers.type!='list') {
+                if(!answers || !jme.isType(answers,'list')) {
                     this.error('part.mcq.options def not a list',{properties: 'answer'});
                 }
-                settings.answers = jme.unwrapValue(answers);
+                settings.answers = jme.unwrapValue(jme.castToType(answers,'list'));
             } else {
                 settings.answers = data.answers;
             }
@@ -18578,16 +19389,16 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         settings.minimumMarks = util.parseNumber(settings.minimumMarks) || 0;
         var minAnswers = jme.subvars(settings.minAnswersString, scope);
         minAnswers = jme.evaluate(minAnswers, scope);
-        if(minAnswers && minAnswers.type=='number') {
-            settings.minAnswers = minAnswers.value;
-        } else {
+        try {
+            settings.minAnswers = jme.castToType(minAnswers,'number').value;
+        } catch(e) {
             this.error('part.setting not present',{property: 'minimum answers'});
         }
         var maxAnswers = jme.subvars(settings.maxAnswersString, scope);
         maxAnswers = jme.evaluate(maxAnswers, scope);
-        if(maxAnswers && maxAnswers.type=='number') {
-            settings.maxAnswers = maxAnswers.value;
-        } else {
+        try {
+            settings.maxAnswers = jme.castToType(maxAnswers,'number').value;
+        } catch(e) {
             this.error('part.setting not present',{property: 'maximum answers'});
         }
         // fill layout matrix
@@ -18767,40 +19578,23 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         var matrix = [];
         if(settings.markingMatrixString) {
             matrix = jme.evaluate(settings.markingMatrixString,scope);
-            switch(matrix.type) {
-            case 'list':
-                var numLists = 0;
-                var numNumbers = 0;
-                for(var i=0;i<matrix.value.length;i++) {
-                    switch(matrix.value[i].type) {
-                    case 'list':
-                        numLists++;
-                        break;
-                    case 'number':
-                        numNumbers++;
-                        break;
-                    default:
-                        this.error('part.mcq.matrix wrong type',{type: matrix.value[i].type});
-                    }
-                }
-                if(numLists == matrix.value.length) {
-                    matrix = matrix.value.map(function(row){    //convert TNums to javascript numbers
-                        return row.value.map(function(e){return e.value;});
-                    });
-                } else if(numNumbers == matrix.value.length) {
-                    matrix = matrix.value.map(function(e) {
-                        return [e.value];
-                    });
-                } else {
-                    this.error('part.mcq.matrix mix of numbers and lists');
-                }
+            var sig = Numbas.jme.signature;
+            var m;
+            if(m=sig.type('matrix')([matrix])) {
+                matrix = jme.castToType(matrix,m[0]).value;
+            } else if(m=sig.listof(sig.type('number'))([matrix])) {
+                matrix = jme.castToType(matrix,m[0]).value.map(function(e) {
+                    return [e.value];
+                });
                 matrix.rows = matrix.length;
                 matrix.columns = matrix[0].length;
-                break;
-            case 'matrix':
-                matrix = matrix.value;
-                break;
-            default:
+            } else if(m=sig.listof(sig.listof(sig.type('number')))([matrix])) {
+                matrix = jme.castToType(matrix,m[0]).value.map(function(row) {
+                    return row.value.map(function(e){return e.value;});
+                });
+                matrix.rows = matrix.length;
+                matrix.columns = matrix[0].length;
+            } else {
                 this.error('part.mcq.matrix not a list');
             }
             if(this.flipped) {

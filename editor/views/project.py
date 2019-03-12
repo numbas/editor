@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.db.models import Sum, When, Case, IntegerField
 from django.views import generic
 from django.urls import reverse, reverse_lazy
-from django.shortcuts import redirect, render_to_response
+from django.shortcuts import redirect, render
 from django import http
 from django.core.exceptions import PermissionDenied
 from itertools import groupby
@@ -18,7 +18,7 @@ class MustBeMemberMixin(object):
     def dispatch(self, request, *args, **kwargs):
         self.project = self.get_project()
         if not self.project.can_be_viewed_by(request.user):
-            return render_to_response('project/must_be_member.html', self.get_context_data())
+            return render(request, 'project/must_be_member.html', self.get_context_data())
         return super(MustBeMemberMixin, self).dispatch(request, *args, **kwargs)
 
     def get_project(self):

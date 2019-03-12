@@ -369,6 +369,8 @@ class SearchView(ListView):
         return items
 
     def get_context_data(self, **kwargs):
+        if not hasattr(self,'object_list'):
+            self.object_list = self.get_queryset()
         context = super(SearchView, self).get_context_data(**kwargs)
 
         context['taxonomies'] = [{'pk':taxonomy.pk, 'name': taxonomy.name, 'description': taxonomy.description, 'nodes': taxonomy.json} for taxonomy in Taxonomy.objects.all()]

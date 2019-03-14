@@ -212,6 +212,9 @@ table.variable-list .value-cell .value {
 .marking-test .note.invalid {
     color: red;
 }
+.marking-test .note.invalid .name {
+    text-decoration: wavy underline;
+}
 .marking-test .note:not(.show-note) > td {
     padding-top: 0;
     padding-bottom: 0;

@@ -59,8 +59,15 @@ def test_question(q):
         result = HeadlessTest(q).compile()
         return result
     except HeadlessError as e:
-        result = json.loads(e.stdout.strip())
-        return result
+        if e.stdout.strip():
+            result = json.loads(e.stdout.strip())
+            return result
+        else:
+            return {
+                'success': False,
+                'message': '',
+                'originalMessages': []
+            }
     except CompileError as e:
         return {
             'success': False,
@@ -79,12 +86,14 @@ STATUS_CHOICES = [
     ('dontuse', 'd'),
     ('problem', 'p'),
     ('broken', 'b'),
+    ('test again', 'a'),
 ]
 
 class Command(BaseCommand):
     help = 'Test a question headlessly'
 
     last_success = False
+    questions_tested = 0
 
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
@@ -157,6 +166,7 @@ class Command(BaseCommand):
             questions = questions.exclude(extensions__runs_headless=False)
         print("Testing {} question{}".format(questions.count(),'s' if questions.count()!=1 else ''))
         for q in questions:
+            self.questions_tested += 1
             result = self.test_question(q)
 
     def test_question(self,q):
@@ -196,7 +206,9 @@ class Command(BaseCommand):
 
             if self.options['stamp']:
                 status = self.options['stamp_status'] or input_choice('Stamp this question?', STATUS_CHOICES)
-                if status != 'no':
+                if status == 'test again':
+                    return self.test_question(q)
+                elif status != 'no':
                     user = User.objects.filter(is_superuser=True).first()
                     comment_template = """<p>Automatic testing has identified a problem with this question:</p>
     <blockquote>{message}</blockquote>"""

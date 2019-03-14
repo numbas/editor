@@ -13,6 +13,7 @@ $(document).ready(function() {
             jmeTypes.push(t);
         }
     }
+    jmeTypes.sort();
 
 
     function AddPartTypeModal(question,useFn, filter) {

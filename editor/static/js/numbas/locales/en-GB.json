@@ -107,6 +107,7 @@
     "jme.func.matrix.invalid row type": "Can't construct a matrix from rows of type {{type}}",
     "jme.func.except.continuous range": "Can't use the 'except' operator on continuous ranges.",
     "jme.matrix.reports bad size": "Matrix reports its size incorrectly - must be an error in constructor function",
+    "jme.subvars.null substitution": "Empty variable substitution: <code>$t(left brace){{str}}$t(right brace)",
     "jme.texsubvars.no right bracket": "No matching <code>]</code> in {{op}} arguments.",
     "jme.texsubvars.missing parameter": "Missing parameter in {{op}}: {{parameter}}",
     "jme.texsubvars.no right brace": "No matching <code>}</code> in {{op}}",
@@ -143,6 +144,7 @@
     "math.lt.order complex numbers": "Can't order complex numbers",
     "math.niceNumber.undefined": "Was expecting a number, but got <code>undefined</code>",
     "math.choose.empty selection": "Empty selection given to random function",
+    "math.rangeToList.zero step size": "Can't convert a range with step size zero to a list.",
     "matrixmath.abs.non-square": "Can't compute the determinant of a matrix which isn't square.",
     "matrixmath.abs.too big": "Sorry, can't compute the determinant of a matrix bigger than 3x3 yet.",
     "matrixmath.mul.different sizes": "Can't multiply matrices of different sizes.",
@@ -159,7 +161,7 @@
     "part.marking.revealed steps with penalty": "You revealed the steps. The maximum you can score for this part is <strong>{{count,niceNumber}}</strong> $t(mark). Your scores will be scaled down accordingly.",
     "part.marking.revealed steps no penalty": "You revealed the steps.",
     "part.marking.used variable replacements": "This part was marked using your answers to previous parts.",
-    "part.marking.variable replacement part not answered": "You must answer {{part}} first",
+    "part.marking.variable replacement part not answered": "You must answer {{part}} first.",
     "part.marking.resubmit because of variable replacement": "This part's marking depends on your answers to other parts, which you have changed. Submit this part again to update your score.",
     "part.marking.not submitted": "No answer submitted.",
     "part.marking.did not answer": "You did not answer this question.",
@@ -306,5 +308,7 @@
     "was_plural": "were",
     "part": "part",
     "gap": "gap",
-    "step": "step"
+    "step": "step",
+    "left brace": "{",
+    "right brace": "}"
 }

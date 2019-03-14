@@ -1,0 +1,58 @@
+{% load sstatic %}
+{% load user_link %}
+{% load links %}
+
+<!doctype html>
+<html>
+    <head>
+        <title>{{item.name}} - preview - {{SITE_TITLE}}</title>
+
+        <link rel="stylesheet" href="{% sstatic 'css/preview.css' %}"/>
+        {% include "mathjax.html" %}
+    </head>
+    <body>
+        <header role="banner">
+            <span class="description">
+                PREVIEW of <a href="{{item.get_absolute_url}}">{{item.name}}</a>
+                in <a href="{{item.project.get_absolute_url}}">{{item.project.name}}</a>
+            </span>
+
+            <span class="licence">
+            {% if item.licence %}
+                &copy;
+                <abbr title="{{item.licence.name}}">
+                    {% if item.licence.url %}
+                        <a target="_blank" href="{{item.licence.url}}">{{item.licence.short_name}}</a>
+                    {% else %}
+                        {{item.licence.short_name}}
+                    {% endif %}
+                </abbr>
+            {% endif %}
+            </span>
+
+            <a href="{{item.get_absolute_url}}">Edit</a>
+
+            <a href="{% editoritem_url 'download' item.rel_obj %}?scorm">Download</a>
+
+            <button class="btn" id="share" type="button">Share</button>
+
+            <span id="embed-url">
+                <code tabindex="0">{{SITE_ROOT}}{{embed_url}}</code>
+            </span>
+
+        </header>
+        <main role="main">
+            <iframe src="{{exam_url}}"></iframe>
+        </main>
+
+
+        <script>
+var share_button = document.getElementById('share');
+var embed_display = document.getElementById('embed-url');
+share_button.addEventListener('click',function() {
+    embed_display.classList.toggle('shown');
+    embed_display.focus();
+});
+        </script>
+    </body>
+</html>

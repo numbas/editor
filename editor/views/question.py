@@ -20,60 +20,16 @@ import editor.views.editoritem
 from accounts.models import UserProfile
 
 class PreviewView(editor.views.editoritem.PreviewView):
-    
-    """Compile question as a preview and return its URL."""
-    
+    """Compile question as a preview."""
     model = NewQuestion
-    
-    def get(self, request, *args, **kwargs):
-        try:
-            q = self.get_object()
-        except (NewQuestion.DoesNotExist, TypeError) as err:
-            status = {
-                "result": "error",
-                "message": str(err),
-                "traceback": traceback.format_exc(),
-            }
-            return http.HttpResponseServerError(json.dumps(status),
-                                           content_type='application/json')
-        else:
-            try:
-                if not request.user.is_anonymous:
-                    profile = UserProfile.objects.get(user=request.user)
-                    q.locale = profile.language
-            except (UserProfile.DoesNotExist,TypeError):
-                pass
 
-            return self.preview(q.editoritem)
-
+class EmbedView(editor.views.editoritem.EmbedView):
+    """Compile question and show it."""
+    model = NewQuestion
 
 class ZipView(editor.views.editoritem.ZipView):
-
     """Compile a question as a SCORM package and return the .zip file"""
-
     model = NewQuestion
-
-    def get(self, request, *args, **kwargs):
-        try:
-            q = self.get_object()
-            scorm = 'scorm' in request.GET
-        except (NewQuestion.DoesNotExist, TypeError) as err:
-            status = {
-                "result": "error",
-                "message": str(err),
-                "traceback": traceback.format_exc(),
-            }
-            return http.HttpResponseServerError(json.dumps(status),
-                                           content_type='application/json')
-        else:
-            try:
-                profile = UserProfile.objects.get(user=request.user)
-                q.locale = profile.language
-            except (UserProfile.DoesNotExist,TypeError):
-                pass
-
-            return self.download(q.editoritem, scorm)
-
 
 class SourceView(editor.views.editoritem.SourceView):
     """Serve the source .exam file for this question"""

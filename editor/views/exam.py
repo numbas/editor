@@ -26,46 +26,16 @@ import editor.views.generic
 from numbasobject import NumbasObject
 
 class PreviewView(editor.views.editoritem.PreviewView):
-    
-    """Compile an exam as a preview and return its URL."""
-    
+    """Compile an exam as a preview."""
     model = NewExam
-    
-    def get(self, request, *args, **kwargs):
-        try:
-            e = self.get_object()
-        except (NewExam.DoesNotExist, TypeError) as err:
-            status = {
-                "result": "error",
-                "message": str(err),
-                "traceback": traceback.format_exc(),
-            }
-            return HttpResponseServerError(json.dumps(status),
-                                           content_type='application/json')
-        else:
-            return self.preview(e.editoritem)
 
+class EmbedView(editor.views.editoritem.EmbedView):
+    """Compile an exam and show it as an embed."""
+    model = NewExam
 
 class ZipView(editor.views.editoritem.ZipView):
-
     """Compile an exam as a SCORM package and return the .zip file"""
-
     model = NewExam
-
-    def get(self, request, *args, **kwargs):
-        try:
-            e = self.get_object()
-            scorm = 'scorm' in request.GET
-        except (NewExam.DoesNotExist, TypeError) as err:
-            status = {
-                "result": "error",
-                "message": str(err),
-                "traceback": traceback.format_exc(),
-            }
-            return HttpResponseServerError(json.dumps(status),
-                                           content_type='application/json')
-        else:
-            return self.download(e.editoritem, scorm)
 
 
 class SourceView(editor.views.editoritem.SourceView):

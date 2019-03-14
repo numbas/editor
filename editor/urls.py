@@ -83,6 +83,9 @@ urlpatterns = [
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/preview/$',
         exam.PreviewView.as_view(), name='exam_preview'),
                        
+    url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+)/embed/$',
+        exam.EmbedView.as_view(), name='exam_embed'),
+                       
     url(r'^exam/(?P<pk>\d+)/(?P<slug>[\w-]+).zip$',
         exam.ZipView.as_view(), name='exam_download'),
 
@@ -134,6 +137,9 @@ urlpatterns = [
                        
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/preview/$',
         question.PreviewView.as_view(), name='question_preview'),
+                       
+    url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+)/embed/$',
+        question.EmbedView.as_view(), name='question_embed'),
                        
     url(r'^question/(?P<pk>\d+)/(?P<slug>[\w-]+).zip$',
         question.ZipView.as_view(), name='question_download'),

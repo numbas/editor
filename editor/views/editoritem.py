@@ -5,8 +5,10 @@ import time
 import calendar
 import re
 
+from datetime import datetime
 import os
 import subprocess
+from pathlib import Path
 
 from wsgiref.util import FileWrapper
 from django.core.exceptions import ValidationError, PermissionDenied
@@ -14,10 +16,11 @@ from django.conf import settings
 from django.contrib import messages
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.timezone import make_aware
 from django.db.models import Q, Min, Max, Count
 from django.db import transaction, IntegrityError
 from django import http
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.views import generic
 from django.template.loader import get_template
 from django.template import RequestContext
@@ -25,6 +28,8 @@ from django.template import RequestContext
 import reversion
 
 from django_tables2.config import RequestConfig
+
+from accounts.models import UserProfile
 
 from editor.tables import EditorItemTable
 from editor.models import EditorItem, Project, Access, Licence, PullRequest, Taxonomy, Contributor
@@ -400,42 +405,66 @@ class CompileObject():
     
     """Compile an exam or question."""
 
-    def get_locale(self, obj):
-        if obj.item_type == 'exam':
-            return obj.exam.locale
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.editoritem.can_be_viewed_by(self.request.user):
+            return self.access_valid()
+        else:
+            token = self.request.GET.get('token','')
+            if token==str(self.editoritem.share_uuid_view):
+                return self.access_valid()
+            else:
+                return forbidden(self.request)
+
+    def get_object(self):
+        obj = super(CompileObject,self).get_object()
+        print(obj)
+        self.editoritem = obj.editoritem
+        self.numbasobject = self.editoritem.as_numbasobject(self.request)
+        return obj
+
+    def get_locale(self):
+        if self.editoritem.item_type == 'exam':
+            return self.editoritem.exam.locale
         elif not self.request.user.is_anonymous:
             return self.request.user.userprofile.language
         else:
             return 'en-GB'
 
-    def add_extensions(self,numbasobject):
-        extensions = editor.models.Extension.objects.filter(location__in=numbasobject.data.get('extensions', []))
-        numbasobject.data['extensions'] = [os.path.join(os.getcwd(), e.extracted_path) for e in extensions]
-        for extracted_path in numbasobject.data['extensions']:
-            if not os.path.exists(extracted_path):
+    def add_extensions(self):
+        extensions = editor.models.Extension.objects.filter(location__in=self.numbasobject.data.get('extensions', []))
+        extension_paths = [Path.cwd() / e.extracted_path for e in extensions]
+        for extracted_path in extension_paths:
+            if not extracted_path.exists():
                 raise ExtensionNotFoundCompileError("Extension not found at {}. Is MEDIA_ROOT configured correctly? It should be the absolute path to your editor media directory.".format(extracted_path))
+        self.numbasobject.data['extensions'] = [str(p) for p in extension_paths]
 
-    def compile(self, numbasobject, switches, location, obj, locale='en-GB'):
+    def output_location(self):
+        return Path(settings.GLOBAL_SETTINGS['PREVIEW_PATH']) / self.location
+
+    def compile(self, switches):
         """
             Construct a temporary exam/question file and compile it.
             Returns the path to the output produced
         """
 
-        self.add_extensions(numbasobject)
-        source = str(numbasobject)
+        self.add_extensions()
+        source = str(self.numbasobject)
 
-        theme_path = obj.theme_path if hasattr(obj, 'theme_path') else 'default'
-        if not os.path.exists(theme_path):
+        theme_path = Path(self.editoritem.theme_path if hasattr(self.editoritem, 'theme_path') else 'default')
+        if not theme_path.exists():
             raise CompileError("Theme not found at {}. Is MEDIA_ROOT configured correctly? It should be the absolute path to your editor media directory.".format(theme_path))
 
-        output_location = os.path.join(settings.GLOBAL_SETTINGS['PREVIEW_PATH'], location)
+        output_location = self.output_location()
+        locale = self.get_locale()
+
         numbas_command = [
             settings.GLOBAL_SETTINGS['PYTHON_EXEC'],
-            os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'], 'bin', 'numbas.py'),
+            str(Path(settings.GLOBAL_SETTINGS['NUMBAS_PATH']) / 'bin' / 'numbas.py'),
             '--pipein',
             '-p'+settings.GLOBAL_SETTINGS['NUMBAS_PATH'],
-            '-o'+output_location,
-            '-t'+theme_path,
+            '-o'+str(output_location),
+            '-t'+str(theme_path),
             '-l'+locale,
             '--mathjax-url',self.get_mathjax_url()
         ] + switches
@@ -466,22 +495,52 @@ class CompileObject():
             'code': error.code,
         }).flatten()))
 
-class PreviewView(generic.DetailView, CompileObject):
-    def preview(self, obj):
-        numbasobject = obj.as_numbasobject(self.request)
-        location = obj.filename
+class PreviewView(CompileObject, generic.DetailView):
+    template_name = 'editoritem/preview.html'
+
+    def should_compile(self):
+        output_location = self.output_location()
+        if not output_location.exists():
+            return True
+        mtime = make_aware(datetime.fromtimestamp(output_location.stat().st_mtime))
+        if mtime<self.editoritem.last_modified:
+            return True
+        return 'refresh' in self.request.GET
+
+    def access_valid(self):
+        self.location = self.editoritem.filename
+
         switches = ['-c']
-        try:
-            self.compile(numbasobject, switches, location, obj, locale=self.get_locale(obj))
-        except CompileError as err:
-            return self.get_error_response(err)
-        else:
-            url = settings.GLOBAL_SETTINGS['PREVIEW_URL'] + location + '/index.html'
-            return redirect(url)
+
+        if self.should_compile():
+            try:
+                self.compile(switches)
+            except CompileError as err:
+                return self.get_error_response(err)
+
+        if 'refresh' in self.request.GET:
+            return redirect(self.request.path)
+
+        exam_url = settings.GLOBAL_SETTINGS['PREVIEW_URL'] + self.location + '/index.html'
+
+        embed_url = reverse(self.editoritem.item_type+'_embed',args=(self.object.pk,self.editoritem.slug))
+        if not self.editoritem.published:
+            embed_url += '?token='+str(self.editoritem.share_uuid_view)
+
+        context = {
+            'item': self.editoritem,
+            'exam_url': exam_url,
+            'embed_url': embed_url,
+        }
+
+        return self.render_to_response(context)
+
+class EmbedView(PreviewView):
+    template_name = 'editoritem/embed.html'
         
-class ZipView(generic.DetailView, CompileObject):
-    def download(self, obj, scorm=False):
-        numbasobject = obj.as_numbasobject(self.request)
+class ZipView(CompileObject, generic.DetailView):
+    def access_valid(self):
+        scorm = 'scorm' in self.request.GET
 
         switches = ['-cz']
 
@@ -490,16 +549,16 @@ class ZipView(generic.DetailView, CompileObject):
         if scorm:
             switches.append('-s')
 
-        location = obj.filename + '.zip'
+        self.location = self.editoritem.filename + '.zip'
 
         try:
-            fsLocation = self.compile(numbasobject, switches, location, obj, locale=self.get_locale(obj))
+            fsLocation = str(self.compile(switches))
         except CompileError as err:
             return self.get_error_response(err)
         else:
             wrapper = FileWrapper(open(fsLocation, 'rb'))
             response = http.HttpResponse(wrapper, content_type='application/zip')
-            response['Content-Disposition'] = 'attachment; filename={}.zip'.format(obj.filename)
+            response['Content-Disposition'] = 'attachment; filename={}.zip'.format(self.editoritem.filename)
             response['Content-Length'] = os.path.getsize(fsLocation)
             response['Cache-Control'] = 'max-age=0,no-cache,no-store'
             return response

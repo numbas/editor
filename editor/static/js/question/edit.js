@@ -642,25 +642,25 @@ $(document).ready(function() {
             this.variablesTest.conditionSatisfied(conditionSatisfied);
 
             // fill in observables
-            if(conditionSatisfied) {
-                this.variables().map(function(v) {
-                    if(v.locked.peek()) {
-                        return;
-                    }
-                    var name = v.name().toLowerCase();
-                    var result = results.variables[name];
-                    if(!result) {
-                        v.value(null);
-                        return;
-                    }
+            this.variables().map(function(v) {
+                if(v.locked.peek()) {
+                    return;
+                }
+                var name = v.name().toLowerCase();
+                var result = results.variables[name];
+                if(!result) {
+                    v.value(null);
+                    return;
+                }
+                if(conditionSatisfied) {
                     if('value' in result) {
                         v.value(result.value);
                     }
-                    if('error' in result) {
-                        v.error(result.error);
-                    }
-                });
-            }
+                }
+                if('error' in result) {
+                    v.error(result.error);
+                }
+            });
 
             var rulesetTodo = {};
             this.rulesets().forEach(function(r) {
@@ -1544,13 +1544,16 @@ $(document).ready(function() {
 
         this.error = ko.observable('');
         this.anyError = ko.computed(function() {
-            if(this.question.variablesTest.conditionError()) {
+            if(this.error()) {
+                return this.error();
+            } else if(this.nameError()) {
+                return this.nameError();
+            } else if(this.question.variablesTest.conditionError()) {
                 return "Error in testing condition";
             } else if(!(this.question.variablesTest.conditionSatisfied())) {
                 return "Testing condition not satisfied";
-            } else {
-                return this.error() || this.nameError();
             }
+            return false;
         },this);
 
         this.thisLocked = ko.observable(false);

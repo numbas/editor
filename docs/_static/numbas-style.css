@@ -1,0 +1,64 @@
+@import url('css/theme.css');
+@import url('fonts/source-sans-pro/source-sans-pro.css');
+
+body {
+    font-family: "Source Sans Pro","Helvetica Neue",Arial,sans-serif;
+}
+h1, h2, .rst-content .toctree-wrapper p.caption, h3, h4, h5, h6, legend {
+    font-family: "Source Sans Pro","Helvetica Neue",Arial,sans-serif;
+    font-weight: 600;
+}
+
+.rst-content .topic-title {
+	font-size: 1.3em;
+}
+
+.document img {
+	border: 1px solid #999;
+}
+.guilabel {
+	color: grey;
+	font-weight: bold;
+}
+
+iframe {
+    display: block;
+    margin: 2em auto;
+    max-width: 100%;
+}
+
+table.docutils td, table.docutils th {
+    white-space: normal;
+}
+
+
+h1 { font-size: 2.5em; border-bottom-color: hsl(203.8, 72.2%, 78.8%); }
+h2 { font-size: 2.0em; border-bottom-color: hsl(203.8, 42.2%, 78.8%); }
+h3 { font-size: 1.5em; border-bottom-color: hsl(203.8, 12.2%, 78.8%); }
+h1,h2,h3 {
+	padding: 0.2rem 0;
+	margin-left: -1rem;
+	color: #34444f;
+	border-bottom-width: 0.2em;
+	border-bottom-style: solid;
+}
+
+.section * ~ .section {
+	margin-top: 3em;
+	padding-left: 1rem;
+}
+.wy-side-nav-search {
+	background: #a2d1f0;
+}
+.wy-side-nav-search,
+.wy-side-nav-search > a,
+.wy-side-nav-search .wy-dropdown > a,
+.wy-side-nav-search > div.version {
+	color: #34444f;
+}
+
+.glossary {
+	padding: 0.5em 1em;
+	background: hsl(0,0%,99.9%);
+	border: 2px solid #eee;
+}

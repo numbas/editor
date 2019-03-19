@@ -254,3 +254,13 @@ table.variable-list .value-cell .value {
 .add-part {
     line-height: 3em;
 }
+
+#previewModal .modal-content {
+    display: flex;
+    max-height: 90vh;
+    flex-direction: column;
+}
+#previewModal .modal-body {
+    flex-grow: 1;
+    overflow-y: auto;
+}

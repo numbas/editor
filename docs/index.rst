@@ -53,4 +53,9 @@ If you have any questions, please `email us <mailto:numbas@ncl.ac.uk>`_ or join 
     extensions
     themes
     custom-part-types/reference
-    server-installation
+
+.. toctree::
+    :caption: Running your own editor
+    :maxdepth: 2
+
+    server-installation/index

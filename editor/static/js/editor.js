@@ -1163,7 +1163,7 @@ $(document).ready(function() {
             var mc = ko.utils.domData.get(element,'codemirror');
             var value = ko.utils.unwrapObservable(valueAccessor());
             if(value!=mc.getValue()) {
-                mc.setValue(value);
+                mc.setValue(value || '');
             }
             var allBindings = allBindingsAccessor();
             var mode = ko.utils.unwrapObservable(allBindings.codemirrorMode) || 'javascript';

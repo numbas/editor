@@ -1492,9 +1492,9 @@ $(document).ready(function() {
                     case 'list of strings':
                         return treeToJME({tok: wrapValue(val.values())});
                     case 'json':
-                        JSON.parse(val.value());
+                        JSON.parse(val.value() || '');
                         var json = treeToJME({tok: wrapValue(val.value())});
-                        return 'json_decode(safe('+json+'))';
+                        return 'json_decode('+json+')';
                     }
                 } catch(e) {
                     this.definitionError(e);
@@ -1679,21 +1679,29 @@ $(document).ready(function() {
                     break;
                 case 'string':
                 case 'long string':
-                    if(Numbas.jme.isFunction(tree.tok,'safe')) {
+                    while(Numbas.jme.isFunction(tree.tok,'safe')) {
                         templateTypeValues.isTemplate(true);
-                        templateTypeValues.value(tree.args[0].tok.value);
-                    } else {
-                        templateTypeValues.value(tree.tok.value);
+                        tree = tree.args[0];
                     }
+                    templateTypeValues.value(tree.tok.value);
                     break;
                 case 'list of numbers':
                     templateTypeValues.values(tree.args.map(function(t){return Numbas.jme.display.treeToJME(t);}));
                     break;
                 case 'list of strings':
-                    templateTypeValues.values(tree.args.map(function(t){return t.tok.value}));
+                    templateTypeValues.values(tree.args.map(function(t){
+                        while(Numbas.jme.isFunction(t.tok,'safe')) {
+                            t = t.args[0];
+                        }
+                        return t.tok.value;
+                    }));
                     break;
                 case 'json':
-                    templateTypeValues.value(tree.args[0].args[0].tok.value);
+                    tree = tree.args[0];
+                    while(Numbas.jme.isFunction(tree.tok,'safe')) {
+                        tree = tree.args[0];
+                    }
+                    templateTypeValues.value(tree.tok.value);
                 }
             }
             catch(e) {

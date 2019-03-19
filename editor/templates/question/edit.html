@@ -313,6 +313,7 @@
                                     <th></th>
                                     <th></th>
                                     <th class="name">Name</th>
+                                    <th class="type">Type</th>
                                     <th class="value">Generated Value</th>
                                     <th></th>
                                 </tr>
@@ -340,6 +341,7 @@
                                         <span title="This variable is a source of randomisation"  data-bind="visible: random(), click: $root.currentVariable" class="glyphicon glyphicon-random is-random text-muted"></span>
                                     </td>
                                     <td class="name monospace" data-bind="click: $root.currentVariable, text: name() ? name() : 'Unnamed', css: {'name-error': nameError()!='','text-danger': nameError()!=''}"></td>
+                                    <td class="type" data-bind="text: type"></td>
                                     <td class="value-cell" data-bind="click: $root.currentVariable">
                                         <div class="value jme-value" data-bind="jmevalue: value, error: anyError"></div>
                                     </td>

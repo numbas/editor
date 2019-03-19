@@ -141,6 +141,14 @@ table.variable-list .value-cell .value {
     width: 40%;
     word-break: break-all;
 }
+.variable-selector .type {
+    padding-right: 2em;
+    color: #555;
+    font-family: monospace;
+    font-size: 0.8em;
+    line-height: 1.25em;
+    vertical-align: middle;
+}
 .variable-selector .value {
     text-align: left;
     display: inline-block;

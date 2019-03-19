@@ -1542,7 +1542,6 @@ $(document).ready(function() {
             });
         },this);
         this.value = ko.observable(null);
-
         this.error = ko.observable('');
         this.anyError = ko.computed(function() {
             if(this.error()) {
@@ -1555,6 +1554,14 @@ $(document).ready(function() {
                 return "Testing condition not satisfied";
             }
             return false;
+        },this);
+
+        this.type = ko.computed(function() {
+            var v = this.value();
+            if(!v || this.error()) {
+                return '';
+            }
+            return v.type;
         },this);
 
         this.thisLocked = ko.observable(false);

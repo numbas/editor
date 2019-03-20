@@ -2,6 +2,11 @@
 
 {% block title %}Deactivate your account - {{block.super}}{% endblock %}
 
+{% block javascripts %}
+{{block.super}}
+{{form.media}}
+{% endblock javascripts %}
+
 {% block content %}
 
 <header class="page-header">
@@ -17,6 +22,13 @@
         <p class="text-danger">This is <strong>IRREVERSIBLE</strong>.</p>
         <p>All personally identifying information will be removed from your account, and you will not be able to log back in. Any content you have created will remain on the site, and any access privileges you have granted to other users will remain.</p>
         <p>If you want to delete anything or revoke access, do that before deactivating your account.</p>
+
+        <p>You may optionally reassign all of your content to another user:</p>
+        <div class="form-group">
+            <label for="{{form.reassign_content.id_for_label}}">Reassign your content to</label>
+            {{form.reassign_to_user}}
+        </div>
+
         <p>Type <strong>{{form.magic_word}}</strong> in the box below to confirm you want to deactivate your account.</p>
         <p>{{form.confirm_text}}</p>
         {% if form.confirm_text.errors %}

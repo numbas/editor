@@ -85,7 +85,7 @@
                 <li role="separator" class="divider"></li>
                 <li><a tabindex="2" href="{% url 'edit_profile' %}"><span class="glyphicon glyphicon-cog"></span> Settings</a></li>
                 {% if CAN_LOGOUT %}
-                <li><a tabindex="2" href="{% url 'logout' %}?next={{request.path|escape}}"><span class="glyphicon glyphicon-log-out"></span> Log out</a></li>
+                <li><a tabindex="2" href="{% url 'logout' %}"><span class="glyphicon glyphicon-log-out"></span> Log out</a></li>
                 {% endif %}
                 </ul>
             </li>

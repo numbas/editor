@@ -146,6 +146,58 @@ class TimelineMixin(object):
 
 LOCALE_CHOICES = [(y, x) for x, y in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']]
 
+def combine_access(*args):
+    order = ['view','edit']
+    return sorted(args,key=order.index)[-1]
+
+def reassign_content(from_user,to_user):
+    with transaction.atomic():
+        for p in from_user.own_projects.all():
+            p.owner = to_user
+            p.save()
+
+        for pa in from_user.project_memberships.all():
+            try:
+                pa2 = ProjectAccess.objects.get(user=to_user,project=pa.project)
+                access = combine_access(pa.access,pa2.access)
+                if access!=pa2.access:
+                    pa2.access = access
+                    pa2.save()
+            except ProjectAccess.DoesNotExist:
+                pa.user = to_user
+                pa.save()
+
+        for e in from_user.own_extensions.all():
+            e.author = to_user
+            e.save()
+
+        for t in from_user.own_themes.all():
+            t.author = to_user
+            t.save()
+
+        for cpt in from_user.own_custom_part_types.all():
+            cpt.author = to_user
+            cpt.save()
+
+        for r in from_user.resources.all():
+            r.owner = to_user
+            r.save()
+
+        for a in from_user.item_accesses.all():
+            try:
+                a2 = Access.objects.get(user=to_user,item=a.item)
+                access = combine_access(a.access,a2.access)
+                if access!=a2.access:
+                    a2.access = access
+                    a2.save()
+            except Access.DoesNotExist:
+                a.user = to_user
+                a.save()
+
+        for ei in from_user.own_items.all():
+            ei.author = to_user
+            ei.save()
+
 class Project(models.Model, ControlledObject):
     name = models.CharField(max_length=200)
     owner = models.ForeignKey(User, related_name='own_projects', on_delete=models.CASCADE)
@@ -649,7 +701,7 @@ class TaggedQuestion(taggit.models.GenericTaggedItemBase):
 
 class Access(models.Model, TimelineMixin):
     item = models.ForeignKey('EditorItem', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='item_accesses', on_delete=models.CASCADE)
     access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
 
     timelineitems = GenericRelation('TimelineItem', related_query_name='item_accesses', content_type_field='object_content_type', object_id_field='object_id')
@@ -712,7 +764,7 @@ class EditorItemManager(models.Manager):
 
 class Contributor(models.Model):
     item = models.ForeignKey('EditorItem', on_delete=models.CASCADE, related_name='contributors')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+    user = models.ForeignKey(User, related_name='item_contributions', on_delete=models.CASCADE, blank=True, null=True)
     name = models.CharField(max_length=200,blank=True)
     profile_url = models.URLField(blank=True)
 

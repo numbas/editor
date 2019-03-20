@@ -31,6 +31,7 @@
                 {% if view_user == request.user %}
                 <li role="separator" class="nav-divider"></li>
                 <li><a class="text-danger" href="{% url 'user_deactivate' %}"><span class="glyphicon glyphicon-remove"></span> Deactivate your account</a></li>
+                <li><a class="text-danger" href="{% url 'user_reassign_content' %}"><span class="glyphicon glyphicon-share"></span> Reassign your content</a></li>
                 {% endif %}
             </div>
         </div>

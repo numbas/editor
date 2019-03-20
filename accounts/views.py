@@ -6,7 +6,7 @@ try:
 except ImportError:
     from io import StringIO
 
-from accounts.forms import NumbasRegistrationForm, DeactivateUserForm
+from accounts.forms import NumbasRegistrationForm, DeactivateUserForm, ReassignContentForm
 from accounts.forms import UserProfileForm, ChangePasswordForm
 from accounts.models import RegistrationProfile
 from accounts.util import find_users, user_json
@@ -20,6 +20,7 @@ from django.urls import reverse
 from django.contrib import messages
 from django.http import Http404, HttpResponse
 from django.template.defaultfilters import slugify
+from django.template.loader import get_template
 from django.contrib.sites.models import Site
 from editor.models import NewQuestion, NewExam
 import editor.models
@@ -200,7 +201,7 @@ class UserSearchView(ListView):
             search_term = self.request.GET['q']
             users = find_users(name=search_term)[:5]
         except KeyError:
-            users = User.objects.all()
+            users = User.objects.filter(is_active=True)
         return [user_json(u) for u in users]
 
 class AfterFirstLoginView(TemplateView):
@@ -237,3 +238,18 @@ class DeactivateUserView(CurrentUserUpdateView):
 
     def get_success_url(self):
         return reverse('logout')
+
+class ReassignContentView(CurrentUserUpdateView):
+    model = User
+    template_name = 'profile/reassign_content.html'
+    form_class = ReassignContentForm
+
+    def form_valid(self,form):
+        res = super().form_valid(form)
+        template = get_template('profile/content-reassigned.html')
+        message= template.render({'to_user': form.cleaned_data['to_user']})
+        messages.success(self.request, message)
+        return res
+
+    def get_success_url(self):
+        return reverse('editor_index')

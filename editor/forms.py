@@ -14,6 +14,7 @@ from django.contrib.auth.models import User
 
 from editor.models import NewExam, NewQuestion, EditorItem, Access, Theme, Extension, PullRequest, CustomPartType
 import editor.models
+from accounts.forms import UserField
 from accounts.util import find_users
 from editor import jsonfield
 
@@ -355,33 +356,6 @@ class CopyCustomPartTypeForm(forms.ModelForm):
         if name == self.instance.name:
             raise forms.ValidationError("Please pick a new name.")
         return name
-
-class BootstrapFieldMixin(object):
-    def widget_attrs(self, widget):
-        attrs = super(BootstrapFieldMixin, self).widget_attrs(widget)
-        attrs.update({'class': 'form-control'})
-        return attrs
-
-class UserField(BootstrapFieldMixin, forms.Field):
-    def from_db_value(self, value, expression, connection, context):
-        return value.get_full_name()
-
-    def widget_attrs(self, widget):
-        attrs = super(UserField, self).widget_attrs(widget)
-        attrs.update({'placeholder': 'Username or full name'})
-        return attrs
-
-    def to_python(self, value):
-        if value is None:
-            return None
-        user = find_users(value).first()
-        if user is None:
-            try:
-                validate_email(value)
-                return User(email=value)
-            except ValidationError:
-                raise forms.ValidationError("No user matching query '{}'".format(value))
-        return user
 
 class UserSearchMixin(forms.ModelForm):
     """

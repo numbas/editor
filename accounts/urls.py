@@ -31,6 +31,7 @@ from numbas import settings
 urlpatterns = [
     url(r'search/$', UserSearchView.as_view(), name='user_search'),
     url(r'deactivate/$', accounts.views.DeactivateUserView.as_view(), name='user_deactivate'),
+    url(r'reassign-content/$', accounts.views.ReassignContentView.as_view(), name='user_reassign_content'),
     url(r'profile/(?P<pk>\d+)/$',
         UserProfileView.as_view(),
         name='view_profile'),

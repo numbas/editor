@@ -16,6 +16,7 @@ from django.views.generic import UpdateView, DetailView, ListView, TemplateView
 from django.contrib.auth.models import User
 from django.contrib.sites.requests import RequestSite
 from django.contrib.sites.shortcuts import get_current_site
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.contrib import messages
 from django.http import Http404, HttpResponse
@@ -53,6 +54,15 @@ class RegistrationView(registration.views.RegistrationView):
 
     def registration_allowed(self):
         return settings.ALLOW_REGISTRATION
+
+class RegistrationCompleteView(TemplateView):
+    template_name='registration/registration_complete.html'
+
+    def get(self, request, *args, **kwargs):
+        if not self.request.user.is_anonymous:
+            return redirect(reverse('editor_index'))
+        return super().get(request,*args,**kwargs)
+
 
 class ActivationView(registration.views.ActivationView):
     template_name = 'registration/activation_complete.html'

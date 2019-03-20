@@ -895,7 +895,7 @@
                                 }">
                                     <a role="button" class="list-group-item part root" data-bind="
                                         click: $parent.currentPart, 
-                                        css: {active: $data==$parent.currentPart()}
+                                        css: {active: $data==$parent.currentPart() || ($parent.addingPart() && $data==$parent.addingPart().parent)}
                                     ">
                                         <strong data-bind="text: header"></strong>
                                         <span class="type-name" data-bind="text: type().niceName"></span>

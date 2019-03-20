@@ -5,6 +5,7 @@
 <form class="form-horizontal" data-bind="submit: Editor.noop">
     {% property '$parent.marks' 'Marks' min=0 help_url='question/parts/reference.html#term-marks' %}
     {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='question/parts/reference.html#term-show-correct-answer-on-reveal' %}
+    {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/parts/reference.html#term-show-score-feedback-icon' %}    
     <div data-bind="visible: $parent.steps().length">
         {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='question/parts/reference.html#term-penalty-for-revealing-steps' %}
     </div>

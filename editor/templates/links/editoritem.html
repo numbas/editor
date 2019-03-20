@@ -1,1 +1,4 @@
-<a href="{{item.get_absolute_url}}">{{item.editoritem.name}}</a>
+<a href="{{item.get_absolute_url}}">
+    {% if show_icon %}<span class="glyphicon glyphicon-{{item.icon}}"></span>{% endif %}
+    {{item.editoritem.name}}
+</a>

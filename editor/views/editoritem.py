@@ -29,7 +29,7 @@ import reversion
 
 from django_tables2.config import RequestConfig
 
-from accounts.models import UserProfile
+from accounts.models import UserProfile, EditorItemViewed
 
 from editor.tables import EditorItemTable
 from editor.models import EditorItem, Project, Access, Licence, PullRequest, Taxonomy, Contributor
@@ -151,6 +151,10 @@ class BaseUpdateView(generic.UpdateView):
         else:
             if not self.user.is_anonymous:
                 self.user.notifications.filter(target_object_id=self.object.pk).mark_all_as_read()
+                item = self.object.editoritem
+                v, created = EditorItemViewed.objects.get_or_create(userprofile=self.user.userprofile,item=item)
+                if not created:
+                    v.save()
 
             return super(BaseUpdateView, self).get(request, *args, **kwargs)
 

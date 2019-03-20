@@ -16,7 +16,7 @@ from registration import models as regmodels
 
 from sanitizer.models import SanitizedTextField
 
-from editor.models import NewQuestion, EditorTag, Project, TimelineItem, SiteBroadcast
+from editor.models import NewQuestion, EditorTag, Project, TimelineItem, SiteBroadcast, EditorItem
 
 class RegistrationManager(regmodels.RegistrationManager):
     @transaction.atomic
@@ -91,6 +91,21 @@ class UserProfile(models.Model):
 
     def get_absolute_url(self):
         return reverse('view_profile', args=(self.pk,))
+
+class EditorItemViewed(models.Model):
+    userprofile = models.ForeignKey(UserProfile, related_name='last_viewed_items', on_delete=models.CASCADE)
+    item = models.ForeignKey(EditorItem,related_name='views', on_delete=models.CASCADE)
+    date = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('-date',)
+
+@receiver(signals.post_save, sender=EditorItemViewed)
+def truncate_last_viewed_items(instance, created, **kwargs):
+    views = EditorItemViewed.objects.filter(userprofile=instance.userprofile)
+    old = views[5:].values_list('id',flat=True)
+    if old:
+        views.filter(pk__in=old).delete()
 
 class BasketQuestion(models.Model):
     class Meta:

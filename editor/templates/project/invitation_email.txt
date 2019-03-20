@@ -4,4 +4,4 @@ Hi,
 
 To accept {{invitation.invited_by.first_name}}'s invitation, create an account by clicking the link below:
 
-{% absurl 'editor_index' %}
+{% absurl 'registration_register' %}

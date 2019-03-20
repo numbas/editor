@@ -9,7 +9,6 @@ from django.utils.html import format_html, html_safe
 from django.utils.safestring import mark_safe
 from django.utils.encoding import force_text
 from django.db.models import Q, Count
-from django.core.validators import validate_email
 from django.contrib.auth.models import User
 
 from editor.models import NewExam, NewQuestion, EditorItem, Access, Theme, Extension, PullRequest, CustomPartType
@@ -380,7 +379,7 @@ class UserSearchMixin(forms.ModelForm):
         if selected_user is not None:
             cleaned_data['user_search'] = selected_user
 
-        if cleaned_data['user_search'] is None:
+        if cleaned_data.get('user_search') is None:
             raise forms.ValidationError("No such user")
 
         return cleaned_data

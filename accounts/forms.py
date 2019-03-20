@@ -2,6 +2,7 @@ from registration.forms import RegistrationForm
 from sanitizer.forms import SanitizedCharField
 from django import forms, apps
 from django.conf import settings
+from django.core.validators import validate_email
 from django.forms.widgets import PasswordInput, Textarea, TextInput
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
@@ -30,7 +31,7 @@ class UserField(BootstrapFieldMixin, forms.Field):
         return attrs
 
     def to_python(self, value):
-        if value is None:
+        if not value:
             return None
         user = find_users(value).first()
         if user is None:

@@ -1,0 +1,32 @@
+Upgrading to Numbas 2.0
+=======================
+
+Upgrading to Numbas 2.0 from an earlier version is a straightforward
+process, but can take a long time and disk space if you have a very
+large database.
+
+Follow the instructions below, using a shell in your ``numbas_editor``
+directory.
+
+-  Remove ``editor/templates/index.html`` - Numbas 2.0 looks for your
+   custom welcome message in ``editor/templates/index_message.html``.
+
+-  Get the latest code::
+  
+    git pull
+
+-  Upgrade Python libraries::
+   
+    pip install --upgrade -r numbas/requirements.pip``
+
+-  Migrate the database (this could take a while)::
+
+    python manage.py migrate
+
+-  Copy ``editor/templates/index_message.html.dist`` to
+   ``editor/templates/index_message.html``, and customise to your
+   liking.
+
+That's it!
+
+If you have any problems, email numbas@ncl.ac.uk.

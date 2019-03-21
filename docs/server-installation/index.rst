@@ -33,5 +33,5 @@ Upgrading
 .. toctree::
     :maxdepth: 1
 
-    upgrade/v2
-    upgrade/v3
+    from version 1.0 to 2.0 <upgrade/v2>
+    from version 2.0 to 3.0 <upgrade/v3>

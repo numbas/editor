@@ -449,12 +449,16 @@
                             <button type="button" class="btn btn-sm btn-info" data-bind="visible: isRootPart, click: startAddingStep">
                                 <span class="glyphicon glyphicon-plus"></span> Add a step to this part
                             </button>
+                            <!-- ko if: isGap -->
                             <button type="button" class="btn btn-sm btn-info" data-bind="visible: isGap, click: parent().startAddingGap">
                                 <span class="glyphicon glyphicon-plus"></span> Add another gap to this part</span>
                             </button>
+                            <!-- /ko -->
+                            <!-- ko if: isStep -->
                             <button type="button" class="btn btn-sm btn-info" data-bind="visible: isStep, click: parent().startAddingStep">
                                 <span class="glyphicon glyphicon-plus"></span> Add another step to this part</span>
                             </button>
+                            <!-- /ko -->
                             <button type="button" class="btn btn-sm btn-danger" data-bind="click: remove">
                                 <span class="glyphicon glyphicon-remove"></span> Delete this <span data-bind="text: levelName"></span>
                             </button>

@@ -170,11 +170,20 @@
 
                                 <div class="form-group description">
                                     <label>Description</label>
-                                    <div id="description-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
-                                    <p class="help-block">
-                                        {% helplink 'question/reference.html#term-description' subject='the description field' %}
-                                        Describe what this {{item_type}} assesses, or how it is going to be used.
-                                    </p>
+                                    <div id="description-input" {% if not editable %}disabled{% endif %} data-bind="light_wysiwyg: description"></div>
+                                    <div class="help-block">
+                                        <p>
+                                            {% helplink 'question/reference.html#term-description' subject='the description field' %}
+                                            Try to answer the following questions here:
+                                        </p>
+                                        <ul>
+                                            <li>What is this {{item_type}} used for?</li>
+                                            <li>What does this {{item_type}} assess?</li>
+                                            <li>What does the student have to do?</li>
+                                            <li>How is the {{item_type}} randomised?</li>
+                                            <li>Are there any implementation details that editors should be aware of?</li>
+                                        </ul>
+                                    </div>
                                 </div>
 
                                 <div class="form-group tags">

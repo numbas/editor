@@ -1171,6 +1171,70 @@ $(document).ready(function() {
         }
     }
 
+    ko.bindingHandlers.light_wysiwyg = {
+        init: function(element,valueAccessor,allBindingsAccessor) {
+            valueAccessor = valueAccessor();
+            allBindingsAccessor = allBindingsAccessor();
+
+            if(element.hasAttribute('disabled')) {
+                try {
+                    element.classList.add('well');
+                    element.classList.add('content-area');
+                } catch(e) {
+                    element.className += ' well content-area';
+                }
+                return;
+            }
+
+            function onChange(html) {
+                valueAccessor(html);
+            }
+
+            function onFocus() {
+                $(element).data('summernote-focus',true);
+            }
+
+            function onBlue() {
+                $(element).data('summernote-focus',false);
+            }
+
+            $(element).summernote({
+                airMode: true,
+                disableDragAndDrop: true,
+                popover: {
+                    air: [
+                        ['style', ['bold', 'italic', 'underline', 'clear']],
+                        ['para', ['ul', 'ol', 'paragraph']],
+                        ['insert', ['link']]
+                    ]
+                },
+                callbacks: {
+                    onChange: onChange,
+                    onFocus: onFocus,
+                    onBlur: onBlue
+                }
+            } );
+            var ed = $(element).data('summernote');
+            ed.layoutInfo.editor[0].classList.add('form-control');
+            $(element).summernote('code',ko.unwrap(valueAccessor));
+        },
+        update: function(element, valueAccessor) {
+            var value = ko.unwrap(valueAccessor()) || '';
+
+            if(element.hasAttribute('disabled')) {
+                $(element).html(value).mathjax();
+                $(element).find('[data-bind]').each(function() {
+                    this.removeAttribute('data-bind');
+                });
+                return;
+            }
+
+            if(!$(element).data('summernote-focus')) {
+                $(element).summernote('code',value);
+            }
+        }
+    };
+
     ko.bindingHandlers.writemaths = {
         init: function(element,valueAccessor,allBindingsAccessor) {
             valueAccessor = valueAccessor();

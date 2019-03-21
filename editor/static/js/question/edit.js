@@ -1814,6 +1814,12 @@ $(document).ready(function() {
 
         this.showChildren = ko.pureComputed(function() {
             var currentPart = q.currentPart();
+            if(!currentPart) {
+                var a = q.addingPart();
+                if(a) {
+                    currentPart = a.parent;
+                }
+            }
             while(currentPart) {
                 if(currentPart==this) {
                     return true;

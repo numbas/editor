@@ -26,6 +26,10 @@
     overflow-y: auto;
 }
 
+.parts-tree .gaps, .parts-tree .steps {
+    margin-top: 1px;
+}
+
 .parts-tree .part.gap, .parts-tree .part.step {
     margin-left: 2em;
 }

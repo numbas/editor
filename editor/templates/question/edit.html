@@ -890,7 +890,7 @@
                                     foreach: parts,
                                     options: {
                                         group: 'parts',
-                                        filter: '.gap, .step'
+                                        onMove: movePart
                                     }
                                 }">
                                     <a role="button" class="list-group-item part root" data-bind="
@@ -901,8 +901,8 @@
                                         <span class="type-name" data-bind="text: type().niceName"></span>
                                         <small class="children-description text-muted" data-bind="text: childrenDescription"></small>
                                     </a>
-                                    <!-- ko if: showChildren -->
-                                    <!-- ko foreach: gaps -->
+                                    <!-- ko if: showChildren() && (gaps().length || steps().length) -->
+                                    <div class="gaps" data-bind="sortable: { foreach: gaps, options: {group: path()+'gaps'} }">
                                     <a role="button" class="list-group-item part gap" data-bind="
                                         click: $parents[1].currentPart, 
                                         css: {active: $data==$parents[1].currentPart()}
@@ -910,8 +910,8 @@
                                         <strong data-bind="text: header"></strong>
                                         <span class="type-name" data-bind="text: type().niceName"></span>
                                     </a>
-                                    <!-- /ko -->
-                                    <!-- ko foreach: steps -->
+                                    </div>
+                                    <div class="steps" data-bind="sortable: { foreach: steps, options: {group: path()+'steps'} }">
                                     <a role="button" class="list-group-item part step" data-bind="
                                         click: $parents[1].currentPart, 
                                         css: {active: $data==$parents[1].currentPart()}
@@ -919,7 +919,7 @@
                                         <strong data-bind="text: header"></strong>
                                         <span class="type-name" data-bind="text: type().niceName"></span>
                                     </a>
-                                    <!-- /ko -->
+                                    </div>
                                     <!-- /ko -->
                                 </div>
                             </div>

@@ -18,6 +18,11 @@ For a version which can be uploaded to a VLE such as Blackboard or Moodle, click
 
 In both cases, a .zip file containing everything needed to run the exam will be downloaded to your computer. 
 
+Uploading to the Numbas LTI provider
+------------------------------------
+
+See the `Numbas LTI provider documentation <https://numbas-lti-provider.readthedocs.io/en/latest/instructor/resources.html#creating-a-new-resource>`_.
+
 Uploading to Blackboard
 -----------------------
 

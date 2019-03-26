@@ -37,10 +37,16 @@ class HeadlessTest(CompileObject):
     def __init__(self,q,*args,**kwargs):
         super().__init__(*args,**kwargs)
         self.question = q
+        self.get_object()
+
+    def get_object(self):
+        self.editoritem = self.question.editoritem
+        self.numbasobject = self.editoritem.as_numbasobject(None)
+        return self.question
+
     def compile(self):
-        numbasobject = self.question.as_numbasobject(None)
-        self.add_extensions(numbasobject)
-        source = str(numbasobject)
+        self.add_extensions()
+        source = str(self.numbasobject)
         command = [
             os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'],'headless'),
         ]

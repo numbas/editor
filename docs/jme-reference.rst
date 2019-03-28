@@ -1,3 +1,5 @@
+.. role:: no-test
+
 .. _jme:
 
 JME
@@ -57,16 +59,62 @@ For example, ``v:dot:x`` produces a bold *x* with a dot on top: :math:`\boldsymb
 Data types
 **********
 
+JME expressions are composed of the following data types.
+Some extensions add new data types.
+
 .. data:: number
 
-    Numbers include integers, real numbers and complex numbers.
-    There is only one data type for all numbers.
+    A real or complex floating-point number.
 
     ``i``, ``e``, ``infinity`` and ``pi`` are reserved keywords for the imaginary unit, the base of the natural logarithm, ∞ and π, respectively.
 
-    **Examples**: ``0``, ``-1``, ``0.234``, ``i``, ``e``, ``pi``
+    **Examples**: ``0.0``, ``-1.0``, ``0.234``, ``i``, ``e``, ``pi``
+
+    Numbers of this type are represented using JavaScript's built-in ``Number`` object, which is a 64-bit IEEE 754 floating-point number.
+    This representation offers a very good compromise between precision and the range of values that can be stored, but can behave in unexpected ways.
+    Accuracy is easily lost when dealing with very big or very small numbers, and on division.
 
     See functions related to :ref:`jme-fns-arithmetic`, :ref:`jme-fns-number-operations`, :ref:`jme-fns-trigonometry` and :ref:`jme-fns-number-theory`.
+
+    **Automatically converts to:**
+        * :data:`decimal`
+
+.. data:: integer
+
+    An element of the set of integers, :math:`\mathbb{Z}`.
+
+    **Examples**: ``0``, ``1``, ``-2``, `431``.
+
+    **Automatically converts to:**
+        * :data:`number`
+        * :data:`rational`
+        * :data:`decimal`
+
+.. data:: rational
+
+    A fraction; an element of the set of rationals, :math:`\mathbb{Q}`.
+    The numerator and denominator are integers.
+
+    Instances of this data type may be top-heavy, with numerator bigger than the denominator, and are not required to be reduced.
+
+    **Examples**: ``1/1``, ``-34/2``, `3/4``.
+
+    **Automatically converts to:**
+        * :data:`number`
+        * :data:`decimal`
+
+.. data:: decimal
+
+    A number with a guaranteed level of precision, and arbitrary order of magnitude.
+
+    Numbers of this type are represented using the `Decimal.js <https://github.com/MikeMcl/decimal.js/>`_ library.
+    They're guaranteed to be accurate to 40 significant figures.
+    The order of magnitude is stored separately from the significant digits, so there's no less of precision for very big or very small numbers.
+
+    **Examples**: ``dec(0)``, ``dec("1.23e-5")``, ``6.0221409*10^23``
+
+    **Automatically converts to:**
+        * :data:`number`
 
 .. data:: boolean
 
@@ -135,6 +183,9 @@ Data types
 
     See functions related to :ref:`jme-fns-ranges`.
 
+    **Automatically converts to:**
+        * :data:`list` - a list of :data:`number` values corresponding to the numbers included in the range. If the step size is zero, an error is thrown.
+
 .. data:: set
 
     An unordered set of elements of any data type.
@@ -143,6 +194,9 @@ Data types
     **Examples**: ``set(a,b,c)``, ``set([1,2,3,4])``, ``set(1..5)``
 
     See functions related to :ref:`jme-fns-sets`.
+
+    **Automatically converts to:**
+        * :data:`list`
 
 .. data:: vector
 
@@ -154,6 +208,9 @@ Data types
 
     See functions related to :ref:`jme-fns-vector-and-matrix-arithmetic`.
 
+    **Automatically converts to:**
+        * :data:`list` - a list of :data:`number` values corresponding to the components of the vector.
+
 .. data:: matrix
 
     Matrices are constructed from lists of numbers, representing the rows.
@@ -163,6 +220,14 @@ Data types
     **Examples**: ``matrix([1,2,3],[4,5,6])``, ``matrix(row1,row2,row3)``
 
     See functions related to :ref:`jme-fns-vector-and-matrix-arithmetic`.
+
+    **Automatically converts to:**
+        * :data:`list` - a list of :data:`vector` values corresponding to the rows of the matrix.
+
+.. data:: name
+
+    A variable name. 
+    When an expression is evaluated, all variable names are replaced withe their corresponding value in the current scope.
 
 .. data:: function
 
@@ -191,6 +256,46 @@ Data types
 
     See functions related to :ref:`jme-fns-subexpressions`.
 
+Automatic data type conversion
+------------------------------
+
+Some data types can be automatically converted to others when required.
+For example, the number-like types such as :data:`integer` and :data:`decimal` can be automatically converted to :data:`number` values.
+
+The data types of the arguments to a function application determine which version of the function is used.
+Ideally, this will do what you expect without you having to think about it.
+For reference, the process for deciding on what conversions to perform is as follows:
+
+* If there is a version of the function which takes exactly the given data types, that is used.
+* Otherwise, each definition of the function is compared by looking at each of the arguments, working from left to right.
+* A definition which does not convert an argument is preferred to one that does.
+* If both definitions being compared need to convert an argument, the type that occurs first in the input type's list of automatic conversion methods is used.
+  (This follows the order of the types under the "Automatically converts to" headers above)
+
+The following examples illustrate how this works.
+
+.. list-table::
+    :widths: 15 15 70
+
+    * - Expression
+      - Type of result
+      - Explanation
+    * - ``1+3.3``
+      - :data:`number`
+      - The ``1`` is converted to a :data:`number`, and then added to ``3.3``.
+    * - ``1+1/2``
+      - :data:`rational`
+      - :data:`integer` prefers to convert to :data:`rational` over 
+    * - ``1.23+dec("1.2")``
+      - :data:`decimal`
+      - :data:`decimal` values are preferred to :data:`number` because they're more precise.
+    * - ``1/2+0.5``
+      - :data:`number`
+      - :data:`rational` can convert to :data:`number`, but not the other way round, so :data:`number` addition is used.
+    * - ``set(1,2,3,4) except [2]``
+      - :data:`list`
+      - :func:`except` is only defined on :data:`list` values, so the :data:`set` is converted to a :data:`list` automatically.
+
 .. _jme-functions:
 
 Function reference
@@ -208,10 +313,20 @@ Arithmetic
 .. jme:function:: x+y
 
     Addition.
-    Numbers, vectors, matrices, lists, dicts, or strings can be added together.
 
-    * ``list1+list2`` concatenates the two lists, while ``list+value`` returns a list with the right-hand-side value appended.
-    * ``dict1+dict2`` merges the two dictionaries, with values from the right-hand side taking precedence when the same key is present in both dictionaries.
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`number`
+        * :data:`list`, :data:`list` → :data:`list` - concatenate two lists
+        * :data:`list`, anything → :data:`list` - add an item to the end of a list
+        * :data:`dict`, :data:`dict` → :data:`dict` - merge two dictionaries, with values from the right-hand side taking precedence when the same key is present in both dictionaries.
+        * :data:`string`, anything → :data:`string` - convert the right-hand argument to a string, and concatenate
+        * anything, :data:`string` → :data:`string` - convert the left-hand argument to a string, and concatenate
+        * :data:`vector`, :data:`vector` → :data:`vector`
+        * :data:`matrix`, :data:`matrix` → :data:`matrix`
+        * :data:`integer`, :data:`integer` → :data:`integer`
+        * :data:`rational`, :data:`rational` → :data:`rational`
+        * :data:`decimal`, :data:`decimal` → :data:`decimal`
+        * :data:`number`, :data:`decimal` → :data:`decimal`
 
     **Examples**:
         * ``1+2`` → ``3``
@@ -224,7 +339,16 @@ Arithmetic
 .. jme:function:: x-y
 
     Subtraction.
-    Defined for numbers, vectors and matrices.
+
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`number`
+        * :data:`vector`, :data:`vector` → :data:`vector`
+        * :data:`matrix`, :data:`matrix` → :data:`matrix`
+        * :data:`integer`, :data:`integer` → :data:`integer`
+        * :data:`rational`, :data:`rational` → :data:`rational`
+        * :data:`decimal`, :data:`decimal` → :data:`decimal`
+        * :data:`number`, :data:`decimal` → :data:`decimal`
+        * :data:`set`, :data:`set` → :data:`set`
 
     **Examples**:
         * ``1-2`` → ``-1``
@@ -234,7 +358,20 @@ Arithmetic
 .. jme:function:: x*y
 
     Multiplication.
-    Numbers, vectors and matrices can be multiplied together.
+
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`number`
+        * :data:`number`, :data:`vector` → :data:`vector`
+        * :data:`vector`, :data:`number` → :data:`vector`
+        * :data:`matrix`, :data:`vector` → :data:`vector`
+        * :data:`number`, :data:`matrix` → :data:`matrix`
+        * :data:`matrix`, :data:`number` → :data:`matrix`
+        * :data:`matrix`, :data:`matrix` → :data:`matrix`
+        * :data:`vector`, :data:`matrix` → :data:`vector`
+        * :data:`integer`, :data:`integer` → :data:`integer`
+        * :data:`rational`, :data:`rational` → :data:`rational`
+        * :data:`decimal`, :data:`decimal` → :data:`decimal`
+        * :data:`number`, :data:`decimal` → :data:`decimal`
 
     **Examples**:
         * ``1*2`` → ``2``
@@ -247,19 +384,31 @@ Arithmetic
     Division.
     Only defined for numbers.
 
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`number`
+        * :data:`matrix`, :data:`number` → :data:`matrix`
+        * :data:`vector`, :data:`number` → :data:`vector`
+        * :data:`integer`, :data:`integer` → :data:`rational`
+        * :data:`rational`, :data:`rational` → :data:`rational`
+        * :data:`decimal`, :data:`decimal` → :data:`decimal`
+        * :data:`number`, :data:`decimal` → :data:`decimal`
+
     **Example**:
         * ``3/4`` → ``0.75``.
 
 .. jme:function:: x^y
 
     Exponentiation.
-    Only defined for numbers.
 
-    ``exp(x,y)`` is a synoynm for ``x^y``.
+    ``exp(x)`` is a synoynm for ``e^x``.
+
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`number`
+        * :data:`integer`, :data:`integer` → :data:`decimal`
+        * :data:`decimal`, :data:`decimal` → :data:`decimal`
 
     **Examples**:
         * ``3^2`` → ``9``
-        * ``exp(3,2)`` → ``9``
         * ``e^(pi * i)`` → ``-1``
 
 .. _jme-fns-number-operations:
@@ -267,15 +416,41 @@ Arithmetic
 Number operations
 -----------------
 
+.. jme:function:: decimal(n)
+                  decimal(x)
+
+    Construct a :data:`decimal` value.
+    Any string accepted by `Decimal.js <https://github.com/MikeMcl/decimal.js/>`_ is accepted.
+
+    **Definitions**:
+        * :data:`number` → :data:`decimal`
+        * :data:`string` → :data:`decimal`
+
+.. jme:function:: int(n)
+
+    Convert ``n`` to an integer, rounding to the nearest integer.
+
+    **Definitions**:
+        * :data:`number` → :data:`integer`
+
+    **Example**:
+        * ``int(3.0)`` → ``3``
+
 .. jme:function:: abs(x)
               len(x)
               length(x)
 
     Absolute value, or modulus.
-    Defined for numbers, strings, ranges, vectors, lists and dictionaries.
-    In the case of a list, returns the number of elements.
-    For a range, returns the difference between the upper and lower bounds.
-    For a dictionary, returns the number of keys.
+
+    **Definitions**:
+        * :data:`number` → :data:`number`
+        * :data:`string` → :data:`number` - the number of characters
+        * :data:`list` → :data:`number` - the number of elements
+        * :data:`range` → :data:`number` - the difference between the upper and lower bound
+        * :data:`vector` → :data:`number`
+        * :data:`dict` → :data:`number` - the number of keys
+        * :data:`decimal` → :data:`decimal`
+        * :data:`set` → :data:`number` - the number of elements
 
     **Examples**:
         * ``abs(-8)`` → ``8``
@@ -292,12 +467,18 @@ Number operations
 
     Argument of a complex number.
 
+    **Definitions**:
+        * :data:`number` → :data:`number`
+
     **Example**:
         * ``arg(-1)`` → ``pi``
 
 .. jme:function:: re(z)
 
     Real part of a complex number.
+
+    **Definitions**:
+        * :data:`number` → :data:`number`
 
     **Example**:
         * ``re(1+2i)`` → ``1``
@@ -306,6 +487,9 @@ Number operations
 
     Imaginary part of a complex number.
 
+    **Definitions**:
+        * :data:`number` → :data:`number`
+
     **Example**:
         * ``im(1+2i)`` → ``2``
 
@@ -313,15 +497,29 @@ Number operations
 
     Complex conjugate.
 
+    **Definitions**:
+        * :data:`number` → :data:`number`
+
     **Example**:
         * ``conj(1+i)`` → ``1-i``
 
 .. jme:function:: isint(x)
 
-    Returns ``true`` if ``x`` is an integer.
+    Returns ``true`` if ``x`` is an integer - that is, it is real and has no fractional part.
+
+    **Definitions**:
+        * :data:`number` → :data:`boolean`
+        * :data:`decimal` → :data:`boolean`
 
     **Example**:
         * ``isint(4.0)`` → ``true``
+
+.. jme:function:: iszero(n)
+
+    Returns ``true`` when ``n`` is exactly 0.
+
+    **Definitions**:
+        * :data:`decimal` → :data:`boolean`
 
 .. jme:function:: sqrt(x)
               sqr(x)
@@ -336,6 +534,9 @@ Number operations
 
     ``n``:sup:`th` root of ``x``.
 
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`number`
+
     **Example**:
         * ``root(8,3)`` → ``2``.
 
@@ -343,15 +544,26 @@ Number operations
 
     Natural logarithm.
 
+    **Definitions**:
+        * :data:`number` → :data:`number`
+        * :data:`decimal` → :data:`decimal`
+
     **Example**:
         * ``ln(e)`` → ``1``
 
-.. jme:function:: log(x)
+.. jme:function:: log(x,b)
 
-    Logarithm with base 10.
+    Logarithm with base ``b``, or base 10 if ``b`` is not given.
+
+    **Definitions**:
+        * :data:`number` → :data:`number`
+        * :data:`number`, :data:`number` → :data:`number`
+        * :data:`decimal` → :data:`decimal`
+        * :data:`decimal`, :data:`decimal` → :data:`decimal`
 
     **Example**:
         * ``log(100)`` → ``2``.
+        * ``log(343,7)`` → ``3``.
 
 .. jme:function:: log(x,b)
 
@@ -363,6 +575,9 @@ Number operations
 .. jme:function:: degrees(x)
 
     Convert radians to degrees.
+
+    **Definitions**:
+        * :data:`number` → :data:`number`
 
     **Example**:
         * ``degrees(pi/2)`` → ``90``
@@ -380,36 +595,35 @@ Number operations
     Sign of a number.
     Equivalent to :math:`\frac{x}{|x|}`, or 0 when ``x`` is 0.
 
+    **Definitions**:
+        * :data:`number` → :data:`number`
+
     **Examples**:
         * ``sign(3)`` → ``1``
         * ``sign(-3)`` → ``-1``
 
 .. jme:function:: max(a,b)
 
-    Greatest of two numbers.
+    Greatest of the given numbers.
+
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`number` - return the greatest of the two numbers.
+        * :data:`list` → :data:`number` - return the greatest number in the list.
 
     **Example**:
         * ``max(46,2)`` → ``46``
-
-.. jme:function:: max(list)
-
-    Greatest of a list of numbers.
-
-    **Example**:
         * ``max([1,2,3])`` → ``3``
 
 .. jme:function:: min(a,b)
 
-    Least of two numbers.
+    Least of the given numbers.
+
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`number` - return the least of the two numbers.
+        * :data:`list` → :data:`number` - return the lowest number in the list.
 
     **Example**:
         * ``min(3,2)`` → ``2``
-
-.. jme:function:: min(list)
-
-    Least of a list of numbers.
-
-    **Example**:
         * ``min([1,2,3])`` → ``1``
 
 .. jme:function:: precround(n,d)
@@ -417,9 +631,15 @@ Number operations
     Round ``n`` to ``d`` decimal places.
     On matrices and vectors, this rounds each element independently.
 
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`number`
+        * :data:`matrix`, :data:`number` → :data:`matrix`
+        * :data:`vector`, :data:`number` → :data:`vector`
+        * :data:`decimal`, :data:`integer` → :data:`decimal`
+
     **Examples**:
         * ``precround(pi,5)`` → ``3.14159``
-        * ``precround(matrix([[0.123,4.56],[54,98.765]]),2)`` → ``matrix([[0.12,4.56],[54,98.77]])``
+        * ``precround(matrix([[0.123,4.56],[54,98.765]]),2)`` → ``matrix([0.12,4.56],[54,98.77])``
         * ``precround(vector(1/3,2/3),1)`` → ``vector(0.3,0.7)``
 
 .. jme:function:: siground(n,f)
@@ -427,14 +647,23 @@ Number operations
     Round ``n`` to ``f`` significant figures.
     On matrices and vectors, this rounds each element independently.
 
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`number`
+        * :data:`matrix`, :data:`number` → :data:`matrix`
+        * :data:`vector`, :data:`number` → :data:`vector`
+        * :data:`decimal`, :data:`integer` → :data:`decimal`
+
     **Examples**:
         * ``siground(pi,3)`` → ``3.14``
-        * ``siground(matrix([[0.123,4.56],[54,98.765]]),2)`` → ``matrix([[0.12,4.6],[54,99]])``
+        * ``siground(matrix([[0.123,4.56],[54,98.765]]),2)`` → ``matrix([0.12,4.6],[54,99])``
         * ``siground(vector(10/3,20/3),2)`` → ``vector(3.3,6.7)``
 
 .. jme:function:: withintolerance(a,b,t)
 
     Returns ``true`` if :math:`b-t \leq a \leq b+t`.
+
+    **Definitions**:
+        * :data:`number`, :data:`number`, :data:`number` → :data:`boolean`
 
     **Example**:
         * ``withintolerance(pi,22/7,0.1)`` → ``true``
@@ -446,13 +675,22 @@ Number operations
     If ``style`` is given, the number is rendered using the given notation style.
     See the page on :ref:`number-notation` for more on notation styles.
 
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`string`
+        * :data:`number`, :data:`number`, :data:`string` → :data:`string`
+        * :data:`decimal`, :data:`integer` → :data:`string`
+
     **Example**:
         * ``dpformat(1.2,4)`` → ``"1.2000"``
 
-.. jme:function:: countdp(str)
+.. jme:function:: countdp(n)
 
-    Assuming ``str`` is a string representing a number, return the number of decimal places used.
+    Assuming ``n`` is a string representing a number, return the number of decimal places used.
     The string is passed through :jme:func:`cleannumber` first.
+
+    **Definitions**:
+        * :data:`string` → :data:`number`
+        * :data:`decimal` → :data:`integer`
 
     **Example**:
         * ``countdp("1.0")`` → ``1``
@@ -463,13 +701,22 @@ Number operations
 
     Round ``n`` to ``d`` significant figures and return a string, padding with zeros if necessary.
 
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`string`
+        * :data:`number`, :data:`number`, :data:`string` → :data:`string`
+        * :data:`decimal`, :data:`integer` → :data:`string`
+
     **Example**:
         * ``sigformat(4,3)`` → ``"4.00"``
 
-.. jme:function:: countsigfigs(str)
+.. jme:function:: countsigfigs(n)
 
-    Assuming ``str`` is a string representing a number, return the number of significant figures.
+    Assuming ``n`` is a string representing a number, return the number of significant figures.
     The string is passed through :jme:func:`cleannumber` first.
+
+    **Definitions**:
+        * :data:`string` → :data:`number`
+        * :data:`decimal` → :data:`integer`
 
     **Example**:
         * ``countsigfigs("1")`` → ``1``
@@ -485,6 +732,9 @@ Number operations
 
     If ``strict`` is ``true``, then trailing zeroes **must** be included.
 
+    **Definitions**:
+        * :data:`string`, :data:`string`, :data:`number`, :data:`boolean` → :data:`boolean`
+
     **Examples**:
         * ``togivenprecision("1","dp",1,true)`` → ``false``
         * ``togivenprecision("1","dp",1,false)`` → ``true``
@@ -492,14 +742,28 @@ Number operations
         * ``togivenprecision("100","sigfig",1,true)`` → ``true``
         * ``togivenprecision("100","sigfig",3,true)`` → ``true``
 
+.. jme:function:: tonearest(a,b)
+
+    Round ``a`` to the nearest multiple of ``b``.
+
+    **Definitions**:
+        * :data:`decimal`, :data:`decimal` → :data:`decimal`
+
+    **Example**:
+        * ``tonearest(1.234,0.1)`` → ``1.2``
+
+
 .. jme:function:: formatnumber(n,style)
 
     Render the number ``n`` using the given number notation style.
 
     See the page on :ref:`number-notation` for more on notation styles.
 
+    **Definitions**:
+        * :data:`number`, :data:`string` → :data:`string`
+
     **Example**:
-        * ``formatnumber(1234.567,"fr")`` → ``"1.234,567"``
+        * ``formatnumber(1234.567,"eu")`` → ``"1.234,567"``
 
 .. jme:function:: cleannumber(str, styles)
 
@@ -510,15 +774,27 @@ Number operations
     If ``styles`` is given, `str` will be tested against the given styles.
     If it matches, the string will be rewritten using the matched integer and decimal parts, with punctuation removed and the decimal point changed to a dot.
 
-    **Example**:
+    **Definitions**:
+        * :data:`string`, :data:`list` of :data:`string` → :data:`string`
+
+    **Examples**:
         * ``cleannumber("100 000,02",["si-fr"])`` → ``"100000.02"``
         * ``cleannumber(" 1 ")`` → ``"1"``
         * ``cleannumber("1.0")`` → ``"1.0"``
 
-.. jme:function:: string(n)
+.. jme:function:: matchnumber(str,styles)
 
-    Render the number ``n`` using the ``plain-en`` notation style.
+    Try to match a string representing a number in any of the given styles at the start of the given string, and return both the matched text and a corresponding :data:`number` value.
 
+    **Definitions**:
+        * :data:`string`, :data:`list` of :data:`string` → :data:`list`
+
+    .. todo::
+        
+        Examples for matchnumber
+
+    **Example**:
+        * 
 .. jme:function:: parsenumber(string,style)
 
     Parse a string representing a number written in the given style.
@@ -538,9 +814,39 @@ Number operations
     **Example**:
         * ``parsenumber_or_fraction("1/2")`` → ``0.5``
 
+.. jme:function:: parsedecimal(string,style)
+
+    Parse a string representing a number written in the given style, and return a :data:`decimal` value.
+
+    If a list of styles is given, the first that accepts the given string is used.
+
+    See the page on :ref:`number-notation` for more on notation styles.
+
+    **Definitions**:
+        * :data:`string`, :data:`string` → :data:`decimal`
+        * :data:`string`, :data:`list` of :data:`string` → :data:`decimal`
+
+    **Examples**:
+        * ``parsedecimal("1 234,567","si-fr")`` → ``1234.567``
+        * ``parsedecimal("1.001",["si-fr","eu"])`` → ``1001``
+
+.. jme:function:: parsedecimal_or_fraction(string,style)
+
+    Works the same as :jme:func:`parsedecimal`, but also accepts strings of the form ``number/number``, which it interprets as fractions.
+
+    **Definitions**:
+        * :data:`string`, :data:`string` → :data:`number`
+
+    **Example**:
+        * ``parsedecimal_or_fraction("1/2")`` → ``0.5``
+
 .. jme:function:: isnan(n)
 
     Is ``n`` the "not a number" value, ``NaN``?
+
+    **Definitions**:
+        * :data:`number` → :data:`boolean`
+        * :data:`decimal` → :data:`boolean`
 
     **Examples**:
         * ``isnan(1)`` → ``false``
@@ -557,76 +863,142 @@ Trigonometric functions all work in radians, and have as their domain the comple
 
     Sine.
 
+    **Definitions**:
+        * :data:`number` → :data:`number`
+        * :data:`decimal` → :data:`decimal`
+
 .. jme:function:: cos(x)
 
     Cosine.
+
+    **Definitions**:
+        * :data:`number` → :data:`number`
+        * :data:`decimal` → :data:`decimal`
 
 .. jme:function:: tan(x)
 
     Tangent: :math:`\tan(x) = \frac{\sin(x)}{\cos(x)}`
 
+    **Definitions**:
+        * :data:`number` → :data:`number`
+        * :data:`decimal` → :data:`decimal`
+
 .. jme:function:: cosec(x)
 
     Cosecant: :math:`\csc(x) = \frac{1}{sin(x)}`
+
+    **Definitions**:
+        * :data:`number` → :data:`number`
 
 .. jme:function:: sec(x)
 
     Secant: :math:`\sec(x) = \frac{1}{cos(x)}`
 
+    **Definitions**:
+        * :data:`number` → :data:`number`
+
 .. jme:function:: cot(x)
 
     Cotangent: :math:`\cot(x) = \frac{1}{\tan(x)}`
+
+    **Definitions**:
+        * :data:`number` → :data:`number`
 
 .. jme:function:: arcsin(x)
 
     Inverse of :jme:func:`sin`.
     When :math:`x \in [-1,1]`, ``arcsin(x)`` returns a value in :math:`[-\frac{\pi}{2}, \frac{\pi}{2}]`.
 
+    **Definitions**:
+        * :data:`number` → :data:`number`
+        * :data:`decimal` → :data:`decimal`
+
 .. jme:function:: arccos(x)
 
     Inverse of :jme:func:`cos`.
     When :math:`x \in [-1,1]`, ``arccos(x)`` returns a value in :math:`[0, \frac{\pi}]`.
+
+    **Definitions**:
+        * :data:`number` → :data:`number`
+        * :data:`decimal` → :data:`decimal`
 
 .. jme:function:: arctan(x)
 
     Inverse of :jme:func:`tan`.
     When :math:`x` is non-complex, ``arctan(x)`` returns a value in :math:`[-\frac{\pi}{2}, \frac{\pi}{2}]`.
 
+    **Definitions**:
+        * :data:`number` → :data:`number`
+        * :data:`decimal` → :data:`decimal`
+
 .. jme:function:: sinh(x)
 
     Hyperbolic sine: :math:`\sinh(x) = \frac{1}{2} \left( \mathrm{e}^x - \mathrm{e}^{-x} \right)`
+
+    **Definitions**:
+        * :data:`number` → :data:`number`
+        * :data:`decimal` → :data:`decimal`
 
 .. jme:function:: cosh(x)
 
     Hyperbolic cosine: :math:`\cosh(x) = \frac{1}{2} \left( \mathrm{e}^x + \mathrm{e}^{-x} \right)`
 
+    **Definitions**:
+        * :data:`number` → :data:`number`
+        * :data:`decimal` → :data:`decimal`
+
 .. jme:function:: tanh(x)
 
     Hyperbolic tangent: :math:`\tanh(x) = \frac{\sinh(x)}{\cosh(x)}`
+
+    **Definitions**:
+        * :data:`number` → :data:`number`
+        * :data:`decimal` → :data:`decimal`
 
 .. jme:function:: cosech(x)
 
     Hyperbolic cosecant: :math:`\operatorname{cosech}(x) = \frac{1}{\sinh(x)}`
 
+    **Definitions**:
+        * :data:`number` → :data:`number`
+
 .. jme:function:: sech(x)
 
     Hyperbolic secant: :math:`\operatorname{sech}(x) = \frac{1}{\cosh(x)}`
+
+    **Definitions**:
+        * :data:`number` → :data:`number`
 
 .. jme:function:: coth(x)
 
     Hyperbolic cotangent: :math:`\coth(x) = \frac{1}{\tanh(x)}`
 
+    **Definitions**:
+        * :data:`number` → :data:`number`
+
 .. jme:function:: arcsinh(x)
 
     Inverse of :jme:func:`sinh`.
+
+    **Definitions**:
+        * :data:`number` → :data:`number`
+        * :data:`decimal` → :data:`decimal`
 
 .. jme:function:: arccosh(x)
 
     Inverse of :jme:func:`cosh`.
 
+    **Definitions**:
+        * :data:`number` → :data:`number`
+        * :data:`decimal` → :data:`decimal`
+
 .. jme:function:: arctanh(x)
 
     Inverse of :jme:func:`tanh`.
+
+    **Definitions**:
+        * :data:`number` → :data:`number`
+        * :data:`decimal` → :data:`decimal`
 
 .. _jme-fns-number-theory:
 
@@ -640,6 +1012,9 @@ Number theory
 
     ``fact(x)`` is a synoynm for ``x!``.
 
+    **Definitions**:
+        * :data:`number` → :data:`number`
+
     **Examples**:
         * ``fact(3)`` → ``6``
         * ``3!`` → ``6``
@@ -650,6 +1025,9 @@ Number theory
     Factorise ``n``.
     Returns the exponents of the prime factorisation of ``n`` as a list.
 
+    **Definitions**:
+        * :data:`number` → :data:`list`
+
     **Examples**
         * ``factorise(18)`` → ``[1,2]``
         * ``factorise(70)`` → ``[1,0,1,1]``
@@ -657,6 +1035,9 @@ Number theory
 .. jme:function:: gamma(x)
 
     Gamma function.
+
+    **Definitions**:
+        * :data:`number` → :data:`number`
 
     **Examples**:
         * ``gamma(3)`` → ``2``
@@ -667,6 +1048,10 @@ Number theory
     Round up to the nearest integer.
     When ``x`` is complex, each component is rounded separately.
 
+    **Definitions**:
+        * :data:`number` → :data:`number`
+        * :data:`decimal` → :data:`decimal`
+
     **Examples**:
         * ``ceil(3.2)`` → ``4``
         * ``ceil(-1.3+5.4i)`` → ``-1+6i``
@@ -676,6 +1061,10 @@ Number theory
     Round down to the nearest integer.
     When ``x`` is complex, each component is rounded separately.
 
+    **Definitions**:
+        * :data:`number` → :data:`number`
+        * :data:`decimal` → :data:`decimal`
+
     **Example**:
         * ``floor(3.5)`` → ``3``
 
@@ -683,6 +1072,10 @@ Number theory
 
     Round to the nearest integer.
     ``0.5`` is rounded up.
+
+    **Definitions**:
+        * :data:`number` → :data:`number`
+        * :data:`decimal` → :data:`decimal`
 
     **Examples**:
         * ``round(0.1)`` → ``0``
@@ -694,6 +1087,10 @@ Number theory
 
     If ``x`` is positive, round down to the nearest integer; if it is negative, round up to the nearest integer.
 
+    **Definitions**:
+        * :data:`number` → :data:`number`
+        * :data:`decimal` → :data:`decimal`
+
     **Example**:
         * ``trunc(3.3)`` → ``3``
         * ``trunc(-3.3)`` → ``-3``
@@ -703,6 +1100,10 @@ Number theory
     Fractional part of a number.
     Equivalent to ``x-trunc(x)``.
 
+    **Definitions**:
+        * :data:`number` → :data:`number`
+        * :data:`decimal` → :data:`decimal`
+
     **Example**:
         * ``fract(4.3)`` → ``0.3``
 
@@ -710,6 +1111,10 @@ Number theory
 
     Compute a rational approximation to the given number by computing terms of its continued fraction, returning the numerator and denominator separately.
     The approximation will be within :math:`e^{-\text{accuracy}}` of the true value; the default value for ``accuracy`` is 15.
+
+    **Definitions**:
+        * :data:`number` → :data:`list`
+        * :data:`number`, :data:`number` → :data:`list`
 
     **Examples**:
         * ``rational_approximation(pi)`` → ``[355,113]``
@@ -719,6 +1124,11 @@ Number theory
 
     Modulo; remainder after integral division, i.e. :math:`a \bmod b`.
 
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`number`
+        * :data:`integer`, :data:`integer` → :data:`integer`
+        * :data:`decimal`, :data:`decimal` → :data:`decimal`
+
     **Example**:
         * ``mod(5,3)`` → ``2``
 
@@ -726,12 +1136,18 @@ Number theory
 
     Count permutations, i.e. :math:`^n \kern-2pt P_k = \frac{n!}{(n-k)!}`.
 
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`number`
+
     **Example**:
         * ``perm(5,2)`` → ``20``
 
 .. jme:function:: comb(n,k)
 
     Count combinations, i.e. :math:`^n \kern-2pt C_k = \frac{n!}{k!(n-k)!}`.
+
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`number`
 
     **Example**:
         * ``comb(5,2)`` → ``10``.
@@ -742,6 +1158,9 @@ Number theory
     Greatest common divisor of integers ``a`` and ``b``.
     Can also write ``gcf(a,b)``.
 
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`number`
+
     **Example**:
         * ``gcd(12,16)`` → ``4``
 
@@ -749,12 +1168,18 @@ Number theory
 
     Take out factors of :math:`\pi` or :math:`i` from ``a`` and ``b`` before computing their greatest common denominator.
 
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`number`
+
     **Example**:
         * ``gcd_without_pi_or_i(6*pi, 9)`` → ``3``
 
 .. jme:function:: coprime(a,b)
 
     Are ``a`` and ``b`` coprime? True if their :jme:func:`gcd` is :math:`1`, or if either of ``a`` or ``b`` is not an integer.
+
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`boolean`
 
     **Examples**:
         * ``coprime(12,16)`` → ``false``
@@ -767,6 +1192,10 @@ Number theory
     Lowest common multiple of integers ``a`` and ``b``.
     Can be used with any number of arguments; it returns the lowest common multiple of all the arguments.
 
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`number`
+        * :data:`list` of :data:`number` → :data:`number`
+
     **Examples**
         * ``lcm(8,12)`` → ``24``
         * ``lcm(8,12,5)`` → ``120``
@@ -774,6 +1203,9 @@ Number theory
 .. jme:function:: x|y
 
     ``x`` divides ``y``.
+
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`boolean`
 
     **Example**:
         * ``4|8`` → ``true``
@@ -788,14 +1220,24 @@ Vector and matrix arithmetic
     Create a vector with given components.
     Alternately, you can create a vector from a single list of numbers.
 
+    **Definitions**:
+        * multiple :data:`number` → :data:`vector`
+        * :data:`list` of :data:`number` → :data:`vector`
+
     **Examples**:
         * ``vector(1,2,3)``
         * ``vector([1,2,3])``
 
 .. jme:function:: matrix(row1,row2,...,rowN)
 
-    Create a matrix with given rows, which should be lists of numbers.
+    Create a matrix with given rows, which should be either vectors or lists of numbers.
     Or, you can pass in a single list of lists of numbers.
+
+    **Definitions**:
+        * :data:`list` of :data:`vector` → :data:`matrix`
+        * :data:`list` of :data:`list` of :data:`number` → :data:`matrix`
+        * :data:`list` of :data:`number` → :data:`matrix` - a matrix with one row.
+        * multiple :data:`list` of :data:`number` → :data:`matrix`
 
     **Examples**:
         * ``matrix([1,2],[3,4])``
@@ -805,27 +1247,40 @@ Vector and matrix arithmetic
 
     Identity matrix with :math:`n` rows and columns.
 
+    **Definitions**:
+        * :data:`number` → :data:`matrix`
+
     **Example**:
-        * ``id(3)`` → ``matrix([[1,0,0],[0,1,0],[0,0,1])``
+        * ``id(3)`` → ``matrix([1,0,0],[0,1,0],[0,0,1])``
 
 .. jme:function:: numrows(matrix)
 
     The number of rows in the given matrix
 
+    **Definitions**:
+        * :data:`matrix` → :data:`number`
+
     **Example**:
-        * ``numrows(matrix([1,2],[3,4],[5,6])`` → ``3``
+        * ``numrows(matrix([1,2],[3,4],[5,6]))`` → ``3``
 
 .. jme:function:: numcolumns(matrix)
 
     The number of columns in the given matrix
 
+    **Definitions**:
+        * :data:`matrix` → :data:`number`
+
     **Example**:
-        * ``numrows(matrix([1,2],[3,4],[5,6])`` → ``2``
+        * ``numcolumns(matrix([1,2],[3,4],[5,6]))`` → ``2``
 
 .. jme:function:: rowvector(a1,a2,...,aN)
 
     Create a row vector (:math:`1 \times n` matrix) with the given components.
     Alternately, you can create a row vector from a single list of numbers.
+
+    **Definitions**:
+        * multiple :data:`number` → :data:`matrix`
+        * :data:`list` of :data:`number` → :data:`matrix`
 
     **Examples**:
         * ``rowvector(1,2)`` → ``matrix([1,2])``
@@ -836,6 +1291,12 @@ Vector and matrix arithmetic
     Dot (scalar) product.
     Inputs can be vectors or column matrices.
 
+    **Definitions**:
+        * :data:`vector`, :data:`vector` → :data:`number`
+        * :data:`matrix`, :data:`vector` → :data:`number`
+        * :data:`vector`, :data:`matrix` → :data:`number`
+        * :data:`matrix`, :data:`matrix` → :data:`number`
+
     **Examples**:
         * ``dot(vector(1,2,3),vector(4,5,6))`` → ``32``
         * ``dot(matrix([1],[2]), matrix([3],[4]))`` → ``11``
@@ -844,6 +1305,12 @@ Vector and matrix arithmetic
 
     Cross product.
     Inputs can be vectors or column matrices.
+
+    **Definitions**:
+        * :data:`vector`, :data:`vector` → :data:`vector`
+        * :data:`matrix`, :data:`vector` → :data:`vector`
+        * :data:`vector`, :data:`matrix` → :data:`vector`
+        * :data:`matrix`, :data:`matrix` → :data:`vector`
 
     **Examples**:
         * ``cross(vector(1,2,3),vector(4,5,6))`` → ``vector(-3,6,-3)``
@@ -854,12 +1321,18 @@ Vector and matrix arithmetic
     Angle between vectors ``a`` and ``b``, in radians.
     Returns ``0`` if either ``a`` or ``b`` has length 0.
 
+    **Definitions**:
+        * :data:`vector`, :data:`vector` → :data:`number`
+
     **Example**:
-        * ``angle(vector(1,0),vector(0,1))`` → ``pi/2``
+        * ``angle(vector(1,0),vector(0,1))`` → ``0.5 pi``
 
 .. jme:function:: is_zero(x)
 
     Returns ``true`` if every component of the vector ``x`` is zero.
+
+    **Definitions**:
+        * :data:`vector` → :data:`boolean`
 
     **Example**:
         * ``is_zero(vector(0,0,0))`` → ``true``
@@ -869,6 +1342,9 @@ Vector and matrix arithmetic
     Determinant of a matrix.
     Throws an error if used on anything larger than a 3×3 matrix.
 
+    **Definitions**:
+        * :data:`matrix` → :data:`number`
+
     **Examples**:
         * ``det(matrix([1,2],[3,4]))`` → ``-2``
         * ``det(matrix([1,2,3],[4,5,6],[7,8,9]))`` → ``0``
@@ -876,7 +1352,10 @@ Vector and matrix arithmetic
 .. jme:function:: transpose(x)
 
     Matrix transpose.
-    Can also take a vector, in which case it returns a single-row matrix.
+
+    **Definitions**:
+        * :data:`vector` → :data:`matrix` - returns a single-row matrix.
+        * :data:`matrix` → :data:`matrix`
 
     **Examples**:
         * ``transpose(matrix([1,2],[3,4]))`` → ``matrix([1,3],[2,4])``
@@ -886,8 +1365,11 @@ Vector and matrix arithmetic
 
     Calculate the sum of all the cells in a matrix.
 
+    **Definitions**:
+        * :data:`matrix` → :data:`number`
+
     **Example**:
-        * ``sum_cells(matrix([1,2],[3,4]))`` → ``12``
+        * ``sum_cells(matrix([1,2],[3,4]))`` → ``10``
 
 .. _jme-fns-strings:
 
@@ -918,11 +1400,30 @@ Strings
     **Example**:
         * ``"plain" in "explains"`` → ``true``
 
+.. jme:function:: string(x)
+
+    Convert ``x`` to a string.
+
+    **Definitions**:
+        * :data:`number` → :data:`string` - rendered using the ``plain-en`` :ref:`notation style <number-notation>`.
+        * :data:`integer` → :data:`string`
+        * :data:`rational` → :data:`string`
+        * :data:`decimal` → :data:`string`
+        * :data:`name` → :data:`string`
+        * :data:`expression` → :data:`string`
+
+    **Example**:
+        * ``string(123)`` → ``"123"``
+        * ``string(x)`` → ``"x"``
+
 .. jme:function:: latex(x)
 
     Mark string ``x`` as containing raw LaTeX, so when it's included in a mathmode environment it doesn't get wrapped in a ``\textrm`` environment.
 
     Note that backslashes must be double up, because the backslash is an escape character in JME strings.
+
+    **Definitions**:
+        * :data:`string` → :data:`string`
 
     **Example**:
         * ``latex('\\frac{1}{2}')``.
@@ -933,6 +1434,9 @@ Strings
 
     Use this function to preserve curly braces in string literals.
 
+    **Definitions**:
+        * :data:`string` → :data:`string`
+
     **Example**:
         * ``safe('From { to }')``
 
@@ -942,9 +1446,12 @@ Strings
 
     The optional dictionary ``values`` overrides any previously-defined values of variables.
 
+    **Definitions**:
+        * :data:`string`, optional :data:`dict` → :data:`string`
+
     **Example**:
-        * ``render("I have {num_apples} apples.", ["num_apples": 5])`` → ``"I have 5 apples"``
-        * ``render("Let $x = \\var{x}$", ["x": 2])`` → ``"Let $x = {2}$"``
+        * ``render(safe("I have {num_apples} apples."), ["num_apples": 5])`` → ``"I have 5 apples."``
+        * ``render(safe("Let $x = \\var{x}$"), ["x": 2])`` → ``"Let $x = {2}$"``
 
     .. note::
         The variable dependency checker can't establish which variables will be used in the string until ``render`` is evaluated, so you may encounter errors if using ``render`` in the definition of a question variable.
@@ -958,12 +1465,18 @@ Strings
 
     Capitalise the first letter of a string.
 
+    **Definitions**:
+        * :data:`string` → :data:`string`
+
     **Example**:
         * ``capitalise('hello there')``.
 
 .. jme:function:: pluralise(n,singular,plural)
 
     Return ``singular`` if ``n`` is 1, otherwise return ``plural``.
+
+    **Definitions**:
+        * :data:`number`, :data:`string`, :data:`string` → :data:`string`
 
     **Example**:
         * ``pluralise(num_things,"thing","things")``
@@ -972,12 +1485,18 @@ Strings
 
     Convert string to upper-case.
 
+    **Definitions**:
+        * :data:`string` → :data:`string`
+
     **Example**:
         * ``upper('Hello there')``.
 
 .. jme:function:: lower(x)
 
     Convert string to lower-case.
+
+    **Definitions**:
+        * :data:`string` → :data:`string`
 
     **Example**:
         * ``lower('CLAUS, Santa')``.
@@ -986,12 +1505,18 @@ Strings
 
     Join a list of strings with the given delimiter.
 
+    **Definitions**:
+        * :data:`list`, :data:`string` → :data:`string`
+
     **Example**:
-        * ``join(['a','b','c'],',')`` → ``'a,b,c'``
+        * ``join(['a','b','c'],',')`` → ``"a,b,c"``
 
 .. jme:function:: split(string,delimiter)
 
     Split a string at every occurrence of ``delimiter``, returning a list of the the remaining pieces.
+
+    **Definitions**:
+        * :data:`string`, :data:`string` → :data:`list`
 
     **Example**:
         * ``split("a,b,c,d",",")`` → ``["a","b","c","d"]``
@@ -1000,6 +1525,9 @@ Strings
 
     Remove whitespace from the start and end of ``str``.
 
+    **Definitions**:
+        * :data:`string` → :data:`string`
+
     **Example**:
         * ``trim(" a string  ")`` → ``"a string"``
 
@@ -1007,8 +1535,11 @@ Strings
 
     Write a currency amount, with the given prefix or suffix characters.
 
+    **Definitions**:
+        * :data:`number`, :data:`string`, :data:`string` → :data:`string`
+
     **Example**:
-        * ``currency(123.321,"£","")`` → ``'£123.32'``
+        * ``currency(123.321,"£","")`` → ``"£123.32"``
 
 .. jme:function:: separateThousands(n,separator)
 
@@ -1016,12 +1547,18 @@ Strings
 
     To write a number using notation appropriate to a particular culture or context, see :jme:func:`formatnumber`.
 
+    **Definitions**:
+        * :data:`number`, :data:`string` → :data:`string`
+
     **Example**:
-        * ``separateThousands(1234567.1234,",")`` → ``'1,234,567.1234'``
+        * ``separateThousands(1234567.1234,",")`` → ``"1,234,567.1234"``
 
 .. jme:function:: unpercent(str)
 
     Get rid of the ``%`` on the end of a percentage and parse as a number, then divide by 100.
+
+    **Definitions**:
+        * :data:`string` → :data:`number`
 
     **Example**:
         * ``unpercent("2%")`` → ``0.02``
@@ -1030,12 +1567,18 @@ Strings
 
     Add copies of ``prefix`` to the start of ``str`` until the result is at least ``n`` characters long.
 
+    **Definitions**:
+        * :data:`string`, :data:`number`, :data:`string` → :data:`string`
+
     **Example**:
         * ``lpad("3", 2, "0")`` → ``"03"``
 
 .. jme:function:: rpad(str, n, suffix)
 
     Add copies of ``suffix`` to the end of ``str`` until the result is at least ``n`` characters long.
+
+    **Definitions**:
+        * :data:`string`, :data:`number`, :data:`string` → :data:`string`
 
     **Example**:
         * ``rpad("3", 2, "0")`` → ``"30"``
@@ -1044,15 +1587,21 @@ Strings
 
     For each occurrence of ``%s`` in ``str``, replace it with the corresponding entry in the list ``values``.
 
+    **Definitions**:
+        * :data:`string`, :data:`list` → :data:`string`
+
     **Example**:
         * ``formatstring("Their name is %s",["Hortense"])`` → ``"Their name is Hortense"``
-        * ``formatstring("You should %s the %s",["simplify","denominator"])`` → ``You should simplify the denominator"``
+        * ``formatstring("You should %s the %s",["simplify","denominator"])`` → ``"You should simplify the denominator"``
 
 .. jme:function:: letterordinal(n)
 
     Get the :math:`n`:sup:`th` element of the sequence ``a, b, c, ..., aa, ab, ...``.
 
     Note that the numbering starts from 0.
+
+    **Definitions**:
+        * :data:`number` → :data:`string`
 
     **Examples**:
         * ``letterordinal(0)`` → ``"a"``
@@ -1066,6 +1615,10 @@ Strings
     This function uses `JavaScript regular expression syntax <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp>`_.
 
     ``flags`` is an optional string listing the options flags to use.
+
+    **Definitions**:
+        * :data:`string`, :data:`string` → :data:`list`
+        * :data:`string`, :data:`string`, :data:`string` → :data:`list`
 
     **Examples**:
         * ``match_regex("\\d+","01234")`` → ``["01234"]``
@@ -1082,13 +1635,20 @@ Strings
 
     ``arguments`` is a dictionary of named substitutions to make in the string.
 
+    **Definitions**:
+        * :data:`string` → :data:`string`
+        * :data:`string`, :data:`dict` → :data:`string`
+
     **Examples**:
         * ``translate("question.header",["number": 2])`` → ``"Question 2"`` (when the ``en-GB`` locale is in use)
-        * ``translate("question.header",["number": 2])`` → ``"Pregunta 2"`` (when the ``es-ES`` locale is in use)
+        * ``translate("question.header",["number": 2])`` :no-test:`→` ``"Pregunta 2"`` (when the ``es-ES`` locale is in use)
 
 .. jme:function:: isbool(str)
 
     After converting to lower case, is ``str`` any of the strings ``"true"``, ``"false"``, ``"yes"`` or ``"no"``?
+
+    **Definitions**:
+        * :data:`string` → :data:`boolean`
     
     **Examples**:
         * ``isbool("true")`` → ``true``
@@ -1104,7 +1664,10 @@ Logic
 .. jme:function:: x<y
 
     Returns ``true`` if ``x`` is less than ``y``.
-    Defined only for numbers.
+
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`boolean`
+        * :data:`decimal`, :data:`decimal` → :data:`boolean`
 
     **Example**:
         * ``4<5``
@@ -1112,7 +1675,10 @@ Logic
 .. jme:function:: x>y
 
     Returns ``true`` if ``x`` is greater than ``y``.
-    Defined only for numbers.
+
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`boolean`
+        * :data:`decimal`, :data:`decimal` → :data:`boolean`
 
     **Example**:
         * ``5>4``
@@ -1120,7 +1686,11 @@ Logic
 .. jme:function:: x<=y
 
     Returns ``true`` if ``x`` is less than or equal to ``y``.
-    Defined only for numbers.
+
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`boolean`
+        * :data:`decimal`, :data:`decimal` → :data:`boolean`
+        * :data:`decimal`, :data:`number` → :data:`boolean`
 
     **Example**:
         * ``4<=4``
@@ -1128,7 +1698,11 @@ Logic
 .. jme:function:: x>=y
 
     Returns ``true`` if ``x`` is greater than or equal to ``y``.
-    Defined only for numbers.
+
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`boolean`
+        * :data:`decimal`, :data:`decimal` → :data:`boolean`
+        * :data:`decimal`, :data:`number` → :data:`boolean`
 
     **Example**:
         * ``4>=4``
@@ -1136,8 +1710,10 @@ Logic
 .. jme:function:: x<>y
 
     Returns ``true`` if ``x`` is not equal to ``y``.
-    Defined for any data type.
     Returns ``true`` if ``x`` and ``y`` are not of the same data type.
+
+    **Definitions**:
+        * anything, anything → :data:`boolean`
 
     **Examples**:
         * ``'this string' <> 'that string'``
@@ -1147,8 +1723,10 @@ Logic
 .. jme:function:: x=y
 
     Returns ``true`` if ``x`` is equal to ``y``.
-    Defined for any data type.
     Returns ``false`` if ``x`` and ``y`` are not of the same data type.
+
+    **Definitions**:
+        * anything, anything → :data:`boolean`
 
     **Examples**:
         * ``vector(1,2)=vector(1,2,0)``
@@ -1162,6 +1740,9 @@ Logic
 
         abs(x-y) <= max( rel_tol*max(abs(a),abs(b)), abs_tol )
 
+    **Definitions**:
+        * :data:`number`, :data:`number`, :data:`number`, :data:`number` → :data:`boolean`
+
 .. jme:function:: resultsequal(a,b,checkingFunction,accuracy)
 
     Returns ``true`` if ``a`` and ``b`` are both of the same data type, and "close enough" according to the given checking function.
@@ -1171,14 +1752,23 @@ Logic
     ``checkingFunction`` is the name of a checking function to use.
     These are documented in `the Numbas runtime documentation <http://numbas.github.io/Numbas/Numbas.jme.html#.checkingFunctions>`_.
 
+    **Definitions**:
+        * anything, anything, :data:`string`, :data:`number` → :data:`boolean`
+
     **Examples**:
         * ``resultsequal(22/7,pi,"absdiff",0.001)`` → ``false``
         * ``resultsequal(22/7,pi,"reldiff",0.001)`` → ``true``
 
 .. jme:function:: x and y
+                x && y
+                x & y
 
     Logical AND.
-    Returns ``true`` if both ``x`` and ``y`` are true, otherwise returns false.
+    Returns ``true`` if both ``x`` and ``y`` are true, otherwise returns ``false``.
+
+    **Definitions**:
+        * :data:`boolean`, :data:`boolean` → :data:`boolean`
+        * :data:`set`, :data:`set` → :data:`set`
 
     **Examples**:
         * ``true and true``
@@ -1188,6 +1778,9 @@ Logic
 .. jme:function:: not x
 
     Logical NOT.
+
+    **Definitions**:
+        * :data:`boolean` → :data:`boolean`
 
     **Examples**:
         * ``not true``
@@ -1199,6 +1792,10 @@ Logic
     Returns ``true`` when at least one of ``x`` and ``y`` is true.
     Returns false when both ``x`` and ``y`` are false.
 
+    **Definitions**:
+        * :data:`boolean`, :data:`boolean` → :data:`boolean`
+        * :data:`set`, :data:`set` → :data:`set` - equivalent to ``union(x,y)``
+
     **Examples**:
         * ``true or false``
         * ``true || false``
@@ -1207,7 +1804,10 @@ Logic
 
     Logical XOR.
     Returns ``true`` when at either ``x`` or ``y`` is true but not both.
-    Returns false when ``x`` and ``y`` are the same expression.
+    Returns ``false`` when ``x`` and ``y`` are the same expression.
+
+    **Definitions**:
+        * :data:`boolean`, :data:`boolean` → :data:`boolean`
 
     **Example**:
         * ``true XOR false``.
@@ -1218,8 +1818,72 @@ Logic
     If ``x`` is true and ``y`` is false, then the implication is false.
     Otherwise, the implication is true.
 
+    **Definitions**:
+        * :data:`boolean`, :data:`boolean` → :data:`boolean`
+
     **Example**:
         * ``false implies true``.
+
+.. _jme-fns-collections:
+
+Collections
+-----------
+
+.. jme:function:: x[y]
+
+    Get the ``y``:sup:`th` element of the collection ``x``.
+
+    For matrices, the ``y``:sup:`th` row is returned.
+
+    For dictionaries, the value corresponding to the key ``y`` is returned.
+    If the key is not present in the dictionary, an error will be thrown.
+
+    **Definitions**:
+        * :data:`dict`, :data:`string` → unspecified
+        * :data:`string`, :data:`number` → :data:`string`
+        * :data:`list`, :data:`number` → unspecified
+        * :data:`vector`, :data:`number` → :data:`number`
+        * :data:`matrix`, :data:`number` → :data:`vector`
+
+    **Examples**:
+        * ``[0,1,2,3][1]`` → ``1``
+        * ``vector(0,1,2)[2]`` → ``2``
+        * ``matrix([0,1,2],[3,4,5],[6,7,8])[0]`` → ``vector(0,1,2)``
+        * ``["a": 1, "b": 2]["a"]`` → ``1``
+
+.. jme:function:: x[a..b]
+                x[a..b#c]
+
+    Slice the collection ``x`` - return elements with indices in the given range.
+    Note that list indices start at 0, and the final index is not included.
+
+    **Definitions**:
+        * :data:`string`, :data:`range` → :data:`string`
+        * :data:`list`, :data:`range` → :data:`list`
+        * :data:`vector`, :data:`range` → :data:`vector`
+        * :data:`matrix`, :data:`range` → :data:`matrix`
+
+    **Example**:
+        * ``[0,1,2,3,4,5][1..3]`` → ``[1,2]``
+        * ``[0,1,2,3,4,5][1..6#2]`` → ``[1,3,5]``
+
+.. jme:function:: x in collection
+
+    Is element ``x`` in ``collection``?
+
+    **Definitions**:
+        * :data:`number`, :data:`range` → :data:`boolean`
+        * :data:`string`, :data:`dict` → :data:`boolean` - returns ``true`` if the dictionary has a key ``x``
+        * :data:`string`, :data:`string` → :data:`boolean`
+        * anything, :data:`list` → :data:`boolean`
+        * anything, :data:`set` → :data:`boolean`
+
+    **Examples**:
+        * ``3 in [1,2,3,4]`` → ``true``
+        * ``3 in (set(1,2,3,4) and set(2,4,6,8))`` → ``false``
+        * ``"a" in ["a": 1]`` → ``true``
+        * ``1 in ["a": 1]`` throws an error because dictionary keys must be strings.
+
 
 .. _jme-fns-ranges:
 
@@ -1231,15 +1895,21 @@ Ranges
     Define a range.
     Includes all integers between and including ``a`` and ``b``.
 
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`range`
+
     **Examples**:
         * ``1..5``
         * ``-6..6``
 
-.. jme:function:: a..b#s
+.. jme:function:: range#step
 
     Set the step size for a range.
     Default is 1.
-    When ``s`` is 0, the range includes all real numbers between the limits.
+    When ``step`` is 0, the range includes all real numbers between the limits.
+
+    **Definitions**:
+        * :data:`range`, :data:`number` → :data:`range`
 
     **Examples**:
         * ``0..1 # 0.1``
@@ -1250,67 +1920,41 @@ Ranges
 
     Exclude a number, range, or list of items from a list or range.
 
+    **Definitions**:
+        * :data:`range`, :data:`range` → :data:`list`
+        * :data:`range`, :data:`list` → :data:`list` - exclude the given list of numbers
+        * :data:`range`, :data:`number` → :data:`list` - exclude the given number
+        * :data:`list`, :data:`range` → :data:`list` - exclude all numbers in the given range
+        * :data:`list`, :data:`list` → :data:`list`
+        * :data:`list`, anything → :data:`list` - exclude the given element
+
     **Examples**:
         * ``-9..9 except 0``
         * ``-9..9 except [-1,1]``
         * ``3..8 except 4..6``
         * ``[1,2,3,4,5] except [2,3]``
 
-.. jme:function:: list(range)
-
-    Convert a range to a list of its elements.
-
-    **Example**:
-        * ``list(-2..2)`` → ``[-2,-1,0,1,2]``
-
 .. _jme-fns-lists:
 
 Lists
 -----
 
-.. jme:function:: x[n]
-
-    Get the ``n``:sup:`th` element of list, vector or matrix ``x``.
-    For matrices, the ``n``:sup:`th` row is returned.
-
-    **Examples**:
-        * ``[0,1,2,3][1]`` → ``1``
-        * ``vector(0,1,2)[2]`` → ``2``
-        * ``matrix([0,1,2],[3,4,5],[6,7,8])[0]`` → ``matrix([0,1,2])``
-
-.. jme:function:: x[a..b]
-                x[a..b#c]
-
-    Slice list ``x`` - return elements with indices in the given range.
-    Note that list indices start at 0, and the final index is not included.
-
-    **Example**:
-        * ``[0,1,2,3,4,5][1..3]`` → ``[1,2]``
-        * ``[0,1,2,3,4,5][1..6#2]`` → ``[1,3,5]``
-
-.. jme:function:: x in collection
-
-    Is element ``x`` in the list, set or range ``collection``?
-
-    If ``collection`` is a dictionary, returns ``true`` if the dictionary has a key ``x``.
-
-    **Examples**:
-        * ``3 in [1,2,3,4]`` → ``true``
-        * ``3 in (set(1,2,3,4) and set(2,4,6,8))`` → ``false``
-        * ``"a" in ["a": 1]`` → ``true``
-        * ``1 in ["a": 1]`` throws an error because dictionary keys must be strings.
-
 .. jme:function:: repeat(expression,n)
 
     Evaluate ``expression`` ``n`` times, and return the results in a list.
 
+    **Definitions**:
+        * anything, :data:`number` → :data:`list`
+
     **Example**:
-        * ``repeat(random(1..4),5)`` → ``[2, 4, 1, 3, 4]``
+        * ``repeat(random(1..4),5)`` :no-test:`→` ``[2, 4, 1, 3, 4]``
 
 .. jme:function:: all(list)
 
     Returns ``true`` if every element of ``list`` is ``true``.
 
+    **Definitions**:
+        * :data:`list` of :data:`boolean` → :data:`boolean`
 
     **Examples**:
         * ``all([true,true])`` → ``true``
@@ -1320,6 +1964,9 @@ Lists
 .. jme:function:: some(list)
 
     Returns ``true`` if at least one element of ``list`` is ``true``.
+
+    **Definitions**:
+        * :data:`list` of :data:`boolean` → :data:`boolean`
 
     **Examples**:
         * ``some([false,true,false])`` → ``true``
@@ -1336,11 +1983,14 @@ Lists
     .. note::
         Do not use ``i`` or ``e`` as the variable name to map over - they're already defined as mathematical constants!
 
+    **Definitions**:
+        * anything, :data:`name`, anything → :data:`list`
+
     **Examples**:
         * ``map(x+1,x,1..3)`` → ``[2,3,4]``
         * ``map(capitalise(s),s,["jim","bob"])`` → ``["Jim","Bob"]``
         * ``map(sqrt(x^2+y^2),[x,y],[ [3,4], [5,12] ])`` → ``[5,13]``
-        * ``map(x+1,x,id(2))`` → ``matrix([[2,1],[1,2]])``
+        * ``map(x+1,x,id(2))`` → ``matrix([2,1],[1,2])``
         * ``map(sqrt(x),x,vector(1,4,9))`` → ``vector(1,2,3)``
 
 .. jme:function:: filter(expression,name,d)
@@ -1349,6 +1999,9 @@ Lists
 
     .. note::
         Do not use ``i`` or ``e`` as the variable name to map over - they're already defined as mathematical constants!
+
+    **Definitions**:
+        * anything, :data:`name`, anything → :data:`list`
 
     **Example**:
         * ``filter(x>5,x,[1,3,5,7,9])`` → ``[7,9]``
@@ -1363,6 +2016,9 @@ Lists
     .. note::
         Do not use ``i`` or ``e`` as the variable name to map over - they're already defined as mathematical constants!
 
+    **Definitions**:
+        * :data:`number`, anything, :data:`name`, anything → :data:`list`
+
     **Example**:
         * ``take(3,gcd(x,6)=1,x,10..30)`` → ``[11,13,17]``
 
@@ -1376,8 +2032,11 @@ Lists
     Or you can give a dictionary mapping variable names to their values.
     The last argument is the expression to be evaluated.
 
+    **Definitions**:
+        * :data:`dict`, anything or multiple :data:`name`, anything or :data:`list` of :data:`name`, :data:`list` of anything, anything → :data:`list`
+
     **Examples**:
-        * ``let(d,sqrt(b^2-4*a*ac), [(-b+d)/2, (-b-d)/2])`` → ``[-2,-3]`` (when ``[a,b,c]`` = ``[1,5,6]``)
+        * ``let([a,b,c],[1,5,6],d,sqrt(b^2-4*a*c), [(-b+d)/2, (-b-d)/2])`` → ``[-2,-3]`` (when ``[a,b,c]`` = ``[1,5,6]``)
         * ``let(x,1, y,2, x+y)`` → ``3``
         * ``let(["x": 1, "y": 2], x+y)`` → ``3``
 
@@ -1385,12 +2044,18 @@ Lists
 
     Sort list ``x``.
 
+    **Definitions**:
+        * :data:`list` → :data:`list`
+
     **Example**:
         * ``sort([4,2,1,3])`` → ``[1,2,3,4]``
 
 .. jme:function:: sort_destinations(x)
 
     Return a list giving the index that each entry in the list will occupy after sorting.
+
+    **Definitions**:
+        * :data:`list` → :data:`list`
 
     **Example**:
         * ``sort_destinations([4,2,1,3])`` → ``[3,1,0,2]``
@@ -1402,9 +2067,13 @@ Lists
     When sorting a list of lists, the key is a number representing the index of each list to look at.
     When sorting a list of dictionaries, the key is a string.
 
+    **Definitions**:
+        * :data:`number`, :data:`list` of :data:`list` → :data:`list`
+        * :data:`string`, :data:`list` of :data:`dict` → :data:`list`
+
     **Examples**:
         * ``sort_by(0, [[5,0], [3,2], [4,4]])`` → ``[[3,2], [4,4], [5,0]]``
-        * ``sort_by("width", [["label": "M", "width": 20], ["label": "L", "width": 30], ["label": "S", "width": 10]]`` → ``[["label": "S", "width": 10], ["label": "M", "width": 20], ["label": "L", "width": 30]]``
+        * ``sort_by("width", [["label": "M", "width": 20], ["label": "L", "width": 30], ["label": "S", "width": 10]])`` → ``[["label": "S", "width": 10], ["label": "M", "width": 20], ["label": "L", "width": 30]]``
 
 .. jme:function:: group_by(key,list)
 
@@ -1414,13 +2083,20 @@ Lists
     When grouping a list of lists, the ``key`` argument is a number representing the index of each list to look at.
     When grouping a list of dictionaries, the ``key`` argument is a string.
 
+    **Definitions**:
+        * :data:`number`, :data:`list` of :data:`list` → :data:`list`
+        * :data:`string`, :data:`list` of :data:`dict` → :data:`list`
+
     **Examples**:
-        * ``group_by(0, [[0,0], [3,2], [0,4]])`` → ``[[0, [[0,0], [0,4]]], [3, [[3,2]]]``
-        * ``group_by("a", [["a": 1, "b": "M"], ["a": 2, "b": "S"], ["a": 1, "b": "XL"]])`` → ``[[1,[["a": 1, "b": "M"], ["a: 1, "b": "XL"]]], [2, [["a": 2, "b": "S"]]]]``
+        * ``group_by(0, [[0,0], [3,2], [0,4]])`` → ``[[0, [[0,0], [0,4]]], [3, [[3,2]]]]``
+        * ``group_by("a", [["a": 1, "b": "M"], ["a": 2, "b": "S"], ["a": 1, "b": "XL"]])`` → ``[[1,[["a": 1, "b": "M"], ["a": 1, "b": "XL"]]], [2, [["a": 2, "b": "S"]]]]``
 
 .. jme:function:: reverse(x)
 
     Reverse list ``x``.
+
+    **Definitions**:
+        * :data:`list` → :data:`list`
 
     **Example**:
         * ``reverse([1,2,3])`` → ``[3,2,1]``
@@ -1428,6 +2104,9 @@ Lists
 .. jme:function:: indices(list,value)
 
     Find the indices at which ``value`` occurs in ``list``.
+
+    **Definitions**:
+        * :data:`list`, anything → :data:`list`
 
     **Examples**:
         * ``indices([1,0,1,0],1)`` → ``[0,2]``
@@ -1438,12 +2117,21 @@ Lists
 
     Return a copy of the list ``x`` with duplicates removed.
 
+    **Definitions**:
+        * :data:`list` → :data:`list`
+
     **Example**:
         * ``distinct([1,2,3,1,4,3])`` → ``[1,2,3,4]``
 
 .. jme:function:: list(x)
 
-    Convert set, vector or matrix ``x`` to a list of components (or rows, for a matrix).
+    Convert a value to a list of its components (or rows, for a matrix).
+
+    **Definitions**:
+        * :data:`range` → :data:`list`
+        * :data:`set` → :data:`list`
+        * :data:`vector` → :data:`list` - returns a list of :data:`number`.
+        * :data:`matrix` → :data:`list` - returns a list of lists representing the rows.
 
     **Examples**:
         * ``list(set(1,2,3))`` → ``[1,2,3]`` (note that you can't depend on the elements of sets being in any order)
@@ -1459,8 +2147,11 @@ Lists
     The definitions can refer to other variables to be evaluated, or variables already defined in the current scope.
     Variables named in the dictionary which have already been defined will be removed before evaluation begins.
 
+    **Definitions**:
+        * :data:`dict` of :data:`expression`, :data:`range` → :data:`dict`
+
     **Example**:
-        * ``make_variables(["a": expression("random(1..5)"), "b": expression("a^2")])`` → ``["a": 3, "b": 9]``
+        * ``make_variables(["a": expression("random(1..5)"), "b": expression("a^2")])`` :no-test:`→` ``["a": 3, "b": 9]``
 
 .. jme:function:: satisfy(names,definitions,conditions,maxRuns)
 
@@ -1473,6 +2164,9 @@ Lists
         This function is deprecated, and retained only for backwards compatibility.
         Use :jme:func:`make_variables` instead.
 
+    **Definitions**:
+        * :data:`list`, :data:`list`, :data:`list`, :data:`number` → :data:`list`
+
     **Example**:
         * ``satisfy([a,b,c],[random(1..10),random(1..10),random(1..10)],[b^2-4*a*c>0])``
 
@@ -1480,8 +2174,13 @@ Lists
 
     Add up a list of numbers
 
+    **Definitions**:
+        * :data:`list` of :data:`number` → :data:`number`
+        * :data:`vector` → :data:`number` - sum of the components
+
     **Example**:
         * ``sum([1,2,3])`` → ``6``
+        * ``sum(vector(4,5,6))`` → ``15``
 
 .. jme:function:: product(list1,list2,...,listN) or product(list, n)
 
@@ -1489,6 +2188,10 @@ Lists
     In other words, every possible combination of choices of one value from each given list.
 
     If one list and a number are given, then the ``n``-th Cartesian power of the list is returned: the Cartesian product of ``n`` copies of the list.
+
+    **Definitions**:
+        * multiple :data:`list` → :data:`list`
+        * :data:`list`, :data:`number` → :data:`list`
 
     **Example**:
         * ``product([1,2],[a,b])`` → ``[ [1,a], [1,b], [2,a], [2,b] ]``
@@ -1498,12 +2201,18 @@ Lists
 
     Combine two (or more) lists into one - the Nth element of the output is a list containing the Nth elements of each of the input lists.
 
+    **Definitions**:
+        * multiple :data:`list` → :data:`list`
+
     **Example**:
         * ``zip([1,2,3],[4,5,6])`` → ``[ [1,4], [2,5], [3,6] ]``
 
 .. jme:function:: combinations(collection,r)
 
     All ordered choices of ``r`` elements from ``collection``, without replacement.
+
+    **Definitions**:
+        * :data:`list`, :data:`number` → :data:`list`
 
     **Example**:
         * ``combinations([1,2,3],2)`` → ``[ [1,2], [1,3], [2,3] ]``
@@ -1512,12 +2221,18 @@ Lists
 
     All ordered choices of ``r`` elements from ``collection``, with replacement.
 
+    **Definitions**:
+        * :data:`list`, :data:`number` → :data:`list`
+
     **Example**:
-        * ``combinations([1,2,3],2)`` → ``[ [1,1], [1,2], [1,3], [2,2], [2,3], [3,3] ]``
+        * ``combinations_with_replacement([1,2,3],2)`` → ``[ [1,1], [1,2], [1,3], [2,2], [2,3], [3,3] ]``
 
 .. jme:function:: permutations(collection,r)
 
     All choices of ``r`` elements from ``collection``, in any order, without replacement.
+
+    **Definitions**:
+        * :data:`list`, :data:`number` → :data:`list`
 
     **Example**:
         * ``permutations([1,2,3],2)`` → ``[ [1,2], [1,3], [2,1], [2,3], [3,1], [3,2] ]``
@@ -1533,6 +2248,9 @@ Dictionaries
 
     If the key is not present in the dictionary, an error will be thrown.
 
+    **Definitions**:
+        * :data:`dict`, :data:`string` → unspecified
+
     **Example**:
         * ``["a": 1, "b": 2]["a"]`` → ``1``
 
@@ -1541,6 +2259,9 @@ Dictionaries
     Get the value corresponding to the given key string in the dictionary.
 
     If the key is not present in the dictionary, the ``default`` value will be returned.
+
+    **Definitions**:
+        * :data:`dict`, :data:`string`, anything → unspecified
 
     **Examples**:
         * ``get(["a":1], "a", 0)`` → ``1``
@@ -1554,6 +2275,9 @@ Dictionaries
 
     You can alternately pass a list of pairs of the form ``[key, value]``, to transform a list into a dictionary.
 
+    **Definitions**:
+        * multiple :data:`keypair` → :data:`dict`
+
     **Examples**:
         * ``dict()``
         * ``dict("a": 1, "b": 2)``
@@ -1563,15 +2287,21 @@ Dictionaries
 
     A list of all of the given dictionary's keys.
 
+    **Definitions**:
+        * :data:`dict` → :data:`list`
+
     **Example**:
         * ``keys(["a": 1, "b": 2, "c": 1])`` → ``["a","b","c"]``
 
-.. jme:function:: values(dict)
-              values(dict,keys)
+.. jme:function:: values(dict,[keys])
 
     A list of the values corresponding to each of the given dictionary's keys.
 
-    If a list of keys is given, the values corresponding to those keys are returned, in the same order.
+    If a list of keys is given, only the values corresponding to those keys are returned, in the same order.
+
+    **Definitions**:
+        * :data:`dict` → :data:`list`
+        * :data:`dict`, :data:`list` of :data:`string` → :data:`list`
 
     **Examples**:
         * ``values(["a": 1, "b": 2, "c": 1])`` → ``[1,2,1]``
@@ -1581,8 +2311,11 @@ Dictionaries
 
     A list of all of the ``[key,value]`` pairs in the given dictionary.
 
+    **Definitions**:
+        * :data:`dict` → :data:`list`
+
     **Example**:
-        * ``values(["a": 1, "b": 2, "c": 1])`` → ``[ ["a",1], ["b",2], ["c",1] ]``
+        * ``items(["a": 1, "b": 2, "c": 1])`` → ``[ ["a",1], ["b",2], ["c",1] ]``
 
 .. _jme-fns-sets:
 
@@ -1594,6 +2327,10 @@ Sets
     Create a set with the given elements.
     Either pass the elements as individual arguments, or as a list.
 
+    **Definitions**:
+        * :data:`list` → :data:`set`
+        * multiple anything → :data:`set`
+
     **Examples**:
         * ``set(1,2,3)``
         * ``set([1,2,3])``
@@ -1602,6 +2339,9 @@ Sets
 
     Union of sets ``a`` and ``b``
 
+    **Definitions**:
+        * :data:`set`, :data:`set` → :data:`set`
+
     **Examples**:
         * ``union(set(1,2,3),set(2,4,6))`` → ``set(1,2,3,4,6)``
         * ``set(1,2,3) or set(2,4,6)`` → ``set(1,2,3,4,6)``
@@ -1609,6 +2349,9 @@ Sets
 .. jme:function:: intersection(a,b)
 
     Intersection of sets ``a`` and ``b``, i.e. elements which are in both sets.
+
+    **Definitions**:
+        * :data:`set`, :data:`set` → :data:`set`
 
     **Examples**:
         * ``intersection(set(1,2,3),set(2,4,6))`` → ``set(2)``
@@ -1630,6 +2373,11 @@ Randomisation
 
     Pick uniformly at random from a range, list, or from the given arguments.
 
+    **Definitions**:
+        * :data:`range` → :data:`number`
+        * :data:`list` → unspecified
+        * multiple anything → unspecified
+
     **Examples**:
         * ``random(1..5)``
         * ``random([1,2,4])``
@@ -1639,16 +2387,22 @@ Randomisation
 
     Get a random shuffling of the integers :math:`[0 \dots n-1]`
 
+    **Definitions**:
+        * :data:`number` → :data:`list`
+
     **Example**:
-        * ``deal(3)`` → ``[2,0,1]``
+        * ``deal(3)`` :no-test:`→` ``[2,0,1]``
 
 .. jme:function:: shuffle(x) or shuffle(a..b)
 
     Random shuffling of list or range.
 
+    **Definitions**:
+        * :data:`list` → :data:`list`
+
     **Examples**:
-        * ``shuffle(["a","b","c"])`` → ``["c","b","a"]``
-        * ``shuffle(0..4)`` → ``[2,3,0,4,1]``
+        * ``shuffle(["a","b","c"])`` :no-test:`→` ``["c","b","a"]``
+        * ``shuffle(0..4)`` :no-test:`→` ``[2,3,0,4,1]``
 
 .. _jme-fns-control-flow:
 
@@ -1659,6 +2413,9 @@ Control flow
 
     Return ``a`` if ``b`` is ``true``, else return ``0``.
 
+    **Definitions**:
+        * :data:`number`, :data:`boolean` → :data:`number`
+
     **Example**:
         * ``award(5,true)`` → ``5``
 
@@ -1666,6 +2423,9 @@ Control flow
 
     If ``p`` is ``true``, return ``a``, else return ``b``.
     Only the returned value is evaluated.
+
+    **Definitions**:
+        * :data:`boolean`, anything, anything → unspecified
 
     **Example**:
         * ``if(false,1,0)`` → ``0``
@@ -1676,15 +2436,21 @@ Control flow
     Alternating boolean expressions with values to return, with the final argument representing the default case.
     Only the returned value is evaluated.
 
+    **Definitions**:
+        * multiple :data:`boolean`,anything, anything → unspecified
+
     **Examples**:
         * ``switch(true,1,false,0,3)`` → ``1``
         * ``switch(false,1,true,0,3)`` → ``0``
         * ``switch(false,1,false,0,3)`` → ``3``
 
-.. jme:function:: assert(bool, value)
+.. jme:function:: assert(condition, value)
 
-    If ``bool`` is ``false``, then return ``value``, otherwise don't evaluate ``value`` and return ``false``.
+    If ``condition`` is ``false``, then return ``value``, otherwise don't evaluate ``value`` and return ``false``.
     This is intended for use in marking scripts, to apply marking feedback only if a condition is met.
+
+    **Definitions**:
+        * :data:`boolean`, anything → unspecified
 
     **Example**:
         * ``assert(studentAnswer<=0, correct("Student answer is positive"))``
@@ -1694,6 +2460,9 @@ Control flow
     Try to evaluate ``expression``.
     If it is successfully evaluated, return the result.
     Otherwise, evaluate ``except``, with the error message available as ``name``.
+
+    **Definitions**:
+        * anything, :data:`name`, anything → unspecified
 
     **Examples**:
         * ``try(eval(expression("x+")),err, "Error: "+err)`` → ``"Error: Not enough arguments for operation <code>+</code>"``
@@ -1708,6 +2477,9 @@ HTML
 
     Parse string ``x`` as HTML.
 
+    **Definitions**:
+        * :data:`string` → :data:`html`
+
     **Example**:
         * ``html('<div>Text!</div>')``
 
@@ -1715,6 +2487,9 @@ HTML
 
     Does ``str`` represent a string of HTML containing text?
     Returns false for the empty string, or HTML elements with no text content.
+
+    **Definitions**:
+        * :data:`string` → :data:`boolean`
 
     **Examples**:
         * ``isnonemptyhtml("<p>Yes</p>")`` → ``true``
@@ -1724,6 +2499,10 @@ HTML
 
     Create an HTML with cell contents defined by ``data``, which should be a list of lists of data, and column headers defined by the list of strings ``headers``.
 
+    **Definitions**:
+        * :data:`list`, :data:`list` of :data:`list` → :data:`html`
+        * :data:`list` → :data:`html`
+
     **Examples**:
         * ``table([[0,1],[1,0]], ["Column A","Column B"])``
         * ``table([[0,1],[1,0]])``
@@ -1732,6 +2511,9 @@ HTML
 
     Create an HTML `img` element loading the image from the given URL.
     Images uploaded through the resources tab are stored in the relative URL `resources/images/<filename>.png`, where `<filename>` is the name of the original file.
+
+    **Definitions**:
+        * :data:`string` → :data:`html`
 
     **Examples**:
         * ``image('resources/images/picture.png')``
@@ -1759,8 +2541,11 @@ For an example of how you can use JSON data in a Numbas question, see the exam `
         The JSON value ``null`` is silently converted to an empty string, because JME has no "null" data type.
         This may change in the future.
 
+    **Definitions**:
+        * :data:`string` → unspecified
+
     **Example**:
-        * ``json_decode(' {"a": 1, "b": [2,true,"thing"]} ')`` → ``["a": 1, "b": [2,true,"thing"]]``
+        * ``json_decode(safe(' {"a": 1, "b": [2,true,"thing"]} '))`` → ``["a": 1, "b": [2,true,"thing"]]``
 
 .. jme:function:: json_encode(data)
 
@@ -1769,8 +2554,11 @@ For an example of how you can use JSON data in a Numbas question, see the exam `
     Numbers, strings, booleans, lists, and dictionaries are converted in a straightforward manner.
     Other data types may behave unexpectedly.
 
+    **Definitions**:
+        * anything → :data:`string`
+
     **Example**:
-        * ``json_encode([1,"a",true])`` → ``'[1,"a",true]'``
+        * ``json_encode([1,"a",true])`` → ``"[1,\"a\",true]"``
 
 .. _jme-fns-subexpressions:
 
@@ -1784,6 +2572,9 @@ Sub-expressions
 
     ``parse(string)`` is a synonym for ``expression(string)``.
 
+    **Definitions**:
+        * :data:`string` → :data:`expression`
+
     **Example**:
         * `A question using randomly chosen variable names <https://numbas.mathcentre.ac.uk/question/20358/randomise-variable-names-expression-version/>`_.
 
@@ -1792,6 +2583,10 @@ Sub-expressions
     Evaluate the given sub-expression.
 
     If ``values`` is given, it should be a dictionary mapping names of variables to their values.
+
+    **Definitions**:
+        * :data:`expression` → unspecified
+        * :data:`expression`, :data:`dict` → unspecified
 
     **Example**:
         * ``eval(expression("1+2"))`` → ``3``
@@ -1805,6 +2600,9 @@ Sub-expressions
     Binary operations only ever have two arguments.
     For example, ``1+2+3`` is parsed as ``(1+2)+3``.
 
+    **Definitions**:
+        * :data:`expression` → :data:`list`
+
     **Examples**:
         * ``args(expression("f(x)"))`` → ``[expression("x")]``
         * ``args(expression("1+2+3"))`` → ``[expression("1+2"), expression("3")]``
@@ -1814,36 +2612,41 @@ Sub-expressions
 
     Returns the name of the :ref:`data type <jme-data-types>` of the top token in the expression, as a string.
 
+    **Definitions**:
+        * :data:`expression` → :data:`string`
+
     **Examples**:
-        * ``type(x)`` → ``"name"``
-        * ``type(1)`` → ``"number"``
-        * ``type(x+1)`` → ``"op"``
-        * ``type(sin(x))`` → ``"function"``
+        * ``type(expression("x"))`` → ``"name"``
+        * ``type(expression("1"))`` → ``"integer"``
+        * ``type(expression("x+1"))`` → ``"op"``
+        * ``type(expression("sin(x)"))`` → ``"function"``
 
 .. jme:function:: name(string)
 
     Construct a :data:`name` token with the given name.
 
+    **Definitions**:
+        * :data:`string` → :data:`name`
+
     **Example**:
         * ``name("x")`` → ``x``
-
-.. jme:function:: string(name)
-
-    Return the given variable name as a string.
-
-    **Example**:
-        * ``string(x)`` → ``"x"``
 
 .. jme:function:: op(name)
 
     Construct an operator with the given name.
 
+    **Definitions**:
+        * :data:`string` → :data:`op`
+
     **Example**:
-        * ``op("+")`` → ``+``
+        * ``op("+")`` :no-test:`→` ``+``
 
 .. jme:function:: exec(op, arguments)
 
     Returns a sub-expression representing the application of the given operation to the list of arguments.
+
+    **Definitions**:
+        * :data:`op`, :data:`list` → :data:`expression`
 
     **Example**:
         * ``exec(op("+"), [2,1])`` → ``expression("2+1")``
@@ -1856,9 +2659,12 @@ Sub-expressions
 
     *Bound variables* are those defined as part of operations which also assign values to those variables, such as ``map`` or ``let``.
 
+    **Definitions**:
+        * :data:`expression` → :data:`list`
+
     **Examples**:
-        * ``findvars(expression("x+1"))`` → ``[x]``
-        * ``findvars(expression("x + x*y"))`` → ``[x,y]``
+        * ``findvars(expression("x+1"))`` → ``["x"]``
+        * ``findvars(expression("x + x*y"))`` → ``["x","y"]``
         * ``findvars(expression("map(x+2, x, [1,2,3])"))`` → ``[]``
 
 .. jme:function:: simplify(expression,rules)
@@ -1871,8 +2677,13 @@ Sub-expressions
 
     See :ref:`simplification-rules` for a list of rules available.
 
+    **Definitions**:
+        * :data:`expression`, :data:`string` → :data:`expression`
+        * :data:`expression`, :data:`list` → :data:`expression`
+        * :data:`string`, :data:`string` → :data:`expression`
+
     **Examples**:
-        * ``simplify(expression("1*x+cos(pi)","unitfactor"))`` → ``expression("x+cos(pi)")``
+        * ``simplify(expression("1*x+cos(pi)"),"unitfactor")`` → ``expression("x+cos(pi)")``
         * ``simplify(expression("1*x+cos(pi)"),["basic","unitfactor","trig"])`` → ``expression("x-1")``
 
 .. jme:function:: canonical_compare(expr1,expr2)
@@ -1898,48 +2709,81 @@ Sub-expressions
     * 
         Elements of other data types are considered to be equal to any other value of the same data type.
 
+    **Definitions**:
+        * anything, anything → :data:`number`
+
     **Examples**:
         * ``canonical_compare(a,b)`` → ``-1``
         * ``canonical_compare(f(y),g(x))`` → ``1``
         * ``canonical_compare(f(x),g(x))`` → ``-1``
         * ``canonical_compare("a","b")`` → ``0``
 
+.. jme:function:: numerical_compare(a,b)
+
+    Compare expression ``a`` and ``b`` by substituting random values in for the free variables.
+
+    Returns ``true`` if ``a`` and ``b`` have exactly the same free variables, and produce the same results when evaluated against the randomly chosen values.
+
+    For more control over the evaluation, see :func:`resultsequal`.
+
+    **Definitions**:
+        * :data:`expression`, :data:`expression` → :data:`boolean`
+
+    .. todo::
+
+        Example for numerical_compare
+
+    **Example**:
+        *
+
 .. _jme-fns-pattern-matching:
 
 Pattern-matching sub-expressions
 --------------------------------
 
-.. jme:function:: match(expr, pattern)
+.. jme:function:: match(expr, pattern, options)
 
     If ``expr`` matches ``pattern``, return a dictionary of the form ``["match": boolean, "groups": dict]``, where ``"groups"`` is a dictionary mapping names of matches to sub-expressions.
 
-    See ``pattern-matching`` for more on matching mathematical expressions.
+    See :ref:`the documentation on pattern-matching mathematical expressions <pattern-matching>`.
 
     If you don't need to use any parts of the matched expression, use :jme:func:`matches` instead.
 
-    **Examples**:
-        * ``match(expression("x+1"),"?;a + ?;b")`` → ``["match": true, "groups": ["a": expression("x"), "b": expression("1")])``
-        * ``match(expression("sin(x)", "?;a + ?;b")`` → ``["match": false, "groups": []]``
-        * ``match(expression("x+1"),"1+?;a")`` → ``["match": true, "groups": ["a": expression("x")]]``
+    **Definitions**:
+        * :data:`expression`, :data:`string` → :data:`dict`
+        * :data:`expression`, :data:`string`, :data:`string` → :data:`dict`
 
-.. jme:function:: matches(expr, pattern)
+    **Examples**:
+        * ``match(expression("x+1"),"?;a + ?;b")`` → ``["match": true, "groups": ["a": expression("x"), "b": expression("1"), "_match": expression("x+1")]]``
+        * ``match(expression("sin(x)"), "?;a + ?;b")`` → ``["match": false, "groups": dict()]``
+        * ``match(expression("x+1"),"1+?;a")`` → ``["match": true, "groups": ["a": expression("x"), "_match": expression("x+1")]]``
+
+.. jme:function:: matches(expr, pattern, options)
 
     Return ``true`` if ``expr`` matches ``pattern``.
 
     Use this if you're not interested in capturing any parts of the matched expression.
 
+    **Definitions**:
+        * :data:`expression`, :data:`string` → :data:`boolean`
+        * :data:`expression`, :data:`string`, :data:`string` → :data:`boolean`
+
     **Examples**:
         * ``matches(expression("x+1"),"?;a + ?;b")`` → ``true``
-        * ``match(expression("sin(x)", "?;a + ?;b")`` → ``false``
+        * ``matches(expression("sin(x)"), "?;a + ?;b")`` → ``false``
 
 .. jme:function:: replace(pattern, replacement, expr)
 
     Replace occurrences of ``pattern`` in ``expr`` with the expression created by substituting the matched items into ``replacement``.
 
+    **Definitions**:
+        * :data:`string`, :data:`string`, :data:`expression` → :data:`expression`
+        * :data:`string`, :data:`string`, :data:`expression`, :data:`string` → :data:`expression`
+
     **Examples**:
         * ``replace("?;x + ?;y", "x*y", expression("1+2"))`` → ``expression("1*2")``
         * ``replace("?;x + ?;y", "f(x,y)", expression("1+2+3"))`` → ``expression("f(f(1,2),3)")``
-        * ``replace("0*?", "0", expression("0*sin(x) + x*0 + 2*cos(0*pi)"))`` → ``expression("0 + x*0 + 2*cos(0)")``
+        * ``replace("0*?", "0", expression("0*sin(x) + x*0 + 2*cos(0*pi)"))`` → ``expression("0 + 0 + 2*cos(0)")``
 
 .. _jme-fns-data-types:
 
@@ -1951,16 +2795,32 @@ Identifying data types
     Returns the name of the :ref:`data type <jme-data-types>` of ``x``.
 
     **Example**:
-        * ``type(1)`` → ``"number"``
+        * ``type(1)`` → ``"integer"``
 
 .. jme:function:: x isa type
 
     Returns ``true`` if ``x`` is of the :ref:`data type <jme-data-types>` ``type``.
 
+    **Definitions**:
+        * anything, :data:`string` → :data:`boolean`
+
     **Examples**:
         * ``1 isa "number"`` → ``true``
         * ``x isa "name"`` → ``true`` (if ``x`` is not defined in this scope)
-        * ``x isa "number"`` → ``true`` (if ``x`` has a numerical value in this scope)
+        * ``x isa "number"`` :no-test:`→` ``true`` (if ``x`` has a numerical value in this scope)
+
+.. jme:function:: x as type
+
+    Convert ``x`` to the given data type, if possible.
+
+    If ``x`` can not be automatically converted to ``type``, an error is thrown.
+
+    **Definitions**:
+        * anything, :data:`string` → given type
+
+    **Examples**:
+        * ``dec(1.23) as "number"`` → ``1.23``
+        * ``set(1,2,3) as "list"`` → ``[1,2,3]``
 
 .. jme:function:: infer_variable_types(expression)
 
@@ -1969,14 +2829,16 @@ Identifying data types
     There can be more than one valid assignment of types to the variables in an expression.
     For example, in the expression ``a+a``, the variable ``a`` can be any type which has a defined addition operation.
 
-    Returns a list of possible assignments of types to variables.
-    Each assignment is a dictionary mapping variable names to the name of its type.
+    Returns the first possible assignment of types to variables, as a dictionary mapping variable names to the name of its type.
     If a variable name is missing from the dictionary, the algorithm can't establish any constraint on it.
 
+    **Definitions**:
+        * :data:`expression` → :data:`dict`
+
     **Example**:
-        * ``infer_variable_types(expression("x^2"))`` → ``[ ["x": "number"] ]``
-        * ``infer_variable_types(expression("union(a,b)"))`` → ``[ ["a": "set", "b": "set"] ]``
-        * ``infer_variable_types(expression("k*det(a)"))`` → ``[ [ "k": "number", "a": "matrix" ], [ "k": "matrix", "a": "matrix" ], [ "k": "vector", "a": "matrix" ] ]``
+        * ``infer_variable_types(expression("x^2"))`` → ``["x": "number"]``
+        * ``infer_variable_types(expression("union(a,b)"))`` → ``["a": "set", "b": "set"]``
+        * ``infer_variable_types(expression("k*det(a)"))`` → ``[ "k": "number", "a": "matrix" ]``
 
 .. _jme-fns-inspecting-the-scope:
 
@@ -1987,12 +2849,21 @@ Inspecting the evaluation scope
 
     Returns a list containing the names of every variable defined in the current scope, as strings.
 
+    **Definitions**:
+        * () → :data:`list`
+
 .. jme:function:: isset(name)
 
     Returns ``true`` if the variable with the given name has been defined in the current scope.
+
+    **Definitions**:
+        * :data:`name` → :data:`boolean`
 
 .. jme:function:: unset(names, expression)
 
     Temporarily remove the named variables, functions and rulesets from the scope, and evaluate the given expression.
 
     ``names`` is a dictionary of the form ``["variables": list, "functions": list, "rulesets": list]``.
+
+    **Definitions**:
+        * :data:`dict`, anything → unspecified

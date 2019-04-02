@@ -3755,23 +3755,35 @@ newBuiltin('let',['?'],TList, null, {
 });
 Numbas.jme.lazyOps.push('let');
 jme.findvarsOps.let = function(tree,boundvars,scope) {
-    // find vars used in variable assignments
     var vars = [];
-    for(var i=0;i<tree.args.length-1;i+=2) {
-        vars = vars.merge(jme.findvars(tree.args[i+1],boundvars,scope));
-    }
-    // find variable names assigned by let
+    var oboundvars = boundvars;
     boundvars = boundvars.slice();
-    for(var i=0;i<tree.args.length-1;i+=2) {
-        boundvars.push(tree.args[i].tok.name.toLowerCase());
+    if(tree.args[0].tok.type=='dict') {
+        tree.args[0].args.forEach(function(kp) {
+            boundvars.push(kp.tok.key);
+            vars = vars.merge(jme.findvars(kp.args[0],oboundvars,scope));
+        });
+    } else {
+        for(var i=0;i<tree.args.length-1;i+=2) {
+            var names = tree.args[i].tok.type=='list' ? tree.args[i].args : [tree.args[i]];
+            names.forEach(function(name) {
+                boundvars.push(name.tok.name.toLowerCase());
+            });
+            vars = vars.merge(jme.findvars(tree.args[i+1],oboundvars,scope));
+        }
     }
     // find variables used in the lambda expression, excluding the ones assigned by let
     vars = vars.merge(jme.findvars(tree.args[tree.args.length-1],boundvars,scope));
     return vars;
 }
 jme.substituteTreeOps.let = function(tree,scope,allowUnbound) {
-    for(var i=1;i<tree.args.length-1;i+=2) {
-        tree.args[i] = jme.substituteTree(tree.args[i],scope,allowUnbound);
+    if(tree.args[0].tok.type=='dict') {
+        var d = tree.args[0];
+        d.args = d.args.map(function(da) { return jme.substituteTree(da,scope,allowUnbound) });
+    } else {
+        for(var i=1;i<tree.args.length-1;i+=2) {
+            tree.args[i] = jme.substituteTree(tree.args[i],scope,allowUnbound);
+        }
     }
 }
 
@@ -5337,7 +5349,8 @@ var jmeRationalNumber = jme.display.jmeRationalNumber = function(n,settings)
     if(n.complex)
     {
         var re = jmeRationalNumber(n.re);
-        var im = jmeRationalNumber(n.im)+'i';
+        var im = jmeRationalNumber(n.im);
+        im += im.match(/\d$/) ? 'i' : '*i';
         if(n.im==0)
             return re;
         else if(n.re==0)
@@ -5351,10 +5364,11 @@ var jmeRationalNumber = jme.display.jmeRationalNumber = function(n,settings)
         }
         else if(n.im<0)
         {
-            if(n.im==-1)
+            if(n.im==-1) {
                 return re+' - i';
-            else
-                return re+' - '+jmeRationalNumber(-n.im)+'i';
+            } else {
+                return re+' - '+im.slice(1);
+            }
         }
         else
         {
@@ -5414,17 +5428,14 @@ var jmeRationalNumber = jme.display.jmeRationalNumber = function(n,settings)
  * @param {Numbas.jme.display.jme_display_settings} settings - if `settings.niceNumber===false`, don't round off numbers
  * @returns {JME}
  */
-function jmeRealNumber(n,settings)
+var jmeRealNumber = jme.display.jmeRealNumber = function(n,settings)
 {
     settings = settings || {};
     if(n.complex)
     {
         var re = jmeRealNumber(n.re);
         var im = jmeRealNumber(n.im);
-        if(im[im.length-1].match(/[a-zA-Z]/))
-            im += '*i';
-        else
-            im += 'i';
+        im += im.match(/\d$/) ? 'i' : '*i';
         if(n.im==0)
             return re;
         else if(n.re==0)
@@ -5441,7 +5452,7 @@ function jmeRealNumber(n,settings)
             if(n.im==-1)
                 return re+' - i';
             else
-                return re+' - '+jmeRealNumber(-n.im)+'i';
+                return re+' - '+im.slice(1);
         }
         else
         {
@@ -5758,7 +5769,6 @@ function align(name,items) {
     
     var item_lines = items.map(function(item){return item.split('\n')});
     var item_widths = item_lines.map(function(lines) {return lines.reduce(function(m,l){return Math.max(l.length,m)},0)});
-    console.log(item_widths);
     var num_lines = item_lines.reduce(function(t,ls){return Math.max(ls.length,t)},0);
     item_lines = item_lines.map(function(lines,i) {
         var w = item_widths[i];
@@ -5828,7 +5838,6 @@ var tree_diagram = Numbas.jme.display.tree_diagram = function(tree) {
         case 'op':
         case 'function':
             var args = tree.args.map(function(arg){ return tree_diagram(arg); });
-            console.log(treeToJME(tree));
             return align(tree.tok.name, args);
         default:
             return treeToJME(tree);
@@ -9462,7 +9471,7 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
                     values: {interpreted_answer:answer}
                 }
             } else {
-                var part_result = part.mark_answer(answer,scope);
+                var part_result = part.mark_answer(answer,part.getScope());
             }
             var result = marking.finalise_state(part_result.states.mark);
             return jme.wrapValue({

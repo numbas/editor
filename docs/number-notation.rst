@@ -16,7 +16,7 @@ The entry in the "Code" column is the string you should use to identify the styl
 +-----------------+-----------------+-------------------------------------------------+-------------------+
 | Style           | Code            | Description                                     | Example           |
 +=================+=================+=================================================+===================+
-| English (plain) | ``plain-en``    | Powers of 1000 not separated,                   | 1234567.890123    |
+| English (plain) | ``plain``       | Powers of 1000 not separated,                   | 1234567.890123    |
 |                 |                 | and a dot is used for the decimal mark.         |                   |
 +-----------------+-----------------+-------------------------------------------------+-------------------+
 | English         | ``en``          | Positive powers of 1000 are separated with      | 1,234,567.890123  |

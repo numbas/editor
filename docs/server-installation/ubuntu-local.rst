@@ -32,12 +32,12 @@ Installation
         
         You'll need to activate the virtual environment each time you want to use it.
 
-#.  Either download the Numbas runtime tools `from GitHub <https://github.com/numbas/Numbas/archive/master.zip>`_
+#.  Either download the Numbas runtime tools `from GitHub <https://github.com/numbas/Numbas/archive/master.zip>`__
     and extract to a folder called ``numbas_runtime``, or use `git <https://git-scm.com/>`_ to clone the repository::
 
         git clone git://github.com/numbas/Numbas.git numbas_runtime
 
-#.  Either download the Numbas editor `from GitHub <https://github.com/numbas/editor/archive/master.zip>`_
+#.  Either download the Numbas editor `from GitHub <https://github.com/numbas/editor/archive/master.zip>`__
     and extract to a folder called ``numbas_editor``, or use git to clone the repository::
 
         git clone git://github.com/numbas/editor.git numbas_editor

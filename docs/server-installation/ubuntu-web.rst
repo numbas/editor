@@ -85,11 +85,11 @@ Create directories and set permissions
 #.  Create the following directories outside the web root, so they're
     not accessible to the public::
   
-    mkdir /srv/numbas
-    mkdir /srv/numbas/compiler
-    mkdir /srv/numbas/media
-    mkdir /srv/numbas/previews
-    mkdir /srv/numbas/static
+        mkdir /srv/numbas
+        mkdir /srv/numbas/compiler
+        mkdir /srv/numbas/media
+        mkdir /srv/numbas/previews
+        mkdir /srv/numbas/static
 
 #.  Set the correct ownership and permissions::
     

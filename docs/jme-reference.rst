@@ -789,12 +789,12 @@ Number operations
     **Definitions**:
         * :data:`string`, :data:`list` of :data:`string` → :data:`list`
 
-    .. todo::
-        
-        Examples for matchnumber
+    **Examples**:
+        * ``matchnumber("1.234",["plain","eu"])`` → ``[ "1.234", 1.234 ]``
+        * ``matchnumber("1,234",["plain","eu"])`` → ``[ "1,234", 1.234 ]``
+        * ``matchnumber("5 000 things",["plain","si-en"])`` → ``[ "5 000", 5000 ]``
+        * ``matchnumber("apple",["plain"])`` → ``[ "", NaN ]``
 
-    **Example**:
-        * 
 .. jme:function:: parsenumber(string,style)
 
     Parse a string representing a number written in the given style.
@@ -2729,12 +2729,10 @@ Sub-expressions
     **Definitions**:
         * :data:`expression`, :data:`expression` → :data:`boolean`
 
-    .. todo::
-
-        Example for numerical_compare
-
     **Example**:
-        *
+        * ``numerical_compare(expression("x^2"), expression("x*x"))`` → ``true``
+        * ``numerical_compare(expression("x^2"), expression("2x"))`` → ``false``
+        * ``numerical_compare(expression("x^2"), expression("y^2"))`` → ``false``
 
 .. _jme-fns-pattern-matching:
 

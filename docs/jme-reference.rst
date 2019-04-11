@@ -626,6 +626,20 @@ Number operations
         * ``min(3,2)`` → ``2``
         * ``min([1,2,3])`` → ``1``
 
+.. jme:function:: clamp(x,a,b)
+
+    Return the point nearest to ``x`` in the interval :math:`[a,b]`.
+    
+    Equivalent to ``max(a,min(x,b))``.
+
+    **Definitions**:
+        * :data:`number`, :data:`number`, :data:`number` → :data:`number`
+
+    **Example**:
+        * ``clamp(1,0,2)`` → ``1``
+        * ``clamp(-1,0,2)`` → ``0``
+        * ``clamp(3,0,2)`` → ``2``
+
 .. jme:function:: precround(n,d)
 
     Round ``n`` to ``d`` decimal places.

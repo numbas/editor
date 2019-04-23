@@ -4,7 +4,16 @@ if(!window.Editor)
 
 $(document).ready(function() {
 
-    function texJMEBit(expr,rules) {
+    function wrap_subvar(expr) {
+        var sbits = Numbas.util.splitbrackets(expr,'{','}');
+        var out = '';
+        for(var j=0;j<sbits.length;j+=1) {
+            out += j%2 ? ' subvar('+sbits[j]+')' : sbits[j]; //subvar here instead of \\color because we're still in JME
+        }
+        return out;
+    }
+
+    function texJMEBit(expr,rules,parser) {
         rules = rules || 'basic';
         var scope = new Numbas.jme.Scope(Numbas.jme.builtinScope);
         try{
@@ -13,14 +22,9 @@ $(document).ready(function() {
                     scope.setRuleset(r.name(), Numbas.jme.collectRuleset(r.sets(),scope.allRulesets()));
                 });
             }
-            var sbits = Numbas.util.splitbrackets(expr,'{','}');
-            var expr = '';
-            for(var j=0;j<sbits.length;j+=1)
-            {
-                expr += j%2 ? ' subvar('+sbits[j]+')' : sbits[j]; //subvar here instead of \\color because we're still in JME
-            }
-            expr = {tex: Numbas.jme.display.exprToLaTeX(expr,rules,scope), error: false};
-            return expr;
+            expr = wrap_subvar(expr);
+            var tex = Numbas.jme.display.exprToLaTeX(expr,rules,scope,parser);
+            return {tex: tex, error: false};
         } catch(e) {
             var tex = e.message.replace(/<\/?(code|em|strong)>/g,'');
             return {message: e.message, tex: '\\color{red}{\\text{'+tex+'}}', error: true};
@@ -1167,6 +1171,70 @@ $(document).ready(function() {
         }
     }
 
+    ko.bindingHandlers.light_wysiwyg = {
+        init: function(element,valueAccessor,allBindingsAccessor) {
+            valueAccessor = valueAccessor();
+            allBindingsAccessor = allBindingsAccessor();
+
+            if(element.hasAttribute('disabled')) {
+                try {
+                    element.classList.add('well');
+                    element.classList.add('content-area');
+                } catch(e) {
+                    element.className += ' well content-area';
+                }
+                return;
+            }
+
+            function onChange(html) {
+                valueAccessor(html);
+            }
+
+            function onFocus() {
+                $(element).data('summernote-focus',true);
+            }
+
+            function onBlue() {
+                $(element).data('summernote-focus',false);
+            }
+
+            $(element).summernote({
+                airMode: true,
+                disableDragAndDrop: true,
+                popover: {
+                    air: [
+                        ['style', ['bold', 'italic', 'underline', 'clear']],
+                        ['para', ['ul', 'ol', 'paragraph']],
+                        ['insert', ['link']]
+                    ]
+                },
+                callbacks: {
+                    onChange: onChange,
+                    onFocus: onFocus,
+                    onBlur: onBlue
+                }
+            } );
+            var ed = $(element).data('summernote');
+            ed.layoutInfo.editor[0].classList.add('form-control');
+            $(element).summernote('code',ko.unwrap(valueAccessor));
+        },
+        update: function(element, valueAccessor) {
+            var value = ko.unwrap(valueAccessor()) || '';
+
+            if(element.hasAttribute('disabled')) {
+                $(element).html(value).mathjax();
+                $(element).find('[data-bind]').each(function() {
+                    this.removeAttribute('data-bind');
+                });
+                return;
+            }
+
+            if(!$(element).data('summernote-focus')) {
+                $(element).summernote('code',value);
+            }
+        }
+    };
+
     ko.bindingHandlers.writemaths = {
         init: function(element,valueAccessor,allBindingsAccessor) {
             valueAccessor = valueAccessor();
@@ -1712,9 +1780,11 @@ $(document).ready(function() {
     };
 
     ko.bindingHandlers.JME = {
-        update: function(element,valueAccessor) {
+        update: function(element,valueAccessor,allBindingsAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor());
-            var res = texJMEBit(value);
+            var allBindings = allBindingsAccessor();
+            var parser = allBindings.parser || Numbas.jme.standardParser;
+            var res = texJMEBit(value,null,parser);
             $(element).toggleClass('jme-error',res.error);
             if(res.error) {
                 $(element).html(res.message);
@@ -2115,42 +2185,47 @@ $(document).ready(function() {
         {
             code: 'plain',
             name: 'English (Plain)',
-            description: 'No thousands separator; dot for decimal point.',
+            description: 'No thousands separator; dot for decimal point.'
         },
         {
             code: 'en',
             name:'English',
-            description:'Commas separate thousands; dot for decimal point.',
+            description:'Commas separate thousands; dot for decimal point.'
         },
         {
             code: 'si-en',
             name:'SI (English)',
-            description:'Spaces separate thousands; dot for decimal point.',
+            description:'Spaces separate thousands; dot for decimal point.'
         },
         {
             code: 'si-fr',
             name:'SI (French)',
-            description:'Spaces separate thousands; comma for decimal point.',
+            description:'Spaces separate thousands; comma for decimal point.'
         },
         {
             code: 'eu',
             name: 'Continental',
-            description:'Dots separate thousands; comma for decimal point.',
+            description:'Dots separate thousands; comma for decimal point.'
         },
         {
             code: 'plain-eu',
             name:'Continental (Plain)',
-            description:'No thousands separator; comma for decimal point.',
+            description:'No thousands separator; comma for decimal point.'
         },
         {
             code: 'ch',
             name:'Swiss',
-            description:'Apostrophes separate thousands; dot for decimal point.',
+            description:'Apostrophes separate thousands; dot for decimal point.'
         },
         {
             code: 'in',
             name:'Indian',
-            description:'Commas separate groups; rightmost group is 3 digits, other groups 2 digits; dot for decimal point.',
+            description:'Commas separate groups; rightmost group is 3 digits, other groups 2 digits; dot for decimal point.'
+        },
+        {
+            code: 'scientific',
+            name: 'Scientific',
+            description:'A significand followed by the letter \'e\' and an integer exponent.'
         }
     ];
 });

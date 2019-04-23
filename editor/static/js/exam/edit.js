@@ -77,6 +77,7 @@ $(document).ready(function() {
         this.reverse = ko.observable(true);
         this.browse = ko.observable(true);
         this.preventleave = ko.observable(true);
+        this.startpassword = ko.observable('');
 
         this.onleave = ko.observable(null);
 
@@ -251,7 +252,8 @@ $(document).ready(function() {
                     showfrontpage: this.showfrontpage(),
                     showresultspage: this.showresultspage(),
                     onleave: this.onleave.toJSON(),
-                    preventleave: this.preventleave()
+                    preventleave: this.preventleave(),
+                    startpassword: this.startpassword()
                 },
                 timing: {
                     allowPause: this.allowPause(),
@@ -287,7 +289,7 @@ $(document).ready(function() {
 
             if('navigation' in content)
             {
-                tryLoad(content.navigation,['allowregen','reverse','browse','showfrontpage','showresultspage','preventleave'],this);
+                tryLoad(content.navigation,['allowregen','reverse','browse','showfrontpage','showresultspage','preventleave','startpassword'],this);
                 this.onleave.load(content.navigation.onleave);
             }
 

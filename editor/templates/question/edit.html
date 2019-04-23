@@ -6,7 +6,6 @@
 {% load helplink %}
 {% load editor_controls %}
 {% load sstatic %}
-{% load verbatim %}
 {% load json_filter %}
 
 {% block javascripts %}
@@ -242,9 +241,11 @@
                             <div data-bind="visible: templateType().id=='string'">
                                 <input {% if not editable %}disabled{% endif %} class="form-control" type="text" data-bind="textInput: templateTypeValues.string.value, autosize: {max: 500, min: 30, padding: 10, value: templateTypeValues.string.value}"/> 
                                 <p class="help-block">(text string)</p>
+                                <p><label><input type="checkbox" data-bind="checked: templateTypeValues.string.isTemplate" {% if not editable %}disabled{% endif %}> Is this a template?</p>
                             </div>
                             <div data-bind="visible: templateType().id=='long string'">
                                 <div {% if not editable %}disabled{% endif %} data-bind="writemaths: templateTypeValues['long string'].value"></div>
+                                <p><label><input type="checkbox" data-bind="checked: templateTypeValues.string.isTemplate" {% if not editable %}disabled{% endif %}> Is this a template?</p>
                             </div>
                             <div data-bind="visible: templateType().id=='list of numbers', with: templateTypeValues['list of numbers']">
                                 <ul class="list-unstyled" data-bind="foreach: values.edit">
@@ -268,7 +269,7 @@
                             </div>
                             </div>
                             <div class="help-block">
-                                <div class="value-error alert alert-danger" data-bind="visible: error().length>0, html: error">
+                                <div class="value-error alert alert-danger" data-bind="visible: error() && error().length>0, html: error">
                                 <div class="html-type-warning value-error alert alert-danger" data-bind="visible: value() && value().type=='html'">
                                     <p>This variable is an HTML node. HTML nodes can not be relied upon to work correctly when resuming a session - for example, attached event callbacks will be lost, and mathematical notation will likely also break.</p>
                                     <p>If this causes problems, try to create HTML nodes where you use them in content areas, instead of storing them in variables.</p>
@@ -312,6 +313,7 @@
                                     <th></th>
                                     <th></th>
                                     <th class="name">Name</th>
+                                    <th class="type">Type</th>
                                     <th class="value">Generated Value</th>
                                     <th></th>
                                 </tr>
@@ -339,6 +341,7 @@
                                         <span title="This variable is a source of randomisation"  data-bind="visible: random(), click: $root.currentVariable" class="glyphicon glyphicon-random is-random text-muted"></span>
                                     </td>
                                     <td class="name monospace" data-bind="click: $root.currentVariable, text: name() ? name() : 'Unnamed', css: {'name-error': nameError()!='','text-danger': nameError()!=''}"></td>
+                                    <td class="type" data-bind="text: type"></td>
                                     <td class="value-cell" data-bind="click: $root.currentVariable">
                                         <div class="value jme-value" data-bind="jmevalue: value, error: anyError"></div>
                                     </td>
@@ -433,7 +436,7 @@
                         <!-- /ko -->
                         <!-- ko with: currentPart -->
                         <h3>
-                            <strong data-bind="text: header"></strong>
+                            <input type="text" class="custom-name" data-bind="textInput: customName, autosize: name, attr: {placeholder: standardName}">
                             <span data-bind="text: type().niceName"></span>
                         </h3>
                         {% if editable %}
@@ -446,6 +449,16 @@
                             <button type="button" class="btn btn-sm btn-info" data-bind="visible: isRootPart, click: startAddingStep">
                                 <span class="glyphicon glyphicon-plus"></span> Add a step to this part
                             </button>
+                            <!-- ko if: isGap -->
+                            <button type="button" class="btn btn-sm btn-info" data-bind="visible: isGap, click: parent().startAddingGap">
+                                <span class="glyphicon glyphicon-plus"></span> Add another gap to this part</span>
+                            </button>
+                            <!-- /ko -->
+                            <!-- ko if: isStep -->
+                            <button type="button" class="btn btn-sm btn-info" data-bind="visible: isStep, click: parent().startAddingStep">
+                                <span class="glyphicon glyphicon-plus"></span> Add another step to this part</span>
+                            </button>
+                            <!-- /ko -->
                             <button type="button" class="btn btn-sm btn-danger" data-bind="click: remove">
                                 <span class="glyphicon glyphicon-remove"></span> Delete this <span data-bind="text: levelName"></span>
                             </button>
@@ -823,7 +836,7 @@
                                             <tr>
                                                 <td><select {% if not editable %}disabled{% endif %} class="form-control name-to-replace" data-bind="options: variableDisplay, value: variable"/></td>
                                                 <td>
-                                                    <select {% if not editable %}disabled{% endif %} class="form-control replace-with" data-bind="options: availableParts, optionsText: 'nicePath', optionsValue: 'path', value: replacement"/>
+                                                    <select {% if not editable %}disabled{% endif %} class="form-control replace-with" data-bind="options: availableParts, optionsText: 'name', optionsValue: 'path', value: replacement"/>
                                                 </td>
                                                 <td>
                                                     <input {% if not editable %}disabled{% endif %} type="checkbox" data-bind="checked: must_go_first"/>
@@ -886,20 +899,19 @@
                                 <div data-bind="sortable: {
                                     foreach: parts,
                                     options: {
-                                        group: 'parts',
-                                        filter: '.gap, .step'
+                                        group: 'parts'
                                     }
                                 }">
                                     <a role="button" class="list-group-item part root" data-bind="
                                         click: $parent.currentPart, 
-                                        css: {active: $data==$parent.currentPart()}
+                                        css: {active: $data==$parent.currentPart() || ($parent.addingPart() && $data==$parent.addingPart().parent)}
                                     ">
                                         <strong data-bind="text: header"></strong>
                                         <span class="type-name" data-bind="text: type().niceName"></span>
                                         <small class="children-description text-muted" data-bind="text: childrenDescription"></small>
                                     </a>
-                                    <!-- ko if: showChildren -->
-                                    <!-- ko foreach: gaps -->
+                                    <!-- ko if: showChildren() && (gaps().length || steps().length) -->
+                                    <div class="gaps" data-bind="sortable: { foreach: gaps, options: {group: path()+'gaps'} }">
                                     <a role="button" class="list-group-item part gap" data-bind="
                                         click: $parents[1].currentPart, 
                                         css: {active: $data==$parents[1].currentPart()}
@@ -907,8 +919,8 @@
                                         <strong data-bind="text: header"></strong>
                                         <span class="type-name" data-bind="text: type().niceName"></span>
                                     </a>
-                                    <!-- /ko -->
-                                    <!-- ko foreach: steps -->
+                                    </div>
+                                    <div class="steps" data-bind="sortable: { foreach: steps, options: {group: path()+'steps'} }">
                                     <a role="button" class="list-group-item part step" data-bind="
                                         click: $parents[1].currentPart, 
                                         css: {active: $data==$parents[1].currentPart()}
@@ -916,7 +928,7 @@
                                         <strong data-bind="text: header"></strong>
                                         <span class="type-name" data-bind="text: type().niceName"></span>
                                     </a>
-                                    <!-- /ko -->
+                                    </div>
                                     <!-- /ko -->
                                 </div>
                             </div>

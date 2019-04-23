@@ -146,6 +146,58 @@ class TimelineMixin(object):
 
 LOCALE_CHOICES = [(y, x) for x, y in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']]
 
+def combine_access(*args):
+    order = ['view','edit']
+    return sorted(args,key=order.index)[-1]
+
+def reassign_content(from_user,to_user):
+    with transaction.atomic():
+        for p in from_user.own_projects.all():
+            p.owner = to_user
+            p.save()
+
+        for pa in from_user.project_memberships.all():
+            try:
+                pa2 = ProjectAccess.objects.get(user=to_user,project=pa.project)
+                access = combine_access(pa.access,pa2.access)
+                if access!=pa2.access:
+                    pa2.access = access
+                    pa2.save()
+            except ProjectAccess.DoesNotExist:
+                pa.user = to_user
+                pa.save()
+
+        for e in from_user.own_extensions.all():
+            e.author = to_user
+            e.save()
+
+        for t in from_user.own_themes.all():
+            t.author = to_user
+            t.save()
+
+        for cpt in from_user.own_custom_part_types.all():
+            cpt.author = to_user
+            cpt.save()
+
+        for r in from_user.resources.all():
+            r.owner = to_user
+            r.save()
+
+        for a in from_user.item_accesses.all():
+            try:
+                a2 = Access.objects.get(user=to_user,item=a.item)
+                access = combine_access(a.access,a2.access)
+                if access!=a2.access:
+                    a2.access = access
+                    a2.save()
+            except Access.DoesNotExist:
+                a.user = to_user
+                a.save()
+
+        for ei in from_user.own_items.all():
+            ei.author = to_user
+            ei.save()
+
 class Project(models.Model, ControlledObject):
     name = models.CharField(max_length=200)
     owner = models.ForeignKey(User, related_name='own_projects', on_delete=models.CASCADE)
@@ -281,6 +333,7 @@ class Extension(models.Model):
     last_modified = models.DateTimeField(auto_now=True)
     zipfile_folder = 'user-extensions'
     zipfile = models.FileField(upload_to=zipfile_folder+'/zips', blank=True, null=True, max_length=255, verbose_name='Extension package', help_text='A .zip package containing the extension\'s files')
+    runs_headless = models.BooleanField(default=True, help_text='Can this extension run outside a browser?')
 
     class Meta:
         ordering = ['name']
@@ -648,7 +701,7 @@ class TaggedQuestion(taggit.models.GenericTaggedItemBase):
 
 class Access(models.Model, TimelineMixin):
     item = models.ForeignKey('EditorItem', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='item_accesses', on_delete=models.CASCADE)
     access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
 
     timelineitems = GenericRelation('TimelineItem', related_query_name='item_accesses', content_type_field='object_content_type', object_id_field='object_id')
@@ -711,7 +764,7 @@ class EditorItemManager(models.Manager):
 
 class Contributor(models.Model):
     item = models.ForeignKey('EditorItem', on_delete=models.CASCADE, related_name='contributors')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+    user = models.ForeignKey(User, related_name='item_contributions', on_delete=models.CASCADE, blank=True, null=True)
     name = models.CharField(max_length=200,blank=True)
     profile_url = models.URLField(blank=True)
 
@@ -1473,481 +1526,3 @@ def notify_stamp(instance, **kwargs):
 @receiver(signals.post_save, sender=Comment)
 def notify_comment(instance, **kwargs):
     notify_watching(instance.user, target=instance.object, verb='commented on', action_object=instance)
-
-
-#    Everything below is to be deleted in Numbas 2.0
-
-class EditorModel(models.Model):
-    class Meta:
-        abstract = True
-
-    licence = models.ForeignKey(Licence, null=True, on_delete=models.SET_NULL)
-
-    current_stamp = models.ForeignKey('StampOfApproval', blank=True, null=True, on_delete=models.SET_NULL)
-
-    share_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-
-    published = models.BooleanField(default=False)
-    published_date = models.DateTimeField(null=True)
-
-    ability_level_start = AbilityLevelField(null=True)
-    ability_level_end = AbilityLevelField(null=True)
-    ability_levels = models.ManyToManyField(AbilityLevel)
-
-    subjects = models.ManyToManyField(Subject)
-    topics = models.ManyToManyField(Topic)
-
-    def set_licence(self, licence):
-        NumbasObject.get_parsed_content(self)
-        metadata = self.parsed_content.data.setdefault(u'metadata', {})
-        metadata['licence'] = licence.name
-        self.licence = licence
-        self.content = str(self.parsed_content)
-
-    @property
-    def timeline(self):
-        return []
-    
-    @property
-    def stamps(self):
-        return NewStampOfApproval.objects.filter(object_content_type=ContentType.objects.get_for_model(self.__class__), object_id=self.pk).order_by('-date')
-
-class QuestionManager(models.Manager):
-    def viewable_by(self, user):
-        if user.is_superuser:
-            return self.all()
-        elif user.is_anonymous:
-            return self.filter(public_access__in=['edit', 'view'])
-        else:
-            mine_or_public_query = Q(public_access__in=['edit', 'view']) | Q(author=user)
-            mine_or_public = self.all().filter(mine_or_public_query)
-            given_access = QuestionAccess.objects.filter(access__in=['edit', 'view'], user=user).values_list('question', flat=True)
-            return mine_or_public | self.exclude(mine_or_public_query).filter(pk__in=given_access)
-
-@reversion.register
-class Question(EditorModel, NumbasObject, ControlledObject):
-    
-    """Model class for a question.
-    
-    Many-to-many relation with Exam through ExamQuestion.
-    
-    """
-
-    objects = QuestionManager()
-    
-    name = models.CharField(max_length=200, default='Untitled Question')
-    theme_path = 'question'
-    slug = models.SlugField(max_length=200, editable=False, unique=False)
-    author = models.ForeignKey(User, related_name='own_questions', on_delete=models.CASCADE)
-    filename = models.CharField(max_length=200, editable=False, default='')
-    content = models.TextField(blank=True, validators=[validate_content])
-    metadata = JSONField(blank=True)
-    created = models.DateTimeField(auto_now_add=True)
-    last_modified = models.DateTimeField(auto_now=True)
-    resources = models.ManyToManyField('Image', blank=True, related_name='questions')
-    copy_of = models.ForeignKey('self', null=True, related_name='copies', on_delete=models.SET_NULL)
-    extensions = models.ManyToManyField(Extension, blank=True)
-
-    public_access = models.CharField(default='view', editable=True, choices=PUBLIC_ACCESS_CHOICES, max_length=6)
-    access_rights = models.ManyToManyField(User, through='QuestionAccess', blank=True, editable=False, related_name='accessed_questions+')
-
-    tags = TaggableManager(through=TaggedQuestion)
-
-    class Meta:
-        ordering = ['name']
-        permissions = (
-              ('highlight', 'Can pick questions to feature on the front page.'),
-        )
-
-    def __str__(self):
-        return '%s' % self.name
-
-    def save(self, *args, **kwargs):
-        NumbasObject.get_parsed_content(self)
-
-        self.slug = slugify(self.name)
-
-        if 'metadata' in self.parsed_content.data:
-            licence_name = self.parsed_content.data['metadata'].get('licence', None)
-        else:
-            licence_name = None
-        self.licence = Licence.objects.filter(name=licence_name).first()
-
-        super(Question, self).save(*args, **kwargs)
-
-        if 'tags' in self.parsed_content.data:
-            self.tags.set(*[t.strip() for t in self.parsed_content.data['tags']])
-
-
-    def delete(self, *args, **kwargs):
-        super(Question, self).delete(*args, **kwargs)
-
-    def get_filename(self):
-        return 'question-%i-%s' % (self.pk, self.slug)
-
-    def as_numbasobject(self):
-        self.get_parsed_content()
-        data = OrderedDict([
-            ('name', self.name),
-            ('extensions', [e.location for e in self.extensions.all()]),
-            ('resources', [[i.image.name, i.image.path] for i in self.resources.all()]),
-            ('navigation', {'allowregen': 'true', 'showfrontpage': 'false', 'preventleave': False}),
-            ('questions', [self.parsed_content.data])
-        ])
-        obj = numbasobject.NumbasObject(data=data, version=self.parsed_content.version)
-        return obj
-
-    def as_source(self):
-        return str(self.as_numbasobject())
-
-    def as_json(self):
-        self.get_parsed_content()
-        d = model_to_dict(self)
-        d['JSONContent'] = self.parsed_content.data
-        d['metadata'] = self.metadata
-        d['tags'] = [ti.tag.name for ti in d['tags']]
-        d['resources'] = [res.as_json() for res in self.resources.all()]
-        return json.dumps(d)
-
-    def summary(self, user=None):
-        """return id, name and url, enough to identify a question and say where to find it"""
-        obj = {
-            'id': self.id, 
-            'name': self.name, 
-            'metadata': self.metadata,
-            'created': str(self.created),
-            'last_modified': str(self.last_modified), 
-            'author': self.author.get_full_name(), 
-            'url': reverse('question_edit', args=(self.pk, self.slug,)),
-            'deleteURL': reverse('question_delete', args=(self.pk, self.slug)),
-        }
-        if user:
-            obj['canEdit'] = self.can_be_edited_by(user) 
-        return obj
-
-    def set_access(self, user, access_level):
-        access = QuestionAccess(user=user, question=self, access=access_level)
-        access.save()
-
-    def get_access_for(self, user):
-        if user.is_anonymous:
-            return 'none'
-        try:
-            question_access = QuestionAccess.objects.get(question=self, user=user)
-            return question_access.access
-        except QuestionAccess.DoesNotExist:
-            return 'none'
-
-    @property
-    def network(self):
-        q = self
-        while q.copy_of:
-            q = q.copy_of
-        return sorted(q.descendants(), key=lambda x: x.created)
-
-    def descendants(self):
-        return [self]+sum([q2.descendants() for q2 in self.copies.all()], [])
-
-    @property
-    def exams_using_this(self):
-        return self.exam_set.distinct()
-
-class QuestionAccess(models.Model):
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
-
-@receiver(signals.post_save, sender=QuestionAccess)
-def notify_given_question_access(instance, created, **kwargs):
-    if created and hasattr(instance, 'given_by'):
-        notify.send(instance.given_by, verb='gave you access to', target=instance.question, recipient=instance.user)
-
-class QuestionHighlight(models.Model):
-    class Meta:
-        ordering = ['-date']
-
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    picked_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    note = models.TextField(blank=True)
-    date = models.DateTimeField(auto_now_add=True)
-
-class QuestionPullRequest(models.Model):
-    objects = PullRequestManager()
-
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
-    source = models.ForeignKey(Question, related_name='outgoing_pull_requests', on_delete=models.CASCADE)
-    destination = models.ForeignKey(Question, related_name='incoming_pull_requests', on_delete=models.CASCADE)
-    open = models.BooleanField(default=True)
-    created = models.DateTimeField(auto_now_add=True)
-    comment = models.TextField(blank=True)
-
-    def clean(self):
-        if self.source == self.destination:
-            raise ValidationError({'source': "Source and destination are the same."})
-
-    def validate_unique(self, exclude=None):
-        if self.open and QuestionPullRequest.objects.filter(source=self.source, destination=self.destination, open=True).exists():
-            raise ValidationError("There's already an open pull request between these questions.")
-
-    def merge(self, user):
-        source, destination = self.source, self.destination
-        with transaction.atomic(), reversion.create_revision():
-            oname = destination.name
-            destination.content = source.content
-            destination.metadata = source.metadata
-            
-            destination.extensions.clear()
-            destination.extensions.add(*source.extensions.all())
-            
-            destination.resources.clear()
-            destination.resources.add(*source.resources.all())
-
-            destination.save()
-            destination.set_name(oname)
-            reversion.set_user(self.owner)
-            reversion.set_comment("Merged with {}:\n{}".format(source.name, self.comment))
-
-        if user != self.owner:
-            notify.send(user, verb='has accepted your request to merge into', target=self.destination, recipient=self.owner, action_object=self)
-
-
-    def reject(self, user):
-        self.delete()
-        if user != self.owner:
-            notify.send(user, verb='has rejected your request to merge', target=self.source, recipient=self.owner, action_object=self)
-
-    def can_be_merged_by(self, user):
-        return self.destination.can_be_edited_by(user)
-
-    def can_be_deleted_by(self, user):
-        return user == self.owner or self.destination.can_be_edited_by(user)
-
-@receiver(signals.pre_save, sender=QuestionPullRequest)
-def clean_pull_request_pre_save(sender, instance, *args, **kwargs):
-    instance.full_clean()
-
-@receiver(signals.post_save, sender=QuestionPullRequest)
-def notify_pull_request(instance, created, **kwargs):
-    if created and instance.owner != instance.destination.author:
-        notify.send(instance.owner, verb='has sent you a request to merge', target=instance.destination, recipient=instance.destination.author, action_object=instance)
-
-
-
-@reversion.register
-class Exam(EditorModel, NumbasObject, ControlledObject):
-    
-    """Model class for an Exam.
-    
-    Many-to-many relation with Question through ExamQuestion.
-    
-    """
-    
-    questions = models.ManyToManyField(Question, through='ExamQuestion',
-                                       blank=True, editable=False)
-    name = models.CharField(max_length=200, default='Untitled Exam')
-    theme = models.CharField(max_length=200, default='default', blank=True)  # used if custom_theme is None
-    custom_theme = models.ForeignKey(Theme, null=True, blank=True, on_delete=models.SET_NULL, related_name='used_in_exams')
-    locale = models.CharField(max_length=200, default='en-GB')
-    slug = models.SlugField(max_length=200, editable=False, unique=False)
-    author = models.ForeignKey(User, related_name='own_exams', on_delete=models.CASCADE)
-    filename = models.CharField(max_length=200, editable=False, default='')
-    content = models.TextField(blank=True, validators=[validate_content])
-    created = models.DateTimeField(auto_now_add=True)
-    last_modified = models.DateTimeField(auto_now=True)
-    metadata = JSONField(blank=True)
-
-    public_access = models.CharField(default='view', editable=True, choices=PUBLIC_ACCESS_CHOICES, max_length=6)
-    access_rights = models.ManyToManyField(User, through='ExamAccess', blank=True, editable=False, related_name='accessed_exams+')
-
-    class Meta:
-        ordering = ['name']
-        permissions = (
-              ('highlight', 'Can pick exams to feature on the front page.'),
-        )
-
-    def __str__(self):
-        return '%s' %self.name
-    
-    @property
-    def theme_path(self):
-        if self.custom_theme:
-            return self.custom_theme.extracted_path
-        else:
-            return self.theme
-
-    @property
-    def extensions(self):
-        return Extension.objects.filter(question__in=self.questions.all()).distinct()
-
-    def get_questions(self):
-        return self.questions.order_by('examquestion')
-
-    def set_questions(self, question_list=None, **kwargs):
-        """ 
-            Set the list of questions for this exam. 
-            question_list is an ordered list of question IDs
-        """
-
-        if 'question_ids' in kwargs:
-            question_list = [Question.objects.get(pk=pk) for pk in kwargs['question_ids']]
-
-        self.questions.clear()
-        for order, question in enumerate(question_list):
-            exam_question = ExamQuestion(exam=self, question=question, qn_order=order)
-            exam_question.save()
-    
-    def save(self, *args, **kwargs):
-        NumbasObject.get_parsed_content(self)
-        
-        self.slug = slugify(self.name)
-
-        if 'metadata' in self.parsed_content.data:
-            licence_name = self.parsed_content.data['metadata'].get('licence', None)
-        else:
-            licence_name = None
-        self.licence = Licence.objects.filter(name=licence_name).first()
-            
-        super(Exam, self).save(*args, **kwargs)
-
-    def get_filename(self):
-        return 'exam-%i-%s' % (self.pk, self.slug)
-        
-    def as_numbasobject(self):
-        obj = numbasobject.NumbasObject(self.content)
-        data = obj.data
-        resources = []
-        for q in self.get_questions():
-            q.get_parsed_content()
-            resources += q.resources.all()
-        extensions = [e.location for e in self.extensions]
-        data['extensions'] = extensions
-        data['name'] = self.name
-        data['questions'] = [numbasobject.NumbasObject(q.content).data for q in self.get_questions()]
-        data['resources'] = [[i.image.name, i.image.path] for i in set(resources)]
-        
-        return obj
-
-    def as_source(self):
-        return str(self.as_numbasobject())
-    
-    def as_json(self):
-        self.get_parsed_content()
-        exam_dict = model_to_dict(self)
-        exam_dict['questions'] = [q.summary() for q in self.get_questions()]
-        exam_dict['JSONContent'] = self.parsed_content.data
-
-        return exam_dict
-
-    def summary(self, user=None):
-        """return enough to identify an exam and say where to find it, along with a description"""
-        obj = {
-            'id': self.id, 
-            'name': self.name, 
-            'metadata': self.metadata,
-            'created': str(self.created), 
-            'last_modified': str(self.last_modified), 
-            'author': self.author.get_full_name(), 
-            'url': reverse('exam_edit', args=(self.pk, self.slug,)),
-            'deleteURL': reverse('exam_delete', args=(self.pk, self.slug)),
-        }
-        if user:
-            obj['canEdit'] = self.can_be_edited_by(user) 
-        return obj
-
-    def set_access(self, user, access_level):
-        access = ExamAccess(user=user, exam=self, access=access_level)
-        access.save()
-
-    def get_access_for(self, user):
-        if user.is_anonymous:
-            return 'none'
-        try:
-            exam_access = ExamAccess.objects.get(exam=self, user=user)
-            return exam_access.access
-        except ExamAccess.DoesNotExist:
-            return 'none'
-
-@receiver(signals.post_delete)
-def remove_deleted_notifications(sender, instance=None, **kwargs):
-    if sender in [NewQuestion, NewExam, NewStampOfApproval, Comment]:
-        Notification.objects.filter(target_object_id=instance.pk).delete()
-        Notification.objects.filter(action_object_object_id=instance.pk).delete()
-
-class ExamHighlight(models.Model):
-    class Meta:
-        ordering = ['-date']
-
-    exam = models.ForeignKey(Exam, on_delete=models.CASCADE)
-    picked_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    note = models.TextField(blank=True)
-    date = models.DateTimeField(auto_now_add=True)
-
-class ExamAccess(models.Model):
-    exam = models.ForeignKey(Exam, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
-
-@receiver(signals.post_save, sender=ExamAccess)
-def notify_given_exam_access(instance, created, **kwargs):
-    if created and hasattr(instance, 'given_by'):
-        notify.send(instance.given_by, verb='gave you access to', target=instance.exam, recipient=instance.user)
-        
-class ExamQuestion(models.Model):
-    
-    """Model class linking exams and questions."""
-    
-    class Meta:
-        ordering = ['qn_order']
-        
-    exam = models.ForeignKey(Exam, on_delete=models.CASCADE)
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    qn_order = models.PositiveIntegerField()
-
-class Image(models.Model):
-    # on its way out as of Numbas editor 2.0
-    title = models.CharField(max_length=255) 
-    image = models.ImageField(upload_to='question-resources/', max_length=255) 
-
-    @property 
-    def data_url(self):
-        try:
-            img = open(self.image.path, "rb") 
-            data = img.read() 
-            return "data:image/jpg;base64, %s" % codecs.encode(data, 'base64')[:-1]
-    
-        except IOError:
-            return self.image.url
-
-    @property
-    def resource_url(self):
-        return 'resources/%s' % self.image.name
-
-    def delete(self, *args, **kwargs):
-        self.image.delete(save=False)
-        super(Image, self).delete(*args, **kwargs)
-
-    def as_json(self):
-        return {
-            'url': self.resource_url,
-            'name': self.image.name,
-            'pk': self.pk,
-            'delete_url': reverse('delete_resource', args=(self.pk,)),
-        }
-
-    def summary(self):
-        return json.dumps(self.as_json()),
-
-class StampOfApproval(models.Model, TimelineMixin):
-    object_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    object = GenericForeignKey('object_content_type', 'object_id')
-
-    user = models.ForeignKey(User, related_name='stamps', on_delete=models.CASCADE)
-    status = models.CharField(choices=STAMP_STATUS_CHOICES, max_length=20)
-    date = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return '{} stamped {} as "{}"'.format(self.user.username, self.object.name, self.get_status_display(), self.date)
-
-    def can_be_viewed_by(self, user):
-        return self.object.can_be_viewed_by(user)

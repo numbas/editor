@@ -2,6 +2,7 @@ from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.auth.views import LogoutView
 from django.urls import path
 import django.contrib.auth.views
 import notifications.urls
@@ -11,6 +12,7 @@ admin.autodiscover()
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
 
+    path('logout/',LogoutView.as_view(),name='logout'),
     path('', include('django.contrib.auth.urls')),
     url(r'', include('accounts.urls')),
 ]

@@ -10,6 +10,11 @@
     font-family: monospace;
 }
 
+.note-editor.form-control {
+    height: auto;
+    min-height: 5em;
+}
+
 .CodeMirror {
     border: 1px solid #ccc;
     height: auto;

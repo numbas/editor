@@ -23,7 +23,7 @@ from django.views.generic import TemplateView
 
 from django.contrib.auth.decorators import login_required
 
-from accounts.views import ActivationView, RegistrationView, UserUpdateView, ChangePasswordView, UserProfileView, AllExamsView, AllQuestionsView, UserSearchView
+from accounts.views import ActivationView, RegistrationView, RegistrationCompleteView, UserUpdateView, ChangePasswordView, UserProfileView, AllExamsView, AllQuestionsView, UserSearchView
 import accounts.views
 
 from numbas import settings
@@ -31,6 +31,7 @@ from numbas import settings
 urlpatterns = [
     url(r'search/$', UserSearchView.as_view(), name='user_search'),
     url(r'deactivate/$', accounts.views.DeactivateUserView.as_view(), name='user_deactivate'),
+    url(r'reassign-content/$', accounts.views.ReassignContentView.as_view(), name='user_reassign_content'),
     url(r'profile/(?P<pk>\d+)/$',
         UserProfileView.as_view(),
         name='view_profile'),
@@ -86,7 +87,7 @@ if settings.CAN_CHANGE_PASSWORD:
                 {'backend': 'accounts.backend.Backend'},
                 name='registration_register'),
             url(r'register/complete/$',
-                TemplateView.as_view(template_name='registration/registration_complete.html'),
+                RegistrationCompleteView.as_view(),
                 name='registration_complete'),
             url(r'register/closed/$',
                 TemplateView.as_view(template_name='registration/registration_closed.html'),

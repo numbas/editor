@@ -1,0 +1,87 @@
+body {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-y: hidden;
+    font-family: sans-serif;
+}
+header {
+    /*! padding: 0.1em 1em; */
+    background: hsl(0, 70%, 30%);
+    /*! border-bottom: 0.2rem solid hsl(0, 70%, 10%); */
+    display: grid;
+    color: white;
+    box-shadow: 0 0px 1px 2px hsl(0, 70%, 10%);
+    z-index: 100;
+    line-height: 1.5em;
+    grid-template-columns: [row-start] 1fr repeat(4,max-content) [row-end];
+    grid-gap: 0.2em 2em;
+    align-items: center;
+}
+header .description {
+    flex-grow: 1;
+}
+#embed-url {
+    grid-column: row;
+    text-align: right;
+    padding: 0;
+}
+#embed-url:not(.shown) {
+    display: none;
+}
+#embed-url code {
+    background: hsl(0,0%,95%);
+    color: black;
+    display: inline-block;
+    padding: 0em 0.5em;
+}
+header button {
+    padding: 0 0.5em;
+    border: none;
+    background: white;
+    color: hsl(0, 70%, 10%);
+    border-radius: 2px;
+    font-size: 1em;
+    text-decoration: none;
+    height: 1.5em;
+    line-height: 1.5em;
+    font-family: inherit;
+    cursor: pointer;
+}
+header .user-thumbnail > img {
+    vertical-align: bottom;
+    border-radius: 6px;
+}
+header a {
+    color: white;
+}
+
+header abbr a {
+  text-decoration: inherit;
+}
+
+main {
+    width: 100%;
+    flex-grow: 1;
+}
+main > iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+@media screen and (max-width: 800px) {
+    header {
+        grid-template-rows: auto auto;
+        grid-auto-columns: 1fr;
+        text-align: center;
+    }
+    header .description {
+        grid-column-start: row-start;
+        grid-column-end: row-end;
+    }
+    #share {
+        justify-self: right;
+    }
+}

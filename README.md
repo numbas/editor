@@ -14,7 +14,7 @@ You probably don't need to set up your own editor installation: there's [a free 
 
 ### Copyright
 
-> Copyright 2011-16 Newcastle University
+> Copyright 2011-19 Newcastle University
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

@@ -9,11 +9,11 @@ from django.utils.html import format_html, html_safe
 from django.utils.safestring import mark_safe
 from django.utils.encoding import force_text
 from django.db.models import Q, Count
-from django.core.validators import validate_email
 from django.contrib.auth.models import User
 
 from editor.models import NewExam, NewQuestion, EditorItem, Access, Theme, Extension, PullRequest, CustomPartType
 import editor.models
+from accounts.forms import UserField
 from accounts.util import find_users
 from editor import jsonfield
 
@@ -356,33 +356,6 @@ class CopyCustomPartTypeForm(forms.ModelForm):
             raise forms.ValidationError("Please pick a new name.")
         return name
 
-class BootstrapFieldMixin(object):
-    def widget_attrs(self, widget):
-        attrs = super(BootstrapFieldMixin, self).widget_attrs(widget)
-        attrs.update({'class': 'form-control'})
-        return attrs
-
-class UserField(BootstrapFieldMixin, forms.Field):
-    def from_db_value(self, value, expression, connection, context):
-        return value.get_full_name()
-
-    def widget_attrs(self, widget):
-        attrs = super(UserField, self).widget_attrs(widget)
-        attrs.update({'placeholder': 'Username or full name'})
-        return attrs
-
-    def to_python(self, value):
-        if value is None:
-            return None
-        user = find_users(value).first()
-        if user is None:
-            try:
-                validate_email(value)
-                return User(email=value)
-            except ValidationError:
-                raise forms.ValidationError("No user matching query '{}'".format(value))
-        return user
-
 class UserSearchMixin(forms.ModelForm):
     """
         Add a user_search field to the form, which resolves a string query to a User object, and set the property user_attr on the model to that user.
@@ -406,7 +379,7 @@ class UserSearchMixin(forms.ModelForm):
         if selected_user is not None:
             cleaned_data['user_search'] = selected_user
 
-        if cleaned_data['user_search'] is None:
+        if cleaned_data.get('user_search') is None:
             raise forms.ValidationError("No such user")
 
         return cleaned_data

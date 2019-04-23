@@ -12,7 +12,7 @@ import taggit.managers
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('reversion', '0002_auto_20141216_1509'),
+        ('reversion', '0001_squashed_0004_auto_20160611_1202'),
         ('contenttypes', '0002_remove_content_type_name'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('editor', '0012_auto_20151201_1335'),

@@ -7,7 +7,7 @@
             {% if help_url %}{% helplink help_url %}{% endif %}
         </div>
         <div class="{{form_control_class}} jme-property">
-            {% jme_input property disable=disable %}
+            {% jme_input property disable=disable parser=parser %}
         </div>
     </label>
 </div>

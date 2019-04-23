@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+
+{% block title %}Reassign your content to somenoe else - {{block.super}}{% endblock %}
+
+{% block javascripts %}
+{{block.super}}
+{{form.media}}
+{% endblock javascripts %}
+
+{% block content %}
+
+<header class="page-header">
+    <h1 class="big-name">
+        Reassign your content to someone else
+    </h1>
+</header>
+
+<main>
+    <form method="POST">
+        {% csrf_token %}
+        <p>Submitting this form will reassign all of your content to the account that you name.</p>
+        <p>This includes:</p>
+        <ul>
+            <li>Your questions and exams</li>
+            <li>All projects for which you are the owner, including your personal workspace.</li>
+            <li>All extensions, themes and custom part types belonging to you.</li>
+            <li>Any access you have been given to other projects, exams or questions.</li>
+        </ul>
+        <p>{{user.first_name}}, are you sure you want to reassign your content?</p>
+        <p class="text-danger">This is <strong>IRREVERSIBLE</strong>.</p>
+
+        <div class="form-group">
+            <label for="{{form.to_user.id_for_label}}">{{form.to_user.label}}</label>
+            {{form.to_user}}
+        </div>
+
+        <div class="form-group">
+        <p>Type <strong>{{form.magic_word}}</strong> in the box below to confirm you want to reassign all of your content.</p>
+        <p>{{form.confirm_text}}</p>
+        {% if form.confirm_text.errors %}
+        <ol class="list-unstyled">
+            {% for error in form.confirm_text.errors %}
+            <li class="text-warning">{{error}}</li>
+            {% endfor %}
+        </ol>
+        {% endif %}
+        </div>
+
+        <button class="btn btn-danger btn-lg" type="submit">Reassign all of my content</button> <a class="btn btn-link" href="{% url 'editor_index' %}">Cancel</a>
+    </form>
+</main>
+
+{% endblock content %}
+

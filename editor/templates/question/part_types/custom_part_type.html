@@ -4,9 +4,12 @@
 <p><a class="helplink text-info" target="numbasquickhelp" data-bind="attr: {href: $parent.type().help_url}"><span class="glyphicon glyphicon-question-sign"></span> Help with this part type</a></p>
 <form class="form-horizontal" data-bind="submit: Editor.noop">
     {% property '$parent.marks' 'Marks' min=0 help_url='question/parts/reference.html#term-marks' %}
+    {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='question/parts/reference.html#term-show-correct-answer-on-reveal' %}
+    {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/parts/reference.html#term-show-score-feedback-icon' %}    
     <div data-bind="visible: $parent.steps().length">
         {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='question/parts/reference.html#term-penalty-for-revealing-steps' %}
     </div>
+    <hr>
     <!-- ko foreach: settings -->
     <div class="form-group">
         <label class="label-block">
@@ -29,9 +32,7 @@
                 </div>
                 <div data-bind="if: input_type=='checkbox'">
                     <div class="checkbox">
-                        <label>
-                            <input {% if not editable %}disabled{% endif %} type="checkbox" data-bind="checked: value">
-                        </label>
+                        <input {% if not editable %}disabled{% endif %} type="checkbox" data-bind="checked: value">
                     </div>
                 </div>
                 <div data-bind="if: input_type=='dropdown'">

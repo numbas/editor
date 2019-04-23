@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load timeline %}
 {% load sstatic %}
+{% load links %}
 
 {% block javascripts %}
 {{block.super}}
@@ -75,25 +76,40 @@
         </div>
     </div>
     <div class="col-sm-4">
-            <div class="panel panel-primary">
-                <div class="panel-heading">
-                    <h2 class="panel-title"><span class="glyphicon glyphicon-plus"></span> Create</h2>
-                </div>
-                <div class="panel-body create">
-                    <a href="{% url 'question_new' %}" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-file"></span> Question</a> 
-                    <a href="{% url 'exam_new' %}" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-book"></span> Exam</a> 
-                </div>
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h2 class="panel-title"><span class="glyphicon glyphicon-plus"></span> Create</h2>
             </div>
+            <div class="panel-body create">
+                <a href="{% url 'question_new' %}" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-file"></span> Question</a> 
+                <a href="{% url 'exam_new' %}" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-book"></span> Exam</a> 
+            </div>
+        </div>
 
-            <div class="panel panel-info">
-                <div class="panel-heading">
-                    <h2 class="panel-title"><a href="{% url 'search' %}"><span class="glyphicon glyphicon-search"></span> Browse the public database</a></h2>
-                </div>
-                <div class="panel-body browse">
-                    <a href="{% url 'search' %}?item_types=questions" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-file"></span> Questions</a> 
-                    <a href="{% url 'search' %}?item_types=exams" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-book"></span> Exams</a> 
-                </div>
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <h2 class="panel-title"><a href="{% url 'search' %}"><span class="glyphicon glyphicon-search"></span> Browse the public database</a></h2>
             </div>
+            <div class="panel-body browse">
+                <a href="{% url 'search' %}?item_types=questions" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-file"></span> Questions</a> 
+                <a href="{% url 'search' %}?item_types=exams" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-book"></span> Exams</a> 
+            </div>
+        </div>
+
+        {% if request.user.userprofile.last_viewed_items.exists %}
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h2 class="panel-title"><span class="glyphicon glyphicon-eye-open"></span> Recently viewed items</h2>
+            </div>
+            <ul class="list-group">
+                {% for itemview in request.user.userprofile.last_viewed_items.all %}
+                <li class="list-group-item">
+                    {% editoritem_link itemview.item.rel_obj show_icon=True %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
 
         <div class="panel panel-default">
             <div class="panel-heading">

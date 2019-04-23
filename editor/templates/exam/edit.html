@@ -4,7 +4,6 @@
 {% load links %}
 {% load sanitizer %}
 {% load sstatic %}
-{% load verbatim %}
 {% load json_filter %}
 {% load user_link %}
 
@@ -203,6 +202,7 @@
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='navigation'}">
         <form class="form-horizontal" data-bind="submit: Editor.noop">
             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
+            {% property 'startpassword' 'Password to begin the exam' help_url='exam/reference.html#term-password-to-begin-exam' %}
             {% booleanproperty 'allowregen' 'Allow user to regenerate questions?' help_url='exam/reference.html#term-allow-user-to-regenerate-questions' %}
             {% booleanproperty 'reverse' 'Allow move to previous question?' help_url='exam/reference.html#term-allow-move-to-previous-question' %}
             {% booleanproperty 'browse' 'Allow to jump to any question?' help_url='exam/reference.html#term-allow-jump-to-any-question' %}

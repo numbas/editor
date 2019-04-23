@@ -6,7 +6,7 @@ try:
 except ImportError:
     from io import StringIO
 
-from accounts.forms import NumbasRegistrationForm, DeactivateUserForm
+from accounts.forms import NumbasRegistrationForm, DeactivateUserForm, ReassignContentForm
 from accounts.forms import UserProfileForm, ChangePasswordForm
 from accounts.models import RegistrationProfile
 from accounts.util import find_users, user_json
@@ -16,10 +16,12 @@ from django.views.generic import UpdateView, DetailView, ListView, TemplateView
 from django.contrib.auth.models import User
 from django.contrib.sites.requests import RequestSite
 from django.contrib.sites.shortcuts import get_current_site
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.contrib import messages
 from django.http import Http404, HttpResponse
 from django.template.defaultfilters import slugify
+from django.template.loader import get_template
 from django.contrib.sites.models import Site
 from editor.models import NewQuestion, NewExam
 import editor.models
@@ -52,6 +54,15 @@ class RegistrationView(registration.views.RegistrationView):
 
     def registration_allowed(self):
         return settings.ALLOW_REGISTRATION
+
+class RegistrationCompleteView(TemplateView):
+    template_name='registration/registration_complete.html'
+
+    def get(self, request, *args, **kwargs):
+        if not self.request.user.is_anonymous:
+            return redirect(reverse('editor_index'))
+        return super().get(request,*args,**kwargs)
+
 
 class ActivationView(registration.views.ActivationView):
     template_name = 'registration/activation_complete.html'
@@ -200,7 +211,7 @@ class UserSearchView(ListView):
             search_term = self.request.GET['q']
             users = find_users(name=search_term)[:5]
         except KeyError:
-            users = User.objects.all()
+            users = User.objects.filter(is_active=True)
         return [user_json(u) for u in users]
 
 class AfterFirstLoginView(TemplateView):
@@ -237,3 +248,18 @@ class DeactivateUserView(CurrentUserUpdateView):
 
     def get_success_url(self):
         return reverse('logout')
+
+class ReassignContentView(CurrentUserUpdateView):
+    model = User
+    template_name = 'profile/reassign_content.html'
+    form_class = ReassignContentForm
+
+    def form_valid(self,form):
+        res = super().form_valid(form)
+        template = get_template('profile/content-reassigned.html')
+        message= template.render({'to_user': form.cleaned_data['to_user']})
+        messages.success(self.request, message)
+        return res
+
+    def get_success_url(self):
+        return reverse('editor_index')

@@ -3,10 +3,12 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.template.loader import get_template
 
-def find_users(name=''):
+def find_users(name='',queryset=User.objects):
     q = Q()
 
-    user = User.objects.filter(Q(username=name) | Q(email=name))
+    queryset = queryset.filter(is_active=True)
+
+    user = queryset.filter(Q(username=name) | Q(email=name))
     if user.exists():
         return user
 
@@ -17,7 +19,7 @@ def find_users(name=''):
     # second part - search on username
     q |= Q(username__icontains=name)
 
-    users = User.objects.filter(q).distinct().order_by('first_name', 'last_name')
+    users = queryset.filter(q).distinct().order_by('first_name', 'last_name')
     return users
 
 def user_json(user):

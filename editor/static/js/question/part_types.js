@@ -62,7 +62,7 @@ part_types.models = [
         has_marks: true, 
         has_marking_settings: true,
         tabs: [
-            new Editor.Tab('restrictions','String restrictions','text-background'),
+            new Editor.Tab('restrictions','Restrictions','text-background'),
             new Editor.Tab('checking-accuracy','Accuracy','scale')
         ],
         widget: 'jme',
@@ -106,10 +106,76 @@ part_types.models = [
                     partialCredit: ko.observable(0),
                     message: Editor.contentObservable('')
                 },
-                checkVariableNames: ko.observable(false),
-                expectedVariableNames: ko.observableArray([])
+                mustmatchpattern: {
+                    pattern: ko.observable(''),
+                    partialCredit: ko.observable(0),
+                    message: ko.observable(''),
+                    nameToCompare: ko.observable('')
+                },
+                checkVariableNames: ko.observable(false)
             };
             model.checkingType = ko.observable(model.checkingTypes[0]);
+
+            model.answerIsEquation = ko.computed(function() {
+                try {
+                    var answer = Numbas.jme.compile(this.answer());
+                    return Numbas.jme.isOp(answer.tok,'=');
+                } catch(e) {
+                    return false;
+                }
+            }, model);
+
+            model.variableNames = ko.computed(function() {
+                try {
+                    var correctAnswer = Numbas.jme.subvars(this.answer(),part.q.questionScope());
+                    var answer = Numbas.jme.compile(correctAnswer);
+                    var names = Numbas.jme.findvars(answer);
+                    return names.sort();
+                } catch(e) {
+                    return [];
+                }
+            },model);
+
+            var valueGenerators = {};
+            var valueGeneratorFactory = ko.computed(function() {
+                this.variableNames().forEach(function(name) {
+                    if(!valueGenerators[name]) {
+                        valueGenerators[name] = ko.observable('');
+                    }
+                });
+            },model);
+
+            model.valueGenerators = ko.computed(function() {
+                valueGeneratorFactory();
+                var inferredTypes;
+                try {
+                    inferredTypes = Numbas.jme.inferVariableTypes(Numbas.jme.compile(model.answer()),Numbas.jme.builtinScope)[0] || {};
+                } catch(e) {
+                    inferredTypes = {};
+                }
+                return this.variableNames().map(function(n) {
+                    return {name: n, value: valueGenerators[n], inferredType: inferredTypes[n]};
+                });
+            },model);
+
+            model.mustmatchpattern.capturedNames = ko.computed(function() {
+                var pattern = this.mustmatchpattern.pattern();
+                try {
+                    var expr = Numbas.jme.rules.patternParser.compile(pattern);
+                } catch(e) {
+                    return [];
+                }
+                if(!expr) {
+                    return [];
+                }
+                return Numbas.jme.rules.findCapturedNames(expr);
+            },model);
+
+            model.mustmatchpattern.capturedNameOptions = ko.computed(function() {
+                var l = model.mustmatchpattern.capturedNames().map(function(n) {return {name: n, label: n}});
+                l.splice(0,0,{name:'',label:'Whole expression'});
+                return l;
+            },model);
 
             model.markingSettings = ko.computed(function() {
                 try {
@@ -118,7 +184,6 @@ part_types.models = [
                     correctAnswer = '';
                 }
                 return {
-                    expectedVariableNames: model.expectedVariableNames(),
                     minLength: model.minlength.length(),
                     minLengthPC: model.minlength.partialCredit(),
                     minLengthMessage: model.minlength.message(),
@@ -141,7 +206,13 @@ part_types.models = [
                     failureRate: model.failureRate(),
                     checkVariableNames: model.checkVariableNames(),
                     showPreview: model.showPreview(),
-                    expectedVariableNames: model.expectedVariableNames()
+                    mustmatchpattern: model.mustmatchpattern.pattern(),
+                    mustMatchPC: model.mustmatchpattern.partialCredit(),
+                    mustMatchMessage: model.mustmatchpattern.message(),
+                    matchNameToCompare: model.mustmatchpattern.nameToCompare(),
+                    valueGenerators: model.valueGenerators().map(function(d) {
+                        return {name: d.name, value: d.value()}
+                    })
                 };
             });
 
@@ -159,7 +230,6 @@ part_types.models = [
             data.vsetRangePoints = this.vset.points();
             data.vsetRange = [this.vset.start(),this.vset.end()];
             data.checkVariableNames = this.checkVariableNames();
-            data.expectedVariableNames = this.expectedVariableNames();
             if(this.maxlength.length())
             {
                 data.maxlength = {
@@ -194,9 +264,20 @@ part_types.models = [
                     message: this.notallowed.message()
                 };
             }
+            if(this.mustmatchpattern.pattern().trim()) {
+                data.mustmatchpattern = {
+                    pattern: this.mustmatchpattern.pattern(),
+                    partialCredit: this.mustmatchpattern.partialCredit(),
+                    message: this.mustmatchpattern.message(),
+                    nameToCompare: this.mustmatchpattern.nameToCompare()
+                }
+            }
+            data.valuegenerators = this.valueGenerators().map(function(d) {
+                return {name: d.name, value: d.value()};
+            });
         },
         load: function(data) {
-            tryLoad(data,['answer','answerSimplification','checkVariableNames','expectedVariableNames','showPreview'],this);
+            tryLoad(data,['answer','answerSimplification','checkVariableNames','showPreview'],this);
             var checkingType = tryGetAttribute(data,'checkingType');
             for(var i=0;i<this.checkingTypes.length;i++) {
                 if(this.checkingTypes[i].name == checkingType)
@@ -214,6 +295,18 @@ part_types.models = [
             tryLoad(tryGetAttribute(data,'minLength'),['length','partialCredit','message'],this.minlength);
             tryLoad(tryGetAttribute(data,'mustHave'),['strings','showStrings','partialCredit','message'],this.musthave);
             tryLoad(tryGetAttribute(data,'notAllowed'),['strings','showStrings','partialCredt','message'],this.notallowed);
+            tryLoad(tryGetAttribute(data,'mustMatchPattern'),['pattern','partialCredt','message','nameToCompare'],this.mustmatchpattern);
+            
+            var valueGenerators = tryGetAttribute(data,'valueGenerators');
+            if(valueGenerators) {
+                var d = {};
+                valueGenerators.forEach(function(def) {
+                    d[def.name] = def.value;
+                });
+                this.valueGenerators().forEach(function(g) {
+                    g.value(d[g.name] || '');
+                });
+            }
         }
     },
     {
@@ -240,6 +333,7 @@ part_types.models = [
                 precisionMessage: ko.observable('You have not given your answer to the correct precision.'),
                 strictPrecision: ko.observable(true),
                 showPrecisionHint: ko.observable(true),
+                showFractionHint: ko.observable(true),
                 mustBeReduced: ko.observable(false),
                 mustBeReducedPC: ko.observable(0)
             };
@@ -281,6 +375,8 @@ part_types.models = [
                 data.precisionMessage = this.precisionMessage();
                 data.strictPrecision = this.strictPrecision();
                 data.showPrecisionHint = this.showPrecisionHint();
+            } else {
+                data.showFractionHint = this.showFractionHint();
             }
             data.notationStyles = this.allowedNotationStyles().map(function(s){return s.code});
             if(this.correctAnswerStyle()) {
@@ -288,7 +384,7 @@ part_types.models = [
             }
         },
         load: function(data) {
-            tryLoad(data,['minValue','maxValue','correctAnswerFraction','allowFractions','mustBeReduced','mustBeReducedPC','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision','showPrecisionHint'],this);
+            tryLoad(data,['minValue','maxValue','correctAnswerFraction','allowFractions','mustBeReduced','mustBeReducedPC','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision','showPrecisionHint','showFractionHint'],this);
             if('answer' in data) {
                 this.minValue(data.answer);
                 this.maxValue(data.answer);

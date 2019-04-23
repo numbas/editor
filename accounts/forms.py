@@ -2,15 +2,54 @@ from registration.forms import RegistrationForm
 from sanitizer.forms import SanitizedCharField
 from django import forms, apps
 from django.conf import settings
-from django.forms.widgets import PasswordInput, Textarea
+from django.core.validators import validate_email
+from django.forms.widgets import PasswordInput, Textarea, TextInput
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
 from accounts.models import UserProfile
+from accounts.util import find_users
+from editor.models import reassign_content
 try:
     from urllib.parse import urlparse, urlunparse
 except ImportError:
     from urlparse import urlparse, urlunparse
 import re
+
+class BootstrapFieldMixin(object):
+    def widget_attrs(self, widget):
+        attrs = super(BootstrapFieldMixin, self).widget_attrs(widget)
+        attrs.update({'class': 'form-control'})
+        return attrs
+
+class UserField(BootstrapFieldMixin, forms.Field):
+    def from_db_value(self, value, expression, connection, context):
+        return value.get_full_name()
+
+    def widget_attrs(self, widget):
+        attrs = super(UserField, self).widget_attrs(widget)
+        attrs.update({'placeholder': 'Username or full name'})
+        return attrs
+
+    def to_python(self, value):
+        if not value:
+            return None
+        user = find_users(value).first()
+        if user is None:
+            try:
+                validate_email(value)
+                return User(email=value)
+            except ValidationError:
+                raise forms.ValidationError("No user matching query '{}'".format(value))
+        return user
+
+class UserSearchWidget(TextInput):
+    template_name = 'autocomplete/user-search-widget.html'
+
+    class Media:
+        js = ('js/user-search-widget.js',)
+
+class UserSearchField(UserField):
+    widget = UserSearchWidget
 
 class NumbasRegistrationForm(RegistrationForm):
     first_name = forms.CharField(label=_('First Name(s)'))
@@ -96,15 +135,9 @@ class ChangePasswordForm(forms.ModelForm):
         self.instance.set_password(password)
         self.instance.save()
 
-class DeactivateUserForm(forms.ModelForm):
-    class Meta:
-        model = User
-        fields = []
-
+class MagicWordForm(forms.Form):
     confirm_text = forms.CharField()
-    if apps.registry.apps.is_installed('numbasmailing'):
-        unsubscribe = forms.BooleanField(initial=True, label=_('Unsubscribe from the Numbas newsletter'), required=False)
-    magic_word = 'DEACTIVATE'
+    magic_word = 'CONFIRM'
 
     def clean_confirm_text(self):
         magic_word = self.magic_word
@@ -113,8 +146,24 @@ class DeactivateUserForm(forms.ModelForm):
             raise forms.ValidationError("You must type {} in the box.".format(magic_word))
         return confirm_text
 
+class DeactivateUserForm(forms.ModelForm,MagicWordForm):
+    class Meta:
+        model = User
+        fields = []
+
+    if apps.registry.apps.is_installed('numbasmailing'):
+        unsubscribe = forms.BooleanField(initial=True, label=_('Unsubscribe from the Numbas newsletter'), required=False)
+    magic_word = 'DEACTIVATE'
+
+    reassign_to_user = UserSearchField(label=_('Reassign content to'),required=False)
+
+
     def save(self, *args, **kwargs):
         user = self.instance
+
+        reassign_to_user = self.cleaned_data.get('reassign_to_user')
+        if reassign_to_user:
+            reassign_content(user,reassign_to_user)
 
         if self.cleaned_data.get('unsubscribe'):
             import numbasmailing
@@ -137,3 +186,17 @@ class DeactivateUserForm(forms.ModelForm):
 
         user.userprofile.personal_project.name = "Deactivated user's workspace"
         user.userprofile.personal_project.save()
+
+class ReassignContentForm(forms.ModelForm,MagicWordForm):
+    class Meta:
+        model = User
+        fields = []
+
+    to_user = UserSearchField(label=_('Reassign content to'))
+
+    magic_word = 'REASSIGN'
+
+    def save(self, *args, **kwargs):
+        from_user = self.instance
+        to_user = self.cleaned_data.get('to_user')
+        reassign_content(from_user,to_user)

@@ -26,6 +26,10 @@
     overflow-y: auto;
 }
 
+.parts-tree .gaps, .parts-tree .steps {
+    margin-top: 1px;
+}
+
 .parts-tree .part.gap, .parts-tree .part.step {
     margin-left: 2em;
 }
@@ -45,6 +49,28 @@
 }
 
 .part-header-controls .btn {
+    color: inherit;
+}
+
+.part .custom-name {
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0;
+    font-weight: bold;
+    width: auto;
+    display: inline-block;
+    font-size: 1em;
+    color: inherit;
+    border-radius: 0;
+    transition: border-bottom-color 0.2s;
+}
+.part .custom-name:hover {
+    border-bottom-color: black;
+}
+.part .custom-name:focus {
+    border-bottom-color: black;
+}
+.part .custom-name:not(:focus)::placeholder {
     color: inherit;
 }
 
@@ -119,6 +145,14 @@ table.variable-list .value-cell .value {
     width: 40%;
     word-break: break-all;
 }
+.variable-selector .type {
+    padding-right: 2em;
+    color: #555;
+    font-family: monospace;
+    font-size: 0.8em;
+    line-height: 1.25em;
+    vertical-align: middle;
+}
 .variable-selector .value {
     text-align: left;
     display: inline-block;
@@ -190,6 +224,9 @@ table.variable-list .value-cell .value {
 .marking-test .note.invalid {
     color: red;
 }
+.marking-test .note.invalid .name {
+    text-decoration: wavy underline;
+}
 .marking-test .note:not(.show-note) > td {
     padding-top: 0;
     padding-bottom: 0;
@@ -228,4 +265,14 @@ table.variable-list .value-cell .value {
 
 .add-part {
     line-height: 3em;
+}
+
+#previewModal .modal-content {
+    display: flex;
+    max-height: 90vh;
+    flex-direction: column;
+}
+#previewModal .modal-body {
+    flex-grow: 1;
+    overflow-y: auto;
 }

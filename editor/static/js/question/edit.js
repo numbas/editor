@@ -13,6 +13,7 @@ $(document).ready(function() {
             jmeTypes.push(t);
         }
     }
+    jmeTypes.sort();
 
 
     function AddPartTypeModal(question,useFn, filter) {
@@ -642,25 +643,25 @@ $(document).ready(function() {
             this.variablesTest.conditionSatisfied(conditionSatisfied);
 
             // fill in observables
-            if(conditionSatisfied) {
-                this.variables().map(function(v) {
-                    if(v.locked.peek()) {
-                        return;
-                    }
-                    var name = v.name().toLowerCase();
-                    var result = results.variables[name];
-                    if(!result) {
-                        v.value(null);
-                        return;
-                    }
+            this.variables().map(function(v) {
+                if(v.locked.peek()) {
+                    return;
+                }
+                var name = v.name().toLowerCase();
+                var result = results.variables[name];
+                if(!result) {
+                    v.value(null);
+                    return;
+                }
+                if(conditionSatisfied) {
                     if('value' in result) {
                         v.value(result.value);
                     }
-                    if('error' in result) {
-                        v.error(result.error);
-                    }
-                });
-            }
+                }
+                if('error' in result) {
+                    v.error(result.error);
+                }
+            });
 
             var rulesetTodo = {};
             this.rulesets().forEach(function(r) {
@@ -1388,10 +1389,12 @@ $(document).ready(function() {
                 step: ko.observable(1)
             },
             'string': {
-                value: ko.observable('')
+                value: ko.observable(''),
+                isTemplate: ko.observable(false)
             },
             'long string': {
-                value: ko.observable('')
+                value: ko.observable(''),
+                isTemplate: ko.observable(false)
             },
             'list of numbers': {
                 values: InexhaustibleList(),
@@ -1475,7 +1478,11 @@ $(document).ready(function() {
                         return treeToJME(tree);
                     case 'string':
                     case 'long string':
-                        return treeToJME({tok: wrapValue(val.value())});
+                        var s = treeToJME({tok: wrapValue(val.value())});
+                        if(val.isTemplate()) {
+                            s = 'safe('+s+')';
+                        }
+                        return s;
                     case 'list of numbers':
                         var values = val.values().filter(function(n){return n!=''});
                         if(!values.every(function(n){return Numbas.util.isNumber(n,true)})) {
@@ -1535,16 +1542,26 @@ $(document).ready(function() {
             });
         },this);
         this.value = ko.observable(null);
-
         this.error = ko.observable('');
         this.anyError = ko.computed(function() {
-            if(this.question.variablesTest.conditionError()) {
+            if(this.error()) {
+                return this.error();
+            } else if(this.nameError()) {
+                return this.nameError();
+            } else if(this.question.variablesTest.conditionError()) {
                 return "Error in testing condition";
             } else if(!(this.question.variablesTest.conditionSatisfied())) {
                 return "Testing condition not satisfied";
-            } else {
-                return this.error() || this.nameError();
             }
+            return false;
+        },this);
+
+        this.type = ko.computed(function() {
+            var v = this.value();
+            if(!v || this.error()) {
+                return '';
+            }
+            return v.type;
         },this);
 
         this.thisLocked = ko.observable(false);
@@ -1663,6 +1680,7 @@ $(document).ready(function() {
                 case 'string':
                 case 'long string':
                     while(Numbas.jme.isFunction(tree.tok,'safe')) {
+                        templateTypeValues.isTemplate(true);
                         tree = tree.args[0];
                     }
                     templateTypeValues.value(tree.tok.value);
@@ -1789,9 +1807,19 @@ $(document).ready(function() {
         this.prompt = Editor.contentObservable('');
         this.parent = ko.observable(parent);
         this.parentList = parentList;
+        this.customName = ko.observable('');
+        this.useCustomName = ko.computed(function() {
+            return this.customName().trim()!='';
+        },this);
 
         this.showChildren = ko.pureComputed(function() {
             var currentPart = q.currentPart();
+            if(!currentPart) {
+                var a = q.addingPart();
+                if(a) {
+                    currentPart = a.parent;
+                }
+            }
             while(currentPart) {
                 if(currentPart==this) {
                     return true;
@@ -1848,25 +1876,56 @@ $(document).ready(function() {
         },this);
 
         this.indexLabel = ko.computed(function() {
-            var i = this.parentList.indexOf(this);
-            if(this.isGap() || this.isStep()) {
-                i = i;
+            var index = this.parentList.indexOf(this);
+            var i = 0;
+            for(var j=0;j<index;j++) {
+                var op = ko.unwrap(this.parentList)[j];
+                if(!(op.type().name=='information' || op.useCustomName() && op.customName()=='')) {
+                    i += 1;
+                }
             }
-            else {
+            if(ko.unwrap(this.parentList).length<=1) {
+                return '';
+            } else if(this.type().name=='information') {
+                return '';
+            } else if(this.isGap() || this.isStep()) {
+                i = i+'';
+            } else {
                 i = Numbas.util.letterOrdinal(i);
             }
-            return i;
+            return i+'';
         },this);
         this.levelName = ko.computed(function() {
             return this.isGap() ? 'gap' : this.isStep() ? 'step' : 'part';
         },this);
+        this.standardName = ko.computed(function() {
+            if(this.indexLabel()) {
+                var name = Numbas.util.capitalise(this.levelName() + " " + this.indexLabel());
+                if(this.isGap() || this.isStep()) {
+                    name += '.';
+                } else {
+                    name += ')';
+                }
+                return name;
+            } else {
+                return 'Unnamed '+this.levelName();
+            }
+        },this);
+        this.name = ko.computed(function() {
+            if(this.useCustomName()) {
+                return this.customName() || "unnamed "+this.levelName()+" "+this.indexLabel();
+            } else {
+                return this.standardName();
+            }
+        },this);
         this.header = ko.computed(function() {
-            if(this.isGap()) {
-                return 'Gap '+this.indexLabel()+'. ';
-            } else if(this.isStep()) {
-                return 'Step '+this.indexLabel()+'. ';
-            } else if(this.isRootPart()) {
-                return 'Part '+this.indexLabel()+') ';
+            var label = this.indexLabel();
+            if(this.useCustomName()) {
+                return this.customName();
+            } else if(label==='') {
+                return '';
+            } else {
+                return this.standardName();
             }
         },this);
 
@@ -1879,9 +1938,6 @@ $(document).ready(function() {
             } else {
                 return 'p'+i;
             }
-        },this);
-        this.nicePath = ko.computed(function() {
-            return Numbas.util.capitalise(Numbas.util.nicePartName(this.path()));
         },this);
 
         this.tabs = ko.computed(function() {
@@ -2085,7 +2141,7 @@ $(document).ready(function() {
         },
 
         remove: function() {
-            if(confirm("Remove "+this.levelName()+" "+this.indexLabel()+"?"))
+            if(confirm("Remove "+this.name()+"?"))
             {
                 this.parentList.remove(this);
                 if(this.q.currentPart()==this) {
@@ -2124,6 +2180,8 @@ $(document).ready(function() {
         toJSON: function() {
             var o = {
                 type: this.type().name,
+                useCustomName: this.useCustomName(),
+                customName: this.useCustomName() ? this.customName() : '',
                 marks: this.realMarks(),
                 showCorrectAnswer: this.showCorrectAnswer(),
                 showFeedbackIcon: this.showFeedbackIcon(),
@@ -2169,7 +2227,7 @@ $(document).ready(function() {
                 if(this.types[i].name == data.type.toLowerCase())
                     this.type(this.types[i]);
             }
-            tryLoad(data,['marks','prompt','stepsPenalty','showCorrectAnswer','showFeedbackIcon','customMarkingAlgorithm','extendBaseMarkingAlgorithm'],this);
+            tryLoad(data,['marks','customName','prompt','stepsPenalty','showCorrectAnswer','showFeedbackIcon','customMarkingAlgorithm','extendBaseMarkingAlgorithm'],this);
             this.use_custom_algorithm(this.customMarkingAlgorithm()!='');
 
             if(data.steps)
@@ -2267,7 +2325,7 @@ $(document).ready(function() {
         this.availableParts = ko.computed(function() {
             var p = this.part
             return p.q.allParts().filter(function(p2){
-                return p!=p2;
+                return p!=p2 && p2.type().has_marks && p2.parent()!=p;
             });
         },this);
         if(data) {

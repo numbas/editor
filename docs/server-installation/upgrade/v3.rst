@@ -22,6 +22,11 @@ directory.
     You must edit those: ``editor/templates/terms_of_use_content.html`` and
     ``editor/templates/privacy_policy_content.html``.
 
+-   Finally, get the latest code in your Numbas ``compiler`` directory::
+
+      cd ../compiler
+      git pull
+
 That's it!
 
 If you have any problems, email numbas@ncl.ac.uk.

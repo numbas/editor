@@ -2,7 +2,7 @@ import re
 
 from sphinx import addnodes
 from sphinx.roles import XRefRole
-from sphinx.locale import l_, _
+from sphinx.locale import _
 from sphinx.domains import Domain, ObjType
 from sphinx.directives import ObjectDescription
 from sphinx.util.nodes import make_refnode
@@ -68,13 +68,13 @@ class JMEObject(ObjectDescription):
     }
 
     doc_field_types = [
-        TypedField('parameter', label=l_('Parameters'),
+        TypedField('parameter', label=_('Parameters'),
                    names=('param', 'parameter', 'arg', 'argument'),
                    typerolename='obj', typenames=('paramtype', 'type'),
                    can_collapse=True),
-        Field('returnvalue', label=l_('Returns'), has_arg=False,
+        Field('returnvalue', label=_('Returns'), has_arg=False,
               names=('returns', 'return')),
-        Field('returntype', label=l_('Return type'), has_arg=False,
+        Field('returntype', label=_('Return type'), has_arg=False,
               names=('rtype',)),
     ]
 
@@ -185,9 +185,9 @@ class JMEDomain(Domain):
     name = 'jme'
     label = 'JME'
     object_types = {
-        'function': ObjType(l_('function'), 'func', 'obj'),
-        'data': ObjType(l_('data'), 'data', 'obj'),
-        'variable': ObjType(l_('variable'), 'var', 'obj'),
+        'function': ObjType(_('function'), 'func', 'obj'),
+        'data': ObjType(_('data'), 'data', 'obj'),
+        'variable': ObjType(_('variable'), 'var', 'obj'),
     }
 
     directives = {

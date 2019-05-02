@@ -1,7 +1,7 @@
-Upgrading from Numbas 2.0 to 3.0
+Upgrading from Numbas 3.0 to 4.0
 ================================
 
-Follow the instructions below, using a shell in your ``numbas_editor``
+Follow the instructions below, using a terminal in your ``numbas_editor``
 directory.
 
 -   Get the latest code:: 
@@ -12,15 +12,16 @@ directory.
 
         pip install --upgrade -r requirements.txt
 
--   Run the new setup script. 
+-   Run the setup script. 
     It will use your existing settings and perform the rest of the upgrade jobs.
     ::
 
         python first_setup.py
 
--   The editor now has "terms of use" and "privacy policy" pages. 
-    You must edit those: ``editor/templates/terms_of_use_content.html`` and
-    ``editor/templates/privacy_policy_content.html``.
+-   Finally, get the latest code in your Numbas ``compiler`` directory::
+
+      cd ../compiler
+      git pull
 
 That's it!
 

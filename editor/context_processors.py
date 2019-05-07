@@ -13,7 +13,10 @@ def global_settings(request):
         'NUMBAS_LOCALES': settings.GLOBAL_SETTINGS['NUMBAS_LOCALES'],
     }
 
+def site_root_url(request):
+    return urlunparse((request.scheme, request.get_host(), '', '', '', ''))
+
 def site_root(request):
     return {
-        'SITE_ROOT': urlunparse((request.scheme, request.get_host(), '', '', '', ''))
+        'SITE_ROOT': site_root_url(request)
     }

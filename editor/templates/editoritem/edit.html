@@ -15,6 +15,13 @@
 
 {% block search_url %}{% url 'project_search' object.editoritem.project.pk %}{% endblock search_url %}
 
+{% block head %}
+{% if object.editoritem.published %}
+    {% include 'editoritem/oembed.html' with item=object.editoritem %}
+{% endif %}
+{% endblock head %}
+
+
 {% block javascripts %}
     {{ block.super }}
 

@@ -24,6 +24,7 @@ from django.shortcuts import redirect, render
 from django.views import generic
 from django.template.loader import get_template
 from django.template import RequestContext
+from editor.context_processors import site_root_url
 
 import reversion
 
@@ -538,6 +539,25 @@ class PreviewView(CompileObject, generic.DetailView):
         }
 
         return self.render_to_response(context)
+
+class OembedView(generic.DetailView):
+    model = EditorItem
+
+    def render_to_response(self, ctx):
+        if not self.object.published:
+            return http.HttpResponseNotFound()
+
+        maxwidth = self.request.GET.get('maxwidth',600)
+        maxheight = self.request.GET.get('maxheight',600)
+
+        embed_url = reverse(self.object.item_type+'_embed',args=(self.object.rel_obj.pk,self.object.slug))
+        SITE_ROOT = site_root_url(self.request)
+        return http.JsonResponse({
+            'type': 'rich',
+            'html': '<iframe src="{embed_url}"></iframe>'.format(embed_url=SITE_ROOT+embed_url),
+            'width': maxwidth,
+            'height': min(maxheight,600),
+        })
 
 class EmbedView(PreviewView):
     template_name = 'editoritem/embed.html'

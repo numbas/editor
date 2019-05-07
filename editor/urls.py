@@ -48,6 +48,8 @@ urlpatterns = [
 
     url(r'^item/(?P<pk>\d+)/preview/$', editoritem.PreviewView.as_view(), name='item_preview'),
 
+    url(r'^item/(?P<pk>\d+)/oembed/$', editoritem.OembedView.as_view(), name='item_oembed'),
+
     url(r'^item/(?P<pk>\d+)/publish$',
         editoritem.PublishView.as_view(), name='item_publish'),
 

@@ -7,6 +7,10 @@
     <head>
         <title>{{item.name}} - preview - {{SITE_TITLE}}</title>
 
+        {% if item.published %}
+            {% include 'editoritem/oembed.html' %}
+        {% endif %}
+
         <link rel="stylesheet" href="{% sstatic 'css/preview.css' %}"/>
         {% include "mathjax.html" %}
     </head>

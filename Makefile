@@ -35,7 +35,7 @@ editor/static/js/numbas/numbas-runtime.js: $(patsubst %, $(NUMBAS_RUNTIME_PATH)/
 
 runtime: editor/static/js/numbas/numbas-runtime.js
 
-MARKING_SCRIPTS=$(p[$(wildcard $(NUMBAS_RUNTIME_PATH)/marking_scripts/*.jme)
+MARKING_SCRIPTS=$(wildcard $(NUMBAS_RUNTIME_PATH)/marking_scripts/*.jme)
 
 define MARKING_INTRO
 Numbas.queueScript('marking_scripts',['marking'],function() {

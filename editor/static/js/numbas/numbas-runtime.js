@@ -714,6 +714,19 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
         'number': function(v) {
             return ''+Numbas.math.niceNumber(v.value)+'';
         },
+        'decimal': function(v) {
+            var d = v.value;
+            var re = d.re.toString();
+            if(d.isReal()) {
+                return re;
+            }
+            var im = d.im.absoluteValue().toString();
+            if(d.im.lessThan(0)) {
+                return re + ' - '+im+'i';
+            } else {
+                return re + ' + '+im+'i';
+            }
+        },
         'string': function(v,display) {
             return v.value;
         },
@@ -863,6 +876,8 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
                             v = v.map(jme.wrapValue);
                             return new jme.types.TList(v);
                         }
+                    } else if(v instanceof math.ComplexDecimal) {
+                        return new jme.types.TDecimal(v);
                     } else if(v instanceof Decimal) {
                         return new jme.types.TDecimal(v);
                     } else if(v instanceof math.Fraction) {
@@ -1925,7 +1940,7 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
     },
     /** Get the definition of the function with the given name which matches the types of the given arguments
      * @param {Numbas.jme.token} tok - the token of the function or operator
-     * @param {Array.<Numbas.jme.token} args
+     * @param {Array.<Numbas.jme.token>} args
      * @returns {Numbas.jme.funcObj}
      */
     matchFunctionToArguments: function(tok,args) {
@@ -1946,6 +1961,11 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
             }
         }
 
+        /** Represent the difference between an input token and the description of the desired type returned by a signature checker.
+         * @param {Numbas.jme.token} tok
+         * @param {Numbas.jme.signature_result_argument} typeDescription
+         * @returns {Array.<String>} - the difference between the input argument and any of its child tokens, and the type described by `typeDescription`.
+         */
         function type_difference(tok,typeDescription) {
             if(tok.type!=typeDescription.type) {
                 return [typeDescription.type];
@@ -1963,6 +1983,14 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
             return out;
         }
 
+        /** Compare two function matches. A match is sorted earlier if, considering each argument in turn:
+         * * it's more specific about a argument whose type is a collection
+         * * it matches the type of the corresponding argument exactly
+         * * the type it casts to is preferred over the other match's (occurs earlier in the input token's list of casts)
+         * @param {Numbas.jme.signature_result} m1
+         * @param {Numbas.jme.signature_result} m2
+         * @returns {Number}
+         */
         function compare_matches(m1,m2) {
             m1 = sig_remove_missing(m1);
             m2 = sig_remove_missing(m2);
@@ -2319,7 +2347,16 @@ jme.registerType(
     'number', 
     {
         'decimal': function(n) {
-            return new TDecimal(new Decimal(n.value.toFixed(14)));
+            var dp = 14;
+            var re,im;
+            if(n.value.complex) {
+                var re = n.value.re.toFixed(dp);
+                var im = n.value.im.toFixed(dp);
+            } else {
+                re = n.value.toFixed(dp);
+                im = 0;
+            }
+            return new TDecimal(new math.ComplexDecimal(new Decimal(re), new Decimal(im)));
         }
     }
 );
@@ -2364,8 +2401,13 @@ jme.registerType(
 
 /** A Decimal number.
  *  Powered by [decimal.js](http://mikemcl.github.io/decimal.js/)
+ *  @param {Numbas.math.ComplexDecimal|Decimal} value - if just a `Decimal` is given, it's turned into a `ComplexDecimal` with zero imaginary part.
+ *  @property {Numbas.jme.ComplexDecimal} value
  */
 var TDecimal = types.TDecimal = function(value) {
+    if(value instanceof Decimal) {
+        value = new math.ComplexDecimal(value,new Decimal(0));
+    }
     this.value = value;
 }
 jme.registerType(
@@ -2373,7 +2415,11 @@ jme.registerType(
     'decimal',
     {
         'number': function(n) {
-            return new TNum(n.value.toNumber());
+            if(n.value.im.isZero()) {
+                return new TNum(n.value.re.toNumber());
+            } else {
+                return new TNum({complex: true, re: n.value.re.toNumber(), im: n.value.im.toNumber()});
+            }
         }
     }
 );
@@ -2882,6 +2928,10 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
     this.id = funcObjAcc++;
     options = options || {};
 
+    /** Parse a signature definition. 
+     * @param {String|Function} sig - either a string consisting of a variable name optionally followed by '*' and/or '?', a {@link Numbas.jme.token} constructor, or a {@link Numbas.jme.signature} function.
+     * @returns {Numbas.jme.signature}
+     */
     function parse_signature(sig) {
         if(typeof(sig)=='function') {
             if(sig.kind!==undefined) {
@@ -3511,6 +3561,7 @@ var compareTrees = jme.compareTrees = function(a,b) {
  */
 jme.inferVariableTypes = function(tree,scope) {
     /** Create an annotated copy of the tree, fetching definitions for functions, and storing state to enumerate function definitions
+     * @param {Numbas.jme.tree} tree
      */
     function AnnotatedTree(tree) {
         this.tok = tree.tok;
@@ -3528,7 +3579,7 @@ jme.inferVariableTypes = function(tree,scope) {
                 break;
         }
     }
-    AnnotatedTree.prototype = {
+    AnnotatedTree.prototype = /** @lends AnnotatedTree.prototype */ {
 
         toString: function() {
             var args;
@@ -3565,18 +3616,27 @@ jme.inferVariableTypes = function(tree,scope) {
         },
 
         /** Find an assignment of types to variables in this tree which produces the given output type
+         * @param {String} outtype - the name of the desired type of this tree
+         * @param {Object} assignments - assignments of variables that have already been made.
+         * @returns {Object} - a dictionary of assignments
          */
         assign: function(outtype,assignments) {
             if(outtype=='?') {
                 outtype = undefined;
             }
+            /** Find a type which can be cast to all of the desired types
+             * @param {Array.<String>} types - the names of the desired types
+             * @returns {String}
+             */
             function mutually_compatible_type(types) {
                 var preferred_types = ['number','decimal'];
+                /** Can the given type be cast to all of the desired types?
+                 * @param {String} x - the name of a type
+                 * @returns {Boolean}
+                 */
                 function mutually_compatible(x) {
                     var casts = jme.types[x].prototype.casts || {};
-                    if(types.every(function(t) { return t==x || casts[t]; })) {
-                        return true;
-                    }
+                    return types.every(function(t) { return t==x || casts[t]; });
                 }
                 for(var i=0;i<preferred_types.length;i++) {
                     var type = preferred_types[i];
@@ -3642,6 +3702,9 @@ jme.inferVariableTypes = function(tree,scope) {
         },
 
         /** Find an assignment based on this tree's arguments, with optional specified types for each of the arguments.
+         * @param {Object} assignments - the data types of names that have been assigned.
+         * @param {Numbas.jme.signature_result} [signature]
+         * @returns {Object} - a dictionary of assignments
          */
         assign_args: function(assignments,signature) {
             if(!this.args) {
@@ -3694,7 +3757,6 @@ jme.inferVariableTypes = function(tree,scope) {
 
     var at = new AnnotatedTree(tree);
     do {
-        //console.log(at+'');
         var res = at.assign(undefined,{});
         if(res!==false) {
             var o = {};
@@ -3834,10 +3896,38 @@ SignatureEnumerator.prototype = {
     }
 }
 
+/** Remove "missing" arguments from a signature-checker result.
+ * @param {Numbas.jme.signature_result} items
+ * @returns {Numbas.jme.signature_result}
+ */
 function sig_remove_missing(items) {
     return items.filter(function(d){return !d.missing});
 }
 
+/** A signature-checker function. Takes a list of {@link Numbas.jme.token} objects, and returns a {@link Numbas.jme.signature_result} representing the matched arguments, or `false` if the signature doesn't match.
+ * @typedef Numbas.jme.signature
+ * @type {Function}
+ * @property {String} kind - the kind of this signature checker, e.g. "type", "anything", "multiple". Used by the type inference routine, among other things.
+ */
+
+/** A list of arguments matched by a signature checker. At most one per argument passed in.
+ * @typedef Numbas.jme.signature_result
+ * @type {Array.<Numbas.jme.signature_result_argument>}
+ */
+
+/** Information about an argument matched by a signature checker.
+ * The main purpose is to specify the desired type of the argument, but there are other properties for certain types.
+ * @typedef Numbas.jme.signature_result_argument
+ * @type {Object}
+ * @property {String} type - the data type that the argument should be cast to.
+ * @property {Boolean} missing - does this represent an optional argument that wasn't given?
+ * @property {Boolean} nonspecific - does this represent an argument matched with an 'anything' signature? If so, don't use it when comparing two signature results.
+ */
+
+/** Signature-checking function constructors
+ * @see {Numbas.jme.signature}
+ * @enum {Function}
+ */
 jme.signature = {
     anything: function() {
         var f = function(args) {
@@ -4563,71 +4653,70 @@ newBuiltin('string',[TRational], TString, function(a) { return a.toString(); });
 
 //Decimal arithmetic
 newBuiltin('string',[TDecimal], TString, function(a) { return a.toString(); });
-newBuiltin('decimal',[TNum],TDecimal,function(x){return new Decimal(x)});
+newBuiltin('decimal',[TNum],TDecimal,function(x){
+    if(x.complex) {
+        return new math.ComplexDecimal(new Decimal(x.re), new Decimal(x.im));
+    } else {
+        return new Decimal(x);
+    }
+});
 newBuiltin('decimal',[TString],TDecimal,function(x){return new Decimal(x)});
 newBuiltin('+u', [TDecimal], TDecimal, function(a){return a;});
 newBuiltin('-u', [TDecimal], TDecimal, function(a){ return a.negated(); });
 newBuiltin('+', [TDecimal,TDecimal], TDecimal, function(a,b){ return a.plus(b); });
-newBuiltin('+', [TNum,TDecimal], TDecimal, function(a,b){ return (new Decimal(a)).plus(b); });
+newBuiltin('+', [TNum,TDecimal], TDecimal, function(a,b){ return (new math.ComplexDecimal(new Decimal(a))).plus(b); });
 newBuiltin('-', [TDecimal,TDecimal], TDecimal, function(a,b){ return a.minus(b); });
-newBuiltin('-', [TNum,TDecimal], TDecimal, function(a,b){ return (new Decimal(a)).minus(b); });
+newBuiltin('-', [TNum,TDecimal], TDecimal, function(a,b){ return (new math.ComplexDecimal(new Decimal(a))).minus(b); });
 newBuiltin('*', [TDecimal,TDecimal], TDecimal, function(a,b){ return a.times(b); });
-var sig_number = sig.type('number');
-function sig_non_complex_number(args) {
-    return sig_number(args) && !args[0].value.complex ? [{type:'number'}] : false;
-}
-sig_non_complex_number.kind = 'type';
-sig_non_complex_number.type = 'number';
-newBuiltin('*', [sig_non_complex_number,TDecimal], TDecimal, function(a,b){ return (new Decimal(a)).times(b); });
 newBuiltin('/', [TDecimal,TDecimal], TDecimal, function(a,b){ return a.dividedBy(b); });
-newBuiltin('/', [TNum,TDecimal], TDecimal, function(a,b){ return (new Decimal(a)).dividedBy(b); });
+newBuiltin('/', [TNum,TDecimal], TDecimal, function(a,b){ return (new math.ComplexDecimal(new Decimal(a))).dividedBy(b); });
 newBuiltin('abs', [TDecimal], TDecimal, function(a){ return a.absoluteValue(); });
-newBuiltin('ceil', [TDecimal], TDecimal, function(a){ return a.ceil(); });
-newBuiltin('cos', [TDecimal], TDecimal, function(a){ return a.cos(); });
+newBuiltin('ceil', [TDecimal], TDecimal, function(a){ return a.re.ceil(); });
+newBuiltin('cos', [TDecimal], TDecimal, function(a){ return a.re.cos(); });
 newBuiltin('countdp', [TDecimal], TInt, function(a){ return a.decimalPlaces(); });
-newBuiltin('floor', [TDecimal], TDecimal, function(a){ return a.floor(); });
-newBuiltin('>', [TDecimal,TDecimal], TBool, function(a,b){ return a.greaterThan(b); });
-newBuiltin('>=', [TDecimal,TDecimal], TBool, function(a,b){ return a.greaterThanOrEqualTo(b); });
-newBuiltin('>=', [TDecimal,TNum], TBool, function(a,b){ return math.geq(a.toNumber(),b); });
-newBuiltin('cosh', [TDecimal], TDecimal, function(a){ return a.cosh(); });
-newBuiltin('sinh', [TDecimal], TDecimal, function(a){ return a.sinh(); });
-newBuiltin('tanh', [TDecimal], TDecimal, function(a){ return a.tanh(); });
-newBuiltin('arccos', [TDecimal], TDecimal, function(a){ return a.acos(); });
-newBuiltin('arccosh', [TDecimal], TDecimal, function(a){ return a.acosh(); });
-newBuiltin('arcsinh', [TDecimal], TDecimal, function(a){ return a.asinh(); });
-newBuiltin('arctanh', [TDecimal], TDecimal, function(a){ return a.atanh(); });
-newBuiltin('arcsin', [TDecimal], TDecimal, function(a){ return a.asin(); });
-newBuiltin('arctan', [TDecimal], TDecimal, function(a){ return a.atan(); });
+newBuiltin('floor', [TDecimal], TDecimal, function(a){ return a.re.floor(); });
+newBuiltin('>', [TDecimal,TDecimal], TBool, function(a,b){ return a.re.greaterThan(b.re); });
+newBuiltin('>=', [TDecimal,TDecimal], TBool, function(a,b){ return a.re.greaterThanOrEqualTo(b.re); });
+newBuiltin('>=', [TDecimal,TNum], TBool, function(a,b){ return math.geq(a.re.toNumber(),b); });
+newBuiltin('cosh', [TDecimal], TDecimal, function(a){ return a.re.cosh(); });
+newBuiltin('sinh', [TDecimal], TDecimal, function(a){ return a.re.sinh(); });
+newBuiltin('tanh', [TDecimal], TDecimal, function(a){ return a.re.tanh(); });
+newBuiltin('arccos', [TDecimal], TDecimal, function(a){ return a.re.acos(); });
+newBuiltin('arccosh', [TDecimal], TDecimal, function(a){ return a.re.acosh(); });
+newBuiltin('arcsinh', [TDecimal], TDecimal, function(a){ return a.re.asinh(); });
+newBuiltin('arctanh', [TDecimal], TDecimal, function(a){ return a.re.atanh(); });
+newBuiltin('arcsin', [TDecimal], TDecimal, function(a){ return a.re.asin(); });
+newBuiltin('arctan', [TDecimal], TDecimal, function(a){ return a.re.atan(); });
 newBuiltin('isint',[TDecimal], TBool, function(a) {return a.isInt(); })
 newBuiltin('isnan',[TDecimal], TBool, function(a) {return a.isNaN(); })
 newBuiltin('iszero',[TDecimal], TBool, function(a) {return a.isZero(); })
-newBuiltin('<', [TDecimal,TDecimal], TBool, function(a,b){ return a.lessThan(b); });
-newBuiltin('<=', [TDecimal,TDecimal], TBool, function(a,b){ return a.lessThanOrEqualTo(b); });
-newBuiltin('<=', [TDecimal,TNum], TBool, function(a,b){ return math.leq(a.toNumber(),b); });
-newBuiltin('log',[TDecimal], TDecimal, function(a) {return a.log(); })
-newBuiltin('log',[TDecimal,TDecimal], TDecimal, function(a,b) {return a.log()/b.log(); })
-newBuiltin('mod', [TDecimal,TDecimal], TDecimal, function(a,b){ 
-    var m = a.mod(b);
+newBuiltin('<', [TDecimal,TDecimal], TBool, function(a,b){ return a.re.lessThan(b.re); });
+newBuiltin('<=', [TDecimal,TDecimal], TBool, function(a,b){ return a.re.lessThanOrEqualTo(b.re); });
+newBuiltin('<=', [TDecimal,TNum], TBool, function(a,b){ return math.leq(a.re.toNumber(),b); });
+newBuiltin('log',[TDecimal], TDecimal, function(a) {return a.re.log(); })
+newBuiltin('log',[TDecimal,TDecimal], TDecimal, function(a,b) {return a.re.log()/b.re.log(); })
+newBuiltin('mod', [TDecimal,TDecimal], TDecimal, function(a,b) {
+    var m = a.re.mod(b.re);
     if(m.isNegative()) {
-        m = m.plus(b);
+        m = m.plus(b.re);
     }
     return m;
 });
-newBuiltin('exp',[TDecimal], TDecimal, function(a) {return a.exp(); });
-newBuiltin('ln',[TDecimal], TDecimal, function(a) {return a.ln(); });
-newBuiltin('countsigfigs',[TDecimal], TInt, function(a) {return a.countSigFigs(); });
+newBuiltin('exp',[TDecimal], TDecimal, function(a) {return a.re.exp(); });
+newBuiltin('ln',[TDecimal], TDecimal, function(a) {return a.re.ln(); });
+newBuiltin('countsigfigs',[TDecimal], TInt, function(a) {return a.re.countSigFigs(); });
 newBuiltin('round',[TDecimal], TDecimal, function(a) {return a.round(); });
-newBuiltin('sin',[TDecimal], TDecimal, function(a) {return a.sin(); });
-newBuiltin('sqrt',[TDecimal], TDecimal, function(a) {return a.sqrt(); });
-newBuiltin('tan',[TDecimal], TDecimal, function(a) {return a.tan(); });
-newBuiltin('precround',[TDecimal,TInt], TDecimal, function(a,dp) {return a.toDecimalPlaces(dp); });
-newBuiltin('dpformat',[TDecimal,TInt], TString, function(a,dp) {return a.toFixed(dp); });
-newBuiltin('tonearest',[TDecimal,TDecimal], TDecimal, function(a,x) {return a.toNearest(x); });
+newBuiltin('sin',[TDecimal], TDecimal, function(a) {return a.re.sin(); });
+newBuiltin('sqrt',[TDecimal], TDecimal, function(a) {return a.re.sqrt(); });
+newBuiltin('tan',[TDecimal], TDecimal, function(a) {return a.re.tan(); });
+newBuiltin('precround',[TDecimal,TNum], TDecimal, function(a,dp) {return a.toDecimalPlaces(dp); });
+newBuiltin('dpformat',[TDecimal,TNum], TString, function(a,dp) {return a.toFixed(dp); });
+newBuiltin('tonearest',[TDecimal,TDecimal], TDecimal, function(a,x) {return a.toNearest(x.re); });
 newBuiltin('^',[TDecimal,TDecimal], TDecimal, function(a,b) {return a.pow(b); });
-newBuiltin('sigformat',[TDecimal,TInt], TString, function(a,sf) {return a.toPrecision(sf); });
-newBuiltin('siground',[TDecimal,TInt], TDecimal, function(a,sf) {return a.toSignificantDigits(sf); });
-newBuiltin('trunc',[TDecimal], TDecimal, function(a) {return a.trunc(); });
-newBuiltin('fract',[TDecimal], TDecimal, function(a) {return a.minus(a.trunc()); });
+newBuiltin('sigformat',[TDecimal,TNum], TString, function(a,sf) {return a.toPrecision(sf); });
+newBuiltin('siground',[TDecimal,TNum], TDecimal, function(a,sf) {return a.toSignificantDigits(sf); });
+newBuiltin('trunc',[TDecimal], TDecimal, function(a) {return a.re.trunc(); });
+newBuiltin('fract',[TDecimal], TDecimal, function(a) {return a.re.minus(a.re.trunc()); });
 
 
 
@@ -5478,6 +5567,11 @@ newBuiltin('list',[TMatrix],TList,null, {
         return new TList(value);
     }
 });
+/** Set the content of an HTML element to something corresponding to the value of the given token.
+ * If the token is not of type HTML, use {@link jme.typeToDisplayString}.
+ * @param {Element} element
+ * @param {Numbas.jme.token} tok
+ */
 function set_html_content(element,tok) {
     if(tok.type!='html') {
         element.innerHTML = jme.typeToDisplayString(tok);
@@ -6196,6 +6290,9 @@ var texOps = jme.display.texOps = {
     'implies': infixTex('\\to'),
     'in': infixTex('\\in'),
     '|': infixTex('|'),
+    'decimal': function(thing,texArgs,settings) {
+        return texArgs[0];
+    },
     'abs': (function(thing,texArgs,settings) {
         var arg;
         if(thing.args[0].tok.type=='vector')
@@ -6795,7 +6892,7 @@ var typeToTeX = jme.display.typeToTeX = {
         return settings.texNumber(tok.value.toFloat(), settings);
     },
     'decimal': function(thing,tok,texArgs,settings) {
-        return settings.texNumber(tok.value.toNumber(), settings);
+        return settings.texNumber(tok.value.toComplexNumber(), settings);
     },
     'number': function(thing,tok,texArgs,settings) {
         return settings.texNumber(tok.value, settings);
@@ -7128,6 +7225,57 @@ var jmeRealNumber = jme.display.jmeRealNumber = function(n,settings)
         }
     }
 }
+
+/** Write a {@link Numbas.jme.math.ComplexDecimal} in JME syntax.
+ *
+ * @memberof Numbas.jme.display
+ * @private
+ *
+ * @param {Numbas.math.ComplexDecimal|Decimal} n
+ * @param {Numbas.jme.display.jme_display_settings} settings - if `settings.niceNumber===false`, don't round off numbers
+ * @returns {JME}
+ */
+var jmeDecimal = jme.display.jmeDecimal = function(n,settings)
+{
+    settings = settings || {};
+    if(n instanceof Numbas.math.ComplexDecimal) {
+        var re = jmeDecimal(n.re);
+        if(n.isReal()) {
+            return re;
+        } 
+        var im = jmeDecimal(n.im)+'*i';
+        if(n.re.isZero()) {
+            if(n.im.eq(1))
+                return 'i';
+            else if(n.im.eq(-1))
+                return '-i';
+            else
+                return im;
+        } else if(n.im.lt(0)) {
+            if(n.im.eq(-1))
+                return re+' - i';
+            else
+                return re+' - '+im.slice(1);
+        } else {
+            if(n.im.eq(1))
+                return re+' + i';
+            else
+                return re+' + '+im;
+        }
+    } else if(n instanceof Decimal) {
+        var out = n.toString();
+        if(n.absoluteValue().toNumber()<Infinity && ((n.isInteger() && n.absoluteValue().lt(Number.MAX_SAFE_INTEGER)) || n.decimalPlaces()<10)) {
+            return out;
+        }
+        if(out.length>20) {
+            out = n.toExponential();
+        }
+        return 'dec("'+out+'")';
+    } else {
+        return jmeRealNumber(n, settings);
+    }
+}
+
 /** Dictionary of functions to turn {@link Numbas.jme.types} objects into JME strings
  *
  * @enum
@@ -7144,12 +7292,7 @@ var typeToJME = Numbas.jme.display.typeToJME = {
         return settings.jmeNumber(tok.value.toFloat(),settings);
     },
     'decimal': function(tree,tok,bits,settings) {
-        var n = settings.jmeNumber(tok.value.toNumber(),settings);
-        if(!settings.ignorestringattributes) {
-            return 'dec('+n+')';
-        } else {
-            return n;
-        }
+        return jmeDecimal(tok.value,settings);
     },
     'number': function(tree,tok,bits,settings) {
         switch(tok.value)
@@ -7338,7 +7481,7 @@ jme.display.registerType = function(type, renderers) {
         typeToJME[name] = renderers.jme;
     }
     if(renderers.displayString) {
-        jme.tokenToDisplayString[name] = renderers.displayString;
+        jme.typeToDisplayString[name] = renderers.displayString;
     }
 }
 
@@ -10254,6 +10397,7 @@ var Part = Numbas.parts.Part = function( path, question, parentPart, store)
     Object.defineProperty(this,"credit", {
         /** Proportion of available marks awarded to the student - i.e. `score/marks`. Penalties will affect this instead of the raw score, because of things like the steps marking algorithm.
          * @type {Number}
+         * @returns {Number}
          */
         get: function() {
             return this.creditFraction.toFloat();
@@ -12914,7 +13058,9 @@ Numbas.queueScript('math',['base','decimal'],function() {
     
     Decimal.set({ 
         precision: 40,
-        modulo: Decimal.EUCLID 
+        modulo: Decimal.EUCLID,
+        toExpPos: 1000,
+        toExpNeg: -1000
     });
 
 /** Mathematical functions, providing stuff that the built-in `Math` object doesn't
@@ -13353,7 +13499,7 @@ var math = Numbas.math = /** @lends Numbas.math */ {
      */
     isclose: function(a,b,rel_tol,abs_tol) {
         rel_tol = rel_tol===undefined ? 1e-15 : rel_tol;
-        abs_tol = abs_tol===undefined ? 0 : rel_tol;
+        abs_tol = abs_tol===undefined ? 1e-15: rel_tol;
         return Math.abs(a-b) <= Math.max( rel_tol * Math.max(Math.abs(a), Math.abs(b)), abs_tol );
     },
 
@@ -13462,15 +13608,17 @@ var math = Numbas.math = /** @lends Numbas.math */ {
             return n;
         }
     },
+
     /** Settings for {@link Numbas.math.niceNumber}
      * @typedef Numbas.math.niceNumber_settings
      * @property {String} precisionType - Either `"dp"` or `"sigfig"`.
      * @property {Number} precision - number of decimal places or significant figures to show.
      * @property {String} style - Name of a notational style to use. See {@link Numbas.util.numberNotationStyles}.
      */
+
     /** Display a number nicely - rounds off to 10dp so floating point errors aren't displayed
      * @param {Number} n
-     * @param {Numbas.math.niceNumber_settings} options - `precisionType` is either "dp" or "sigfig". `style` is an optional notation style to use.
+     * @param {Numbas.math.niceNumber_settings} options
      * @see Numbas.util.numberNotationStyles
      * @returns {String}
      */
@@ -13588,6 +13736,77 @@ var math = Numbas.math = /** @lends Numbas.math */ {
                 else
                     return out+'*pi'+piD;
             }
+        }
+    },
+
+    /** Display a {@link Numbas.math.ComplexDecimal} as a string
+     * @param {Numbas.math.ComplexDecimal} n
+     * @param {Numbas.math.niceNumber_settings} options
+     * @see Numbas.util.numberNotationStyles
+     * @returns {String}
+     */
+    niceComplexDecimal: function(n,options) {
+        options = options || {};
+        if(n===undefined) {
+            throw(new Numbas.Error('math.niceNumber.undefined'));
+        }
+        var re = math.niceDecimal(n.re,options);
+        if(n.isReal()) {
+            return re;
+        } else {
+            var im = math.niceDecimal(n.im.absoluteValue(),options);
+            if(options.style=='scientific') {
+                im = '('+im+')*i';
+            } else {
+                im = n.im.absoluteValue().equals(1) ? 'i' : im+'*i';
+            }
+            if(n.re.isZero()) {
+                return (n.im.lessThan(0) ? '-' : '') + im;
+            }
+            var symbol = n.im.lessThan(0) ? '-' : '+';
+            return re + ' ' + symbol + ' ' + im;
+        }
+    },
+
+    /** Display a Decimal as a string
+     * @param {Decimal} n
+     * @param {Numbas.math.niceNumber_settings} options
+     * @see Numbas.util.numberNotationStyles
+     * @returns {String}
+     */
+    niceDecimal: function(n,options) {
+        options = options || {};
+        if(n===undefined) {
+            throw(new Numbas.Error('math.niceNumber.undefined'));
+        }
+        if(!n.isFinite()) {
+            return n.lessThan(0) ? '-infinity' : 'infinity';
+        }
+
+        var precision = options.precision;
+        if(options.style=='scientific') {
+            return n.toExponential(options.precision);
+        } else {
+            var out;
+            switch(options.precisionType) {
+            case 'sigfig':
+                out = n.toPrecision(precision);
+                break;
+            case 'dp':
+                out = n.toFixed(precision);
+                break;
+            default:
+                out = n.toString();
+            }
+            if(options.style && Numbas.util.numberNotationStyles[options.style]) {
+                var match_neg = /^(-)?(.*)/.exec(out);
+                var minus = match_neg[1] || '';
+                var bits = match_neg[2].split('.');
+                var integer = bits[0];
+                var decimal = bits[1];
+                out = minus+Numbas.util.numberNotationStyles[options.style].format(integer,decimal);
+            }
+            return out;
         }
     },
     /** Get a random number in range `[0..n-1]`
@@ -14662,6 +14881,159 @@ Fraction.fromDecimal = function(n) {
     var approx = n.toFraction(1e15);
     return new Fraction(approx[0].toNumber(),approx[1].toNumber());
 }
+
+
+function ensure_decimal(n) {
+    if(n instanceof ComplexDecimal) {
+        return n;
+    }
+    if(n instanceof Decimal) {
+        return new ComplexDecimal(n);
+    }
+    return new ComplexDecimal(new Decimal(n));
+}
+/** A complex number with components stored as `Decimal` objects.
+ * @param {Decimal} re
+ * @param {Decimal} [im]
+ * @property {Decimal} re
+ * @property {Decimal} im
+ */
+var ComplexDecimal = math.ComplexDecimal = function(re,im) {
+    this.re = re;
+    if(im===undefined) {
+        im = new Decimal(0);
+    }
+    this.im = im;
+}
+ComplexDecimal.prototype = {
+    toString: function() {
+        var re = this.re.toString();
+        if(this.isReal()) {
+            return re;
+        } else {
+            var symbol = this.im.isNegative() ? '-' : '+';
+            var im = this.im.absoluteValue().toString();
+            return re+' '+symbol+' '+im+'i';
+        }
+    },
+
+    toNumber: function() {
+        return this.re.toNumber();
+    },
+
+    toComplexNumber: function() {
+        if(this.isReal()) {
+            return this.re.toNumber();
+        } else {
+            return {complex: true, re: this.re.toNumber(), im: this.im.toNumber()};
+        }
+    },
+
+    isReal: function() {
+        return this.im.isZero();
+    },
+
+    equals: function(b) {
+        b = ensure_decimal(b);
+        return this.re.equals(b.re) && this.im.equals(b.im);
+    },
+
+    negated: function() {
+        return new ComplexDecimal(this.re.negated(), this.im.negated());
+    },
+
+    plus: function(b) {
+        b = ensure_decimal(b);
+        return new ComplexDecimal(this.re.plus(b.re), this.im.plus(b.im));
+    },
+
+    minus: function(b) {
+        b = ensure_decimal(b);
+        return new ComplexDecimal(this.re.minus(b.re), this.im.minus(b.im));
+    },
+    times: function(b) {
+        b = ensure_decimal(b);
+        var re = this.re.times(b.re).minus(this.im.times(b.im));
+        var im = this.re.times(b.im).plus(this.im.times(b.re));
+        return new ComplexDecimal(re,im);
+    },
+
+    dividedBy: function(b) {
+        b = ensure_decimal(b);
+        var q = b.re.times(b.re).plus(b.re.times(b.im));
+        var re = this.re.times(b.re).plus(this.im.times(b.im)).dividedBy(q);
+        var im = this.im.times(b.re).minus(this.re.times(b.im)).dividedBy(q);
+        return new ComplexDecimal(re,im);
+    },
+
+    pow: function(b) {
+        b = ensure_decimal(b);
+        if(this.isReal() && b.isReal()) {
+            return new ComplexDecimal(this.re.pow(b.re),this.im);
+        } else {
+            var ss = this.re.times(this.re).plus(b.im.times(b.im));
+            var arg1 = Decimal.atan2(this.im,this.re);
+            var mag = ss.pow(b.re.dividedBy(2)).times(Decimal.exp(b.im.times(arg1).negated()));
+            var arg = b.re.times(arg1).plus(b.im.times(Decimal.ln(ss)).dividedBy(2));
+            return new ComplexDecimal(mag.times(arg.cos()), mag.times(arg.sin()));
+        }
+    },
+
+    absoluteValue: function() {
+        return new ComplexDecimal(this.re.times(this.re).plus(this.im.times(this.im)));
+    },
+
+    isInt: function() {
+        return this.re.isInt() && this.im.isInt();
+    },
+
+    isNaN: function() {
+        return this.re.isNaN() || this.im.isNaN();
+    },
+
+    isZero: function() {
+        return this.re.isZero() && this.im.isZero();
+    },
+
+    round: function() {
+        return new ComplexDecimal(this.re.round(), this.im.round());
+    },
+
+    toDecimalPlaces: function(dp) {
+        return new ComplexDecimal(this.re.toDecimalPlaces(dp), this.im.toDecimalPlaces(dp));
+    },
+
+    toFixed: function(dp) {
+        var re = this.re.toFixed(dp);
+        if(this.isReal()) {
+            return re;
+        } else {
+            var symbol = this.im.isNegative() ? '-' : '+';
+            var im = this.im.absoluteValue().toFixed(dp);
+            return re+' '+symbol+' '+im+'i';
+        }
+    },
+
+    toNearest: function(n) {
+        return new ComplexDecimal(this.re.toNearest(n), this.im.toNearest(n));
+    },
+
+    toPrecision: function(sf) {
+        var re = this.re.toPrecision(dp);
+        if(this.isReal()) {
+            return re;
+        } else {
+            var symbol = this.im.isNegative() ? '-' : '+';
+            var im = this.im.absoluteValue().toPrecision(dp);
+            return re+' '+symbol+' '+im+'i';
+        }
+    },
+
+    toSignificantDigits: function(sf) {
+        return new ComplexDecimal(this.re.toSignificantDigits(sf), this.im.toSignificantDigits(sf));
+    }
+}
+
 
 /** A list of a vector's components.
  * @typedef vector
@@ -15807,7 +16179,7 @@ var util = Numbas.util = /** @lends Numbas.util */ {
         var result = util.matchNotationStyle(s,styles,strictStyle,true);
         return result.cleaned;
     },
-    /** Parse a number - either parseFloat, or parse a fraction.
+    /** Parse a number - either as a `Decimal`, or parse a fraction.
      * @param {String} s
      * @param {Boolean} allowFractions - are fractions of the form `a/b` (`a` and `b` integers without punctuation) allowed?
      * @param {String|String[]} styles - styles of notation to allow.
@@ -15963,10 +16335,13 @@ var util = Numbas.util = /** @lends Numbas.util */ {
      * @returns {String}
      */
     separateThousands: function(n,separator) {
-        if(n<0) {
-            return '-'+util.separateThousands(-n,separator);
+        var s = n;
+        if(typeof n=='number') {
+            if(n<0) {
+                return '-'+util.separateThousands(-n,separator);
+            }
+            s = Numbas.math.niceNumber(n);
         }
-        var s = Numbas.math.niceNumber(n);
         var bits = s.split('.');
         var whole = bits[0];
         var frac = bits[1];
@@ -19484,9 +19859,9 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
         } catch(e) {
             this.error('part.setting not present',{property:R('maximum value')});
         }
-        var displayAnswer = minvalue.add(maxvalue).dividedBy(2);
+        var displayAnswer = minvalue.plus(maxvalue).dividedBy(2);
         if(settings.correctAnswerFraction) {
-            var frac = math.Fraction.fromDecimal(displayAnswer);
+            var frac = math.Fraction.fromDecimal(displayAnswer.re);
             settings.displayAnswer = frac.toString();
         } else {
             settings.displayAnswer = math.niceNumber(displayAnswer.toNumber(),{precisionType: settings.precisionType, precision:settings.precision, style: settings.correctAnswerStyle});
@@ -20160,6 +20535,9 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
                 content.appendChild(span);
                 node.appendChild(content);
                 topNode.appendChild(node);
+                /** Load a string representing the text of a label into the `span` element for this label
+                 * @param {String} str
+                 */
                 function load_string(str) {
                     var d = document.createElement('d');
                     d.innerHTML = str;
@@ -20873,11 +21251,11 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
         var pobj = this.store.loadPart(this);
         this.stagedAnswer = pobj.studentAnswer;
     },
-    finaliseLoad: function() {
+
+    evaluateSettings: function(scope) {
         var p = this;
         var settings = this.settings;
         var raw_settings = this.raw_settings;
-        var scope = this.getScope();
         this.definition.settings.forEach(function(s) {
             var name = s.name;
             var value = raw_settings[name];
@@ -20885,11 +21263,18 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
                 p.error('part.custom.unrecognised input type',{input_type:s.input_type});
             }
             try {
-                settings[name] = p.setting_evaluators[s.input_type].call(p, s, value);
+                settings[name] = p.setting_evaluators[s.input_type].call(p, s, value, scope);
             } catch(e) {
                 p.error('part.custom.error evaluating setting',{setting: name, error: e.message},e);
             }
         });
+    },
+
+    finaliseLoad: function() {
+        var p = this;
+        var settings = this.settings;
+        var scope = this.getScope();
+        this.evaluateSettings(scope);
         var settings_scope = new jme.Scope([scope,{variables:{settings:new jme.types.TDict(settings)}}]);
         var raw_input_options = this.definition.input_options;
         ['correctAnswer','hint'].forEach(function(option) {
@@ -20929,6 +21314,7 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
         }
     },
     getCorrectAnswer: function(scope) {
+        this.evaluateSettings(scope);
         var settings = this.settings;
         this.correctAnswer = scope.evaluate(this.definition.input_options.correctAnswer, {settings: this.settings});
         switch(this.definition.input_widget) {
@@ -20983,15 +21369,13 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
         }
     },
     setting_evaluators: {
-        'string': function(def, value) {
-            var scope = this.getScope();
+        'string': function(def, value, scope) {
             if(def.subvars) {
                 value = jme.subvars(value, scope, true);
             }
             return new jme.types.TString(value);
         },
-        'mathematical_expression': function(def, value) {
-            var scope = this.getScope();
+        'mathematical_expression': function(def, value, scope) {
             if(!value.trim()) {
                 throw(new Numbas.Error("part.custom.empty setting"));
             }
@@ -21007,8 +21391,7 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
         'dropdown': function(def, value) {
             return new jme.types.TString(value);
         },
-        'code': function(def, value) {
-            var scope = this.getScope();
+        'code': function(def, value, scope) {
             if(!value.trim()) {
                 throw(new Numbas.Error('part.custom.empty setting'));
             }
@@ -21021,15 +21404,13 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
         'percent': function(def, value) {
             return new jme.types.TNum(value/100);
         },
-        'html': function(def, value) {
-            var scope = this.getScope();
+        'html': function(def, value, scope) {
             if(def.subvars) {
                 value = jme.contentsubvars(value, scope);
             }
             return new jme.types.TString(value);
         },
-        'list_of_strings': function(def, value) {
-            var scope = this.getScope();
+        'list_of_strings': function(def, value, scope) {
             return new jme.types.TList(value.map(function(s){
                 if(def.subvars) {
                     s = jme.subvars(s, scope);

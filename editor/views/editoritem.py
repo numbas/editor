@@ -16,12 +16,14 @@ from django.conf import settings
 from django.contrib import messages
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.utils.timezone import make_aware
 from django.db.models import Q, Min, Max, Count
 from django.db import transaction, IntegrityError
 from django import http
 from django.shortcuts import redirect, render
 from django.views import generic
+from django.views.decorators.clickjacking import xframe_options_exempt
 from django.template.loader import get_template
 from django.template import RequestContext
 from editor.context_processors import site_root_url
@@ -547,18 +549,22 @@ class OembedView(generic.DetailView):
         if not self.object.published:
             return http.HttpResponseNotFound()
 
-        maxwidth = self.request.GET.get('maxwidth',600)
-        maxheight = self.request.GET.get('maxheight',600)
+        maxwidth = int(self.request.GET.get('maxwidth',600))
+        maxheight = int(self.request.GET.get('maxheight',600))
+
+        width = maxwidth
+        height = maxheight
 
         embed_url = reverse(self.object.item_type+'_embed',args=(self.object.rel_obj.pk,self.object.slug))
         SITE_ROOT = site_root_url(self.request)
         return http.JsonResponse({
             'type': 'rich',
-            'html': '<iframe src="{embed_url}"></iframe>'.format(embed_url=SITE_ROOT+embed_url),
-            'width': maxwidth,
-            'height': min(maxheight,600),
+            'html': '<iframe width="{width}" height="{height}" src="{embed_url}"></iframe>'.format(embed_url=SITE_ROOT+embed_url,width=width,height=height),
+            'width': width,
+            'height': height,
         })
 
+@method_decorator(xframe_options_exempt, name='dispatch')
 class EmbedView(PreviewView):
     template_name = 'editoritem/embed.html'
         

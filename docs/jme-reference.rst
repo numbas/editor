@@ -404,7 +404,7 @@ Arithmetic
 
     **Definitions**:
         * :data:`number`, :data:`number` → :data:`number`
-        * :data:`integer`, :data:`integer` → :data:`decimal`
+        * :data:`integer`, :data:`integer` → :data:`number`
         * :data:`decimal`, :data:`decimal` → :data:`decimal`
 
     **Examples**:

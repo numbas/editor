@@ -105,7 +105,7 @@ def truncate_last_viewed_items(instance, created, **kwargs):
     views = EditorItemViewed.objects.filter(userprofile=instance.userprofile)
     old = views[5:].values_list('id',flat=True)
     if old:
-        views.filter(pk__in=old).delete()
+        views.filter(pk__in=list(old)).delete()
 
 class BasketQuestion(models.Model):
     class Meta:

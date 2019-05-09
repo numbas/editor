@@ -127,17 +127,18 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.options = options
-        if options['project']:
-            self.test_project(options['project'])
-
-        if options['question_id']:
-            self.test_questions(NewQuestion.objects.filter(pk__in=options['question_id']))
-
         if options['all']:
             self.test_all()
+        elif options['project']:
+            self.test_project(options['project'])
+        else:
+            qns = []
+            if options['question_id']:
+                qns += NewQuestion.objects.filter(pk__in=options['question_id'])
 
-        if options['exam_ids']:
-            self.test_questions(NewQuestion.objects.filter(exams__pk__in=options['exam_ids']).distinct())
+            if options['exam_ids']:
+                qns += NewQuestion.objects.filter(exams__pk__in=options['exam_ids']).distinct()
+            self.test_questions(qns)
 
         end_time = datetime.now()
         failures = [r for r in self.results if not r['success']]
@@ -173,6 +174,8 @@ class Command(BaseCommand):
         print("Testing {} question{}".format(questions.count(),'s' if questions.count()!=1 else ''))
         for q in questions:
             self.questions_tested += 1
+            if self.questions_tested % 50 == 0:
+                sys.stdout.write(' {} '.format(self.questions_tested))
             result = self.test_question(q)
 
     def test_question(self,q):

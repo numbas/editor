@@ -5,7 +5,7 @@ NUMBAS_RUNTIME_PATH ?= ../compiler
 update_from_runtime: runtime marking_scripts locales extensions
 
 SCRIPTS_DIR=runtime/scripts
-RUNTIME_SOURCES=numbas.js jme.js jme-builtins.js jme-display.js jme-rules.js jme-variables.js localisation.js part.js  question.js  schedule.js  marking.js math.js util.js i18next/i18next.js json.js es5-shim.js es6-promise/es6-promise.js decimal/decimal.js
+RUNTIME_SOURCES=numbas.js jme.js jme-builtins.js jme-display.js jme-rules.js jme-variables.js localisation.js part.js  question.js  schedule.js  marking.js math.js util.js i18next/i18next.js json.js es5-shim.js es6-shim.js es6-promise/es6-promise.js decimal/decimal.js
 PART_SOURCES=$(patsubst $(NUMBAS_RUNTIME_PATH)/%, %, $(wildcard $(NUMBAS_RUNTIME_PATH)/$(SCRIPTS_DIR)/parts/*.js))
 THEME_DIR=themes/default/files/scripts
 THEME_SOURCES=answer-widgets.js

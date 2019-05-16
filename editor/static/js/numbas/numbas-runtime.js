@@ -4474,7 +4474,7 @@ newBuiltin('=', ['?','?'], TBool, null, {
         return new TBool(util.eq(args[0],args[1]));
     }
 });
-newBuiltin('isclose', [TNum,TNum,TNum,TNum], TBool, math.isclose);
+newBuiltin('isclose', [TNum,TNum,sig.optional(sig.type('number')),sig.optional(sig.type('number'))], TBool, math.isclose);
 newBuiltin('and', [TBool,TBool], TBool, function(a,b){return a&&b;} );
 newBuiltin('not', [TBool], TBool, function(a){return !a;} );
 newBuiltin('or', [TBool,TBool], TBool, function(a,b){return a||b;} );
@@ -5626,10 +5626,7 @@ newBuiltin('table',[TList],THTML,
                 row.appendChild(td);
             }
         }
-        return new THTML(table);
-    },
-    {
-        unwrapValues: true
+        return table;
     }
 );
 
@@ -7762,6 +7759,10 @@ var Rule = jme.rules.Rule = function(pattern,result,options,name) {
     this.result = jme.compile(result);
 }
 Rule.prototype = /** @lends Numbas.jme.rules.Rule.prototype */ {
+    toString: function() {
+        return this.patternString+' -> '+this.resultString;
+    },
+
     /** Extend this rule's default options with the given options
      * @param {Numbas.jme.rules.matchTree_options} options
      * @returns {Numbas.jme.rules.matchTree_options}
@@ -9662,7 +9663,7 @@ var simplificationRules = jme.rules.simplificationRules = {
         ['?;=x^(? `: 1);n * ?;=x^(? `: 1);m','acg','x^(m+n)'],
     ],
     collectLikeFractions: [
-        ['?;a/?;=d + `+- ?;b/?;=d','acg','(a+b)/d']
+        ['(?`+);a/?;=d + `+- (?`+);b/?;=d','acg','(a+b)/d']
     ]
     /*
         // x/y or rest*x/y
@@ -12379,7 +12380,7 @@ SignalBox.prototype = { /** @lends Numbas.schedule.SignalBox.prototype */
     trigger: function(name) {
         var callback = this.getCallback(name);
         if(this.error) {
-            callback.reject(error);
+            callback.reject(this.error);
         }
         callback.resolved = true;
         callback.resolve();
@@ -13501,13 +13502,13 @@ var math = Numbas.math = /** @lends Numbas.math */ {
     /** Is `a` close to `b`?
      * @param {Number} a
      * @param {Number} b
-     * @param {Number} [rel_tol=1e-12] - relative tolerance: amount of error relative to `max(abs(a),abs(b))`.
-     * @param {Number} [abs_tol=0] - absolute tolerance: maximum absolute difference between `a` and `b`.
+     * @param {Number} [rel_tol=1e-15] - relative tolerance: amount of error relative to `max(abs(a),abs(b))`.
+     * @param {Number} [abs_tol=1e-15] - absolute tolerance: maximum absolute difference between `a` and `b`.
      * @returns {Boolean}
      */
     isclose: function(a,b,rel_tol,abs_tol) {
         rel_tol = rel_tol===undefined ? 1e-15 : rel_tol;
-        abs_tol = abs_tol===undefined ? 1e-15: rel_tol;
+        abs_tol = abs_tol===undefined ? 1e-15: abs_tol;
         return Math.abs(a-b) <= Math.max( rel_tol * Math.max(Math.abs(a), Math.abs(b)), abs_tol );
     },
 
@@ -14812,7 +14813,11 @@ var Fraction = math.Fraction = function(numerator,denominator) {
 }
 Fraction.prototype = {
     toString: function() {
-        return this.numerator+'/'+this.denominator;
+        if(this.denominator==1) {
+            return this.numerator+'';
+        } else {
+            return this.numerator+'/'+this.denominator;
+        }
     },
     toFloat: function() {
         return this.numerator / this.denominator;
@@ -23841,15 +23846,16 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
         }
 
         if(minvalue.type=='number') {
-            minvalue.value -= 1e-12;
+            minvalue = new jme.types.TNum(minvalue.value - 1e-12);
         }
         minvalue = jme.castToType(minvalue,'decimal').value;
         settings.minvalue = minvalue;
         if(maxvalue.type=='number') {
-            maxvalue.value += 1e-12;
+            maxvalue = new jme.types.TNum(maxvalue.value + 1e-12);
         }
         maxvalue = jme.castToType(maxvalue,'decimal').value;
         settings.maxvalue = maxvalue;
+
 
         var displayAnswer = minvalue.plus(maxvalue).dividedBy(2);
         if(settings.correctAnswerFraction) {

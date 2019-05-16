@@ -1214,9 +1214,13 @@ $(document).ready(function() {
                     onBlur: onBlue
                 }
             } );
+
             var ed = $(element).data('summernote');
             ed.layoutInfo.editor[0].classList.add('form-control');
             $(element).summernote('code',ko.unwrap(valueAccessor));
+            ed.layoutInfo.editor[0].addEventListener('click',function() {
+                $(element).summernote('focus');
+            });
         },
         update: function(element, valueAccessor) {
             var value = ko.unwrap(valueAccessor()) || '';

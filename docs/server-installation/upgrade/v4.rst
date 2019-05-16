@@ -18,6 +18,10 @@ directory.
 
         python first_setup.py
 
+-   Edit the file `numbas/settings.py` and add the following line::
+
+        LOGOUT_REDIRECT_URL = '/'
+
 -   Finally, get the latest code in your Numbas ``compiler`` directory::
 
       cd ../compiler

@@ -404,7 +404,7 @@ Arithmetic
 
     **Definitions**:
         * :data:`number`, :data:`number` → :data:`number`
-        * :data:`integer`, :data:`integer` → :data:`decimal`
+        * :data:`integer`, :data:`integer` → :data:`number`
         * :data:`decimal`, :data:`decimal` → :data:`decimal`
 
     **Examples**:
@@ -2195,6 +2195,18 @@ Lists
     **Example**:
         * ``sum([1,2,3])`` → ``6``
         * ``sum(vector(4,5,6))`` → ``15``
+
+.. jme:function:: prod(list)
+
+    Multiply a list of numbers together
+
+    **Definitions**:
+        * :data:`list` of :data:`number` → :data:`number`
+        * :data:`vector` → :data:`number` - product of the components
+
+    **Example**:
+        * ``prod([2,3,4])`` → ``24``
+      
 
 .. jme:function:: product(list1,list2,...,listN) or product(list, n)
 

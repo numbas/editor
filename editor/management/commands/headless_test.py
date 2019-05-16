@@ -163,6 +163,9 @@ class Command(BaseCommand):
         self.test_questions(NewQuestion.objects.all())
 
     def test_questions(self,questions):
+        if isinstance(questions,list):
+            questions = NewQuestion.objects.filter(pk__in=[q.pk for q in questions])
+
         bad_stamp = Q(editoritem__current_stamp__status__in=('dontuse','problem','broken'))
         questions = questions.exclude(bad_stamp)
 

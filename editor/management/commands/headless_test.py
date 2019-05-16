@@ -219,7 +219,7 @@ class Command(BaseCommand):
             if self.options['stamp']:
                 status = self.options['stamp_status'] or input_choice('Stamp this question?', STATUS_CHOICES)
                 if status == 'test again':
-                    return self.test_question(q)
+                    return self.test_question(NewQuestion.objects.get(pk=q.pk))
                 elif status != 'no':
                     user = User.objects.filter(is_superuser=True).first()
                     comment_template = """<p>Automatic testing has identified a problem with this question:</p>

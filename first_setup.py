@@ -60,10 +60,10 @@ class Command(object):
     other_db_template = """DATABASES = {{
     'default': {{
         'ENGINE': 'django.db.backends.{DB_ENGINE}',
-        'NAME': '{{DB_NAME}}',
-        'USER': '{{DB_USER}}',
-        'PASSWORD': '{{DB_PASSWORD}}',
-        'HOST': '{{DB_HOST}}',
+        'NAME': '{DB_NAME}',
+        'USER': '{DB_USER}',
+        'PASSWORD': '{DB_PASSWORD}',
+        'HOST': '{DB_HOST}',
     }}
 }}"""
 
@@ -164,7 +164,7 @@ class Command(object):
             (r"'PREVIEW_URL': '(.*?)',", 'PREVIEW_URL'),
             (r"'PYTHON_EXEC': '(.*?)',", 'PYTHON_EXEC'),
             (r"^SITE_TITLE = '(Numbas)'", 'SITE_TITLE'),
-            (r"^DATABASES = {.*^}", set_database),
+            (r"^DATABASES = {.*?^}", set_database),
             (r"^SECRET_KEY = '()'", 'SECRET_KEY'),
             (r"^ALLOW_REGISTRATION = (True)", 'ALLOW_REGISTRATION'),
             (r"^DEFAULT_FROM_EMAIL = '(admin@numbas)'", 'DEFAULT_FROM_EMAIL'),
@@ -203,7 +203,7 @@ class Command(object):
         for pattern, key in subs:
             pattern = re.compile(pattern, re.MULTILINE | re.DOTALL)
             if callable(key):
-                self.sub_fn(text, pattern, key)
+                text = self.sub_fn(text, pattern, key)
             else:
                 text = self.sub(text,pattern,self.rvalues[key])
 

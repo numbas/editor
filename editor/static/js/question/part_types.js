@@ -523,11 +523,11 @@ part_types.models = [
     },
     {
         name:'1_n_2', 
+        has_marks: true,
         niceName: 'Choose one from a list',
         tabs: [
             new Editor.Tab('choices','Choices','list',true,true),
             new Editor.Tab('marking-settings','Marking settings','pencil',true,true),
-            new Editor.Tab('marking-algorithm','Marking algorithm','ok'),
         ],
         widget: 'radios',
 
@@ -643,11 +643,11 @@ part_types.models = [
     },
     {
         name:'m_n_2', 
+        has_marks: true,
         niceName: 'Choose several from a list',
         tabs: [
             new Editor.Tab('choices','Choices','list',true,true),
             new Editor.Tab('marking-settings','Marking settings','pencil',true,true),
-            new Editor.Tab('marking-algorithm','Marking algorithm','ok')
         ],
         widget: 'checkboxes',
 
@@ -774,13 +774,13 @@ part_types.models = [
     },
     {
         name:'m_n_x', 
+        has_marks: true,
         niceName: 'Match choices with answers',
         tabs: [
             new Editor.Tab('choices','Choices','list',true,true),
             new Editor.Tab('answers','Answers','list',true,true),
             new Editor.Tab('matrix','Marking matrix','th',true,true),
             new Editor.Tab('marking-settings','Marking options','pencil',true,true),
-            new Editor.Tab('marking-algorithm','Marking algorithm','ok')
         ],
         widget: 'm_n_x',
 

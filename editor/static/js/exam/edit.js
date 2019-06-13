@@ -71,7 +71,12 @@ $(document).ready(function() {
         this.allowPause = ko.observable(true);
         this.percentPass = ko.observable(0);
         this.showfrontpage = ko.observable(true);
-        this.showresultspage = ko.observable(true);
+        this.showResultsPageOptions = [
+            {name: 'oncompletion', niceName: 'On completion'},
+            {name: 'review', niceName: 'When entering in review mode'},
+            {name: 'never', niceName: 'Never'}
+        ];
+        this.showresultspage = ko.observable(this.showResultsPageOptions[0]);
 
         this.allowregen = ko.observable(true);
         this.reverse = ko.observable(true);
@@ -250,7 +255,7 @@ $(document).ready(function() {
                     reverse: this.reverse(),
                     browse: this.browse(),
                     showfrontpage: this.showfrontpage(),
-                    showresultspage: this.showresultspage(),
+                    showresultspage: this.showresultspage().name,
                     onleave: this.onleave.toJSON(),
                     preventleave: this.preventleave(),
                     startpassword: this.startpassword()
@@ -289,7 +294,9 @@ $(document).ready(function() {
 
             if('navigation' in content)
             {
-                tryLoad(content.navigation,['allowregen','reverse','browse','showfrontpage','showresultspage','preventleave','startpassword'],this);
+                tryLoad(content.navigation,['allowregen','reverse','browse','showfrontpage','preventleave','startpassword'],this);
+                var showresultspage = Editor.tryGetAttribute(content.navigation, 'showresultspage');
+                this.showresultspage(this.showResultsPageOptions.find(function(o){return o.name==showresultspage}));
                 this.onleave.load(content.navigation.onleave);
             }
 

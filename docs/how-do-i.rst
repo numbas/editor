@@ -10,6 +10,26 @@ If you've got a question that isn't answered here, try asking on `the Numbas use
 
 .. contents:: :local:
 
+******************
+Delivering an exam
+******************
+
+.. _delay-results:
+
+Delay showing students scores until a certain date
+--------------------------------------------------
+
+    This is only possible when delivering the exam through the `Numbas LTI provider <https://numbas-lti-provider.readthedocs.io/>`_.
+
+    First, turn off the feedback options :term:`Show current score?` and :term:`Show answer state?`, so students don't get any feedback while completing the exam.
+
+    Then, set :term:`Show results page` to :guilabel:`When entering in review mode`.
+
+    Finally, after uploading the exam to the Numbas LTI provider, set the :guilabel:`Allow students to review attempt from` setting to the date and time after which you'd like to allow students to see their scores and feedback.
+
+    When a student completes the exam, they won't see any feedback.
+    Once the chosen time has passed, the student will be able to re-enter the exam in review mode and see their scores and full feedback.
+
 ********************************
 Images, diagrams and other media
 ********************************

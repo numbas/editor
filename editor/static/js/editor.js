@@ -196,7 +196,7 @@ $(document).ready(function() {
         }
     }
 
-    Editor.numbasVersion = 'exam_question_groups';
+    Editor.numbasVersion = 'exam_results_page_options';
 
     Editor.parseExam = function(source) {
         var content = /\/\/(.*?)\n(.*)/.exec(source)[2]

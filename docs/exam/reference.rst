@@ -152,9 +152,16 @@ The navigation settings control how the student can move through the exam, and w
     Show front page?
         If ticked, then an intro screen is shown to the student before the exam starts, 
 
-    Show results page?
-        If ticked, then the student is shown a page summarising the results of their exam after finishing. 
-        If this is not ticked, then the exam exits as soon as the student finishes, and they get no immediate feedback about their scores.
+    Show results page
+        Control when the student may see the results page, after ending the exam.
+        
+        If :guilabel:`On completion` is chosen, the results page will be shown immediately after the student ends the exam, and when they re-enter in review mode.
+
+        If :guilabel:`When entering in review mode` is chosen, on ending the exam the student will just be shown a screen directing them to exit. When they re-enter the exam in review mode, they will be shown the results page.
+
+        If :guilabel:`Never` is chosen, the student will never be shown the results page, even when entering in review mode.
+
+        When an instructor opens a student's attempt, they are always shown the results page. (This feature only works in the Numbas LTI provider, not in a generic SCORM player)
 
     Confirm before leaving the exam while it's running?
         If ticked, the student will be asked to confirm that they really want to leave if they try to close the exam while it's running, for example by pressing the browser's back button or closing the tab the exam is running in.
@@ -192,7 +199,7 @@ Feedback
         If ticked, the student will be shown the maximum attainable score for each question and part.
 
     Show answer state?
-        If ticked, then when the student submits an answer an icon will be displayed to let the student know if their answer was marked correct, partially correct or incorrect.
+        If ticked, then when the student submits an answer an icon will be displayed to let the student know if their answer was marked correct, partially correct or incorrect, and feedback messages will be displayed underneath.
 
     Allow reveal answer?
         If ticked, then the :guilabel:`Reveal answer` button is enabled on each question. 

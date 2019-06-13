@@ -207,7 +207,7 @@
             {% booleanproperty 'reverse' 'Allow move to previous question?' help_url='exam/reference.html#term-allow-move-to-previous-question' %}
             {% booleanproperty 'browse' 'Allow to jump to any question?' help_url='exam/reference.html#term-allow-jump-to-any-question' %}
             {% booleanproperty 'showfrontpage' 'Show front page?' help_url='exam/reference.html#term-show-front-page' %}
-            {% booleanproperty 'showresultspage' 'Show results page?' help_url='exam/reference.html#term-show-results-page' %}
+            {% selectproperty 'showresultspage' 'Show results page' options='showResultsPageOptions' options_text='niceName' help_url='exam/reference.html#term-show-results-page' %}
             {% booleanproperty 'preventleave' 'Confirm before leaving the exam while it\'s running?' help_url='exam/reference.html#term-confirm-before-leaving-the-exam-while-it-s-running' %}
             {% exam_event 'onleave' 'On leaving a question' help_url='exam/reference.html#term-on-leaving-a-question' %}
             {% endwith %}

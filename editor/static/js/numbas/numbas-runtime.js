@@ -12388,13 +12388,14 @@ SignalBox.prototype = { /** @lends Numbas.schedule.SignalBox.prototype */
 }
 });
 
-Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
+Numbas.queueScript('marking',['util', 'jme','localisation','jme-variables'],function() {
     /** @namespace Numbas.marking */
     var marking = Numbas.marking = {};
 
     marking.ignore_note_errors = true;
 
     var jme = Numbas.jme;
+    var sig = jme.signature;
     var math = Numbas.math;
     var TNothing = jme.types.TNothing;
     var TString = jme.types.TString;
@@ -12723,7 +12724,12 @@ Numbas.queueScript('marking',['jme','localisation','jme-variables'],function() {
             });
         }
     }));
-    state_functions.push(state_fn('concat_feedback',[TList,TNum],TList,function(messages, scale) {
+    state_functions.push(state_fn('concat_feedback',[TList,TNum, sig.optional(sig.type('boolean'))],TList,function(messages, scale, strip_messages) {
+        if(strip_messages) {
+            messages = messages.map(function(m) {
+                return Numbas.util.extend_object({}, m, {message: ''});
+            });
+        }
         return {
             return: messages,
             state: [feedback.concat(messages, scale)]

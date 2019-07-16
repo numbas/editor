@@ -49,6 +49,7 @@ The following properties are available on every type of part.
     Show score feedback icon?
         After the student submits an answer to this part, should an icon describing their score be shown?
         This is usually shown next to the input field, as well as in the feedback box.
+        This option also controls whether feedback messages are shown for this part.
         You might want to turn this off if you've set up a question with a custom marking script which assigns a score based on the answers to two or more parts (or gapfills), meaning the individual parts have no independent "correct" or "incorrect" state.
 
 

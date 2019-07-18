@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+{% load django_tables2 %}
+{% load render_table from django_tables2 %}
+{% load can_edit %}
+{% load sanitizer %}
+{% load stamp %}
+{% load user_link %}
+{% load sstatic %}
+
+{% block title %}Recently published items - {{block.super}}{% endblock title %}
+
+{% block stylesheets %}
+    {{block.super}}
+    <link href="{% sstatic 'css/recently-published.css' %}" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+    <h1>Recently published items</h1>
+    <div class="row">
+        {% if object_list %}
+        <ul class="list-unstyled">
+            {% for row in results.page.object_list|default:results.rows %}
+            {% with item=row.record edit_view=item.type|add:'_edit' %}
+            <li class="result">
+                <h4>
+                    <a href="{% url item.item_type|add:'_edit' item.rel_obj.pk item.slug %}">{{item.name}}</a>
+                </h4>
+                <div class="fields">
+                    <span class="item-type">
+                        {% if item.item_type == 'question' %}
+                        <span class="glyphicon glyphicon-file"></span> Question
+                        {% elif item.item_type == 'exam' %}
+                        <span class="glyphicon glyphicon-book"></span> Exam (<span class="num-questions">{{item.exam.questions.count}}</span> question{{item.exam.questions.count|pluralize}})
+                        {% endif %}
+                    </span>
+                    <span class="author">
+                        by
+                        {% user_thumbnail item.author 20 15 %} {% user_link item.author %}
+                        {% with others=item.contributors.count|add:-1 %}
+                        {% if others > 0 %}
+                        and {{item.contributors.count|add:-1}} other{{others|pluralize}}
+                        {% endif %}
+                        {% endwith %}
+                    </span>
+                </div>
+                <div class="description">
+                    {% if item.metadata.description %}
+                    {{item.metadata.description|strip_html|safe}}
+                    {% else %}
+                    <p class="nothing-here">No description given</p>
+                    {% endif %}
+                </div>
+                <div class="published-on">
+                    Published on {{item.published_date|date:"d/m/Y H:i"}}
+                    <span class="licence">
+                        <span class="glyphicon glyphicon-copyright-mark"></span> 
+                        {% if item.licence %}
+                            {% with item.licence as licence %}
+                                {% if licence.url %}
+                                    <a href="{{licence.url}}" target="_blank"><abbr title="{{licence.name}}">{{licence.short_name}}</abbr></a>
+                                {% else %}
+                                    <abbr title="{{licence.name}}">{{licence.short_name}}</abbr>
+                                {% endif %}
+                            {% endwith %}
+                        {% else %}
+                            <span class="no-licence nothing-here">No licence specified</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </li>
+            {% endwith %}
+            {% endfor %}
+        </ul>
+        {% include "pagination.html" %}
+        {% else %}
+        <div class="none">No items found matching your query.</div>
+        {% endif %}
+    </div>
+{% endblock content %}

@@ -20,6 +20,12 @@ class EditorItemTable(ObjectTable):
         model = EditorItem
         sequence = ('name', 'current_stamp', 'licence', 'author', 'last_modified')
 
+class RecentlyPublishedTable(tables.Table):
+    class Meta(ObjectTable.Meta):
+        model = EditorItem
+        fields = ('published_date',)
+        order_by = ('-published_date')
+
 class NumItemsColumn(Column):
     def order(self, queryset, is_descending):
         queryset = queryset.annotate(num_items=Sum(Case(When(items__published=True,then=1),default=0,output_field=IntegerField()))).order_by(('-' if is_descending else '')+'num_items')

@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.views.generic import TemplateView
-from django.db.models import Q
+from django.db.models import Q, Sum, When, Case, IntegerField
 from editor.models import SiteBroadcast
 from django.utils.timezone import now
 from datetime import timedelta
@@ -92,3 +92,12 @@ def word_cloud(items):
     chart = [(x[0],(x[1]/mean)**(1/3),i*1.618*360) for i,x in enumerate(chart)]
     shuffle(chart)
     return chart
+
+class ExploreView(TemplateView):
+    template_name = 'explore.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['items'] = EditorItem.objects.filter(published=True).order_by('-published_date')[:3]
+        context['projects'] = Project.objects.filter(public_view=True).annotate(num_items=Sum(Case(When(items__published=True,then=1),default=0,output_field=IntegerField()))).order_by('-num_items').exclude(num_items=0)[:3]
+        return context

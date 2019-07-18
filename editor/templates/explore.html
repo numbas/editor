@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% load humanize %}
+{% load user_link %}
+{% load sanitizer %}
+{% load sstatic %}
+
+{% block stylesheets %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% sstatic 'css/explore.css' %}"/>
+{% endblock stylesheets %}
+
+{% block content %}
+<div class="row">
+    <header><h1>Explore public content</h1></header>
+
+    <section>
+        <h2><a href="{% url 'public_projects' %}">Projects</a></h2>
+        <ul class="list-unstyled cards">
+            {% for project in projects %}
+                <li class="project">
+                    <h3 class="name">
+                        <span class="owner">{% user_thumbnail project.owner 20 18 link=True %}</span>
+                        <a href="{{project.get_absolute_url}}">{{project.name}}</a>
+                    </h3>
+                    <div class="description">
+                        {% if project.description %}
+                        {{project.description|escape_html|safe}}
+                        {% else %}
+                        <span class="nothing-here">No description.</span>
+                        {% endif %}
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+        <p class="more"><a href="{% url 'public_projects' %}">More public projects</a></p>
+    </section>
+    <section>
+        <h2><a href="{% url 'item_recently_published' %}">Recently published items</a></h2>
+        <ul class="list-unstyled cards">
+            {% for item in items %}
+                <li class="item">
+                    <h3 class="name">
+                        <a href="{% url item.item_type|add:'_edit' item.rel_obj.pk item.slug %}">{{item.name}}</a>
+                    </h3>
+                    <div class="fields">
+                        <span class="item-type">
+                            {% if item.item_type == 'question' %}
+                            <span class="glyphicon glyphicon-file"></span> Question
+                            {% elif item.item_type == 'exam' %}
+                            <span class="glyphicon glyphicon-book"></span> Exam (<span class="num-questions">{{item.exam.questions.count}}</span> question{{item.exam.questions.count|pluralize}})
+                            {% endif %}
+                        </span>
+                        <span class="author">
+                            by
+                            {% user_thumbnail item.author 20 15 %} {% user_link item.author %}
+                            {% with others=item.contributors.count|add:-1 %}
+                            {% if others > 0 %}
+                            and {{item.contributors.count|add:-1}} other{{others|pluralize}}
+                            {% endif %}
+                            {% endwith %}
+                        </span>
+                    </div>
+                    <div class="description">
+                        {% if item.metadata.description %}
+                        {{item.metadata.description|strip_html|safe}}
+                        {% else %}
+                        <p class="nothing-here">No description given</p>
+                        {% endif %}
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+        <p class="more"><a href="{% url 'item_recently_published' %}">More published items</a></p>
+    </section>
+</div>
+{% endblock content %}
+

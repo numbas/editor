@@ -14,6 +14,7 @@ from wsgiref.util import FileWrapper
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.syndication.views import Feed
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -34,7 +35,7 @@ from django_tables2.config import RequestConfig
 
 from accounts.models import UserProfile, EditorItemViewed
 
-from editor.tables import EditorItemTable
+from editor.tables import EditorItemTable, RecentlyPublishedTable
 from editor.models import EditorItem, Project, Access, Licence, PullRequest, Taxonomy, Contributor
 import editor.models
 import editor.views.generic
@@ -772,3 +773,32 @@ class TransferOwnershipView(generic.UpdateView):
     def form_valid(self, form):
         messages.add_message(self.request, messages.SUCCESS, render_to_string('editoritem/ownership_transferred_message.html', {'to':form.cleaned_data.get('user_search'), 'item':self.get_object()}))
         return super(TransferOwnershipView, self).form_valid(form)
+
+class RecentlyPublishedView(ListView):
+    template_name = 'editoritem/recently_published.html'
+    table_class = RecentlyPublishedTable
+    
+    def make_table(self):
+        config = RequestConfig(self.request, paginate={'per_page': 10})
+        results = self.table_class(self.object_list)
+        config.configure(results)
+        return results
+
+    def get_queryset(self):
+        return EditorItem.objects.filter(published=True)
+
+class RecentlyPublishedFeed(Feed):
+    title = "{} - Recently published items".format(settings.SITE_TITLE)
+    link = '/items/recently-published'
+    description = "Recently published exams and questions on {}".format(settings.SITE_TITLE)
+
+    def items(self):
+        return EditorItem.objects.filter(published=True).order_by('-published_date')
+
+    def item_title(self, item):
+        return item.name
+
+    def item_description(self, item):
+        data = item.get_parsed_content()
+        metadata = data.data.get('metadata', {})
+        return metadata.get('description','No description')

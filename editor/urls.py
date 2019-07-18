@@ -2,7 +2,7 @@ from django.conf.urls import url
 
 from django.contrib.auth.decorators import login_required
 
-from .views import project, editoritem, exam, question, HomeView, GlobalStatsView, TermsOfUseView, PrivacyPolicyView, theme, extension, generic, notification, resource, basket, timeline, custom_part_type
+from .views import project, editoritem, exam, question, HomeView, GlobalStatsView, ExploreView, TermsOfUseView, PrivacyPolicyView, theme, extension, generic, notification, resource, basket, timeline, custom_part_type
 
 urlpatterns = [
 
@@ -23,9 +23,13 @@ urlpatterns = [
 
     url(r'^search/$', editoritem.SearchView.as_view(), name='search'),
 
+    # Explore
+
+    url(r'^explore/$', ExploreView.as_view(), name='explore'),
+
     # Projects
 
-    url(r'^projects/public$$', project.PublicProjectsView.as_view(), name='public_projects'),
+    url(r'^projects/public$', project.PublicProjectsView.as_view(), name='public_projects'),
     url(r'^project/new$', login_required(project.CreateView.as_view()), name='project_new'),
     url(r'^project/(?P<pk>\d+)/$', project.IndexView.as_view(), name='project_index'),
     url(r'^project/(?P<pk>\d+)/delete$', project.DeleteView.as_view(), name='project_delete'),
@@ -67,6 +71,9 @@ urlpatterns = [
 
     url(r'^items/compare/(?P<pk1>\d+)/(?P<pk2>\d+)$',
         editoritem.CompareView.as_view(), name='editoritem_compare'),
+
+    url(r'^items/recently-published/feed$', editoritem.RecentlyPublishedFeed(), name='item_recently_published_feed'),
+    url(r'^items/recently-published$', editoritem.RecentlyPublishedView.as_view(), name='item_recently_published'),
 
     # Exams
 

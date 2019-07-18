@@ -1,0 +1,10 @@
+.result + .result {
+    margin-top: 5rem;
+}
+.result .fields {
+    margin-bottom: 1rem;
+}
+.result .published-on {
+    font-size: small;
+    font-style: italic;
+}

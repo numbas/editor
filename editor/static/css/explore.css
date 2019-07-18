@@ -1,0 +1,29 @@
+.cards {
+    display: flex;
+    justify-content: space-evenly;
+    flex-wrap: wrap;
+}
+
+.cards > li {
+    margin: 1rem;
+    flex-basis: 30rem;
+    max-width: 100%;
+}
+
+.description {
+    margin-top: 1em;
+}
+
+.more {
+    font-size: 1.2em;
+    margin-top: 2rem;
+    font-style: italic;
+    text-align: right;
+}
+.nothing-here {
+    font-style: italic;
+}
+
+h3 {
+    font-size: 1.25em;
+}

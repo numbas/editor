@@ -476,7 +476,7 @@
                                     Ask the student a question, and give any hints about how they should answer this part.
                                 </p>
 
-                                <div {% if not editable %}disabled{% endif %} data-bind="writemaths: prompt, preambleCSS: $root.preamble.css, tinymce_plugins: ['gapfill','jmevisible','preview'], showButtons: {gapfill: function(){return $data.type().name=='gapfill'}}"></div>
+                                <div {% if not editable %}disabled{% endif %} data-bind="writemaths: prompt, preambleCSS: $root.preamble.css, tinymce_plugins: ['gapfill','jmevisible','preview'], showButtons: {gapfill: function(){return $data.type().name=='gapfill'}}, gaps: gaps"></div>
                             </section>
 
                             {% with form_label_class="col-sm-6 col-md-4" form_control_class="col-sm-6 col-md-8" %}

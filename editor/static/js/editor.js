@@ -1386,6 +1386,14 @@ $(document).ready(function() {
                             },this);
                         }
 
+                        if(allBindingsAccessor.gaps) {
+                            ko.computed(function() {
+                                var gaps = ko.unwrap(allBindingsAccessor.gaps);
+                                var part = ko.unwrap(allBindingsAccessor.part);
+                                ed.fire('gaps_changed',gaps);
+                            }).extend({throttle: 50});
+                        }
+
                     }
                 })
             ;

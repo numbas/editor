@@ -5,6 +5,8 @@
 {% load sanitizer %}
 {% load sstatic %}
 
+{% block title %}Explore public content - {{block.super}}{% endblock %}
+
 {% block stylesheets %}
     {{ block.super }}
     <link rel="stylesheet" type="text/css" href="{% sstatic 'css/explore.css' %}"/>

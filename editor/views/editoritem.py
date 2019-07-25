@@ -559,6 +559,7 @@ class OembedView(generic.DetailView):
         embed_url = reverse(self.object.item_type+'_embed',args=(self.object.rel_obj.pk,self.object.slug))
         SITE_ROOT = site_root_url(self.request)
         return http.JsonResponse({
+            'version': '1.0',
             'type': 'rich',
             'html': '<iframe width="{width}" height="{height}" src="{embed_url}"></iframe>'.format(embed_url=SITE_ROOT+embed_url,width=width,height=height),
             'width': width,

@@ -86,9 +86,11 @@
 
                                     <form class="form-inline" data-bind="submit: Editor.noop">
                                         <div>
-                                            <label>Group name: <input class="form-control group-name" data-bind="textInput: name"></label>
+                                            <label>Group name: <input {% if not editable %}disabled{% endif %} class="form-control group-name" data-bind="textInput: name"></label>
                                             <span class="controls pull-right">
+                                              {% if editable %}
                                                 <button class="delete btn btn-link btn-lg" title="Remove this group of questions" data-bind="visible: ko.unwrap($index)>0, click: remove"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                                              {% endif %}
                                             </span>
                                         </div>
                                     </form>
@@ -147,9 +149,11 @@
                         </div>
                         <!-- end group -->
                     </div>
+                    {% if editable %}
                     <div class="panel-body">
                         <button class="btn btn-primary btn-block" data-bind="click: addQuestionGroup"><span class="glyphicon glyphicon-plus"></span> Add another question group</button>
                     </div>
+                    {% endif %}
                     <div class="panel-footer" data-bind="fadeVisible: numQuestions()>0">
                         <div class="form-group">
                             <label>Pass threshold {% helplink 'exam/reference.html#term-pass-threshold' %}</label>

@@ -13,5 +13,6 @@
 * [Jake Steele](https://github.com/jastee07)
 * [Mohit Jayanti Gurumukhani](https://github.com/mjguru)
 * [Adarsh Shetty](https://github.com/akshett)
+* [Darcy Coleman](https://github.com/docoleman)
 
 *Add your name here - [contribute to the Numbas project](http://www.numbas.org.uk/contributing-to-numbas/)!*

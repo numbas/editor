@@ -102,7 +102,7 @@
                                             <div class="form-group">
                                                 <label class="">
                                                     <div class="control-label">Questions to use {% helplink 'exam/reference.html#term-questions-to-use' %}</div>
-                                                    <select class="form-control" data-bind="options: pickingStrategies, optionsText: 'niceName', value: pickingStrategy"></select>
+                                                    <select class="form-control" data-bind="options: pickingStrategies, optionsText: 'niceName', value: pickingStrategy" {% if not editable %}disabled{% endif %}></select>
                                                 </label>
                                             </div>
                                             <span data-bind="visible: pickingStrategy().name=='random-subset'">

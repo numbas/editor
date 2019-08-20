@@ -54,6 +54,9 @@ For example, a name ``vec:x`` is rendered in LaTeX as ``\vec{x}``, which places 
 You can apply multiple annotations to a single variable.
 For example, ``v:dot:x`` produces a bold *x* with a dot on top: :math:`\boldsymbol{\dot{x}}`.
 
+Names with different annotations are considered to represent different values, for the purpose of simplification and evaluation.
+For example, in the expression ``dot:x + x``, the two terms will not be collected together.
+
 .. _jme-data-types:
 
 Data types

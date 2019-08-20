@@ -2656,9 +2656,13 @@ jme.registerType(
  * @param {Array.<String>} annotation
  */
 var TName = types.TName = function(name,annotation) {
-    this.name = name;
     this.value = name;
     this.annotation = annotation;
+    this.name = name;
+    this.nameWithoutAnnotation = name;
+    if(this.annotation && this.annotation.length) {
+        this.name = this.annotation.join(':') + ':' + this.name;
+    }
 }
 jme.registerType(TName,'name');
 
@@ -2676,6 +2680,10 @@ jme.registerType(TName,'name');
 var TFunc = types.TFunc = function(name,annotation) {
     this.name = name;
     this.annotation = annotation;
+    this.nameWithoutAnnotation = name;
+    if(this.annotation && this.annotation.length) {
+        this.name = this.annotation.join(':') + ':' + this.name;
+    }
 }
 TFunc.prototype = {
     vars: 0
@@ -6968,7 +6976,7 @@ var typeToTeX = jme.display.typeToTeX = {
         return '\\left ( '+texMatrix(tok.value,settings)+' \\right )';
     },
     name: function(thing,tok,texArgs,settings) {
-        return texName(tok.name,tok.annotation);
+        return texName(tok.nameWithoutAnnotation,tok.annotation);
     },
     special: function(thing,tok,texArgs,settings) {
         return tok.value;
@@ -6994,7 +7002,7 @@ var typeToTeX = jme.display.typeToTeX = {
             function texOperatorName(name) {
                 return '\\operatorname{'+name.replace(/_/g,'\\_')+'}';
             }
-            return texName(tok.name,tok.annotation,texOperatorName)+' \\left ( '+texArgs.join(', ')+' \\right )';
+            return texName(tok.nameWithoutAnnotation,tok.annotation,texOperatorName)+' \\left ( '+texArgs.join(', ')+' \\right )';
         }
     },
     set: function(thing,tok,texArgs,settings) {
@@ -7329,11 +7337,7 @@ var typeToJME = Numbas.jme.display.typeToJME = {
         }
     },
     name: function(tree,tok,bits,settings) {
-        if(tok.annotation) {
-            return tok.annotation.join(':')+':'+tok.name;
-        } else {
-            return tok.name;
-        }
+        return tok.name;
     },
     'string': function(tree,tok,bits,settings) {
         var str = '"'+jme.escape(tok.value)+'"';
@@ -8313,8 +8317,8 @@ function matchName(ruleTree,exprTree,options) {
     if(ruleTok.type!='name') {
         return false;
     }
-    if(ruleTok.name in specialMatchNames) {
-        return specialMatchNames[ruleTok.name](ruleTree,exprTree,options);
+    if(ruleTok.nameWithoutAnnotation in specialMatchNames) {
+        return specialMatchNames[ruleTok.nameWithoutAnnotation](ruleTree,exprTree,options);
     } else {
         if(exprTok.type!='name') {
             return false;
@@ -8401,8 +8405,8 @@ function matchFunction(ruleTree,exprTree,options) {
     if(ruleTok.type!='function') {
         return false;
     }
-    if(ruleTok.name in specialMatchFunctions) {
-        return specialMatchFunctions[ruleTok.name](ruleTree,exprTree,options);
+    if(ruleTok.nameWithoutAnnotation in specialMatchFunctions) {
+        return specialMatchFunctions[ruleTok.nameWithoutAnnotation](ruleTree,exprTree,options);
     } else { 
         return matchOrdinaryFunction(ruleTree,exprTree,options);
     }

@@ -711,9 +711,7 @@ $(document).ready(function() {
                     };
 
                     var cfn = jme.variables.makeFunction(fn,scope);
-                    if(scope.functions[cfn.name]===undefined)
-                        scope.functions[cfn.name] = [];
-                    scope.functions[cfn.name].push(cfn);
+                    scope.addFunction(cfn);
                 }
                 catch(e) {
                     f.error(e.message);

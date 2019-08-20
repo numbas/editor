@@ -95,6 +95,7 @@
                 <li id="preview">
                     <a class="text-success" data-bind="attr: {href: item_json.previewURL+'?refresh', target: item_json.previewWindow}" title="Run this {{item_type}} in a new window (Ctrl+B)">
                         <span class="glyphicon glyphicon-play"></span>
+                        &nbsp;
                         <span class="hidden-sm">Test Run</span>
                     </a>
                 </li>
@@ -103,6 +104,7 @@
                 <li class="{% if not can_copy %}disabled{% endif %}">
                 <a class="text-warning" href="{% if can_copy %}{% editoritem_url 'copy' object %}{% endif %}" target="_blank" title="{% if can_copy %}Create your own copy of this {{item_type}}{% else %}This item's licence doesn't allow you to modify it.{% endif %}">
                     <span class="glyphicon glyphicon-duplicate"></span>
+                    &nbsp;
                     <span class="hidden-sm">Make a copy</span>
                 </a>
                 </li>
@@ -112,6 +114,7 @@
                 <li class="">
                     <a href="{% editoritem_url 'delete' object %}" class="text-danger" title="Delete this {{item_type}} permanently">
                         <span class="glyphicon glyphicon-remove"></span> 
+                        &nbsp;
                         <span class="hidden-sm">Delete</span>
                     </a>
                 </li>
@@ -120,6 +123,7 @@
                 <li id="download" class="dropdown">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                         <span class="glyphicon glyphicon-cloud-download"></span>
+                        &nbsp;
                         <span class="hidden-sm">Download</span>
                         <span class="caret"></span>
                     </a>

@@ -622,6 +622,7 @@ $(document).ready(function() {
             } catch(e) {
                 document.body.className += ' loaded';
             }
+            Editor.update_basket();
             $('.timeline').mathjax();
         }
         catch(e) {

@@ -2065,7 +2065,7 @@ $(document).ready(function() {
 
     update_notifications();
 
-    function update_basket(response) {
+    var update_basket = Editor.update_basket = function(response) {
         var num_questions = $('#question_basket .dropdown-menu .question').length;
         $('#question_basket .dropdown-toggle').attr('title',num_questions+' '+(num_questions==1 ? 'question' : 'questions')+' in your basket');
         $('#question_basket .badge').text(num_questions>0 ? num_questions : '');
@@ -2079,7 +2079,8 @@ $(document).ready(function() {
         $('.add-to-basket[data-question-id]').each(function() {
             var id = parseInt($(this).attr('data-question-id'));
             var inBasket = ids.index(id)>=0;
-            $(this).find('.glyphicon').toggleClass('text-success',inBasket);
+            $(this).toggleClass('in-basket',inBasket);
+            $(this).attr('title',inBasket ? 'This is in your basket' : 'Add this to your basket');
         });
     }
 

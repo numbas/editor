@@ -128,3 +128,11 @@ body:not(.loaded) .loaded-content {
 .ui-autocomplete {
     z-index: 2000;
 }
+
+.add-to-basket.in-basket .glyphicon {
+    padding: 0.2em;
+    margin: -0.2em;
+    border-radius: 30%;
+    background: #3c763d;
+    color: white;
+}

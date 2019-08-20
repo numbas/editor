@@ -1527,8 +1527,8 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
             var i = this.i;
             // if followed by an open bracket, this is a function application
             if( i<this.tokens.length-1 && this.tokens[i+1].type=="(") {
-                    tok.name = this.funcSynonym(tok.name);
-                    this.stack.push(new TFunc(tok.name,tok.annotation));
+                    var name = this.funcSynonym(tok.nameWithoutAnnotation);
+                    this.stack.push(new TFunc(name,tok.annotation));
                     this.numvars.push(0);
                     this.olength.push(this.output.length);
             } else {
@@ -2647,7 +2647,8 @@ jme.registerType(
 /** Variable name token
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
- * @property {String} name
+ * @property {String} name - the name, prefixed with any annotations joined by colons
+ * @preoperty {String} nameWithoutAnnotation - the name without the annotations
  * @property {String} value - Same as `name`
  * @property {Array.<String>} annotation - List of annotations (used to modify display)
  * @property {String} type - "name"
@@ -2656,20 +2657,21 @@ jme.registerType(
  * @param {Array.<String>} annotation
  */
 var TName = types.TName = function(name,annotation) {
-    this.value = name;
     this.annotation = annotation;
     this.name = name;
     this.nameWithoutAnnotation = name;
     if(this.annotation && this.annotation.length) {
         this.name = this.annotation.join(':') + ':' + this.name;
     }
+    this.value = this.name;
 }
 jme.registerType(TName,'name');
 
 /** JME function token
  * @memberof Numbas.jme.types
  * @augments Numbas.jme.token
- * @property {String} name
+ * @property {String} name - the function's name, prefixed with any annotations joined by colons
+ * @property {String} nameWithoutAnnotation - the name without the annotations
  * @property {Array.<String>} annotation - List of annotations (used to modify display)
  * @property {Number} vars - Arity of the function
  * @property {String} type - "function"

@@ -12,7 +12,8 @@ def text_input(context, property_name, *args, **kwargs):
         'min': kwargs.get('min'),
         'max': kwargs.get('max'),
         'zero_means': kwargs.get('zero_means'),
-        'warning': kwargs.get('warning')
+        'warning': kwargs.get('warning'),
+        'placeholder': kwargs.get('placeholder'),
     })
     return context
 
@@ -31,7 +32,8 @@ def property_tag(context, property_name, label, *args, **kwargs):
         'zero_means': kwargs.get('zero_means'),
         'form_label_class': context.get('form_label_class', 'col-sm-3'),
         'form_control_class': context.get('form_control_class', 'col-sm-9'),
-        'warning': kwargs.get('warning')
+        'warning': kwargs.get('warning'),
+        'placeholder': kwargs.get('placeholder'),
     })
     return context
 

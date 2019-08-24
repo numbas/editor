@@ -7,7 +7,7 @@
             {% if help_url %}{% helplink help_url %}{% endif %}
         </div>
         <div class="{{form_control_class}}" data-bind="css: { {% if warning %}'has-error': {{warning}}{% endif %}}">
-            {% text_input property monospace=monospace type=type disable=disable min=min max=max zero_means=zero_means warning=warning %}
+            {% text_input property monospace=monospace type=type disable=disable min=min max=max zero_means=zero_means warning=warning placeholder=placeholder %}
         </div>
     </label>
 </div>

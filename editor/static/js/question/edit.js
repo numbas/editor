@@ -1086,6 +1086,11 @@ $(document).ready(function() {
             if(this.parts().length) {
                 this.currentPart(this.parts()[0]);
             }
+            this.allParts().forEach(function(p) {
+                p.nextParts().forEach(function(np) {
+                    np.otherPart(np.part.parentList()[np.otherPartIndex]);
+                });
+            });
 
             try{
                 this.tags(data.tags);
@@ -1957,6 +1962,8 @@ $(document).ready(function() {
 
             tabs.push(new Editor.Tab('adaptivemarking','Adaptive marking','transfer'));
 
+            tabs.push(new Editor.Tab('nextparts','Next parts','arrow-right'));
+
             return tabs;
         },this);
         this.realCurrentTab = ko.observable(this.tabs()[0]);
@@ -2030,6 +2037,28 @@ $(document).ready(function() {
             var names = this.variableReplacements().map(function(vr) {return vr.variable()});
             var randomDependencies = this.q.randomDependencies(names);
             return randomDependencies;
+        },this);
+
+        this.nextParts = ko.observableArray([]);
+        this.addNextPart = function(otherPart) {
+            var np = new NextPart(p);
+            np.otherPart(otherPart);
+            p.nextParts.push(np);
+        };
+        this.deleteNextPart = function(np) {
+            p.nextParts.remove(np);
+        }
+        this.availableNextParts = ko.computed(function() {
+            var parts = p.parentList().filter(function(p2){
+                return p!=p2;
+            });
+            if(!p.type().has_marks) {
+                var usedParts = p.nextParts().map(function(np){ return np.otherPart() });
+                parts = parts.filter(function(p2) {
+                    return usedParts.indexOf(p2)==-1;
+                });
+            }
+            return parts;
         },this);
 
         this.scripts = [
@@ -2186,6 +2215,7 @@ $(document).ready(function() {
                 scripts: {},
                 variableReplacements: this.variableReplacements().map(function(vr){return vr.toJSON()}),
                 variableReplacementStrategy: this.variableReplacementStrategy().name,
+                nextParts: this.nextParts().map(function(np){ return np.toJSON(); }),
                 customMarkingAlgorithm: this.use_custom_algorithm() ? this.customMarkingAlgorithm() : '',
                 extendBaseMarkingAlgorithm: this.use_custom_algorithm() ? this.extendBaseMarkingAlgorithm() : true,
                 unitTests: this.unit_tests().map(function(t){ return t.toJSON() })
@@ -2257,6 +2287,13 @@ $(document).ready(function() {
                 data.variableReplacements.map(function(d) {
                     var vr = new VariableReplacement(p,d);
                     p.variableReplacements.push(vr);
+                });
+            }
+            
+            if(data.nextParts) {
+                data.nextParts.map(function(d) {
+                    var np = new NextPart(p,d);
+                    p.nextParts.push(np);
                 });
             }
 
@@ -2344,6 +2381,109 @@ $(document).ready(function() {
             this.replacement(data.part);
         }
     }
+
+
+    function NextPart(part,data) {
+        var np = this;
+        this.part = part;
+        this.otherPart = ko.observable();
+        this.rawLabel = ko.observable('');
+        this.label = ko.computed({
+            read: function() {
+                return this.rawLabel() || (this.otherPart() ? this.otherPart().header() : '');
+            },
+            write: function(label) {
+                return this.rawLabel(label);
+            }
+        },this);
+        this.variableReplacements = ko.observableArray([]);
+        this.addVariableReplacement = function() {
+            var vr = new NextPartVariableReplacement(np);
+            np.variableReplacements.push(vr);
+        }
+        this.removeVariableReplacement = function(vr) {
+            np.variableReplacements.remove(vr);
+        }
+        if(data) {
+            this.load(data);
+        }
+    }
+    NextPart.prototype = {
+        toJSON: function() {
+            return {
+                label: this.label(),
+                rawLabel: this.rawLabel(),
+                otherPart: this.otherPart() ? this.part.parentList().indexOf(this.otherPart()) : '',
+                variableReplacements: this.variableReplacements().map(function(vr) { return vr.toJSON(); })
+            };
+        },
+        load: function(data) {
+            var np = this;
+            if(!data) {
+                return;
+            }
+            tryLoad(data,'rawLabel',this);
+            this.otherPartIndex = data.otherPart;
+            if(data.variableReplacements) {
+                this.variableReplacements(data.variableReplacements.map(function(vrd) {
+                    return new NextPartVariableReplacement(np,vrd);
+                }));
+            }
+        }
+    }
+
+    function NextPartVariableReplacement(np,data) {
+        this.np = np;
+        this.variables = ko.computed(function(){
+            return this.np.part.q.variables().map(function(v){
+                return v.name();
+            }).sort();
+        },this);
+        this.markingNotes = ko.computed(function() {
+            var s = this.np.part.markingScript();
+            if(!s) {
+                return [];
+            }
+            var notes = Object.values(s.notes).map(function(n) {
+                var desc = n.name;
+                if(n.description && n.description.trim()) {
+                    desc += ' ('+n.description.trim()+')';
+                }
+                return {
+                    name: n.name,
+                    description: desc
+                };
+            });
+            notes.sort(function(a,b) {
+                a = a.description;
+                b = b.description;
+                return a>b ? 1 : a<b ? -1 : 0;
+            });
+            return notes;
+        },this);
+
+        this.variable = ko.observable('');
+        this.definition = ko.observable('interpreted_answer');
+
+        if(data) {
+            this.load(data);
+        }
+    }
+    NextPartVariableReplacement.prototype = {
+        toJSON: function() {
+            return {
+                variable: this.variable(),
+                definition: this.definition()
+            }
+        },
+        load: function(data) {
+            if(!data) {
+                return;
+            }
+            this.variable(data.variable || '');
+            this.definition(data.definition || '');
+        }
+    };
 
     Numbas.marking.ignore_note_errors = true;
 

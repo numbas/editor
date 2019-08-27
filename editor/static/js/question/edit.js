@@ -2049,16 +2049,7 @@ $(document).ready(function() {
             p.nextParts.remove(np);
         }
         this.availableNextParts = ko.computed(function() {
-            var parts = p.parentList().filter(function(p2){
-                return p!=p2;
-            });
-            if(!p.type().has_marks) {
-                var usedParts = p.nextParts().map(function(np){ return np.otherPart() });
-                parts = parts.filter(function(p2) {
-                    return usedParts.indexOf(p2)==-1;
-                });
-            }
-            return parts;
+            return p.parentList();
         },this);
 
         this.scripts = [
@@ -2404,6 +2395,8 @@ $(document).ready(function() {
         this.removeVariableReplacement = function(vr) {
             np.variableReplacements.remove(vr);
         }
+        this.useAvailabilityCondition = ko.observable(false);
+        this.availabilityCondition = ko.observable('');
         if(data) {
             this.load(data);
         }
@@ -2414,7 +2407,8 @@ $(document).ready(function() {
                 label: this.label(),
                 rawLabel: this.rawLabel(),
                 otherPart: this.otherPart() ? this.part.parentList().indexOf(this.otherPart()) : '',
-                variableReplacements: this.variableReplacements().map(function(vr) { return vr.toJSON(); })
+                variableReplacements: this.variableReplacements().map(function(vr) { return vr.toJSON(); }),
+                availabilityCondition: this.useAvailabilityCondition() ? this.availabilityCondition() : ''
             };
         },
         load: function(data) {
@@ -2422,7 +2416,8 @@ $(document).ready(function() {
             if(!data) {
                 return;
             }
-            tryLoad(data,'rawLabel',this);
+            tryLoad(data,['rawLabel','availabilityCondition'],this);
+            this.useAvailabilityCondition(this.availabilityCondition().trim()!='');
             this.otherPartIndex = data.otherPart;
             if(data.variableReplacements) {
                 this.variableReplacements(data.variableReplacements.map(function(vrd) {
@@ -2438,28 +2433,6 @@ $(document).ready(function() {
             return this.np.part.q.variables().map(function(v){
                 return v.name();
             }).sort();
-        },this);
-        this.markingNotes = ko.computed(function() {
-            var s = this.np.part.markingScript();
-            if(!s) {
-                return [];
-            }
-            var notes = Object.values(s.notes).map(function(n) {
-                var desc = n.name;
-                if(n.description && n.description.trim()) {
-                    desc += ' ('+n.description.trim()+')';
-                }
-                return {
-                    name: n.name,
-                    description: desc
-                };
-            });
-            notes.sort(function(a,b) {
-                a = a.description;
-                b = b.description;
-                return a>b ? 1 : a<b ? -1 : 0;
-            });
-            return notes;
         },this);
 
         this.variable = ko.observable('');

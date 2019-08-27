@@ -881,9 +881,13 @@
                                             <button type="button" class="delete btn btn-link" data-bind="click: $parent.deleteNextPart" title="Delete this link"><span class="glyphicon glyphicon-remove text-danger"></span></button>
                                         </h4>
                                         <form class="form-horizontal" data-bind="submit: Editor.noop">
-                                            {% property 'rawLabel' 'Label' help_url='question/reference.html#term-label' placeholder='label' %}
+                                            {% property 'rawLabel' 'Label' help_url='question/parts/reference.html#term-label' placeholder='label' %}
+                                            {% booleanproperty 'useAvailabilityCondition' 'Conditional availability' help_url='question/parts/reference.html#term-conditional-availability' %}
+                                            <div data-bind="fadeVisible: useAvailabilityCondition">
+                                                {% property 'availabilityCondition' 'Available if' help_url='question/parts/reference.html#term-available-if' %}
+                                            </div>
                                         </form>
-                                        <div class="variable-replacements" data-bind="if: $parent.type().has_marks">
+                                        <div class="variable-replacements">
                                             <table class="table" data-bind="fadeVisible: variableReplacements().length">
                                                 <thead>
                                                     <tr>
@@ -895,7 +899,7 @@
                                                     <tr>
                                                         <td><select {% if not editable %}disabled{% endif %} class="form-control name-to-replace" data-bind="options: variables, value: variable"/></td>
                                                         <td>
-                                                            <select {% if not editable %}disabled{% endif %} class="form-control replace-with" data-bind="options: markingNotes, optionsText: 'description', optionsValue: 'name', value: definition"/>
+                                                            <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: definition, codemirrorMode: 'jme'"></textarea>
                                                         </td>
                                                         <td>
                                                             {% if editable %}<button type="button" class="delete btn btn-link" data-bind="click: $parent.deleteVariableReplacement" title="Delete this replacement"><span class="glyphicon glyphicon-remove text-danger"></span></button>{% endif %}

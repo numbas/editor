@@ -2019,6 +2019,7 @@ $(document).ready(function() {
         this.canMakeVariableReplacement = ko.computed(function() {
             return q.variables().length>0 && q.allParts().length>1;
         },this);
+        this.adaptiveMarkingPenalty = ko.observable(0);
 
         this.variableReplacementStrategies = [
             {name: 'originalfirst', niceName: 'Try without replacements first'},
@@ -2186,6 +2187,7 @@ $(document).ready(function() {
                 scripts: {},
                 variableReplacements: this.variableReplacements().map(function(vr){return vr.toJSON()}),
                 variableReplacementStrategy: this.variableReplacementStrategy().name,
+                adaptiveMarkingPenalty: this.adaptiveMarkingPenalty(),
                 customMarkingAlgorithm: this.use_custom_algorithm() ? this.customMarkingAlgorithm() : '',
                 extendBaseMarkingAlgorithm: this.use_custom_algorithm() ? this.extendBaseMarkingAlgorithm() : true,
                 unitTests: this.unit_tests().map(function(t){ return t.toJSON() })
@@ -2225,7 +2227,7 @@ $(document).ready(function() {
                 if(this.types[i].name == data.type.toLowerCase())
                     this.type(this.types[i]);
             }
-            tryLoad(data,['marks','customName','prompt','stepsPenalty','showCorrectAnswer','showFeedbackIcon','customMarkingAlgorithm','extendBaseMarkingAlgorithm'],this);
+            tryLoad(data,['marks','customName','prompt','stepsPenalty','showCorrectAnswer','showFeedbackIcon','customMarkingAlgorithm','extendBaseMarkingAlgorithm','adaptiveMarkingPenalty'],this);
             this.use_custom_algorithm(this.customMarkingAlgorithm()!='');
 
             if(data.steps)

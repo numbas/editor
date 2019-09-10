@@ -87,6 +87,7 @@ def select_input(context, property_name, *args, **kwargs):
         'disable': kwargs.get('disable', False),
         'options': kwargs.get('options'),
         'options_text': kwargs.get('options_text'),
+        'allow_blank': kwargs.get('allow_blank', False),
     })
     return context
 
@@ -97,6 +98,7 @@ def selectproperty(context, property_name, label, *args, **kwargs):
         'label': label,
         'options': kwargs.get('options'),
         'options_text': kwargs.get('options_text'),
+        'allow_blank': kwargs.get('allow_blank',False),
         'help_url': kwargs.get('help_url'),
         'disable': kwargs.get('disable', 'false'),
         'form_label_class': context.get('form_label_class', 'col-sm-3'),

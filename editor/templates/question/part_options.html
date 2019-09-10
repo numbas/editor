@@ -1,0 +1,62 @@
+{% load links %}
+{% load sanitizer %}
+{% load helplink %}
+{% load editor_controls %}
+
+<form class="form-horizontal" data-bind="submit: Editor.noop">
+    {% selectproperty 'partsMode' 'Part display mode' options_text='name' options='partsModes' %}
+
+    <!-- ko if: partsMode().value=='adaptive' -->
+        {% property 'maxMarks' 'Maximum mark' %}
+
+        <hr>
+
+        <section class="objectives">
+            <h3>Objectives</h3>
+            <div data-bind="fadeVisible: objectives().length">
+                <table class="table objectives">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Limit</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody data-bind="foreach: objectives">
+                        <tr class="objective">
+                            <td><input type="text" data-bind="textInput: name"></td>
+                            <td><input type="text" data-bind="textInput: limit"></td>
+                            <td><button class="btn btn-link btn-sm" data-bind="click: $parent.removeObjective" title="Delete this objective"><span class="glyphicon glyphicon-remove text-danger"></span></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn btn-primary" type="button" data-bind="click: addObjective"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: objectives().length ? 'Add another objective' : 'Add an objective'"></span></button>
+        </section>
+
+        <hr>
+        
+        <section class="penalties">
+            <h3>Penalties</h3>
+            <div data-bind="fadeVisible: penalties().length">
+                <table class="table penalties">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Limit</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody data-bind="foreach: penalties">
+                        <tr class="penalty">
+                            <td><input type="text" data-bind="textInput: name"></td>
+                            <td><input type="text" data-bind="textInput: limit"></td>
+                            <td><button class="btn btn-link btn-sm" data-bind="click: $parent.removePenalty" title="Delete this penalty"><span class="glyphicon glyphicon-remove text-danger"></span></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn btn-primary" type="button" data-bind="click: addPenalty"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: penalties().length ? 'Add another penalty' : 'Add a penalty'"></span></button>
+        </section>
+    <!-- /ko -->
+</form>

@@ -152,7 +152,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         context['partNames'] = [
             (name, '{}/{}.html'.format(part_type_path, name)) 
             for name in 
-            ('jme', 'gapfill', 'numberentry', 'patternmatch', '1_n_2', 'm_n_2', 'm_n_x', 'matrix', 'extension')
+            ('information', 'jme', 'gapfill', 'numberentry', 'patternmatch', '1_n_2', 'm_n_2', 'm_n_x', 'matrix', 'extension')
         ]
 
         return context

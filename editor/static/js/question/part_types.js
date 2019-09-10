@@ -17,7 +17,7 @@ part_types.models = [
         name: 'gapfill', 
         niceName: 'Gap-fill', 
         has_marks: true,
-        has_marking_settings: true,
+        has_feedback_icon: true,
         can_be_gap: false,
         can_be_step: false,
         widget: '',
@@ -60,7 +60,8 @@ part_types.models = [
         name:'jme', 
         niceName: 'Mathematical expression', 
         has_marks: true, 
-        has_marking_settings: true,
+        has_feedback_icon: true,
+        has_correct_answer: true,
         tabs: [
             new Editor.Tab('restrictions','Restrictions','text-background'),
             new Editor.Tab('checking-accuracy','Accuracy','scale')
@@ -313,7 +314,8 @@ part_types.models = [
         name:'numberentry', 
         niceName: 'Number entry', 
         has_marks: true,
-        has_marking_settings: true,
+        has_feedback_icon: true,
+        has_correct_answer: true,
         tabs: [],
         widget: 'number',
 
@@ -412,7 +414,8 @@ part_types.models = [
         name: 'matrix',
         niceName: 'Matrix entry',
         has_marks: true,
-        has_marking_settings: true,
+        has_feedback_icon: true,
+        has_correct_answer: true,
         tabs: [],
         widget: 'matrix',
 
@@ -484,7 +487,8 @@ part_types.models = [
         name:'patternmatch', 
         niceName: 'Match text pattern', 
         has_marks: true,
-        has_marking_settings: true,
+        has_feedback_icon: true,
+        has_correct_answer: true,
         tabs: [],
         widget: 'string',
 
@@ -524,6 +528,8 @@ part_types.models = [
     {
         name:'1_n_2', 
         has_marks: true,
+        has_feedback_icon: true,
+        has_correct_answer: true,
         niceName: 'Choose one from a list',
         tabs: [
             new Editor.Tab('choices','Choices','list',true,true),
@@ -644,6 +650,8 @@ part_types.models = [
     {
         name:'m_n_2', 
         has_marks: true,
+        has_feedback_icon: true,
+        has_correct_answer: true,
         niceName: 'Choose several from a list',
         tabs: [
             new Editor.Tab('choices','Choices','list',true,true),
@@ -775,6 +783,8 @@ part_types.models = [
     {
         name:'m_n_x', 
         has_marks: true,
+        has_feedback_icon: true,
+        has_correct_answer: true,
         niceName: 'Match choices with answers',
         tabs: [
             new Editor.Tab('choices','Choices','list',true,true),
@@ -998,10 +1008,11 @@ function CustomPartType(data) {
     this.description = data.description;
     this.widget = data.input_widget;
     this.has_marks = true;
+    this.has_correct_answer = true;
+    this.has_feedback_icon = true;
     this.tabs = [];
     this.can_be_gap = data.can_be_gap;
     this.can_be_step = data.can_be_step;
-    this.has_marking_settings = true;
     this.settings_def = data.settings;
     this.marking_script = data.marking_script;
     this.source = data.source;

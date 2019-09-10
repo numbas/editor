@@ -135,6 +135,14 @@ $(document).ready(function() {
             running: ko.observable(false),
             time_remaining: ko.observable(0)
         };
+
+        this.partsModes = [
+            {name: 'Show all parts', value: 'all'},
+            {name: 'Adaptive', value: 'adaptive'}
+        ];
+        this.partsMode = ko.observable(this.partsModes[0]);
+
+
         this.parts = ko.observableArray([]);
 
         // all parts in this question, including child parts such as gaps and steps
@@ -153,6 +161,25 @@ $(document).ready(function() {
         this.currentPart = ko.observable(null);
         this.addingPart = ko.observable(null);
 
+        this.partsTabMode = ko.observable('edit part');
+        this.showPartOptions = function() {
+            this.partsTabMode('options');
+        };
+        this.partsTabMode.subscribe(function(mode) {
+            switch(mode) {
+                case 'edit part':
+                    q.addingPart(null);
+                    break;
+                case 'options':
+                    q.currentPart(null);
+                    q.addingPart(null);
+                    break;
+                case 'add part':
+                    q.currentPart(null);
+                    break;
+            }
+        });
+
         this.partTypes = ko.computed(function() {
             return Editor.part_types.models.filter(function(pt) {
                 if(pt.is_custom_part_type) {
@@ -170,6 +197,24 @@ $(document).ready(function() {
                 return q.allParts().some(function(p){ return p.type().name==pt.name });
             })
         }, this);
+
+        this.maxMarks = ko.observable(0);
+        this.penalties = ko.observableArray([]);
+        this.objectives = ko.observableArray([]);
+
+        this.addObjective = function() {
+            q.objectives.push(new ScoreBin(q));
+        }
+        this.removeObjective = function(objective) {
+            q.objectives.remove(objective);
+        }
+
+        this.addPenalty = function() {
+            q.penalties.push(new ScoreBin(q));
+        }
+        this.removePenalty = function(penalty) {
+            q.penalties.remove(penalty);
+        }
 
         //for image attribute modal
         this.imageModal = {
@@ -273,12 +318,12 @@ $(document).ready(function() {
         }
         this.currentPart.subscribe(function(p) {
             if(p) {
-                q.addingPart(null);
+                q.partsTabMode('edit part');
             }
         });
         this.addingPart.subscribe(function(adding) {
             if(adding) {
-                q.currentPart(null);
+                q.partsTabMode('add part');
             }
         });
         ko.computed(function() {
@@ -500,6 +545,10 @@ $(document).ready(function() {
                 });
                 return d;
             },this));
+            if('partsTabMode' in state) {
+                this.partsTabMode(state.partsTabMode);
+            }
+            Editor.computedReplaceState('partsTabMode',this.partsTabMode);
         }
 
     }
@@ -977,8 +1026,12 @@ $(document).ready(function() {
                     js: this.preamble.js(),
                     css: this.preamble.css()
                 },
-                parts: this.parts().map(function(p){return p.toJSON();})
+                parts: this.parts().map(function(p){return p.toJSON();}),
+                partsMode: this.partsMode().value,
 
+                maxMarks: this.maxMarks(),
+                objectives: this.objectives().map(function(o){return o.toJSON();}),
+                penalties: this.penalties().map(function(p){return p.toJSON();})
             }
         },
 
@@ -1017,7 +1070,7 @@ $(document).ready(function() {
 
             contentData = data.JSONContent;
 
-            tryLoad(contentData,['name','statement','advice'],this);
+            tryLoad(contentData,['name','statement','advice','maxMarks'],this);
 
             if('variables' in contentData)
             {
@@ -1075,6 +1128,26 @@ $(document).ready(function() {
                 {
                     this.rulesets.push(new Ruleset(this,{name: x, sets:contentData.rulesets[x]}));
                 }
+            }
+
+            var partsMode = Editor.tryGetAttribute(contentData,'partsMode');
+            for(var i=0;i<this.partsModes.length;i++) {
+                var mode = this.partsModes[i];
+                if(mode.value==partsMode) {
+                    this.partsMode(mode);
+                    break;
+                }
+            }
+
+            if('objectives' in contentData) {
+                contentData.objectives.forEach(function(odata) {
+                    q.objectives.push(new ScoreBin(q,odata));
+                });
+            }
+            if('penalties' in contentData) {
+                contentData.penalties.forEach(function(pdata) {
+                    q.penalties.push(new ScoreBin(q,pdata));
+                });
             }
 
             if('parts' in contentData)
@@ -1804,6 +1877,40 @@ $(document).ready(function() {
         },this);
     }
 
+    function ScoreBin(q,data) {
+        this.q = q;
+        this.name = ko.observable('');
+        this.limit = ko.observable(0);
+        this.modes = [
+            {name: 'Sum', value: 'sum'},
+            {name: 'Scale', value: 'scale'}
+        ];
+        this.mode = ko.observable(this.modes[0]); // sum or scale
+
+        if(data) {
+            this.load(data);
+        }
+    }
+    ScoreBin.prototype = {
+        toJSON: function() {
+            return {
+                name: this.name(),
+                limit: this.limit(),
+                mode: this.mode().value
+            };
+        },
+
+        load: function(data) {
+            tryLoad(data,['name','limit'],this);
+            for(var i=0;i<this.modes.length;i++) {
+                if(this.modes[i].value==data.mode) {
+                    this.mode(this.modes[i]);
+                    break;
+                }
+            }
+        }
+    };
+
     var Part = Editor.question.Part = function(q,parent,parentList,data) {
         var p = this;
         this.q = q;
@@ -1949,9 +2056,7 @@ $(document).ready(function() {
                 tabs.push(new Editor.Tab('prompt','Prompt','blackboard',true,true));
             }
 
-            if(this.type().has_marking_settings) {
-                tabs.push(new Editor.Tab('marking-settings','Marking settings','pencil',true,true));
-            }
+            tabs.push(new Editor.Tab('marking-settings','Marking settings','pencil',true,true));
             if(this.type().has_marks) {
                 tabs.push(new Editor.Tab('marking-algorithm','Marking algorithm','ok'));
             }
@@ -2005,6 +2110,10 @@ $(document).ready(function() {
                 return this.marks();
             }
         },this);
+
+        this.adaptiveObjective = ko.observable(null);
+        this.adaptivePenalty = ko.observable(null);
+        this.adaptivePenaltyAmount = ko.observable(0);
 
         this.startAddingGap = function() {
             q.addingPart({kind:'gap',parent:p, parentList: p.gaps, availableTypes: q.gapTypes});
@@ -2209,7 +2318,10 @@ $(document).ready(function() {
                 nextParts: this.nextParts().map(function(np){ return np.toJSON(); }),
                 customMarkingAlgorithm: this.use_custom_algorithm() ? this.customMarkingAlgorithm() : '',
                 extendBaseMarkingAlgorithm: this.use_custom_algorithm() ? this.extendBaseMarkingAlgorithm() : true,
-                unitTests: this.unit_tests().map(function(t){ return t.toJSON() })
+                unitTests: this.unit_tests().map(function(t){ return t.toJSON() }),
+                adaptiveObjective: this.adaptiveObjective() ? this.adaptiveObjective().name() : null,
+                adaptivePenalty: this.adaptivePenalty() ? this.adaptivePenalty().name() : null,
+                adaptivePenaltyAmount: this.adaptivePenaltyAmount()
             };
 
             if(this.prompt())
@@ -2246,8 +2358,10 @@ $(document).ready(function() {
                 if(this.types[i].name == data.type.toLowerCase())
                     this.type(this.types[i]);
             }
-            tryLoad(data,['marks','customName','prompt','stepsPenalty','showCorrectAnswer','showFeedbackIcon','customMarkingAlgorithm','extendBaseMarkingAlgorithm'],this);
+            tryLoad(data,['marks','customName','prompt','stepsPenalty','showCorrectAnswer','showFeedbackIcon','customMarkingAlgorithm','extendBaseMarkingAlgorithm','adaptivePenaltyAmount'],this);
             this.use_custom_algorithm(this.customMarkingAlgorithm()!='');
+
+            this.adaptiveObjective(this.q.objectives().find(function(o) { return o.name()==data.adaptiveObjective; }));
 
             if(data.steps)
             {
@@ -2397,6 +2511,8 @@ $(document).ready(function() {
         }
         this.useAvailabilityCondition = ko.observable(false);
         this.availabilityCondition = ko.observable('');
+        this.penalty = ko.observable(null);
+        this.penaltyAmount = ko.observable(0);
         if(data) {
             this.load(data);
         }
@@ -2408,7 +2524,9 @@ $(document).ready(function() {
                 rawLabel: this.rawLabel(),
                 otherPart: this.otherPart() ? this.part.parentList().indexOf(this.otherPart()) : '',
                 variableReplacements: this.variableReplacements().map(function(vr) { return vr.toJSON(); }),
-                availabilityCondition: this.useAvailabilityCondition() ? this.availabilityCondition() : ''
+                availabilityCondition: this.useAvailabilityCondition() ? this.availabilityCondition() : '',
+                penalty: this.penalty() ? this.penalty().name() : '',
+                penaltyAmount: this.penaltyAmount()
             };
         },
         load: function(data) {
@@ -2416,9 +2534,10 @@ $(document).ready(function() {
             if(!data) {
                 return;
             }
-            tryLoad(data,['rawLabel','availabilityCondition'],this);
+            tryLoad(data,['rawLabel','availabilityCondition','penaltyAmount'],this);
             this.useAvailabilityCondition(this.availabilityCondition().trim()!='');
             this.otherPartIndex = data.otherPart;
+            this.penalty(this.part.q.penalties().find(function(p) { return p.name()==data.penalty; }));
             if(data.variableReplacements) {
                 this.variableReplacements(data.variableReplacements.map(function(vrd) {
                     return new NextPartVariableReplacement(np,vrd);
@@ -3050,7 +3169,8 @@ $(document).ready(function() {
         this.help_url = data.help_url;
         this.niceName = data.niceName;
         this.has_marks = data.has_marks || false;
-        this.has_marking_settings = data.has_marking_settings || false;
+        this.has_correct_answer = data.has_correct_answer || false;
+        this.has_feedback_icon = data.has_feedback_icon || false;
         this.tabs = data.tabs || [];
         this.model = data.model ? data.model(part) : {};
         this.required_extensions = data.required_extensions || [];

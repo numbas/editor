@@ -302,7 +302,14 @@ def apply_project_invitations(instance, created, **kwargs):
     if created:
         invitations = ProjectInvitation.objects.filter(email=instance.email)
         for invitation in invitations:
-            ProjectAccess.objects.create(project=invitation.project, user=instance, access=invitation.access)
+            project = invitation.project
+            if not project.has_access(instance,(invitation.access,)):
+                try:
+                    access = ProjectAccess.objects.get(project=project,user=instance)
+                    access.access = invitation.access
+                    access.save()
+                except ProjectAccess.DoesNotExist:
+                    ProjectAccess.objects.create(project=invitation.project, user=instance, access=invitation.access)
 
 class EditorTag(taggit.models.TagBase):
     official = models.BooleanField(default=False)

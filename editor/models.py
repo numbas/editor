@@ -473,6 +473,7 @@ class CustomPartType(models.Model, ControlledObject):
         new_type.pk = None
         new_type.id = None
         new_type.author = author
+        new_type.public_availability = 'restricted'
         new_type.name = name
         new_type.set_short_name(slugify(name))
         new_type.copy_of = self

@@ -124,7 +124,13 @@ class PublishView(generic.UpdateView):
         messages.add_message(self.request, messages.SUCCESS, 'This custom part type has been published to the public database.')
         return redirect(self.get_success_url())
 
-class UnPublishView(PublishView):
+class UnPublishView(generic.UpdateView):
+    model = CustomPartType
+
+    def get_success_url(self):
+        cpt = self.get_object()
+        return reverse('custom_part_type_edit', args=(cpt.pk,)) 
+
     def dispatch(self, request, *args, **kwargs):
         cpt = self.get_object()
         if cpt.public_availability == 'restricted':
@@ -133,9 +139,9 @@ class UnPublishView(PublishView):
             return super(UnPublishView, self).dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        ei = self.get_object()
-        ei.unpublish()
-        ei.save()
+        cpt = self.get_object()
+        cpt.public_availability = 'restricted'
+        cpt.save()
         messages.add_message(self.request, messages.INFO, 'This custom part type has been unpublished from the public database.')
         return redirect(self.get_success_url())
 

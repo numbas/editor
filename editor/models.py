@@ -469,7 +469,8 @@ class CustomPartType(models.Model, ControlledObject):
         new_type.name = name
         new_type.set_short_name(slugify(name))
         new_type.copy_of = self
-        new_type.extensions.set(self.extensions)
+        new_type.save()
+        new_type.extensions.set(self.extensions.all())
         return new_type
 
     def __str__(self):

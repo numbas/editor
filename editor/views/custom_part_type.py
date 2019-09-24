@@ -160,6 +160,5 @@ class CopyView(generic.FormView, generic.edit.ModelFormMixin):
             return http.HttpResponseForbidden("You may not copy this custom part type.")
 
         new_obj = obj.copy(author=self.request.user, name=form.cleaned_data.get('name'))
-        new_obj.save()
 
         return redirect(new_obj.get_absolute_url())

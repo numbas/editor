@@ -90,7 +90,7 @@ class UserProfile(models.Model):
         return self.user.timelineitems.order_by('-date')
 
     def get_absolute_url(self):
-        return reverse('view_profile', args=(self.pk,))
+        return reverse('view_profile', args=(self.user.pk,))
 
 class EditorItemViewed(models.Model):
     userprofile = models.ForeignKey(UserProfile, related_name='last_viewed_items', on_delete=models.CASCADE)

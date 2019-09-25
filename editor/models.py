@@ -19,6 +19,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.staticfiles import finders
 from django.core.exceptions import ValidationError
+from django.core.files.storage import default_storage
 from django.urls import reverse
 from django.db import models, transaction
 from django.db.models import signals, Max, Min
@@ -567,6 +568,9 @@ class Resource(models.Model):
     def filetype(self):
         name,ext = os.path.splitext(self.file.name)
         return ext
+
+    def get_created_time(self):
+        return default_storage.get_created_time(self.file.name)
 
     def is_image(self):
         return self.filetype.lower() in ('.png','.jpg','.svg','.gif')

@@ -4560,11 +4560,11 @@ newBuiltin('degrees', [TNum], TNum, math.degrees );
 newBuiltin('radians', [TNum], TNum, math.radians );
 newBuiltin('sign', [TNum], TNum, math.sign );
 newBuiltin('rational_approximation',[TNum],TList,function(n) {
-    return math.rationalApproximation(n);
-},{unwrapValues:true});
+    return math.rationalApproximation(n).map(function(x) { return new TInt(x); });
+});
 newBuiltin('rational_approximation',[TNum,TNum],TList,function(n,accuracy) {
-    return math.rationalApproximation(n,accuracy);
-},{unwrapValues:true});
+    return math.rationalApproximation(n,accuracy).map(function(x) { return new TInt(x); });
+});
 newBuiltin('factorise',[TNum],TList,function(n) {
         return math.factorise(n).map(function(n){return new TNum(n)});
     }
@@ -10475,10 +10475,15 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         tryGetAttribute(this.settings,this.xml,'.',['minimumMarks','enableMinimumMarks','stepsPenalty','showCorrectAnswer','showFeedbackIcon'],[]);
         //load steps
         var stepNodes = this.xml.selectNodes('steps/part');
-        for(var i=0; i<stepNodes.length; i++)
-        {
-            var step = Numbas.createPartFromXML( stepNodes[i], this.path+'s'+i, this.question, this, this.store);
-            this.addStep(step,i);
+        if(!this.question || !this.question.exam || this.question.exam.settings.allowSteps) {
+            for(var i=0; i<stepNodes.length; i++) {
+                var step = Numbas.createPartFromXML( stepNodes[i], this.path+'s'+i, this.question, this, this.store);
+                this.addStep(step,i);
+            }
+        } else {
+            for(var i=0; i<stepNodes.length; i++) {
+                stepNodes[i].parentElement.removeChild(stepNodes[i]);
+            }
         }
         // set variable replacements
         var adaptiveMarkingNode = this.xml.selectSingleNode('adaptivemarking');
@@ -14872,8 +14877,8 @@ var math = Numbas.math = /** @lends Numbas.math */ {
      * @returns {Number}
      */
     prod: function(list)  {
-        let product = 1;
-        for (let i = 0; i < list.length; i++){
+        var product = 1;
+        for (var i = 0; i < list.length; i++){
             product = math.mul(product, list[i]);
         }
         return product;
@@ -23316,15 +23321,13 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
         viewModel: function(params) {
             var vm = this;
             this.allowResize = params.allowResize ? params.allowResize : Knockout.observable(false);
+            this.numRows = Knockout.observable(Knockout.unwrap(params.rows) || 2);
             if(typeof params.rows=='function') {
-                this.numRows = params.rows;
-            } else {
-                this.numRows = Knockout.observable(params.rows || 2);
+                params.rows.subscribe(function(v) { vm.numRows(v); });
             }
+            this.numColumns = Knockout.observable(Knockout.unwrap(params.columns) || 2);
             if(typeof params.columns=='function') {
-                this.numColumns = params.columns;
-            } else {
-                this.numColumns = Knockout.observable(params.columns || 2);
+                params.columns.subscribe(function(v) { vm.numColumns(v); });
             }
             this.value = Knockout.observableArray([]);
             var v = params.value();
@@ -25776,10 +25779,8 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
         var correctInput = settings.correctAnswer.map(function(row) {
             return row.map(function(c) {
                 if(settings.allowFractions) {
-                    var f = math.rationalApproximation(c);
-                    if(f[1]!=1) {
-                        return f[0]+'/'+f[1];
-                    }
+                    var f = math.Fraction.fromFloat(c);
+                    return f.toString();
                 }
                 return math.niceNumber(c,{precisionType: settings.precisionType, precision:settings.precision, style: settings.correctAnswerStyle});
             });

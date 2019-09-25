@@ -563,6 +563,14 @@ class Resource(models.Model):
     def resource_url(self):
         return 'resources/%s' % self.file.name
 
+    @property
+    def filetype(self):
+        name,ext = os.path.splitext(self.file.name)
+        return ext
+
+    def is_image(self):
+        return self.filetype.lower() in ('.png','.jpg','.svg','.gif')
+
     def delete(self, *args, **kwargs):
         self.file.delete(save=False)
         super(Resource, self).delete(*args, **kwargs)

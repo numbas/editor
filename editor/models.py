@@ -902,6 +902,8 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
         e2.share_uuid_edit = uuid.uuid4()
         e2.current_stamp = None
         e2.public_access = 'view'
+        e2.published = False
+        e2.published_date = None
         e2.copy_of = self
         if author is not None:
             e2.author = author

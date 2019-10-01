@@ -242,7 +242,6 @@ $(document).ready(function() {
 
             ko.computed(function() {
                 if(this.used_or_required()) {
-                    console.log('activate',this.location);
                     Numbas.activateExtension(this.location);
                 }
             },this);

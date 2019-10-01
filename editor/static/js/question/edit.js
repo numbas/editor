@@ -240,6 +240,12 @@ $(document).ready(function() {
                 }
             }, ext);
 
+            ko.computed(function() {
+                if(this.used_or_required()) {
+                    console.log('activate',this.location);
+                    Numbas.activateExtension(this.location);
+                }
+            },this);
         }
 
         for(var i=0;i<item_json.numbasExtensions.length;i++) {

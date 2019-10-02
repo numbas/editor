@@ -454,9 +454,9 @@
                 </h4>
                 <form class="form-horizontal" data-bind="submit: Editor.noop">
                     {% property 'rawLabel' 'Label' help_url='question/parts/reference.html#term-label' placeholder='label' %}
-                    {% booleanproperty 'useAvailabilityCondition' 'Conditional availability' help_url='question/parts/reference.html#term-conditional-availability' %}
-                    <div data-bind="fadeVisible: useAvailabilityCondition">
-                        {% property 'availabilityCondition' 'Available if' help_url='question/parts/reference.html#term-available-if' %}
+                    {% selectproperty 'availabilityCondition' 'Availability' options_text='name' options='availability_conditions' help_url='question/parts/reference.html#term-availability' %}
+                    <div data-bind="fadeVisible: availabilityCondition().id=='expression'">
+                        {% property 'availabilityExpression' 'Available if' help_url='question/parts/reference.html#term-available-if' %}
                     </div>
 
                     {% selectproperty 'penalty' 'Penalty to apply when visited' options_text='name' options='$parent.q.penalties' allow_blank=True help_url='question/parts/reference.html#term-penalty-to-apply-when-visited' %}

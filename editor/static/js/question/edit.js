@@ -2490,7 +2490,6 @@ $(document).ready(function() {
         }
     }
 
-
     function NextPart(part,data) {
         var np = this;
         this.part = part;
@@ -2512,8 +2511,14 @@ $(document).ready(function() {
         this.removeVariableReplacement = function(vr) {
             np.variableReplacements.remove(vr);
         }
-        this.useAvailabilityCondition = ko.observable(false);
-        this.availabilityCondition = ko.observable('');
+        this.availabilityExpression = ko.observable('');
+        this.availability_conditions = [
+            {name: 'Always', id: 'always', value: ''},
+            {name: 'When incorrect', id: 'when-incorrect', value: 'credit<1'},
+            {name: 'When correct', id: 'when-correct', value: 'credit=1'},
+            {name: 'Depending on expression', id: 'expression', value: this.availabilityExpression}
+        ];
+        this.availabilityCondition = ko.observable(this.availability_conditions[0]);
         this.penalty = ko.observable(null);
         this.penaltyAmount = ko.observable(0);
         if(data) {
@@ -2527,7 +2532,7 @@ $(document).ready(function() {
                 rawLabel: this.rawLabel(),
                 otherPart: this.otherPart() ? this.part.parentList().indexOf(this.otherPart()) : '',
                 variableReplacements: this.variableReplacements().map(function(vr) { return vr.toJSON(); }),
-                availabilityCondition: this.useAvailabilityCondition() ? this.availabilityCondition() : '',
+                availabilityCondition: ko.unwrap(this.availabilityCondition().value),
                 penalty: this.penalty() ? this.penalty().name() : '',
                 penaltyAmount: this.penaltyAmount()
             };
@@ -2537,8 +2542,15 @@ $(document).ready(function() {
             if(!data) {
                 return;
             }
-            tryLoad(data,['rawLabel','availabilityCondition','penaltyAmount'],this);
-            this.useAvailabilityCondition(this.availabilityCondition().trim()!='');
+            tryLoad(data,['rawLabel','penaltyAmount'],this);
+            tryLoad(data,'availabilityCondition',this,'availabilityExpression');
+            for(var i=0;i<this.availability_conditions.length;i++) {
+                var condition = this.availability_conditions[i];
+                if(ko.unwrap(condition.value)==this.availabilityExpression()) {
+                    this.availabilityCondition(condition);
+                    break;
+                }
+            }
             this.otherPartIndex = data.otherPart;
             this.penalty(this.part.q.penalties().find(function(p) { return p.name()==data.penalty; }));
             if(data.variableReplacements) {

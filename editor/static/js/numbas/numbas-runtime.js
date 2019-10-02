@@ -11116,6 +11116,11 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         this.shouldResubmit = false;
         this.credit = 0;
         this.markingFeedback = [];
+        if(this.question.partsMode=='explore' && this.settings.exploreObjective) {
+            this.markingComment(
+                R('part.marking.counts towards objective',{objective: this.settings.exploreObjective})
+            );
+        }
         this.finalised_result = {valid: false, credit: 0, states: []};
         this.submitting = true;
         if(this.parentPart && !this.parentPart.submitting) {
@@ -12431,16 +12436,17 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                 marks = this.maxMarks;
                 this.objectives.forEach(function(o) {
                     o.score = 0;
+                    o.answered = false;
                 });
                 this.penalties.forEach(function(p) {
                     p.score = 0;
                 });
+                var defaultObjective = {score: 0, answered: false, limit: this.maxMarks};
                 for(var i=0; i<this.parts.length; i++) {
                     var part = this.parts[i];
-                    var objective = this.getObjective(part.settings.exploreObjective);
-                    if(objective) {
-                        objective.score += part.score;
-                    }
+                    var objective = this.getObjective(part.settings.exploreObjective) || defaultObjective;
+                    objective.score += part.score;
+                    objective.answered = objective.answered || part.answered;
 
                     part.nextParts.forEach(function(np) {
                         if(np.instance) {
@@ -12451,7 +12457,8 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                         }
                     });
                 }
-                this.objectives.forEach(function(o) {
+                var objectives = this.objectives.concat([defaultObjective]);
+                objectives.forEach(function(o) {
                     o.score = Math.min(o.limit,o.score);
                     score += o.score;
                 });

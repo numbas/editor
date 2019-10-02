@@ -71,7 +71,6 @@ class GlobalStatsView(TemplateView):
 def word_cloud(items):
     all_words = defaultdict(lambda: 0)
     stopwords = 'and,are,for,from,how,that,the,this,was,what,when,where,question,exam,copy,one,two,three,four,five,six,seven,eight,nine,ten'.split(',')
-    print(stopwords)
     for e in items:
         words = [re.sub(r'\W*(\w.*?)\W*$',r'\1',w.lower()) for w in re.split(r'\s',e.name)]
         words = [w for w in words if len(w)>2 and w not in stopwords and not re.search(r'(\d|\'s)',w) and re.match(r'\w+',w)]

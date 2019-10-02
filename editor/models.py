@@ -19,6 +19,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.staticfiles import finders
 from django.core.exceptions import ValidationError
+from django.core.files.storage import default_storage
 from django.urls import reverse
 from django.db import models, transaction
 from django.db.models import signals, Max, Min
@@ -302,7 +303,14 @@ def apply_project_invitations(instance, created, **kwargs):
     if created:
         invitations = ProjectInvitation.objects.filter(email=instance.email)
         for invitation in invitations:
-            ProjectAccess.objects.create(project=invitation.project, user=instance, access=invitation.access)
+            project = invitation.project
+            if not project.has_access(instance,(invitation.access,)):
+                try:
+                    access = ProjectAccess.objects.get(project=project,user=instance)
+                    access.access = invitation.access
+                    access.save()
+                except ProjectAccess.DoesNotExist:
+                    ProjectAccess.objects.create(project=invitation.project, user=instance, access=invitation.access)
 
 class EditorTag(taggit.models.TagBase):
     official = models.BooleanField(default=False)
@@ -466,10 +474,12 @@ class CustomPartType(models.Model, ControlledObject):
         new_type.pk = None
         new_type.id = None
         new_type.author = author
+        new_type.public_availability = 'restricted'
         new_type.name = name
         new_type.set_short_name(slugify(name))
         new_type.copy_of = self
-        new_type.extensions.set(self.extensions)
+        new_type.save()
+        new_type.extensions.set(self.extensions.all())
         return new_type
 
     def __str__(self):
@@ -553,6 +563,17 @@ class Resource(models.Model):
     @property
     def resource_url(self):
         return 'resources/%s' % self.file.name
+
+    @property
+    def filetype(self):
+        name,ext = os.path.splitext(self.file.name)
+        return ext
+
+    def get_created_time(self):
+        return default_storage.get_created_time(self.file.name)
+
+    def is_image(self):
+        return self.filetype.lower() in ('.png','.jpg','.svg','.gif')
 
     def delete(self, *args, **kwargs):
         self.file.delete(save=False)
@@ -881,6 +902,8 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
         e2.share_uuid_edit = uuid.uuid4()
         e2.current_stamp = None
         e2.public_access = 'view'
+        e2.published = False
+        e2.published_date = None
         e2.copy_of = self
         if author is not None:
             e2.author = author

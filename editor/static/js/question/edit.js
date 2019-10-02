@@ -285,6 +285,11 @@ $(document).ready(function() {
                 }
             }, ext);
 
+            ko.computed(function() {
+                if(this.used_or_required()) {
+                    Numbas.activateExtension(this.location);
+                }
+            },this);
         }
 
         for(var i=0;i<item_json.numbasExtensions.length;i++) {
@@ -2135,6 +2140,7 @@ $(document).ready(function() {
         this.canMakeVariableReplacement = ko.computed(function() {
             return q.variables().length>0 && q.allParts().length>1;
         },this);
+        this.adaptiveMarkingPenalty = ko.observable(0);
 
         this.variableReplacementStrategies = [
             {name: 'originalfirst', niceName: 'Try without replacements first'},
@@ -2316,6 +2322,7 @@ $(document).ready(function() {
                 variableReplacements: this.variableReplacements().map(function(vr){return vr.toJSON()}),
                 variableReplacementStrategy: this.variableReplacementStrategy().name,
                 nextParts: this.nextParts().map(function(np){ return np.toJSON(); }),
+                adaptiveMarkingPenalty: this.adaptiveMarkingPenalty(),
                 customMarkingAlgorithm: this.use_custom_algorithm() ? this.customMarkingAlgorithm() : '',
                 extendBaseMarkingAlgorithm: this.use_custom_algorithm() ? this.extendBaseMarkingAlgorithm() : true,
                 unitTests: this.unit_tests().map(function(t){ return t.toJSON() }),
@@ -2358,7 +2365,7 @@ $(document).ready(function() {
                 if(this.types[i].name == data.type.toLowerCase())
                     this.type(this.types[i]);
             }
-            tryLoad(data,['marks','customName','prompt','stepsPenalty','showCorrectAnswer','showFeedbackIcon','customMarkingAlgorithm','extendBaseMarkingAlgorithm','adaptivePenaltyAmount'],this);
+            tryLoad(data,['marks','customName','prompt','stepsPenalty','showCorrectAnswer','showFeedbackIcon','customMarkingAlgorithm','extendBaseMarkingAlgorithm','adaptivePenaltyAmount','adaptiveMarkingPenalty'],this);
             this.use_custom_algorithm(this.customMarkingAlgorithm()!='');
 
             this.adaptiveObjective(this.q.objectives().find(function(o) { return o.name()==data.adaptiveObjective; }));

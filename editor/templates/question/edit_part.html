@@ -435,19 +435,13 @@
                 <p><a href="{{HELP_URL}}question/parts/reference.html#adaptive-marking">More information about this problem</a></p>
             </div>
 
-            <div class="text-right">
+            <p class="text-right">
                 {% if editable %}<button class="btn btn-sm btn-primary add-variable-replacement" data-bind="click: addVariableReplacement"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: variableReplacements().length? 'Add another replacement' : 'Add a variable replacement'">Add a variable replacement</span></button>{% endif %}
-            </div>
+            </p>
 
-            <form class="form-horizontal" data-bind="submit: Editor.noop">
-                <div class="control-group">
-                    <label class="control-label">
-                        Variable replacement strategy:
-                    </label>
-                    <div class="controls">
-                        <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: variableReplacementStrategies, value: variableReplacementStrategy, optionsText: 'niceName'"></select>
-                    </div>
-                </div>
+            <form class="form-horizontal" data-bind="submit: Editor.noop, visible: variableReplacements().length">
+                {% selectproperty 'variableReplacementStrategy' 'Variable replacement strategy' options_text='niceName' options='variableReplacementStrategies' help_url='question/parts/reference.html#term-variable-replacement-strategy' %}
+                {% property 'adaptiveMarkingPenalty' 'Penalty when adaptive marking is used' min=0 help_url='question/parts/reference.html#term-penalty-when-adaptive-marking-is-used' %}
             </form>
         </div>
     </section>

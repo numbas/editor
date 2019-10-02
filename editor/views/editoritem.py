@@ -426,7 +426,6 @@ class CompileObject():
 
     def get_object(self):
         obj = super(CompileObject,self).get_object()
-        print(obj)
         self.editoritem = obj.editoritem
         self.numbasobject = self.editoritem.as_numbasobject(self.request)
         return obj

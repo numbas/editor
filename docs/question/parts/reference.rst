@@ -131,6 +131,10 @@ The definition is a :ref:`jme` expression used to evaluate the note.
 
         Does this part have any variable replacement rules?
 
+    .. data:: adaptiveMarkingPenalty
+
+        The number of marks to deduct when adaptive marking is used.
+
     .. data:: showFeedbackIcon
 
         Show the tick/cross feedback symbol after this part is submitted?
@@ -249,6 +253,31 @@ We can ensure this by replacing the value of ``sample_mean`` with the student's 
 When the student submits an answer to part **b**, the value of ``z_statistic`` will be automatically recalculated using the student's value of ``sample_mean``. 
 Then, if the student correctly applies the formula, their answer will match the new value of ``z_statistic`` and they will receive full credit for the part.
 
+.. topic:: Settings
+
+    .. glossary::
+
+        Variable replacement strategy
+
+            The circumstances under which the variable replacements are used, and adaptive marking is applied.
+            There are two variable replacement strategies:
+
+            :guilabel:`Try without replacements first`:
+            The student's answer is first marked using the original values of the question variables.
+            If the credit given by this method is less than the maximum available, the marking is repeated using the defined variable replacements.
+            If the credit gained with variable replacements is greater than the credit gained under the original marking, that score is used, and the student is told that their answers to previous parts have been used in the marking for this part.
+
+            :guilabel:`Always replace variables`:
+            The student's answer is only marked once, with the defined variable replacements applied.
+
+
+        Penalty when adaptive marking is used
+
+            If adaptive marking is used, reduce the total available marks by this amount. 
+            Credit for the part is scaled down accordingly. 
+            For example, if there are 6 marks available and the penalty for using adaptive marking is 2 marks, the total available after revealing steps is 4. 
+            An answer worth 3 marks without the penalty is instead worth :math:`3 \times \frac{4}{6} = 2` marks when adaptive marking is used.
+        
 .. warning::
     This feature can be very powerful, but make sure you don't introduce any new random variation in these dependent variables, or the correct answer will change each time the student submits their answer.
 
@@ -284,17 +313,6 @@ Then, if the student correctly applies the formula, their answer will match the 
         Must be answered?
             If this is ticked, the student must submit an answer to the referenced part before they can submit an answer to this part.
 
-    There are two variable replacement strategies:
-
-    .. glossary::
-
-        Try without replacements first
-            The student's answer is first marked using the original values of the question variables.
-            If the credit given by this method is less than the maximum available, the marking is repeated using the defined variable replacements.
-            If the credit gained with variable replacements is greater than the credit gained under the original marking, that score is used, and the student is told that their answers to previous parts have been used in the marking for this part.
-
-        Always replace variables
-            The student's answer is only marked once, with the defined variable replacements applied.
 
     .. _part_type_variable_replacement:
 

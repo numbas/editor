@@ -81,6 +81,7 @@ $(document).ready(function() {
         this.allowregen = ko.observable(true);
         this.reverse = ko.observable(true);
         this.browse = ko.observable(true);
+        this.allowsteps = ko.observable(true);
         this.preventleave = ko.observable(true);
         this.startpassword = ko.observable('');
 
@@ -254,6 +255,7 @@ $(document).ready(function() {
                     allowregen: this.allowregen(),
                     reverse: this.reverse(),
                     browse: this.browse(),
+                    allowsteps: this.allowsteps(),
                     showfrontpage: this.showfrontpage(),
                     showresultspage: this.showresultspage().name,
                     onleave: this.onleave.toJSON(),

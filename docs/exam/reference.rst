@@ -149,6 +149,9 @@ The navigation settings control how the student can move through the exam, and w
     Allow jump to any question?
         If ticked, then the user can jump between questions at will during the exam.
 
+    Enable steps?
+        If unticked, then part steps will not be offered to the student, regardless of whether any have been defined in the exam's questions.
+
     Show front page?
         If ticked, then an intro screen is shown to the student before the exam starts, 
 

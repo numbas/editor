@@ -10532,7 +10532,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         this.xml = xml;
         var tryGetAttribute = Numbas.xml.tryGetAttribute;
         tryGetAttribute(this,this.xml,'.',['type','marks','useCustomName','customName']);
-        tryGetAttribute(this.settings,this.xml,'.',['minimumMarks','enableMinimumMarks','stepsPenalty','showCorrectAnswer','showFeedbackIcon','adaptiveObjective'],[]);
+        tryGetAttribute(this.settings,this.xml,'.',['minimumMarks','enableMinimumMarks','stepsPenalty','showCorrectAnswer','showFeedbackIcon','exploreObjective'],[]);
         //load steps
         var stepNodes = this.xml.selectNodes('steps/part');
         if(!this.question || !this.question.exam || this.question.exam.settings.allowSteps) {
@@ -10864,7 +10864,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @property {Boolean} showFeedbackIcon - Show the tick/cross feedback symbol after this part is submitted?
      * @property {Boolean} hasVariableReplacements - Does this part have any variable replacement rules?
      * @property {String} variableReplacementStrategy - `'originalfirst'` or `'alwaysreplace'`
-     * @property {String} adaptiveObjective - objective that this part's score counts towards
+     * @property {String} exploreObjective - objective that this part's score counts towards
      * @property {Number} adaptiveMarkingPenalty - Number of marks to deduct when adaptive marking is used
      */
     settings:
@@ -10876,7 +10876,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         showFeedbackIcon: true,
         hasVariableReplacements: false,
         variableReplacementStrategy: 'originalfirst',
-        adaptiveObjective: ''
+        exploreObjective: '',
         adaptiveMarkingPenalty: 0
     },
 
@@ -11798,17 +11798,17 @@ Question.prototype = /** @lends Numbas.Question.prototype */
     /** How should parts be shown? 
      *
      * * `all`: all available parts are generated straight away
-     * * `adaptive`: parts are only generated when required
+     * * `explore`: parts are only generated when required
      * @type {String}
      */
     partsMode: 'all',
 
-    /** Maximum available marks in adaptive mode.
+    /** Maximum available marks in explore mode.
      * @type {Number}
      */
     maxMarks: 0,
 
-    /** In adaptive mode, the part that the student is currently looking at.
+    /** In explore mode, the part that the student is currently looking at.
      * @type {Numbas.parts.Part}
      */
     currentPart: null,
@@ -11912,7 +11912,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                         q.addPart(part,j);
                     }
                     break;
-                case 'adaptive':
+                case 'explore':
                     var partNode = q.xml.selectSingleNode('parts/part');
                     q.addExtraPartFromXML(0);
                     break;
@@ -12325,7 +12325,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
         return this.partDictionary[path];
     },
 
-    /** Get the adaptive mode objective with the given name
+    /** Get the explore mode objective with the given name
      * @param {String} name
      * @returns {Object}
      */
@@ -12333,7 +12333,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
         return this.objectives.find(function(o){ return o.name==name; });
     },
 
-    /** Get the adaptive mode penalty with the given name
+    /** Get the explore mode penalty with the given name
      * @param {String} name
      * @returns {Object}
      */
@@ -12427,7 +12427,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                     marks += part.marks;
                 }
                 break;
-            case 'adaptive':
+            case 'explore':
                 marks = this.maxMarks;
                 this.objectives.forEach(function(o) {
                     o.score = 0;
@@ -12437,7 +12437,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                 });
                 for(var i=0; i<this.parts.length; i++) {
                     var part = this.parts[i];
-                    var objective = this.getObjective(part.settings.adaptiveObjective);
+                    var objective = this.getObjective(part.settings.exploreObjective);
                     if(objective) {
                         objective.score += part.score;
                     }

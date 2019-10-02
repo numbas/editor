@@ -138,7 +138,7 @@ $(document).ready(function() {
 
         this.partsModes = [
             {name: 'Show all parts', value: 'all'},
-            {name: 'Adaptive', value: 'adaptive'}
+            {name: 'Explore', value: 'explore'}
         ];
         this.partsMode = ko.observable(this.partsModes[0]);
 
@@ -2116,9 +2116,7 @@ $(document).ready(function() {
             }
         },this);
 
-        this.adaptiveObjective = ko.observable(null);
-        this.adaptivePenalty = ko.observable(null);
-        this.adaptivePenaltyAmount = ko.observable(0);
+        this.exploreObjective = ko.observable(null);
 
         this.startAddingGap = function() {
             q.addingPart({kind:'gap',parent:p, parentList: p.gaps, availableTypes: q.gapTypes});
@@ -2326,9 +2324,7 @@ $(document).ready(function() {
                 customMarkingAlgorithm: this.use_custom_algorithm() ? this.customMarkingAlgorithm() : '',
                 extendBaseMarkingAlgorithm: this.use_custom_algorithm() ? this.extendBaseMarkingAlgorithm() : true,
                 unitTests: this.unit_tests().map(function(t){ return t.toJSON() }),
-                adaptiveObjective: this.adaptiveObjective() ? this.adaptiveObjective().name() : null,
-                adaptivePenalty: this.adaptivePenalty() ? this.adaptivePenalty().name() : null,
-                adaptivePenaltyAmount: this.adaptivePenaltyAmount()
+                exploreObjective: this.exploreObjective() ? this.exploreObjective().name() : null,
             };
 
             if(this.prompt())
@@ -2365,10 +2361,10 @@ $(document).ready(function() {
                 if(this.types[i].name == data.type.toLowerCase())
                     this.type(this.types[i]);
             }
-            tryLoad(data,['marks','customName','prompt','stepsPenalty','showCorrectAnswer','showFeedbackIcon','customMarkingAlgorithm','extendBaseMarkingAlgorithm','adaptivePenaltyAmount','adaptiveMarkingPenalty'],this);
+            tryLoad(data,['marks','customName','prompt','stepsPenalty','showCorrectAnswer','showFeedbackIcon','customMarkingAlgorithm','extendBaseMarkingAlgorithm','adaptiveMarkingPenalty'],this);
             this.use_custom_algorithm(this.customMarkingAlgorithm()!='');
 
-            this.adaptiveObjective(this.q.objectives().find(function(o) { return o.name()==data.adaptiveObjective; }));
+            this.exploreObjective(this.q.objectives().find(function(o) { return o.name()==data.exploreObjective; }));
 
             if(data.steps)
             {

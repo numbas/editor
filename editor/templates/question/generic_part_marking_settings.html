@@ -11,7 +11,7 @@
 <div data-bind="visible: type().has_feedback_icon">
     {% booleanproperty 'showFeedbackIcon' 'Show score feedback icon?' help_url='question/parts/reference.html#term-show-score-feedback-icon' %}    
 </div>
-<div data-bind="visible: type().has_marks && q.partsMode().value=='adaptive'">
-    {% selectproperty 'adaptiveObjective' 'Score counts towards objective' options_text='name' options='q.objectives' allow_blank=True help_url='question/parts/reference.html#term-score-counts-toward-objective' %}
+<div data-bind="visible: type().has_marks && q.partsMode().value=='explore'">
+    {% selectproperty 'exploreObjective' 'Score counts towards objective' options_text='name' options='q.objectives' allow_blank=True help_url='question/parts/reference.html#term-score-counts-toward-objective' %}
 </div>
 <!-- /ko -->

@@ -6,7 +6,7 @@
 <form class="form-horizontal" data-bind="submit: Editor.noop">
     {% selectproperty 'partsMode' 'Part display mode' options_text='name' options='partsModes' %}
 
-    <!-- ko if: partsMode().value=='adaptive' -->
+    <!-- ko if: partsMode().value=='explore' -->
         {% property 'maxMarks' 'Maximum mark' %}
 
         <hr>

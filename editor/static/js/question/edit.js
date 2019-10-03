@@ -202,6 +202,14 @@ $(document).ready(function() {
         this.penalties = ko.observableArray([]);
         this.objectives = ko.observableArray([]);
 
+        this.objective_visibility_options = [
+            {name: 'Always', id: 'always'},
+            {name: 'When active', id: 'when-active'}
+        ];
+
+        this.penaltyVisibility = ko.observable(this.objective_visibility_options[0]);
+        this.objectiveVisibility = ko.observable(this.objective_visibility_options[0]);
+
         this.addObjective = function() {
             q.objectives.push(new ScoreBin(q));
         }
@@ -1036,7 +1044,9 @@ $(document).ready(function() {
 
                 maxMarks: this.maxMarks(),
                 objectives: this.objectives().map(function(o){return o.toJSON();}),
-                penalties: this.penalties().map(function(p){return p.toJSON();})
+                penalties: this.penalties().map(function(p){return p.toJSON();}),
+                objectiveVisibility: this.objectiveVisibility().id,
+                penaltyVisibility: this.penaltyVisibility().id
             }
         },
 
@@ -1154,6 +1164,8 @@ $(document).ready(function() {
                     q.penalties.push(new ScoreBin(q,pdata));
                 });
             }
+            Editor.tryLoadMatchingId(contentData, 'objectiveVisibility', 'id', this.objective_visibility_options, this);
+            Editor.tryLoadMatchingId(contentData, 'penaltyVisibility', 'id', this.objective_visibility_options, this);
 
             if('parts' in contentData)
             {
@@ -1990,6 +2002,10 @@ $(document).ready(function() {
             return !(this.type().name=='gapfill' || this.isGap() || this.isStep() || t.can_be_gap===false);
         },this);
 
+        this.isFirstPart = ko.computed(function() {
+            return this==q.parts()[0];
+        },this);
+
         this.indexLabel = ko.computed(function() {
             var index = this.parentList.indexOf(this);
             var i = 0;
@@ -2164,6 +2180,7 @@ $(document).ready(function() {
         this.availableNextParts = ko.computed(function() {
             return p.parentList();
         },this);
+        this.suggestGoingBack = ko.observable(false);
 
         this.scripts = [
             new Script('constructor','When the part is created','after','question/reference.html#term-when-the-part-is-created'),
@@ -2320,6 +2337,7 @@ $(document).ready(function() {
                 variableReplacements: this.variableReplacements().map(function(vr){return vr.toJSON()}),
                 variableReplacementStrategy: this.variableReplacementStrategy().name,
                 nextParts: this.nextParts().map(function(np){ return np.toJSON(); }),
+                suggestGoingBack: !this.isFirstPart() && this.suggestGoingBack(),
                 adaptiveMarkingPenalty: this.adaptiveMarkingPenalty(),
                 customMarkingAlgorithm: this.use_custom_algorithm() ? this.customMarkingAlgorithm() : '',
                 extendBaseMarkingAlgorithm: this.use_custom_algorithm() ? this.extendBaseMarkingAlgorithm() : true,
@@ -2361,7 +2379,7 @@ $(document).ready(function() {
                 if(this.types[i].name == data.type.toLowerCase())
                     this.type(this.types[i]);
             }
-            tryLoad(data,['marks','customName','prompt','stepsPenalty','showCorrectAnswer','showFeedbackIcon','customMarkingAlgorithm','extendBaseMarkingAlgorithm','adaptiveMarkingPenalty'],this);
+            tryLoad(data,['marks','customName','prompt','stepsPenalty','showCorrectAnswer','showFeedbackIcon','customMarkingAlgorithm','extendBaseMarkingAlgorithm','adaptiveMarkingPenalty','suggestGoingBack'],this);
             this.use_custom_algorithm(this.customMarkingAlgorithm()!='');
 
             this.exploreObjective(this.q.objectives().find(function(o) { return o.name()==data.exploreObjective; }));

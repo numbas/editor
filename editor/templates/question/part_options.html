@@ -13,6 +13,9 @@
 
         <section class="objectives">
             <h3>Objectives</h3>
+
+            {% selectproperty 'objectiveVisibility' 'Show objectives' options_text='name' options='objective_visibility_options' %}
+
             <div data-bind="fadeVisible: objectives().length">
                 <table class="table objectives">
                     <thead>
@@ -38,6 +41,9 @@
         
         <section class="penalties">
             <h3>Penalties</h3>
+
+            {% selectproperty 'penaltyVisibility' 'Show penalties' options_text='name' options='objective_visibility_options' %}
+
             <div data-bind="fadeVisible: penalties().length">
                 <table class="table penalties">
                     <thead>

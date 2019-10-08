@@ -5,11 +5,20 @@ from django import http
 from django.views import generic
 from django.template.loader import get_template
 from django.template import RequestContext
+from django.template.response import TemplateResponse
 import reversion
 
 from editor.models import NewStampOfApproval, Comment, RestorePoint, EditorItem, Access
 
 from accounts.util import user_json
+
+def forbidden_response(request,message=None):
+    return TemplateResponse(
+        request=request,
+        context={'message':message},
+        template='403.html',
+        status=403
+    )
 
 # from http://stackoverflow.com/questions/18172102/object-ownership-validation-in-django-updateview
 class AuthorRequiredMixin(object):

@@ -1,7 +1,13 @@
-{% extends "extension/edit_base.html" %}
+{% extends "layout.html" %}
 
-{% block extension_edit_content %}
-<form action="{% url 'extension_edit' form.instance.pk %}" method="post" enctype="multipart/form-data">
+{% block title %}Upload an extension - {{block.super}}{% endblock title %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Upload an extension</h1>
+</div>
+
+<form class="form-horizontal" action="{% url 'extension_new' %}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {% for field in form %}
         <div class="form-group {% if field.errors %}has-error{% endif %}">
@@ -21,13 +27,14 @@
     {% endfor %}
     <div class="form-group">
         <div class="col-sm-offset-3 col-sm-9">
-            <button type="submit" class="btn btn-primary">Update</button>
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <a class="btn btn-link" href="{% url 'profile_extensions' request.user.pk %}">Cancel</a>
         </div>
     </div>
 </form>
 {#{{ formset.management_form }}#}
 {{ formset.errors }}
 {#{{ formset.non_form_errors }}#}
-{% endblock extension_edit_content %}
-
+<p></p>
+{% endblock content %}
 

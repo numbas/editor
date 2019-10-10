@@ -237,6 +237,25 @@ class NewThemeForm(UpdateThemeForm):
             self.save_m2m()
         return theme
 
+class EditExtensionForm(forms.ModelForm):
+    
+    """Form to edit an extension."""
+
+    source = forms.CharField(widget=forms.Textarea)
+    filename = forms.CharField(widget=forms.HiddenInput)
+    
+    class Meta:
+        model = Extension
+        fields = []
+
+    def save(self, commit=True):
+        extension = super().save(commit=False)
+        filename = self.cleaned_data.get('filename')
+        if commit:
+            with open(os.path.join(extension.extracted_path,filename),'w',encoding='utf-8') as f:
+                f.write(self.cleaned_data.get('source'))
+        return extension
+
 class UpdateExtensionForm(forms.ModelForm):
     
     """Form to edit an extension."""
@@ -254,7 +273,7 @@ class UpdateExtensionForm(forms.ModelForm):
     def clean_zipfile(self):
         file = self.cleaned_data['zipfile']
         if file is None:
-            raise forms.ValidationError("No file uploaded")
+            return
         if not zipfile.is_zipfile(file):
             _, extension = os.path.splitext(file.name)
             if extension.lower() == '.js':
@@ -271,16 +290,54 @@ class UpdateExtensionForm(forms.ModelForm):
 
         return location
 
-class NewExtensionForm(UpdateExtensionForm):
+    def save(self, commit=True):
+        extension = super().save(commit)
+        extension.extract_zip()
+        return extension
+
+class CreateExtensionForm(forms.ModelForm):
     
     """Form for a new extension."""
+
+    class Meta:
+        model = Extension
+        fields = ['name']
     
     def __init__(self, *args, **kwargs):
         self._user = kwargs.pop('author')
-        super(NewExtensionForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def save(self, commit=True):
-        extension = super(NewExtensionForm, self).save(commit=False)
+        extension = super().save(commit=False)
+        extension.location = slugify(extension.name)
+        extension.public = False
+        extension.author = self._user
+        if commit:
+            extension.save()
+            self.save_m2m()
+            extension.ensure_extracted_path_exists()
+            extension.write_file(extension.script_filename,\
+"""Numbas.addExtension('{location}',['jme'],function(extension) {{
+  var scope = extension.scope;
+
+  // write your extension code here
+}});""".format(location=extension.location))
+            extension.write_file('README.md',\
+"""# {name}
+
+The author of this extension should write some documentation about how it works.""".format(name=extension.name))
+        return extension
+
+class UploadExtensionForm(UpdateExtensionForm):
+    
+    """Form to upload an extension."""
+    
+    def __init__(self, *args, **kwargs):
+        self._user = kwargs.pop('author')
+        super().__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        extension = super().save(commit=False)
         extension.public = False
         extension.author = self._user
         if commit:

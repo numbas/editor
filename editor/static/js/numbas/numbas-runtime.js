@@ -246,6 +246,7 @@ Numbas.activateExtension = function(name) {
     var cb = extension_callbacks[name];
     if(!cb.activated) {
         cb.callback(cb.extension);
+        cb.activated = true;
     }
 }
 
@@ -15292,8 +15293,9 @@ Fraction.fromFloat = function(n) {
     var approx = math.rationalApproximation(n);
     return new Fraction(approx[0],approx[1]);
 }
-Fraction.fromDecimal = function(n) {
-    var approx = n.toFraction(1e15);
+Fraction.fromDecimal = function(n,accuracy) {
+    accuracy = accuracy===undefined ? 1e15 : accuracy;
+    var approx = n.toFraction(accuracy);
     return new Fraction(approx[0].toNumber(),approx[1].toNumber());
 }
 
@@ -24212,11 +24214,13 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
 
         var minvalue = jme.subvars(settings.minvalueString,scope);
         minvalue = scope.evaluate(minvalue);
+        var ominvalue = minvalue;
         if(!minvalue) {
             this.error('part.setting not present',{property:R('minimum value')});
         }
         var maxvalue = jme.subvars(settings.maxvalueString,scope);
         maxvalue = scope.evaluate(maxvalue);
+        var omaxvalue = maxvalue;
         if(!maxvalue) {
             this.error('part.setting not present',{property:R('maximum value')});
         }
@@ -24232,6 +24236,8 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
             maxvalue = tmp;
         }
 
+        var isNumber = ominvalue.type=='number' || omaxvalue.type=='number';
+
         if(minvalue.type=='number') {
             minvalue = new jme.types.TNum(minvalue.value - 1e-12);
         }
@@ -24246,7 +24252,7 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
 
         var displayAnswer = minvalue.plus(maxvalue).dividedBy(2);
         if(settings.allowFractions && settings.correctAnswerFraction) {
-            var frac = math.Fraction.fromDecimal(displayAnswer.re);
+            var frac = math.Fraction.fromDecimal(displayAnswer.re, isNumber ? 1e12 : undefined);
             settings.displayAnswer = frac.toString();
         } else {
             settings.displayAnswer = math.niceNumber(displayAnswer.toNumber(),{precisionType: settings.precisionType, precision:settings.precision, style: settings.correctAnswerStyle});

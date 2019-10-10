@@ -3,5 +3,5 @@
 {% block title %}Access Forbidden - {{block.super}}{% endblock title %}
 {% block content %}
     <h1>Forbidden</h1>
-    <p>Sorry, you're not allowed to see this.</p>
+    <p>{% if message %}{{message}}{% else %}Sorry, you're not allowed to see this.{% endif %}</p>
 {% endblock content %}

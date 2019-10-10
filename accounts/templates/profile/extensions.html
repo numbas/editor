@@ -17,6 +17,7 @@
     <thead>
         <th>Name</th>
         <th>Short name</th>
+        <th></th><!-- documentation -->
         {% if is_me %}<th></th><!-- control links -->{% endif %}
         <th>Last modified</th>
     </thead>
@@ -25,6 +26,9 @@
     <tr>
         <td>{{extension.name}}</td>
         <td class="monospace">{{extension.location}}</td>
+        <td>
+            <a class="btn btn-link" href="{% url 'extension_documentation' extension.pk %}" title="Documentation for this extension"><span class="glyphicon glyphicon-book"></span></a>
+        </td>
         {% if is_me %}
         <td class="text-center">
             <a class="btn btn-link" href="{% url 'extension_edit' extension.pk %}" title="Edit this extension"><span class="glyphicon glyphicon-pencil text-warning"></span></a>
@@ -44,7 +48,8 @@
     <tfoot>
         <tr>
             <td colspan="4">
-                <a class="btn btn-primary" href="{% url 'extension_new' %}"><span class="glyphicon glyphicon-upload"></span> Upload a new extension</a>
+                <a class="btn btn-primary" href="{% url 'extension_new' %}"><span class="glyphicon glyphicon-plus"></span> Create a new extension</a>
+                <a class="btn btn-primary" href="{% url 'extension_new' %}"><span class="glyphicon glyphicon-upload"></span> Upload an extension</a>
             </td>
         </tr>
     </tfoot>

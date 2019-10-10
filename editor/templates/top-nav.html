@@ -6,7 +6,7 @@
 
 <nav id="top-nav" class="navbar navbar-default navbar-static-top">
     <div class="navbar-header">
-        <a class="navbar-brand" href="{% url 'editor_index' %}"><img id="numbas-logo" src="{% sstatic 'images/numbas_logo.png' %}"></a>
+        <a class="navbar-brand" href="{% url 'editor_index' %}"><img alt="Numbas" id="numbas-logo" src="{% sstatic 'images/numbas_logo.png' %}"></a>
     </div>
 
     <form id="search-bar" class="navbar-form navbar-left" role="search" method="get" action="{% if in_project %}{% url 'project_search' project.pk %}{% else %}{% url 'search' %}{% endif %}">

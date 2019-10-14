@@ -3,7 +3,7 @@
 {% load links %}
 
 <!doctype html>
-<html>
+<html lang="en">
     <head>
         <title>{{item.name}} - preview - {{SITE_TITLE}}</title>
 
@@ -16,10 +16,10 @@
     </head>
     <body>
         <header role="banner">
-            <span class="description">
+            <h1 class="description">
                 PREVIEW of <a href="{{item.get_absolute_url}}">{{item.name}}</a>
                 in <a href="{{item.project.get_absolute_url}}">{{item.project.name}}</a>
-            </span>
+            </h1>
 
             <span class="licence">
             {% if item.licence %}

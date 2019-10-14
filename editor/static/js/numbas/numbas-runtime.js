@@ -42,7 +42,7 @@ Numbas.debug = function(msg,noStack)
         if(e.stack && !noStack)
         {
             var words= e.stack.split('\n')[2];
-            console.log(msg," "+words);
+            console.error(msg," "+words);
         }
         else
         {
@@ -193,7 +193,7 @@ Numbas.tryInit = function()
             scriptreqs[x].tryRun();
         } catch(e) {
             alert(e+'');
-            Numbas.debug(e.stack);
+            console.error(e);
             Numbas.dead = true;
             return;
         }
@@ -3629,9 +3629,41 @@ jme.inferVariableTypes = function(tree,scope) {
         switch(tree.tok.type) {
             case 'op':
             case 'function':
-                this.fns = scope.getFunction(tree.tok.name);
+                var fns = scope.getFunction(tree.tok.name);
+                this.fns = [];
+                this.signature_enumerators = [];
+                for(var i=0;i<fns.length;i++) {
+                    var fn = fns[i];
+                    var se = new SignatureEnumerator(fn.intype);
+                    if(se.is_static()) {
+                        if(se.length() != tree.args.length) {
+                            continue;
+                        }
+                        var sig = se.signature();
+                        var constants_ok = this.args.every(function(arg,j) {
+                            switch(arg.tok.type) {
+                                case 'op':
+                                case 'function':
+                                    for(var i=0;i<arg.fns.length;i++) {
+                                        if(jme.findCompatibleType(arg.fns[i].outtype,sig[j])!==undefined) {
+                                            return true;
+                                        }
+                                    }
+                                    return false;
+                                case 'name':
+                                    return true;
+                                default:
+                                    return jme.findCompatibleType(arg.tok.type,sig[j])!==undefined;
+                            }
+                        });
+                        if(!constants_ok) {
+                            continue;
+                        }
+                    }
+                    this.fns.push(fn);
+                    this.signature_enumerators.push(se);
+                }
                 this.pos = 0;
-                this.signature_enumerators = this.fns.map(function(fn){ return new SignatureEnumerator(fn.intype) });
                 break;
             default:
                 break;
@@ -3852,6 +3884,21 @@ var SignatureEnumerator = jme.SignatureEnumerator = function(sig) {
     }
 }
 SignatureEnumerator.prototype = {
+    /** Does this signature only have one possible realisation?
+     * @returns {Boolean}
+     */
+    is_static: function() {
+        switch(this.sig.kind) {
+            case 'type':
+            case 'anything':
+                return true;
+            case 'sequence':
+                return this.children.every(function(c){ return c.is_static(); });
+            default:
+                return false;
+        }
+    },
+
     /** The length of the signature corresponding to the current state of the enumerator
      * @returns {Number}
      */
@@ -4768,6 +4815,8 @@ newBuiltin('sin',[TDecimal], TDecimal, function(a) {return a.re.sin(); });
 newBuiltin('sqrt',[TDecimal], TDecimal, function(a) {return a.squareRoot(); });
 newBuiltin('tan',[TDecimal], TDecimal, function(a) {return a.re.tan(); });
 newBuiltin('precround',[TDecimal,TNum], TDecimal, function(a,dp) {return a.toDecimalPlaces(dp); });
+newBuiltin('min', [TDecimal,TDecimal], TDecimal, math.ComplexDecimal.min );
+newBuiltin('max', [TDecimal,TDecimal], TDecimal, math.ComplexDecimal.max );
 newBuiltin('dpformat',[TDecimal,TNum], TString, function(a,dp) {return a.toFixed(dp); });
 newBuiltin('tonearest',[TDecimal,TDecimal], TDecimal, function(a,x) {return a.toNearest(x.re); });
 newBuiltin('^',[TDecimal,TDecimal], TDecimal, function(a,b) {return a.pow(b); });
@@ -13627,6 +13676,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
      * @returns {Boolean}
      */
     isclose: function(a,b,rel_tol,abs_tol) {
+        if(a===Infinity || b===Infinity || a==-Infinity || b==-Infinity) {
+            return a===b;
+        }
         rel_tol = rel_tol===undefined ? 1e-15 : rel_tol;
         abs_tol = abs_tol===undefined ? 1e-15: abs_tol;
         return Math.abs(a-b) <= Math.max( rel_tol * Math.max(Math.abs(a), Math.abs(b)), abs_tol );
@@ -15233,6 +15285,20 @@ ComplexDecimal.prototype = {
         return new ComplexDecimal(this.re.toSignificantDigits(sf), this.im.toSignificantDigits(sf));
     }
 }
+
+ComplexDecimal.min = function(a,b) {
+    if(!(a.isReal() && b.isReal())) {
+        throw(new Numbas.Error('math.order complex numbers'));
+    }
+    return Decimal.min(a.re,b.re);
+}
+ComplexDecimal.max = function(a,b) {
+    if(!(a.isReal() && b.isReal())) {
+        throw(new Numbas.Error('math.order complex numbers'));
+    }
+    return Decimal.max(a.re,b.re);
+}
+
 
 
 /** A list of a vector's components.

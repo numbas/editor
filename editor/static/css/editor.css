@@ -138,7 +138,7 @@ editor-pager nav {
 }
 
 .pager li.ready a {
-  color: #fff;
+  color: black;
   background-color: #5cb85c;
   border-color: #4cae4c;
 }

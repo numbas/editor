@@ -15,11 +15,18 @@ This documentation is a work in progress.
 If you have any questions, please `email us <mailto:numbas@ncl.ac.uk>`_ or join `the numbas-users mailing list <https://groups.google.com/forum/#!forum/numbas-users>`_.
 
 .. toctree::
-    :caption: Getting Started
+    :caption: Important Information
     :maxdepth: 1
     :glob:
 
     what-do-i-need
+    accessibility/index
+
+.. toctree::
+    :caption: Getting Started
+    :maxdepth: 1
+    :glob:
+
     tutorials/create-an-account
     tutorials/create-exam
     tutorials/upload-web

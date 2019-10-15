@@ -1,5 +1,6 @@
 import uuid
 import os
+import re
 from copy import deepcopy
 import shutil
 from zipfile import ZipFile
@@ -334,13 +335,14 @@ def validate_content(content):
 class Extension(models.Model):
     name = models.CharField(max_length=200, help_text='A human-readable name for the extension')
     location = models.CharField(default='', max_length=200, help_text='A unique identifier for this extension', verbose_name='Short name', blank=True, unique=True)
-    url = models.CharField(max_length=300, blank=True, verbose_name='Documentation URL', help_text='Address of a page about the extension')
+    url = models.CharField(max_length=300, blank=True, verbose_name='Documentation URL', help_text='Address of a page about the extension. Leave blank to use the README file.')
     public = models.BooleanField(default=False, help_text='Can this extension be seen by everyone?')
     slug = models.SlugField(max_length=200, editable=False, unique=False, default='an-extension')
     author = models.ForeignKey(User, related_name='own_extensions', blank=True, null=True, on_delete=models.CASCADE)
     last_modified = models.DateTimeField(auto_now=True)
     zipfile_folder = 'user-extensions'
     zipfile = models.FileField(upload_to=zipfile_folder+'/zips', blank=True, null=True, max_length=255, verbose_name='Extension package', help_text='A .zip package containing the extension\'s files')
+    editable = models.BooleanField(default=True, help_text='Is this extension stored within the editor\'s media folder?')
     runs_headless = models.BooleanField(default=True, help_text='Can this extension run outside a browser?')
 
     class Meta:
@@ -364,9 +366,13 @@ class Extension(models.Model):
         return d
 
     @property
+    def script_filename(self):
+        return self.location+'.js'
+
+    @property
     def script_path(self):
-        if self.zipfile:
-            filename = self.location+'.js'
+        if self.editable:
+            filename = self.script_filename
             local_path = os.path.join(self.extracted_path, filename)
             if os.path.exists(local_path):
                 return settings.MEDIA_URL+self.zipfile_folder+'/extracted/'+str(self.pk)+'/'+self.location+'/'+filename
@@ -378,7 +384,7 @@ class Extension(models.Model):
 
     @property
     def extracted_path(self):
-        if self.zipfile:
+        if self.editable:
             return os.path.join(settings.MEDIA_ROOT, self.zipfile_folder, 'extracted', str(self.pk), self.location)
         else:
             return os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'], 'extensions', self.location)
@@ -387,10 +393,14 @@ class Extension(models.Model):
         self.slug = slugify(self.name)
         super(Extension, self).save(*args, **kwargs)
 
+    def ensure_extracted_path_exists(self):
+        if os.path.exists(self.extracted_path):
+            shutil.rmtree(self.extracted_path)
+        os.makedirs(self.extracted_path)
+
+    def extract_zip(self):
         if self.zipfile:
-            if os.path.exists(self.extracted_path):
-                shutil.rmtree(self.extracted_path)
-            os.makedirs(self.extracted_path)
+            self.ensure_extracted_path_exists()
 
             _, extension = os.path.splitext(self.zipfile.name)
             if extension.lower() == '.zip':
@@ -400,6 +410,25 @@ class Extension(models.Model):
                 file = open(os.path.join(self.extracted_path, self.location+'.js'), 'wb')
                 file.write(self.zipfile.file.read())
                 file.close()
+
+    def filenames(self):
+        names = os.listdir(self.extracted_path)
+        return [x for x in names if not re.match(r'^\.',x)]
+
+    def write_file(self,filename,content):
+        root = os.path.abspath(self.extracted_path)
+        path = os.path.abspath(os.path.join(root,filename))
+        if not path.startswith(root+os.sep):
+            raise Exception("You may not write a file outside the extension's directory")
+        with open(path,'w',encoding='utf-8') as f:
+            f.write(content)
+
+    @property
+    def readme_filename(self):
+        names = ['README.md','README.html','README']
+        for name in names:
+            if os.path.exists(os.path.join(self.extracted_path,name)):
+                return name
 
 class Theme(models.Model):
     name = models.CharField(max_length=200)

@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit extension "{{form.instance.name}}" - {{block.super}}{% endblock title %}
+
+{% block content_container %}container-fluid{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <p>
+        <a href="{% url 'profile_extensions' request.user.pk %}">Back to extensions</a>
+    </p>
+    <h1>
+        Edit extension <em>"{{form.instance.name}}"</em>
+    </h1>
+</div>
+
+<div class="col-sm-12 col-md-3 col-lg-2">
+    <p class="help-block">
+        <a class="helplink text-info" target="numbasquickhelp" href="{{HELP_URL}}extensions.html"><span class="glyphicon glyphicon-question-sign"></span> Help with writing extensions</a>
+    <div class="panel panel-default">
+        <ul class="list-group">
+            <a class="list-group-item{% if options_active %} active{% endif %}" href="{% url 'extension_edit' extension.pk %}"><span class="glyphicon glyphicon-cog"></span> Options</a>
+        </ul>
+        {% if extension.editable %}
+        <div class="panel-heading">Files</div>
+        <ul class="list-group">
+            {% for fname in extension.filenames %}
+            <a class="list-group-item monospace {% if fname == filename %}active{% endif %}" href="{% url 'extension_edit_source' extension.pk %}?filename={{fname}}">{{fname}}</a>
+            {% endfor %}
+            <li class="list-group-item">
+                <form method="GET" action="">
+                    <label>
+                        <span class="glyphicon glyphicon-plus"></span>
+                        New file: 
+                        <input class="form-control" name="filename">
+                    </label>
+                </form>
+            </li>
+        </ul>
+        {% else %}
+        <div class="panel-body">
+            This extension's source code is not editable.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="col-sm-12 col-md-9 col-lg-10">
+    {% block extension_edit_content %}{% endblock %}
+</div>
+{% endblock content %}

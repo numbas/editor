@@ -1,0 +1,84 @@
+{% extends "extension/edit_base.html" %}
+{% load helplink %}
+
+{% block extension_edit_content %}
+    <form action="{% url 'extension_edit_source' form.instance.pk %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+            <button type="submit" class="btn btn-default" id="save">
+                <span class="glyphicon glyphicon-save"></span>
+                Save
+            </button>
+        </div>
+        <p class="file-info">
+            Editing <code>{{filename}}</code>{% if not exists %} (new file){% endif %}
+            {% if filename == extension.readme_filename %}
+                <span class="help-block help-block-inline">
+                    This file contains the <a href="{% url 'extension_documentation' extension.pk %}">documentation for this extension</a>.
+                </span>
+            {% endif %}
+            {% if filename == extension.script_filename %}
+                <span class="help-block help-block-inline">
+                    This is the main script file for this extension.
+                </span>
+            {% endif %}
+            {% if fileext == '.js' %}
+                <span class="help-block help-block-inline">
+                    <a class="helplink text-info" target="numbasquickhelp" href="{{HELP_URL}}javascript-api.html"><span class="glyphicon glyphicon-question-sign"></span> Help with the JavaScript API</a>
+                </span>
+            {% endif %}
+        </p>
+        {% for field in form %}
+            <div class="form-group">
+                {{field}}
+            </div>
+        {% endfor %}
+    </form>
+{% endblock extension_edit_content %}
+
+{% block stylesheets %}
+    {{block.super}}
+    <style>
+        .file-info .help-block {
+            margin: 0 0 0 1em;
+        }
+    </style>
+{% endblock stylesheets %}
+
+{% block javascripts %}
+    {{block.super}}
+    <script>
+
+    var filename = "{{filename}}";
+
+    window.addEventListener('DOMContentLoaded',function() {
+        console.log('arg');
+        var source_element = document.getElementById('id_source');
+        console.log(source_element);
+        var extension = filename.match(/\.(.*)$/);
+        extension = extension ? extension[1] : 'js';
+        var modes = {
+            'js': 'javascript',
+            'jme': 'jme',
+            'md': 'markdown',
+            'html': 'htmlmixed',
+            'css': 'css'
+        }
+        var mc = CodeMirror.fromTextArea(source_element,{
+            lineNumbers: true,
+            styleActiveLine: true,
+            matchBrackets: true,
+            mode: modes[extension] || 'javascript',
+            indentWithTabs: false,
+            indentUnit: 2,
+            lineWrapping: Editor.wrapLines
+        });
+
+        mc.on('change',function() {
+            var save_button = document.getElementById('save');
+            save_button.classList.remove('btn-default');
+            save_button.classList.add('btn-primary');
+        });
+    });
+    </script>
+{% endblock %}

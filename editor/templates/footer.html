@@ -1,6 +1,8 @@
 <footer class="container text-muted">
 {% block footer %}
-<a href="https://www.numbas.org.uk" target="_blank">Numbas</a> © <a href="https://www.ncl.ac.uk" target="_blank">Newcastle University</a>. <a href="{% url 'terms_of_use' %}">Terms of use</a> and <a href="{% url 'privacy_policy' %}">privacy policy</a>.
+<a href="https://www.numbas.org.uk" target="_blank">Numbas</a> © <a href="https://www.ncl.ac.uk" target="_blank">Newcastle University</a>. 
+<a href="{% url 'terms_of_use' %}">Terms of use</a> and <a href="{% url 'privacy_policy' %}">privacy policy</a>.
+<a href="{{HELP_URL}}accessibility/index.html" target="_blank">Accessibility statement.</a>
 {% endblock footer %}
 </footer>
 

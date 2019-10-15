@@ -11,7 +11,8 @@
             </button>
         </div>
         <p class="file-info">
-            Editing <code>{{filename}}</code>{% if not exists %} (new file){% endif %}
+            Editing <code>{{filename}}</code>{% if not exists %} (new file){% endif %}.
+            Last modified {{last_modified}}
             {% if filename == extension.readme_filename %}
                 <span class="help-block help-block-inline">
                     This file contains the <a href="{% url 'extension_documentation' extension.pk %}">documentation for this extension</a>.

@@ -57,6 +57,7 @@
                     <span class="glyphicon glyphicon-bell"></span>
                     <span class="badge noselect">{% if unread_notifications %}{{unread_notifications}}{% endif %}</span>
                     <span class="visible-xs-inline">Notifications</span>
+                    <span class="sr-only sr-description" aria-live="polite">{{unread_notifications}} unread notification{{unread_notifications|pluralize}}</span>
                 </a>
                 <ul class="dropdown-menu">
                     {% include "notifications/list.html" %}

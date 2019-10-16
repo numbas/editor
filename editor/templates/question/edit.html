@@ -204,7 +204,7 @@
                         <div class="form-group">
                             <label>Name</label>
                             <input {% if not editable %}disabled{% endif %} type="text" placeholder="Name" class="form-control name monospace" data-bind="textInput: _name"/>
-                            <span class="name-error text-danger" data-bind="text: nameError, visible: nameError"></span>
+                            <span class="name-error text-danger" data-bind="text: nameError, visible: nameError" aria-live="polite"></span>
                         </div>
                         <div class="form-group">
                             <label>Data type</label>
@@ -269,7 +269,7 @@
                             </div>
                             </div>
                             <div class="help-block">
-                                <div class="value-error alert alert-danger" data-bind="visible: error() && error().length>0, html: error">
+                                <div class="value-error alert alert-danger" data-bind="visible: error() && error().length>0, html: error" aria-live="polite">
                                 <div class="html-type-warning value-error alert alert-danger" data-bind="visible: value() && value().type=='html'">
                                     <p>This variable is an HTML node. HTML nodes can not be relied upon to work correctly when resuming a session - for example, attached event callbacks will be lost, and mathematical notation will likely also break.</p>
                                     <p>If this causes problems, try to create HTML nodes where you use them in content areas, instead of storing them in variables.</p>
@@ -375,7 +375,7 @@
 
                         <!-- /ko -->
                     </div>
-                    <div class="alert alert-danger" data-bind="visible: variablesTest.conditionError">
+                    <div class="alert alert-danger" data-bind="visible: variablesTest.conditionError" aria-live="polite">
                         <h4><strong>Error in variable testing condition</strong></h4>
                         <p>There's an error in the condition you specified in the <a data-bind="click: setTab('variabletesting')" href="#">Variable testing tab</a>. Variable values can't be generated until it's fixed.</p>
                     </div>
@@ -404,7 +404,7 @@
                 </label>
                 <div class="col-sm-9">
                     <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: variablesTest.condition, codemirrorMode: 'jme'"></textarea>
-                    <p class="alert alert-danger" data-bind="visible: variablesTest.conditionError">Error: <span data-bind="html: variablesTest.conditionError"></span></p>
+                    <p class="alert alert-danger" data-bind="visible: variablesTest.conditionError">Error: <span data-bind="html: variablesTest.conditionError" aria-live="polite"></span></p>
                 </div>
             </div>
             {% with form_label_class="col-sm-3" form_control_class="col-sm-9" %}
@@ -412,12 +412,12 @@
             {% endwith %}
             <div class="form-group form-inline">
                 <div class="col-sm-offset-3">
-                    <p data-bind="visible: !variablesTest.running()"><button class="btn btn-primary" type="button" data-bind="click: testVariables">Test condition</button> for <input class="form-control" type="number" data-bind="textInput: variablesTest.running_time, autosize: {value:variablesTest.running_time, max:100, min: 20}"/> seconds</p>
-                    <p class="variable-test-running" data-bind="visible: variablesTest.running">Running for <span data-bind="text: variablesTest.time_remaining_display"></span>... <button type="button" class="btn btn-warning" data-bind="click: cancelVariablesTest">Cancel</button></p>
+                    <p data-bind="visible: !variablesTest.running()"><button class="btn btn-primary" type="button" data-bind="click: testVariables" aria-live="polite">Test condition</button> for <input class="form-control" type="number" data-bind="textInput: variablesTest.running_time, autosize: {value:variablesTest.running_time, max:100, min: 20}"/> seconds</p>
+                    <p class="variable-test-running" data-bind="visible: variablesTest.running" aria-live="polite">Running for <span data-bind="text: variablesTest.time_remaining_display"></span>... <button type="button" class="btn btn-warning" data-bind="click: cancelVariablesTest">Cancel</button></p>
                 </div>
             </div>
         </form>
-        <div class="variable-test-advice alert alert-info" data-bind="visible: !variablesTest.running() && variablesTest.advice(), html: variablesTest.advice"></div>
+        <div class="variable-test-advice alert alert-info" data-bind="visible: !variablesTest.running() && variablesTest.advice(), html: variablesTest.advice" aria-live="polite"></div>
     </section>
 
     <!-- Parts -->
@@ -506,7 +506,7 @@
                                         </div>
                                         <h5>Custom marking algorithm</h5>
                                         <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: customMarkingAlgorithm, codemirrorMode: 'jme'"></textarea>
-                                        <p class="alert alert-danger" data-bind="html: markingScriptError, visible: markingScriptError"></p>
+                                        <p class="alert alert-danger" data-bind="html: markingScriptError, visible: markingScriptError" aria-live="polite"></p>
                                     </div>
                                 </form>
 
@@ -520,7 +520,7 @@
 
                                 <div class="marking-test" data-bind="with: marking_test">
                                     <!-- ko if: question_error -->
-                                    <div class="alert alert-danger">
+                                    <div class="alert alert-danger" aria-live="polite">
                                         <p>There's an error which means the marking algorithm can't run:</p>   
                                         <p data-bind="html: question_error"></p>
                                         <pre data-bind="visible: ko.unwrap(question_error).stack, text: ko.unwrap(question_error).stack"></pre>
@@ -721,7 +721,7 @@
                                                                 </div>
                                                             </form>
 
-                                                            <div data-bind="visible: last_run_error">
+                                                            <div data-bind="visible: last_run_error" aria-live="polite">
                                                                 <div class="alert alert-danger">
                                                                     <p data-bind="html: last_run_error"></p>
                                                                 </div>
@@ -1074,7 +1074,7 @@
                                         Definition:
                                     </label>
                                     <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: definition, codemirrorMode: language"></textarea>
-                                    <div class="alert alert-danger" data-bind="visible: error().length>0">
+                                    <div class="alert alert-danger" data-bind="visible: error().length>0" aria-live="polite">
                                         <span class="glyphicon glyphicon-alert"></span> <span class="errortext" data-bind="html: error"></span>
                                     </div>
                                 </div>

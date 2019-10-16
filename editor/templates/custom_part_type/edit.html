@@ -601,7 +601,7 @@
                                         <label>Definition</label>
                                         <textarea {% if not editable %}disabled{% endif %} class="definition" data-bind="codemirror: definition"></textarea>
                                         <undefined-variable-warning params="expr: definition, vars: $parent.marking_defined_names, show_syntax_errors: false"></undefined-variable-warning>
-                                        <div class="alert alert-danger" data-bind="visible: definitionError">
+                                        <div class="alert alert-danger" data-bind="visible: definitionError" aria-live="polite">
                                             <p data-bind="html: definitionError"></p>
                                         </div>
                                         <p class="help-block text-right">

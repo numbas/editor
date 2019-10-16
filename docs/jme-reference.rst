@@ -2696,6 +2696,19 @@ Sub-expressions
         * ``findvars(expression("x + x*y"))`` → ``["x","y"]``
         * ``findvars(expression("map(x+2, x, [1,2,3])"))`` → ``[]``
 
+.. jme:function:: substitute(variables,expression)
+
+    Substitute the given variable values into ``expression``.
+
+    ``variables`` is a dictionary mapping variable names to values.
+
+    **Definitions**:
+        * :data:`dict`, :data:`expression` → :data:`expression`
+
+    **Examples**:
+        * ``substitute(["x": 1], expression("x + y"))`` → ``expression("1 + y")``
+        * ``substitute(["x": 1, "y": expression("sqrt(z+2)")], expression("x + y"))`` → ``expression("1 + sqrt(z + 2)")``
+
 .. jme:function:: simplify(expression,rules)
 
     Apply the given simplification rules to ``expression``, until no rules apply.
@@ -2862,10 +2875,27 @@ Identifying data types
     **Definitions**:
         * :data:`expression` → :data:`dict`
 
-    **Example**:
+    **Examples**:
         * ``infer_variable_types(expression("x^2"))`` → ``["x": "number"]``
         * ``infer_variable_types(expression("union(a,b)"))`` → ``["a": "set", "b": "set"]``
         * ``infer_variable_types(expression("k*det(a)"))`` → ``[ "k": "number", "a": "matrix" ]``
+
+.. jme:function:: infer_type(expression)
+
+    Attempt to infer the type of the value produced by the given expression, which may contain free variables.
+
+    First, the types of any free variables are inferred.
+    Then, definitions of an operations or functions in the function are chosen to match the types of their arguments.
+
+    Returns the name of the expression's output type as a string, or ``"?"`` if the type can't be determined.
+
+    **Definitions**:
+        * :data:`expression` → :data:`string`
+
+    **Examples**:
+        * ``infer_type(expression("x+2"))`` → ``"number"``
+        * ``infer_type(expression("id(n)"))`` → ``"matrix"``
+        * ``infer_type(expression("random(2,true)"))`` → ``"?"``
 
 .. _jme-fns-inspecting-the-scope:
 

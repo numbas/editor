@@ -4,14 +4,20 @@
 {% block extension_edit_content %}
     <form action="{% url 'extension_edit_source' form.instance.pk %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
+        {% if editable %}
         <div class="form-group">
             <button type="submit" class="btn btn-default" id="save">
                 <span class="glyphicon glyphicon-save"></span>
                 Save
             </button>
         </div>
+        {% else %}
+        <p>
+            <strong>You may not edit this file.</strong>
+        </p>
+        {% endif %}
         <p class="file-info">
-            Editing <code>{{filename}}</code>{% if not exists %} (new file){% endif %}.
+            {% if editable %}Editing {% endif %}<code>{{filename}}</code>{% if not exists %} (new file){% endif %}.
             Last modified {{last_modified}}
             {% if filename == extension.readme_filename %}
                 <span class="help-block help-block-inline">
@@ -51,11 +57,10 @@
     <script>
 
     var filename = "{{filename}}";
+    var editable = {% if editable %}true{% else %}false{% endif %};
 
     window.addEventListener('DOMContentLoaded',function() {
-        console.log('arg');
         var source_element = document.getElementById('id_source');
-        console.log(source_element);
         var extension = filename.match(/\.(.*)$/);
         extension = extension ? extension[1] : 'js';
         var modes = {
@@ -72,7 +77,8 @@
             mode: modes[extension] || 'javascript',
             indentWithTabs: false,
             indentUnit: 2,
-            lineWrapping: Editor.wrapLines
+            lineWrapping: Editor.wrapLines,
+            readOnly: !editable
         });
 
         mc.on('change',function() {

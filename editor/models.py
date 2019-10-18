@@ -332,7 +332,7 @@ def validate_content(content):
     except Exception as err:
         raise ValidationError(err)
 
-class Extension(models.Model):
+class Extension(models.Model, ControlledObject):
     name = models.CharField(max_length=200, help_text='A human-readable name for the extension')
     location = models.CharField(default='', max_length=200, help_text='A unique identifier for this extension', verbose_name='Short name', blank=True, unique=True)
     url = models.CharField(max_length=300, blank=True, verbose_name='Documentation URL', help_text='Address of a page about the extension. Leave blank to use the README file.')
@@ -349,6 +349,43 @@ class Extension(models.Model):
         ordering = ['name']
     def __str__(self):
         return self.name
+
+    def can_be_edited_by(self, user):
+        return (user.is_superuser) or (self.author == user) or self.has_access(user, ('edit',))
+
+    def can_be_viewed_by(self, user):
+        return self.public or super().can_be_viewed_by(user)
+
+    def can_be_deleted_by(self, user):
+        return user == self.author
+
+    def has_access(self, user, levels):
+        if user.is_anonymous:
+            return False
+        if user==self.author:
+            return True
+        return ExtensionAccess.objects.filter(extension=self, user=user, access__in=levels).exists()
+
+    @property
+    def owner(self):
+        return self.author
+
+
+    @classmethod
+    def filter_can_be_viewed_by(cls, user):
+        if getattr(settings, 'EVERYTHING_VISIBLE', False):
+            return Q()
+        
+        view_perms = ('edit', 'view')
+        if user.is_superuser:
+            return Q()
+        elif user.is_anonymous:
+            return Q(public=True)
+        else:
+            return (Q(access__user=user, access__access__in=view_perms) 
+                    | Q(public=True)
+                    | Q(author=user)
+                   )
 
     def as_json(self):
         d = {
@@ -429,6 +466,29 @@ class Extension(models.Model):
         for name in names:
             if os.path.exists(os.path.join(self.extracted_path,name)):
                 return name
+
+    def get_absolute_url(self):
+        return reverse('extension_documentation',args=(self.pk,))
+
+class ExtensionAccess(models.Model, TimelineMixin):
+    extension = models.ForeignKey('Extension', related_name='access', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='extension_accesses', on_delete=models.CASCADE)
+    access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
+
+    timelineitems = GenericRelation('TimelineItem', related_query_name='extension_accesses', content_type_field='object_content_type', object_id_field='object_id')
+    timelineitem_template = 'timeline/access.html'
+
+    def can_be_viewed_by(self, user):
+        return self.extension.can_be_viewed_by(user)
+
+    def can_be_deleted_by(self, user):
+        return self.extension.can_be_deleted_by(user)
+
+    def timeline_object(self):
+        return self.extension
+
+    def icon(self):
+        return 'eye-open'
 
 class Theme(models.Model):
     name = models.CharField(max_length=200)
@@ -1148,7 +1208,8 @@ class Timeline(object):
             items_for_user = (
                 Q(editoritems__in=self.viewing_user.watched_items.all()) | 
                 Q(editoritems__project__in=projects) |
-                Q(projects__in=projects)
+                Q(projects__in=projects) |
+                Q(extension_accesses__user=viewing_user)
             )
 
             view_filter = view_filter | items_for_user

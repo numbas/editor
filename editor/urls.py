@@ -191,6 +191,8 @@ urlpatterns = [
     url(r'^extensions/(?P<pk>\d+)/edit$', login_required(extension.UpdateView.as_view()), name='extension_edit'),
     url(r'^extensions/(?P<pk>\d+)/edit_source$', login_required(extension.EditView.as_view()), name='extension_edit_source'),
     url(r'^extensions/(?P<pk>\d+)/documentation$', extension.DocumentationView.as_view(), name='extension_documentation'),
+    url(r'^extensions/(?P<pk>\d+)/access$', login_required(extension.AccessView.as_view()), name='extension_access'),
+    url(r'^extensions/(?P<extension_pk>\d+)/access/add$', login_required(extension.AddAccessView.as_view()), name='extension_add_access'),
     url(r'^extensions/(?P<pk>\d+)/delete$', login_required(extension.DeleteView.as_view()), name='extension_delete'),
 
     # Custom part types

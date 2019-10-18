@@ -127,9 +127,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
     def get_context_data(self, **kwargs):
         context = super(UpdateView, self).get_context_data(**kwargs)
 
-        extensions = Extension.objects.filter(public=True) | self.object.extensions.all()
-        if not self.request.user.is_anonymous:
-            extensions |= Extension.objects.filter(author=self.request.user) 
+        extensions = Extension.objects.filter(Extension.filter_can_be_viewed_by(request.user)) | self.object.extensions.all()
         extensions = extensions.distinct().order_by(Lower('name'))
         self.item_json['numbasExtensions'] = context['extensions'] = [e.as_json() for e in extensions]
 

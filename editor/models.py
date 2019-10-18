@@ -470,6 +470,9 @@ class Extension(models.Model, ControlledObject):
     def get_absolute_url(self):
         return reverse('extension_documentation',args=(self.pk,))
 
+    def icon(self):
+        return 'wrench'
+
 class ExtensionAccess(models.Model, TimelineMixin):
     extension = models.ForeignKey('Extension', related_name='access', on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='extension_accesses', on_delete=models.CASCADE)
@@ -486,9 +489,6 @@ class ExtensionAccess(models.Model, TimelineMixin):
 
     def timeline_object(self):
         return self.extension
-
-    def icon(self):
-        return 'eye-open'
 
 class Theme(models.Model):
     name = models.CharField(max_length=200)

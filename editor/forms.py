@@ -307,6 +307,13 @@ class CreateExtensionForm(forms.ModelForm):
         self._user = kwargs.pop('author')
         super().__init__(*args, **kwargs)
 
+    def clean_name(self):
+        name = self.cleaned_data.get('name')
+        location = slugify(name)
+        if Extension.objects.filter(location=location).exists():
+            raise ValidationError("An extension with that name already exists.")
+        return name
+
     def save(self, commit=True):
         extension = super().save(commit=False)
         extension.location = slugify(extension.name)

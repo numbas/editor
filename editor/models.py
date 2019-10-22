@@ -390,7 +390,7 @@ class Extension(models.Model, ControlledObject):
     def as_json(self):
         d = {
             'name': self.name,
-            'url': self.url,
+            'url': reverse('extension_documentation',args=(self.pk,)),
             'pk': self.pk,
             'location': self.location,
             'author': self.author.pk if self.author is not None else None,

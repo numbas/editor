@@ -1,0 +1,15 @@
+{% extends "extension/edit_base.html" %}
+
+{% block extension_edit_content %}
+    <form action="{% url 'extension_delete_file' extension.pk %}" method="POST">
+        {% csrf_token %}
+        {{form}}
+        <p>Are you sure you'd like to delete the file <code>{{filename}}</code>?</p>
+        <p><strong>It will not be possible to recover this file after it is deleted.</strong></p>
+        <div>
+            <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-remove"></span> Delete</button>
+            <a href="{% url 'extension_edit_source' extension.pk %}?filename={{filename}}">Cancel</a>
+        </div>
+    </form>
+{% endblock %}
+

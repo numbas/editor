@@ -11,7 +11,7 @@ from django.shortcuts import redirect
 
 from editor.models import Extension, ExtensionAccess
 from editor import forms
-from editor.views.generic import AuthorRequiredMixin, CanViewMixin, forbidden_response
+from editor.views.generic import AuthorRequiredMixin, CanEditMixin, CanViewMixin, forbidden_response
 
 class CreateView(generic.CreateView):
     """ Create an extension """
@@ -125,6 +125,29 @@ class EditView(CanViewMixin, generic.UpdateView):
 
     def get_success_url(self):
         return reverse('extension_edit_source', args=(self.get_object().pk,))+'?filename='+self.get_filename()
+
+class DeleteFileView(CanEditMixin, generic.UpdateView):
+    model = Extension
+    template_name = 'extension/delete_file.html'
+    form_class = forms.ExtensionDeleteFileForm
+
+    def get_filename(self):
+        d = self.request.GET if self.request.method.lower()=='get' else self.request.POST
+        filename = d.get('filename')
+        return filename
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args,**kwargs)
+        context['filename'] = self.get_filename()
+        return context
+
+    def get_initial(self):
+        initial = super().get_initial()
+        filename = initial['filename'] = self.get_filename()
+        return initial
+
+    def get_success_url(self):
+        return reverse('extension_edit_source', args=(self.get_object().pk,))
 
 class AccessView(AuthorRequiredMixin, generic.UpdateView):
     model = Extension

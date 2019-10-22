@@ -292,6 +292,22 @@ class EditExtensionForm(forms.ModelForm):
                 f.write(self.cleaned_data.get('source'))
         return extension
 
+class ExtensionDeleteFileForm(forms.ModelForm):
+    filename = forms.CharField(widget=forms.HiddenInput)
+
+    class Meta:
+        model = Extension
+        fields = []
+
+    def save(self, commit=True):
+        extension = super().save(commit=False)
+        filename = self.cleaned_data.get('filename')
+        if commit:
+            print("DELETE FILE",filename)
+            path = os.path.join(extension.extracted_path,filename)
+            os.remove(path)
+        return extension
+
 class UpdateExtensionForm(forms.ModelForm):
     
     """Form to edit an extension."""

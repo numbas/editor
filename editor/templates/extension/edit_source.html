@@ -10,6 +10,12 @@
                 <span class="glyphicon glyphicon-save"></span>
                 Save
             </button>
+            {% if exists %}
+            <a class="btn btn-danger pull-right" href="{% url 'extension_delete_file' extension.pk %}?filename={{filename}}">
+                <span class="glyphicon glyphicon-remove"></span>
+                Delete
+            </a>
+            {% endif %}
         </div>
         {% else %}
         <p>

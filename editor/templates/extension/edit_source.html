@@ -2,7 +2,7 @@
 {% load helplink %}
 
 {% block extension_edit_content %}
-    <form action="{% url 'extension_edit_source' form.instance.pk %}" method="post" enctype="multipart/form-data">
+    <form action="{% url 'extension_edit_source' form.instance.pk %}" method="POST">
         {% csrf_token %}
         {% if editable %}
         <div class="form-group">
@@ -17,8 +17,9 @@
         </p>
         {% endif %}
         <p class="file-info">
-            {% if editable %}Editing {% endif %}<code>{{filename}}</code>{% if not exists %} (new file){% endif %}.
-            Last modified {{last_modified}}
+            {% if editable %}Editing {% endif %}<code>{{filename}}</code>
+            {% if not exists %} (new file){% endif %}.
+            {% if exists %}Last modified {{last_modified}}{% endif %}
             {% if filename == extension.readme_filename %}
                 <span class="help-block help-block-inline">
                     This file contains the <a href="{% url 'extension_documentation' extension.pk %}">documentation for this extension</a>.

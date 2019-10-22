@@ -31,11 +31,16 @@
             <a class="list-group-item monospace {% if fname == filename %}active{% endif %}" href="{% url 'extension_edit_source' extension.pk %}?filename={{fname}}">{{fname}}</a>
             {% endfor %}
             <li class="list-group-item">
-                <form method="GET" action="">
+                <form method="GET" action="" class="form-inline">
                     <label>
                         <span class="glyphicon glyphicon-plus"></span>
                         New file: 
-                        <input class="form-control" name="filename">
+                        <div class="input-group">
+                            <input class="form-control" name="filename">
+                            <span class="input-group-btn">
+                                <button class="btn btn-primary" title="Add a file"><span class="glyphicon glyphicon-plus"></span></button>
+                            </span>
+                        </div>
                     </label>
                 </form>
             </li>

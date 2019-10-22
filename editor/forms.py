@@ -277,7 +277,7 @@ class EditExtensionForm(forms.ModelForm):
     
     """Form to edit an extension."""
 
-    source = forms.CharField(widget=forms.Textarea)
+    source = forms.CharField(widget=forms.Textarea,required=False)
     filename = forms.CharField(widget=forms.HiddenInput)
     
     class Meta:

@@ -79,7 +79,8 @@ class UserProfile(models.Model):
         items = TimelineItem.objects.filter(
             Q(editoritems__in=self.user.watched_items.all()) | 
             Q(editoritems__project__in=projects) |
-            Q(projects__in=projects)
+            Q(projects__in=projects) |
+            Q(extension_accesses__user=self.user)
         )
 
         items = (items | nonsticky_broadcast_timelineitems).order_by('-date')

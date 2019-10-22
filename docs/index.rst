@@ -57,7 +57,7 @@ If you have any questions, please `email us <mailto:numbas@ncl.ac.uk>`_ or join 
 
     pattern-matching/index
     javascript-api
-    extensions
+    extensions/index
     themes
     custom-part-types/reference
 

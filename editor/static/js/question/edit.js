@@ -5,15 +5,20 @@ $(document).ready(function() {
 
     Editor.question = {};
 
-    var jmeTypes = [];
-    var forbiddenJmeTypes = ['op','name','function'];
-    for(var type in Numbas.jme.types) {
-        var t = Numbas.jme.types[type].prototype.type;
-        if(t && jmeTypes.indexOf(t)==-1 && forbiddenJmeTypes.indexOf(t)==-1) {
-            jmeTypes.push(t);
+    var jmeTypes = ko.observableArray([]);
+    function find_jme_types() {
+        var types = [];
+        var forbiddenJmeTypes = ['op','name','function'];
+        for(var type in Numbas.jme.types) {
+            var t = Numbas.jme.types[type].prototype.type;
+            if(t && types.indexOf(t)==-1 && forbiddenJmeTypes.indexOf(t)==-1) {
+                types.push(t);
+            }
         }
+        types.sort();
+        jmeTypes(types);
     }
-    jmeTypes.sort();
+    find_jme_types();
 
 
     function AddPartTypeModal(question,useFn, filter) {
@@ -243,6 +248,7 @@ $(document).ready(function() {
             ko.computed(function() {
                 if(this.used_or_required()) {
                     Numbas.activateExtension(this.location);
+                    find_jme_types();
                 }
             },this);
         }

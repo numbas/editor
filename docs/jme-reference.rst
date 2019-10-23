@@ -1538,6 +1538,18 @@ Strings
     **Example**:
         * ``split("a,b,c,d",",")`` → ``["a","b","c","d"]``
 
+.. jme:function:: split_regex(string,pattern,flags)
+
+    Split a string at every occurrence of a substring matching the given regular expression pattern, returning a list of the the remaining pieces.
+
+    **Definitions**:
+        * :data:`string`, :data:`string` → :data:`list`
+        * :data:`string`, :data:`string`, :data:`string` → :data:`list`
+
+    **Example**:
+        * ``split_regex("a, b,c, d ",", *")`` → ``["a","b","c","d"]``
+        * ``split_regex("this and that AND THIS"," and ","i")`` → ``["this","that","THIS"]``
+
 .. jme:function:: trim(str)
 
     Remove whitespace from the start and end of ``str``.
@@ -2669,6 +2681,16 @@ Sub-expressions
 
     **Example**:
         * ``op("+")`` :no-test:`→` ``+``
+
+.. jme:function:: function(name)
+
+    Construct a function token with the given name.
+
+    **Definitions**:
+        * :data:`string` → :data:`func`
+
+    **Example**:
+        * ``function("sin")`` :no-test:`→` ``sin``
 
 .. jme:function:: exec(op, arguments)
 

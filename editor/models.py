@@ -8,6 +8,7 @@ import json
 from datetime import datetime
 from itertools import groupby
 import codecs
+from pathlib import Path
 try:
     # For Python > 2.7
     from collections import OrderedDict
@@ -449,8 +450,13 @@ class Extension(models.Model, ControlledObject):
                 file.close()
 
     def filenames(self):
-        names = os.listdir(self.extracted_path)
-        return [x for x in names if not re.match(r'^\.',x)]
+        top = Path(self.extracted_path)
+        for d,dirs,files in os.walk(str(top)):
+            rd = Path(d).relative_to(top)
+            if str(rd)=='.' or not re.match(r'^\.',str(rd)):
+                for f in files:
+                    if not re.match(r'^\.',f):
+                        yield str(rd / f)
 
     def write_file(self,filename,content):
         root = os.path.abspath(self.extracted_path)

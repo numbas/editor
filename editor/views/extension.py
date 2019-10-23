@@ -1,6 +1,8 @@
 import os
 import mistune
 from datetime import datetime
+from io import BytesIO
+from zipfile import ZipFile
 
 from django import http
 from django.contrib import messages
@@ -209,6 +211,18 @@ class DocumentationView(CanViewMixin, generic.DetailView):
         context['content'] = content
 
         return context
+
+class DownloadView(CanViewMixin, generic.DetailView):
+    model = Extension
+
+    def get(self, request, *args, **kwargs):
+        extension = self.get_object()
+        response = http.HttpResponse(content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename="{}.zip"'.format(extension.location)
+        zf = ZipFile(response,'w')
+        for fname in extension.filenames():
+            zf.write(os.path.join(extension.extracted_path,fname), fname)
+        return response
 
 class DeleteView(AuthorRequiredMixin, generic.DeleteView):
     model = Extension

@@ -1,5 +1,6 @@
 import zipfile
 import os
+from pathlib import Path
 
 from django import forms
 from django.forms.models import inlineformset_factory
@@ -288,7 +289,9 @@ class EditExtensionForm(forms.ModelForm):
         extension = super().save(commit=False)
         filename = self.cleaned_data.get('filename')
         if commit:
-            with open(os.path.join(extension.extracted_path,filename),'w',encoding='utf-8') as f:
+            path = os.path.join(extension.extracted_path,filename)
+            Path(path).parent.mkdir(parents=True,exist_ok=True)
+            with open(path,'w',encoding='utf-8') as f:
                 f.write(self.cleaned_data.get('source'))
         return extension
 

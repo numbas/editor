@@ -31,7 +31,7 @@
             <a class="list-group-item monospace {% if fname == filename %}active{% endif %}" href="{% url 'extension_edit_source' extension.pk %}?filename={{fname}}">{{fname}}</a>
             {% endfor %}
             <li class="list-group-item">
-                <form method="GET" action="" class="form-inline">
+                <form method="GET" action="{% url 'extension_edit_source' extension.pk %}" class="form-inline">
                     <label>
                         <span class="glyphicon glyphicon-plus"></span>
                         New file: 

@@ -576,6 +576,26 @@
                                                 </div>
                                             </form>
                                             <!-- /ko -->
+                                            <!-- ko if: $parent.type().name=='gapfill' -->
+                                            <form class="form-horizontal" data-bind="submit: Editor.noop">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Gap</th>
+                                                            <th>Student's answer</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody data-bind="foreach: $parent.gaps">
+                                                        <tr>
+                                                            <td data-bind="text: name"></td>
+                                                            <td data-bind="with: marking_test">
+                                                                <div data-bind="component: {name: 'answer-widget', params: {answer: answer, part: runtime_part}}"></div>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </form>
+                                            <!-- /ko -->
 
 
                                             <div data-bind="if: last_run_error">

@@ -2376,16 +2376,20 @@ $(document).ready(function() {
         // If editing, set variables to the current values in the question's variable preview
         ko.computed(function() {
             if(this.editing()) {
-                this.variables(this.part.q.variables().map(function(v) {
-                    var value = v.value();
-                    return {
-                        name: v.name(),
-                        value: value,
-                        valueString: value ? Numbas.jme.display.treeToJME({tok:value},{bareExpression:false}) : '',
-                        toggleLocked: function() { v.toggleLocked(); },
-                        locked: v.locked
-                    }
-                }));
+                var vs = [];
+                this.part.q.allVariableGroups().forEach(function(g) {
+                    g.variables().forEach(function(v) {
+                        var value = v.value();
+                        vs.push({
+                            name: v.name(),
+                            value: value,
+                            valueString: value ? Numbas.jme.display.treeToJME({tok:value},{bareExpression:false}) : '',
+                            toggleLocked: function() { v.toggleLocked(); },
+                            locked: v.locked
+                        });
+                    });
+                });
+                this.variables(vs);
             }
         },this);
 

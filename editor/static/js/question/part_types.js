@@ -276,6 +276,19 @@ part_types.models = [
                 return {name: d.name, value: d.value()};
             });
         },
+
+        variable_references: function(part,model) {
+            var o = [
+                {tab: 'marking-settings', value: model.answer, type: 'jme-sub', description: 'Correct answer'},
+                {tab: 'restrictions', value: model.mustmatchpattern.pattern, type: 'jme-sub', description: "Pattern student's answer must match"},
+                {tab: 'restrictions', value: model.mustmatchpattern.message, type: 'html', description: "Warning message for pattern restriction"},
+            ]
+            model.valueGenerators().forEach(function(vg) {
+                o.push({tab:'checking-accuracy',value: vg.value,ignore:model.variableNames,type:'jme',description:'Value generator for variable '+vg.name});
+            });
+            return o;
+        },
+
         load: function(data) {
             tryLoad(data,['answer','answerSimplification','checkVariableNames','showPreview'],this);
             var checkingType = tryGetAttribute(data,'checkingType');
@@ -383,6 +396,17 @@ part_types.models = [
                 data.correctAnswerStyle = this.correctAnswerStyle().code;
             }
         },
+
+        variable_references: function(part,model) {
+            var o = [
+                {tab: 'marking-settings', value: model.minValue, type: 'jme', description: 'Minimum accepted value'},
+                {tab: 'marking-settings', value: model.maxValue, type: 'jme', description: 'Maximum accepted value'},
+                {tab: 'marking-settings', value: model.precision, type: 'jme', description: 'Required precision'},
+                {tab: 'marking-settings', value: model.precisionMessage, type: 'html', description: model.precisionWord},
+            ];
+            return o;
+        },
+
         load: function(data) {
             tryLoad(data,['minValue','maxValue','correctAnswerFraction','allowFractions','mustBeReduced','mustBeReducedPC','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision','showPrecisionHint','showFractionHint'],this);
             if('answer' in data) {
@@ -472,6 +496,17 @@ part_types.models = [
             }
         },
 
+        variable_references: function(part,model) {
+            var o = [
+                {tab: 'marking-settings', value: model.correctAnswer, type: 'jme', description: 'Correct answer'},
+                {tab: 'marking-settings', value: model.numRows, type: 'jme', description: 'Number of rows'},
+                {tab: 'marking-settings', value: model.numColumns, type: 'jme', description: 'Number of columns'},
+                {tab: 'marking-settings', value: model.tolerance, type: 'jme', description: 'Margin of error allowed in each cell'},
+                {tab: 'marking-settings', value: model.precision, type: 'jme', description: model.precisionWord},
+            ];
+            return o;
+        },
+
         load: function(data) {
             tryLoad(data,['correctAnswer','correctAnswerFractions','numRows','numColumns','allowResize','tolerance','markPerCell','allowFractions','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision'],this);
             for(var i=0;i<this.precisionTypes.length;i++) {
@@ -513,6 +548,15 @@ part_types.models = [
             }
             data.matchMode = this.matchMode().name;
         },
+
+        variable_references: function(part,model) {
+            var o = [
+                {tab: 'marking-settings', value: model.answer, type: 'string', description: 'Answer pattern'},
+                {tab: 'marking-settings', value: model.displayAnswer, type: 'string', description: 'Display answer'},
+            ];
+            return o;
+        },
+
         load: function(data) {
             tryLoad(data,['answer','displayAnswer','caseSensitive','partialCredit','matchMode'],this);
             for(var i=0;i<this.matchModes.length;i++) {
@@ -610,6 +654,14 @@ part_types.models = [
                 data.distractors = distractors;
             }
         },
+
+        variable_references: function(part,model) {
+            var o = [
+                {tab: 'marking-settings', value: model.answer, type: 'string', description: 'Answer pattern'},
+            ];
+            return o;
+        },
+
         load: function(data) {
             tryLoad(data,['minMarks','maxMarks','shuffleChoices','displayColumns','showCellAnswerState'],this);
             if(typeof data.matrix == 'string') {

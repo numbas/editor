@@ -5,6 +5,30 @@ $(document).ready(function() {
 
     Editor.question = {};
 
+    function vars_used_in_html(html) {
+        var element = document.createElement('div');
+        element.innerHTML = html;
+        try {
+            var subber = new Numbas.jme.variables.DOMcontentsubber(Numbas.jme.builtinScope);
+            return subber.findvars(element);
+        } catch(e) {
+            return [];
+        }
+    }
+    function vars_used_in_string(str) {
+        var bits = Numbas.util.splitbrackets(str,'{','}');
+        var vars = [];
+        for(var i=1;i<bits.length;i+=2) {
+            try {
+                var tree = Numbas.jme.compile(bits[i]);
+                vars = vars.merge(Numbas.jme.findvars(tree));
+            } catch(e) {
+                continue;
+            }
+        }
+        return vars;
+    }
+
     var jmeTypes = ko.observableArray([]);
     function find_jme_types() {
         var types = [];
@@ -35,7 +59,6 @@ $(document).ready(function() {
         }
         this.part_types = part_types.filter(function(pt) { return pt.is_custom_part_type; });
     }
-
 
     ko.bindingHandlers.showModal = {
         init: function(element, valueAccessor) {
@@ -300,6 +323,15 @@ $(document).ready(function() {
 
         this.addPartTypeModal = new AddPartTypeModal(this,function(pt){ q.addPart(pt) });
 
+        this.goToPart = function(path) {
+            var p = q.getPart(path);
+            if(!p) {
+                return;
+            }
+            q.currentPart(p);
+            q.currentTab(q.getTab('parts'));
+        }
+
         this.baseVariableGroup = new VariableGroup(this,{name:'Ungrouped variables'});
         this.baseVariableGroup.fixed = true;
         this.allVariableGroups = ko.computed(function() {
@@ -372,20 +404,6 @@ $(document).ready(function() {
             q.currentTab(q.getTab('variables'));
         }
 
-        this.expand_all_parts = function() {
-            q.allParts().map(function(p) {
-                p.open(true);
-            });
-        }
-
-        this.collapse_all_parts = function() {
-            q.allParts().map(function(p) {
-                p.open(false);
-            });
-        }
-
-
-
         ko.computed(function() {
             if(!this.autoCalculateVariables())
                 return;
@@ -405,6 +423,45 @@ $(document).ready(function() {
         this.regenerateVariables = function() {
             q.generateVariablePreview();
         }
+
+        this.variable_references = ko.computed(function() {
+            var o = [];
+            o.push(new VariableReference({kind:'tab',tab:'statement',value:q.statement,type:'html',description:'Statement'}));
+            o.push(new VariableReference({kind:'tab',tab:'advice',value:q.advice,type:'html',description:'Advice'}));
+            o.push(new VariableReference({kind:'tab',tab:'variabletesting',value:q.variablesTest.condition,type:'jme',description:'Variable testing condition'}));
+            q.allParts().forEach(function(p) {
+                o = o.concat(p.variable_references());
+            });
+            return o;
+        },this);
+
+        ko.computed(function() {
+            this.variables().forEach(function(v) {
+                v.references([]);
+            });
+            this.variable_references().forEach(function(r) {
+                var def = r.def;
+                var description = r.description();
+                r.vars().forEach(function(name) {
+                    var v = q.getVariable(name);
+                    if(v) {
+                        function go() {
+                            switch(def.kind) {
+                                case 'tab':
+                                    q.setTab(def.tab)();
+                                    break;
+                                case 'part':
+                                    q.setTab('parts')();
+                                    q.currentPart(def.part);
+                                    def.part.setTab(def.tab)();
+                                    break;
+                            }
+                        }
+                        v.references.push({description: description, go: go});
+                    }
+                });
+            });
+        },this);
 
         if(data) {
             this.load(data);
@@ -1550,6 +1607,7 @@ $(document).ready(function() {
                 return v2.dependencies().contains(v.name().toLowerCase());
             });
         },this);
+        this.references = ko.observableArray([]);
         this.value = ko.observable(null);
         this.error = ko.observable('');
         this.anyError = ko.computed(function() {
@@ -1724,6 +1782,58 @@ $(document).ready(function() {
                 e.preventDefault();
             }
         }
+    }
+
+    function VariableReference(def) {
+        this.def = def;
+        this.description = Knockout.computed(function() {
+            var desc = ko.unwrap(this.def.description);
+            if(this.def.kind=='part') {
+                desc = this.def.part.name()+' '+desc;
+            }
+            return desc;
+        },this);
+        var raw_vars = ko.computed(function() {
+            try {
+                var v = ko.unwrap(this.def.value);
+                switch(this.def.type) {
+                    case 'html':
+                        return vars_used_in_html(v);
+                    case 'string':
+                        return vars_used_in_string(v);
+                    case 'jme-sub':
+                        return vars_used_in_string(v)
+                    case 'jme':
+                        try {
+                            var tree = Numbas.jme.compile(v);
+                        } catch(e) {
+                            break;
+                        }
+                        if(tree) {
+                            return Numbas.jme.findvars(tree);
+                        } else {
+                            return [];
+                        }
+                    case 'list':
+                        return v;
+                    default:
+                        throw(new Error("Undefined variable reference data type "+this.def.type));
+                }
+            } catch(e) {
+                return [];
+            }
+        },this);
+        this.vars = ko.computed(function() {
+            var v = raw_vars();
+            if(!v) {
+                return [];
+            }
+            if(this.def.ignore) {
+                var ignore = ko.unwrap(this.def.ignore);
+                v = v.filter(function(n) { return ignore.indexOf(n)==-1 });
+            }
+            return v;
+        },this);
     }
 
     function CustomFunction(q,data) {
@@ -2106,6 +2216,23 @@ $(document).ready(function() {
         }
 
         this.types.map(function(t){p[t.name] = t.model});
+
+        this.variable_references = ko.computed(function() {
+            var o = [];
+            o.push(new VariableReference({kind:'part',part:this,tab:'prompt',value:this.prompt,type:'html',description:'prompt'}));
+            if(this.use_custom_algorithm() && this.markingScript()) {
+                var s = this.markingScript();
+                for(var x in s.notes) {
+                    o.push(new VariableReference({kind:'part',part:this,tab:'marking-algorithm',value:s.notes[x].vars,type:'list',description:'marking algorithm note '+x}));
+                }
+            }
+            this.type().variable_references().forEach(function(def) {
+                def.kind = 'part';
+                def.part = p;
+                o.push(new VariableReference(def));
+            });
+            return o;
+        },this);
 
         if(data)
             this.load(data);
@@ -2961,6 +3088,12 @@ $(document).ready(function() {
         this.is_custom_part_type = data.is_custom_part_type;
         this.toJSONFn = data.toJSON || function() {};
         this.loadFn = data.load || function() {};
+        this.variable_references = ko.computed(function() {
+            if(!data.variable_references) {
+                return [];
+            }
+            return data.variable_references(this.part,this.model);
+        },this);
     }
     PartType.prototype = {
         toJSON: function(data) {

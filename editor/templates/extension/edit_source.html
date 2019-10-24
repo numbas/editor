@@ -2,17 +2,30 @@
 {% load helplink %}
 
 {% block extension_edit_content %}
-    <form action="{% url 'extension_edit_source' form.instance.pk %}" method="post" enctype="multipart/form-data">
+    <form action="{% url 'extension_edit_source' form.instance.pk %}" method="POST">
         {% csrf_token %}
+        {% if editable %}
         <div class="form-group">
             <button type="submit" class="btn btn-default" id="save">
                 <span class="glyphicon glyphicon-save"></span>
                 Save
             </button>
+            {% if exists %}
+            <a class="btn btn-danger pull-right" href="{% url 'extension_delete_file' extension.pk %}?filename={{filename}}">
+                <span class="glyphicon glyphicon-remove"></span>
+                Delete
+            </a>
+            {% endif %}
         </div>
+        {% else %}
+        <p>
+            <strong>You may not edit this file.</strong>
+        </p>
+        {% endif %}
         <p class="file-info">
-            Editing <code>{{filename}}</code>{% if not exists %} (new file){% endif %}.
-            Last modified {{last_modified}}
+            {% if editable %}Editing {% endif %}<code>{{filename}}</code>
+            {% if not exists %} (new file){% endif %}.
+            {% if exists %}Last modified {{last_modified}}{% endif %}
             {% if filename == extension.readme_filename %}
                 <span class="help-block help-block-inline">
                     This file contains the <a href="{% url 'extension_documentation' extension.pk %}">documentation for this extension</a>.
@@ -51,11 +64,10 @@
     <script>
 
     var filename = "{{filename}}";
+    var editable = {% if editable %}true{% else %}false{% endif %};
 
     window.addEventListener('DOMContentLoaded',function() {
-        console.log('arg');
         var source_element = document.getElementById('id_source');
-        console.log(source_element);
         var extension = filename.match(/\.(.*)$/);
         extension = extension ? extension[1] : 'js';
         var modes = {
@@ -72,7 +84,8 @@
             mode: modes[extension] || 'javascript',
             indentWithTabs: false,
             indentUnit: 2,
-            lineWrapping: Editor.wrapLines
+            lineWrapping: Editor.wrapLines,
+            readOnly: !editable
         });
 
         mc.on('change',function() {

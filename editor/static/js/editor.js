@@ -2028,8 +2028,10 @@ $(document).ready(function() {
 
     function update_notifications() {
         var num_notifications = $('#notifications .dropdown-menu .notification').length;
-        $('#notifications .dropdown-toggle').attr('title',num_notifications+' unread '+(num_notifications==1 ? 'notification' : 'notifications'));
+        var description = num_notifications+' unread '+(num_notifications==1 ? 'notification' : 'notifications')
+        $('#notifications .dropdown-toggle').attr('title',description);
         $('#notifications .badge').text(num_notifications>0 ? num_notifications : '');
+        $('#notifications .sr-description').text(description);
         if(num_notifications) {
             $('#notifications').addClass('active');
             $('#notifications .dropdown-toggle').removeClass('disabled');

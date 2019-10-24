@@ -188,10 +188,14 @@ urlpatterns = [
 
     url(r'^extension/new/$', login_required(extension.CreateView.as_view()), name='extension_new'),
     url(r'^extension/upload/$', login_required(extension.UploadView.as_view()), name='extension_upload'),
+    url(r'^extensions/(?P<pk>\d+)/download$', login_required(extension.DownloadView.as_view()), name='extension_download'),
     url(r'^extensions/(?P<pk>\d+)/edit$', login_required(extension.UpdateView.as_view()), name='extension_edit'),
     url(r'^extensions/(?P<pk>\d+)/edit_source$', login_required(extension.EditView.as_view()), name='extension_edit_source'),
     url(r'^extensions/(?P<pk>\d+)/documentation$', extension.DocumentationView.as_view(), name='extension_documentation'),
+    url(r'^extensions/(?P<pk>\d+)/access$', login_required(extension.AccessView.as_view()), name='extension_access'),
+    url(r'^extensions/(?P<extension_pk>\d+)/access/add$', login_required(extension.AddAccessView.as_view()), name='extension_add_access'),
     url(r'^extensions/(?P<pk>\d+)/delete$', login_required(extension.DeleteView.as_view()), name='extension_delete'),
+    url(r'^extensions/(?P<pk>\d+)/delete_file$', login_required(extension.DeleteFileView.as_view()), name='extension_delete_file'),
 
     # Custom part types
     url(r'^part_type/new/$', login_required(custom_part_type.CreateView.as_view()), name='custom_part_type_new'),

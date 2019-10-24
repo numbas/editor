@@ -20,6 +20,9 @@
     <div class="panel panel-default">
         <ul class="list-group">
             <a class="list-group-item{% if options_active %} active{% endif %}" href="{% url 'extension_edit' extension.pk %}"><span class="glyphicon glyphicon-cog"></span> Options</a>
+            {% if request.user == extension.author %}
+            <a class="list-group-item{% if access_active %} active{% endif %}" href="{% url 'extension_access' extension.pk %}"><span class="glyphicon glyphicon-user"></span> Access</a>
+            {% endif %}
         </ul>
         {% if extension.editable %}
         <div class="panel-heading">Files</div>
@@ -28,11 +31,16 @@
             <a class="list-group-item monospace {% if fname == filename %}active{% endif %}" href="{% url 'extension_edit_source' extension.pk %}?filename={{fname}}">{{fname}}</a>
             {% endfor %}
             <li class="list-group-item">
-                <form method="GET" action="">
+                <form method="GET" action="{% url 'extension_edit_source' extension.pk %}" class="form-inline">
                     <label>
                         <span class="glyphicon glyphicon-plus"></span>
                         New file: 
-                        <input class="form-control" name="filename">
+                        <div class="input-group">
+                            <input class="form-control" name="filename">
+                            <span class="input-group-btn">
+                                <button class="btn btn-primary" title="Add a file"><span class="glyphicon glyphicon-plus"></span></button>
+                            </span>
+                        </div>
                     </label>
                 </form>
             </li>

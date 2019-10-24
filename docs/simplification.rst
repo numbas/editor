@@ -112,6 +112,11 @@ The following display options are available:
 
         **Example:** ``\var[fractionNumbers,mixedFractions]{22/7}`` produces :math:`3 \frac{1}{7}`.
 
+    flatFractions
+        Fractions are displayed on a single line, with a slash between the numerator and denominator.
+
+        **Example:** ``\simplify[fractionNumbers]{x/2}`` produces :math:`\left. x \middle/ 2 \right.`.
+
     rowVector
         This rule doesn't rewrite expressions, but tells the maths renderer that you'd like vectors to be rendered as rows instead of columns.
 

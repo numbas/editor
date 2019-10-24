@@ -84,7 +84,7 @@
                 </div>
                 <h5>Custom marking algorithm</h5>
                 <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: customMarkingAlgorithm, codemirrorMode: 'jme'"></textarea>
-                <p class="alert alert-danger" data-bind="html: markingScriptError, visible: markingScriptError"></p>
+                <p class="alert alert-danger" data-bind="html: markingScriptError, visible: markingScriptError" aria-live="polite"></p>
             </div>
         </form>
 
@@ -98,7 +98,7 @@
 
         <div class="marking-test" data-bind="with: marking_test">
             <!-- ko if: question_error -->
-            <div class="alert alert-danger">
+            <div class="alert alert-danger" aria-live="polite">
                 <p>There's an error which means the marking algorithm can't run:</p>   
                 <p data-bind="html: question_error"></p>
                 <pre data-bind="visible: ko.unwrap(question_error).stack, text: ko.unwrap(question_error).stack"></pre>
@@ -157,7 +157,7 @@
 
 
                     <div data-bind="if: last_run_error">
-                        <div class="alert alert-danger">
+                        <div class="alert alert-danger" aria-live="polite">
                             <p data-bind="html: last_run_error"></p>
                             <!-- ko if: last_run().warnings -->
                             <ul data-bind="foreach: last_run().warnings">
@@ -299,7 +299,7 @@
                                         </div>
                                     </form>
 
-                                    <div data-bind="visible: last_run_error">
+                                    <div data-bind="visible: last_run_error" aria-live="polite">
                                         <div class="alert alert-danger">
                                             <p data-bind="html: last_run_error"></p>
                                         </div>

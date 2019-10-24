@@ -1538,6 +1538,18 @@ Strings
     **Example**:
         * ``split("a,b,c,d",",")`` → ``["a","b","c","d"]``
 
+.. jme:function:: split_regex(string,pattern,flags)
+
+    Split a string at every occurrence of a substring matching the given regular expression pattern, returning a list of the the remaining pieces.
+
+    **Definitions**:
+        * :data:`string`, :data:`string` → :data:`list`
+        * :data:`string`, :data:`string`, :data:`string` → :data:`list`
+
+    **Example**:
+        * ``split_regex("a, b,c, d ",", *")`` → ``["a","b","c","d"]``
+        * ``split_regex("this and that AND THIS"," and ","i")`` → ``["this","that","THIS"]``
+
 .. jme:function:: trim(str)
 
     Remove whitespace from the start and end of ``str``.
@@ -2670,6 +2682,16 @@ Sub-expressions
     **Example**:
         * ``op("+")`` :no-test:`→` ``+``
 
+.. jme:function:: function(name)
+
+    Construct a function token with the given name.
+
+    **Definitions**:
+        * :data:`string` → :data:`func`
+
+    **Example**:
+        * ``function("sin")`` :no-test:`→` ``sin``
+
 .. jme:function:: exec(op, arguments)
 
     Returns a sub-expression representing the application of the given operation to the list of arguments.
@@ -2695,6 +2717,19 @@ Sub-expressions
         * ``findvars(expression("x+1"))`` → ``["x"]``
         * ``findvars(expression("x + x*y"))`` → ``["x","y"]``
         * ``findvars(expression("map(x+2, x, [1,2,3])"))`` → ``[]``
+
+.. jme:function:: substitute(variables,expression)
+
+    Substitute the given variable values into ``expression``.
+
+    ``variables`` is a dictionary mapping variable names to values.
+
+    **Definitions**:
+        * :data:`dict`, :data:`expression` → :data:`expression`
+
+    **Examples**:
+        * ``substitute(["x": 1], expression("x + y"))`` → ``expression("1 + y")``
+        * ``substitute(["x": 1, "y": expression("sqrt(z+2)")], expression("x + y"))`` → ``expression("1 + sqrt(z + 2)")``
 
 .. jme:function:: simplify(expression,rules)
 
@@ -2862,10 +2897,27 @@ Identifying data types
     **Definitions**:
         * :data:`expression` → :data:`dict`
 
-    **Example**:
+    **Examples**:
         * ``infer_variable_types(expression("x^2"))`` → ``["x": "number"]``
         * ``infer_variable_types(expression("union(a,b)"))`` → ``["a": "set", "b": "set"]``
         * ``infer_variable_types(expression("k*det(a)"))`` → ``[ "k": "number", "a": "matrix" ]``
+
+.. jme:function:: infer_type(expression)
+
+    Attempt to infer the type of the value produced by the given expression, which may contain free variables.
+
+    First, the types of any free variables are inferred.
+    Then, definitions of an operations or functions in the function are chosen to match the types of their arguments.
+
+    Returns the name of the expression's output type as a string, or ``"?"`` if the type can't be determined.
+
+    **Definitions**:
+        * :data:`expression` → :data:`string`
+
+    **Examples**:
+        * ``infer_type(expression("x+2"))`` → ``"number"``
+        * ``infer_type(expression("id(n)"))`` → ``"matrix"``
+        * ``infer_type(expression("random(2,true)"))`` → ``"?"``
 
 .. _jme-fns-inspecting-the-scope:
 

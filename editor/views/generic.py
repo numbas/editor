@@ -24,10 +24,26 @@ def forbidden_response(request,message=None):
 class AuthorRequiredMixin(object):
     def dispatch(self, request, *args, **kwargs):
         result = super(AuthorRequiredMixin, self).dispatch(request, *args, **kwargs)
-        if self.object.author != self.request.user:
+        if self.get_object().author != self.request.user:
             template = get_template("403.html")
             return http.HttpResponseForbidden(template.render(RequestContext(self.request).flatten()))
         return result
+
+class CanEditMixin(object):
+    def dispatch(self, request, *args, **kwargs):
+        obj = self.get_object()
+        if not obj.can_be_edited_by(request.user):
+            template = get_template("403.html")
+            return http.HttpResponseForbidden(template.render(RequestContext(self.request).flatten()))
+        return super().dispatch(request, *args, **kwargs)
+
+class CanViewMixin(object):
+    def dispatch(self, request, *args, **kwargs):
+        obj = self.get_object()
+        if not obj.can_be_viewed_by(request.user):
+            template = get_template("403.html")
+            return http.HttpResponseForbidden(template.render(RequestContext(self.request).flatten()))
+        return super().dispatch(request, *args, **kwargs)
 
 class TimelineItemViewMixin(object):
     def response(self):

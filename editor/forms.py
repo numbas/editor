@@ -1,5 +1,6 @@
 import zipfile
 import os
+from pathlib import Path
 
 from django import forms
 from django.forms.models import inlineformset_factory
@@ -59,6 +60,42 @@ class BootstrapSelect(forms.Select):
         attrs = super(BootstrapSelect, self).build_attrs(base_attrs, extra_attrs)
         attrs['class'] = 'form-control input-sm'
         return attrs
+
+class UserSearchMixin(forms.ModelForm):
+    """
+        Add a user_search field to the form, which resolves a string query to a User object, and set the property user_attr on the model to that user.
+    """
+    user_search = UserField(label='User')
+    user_attr = 'user'
+    selected_user = forms.ModelChoiceField(queryset=User.objects.all(), widget=forms.HiddenInput(), required=False)
+
+    def __init__(self, *args, **kwargs):
+        super(UserSearchMixin, self).__init__(*args, **kwargs)
+        self.fields['user_search'] = UserField()
+
+    def clean_user_search(self):
+        user = self.cleaned_data.get('user_search')
+
+        return user
+
+    def clean(self):
+        cleaned_data = super(UserSearchMixin, self).clean()
+        selected_user = cleaned_data.get('selected_user')
+        if selected_user is not None:
+            cleaned_data['user_search'] = selected_user
+
+        if cleaned_data.get('user_search') is None:
+            raise forms.ValidationError("No such user")
+
+        return cleaned_data
+
+    def save(self, commit=True, force_insert=False, force_update=False):
+        m = super(UserSearchMixin, self).save(commit=False)
+        setattr(m, self.user_attr, self.cleaned_data['user_search'])
+        if commit:
+            m.save()
+        return m
+
 
 class EditorItemSearchForm(forms.Form):
     query = forms.CharField(initial='', required=False)
@@ -241,7 +278,7 @@ class EditExtensionForm(forms.ModelForm):
     
     """Form to edit an extension."""
 
-    source = forms.CharField(widget=forms.Textarea)
+    source = forms.CharField(widget=forms.Textarea,required=False)
     filename = forms.CharField(widget=forms.HiddenInput)
     
     class Meta:
@@ -252,8 +289,26 @@ class EditExtensionForm(forms.ModelForm):
         extension = super().save(commit=False)
         filename = self.cleaned_data.get('filename')
         if commit:
-            with open(os.path.join(extension.extracted_path,filename),'w',encoding='utf-8') as f:
+            path = os.path.join(extension.extracted_path,filename)
+            Path(path).parent.mkdir(parents=True,exist_ok=True)
+            with open(path,'w',encoding='utf-8') as f:
                 f.write(self.cleaned_data.get('source'))
+        return extension
+
+class ExtensionDeleteFileForm(forms.ModelForm):
+    filename = forms.CharField(widget=forms.HiddenInput)
+
+    class Meta:
+        model = Extension
+        fields = []
+
+    def save(self, commit=True):
+        extension = super().save(commit=False)
+        filename = self.cleaned_data.get('filename')
+        if commit:
+            print("DELETE FILE",filename)
+            path = os.path.join(extension.extracted_path,filename)
+            os.remove(path)
         return extension
 
 class UpdateExtensionForm(forms.ModelForm):
@@ -307,6 +362,13 @@ class CreateExtensionForm(forms.ModelForm):
         self._user = kwargs.pop('author')
         super().__init__(*args, **kwargs)
 
+    def clean_name(self):
+        name = self.cleaned_data.get('name')
+        location = slugify(name)
+        if Extension.objects.filter(location=location).exists():
+            raise ValidationError("An extension with that name already exists.")
+        return name
+
     def save(self, commit=True):
         extension = super().save(commit=False)
         extension.location = slugify(extension.name)
@@ -344,6 +406,39 @@ class UploadExtensionForm(UpdateExtensionForm):
             extension.save()
             self.save_m2m()
         return extension
+
+ExtensionAccessFormset = inlineformset_factory(editor.models.Extension, editor.models.ExtensionAccess, fields=('access',), extra=0, can_delete=True)
+
+class AddExtensionAccessForm(UserSearchMixin, forms.ModelForm):
+    invitation = None
+    adding_user = forms.ModelChoiceField(queryset=User.objects.all(), widget=forms.HiddenInput())
+
+    class Meta:
+        model = editor.models.ExtensionAccess
+        fields = ('extension', 'access')
+        widgets = {
+            'extension': forms.HiddenInput(),
+            'access': forms.Select(attrs={'class':'form-control'})
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        user = cleaned_data.get('user_search')
+        if user == cleaned_data.get('extension').author:
+            raise forms.ValidationError("Can't give separate access to the extension's author")
+        return cleaned_data
+
+    def save(self, force_insert=False, force_update=False, commit=True):
+        m = super().save(commit=False)
+        if commit:
+            if m.user.pk:
+                # check if there's an existing ProjectAccess for this user & project
+                ea = editor.models.ExtensionAccess.objects.filter(extension=m.extension, user=m.user).first()
+                if ea is not None:
+                    ea.access = m.access
+                    m = ea
+                m.save()
+        return m
 
 class UpdateCustomPartTypeForm(forms.ModelForm):
     
@@ -412,41 +507,6 @@ class CopyCustomPartTypeForm(forms.ModelForm):
         if name == self.instance.name:
             raise forms.ValidationError("Please pick a new name.")
         return name
-
-class UserSearchMixin(forms.ModelForm):
-    """
-        Add a user_search field to the form, which resolves a string query to a User object, and set the property user_attr on the model to that user.
-    """
-    user_search = UserField(label='User')
-    user_attr = 'user'
-    selected_user = forms.ModelChoiceField(queryset=User.objects.all(), widget=forms.HiddenInput(), required=False)
-
-    def __init__(self, *args, **kwargs):
-        super(UserSearchMixin, self).__init__(*args, **kwargs)
-        self.fields['user_search'] = UserField()
-
-    def clean_user_search(self):
-        user = self.cleaned_data.get('user_search')
-
-        return user
-
-    def clean(self):
-        cleaned_data = super(UserSearchMixin, self).clean()
-        selected_user = cleaned_data.get('selected_user')
-        if selected_user is not None:
-            cleaned_data['user_search'] = selected_user
-
-        if cleaned_data.get('user_search') is None:
-            raise forms.ValidationError("No such user")
-
-        return cleaned_data
-
-    def save(self, commit=True, force_insert=False, force_update=False):
-        m = super(UserSearchMixin, self).save(commit=False)
-        setattr(m, self.user_attr, self.cleaned_data['user_search'])
-        if commit:
-            m.save()
-        return m
 
 class AddMemberForm(UserSearchMixin, forms.ModelForm):
     invitation = None

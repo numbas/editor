@@ -21,6 +21,8 @@ header {
 }
 header .description {
     flex-grow: 1;
+    font-size: 1em;
+    font-weight: normal;
 }
 #embed-url {
     grid-column: row;

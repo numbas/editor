@@ -1,10 +1,12 @@
 import os
 import mistune
+from datetime import datetime
 
 from django import http
 from django.contrib import messages
 from django.views import generic
 from django.urls import reverse
+from django.utils.timezone import make_aware
 from django.shortcuts import redirect
 
 from editor.models import Extension
@@ -98,7 +100,11 @@ class EditView(AuthorRequiredMixin, generic.UpdateView):
         extension = self.get_object()
 
         filename = context['filename'] = self.get_filename()
-        context['exists'] = os.path.exists(os.path.join(extension.extracted_path,filename))
+        path = os.path.join(extension.extracted_path,filename)
+        context['exists'] = os.path.exists(path)
+        if context['exists']:
+            stat = os.stat(path)
+            context['last_modified'] = make_aware(datetime.fromtimestamp(stat.st_mtime))
         _,ext = os.path.splitext(filename)
         context['fileext'] = ext
 

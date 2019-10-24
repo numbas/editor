@@ -1,3 +1,11 @@
+a {
+    color: hsl(204, 50.2%, 39.9%);
+}
+
+.btn-warning, .btn-success {
+    color: black;
+}
+
 #top-nav {
     display: flex;
     flex-wrap: wrap;
@@ -107,7 +115,7 @@ body:not(.loaded) .loaded-content {
 }
 
 .stamp[data-stamp="problem"]{
-    background-color: #888;
+    background-color: #555;
     color: white;
 }
 

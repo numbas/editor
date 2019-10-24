@@ -42,7 +42,7 @@ Numbas.debug = function(msg,noStack)
         if(e.stack && !noStack)
         {
             var words= e.stack.split('\n')[2];
-            console.log(msg," "+words);
+            console.error(msg," "+words);
         }
         else
         {
@@ -193,7 +193,7 @@ Numbas.tryInit = function()
             scriptreqs[x].tryRun();
         } catch(e) {
             alert(e+'');
-            Numbas.debug(e.stack);
+            console.error(e);
             Numbas.dead = true;
             return;
         }
@@ -3629,9 +3629,41 @@ jme.inferVariableTypes = function(tree,scope) {
         switch(tree.tok.type) {
             case 'op':
             case 'function':
-                this.fns = scope.getFunction(tree.tok.name);
+                var fns = scope.getFunction(tree.tok.name);
+                this.fns = [];
+                this.signature_enumerators = [];
+                for(var i=0;i<fns.length;i++) {
+                    var fn = fns[i];
+                    var se = new SignatureEnumerator(fn.intype);
+                    if(se.is_static()) {
+                        if(se.length() != tree.args.length) {
+                            continue;
+                        }
+                        var sig = se.signature();
+                        var constants_ok = this.args.every(function(arg,j) {
+                            switch(arg.tok.type) {
+                                case 'op':
+                                case 'function':
+                                    for(var i=0;i<arg.fns.length;i++) {
+                                        if(jme.findCompatibleType(arg.fns[i].outtype,sig[j])!==undefined) {
+                                            return true;
+                                        }
+                                    }
+                                    return false;
+                                case 'name':
+                                    return true;
+                                default:
+                                    return jme.findCompatibleType(arg.tok.type,sig[j])!==undefined;
+                            }
+                        });
+                        if(!constants_ok) {
+                            continue;
+                        }
+                    }
+                    this.fns.push(fn);
+                    this.signature_enumerators.push(se);
+                }
                 this.pos = 0;
-                this.signature_enumerators = this.fns.map(function(fn){ return new SignatureEnumerator(fn.intype) });
                 break;
             default:
                 break;
@@ -3852,6 +3884,21 @@ var SignatureEnumerator = jme.SignatureEnumerator = function(sig) {
     }
 }
 SignatureEnumerator.prototype = {
+    /** Does this signature only have one possible realisation?
+     * @returns {Boolean}
+     */
+    is_static: function() {
+        switch(this.sig.kind) {
+            case 'type':
+            case 'anything':
+                return true;
+            case 'sequence':
+                return this.children.every(function(c){ return c.is_static(); });
+            default:
+                return false;
+        }
+    },
+
     /** The length of the signature corresponding to the current state of the enumerator
      * @returns {Number}
      */
@@ -4768,6 +4815,8 @@ newBuiltin('sin',[TDecimal], TDecimal, function(a) {return a.re.sin(); });
 newBuiltin('sqrt',[TDecimal], TDecimal, function(a) {return a.squareRoot(); });
 newBuiltin('tan',[TDecimal], TDecimal, function(a) {return a.re.tan(); });
 newBuiltin('precround',[TDecimal,TNum], TDecimal, function(a,dp) {return a.toDecimalPlaces(dp); });
+newBuiltin('min', [TDecimal,TDecimal], TDecimal, math.ComplexDecimal.min );
+newBuiltin('max', [TDecimal,TDecimal], TDecimal, math.ComplexDecimal.max );
 newBuiltin('dpformat',[TDecimal,TNum], TString, function(a,dp) {return a.toFixed(dp); });
 newBuiltin('tonearest',[TDecimal,TDecimal], TDecimal, function(a,x) {return a.toNearest(x.re); });
 newBuiltin('^',[TDecimal,TDecimal], TDecimal, function(a,b) {return a.pow(b); });
@@ -13897,6 +13946,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
      * @returns {Boolean}
      */
     isclose: function(a,b,rel_tol,abs_tol) {
+        if(a===Infinity || b===Infinity || a==-Infinity || b==-Infinity) {
+            return a===b;
+        }
         rel_tol = rel_tol===undefined ? 1e-15 : rel_tol;
         abs_tol = abs_tol===undefined ? 1e-15: abs_tol;
         return Math.abs(a-b) <= Math.max( rel_tol * Math.max(Math.abs(a), Math.abs(b)), abs_tol );
@@ -15503,6 +15555,20 @@ ComplexDecimal.prototype = {
         return new ComplexDecimal(this.re.toSignificantDigits(sf), this.im.toSignificantDigits(sf));
     }
 }
+
+ComplexDecimal.min = function(a,b) {
+    if(!(a.isReal() && b.isReal())) {
+        throw(new Numbas.Error('math.order complex numbers'));
+    }
+    return Decimal.min(a.re,b.re);
+}
+ComplexDecimal.max = function(a,b) {
+    if(!(a.isReal() && b.isReal())) {
+        throw(new Numbas.Error('math.order complex numbers'));
+    }
+    return Decimal.max(a.re,b.re);
+}
+
 
 
 /** A list of a vector's components.
@@ -23309,9 +23375,10 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.classes = {'answer-widget':true};
             this.classes['answer-widget-'+this.widget] = true;
             this.events = params.events;
+            this.title = params.title || '';
         },
         template: '\
-        <span data-bind="if: widget"><span data-bind="css: classes, component: {name: \'answer-widget-\'+widget, params: {answerJSON: answerJSON, part: part, disable: disable, options: widget_options, events: events}}"></span></span>\
+        <span data-bind="if: widget"><span data-bind="css: classes, component: {name: \'answer-widget-\'+widget, params: {answerJSON: answerJSON, part: part, disable: disable, options: widget_options, events: events, title: title}}"></span></span>\
         '
     });
     Knockout.components.register('answer-widget-string', {
@@ -23323,6 +23390,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.disable = params.disable;
             this.options = params.options;
             this.events = params.events;
+            this.title = params.title || '';
             this.allowEmpty = this.options.allowEmpty;
             var lastValue = this.input();
             this.subscriptions = [
@@ -23345,7 +23413,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             }
         },
         template: '\
-            <input type="text" data-bind="textInput: input, autosize: true, disable: Knockout.unwrap(disable) || Knockout.unwrap(part.revealed), event: events">\
+            <input type="text" data-bind="textInput: input, autosize: true, disable: Knockout.unwrap(disable) || Knockout.unwrap(part.revealed), event: events, attr: {title: title}">\
         '
     });
     Knockout.components.register('answer-widget-number', {
@@ -23358,6 +23426,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.allowedNotationStyles = this.options.allowedNotationStyles || ['plain','en','si-en'];
             this.disable = params.disable;
             this.events = params.events;
+            this.title = params.title || '';
             var init = Knockout.unwrap(this.answerJSON);
             /** Clean up a number, to be set as the value for the input widget.
              * It's run through {@link Numbas.math.niceNumber} with the first allowed notation style.
@@ -23410,7 +23479,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             }
         },
         template: '\
-            <input type="text" data-bind="textInput: input, autosize: true, disable: Knockout.unwrap(disable) || Knockout.unwrap(part.revealed), event: events">\
+            <input type="text" data-bind="textInput: input, autosize: true, disable: Knockout.unwrap(disable) || Knockout.unwrap(part.revealed), event: events, attr: {title: title}">\
         '
     });
     Knockout.components.register('answer-widget-jme', {
@@ -23422,6 +23491,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.returnString = this.options.returnString || false;
             this.disable = params.disable;
             this.events = params.events;
+            this.title = params.title || '';
             var init = Knockout.unwrap(this.answerJSON);
             /** Clean a supplied expression, to be used as the value for the input widget.
              * If it's a string, leave it alone.
@@ -23501,8 +23571,8 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             }
         },
         template: '\
-            <input type="text" data-bind="event: events, textInput: input, autosize: true, disable: Knockout.unwrap(disable) || Knockout.unwrap(part.revealed)">\
-            <span class="jme-preview" data-bind="visible: showPreview && latex(), maths: \'\\\\displaystyle{{\'+latex()+\'}}\'"></span>\
+            <input type="text" data-bind="event: events, textInput: input, autosize: true, disable: Knockout.unwrap(disable) || Knockout.unwrap(part.revealed), attr: {title: title}">\
+            <span class="jme-preview" aria-live="polite" data-bind="visible: showPreview && latex(), maths: \'\\\\displaystyle{{\'+latex()+\'}}\'"></span>\
         '
     });
     Knockout.components.register('answer-widget-gapfill', {
@@ -23540,6 +23610,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.answerJSON = params.answerJSON;
             this.options = params.options;
             this.disable = params.disable;
+            this.title = params.title || '';
             this.events = params.events;
             this.allowFractions = this.options.allowFractions || false;
             this.allowedNotationStyles = this.options.allowedNotationStyles || ['plain','en','si-en'];
@@ -23615,13 +23686,14 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             }
         },
         template: '\
-            <matrix-input params="value: input, allowResize: true, disable: disable, allowResize: allowResize, rows: numRows, columns: numColumns, events: events"></matrix-input>\
+            <matrix-input params="value: input, allowResize: true, disable: disable, allowResize: allowResize, rows: numRows, columns: numColumns, events: events, title: title"></matrix-input>\
         '
     });
     Knockout.components.register('matrix-input',{
         viewModel: function(params) {
             var vm = this;
             this.allowResize = params.allowResize ? params.allowResize : Knockout.observable(false);
+            this.title = params.title || '';
             this.numRows = Knockout.observable(Knockout.unwrap(params.rows) || 2);
             if(typeof params.rows=='function') {
                 params.rows.subscribe(function(v) { vm.numRows(v); });
@@ -23772,12 +23844,15 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             }
         },
         template:
-         '<div class="matrix-input">'
+         '<div class="matrix-input" data-bind="attr: {title: title}">'
         +'    <!-- ko if: allowResize --><div class="matrix-size">'
+        +'        <fieldset><legend aria-label="'+R('matrix input.size control legend')+'"></legend>'
         +'        <label class="num-rows">Rows: <input type="number" min="1" data-bind="value: numRows, autosize: true, disable: disable"/></label>'
         +'        <label class="num-columns">Columns: <input type="number" min="1" data-bind="value: numColumns, autosize: true, disable: disable"/></label>'
+        +'        </fieldset>'
         +'    </div><!-- /ko -->'
         +'    <div class="matrix-wrapper">'
+        +'        <fieldset><legend data-bind="attr: {\'aria-label\': title}"></legend>'
         +'        <span class="left-bracket"></span>'
         +'        <table class="matrix">'
         +'            <tbody data-bind="foreach: value">'
@@ -23787,6 +23862,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
         +'            </tbody>'
         +'        </table>'
         +'        <span class="right-bracket"></span>'
+        +'        </fieldset>'
         +'    </div>'
         +'</div>'
         }
@@ -23853,6 +23929,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.part = params.part;
             this.disable = params.disable;
             this.options = params.options;
+            this.title = params.title || '';
             this.events = params.events;
             this.choices = this.options.choices.map(function(c,i){return {label: c, index: i}});
             this.choices.splice(0,0,{label: '', index: null});
@@ -23905,7 +23982,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             }
         },
         template: '\
-            <select data-bind="options: choices, optionsText: \'label\', value: choice, disable: disable, event: events"></select>\
+            <select data-bind="options: choices, optionsText: \'label\', value: choice, disable: disable, event: events, attr: {title: title}"></select>\
         '
     });
     Knockout.components.register('answer-widget-checkboxes', {

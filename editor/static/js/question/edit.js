@@ -5,7 +5,7 @@ $(document).ready(function() {
 
     Editor.question = {};
 
-    function vars_used_in_html(html) {
+    var vars_used_in_html = Editor.vars_used_in_html = function(html) {
         var element = document.createElement('div');
         element.innerHTML = html;
         try {
@@ -15,7 +15,7 @@ $(document).ready(function() {
             return [];
         }
     }
-    function vars_used_in_string(str) {
+    var vars_used_in_string = Editor.vars_used_in_string = function(str) {
         var bits = Numbas.util.splitbrackets(str,'{','}');
         var vars = [];
         for(var i=1;i<bits.length;i+=2) {
@@ -1789,7 +1789,11 @@ $(document).ready(function() {
         this.description = Knockout.computed(function() {
             var desc = ko.unwrap(this.def.description);
             if(this.def.kind=='part') {
-                desc = this.def.part.name()+' '+desc;
+                var p = this.def.part;
+                while(p) {
+                    desc = p.name()+' '+desc;
+                    p = p.parent();
+                }
             }
             return desc;
         },this);
@@ -3092,7 +3096,7 @@ $(document).ready(function() {
             if(!data.variable_references) {
                 return [];
             }
-            return data.variable_references(this.part,this.model);
+            return data.variable_references.apply(data,[this.part,this.model]);
         },this);
     }
     PartType.prototype = {

@@ -658,7 +658,14 @@ part_types.models = [
         variable_references: function(part,model) {
             var o = [
                 {tab: 'marking-settings', value: model.answer, type: 'string', description: 'Answer pattern'},
+                {tab: 'marking-settings', value: model.customMarking, type: 'jme', description: 'Custom matrix expression'},
+                {tab: 'choices', value: model.customChoicesExpression, type: 'jme', description: 'List of choices'},
             ];
+            model.choices().forEach(function(c) {
+                o.push({tab: 'choices', value: c.content, type: 'html', description: 'Choice text'});
+                o.push({tab: 'choices', value: c.distractor, type: 'html', description: 'Choice distractor message'});
+                o.push({tab: 'choices', value: c.marks, type: 'jme', description: 'Choice marks'});
+            });
             return o;
         },
 
@@ -791,6 +798,24 @@ part_types.models = [
                 data.distractors = distractors;
             }
         },
+
+        variable_references: function(part,model) {
+            var o = [
+                {tab: 'marking-settings', value: model.minMarks, type: 'jme', description: 'Minimum marks'},
+                {tab: 'marking-settings', value: model.maxMarks, type: 'jme', description: 'Maximum marks'},
+                {tab: 'marking-settings', value: model.minAnswers, type: 'jme', description: 'Minimum answers'},
+                {tab: 'marking-settings', value: model.maxAnswers, type: 'jme', description: 'Maximum answers'},
+                {tab: 'marking-settings', value: model.customMarking, type: 'jme', description: 'Custom matrix expression'},
+                {tab: 'choices', value: model.customChoicesExpression, type: 'jme', description: 'List of choices'},
+            ];
+            model.choices().forEach(function(c) {
+                o.push({tab: 'choices', value: c.content, type: 'html', description: 'Choice text'});
+                o.push({tab: 'choices', value: c.distractor, type: 'html', description: 'Choice distractor message'});
+                o.push({tab: 'choices', value: c.marks, type: 'jme', description: 'Choice marks'});
+            });
+            return o;
+        },
+
         load: function(data) {
             tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','displayColumns','showCellAnswerState'],this);
             if(typeof data.matrix == 'string') {
@@ -981,6 +1006,27 @@ part_types.models = [
                 data.answers = answers.map(function(a){return a.content()});
             }
         },
+
+        variable_references: function(part,model) {
+            var o = [
+                {tab: 'marking-settings', value: model.minMarks, type: 'jme', description: 'Minimum marks'},
+                {tab: 'marking-settings', value: model.maxMarks, type: 'jme', description: 'Maximum marks'},
+                {tab: 'marking-settings', value: model.minAnswers, type: 'jme', description: 'Minimum answers'},
+                {tab: 'marking-settings', value: model.maxAnswers, type: 'jme', description: 'Maximum answers'},
+                {tab: 'marking-settings', value: model.customMarking, type: 'jme', description: 'Custom matrix expression'},
+                {tab: 'marking-settings', value: model.layoutExpression, type: 'jme', description: 'Custom layout expression'},
+                {tab: 'choices', value: model.customChoicesExpression, type: 'jme', description: 'List of choices'},
+            ];
+            model.choices().forEach(function(c) {
+                o.push({tab: 'choices', value: c.content, type: 'html', description: 'Choice text'});
+                o.push({tab: 'choices', value: c.distractor, type: 'html', description: 'Choice distractor message'});
+            });
+            model.answers().forEach(function(a) {
+                o.push({tab: 'choices', value: a.content, type: 'html', description: 'Answer text'});
+            });
+            return o;
+        },
+
         load: function(data) {
             tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','shuffleAnswers','showCellAnswerState'],this);
             var warningType = tryGetAttribute(data,'warningType');
@@ -1101,6 +1147,51 @@ CustomPartType.prototype = {
             data.settings[s.name] = s.value();
         });
         return data;
+    },
+    variable_references: function(part,model) {
+        var o = [];
+        this.settings_def.forEach(function(def,i) {
+            var s = model.settings[i];
+            var value = s.value;
+            var description = s.label;
+            var type;
+            switch(s.input_type) {
+                case 'string':
+                    if(def.subvars) {
+                        o.push({tab:'marking-settings', value: s.value, type: 'string', description: s.label});
+                    }
+                    break;
+                case 'mathematical_expression':
+                    if(def.subvars) {
+                        o.push({tab:'marking-settings', value: s.value, type: 'jme-sub', description: s.label});
+                    }
+                    break;
+                case 'code':
+                    var type = def.evaluate ? 'jme' : 'jme-sub';
+                    o.push({tab:'marking-settings', value: s.value, type: type, description: s.label});
+                    break;
+                case 'html':
+                    o.push({tab:'marking-settings', value: s.value, type: 'html', description: s.label});
+                    break;
+                case 'list_of_strings':
+                    var value = ko.computed(function() {
+                        var v = [];
+                        s.value().forEach(function(str) {
+                            v = v.merge(Editor.vars_used_in_string(str));
+                        });
+                        return v;
+                    });
+                    o.push({tab:'marking-settings', value: value, type: 'list', description: s.label});
+                    break;
+                case 'checkbox':
+                case 'dropdown':
+                case 'percent':
+                case 'choose_several':
+                default:
+                    break;
+            }
+        });
+        return o;
     },
     load: function(data) {
         this.settings.forEach(function(s) {

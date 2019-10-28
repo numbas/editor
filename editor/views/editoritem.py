@@ -250,9 +250,10 @@ class BaseUpdateView(generic.UpdateView):
 class ListView(generic.ListView):
     model = EditorItem
     table_class = EditorItemTable
+    results_per_page = 10
 
     def make_table(self):
-        config = RequestConfig(self.request, paginate={'per_page': 10})
+        config = RequestConfig(self.request, paginate={'per_page': self.results_per_page})
         results = self.table_class(self.object_list)
 
         order_by = self.form.cleaned_data.get('order_by')
@@ -276,6 +277,7 @@ filter_question = Q(question__isnull=False)
 class SearchView(ListView):
     
     template_name = 'editoritem/search.html'
+    results_per_page = 30
 
     def base_queryset(self):
         return EditorItem.objects

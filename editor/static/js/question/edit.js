@@ -443,21 +443,36 @@ $(document).ready(function() {
                 var def = r.def;
                 var description = r.description();
                 r.vars().forEach(function(name) {
+                    var icons;
                     var v = q.getVariable(name);
                     if(v) {
+                        switch(def.kind) {
+                            case 'tab':
+                                icons = [q.getTab(def.tab).icon];
+                                break;
+                            case 'part':
+                                icons = [q.getTab('parts').icon, def.part.getTab(def.tab).icon];
+                                break;
+                        }
                         function go() {
                             switch(def.kind) {
                                 case 'tab':
                                     q.setTab(def.tab)();
+                                    icon = q.getTab(def.tab).icon;
                                     break;
                                 case 'part':
                                     q.setTab('parts')();
                                     q.currentPart(def.part);
                                     def.part.setTab(def.tab)();
+                                    icon = def.part.getTab(def.tab).icon;
                                     break;
                             }
                         }
-                        v.references.push({description: description, go: go});
+                        v.references.push({
+                            description: description, 
+                            icons: icons, 
+                            go: go
+                        });
                     }
                 });
             });
@@ -1608,6 +1623,9 @@ $(document).ready(function() {
             });
         },this);
         this.references = ko.observableArray([]);
+        this.unused = ko.computed(function() {
+            return this.usedIn().length==0 && this.references().length==0;
+        },this);
         this.value = ko.observable(null);
         this.error = ko.observable('');
         this.anyError = ko.computed(function() {

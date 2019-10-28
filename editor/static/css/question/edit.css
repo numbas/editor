@@ -176,6 +176,9 @@ table.variable-list .value-cell .value {
     font-size: 13px;
 }
 
+.variable-reference {
+    margin: 0.2em;
+}
 
 .empty-receiver * {
     opacity: 0;

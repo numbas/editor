@@ -285,17 +285,25 @@
                     <div data-bind="visible: dependencies().length>0" class="inline-names">
                         <label>← Depends on:</label>
                         <ul class="list-inline" data-bind="foreach: dependenciesObjects">
-                            <li><span class="btn btn-sm btn-info monospace" data-bind="click: setCurrent, text: name, css: {notdefined: notdefined}, attr: {title: title}"></span></li>
+                            <li><span class="variable-reference btn btn-sm btn-info monospace" data-bind="click: setCurrent, text: name, css: {notdefined: notdefined}, attr: {title: title}"></span></li>
                         </ul>
                     </div>
                     <div data-bind="visible: usedIn().length>0 || references().length>0">
                         <label>→ Used by:</label>
                         <ul class="list-inline" data-bind="foreach: usedIn">
-                            <li><span class="btn btn-sm btn-info monospace" data-bind="click: $root.currentVariable, text: name"></span></li>
+                            <li><span class="variable-reference btn btn-sm btn-info monospace" data-bind="click: $root.currentVariable, text: name"></span></li>
                         </ul>
                         <ul class="list-inline" data-bind="foreach: references">
-                            <li><span class="btn btn-sm btn-default monospace" data-bind="click: go, text: description"></span></li>
+                            <li>
+                                <span class="variable-reference btn btn-sm btn-default" data-bind="click: go">
+                                    <!-- ko foreach: icons --><span data-bind="attr: {'class': 'glyphicon glyphicon-'+$data}"></span> <!-- /ko -->
+                                    <span data-bind="text: description"></span>
+                                </span>
+                            </li>
                         </ul>
+                    </div>
+                    <div data-bind="visible: unused" class="alert alert-info">
+                        <p>This variable doesn't seem to be used anywhere.</p>
                     </div>
 
                 </div>

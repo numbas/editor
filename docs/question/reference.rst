@@ -230,8 +230,10 @@ Definition
         If the variable hasn't been defined yet, it'll be created.
 
     Used by
-        A list of all variables which use this variable in their definition. 
-        You can click on a variable name to go to its definition.
+        A list of all variables which use this variable in their definition, and other places in the question which use this variable.
+        You can click on a variable name to go to its definition, or click on a reference to go the relevant section of the editor.
+
+
 
 Locking variable values
 -----------------------

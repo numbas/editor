@@ -31,3 +31,5 @@ You probably don't need to set up your own editor installation: there's [a free 
 You can see a plain-English explanation of the license and what it allows at [tl;drLegal](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0))
 
 Some icons from [Iconic Icon Set](http://somerandomdude.com/work/iconic/) © P.J. Onori, Licensed under Creative Commons Attribution-ShareAlike 3.0 Unported.
+
+###License

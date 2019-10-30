@@ -161,6 +161,26 @@ editor-pager nav {
     }
 }
 
+.project-header {
+  font-size: 1.2em;
+}
+.project-header .list-inline {
+    display: flex;
+    align-items: first baseline;
+}
+
+.project-header li ~ li::before {
+  content: '/';
+  margin: 0 0.2em;
+  color: #555;
+}
+.project-header .list-inline > li {
+    padding: 0;
+}
+.project-header .project {
+    font-size: 1.2em;
+}
+
 .name-header {
     display: flex;
 }

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header>
+    <h1>Renamefolder <em>{{folder.name}}</em></h1>
+</header>
+
+<form method="POST" action="">
+    {% csrf_token %}
+    <p class="help-block">Enter a new name for this folder.</p>
+    {{form.name}}
+
+    <button class="btn btn-primary">Rename</button>
+    <a class="btn btn-link" href="{{folder.get_absolute_url}}">Cancel</a>
+</form>
+{% endblock %}

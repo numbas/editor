@@ -1,3 +1,8 @@
+th.orderable:not(.asc) .glyphicon-sort-by-attributes,
+th.orderable:not(.desc) .glyphicon-sort-by-attributes-alt {
+    display: none;
+}
+
 .breadcrumb .drag-target {
     padding: 0.2em;
 }
@@ -6,12 +11,19 @@
     margin: 1em 0;
 }
 
-.contents > li ~ li {
-    margin-top: 0.5em;
+#contents-container.empty #contents { 
+    display: none;
+}
+#contents-container:not(.empty) #nothing-here {
+    display: none;
 }
 
-.contents > .folder {
+.contents .folder {
     font-weight: bold;
+}
+
+.contents .folder > td {
+    background: hsl(0,0%,96%);
 }
 
 .dragover {

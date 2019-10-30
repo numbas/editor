@@ -8,6 +8,7 @@ from django.forms.widgets import SelectMultiple
 from django.utils.html import format_html, html_safe
 from django.utils.safestring import mark_safe
 from django.utils.encoding import force_text
+from django.db import transaction
 from django.db.models import Q, Count
 from django.contrib.auth.models import User
 
@@ -584,6 +585,23 @@ ProjectAccessFormset = inlineformset_factory(editor.models.Project, editor.model
 class NewFolderForm(forms.ModelForm):
     parent = forms.ModelChoiceField(queryset=editor.models.Folder.objects.all(), required=False, widget=forms.HiddenInput())
 
+    def clean_name(self):
+        name = self.cleaned_data.get('name')
+        if '/' in name:
+            raise forms.ValidationError("Folder names may not include a forward slash.")
+        return name
+
+    def clean(self):
+        cleaned_data = super().clean()
+        parent = cleaned_data.get('parent')
+        project = cleaned_data.get('project')
+        name = cleaned_data.get('name')
+
+        if editor.models.Folder.objects.filter(parent=parent,project=project,name=name).exists():
+            raise forms.ValidationError("A folder with that name already exists")
+
+        return cleaned_data
+
     class Meta:
         model = editor.models.Folder
         fields = ['name','project','parent']
@@ -592,6 +610,7 @@ class NewFolderForm(forms.ModelForm):
         }
 
 class MoveFolderForm(forms.ModelForm):
+    project = forms.ModelChoiceField(queryset=editor.models.Project.objects.all(), required=False)
     parent = forms.ModelChoiceField(queryset=editor.models.Folder.objects.all(), required=False)
     folders = forms.ModelMultipleChoiceField(queryset=editor.models.Folder.objects.all(), required=False)
     items = forms.ModelMultipleChoiceField(queryset=editor.models.EditorItem.objects.all(), required=False)
@@ -602,11 +621,11 @@ class MoveFolderForm(forms.ModelForm):
         folders = cleaned_data.get('folders')
         items = cleaned_data.get('items')
         for folder in folders:
-            if folder.project != parent.project:
+            if parent is not None and folder.project != parent.project:
                 raise forms.ValidationError("Can't move a folder into a different project.")
             folder.parent = parent
         for item in items:
-            if item.project != parent.project:
+            if parent is not None and item.project != parent.project:
                 raise forms.ValidationError("Can't move an item into a different project.")
             item.parent = parent
         return cleaned_data
@@ -615,12 +634,22 @@ class MoveFolderForm(forms.ModelForm):
         parent = self.cleaned_data.get('parent')
         folders = self.cleaned_data.get('folders')
         items = self.cleaned_data.get('items')
-        for folder in folders:
-
+        with transaction.atomic():
+            for folder in folders:
+                folder.parent = parent
+                folder.save()
+            for item in items:
+                item.folder = parent
+                item.save()
 
     class Meta:
         model = editor.models.EditorItem
         fields = ('parent',)
+
+class RenameFolderForm(forms.ModelForm):
+    class Meta:
+        model = editor.models.Folder
+        fields = ('name',)
 
 class CreatePullRequestForm(forms.ModelForm):
     class Meta:

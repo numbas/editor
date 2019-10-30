@@ -20,6 +20,14 @@ class EditorItemTable(ObjectTable):
         model = EditorItem
         sequence = ('name', 'current_stamp', 'licence', 'author', 'last_modified')
 
+class BrowseProjectTable(ObjectTable):
+    current_stamp = Column(verbose_name='Status', initial_sort_descending=True)
+    last_modified = Column(initial_sort_descending=True)
+    class Meta(ObjectTable.Meta):
+        model = EditorItem
+        sequence = ('current_stamp', 'name', 'last_modified')
+        fields = ('current_stamp', 'name', 'last_modified')
+
 class RecentlyPublishedTable(tables.Table):
     class Meta(ObjectTable.Meta):
         model = EditorItem

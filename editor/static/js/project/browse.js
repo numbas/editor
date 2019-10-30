@@ -1,51 +1,80 @@
-function move_item(item_pk,target_pk) {
-    var data = {
-        csrfmiddlewaretoken: getCookie('csrftoken'),
-        folder: target_pk
+function get_selection() {
+    var selection = {
+        folders: [],
+        items: []
     }
-    var item_row = document.querySelector('.item[data-pk="'+item_pk+'"]');
-    if(!item_row) {
-        return;
+    var folder_elements = document.querySelectorAll('.folder.drag-handle');
+    for(var i=0;i<folder_elements.length;i++) {
+        if(folder_elements[i].querySelector('.include-checkbox').checked) {
+            selection.folders.push(folder_elements[i].getAttribute('data-folder'));
+        }
     }
-    item_row.classList.add('moving');
-    $.post('/item/'+item_pk+'/move_folder',data)
-        .then(function(r) {
-            item_row.parentElement.removeChild(item_row);
-        })
-        .fail(function(r) {
-            item_row.classList.remove('moving');
-        })
-    ;
+    var item_elements = document.querySelectorAll('.item.drag-handle');
+    for(var i=0;i<item_elements.length;i++) {
+        if(item_elements[i].querySelector('.include-checkbox').checked) {
+            selection.items.push(item_elements[i].getAttribute('data-item'));
+        }
+    }
+    return selection;
 }
 
-function move_folder(folder_pk,target_pk) {
+function move_to(target_pk,selection) {
     var data = {
         csrfmiddlewaretoken: getCookie('csrftoken'),
-        parent: target_pk
+        project: project_pk,
+        parent: target_pk,
+        folders: selection.folders,
+        items: selection.items
     }
-    var folder_row = document.querySelector('.contents .folder[data-folder="'+folder_pk+'"]');
-    if(!folder_row) {
-        return;
-    }
-    folder_row.classList.add('moving');
-    $.post('/folder/'+folder_pk+'/move',data)
+    var folder_rows = selection.folders.map(function(folder_pk) {
+        return document.querySelector('.folder[data-folder="'+folder_pk+'"]');
+    });
+    var item_rows = selection.items.map(function(item_pk) {
+        return document.querySelector('.item[data-item="'+item_pk+'"]');
+    });
+    var all_rows = folder_rows.concat(item_rows).filter(function(row) { return row });
+    all_rows.forEach(function(row) {
+        row.classList.add('moving');
+    })
+    $.post({
+        url: '/folder/move',
+        data: data,
+        traditional: true
+    })
         .then(function(r) {
-            folder_row.parentElement.removeChild(folder_row);
+            all_rows.forEach(function(row) {
+                if(row.parentElement) {
+                    row.parentElement.removeChild(row)
+                }
+            });
+            noty({
+                text: r.message,
+                layout: 'topCenter',
+            });
+            num_items -= r.items_moved;
+            document.getElementById('num-items').textContent = num_items+' item'+(num_items==1 ? '' : 's');
+            if(num_items<=0) {
+                document.getElementById('contents-container').classList.add('empty');
+            }
         })
         .fail(function(r) {
-            folder_row.classList.remove('moving');
+            all_rows.forEach(function(row) {
+                row.classList.remove('moving');
+            });
         })
     ;
 }
 
 function make_dragger(row) {
+    var folder_pk = row.getAttribute('data-folder');
+    var item_pk = row.getAttribute('data-item');
     row.addEventListener('dragstart',function(e) {
         row.classList.add('dragging');
         var name = row.querySelector('.name a').textContent;
         e.dataTransfer.setData('text/plain',name);
         e.dataTransfer.setData('numbas/folder-contents',name);
         if(row.classList.contains('item')) {
-            e.dataTransfer.setData('numbas/item',row.getAttribute('data-pk'));
+            e.dataTransfer.setData('numbas/item',row.getAttribute('data-item'));
         } else if(row.classList.contains('folder')) {
             e.dataTransfer.setData('numbas/folder',row.getAttribute('data-folder'));
         }
@@ -53,6 +82,10 @@ function make_dragger(row) {
     });
     row.addEventListener('dragend',function(e) {
         row.classList.remove('dragging');
+    });
+
+    row.querySelector('.include-checkbox').addEventListener('change',function(e) {
+
     });
 }
 
@@ -63,7 +96,8 @@ function make_target(target) {
         if(!e.dataTransfer.types.includes('numbas/folder-contents')) {
             return;
         }
-        if(e.dataTransfer.getData('numbas/folder')==target_pk) {
+        var selection = get_selection();
+        if(e.dataTransfer.getData('numbas/folder')==target_pk || selection.folders.indexOf(target_pk)>=0) {
             return;
         }
         e.preventDefault();
@@ -82,11 +116,17 @@ function make_target(target) {
         target.classList.remove('dragover');
         var item_pk = e.dataTransfer.getData('numbas/item');
         var folder_pk = e.dataTransfer.getData('numbas/folder');
+        var selection = get_selection();
         if(item_pk!='') {
-            move_item(folder_pk,target_pk);
+            if(selection.items.indexOf(item_pk)==-1) {
+                selection.items.push(item_pk);
+            }
         } else if(folder_pk!='') {
-            move_folder(folder_pk,target_pk);
+            if(selection.folders.indexOf(folder_pk)==-1) {
+                selection.folders.push(folder_pk);
+            }
         }
+        move_to(target_pk,selection);
     });
 }
 
@@ -100,9 +140,15 @@ for(var i=0;i<targets.length;i++) {
     make_target(targets[i]);
 }
 
-document.querySelector('.contents').addEventListener('change',function(e) {
-    if(!e.target.classList.contains('include-checkbox')) {
-        return;
+document.getElementById('select-all').addEventListener('click',function() {
+    var checkboxes = document.querySelectorAll('.drag-handle .include-checkbox');
+    for(var i=0;i<checkboxes.length;i++) {
+        checkboxes[i].checked = true;
     }
-    console.log(e.target);
+});
+document.getElementById('select-none').addEventListener('click',function() {
+    var checkboxes = document.querySelectorAll('.drag-handle .include-checkbox');
+    for(var i=0;i<checkboxes.length;i++) {
+        checkboxes[i].checked = false;
+    }
 });

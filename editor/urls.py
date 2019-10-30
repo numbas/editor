@@ -3,7 +3,7 @@ from django.urls import path, re_path
 
 from django.contrib.auth.decorators import login_required
 
-from .views import project, editoritem, exam, question, HomeView, GlobalStatsView, ExploreView, TermsOfUseView, PrivacyPolicyView, theme, extension, generic, notification, resource, basket, timeline, custom_part_type
+from .views import project, folder, editoritem, exam, question, HomeView, GlobalStatsView, ExploreView, TermsOfUseView, PrivacyPolicyView, theme, extension, generic, notification, resource, basket, timeline, custom_part_type
 
 urlpatterns = [
 
@@ -51,7 +51,9 @@ urlpatterns = [
         login_required(project.CommentView.as_view()), name='comment_on_project'),
 
 
-    path('folder/<int:pk>/move', project.MoveFolderView.as_view(), name='folder_move'),
+    path('folder/move', folder.MoveFolderView.as_view(), name='folder_move'),
+    path('folder/<int:pk>/rename', folder.RenameFolderView.as_view(), name='folder_rename'),
+    path('folder/<int:pk>/delete', folder.DeleteFolderView.as_view(), name='folder_delete'),
 
     # Editor items
 
@@ -70,9 +72,6 @@ urlpatterns = [
 
     url(r'^item/(?P<pk>\d+)/move$',
         editoritem.MoveProjectView.as_view(), name='item_move_project'),
-
-    url(r'^item/(?P<pk>\d+)/move_folder$',
-        editoritem.MoveFolderView.as_view(), name='item_move_folder'),
 
     url(r'^item/(?P<pk>\d+)/transfer_ownership$',
         editoritem.TransferOwnershipView.as_view(), name='item_transfer_ownership'),

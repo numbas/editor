@@ -9,6 +9,7 @@ from datetime import datetime
 from itertools import groupby
 import codecs
 from pathlib import Path
+import urllib.parse
 try:
     # For Python > 2.7
     from collections import OrderedDict
@@ -910,13 +911,12 @@ class Contributor(models.Model):
 
 class Folder(models.Model):
     name = models.CharField(max_length=200)
-    slug = models.SlugField(max_length=200, editable=False, unique=False)
 
     project = models.ForeignKey(Project, null=False, related_name='folders', on_delete=models.CASCADE)
     parent = models.ForeignKey('Folder', null=True, related_name='folders', on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = (('slug', 'project', 'parent'),)
+        unique_together = (('name', 'project', 'parent'),)
         ordering = ('name',)
 
     def clean(self):
@@ -935,14 +935,10 @@ class Folder(models.Model):
         return bits
 
     def path(self):
-        return '/'.join(f.slug for f in self.parents())
+        return '/'.join(urllib.parse.quote(f.name) for f in self.parents())
 
     def get_absolute_url(self):
         return reverse('project_browse',args=(self.project.pk, self.path()+'/'))
-
-@receiver(signals.pre_save, sender=Folder)
-def set_folder_slug(instance, **kwargs):
-    instance.slug = slugify(instance.name)
 
 @reversion.register
 class EditorItem(models.Model, NumbasObject, ControlledObject):

@@ -154,7 +154,7 @@ class Command(BaseCommand):
         try:
             project = Project.objects.get(pk=pk)
         except Project.DoesNotExist:
-            raise CommandError("Project {} does not exist".format(question_id))
+            raise CommandError("Project {} does not exist".format(pk))
 
         print("Testing project \"{}\"".format(project.name))
         questions = NewQuestion.objects.filter(editoritem__project=project)

@@ -25,6 +25,7 @@ from django.core.files.storage import default_storage
 from django.urls import reverse
 from django.db import models, transaction
 from django.db.models import signals, Max, Min
+from django.db.models.functions import Lower
 from django.dispatch import receiver
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -907,6 +908,42 @@ class Contributor(models.Model):
     class Meta:
         unique_together = (("item","user"))
 
+class Folder(models.Model):
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=200, editable=False, unique=False)
+
+    project = models.ForeignKey(Project, null=False, related_name='folders', on_delete=models.CASCADE)
+    parent = models.ForeignKey('Folder', null=True, related_name='folders', on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = (('slug', 'project', 'parent'),)
+        ordering = ('name',)
+
+    def clean(self):
+        if self.parent==self:
+            raise ValidationError("A folder can't be its own parent.")
+
+    def __str__(self):
+        return '/'.join([self.project.name]+[f.name for f in self.parents()])
+
+    def parents(self):
+        bits = []
+        f = self
+        while f:
+            bits.insert(0,f)
+            f = f.parent
+        return bits
+
+    def path(self):
+        return '/'.join(f.slug for f in self.parents())
+
+    def get_absolute_url(self):
+        return reverse('project_browse',args=(self.project.pk, self.path()+'/'))
+
+@receiver(signals.pre_save, sender=Folder)
+def set_folder_slug(instance, **kwargs):
+    instance.slug = slugify(instance.name)
+
 @reversion.register
 class EditorItem(models.Model, NumbasObject, ControlledObject):
     """
@@ -923,6 +960,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
     access_rights = models.ManyToManyField(User, through='Access', blank=True, editable=False, related_name='accessed_items')
     licence = models.ForeignKey(Licence, null=True, blank=True, on_delete=models.SET_NULL)
     project = models.ForeignKey(Project, null=True, related_name='items', on_delete=models.CASCADE)
+    folder = models.ForeignKey(Folder, null=True, related_name='items', on_delete=models.SET_NULL)
 
     content = models.TextField(blank=True, validators=[validate_content])
     metadata = JSONField(blank=True)

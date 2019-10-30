@@ -36,7 +36,7 @@ from django_tables2.config import RequestConfig
 from accounts.models import UserProfile, EditorItemViewed
 
 from editor.tables import EditorItemTable, RecentlyPublishedTable
-from editor.models import EditorItem, Project, Access, Licence, PullRequest, Taxonomy, Contributor
+from editor.models import EditorItem, Project, Access, Licence, PullRequest, Taxonomy, Contributor, Folder
 import editor.models
 import editor.views.generic
 from editor.views.errors import forbidden
@@ -68,6 +68,8 @@ class CreateView(ProjectQuerysetMixin, generic.CreateView):
             data['project'] = Project.objects.get(pk=int(self.request.GET['project']))
         else:
             data['project'] = self.request.user.userprofile.personal_project
+        if 'folder' in self.request.GET:
+            data['folder'] = Folder.objects.get(pk=int(self.request.GET['folder']))
         return data
 
 class CopyView(ProjectQuerysetMixin, generic.FormView, generic.edit.ModelFormMixin):
@@ -775,6 +777,28 @@ class TransferOwnershipView(generic.UpdateView):
     def form_valid(self, form):
         messages.add_message(self.request, messages.SUCCESS, render_to_string('editoritem/ownership_transferred_message.html', {'to':form.cleaned_data.get('user_search'), 'item':self.get_object()}))
         return super(TransferOwnershipView, self).form_valid(form)
+
+class MoveFolderView(generic.UpdateView):
+    model = EditorItem
+    form_class = editor.forms.EditorItemMoveFolderForm
+
+    def form_invalid(self,form):
+        if self.request.is_ajax():
+            return http.JsonResponse(form.errors, status=400)
+
+    def form_valid(self, form):
+        self.object = form.save()
+
+        if self.request.is_ajax():
+            return http.JsonResponse({'ok': True},status=200)
+        else:
+            return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        if self.object.folder:
+            return self.object.folder.get_absolute_url()
+        else:
+            return reverse('project_browse',args=(self.project.pk,''))
 
 class RecentlyPublishedView(ListView):
     template_name = 'editoritem/recently_published.html'

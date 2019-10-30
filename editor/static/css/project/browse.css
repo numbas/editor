@@ -1,0 +1,26 @@
+.breadcrumb .drag-target {
+    padding: 0.2em;
+}
+
+#controls {
+    margin: 1em 0;
+}
+
+.contents > li ~ li {
+    margin-top: 0.5em;
+}
+
+.contents > .folder {
+    font-weight: bold;
+}
+
+.dragover {
+    outline: 1px dashed black;
+}
+
+.drag-handle.dragging {
+    opacity: 0.6;
+}
+.drag-handle.moving {
+    opacity: 0.3;
+}

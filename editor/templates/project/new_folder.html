@@ -1,0 +1,10 @@
+{% extends "project/project_base.html" %}
+
+{% block project_content %}
+<form method="POST" action="">
+    {% csrf_token %}
+    {{form}}
+
+    <button class="btn btn-primary">Add a folder</button>
+</form>
+{% endblock %}

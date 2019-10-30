@@ -5,7 +5,6 @@ from pathlib import Path
 from django import forms
 from django.forms.models import inlineformset_factory
 from django.forms.widgets import SelectMultiple
-from django.core.exceptions import ValidationError
 from django.utils.html import format_html, html_safe
 from django.utils.safestring import mark_safe
 from django.utils.encoding import force_text
@@ -195,12 +194,22 @@ class QuestionForm(EditorItemForm):
         fields = ('resources', 'extensions')
 
 class NewQuestionForm(forms.ModelForm):
+
+    def clean(self):
+        cleaned_data = super().clean()
+        project = cleaned_data.get('project')
+        folder = cleaned_data.get('folder')
+        if folder.project != project:
+            raise forms.ValidationError("Folder {} isn't in the project {}".format(folder,project))
+        return cleaned_data
+
     class Meta:
         model = EditorItem
-        fields = ('name', 'author', 'project')
+        fields = ('name', 'author', 'project', 'folder')
         widgets = {
             'name': forms.TextInput(attrs={'class':'form-control', 'placeholder':'e.g. "Solve an equation in two variables"'}),
             'author': forms.HiddenInput(),
+            'folder': forms.HiddenInput(),
             'project': BootstrapSelect,
         }
 
@@ -210,12 +219,21 @@ class ExamForm(EditorItemForm):
         fields = ('theme', 'custom_theme', 'locale')
         
 class NewExamForm(forms.ModelForm):
+    def clean(self):
+        cleaned_data = super().clean()
+        project = cleaned_data.get('project')
+        folder = cleaned_data.get('folder')
+        if folder.project != project:
+            raise forms.ValidationError("Folder {} isn't in the project {}".format(folder,project))
+        return cleaned_data
+
     class Meta:
         model = EditorItem
-        fields = ('name', 'author', 'project')
+        fields = ('name', 'author', 'project', 'folder')
         widgets = {
             'name': forms.TextInput(attrs={'class':'form-control', 'placeholder':'e.g. "Week 4 homework"'}),
             'author': forms.HiddenInput(),
+            'folder': forms.HiddenInput(),
             'project': BootstrapSelect,
         }
 
@@ -224,8 +242,8 @@ def validate_exam_file(f):
         content = f.read().decode('utf-8')
         editor.models.validate_content(content)
         f.seek(0)
-    except (UnicodeDecodeError, ValidationError):
-        raise ValidationError("Not a valid .exam file")
+    except (UnicodeDecodeError, forms.ValidationError):
+        raise forms.ValidationError("Not a valid .exam file")
 
 class UploadExamForm(forms.ModelForm):
     file = forms.FileField(required=True, validators=[validate_exam_file])
@@ -341,7 +359,7 @@ class UpdateExtensionForm(forms.ModelForm):
     def clean_location(self):
         location = self.cleaned_data.get('location')
         if location == '':
-            raise ValidationError('You must give a short name.')
+            raise forms.ValidationError('You must give a short name.')
 
         return location
 
@@ -366,7 +384,7 @@ class CreateExtensionForm(forms.ModelForm):
         name = self.cleaned_data.get('name')
         location = slugify(name)
         if Extension.objects.filter(location=location).exists():
-            raise ValidationError("An extension with that name already exists.")
+            raise forms.ValidationError("An extension with that name already exists.")
         return name
 
     def save(self, commit=True):
@@ -459,7 +477,7 @@ class UpdateCustomPartTypeForm(forms.ModelForm):
         short_name = self.cleaned_data.get('short_name')
         built_in_part_types = ['jme','numberentry','patternmatch','matrix','gapfill','information','extension','1_n_2','m_n_2','m_n_x']
         if short_name in built_in_part_types:
-            raise ValidationError("The unique identifier you chose is already in use.")
+            raise forms.ValidationError("The unique identifier you chose is already in use.")
         return short_name
 
     def clean_marking_script(self):
@@ -562,6 +580,47 @@ class EditorItemTransferOwnershipForm(UserSearchMixin, forms.ModelForm):
         fields = []
 
 ProjectAccessFormset = inlineformset_factory(editor.models.Project, editor.models.ProjectAccess, fields=('access',), extra=0, can_delete=True)
+
+class NewFolderForm(forms.ModelForm):
+    parent = forms.ModelChoiceField(queryset=editor.models.Folder.objects.all(), required=False, widget=forms.HiddenInput())
+
+    class Meta:
+        model = editor.models.Folder
+        fields = ['name','project','parent']
+        widgets = {
+            'project': forms.HiddenInput(),
+        }
+
+class MoveFolderForm(forms.ModelForm):
+    parent = forms.ModelChoiceField(queryset=editor.models.Folder.objects.all(), required=False)
+    folders = forms.ModelMultipleChoiceField(queryset=editor.models.Folder.objects.all(), required=False)
+    items = forms.ModelMultipleChoiceField(queryset=editor.models.EditorItem.objects.all(), required=False)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        parent = cleaned_data.get('parent')
+        folders = cleaned_data.get('folders')
+        items = cleaned_data.get('items')
+        for folder in folders:
+            if folder.project != parent.project:
+                raise forms.ValidationError("Can't move a folder into a different project.")
+            folder.parent = parent
+        for item in items:
+            if item.project != parent.project:
+                raise forms.ValidationError("Can't move an item into a different project.")
+            item.parent = parent
+        return cleaned_data
+
+    def save(self):
+        parent = self.cleaned_data.get('parent')
+        folders = self.cleaned_data.get('folders')
+        items = self.cleaned_data.get('items')
+        for folder in folders:
+
+
+    class Meta:
+        model = editor.models.EditorItem
+        fields = ('parent',)
 
 class CreatePullRequestForm(forms.ModelForm):
     class Meta:

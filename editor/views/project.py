@@ -9,10 +9,10 @@ from django.core.exceptions import PermissionDenied
 from itertools import groupby
 from django_tables2.config import RequestConfig
 
-from editor.models import Project, ProjectAccess, STAMP_STATUS_CHOICES
+from editor.models import Project, ProjectAccess, STAMP_STATUS_CHOICES, Folder
 import editor.forms
 import editor.views.editoritem
-from editor.tables import ProjectTable
+from editor.tables import ProjectTable, EditorItemTable
 
 class MustBeMemberMixin(object):
     def dispatch(self, request, *args, **kwargs):
@@ -175,6 +175,109 @@ class SearchView(MustBeMemberMixin, editor.views.editoritem.SearchView):
         context['in_project'] = True
         context['project'] = self.project
         return context
+
+class BrowseView(ProjectContextMixin, MustBeMemberMixin, generic.DetailView):
+    model = Project
+    template_name = 'project/browse.html'
+    
+    def get_project(self):
+        pk = self.kwargs.get('pk')
+        project = self.project = Project.objects.get(pk=pk)
+        return project
+
+    def get_folders(self):
+        if hasattr(self,'breadcrumbs'):
+            return self.breadcrumbs
+
+        path = self.kwargs.get('path','')[:-1]
+        breadcrumbs = []
+        if len(path):
+            for slug in path.split('/'):
+                folder = Folder.objects.get(slug=slug)
+                breadcrumbs.append(folder)
+            self.breadcrumbs = breadcrumbs
+        return breadcrumbs
+
+    def get_folder(self):
+        breadcrumbs = self.get_folders()
+        return breadcrumbs[-1] if len(breadcrumbs)>0 else None
+
+    def make_table(self):
+        project = self.get_project()
+        folder = self.get_folder()
+        items = folder.items.all() if folder else project.items.filter(folder=None)
+
+        config = RequestConfig(self.request, paginate={'per_page': 100})
+        results = EditorItemTable(items)
+
+        order_by = self.request.GET.get('order_by','name')
+        if order_by in ('last_modified', 'licence'):
+            order_by = '-'+order_by
+        results.order_by = order_by
+
+        config.configure(results)
+
+        return results
+    
+    def get_context_data(self,**kwargs):
+        context = super().get_context_data(**kwargs)
+
+        project =  self.get_project()
+        folder = context['folder'] = self.get_folder()
+        context['breadcrumbs'] = self.get_folders()[:-1]
+        
+        if folder:
+            context['subfolders'] = folder.folders.all()
+            context['path'] = folder.path()
+        else:
+            context['subfolders'] = project.folders.filter(parent=None)
+            context['path'] = project.name
+
+        context['items'] = context['results'] = self.make_table()
+
+        return context
+
+class NewFolderView(ProjectContextMixin, MustBeMemberMixin, generic.CreateView):
+    model = Folder
+    form_class = editor.forms.NewFolderForm
+    template_name = 'project/new_folder.html'
+
+    def get_project(self):
+        pk = self.kwargs.get('project_pk')
+        project = self.project = Project.objects.get(pk=pk)
+        return project
+
+    def get_initial(self):
+        initial = super().get_initial()
+        path = self.request.GET.get('path')
+        parent = Folder.objects.get(slug=path.split('/')[-1]) if path is not None and path!='' else None
+        initial['project'] = self.get_project()
+        initial['parent'] = parent
+        return initial
+
+class MoveFolderView(MustBeMemberMixin, generic.FormView):
+    form_class = editor.forms.MoveFolderForm
+
+    def get_project(self):
+        return self.get_object().project
+
+    def form_invalid(self,form):
+        if self.request.is_ajax():
+            return http.JsonResponse(form.errors, status=400)
+
+    def form_valid(self, form):
+        form.save()
+
+        if self.request.is_ajax():
+            return http.JsonResponse({'ok': True},status=200)
+        else:
+            return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        if self.object.parent:
+            return self.object.parent.get_absolute_url()
+        else:
+            return reverse('project_browse',args=(self.project.pk,''))
 
 class CommentView(MustBeMemberMixin, editor.views.generic.CommentView):
     model = Project

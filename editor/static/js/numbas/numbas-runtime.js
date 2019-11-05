@@ -244,6 +244,9 @@ Numbas.addExtension = function(name,deps,callback) {
  */
 Numbas.activateExtension = function(name) {
     var cb = extension_callbacks[name];
+    if(!cb) {
+        throw(new Numbas.Error("extension.not found",{name: name}));
+    }
     if(!cb.activated) {
         cb.callback(cb.extension);
         cb.activated = true;
@@ -253,18 +256,17 @@ Numbas.activateExtension = function(name) {
 /** Check all required scripts have executed - the theme should call this once the document has loaded
  */
 Numbas.checkAllScriptsLoaded = function() {
-    var fails = [];
-    Object.values(scriptreqs).forEach(function(req) {
+    for(var file in scriptreqs) {
+        var req = scriptreqs[file];
         if(req.executed) {
-            return;
+            continue;
         }
         if(req.fdeps.every(function(f){return scriptreqs[f].executed})) {
-            var err = new Numbas.Error('die.script not loaded',{file:req.file});
+            var err = new Numbas.Error('die.script not loaded',{file:file});
             Numbas.display && Numbas.display.die(err);
+            break;
         }
-        fails.push({file: req.file, req: req, fdeps: req.fdeps.filter(function(f){return !scriptreqs[f].executed})});
-    });
-    return fails;
+    }
 }
 })();
 
@@ -3412,7 +3414,7 @@ var tokenComparisons = Numbas.jme.tokenComparisons = {
     'rational': function(a,b) {
         a = a.value.toFloat();
         b = b.value.toFloat();
-        return a.value>b.value ? 1 : a.value<b.value ? -1 : 0;
+        return a>b ? 1 : a<b ? -1 : 0;
     },
     'string': compareTokensByValue,
     'boolean': compareTokensByValue
@@ -3430,7 +3432,14 @@ var tokenComparisons = Numbas.jme.tokenComparisons = {
  */
 var compareTokens = jme.compareTokens = function(a,b) {
     if(a.type!=b.type) {
-        return jme.compareTrees({tok:a},{tok:b});
+        var type = jme.findCompatibleType(a.type,b.type);
+        if(type) {
+            var ca = jme.castToType(a,type);
+            var cb = jme.castToType(b,type);
+            return compareTokens(ca,cb);
+        } else {
+            return jme.compareTrees({tok:a},{tok:b});
+        }
     } else {
         var compare = tokenComparisons[a.type];
         if(compare) {
@@ -5400,12 +5409,29 @@ jme.findvarsOps.let = function(tree,boundvars,scope) {
     return vars;
 }
 jme.substituteTreeOps.let = function(tree,scope,allowUnbound) {
+    var nscope = new Scope([scope]);
     if(tree.args[0].tok.type=='dict') {
         var d = tree.args[0];
-        d.args = d.args.map(function(da) { return jme.substituteTree(da,scope,allowUnbound) });
+        var names = d.args.map(function(da) { return da.tok.key; });
+        for(var i=0;i<names.length;i++) {
+            nscope.deleteVariable(names[i]);
+        }
+        d.args = d.args.map(function(da) { return jme.substituteTree(da,nscope,allowUnbound) });
     } else {
         for(var i=1;i<tree.args.length-1;i+=2) {
-            tree.args[i] = jme.substituteTree(tree.args[i],scope,allowUnbound);
+            switch(tree.args[i-1].tok.type) {
+                case 'name':
+                    var name = tree.args[i-1].tok.name;
+                    nscope.deleteVariable(name);
+                    break;
+                case 'list':
+                    var names = tree.args[i-1].args;
+                    for(var j=0;j<names.length;j++) {
+                        nscope.deleteVariable(names[j].tok.name);
+                    }
+                    break;
+            }
+            tree.args[i] = jme.substituteTree(tree.args[i],nscope,allowUnbound);
         }
     }
 }
@@ -9806,7 +9832,8 @@ var simplificationRules = jme.rules.simplificationRules = {
         ['-(`! complex:$n);x * (-?;y)','asg','x*y'],
         ['`!-? `& (-(real:$n/real:$n`? `| `!$n);x) * ?`+;y','asgc','-(x*y)'],            //take negation to left of multiplication
         ['-(?;a+?`+;b)','','-a-b'],
-        ['?;a+(-?;b-?;c)','','a-b-c']
+        ['?;a+(-?;b-?;c)','','a-b-c'],
+        ['?;a/?;b/?;c','','a/(b*c)']
     ],
     collectComplex: [
         ['-complex:negative:$n;x','','eval(-x)'],   // negation of a complex number with negative real part
@@ -9837,7 +9864,7 @@ var simplificationRules = jme.rules.simplificationRules = {
         ['-0','','0']
     ],
     collectNumbers: [
-        ['$n;a * 1/$n;b','ag','a/b'],
+        ['$n;a * (1/?;b)','ags','a/b'],
         ['(`+- $n);n1 + (`+- $n)`+;n2','acg','eval(n1+n2)'],
         ['$n;n * $n;m','acg','eval(n*m)'],        //multiply numbers
         ['(`! $n)`+;x * real:$n;n','acgs','n*x']            //shift numbers to left hand side
@@ -10756,10 +10783,6 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @type {Element}
      */
     xml: '',
-    /** JSON defining this part
-     * @type {Object}
-     */
-    json: null,
     /** Load the part's settings from an XML <part> node
      * @param {Element} xml
      */
@@ -10817,7 +10840,6 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @param {Object} data
      */
     loadFromJSON: function(data) {
-        this.json = data;
         var p = this;
         var settings = this.settings;
         var tryLoad = Numbas.json.tryLoad;
@@ -11630,41 +11652,6 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
             }
         }
         part.answered = valid;
-
-        var t = 0;
-        for(var i=0;i<part.markingFeedback.length;i++) {
-            var action = part.markingFeedback[i];
-            var change = action.credit*part.marks;
-            var credit_change = action.credit;
-            if(action.gap!=undefined) {
-                change *= part.gaps[action.gap].marks/part.marks;
-                credit_change *= part.marks>0 ? part.gaps[action.gap].marks/part.marks : 1/part.gaps.length;
-            }
-            t += change;
-            var message = action.message || '';
-            if(util.isNonemptyHTML(message)) {
-                var marks = Math.abs(change);
-                if(change>0) {
-                    action.message += '\n\n'+R('feedback.you were awarded',{count:marks});
-                } else if(change<0) {
-                    action.message += '\n\n'+R('feedback.taken away',{count:marks});
-                }
-            }
-            var change_desc = credit_change>0 ? 'positive' : credit_change<0 ? 'negative' : 'neutral';
-            switch(action.reason) {
-                case 'correct':
-                    change_desc = 'positive';
-                    break;
-                case 'incorrect':
-                    change_desc = 'negative';
-                    break;
-                case 'invalid':
-                    change_desc = 'invalid';
-                    break;
-            }
-            action.credit_change = change_desc;
-        }
-
     },
     marking_parameters: function(studentAnswer) {
         studentAnswer = jme.makeSafe(studentAnswer);

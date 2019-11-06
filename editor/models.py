@@ -839,7 +839,7 @@ class Access(models.Model, TimelineMixin):
 def add_watching_user_for_access(instance, **kwargs):
     instance.item.watching_users.add(instance.user)
 
-NUMBAS_FILE_VERSION = 'variables_as_objects'
+NUMBAS_FILE_VERSION = 'exam_results_page_options'
 
 @deconstructible
 class NumbasObject(object):

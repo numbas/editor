@@ -1,7 +1,8 @@
 import json
 
 from django.core.management.base import BaseCommand, CommandError
-from editor.models import NewQuestion, Project, NewExam
+from editor.models import NewQuestion, Project, NewExam, NUMBAS_FILE_VERSION
+from numbasobject import NumbasObject
 
 class Command(BaseCommand):
     help = 'Extract unit tests from one or more questions'
@@ -29,13 +30,19 @@ class Command(BaseCommand):
         self.options = options
         questions = self.gather_questions()
 
+        obj = NumbasObject(data={"name": "Part unit tests", "extensions": []}, version=NUMBAS_FILE_VERSION)
         collection = []
         for q in questions:
             data = q.editoritem.get_parsed_content().data
-            name = data['name']
             collection.append(data)
 
-        print("""var unit_test_questions = {};""".format(json.dumps(collection)))
+        obj.data['question_groups'] = [{"questions": collection}]
+
+        print("""
+var unit_test_exam = 
+{};
+var unit_test_questions = unit_test_exam.question_groups[0].questions;
+""".format(obj))
 
     def gather_questions(self):
         options = self.options

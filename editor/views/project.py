@@ -254,7 +254,7 @@ class BrowseView(ProjectContextMixin, MustBeMemberMixin, generic.DetailView):
             subfolders = subfolders.order_by('-name')
         context['subfolders'] = subfolders
 
-        context['num_items'] = table.page.paginator.count
+        context['num_items'] = table.page.paginator.count + subfolders.count()
 
         return context
 
@@ -289,6 +289,12 @@ class NewFolderView(ProjectContextMixin, MustBeEditorMixin, generic.CreateView):
         initial['project'] = self.get_project()
         initial['parent'] = parent
         return initial
+
+    def get_success_url(self):
+        if self.object.parent:
+            return self.object.parent.get_absolute_url()
+        else:
+            return reverse('project_browse',args=(self.object.project.pk, ''))
 
 class WatchProjectView(generic.detail.SingleObjectMixin, generic.View):
     model = Project

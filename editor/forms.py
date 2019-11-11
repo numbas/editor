@@ -591,17 +591,6 @@ class NewFolderForm(forms.ModelForm):
             raise forms.ValidationError("Folder names may not include a forward slash.")
         return name
 
-    def clean(self):
-        cleaned_data = super().clean()
-        parent = cleaned_data.get('parent')
-        project = cleaned_data.get('project')
-        name = cleaned_data.get('name')
-
-        if editor.models.Folder.objects.filter(parent=parent,project=project,name=name).exists():
-            raise forms.ValidationError("A folder with that name already exists")
-
-        return cleaned_data
-
     class Meta:
         model = editor.models.Folder
         fields = ['name','project','parent']

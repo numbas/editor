@@ -20,6 +20,7 @@ class MustBeMemberMixin(object):
     def dispatch(self, request, *args, **kwargs):
         self.project = self.get_project()
         if not self.project.can_be_viewed_by(request.user):
+            self.object = self.project
             return render(request, 'project/must_be_member.html', self.get_context_data())
         return super(MustBeMemberMixin, self).dispatch(request, *args, **kwargs)
 
@@ -30,6 +31,7 @@ class MustBeEditorMixin(object):
     def dispatch(self, request, *args, **kwargs):
         self.project = self.get_project()
         if not self.project.can_be_edited_by(request.user):
+            self.object = self.project
             return render(request, 'project/must_be_member.html', self.get_context_data())
         return super().dispatch(request, *args, **kwargs)
 

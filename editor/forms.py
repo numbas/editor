@@ -195,12 +195,15 @@ class QuestionForm(EditorItemForm):
         fields = ('resources', 'extensions')
 
 class NewQuestionForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['folder'].required = False
 
     def clean(self):
         cleaned_data = super().clean()
         project = cleaned_data.get('project')
         folder = cleaned_data.get('folder')
-        if folder.project != project:
+        if folder and folder.project != project:
             raise forms.ValidationError("Folder {} isn't in the project {}".format(folder,project))
         return cleaned_data
 
@@ -220,11 +223,15 @@ class ExamForm(EditorItemForm):
         fields = ('theme', 'custom_theme', 'locale')
         
 class NewExamForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['folder'].required = False
+
     def clean(self):
         cleaned_data = super().clean()
         project = cleaned_data.get('project')
         folder = cleaned_data.get('folder')
-        if folder.project != project:
+        if folder and folder.project != project:
             raise forms.ValidationError("Folder {} isn't in the project {}".format(folder,project))
         return cleaned_data
 

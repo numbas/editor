@@ -2552,10 +2552,15 @@ $(document).ready(function() {
 
         // set answer for gapfill parts
         ko.computed(function() {
-            if(this.part.type().name=='gapfill') {
-                this.answer(this.part.gaps().map(function(g) {
-                    return g.marking_test().answer();
-                }));
+            if(this.editing()) {
+                if(this.part.type().name=='gapfill') {
+                    this.answer({
+                        valid: this.part.gaps().every(function(g){return g.marking_test().answer().valid}), 
+                        value: this.part.gaps().map(function(g) {
+                            return g.marking_test().answer().value;
+                        })
+                    });
+                }
             }
         }, this);
 
@@ -2641,28 +2646,7 @@ $(document).ready(function() {
                 if(!part) {
                     throw(new Error("Part not found"));
                 }
-                var answer;
-                if(mt.part.type().name=='gapfill') {
-                    var gap_answers = mt.part.gaps().map(function(g) {
-                        return g.marking_test().answer();
-                    });
-                    var invalid_gaps = [];
-                    gap_answers.forEach(function(x,i) {
-                        if(!x.valid) {
-                            invalid_gaps.push(i);
-                        }
-                    });
-                    if(invalid_gaps.length==1) {
-                        answer = {valid: false, warnings: ['Gap '+invalid_gaps[0]+' has not been answered.']};
-                    } else if(invalid_gaps.length>1) {
-                        answer = {valid: false, warnings: ['Gaps '+invalid_gaps.slice(0,invalid_gaps.length-1).join(', ')+' and '+invalid_gaps[invalid_gaps.length-1]+' have not been answered.']};
-                    } else {
-                        var answers = gap_answers.map(function(x){ return x.value; });
-                        answer = {valid: true, value: answers};
-                    }
-                } else {
-                    var answer = mt.answer();
-                }
+                var answer = mt.answer();
                 if(!answer) {
                     throw(new Numbas.Error("Student's answer not set. There may be an error in the input widget."));
                 }
@@ -2676,8 +2660,9 @@ $(document).ready(function() {
                 }
                 part.storeAnswer(answer.value);
                 part.setStudentAnswer();
+                part.submit();
                 var res = part.mark_answer(part.rawStudentAnswerAsJME(),part.getScope());
-                var out = {script: part.markingScript, result: res, marks: part.marks};
+                var out = {script: part.markingScript, result: res, marking_result: part.marking_result, marks: part.marks};
                 if(!res.state_valid.mark) {
                     out.error = 'This answer is not valid.';
                     var feedback = compile_feedback(Numbas.marking.finalise_state(res.states.mark), part.marks);
@@ -2765,6 +2750,11 @@ $(document).ready(function() {
                 note.valid(result.state_valid[x]);
                 note.missing(false);
             }
+            var mark_note = existing_notes.mark;
+            var marking_result = last_run.marking_result;
+            mark_note.credit(marking_result.credit);
+            mark_note.messages(marking_result.markingFeedback.map(function(m){ return m.message }));
+            mark_note.warnings(marking_result.warnings);
         },this);
 
         // If this test is being edited, keep the "expected" values up to date

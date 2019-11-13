@@ -539,6 +539,44 @@
                                     <!-- /ko -->
 
                                     <!-- ko if: question -->
+
+                                    <!-- ko if: ko.unwrap($data.runtime_part)!==undefined -->
+                                    <!-- ko if: ko.unwrap($parent.type().widget) -->
+                                    <form class="form-horizontal" data-bind="submit: Editor.noop">
+                                        <div class="form-group">
+                                            <label class="label-block">
+                                                <div class="col-sm-12 col-md-3">
+                                                    Student's answer
+                                                </div>
+                                                <div class="col-sm-12 col-md-9">
+                                                    <div data-bind="component: {name: 'answer-widget', params: {answer: answer, part: runtime_part}}"></div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </form>
+                                    <!-- /ko -->
+                                    <!-- ko if: $parent.type().name=='gapfill' -->
+                                    <form class="form-horizontal" data-bind="submit: Editor.noop">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Gap</th>
+                                                    <th>Student's answer</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody data-bind="foreach: $parent.gaps">
+                                                <tr>
+                                                    <td data-bind="text: name"></td>
+                                                    <td data-bind="with: marking_test">
+                                                        <div data-bind="component: {name: 'answer-widget', params: {answer: answer, part: runtime_part}}"></div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </form>
+                                    <!-- /ko -->
+                                    <!-- /ko -->
+
                                     <ul class="nav nav-tabs" data-bind="foreach: tabs">
                                         <li role="presentation" data-bind="css: {active: ko.unwrap($parent.currentTab().id) == $data.id}"><a href="#" data-bind="click: $parent.currentTab, text: title"></a></li>
                                     </ul>
@@ -573,42 +611,6 @@
 
                                         <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='notes'}">
                                             <!-- ko if: ko.unwrap($data.runtime_part)!==undefined -->
-                                            <!-- ko if: ko.unwrap($parent.type().widget) -->
-                                            <form class="form-horizontal" data-bind="submit: Editor.noop">
-                                                <div class="form-group">
-                                                    <label class="label-block">
-                                                        <div class="col-sm-12 col-md-3">
-                                                            Student's answer
-                                                        </div>
-                                                        <div class="col-sm-12 col-md-9">
-                                                            <div data-bind="component: {name: 'answer-widget', params: {answer: answer, part: runtime_part}}"></div>
-                                                        </div>
-                                                    </label>
-                                                </div>
-                                            </form>
-                                            <!-- /ko -->
-                                            <!-- ko if: $parent.type().name=='gapfill' -->
-                                            <form class="form-horizontal" data-bind="submit: Editor.noop">
-                                                <table class="table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Gap</th>
-                                                            <th>Student's answer</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody data-bind="foreach: $parent.gaps">
-                                                        <tr>
-                                                            <td data-bind="text: name"></td>
-                                                            <td data-bind="with: marking_test">
-                                                                <div data-bind="component: {name: 'answer-widget', params: {answer: answer, part: runtime_part}}"></div>
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </form>
-                                            <!-- /ko -->
-
-
                                             <div data-bind="if: last_run_error">
                                                 <div class="alert alert-danger">
                                                     <p data-bind="html: last_run_error"></p>
@@ -736,7 +738,7 @@
                                                         </section>
 
                                                         <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='notes'}">
-                                                            <!-- ko if: ko.unwrap($data.runtime_part)!==undefined && ko.unwrap($parent.type().widget) -->
+                                                            <!-- ko if: ko.unwrap($data.runtime_part)!==undefined -->
                                                             <form class="form-horizontal" data-bind="submit: Editor.noop">
                                                                 <div class="form-group">
                                                                     <label class="label-block">

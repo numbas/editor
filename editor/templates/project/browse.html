@@ -120,6 +120,7 @@
                         </a>
                     </td>
                     <td></td>
+                    <td></td>
                 </tr>
                 {% endfor %}
 
@@ -134,8 +135,11 @@
                         <a class="test-run" target="_blank" href="{% url item.item_type|add:'_preview' item.rel_obj.pk item.slug %}"><span class="glyphicon glyphicon-play" title="Test run" aria-hidden="true"></span></a>
                     </td>
                     <td class="name">
-                        <span class="glyphicon glyphicon-{{item.icon}}"></span>
                         {% editoritem_link item.rel_obj %}
+                    </td>
+                    <td>
+                        <span class="glyphicon glyphicon-{{item.icon}}"></span>
+                        {{item.item_type}}
                     </td>
                     <td>
                         {{item.last_modified}}

@@ -20,12 +20,21 @@ class EditorItemTable(ObjectTable):
         model = EditorItem
         sequence = ('name', 'current_stamp', 'licence', 'author', 'last_modified')
 
+class BlankColumn(Column):
+    is_blank = True
+
+class CurrentStampColumn(Column):
+    def order(self, queryset, is_descending):
+        queryset = queryset.order_by(('-' if is_descending else '')+'current_stamp__status')
+        return (queryset, True)
+
 class BrowseProjectTable(ObjectTable):
-    current_stamp = Column(verbose_name='Status', initial_sort_descending=True)
+    current_stamp = CurrentStampColumn(verbose_name='Status', initial_sort_descending=True)
     last_modified = Column(initial_sort_descending=True)
+    play = BlankColumn()
     class Meta(ObjectTable.Meta):
         model = EditorItem
-        sequence = ('current_stamp', 'name', 'last_modified')
+        sequence = ('current_stamp', 'play', 'name', 'last_modified')
         fields = ('current_stamp', 'name', 'last_modified')
 
 class RecentlyPublishedTable(tables.Table):

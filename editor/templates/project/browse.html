@@ -17,10 +17,34 @@
         var project_pk = {{project.pk}};
         var num_items = {{num_items}};
     </script>
+    {{folder_hierarchy|json_script:"folder-hierarchy-data"}}
     <script src="{% sstatic 'js/project/browse.js' %}" defer></script>
 {% endblock javascripts %}
 
 {% block project_content %}
+<div class="modal fade" id="move-modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-body">
+          <p>Select a folder to move the selected items to.</p>
+          <ul class="folder-list top-level">
+              <li class="folder expanded">
+                  <div class="name">
+                      <span class="glyphicon glyphicon-folder-close" aria-label="Closed folder"></span>
+                      <span class="glyphicon glyphicon-folder-open" aria-label="Open folder"></span>
+                      <a href="{% url 'project_browse' project.pk "" %}">{{project.name}}</a>
+                  </div>
+              </li>
+          </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary move">Move</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <nav>
     <ol class="breadcrumb folders">
         <li class="{% if folder %}drag-target{% endif %}{% if not folder %} active"{% endif %} data-folder="">
@@ -57,6 +81,13 @@
         <div>
             <button type="button" id="select-all" class="btn btn-sm btn-link">Select all</button>
             <button type="button" id="select-none" class="btn btn-sm btn-link">Select none</button>
+            
+            <div class="btn-group" id="selection-buttons">
+                <button type="button" id="move-items" class="btn btn-default" data-toggle="modal" data-target="#move-modal">
+                    <span class="glyphicon glyphicon-circle-arrow-right"></span>
+                    Move selected items
+                </button>
+            </div>
         </div>
 
         <table class="table contents">
@@ -64,11 +95,15 @@
                 <tr>
                     <th></th>
                     {% for column in items.columns %}
+                    {% if column.column.is_blank %}
+                    <th></th>
+                    {% else %}
                     <th {{column.attrs.th.as_html}}>
                         <span class="glyphicon glyphicon-sort-by-attributes"></span>
                         <span class="glyphicon glyphicon-sort-by-attributes-alt"></span>
                         <a href="{% querystring items.prefixed_order_by_field=column.order_by_alias.next %}">{{ column.header }}</a>
                     </th>
+                    {% endif %}
                     {% endfor %}
                 </tr>
             </thead>
@@ -77,12 +112,14 @@
                 <tr class="folder drag-target drag-handle" data-folder="{{folder.pk}}">
                     <td><input class="include-checkbox" type="checkbox" name="folders[]" value="{{folder.pk}}"></td>
                     <td></td>
-                    <td colspan="2" class="name">
+                    <td></td>
+                    <td class="name">
                         <a href="{{folder.get_absolute_url}}">
                             <span class="glyphicon glyphicon-folder-close"></span> 
                             {{folder.name}}
                         </a>
                     </td>
+                    <td></td>
                 </tr>
                 {% endfor %}
 
@@ -92,6 +129,9 @@
                     <td><input class="include-checkbox" type="checkbox" name="items[]" value="{{folder.pk}}"></td>
                     <td>
                         {% stamp item.current_stamp.status %}
+                    </td>
+                    <td>
+                        <a class="test-run" target="_blank" href="{% url item.item_type|add:'_preview' item.rel_obj.pk item.slug %}"><span class="glyphicon glyphicon-play" title="Test run" aria-hidden="true"></span></a>
                     </td>
                     <td class="name">
                         <span class="glyphicon glyphicon-{{item.icon}}"></span>

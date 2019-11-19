@@ -262,6 +262,17 @@ class Project(models.Model, ControlledObject):
     def num_published_exams(self):
         return self.items.exams().filter(published=True).count()
 
+    def folder_hierarchy(self):
+        folders = self.folders.all()
+        tree = []
+        folder_dict = {f.pk: {'folder': f, 'subfolders': []} for f in folders}
+        for f in folders:
+            if f.parent:
+                folder_dict[f.parent.pk]['subfolders'].append(folder_dict[f.pk])
+            else:
+                tree.append(folder_dict[f.pk])
+        return tree
+
 class ProjectAccess(models.Model, TimelineMixin):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='project_memberships', on_delete=models.CASCADE)
@@ -939,6 +950,13 @@ class Folder(models.Model):
 
     def get_absolute_url(self):
         return reverse('project_browse',args=(self.project.pk, self.path()+'/'))
+
+    def as_json(self):
+        return {
+            'pk': self.pk,
+            'url': self.get_absolute_url(),
+            'name': self.name,
+        }
 
 @reversion.register
 class EditorItem(models.Model, NumbasObject, ControlledObject):

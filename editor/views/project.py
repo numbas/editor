@@ -256,6 +256,11 @@ class BrowseView(ProjectContextMixin, MustBeMemberMixin, generic.DetailView):
 
         context['num_items'] = table.page.paginator.count + subfolders.count()
 
+        def fix_hierarchy(h):
+            return [{'folder': f['folder'].as_json(), 'subfolders': fix_hierarchy(f['subfolders'])} for f in h]
+
+        context['folder_hierarchy'] = fix_hierarchy(project.folder_hierarchy())
+
         return context
 
 class CommentView(MustBeMemberMixin, editor.views.generic.CommentView):

@@ -36,3 +36,41 @@ th.orderable:not(.desc) .glyphicon-sort-by-attributes-alt {
 .drag-handle.moving {
     opacity: 0.3;
 }
+
+.folder-list .folder:not(.expanded) > .name > .glyphicon-folder-open {
+    display: none;
+}
+.folder-list .folder.expanded > .name > .glyphicon-folder-close {
+    display: none;
+}
+
+.folder-list .folder:not(.expanded) > .folder-list {
+    display: none;
+}
+.folder-list {
+    padding-left: 1em;
+    list-style: none;
+}
+.folder-list.top-level {
+    padding-left: 0;
+}
+
+.folder-list .folder > .name > a {
+  margin-left: 0.3em;
+}
+
+.folder-list .folder.selected > .name > a {
+    font-weight: bold;
+}
+
+.folder-list .folder.selected > .name {
+  background: #eee;
+}
+
+body:not(.items-selected) #selection-buttons {
+    visibility: hidden;
+    opacity: 0;
+}
+#selection-buttons {
+    transition: opacity 0.5s;
+}

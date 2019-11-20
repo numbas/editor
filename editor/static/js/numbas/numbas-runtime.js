@@ -257,16 +257,17 @@ Numbas.activateExtension = function(name) {
  */
 Numbas.checkAllScriptsLoaded = function() {
     var fails = [];
-    Object.values(scriptreqs).forEach(function(req) {
+    for(var file in scriptreqs) {
+        var req = scriptreqs[file];
         if(req.executed) {
-            return;
+            continue;
         }
         if(req.fdeps.every(function(f){return scriptreqs[f].executed})) {
             var err = new Numbas.Error('die.script not loaded',{file:req.file});
             Numbas.display && Numbas.display.die(err);
         }
         fails.push({file: req.file, req: req, fdeps: req.fdeps.filter(function(f){return !scriptreqs[f].executed})});
-    });
+    };
     return fails;
 }
 })();
@@ -3572,6 +3573,21 @@ var compareTrees = jme.compareTrees = function(a,b) {
             return a.tok.type<b.tok.type ? -1 : 1;
         }
     }
+
+    if(a.args || b.args) {
+        var aargs = a.args || [];
+        var bargs = b.args || [];
+        if(aargs.length!=bargs.length) {
+            return aargs.length<bargs.length ? -1 : 1;
+        }
+        for(var i=0;i<aargs.length;i++) {
+            var c = jme.compareTrees(aargs[i],bargs[i]);
+            if(c!=0) {
+                return c;
+            }
+        }
+    }
+
     switch(a.tok.type) {
         case 'op':
         case 'function':
@@ -3591,15 +3607,6 @@ var compareTrees = jme.compareTrees = function(a,b) {
             }
             if(a.tok.name!=b.tok.name) {
                 return a.tok.name<b.tok.name ? -1 : 1;
-            }
-            if(a.args.length!=b.args.length) {
-                return a.args.length<b.args.length ? -1 : 1;
-            }
-            for(var i=0;i<a.args.length;i++) {
-                var c = jme.compareTrees(a.args[i],b.args[i]);
-                if(c!=0) {
-                    return c;
-                }
             }
             break;
         case 'expression':
@@ -14401,28 +14408,40 @@ var math = Numbas.math = /** @lends Numbas.math */ {
      * @returns {String}
      */
     unscientific: function(str) {
-        var m = /(-)?([ \d]+)(?:\.([ \d]+))?e([\-+]?[\d ]+)/i.exec(str);
+        var m = /(-)? *(0|[1-9][ \d]*)(?:\.([ \d]+))?e([\-+]?[\d ]+)/i.exec(str);
         if(!m) {
             return str;
         }
         var minus = m[1] || '';
-        var digits = (m[2]+(m[3] || '')).replace(' ','');
+        var significand_integer = m[2].replace(' ','');
+        var significand_decimal = (m[3] || '').replace(' ','');
+        var digits = significand_integer+significand_decimal;
         var pow = parseInt(m[4].replace(' ',''));
+        pow += significand_integer.length
+        var zm = digits.match(/^(0+)[^0]/);
+        if(zm) {
+            var num_zeros = zm[1].length;
+            digits = digits.slice(num_zeros);
+            pow -= num_zeros;
+        }
         var l = digits.length;
         var out;
-        if(pow>=l-1) {
+        if(l<pow) {
             out = digits;
-            for(var i=l-1;i<pow;i++) {
+            for(var i=l;i<pow;i++) {
                 out += '0';
             }
         } else if(pow<0) {
             out = digits;
-            for(var i=1;i<-pow;i++) {
+            for(var i=0;i<-pow;i++) {
                 out = '0'+out;
             }
             out = '0.'+out;
         } else {
-            out = digits.slice(0,pow+1) + '.' + digits.slice(pow+1);
+            out = digits.slice(0,pow);
+            if(digits.length>pow) {
+                out += '.' + digits.slice(pow);
+            }
         }
         return minus + out;
     },
@@ -16378,6 +16397,9 @@ var util = Numbas.util = /** @lends Numbas.util */ {
             return a.key==b.key;
         },
         'list': function(a,b) {
+            if(!a.value || !b.value) {
+                return !a.value && !b.value;
+            }
             return a.value.length==b.value.length && a.value.filter(function(ae,i){return !util.eq(ae,b.value[i])}).length==0;
         },
         'matrix': function(a,b) {
@@ -17589,6 +17611,26 @@ if(!String.prototype.split)
         return cbSplit(this, separator, limit);
     };
 }
+
+(function() {
+var reduce = Function.bind.call(Function.call, Array.prototype.reduce);
+var isEnumerable = Function.bind.call(Function.call, Object.prototype.propertyIsEnumerable);
+var concat = Function.bind.call(Function.call, Array.prototype.concat);
+var keys = Reflect.ownKeys;
+
+if (!Object.values) {
+	Object.values = function values(O) {
+		return reduce(keys(O), function(v, k) { return concat(v, typeof k === 'string' && isEnumerable(O, k) ? [O[k]] : []) }, []);
+	};
+}
+
+if (!Object.entries) {
+	Object.entries = function entries(O) {
+		return reduce(keys(O), function(e, k) { return concat(e, typeof k === 'string' && isEnumerable(O, k) ? [[k, O[k]]] : []) }, []);
+	};
+}
+})();
+
 });
 
 Numbas.queueScript('i18next',[],function(module) {

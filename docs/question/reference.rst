@@ -308,7 +308,7 @@ Extensions
 Extensions can provide new functionality, such as extra JME functions or content types. 
 To use an extension in your question, tick its checkbox here. 
 All functionality provided by the extension will become available immediately.
-See the section on :doc:`/extensions`.
+See the section on :ref:`extensions <extensions>`.
 
 Functions
 ---------

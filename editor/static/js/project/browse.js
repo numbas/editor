@@ -251,6 +251,9 @@ $('#move-modal').on('show.bs.modal',function() {
 });
 
 document.querySelector('.table.contents').addEventListener('click',function(e) {
+    if(e.target.matches('a')) {
+        return;
+    }
     if(e.target.matches('.table.contents .drag-handle *')) {
         var el = e.target;
         while(el && !el.classList.contains('drag-handle')) {

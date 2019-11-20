@@ -525,7 +525,7 @@ class Theme(models.Model):
 @receiver(pre_delete, sender=Theme)
 def reset_theme_on_delete(sender, instance, **kwargs):
     default_theme = settings.GLOBAL_SETTINGS['NUMBAS_THEMES'][0][1]
-    for exam in instance.used_in_exams.all():
+    for exam in instance.used_in_newexams.all():
         exam.custom_theme = None
         exam.theme = default_theme
         exam.save()

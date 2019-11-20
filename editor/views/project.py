@@ -193,7 +193,7 @@ class SearchView(MustBeMemberMixin, editor.views.editoritem.SearchView):
 class BrowseView(ProjectContextMixin, MustBeMemberMixin, generic.DetailView):
     model = Project
     template_name = 'project/browse.html'
-    
+
     def get_project(self):
         pk = self.kwargs.get('pk')
         project = self.project = Project.objects.get(pk=pk)
@@ -203,15 +203,19 @@ class BrowseView(ProjectContextMixin, MustBeMemberMixin, generic.DetailView):
         if hasattr(self,'breadcrumbs'):
             return self.breadcrumbs
 
+        project = self.get_project()
         path = self.kwargs.get('path','')[:-1]
         breadcrumbs = []
         if len(path):
             parent = None
             for name in path.split('/'):
-                folder = Folder.objects.get(name=urllib.parse.unquote(name),parent=parent)
+                try:
+                    folder = project.folders.get(name=urllib.parse.unquote(name),parent=parent)
+                except Folder.DoesNotExist:
+                    raise http.Http404("Folder not found.")
                 breadcrumbs.append(folder)
                 parent = folder
-            self.breadcrumbs = breadcrumbs
+        self.breadcrumbs = breadcrumbs
         return breadcrumbs
 
     def get_folder(self):

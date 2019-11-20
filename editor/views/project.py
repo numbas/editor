@@ -373,11 +373,11 @@ class PublicProjectsView(generic.ListView):
     
     def get_queryset(self):
         query = super(PublicProjectsView,self).get_queryset() \
-                .exclude(items=None) \
+                .exclude(items=None)
+        if not getattr(settings,'EVERYTHING_VISIBLE',False):
+            query = query.filter(public_view=True) \
                 .annotate(num_items=Sum(Case(When(items__published=True,then=1),default=0,output_field=IntegerField()))) \
                 .exclude(num_items=0)
-        if not getattr(settings,'EVERYTHING_VISIBLE',False):
-            query = query.filter(public_view=True)
         return query
 
     def make_table(self):

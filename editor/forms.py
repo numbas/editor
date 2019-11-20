@@ -187,6 +187,13 @@ class EditorItemMoveProjectForm(forms.ModelForm):
         widgets = {
             'project': BootstrapSelect,
         }
+
+    def save(self, commit=True):
+        obj = super().save(commit=False)
+        obj.folder = None
+        if commit:
+            obj.save()
+        return obj
         
 class QuestionForm(EditorItemForm):
     

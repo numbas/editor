@@ -36,7 +36,7 @@ from django_tables2.config import RequestConfig
 from accounts.models import UserProfile, EditorItemViewed
 
 from editor.tables import EditorItemTable, RecentlyPublishedTable
-from editor.models import EditorItem, Project, Access, Licence, PullRequest, Taxonomy, Contributor
+from editor.models import EditorItem, Project, Access, Licence, PullRequest, Taxonomy, Contributor, Folder
 import editor.models
 import editor.views.generic
 from editor.views.errors import forbidden
@@ -68,6 +68,8 @@ class CreateView(ProjectQuerysetMixin, generic.CreateView):
             data['project'] = Project.objects.get(pk=int(self.request.GET['project']))
         else:
             data['project'] = self.request.user.userprofile.personal_project
+        if 'folder' in self.request.GET:
+            data['folder'] = Folder.objects.get(pk=int(self.request.GET['folder']))
         return data
 
 class CopyView(ProjectQuerysetMixin, generic.FormView, generic.edit.ModelFormMixin):
@@ -244,15 +246,24 @@ class BaseUpdateView(generic.UpdateView):
         context['preferred_locale'] = self.request.user.userprofile.language if not self.request.user.is_anonymous else 'en-GB'
         context['locale_files'] = [code for name, code in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']]
 
+        breadcrumbs = []
+        ei = self.object.editoritem
+        f = ei.folder
+        while f:
+            breadcrumbs.insert(0,f)
+            f = f.parent
+        context['breadcrumbs'] = breadcrumbs
+
         return context
 
 
 class ListView(generic.ListView):
     model = EditorItem
     table_class = EditorItemTable
+    results_per_page = 10
 
     def make_table(self):
-        config = RequestConfig(self.request, paginate={'per_page': 10})
+        config = RequestConfig(self.request, paginate={'per_page': self.results_per_page})
         results = self.table_class(self.object_list)
 
         order_by = self.form.cleaned_data.get('order_by')
@@ -276,6 +287,7 @@ filter_question = Q(question__isnull=False)
 class SearchView(ListView):
     
     template_name = 'editoritem/search.html'
+    results_per_page = 30
 
     def base_queryset(self):
         return EditorItem.objects

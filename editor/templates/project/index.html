@@ -70,11 +70,10 @@
 
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    <h2 class="panel-title"><a href="{% url 'project_search' project.pk %}"><span class="glyphicon glyphicon-search"></span> Browse</a></h2>
+                    <h2 class="panel-title"><a href="{% url 'project_search' project.pk %}"><span class="glyphicon glyphicon-search"></span> Content</a></h2>
                 </div>
                 <div class="panel-body browse">
-                    <a href="{% url 'project_search' project.pk %}?item_types=questions" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-file"></span> Questions</a> 
-                    <a href="{% url 'project_search' project.pk %}?item_types=exams" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-book"></span> Exams</a> 
+                    <a href="{% url 'project_browse' project.pk %}" class="btn btn-lg btn-block btn-link"><span class="glyphicon glyphicon-folder-close"></span> Browse this project's content</a>
                 </div>
                 <table class="table table-condensed status-breakdown">
                     <tbody>

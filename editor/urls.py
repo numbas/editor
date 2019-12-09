@@ -1,8 +1,9 @@
 from django.conf.urls import url
+from django.urls import path, re_path
 
 from django.contrib.auth.decorators import login_required
 
-from .views import project, editoritem, exam, question, HomeView, GlobalStatsView, ExploreView, TermsOfUseView, PrivacyPolicyView, theme, extension, generic, notification, resource, basket, timeline, custom_part_type
+from .views import project, folder, editoritem, exam, question, HomeView, GlobalStatsView, ExploreView, TermsOfUseView, PrivacyPolicyView, theme, extension, generic, notification, resource, basket, timeline, custom_part_type
 
 urlpatterns = [
 
@@ -43,10 +44,16 @@ urlpatterns = [
     url(r'^project/(?P<pk>\d+)/leave/$', project.LeaveProjectView.as_view(), name='project_leave'),
 
     url(r'^project/(?P<pk>\d+)/search/$', project.SearchView.as_view(), name='project_search'),
+    re_path(r'^project/(?P<pk>\d+)/browse/(?P<path>(.*/)*)?$', project.BrowseView.as_view(), name='project_browse'),
+    path(r'project/<int:project_pk>/new_folder', project.NewFolderView.as_view(), name='project_new_folder'),
 
     url(r'^project/(?P<pk>\d+)/comment$',
         login_required(project.CommentView.as_view()), name='comment_on_project'),
 
+
+    path('folder/move', folder.MoveFolderView.as_view(), name='folder_move'),
+    path('folder/<int:pk>/rename', folder.RenameFolderView.as_view(), name='folder_rename'),
+    path('folder/<int:pk>/delete', folder.DeleteFolderView.as_view(), name='folder_delete'),
 
     # Editor items
 

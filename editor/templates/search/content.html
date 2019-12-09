@@ -4,6 +4,7 @@
 {% load sanitizer %}
 {% load stamp %}
 {% load user_link %}
+{% load links %}
 
 <!-- new -->
 <div class="container-fluid">
@@ -134,114 +135,62 @@
                 {% for row in results.page.object_list|default:results.rows %}
                 {% with item=row.record edit_view=item.type|add:'_edit' %}
                 <li class="result">
-                    <div class="row">
-                        <div class="col-lg-7 col-md-8 col-sm-7 col-xs-12">
-                            <h4><a href="{% url item.item_type|add:'_edit' item.rel_obj.pk item.slug %}">{{item.name}}</a></h4>
-                            <div class="fields">
-                                <p class="author">
-                                by
-                                {% user_thumbnail item.author 20 15 %} {% user_link item.author %}
-                                {% with others=item.contributors.count|add:-1 %}
-                                {% if others > 0 %}
-                                and {{item.contributors.count|add:-1}} other{{others|pluralize}}
-                                {% endif %}
-                                {% endwith %}
-                                </p>
-                            </div>
-                            <div class="description">
-                                {% if item.metadata.description %}
-                                {{item.metadata.description|strip_html|safe}}
-                                {% else %}
-                                <p class="nothing-here">No description given</p>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-lg-5 col-md-4 col-sm-5 col-xs-12 info">
-                            <h4 class="text-left item-type {{item.item_type}}">
-                                <small>
-                                    {% if item.item_type == 'question' %}
-                                    <span class="glyphicon glyphicon-file"></span> Question
-                                    {% elif item.item_type == 'exam' %}
-                                    <span class="glyphicon glyphicon-book"></span> Exam (<span class="num-questions">{{item.exam.questions.count}}</span> question{{item.exam.questions.count|pluralize}})
-                                    {% endif %}
-                                    <span>{% stamp item.get_current_stamp.status %}</span>
-                                </small>
-                            </h4>
-                            <ul class="list-inline controls">
-                                <li>
-                                    <a class="btn btn-link btn-sm test-run" target="_blank" href="{% url item.item_type|add:'_preview' item.rel_obj.pk item.slug %}"><span class="glyphicon glyphicon-play" title="Test run" aria-hidden="true"></span></a>
-                                </li>
-                                <li>
-                                    <a class="btn btn-link btn-sm copy" href="{% url item.item_type|add:'_copy' item.rel_obj.pk item.slug %}"><span class="glyphicon glyphicon-duplicate" title="Make a copy of this {{item.item_type}}" aria-hidden="true"></span></a>
-                                </li>
-                                {% if item.item_type == 'question' %}
-                                <li>
-                                <a class="btn btn-link btn-sm basket add-to-basket" data-question-id="{{item.question.id}}"><span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span></a>
-                                </li>
-                                {% endif %}
-                            </ul>
-                            <p class="status">
-                                {% if item.get_current_stamp %}
-                                {% with item.get_current_stamp as stamp %}
-                                    {% include "stamp_column.html" %}
-                                {% endwith %}
-                                {% endif %}
-                            </p>
-                            <p class="licence">
-                                <span class="glyphicon glyphicon-copyright-mark"></span> 
-                                {% if item.licence %}
-                                    {% with item.licence as licence %}
-                                        {% if licence.url %}
-                                            <a href="{{licence.url}}" target="_blank"><abbr title="{{licence.name}}">{{licence.short_name}}</abbr></a>
-                                        {% else %}
-                                            <abbr title="{{licence.name}}">{{licence.short_name}}</abbr>
-                                        {% endif %}
-                                    {% endwith %}
-                                {% else %}
-                                    <span class="no-licence nothing-here">No licence specified</span>
-                                {% endif %}
-                                {% if item.published %}
-                                    <span class="text-success glyphicon glyphicon-ok"></span> Published
-                                {% else %}
-                                    <span class="glyphicon glyphicon-lock"></span> Not published
-                                {% endif %}
-                            </p>
-                            <p class="last-modified">
-                                <span class="glyphicon glyphicon-time"></span> Last modified {{item.last_modified|date:"d/m/Y H:i"}}
-                            </p>
-                            <p>
-                                <ul class="list-inline">
-                                    <span class="glyphicon glyphicon-education"></span>
-                                    {% if item.subjects.count %}
-                                        {% for subject in item.subjects.all %}
-                                            <li class="subject">{{subject.name}}</li>{% if not forloop.last %},{% endif %}
-                                        {% endfor %}
-                                    {% else %}
-                                        <li class="nothing-here">No subjects selected</li>
-                                    {% endif %}
+                    <div class="header">
+                        <a class="item-link" href="{% url item.item_type|add:'_edit' item.rel_obj.pk item.slug %}">{{item.name}}</a>
 
-                                    <span class="glyphicon glyphicon-asterisk"></span>
-                                    {% if item.topics.count %}
-                                        {% for topic in item.topics.all %}
-                                            <li class="topic">{{topic.name}}</li>{% if not forloop.last %},{% endif %}
-                                        {% endfor %}
-                                    {% else %}
-                                        <li class="nothing-here">No topics selected</li>
-                                    {% endif %}
-                                </ul>
-                            </p>
-                            <p class="ability-levels">
-                                <span class="glyphicon glyphicon-sort-by-attributes"></span>
-                                {% if item.ability_levels.count %}
-                                    {% for level in item.ability_levels.all %}
-                                    <span class="ability-level">{{level.name}}</span>{% if not forloop.last %},{% endif %}
-                                    {% endfor %}
-                                {% else %}
-                                    <span class="nothing-here">No ability levels selected</span>
-                                {% endif %}
-                            </p>
-                        </div>
+                        <ul class="list-inline controls">
+                            <li>
+                                <a class="btn btn-link btn-sm test-run" target="_blank" href="{% url item.item_type|add:'_preview' item.rel_obj.pk item.slug %}"><span class="glyphicon glyphicon-play" title="Test run" aria-hidden="true"></span></a>
+                            </li>
+                            <li>
+                                <a class="btn btn-link btn-sm copy" href="{% url item.item_type|add:'_copy' item.rel_obj.pk item.slug %}"><span class="glyphicon glyphicon-duplicate" title="Make a copy of this {{item.item_type}}" aria-hidden="true"></span></a>
+                            </li>
+                            {% if item.item_type == 'question' %}
+                            <li>
+                            <a class="btn btn-link btn-sm basket add-to-basket" data-question-id="{{item.question.id}}"><span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span></a>
+                            </li>
+                            {% endif %}
+                        </ul>
+
+                        <span>{% stamp item.get_current_stamp.status %}</span>
                     </div>
+
+                    <div class="details">
+
+                        <span class="item-type">
+                            {% if item.item_type == 'question' %}
+                            <span class="glyphicon glyphicon-file"></span> Question
+                            {% elif item.item_type == 'exam' %}
+                            <span class="glyphicon glyphicon-book"></span> Exam (<span class="num-questions">{{item.exam.questions.count}}</span> question{{item.exam.questions.count|pluralize}})
+                            {% endif %}
+                        </span>
+
+                        {% if not project %}
+                        <span class="project">
+                            <span class="text-muted">in</span>
+                            {% project_link item.project %}
+                        </span>
+                        {% endif %}
+
+                        <span class="author">
+                            <span class="text-muted">by</span>
+                            {% user_thumbnail item.author 20 15 link=True %} {% user_link item.author %}
+                            {% with others=item.contributors.count|add:-1 %}
+                            {% if others > 0 %}
+                            and {{item.contributors.count|add:-1}} other{{others|pluralize}}
+                            {% endif %}
+                            {% endwith %}
+                        </span>
+                    </div>
+
+                    <div class="description">
+                        {% if item.metadata.description %}
+                        {{item.metadata.description|strip_html|safe}}
+                        {% else %}
+                        <p class="nothing-here">No description given</p>
+                        {% endif %}
+                    </div>
+
                 </li>
                 {% endwith %}
                 {% endfor %}

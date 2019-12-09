@@ -1,0 +1,160 @@
+{% extends "project/project_base.html" %}
+{% load django_tables2 %}
+{% load links %}
+{% load sstatic %}
+{% load stamp %}
+
+{% block title %}{% if folder %}{{folder}}{% else %}Browse{% endif %} - {{block.super}}{% endblock title %}
+
+{% block stylesheets %}
+    {{block.super}}
+    <link rel="stylesheet" href="{% sstatic 'css/project/browse.css' %}"/>
+{% endblock stylesheets %}
+
+{% block javascripts %}
+    {{block.super}}
+    <script>
+        var project_pk = {{project.pk}};
+        var num_items = {{num_items}};
+    </script>
+    {{folder_hierarchy|json_script:"folder-hierarchy-data"}}
+    <script src="{% sstatic 'js/project/browse.js' %}" defer></script>
+{% endblock javascripts %}
+
+{% block project_content %}
+<div class="modal fade" id="move-modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-body">
+          <p>Select a folder to move the selected items to.</p>
+          <ul class="folder-list top-level">
+              <li class="folder expanded">
+                  <div class="name">
+                      <span class="glyphicon glyphicon-folder-close" aria-label="Closed folder"></span>
+                      <span class="glyphicon glyphicon-folder-open" aria-label="Open folder"></span>
+                      <a href="{% url 'project_browse' project.pk "" %}">{{project.name}}</a>
+                  </div>
+              </li>
+          </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary move">Move</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<nav>
+    <ol class="breadcrumb folders">
+        <li class="{% if folder %}drag-target{% endif %}{% if not folder %} active"{% endif %} data-folder="">
+            <span class="glyphicon glyphicon-briefcase"></span>
+            <a href="{% url 'project_browse' project.pk "" %}">{{project.name}}</a>
+        </li>
+        {% for folder in breadcrumbs %}
+        <li>
+            <a class="drag-target" data-folder="{{folder.pk}}" href="{{folder.get_absolute_url}}">{{folder.name}}</a></li>
+        {% endfor %}
+        {% if folder %}
+        <li class="active">{{folder.name}}</li>
+        {% endif %}
+    </ol>
+</nav>
+
+<div id="controls">
+    <span class="glyphicon glyphicon-plus"></span>
+    New:
+    <div class="btn-group">
+        <a class="btn btn-primary" href="{% url 'project_new_folder' project.pk %}?path={{path|urlencode}}"><span class="glyphicon glyphicon-folder-close"></span> Folder</a>
+        <a class="btn btn-primary" href="{% url 'question_new' %}?project={{project.pk}}{% if folder %}&folder={{folder.pk}}{% endif %}"><span class="glyphicon glyphicon-file"></span> Question</a> 
+        <a class="btn btn-primary" href="{% url 'exam_new' %}?project={{project.pk}}{% if folder %}&folder={{folder.pk}}{% endif %}"><span class="glyphicon glyphicon-book"></span> Exam</a> 
+    </div>
+    {% if folder %}
+    <a class="btn btn-default" href="{% url 'folder_rename' folder.pk %}"><span class="glyphicon glyphicon-pencil"></span> Rename this folder</a>
+    <a class="btn btn-danger" href="{% url 'folder_delete' folder.pk %}"><span class="glyphicon glyphicon-remove"></span> Delete this folder</a>
+    {% endif %}
+</div>
+
+<div id="contents-container" class="{% if num_items == 0 %}empty{% endif %}">
+    <div id="contents">
+        <p><span id="num-items">{{num_items}} item{{num_items|pluralize}}</span> in this folder.</p>
+        <div>
+            <button type="button" id="select-all" class="btn btn-sm btn-link">Select all</button>
+            <button type="button" id="select-none" class="btn btn-sm btn-link">Select none</button>
+            
+            <div class="btn-group" id="selection-buttons">
+                <button type="button" id="move-items" class="btn btn-default" data-toggle="modal" data-target="#move-modal">
+                    <span class="glyphicon glyphicon-circle-arrow-right"></span>
+                    Move selected items
+                </button>
+            </div>
+        </div>
+
+        <table class="table contents">
+            <thead>
+                <tr>
+                    <th></th>
+                    {% for column in items.columns %}
+                    {% if column.column.is_blank %}
+                    <th></th>
+                    {% else %}
+                    <th {{column.attrs.th.as_html}}>
+                        <span class="glyphicon glyphicon-sort-by-attributes"></span>
+                        <span class="glyphicon glyphicon-sort-by-attributes-alt"></span>
+                        <a href="{% querystring items.prefixed_order_by_field=column.order_by_alias.next %}">{{ column.header }}</a>
+                    </th>
+                    {% endif %}
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for folder in subfolders %}
+                <tr class="folder drag-target drag-handle" data-folder="{{folder.pk}}">
+                    <td><input class="include-checkbox" type="checkbox" name="folders[]" value="{{folder.pk}}"></td>
+                    <td></td>
+                    <td></td>
+                    <td class="name">
+                        <a href="{{folder.get_absolute_url}}">
+                            <span class="glyphicon glyphicon-folder-close"></span> 
+                            {{folder.name}}
+                        </a>
+                    </td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                {% endfor %}
+
+                {% for row in items.page.object_list|default:items.rows %}
+                {% with item=row.record %}
+                <tr class="item drag-handle" draggable="true" data-item="{{item.pk}}">
+                    <td><input class="include-checkbox" type="checkbox" name="items[]" value="{{folder.pk}}"></td>
+                    <td>
+                        {% stamp item.current_stamp.status %}
+                    </td>
+                    <td>
+                        <a class="test-run" target="_blank" href="{% url item.item_type|add:'_preview' item.rel_obj.pk item.slug %}"><span class="glyphicon glyphicon-play" title="Test run" aria-hidden="true"></span></a>
+                    </td>
+                    <td class="name">
+                        {% editoritem_link item.rel_obj %}
+                    </td>
+                    <td>
+                        <span class="glyphicon glyphicon-{{item.icon}}"></span>
+                        {{item.item_type}}
+                    </td>
+                    <td>
+                        {{item.last_modified}}
+                    </td>
+                </tr>
+                {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
+        {% include "pagination.html" %}
+    </div>
+    <div id="nothing-here">
+        <p class="nothing-here">There's nothing in this folder at the moment.</p>
+    </div>
+</div>
+
+{% endblock project_content %}
+

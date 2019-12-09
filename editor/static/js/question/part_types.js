@@ -277,6 +277,19 @@ part_types.models = [
                 return {name: d.name, value: d.value()};
             });
         },
+
+        variable_references: function(part,model) {
+            var o = [
+                {tab: 'marking-settings', value: model.answer, type: 'jme-sub', description: 'Correct answer'},
+                {tab: 'restrictions', value: model.mustmatchpattern.pattern, type: 'jme-sub', description: "Pattern student's answer must match"},
+                {tab: 'restrictions', value: model.mustmatchpattern.message, type: 'html', description: "Warning message for pattern restriction"},
+            ]
+            model.valueGenerators().forEach(function(vg) {
+                o.push({tab:'checking-accuracy',value: vg.value,ignore:model.variableNames,type:'jme',description:'Value generator for variable '+vg.name});
+            });
+            return o;
+        },
+
         load: function(data) {
             tryLoad(data,['answer','answerSimplification','checkVariableNames','showPreview'],this);
             var checkingType = tryGetAttribute(data,'checkingType');
@@ -385,6 +398,17 @@ part_types.models = [
                 data.correctAnswerStyle = this.correctAnswerStyle().code;
             }
         },
+
+        variable_references: function(part,model) {
+            var o = [
+                {tab: 'marking-settings', value: model.minValue, type: 'jme', description: 'Minimum accepted value'},
+                {tab: 'marking-settings', value: model.maxValue, type: 'jme', description: 'Maximum accepted value'},
+                {tab: 'marking-settings', value: model.precision, type: 'jme', description: 'Required precision'},
+                {tab: 'marking-settings', value: model.precisionMessage, type: 'html', description: model.precisionWord},
+            ];
+            return o;
+        },
+
         load: function(data) {
             tryLoad(data,['minValue','maxValue','correctAnswerFraction','allowFractions','mustBeReduced','mustBeReducedPC','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision','showPrecisionHint','showFractionHint'],this);
             if('answer' in data) {
@@ -475,6 +499,17 @@ part_types.models = [
             }
         },
 
+        variable_references: function(part,model) {
+            var o = [
+                {tab: 'marking-settings', value: model.correctAnswer, type: 'jme', description: 'Correct answer'},
+                {tab: 'marking-settings', value: model.numRows, type: 'jme', description: 'Number of rows'},
+                {tab: 'marking-settings', value: model.numColumns, type: 'jme', description: 'Number of columns'},
+                {tab: 'marking-settings', value: model.tolerance, type: 'jme', description: 'Margin of error allowed in each cell'},
+                {tab: 'marking-settings', value: model.precision, type: 'jme', description: model.precisionWord},
+            ];
+            return o;
+        },
+
         load: function(data) {
             tryLoad(data,['correctAnswer','correctAnswerFractions','numRows','numColumns','allowResize','tolerance','markPerCell','allowFractions','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision'],this);
             for(var i=0;i<this.precisionTypes.length;i++) {
@@ -517,6 +552,15 @@ part_types.models = [
             }
             data.matchMode = this.matchMode().name;
         },
+
+        variable_references: function(part,model) {
+            var o = [
+                {tab: 'marking-settings', value: model.answer, type: 'string', description: 'Answer pattern'},
+                {tab: 'marking-settings', value: model.displayAnswer, type: 'string', description: 'Display answer'},
+            ];
+            return o;
+        },
+
         load: function(data) {
             tryLoad(data,['answer','displayAnswer','caseSensitive','partialCredit','matchMode'],this);
             for(var i=0;i<this.matchModes.length;i++) {
@@ -616,6 +660,21 @@ part_types.models = [
                 data.distractors = distractors;
             }
         },
+
+        variable_references: function(part,model) {
+            var o = [
+                {tab: 'marking-settings', value: model.answer, type: 'string', description: 'Answer pattern'},
+                {tab: 'marking-settings', value: model.customMarking, type: 'jme', description: 'Custom matrix expression'},
+                {tab: 'choices', value: model.customChoicesExpression, type: 'jme', description: 'List of choices'},
+            ];
+            model.choices().forEach(function(c) {
+                o.push({tab: 'choices', value: c.content, type: 'html', description: 'Choice text'});
+                o.push({tab: 'choices', value: c.distractor, type: 'html', description: 'Choice distractor message'});
+                o.push({tab: 'choices', value: c.marks, type: 'jme', description: 'Choice marks'});
+            });
+            return o;
+        },
+
         load: function(data) {
             tryLoad(data,['minMarks','maxMarks','shuffleChoices','displayColumns','showCellAnswerState'],this);
             if(typeof data.matrix == 'string') {
@@ -747,6 +806,24 @@ part_types.models = [
                 data.distractors = distractors;
             }
         },
+
+        variable_references: function(part,model) {
+            var o = [
+                {tab: 'marking-settings', value: model.minMarks, type: 'jme', description: 'Minimum marks'},
+                {tab: 'marking-settings', value: model.maxMarks, type: 'jme', description: 'Maximum marks'},
+                {tab: 'marking-settings', value: model.minAnswers, type: 'jme', description: 'Minimum answers'},
+                {tab: 'marking-settings', value: model.maxAnswers, type: 'jme', description: 'Maximum answers'},
+                {tab: 'marking-settings', value: model.customMarking, type: 'jme', description: 'Custom matrix expression'},
+                {tab: 'choices', value: model.customChoicesExpression, type: 'jme', description: 'List of choices'},
+            ];
+            model.choices().forEach(function(c) {
+                o.push({tab: 'choices', value: c.content, type: 'html', description: 'Choice text'});
+                o.push({tab: 'choices', value: c.distractor, type: 'html', description: 'Choice distractor message'});
+                o.push({tab: 'choices', value: c.marks, type: 'jme', description: 'Choice marks'});
+            });
+            return o;
+        },
+
         load: function(data) {
             tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','displayColumns','showCellAnswerState'],this);
             if(typeof data.matrix == 'string') {
@@ -939,6 +1016,27 @@ part_types.models = [
                 data.answers = answers.map(function(a){return a.content()});
             }
         },
+
+        variable_references: function(part,model) {
+            var o = [
+                {tab: 'marking-settings', value: model.minMarks, type: 'jme', description: 'Minimum marks'},
+                {tab: 'marking-settings', value: model.maxMarks, type: 'jme', description: 'Maximum marks'},
+                {tab: 'marking-settings', value: model.minAnswers, type: 'jme', description: 'Minimum answers'},
+                {tab: 'marking-settings', value: model.maxAnswers, type: 'jme', description: 'Maximum answers'},
+                {tab: 'marking-settings', value: model.customMarking, type: 'jme', description: 'Custom matrix expression'},
+                {tab: 'marking-settings', value: model.layoutExpression, type: 'jme', description: 'Custom layout expression'},
+                {tab: 'choices', value: model.customChoicesExpression, type: 'jme', description: 'List of choices'},
+            ];
+            model.choices().forEach(function(c) {
+                o.push({tab: 'choices', value: c.content, type: 'html', description: 'Choice text'});
+                o.push({tab: 'choices', value: c.distractor, type: 'html', description: 'Choice distractor message'});
+            });
+            model.answers().forEach(function(a) {
+                o.push({tab: 'choices', value: a.content, type: 'html', description: 'Answer text'});
+            });
+            return o;
+        },
+
         load: function(data) {
             tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','shuffleAnswers','showCellAnswerState'],this);
             var warningType = tryGetAttribute(data,'warningType');
@@ -1060,6 +1158,51 @@ CustomPartType.prototype = {
             data.settings[s.name] = s.value();
         });
         return data;
+    },
+    variable_references: function(part,model) {
+        var o = [];
+        this.settings_def.forEach(function(def,i) {
+            var s = model.settings[i];
+            var value = s.value;
+            var description = s.label;
+            var type;
+            switch(s.input_type) {
+                case 'string':
+                    if(def.subvars) {
+                        o.push({tab:'marking-settings', value: s.value, type: 'string', description: s.label});
+                    }
+                    break;
+                case 'mathematical_expression':
+                    if(def.subvars) {
+                        o.push({tab:'marking-settings', value: s.value, type: 'jme-sub', description: s.label});
+                    }
+                    break;
+                case 'code':
+                    var type = def.evaluate ? 'jme' : 'jme-sub';
+                    o.push({tab:'marking-settings', value: s.value, type: type, description: s.label});
+                    break;
+                case 'html':
+                    o.push({tab:'marking-settings', value: s.value, type: 'html', description: s.label});
+                    break;
+                case 'list_of_strings':
+                    var value = ko.computed(function() {
+                        var v = [];
+                        s.value().forEach(function(str) {
+                            v = v.merge(Editor.vars_used_in_string(str));
+                        });
+                        return v;
+                    });
+                    o.push({tab:'marking-settings', value: value, type: 'list', description: s.label});
+                    break;
+                case 'checkbox':
+                case 'dropdown':
+                case 'percent':
+                case 'choose_several':
+                default:
+                    break;
+            }
+        });
+        return o;
     },
     load: function(data) {
         this.settings.forEach(function(s) {

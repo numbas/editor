@@ -177,10 +177,10 @@
 {% block main_tab_content %}
 {{ block.super }}
     <!-- Question statement -->
-    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='statement'}">
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='statement'}, variableReferenceLandmark: {kind: 'tab', tab: 'statement'}">
         <div class="form-group">
             <label>Question statement</label>
-            <div id="statement-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: statement, tinymce_plugins: ['jmevisible','preview']"></div>
+            <div id="statement-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: statement, tinymce_plugins: ['jmevisible','preview'], variableReferrer: {value: statement, description: 'Statement', kind: 'html'}"></div>
             <p class="help-block">
                 {% helplink 'question/reference.html#statement' subject='the question statement' %}
                 Give any introductory information the student needs. 
@@ -285,14 +285,25 @@
                     <div data-bind="visible: dependencies().length>0" class="inline-names">
                         <label>← Depends on:</label>
                         <ul class="list-inline" data-bind="foreach: dependenciesObjects">
-                            <li><span class="btn btn-sm btn-info monospace" data-bind="click: setCurrent, text: name, css: {notdefined: notdefined}, attr: {title: title}"></span></li>
+                            <li><span class="variable-reference btn btn-sm btn-info monospace" data-bind="click: setCurrent, text: name, css: {notdefined: notdefined}, attr: {title: title}"></span></li>
                         </ul>
                     </div>
-                    <div data-bind="visible: usedIn().length>0">
+                    <div data-bind="visible: usedIn().length>0 || references().length>0">
                         <label>→ Used by:</label>
                         <ul class="list-inline" data-bind="foreach: usedIn">
-                            <li><span class="btn btn-sm btn-info monospace" data-bind="click: $root.currentVariable, text: name"></span></li>
+                            <li><span class="variable-reference btn btn-sm btn-info monospace" data-bind="click: $root.currentVariable, text: name"></span></li>
                         </ul>
+                        <ul class="list-inline" data-bind="foreach: references">
+                            <li>
+                                <span class="variable-reference btn btn-sm btn-default" data-bind="click: go">
+                                    <!-- ko foreach: icons --><span data-bind="attr: {'class': 'glyphicon glyphicon-'+$data}"></span> <!-- /ko -->
+                                    <span data-bind="text: description"></span>
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div data-bind="visible: unused" class="alert alert-info">
+                        <p>This variable doesn't seem to be used anywhere.</p>
                     </div>
 
                 </div>
@@ -395,7 +406,7 @@
     </section>
 
     <!-- Variable testing -->
-    <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='variabletesting'}">
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='variabletesting'}, variableReferenceLandmark: {kind: 'tab', tab: 'variabletesting'}">
         <form class="form-horizontal" data-bind="submit: Editor.noop">
             <div class="form-group">
                 <label class="col-sm-3 control-label">
@@ -403,7 +414,7 @@
                     {% helplink 'question/reference.html#term-condition-to-satisfy' %}
                 </label>
                 <div class="col-sm-9">
-                    <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: variablesTest.condition, codemirrorMode: 'jme'"></textarea>
+                    <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: variablesTest.condition, codemirrorMode: 'jme', variableReferrer: {value: variablesTest.condition, description: 'Variable testing condition', kind: 'jme'}"></textarea>
                     <p class="alert alert-danger" data-bind="visible: variablesTest.conditionError">Error: <span data-bind="html: variablesTest.conditionError" aria-live="polite"></span></p>
                 </div>
             </div>

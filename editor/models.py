@@ -9,6 +9,7 @@ from datetime import datetime
 from itertools import groupby
 import codecs
 from pathlib import Path
+import urllib.parse
 try:
     # For Python > 2.7
     from collections import OrderedDict
@@ -25,6 +26,7 @@ from django.core.files.storage import default_storage
 from django.urls import reverse
 from django.db import models, transaction
 from django.db.models import signals, Max, Min
+from django.db.models.functions import Lower
 from django.dispatch import receiver
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -259,6 +261,17 @@ class Project(models.Model, ControlledObject):
 
     def num_published_exams(self):
         return self.items.exams().filter(published=True).count()
+
+    def folder_hierarchy(self):
+        folders = self.folders.all()
+        tree = []
+        folder_dict = {f.pk: {'folder': f, 'subfolders': []} for f in folders}
+        for f in folders:
+            if f.parent:
+                folder_dict[f.parent.pk]['subfolders'].append(folder_dict[f.pk])
+            else:
+                tree.append(folder_dict[f.pk])
+        return tree
 
 class ProjectAccess(models.Model, TimelineMixin):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
@@ -525,7 +538,7 @@ class Theme(models.Model):
 @receiver(pre_delete, sender=Theme)
 def reset_theme_on_delete(sender, instance, **kwargs):
     default_theme = settings.GLOBAL_SETTINGS['NUMBAS_THEMES'][0][1]
-    for exam in instance.used_in_exams.all():
+    for exam in instance.used_in_newexams.all():
         exam.custom_theme = None
         exam.theme = default_theme
         exam.save()
@@ -839,7 +852,7 @@ class Access(models.Model, TimelineMixin):
 def add_watching_user_for_access(instance, **kwargs):
     instance.item.watching_users.add(instance.user)
 
-NUMBAS_FILE_VERSION = 'variables_as_objects'
+NUMBAS_FILE_VERSION = 'exam_results_page_options'
 
 @deconstructible
 class NumbasObject(object):
@@ -907,6 +920,44 @@ class Contributor(models.Model):
     class Meta:
         unique_together = (("item","user"))
 
+class Folder(models.Model):
+    name = models.CharField(max_length=200)
+
+    project = models.ForeignKey(Project, null=False, related_name='folders', on_delete=models.CASCADE)
+    parent = models.ForeignKey('Folder', null=True, related_name='folders', on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = (('name', 'project', 'parent'),)
+        ordering = ('name',)
+
+    def clean(self):
+        if self.parent==self:
+            raise ValidationError("A folder can't be its own parent.")
+
+    def __str__(self):
+        return '/'.join([self.project.name]+[f.name for f in self.parents()])
+
+    def parents(self):
+        bits = []
+        f = self
+        while f:
+            bits.insert(0,f)
+            f = f.parent
+        return bits
+
+    def path(self):
+        return '/'.join(urllib.parse.quote(f.name) for f in self.parents())
+
+    def get_absolute_url(self):
+        return reverse('project_browse',args=(self.project.pk, self.path()+'/'))
+
+    def as_json(self):
+        return {
+            'pk': self.pk,
+            'url': self.get_absolute_url(),
+            'name': self.name,
+        }
+
 @reversion.register
 class EditorItem(models.Model, NumbasObject, ControlledObject):
     """
@@ -923,6 +974,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
     access_rights = models.ManyToManyField(User, through='Access', blank=True, editable=False, related_name='accessed_items')
     licence = models.ForeignKey(Licence, null=True, blank=True, on_delete=models.SET_NULL)
     project = models.ForeignKey(Project, null=True, related_name='items', on_delete=models.CASCADE)
+    folder = models.ForeignKey(Folder, null=True, related_name='items', on_delete=models.SET_NULL)
 
     content = models.TextField(blank=True, validators=[validate_content])
     metadata = JSONField(blank=True)

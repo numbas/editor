@@ -1,0 +1,30 @@
+{% extends "project/project_base.html" %}
+
+{% block project_content %}
+<h2>Create a folder in {{parent_name}}</h2>
+<form method="POST" action="">
+    {% csrf_token %}
+    {% for field in form.hidden_fields %}{{field}}{% endfor %}
+
+    {% for error in form.non_field_errors %}
+        <div class="alert alert-danger">
+            <strong>{{ error|escape }}</strong>
+        </div>
+    {% endfor %}
+
+    {% for field in form.visible_fields %}
+        <div class="form-group {% if field.errors %}has-error{% endif %}">
+            <label class="control-label">{{field.label}}</label>
+            {{field.as_widget}}
+            {% if field.errors %}
+            <ul class="errorlist list-unstyled">
+                {% for error in field.errors %}
+                <li>{{error}}</li>
+                {% endfor %}
+            {% endif %}
+        </div>
+    {% endfor %}
+
+    <button class="btn btn-primary">Add a folder</button>
+</form>
+{% endblock %}

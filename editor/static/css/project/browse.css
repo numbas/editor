@@ -1,0 +1,76 @@
+th.orderable:not(.asc) .glyphicon-sort-by-attributes,
+th.orderable:not(.desc) .glyphicon-sort-by-attributes-alt {
+    display: none;
+}
+
+.breadcrumb .drag-target {
+    padding: 0.2em;
+}
+
+#controls {
+    margin: 1em 0;
+}
+
+#contents-container.empty #contents { 
+    display: none;
+}
+#contents-container:not(.empty) #nothing-here {
+    display: none;
+}
+
+.contents .folder {
+    font-weight: bold;
+}
+
+.contents .folder > td {
+    background: hsl(0,0%,96%);
+}
+
+.dragover {
+    outline: 1px dashed black;
+}
+
+.drag-handle.dragging {
+    opacity: 0.6;
+}
+.drag-handle.moving {
+    opacity: 0.3;
+}
+
+.folder-list .folder:not(.expanded) > .name > .glyphicon-folder-open {
+    display: none;
+}
+.folder-list .folder.expanded > .name > .glyphicon-folder-close {
+    display: none;
+}
+
+.folder-list .folder:not(.expanded) > .folder-list {
+    display: none;
+}
+.folder-list {
+    padding-left: 1em;
+    list-style: none;
+}
+.folder-list.top-level {
+    padding-left: 0;
+}
+
+.folder-list .folder > .name > a {
+  margin-left: 0.3em;
+}
+
+.folder-list .folder.selected > .name > a {
+    font-weight: bold;
+}
+
+.folder-list .folder.selected > .name {
+  background: #eee;
+}
+
+body:not(.items-selected) #selection-buttons {
+    visibility: hidden;
+    opacity: 0;
+}
+#selection-buttons {
+    transition: opacity 0.5s;
+}

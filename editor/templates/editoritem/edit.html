@@ -56,7 +56,12 @@
     <div class="page-header">
         {% block page_header %}
         <h2 class="project-header">
-            <small><span class="glyphicon glyphicon-briefcase"></span> <a href="{% url 'project_index' object.editoritem.project.pk %}">{{object.editoritem.project.name}}</a></small>
+            <ol class="list-inline">
+                <li class="project"><span class="glyphicon glyphicon-briefcase"></span> <a href="{% url 'project_index' object.editoritem.project.pk %}">{{object.editoritem.project.name}}</a>
+                {% for folder in breadcrumbs %}
+                <li><a href="{{folder.get_absolute_url}}">{{folder.name}}</a></li>
+                {% endfor %}
+            </ol>
         </h2>
         <h1 class="name-header">
             <span class="glyphicon glyphicon-{{object.icon}}"></span> 

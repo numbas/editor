@@ -6,8 +6,57 @@
 
 .result {
   border-bottom: 2px solid #eee;
-  padding-bottom: 1em;
-  margin-bottom: 1em;
+  margin-bottom: 0.5em;
+  max-width: 50em;
+}
+
+.result .header {
+    font-size: 1.1em;
+    margin: 0 0 0rem 0;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.result .header .item-link {
+    flex-grow: 1;
+}
+
+.result .details, .result .description {
+    margin-left: 2em;
+}
+
+@media screen and (max-width:768px) {
+    .result {
+        max-width: none;
+    }
+    .result .header {
+        flex-direction: column;
+        margin-bottom: 0.5em;
+    }
+    .result .details, .result .description {
+        margin-left: 0em;
+    }
+}
+
+.result .details {
+    margin-bottom: 0.5rem;
+}
+
+.result .controls {
+    display: inline-block;
+}
+
+.result .item-type, .result .author, .result .project {
+    display: inline-block;
+}
+
+.result .description {
+    max-width: 50em;
+    margin-bottom: 0.5em;
+}
+
+.result .description > :last-child {
+    margin-bottom: 0;
 }
 
 .initial-list > li:last-child {

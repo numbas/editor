@@ -1,3 +1,5 @@
+import urllib.parse
+
 from django.conf import settings
 from django.contrib import messages
 from django.db.models import Sum, When, Case, IntegerField
@@ -9,17 +11,29 @@ from django.core.exceptions import PermissionDenied
 from itertools import groupby
 from django_tables2.config import RequestConfig
 
-from editor.models import Project, ProjectAccess, STAMP_STATUS_CHOICES
+from editor.models import Project, ProjectAccess, STAMP_STATUS_CHOICES, Folder
 import editor.forms
 import editor.views.editoritem
-from editor.tables import ProjectTable
+from editor.tables import ProjectTable, EditorItemTable, BrowseProjectTable
 
 class MustBeMemberMixin(object):
     def dispatch(self, request, *args, **kwargs):
         self.project = self.get_project()
         if not self.project.can_be_viewed_by(request.user):
+            self.object = self.project
             return render(request, 'project/must_be_member.html', self.get_context_data())
         return super(MustBeMemberMixin, self).dispatch(request, *args, **kwargs)
+
+    def get_project(self):
+        return self.get_object()
+
+class MustBeEditorMixin(object):
+    def dispatch(self, request, *args, **kwargs):
+        self.project = self.get_project()
+        if not self.project.can_be_edited_by(request.user):
+            self.object = self.project
+            return render(request, 'project/must_be_member.html', self.get_context_data())
+        return super().dispatch(request, *args, **kwargs)
 
     def get_project(self):
         return self.get_object()
@@ -176,11 +190,120 @@ class SearchView(MustBeMemberMixin, editor.views.editoritem.SearchView):
         context['project'] = self.project
         return context
 
+class BrowseView(ProjectContextMixin, MustBeMemberMixin, generic.DetailView):
+    model = Project
+    template_name = 'project/browse.html'
+
+    def get_project(self):
+        pk = self.kwargs.get('pk')
+        project = self.project = Project.objects.get(pk=pk)
+        return project
+
+    def get_folders(self):
+        if hasattr(self,'breadcrumbs'):
+            return self.breadcrumbs
+
+        project = self.get_project()
+        path = self.kwargs.get('path','')[:-1]
+        breadcrumbs = []
+        if len(path):
+            parent = None
+            for name in path.split('/'):
+                try:
+                    folder = project.folders.get(name=urllib.parse.unquote(name),parent=parent)
+                except Folder.DoesNotExist:
+                    raise http.Http404("Folder not found.")
+                breadcrumbs.append(folder)
+                parent = folder
+        self.breadcrumbs = breadcrumbs
+        return breadcrumbs
+
+    def get_folder(self):
+        breadcrumbs = self.get_folders()
+        return breadcrumbs[-1] if len(breadcrumbs)>0 else None
+
+    def make_table(self):
+        project = self.get_project()
+        folder = self.get_folder()
+        items = folder.items.all() if folder else project.items.filter(folder=None)
+
+        config = RequestConfig(self.request, paginate={'per_page': 100})
+        results = BrowseProjectTable(items,order_by_field='order_by')
+
+        order_by = self.request.GET.get('order_by','name')
+        if order_by in ('last_modified', 'licence'):
+            order_by = '-'+order_by
+        results.order_by = order_by
+
+        config.configure(results)
+
+        return results
+    
+    def get_context_data(self,**kwargs):
+        context = super().get_context_data(**kwargs)
+
+        project =  self.get_project()
+        folder = context['folder'] = self.get_folder()
+        context['breadcrumbs'] = self.get_folders()[:-1]
+        
+        if folder:
+            subfolders = folder.folders.all()
+            context['path'] = folder.path()
+        else:
+            subfolders = project.folders.filter(parent=None)
+
+        table = context['items'] = context['results'] = self.make_table()
+
+        if table.order_by[0]=='-name':
+            subfolders = subfolders.order_by('-name')
+        context['subfolders'] = subfolders
+
+        context['num_items'] = table.page.paginator.count + subfolders.count()
+
+        def fix_hierarchy(h):
+            return [{'folder': f['folder'].as_json(), 'subfolders': fix_hierarchy(f['subfolders'])} for f in h]
+
+        context['folder_hierarchy'] = fix_hierarchy(project.folder_hierarchy())
+
+        return context
+
 class CommentView(MustBeMemberMixin, editor.views.generic.CommentView):
     model = Project
 
     def get_comment_object(self):
         return self.get_object()
+
+class NewFolderView(ProjectContextMixin, MustBeEditorMixin, generic.CreateView):
+    model = Folder
+    form_class = editor.forms.NewFolderForm
+    template_name = 'project/new_folder.html'
+
+    def get_project(self):
+        pk = self.kwargs.get('project_pk')
+        project = self.project = Project.objects.get(pk=pk)
+        return project
+
+    def get_context_data(self,*args,**kwargs):
+        context = super().get_context_data(*args,**kwargs)
+
+        initial = self.get_initial()
+        context['parent_name'] = initial['parent'].name if initial['parent'] is not None else initial['project'].name
+        
+        return context
+
+    def get_initial(self):
+        initial = super().get_initial()
+        path = self.request.GET.get('path')
+        parent = Folder.objects.get(name=urllib.parse.unquote(path.split('/')[-1])) if path is not None and path!='' else None
+        initial['project'] = self.get_project()
+        initial['parent'] = parent
+        return initial
+
+    def get_success_url(self):
+        if self.object.parent:
+            return self.object.parent.get_absolute_url()
+        else:
+            return reverse('project_browse',args=(self.object.project.pk, ''))
 
 class WatchProjectView(generic.detail.SingleObjectMixin, generic.View):
     model = Project
@@ -250,11 +373,11 @@ class PublicProjectsView(generic.ListView):
     
     def get_queryset(self):
         query = super(PublicProjectsView,self).get_queryset() \
-                .exclude(items=None) \
+                .exclude(items=None)
+        if not getattr(settings,'EVERYTHING_VISIBLE',False):
+            query = query.filter(public_view=True) \
                 .annotate(num_items=Sum(Case(When(items__published=True,then=1),default=0,output_field=IntegerField()))) \
                 .exclude(num_items=0)
-        if not getattr(settings,'EVERYTHING_VISIBLE',False):
-            query = query.filter(public_view=True)
         return query
 
     def make_table(self):

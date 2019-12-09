@@ -5,6 +5,30 @@ $(document).ready(function() {
 
     Editor.question = {};
 
+    var vars_used_in_html = Editor.vars_used_in_html = function(html) {
+        var element = document.createElement('div');
+        element.innerHTML = html;
+        try {
+            var subber = new Numbas.jme.variables.DOMcontentsubber(Numbas.jme.builtinScope);
+            return subber.findvars(element);
+        } catch(e) {
+            return [];
+        }
+    }
+    var vars_used_in_string = Editor.vars_used_in_string = function(str) {
+        var bits = Numbas.util.splitbrackets(str,'{','}');
+        var vars = [];
+        for(var i=1;i<bits.length;i+=2) {
+            try {
+                var tree = Numbas.jme.compile(bits[i]);
+                vars = vars.merge(Numbas.jme.findvars(tree));
+            } catch(e) {
+                continue;
+            }
+        }
+        return vars;
+    }
+
     var jmeTypes = ko.observableArray([]);
     function find_jme_types() {
         var types = [];
@@ -35,7 +59,6 @@ $(document).ready(function() {
         }
         this.part_types = part_types.filter(function(pt) { return pt.is_custom_part_type; });
     }
-
 
     ko.bindingHandlers.showModal = {
         init: function(element, valueAccessor) {
@@ -353,6 +376,15 @@ $(document).ready(function() {
 
         this.addPartTypeModal = new AddPartTypeModal(this,function(pt){ q.addPart(pt) });
 
+        this.goToPart = function(path) {
+            var p = q.getPart(path);
+            if(!p) {
+                return;
+            }
+            q.currentPart(p);
+            q.currentTab(q.getTab('parts'));
+        }
+
         this.baseVariableGroup = new VariableGroup(this,{name:'Ungrouped variables'});
         this.baseVariableGroup.fixed = true;
         this.allVariableGroups = ko.computed(function() {
@@ -425,20 +457,6 @@ $(document).ready(function() {
             q.currentTab(q.getTab('variables'));
         }
 
-        this.expand_all_parts = function() {
-            q.allParts().map(function(p) {
-                p.open(true);
-            });
-        }
-
-        this.collapse_all_parts = function() {
-            q.allParts().map(function(p) {
-                p.open(false);
-            });
-        }
-
-
-
         ko.computed(function() {
             if(!this.autoCalculateVariables())
                 return;
@@ -458,6 +476,60 @@ $(document).ready(function() {
         this.regenerateVariables = function() {
             q.generateVariablePreview();
         }
+
+        this.variable_references = ko.computed(function() {
+            var o = [];
+            o.push(new VariableReference({kind:'tab',tab:'statement',value:q.statement,type:'html',description:'Statement'}));
+            o.push(new VariableReference({kind:'tab',tab:'advice',value:q.advice,type:'html',description:'Advice'}));
+            o.push(new VariableReference({kind:'tab',tab:'variabletesting',value:q.variablesTest.condition,type:'jme',description:'Variable testing condition'}));
+            q.allParts().forEach(function(p) {
+                o = o.concat(p.variable_references());
+            });
+            return o;
+        },this);
+
+        ko.computed(function() {
+            this.variables().forEach(function(v) {
+                v.references([]);
+            });
+            this.variable_references().forEach(function(r) {
+                var def = r.def;
+                var description = r.description();
+                r.vars().forEach(function(name) {
+                    var icons;
+                    var v = q.getVariable(name);
+                    if(v) {
+                        switch(def.kind) {
+                            case 'tab':
+                                icons = [q.getTab(def.tab).icon];
+                                break;
+                            case 'part':
+                                icons = [q.getTab('parts').icon, def.part.getTab(def.tab).icon];
+                                break;
+                        }
+                        function go() {
+                            switch(def.kind) {
+                                case 'tab':
+                                    q.setTab(def.tab)();
+                                    icon = q.getTab(def.tab).icon;
+                                    break;
+                                case 'part':
+                                    q.setTab('parts')();
+                                    q.currentPart(def.part);
+                                    def.part.setTab(def.tab)();
+                                    icon = def.part.getTab(def.tab).icon;
+                                    break;
+                            }
+                        }
+                        v.references.push({
+                            description: description, 
+                            icons: icons, 
+                            go: go
+                        });
+                    }
+                });
+            });
+        },this);
 
         if(data) {
             this.load(data);
@@ -1640,6 +1712,10 @@ $(document).ready(function() {
                 return v2.dependencies().contains(v.name().toLowerCase());
             });
         },this);
+        this.references = ko.observableArray([]);
+        this.unused = ko.computed(function() {
+            return this.usedIn().length==0 && this.references().length==0;
+        },this);
         this.value = ko.observable(null);
         this.error = ko.observable('');
         this.anyError = ko.computed(function() {
@@ -1814,6 +1890,62 @@ $(document).ready(function() {
                 e.preventDefault();
             }
         }
+    }
+
+    function VariableReference(def) {
+        this.def = def;
+        this.description = Knockout.computed(function() {
+            var desc = ko.unwrap(this.def.description);
+            if(this.def.kind=='part') {
+                var p = this.def.part;
+                while(p) {
+                    desc = p.name()+' '+desc;
+                    p = p.parent();
+                }
+            }
+            return desc;
+        },this);
+        var raw_vars = ko.computed(function() {
+            try {
+                var v = ko.unwrap(this.def.value);
+                switch(this.def.type) {
+                    case 'html':
+                        return vars_used_in_html(v);
+                    case 'string':
+                        return vars_used_in_string(v);
+                    case 'jme-sub':
+                        return vars_used_in_string(v)
+                    case 'jme':
+                        try {
+                            var tree = Numbas.jme.compile(v);
+                        } catch(e) {
+                            break;
+                        }
+                        if(tree) {
+                            return Numbas.jme.findvars(tree);
+                        } else {
+                            return [];
+                        }
+                    case 'list':
+                        return v;
+                    default:
+                        throw(new Error("Undefined variable reference data type "+this.def.type));
+                }
+            } catch(e) {
+                return [];
+            }
+        },this);
+        this.vars = ko.computed(function() {
+            var v = raw_vars();
+            if(!v) {
+                return [];
+            }
+            if(this.def.ignore) {
+                var ignore = ko.unwrap(this.def.ignore);
+                v = v.filter(function(n) { return ignore.indexOf(n)==-1 });
+            }
+            return v;
+        },this);
     }
 
     function CustomFunction(q,data) {
@@ -2251,6 +2383,23 @@ $(document).ready(function() {
 
         this.types.map(function(t){p[t.name] = t.model});
 
+        this.variable_references = ko.computed(function() {
+            var o = [];
+            o.push(new VariableReference({kind:'part',part:this,tab:'prompt',value:this.prompt,type:'html',description:'prompt'}));
+            if(this.use_custom_algorithm() && this.markingScript()) {
+                var s = this.markingScript();
+                for(var x in s.notes) {
+                    o.push(new VariableReference({kind:'part',part:this,tab:'marking-algorithm',value:s.notes[x].vars,type:'list',description:'marking algorithm note '+x}));
+                }
+            }
+            this.type().variable_references().forEach(function(def) {
+                def.kind = 'part';
+                def.part = p;
+                o.push(new VariableReference(def));
+            });
+            return o;
+        },this);
+
         if(data)
             this.load(data);
     }
@@ -2634,16 +2783,20 @@ $(document).ready(function() {
         // If editing, set variables to the current values in the question's variable preview
         ko.computed(function() {
             if(this.editing()) {
-                this.variables(this.part.q.variables().map(function(v) {
-                    var value = v.value();
-                    return {
-                        name: v.name(),
-                        value: value,
-                        valueString: value ? Numbas.jme.display.treeToJME({tok:value},{bareExpression:false}) : '',
-                        toggleLocked: function() { v.toggleLocked(); },
-                        locked: v.locked
-                    }
-                }));
+                var vs = [];
+                this.part.q.allVariableGroups().forEach(function(g) {
+                    g.variables().forEach(function(v) {
+                        var value = v.value();
+                        vs.push({
+                            name: v.name(),
+                            value: value,
+                            valueString: value ? Numbas.jme.display.treeToJME({tok:value},{bareExpression:false}) : '',
+                            toggleLocked: function() { v.toggleLocked(); },
+                            locked: v.locked
+                        });
+                    });
+                });
+                this.variables(vs);
             }
         },this);
 
@@ -2657,10 +2810,15 @@ $(document).ready(function() {
 
         // set answer for gapfill parts
         ko.computed(function() {
-            if(this.part.type().name=='gapfill') {
-                this.answer(this.part.gaps().map(function(g) {
-                    return g.marking_test().answer();
-                }));
+            if(this.editing()) {
+                if(this.part.type().name=='gapfill') {
+                    this.answer({
+                        valid: this.part.gaps().every(function(g){return g.marking_test().answer().valid}), 
+                        value: this.part.gaps().map(function(g) {
+                            return g.marking_test().answer().value;
+                        })
+                    });
+                }
             }
         }, this);
 
@@ -2746,28 +2904,7 @@ $(document).ready(function() {
                 if(!part) {
                     throw(new Error("Part not found"));
                 }
-                var answer;
-                if(mt.part.type().name=='gapfill') {
-                    var gap_answers = mt.part.gaps().map(function(g) {
-                        return g.marking_test().answer();
-                    });
-                    var invalid_gaps = [];
-                    gap_answers.forEach(function(x,i) {
-                        if(!x.valid) {
-                            invalid_gaps.push(i);
-                        }
-                    });
-                    if(invalid_gaps.length==1) {
-                        answer = {valid: false, warnings: ['Gap '+invalid_gaps[0]+' has not been answered.']};
-                    } else if(invalid_gaps.length>1) {
-                        answer = {valid: false, warnings: ['Gaps '+invalid_gaps.slice(0,invalid_gaps.length-1).join(', ')+' and '+invalid_gaps[invalid_gaps.length-1]+' have not been answered.']};
-                    } else {
-                        var answers = gap_answers.map(function(x){ return x.value; });
-                        answer = {valid: true, value: answers};
-                    }
-                } else {
-                    var answer = mt.answer();
-                }
+                var answer = mt.answer();
                 if(!answer) {
                     throw(new Numbas.Error("Student's answer not set. There may be an error in the input widget."));
                 }
@@ -2781,8 +2918,9 @@ $(document).ready(function() {
                 }
                 part.storeAnswer(answer.value);
                 part.setStudentAnswer();
+                part.submit();
                 var res = part.mark_answer(part.rawStudentAnswerAsJME(),part.getScope());
-                var out = {script: part.markingScript, result: res, marks: part.marks};
+                var out = {script: part.markingScript, result: res, marking_result: part.marking_result, marks: part.marks};
                 if(!res.state_valid.mark) {
                     out.error = 'This answer is not valid.';
                     var feedback = compile_feedback(Numbas.marking.finalise_state(res.states.mark), part.marks);
@@ -2870,6 +3008,11 @@ $(document).ready(function() {
                 note.valid(result.state_valid[x]);
                 note.missing(false);
             }
+            var mark_note = existing_notes.mark;
+            var marking_result = last_run.marking_result;
+            mark_note.credit(marking_result.credit);
+            mark_note.messages(marking_result.markingFeedback.map(function(m){ return m.message }));
+            mark_note.warnings(marking_result.warnings);
         },this);
 
         // If this test is being edited, keep the "expected" values up to date
@@ -3216,6 +3359,12 @@ $(document).ready(function() {
         this.is_custom_part_type = data.is_custom_part_type;
         this.toJSONFn = data.toJSON || function() {};
         this.loadFn = data.load || function() {};
+        this.variable_references = ko.computed(function() {
+            if(!data.variable_references) {
+                return [];
+            }
+            return data.variable_references.apply(data,[this.part,this.model]);
+        },this);
     }
     PartType.prototype = {
         toJSON: function(data) {

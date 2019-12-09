@@ -45,11 +45,20 @@ The cog icon at the top of the page takes you to the project's options page.
 On this page you can change any of the project's settings or, if you're the project's owner and it isn't your personal workspace, delete it.
 
 
-Finding content inside a project
+Organising content inside a project
 ================================
 
-From the project homepage, click on either of the :guilabel:`Browse` links to see the questions or exams belonging to the project. 
-You can narrow down your search by adding a query in the search bar at the top of the page, or selecting one of the filters.
+From the project homepage, click on the :guilabel:`Browse this project's content` link to see the questions and exams belonging to the project. 
+
+You can organise content into folders.
+
+Click the :guilabel:`New folder` button to create a folder.
+You can drag and drop items into folders, or select several items by ticking the checkboxes and then click the :guilabel:`Move selected items` button.
+
+.. image:: images/browse.png
+    :alt: Browsing a project's content.
+
+You can also search within a project by entering a query in the search bar at the top of the page.
 
 .. image:: images/search.png
     :alt: A search inside a project.

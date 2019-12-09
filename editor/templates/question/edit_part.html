@@ -477,58 +477,72 @@
             Define the list of parts that the student can visit after this one.
         </p>
         <ul data-bind="foreach: nextParts" class="list-unstyled next-parts">
-            <li class="next-part">
-                <h4 data-bind="if: otherPart">
-                    <a href="#" data-bind="click: function() {$parents[1].currentPart(otherPart())}, text: otherPart().header"></a>
-                    <button type="button" class="delete btn btn-link" data-bind="click: $parent.deleteNextPart" title="Delete this link"><span class="glyphicon glyphicon-remove text-danger"></span></button>
-                </h4>
-                <form class="form-horizontal" data-bind="submit: Editor.noop">
-                    {% property 'rawLabel' 'Label' help_url='question/parts/reference.html#term-label' placeholder='label' %}
-                    {% selectproperty 'availabilityCondition' 'Availability' options_text='name' options='availability_conditions' help_url='question/parts/reference.html#term-availability' %}
-                    <div data-bind="fadeVisible: availabilityCondition().id=='expression'">
-                        {% property 'availabilityExpression' 'Available if' help_url='question/parts/reference.html#term-available-if' %}
-                    </div>
+            <li class="next-part panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title" data-bind="if: otherPart">
+                        <a href="#" data-bind="click: function() {$parents[1].currentPart(otherPart())}, text: otherPart().header"></a>
+                        <button type="button" class="delete btn btn-link" data-bind="click: $parent.deleteNextPart" title="Delete this next part option"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                    </h4>
+                </div>
+                <div class="panel-body">
+                    <form class="form-horizontal" data-bind="submit: Editor.noop">
+                        {% property 'rawLabel' 'Label' help_url='question/parts/reference.html#term-label' placeholder='label' %}
+                        {% selectproperty 'availabilityCondition' 'Availability' options_text='name' options='availability_conditions' help_url='question/parts/reference.html#term-availability' %}
+                        <div data-bind="fadeVisible: availabilityCondition().id=='expression'">
+                            {% property 'availabilityExpression' 'Available if' help_url='question/parts/reference.html#term-available-if' %}
+                        </div>
 
-                    {% selectproperty 'penalty' 'Penalty to apply when visited' options_text='name' options='$parent.q.penalties' allow_blank=True help_url='question/parts/reference.html#term-penalty-to-apply-when-visited' %}
-                    <div data-bind="fadeVisible: penalty">
-                        {% property 'penaltyAmount' 'Amount of penalty' help_url='question/parts/reference.html#term-amount-of-penalty' %}
-                    </div>
-                </form>
-                <div class="variable-replacements">
-                    <table class="table" data-bind="fadeVisible: variableReplacements().length">
-                        <thead>
-                            <tr>
-                                <th>Variable</th>
-                                <th>Value</th>
-                            </th>
-                        </thead>
-                        <tbody data-bind="foreach: variableReplacements">
-                            <tr>
-                                <td><select {% if not editable %}disabled{% endif %} class="form-control name-to-replace" data-bind="options: variables, value: variable"/></td>
-                                <td>
-                                    <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: definition, codemirrorMode: 'jme'"></textarea>
-                                </td>
-                                <td>
-                                    {% if editable %}<button type="button" class="delete btn btn-link" data-bind="click: $parent.deleteVariableReplacement" title="Delete this replacement"><span class="glyphicon glyphicon-remove text-danger"></span></button>{% endif %}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                        {% selectproperty 'penalty' 'Penalty to apply when visited' options_text='name' options='$parent.q.penalties' allow_blank=True help_url='question/parts/reference.html#term-penalty-to-apply-when-visited' %}
+                        <div data-bind="fadeVisible: penalty">
+                            {% property 'penaltyAmount' 'Amount of penalty' help_url='question/parts/reference.html#term-amount-of-penalty' %}
+                        </div>
+                    </form>
+                    <div class="variable-replacements">
+                        <h4>Variable replacements</h4>
+                        <div data-bind="fadeVisible: variableReplacements().length==0" class="nothing-here">
+                            No variable replacements have been defined for this next part option.
+                        </div>
+                        <table class="table" data-bind="fadeVisible: variableReplacements().length">
+                            <colgroup>
+                                <col class="name"/>
+                                <col class="value"/>
+                                <col class="controls"/>
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>Variable</th>
+                                    <th>Value</th>
+                                    <th></th>
+                                </th>
+                            </thead>
+                            <tbody data-bind="foreach: variableReplacements">
+                                <tr>
+                                    <td><select {% if not editable %}disabled{% endif %} class="form-control name-to-replace" data-bind="options: variables, value: variable"/></td>
+                                    <td>
+                                        <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: definition, codemirrorMode: 'jme'"></textarea>
+                                    </td>
+                                    <td>
+                                        {% if editable %}<button type="button" class="delete btn btn-link" data-bind="click: $parent.removeVariableReplacement" title="Delete this replacement"><span class="glyphicon glyphicon-remove text-danger"></span></button>{% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
 
-                    <!--
-                    <div data-bind="fadeVisible: replacementRandomDependencies().length" class="alert alert-danger">
-                        <p>The variable replacements you've chosen will cause the following variables to be regenerated each time the student submits an answer to this part:</p>
-                        <p><ul class="list-inline" data-bind="foreach: replacementRandomDependencies">
-                            <li><span class="btn btn-sm btn-danger monospace" data-bind="text: $data,click: $root.goToVariable" title="Edit this variable"></span></li>
-                        </ul></p>
-                        <p>These variables have some random elements, which means they're not guaranteed to have the same value each time the student submits an answer. You should define new variables to store the random elements, so that they remain the same each time this part is marked.</p>
-                        <p><a href="{{HELP_URL}}question/parts/reference.html#adaptive-marking">More information about this problem</a></p>
-                    </div>
-                    -->
+                        <!--
+                        <div data-bind="fadeVisible: replacementRandomDependencies().length" class="alert alert-danger">
+                            <p>The variable replacements you've chosen will cause the following variables to be regenerated each time the student submits an answer to this part:</p>
+                            <p><ul class="list-inline" data-bind="foreach: replacementRandomDependencies">
+                                <li><span class="btn btn-sm btn-danger monospace" data-bind="text: $data,click: $root.goToVariable" title="Edit this variable"></span></li>
+                            </ul></p>
+                            <p>These variables have some random elements, which means they're not guaranteed to have the same value each time the student submits an answer. You should define new variables to store the random elements, so that they remain the same each time this part is marked.</p>
+                            <p><a href="{{HELP_URL}}question/parts/reference.html#adaptive-marking">More information about this problem</a></p>
+                        </div>
+                        -->
 
 
-                    <div class="text-right">
-                        {% if editable %}<button class="btn btn-sm btn-primary add-variable-replacement" data-bind="click: addVariableReplacement"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: variableReplacements().length? 'Add another replacement' : 'Add a variable replacement'">Add a variable replacement</span></button>{% endif %}
+                        <div class="text-right">
+                            {% if editable %}<button class="btn btn-sm btn-primary add-variable-replacement" data-bind="click: addVariableReplacement"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: variableReplacements().length? 'Add another replacement' : 'Add a variable replacement'">Add a variable replacement</span></button>{% endif %}
+                        </div>
                     </div>
                 </div>
             </li>

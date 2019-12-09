@@ -251,6 +251,13 @@ table.variable-list .value-cell .value {
     overflow-x: hidden;
 }
 
+.next-parts .variable-replacements col.name {
+    width: 12em;
+}
+.next-parts .variable-replacements col.controls {
+    width: 4em;
+}
+
 .part-type-modal .part-types {
     max-height: 66vh;
     overflow-y: auto;

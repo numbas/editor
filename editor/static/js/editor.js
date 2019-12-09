@@ -1410,7 +1410,7 @@ $(document).ready(function() {
                 return;
             }
 
-            var tinymce = $(element).find('iframe').contents().find('body');
+            var tinymce = $(element).find('iframe');
 
             if (!tinymce.is(':focus')) {
                 var ed = $(element).children('.wmTextArea').tinymce();

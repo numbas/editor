@@ -2415,7 +2415,10 @@ $(document).ready(function() {
         },
 
         replaceWithGapfill: function() {
+            var p = this;
             var gapFill = new Part(this.q,this.parent(),this.parentList);
+            gapFill.customName(this.customName());
+            this.customName('');
             gapFill.setType('gapfill');
 
             this.parentList.splice(this.parentList.indexOf(this),1,gapFill);
@@ -2433,6 +2436,17 @@ $(document).ready(function() {
             gapFill.gaps.push(this);
             this.parentList = gapFill.gaps;
             this.parent(gapFill);
+
+            gapFill.nextParts(this.nextParts());
+            this.nextParts([]);
+
+            viewModel.allParts().forEach(function(p2) {
+                p2.nextParts().forEach(function(np) {
+                    if(np.otherPart()==p) {
+                        np.otherPart(gapFill);
+                    }
+                });
+            });
         },
 
         canMove: function(direction) {
@@ -2446,12 +2460,20 @@ $(document).ready(function() {
         },
 
         remove: function() {
+            var p = this;
             if(confirm("Remove "+this.name()+"?"))
             {
                 this.parentList.remove(this);
                 if(this.q.currentPart()==this) {
                     this.q.currentPart(this.parent() || null);
                 }
+                viewModel.allParts().forEach(function(p2) {
+                    p2.nextParts().forEach(function(np) {
+                        if(np.otherPart()==p) {
+                            p2.nextParts.remove(np);
+                        }
+                    });
+                });
             }
         },
 

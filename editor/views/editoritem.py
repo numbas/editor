@@ -113,6 +113,8 @@ class CopyView(ProjectQuerysetMixin, generic.FormView, generic.edit.ModelFormMix
 
         obj2.editoritem.set_name(form.cleaned_data.get('name'))
         obj2.editoritem.project = form.cleaned_data.get('project')
+        if obj2.editoritem.project == obj.editoritem.project:
+            obj2.editoritem.folder = obj.editoritem.folder
         obj2.editoritem.save()
         obj2.editoritem.access_rights.clear()
         for c in obj.editoritem.contributors.all():

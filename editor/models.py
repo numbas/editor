@@ -1052,6 +1052,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
         e2.published = False
         e2.published_date = None
         e2.copy_of = self
+        e2.folder = None
         if author is not None:
             e2.author = author
         return e2

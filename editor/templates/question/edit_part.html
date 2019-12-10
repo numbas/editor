@@ -479,8 +479,8 @@
         <ul data-bind="foreach: nextParts" class="list-unstyled next-parts">
             <li class="next-part panel panel-default">
                 <div class="panel-heading">
-                    <h4 class="panel-title" data-bind="if: otherPart">
-                        <a href="#" data-bind="click: function() {$parents[1].currentPart(otherPart())}, text: otherPart().header"></a>
+                    <h4 class="panel-title">
+                        <!-- ko if: otherPart --><a href="#" data-bind="click: function() {$parents[1].currentPart(otherPart())}, text: otherPart().header"></a><!-- /ko -->
                         <button type="button" class="delete btn btn-link" data-bind="click: $parent.deleteNextPart" title="Delete this next part option"><span class="glyphicon glyphicon-remove text-danger"></span></button>
                     </h4>
                 </div>

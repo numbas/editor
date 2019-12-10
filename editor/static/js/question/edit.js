@@ -2226,7 +2226,9 @@ $(document).ready(function() {
 
             tabs.push(new Editor.Tab('adaptivemarking','Adaptive marking','transfer'));
 
-            tabs.push(new Editor.Tab('nextparts','Next parts','arrow-right'));
+            if(!this.parent()) {
+                tabs.push(new Editor.Tab('nextparts','Next parts','arrow-right'));
+            }
 
             return tabs;
         },this);

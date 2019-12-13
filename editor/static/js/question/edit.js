@@ -2877,8 +2877,20 @@ $(document).ready(function() {
             try {
                 var json = mt.part.q.toJSON();
                 var variables = mt.variables().map(function(v){ return {name: v.name, value: v.value} });
-                if(Numbas.util.objects_equal(json,mt.last_question_json) && Numbas.util.objects_equal(variables, mt.last_variables)) {
-                    return mt.question();
+                try {
+                    var same_question = Numbas.util.objects_equal(json,mt.last_question_json);
+                    var same_variables = mt.last_variables && variables.length==mt.last_variables.length && variables.every(function(v,i) {
+                        var lv = mt.last_variables[i];
+                        return lv.name==v.name && Numbas.util.eq(v.value,lv.value);
+                    });
+                    if(same_question && same_variables) {
+                        return mt.question();
+                    }
+                } catch(e) {
+                    window.poop = variables;
+                    console.log(same_question,same_variables);
+                    console.error(e);
+                    throw(e);
                 }
                 mt.question(null);
                 mt.last_question_json = json;

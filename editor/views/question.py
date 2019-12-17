@@ -131,6 +131,9 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         extensions = extensions.distinct().order_by(Lower('name'))
         self.item_json['numbasExtensions'] = context['extensions'] = [e.as_json() for e in extensions]
 
+        self.item_json['used_in_exams'] = self.object.exams_using_this.exists()
+        self.item_json['other_versions_exist'] = len(self.object.editoritem.network)>1
+
         # get publicly available part types first
         custom_part_types = CustomPartType.objects.filter(public_availability='always')
         if not self.request.user.is_anonymous:

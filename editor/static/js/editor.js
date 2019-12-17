@@ -217,12 +217,14 @@ $(document).ready(function() {
         });
     }
 
-    Editor.Tab = function(id,title,icon,visible,more_important) {
+    Editor.Tab = function(id,title,icon,options) {
         this.id = id;
         this.title = title;
         this.icon = icon;
-        this.visible = visible === undefined ? true : visible;
-        this.more_important = more_important;
+        options = options || {};
+        this.visible = options.visible === undefined ? true : options.visible;
+        this.more_important = options.more_important;
+        this.in_use = options.in_use === undefined ? false : options.in_use;
     }
 
     Editor.contentObservable = function(val) {

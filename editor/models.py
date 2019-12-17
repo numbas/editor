@@ -968,6 +968,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
     slug = models.SlugField(max_length=200, editable=False, unique=False)
 
     timeline = GenericRelation('TimelineItem', related_query_name='editoritems', content_type_field='timeline_content_type', object_id_field='timeline_id')
+    comments = GenericRelation('Comment', content_type_field='object_content_type', object_id_field='object_id')
 
     author = models.ForeignKey(User, related_name='own_items', on_delete=models.CASCADE)
     public_access = models.CharField(default='view', editable=True, choices=PUBLIC_ACCESS_CHOICES, max_length=6)

@@ -133,6 +133,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
 
         self.item_json['used_in_exams'] = self.object.exams_using_this.exists()
         self.item_json['other_versions_exist'] = len(self.object.editoritem.network)>1
+        self.item_json['editing_history_used'] = self.object.editoritem.comments.exists() or self.object.editoritem.restore_points.exists()
 
         # get publicly available part types first
         custom_part_types = CustomPartType.objects.filter(public_availability='always')

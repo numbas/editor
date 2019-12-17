@@ -287,7 +287,7 @@ $(document).ready(function() {
             new Editor.Tab('settings','Settings','cog'),
             new Editor.Tab('exams','Exams using this question','book',{in_use:item_json.used_in_exams}),
             new Editor.Tab('network','Other versions','link',{in_use:item_json.other_versions_exist}),
-            new Editor.Tab('history','Editing history','time')
+            new Editor.Tab('history','Editing history','time',{in_use:item_json.editing_history_used})
         ]);
         if(item_json.editable) {
             var adviceTab = new Editor.Tab('access','Access','lock');

@@ -254,6 +254,9 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         else:
             profile = None
 
+        self.item_json['other_versions_exist'] = len(self.object.editoritem.network)>1
+        self.item_json['editing_history_used'] = self.object.editoritem.comments.exists() or self.object.editoritem.restore_points.exists()
+
         self.item_json.update({
             'themes': sorted(context['themes'], key=operator.itemgetter('name')),
             'locales': context['locales'],

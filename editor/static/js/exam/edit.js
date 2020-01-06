@@ -50,14 +50,14 @@ $(document).ready(function() {
         },this);
 
         this.mainTabs([
-            new Editor.Tab('questions','Questions','file'),
-            new Editor.Tab('display','Display','picture'),
+            new Editor.Tab('questions','Questions','file',{in_use: ko.computed(function() { return this.questions().length>0; },this)}),
+            new Editor.Tab('display','Display','picture',{in_use: ko.computed(function() { return this.theme().path!='default'; })}),
             new Editor.Tab('navigation','Navigation','tasks'),
             new Editor.Tab('timing','Timing','time'),
             new Editor.Tab('feedback','Feedback','comment'),
             new Editor.Tab('settings','Settings','cog'),
-            new Editor.Tab('network','Other versions','link'),
-            new Editor.Tab('history','Editing history','time')
+            new Editor.Tab('network','Other versions','link',{in_use:item_json.other_versions_exist}),
+            new Editor.Tab('history','Editing history','time',{in_use:item_json.editing_history_used})
         ]);
         if(item_json.editable) {
             this.mainTabs.splice(6,0,new Editor.Tab('access','Access','lock'));

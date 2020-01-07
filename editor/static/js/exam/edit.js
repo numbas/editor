@@ -49,9 +49,12 @@ $(document).ready(function() {
             return t;
         },this);
 
+        this.theme = ko.observable(null);
+        this.locale = ko.observable(item_json.preferred_locale);
+
         this.mainTabs([
             new Editor.Tab('questions','Questions','file',{in_use: ko.computed(function() { return this.questions().length>0; },this)}),
-            new Editor.Tab('display','Display','picture',{in_use: ko.computed(function() { return this.theme().path!='default'; })}),
+            new Editor.Tab('display','Display','picture',{in_use: ko.computed(function() { return this.theme() && this.theme().path!='default'; },this)}),
             new Editor.Tab('navigation','Navigation','tasks'),
             new Editor.Tab('timing','Timing','time'),
             new Editor.Tab('feedback','Feedback','comment'),
@@ -63,9 +66,6 @@ $(document).ready(function() {
             this.mainTabs.splice(6,0,new Editor.Tab('access','Access','lock'));
         }
         this.currentTab(this.mainTabs()[0]);
-
-        this.theme = ko.observable(null);
-        this.locale = ko.observable(item_json.preferred_locale);
 
         this.duration = ko.observable(0);
         this.allowPause = ko.observable(true);

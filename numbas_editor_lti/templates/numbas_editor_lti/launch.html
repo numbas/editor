@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Hi</h1>
+<p>Role: {{lti.role}}</p>
+<p>Roles: {{lti.roles}}</p>
+<p>Is instructor: {{is_instructor}}</p>
+<form method="post" action=""><button type="submit">Go</button></form>
+{% endblock content %}

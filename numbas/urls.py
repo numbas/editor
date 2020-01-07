@@ -1,9 +1,9 @@
-from django.conf.urls import include, url
+from django.conf.urls import url
+from django.urls import include, path
 from django.conf.urls.static import static
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.views import LogoutView
-from django.urls import path
 import django.contrib.auth.views
 import notifications.urls
 
@@ -22,6 +22,15 @@ if 'editor_rest_api' in settings.INSTALLED_APPS:
         from editor_rest_api.urls import urls as rest_urls
         urlpatterns += [
             url('^api/', include(rest_urls)),
+        ]
+    except ImportError:
+        pass
+
+if 'numbas_editor_lti' in settings.INSTALLED_APPS:
+    try:
+        from numbas_editor_lti.urls import urls as lti_urls
+        urlpatterns += [
+            path('lti/', include(lti_urls)),
         ]
     except ImportError:
         pass

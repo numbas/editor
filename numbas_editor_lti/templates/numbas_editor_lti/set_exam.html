@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load links %}
+
+{% block content %}
+
+{% if lticontext.exam %}
+<p>Using {% editoritem_link lticontext.exam %}.</p>
+{% endif %}
+
+<h2>Recently viewed exams</h2>
+
+<table class="table">
+{% for exam in last_viewed_exams %}
+<tr>
+    <td>{% editoritem_link exam show_icon=False %}</td>
+    <td>
+    <form method="POST" action="" style="display: inline">
+        <input type="hidden" name="exam" value="{{exam.pk}}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">Use this exam</button>
+    </form>
+
+    </td>
+</tr>
+{% endfor %}
+</table>
+{% endblock content %}

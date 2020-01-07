@@ -528,6 +528,24 @@ class PreviewView(CompileObject, generic.DetailView):
             return True
         return 'refresh' in self.request.GET
 
+    def get_context_data(self,*args,**kwargs):
+        context = super().get_context_data(*args,**kwargs)
+
+        exam_url = settings.GLOBAL_SETTINGS['PREVIEW_URL'] + self.location + '/index.html'
+
+        embed_url = reverse(self.editoritem.item_type+'_embed',args=(self.object.pk,self.editoritem.slug))
+        if not self.editoritem.published:
+            embed_url += '?token='+str(self.editoritem.share_uuid_view)
+
+        context.update({
+            'item': self.editoritem,
+            'exam_url': exam_url,
+            'embed_url': embed_url,
+        })
+        
+        return context
+
+
     def access_valid(self):
         self.location = self.editoritem.filename
 
@@ -542,17 +560,7 @@ class PreviewView(CompileObject, generic.DetailView):
         if 'refresh' in self.request.GET:
             return redirect(self.request.path)
 
-        exam_url = settings.GLOBAL_SETTINGS['PREVIEW_URL'] + self.location + '/index.html'
-
-        embed_url = reverse(self.editoritem.item_type+'_embed',args=(self.object.pk,self.editoritem.slug))
-        if not self.editoritem.published:
-            embed_url += '?token='+str(self.editoritem.share_uuid_view)
-
-        context = {
-            'item': self.editoritem,
-            'exam_url': exam_url,
-            'embed_url': embed_url,
-        }
+        context = self.get_context_data(object=self.object)
 
         return self.render_to_response(context)
 

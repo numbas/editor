@@ -12394,6 +12394,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             } else if(q.adviceDisplayed) {
                 q.getAdvice(true);
             }
+            q.display && q.display.resume();
             q.updateScore();
         });
     },
@@ -12497,7 +12498,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
     getAdvice: function(dontStore)
     {
         this.adviceDisplayed = true;
-    this.display && this.display.showAdvice(true);
+        this.display && this.display.showAdvice(true);
         if(this.store && !dontStore) {
             this.store.adviceDisplayed(this);
         }
@@ -16640,6 +16641,9 @@ var util = Numbas.util = /** @lends Numbas.util */ {
      * @returns {Boolean}
      */
     isNonemptyHTML: function(html) {
+        if(html===undefined || html===null) {
+            return false;
+        }
         if(window.document) {
             var d = document.createElement('div');
             d.innerHTML = html;

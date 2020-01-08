@@ -3,8 +3,6 @@
 Create an exam
 --------------
 
-Once you have :ref:`created an account on the editor <signup>`, you can create your own questions and exams, as well as look at and make copies of those made by others.
-
 Let's create an exam using questions already in the database. 
 
 Creating an exam using existing questions

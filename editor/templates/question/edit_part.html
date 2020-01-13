@@ -43,7 +43,7 @@
 </div>
 {% endif %}
 <ul class="col-sm-1 col-md-3 col-lg-2 nav nav-pills nav-stacked part-tabs" data-bind="foreach: tabs">
-    <li data-bind="css: {active: ko.unwrap($parent.currentTab().id) == $data.id, 'more-important': $data.more_important}">
+    <li data-bind="css: {active: ko.unwrap($parent.currentTab().id) == $data.id, 'more-important': $data.more_important, 'in-use': $data.in_use}">
         <a href="#" data-bind="click: $parent.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> <span class="hidden-sm" data-bind="text: title"></span></a>
     </li>
 </ul>

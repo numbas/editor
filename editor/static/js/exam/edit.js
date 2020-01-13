@@ -49,23 +49,23 @@ $(document).ready(function() {
             return t;
         },this);
 
+        this.theme = ko.observable(null);
+        this.locale = ko.observable(item_json.preferred_locale);
+
         this.mainTabs([
-            new Editor.Tab('questions','Questions','file'),
-            new Editor.Tab('display','Display','picture'),
+            new Editor.Tab('questions','Questions','file',{in_use: ko.computed(function() { return this.questions().length>0; },this)}),
+            new Editor.Tab('display','Display','picture',{in_use: ko.computed(function() { return this.theme() && this.theme().path!='default'; },this)}),
             new Editor.Tab('navigation','Navigation','tasks'),
             new Editor.Tab('timing','Timing','time'),
             new Editor.Tab('feedback','Feedback','comment'),
             new Editor.Tab('settings','Settings','cog'),
-            new Editor.Tab('network','Other versions','link'),
-            new Editor.Tab('history','Editing history','time')
+            new Editor.Tab('network','Other versions','link',{in_use:item_json.other_versions_exist}),
+            new Editor.Tab('history','Editing history','time',{in_use:item_json.editing_history_used})
         ]);
         if(item_json.editable) {
             this.mainTabs.splice(6,0,new Editor.Tab('access','Access','lock'));
         }
         this.currentTab(this.mainTabs()[0]);
-
-        this.theme = ko.observable(null);
-        this.locale = ko.observable(item_json.preferred_locale);
 
         this.duration = ko.observable(0);
         this.allowPause = ko.observable(true);
@@ -117,6 +117,9 @@ $(document).ready(function() {
         this.basketQuestions(data.basketQuestions);
 
         function getQuestions() {
+            if(!is_logged_in) {
+                return;
+            }
             var cookie = getCookie('csrftoken');
             if(cookie!==null) {
                 $.get('/exam/question-lists/'+e.id)
@@ -341,19 +344,20 @@ $(document).ready(function() {
                 this.theme(item_json.themes[0]);
             }
 
-            if('locale' in data)
+            if('locale' in data) {
                 this.locale(data.locale);
-
-            if('question_groups' in content) {
-                if('question_groups' in data) {
-                    data.question_groups.forEach(function(d) {
-                        content.question_groups[d.group].questions = d.questions;
-                    })
-                }
-                this.question_groups(content.question_groups.map(function(qg) {
-                    return new QuestionGroup(qg,e);
-                }));
             }
+
+            if('question_groups' in data) {
+                content.question_groups = content.question_groups || [];
+                data.question_groups.forEach(function(d) {
+                    content.question_groups[d.group] = content.question_groups[d.group] || {questions: []};
+                    content.question_groups[d.group].questions = d.questions;
+                })
+            }
+            this.question_groups(content.question_groups.map(function(qg) {
+                return new QuestionGroup(qg,e);
+            }));
         },
 
         remove_deleted_questions: function(questions) {

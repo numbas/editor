@@ -1247,7 +1247,7 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
     /** Binary operations
      * @type {Array.<String>}
      */
-    ops: ['not','and','or','xor','implies','isa','except','in','divides','as','..','#','<=','>=','<>','&&','||','|','*','+','-','/','^','<','>','=','!','&','÷','×','∈','∧','∨','⟹','≠','≥','≤'],
+    ops: ['not','and','or','xor','implies','isa','except','in','divides','as','..','#','<=','>=','<>','&&','||','|','*','+','-','/','^','<','>','=','!','&','÷','×','∈','∧','∨','¬','⟹','≠','≥','≤'],
 
     /** Regular expressions to match tokens 
      * @type {Object.<RegExp>}
@@ -2870,6 +2870,7 @@ var opSynonyms = jme.opSynonyms = {
     '∈': 'in',
     '∧': 'and',
     '∨': 'or',
+    '¬': 'not',
     '⟹': 'implies',
     '≠': '<>',
     '≥': '>=',
@@ -12747,6 +12748,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             } else if(q.adviceDisplayed) {
                 q.getAdvice(true);
             }
+            q.display && q.display.resume();
             q.updateScore();
             if(q.partsMode=='explore') {
                 q.setCurrentPart(q.getPart(qobj.currentPart));
@@ -17064,6 +17066,9 @@ var util = Numbas.util = /** @lends Numbas.util */ {
      * @returns {Boolean}
      */
     isNonemptyHTML: function(html) {
+        if(html===undefined || html===null) {
+            return false;
+        }
         if(window.document) {
             var d = document.createElement('div');
             d.innerHTML = html;

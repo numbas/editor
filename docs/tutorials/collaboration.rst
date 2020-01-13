@@ -54,9 +54,6 @@ This is useful when you're editing your own questions, but doubly so when editin
 You can write comments on the editing history. 
 Use this to suggest changes, report bugs, and so on.
 
-Give feedback on quality
-------------------------
-
 Add descriptions to variables and use sensible names
 ----------------------------------------------------
 

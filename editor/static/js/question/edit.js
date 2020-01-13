@@ -265,26 +265,6 @@ $(document).ready(function() {
             height: ko.observable(0)
         }
 
-
-        this.mainTabs([
-            new Editor.Tab('statement','Statement','blackboard'),
-            new Editor.Tab('parts','Parts','check'),
-            new Editor.Tab('variables','Variables','list'),
-            new Editor.Tab('variabletesting','Variable testing','dashboard'),
-            new Editor.Tab('advice','Advice','blackboard'),
-            new Editor.Tab('extensions','Extensions & scripts','wrench'),
-            new Editor.Tab('resources','Resources','picture'),
-            new Editor.Tab('settings','Settings','cog'),
-            new Editor.Tab('exams','Exams using this question','book'),
-            new Editor.Tab('network','Other versions','link'),
-            new Editor.Tab('history','Editing history','time')
-        ]);
-        if(item_json.editable) {
-            var adviceTab = new Editor.Tab('access','Access','lock');
-            this.mainTabs.splice(8,0,adviceTab);
-        }
-        this.currentTab(this.mainTabs()[0]);
-
         this.add_to_basket = function() {
             Editor.add_question_to_basket(item_json.itemJSON.id);
         }
@@ -344,6 +324,29 @@ $(document).ready(function() {
             css: ko.observable(''),
             js: ko.observable('')
         };
+
+        var extensions_tab_in_use = ko.computed(function() {
+            return this.usedExtensions().length>0 || this.functions().length>0 || this.preamble.css()!='' || this.preamble.js()!='';
+        },this);
+
+        this.mainTabs([
+            new Editor.Tab('statement','Statement','blackboard',{in_use: ko.computed(function(){ return this.statement()!=''; },this)}),
+            new Editor.Tab('parts','Parts','check',{in_use: ko.computed(function() { return this.parts().length>0; },this)}),
+            new Editor.Tab('variables','Variables','list',{in_use: ko.computed(function() { return this.variables().length>0; },this)}),
+            new Editor.Tab('variabletesting','Variable testing','dashboard',{in_use: ko.computed(function() { return this.variablesTest.condition()!=''; },this)}),
+            new Editor.Tab('advice','Advice','blackboard',{in_use: ko.computed(function() { return this.advice()!=''; },this)}),
+            new Editor.Tab('extensions','Extensions & scripts','wrench',{in_use: extensions_tab_in_use}),
+            new Editor.Tab('resources','Resources','picture',{in_use: ko.computed(function() { return this.resources().length>0; },this)}),
+            new Editor.Tab('settings','Settings','cog'),
+            new Editor.Tab('exams','Exams using this question','book',{in_use:item_json.used_in_exams}),
+            new Editor.Tab('network','Other versions','link',{in_use:item_json.other_versions_exist}),
+            new Editor.Tab('history','Editing history','time',{in_use:item_json.editing_history_used})
+        ]);
+        if(item_json.editable) {
+            var adviceTab = new Editor.Tab('access','Access','lock');
+            this.mainTabs.splice(8,0,adviceTab);
+        }
+        this.currentTab(this.mainTabs()[0]);
 
         this.startAddingPart = function() {
             q.addingPart({kind:'part', parent:null, parentList: q.parts, availableTypes: q.partTypes});
@@ -2209,55 +2212,6 @@ $(document).ready(function() {
             }
         },this);
 
-        this.tabs = ko.computed(function() {
-            var tabs = [];
-            if(!this.isGap()) {
-                tabs.push(new Editor.Tab('prompt','Prompt','blackboard',true,true));
-            }
-
-            tabs.push(new Editor.Tab('marking-settings','Marking settings','pencil',true,true));
-            if(this.type().has_marks) {
-                tabs.push(new Editor.Tab('marking-algorithm','Marking algorithm','ok'));
-            }
-
-            tabs = tabs.concat(this.type().tabs);
-
-            tabs.push(new Editor.Tab('scripts','Scripts','wrench'));
-
-            tabs.push(new Editor.Tab('adaptivemarking','Adaptive marking','transfer'));
-
-            if(!this.parent()) {
-                tabs.push(new Editor.Tab('nextparts','Next parts','arrow-right'));
-            }
-
-            return tabs;
-        },this);
-        this.realCurrentTab = ko.observable(this.tabs()[0]);
-        this.currentTab = ko.computed({
-            read: function() {
-                if(this.tabs().indexOf(this.realCurrentTab())==-1) {
-                    this.realCurrentTab(this.tabs()[0]);
-                    return this.tabs()[0];
-                }
-                else {
-                    return this.realCurrentTab();
-                }
-            },
-            write: this.realCurrentTab
-        },this);
-
-        this.getTab = function(id) {
-            return p.tabs().find(function(t){return t.id==id});
-        }
-
-        this.setTab = function(id) {
-            return function() {
-                var tab = p.getTab(id);
-                p.currentTab(tab);
-            }
-        }
-
-
         this.marks = ko.observable(1);
         this.realMarks = ko.computed(function() {
             switch(this.type().name) {
@@ -2401,6 +2355,78 @@ $(document).ready(function() {
             });
             return o;
         },this);
+
+        this.tabs = ko.computed(function() {
+            var tabs = [];
+            if(!this.isGap()) {
+                tabs.push(new Editor.Tab('prompt','Prompt','blackboard',{visible:true,more_important:true,in_use: ko.computed(function() { return this.prompt()!=''},this)}));
+            }
+
+            if(this.type().has_marking_settings) {
+                tabs.push(new Editor.Tab('marking-settings','Marking settings','pencil',{visible:true,more_important:true,in_use:true}));
+            }
+            var marking_algorithm_tab_in_use = ko.computed(function() {
+                return this.use_custom_algorithm();
+            },this);
+            if(this.type().has_marks) {
+                tabs.push(new Editor.Tab('marking-algorithm','Marking algorithm','ok',{in_use: marking_algorithm_tab_in_use}));
+            }
+
+            tabs = tabs.concat(this.type().tabs);
+
+            var scripts_tab_in_use = ko.computed(function() {
+                return this.scripts.some(function(s) { return s.active(); });
+            },this);
+
+            tabs.push(new Editor.Tab('scripts','Scripts','wrench',{in_use: scripts_tab_in_use}));
+
+            var adaptive_marking_tab_in_use = ko.computed(function() {
+                return this.variableReplacements().length>0;
+            },this);
+
+            tabs.push(new Editor.Tab('adaptivemarking','Adaptive marking','transfer',{in_use: adaptive_marking_tab_in_use}));
+
+            if(!this.parent()) {
+                var next_parts_tab_in_use = ko.computed(function() {
+                    return this.nextParts().length>0;
+                },this);
+                tabs.push(new Editor.Tab('nextparts','Next parts','arrow-right'));
+            }
+
+            tabs = tabs.sort(function(a,b) {
+                var ia = ko.unwrap(a.more_important);
+                var ib = ko.unwrap(b.more_important);
+                return ia ? ib ? 0 : -1 : ib ? 1 : 0;
+            });
+
+            return tabs;
+        },this);
+        this.realCurrentTab = ko.observable(this.tabs()[0]);
+        this.currentTab = ko.computed({
+            read: function() {
+                if(this.tabs().indexOf(this.realCurrentTab())==-1) {
+                    this.realCurrentTab(this.tabs()[0]);
+                    return this.tabs()[0];
+                }
+                else {
+                    return this.realCurrentTab();
+                }
+            },
+            write: this.realCurrentTab
+        },this);
+
+        this.getTab = function(id) {
+            return p.tabs().find(function(t){return t.id==id});
+        }
+
+        this.setTab = function(id) {
+            return function() {
+                var tab = p.getTab(id);
+                p.currentTab(tab);
+            }
+        }
+
+
 
         if(data)
             this.load(data);
@@ -3377,8 +3403,9 @@ $(document).ready(function() {
         this.has_marks = data.has_marks || false;
         this.has_correct_answer = data.has_correct_answer || false;
         this.has_feedback_icon = data.has_feedback_icon || false;
-        this.tabs = data.tabs || [];
+        this.has_marking_settings = data.has_marking_settings || false;
         this.model = data.model ? data.model(part) : {};
+        this.tabs = data.tabs ? data.tabs(part,this.model) : [];
         this.required_extensions = data.required_extensions || [];
         this.is_custom_part_type = data.is_custom_part_type;
         this.toJSONFn = data.toJSON || function() {};

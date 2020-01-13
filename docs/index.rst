@@ -28,12 +28,19 @@ If you have any questions, please `email us <mailto:numbas@ncl.ac.uk>`_ or join 
     :glob:
 
     tutorials/create-an-account
-    tutorials/create-exam
-    tutorials/upload-web
-    tutorials/upload-vle
+    tutorials/explore
     tutorials/write-question
+    tutorials/create-exam
+    tutorials/deliver-to-students
     tutorials/collaboration
-    how-do-i
+    tutorials/what-next
+
+.. toctree::
+    :caption: Writing Numbas questions
+    :maxdepth: 1
+
+    authoring/planning-a-question
+    authoring/how-do-i
 
 .. toctree::
     :caption: Reference
@@ -43,7 +50,6 @@ If you have any questions, please `email us <mailto:numbas@ncl.ac.uk>`_ or join 
     exam/reference
     question/reference
     question/parts/reference
-    question/cheatsheet
 
     latex
     jme-reference

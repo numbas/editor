@@ -62,10 +62,19 @@ part_types.models = [
         has_marks: true, 
         has_feedback_icon: true,
         has_correct_answer: true,
-        tabs: [
-            new Editor.Tab('restrictions','Restrictions','text-background'),
-            new Editor.Tab('checking-accuracy','Accuracy','scale')
-        ],
+        has_marking_settings: true,
+        tabs: function(part,model) {
+            var restrictions_tab_in_use = ko.computed(function() {
+                return model.mustmatchpattern.pattern()!='' || model.maxlength.length()!=0 || model.minlength.length()!=0 || model.musthave.strings().length>0 || model.notallowed.strings().length>0;
+            });
+            var accuracy_tab_in_use = ko.computed(function() {
+                return model.valueGenerators().some(function(v){ return v.value()!=''; });
+            });
+            return [
+                new Editor.Tab('restrictions','Restrictions','text-background',{in_use: restrictions_tab_in_use}),
+                new Editor.Tab('checking-accuracy','Accuracy','scale',{in_use: accuracy_tab_in_use})
+            ];
+        },
         widget: 'jme',
 
         model: function(part) {
@@ -329,7 +338,7 @@ part_types.models = [
         has_marks: true,
         has_feedback_icon: true,
         has_correct_answer: true,
-        tabs: [],
+        has_marking_settings: true,
         widget: 'number',
 
         model: function() {
@@ -440,7 +449,7 @@ part_types.models = [
         has_marks: true,
         has_feedback_icon: true,
         has_correct_answer: true,
-        tabs: [],
+        has_marking_settings: true,
         widget: 'matrix',
 
         model: function() {
@@ -524,7 +533,7 @@ part_types.models = [
         has_marks: true,
         has_feedback_icon: true,
         has_correct_answer: true,
-        tabs: [],
+        has_marking_settings: true,
         widget: 'string',
 
         model: function() {
@@ -575,10 +584,12 @@ part_types.models = [
         has_feedback_icon: true,
         has_correct_answer: true,
         niceName: 'Choose one from a list',
-        tabs: [
-            new Editor.Tab('choices','Choices','list',true,true),
-            new Editor.Tab('marking-settings','Marking settings','pencil',true,true),
-        ],
+        tabs: function(parts,model) {
+            return [
+                new Editor.Tab('choices','Choices','list',{visible:true,more_important:true,in_use: ko.computed(function() { return model.choices().length>0; })}),
+                new Editor.Tab('marking-settings','Marking settings','pencil',{visible:true,more_important:true}),
+            ];
+        },
         widget: 'radios',
 
         model: function(part) {
@@ -712,10 +723,12 @@ part_types.models = [
         has_feedback_icon: true,
         has_correct_answer: true,
         niceName: 'Choose several from a list',
-        tabs: [
-            new Editor.Tab('choices','Choices','list',true,true),
-            new Editor.Tab('marking-settings','Marking settings','pencil',true,true),
-        ],
+        tabs: function(part,model) {
+            return [
+                new Editor.Tab('choices','Choices','list',{visible:true,more_important:true,in_use: ko.computed(function() { return model.choices().length>0;})}),
+                new Editor.Tab('marking-settings','Marking settings','pencil',{visible:true,more_important:true}),
+            ];
+        },
         widget: 'checkboxes',
 
         model: function() {
@@ -863,12 +876,14 @@ part_types.models = [
         has_feedback_icon: true,
         has_correct_answer: true,
         niceName: 'Match choices with answers',
-        tabs: [
-            new Editor.Tab('choices','Choices','list',true,true),
-            new Editor.Tab('answers','Answers','list',true,true),
-            new Editor.Tab('matrix','Marking matrix','th',true,true),
-            new Editor.Tab('marking-settings','Marking options','pencil',true,true),
-        ],
+        tabs: function(part,model) {
+            return [
+                new Editor.Tab('choices','Choices','list',{visible:true,more_important:true,in_use: ko.computed(function(){ return model.choices().length>0; })}),
+                new Editor.Tab('answers','Answers','list',{visible:true,more_important:true,in_use: ko.computed(function(){ return model.answers().length>0; })}),
+                new Editor.Tab('matrix','Marking matrix','th',{visible:true,more_important:true}),
+                new Editor.Tab('marking-settings','Marking options','pencil',{visible:true,more_important:true}),
+            ];
+        },
         widget: 'm_n_x',
 
         model: function() {
@@ -1108,7 +1123,6 @@ function CustomPartType(data) {
     this.has_marks = true;
     this.has_correct_answer = true;
     this.has_feedback_icon = true;
-    this.tabs = [];
     this.can_be_gap = data.can_be_gap;
     this.can_be_step = data.can_be_step;
     this.settings_def = data.settings;

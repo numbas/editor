@@ -258,13 +258,16 @@ document.querySelector('.table.contents').addEventListener('click',function(e) {
         var el = e.target;
         while(el && !el.classList.contains('drag-handle')) {
             el = el.parentElement;
+            if(el.matches('a')) {
+                return;
+            }
         }
         if(!el) {
             return;
         }
-    if(e.target.matches('.include-checkbox')) {
-        return;
-    }
+        if(e.target.matches('.include-checkbox')) {
+            return;
+        }
         var checkbox = el.querySelector('.include-checkbox');
         checkbox.checked = !checkbox.checked;
         update_selection();

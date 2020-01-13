@@ -117,6 +117,9 @@ $(document).ready(function() {
         this.basketQuestions(data.basketQuestions);
 
         function getQuestions() {
+            if(!is_logged_in) {
+                return;
+            }
             var cookie = getCookie('csrftoken');
             if(cookie!==null) {
                 $.get('/exam/question-lists/'+e.id)

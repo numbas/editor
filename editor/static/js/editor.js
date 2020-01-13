@@ -2058,6 +2058,9 @@ $(document).ready(function() {
         if(!document.hasFocus()) {
             return;
         }
+        if(!is_logged_in) {
+            return;
+        }
         $.get('/notifications/unread/').success(function(response) {
             if(response!=old_notifications) {
                 old_notifications = response;

@@ -1296,6 +1296,7 @@ $(document).ready(function() {
                 'colorpicker',
                 'directionality',
                 'fullscreen',
+                'gapfill',
                 'hr',
                 'image',
                 'link',

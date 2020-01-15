@@ -1122,6 +1122,7 @@ function CustomPartType(data) {
     this.widget = data.input_widget;
     this.has_marks = true;
     this.has_correct_answer = true;
+    this.has_marking_settings = true,
     this.has_feedback_icon = true;
     this.can_be_gap = data.can_be_gap;
     this.can_be_step = data.can_be_step;

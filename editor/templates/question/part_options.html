@@ -7,7 +7,7 @@
     {% selectproperty 'partsMode' 'Part display mode' options_text='name' options='partsModes' %}
 
     <!-- ko if: partsMode().value=='explore' -->
-        {% property 'maxMarks' 'Maximum mark' %}
+        {% property 'maxMarks' 'Maximum mark' zero_means='sum of objective limits' %}
 
         <hr>
 

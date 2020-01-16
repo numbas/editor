@@ -2737,8 +2737,9 @@ $(document).ready(function() {
         this.availabilityExpression = ko.observable('');
         this.availability_conditions = [
             {name: 'Always', id: 'always', value: ''},
-            {name: 'When incorrect', id: 'when-incorrect', value: 'credit<1'},
-            {name: 'When correct', id: 'when-correct', value: 'credit=1'},
+            {name: 'When answer submitted', id: 'when-submitted', value: 'answered'},
+            {name: 'When incorrect', id: 'when-incorrect', value: 'answered and credit<1'},
+            {name: 'When correct', id: 'when-correct', value: 'answered and credit=1'},
             {name: 'Depending on expression', id: 'expression', value: this.availabilityExpression}
         ];
         this.availabilityCondition = ko.observable(this.availability_conditions[0]);

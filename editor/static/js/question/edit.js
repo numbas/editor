@@ -1900,11 +1900,13 @@ $(document).ready(function() {
         this.description = Knockout.computed(function() {
             var desc = ko.unwrap(this.def.description);
             if(this.def.kind=='part') {
+                var names = [];
                 var p = this.def.part;
                 while(p) {
-                    desc = p.name()+' '+desc;
+                    names.push(p.name());
                     p = p.parent();
                 }
+                desc = '"' + names.join(' ') + '" - ' + desc;
             }
             return desc;
         },this);
@@ -2348,6 +2350,9 @@ $(document).ready(function() {
                     o.push(new VariableReference({kind:'part',part:this,tab:'marking-algorithm',value:s.notes[x].vars,type:'list',description:'marking algorithm note '+x}));
                 }
             }
+            this.nextParts().forEach(function(np) {
+                o = o.concat(np.variable_references());
+            });
             this.type().variable_references().forEach(function(def) {
                 def.kind = 'part';
                 def.part = p;
@@ -2745,6 +2750,19 @@ $(document).ready(function() {
         this.availabilityCondition = ko.observable(this.availability_conditions[0]);
         this.penalty = ko.observable(null);
         this.penaltyAmount = ko.observable(0);
+
+        this.variable_references = ko.computed(function() {
+            var o = [];
+            if(this.availabilityCondition().id=='expression') {
+                o.push(new VariableReference({kind:'part',part:this.part,tab:'nextparts',value:this.availabilityExpression,type:'jme',description:'next part availability condition'}));
+            }
+            this.variableReplacements().forEach(function(vr) {
+                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.definition,type:'jme',description:'variable replacement'}));
+                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.variable,type:'jme',description:'variable replacement'}));
+            });
+            return o;
+        },this);
+
         if(data) {
             this.load(data);
         }

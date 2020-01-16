@@ -2813,7 +2813,25 @@ $(document).ready(function() {
         },this);
 
         this.variable = ko.observable('');
-        this.definition = ko.observable('interpreted_answer');
+
+        this.custom_definition = ko.observable('interpreted_answer');
+        this.value_options = ko.computed(function() {
+            var options = [
+                {definition: 'interpreted_answer', name: "Student's answer"}
+            ];
+            options = options.concat(np.part.gaps().map(function(g,i) {
+                return {definition: 'interpreted_answer['+i+']', name: "Student's answer to \""+g.name()+"\""};
+            }));
+            options = options.concat([
+                {definition: 'credit', name: 'Credit awarded'},
+                {definition: this.custom_definition, name: 'JME expression', custom: true}
+            ])
+            return options;
+        },this);
+        this.value_option = ko.observable(this.value_options()[0]);
+        this.definition = ko.computed(function() {
+            return ko.unwrap(this.value_option().definition);
+        },this);
 
         if(data) {
             this.load(data);
@@ -2831,7 +2849,7 @@ $(document).ready(function() {
                 return;
             }
             this.variable(data.variable || '');
-            this.definition(data.definition || '');
+            this.custom_definition(data.definition || '');
         }
     };
 

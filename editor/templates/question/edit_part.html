@@ -517,9 +517,13 @@
                             </thead>
                             <tbody data-bind="foreach: variableReplacements">
                                 <tr>
-                                    <td><select {% if not editable %}disabled{% endif %} class="form-control name-to-replace" data-bind="options: variables, value: variable"/></td>
+                                    <td><select {% if not editable %}disabled{% endif %} class="form-control name-to-replace" data-bind="options: variables, value: variable"></select></td>
                                     <td>
-                                        <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: definition, codemirrorMode: 'jme'"></textarea>
+                                        <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: value_options, optionsText: 'name', value: value_option"></select>
+                                        <div data-bind="fadeVisible: value_option().custom">
+                                            <p>WHAT</p>
+                                            <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: custom_definition, codemirrorMode: 'jme'"></textarea>
+                                        </div>
                                     </td>
                                     <td>
                                         {% if editable %}<button type="button" class="delete btn btn-link" data-bind="click: $parent.removeVariableReplacement" title="Delete this replacement"><span class="glyphicon glyphicon-remove text-danger"></span></button>{% endif %}

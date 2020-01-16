@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.shortcuts import redirect
 
 from editor.models import CustomPartType, CUSTOM_PART_TYPE_PUBLIC_CHOICES, CUSTOM_PART_TYPE_INPUT_WIDGETS, Extension
-from editor.forms import NewCustomPartTypeForm, UpdateCustomPartTypeForm, CopyCustomPartTypeForm
+from editor.forms import NewCustomPartTypeForm, UpdateCustomPartTypeForm, CopyCustomPartTypeForm, UploadCustomPartTypeForm
 from editor.views.generic import AuthorRequiredMixin
 
 import json
@@ -23,6 +23,19 @@ class CreateView(generic.CreateView):
         kwargs = super(CreateView, self).get_form_kwargs()
         kwargs['author'] = self.request.user
         return kwargs
+
+    def get_success_url(self):
+        return self.object.get_absolute_url()
+
+class UploadView(generic.CreateView):
+    model = CustomPartType
+    form_class = UploadCustomPartTypeForm
+    template_name = 'custom_part_type/upload.html'
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial['author'] = self.request.user
+        return initial
 
     def get_success_url(self):
         return self.object.get_absolute_url()

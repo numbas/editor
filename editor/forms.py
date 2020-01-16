@@ -1,6 +1,7 @@
 import zipfile
 import os
 from pathlib import Path
+import json
 
 from django import forms
 from django.forms.models import inlineformset_factory
@@ -526,6 +527,45 @@ class NewCustomPartTypeForm(forms.ModelForm):
             custom_part_type.save()
             self.save_m2m()
         return custom_part_type
+
+def validate_custom_part_type_json_file(f):
+    try:
+        content = f.read().decode('utf-8')
+        data = json.loads(content)
+        f.seek(0)
+    except (UnicodeDecodeError, json.JSONDecodeError, forms.ValidationError):
+        raise forms.ValidationError("Not a valid custom part type definition file")
+
+class UploadCustomPartTypeForm(forms.ModelForm):
+    file = forms.FileField(required=True, validators=[validate_custom_part_type_json_file])
+
+    class Meta:
+        model = CustomPartType
+        fields = ['author']
+        widgets = {
+            'author': forms.HiddenInput(),
+        }
+
+    def clean_file(self):
+        json_file = self.cleaned_data.get('file')
+        content = json_file.read().decode('utf-8')
+        data = json.loads(content)
+        self.cleaned_data['json'] = data
+        return content
+
+    def save(self, commit=True):
+        data = self.cleaned_data.get('json')
+        extensions = data.get('extensions',[])
+        del data['extensions']
+        kwargs = {}
+        for key in ['name','short_name','description','input_widget','input_options','can_be_gap','can_be_step','marking_script','marking_notes','settings','help_url','ready_to_use']:
+            if key in data:
+                kwargs[key] = data[key]
+        cpt = CustomPartType(author=self.cleaned_data.get('author'), **kwargs)
+        if(commit):
+            cpt.save()
+            cpt.extensions.set(Extension.objects.filter(location__in=extensions))
+        return cpt
 
 class CopyCustomPartTypeForm(forms.ModelForm):
     class Meta:

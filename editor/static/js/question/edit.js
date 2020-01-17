@@ -2743,7 +2743,7 @@ $(document).ready(function() {
         this.availability_conditions = [
             {name: 'Always', id: 'always', value: ''},
             {name: 'When answer submitted', id: 'when-submitted', value: 'answered'},
-            {name: 'When unanswered or incorrect', id: 'when-unanswered-or-incorrect', value: 'not (answered or credit=1)'},
+            {name: 'When unanswered or incorrect', id: 'when-unanswered-or-incorrect', value: 'not (answered and credit=1)'},
             {name: 'When incorrect', id: 'when-incorrect', value: 'answered and credit<1'},
             {name: 'When correct', id: 'when-correct', value: 'answered and credit=1'},
             {name: 'Depending on expression', id: 'expression', value: this.availabilityExpression}

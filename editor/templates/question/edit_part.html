@@ -521,7 +521,6 @@
                                     <td>
                                         <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: value_options, optionsText: 'name', value: value_option"></select>
                                         <div data-bind="fadeVisible: value_option().custom">
-                                            <p>WHAT</p>
                                             <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: custom_definition, codemirrorMode: 'jme'"></textarea>
                                         </div>
                                     </td>

@@ -2277,6 +2277,13 @@ $(document).ready(function() {
             return p.parentList();
         },this);
         this.suggestGoingBack = ko.observable(false);
+        this.nextPartReferences = ko.computed(function() {
+            return this.q.allParts().filter(function(p2) {
+                return p2.nextParts().some(function(np) {
+                    return np.otherPart()==p;
+                });
+            });
+        },this);
 
         this.scripts = [
             new Script('constructor','When the part is created','after','question/reference.html#term-when-the-part-is-created'),

@@ -560,6 +560,19 @@
                 <li><a href="#" data-bind="click: $parent.addNextPart, text: name"></a></li>
             </ul>
         </div>
+
+        <h3>Previous parts</h3>
+        <!-- ko if: nextPartReferences().length -->
+            <p>This part can follow on from:</p>
+            <ul data-bind="foreach: nextPartReferences">
+                <li>
+                    <button type="button" class="btn btn-sm btn-default" data-bind="click: $root.currentPart"><span class="glyphicon glyphicon-check"></span> <span data-bind="text: header"></span></button>
+                </li>
+            </ul>
+        <!-- /ko -->
+        <!-- ko if: nextPartReferences().length==0 -->
+        <p class="nothing-here">This part doesn't follow on from any others.</p>
+        <!-- /ko -->
     </section>
 </div>
 <!-- /ko -->

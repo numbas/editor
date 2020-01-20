@@ -190,7 +190,6 @@ $(document).ready(function() {
                 p.nextParts().forEach(function(np) {
                     var p2 = np.otherPart();
                     if(p2) {
-                        console.log(p2.header());
                         if(seen.indexOf(p2)==-1) {
                             queue.push(p2);
                             seen.push(p2);
@@ -2259,6 +2258,20 @@ $(document).ready(function() {
         },this);
 
         this.exploreObjective = ko.observable(null);
+
+        this.addObjective = function() {
+            var o = new ScoreBin(q);
+            var name;
+            if(!p.useCustomName() && p.parent()) {
+                name = p.parent().name();
+            } else {
+                name = p.name();
+            }
+            o.name(name);
+            o.limit(p.realMarks());
+            q.objectives.push(o);
+            p.exploreObjective(o);
+        }
 
         this.startAddingGap = function() {
             q.addingPart({kind:'gap',parent:p, parentList: p.gaps, availableTypes: q.gapTypes});

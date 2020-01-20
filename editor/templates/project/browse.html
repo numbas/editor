@@ -97,6 +97,7 @@
                     {% for column in items.columns %}
                     {% if column.column.is_blank %}
                     <th></th>
+                    <th></th>
                     {% else %}
                     <th {{column.attrs.th.as_html}}>
                         <span class="glyphicon glyphicon-sort-by-attributes"></span>

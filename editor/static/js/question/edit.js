@@ -172,6 +172,36 @@ $(document).ready(function() {
 
 
         this.parts = ko.observableArray([]);
+        ko.computed(function() {
+            if(this.partsMode().value=='all') {
+                this.parts().forEach(function(p) {
+                    p.reachable(true);
+                });
+            }
+            if(!this.parts().length) {
+                return;
+            }
+            var p = this.parts()[0];
+            var seen = [p];
+            var queue = [p];
+            while(queue.length>0) {
+                p = queue.pop();
+                p.reachable(true);
+                p.nextParts().forEach(function(np) {
+                    var p2 = np.otherPart();
+                    if(p2) {
+                        console.log(p2.header());
+                        if(seen.indexOf(p2)==-1) {
+                            queue.push(p2);
+                            seen.push(p2);
+                        }
+                    }
+                });
+            }
+            this.parts().forEach(function(p) {
+                p.reachable(seen.indexOf(p)>=0);
+            });
+        },this);
 
         // all parts in this question, including child parts such as gaps and steps
         this.allParts = ko.computed(function() {
@@ -2284,6 +2314,7 @@ $(document).ready(function() {
                 });
             });
         },this);
+        this.reachable = ko.observable(true);
 
         this.scripts = [
             new Script('constructor','When the part is created','after','question/reference.html#term-when-the-part-is-created'),

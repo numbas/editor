@@ -37,7 +37,7 @@ class Command(object):
         Question('STATIC_ROOT', 'Where are static files stored?','/srv/numbas/static/', validation=path_exists),
         Question('MEDIA_ROOT', 'Where are uploaded files stored?','/srv/numbas/media/', validation=path_exists),
         Question('PREVIEW_PATH', 'Where are preview exams stored?','/srv/numbas/previews/', validation=path_exists),
-        Question('PREVIEW_URL', 'Base URL of previews:','/previews/'),
+        Question('PREVIEW_URL', 'Base URL of previews:','/numbas-previews/'),
         Question('PYTHON_EXEC', 'Python command:','python3'),
         Question('SITE_TITLE', 'Title of the site:','Numbas'),
         Question('ALLOW_REGISTRATION', 'Allow new users to register themselves?', True),

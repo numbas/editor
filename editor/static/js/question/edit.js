@@ -2442,7 +2442,7 @@ $(document).ready(function() {
 
             tabs.push(new Editor.Tab('adaptivemarking','Adaptive marking','transfer',{in_use: adaptive_marking_tab_in_use}));
 
-            if(!this.parent()) {
+            if(!this.parent() && q.partsMode().value=='explore') {
                 var next_parts_tab_in_use = ko.computed(function() {
                     return this.nextParts().length>0;
                 },this);

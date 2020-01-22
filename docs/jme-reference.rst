@@ -568,13 +568,6 @@ Number operations
         * ``log(100)`` → ``2``.
         * ``log(343,7)`` → ``3``.
 
-.. jme:function:: log(x,b)
-
-    Logarithm with base ``b``.
-
-    **Example**:
-        * ``log(8,2)`` → ``3``.
-
 .. jme:function:: degrees(x)
 
     Convert radians to degrees.

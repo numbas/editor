@@ -469,6 +469,7 @@
                                         click: $parent.currentPart, 
                                         css: {active: $data==$parent.currentPart() || ($parent.addingPart() && $data==$parent.addingPart().parent)}
                                     ">
+                                        <span data-bind="visible: !reachable()" class="glyphicon glyphicon-exclamation-sign text-warning" title="This part can't be reached"></span>
                                         <strong data-bind="text: header"></strong>
                                         <span class="type-name" data-bind="text: type().niceName"></span>
                                         <small class="children-description text-muted" data-bind="text: childrenDescription"></small>

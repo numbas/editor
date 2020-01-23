@@ -172,6 +172,35 @@ $(document).ready(function() {
 
 
         this.parts = ko.observableArray([]);
+        ko.computed(function() {
+            if(this.partsMode().value=='all') {
+                this.parts().forEach(function(p) {
+                    p.reachable(true);
+                });
+            }
+            if(!this.parts().length) {
+                return;
+            }
+            var p = this.parts()[0];
+            var seen = [p];
+            var queue = [p];
+            while(queue.length>0) {
+                p = queue.pop();
+                p.reachable(true);
+                p.nextParts().forEach(function(np) {
+                    var p2 = np.otherPart();
+                    if(p2) {
+                        if(seen.indexOf(p2)==-1) {
+                            queue.push(p2);
+                            seen.push(p2);
+                        }
+                    }
+                });
+            }
+            this.parts().forEach(function(p) {
+                p.reachable(seen.indexOf(p)>=0);
+            });
+        },this);
 
         // all parts in this question, including child parts such as gaps and steps
         this.allParts = ko.computed(function() {
@@ -265,26 +294,6 @@ $(document).ready(function() {
             height: ko.observable(0)
         }
 
-
-        this.mainTabs([
-            new Editor.Tab('statement','Statement','blackboard'),
-            new Editor.Tab('parts','Parts','check'),
-            new Editor.Tab('variables','Variables','list'),
-            new Editor.Tab('variabletesting','Variable testing','dashboard'),
-            new Editor.Tab('advice','Advice','blackboard'),
-            new Editor.Tab('extensions','Extensions & scripts','wrench'),
-            new Editor.Tab('resources','Resources','picture'),
-            new Editor.Tab('settings','Settings','cog'),
-            new Editor.Tab('exams','Exams using this question','book'),
-            new Editor.Tab('network','Other versions','link'),
-            new Editor.Tab('history','Editing history','time')
-        ]);
-        if(item_json.editable) {
-            var adviceTab = new Editor.Tab('access','Access','lock');
-            this.mainTabs.splice(8,0,adviceTab);
-        }
-        this.currentTab(this.mainTabs()[0]);
-
         this.add_to_basket = function() {
             Editor.add_question_to_basket(item_json.itemJSON.id);
         }
@@ -344,6 +353,29 @@ $(document).ready(function() {
             css: ko.observable(''),
             js: ko.observable('')
         };
+
+        var extensions_tab_in_use = ko.computed(function() {
+            return this.usedExtensions().length>0 || this.functions().length>0 || this.preamble.css()!='' || this.preamble.js()!='';
+        },this);
+
+        this.mainTabs([
+            new Editor.Tab('statement','Statement','blackboard',{in_use: ko.computed(function(){ return this.statement()!=''; },this)}),
+            new Editor.Tab('parts','Parts','check',{in_use: ko.computed(function() { return this.parts().length>0; },this)}),
+            new Editor.Tab('variables','Variables','list',{in_use: ko.computed(function() { return this.variables().length>0; },this)}),
+            new Editor.Tab('variabletesting','Variable testing','dashboard',{in_use: ko.computed(function() { return this.variablesTest.condition()!=''; },this)}),
+            new Editor.Tab('advice','Advice','blackboard',{in_use: ko.computed(function() { return this.advice()!=''; },this)}),
+            new Editor.Tab('extensions','Extensions & scripts','wrench',{in_use: extensions_tab_in_use}),
+            new Editor.Tab('resources','Resources','picture',{in_use: ko.computed(function() { return this.resources().length>0; },this)}),
+            new Editor.Tab('settings','Settings','cog'),
+            new Editor.Tab('exams','Exams using this question','book',{in_use:item_json.used_in_exams}),
+            new Editor.Tab('network','Other versions','link',{in_use:item_json.other_versions_exist}),
+            new Editor.Tab('history','Editing history','time',{in_use:item_json.editing_history_used})
+        ]);
+        if(item_json.editable) {
+            var adviceTab = new Editor.Tab('access','Access','lock');
+            this.mainTabs.splice(8,0,adviceTab);
+        }
+        this.currentTab(this.mainTabs()[0]);
 
         this.startAddingPart = function() {
             q.addingPart({kind:'part', parent:null, parentList: q.parts, availableTypes: q.partTypes});
@@ -1897,11 +1929,13 @@ $(document).ready(function() {
         this.description = Knockout.computed(function() {
             var desc = ko.unwrap(this.def.description);
             if(this.def.kind=='part') {
+                var names = [];
                 var p = this.def.part;
                 while(p) {
-                    desc = p.name()+' '+desc;
+                    names.push(p.name());
                     p = p.parent();
                 }
+                desc = '"' + names.join(' ') + '" - ' + desc;
             }
             return desc;
         },this);
@@ -2209,55 +2243,6 @@ $(document).ready(function() {
             }
         },this);
 
-        this.tabs = ko.computed(function() {
-            var tabs = [];
-            if(!this.isGap()) {
-                tabs.push(new Editor.Tab('prompt','Prompt','blackboard',true,true));
-            }
-
-            tabs.push(new Editor.Tab('marking-settings','Marking settings','pencil',true,true));
-            if(this.type().has_marks) {
-                tabs.push(new Editor.Tab('marking-algorithm','Marking algorithm','ok'));
-            }
-
-            tabs = tabs.concat(this.type().tabs);
-
-            tabs.push(new Editor.Tab('scripts','Scripts','wrench'));
-
-            tabs.push(new Editor.Tab('adaptivemarking','Adaptive marking','transfer'));
-
-            if(!this.parent()) {
-                tabs.push(new Editor.Tab('nextparts','Next parts','arrow-right'));
-            }
-
-            return tabs;
-        },this);
-        this.realCurrentTab = ko.observable(this.tabs()[0]);
-        this.currentTab = ko.computed({
-            read: function() {
-                if(this.tabs().indexOf(this.realCurrentTab())==-1) {
-                    this.realCurrentTab(this.tabs()[0]);
-                    return this.tabs()[0];
-                }
-                else {
-                    return this.realCurrentTab();
-                }
-            },
-            write: this.realCurrentTab
-        },this);
-
-        this.getTab = function(id) {
-            return p.tabs().find(function(t){return t.id==id});
-        }
-
-        this.setTab = function(id) {
-            return function() {
-                var tab = p.getTab(id);
-                p.currentTab(tab);
-            }
-        }
-
-
         this.marks = ko.observable(1);
         this.realMarks = ko.computed(function() {
             switch(this.type().name) {
@@ -2273,6 +2258,20 @@ $(document).ready(function() {
         },this);
 
         this.exploreObjective = ko.observable(null);
+
+        this.addObjective = function() {
+            var o = new ScoreBin(q);
+            var name;
+            if(!p.useCustomName() && p.parent()) {
+                name = p.parent().name();
+            } else {
+                name = p.name();
+            }
+            o.name(name);
+            o.limit(p.realMarks());
+            q.objectives.push(o);
+            p.exploreObjective(o);
+        }
 
         this.startAddingGap = function() {
             q.addingPart({kind:'gap',parent:p, parentList: p.gaps, availableTypes: q.gapTypes});
@@ -2321,6 +2320,14 @@ $(document).ready(function() {
             return p.parentList();
         },this);
         this.suggestGoingBack = ko.observable(false);
+        this.nextPartReferences = ko.computed(function() {
+            return this.q.allParts().filter(function(p2) {
+                return p2.nextParts().some(function(np) {
+                    return np.otherPart()==p;
+                });
+            });
+        },this);
+        this.reachable = ko.observable(true);
 
         this.scripts = [
             new Script('constructor','When the part is created','after','question/reference.html#term-when-the-part-is-created'),
@@ -2394,6 +2401,9 @@ $(document).ready(function() {
                     o.push(new VariableReference({kind:'part',part:this,tab:'marking-algorithm',value:s.notes[x].vars,type:'list',description:'marking algorithm note '+x}));
                 }
             }
+            this.nextParts().forEach(function(np) {
+                o = o.concat(np.variable_references());
+            });
             this.type().variable_references().forEach(function(def) {
                 def.kind = 'part';
                 def.part = p;
@@ -2401,6 +2411,78 @@ $(document).ready(function() {
             });
             return o;
         },this);
+
+        this.tabs = ko.computed(function() {
+            var tabs = [];
+            if(!this.isGap()) {
+                tabs.push(new Editor.Tab('prompt','Prompt','blackboard',{visible:true,more_important:true,in_use: ko.computed(function() { return this.prompt()!=''},this)}));
+            }
+
+            if(this.type().has_marking_settings) {
+                tabs.push(new Editor.Tab('marking-settings','Marking settings','pencil',{visible:true,more_important:true,in_use:true}));
+            }
+            var marking_algorithm_tab_in_use = ko.computed(function() {
+                return this.use_custom_algorithm();
+            },this);
+            if(this.type().has_marks) {
+                tabs.push(new Editor.Tab('marking-algorithm','Marking algorithm','ok',{in_use: marking_algorithm_tab_in_use}));
+            }
+
+            tabs = tabs.concat(this.type().tabs);
+
+            var scripts_tab_in_use = ko.computed(function() {
+                return this.scripts.some(function(s) { return s.active(); });
+            },this);
+
+            tabs.push(new Editor.Tab('scripts','Scripts','wrench',{in_use: scripts_tab_in_use}));
+
+            var adaptive_marking_tab_in_use = ko.computed(function() {
+                return this.variableReplacements().length>0;
+            },this);
+
+            tabs.push(new Editor.Tab('adaptivemarking','Adaptive marking','transfer',{in_use: adaptive_marking_tab_in_use}));
+
+            if(!this.parent() && q.partsMode().value=='explore') {
+                var next_parts_tab_in_use = ko.computed(function() {
+                    return this.nextParts().length>0;
+                },this);
+                tabs.push(new Editor.Tab('nextparts','Next parts','arrow-right'));
+            }
+
+            tabs = tabs.sort(function(a,b) {
+                var ia = ko.unwrap(a.more_important);
+                var ib = ko.unwrap(b.more_important);
+                return ia ? ib ? 0 : -1 : ib ? 1 : 0;
+            });
+
+            return tabs;
+        },this);
+        this.realCurrentTab = ko.observable(this.tabs()[0]);
+        this.currentTab = ko.computed({
+            read: function() {
+                if(this.tabs().indexOf(this.realCurrentTab())==-1) {
+                    this.realCurrentTab(this.tabs()[0]);
+                    return this.tabs()[0];
+                }
+                else {
+                    return this.realCurrentTab();
+                }
+            },
+            write: this.realCurrentTab
+        },this);
+
+        this.getTab = function(id) {
+            return p.tabs().find(function(t){return t.id==id});
+        }
+
+        this.setTab = function(id) {
+            return function() {
+                var tab = p.getTab(id);
+                p.currentTab(tab);
+            }
+        }
+
+
 
         if(data)
             this.load(data);
@@ -2711,13 +2793,28 @@ $(document).ready(function() {
         this.availabilityExpression = ko.observable('');
         this.availability_conditions = [
             {name: 'Always', id: 'always', value: ''},
-            {name: 'When incorrect', id: 'when-incorrect', value: 'credit<1'},
-            {name: 'When correct', id: 'when-correct', value: 'credit=1'},
+            {name: 'When answer submitted', id: 'when-submitted', value: 'answered'},
+            {name: 'When unanswered or incorrect', id: 'when-unanswered-or-incorrect', value: 'not (answered and credit=1)'},
+            {name: 'When incorrect', id: 'when-incorrect', value: 'answered and credit<1'},
+            {name: 'When correct', id: 'when-correct', value: 'answered and credit=1'},
             {name: 'Depending on expression', id: 'expression', value: this.availabilityExpression}
         ];
         this.availabilityCondition = ko.observable(this.availability_conditions[0]);
         this.penalty = ko.observable(null);
         this.penaltyAmount = ko.observable(0);
+
+        this.variable_references = ko.computed(function() {
+            var o = [];
+            if(this.availabilityCondition().id=='expression') {
+                o.push(new VariableReference({kind:'part',part:this.part,tab:'nextparts',value:this.availabilityExpression,type:'jme',description:'next part availability condition'}));
+            }
+            this.variableReplacements().forEach(function(vr) {
+                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.definition,type:'jme',description:'variable replacement'}));
+                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.variable,type:'jme',description:'variable replacement'}));
+            });
+            return o;
+        },this);
+
         if(data) {
             this.load(data);
         }
@@ -2767,7 +2864,25 @@ $(document).ready(function() {
         },this);
 
         this.variable = ko.observable('');
-        this.definition = ko.observable('interpreted_answer');
+
+        this.custom_definition = ko.observable('interpreted_answer');
+        this.value_options = ko.computed(function() {
+            var options = [
+                {definition: 'interpreted_answer', name: "Student's answer"}
+            ];
+            options = options.concat(np.part.gaps().map(function(g,i) {
+                return {definition: 'interpreted_answer['+i+']', name: "Student's answer to \""+g.name()+"\""};
+            }));
+            options = options.concat([
+                {definition: 'credit', name: 'Credit awarded'},
+                {definition: this.custom_definition, name: 'JME expression', custom: true}
+            ])
+            return options;
+        },this);
+        this.value_option = ko.observable(this.value_options()[0]);
+        this.definition = ko.computed(function() {
+            return ko.unwrap(this.value_option().definition);
+        },this);
 
         if(data) {
             this.load(data);
@@ -2785,7 +2900,7 @@ $(document).ready(function() {
                 return;
             }
             this.variable(data.variable || '');
-            this.definition(data.definition || '');
+            this.custom_definition(data.definition || '');
         }
     };
 
@@ -3389,8 +3504,9 @@ $(document).ready(function() {
         this.has_marks = data.has_marks || false;
         this.has_correct_answer = data.has_correct_answer || false;
         this.has_feedback_icon = data.has_feedback_icon || false;
-        this.tabs = data.tabs || [];
+        this.has_marking_settings = data.has_marking_settings || false;
         this.model = data.model ? data.model(part) : {};
+        this.tabs = data.tabs ? data.tabs(part,this.model) : [];
         this.required_extensions = data.required_extensions || [];
         this.is_custom_part_type = data.is_custom_part_type;
         this.toJSONFn = data.toJSON || function() {};

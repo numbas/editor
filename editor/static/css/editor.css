@@ -153,6 +153,10 @@ editor-pager nav {
   border-color: #398439;
 }
 
+.nav-pills.nav-stacked > li.in-use:not(.active) > a {
+    color: hsl(121, 32.6%, 34.9%);
+}
+
 @media (min-width: 768px) and (max-width: 992px) {
     .nav-pills.nav-stacked > li > a {
         padding-left: 5px;

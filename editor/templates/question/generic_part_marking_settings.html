@@ -12,6 +12,22 @@
     {% booleanproperty 'showFeedbackIcon' 'Show score feedback icon?' help_url='question/parts/reference.html#term-show-score-feedback-icon' %}    
 </div>
 <div data-bind="visible: type().has_marks && q.partsMode().value=='explore'">
-    {% selectproperty 'exploreObjective' 'Score counts towards objective' options_text='name' options='q.objectives' allow_blank=True help_url='question/parts/reference.html#term-score-counts-toward-objective' %}
+    <div class="form-group">
+        <label class="label-block">
+            <div class="{{form_label_class}} control-label">
+                Score counts towards objective
+                {% helplink 'question/parts/reference.html#term-score-counts-toward-objective' %}
+            </div>
+            <div class="{{form_control_class}}">
+                {% select_input 'exploreObjective' options='q.objectives' options_text='name' allow_blank=True %}
+                {% if editable %}
+                <button type="button" class="btn btn-primary btn-sm" data-bind="click: addObjective">
+                    <span class="glyphicon glyphicon-plus"></span>
+                    Add a new objective
+                </button>
+                {% endif %}
+            </div>
+        </label>
+    </div>
 </div>
 <!-- /ko -->

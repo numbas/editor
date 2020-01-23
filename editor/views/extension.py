@@ -38,7 +38,7 @@ class UploadView(generic.CreateView):
     template_name = 'extension/upload.html'
 
     def get_form_kwargs(self):
-        kwargs = super(CreateView, self).get_form_kwargs()
+        kwargs = super().get_form_kwargs()
         kwargs['author'] = self.request.user
         return kwargs
 

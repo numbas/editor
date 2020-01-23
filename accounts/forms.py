@@ -166,8 +166,8 @@ class DeactivateUserForm(forms.ModelForm,MagicWordForm):
             reassign_content(user,reassign_to_user)
 
         if self.cleaned_data.get('unsubscribe'):
-            import numbasmailing
-            numbasmailing.delete(user.email)
+            import numbasmailing.mail
+            numbasmailing.mail.delete(user.email)
 
         user.is_active = False
         user.username = 'deactivated_user_{}!'.format(user.pk)

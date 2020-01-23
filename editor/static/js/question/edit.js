@@ -177,6 +177,7 @@ $(document).ready(function() {
                 this.parts().forEach(function(p) {
                     p.reachable(true);
                 });
+                return;
             }
             if(!this.parts().length) {
                 return;

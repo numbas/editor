@@ -1246,179 +1246,194 @@ $(document).ready(function() {
             valueAccessor = valueAccessor();
             allBindingsAccessor = allBindingsAccessor();
 
-            if(element.hasAttribute('disabled')) {
-                try {
-                    element.classList.add('well');
-                    element.classList.add('content-area');
-                } catch(e) {
-                    element.className += ' well content-area';
-                }
-                return;
-            }
+            var well = document.createElement('div');
+            well.classList.add('well','not-editing');
 
-            var height = allBindingsAccessor.hasOwnProperty('wmHeight') ? allBindingsAccessor.wmHeight : 200;
-            var width = allBindingsAccessor.hasOwnProperty('wmWidth') ? allBindingsAccessor.wmWidth : '';
-            var para = allBindingsAccessor.hasOwnProperty('wmPara') ? allBindingsAccessor.wmPara : true;
+            var content_area = document.createElement('div');
+            content_area.classList.add('content-area');
+            well.appendChild(content_area);
 
-            var preambleCSSAccessor = allBindingsAccessor.preambleCSS;
+            var click_to_edit = document.createElement('p');
+            click_to_edit.classList.add('click-to-edit');
+            click_to_edit.textContent = 'Click to edit';
+            well.appendChild(click_to_edit);
 
-            var tinymce_plugins = ko.utils.unwrapObservable(allBindingsAccessor.tinymce_plugins) || [];
+            well.setAttribute('tabindex',0);
+            well.setAttribute('role','button');
+            element.appendChild(well);
 
-            var t = $('<div class="wmTextArea" style="width:100%"/>');
+            function make_tinymce() {
+                element.removeChild(well);
+                element.classList.add('has-tinymce');
+                var height = allBindingsAccessor.hasOwnProperty('wmHeight') ? allBindingsAccessor.wmHeight : 200;
+                var width = allBindingsAccessor.hasOwnProperty('wmWidth') ? allBindingsAccessor.wmWidth : '';
+                var para = allBindingsAccessor.hasOwnProperty('wmPara') ? allBindingsAccessor.wmPara : true;
 
-            $(element)
-                .css('width',width)
-                .append(t)
-            ;
+                var preambleCSSAccessor = allBindingsAccessor.preambleCSS;
 
-            function remove_empty_spans(node) {
-                if(node.nodeType==1) {
-                    for(var i=0;i<node.childNodes.length;i++) {
-                        var child = node.childNodes[i];
-                        if(child.nodeType==1) {
-                            remove_empty_spans(child);
-                            if(child.nodeName=='SPAN' && child.attributes.length==0) {
-                                for(var j=0;j<child.childNodes.length;j++) {
-                                    node.insertBefore(child.childNodes[j],child);
+                var tinymce_plugins = ko.utils.unwrapObservable(allBindingsAccessor.tinymce_plugins) || [];
+
+                var t = $('<div class="wmTextArea" style="width:100%"/>');
+
+                $(element)
+                    .css('width',width)
+                    .append(t)
+                ;
+
+                function remove_empty_spans(node) {
+                    if(node.nodeType==1) {
+                        for(var i=0;i<node.childNodes.length;i++) {
+                            var child = node.childNodes[i];
+                            if(child.nodeType==1) {
+                                remove_empty_spans(child);
+                                if(child.nodeName=='SPAN' && child.attributes.length==0) {
+                                    for(var j=0;j<child.childNodes.length;j++) {
+                                        node.insertBefore(child.childNodes[j],child);
+                                    }
+                                    node.removeChild(child);
                                 }
-                                node.removeChild(child);
                             }
                         }
                     }
                 }
-            }
-            
-            var plugins = [
-                'anchor',
-                'autoresize',
-                'code',
-                'codesample',
-                'colorpicker',
-                'directionality',
-                'fullscreen',
-                'gapfill',
-                'hr',
-                'image',
-                'link',
-                'lists',
-                'media',
-                'noneditable',
-                'paste',
-                'searchreplace',
-                'table',
-                'textcolor',
-                'textpattern'
-            ]
-            .concat(tinymce_plugins);
+                
+                var plugins = [
+                    'anchor',
+                    'autoresize',
+                    'code',
+                    'codesample',
+                    'colorpicker',
+                    'directionality',
+                    'fullscreen',
+                    'gapfill',
+                    'hr',
+                    'image',
+                    'link',
+                    'lists',
+                    'media',
+                    'noneditable',
+                    'paste',
+                    'searchreplace',
+                    'table',
+                    'textcolor',
+                    'textpattern'
+                ]
+                .concat(tinymce_plugins);
 
-            //tinyMCE
-            t
-                .tinymce({
-                    theme: 'modern',
-                    skin: 'lightgray',
-                    plugins: plugins,
+                //tinyMCE
+                t
+                    .tinymce({
+                        theme: 'modern',
+                        skin: 'lightgray',
+                        plugins: plugins,
 
-                    menu: {
-                        edit: {title: 'Edit', items: 'undo redo | cut copy paste pastetext | selectall | searchreplace'},
-                        insert: {title: 'Insert', items: 'image media link | anchor hr'},
-                        view: {title: 'View', items: 'visualaid | fullscreen preview'},
-                        format: {title: 'Format', items: 'bold italic underline strikethrough superscript subscript | formats | removeformat'},
-                        table: {title: 'Table', items: 'inserttable tableprops deletetable | cell row column'},
-                        tools: {title: 'Tools', items: 'code'}
-                    },
-                    
-                    toolbar: "undo redo | styleselect | bullist numlist | bold italic removeformat | alignleft aligncenter alignright | bullist numlist outdent indent | link image gapfill jmevisible | fullscreen preview code",
+                        menu: {
+                            edit: {title: 'Edit', items: 'undo redo | cut copy paste pastetext | selectall | searchreplace'},
+                            insert: {title: 'Insert', items: 'image media link | anchor hr'},
+                            view: {title: 'View', items: 'visualaid | fullscreen preview'},
+                            format: {title: 'Format', items: 'bold italic underline strikethrough superscript subscript | formats | removeformat'},
+                            table: {title: 'Table', items: 'inserttable tableprops deletetable | cell row column'},
+                            tools: {title: 'Tools', items: 'code'}
+                        },
+                        
+                        toolbar: "undo redo | styleselect | bullist numlist | bold italic removeformat | alignleft aligncenter alignright | bullist numlist outdent indent | link image gapfill jmevisible | fullscreen preview code",
 
-                    statusbar: false,
-                    media_strict: false,
-                    width: width,
-                    verify_html: false,
-                    autoresize_bottom_margin: 0,
-                    autoresize_min_height: 30,
-                    convert_urls: false,
-                    verify_html: false,
+                        statusbar: false,
+                        media_strict: false,
+                        width: width,
+                        verify_html: false,
+                        autoresize_bottom_margin: 0,
+                        autoresize_min_height: 30,
+                        convert_urls: false,
+                        verify_html: false,
 
-                    forced_root_block: para ? 'p' : false,
+                        forced_root_block: para ? 'p' : false,
 
-                    paste_postprocess: function(ed,args) {
-                        remove_empty_spans(args.node);
-                    },
+                        paste_postprocess: function(ed,args) {
+                            remove_empty_spans(args.node);
+                        },
 
-                    init_instance_callback: function(ed) { 
-                        $(element).writemaths({iFrame: true, position: 'center top', previewPosition: 'center bottom'}); 
-                        function onMCEChange() {
-                            valueAccessor(ed.getContent());
-                        }
-                        ed.on('change',onMCEChange);
-                        ed.on('keyup',onMCEChange);
-                        ed.on('paste',onMCEChange);
-                        if(preambleCSSAccessor !== undefined) {
-                            var s = ed.dom.create('style',{type:'text/css',id:'preamblecss'});
-                            ed.dom.doc.head.appendChild(s);
-                            ko.computed(function() {
-                                s.textContent = ko.utils.unwrapObservable(preambleCSSAccessor);
+                        init_instance_callback: function(ed) { 
+                            $(element).writemaths({iFrame: true, position: 'center top', previewPosition: 'center bottom'}); 
+                            function onMCEChange() {
+                                valueAccessor(ed.getContent());
+                            }
+                            ed.on('change',onMCEChange);
+                            ed.on('keyup',onMCEChange);
+                            ed.on('paste',onMCEChange);
+                            if(preambleCSSAccessor !== undefined) {
+                                var s = ed.dom.create('style',{type:'text/css',id:'preamblecss'});
+                                ed.dom.doc.head.appendChild(s);
+                                ko.computed(function() {
+                                    s.textContent = ko.utils.unwrapObservable(preambleCSSAccessor);
+                                });
+                            }
+                            ed.on('keyup',function(e) {
+                                if(e.which==27 && ed.plugins.fullscreen.isFullscreen()) {
+                                    ed.execCommand('mceFullScreen');
+                                }
                             });
-                        }
-                        ed.on('keyup',function(e) {
-                            if(e.which==27 && ed.plugins.fullscreen.isFullscreen()) {
-                                ed.execCommand('mceFullScreen');
+
+                            ed.setContent(ko.unwrap(valueAccessor));
+                            ed.undoManager.clear();
+                            ed.on('focus',function() {
+                                $(ed.getContainer()).addClass('wm-focus');
+                            });
+                            ed.on('blur',function() {
+                                $(ed.getContainer()).removeClass('wm-focus');
+                            });
+
+                            var resizer = setInterval(function() {
+                                if($(ed.getContainer()).parents('.tab-pane:not(.active)').length==0) {
+                                    ed.execCommand('mceAutoResize');
+                                    clearInterval(resizer);
+                                }
+                            }, 100);
+
+                            if(allBindingsAccessor.showButtons) {
+                                ko.computed(function() {
+                                    var showButtons = ko.unwrap(allBindingsAccessor.showButtons);
+                                    var show = showButtons.gapfill();
+                                    ed.fire('toggle_gapfill_button',{show:show});
+                                },this);
                             }
-                        });
 
-                        ed.setContent(ko.unwrap(valueAccessor));
-                        ed.undoManager.clear();
-                        ed.on('focus',function() {
-                            $(ed.getContainer()).addClass('wm-focus');
-                        });
-                        ed.on('blur',function() {
-                            $(ed.getContainer()).removeClass('wm-focus');
-                        });
-
-                        var resizer = setInterval(function() {
-                            if($(ed.getContainer()).parents('.tab-pane:not(.active)').length==0) {
-                                ed.execCommand('mceAutoResize');
-                                clearInterval(resizer);
+                            if(allBindingsAccessor.gaps) {
+                                ko.computed(function() {
+                                    var gaps = ko.unwrap(allBindingsAccessor.gaps);
+                                    var part = ko.unwrap(allBindingsAccessor.part);
+                                    ed.fire('gaps_changed',gaps);
+                                }).extend({throttle: 50});
                             }
-                        }, 100);
 
-                        if(allBindingsAccessor.showButtons) {
-                            ko.computed(function() {
-                                var showButtons = ko.unwrap(allBindingsAccessor.showButtons);
-                                var show = showButtons.gapfill();
-                                ed.fire('toggle_gapfill_button',{show:show});
-                            },this);
                         }
+                    })
+                ;
+            }
 
-                        if(allBindingsAccessor.gaps) {
-                            ko.computed(function() {
-                                var gaps = ko.unwrap(allBindingsAccessor.gaps);
-                                var part = ko.unwrap(allBindingsAccessor.part);
-                                ed.fire('gaps_changed',gaps);
-                            }).extend({throttle: 50});
-                        }
-
-                    }
-                })
-            ;
-
+            well.addEventListener('click',function() {
+                if(!element.hasAttribute('disabled')) {
+                    make_tinymce();
+                }
+            });
         },
         update: function(element, valueAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor()) || '';
 
-            if(element.hasAttribute('disabled')) {
-                $(element).html(value).mathjax();
-                $(element).find('[data-bind]').each(function() {
-                    this.removeAttribute('data-bind');
-                });
-                return;
-            }
+            var well = element.querySelector('.well.not-editing > .content-area');
+            $(well).html(value).mathjax();
+            $(well).find('[data-bind]').each(function() {
+                this.removeAttribute('data-bind');
+            });
 
-            var tinymce = $(element).find('iframe');
+            if(element.classList.contains('has-tinymce')) {
+                var tinymce = $(element).find('iframe');
 
-            if (!tinymce.is(':focus')) {
-                var ed = $(element).children('.wmTextArea').tinymce();
-                if(ed && ed.initialized) {
-                    ed.setContent(value);
+                if (!tinymce.is(':focus')) {
+                    var ed = $(element).children('.wmTextArea').tinymce();
+                    if(ed && ed.initialized) {
+                        ed.setContent(value);
+                    }
                 }
             }
         }
@@ -1529,6 +1544,16 @@ $(document).ready(function() {
             }
             element.setAttribute('data-jme-value-type',type);
             $(element).html(display);
+        }
+    }
+
+    ko.bindingHandlers.activeIf = {
+        init: function() {
+            return ko.bindingHandlers['if'].init.apply(this,arguments);
+        },
+        update: function(element, valueAccessor) {
+            var active = ko.unwrap(valueAccessor());
+            element.classList.toggle('active',active);
         }
     }
 

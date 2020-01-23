@@ -48,7 +48,7 @@
     </li>
 </ul>
 <div class="col-sm-11 col-md-9 col-lg-10 tab-content">
-    <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='prompt'}">
+    <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='prompt'">
         <p class="help-block">
             {% helplink 'question/parts/reference.html#term-prompt' subject='the part prompt' %}
             Ask the student a question, and give any hints about how they should answer this part.
@@ -72,7 +72,7 @@
         <!-- /ko -->
     {% endwith %}
 
-    <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='marking-algorithm'}">
+    <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='marking-algorithm'">
         <form class="form-horizontal" data-bind="submit: Editor.noop">
             {% booleanproperty 'use_custom_algorithm' 'Use custom marking algorithm?' help_url='question/parts/reference.html#term-use-custom-marking-algorithm' %}
 
@@ -149,7 +149,7 @@
             </ul>
 
             <div class="tab-content">
-                <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='variables'}">
+                <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='variables'">
 
                     <table class="variables table table-striped">
                         <thead>
@@ -176,7 +176,7 @@
                     <button class="btn btn-info btn-lg" type="button" data-bind="click: $root.regenerateVariables"><span class="glyphicon glyphicon-refresh"></span> Regenerate values</button>
                 </section>
 
-                <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='notes'}">
+                <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='notes'">
                     <!-- ko if: ko.unwrap($data.runtime_part)!==undefined -->
                     <div data-bind="if: last_run_error">
                         <div class="alert alert-danger" aria-live="polite">
@@ -287,7 +287,7 @@
                             </ul>
 
                             <div class="tab-content">
-                                <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='variables'}">
+                                <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='variables'">
                                     <table class="variables table table-striped">
                                         <thead>
                                             <tr>
@@ -304,7 +304,7 @@
                                     </table>
                                 </section>
 
-                                <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='notes'}">
+                                <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='notes'">
                                     <!-- ko if: ko.unwrap($data.runtime_part)!==undefined -->
                                     <form class="form-horizontal" data-bind="submit: Editor.noop">
                                         <div class="form-group">
@@ -393,7 +393,7 @@
         </div>
     </section>
 
-    <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='scripts'}">
+    <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='scripts'">
         <p class="help-block">
             {% helplink 'question/parts/reference.html#scripts' subject='part scripts' %}
             When you need to change the way this part works beyond the available options, you can write JavaScript code to be executed at the times described below.
@@ -415,7 +415,7 @@
             </div>
         </form>
     </section>
-    <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='adaptivemarking'}">
+    <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='adaptivemarking'">
         <p class="help-block">
             {% helplink 'question/parts/reference.html#adaptive-marking' subject='adaptive marking' %}
             To account for errors made by the student in earlier calculations, replace question variables with answers to earlier parts.
@@ -467,7 +467,7 @@
             </form>
         </div>
     </section>
-    <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='nextparts'}">
+    <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='nextparts'">
         <div class="alert alert-warning" data-bind="fadeVisible: !reachable()">
             <p>This part can't be reached by the student.</p>
             <p data-bind="visible: nextPartReferences().length==0">

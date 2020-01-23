@@ -246,7 +246,7 @@ $(document).ready(function() {
     Editor.nonempty_task = function(text,observable,focus_on) {
         return {
             text: text, 
-            done: ko.computed(function() {return observable() && true}),
+            done: ko.pureComputed(function() {return observable() && true}),
             focus_on: focus_on
         };
     }
@@ -255,7 +255,7 @@ $(document).ready(function() {
     Editor.valid_jme_task = function(text,observable,focus_on) {
         return {
             text: text, 
-            done: ko.computed(function() {
+            done: ko.pureComputed(function() {
                 var expr = ko.unwrap(observable);
                 try {
                     var tree = Numbas.jme.compile(expr);
@@ -274,7 +274,7 @@ $(document).ready(function() {
         search.searching = ko.observable(false);
 
         if('page' in search.results) {
-            search.results.pages = ko.computed(function() {
+            search.results.pages = ko.pureComputed(function() {
                 var results = this.all();
                 var pages = [];
                 for(var i=0;i<results.length;i+=10) {
@@ -284,7 +284,7 @@ $(document).ready(function() {
                 return pages;
             },search.results);
 
-            search.results.pageText = ko.computed(function() {
+            search.results.pageText = ko.pureComputed(function() {
                 return this.page()+'/'+this.pages().length;
             },search.results);
         }
@@ -465,7 +465,7 @@ $(document).ready(function() {
         this.toggleOpen = function() {
             t.open(!t.open());
         }
-        this.any_used = ko.computed(function() {
+        this.any_used = ko.pureComputed(function() {
             return this.trees.some(function(n){ return n.used() || n.children_used(); });
         },this);
 
@@ -502,7 +502,7 @@ $(document).ready(function() {
         this.code = data.code;
         this.name = data.name;
         this.children = data.children.map(function(d){ return new TaxonomyNode(d,n); });
-        this.children_used = ko.computed(function() {
+        this.children_used = ko.pureComputed(function() {
             return this.children.some(function(n){ return n.used() || n.children_used() });
         },this);
         this.used = ko.observable(false);
@@ -521,13 +521,13 @@ $(document).ready(function() {
         this.section_still_to_do = {};
 
         function section_completed(tasks) {
-            return ko.computed(function() {
+            return ko.pureComputed(function() {
                 return tasks.every(function(t){return ko.unwrap(t.done)});
             })
         }
 
         function section_still_to_do(tasks) {
-            return ko.computed(function() {
+            return ko.pureComputed(function() {
                 var task = tasks.filter(function(t){return !ko.unwrap(t.done)})[0];
                 function uncapitalise(str){ 
                     return str.slice(0,1).toLowerCase()+str.slice(1);
@@ -541,7 +541,7 @@ $(document).ready(function() {
             this.section_still_to_do[section] = section_still_to_do(this.section_tasks[section]);
         }
         
-        this.all_sections_completed = ko.computed(function() {
+        this.all_sections_completed = ko.pureComputed(function() {
             for(var key in this.section_completed) {
                 if(!this.section_completed[key]()) {
                     return false;
@@ -590,7 +590,7 @@ $(document).ready(function() {
                 }
             }
         ]);
-        this.ready_to_download_obj = ko.computed(function() {
+        this.ready_to_download_obj = ko.pureComputed(function() {
             var checks = this.ready_to_download_checks();
             for(var i=0;i<checks.length;i++) {
                 var obj = checks[i]();
@@ -600,10 +600,10 @@ $(document).ready(function() {
             }
             return {ready:true};
         },this);
-        this.ready_to_download = ko.computed(function() {
+        this.ready_to_download = ko.pureComputed(function() {
             return this.ready_to_download_obj().ready;
         },this);
-        this.ready_to_download_reason = ko.computed(function() {
+        this.ready_to_download_reason = ko.pureComputed(function() {
             return this.ready_to_download_obj().reason;
         },this);
 
@@ -612,7 +612,7 @@ $(document).ready(function() {
             return new Editor.AbilityFramework(d);
         }));
 
-        this.ability_levels = ko.computed(function() {
+        this.ability_levels = ko.pureComputed(function() {
             var o = [];
             this.ability_frameworks().map(function(af) {
                 o = o.concat(af.levels);
@@ -620,12 +620,12 @@ $(document).ready(function() {
             return o;
         },this);
 
-        this.used_ability_levels = ko.computed(function() {
+        this.used_ability_levels = ko.pureComputed(function() {
             return this.ability_levels().filter(function(al){return al.used()});
         },this);
 
         item_json.licences.sort(function(a,b){a=a.short_name;b=b.short_name; return a<b ? -1 : a>b ? 1 : 0 });
-        this.licence_name = ko.computed(function() {
+        this.licence_name = ko.pureComputed(function() {
             if(this.licence()) {
                 return this.licence().name;
             } else {
@@ -637,12 +637,12 @@ $(document).ready(function() {
             return new Taxonomy(t);
         });
 
-        this.realName = ko.computed(function() {
+        this.realName = ko.pureComputed(function() {
             var name = this.name()
             return name.length>0 ? name : 'Untitled Question';
         },this);
 
-        this.tags = ko.computed({
+        this.tags = ko.pureComputed({
             read: function() {
                 return this.realtags().sort(function(a,b) {
                     a = a.toLowerCase();
@@ -679,7 +679,7 @@ $(document).ready(function() {
             return ei.realtags.remove(q);
         }
 
-        this.metadata = ko.computed(function() {
+        this.metadata = ko.pureComputed(function() {
             return {
                 description: this.description(),
                 licence: this.licence_name()
@@ -698,7 +698,7 @@ $(document).ready(function() {
                 {value:'view',text:'Anyone can view this'},
                 {value:'edit',text:'Anyone can edit this'}
             ];
-            this.public_access_text = ko.computed(function() {
+            this.public_access_text = ko.pureComputed(function() {
                 var public_access = this.public_access();
                 return this.access_options.filter(function(t){return t.value==public_access})[0].text;
             },this);
@@ -708,7 +708,7 @@ $(document).ready(function() {
                 return access;
             }));
 
-            this.access_data = ko.computed(function() {
+            this.access_data = ko.pureComputed(function() {
                 return {
                     public_access: ei.public_access(),
                     user_ids: ei.access_rights().map(function(u){return u.id}),
@@ -769,7 +769,7 @@ $(document).ready(function() {
     Editor.EditorItem.prototype = {
         init_tasks: function() {
             this.task_list = new Editor.TaskList(this.section_tasks);
-            this.canPublish = ko.computed(function() {
+            this.canPublish = ko.pureComputed(function() {
                 return !this.published() && this.task_list.all_sections_completed();
             },this);
         },
@@ -779,7 +779,7 @@ $(document).ready(function() {
         },
 
         init_output: function() {
-            this.output = ko.computed(function() {
+            this.output = ko.pureComputed(function() {
                 var data = JSON.stringify(this.toJSON());
                 return '// Numbas version: '+Editor.numbasVersion+'\n'+data;
             },this);
@@ -846,7 +846,7 @@ $(document).ready(function() {
                         }
                     }
                 }
-                Editor.computedReplaceState('currentTab',ko.computed(function() {
+                Editor.computedReplaceState('currentTab',ko.pureComputed(function() {
                     var tab = this.currentTab();
                     return tab ? tab.id : '';
                 },this));
@@ -1576,7 +1576,7 @@ $(document).ready(function() {
             this.expr = params.expr;
             this.vars = params.vars || [];
             this.show_syntax_errors = params.show_syntax_errors===undefined ? true : params.show_syntax_errors;
-            this.error = ko.computed(function() {
+            this.error = ko.pureComputed(function() {
                 var expr = ko.unwrap(this.expr);
                 try {
                     var tree = Numbas.jme.compile(expr);
@@ -1646,7 +1646,7 @@ $(document).ready(function() {
             this.has_task = editor.section_tasks[this.task_group] !== undefined;
             this.completed = this.has_task ? editor.task_list.section_completed[this.task_group] : true;
             this.still_to_do = this.has_task ? editor.task_list.section_still_to_do[this.task_group] : false;
-            this.current_task = ko.computed(function() {
+            this.current_task = ko.pureComputed(function() {
                 if(!editor.task_list.section_tasks[this.task_group]) {
                     return null;
                 } else {
@@ -1941,7 +1941,7 @@ $(document).ready(function() {
     var CommentWriter = Editor.CommentWriter = function() {
         this.writingComment = ko.observable(false);
         this.commentText = ko.observable('');
-        this.commentIsEmpty = ko.computed(function() {
+        this.commentIsEmpty = ko.pureComputed(function() {
             return $(this.commentText()).text().trim()=='';
         },this);
         this.submitComment = function(form) {

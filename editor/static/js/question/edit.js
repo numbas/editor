@@ -88,7 +88,7 @@ $(document).ready(function() {
             this.show = params.data.show;
             this.part_types = params.data.part_types;
             this.search = ko.observable('');
-            this.filtered_part_types = ko.computed(function() {
+            this.filtered_part_types = ko.pureComputed(function() {
                 var search = this.search();
                 var words = search.toLowerCase().split(/\s+/g).map(function(w){ return w.trim() });
                 return this.part_types.filter(function(pt) {
@@ -204,7 +204,7 @@ $(document).ready(function() {
         },this);
 
         // all parts in this question, including child parts such as gaps and steps
-        this.allParts = ko.computed(function() {
+        this.allParts = ko.pureComputed(function() {
             var o = [];
             this.parts().map(function(p) {
                 o.push(p);
@@ -238,7 +238,7 @@ $(document).ready(function() {
             }
         });
 
-        this.partTypes = ko.computed(function() {
+        this.partTypes = ko.pureComputed(function() {
             return Editor.part_types.models.filter(function(pt) {
                 if(pt.is_custom_part_type) {
                     return q.allParts().some(function(p){ return p.type().name==pt.name });
@@ -247,10 +247,10 @@ $(document).ready(function() {
                 }
             });
         }, this);
-        this.gapTypes = ko.computed(function(){ return q.partTypes().filter(function(t){ return t.can_be_gap!==false }); });
-        this.stepTypes = ko.computed(function(){ return q.partTypes().filter(function(t){ return t.can_be_step!==false }); });
+        this.gapTypes = ko.pureComputed(function(){ return q.partTypes().filter(function(t){ return t.can_be_gap!==false }); });
+        this.stepTypes = ko.pureComputed(function(){ return q.partTypes().filter(function(t){ return t.can_be_step!==false }); });
 
-        this.usedPartTypes = ko.computed(function() {
+        this.usedPartTypes = ko.pureComputed(function() {
             return Editor.part_types.models.filter(function(pt) {
                 return q.allParts().some(function(p){ return p.type().name==pt.name });
             })
@@ -299,7 +299,7 @@ $(document).ready(function() {
             Editor.add_question_to_basket(item_json.itemJSON.id);
         }
 
-        this.saveResources = ko.computed(function() {
+        this.saveResources = ko.pureComputed(function() {
             var resources = this.resources();
             var out = [];
             for(var i=0;i<resources.length;i++) {
@@ -319,10 +319,10 @@ $(document).ready(function() {
                 ext[k] = data[k];
             });
             this.used = ko.observable(false);
-            this.required = ko.computed(function() {
+            this.required = ko.pureComputed(function() {
                 return q.usedPartTypes().some(function(p){ return p.required_extensions && p.required_extensions.indexOf(ext.location) != -1 });
             }, this);
-            this.used_or_required = ko.computed({
+            this.used_or_required = ko.pureComputed({
                 read: function() {
                     return this.used() || this.required();
                 },
@@ -342,11 +342,11 @@ $(document).ready(function() {
         for(var i=0;i<item_json.numbasExtensions.length;i++) {
             this.extensions.push(new Extension(this,item_json.numbasExtensions[i]));
         }
-        this.usedExtensions = ko.computed(function() {
+        this.usedExtensions = ko.pureComputed(function() {
             return this.extensions().filter(function(e){return e.used_or_required()});
         },this);
 
-        this.allsets = ko.computed(function() {
+        this.allsets = ko.pureComputed(function() {
             return builtinRulesets.concat(this.rulesets().map(function(r){return r.name()})).sort();
         },this);
 
@@ -355,18 +355,18 @@ $(document).ready(function() {
             js: ko.observable('')
         };
 
-        var extensions_tab_in_use = ko.computed(function() {
+        var extensions_tab_in_use = ko.pureComputed(function() {
             return this.usedExtensions().length>0 || this.functions().length>0 || this.preamble.css()!='' || this.preamble.js()!='';
         },this);
 
         this.mainTabs([
-            new Editor.Tab('statement','Statement','blackboard',{in_use: ko.computed(function(){ return this.statement()!=''; },this)}),
-            new Editor.Tab('parts','Parts','check',{in_use: ko.computed(function() { return this.parts().length>0; },this)}),
-            new Editor.Tab('variables','Variables','list',{in_use: ko.computed(function() { return this.variables().length>0; },this)}),
-            new Editor.Tab('variabletesting','Variable testing','dashboard',{in_use: ko.computed(function() { return this.variablesTest.condition()!=''; },this)}),
-            new Editor.Tab('advice','Advice','blackboard',{in_use: ko.computed(function() { return this.advice()!=''; },this)}),
+            new Editor.Tab('statement','Statement','blackboard',{in_use: ko.pureComputed(function(){ return this.statement()!=''; },this)}),
+            new Editor.Tab('parts','Parts','check',{in_use: ko.pureComputed(function() { return this.parts().length>0; },this)}),
+            new Editor.Tab('variables','Variables','list',{in_use: ko.pureComputed(function() { return this.variables().length>0; },this)}),
+            new Editor.Tab('variabletesting','Variable testing','dashboard',{in_use: ko.pureComputed(function() { return this.variablesTest.condition()!=''; },this)}),
+            new Editor.Tab('advice','Advice','blackboard',{in_use: ko.pureComputed(function() { return this.advice()!=''; },this)}),
             new Editor.Tab('extensions','Extensions & scripts','wrench',{in_use: extensions_tab_in_use}),
-            new Editor.Tab('resources','Resources','picture',{in_use: ko.computed(function() { return this.resources().length>0; },this)}),
+            new Editor.Tab('resources','Resources','picture',{in_use: ko.pureComputed(function() { return this.resources().length>0; },this)}),
             new Editor.Tab('settings','Settings','cog'),
             new Editor.Tab('exams','Exams using this question','book',{in_use:item_json.used_in_exams}),
             new Editor.Tab('network','Other versions','link',{in_use:item_json.other_versions_exist}),
@@ -420,13 +420,13 @@ $(document).ready(function() {
 
         this.baseVariableGroup = new VariableGroup(this,{name:'Ungrouped variables'});
         this.baseVariableGroup.fixed = true;
-        this.allVariableGroups = ko.computed(function() {
+        this.allVariableGroups = ko.pureComputed(function() {
             var l = this.variableGroups();
             return l.concat(this.baseVariableGroup);
         },this);
 
         // this changes whenever there's a change to a variable name or definition, or a variables is added or removed (or similar to the functions)
-        this.lastVariableChange = ko.computed(function() {
+        this.lastVariableChange = ko.pureComputed(function() {
             this.variables().map(function(v) {
                 v.definition();
                 v.name();
@@ -441,7 +441,7 @@ $(document).ready(function() {
             return new Date();
         },this);
 
-        this.variablesTest.time_remaining_display = ko.computed(function() {
+        this.variablesTest.time_remaining_display = ko.pureComputed(function() {
             return this.time_remaining()+' '+Numbas.util.pluralise(this.time_remaining(),'second','seconds');
         },this.variablesTest);
 
@@ -452,7 +452,7 @@ $(document).ready(function() {
             this.variablesTest.advice('');
         },this);
 
-        this.variableErrors = ko.computed(function() {
+        this.variableErrors = ko.pureComputed(function() {
             var variables = this.variables();
             for(var i=0;i<variables.length;i++) {
                 if(variables[i].name().trim()=='' || variables[i].definition().trim()=='' || variables[i].nameError() || variables[i].error()) {
@@ -462,7 +462,7 @@ $(document).ready(function() {
             return false;
         },this);
 
-        this.variablesReady = ko.computed(function() {
+        this.variablesReady = ko.pureComputed(function() {
             if(this.variableErrors()) {
                 return false;
             }
@@ -510,7 +510,7 @@ $(document).ready(function() {
             q.generateVariablePreview();
         }
 
-        this.variable_references = ko.computed(function() {
+        this.variable_references = ko.pureComputed(function() {
             var o = [];
             o.push(new VariableReference({kind:'tab',tab:'statement',value:q.statement,type:'html',description:'Statement'}));
             o.push(new VariableReference({kind:'tab',tab:'advice',value:q.advice,type:'html',description:'Advice'}));
@@ -575,7 +575,7 @@ $(document).ready(function() {
 
             this.init_output();
 
-            this.save = ko.computed(function() {
+            this.save = ko.pureComputed(function() {
                 var used_nodes = [];
                 function node_used(n) {
                     if(n.used()) {
@@ -610,10 +610,10 @@ $(document).ready(function() {
                     Editor.nonempty_task('Write a question statement.',this.statement,'#statement-input .wmTextArea')
                 ],
                 'variables': [
-                    {text: 'Add one or more variables to randomise the question', done: ko.computed(function() { return this.variables().length>0 && !this.variableErrors(); },this), focus_on: '#add-variable-button'}
+                    {text: 'Add one or more variables to randomise the question', done: ko.pureComputed(function() { return this.variables().length>0 && !this.variableErrors(); },this), focus_on: '#add-variable-button'}
                 ],
                 'parts': [
-                    {text: 'Create at least one part.', done: ko.computed(function(){ return this.parts().length>0 },this), focus_on: '#add-part-button'}
+                    {text: 'Create at least one part.', done: ko.pureComputed(function(){ return this.parts().length>0 },this), focus_on: '#add-part-button'}
                 ],
                 'advice': [
                     Editor.nonempty_task('Write a worked solution to the question.',this.advice, '#advice-input .wmTextArea')
@@ -636,7 +636,7 @@ $(document).ready(function() {
                     }
                 }
             }
-            Editor.computedReplaceState('currentVariable',ko.computed(function(){
+            Editor.computedReplaceState('currentVariable',ko.pureComputed(function(){
                 var v = this.currentVariable();
                 if(v) {
                     return v.name().toLowerCase();
@@ -656,13 +656,13 @@ $(document).ready(function() {
             if('currentPart' in state) {
                 this.currentPart(this.getPart(state.currentPart));
             }
-            Editor.computedReplaceState('currentPart',ko.computed(function() {
+            Editor.computedReplaceState('currentPart',ko.pureComputed(function() {
                 var p = this.currentPart();
                 if(p) {
                     return p.path();
                 }
             },this));
-            Editor.computedReplaceState('currentPartTabs',ko.computed(function() {
+            Editor.computedReplaceState('currentPartTabs',ko.pureComputed(function() {
                 var d = {};
                 q.allParts().forEach(function(p) {
                     d[p.path()] = p.currentTab().id;
@@ -1407,7 +1407,7 @@ $(document).ready(function() {
         var vg = this;
         this.fixed = false;
         this.name = ko.observable('Unnamed group');
-        this.isEditing = ko.computed({
+        this.isEditing = ko.pureComputed({
             write: function(v) {
                 if(v) {
                     q.editVariableGroup(vg);
@@ -1422,7 +1422,7 @@ $(document).ready(function() {
         this.endEdit = function() {
             vg.isEditing(false);
         }
-        this.displayName = ko.computed(function() {
+        this.displayName = ko.pureComputed(function() {
             return this.name() ? this.name() : 'Unnamed group'
         },this);
 
@@ -1471,7 +1471,7 @@ $(document).ready(function() {
     function Variable(q,data) {
         this.question = q;
         this._name = ko.observable('');
-        this.name = ko.computed({
+        this.name = ko.pureComputed({
             read: function() {
                 return this._name().trim();
             },
@@ -1481,7 +1481,7 @@ $(document).ready(function() {
         },this);
         this.group = ko.observable(null);
         this.random = ko.observable(null);
-        this.nameError = ko.computed(function() {
+        this.nameError = ko.pureComputed(function() {
             var name = this.name();
             if(name=='')
                 return '';
@@ -1516,7 +1516,7 @@ $(document).ready(function() {
             return '';
         },this);
 
-        this.usedInTestCondition = ko.computed(function() {
+        this.usedInTestCondition = ko.pureComputed(function() {
             var name = this.name();
             try {
                 var condition = Numbas.jme.compile(this.question.variablesTest.condition());
@@ -1618,7 +1618,7 @@ $(document).ready(function() {
                 }
             }
         };
-        this.templateTypeValues['list of numbers'].floatValues = ko.computed(function() {
+        this.templateTypeValues['list of numbers'].floatValues = ko.pureComputed(function() {
             return this.values().map(function(n){return parseFloat(n)});
         },this.templateTypeValues['list of numbers']);
         this.editDefinition = this.templateTypeValues['anything'].definition;
@@ -1708,13 +1708,13 @@ $(document).ready(function() {
         },this);
 
         this.dependencies = ko.observableArray([]);
-        this.isDependency = ko.computed(function() {
+        this.isDependency = ko.pureComputed(function() {
             var currentVariable = q.currentVariable();
             if(!currentVariable)
                 return false;
             return currentVariable.dependencies().contains(this.name().toLowerCase());
         },this);
-        this.dependenciesObjects = ko.computed(function() {
+        this.dependenciesObjects = ko.pureComputed(function() {
             var deps = this.dependencies();
             return this.dependencies().map(function(name) {
                 var obj = q.getVariable(name);
@@ -1739,19 +1739,19 @@ $(document).ready(function() {
                 return out;
             });
         },this);
-        this.usedIn = ko.computed(function() {
+        this.usedIn = ko.pureComputed(function() {
             var v = this;
             return q.variables().filter(function(v2) {
                 return v2.dependencies().contains(v.name().toLowerCase());
             });
         },this);
         this.references = ko.observableArray([]);
-        this.unused = ko.computed(function() {
+        this.unused = ko.pureComputed(function() {
             return this.usedIn().length==0 && this.references().length==0;
         },this);
         this.value = ko.observable(null);
         this.error = ko.observable('');
-        this.anyError = ko.computed(function() {
+        this.anyError = ko.pureComputed(function() {
             if(this.error()) {
                 return this.error();
             } else if(this.nameError()) {
@@ -1764,7 +1764,7 @@ $(document).ready(function() {
             return false;
         },this);
 
-        this.type = ko.computed(function() {
+        this.type = ko.pureComputed(function() {
             var v = this.value();
             if(!v || this.error()) {
                 return '';
@@ -1775,7 +1775,7 @@ $(document).ready(function() {
         this.thisLocked = ko.observable(false);
         var lockedSeen = {};
         var lockedDepth = 0;
-        this.locked = ko.computed(function() {
+        this.locked = ko.pureComputed(function() {
             if(lockedDepth==0) {
                 lockedSeen = {};
             }
@@ -1798,7 +1798,7 @@ $(document).ready(function() {
             return lockedUsed;
         },this);
 
-        this.display = ko.computed(function() {
+        this.display = ko.pureComputed(function() {
             var v;
             if(this.anyError()) {
                 return this.anyError();
@@ -1940,7 +1940,7 @@ $(document).ready(function() {
             }
             return desc;
         },this);
-        var raw_vars = ko.computed(function() {
+        var raw_vars = ko.pureComputed(function() {
             try {
                 var v = ko.unwrap(this.def.value);
                 switch(this.def.type) {
@@ -1970,7 +1970,7 @@ $(document).ready(function() {
                 return [];
             }
         },this);
-        this.vars = ko.computed(function() {
+        this.vars = ko.pureComputed(function() {
             var v = raw_vars();
             if(!v) {
                 return [];
@@ -2062,7 +2062,7 @@ $(document).ready(function() {
         this.script = ko.observable('');
         this.helpURL = helpURL;
 
-        this.active = ko.computed(function() {
+        this.active = ko.pureComputed(function() {
             return this.script().trim().length>0;
         },this);
     }
@@ -2108,7 +2108,7 @@ $(document).ready(function() {
         this.parent = ko.observable(parent);
         this.parentList = parentList;
         this.customName = ko.observable('');
-        this.useCustomName = ko.computed(function() {
+        this.useCustomName = ko.pureComputed(function() {
             return this.customName().trim()!='';
         },this);
 
@@ -2148,19 +2148,19 @@ $(document).ready(function() {
 
         this.types = Editor.part_types.models.map(function(data){return new PartType(p,data);});
 
-        this.isRootPart = ko.computed(function() {
+        this.isRootPart = ko.pureComputed(function() {
             return !this.parent();
         },this);
 
-        this.isGap = ko.computed(function(){
+        this.isGap = ko.pureComputed(function(){
             return this.parent() && this.parent().type().name=='gapfill' && !this.parent().steps().contains(this);
         },this);
 
-        this.isStep = ko.computed(function() {
+        this.isStep = ko.pureComputed(function() {
             return this.parent() && this.parent().steps().contains(this);
         },this);
 
-        this.availableTypes = ko.computed(function() {
+        this.availableTypes = ko.pureComputed(function() {
             if(this.isGap()) {
                 return this.types.filter(function(t){return t.can_be_gap!==false});
             } else if(this.isStep()) {
@@ -2171,15 +2171,15 @@ $(document).ready(function() {
         },this);
         this.type = ko.observable(this.availableTypes()[0]);
 
-        this.canBeReplacedWithGap = ko.computed(function() {
+        this.canBeReplacedWithGap = ko.pureComputed(function() {
             return !(this.type().name=='gapfill' || this.isGap() || this.isStep() || this.type().can_be_gap===false);
         },this);
 
-        this.isFirstPart = ko.computed(function() {
+        this.isFirstPart = ko.pureComputed(function() {
             return this==q.parts()[0];
         },this);
 
-        this.indexLabel = ko.computed(function() {
+        this.indexLabel = ko.pureComputed(function() {
             var index = this.parentList.indexOf(this);
             var i = 0;
             for(var j=0;j<index;j++) {
@@ -2199,10 +2199,10 @@ $(document).ready(function() {
             }
             return i+'';
         },this);
-        this.levelName = ko.computed(function() {
+        this.levelName = ko.pureComputed(function() {
             return this.isGap() ? 'gap' : this.isStep() ? 'step' : 'part';
         },this);
-        this.standardName = ko.computed(function() {
+        this.standardName = ko.pureComputed(function() {
             if(this.indexLabel()) {
                 var name = Numbas.util.capitalise(this.levelName() + " " + this.indexLabel());
                 if(this.isGap() || this.isStep()) {
@@ -2215,14 +2215,14 @@ $(document).ready(function() {
                 return 'Unnamed '+this.levelName();
             }
         },this);
-        this.name = ko.computed(function() {
+        this.name = ko.pureComputed(function() {
             if(this.useCustomName()) {
                 return this.customName() || "unnamed "+this.levelName()+" "+this.indexLabel();
             } else {
                 return this.standardName();
             }
         },this);
-        this.header = ko.computed(function() {
+        this.header = ko.pureComputed(function() {
             var label = this.indexLabel();
             if(this.useCustomName()) {
                 return this.customName();
@@ -2233,7 +2233,7 @@ $(document).ready(function() {
             }
         },this);
 
-        this.path = ko.computed(function() {
+        this.path = ko.pureComputed(function() {
             var i = Math.max(this.parentList.indexOf(this),0);
             if(this.isGap()) {
                 return this.parent().path()+'g'+i;
@@ -2245,7 +2245,7 @@ $(document).ready(function() {
         },this);
 
         this.marks = ko.observable(1);
-        this.realMarks = ko.computed(function() {
+        this.realMarks = ko.pureComputed(function() {
             switch(this.type().name) {
             case 'information':
             case 'gapfill':
@@ -2291,7 +2291,7 @@ $(document).ready(function() {
         this.deleteVariableReplacement = function(vr) {
             p.variableReplacements.remove(vr);
         }
-        this.canMakeVariableReplacement = ko.computed(function() {
+        this.canMakeVariableReplacement = ko.pureComputed(function() {
             return q.variables().length>0 && q.allParts().length>1;
         },this);
         this.adaptiveMarkingPenalty = ko.observable(0);
@@ -2302,7 +2302,7 @@ $(document).ready(function() {
         ];
         this.variableReplacementStrategy = ko.observable(this.variableReplacementStrategies[0])
 
-        this.replacementRandomDependencies = ko.computed(function() {
+        this.replacementRandomDependencies = ko.pureComputed(function() {
             var names = this.variableReplacements().map(function(vr) {return vr.variable()});
             var randomDependencies = this.q.randomDependencies(names);
             return randomDependencies;
@@ -2317,11 +2317,11 @@ $(document).ready(function() {
         this.deleteNextPart = function(np) {
             p.nextParts.remove(np);
         }
-        this.availableNextParts = ko.computed(function() {
+        this.availableNextParts = ko.pureComputed(function() {
             return p.parentList();
         },this);
         this.suggestGoingBack = ko.observable(false);
-        this.nextPartReferences = ko.computed(function() {
+        this.nextPartReferences = ko.pureComputed(function() {
             return this.q.allParts().filter(function(p2) {
                 return p2.nextParts().some(function(np) {
                     return np.otherPart()==p;
@@ -2339,7 +2339,7 @@ $(document).ready(function() {
         this.use_custom_algorithm = ko.observable(false);
         this.customMarkingAlgorithm = ko.observable('');
         this.extendBaseMarkingAlgorithm = ko.observable(true);
-        this.baseMarkingAlgorithm = ko.computed(function() {
+        this.baseMarkingAlgorithm = ko.pureComputed(function() {
             var type = this.type();
             if(type.is_custom_part_type) {
                 return Numbas.custom_part_types[type.name].marking_script;
@@ -2393,7 +2393,7 @@ $(document).ready(function() {
 
         this.types.map(function(t){p[t.name] = t.model});
 
-        this.variable_references = ko.computed(function() {
+        this.variable_references = ko.pureComputed(function() {
             var o = [];
             o.push(new VariableReference({kind:'part',part:this,tab:'prompt',value:this.prompt,type:'html',description:'prompt'}));
             if(this.use_custom_algorithm() && this.markingScript()) {
@@ -2413,16 +2413,16 @@ $(document).ready(function() {
             return o;
         },this);
 
-        this.tabs = ko.computed(function() {
+        this.tabs = ko.pureComputed(function() {
             var tabs = [];
             if(!this.isGap()) {
-                tabs.push(new Editor.Tab('prompt','Prompt','blackboard',{visible:true,more_important:true,in_use: ko.computed(function() { return this.prompt()!=''},this)}));
+                tabs.push(new Editor.Tab('prompt','Prompt','blackboard',{visible:true,more_important:true,in_use: ko.pureComputed(function() { return this.prompt()!=''},this)}));
             }
 
             if(this.type().has_marking_settings) {
                 tabs.push(new Editor.Tab('marking-settings','Marking settings','pencil',{visible:true,more_important:true,in_use:true}));
             }
-            var marking_algorithm_tab_in_use = ko.computed(function() {
+            var marking_algorithm_tab_in_use = ko.pureComputed(function() {
                 return this.use_custom_algorithm();
             },this);
             if(this.type().has_marks) {
@@ -2431,20 +2431,20 @@ $(document).ready(function() {
 
             tabs = tabs.concat(this.type().tabs);
 
-            var scripts_tab_in_use = ko.computed(function() {
+            var scripts_tab_in_use = ko.pureComputed(function() {
                 return this.scripts.some(function(s) { return s.active(); });
             },this);
 
             tabs.push(new Editor.Tab('scripts','Scripts','wrench',{in_use: scripts_tab_in_use}));
 
-            var adaptive_marking_tab_in_use = ko.computed(function() {
+            var adaptive_marking_tab_in_use = ko.pureComputed(function() {
                 return this.variableReplacements().length>0;
             },this);
 
             tabs.push(new Editor.Tab('adaptivemarking','Adaptive marking','transfer',{in_use: adaptive_marking_tab_in_use}));
 
             if(!this.parent() && q.partsMode().value=='explore') {
-                var next_parts_tab_in_use = ko.computed(function() {
+                var next_parts_tab_in_use = ko.pureComputed(function() {
                     return this.nextParts().length>0;
                 },this);
                 tabs.push(new Editor.Tab('nextparts','Next parts','arrow-right'));
@@ -2738,14 +2738,14 @@ $(document).ready(function() {
     function VariableReplacement(part,data) {
         this.part = part;
         this.variable = ko.observable('');
-        this.variableDisplay = ko.computed(function(){
+        this.variableDisplay = ko.pureComputed(function(){
             return this.part.q.variables().map(function(v){
                 return v.name();
             });
         },this);
         this.replacement = ko.observable(null);
         this.must_go_first = ko.observable(false);
-        this.availableParts = ko.computed(function() {
+        this.availableParts = ko.pureComputed(function() {
             var p = this.part
             return p.q.allParts().filter(function(p2){
                 return p!=p2 && p2.type().has_marks && p2.parent()!=p;
@@ -2804,7 +2804,7 @@ $(document).ready(function() {
         this.penalty = ko.observable(null);
         this.penaltyAmount = ko.observable(0);
 
-        this.variable_references = ko.computed(function() {
+        this.variable_references = ko.pureComputed(function() {
             var o = [];
             if(this.availabilityCondition().id=='expression') {
                 o.push(new VariableReference({kind:'part',part:this.part,tab:'nextparts',value:this.availabilityExpression,type:'jme',description:'next part availability condition'}));
@@ -2858,7 +2858,7 @@ $(document).ready(function() {
 
     function NextPartVariableReplacement(np,data) {
         this.np = np;
-        this.variables = ko.computed(function(){
+        this.variables = ko.pureComputed(function(){
             return this.np.part.q.variables().map(function(v){
                 return v.name();
             }).sort();
@@ -2867,7 +2867,7 @@ $(document).ready(function() {
         this.variable = ko.observable('');
 
         this.custom_definition = ko.observable('interpreted_answer');
-        this.value_options = ko.computed(function() {
+        this.value_options = ko.pureComputed(function() {
             var options = [
                 {definition: 'interpreted_answer', name: "Student's answer"}
             ];
@@ -2881,7 +2881,7 @@ $(document).ready(function() {
             return options;
         },this);
         this.value_option = ko.observable(this.value_options()[0]);
-        this.definition = ko.computed(function() {
+        this.definition = ko.pureComputed(function() {
             return ko.unwrap(this.value_option().definition);
         },this);
 
@@ -3031,7 +3031,7 @@ $(document).ready(function() {
                 mt.question_error(e);
             }
         }
-        this.runtime_part = ko.computed(function() {
+        this.runtime_part = ko.pureComputed(function() {
             var q = this.question();
             if(!q) {
                 return;
@@ -3092,7 +3092,7 @@ $(document).ready(function() {
             }
         }
 
-        this.last_run_error = ko.computed(function() {
+        this.last_run_error = ko.pureComputed(function() {
             if(this.last_run()) {
                 return this.last_run().error;
             }
@@ -3175,7 +3175,7 @@ $(document).ready(function() {
         },this).extend({throttle:100});
 
         // The marking notes, in alphabetical order by name
-        this.sortedNotes = ko.computed(function() {
+        this.sortedNotes = ko.pureComputed(function() {
             var notes = this.notes().slice();
             notes.sort(function(a,b) {
                 a = a.name;
@@ -3186,29 +3186,29 @@ $(document).ready(function() {
         },this);
 
         // Non-hidden notes. Only these notes count towards the test passing or not.
-        this.shownNotes = ko.computed(function() {
+        this.shownNotes = ko.pureComputed(function() {
             return this.notes().filter(function(n){ return n.show(); });
         },this);
 
         // Can this be saved as a unit test?
         // Only if there's at least one shown note.
-        this.canCreateUnitTest = ko.computed(function() {
+        this.canCreateUnitTest = ko.pureComputed(function() {
             return this.shownNotes().length>0;
         },this);
 
         // Notes whose results don't match the expected values
-        this.failingNotes = ko.computed(function() {
+        this.failingNotes = ko.pureComputed(function() {
             return this.shownNotes().filter(function(n){return n.missing() || !n.matchesExpected()});
         },this);
 
         // Notes which have gone missing since the test was set up
         // These might have been removed from the marking script
-        this.missingNotes = ko.computed(function() {
+        this.missingNotes = ko.pureComputed(function() {
             return this.shownNotes().filter(function(n){return n.missing()});
         },this);
 
         // Is this test passing? No if any notes are failing.
-        this.passes = ko.computed(function() {
+        this.passes = ko.pureComputed(function() {
             return this.failingNotes().length==0;
         },this);
 
@@ -3232,7 +3232,7 @@ $(document).ready(function() {
 
         this.setTab('notes')();
 
-        this.header = ko.computed(function() {
+        this.header = ko.pureComputed(function() {
             // Prefix for the the header of this test in the list of tests
             var i = this.part.unit_tests().indexOf(this)+1;
             return i+'. ';
@@ -3293,7 +3293,7 @@ $(document).ready(function() {
         this.show = ko.observable(in_unit_test && default_show_names.contains(this.name)).toggleable();
 
         this.note = ko.observable(null);
-        this.description = ko.computed(function() {
+        this.description = ko.pureComputed(function() {
             var note = this.note();
             return note ? note.description : '';
         },this);
@@ -3307,7 +3307,7 @@ $(document).ready(function() {
         this.valid = ko.observable(true);
         this.credit = ko.observable(0);
 
-        this.valueType = ko.computed(function() {
+        this.valueType = ko.pureComputed(function() {
             var v = this.value();
             return v ? v.type : 'none';
         },this);
@@ -3320,7 +3320,7 @@ $(document).ready(function() {
             valid: ko.observable(true),
             credit: ko.observable(0)
         };
-        this.expected.computedValue = ko.computed(function() {
+        this.expected.computedValue = ko.pureComputed(function() {
             try {
                 return Numbas.jme.builtinScope.evaluate(this.expected.value());
             } catch(e) {
@@ -3336,7 +3336,7 @@ $(document).ready(function() {
             mn.expected.valid(mn.valid());
             mn.expected.credit(mn.credit());
         }
-        this.noMatchReason = ko.computed(function() {
+        this.noMatchReason = ko.pureComputed(function() {
             if(this.missing()) {
                 return 'missing';
             }
@@ -3379,7 +3379,7 @@ $(document).ready(function() {
                 return null;
             }
         },this);
-        this.noMatchDescription = ko.computed(function() {
+        this.noMatchDescription = ko.pureComputed(function() {
             var reason = this.noMatchReason();
             var d = {
                 'missing': 'This note is no longer defined.',
@@ -3396,7 +3396,7 @@ $(document).ready(function() {
             return d[reason];
         },this);
 
-        this.matchesExpected = ko.computed(function() {
+        this.matchesExpected = ko.pureComputed(function() {
             return !this.noMatchReason();
         },this);
     }
@@ -3512,7 +3512,7 @@ $(document).ready(function() {
         this.is_custom_part_type = data.is_custom_part_type;
         this.toJSONFn = data.toJSON || function() {};
         this.loadFn = data.load || function() {};
-        this.variable_references = ko.computed(function() {
+        this.variable_references = ko.pureComputed(function() {
             if(!data.variable_references) {
                 return [];
             }

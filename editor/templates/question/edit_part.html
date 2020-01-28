@@ -21,6 +21,9 @@
 <div class="part-controls">
     <button type="button" class="btn btn-sm btn-default" data-bind="click: copy"><span class="glyphicon glyphicon-duplicate"></span> Copy this <span data-bind="text: levelName"></span></button>
     <button type="button" class="btn btn-sm btn-default" data-bind="click: replaceWithGapfill, visible: canBeReplacedWithGap"><span class="glyphicon glyphicon-tasks"></span> Replace this part with a gapfill</button>
+    <button type="button" class="btn btn-sm btn-warning" data-bind="click: addAlternative">
+        <span class="glyphicon glyphicon-plus"></span> Add an alternative to this part
+    </button>
     <button type="button" class="btn btn-sm btn-default" data-bind="visible: type().name=='gapfill', click: startAddingGap">
         <span class="glyphicon glyphicon-plus"></span> Add a gap to this part
     </button>
@@ -55,6 +58,15 @@
         </p>
 
         <div {% if not editable %}disabled{% endif %} data-bind="writemaths: prompt, preambleCSS: $root.preamble.css, tinymce_plugins: ['gapfill','jmevisible','preview'], showButtons: {gapfill: function(){return $data.type().name=='gapfill'}}, gaps: gaps"></div>
+    </section>
+
+    <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='alternative-feedback-message'">
+        <p class="help-block">
+            {% helplink 'question/parts/reference.html#term-alternative-feedback-message' subject='the alternative feedback message' %}
+            Write a message that will be shown to the student if this alternative is used.
+        </p>
+
+        <div {% if not editable %}disabled{% endif %} data-bind="writemaths: alternativeFeedbackMessage, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','preview']"></div>
     </section>
 
     {% with form_label_class="col-sm-6 col-md-4" form_control_class="col-sm-6 col-md-8" %}

@@ -212,6 +212,7 @@ $(document).ready(function() {
                     o = o.concat(p.gaps());
                 }
                 o = o.concat(p.steps());
+                o = o.concat(p.alternatives());
             });
             return o;
         },this);
@@ -741,7 +742,7 @@ $(document).ready(function() {
         },
 
         getPart: function(path) {
-            var re_path = /^p(\d+)(?:g(\d+)|s(\d+))?$/;
+            var re_path = /^p(\d+)(?:([gsa])(\d+))?$/;
             var m = re_path.exec(path);
             if(!m) {
                 return;
@@ -752,11 +753,14 @@ $(document).ready(function() {
                 return;
             }
             if(m[2]) {
-                var g = parseInt(m[2]);
-                return p.gaps()[g];
-            } else if(m[3]) {
-                var s = parseInt(m[3]);
-                return p.steps()[s];
+                var l = m[2];
+                var lists = {
+                    'g': p.gaps,
+                    's': p.steps,
+                    'a': p.alternatives
+                }
+                var j = parseInt(m[3]);
+                return lists[l]()[j];
             } else {
                 return p;
             }
@@ -2105,6 +2109,7 @@ $(document).ready(function() {
         var p = this;
         this.q = q;
         this.prompt = Editor.contentObservable('');
+        this.alternativeFeedbackMessage = Editor.contentObservable('');
         this.parent = ko.observable(parent);
         this.parentList = parentList;
         this.customName = ko.observable('');
@@ -2128,8 +2133,26 @@ $(document).ready(function() {
             }
             return false;
         },this);
+        this.steps = ko.observableArray([]);
+        this.stepsPenalty = ko.observable(0);
+
+        this.gaps = ko.observableArray([]);
+
+        this.alternatives = ko.observableArray([]);
+
+        this.addAlternative = function() {
+            var alt = new Part(q,p,p.alternatives,this.toJSON());
+            alt.setType(p.type().name);
+            p.alternatives.push(alt);
+            q.currentPart(alt);
+        }
+
         this.childrenDescription = ko.pureComputed(function() {
             var out = [];
+            if(this.alternatives().length>0) {
+                var numAlternatives = this.alternatives().length;
+                out.push(numAlternatives+' alternative'+(numAlternatives==1 ? '' : 's'));
+            }
             if(this.type().name=='gapfill') {
                 var numGaps = this.gaps().length;
                 out.push(numGaps+' gap'+(numGaps==1 ? '' : 's'));
@@ -2141,11 +2164,6 @@ $(document).ready(function() {
             return out.join(', ');
         },this);
 
-        this.steps = ko.observableArray([]);
-        this.stepsPenalty = ko.observable(0);
-
-        this.gaps = ko.observableArray([]);
-
         this.types = Editor.part_types.models.map(function(data){return new PartType(p,data);});
 
         this.isRootPart = ko.pureComputed(function() {
@@ -2153,11 +2171,15 @@ $(document).ready(function() {
         },this);
 
         this.isGap = ko.pureComputed(function(){
-            return this.parent() && this.parent().type().name=='gapfill' && !this.parent().steps().contains(this);
+            return this.parent() && this.parent().gaps().contains(this);
         },this);
 
         this.isStep = ko.pureComputed(function() {
             return this.parent() && this.parent().steps().contains(this);
+        },this);
+
+        this.isAlternative = ko.pureComputed(function() {
+            return this.parent() && this.parent().alternatives().contains(this);
         },this);
 
         this.availableTypes = ko.pureComputed(function() {
@@ -2172,7 +2194,7 @@ $(document).ready(function() {
         this.type = ko.observable(this.availableTypes()[0]);
 
         this.canBeReplacedWithGap = ko.pureComputed(function() {
-            return !(this.type().name=='gapfill' || this.isGap() || this.isStep() || this.type().can_be_gap===false);
+            return !(this.type().name=='gapfill' || this.isGap() || this.isStep() || this.isAlternative() || this.type().can_be_gap===false);
         },this);
 
         this.isFirstPart = ko.pureComputed(function() {
@@ -2192,7 +2214,7 @@ $(document).ready(function() {
                 return '';
             } else if(this.type().name=='information') {
                 return '';
-            } else if(this.isGap() || this.isStep()) {
+            } else if(this.isGap() || this.isStep() || this.isAlternative()) {
                 i = i+'';
             } else {
                 i = Numbas.util.letterOrdinal(i);
@@ -2200,12 +2222,20 @@ $(document).ready(function() {
             return i+'';
         },this);
         this.levelName = ko.pureComputed(function() {
-            return this.isGap() ? 'gap' : this.isStep() ? 'step' : 'part';
+            if(this.isGap()) {
+                return 'gap';
+            } else if(this.isStep()) {
+                return 'step';
+            } else if(this.isAlternative()) {
+                return 'alternative';
+            } else {
+                return 'part';
+            }
         },this);
         this.standardName = ko.pureComputed(function() {
             if(this.indexLabel()) {
                 var name = Numbas.util.capitalise(this.levelName() + " " + this.indexLabel());
-                if(this.isGap() || this.isStep()) {
+                if(this.isGap() || this.isStep() || this.isAlternative()) {
                     name += '.';
                 } else {
                     name += ')';
@@ -2239,6 +2269,8 @@ $(document).ready(function() {
                 return this.parent().path()+'g'+i;
             } else if(this.isStep()) {
                 return this.parent().path()+'s'+i;
+            } else if(this.isAlternative()) {
+                return this.parent().path()+'a'+i;
             } else {
                 return 'p'+i;
             }
@@ -2415,8 +2447,11 @@ $(document).ready(function() {
 
         this.tabs = ko.pureComputed(function() {
             var tabs = [];
-            if(!this.isGap()) {
+            if(!this.isGap() && !this.isAlternative()) {
                 tabs.push(new Editor.Tab('prompt','Prompt','blackboard',{visible:true,more_important:true,in_use: ko.pureComputed(function() { return this.prompt()!=''},this)}));
+            }
+            if(this.isAlternative()) {
+                tabs.push(new Editor.Tab('alternative-feedback-message','Feedback message','blackboard',{visible:true,more_important:true,in_use: ko.pureComputed(function() { return this.alternativeFeedbackMessage()!=''},this)}));
             }
 
             if(this.type().has_marking_settings) {
@@ -2437,11 +2472,13 @@ $(document).ready(function() {
 
             tabs.push(new Editor.Tab('scripts','Scripts','wrench',{in_use: scripts_tab_in_use}));
 
-            var adaptive_marking_tab_in_use = ko.pureComputed(function() {
-                return this.variableReplacements().length>0;
-            },this);
+            if(!this.isAlternative()) {
+                var adaptive_marking_tab_in_use = ko.pureComputed(function() {
+                    return this.variableReplacements().length>0;
+                },this);
 
-            tabs.push(new Editor.Tab('adaptivemarking','Adaptive marking','transfer',{in_use: adaptive_marking_tab_in_use}));
+                tabs.push(new Editor.Tab('adaptivemarking','Adaptive marking','transfer',{in_use: adaptive_marking_tab_in_use}));
+            }
 
             if(!this.parent() && q.partsMode().value=='explore') {
                 var next_parts_tab_in_use = ko.pureComputed(function() {
@@ -2607,12 +2644,19 @@ $(document).ready(function() {
                 exploreObjective: this.exploreObjective() ? this.exploreObjective().name() : null,
             };
 
-            if(this.prompt())
+            if(this.prompt()) {
                 o.prompt = this.prompt();
-            if(this.steps().length)
-            {
+            }
+            if(this.isAlternative()) {
+                o.alternativeFeedbackMessage = this.alternativeFeedbackMessage();
+            }
+            if(this.steps().length) {
                 o.stepsPenalty = this.stepsPenalty(),
                 o.steps = this.steps().map(function(s){return s.toJSON();});
+            }
+
+            if(this.alternatives().length) {
+                o.alternatives = this.alternatives().map(function(a){return a.toJSON();});
             }
 
             this.scripts.map(function(s) {
@@ -2636,22 +2680,26 @@ $(document).ready(function() {
 
         load: function(data) {
             var p = this;
-            for(var i=0;i<this.types.length;i++)
-            {
+            for(var i=0;i<this.types.length;i++) {
                 if(this.types[i].name == data.type.toLowerCase())
                     this.type(this.types[i]);
             }
-            tryLoad(data,['marks','customName','prompt','stepsPenalty','showCorrectAnswer','showFeedbackIcon','customMarkingAlgorithm','extendBaseMarkingAlgorithm','adaptiveMarkingPenalty','suggestGoingBack'],this);
+            tryLoad(data,['marks','customName','prompt','alternativeFeedbackMessage','stepsPenalty','showCorrectAnswer','showFeedbackIcon','customMarkingAlgorithm','extendBaseMarkingAlgorithm','adaptiveMarkingPenalty','suggestGoingBack'],this);
             this.use_custom_algorithm(this.customMarkingAlgorithm()!='');
 
             this.exploreObjective(this.q.objectives().find(function(o) { return o.name()==data.exploreObjective; }));
 
-            if(data.steps)
-            {
+            if(data.steps) {
                 var parentPart = this.isGap() ? this.parent() : this;
                 data.steps.map(function(s) {
                     this.steps.push(new Part(this.q,this,this.steps,s));
                 },parentPart);
+            }
+
+            if(data.alternatives) {
+                data.alternatives.map(function(a) {
+                    this.alternatives.push(new Part(this.q,this,this.alternatives,a));
+                },this);
             }
 
             if(data.scripts) {

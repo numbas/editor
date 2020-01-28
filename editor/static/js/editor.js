@@ -1429,12 +1429,14 @@ $(document).ready(function() {
             if(element.classList.contains('has-tinymce')) {
                 var tinymce = $(element).find('iframe');
 
+                /*
                 if (!tinymce.is(':focus')) {
                     var ed = $(element).children('.wmTextArea').tinymce();
                     if(ed && ed.initialized) {
                         ed.setContent(value);
                     }
                 }
+                */
             }
         }
     };

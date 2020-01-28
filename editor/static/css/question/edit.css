@@ -8,6 +8,9 @@
 .part .part-controls > button {
     margin: 0.2em 0;
 }
+.part > .children-description {
+    display: block;
+}
 .part.active > .children-description {
     color: #ddd;
 }
@@ -26,14 +29,23 @@
     overflow-y: auto;
 }
 
-.parts-tree .gaps, .parts-tree .steps {
-    margin-top: 1px;
+.parts-tree .children-header {
+    font-size: 0.8em;
+    padding: 0.5em 0em 0.5em 1em;
+    font-weight: bold;
+    margin: 0 0 0 1em;
+    background-color: hsl(200, 65.2%, 91%);
 }
-
-.parts-tree .part.gap, .parts-tree .part.step {
+.parts-tree .children .part {
+    margin-top: 1px;
     margin-left: 2em;
 }
-
+.parts-tree .children .part:first-child {
+    border-top: 0;
+}
+.parts-tree .children .part:last-child {
+    border-bottom: 0;
+}
 
 .part-tabs {
     margin-bottom: 1em;

@@ -474,26 +474,38 @@
                                         <span class="type-name" data-bind="text: type().niceName"></span>
                                         <small class="children-description text-muted" data-bind="text: childrenDescription"></small>
                                     </a>
-                                    <!-- ko if: showChildren() && (gaps().length || steps().length) -->
-                                    <div class="gaps" data-bind="sortable: { foreach: gaps, options: {group: path()+'gaps'} }">
-                                    <a role="button" class="list-group-item part gap" data-bind="
-                                        click: $parents[1].currentPart, 
-                                        css: {active: $data==$parents[1].currentPart()}
-                                    ">
-                                        <strong data-bind="text: header"></strong>
-                                        <span class="type-name" data-bind="text: type().niceName"></span>
-                                    </a>
-                                    </div>
-                                    <div class="steps" data-bind="sortable: { foreach: steps, options: {group: path()+'steps'} }">
-                                    <a role="button" class="list-group-item part step" data-bind="
-                                        click: $parents[1].currentPart, 
-                                        css: {active: $data==$parents[1].currentPart()}
-                                    ">
-                                        <strong data-bind="text: header"></strong>
-                                        <span class="type-name" data-bind="text: type().niceName"></span>
-                                    </a>
-                                    </div>
-                                    <!-- /ko -->
+                                    <!-- ko if: showChildren()-->
+                                        <h4 class="children-header" data-bind="visible: alternatives().length">Alternatives</h4>
+                                        <div class="alternatives children" data-bind="visible: alternatives().length, sortable: { foreach: alternatives, options: {group: path()+'alternatives'} }">
+                                            <a role="button" class="list-group-item part alternative" data-bind="
+                                                click: $root.currentPart, 
+                                                css: {active: $data==$root.currentPart()}
+                                            ">
+                                                <strong data-bind="text: header"></strong>
+                                                <span class="type-name" data-bind="text: type().niceName"></span>
+                                            </a>
+                                        </div>
+                                        <h4 class="children-header" data-bind="visible: gaps().length">Gaps</h4>
+                                        <div class="gaps children" data-bind="visible: gaps().length, sortable: { foreach: gaps, options: {group: path()+'gaps'} }">
+                                            <a role="button" class="list-group-item part gap" data-bind="
+                                                click: $parents[1].currentPart, 
+                                                css: {active: $data==$parents[1].currentPart()}
+                                            ">
+                                                <strong data-bind="text: header"></strong>
+                                                <span class="type-name" data-bind="text: type().niceName"></span>
+                                            </a>
+                                        </div>
+                                        <h4 class="children-header" data-bind="visible: steps().length">Steps</h4>
+                                        <div class="steps children" data-bind="visible: steps().length, sortable: { foreach: steps, options: {group: path()+'steps'} }">
+                                            <a role="button" class="list-group-item part step" data-bind="
+                                                click: $parents[1].currentPart, 
+                                                css: {active: $data==$parents[1].currentPart()}
+                                            ">
+                                                <strong data-bind="text: header"></strong>
+                                                <span class="type-name" data-bind="text: type().niceName"></span>
+                                            </a>
+                                        </div>
+                                     <!-- /ko -->
                                 </div>
                             </div>
                             {% if editable %}

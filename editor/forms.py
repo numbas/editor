@@ -661,12 +661,20 @@ class MoveFolderForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         parent = cleaned_data.get('parent')
+        parents = [parent]
+        f = parent.parent
+        while f:
+            parents.append(f)
+            f = f.parent
         folders = cleaned_data.get('folders')
         items = cleaned_data.get('items')
+        move_folders = []
         for folder in folders:
             if parent is not None and folder.project != parent.project:
                 raise forms.ValidationError("Can't move a folder into a different project.")
-            folder.parent = parent
+            if folder not in parents:
+                move_folders.append(folder)
+        cleaned_data['folders'] = move_folders
         for item in items:
             if parent is not None and item.project != parent.project:
                 raise forms.ValidationError("Can't move an item into a different project.")

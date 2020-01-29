@@ -385,7 +385,7 @@ $(document).ready(function() {
 
         this.addPart = function(type) {
             var adding = q.addingPart();
-            var p = new Part(q,adding.parent,adding.parentList);
+            var p = new Part(adding.kind,q,adding.parent,adding.parentList);
             p.setType(type.name);
             adding.parentList.push(p);
             q.currentPart(p);
@@ -736,7 +736,7 @@ $(document).ready(function() {
         },
 
         loadPart: function(data) {
-            var p = new Part(this,null,this.parts,data);
+            var p = new Part('part',this,null,this.parts,data);
             this.parts.push(p);
             return p;
         },
@@ -2105,8 +2105,9 @@ $(document).ready(function() {
         }
     };
 
-    var Part = Editor.question.Part = function(q,parent,parentList,data) {
+    var Part = Editor.question.Part = function(levelName,q,parent,parentList,data) {
         var p = this;
+        this.levelName = ko.observable(levelName);
         this.q = q;
         this.prompt = Editor.contentObservable('');
         this.alternativeFeedbackMessage = Editor.contentObservable('');
@@ -2141,8 +2142,13 @@ $(document).ready(function() {
         this.alternatives = ko.observableArray([]);
 
         this.addAlternative = function() {
-            var alt = new Part(q,p,p.alternatives,this.toJSON());
+            if(this.isAlternative()) {
+                return this.parent().addAlternative();
+            }
+            var alt = new Part('expected error',q,p,p.alternatives,this.toJSON());
             alt.setType(p.type().name);
+            alt.marks(0);
+            alt.customName('');
             p.alternatives.push(alt);
             q.currentPart(alt);
         }
@@ -2151,7 +2157,7 @@ $(document).ready(function() {
             var out = [];
             if(this.alternatives().length>0) {
                 var numAlternatives = this.alternatives().length;
-                out.push(numAlternatives+' alternative'+(numAlternatives==1 ? '' : 's'));
+                out.push(numAlternatives+' expected error'+(numAlternatives==1 ? '' : 's'));
             }
             if(this.type().name=='gapfill') {
                 var numGaps = this.gaps().length;
@@ -2170,17 +2176,9 @@ $(document).ready(function() {
             return !this.parent();
         },this);
 
-        this.isGap = ko.pureComputed(function(){
-            return this.parent() && this.parent().gaps().contains(this);
-        },this);
-
-        this.isStep = ko.pureComputed(function() {
-            return this.parent() && this.parent().steps().contains(this);
-        },this);
-
-        this.isAlternative = ko.pureComputed(function() {
-            return this.parent() && this.parent().alternatives().contains(this);
-        },this);
+        this.isGap = ko.pureComputed(function(){ return this.levelName()=='gap'; },this);
+        this.isStep = ko.pureComputed(function(){ return this.levelName()=='step'; },this);
+        this.isAlternative = ko.pureComputed(function(){ return this.levelName()=='expected error'; },this);
 
         this.availableTypes = ko.pureComputed(function() {
             if(this.isGap()) {
@@ -2220,17 +2218,6 @@ $(document).ready(function() {
                 i = Numbas.util.letterOrdinal(i);
             }
             return i+'';
-        },this);
-        this.levelName = ko.pureComputed(function() {
-            if(this.isGap()) {
-                return 'gap';
-            } else if(this.isStep()) {
-                return 'step';
-            } else if(this.isAlternative()) {
-                return 'alternative';
-            } else {
-                return 'part';
-            }
         },this);
         this.standardName = ko.pureComputed(function() {
             if(this.indexLabel()) {
@@ -2305,6 +2292,18 @@ $(document).ready(function() {
             q.objectives.push(o);
             p.exploreObjective(o);
         }
+
+        this.canAddGap = ko.computed(function() {
+            return this.type().name=='gapfill';
+        },this);
+
+        this.canAddStep = ko.computed(function() {
+            return this.isRootPart() && this.type().has_marks;
+        },this);
+
+        this.canAddAlternative = ko.computed(function() {
+            return this.type().has_marks && !this.isAlternative();
+        },this);
 
         this.startAddingGap = function() {
             q.addingPart({kind:'gap',parent:p, parentList: p.gaps, availableTypes: q.gapTypes});
@@ -2529,14 +2528,15 @@ $(document).ready(function() {
 
         copy: function() {
             var data = this.toJSON();
-            var p = new Part(this.q,this.parent(),this.parentList,data);
+            var p = new Part(this.levelName(),this.q,this.parent(),this.parentList,data);
             this.parentList.push(p);
             this.q.currentPart(p);
         },
 
         replaceWithGapfill: function() {
             var p = this;
-            var gapFill = new Part(this.q,this.parent(),this.parentList);
+            var gapFill = new Part('part',this.q,this.parent(),this.parentList);
+            this.levelName('gap');
             gapFill.customName(this.customName());
             this.customName('');
             gapFill.setType('gapfill');
@@ -2630,33 +2630,37 @@ $(document).ready(function() {
                 useCustomName: this.useCustomName(),
                 customName: this.useCustomName() ? this.customName() : '',
                 marks: this.realMarks(),
-                showCorrectAnswer: this.showCorrectAnswer(),
-                showFeedbackIcon: this.showFeedbackIcon(),
                 scripts: {},
-                variableReplacements: this.variableReplacements().map(function(vr){return vr.toJSON()}),
-                variableReplacementStrategy: this.variableReplacementStrategy().name,
-                nextParts: this.nextParts().map(function(np){ return np.toJSON(); }),
-                suggestGoingBack: !this.isFirstPart() && this.suggestGoingBack(),
-                adaptiveMarkingPenalty: this.adaptiveMarkingPenalty(),
                 customMarkingAlgorithm: this.use_custom_algorithm() ? this.customMarkingAlgorithm() : '',
                 extendBaseMarkingAlgorithm: this.use_custom_algorithm() ? this.extendBaseMarkingAlgorithm() : true,
                 unitTests: this.unit_tests().map(function(t){ return t.toJSON() }),
-                exploreObjective: this.exploreObjective() ? this.exploreObjective().name() : null,
             };
 
-            if(this.prompt()) {
-                o.prompt = this.prompt();
-            }
-            if(this.isAlternative()) {
-                o.alternativeFeedbackMessage = this.alternativeFeedbackMessage();
-            }
-            if(this.steps().length) {
-                o.stepsPenalty = this.stepsPenalty(),
-                o.steps = this.steps().map(function(s){return s.toJSON();});
-            }
+            if(!this.isAlternative()) {
+                Object.assign(o,{
+                    showCorrectAnswer: this.showCorrectAnswer(),
+                    showFeedbackIcon: this.showFeedbackIcon(),
+                    variableReplacements: this.variableReplacements().map(function(vr){return vr.toJSON()}),
+                    variableReplacementStrategy: this.variableReplacementStrategy().name,
+                    nextParts: this.nextParts().map(function(np){ return np.toJSON(); }),
+                    suggestGoingBack: !this.isFirstPart() && this.suggestGoingBack(),
+                    adaptiveMarkingPenalty: this.adaptiveMarkingPenalty(),
+                    exploreObjective: this.exploreObjective() ? this.exploreObjective().name() : null,
+                });
+                if(this.prompt()) {
+                    o.prompt = this.prompt();
+                }
+                if(this.steps().length) {
+                    o.stepsPenalty = this.stepsPenalty(),
+                    o.steps = this.steps().map(function(s){return s.toJSON();});
+                }
 
-            if(this.alternatives().length) {
-                o.alternatives = this.alternatives().map(function(a){return a.toJSON();});
+                if(this.alternatives().length) {
+                    o.alternatives = this.alternatives().map(function(a){return a.toJSON();});
+                }
+
+            } else {
+                o.alternativeFeedbackMessage = this.alternativeFeedbackMessage();
             }
 
             this.scripts.map(function(s) {
@@ -2684,22 +2688,60 @@ $(document).ready(function() {
                 if(this.types[i].name == data.type.toLowerCase())
                     this.type(this.types[i]);
             }
-            tryLoad(data,['marks','customName','prompt','alternativeFeedbackMessage','stepsPenalty','showCorrectAnswer','showFeedbackIcon','customMarkingAlgorithm','extendBaseMarkingAlgorithm','adaptiveMarkingPenalty','suggestGoingBack'],this);
+            tryLoad(data,[
+                'marks',
+                'customName',
+                'alternativeFeedbackMessage',
+                'customMarkingAlgorithm',
+                'extendBaseMarkingAlgorithm',
+            ],this);
             this.use_custom_algorithm(this.customMarkingAlgorithm()!='');
 
-            this.exploreObjective(this.q.objectives().find(function(o) { return o.name()==data.exploreObjective; }));
+            if(!this.isAlternative()) {
+                tryLoad(data,[
+                    'prompt',
+                    'stepsPenalty',
+                    'showCorrectAnswer',
+                    'showFeedbackIcon',
+                    'adaptiveMarkingPenalty',
+                    'suggestGoingBack'
+                ],this);
+                this.exploreObjective(this.q.objectives().find(function(o) { return o.name()==data.exploreObjective; }));
+                if(data.steps) {
+                    var parentPart = this.isGap() ? this.parent() : this;
+                    data.steps.map(function(s) {
+                        this.steps.push(new Part('step',this.q,this,this.steps,s));
+                    },parentPart);
+                }
 
-            if(data.steps) {
-                var parentPart = this.isGap() ? this.parent() : this;
-                data.steps.map(function(s) {
-                    this.steps.push(new Part(this.q,this,this.steps,s));
-                },parentPart);
-            }
+                if(data.alternatives) {
+                    data.alternatives.map(function(a) {
+                        p.alternatives.push(new Part('expected error',p.q,p,p.alternatives,a));
+                    });
+                }
 
-            if(data.alternatives) {
-                data.alternatives.map(function(a) {
-                    this.alternatives.push(new Part(this.q,this,this.alternatives,a));
-                },this);
+                p.variableReplacementStrategies.map(function(s) {
+                    if(s.name==data.variableReplacementStrategy) {
+                        p.variableReplacementStrategy(s);
+                    }
+                });
+
+                if(data.variableReplacements) {
+                    data.variableReplacements.map(function(d) {
+                        var vr = new VariableReplacement(p,d);
+                        p.variableReplacements.push(vr);
+                    });
+                }
+                
+                if(data.nextParts) {
+                    data.nextParts.map(function(d) {
+                        var np = new NextPart(p,d);
+                        p.nextParts.push(np);
+                    });
+                }
+
+            } else {
+                tryLoad(data,['alternativeFeedbackMessage'],this);
             }
 
             if(data.scripts) {
@@ -2711,26 +2753,6 @@ $(document).ready(function() {
                         }
                     }
                 }
-            }
-
-            p.variableReplacementStrategies.map(function(s) {
-                if(s.name==data.variableReplacementStrategy) {
-                    p.variableReplacementStrategy(s);
-                }
-            });
-
-            if(data.variableReplacements) {
-                data.variableReplacements.map(function(d) {
-                    var vr = new VariableReplacement(p,d);
-                    p.variableReplacements.push(vr);
-                });
-            }
-            
-            if(data.nextParts) {
-                data.nextParts.map(function(d) {
-                    var np = new NextPart(p,d);
-                    p.nextParts.push(np);
-                });
             }
 
             if(data.unitTests) {
@@ -2796,7 +2818,7 @@ $(document).ready(function() {
         this.availableParts = ko.pureComputed(function() {
             var p = this.part
             return p.q.allParts().filter(function(p2){
-                return p!=p2 && p2.type().has_marks && p2.parent()!=p;
+                return p!=p2 && p2.type().has_marks && p2.parent()!=p && !p2.isAlternative();
             });
         },this);
         if(data) {

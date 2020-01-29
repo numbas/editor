@@ -29,16 +29,33 @@
     overflow-y: auto;
 }
 
+.parts-tree .part-container.sortable-chosen > .children {
+    display: none;
+}
+
+.parts-tree .part-container.open {
+    border: 3px solid #397eac;
+}
+
+.parts-tree .list-group-item.add {
+    border-top: none;
+    text-align: right;
+    padding: 0.2em;
+}
+
+.parts-tree .children {
+    margin-left: 1em;
+}
+
 .parts-tree .children-header {
     font-size: 0.8em;
-    padding: 0.5em 0em 0.5em 1em;
+    padding: 0.2em 0em 0.2em 0.51em;
     font-weight: bold;
-    margin: 0 0 0 1em;
+    margin: 0 0 0.5em 0;
     background-color: hsl(200, 65.2%, 91%);
 }
 .parts-tree .children .part {
-    margin-top: 1px;
-    margin-left: 2em;
+    padding: 0.2em 0.5em;
 }
 .parts-tree .children .part:first-child {
     border-top: 0;

@@ -50,7 +50,7 @@ part_types.models = [
             if(data.gaps)
             {
                 data.gaps.map(function(g) {
-                    part.gaps.push(new Editor.question.Part(part.q,part,part.gaps,g));
+                    part.gaps.push(new Editor.question.Part('gap',part.q,part,part.gaps,g));
                 });
             }
             tryLoad(data,['sortAnswers'],this);

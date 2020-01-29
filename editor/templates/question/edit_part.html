@@ -21,25 +21,6 @@
 <div class="part-controls">
     <button type="button" class="btn btn-sm btn-default" data-bind="click: copy"><span class="glyphicon glyphicon-duplicate"></span> Copy this <span data-bind="text: levelName"></span></button>
     <button type="button" class="btn btn-sm btn-default" data-bind="click: replaceWithGapfill, visible: canBeReplacedWithGap"><span class="glyphicon glyphicon-tasks"></span> Replace this part with a gapfill</button>
-    <button type="button" class="btn btn-sm btn-warning" data-bind="click: addAlternative">
-        <span class="glyphicon glyphicon-plus"></span> Add an alternative to this part
-    </button>
-    <button type="button" class="btn btn-sm btn-default" data-bind="visible: type().name=='gapfill', click: startAddingGap">
-        <span class="glyphicon glyphicon-plus"></span> Add a gap to this part
-    </button>
-    <button type="button" class="btn btn-sm btn-info" data-bind="visible: isRootPart, click: startAddingStep">
-        <span class="glyphicon glyphicon-plus"></span> Add a step to this part
-    </button>
-    <!-- ko if: isGap -->
-    <button type="button" class="btn btn-sm btn-info" data-bind="visible: isGap, click: parent().startAddingGap">
-        <span class="glyphicon glyphicon-plus"></span> Add another gap to this part</span>
-    </button>
-    <!-- /ko -->
-    <!-- ko if: isStep -->
-    <button type="button" class="btn btn-sm btn-info" data-bind="visible: isStep, click: parent().startAddingStep">
-        <span class="glyphicon glyphicon-plus"></span> Add another step to this part</span>
-    </button>
-    <!-- /ko -->
     <button type="button" class="btn btn-sm btn-danger" data-bind="click: remove">
         <span class="glyphicon glyphicon-remove"></span> Delete this <span data-bind="text: levelName"></span>
     </button>

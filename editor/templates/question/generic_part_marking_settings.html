@@ -2,6 +2,7 @@
 {% load helplink %}
 
 <!-- ko with: $parent -->
+<!-- ko if: !isAlternative() -->
 <div data-bind="visible: steps().length">
     {% property 'stepsPenalty' 'Penalty for revealing steps' min=0 help_url='question/parts/reference.html#term-penalty-for-revealing-steps' %}
 </div>
@@ -30,4 +31,5 @@
         </label>
     </div>
 </div>
+<!-- /ko -->
 <!-- /ko -->

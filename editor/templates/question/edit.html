@@ -481,7 +481,7 @@
                                         <!-- ko if: showChildren -->
                                         <div class="children">
                                             <h4 class="children-header" data-bind="visible: canAddAlternative">Expected errors</h4>
-                                            <div class="alternatives" data-bind="visible: alternatives().length, sortable: { foreach: alternatives, options: {group: path()+'alternatives'} }">
+                                            <div class="alternatives" data-bind="visible: alternatives().length, sortable: { foreach: alternatives, options: {group: path()+'alternatives', handle: '.alternative'} }">
                                                 <a role="button" class="list-group-item part alternative" data-bind="
                                                     click: $root.currentPart, 
                                                     css: {active: $data==$root.currentPart()}
@@ -493,7 +493,7 @@
                                                 <button type="button" data-bind="click: addAlternative" class="btn btn-xs btn-warning"><span class="glyphicon glyphicon-plus"></span> Add an expected error</button>
                                             </span>
                                             <h4 class="children-header" data-bind="visible: canAddGap">Gaps</h4>
-                                            <div class="gaps" data-bind="visible: gaps().length, sortable: { foreach: gaps, options: {group: path()+'gaps'} }">
+                                            <div class="gaps" data-bind="visible: gaps().length, sortable: { foreach: gaps, options: {group: path()+'gaps', handle: '.gap'} }">
                                                 <div class="part-container" data-bind="css: {open: showChildren()}">
                                                     <a role="button" class="list-group-item part gap" data-bind="
                                                         click: $parents[1].currentPart, 
@@ -506,7 +506,7 @@
                                                     <!-- ko if: showChildren -->
                                                     <div class="children">
                                                         <h4 class="children-header" data-bind="visible: canAddAlternative">Expected errors</h4>
-                                                        <div class="alternatives" data-bind="visible: alternatives().length, sortable: { foreach: alternatives, options: {group: path()+'alternatives'} }">
+                                                        <div class="alternatives" data-bind="visible: alternatives().length, sortable: { foreach: alternatives, options: {group: path()+'alternatives', handle: '.alternative'} }">
                                                             <a role="button" class="list-group-item part alternative" data-bind="
                                                                 click: $root.currentPart, 
                                                                 css: {active: $data==$root.currentPart()}
@@ -525,14 +525,32 @@
                                                 <button type="button" data-bind="click: startAddingGap" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-plus"></span> Add a gap</button>
                                             </span>
                                             <h4 class="children-header" data-bind="visible: canAddStep">Steps</h4>
-                                            <div class="steps" data-bind="visible: steps().length, sortable: { foreach: steps, options: {group: path()+'steps'} }">
-                                                <a role="button" class="list-group-item part step" data-bind="
-                                                    click: $parents[1].currentPart, 
-                                                    css: {active: $data==$parents[1].currentPart()}
-                                                ">
-                                                    <strong data-bind="text: header"></strong>
-                                                    <span class="type-name" data-bind="text: type().niceName"></span>
-                                                </a>
+                                            <div class="steps" data-bind="visible: steps().length, sortable: { foreach: steps, options: {group: path()+'steps', handle: '.step'} }">
+                                                <div class="part-container" data-bind="css: {open: showChildren()}">
+                                                    <a role="button" class="list-group-item part step" data-bind="
+                                                        click: $parents[1].currentPart, 
+                                                        css: {active: $data==$parents[1].currentPart()}
+                                                    ">
+                                                        <strong data-bind="text: header"></strong>
+                                                        <span class="type-name" data-bind="text: type().niceName"></span>
+                                                    </a>
+                                                    <!-- ko if: showChildren -->
+                                                    <div class="children">
+                                                        <h4 class="children-header" data-bind="visible: canAddAlternative">Expected errors</h4>
+                                                        <div class="alternatives" data-bind="visible: alternatives().length, sortable: { foreach: alternatives, options: {group: path()+'alternatives', handle: '.alternative'} }">
+                                                            <a role="button" class="list-group-item part alternative" data-bind="
+                                                                click: $root.currentPart, 
+                                                                css: {active: $data==$root.currentPart()}
+                                                            ">
+                                                                <strong data-bind="text: name"></strong>
+                                                            </a>
+                                                        </div>
+                                                        <span class="list-group-item add alternative" data-bind="visible: canAddAlternative">
+                                                            <button type="button" data-bind="click: addAlternative" class="btn btn-xs btn-warning"><span class="glyphicon glyphicon-plus"></span> Add an expected error</button>
+                                                        </span>
+                                                    </div>
+                                                    <!-- /ko -->
+                                                </div>
                                             </div>
                                             <span class="list-group-item add step" data-bind="visible: canAddStep">
                                                 <button type="button" data-bind="click: startAddingStep" class="btn btn-xs btn-info"><span class="glyphicon glyphicon-plus"></span> Add a step</button>

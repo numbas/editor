@@ -2298,7 +2298,7 @@ $(document).ready(function() {
         },this);
 
         this.canAddStep = ko.computed(function() {
-            return this.isRootPart() && this.type().has_marks;
+            return this.q.partsMode().value=='all' && this.isRootPart() && this.type().has_marks;
         },this);
 
         this.canAddAlternative = ko.computed(function() {

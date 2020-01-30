@@ -1937,10 +1937,10 @@ $(document).ready(function() {
                 var names = [];
                 var p = this.def.part;
                 while(p) {
-                    names.push(p.name());
+                    names.splice(0,0,'"'+p.name()+'"');
                     p = p.parent();
                 }
-                desc = '"' + names.join(' ') + '" - ' + desc;
+                desc = names.join(' → ') + ' - ' + desc;
             }
             return desc;
         },this);

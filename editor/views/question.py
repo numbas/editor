@@ -45,6 +45,9 @@ class CreateView(editor.views.editoritem.CreateView):
     def form_valid(self, form):
         with transaction.atomic(), reversion.create_revision():
             ei = form.save()
+            content = ei.get_parsed_content()
+            content.data['partsMode'] = form.cleaned_data.get('parts_mode')
+            ei.content = str(content)
             ei.set_licence(ei.project.default_licence)
             ei.save()
             self.question = NewQuestion()

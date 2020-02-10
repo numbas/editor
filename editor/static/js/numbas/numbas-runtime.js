@@ -10918,6 +10918,9 @@ var createPartFromXML = Numbas.createPartFromXML = function(xml, path, question,
     try {
         part.loadFromXML(xml);
         part.finaliseLoad();
+        if(Numbas.display && part.question && part.question.display) {
+            part.initDisplay();
+        }
     } catch(e) {
         if(e.originalMessage=='part.error') {
             throw(e);
@@ -11174,9 +11177,12 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
                 np.penaltyAmount = scope.evaluate(np.penaltyAmountString).value;
             }
         });
-        if(Numbas.display) {
-            this.display = new Numbas.display.PartDisplay(this);
-        }
+    },
+    /** Initialise this part's display object.
+     *  Only called if the question this part belongs to has a display
+     */
+    initDisplay: function() {
+        this.display = new Numbas.display.PartDisplay(this);
     },
     /** Load saved data about this part from storage
      *  The part is not resubmitted - you must do this afterwards, once any steps or gaps have been resumed.
@@ -13005,7 +13011,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
         q.signals.on('variablesGenerated',function() {
             q.name = jme.contentsubvars(q.name,q.scope);
         });
-        if(Numbas.display) {
+        if(Numbas.display && q.exam && q.exam.display) {
             q.display = new Numbas.display.QuestionDisplay(q);
         }
         q.signals.on('partsGenerated', function() {
@@ -13162,7 +13168,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
      * @see Numbas.display.QuestionDisplay.leave
      */
     leave: function() {
-    this.display && this.display.leave();
+        this.display && this.display.leave();
     },
     /** Execute the question's JavaScript preamble - should happen as soon as the configuration has been loaded from XML, before variables are generated. 
      * @fires Numbas.Question#preambleRun
@@ -24231,8 +24237,14 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.answerJSON = params.answer;
             this.part = params.part;
             this.disable = params.disable;
-            this.widget = params.widget || Knockout.computed(function() { return this.part() && this.part().input_widget();},this);
-            this.widget_options = params.widget_options || Knockout.computed(function() { return this.part() && this.part().input_options()},this);
+            this.widget = params.widget || Knockout.computed(function() { 
+                var part = Knockout.unwrap(this.part);
+                return part && part.input_widget();
+            },this);
+            this.widget_options = params.widget_options || Knockout.computed(function() { 
+                var part = Knockout.unwrap(this.part);
+                return part && part.input_options()
+            },this);
             this.classes = {'answer-widget':true};
             this.classes['answer-widget-'+this.widget] = true;
             this.events = params.events;
@@ -25116,9 +25128,9 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
             this.error(e.message,{},e);
         }
         this.stagedAnswer = '';
-        if(Numbas.display) {
-            this.display = new Numbas.display.NumberEntryPartDisplay(this);
-        }
+    },
+    initDisplay: function() {
+        this.display = new Numbas.display.NumberEntryPartDisplay(this);
     },
     resume: function() {
         if(!this.store) {
@@ -25344,10 +25356,9 @@ GapFillPart.prototype = /** @lends Numbas.parts.GapFillPart.prototype */
             });
         }
     },
-    finaliseLoad: function() {
-        if(Numbas.display) {
-            this.display = new Numbas.display.GapFillPartDisplay(this);
-        }
+    finaliseLoad: function() {},
+    initDisplay: function() {
+        this.display = new Numbas.display.GapFillPartDisplay(this);
     },
 
     /** The total marks available for this part, after applying adaptive marking and steps penalties
@@ -25488,9 +25499,9 @@ InformationPart.prototype = /** @lends Numbas.parts.InformationOnlyPart.prototyp
     finaliseLoad: function() {
         this.answered = true;
         this.isDirty = false;
-        if(Numbas.display) {
-            this.display = new Numbas.display.InformationPartDisplay(this);
-        }
+    },
+    initDisplay: function() {
+        this.display = new Numbas.display.InformationPartDisplay(this);
     },
     /** This part is always valid
      * @returns {Boolean} true
@@ -25680,9 +25691,9 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
     finaliseLoad: function() {
         this.stagedAnswer = '';
         this.getCorrectAnswer(this.getScope());
-        if(Numbas.display) {
-            this.display = new Numbas.display.JMEPartDisplay(this);
-        }
+    },
+    initDisplay: function() {
+        this.display = new Numbas.display.JMEPartDisplay(this);
     },
     /** Student's last submitted answer
      * @type {String}
@@ -26271,9 +26282,9 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
                 this.stagedAnswer[i].push(false);
             }
         }
-        if(Numbas.display) {
-            this.display = new Numbas.display.MultipleResponsePartDisplay(this);
-        }
+    },
+    initDisplay: function() {
+        this.display = new Numbas.display.MultipleResponsePartDisplay(this);
     },
     /** Student's last submitted answer/choice selections
      * @type {Array.<Array.<Boolean>>}
@@ -26720,9 +26731,9 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
         } catch(e) {
             this.error(e.message,{},e);
         }
-        if(Numbas.display) {
-            this.display = new Numbas.display.CustomPartDisplay(this);
-        }
+    },
+    initDisplay: function() {
+        this.display = new Numbas.display.CustomPartDisplay(this);
     },
     getCorrectAnswer: function(scope) {
         this.evaluateSettings(scope);
@@ -26871,10 +26882,9 @@ var ExtensionPart = Numbas.parts.ExtensionPart = function(xml, path, question, p
 ExtensionPart.prototype = /** @lends Numbas.parts.ExtensionPart.prototype */ {
     loadFromXML: function() {},
     loadFromJSON: function() {},
-    finaliseLoad: function() {
-        if(Numbas.display) {
-    this.display = new Numbas.display.ExtensionPartDisplay(this);
-        }
+    finaliseLoad: function() {},
+    initDisplay: function() {
+        this.display = new Numbas.display.ExtensionPartDisplay(this);
     },
     validate: function() {
         return false;
@@ -27001,9 +27011,9 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
             var answerSize = settings.numRows+'×'+settings.numColumns;
             throw(new Numbas.Error('part.matrix.size mismatch',{correct_dimensions:correctSize,input_dimensions:answerSize}));
         }
-        if(Numbas.display) {
-            this.display = new Numbas.display.MatrixEntryPartDisplay(this);
-        }
+    },
+    initDisplay: function() {
+        this.display = new Numbas.display.MatrixEntryPartDisplay(this);
     },
     /** The student's last submitted answer */
     studentAnswer: '',
@@ -27171,9 +27181,9 @@ PatternMatchPart.prototype = /** @lends Numbas.PatternMatchPart.prototype */ {
     },
     finaliseLoad: function() {
         this.getCorrectAnswer(this.getScope());
-        if(Numbas.display) {
-            this.display = new Numbas.display.PatternMatchPartDisplay(this);
-        }
+    },
+    initDisplay: function() {
+        this.display = new Numbas.display.PatternMatchPartDisplay(this);
     },
     resume: function() {
         if(!this.store) {

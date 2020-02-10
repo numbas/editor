@@ -11823,8 +11823,10 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
             }
             if(this.display) {
                 this.display.showScore(this.answered);
-                this.display.updateNextParts();
             }
+        }
+        if(this.display) {
+            this.display.updateNextParts();
         }
         this.store && this.store.partAnswered(this);
         this.submitting = false;
@@ -12305,7 +12307,8 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @returns {Array.<Numbas.parts.NextPart>}
      */
     availableNextParts: function() {
-        var scope = new jme.Scope([this.getScope(),{variables: this.marking_values}]);
+        var extra = this.answered ? {variables: this.marking_values} : {};
+        var scope = new jme.Scope([this.getScope(),extra]);
         scope.setVariable('credit',new jme.types.TNum(this.credit));
         scope.setVariable('answered', new jme.types.TBool(this.answered));
         return this.nextParts.filter(function(np) {

@@ -231,6 +231,27 @@ The following scripts can be customised:
 
 There are several example questions using custom scripts at `numbas.mathcentre.ac.uk/exam/1016/custom-marking/ <https://numbas.mathcentre.ac.uk/exam/1016/custom-marking/>`_.
 
+.. _expected-errors:
+
+Expected errors
+===============
+
+You can define any number of "expected errors" to catch answers you might expect the student to submit, and award partial credit along with a tailored feedback message.
+
+In the editor, an "expected error" is a copy of the parent part, with only the fields relevant to marking shown.
+Set the "expected error" version up so it awards full credit when you want it to apply.
+
+When the student submits an answer to a part with expected errors, the following happens:
+
+* The student's answer is marked against the normal marking settings. 
+  This produces an amount of credit and some feedback messages.
+* The student's answer is marked against each of the "expected error" versions in turn, producing an amount of credit. Any feedback messages produced by the marking algorithm are discarded.
+* If this version would award more marks (or more credit, if this and all previous versions awarded no marks) to the student than any of the versions considered so far,  keep this version's feedback message.
+* Once all versions have been considered, show the feedback corresponding to the one that awarded the most marks or credit.
+
+Practically, set up each expected error to mark an answer "correct" if you want to show the corresponding feedback message.
+You could just set the :guilabel:`Correct answer` field to the answer you'd expect the student to enter if they made a particular error, or you could set up a :ref:`custom marking algorithm <part-marking-algorithm>` to catch a variety of errors.
+
 .. _adaptive-marking:
 
 Adaptive marking

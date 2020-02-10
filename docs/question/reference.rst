@@ -154,7 +154,6 @@ Parts
 =====
 
 Each question has one or more parts.
-The student is given a separate score for each part of the question, and their total score is the sum of their scores for each part.
 
 In the editor, parts are displayed in a list on the right of a page; you can click on a part in the list to start editing it.
 You can drag up or down a part to change its position in the question.
@@ -168,6 +167,28 @@ You can filter the list by typing keywords in the search box at the top.
 
 See :ref:`parts` for more on part settings.
 
+Part display mode
+=================
+
+There are two modes that dictate how question parts are presented to students.
+
+.. glossary::
+
+   Show all parts
+      In :guilabel:`Show all parts` mode, all parts are shown to the student in a list.
+      The student is given a separate score for each part, and their total score is the sum of their scores for each part.
+
+   Explore
+      In :guilabel:`Explore` mode, the student's journey through the parts of the question is not determined in advance.
+
+      When the question begins, the student is shown the first part.
+      Each part defines a list of "next part" options, which the student can choose to follow.
+
+      The student's scores from each part are collected into pre-defined :ref:`objectives`.
+      The student might accumulate :ref:`penalties` by visiting certain parts.
+      The student's total score for the question is the sum of their objective scores minus the sum of their penalties.
+
+      See the page on :ref:`explore-mode`.
 
 .. _variables:
 

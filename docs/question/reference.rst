@@ -11,7 +11,14 @@ Every Numbas question consists of three sections: :ref:`Statement <statement>`, 
   A question can have one or more parts, each of which is one of several types, depending on what kind of input you want from the student. 
 * Finally, the optional :ref:`Advice` section can be used to give a full solution to the question, which the student can request to see if they're stuck, or once they've finished the exam.
 
+.. todo::
+   Make this more accurate w.r.t. explore mode.
+
 The content in each section is generated each time the question is run, based on the question's :ref:`variables <variables>`.
+
+.. contents:: Contents of this page
+   :local:
+   :depth: 1
 
 Creating a question
 ====================
@@ -28,6 +35,9 @@ The question editor
 ===================
 
 At the top of the question editor is the question's name, as well as a stamp showing the status of the question.
+
+.. todo::
+   Move stamps to a generic page about organisation
 
 .. _question-stamps:
 
@@ -50,6 +60,9 @@ Admin controls
 
 .. image:: images/admin_controls.png
     :alt: Admin controls on the question editor.
+
+.. todo::
+   Retake this screenshot with "add to basket" included
 
 .. glossary::
 
@@ -150,10 +163,22 @@ Statement
 The statement is a content area which appears at the top of the question, before any input boxes. 
 Use the statement to set up the question and provide any information the student needs to answer it.
 
+.. note::
+   Only use the statement area to give information, don't ask a question.
+   Do that in the :term:`prompt` area of each part.
+
 Parts
 =====
 
-Each question has one or more parts.
+.. admonition:: Motivation
+   A *part* is an opportunity for the student to give an answer in response to a prompt.
+   A question might contain more than one part if the student needs to perform a sequence of steps, and you want to assess each of them independently.
+
+.. todo::
+   Talk about how parts should be linked - if they can be separate, should be separate questions.
+   (Highly opinionated)
+
+Each question has one or more *parts*.
 
 In the editor, parts are displayed in a list on the right of a page; you can click on a part in the list to start editing it.
 You can drag up or down a part to change its position in the question.
@@ -168,7 +193,7 @@ You can filter the list by typing keywords in the search box at the top.
 See :ref:`parts` for more on part settings.
 
 Part display mode
-=================
+-----------------
 
 There are two modes that dictate how question parts are presented to students.
 
@@ -190,10 +215,24 @@ There are two modes that dictate how question parts are presented to students.
 
       See the page on :ref:`explore-mode`.
 
+.. admonition:: Motivation
+   The original Numbas design only allowed the 'Show all parts' mode, following the design of older systems.
+
+   The 'explore mode' allows a wider range of interactive experiences, at the cost of a bit more setup by the author.
+
+   Use the 'show all parts' mode if you just want the student to answer a fixed set of question prompts.
+
 .. _variables:
 
 Variables
 =========
+
+.. admonition:: Motivation
+   The ability to randomise questions is one of the main benefits of computer-based assessment.
+   When a question is randomised, all of the sections of the question are affected: statement and prompts, marking, and the advice.
+   Variables represent randomly-generated values, as well as values derived from other variables.
+   Variables can be referred to by name throughout the question's content areas and marking settings, so they're substituted in automatically when a student runs the question.
+   Defining variables in terms of other variables makes it easy to organise and reuse sophisticated computations.
 
 .. image:: images/variable_definition.png
     :alt: The variables tab, showing the definition of the selected variable on the left and the list of all variables on the right.
@@ -261,6 +300,10 @@ Definition
 Locking variable values
 -----------------------
 
+.. admonition:: Motivation
+   Sometimes you want to focus on a particular case in a randomised question.
+   Rather than constantly regenerating all the question's variables to get back to the case you want, or temporarily redefining the involved variables to fixed values, you can lock a variable to keep its current value until you're ready to re-randomise it.
+
 The preview values for each question variable are regenerated each time you click on the :guilabel:`Regenerate variables` button or, if the :guilabel:`Automatically regenerate variables when changes are made` option is ticked, whenever a variable definition is changed.
 
 You can **lock** the value of a variable so that it doesn't change when the other variables are regenerated.
@@ -275,6 +318,10 @@ You can unlock a variable by clicking on the padlock icon again.
 
 Variable testing
 ================
+
+.. admonition:: Motivation
+   Sometimes it's hard to define randomised question variables so they're guaranteed to produce a usable set of values.
+   In these cases, it's easier to state the condition you want the variables to satisfy, and let Numbas automatically throw out sets of values that don't work.
 
 .. image:: images/variable_testing.png
     :alt: The variable testing tab, showing the testing condition and information on the likelihood of satisfying the condition.
@@ -311,6 +358,10 @@ This tab provides tools to test your variables for desired properties, so you ca
 Advice
 ======
 
+.. admonition:: Motivation
+   Students find it enormously valuable to see a full solution to a question they've attempted, to compare against their own working.
+   During formative use, students might reveal the advice to remind themselves of the techniques required, then regenerate the question and try again.
+
 :guilabel:`Advice` is a content area which is shown when the student presses the :guilabel:`Reveal` button to reveal the question's answers, or at the end of the exam.
 
 The advice area is normally used to present a worked solution to the question.
@@ -328,7 +379,11 @@ Extensions
 .. image:: images/extensions.png
     :alt: The list of available extensions.
 
-Extensions can provide new functionality, such as extra JME functions or content types. 
+.. admonition:: Motivation
+   Extensions can provide new functionality, such as extra JME functions or content types.
+
+   Some extensions include large external libraries or modify the behaviour of Numbas in a way that not everyone wants, so they're not included in Numbas by default, and made available as optional extras instead.
+
 To use an extension in your question, tick its checkbox here. 
 All functionality provided by the extension will become available immediately.
 See the section on :ref:`extensions <extensions>`.
@@ -339,7 +394,12 @@ Functions
 .. image:: images/functions.png
     :alt: The function editor.
 
-If you need to do something a bit more complicated with variables, or you find yourself repeating the same pattern over and over, you can define a custom function. 
+.. admonition:: Motivation
+   If you need to do something a bit more complicated with variables, or you find yourself repeating the same pattern over and over, you can define a custom function.
+   
+   Complicated algorithms, or dynamically-generated sections of display content, are often easier to implement in JavaScript than JME.
+   Custom functions allow you to wrap up JavaScript code as a JME function.
+
 Custom functions can be used in any JME expression in the question, such as variable definitions or part answers.
 
 .. glossary::
@@ -468,22 +528,32 @@ While the JME system has its own type system for variables, separate from Javasc
 Rulesets
 --------
 
-A "ruleset" defines a list of named :doc:`simplification rules </simplification>` used to manipulate mathematical expressions.
+.. admonition:: Motivation
+   If you find yourself using the same set of rules repeatedly in ``\simplify`` commands, define a new ruleset with a shorter name to save yourself some typing.
 
-If you find yourself using the same set of rules repeatedly in ``\simplify`` commands, define a new ruleset with a shorter name to save yourself some typing.
+A "ruleset" defines a list of named :doc:`simplification rules </simplification>` used to manipulate mathematical expressions.
 
 .. _preamble:
 
 Preamble
 --------
 
-The preambles allow you to add some code which affects the entire question. 
+.. admonition:: Motivation
+   For those who can write JavaScript, the preamble allows you to add some code which affects the entire question.
+
+   Many of the use cases for the JavaScript preamble are now more appropriately implemented with features such as :ref:`custom part types <custom-part-types>` and :ref:`marking algorithms <marking-algorithm>`.
+   The preamble is still there for backwards compatibility, and for new experimental features.
+
+   The CSS preamble allows you to style certain portions of your question, without relying on a custom exam :ref:`theme <themes>`.
 
 The code written in the :guilabel:`Javascript` preamble is executed when the question is generated, just before the question's variables are calculated. 
 The Javascript preamble can access the question's properties through the `question` variable. 
 You can see an example of the Javascript preamble in use at https://numbas.mathcentre.ac.uk/question/2705/jsxgraph-test-preamble-version/.
 
 You can see what functions are available in JavaScript at `the Numbas code documentation <http://numbas.github.io/Numbas>`_.
+
+.. todo:
+   Update these examples to use the signalbox
 
 If you want to do something with the display of the question on the page, you have to wait until its HTML has been generated, using the ``onHTMLAttached`` method. 
 Here's an example which hides an element in the statement with a given id::
@@ -538,6 +608,9 @@ Settings
         Your guiding principle should be "more is better" - try to write down all words that someone searching for this question might use.
 
         After typing a tag in the box, press the Enter key to add it to the list. 
+
+.. todo::
+   Metadata: topics and ability levels
 
 .. access:
 

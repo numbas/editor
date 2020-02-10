@@ -2220,7 +2220,9 @@ $(document).ready(function() {
             return i+'';
         },this);
         this.standardName = ko.pureComputed(function() {
-            if(this.indexLabel()) {
+            if((this.q.partsMode().value=='explore' && this.levelName()=='part') || !this.indexLabel()) {
+                return 'Unnamed '+this.levelName();
+            } else if(this.indexLabel()) {
                 var name = Numbas.util.capitalise(this.levelName() + " " + this.indexLabel());
                 if(this.isGap() || this.isStep() || this.isAlternative()) {
                     name += '.';
@@ -2228,8 +2230,6 @@ $(document).ready(function() {
                     name += ')';
                 }
                 return name;
-            } else {
-                return 'Unnamed '+this.levelName();
             }
         },this);
         this.name = ko.pureComputed(function() {

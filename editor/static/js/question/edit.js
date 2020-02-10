@@ -2471,7 +2471,7 @@ $(document).ready(function() {
 
             tabs.push(new Editor.Tab('scripts','Scripts','wrench',{in_use: scripts_tab_in_use}));
 
-            if(!this.isAlternative()) {
+            if(!this.isAlternative() && q.partsMode().value=='all') {
                 var adaptive_marking_tab_in_use = ko.pureComputed(function() {
                     return this.variableReplacements().length>0;
                 },this);

@@ -231,26 +231,46 @@ The following scripts can be customised:
 
 There are several example questions using custom scripts at `numbas.mathcentre.ac.uk/exam/1016/custom-marking/ <https://numbas.mathcentre.ac.uk/exam/1016/custom-marking/>`_.
 
-.. _expected-errors:
+.. _alternative-answers:
 
-Expected errors
-===============
+Alternative answers
+===================
 
-You can define any number of "expected errors" to catch answers you might expect the student to submit, and award partial credit along with a tailored feedback message.
+.. admonition:: Motivation
 
-In the editor, an "expected error" is a copy of the parent part, with only the fields relevant to marking shown.
-Set the "expected error" version up so it awards full credit when you want it to apply.
+    If there are several acceptable answers to a part, use "alternative answers" to check for each of them.
 
-When the student submits an answer to a part with expected errors, the following happens:
+    Or, if there's an error that you expect the student to make, you can set it up as an alternative answer so you can give the student a relevant hint in their feedback.
+
+You can define any number of "alternative answers" to catch answers you might expect the student to submit, and award full, partial or zero credit along with a tailored feedback message.
+
+In the editor, an "alternative answer" is a copy of the parent part, with only the fields relevant to marking shown.
+Set the "alternative answer" version up so it awards full credit when you want it to apply. 
+
+When the student submits an answer to a part with alternative answers, the following happens:
 
 * The student's answer is marked against the normal marking settings. 
   This produces an amount of credit and some feedback messages.
-* The student's answer is marked against each of the "expected error" versions in turn, producing an amount of credit. Any feedback messages produced by the marking algorithm are discarded.
-* If this version would award more marks (or more credit, if this and all previous versions awarded no marks) to the student than any of the versions considered so far,  keep this version's feedback message.
+* The student's answer is marked against each of the "alternative answer" versions in turn, producing an amount of credit. 
+  Any feedback messages produced by the marking algorithm are discarded, unless :guilabel:`Show all feedback?` is ticked for this version.
+* If this version would award the student more marks (or more credit, if this and all previous versions awarded no marks) than any of the versions considered so far, keep this version's feedback message.
 * Once all versions have been considered, show the feedback corresponding to the one that awarded the most marks or credit.
 
-Practically, set up each expected error to mark an answer "correct" if you want to show the corresponding feedback message.
+Practically, set up each alternative answer to mark an answer "correct" if you want to show the corresponding feedback message.
 You could just set the :guilabel:`Correct answer` field to the answer you'd expect the student to enter if they made a particular error, or you could set up a :ref:`custom marking algorithm <part-marking-algorithm>` to catch a variety of errors.
+
+.. glossary::
+
+    Show all feedback?
+        If ticked, when this alternative is used, all of the feedback items produced during marking are shown to the student, in addition to the :term:`Message if this alternative is used`.
+
+        If not ticked, when this alternative is used, only the :term:`Message if this alternative is used` is shown to the student, and all other feedback is discarded.
+        You might want this if the alternative represents an incorrect answer, and the built-in marking algorithm would produce a message like "Your answer is correct".
+
+    Message if this alternative is used
+        If this alternative is the one whose feedback is shown, this message is added to the end of the feedback.
+        You could use this to give the student a hint about the error they've made, or describe which of several acceptable solutions they've given.
+
 
 .. _adaptive-marking:
 

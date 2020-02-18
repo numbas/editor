@@ -480,7 +480,7 @@
                                         </a>
                                         <!-- ko if: showChildren -->
                                         <div class="children">
-                                            <h4 class="children-header" data-bind="visible: canAddAlternative">Expected errors</h4>
+                                            <h4 class="children-header" data-bind="visible: canAddAlternative">Alternative answers</h4>
                                             <div class="alternatives" data-bind="visible: alternatives().length, sortable: { foreach: alternatives, options: {group: path()+'alternatives', handle: '.alternative'} }">
                                                 <a role="button" class="list-group-item part alternative" data-bind="
                                                     click: $root.currentPart, 
@@ -490,7 +490,7 @@
                                                 </a>
                                             </div>
                                             <span class="list-group-item add alternative" data-bind="visible: canAddAlternative() && $data==$root.currentPart() || ($root.currentPart().isAlternative() && $data==$root.currentPart().parent())">
-                                                <button type="button" data-bind="click: addAlternative" class="btn btn-xs btn-warning"><span class="glyphicon glyphicon-plus"></span> Add an expected error</button>
+                                                <button type="button" data-bind="click: addAlternative" class="btn btn-xs btn-warning"><span class="glyphicon glyphicon-plus"></span> Add an alternative answer</button>
                                             </span>
                                             <h4 class="children-header" data-bind="visible: canAddGap">Gaps</h4>
                                             <div class="gaps" data-bind="visible: gaps().length, sortable: { foreach: gaps, options: {group: path()+'gaps', handle: '.gap'} }">
@@ -505,7 +505,7 @@
                                                     </a>
                                                     <!-- ko if: showChildren -->
                                                     <div class="children">
-                                                        <h4 class="children-header" data-bind="visible: canAddAlternative">Expected errors</h4>
+                                                        <h4 class="children-header" data-bind="visible: canAddAlternative">Alternative answers</h4>
                                                         <div class="alternatives" data-bind="visible: alternatives().length, sortable: { foreach: alternatives, options: {group: path()+'alternatives', handle: '.alternative'} }">
                                                             <a role="button" class="list-group-item part alternative" data-bind="
                                                                 click: $root.currentPart, 
@@ -515,7 +515,7 @@
                                                             </a>
                                                         </div>
                                                         <span class="list-group-item add alternative" data-bind="visible: canAddAlternative">
-                                                            <button type="button" data-bind="click: addAlternative" class="btn btn-xs btn-warning"><span class="glyphicon glyphicon-plus"></span> Add an expected error</button>
+                                                            <button type="button" data-bind="click: addAlternative" class="btn btn-xs btn-warning"><span class="glyphicon glyphicon-plus"></span> Add an alternative answer</button>
                                                         </span>
                                                     </div>
                                                     <!-- /ko -->
@@ -536,7 +536,7 @@
                                                     </a>
                                                     <!-- ko if: showChildren -->
                                                     <div class="children">
-                                                        <h4 class="children-header" data-bind="visible: canAddAlternative">Expected errors</h4>
+                                                        <h4 class="children-header" data-bind="visible: canAddAlternative">Alternative answers</h4>
                                                         <div class="alternatives" data-bind="visible: alternatives().length, sortable: { foreach: alternatives, options: {group: path()+'alternatives', handle: '.alternative'} }">
                                                             <a role="button" class="list-group-item part alternative" data-bind="
                                                                 click: $root.currentPart, 
@@ -546,7 +546,7 @@
                                                             </a>
                                                         </div>
                                                         <span class="list-group-item add alternative" data-bind="visible: canAddAlternative">
-                                                            <button type="button" data-bind="click: addAlternative" class="btn btn-xs btn-warning"><span class="glyphicon glyphicon-plus"></span> Add an expected error</button>
+                                                            <button type="button" data-bind="click: addAlternative" class="btn btn-xs btn-warning"><span class="glyphicon glyphicon-plus"></span> Add an alternative answer</button>
                                                         </span>
                                                     </div>
                                                     <!-- /ko -->

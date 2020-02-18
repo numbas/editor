@@ -171,6 +171,7 @@ Parts
 =====
 
 .. admonition:: Motivation
+
    A *part* is an opportunity for the student to give an answer in response to a prompt.
    A question might contain more than one part if the student needs to perform a sequence of steps, and you want to assess each of them independently.
 
@@ -216,6 +217,7 @@ There are two modes that dictate how question parts are presented to students.
       See the page on :ref:`explore-mode`.
 
 .. admonition:: Motivation
+
    The original Numbas design only allowed the 'Show all parts' mode, following the design of older systems.
 
    The 'explore mode' allows a wider range of interactive experiences, at the cost of a bit more setup by the author.
@@ -228,6 +230,7 @@ Variables
 =========
 
 .. admonition:: Motivation
+
    The ability to randomise questions is one of the main benefits of computer-based assessment.
    When a question is randomised, all of the sections of the question are affected: statement and prompts, marking, and the advice.
    Variables represent randomly-generated values, as well as values derived from other variables.
@@ -301,6 +304,7 @@ Locking variable values
 -----------------------
 
 .. admonition:: Motivation
+
    Sometimes you want to focus on a particular case in a randomised question.
    Rather than constantly regenerating all the question's variables to get back to the case you want, or temporarily redefining the involved variables to fixed values, you can lock a variable to keep its current value until you're ready to re-randomise it.
 
@@ -320,6 +324,7 @@ Variable testing
 ================
 
 .. admonition:: Motivation
+
    Sometimes it's hard to define randomised question variables so they're guaranteed to produce a usable set of values.
    In these cases, it's easier to state the condition you want the variables to satisfy, and let Numbas automatically throw out sets of values that don't work.
 
@@ -359,6 +364,7 @@ Advice
 ======
 
 .. admonition:: Motivation
+
    Students find it enormously valuable to see a full solution to a question they've attempted, to compare against their own working.
    During formative use, students might reveal the advice to remind themselves of the techniques required, then regenerate the question and try again.
 
@@ -380,6 +386,7 @@ Extensions
     :alt: The list of available extensions.
 
 .. admonition:: Motivation
+
    Extensions can provide new functionality, such as extra JME functions or content types.
 
    Some extensions include large external libraries or modify the behaviour of Numbas in a way that not everyone wants, so they're not included in Numbas by default, and made available as optional extras instead.
@@ -395,6 +402,7 @@ Functions
     :alt: The function editor.
 
 .. admonition:: Motivation
+
    If you need to do something a bit more complicated with variables, or you find yourself repeating the same pattern over and over, you can define a custom function.
    
    Complicated algorithms, or dynamically-generated sections of display content, are often easier to implement in JavaScript than JME.
@@ -529,6 +537,7 @@ Rulesets
 --------
 
 .. admonition:: Motivation
+
    If you find yourself using the same set of rules repeatedly in ``\simplify`` commands, define a new ruleset with a shorter name to save yourself some typing.
 
 A "ruleset" defines a list of named :doc:`simplification rules </simplification>` used to manipulate mathematical expressions.
@@ -539,6 +548,7 @@ Preamble
 --------
 
 .. admonition:: Motivation
+
    For those who can write JavaScript, the preamble allows you to add some code which affects the entire question.
 
    Many of the use cases for the JavaScript preamble are now more appropriately implemented with features such as :ref:`custom part types <custom-part-types>` and :ref:`marking algorithms <marking-algorithm>`.

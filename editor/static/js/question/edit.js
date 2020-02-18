@@ -2145,7 +2145,7 @@ $(document).ready(function() {
             if(this.isAlternative()) {
                 return this.parent().addAlternative();
             }
-            var alt = new Part('expected error',q,p,p.alternatives,this.toJSON());
+            var alt = new Part('alternative',q,p,p.alternatives,this.toJSON());
             alt.setType(p.type().name);
             alt.marks(0);
             alt.customName('');
@@ -2157,7 +2157,7 @@ $(document).ready(function() {
             var out = [];
             if(this.alternatives().length>0) {
                 var numAlternatives = this.alternatives().length;
-                out.push(numAlternatives+' expected error'+(numAlternatives==1 ? '' : 's'));
+                out.push(numAlternatives+' alternative'+(numAlternatives==1 ? '' : 's'));
             }
             if(this.type().name=='gapfill') {
                 var numGaps = this.gaps().length;
@@ -2178,7 +2178,7 @@ $(document).ready(function() {
 
         this.isGap = ko.pureComputed(function(){ return this.levelName()=='gap'; },this);
         this.isStep = ko.pureComputed(function(){ return this.levelName()=='step'; },this);
-        this.isAlternative = ko.pureComputed(function(){ return this.levelName()=='expected error'; },this);
+        this.isAlternative = ko.pureComputed(function(){ return this.levelName()=='alternative'; },this);
 
         this.availableTypes = ko.pureComputed(function() {
             if(this.isGap()) {
@@ -2716,7 +2716,7 @@ $(document).ready(function() {
 
                 if(data.alternatives) {
                     data.alternatives.map(function(a) {
-                        p.alternatives.push(new Part('expected error',p.q,p,p.alternatives,a));
+                        p.alternatives.push(new Part('alternative',p.q,p,p.alternatives,a));
                     });
                 }
 

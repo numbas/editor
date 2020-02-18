@@ -42,12 +42,22 @@
     </section>
 
     <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='alternative-feedback-message'">
-        <p class="help-block">
-            {% helplink 'question/parts/reference.html#term-alternative-feedback-message' subject='the alternative feedback message' %}
-            Write a message that will be shown to the student if this alternative is used.
-        </p>
+        <form class="form-horizontal" data-bind="submit: Editor.noop">
+            {% booleanproperty 'useAlternativeFeedback' 'Show all feedback?' help_url='question/parts/reference.html#term-show-all-feedback' %}
 
-        <div {% if not editable %}disabled{% endif %} data-bind="writemaths: alternativeFeedbackMessage, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','preview']"></div>
+            <div class="form-group">
+                <label class="label-block">
+                    <div class="{{form_label_class}} control-label">
+                        Message if this alternative is used
+                        {% helplink 'question/parts/reference.html#term-alternative-feedback-message' subject='the alternative feedback message' %}
+                    </div>
+                    <div class="{{form_control_class}}">
+                        <div {% if not editable %}disabled{% endif %} data-bind="writemaths: alternativeFeedbackMessage, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','preview']"></div>
+                    </div>
+                </label>
+            </div>
+        </form>
+
     </section>
 
     {% with form_label_class="col-sm-6 col-md-4" form_control_class="col-sm-6 col-md-8" %}

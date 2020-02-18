@@ -2111,6 +2111,7 @@ $(document).ready(function() {
         this.q = q;
         this.prompt = Editor.contentObservable('');
         this.alternativeFeedbackMessage = Editor.contentObservable('');
+        this.useAlternativeFeedback = ko.observable(false);
         this.parent = ko.observable(parent);
         this.parentList = parentList;
         this.customName = ko.observable('');
@@ -2661,6 +2662,7 @@ $(document).ready(function() {
 
             } else {
                 o.alternativeFeedbackMessage = this.alternativeFeedbackMessage();
+                o.useAlternativeFeedback = this.useAlternativeFeedback();
             }
 
             this.scripts.map(function(s) {
@@ -2691,7 +2693,6 @@ $(document).ready(function() {
             tryLoad(data,[
                 'marks',
                 'customName',
-                'alternativeFeedbackMessage',
                 'customMarkingAlgorithm',
                 'extendBaseMarkingAlgorithm',
             ],this);
@@ -2741,7 +2742,7 @@ $(document).ready(function() {
                 }
 
             } else {
-                tryLoad(data,['alternativeFeedbackMessage'],this);
+                tryLoad(data,['alternativeFeedbackMessage','useAlternativeFeedback'],this);
             }
 
             if(data.scripts) {

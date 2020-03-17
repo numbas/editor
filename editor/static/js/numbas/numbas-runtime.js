@@ -11077,7 +11077,6 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         }
         var alternativeFeedbackMessageNode = this.xml.selectSingleNode('alternativefeedbackmessage');
         if(alternativeFeedbackMessageNode) {
-            tryGetAttribute(this.settings,alternativeFeedbackMessageNode,'.',['usefeedback'],['useAlternativeFeedback']);
             this.alternativeFeedbackMessage = $.xsl.transform(Numbas.xml.templates.question, alternativeFeedbackMessageNode).string;
         }
         // set variable replacements
@@ -11438,7 +11437,6 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @property {String} exploreObjective - objective that this part's score counts towards
      * @property {String} suggestGoingBack - in explore mode, suggest to the student to go back to the previous part after completing this one?
      * @property {Number} adaptiveMarkingPenalty - Number of marks to deduct when adaptive marking is used
-     * @property {Boolean} useAlternativeFeedback - If this alternative is used, should all the feedback items be shown, or just the alternative feedback message?
      */
     settings:
     {
@@ -11451,8 +11449,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         variableReplacementStrategy: 'originalfirst',
         exploreObjective: '',
         suggestGoingBack: false,
-        adaptiveMarkingPenalty: 0,
-        useAlternativeFeedback: false
+        adaptiveMarkingPenalty: 0
     },
 
     /** The script to mark this part - assign credit, and give messages and feedback.
@@ -11936,16 +11933,10 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
             if(best_alternative) {
                 var alternative = best_alternative.alternative;
                 res = best_alternative.result;
-                var states = [];
-                if(alternative.settings.useAlternativeFeedback) {
-                    states = [].concat(
-                        [{op:'start_lift',scale:best_alternative.scale}],
-                        res.finalised_result.states.slice(),
-                        [{op:'end_lift'}]
-                    );
-                }
                 var reason = best_alternative.scaled_credit==1 ? 'correct' : best_alternative.scaled_credit==0 ? 'incorrect': '';
-                states.push({op:'set_credit', credit: best_alternative.scaled_credit, message: alternative.alternativeFeedbackMessage, reason: reason});
+                var states = [
+                    {op:'set_credit', credit: best_alternative.scaled_credit, message: alternative.alternativeFeedbackMessage, reason: reason}
+                ];
                 res.finalised_result = {
                     credit: best_alternative.scaled_credit,
                     states: states,

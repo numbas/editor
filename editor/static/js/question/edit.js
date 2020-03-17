@@ -2758,12 +2758,13 @@ $(document).ready(function() {
 
             if(data.unitTests) {
                 data.unitTests.forEach(function(dt) {
-                    var test = new MarkingTest(p,p.q.questionScope());
+                    var scope = p.q.baseScope();
+                    var test = new MarkingTest(p,scope);
                     test.editing(false);
                     test.open(false);
                     test.variables(dt.variables.map(function(v) {
                         try {
-                            var value = Numbas.jme.builtinScope.evaluate(v.value);
+                            var value = scope.evaluate(v.value);
                         } catch(e) {
                             value = null;
                         }
@@ -3046,11 +3047,6 @@ $(document).ready(function() {
 
         // The result of running the marking script
         this.last_run = ko.observable(null);
-
-        this.part.type.subscribe(function() {
-            mt.answer({valid: false, value: undefined});
-            mt.last_run(null);
-        });
 
         this.question = ko.observable(null);
         this.current_question_instance = null;

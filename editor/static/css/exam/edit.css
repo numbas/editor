@@ -20,3 +20,30 @@
 .question-group .panel-heading .handle-grp {
     margin-left: -15px;
 }
+
+.question {
+  display: grid;
+  grid-gap: 0.5em;
+  grid-template-columns: min-content 1fr max-content;
+}
+.question .description {
+  grid-column: 2 / 4;
+}
+.question .controls {
+  grid-column: 3;
+}
+.question .title, .question .details {
+  grid-column: 2;
+  grid-row: 1;
+}
+.question .handle {
+  grid-row: 1/3;
+}
+.question > .title {
+  display: grid;
+  align-items: center;
+  grid-template-columns: 1fr;
+  grid-auto-columns: min-content;
+  grid-auto-flow: column;
+  grid-gap: 0.5em;
+}

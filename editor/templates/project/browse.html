@@ -97,6 +97,7 @@
                     {% for column in items.columns %}
                     {% if column.column.is_blank %}
                     <th></th>
+                    <th></th>
                     {% else %}
                     <th {{column.attrs.th.as_html}}>
                         <span class="glyphicon glyphicon-sort-by-attributes"></span>
@@ -111,6 +112,7 @@
                 {% for folder in subfolders %}
                 <tr class="folder drag-target drag-handle" data-folder="{{folder.pk}}">
                     <td><input class="include-checkbox" type="checkbox" name="folders[]" value="{{folder.pk}}"></td>
+                    <td></td>
                     <td></td>
                     <td></td>
                     <td class="name">
@@ -133,6 +135,11 @@
                     </td>
                     <td>
                         <a class="test-run" target="_blank" href="{% url item.item_type|add:'_preview' item.rel_obj.pk item.slug %}"><span class="glyphicon glyphicon-play" title="Test run" aria-hidden="true"></span></a>
+                    </td>
+                    <td>
+                        {% if item.item_type == 'question' %}
+                            <a class="btn btn-link btn-sm basket add-to-basket" data-question-id="{{item.question.id}}"><span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span></a>
+                        {% endif %}
                     </td>
                     <td class="name">
                         {% editoritem_link item.rel_obj %}

@@ -117,6 +117,9 @@ $(document).ready(function() {
         this.basketQuestions(data.basketQuestions);
 
         function getQuestions() {
+            if(!is_logged_in) {
+                return;
+            }
             var cookie = getCookie('csrftoken');
             if(cookie!==null) {
                 $.get('/exam/question-lists/'+e.id)
@@ -341,19 +344,20 @@ $(document).ready(function() {
                 this.theme(item_json.themes[0]);
             }
 
-            if('locale' in data)
+            if('locale' in data) {
                 this.locale(data.locale);
-
-            if('question_groups' in content) {
-                if('question_groups' in data) {
-                    data.question_groups.forEach(function(d) {
-                        content.question_groups[d.group].questions = d.questions;
-                    })
-                }
-                this.question_groups(content.question_groups.map(function(qg) {
-                    return new QuestionGroup(qg,e);
-                }));
             }
+
+            if('question_groups' in data) {
+                content.question_groups = content.question_groups || [];
+                data.question_groups.forEach(function(d) {
+                    content.question_groups[d.group] = content.question_groups[d.group] || {questions: []};
+                    content.question_groups[d.group].questions = d.questions;
+                })
+            }
+            this.question_groups(content.question_groups.map(function(qg) {
+                return new QuestionGroup(qg,e);
+            }));
         },
 
         remove_deleted_questions: function(questions) {

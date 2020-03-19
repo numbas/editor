@@ -37,7 +37,7 @@ class Command(object):
         Question('STATIC_ROOT', 'Where are static files stored?','/srv/numbas/static/', validation=path_exists),
         Question('MEDIA_ROOT', 'Where are uploaded files stored?','/srv/numbas/media/', validation=path_exists),
         Question('PREVIEW_PATH', 'Where are preview exams stored?','/srv/numbas/previews/', validation=path_exists),
-        Question('PREVIEW_URL', 'Base URL of previews:','/previews/'),
+        Question('PREVIEW_URL', 'Base URL of previews:','/numbas-previews/'),
         Question('PYTHON_EXEC', 'Python command:','python3'),
         Question('SITE_TITLE', 'Title of the site:','Numbas'),
         Question('ALLOW_REGISTRATION', 'Allow new users to register themselves?', True),
@@ -88,6 +88,9 @@ class Command(object):
 
         import django
         django.setup()
+
+        self.setup_site()
+
         from django.contrib.auth.models import User
         superusers = User.objects.filter(is_superuser=True)
         if superusers.exists():
@@ -103,7 +106,25 @@ class Command(object):
             print_notice("Run\n  python manage.py runserver\nto start a development server at http://localhost:8000.")
         else:
             self.run_management_command('collectstatic')
-            print_notice("The Numbas editor is now set up. Once you've configured your web server, it'll be ready to use.")
+            print_notice("The Numbas editor is now set up. Once you've configured your web server, it'll be ready to use at http://{}".format(self.domain))
+
+    def setup_site(self):
+        from django.contrib.sites.models import Site
+        try:
+            domain = Site.objects.first().domain
+        except Site.DoesNotExist:
+            domain = 'numbas.example.com'
+
+        domain = self.get_input('What domain will the site be accessed from?', domain)
+        try:
+            url = urllib.parse.urlparse(domain)
+            self.domain = url.netloc if url.netloc else domain
+        except ValueError:
+            self.domain = domain
+
+        s, created = Site.objects.get_or_create(domain=self.domain)
+        s.name = self.values['SITE_TITLE']
+        s.save()
 
     def get_values(self):
         self.values = {}

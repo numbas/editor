@@ -54,8 +54,8 @@ class MoveFolderView(editor.views.project.MustBeEditorMixin, generic.FormView):
                 'folder_name': folder_name, 
                 'folder_url': folder_url, 
                 'message': message,
-                'items_moved': len(items),
-                'folders_moved': len(folders),
+                'items_moved': [item.pk for item in items],
+                'folders_moved': [folder.pk for folder in folders],
             }
             return http.JsonResponse(data,status=200)
         else:

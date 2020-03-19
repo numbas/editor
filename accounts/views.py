@@ -14,15 +14,13 @@ from django import apps
 from django.conf import settings
 from django.views.generic import UpdateView, DetailView, ListView, TemplateView
 from django.contrib.auth.models import User
-from django.contrib.sites.requests import RequestSite
-from django.contrib.sites.shortcuts import get_current_site
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.contrib import messages
 from django.http import Http404, HttpResponse
 from django.template.defaultfilters import slugify
 from django.template.loader import get_template
-from django.contrib.sites.models import Site
+from django.contrib.sites.shortcuts import get_current_site
 from editor.models import NewQuestion, NewExam
 import editor.models
 from editor.views import editoritem
@@ -36,10 +34,7 @@ class RegistrationView(registration.views.RegistrationView):
         d = form.cleaned_data
         username, email, password = d['username'], d['email'], d['password1']
         first_name, last_name = d['first_name'], d['last_name']
-        if Site._meta.installed:
-            site = Site.objects.get_current()
-        else:
-            site = RequestSite(self.request)
+        site = get_current_site(self.request)
         new_user = RegistrationProfile.objects.create_inactive_user(username, first_name, last_name, email,
                                                                     password, site)
         signals.user_registered.send(sender=self.__class__,

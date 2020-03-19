@@ -62,3 +62,12 @@ h1,h2,h3 {
 	background: hsl(0,0%,99.9%);
 	border: 2px solid #eee;
 }
+
+
+.rst-content div.figure {
+    padding: 1em 1em 0.5em 1em;
+    border: 0.4em solid hsl(203.5, 42.6%, 78.8%);
+    margin-left: 2em;
+    background: hsl(0, 0%, 93%);
+    text-align: center;
+}

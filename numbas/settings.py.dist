@@ -78,8 +78,6 @@ TEMPLATES = [
     },
 ]
 
-SITE_ID = 1
-
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
@@ -145,21 +143,22 @@ GLOBAL_SETTINGS = {
     'PYTHON_EXEC': '/usr/bin/python3',
     'NUMBAS_THEMES': [('Standard', 'default'), ('Printable worksheet', 'worksheet'), ('School', 'school')],
     'NUMBAS_LOCALES': [
-        ('English','en-GB'),
-        ('Deutsch','de-DE'),
-        ('Español','es-ES'),
-        ('Français','fr-FR'),
-        ('Nederlands','nl-NL'),
-        ('Norsk bokmål','nb-NO'),
-        ('Polski (incomplete)','pl-PL'),
-        ('Português brasileiro','pt-BR'),
-        ('Shqip','sq-AL'),
-        ('Svenska','sv-SE'),
-        ('ﺎﻠﻋﺮﺒﻳﺓ (incomplete)','ar-SA'),
-        ('Italiano (incomplete)','it-IT'),
-        ('한국어 (incomplete)','ko-KR'),
-        ('日本語 (incomplete)','ja-JP'),
-        ('School English','en-school'),
+        ('English', 'en-GB'),
+        ('Deutsch', 'de-DE'),
+        ('Español (95% complete)', 'es-ES'),
+        ('Français (85% complete)', 'fr-FR'),
+        ('Italiano (12% complete)', 'it-IT'),
+        ('Nederlands (74% complete)', 'nl-NL'),
+        ('Norsk bokmål (71% complete)', 'nb-NO'),
+        ('Polski (22% complete)', 'pl-PL'),
+        ('Português brasileiro (83% complete)', 'pt-BR'),
+        ('Shqip (58% complete)', 'sq-AL'),
+        ('Svenska (83% complete)', 'sv-SE'),
+        ('Tiếng Việt (23% complete)', 'vi-VN'),
+        ('Türkçe (17% complete)', 'tr-TR'),
+        ('中文', 'zh-CN'),
+        ('日本語 (51% complete)', 'ja-JP'),
+        ('ﺎﻠﻋﺮﺒﻳﺓ (41% complete)', 'ar-SA'),
     ],
     #Uncomment the line below and provide a path to a minification tool to minify javascript files
     #'MINIFIER_PATH': 'uglifyjs',

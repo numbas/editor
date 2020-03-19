@@ -46,7 +46,7 @@ On this page you can change any of the project's settings or, if you're the proj
 
 
 Organising content inside a project
-================================
+===================================
 
 From the project homepage, click on the :guilabel:`Browse this project's content` link to see the questions and exams belonging to the project. 
 

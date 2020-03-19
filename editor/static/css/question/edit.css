@@ -106,6 +106,10 @@ table.variable-list .value-cell .value {
     overflow-y: auto;
 }
 
+.extensions {
+    list-style: none;
+}
+
 .function .parameters li {
     margin-bottom: 0.5em;
 }

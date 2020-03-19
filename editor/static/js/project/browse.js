@@ -24,6 +24,7 @@ function get_selection() {
 }
 
 function move_to(target_pk,selection) {
+    selection.folders = selection.folders.filter(function(pk) { return pk!=target_pk; });
     var data = {
         csrfmiddlewaretoken: getCookie('csrftoken'),
         project: project_pk,
@@ -47,6 +48,17 @@ function move_to(target_pk,selection) {
         traditional: true
     })
         .then(function(r) {
+            var moving_rows = document.querySelectorAll('#contents .moving');
+            for(var i=0;i<moving_rows.length;i++) {
+                moving_rows[i].classList.remove('moving');
+            }
+            var folder_rows = r.folders_moved.map(function(folder_pk) {
+                return document.querySelector('#contents .folder[data-folder="'+folder_pk+'"]');
+            });
+            var item_rows = r.items_moved.map(function(item_pk) {
+                return document.querySelector('#contents .item[data-item="'+item_pk+'"]');
+            });
+            var all_rows = folder_rows.concat(item_rows).filter(function(row) { return row });
             all_rows.forEach(function(row) {
                 if(row.parentElement) {
                     row.parentElement.removeChild(row)
@@ -56,7 +68,7 @@ function move_to(target_pk,selection) {
                 text: r.message,
                 layout: 'topCenter',
             });
-            num_items -= r.items_moved;
+            num_items -= r.items_moved.length;
             document.getElementById('num-items').textContent = num_items+' item'+(num_items==1 ? '' : 's');
             if(num_items<=0) {
                 document.getElementById('contents-container').classList.add('empty');
@@ -258,13 +270,16 @@ document.querySelector('.table.contents').addEventListener('click',function(e) {
         var el = e.target;
         while(el && !el.classList.contains('drag-handle')) {
             el = el.parentElement;
+            if(el.matches('a')) {
+                return;
+            }
         }
         if(!el) {
             return;
         }
-    if(e.target.matches('.include-checkbox')) {
-        return;
-    }
+        if(e.target.matches('.include-checkbox')) {
+            return;
+        }
         var checkbox = el.querySelector('.include-checkbox');
         checkbox.checked = !checkbox.checked;
         update_selection();

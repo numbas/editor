@@ -1,27 +1,72 @@
-{% extends "base.html" %}
+{% extends "numbas_editor_lti/base.html" %}
 {% load links %}
+{% load sstatic %}
+
+{% block title %}Pick an exam{% endblock title %}
+
+{% block scripts %}
+    {{block.super}}
+    <!-- jQuery -->
+    <script src="{% sstatic 'js/jquery.js' %}"></script>
+    <script src="{% sstatic 'js/jquery-ui.min.js' %}" type="text/javascript"></script>
+    <script src="{% sstatic 'numbas_editor_lti/set_exam.js' %}"></script>
+{% endblock scripts %}
+
+{% block stylesheets %}
+    {{block.super}}
+    <link href="{% sstatic 'css/jquery-ui.css' %}" rel="stylesheet" type="text/css" />
+{% endblock %}
 
 {% block content %}
+    <div class="container">
+        <header>
+            <h1>{{lticontext.name}}</h1>
+        </header>
+        <main>
+            <p>
+                Students who open this link will be allowed one attempt at the chosen exam.
+                Scores will be reported back automatically, but attempt data is only saved to the student's device.
+                Students can leave their attempt and resume it at any time by clicking on the link again, but <strong>only on the same device</strong>.
+            </p>
+            <p>
+                <strong>No student data is saved on the Numbas server</strong>.
+            </p>
 
-{% if lticontext.exam %}
-<p>Using {% editoritem_link lticontext.exam %}.</p>
-{% endif %}
+            {% if lticontext.exam %}
+            <p>Currently using the exam {% editoritem_link lticontext.exam %}.</p>
+            {% endif %}
 
-<h2>Recently viewed exams</h2>
+            <h2>Select an exam to use</h2>
+            {% if lticontext.exam %}
+            <p>
+                If you'd like, you can change the exam shown to students.
+            </p>
+            {% endif %}
+            <form method="POST" action="" style="display: inline">
+                {% csrf_token %}
+                <input name="query" type="text" class="form-control" id="exam-search" placeholder="Search for an exam by name or keyword" value=""/>
+                <input type="hidden" name="exam">
+            </form>
+            <h3>Recently viewed exams</h3>
 
-<table class="table">
-{% for exam in last_viewed_exams %}
-<tr>
-    <td>{% editoritem_link exam show_icon=False %}</td>
-    <td>
-    <form method="POST" action="" style="display: inline">
-        <input type="hidden" name="exam" value="{{exam.pk}}">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-primary">Use this exam</button>
-    </form>
-
-    </td>
-</tr>
-{% endfor %}
-</table>
+            <table class="table">
+            {% for exam in last_viewed_exams %}
+            <tr>
+                <td>{% editoritem_link exam show_icon=False %}</td>
+                <td>
+                    {% if exam.editoritem.published %}
+                        <form method="POST" action="" style="display: inline">
+                            <input type="hidden" name="exam" value="{{exam.pk}}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary">Use this exam</button>
+                        </form>
+                    {% else %}
+                        <span class="text-warning">Not published</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </table>
+        </main>
+    </div>
 {% endblock content %}

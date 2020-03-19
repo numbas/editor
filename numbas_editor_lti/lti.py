@@ -51,8 +51,12 @@ class LTI(LTIBase):
             self.session = lti_session
             key = params['oauth_consumer_key']
             resource_link_id = params['resource_link_id']
+            name = params['resource_link_title']
             consumer = LTIConsumer.objects.get(key=self.key)
             self.lti_context, created = LTIContext.objects.get_or_create(consumer=consumer, resource_link_id=resource_link_id)
+            if self.lti_context.name != name:
+                self.lti_context.name = name
+                self.lti_context.save()
             request.session[self.session_key] = lti_session
         except LTIException:
             raise

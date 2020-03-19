@@ -1,0 +1,18 @@
+{% load sstatic %}
+<!doctype html>
+<html>
+    <head>
+        <title>{% block title %}{{item.name}}{% endblock title %}</title>
+        {% block scripts %}
+        {% endblock scripts %}
+        {% block stylesheets %}
+            <link href="{% sstatic 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet" media="screen">
+        {% endblock stylesheets %}
+    </head>
+    <body>
+        {% block content %}
+        {% endblock content %}
+    </body>
+</html>
+
+

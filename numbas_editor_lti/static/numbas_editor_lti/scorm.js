@@ -43,7 +43,6 @@ SCORM_API.prototype = {
      */
     initialise_data: function(data) {
         var stored_data = this.get_localstorage();
-        console.log(stored_data);
 
         // merge stored data
 
@@ -57,7 +56,7 @@ SCORM_API.prototype = {
                 this.data[key] = stored_data.current[key];
             }
             this.data['cmi.entry'] = 'resume';
-            this.data['cmi.mode'] = this.data['completion_status'] == 'completed' ? 'review' : 'normal';
+            this.data['cmi.mode'] = this.data['cmi.completion_status'] == 'completed' ? 'review' : 'normal';
         }
         
         /** SCORM display mode - 'normal' or 'review'
@@ -189,6 +188,7 @@ SCORM_API.prototype = {
 		}
 		this.terminated = true;
         document.body.classList.add('terminated');
+        this.set_localstorage();
 
 		return true;
 	},
@@ -245,7 +245,6 @@ CallbackHandler.prototype = {
         this.callbacks[key].push(fn);
     },
     trigger: function(key) {
-        console.log(key);
         if(!this.callbacks[key]) {
             return;
         }
@@ -278,5 +277,3 @@ SCORMData.prototype = {
         return this.time.getTime()/1000
     }
 }
-
-console.log("ARG");

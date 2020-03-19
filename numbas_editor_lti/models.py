@@ -12,3 +12,4 @@ class LTIContext(models.Model):
     consumer = models.ForeignKey(LTIConsumer,related_name='contexts',on_delete=models.CASCADE)
     exam = models.ForeignKey(NewExam, blank=True, null=True, on_delete=models.SET_NULL)
     resource_link_id = models.CharField(max_length=1000)
+    name = models.CharField(max_length=1000,blank=True)

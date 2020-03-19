@@ -3,12 +3,14 @@ from django.views import generic
 from django import http, forms
 from django.urls import reverse_lazy, reverse
 from django.core.exceptions import PermissionDenied
+from django.contrib.auth.mixins import LoginRequiredMixin
 from pylti.common import LTIException
 from django.shortcuts import render, redirect
 
 from .lti import LTI
 from .models import LTIContext
 from editor.models import NewExam
+from editor.views import editoritem
 import editor.views.exam
 
 @csrf_exempt
@@ -34,20 +36,17 @@ class LTIMixin(object):
     lti_request_type = 'any'
 
     def dispatch(self, request, *args, **kwargs):
-        print("LTI mixin")
         self.lti = LTI(request, request_type=self.lti_request_type, context = self.get_lti_context())
         try:
             self.lti.verify()
-            print("Verified")
         except LTIException as e:
-            print("Error")
             return http.HttpResponseForbidden(e)
         return super().dispatch(request,*args,**kwargs)
 
     def get_lti_context(self):
         return self.get_object()
 
-class SetExamView(LTIMixin, generic.UpdateView):
+class SetExamView(LoginRequiredMixin, LTIMixin, generic.UpdateView):
     model = LTIContext
     template_name = 'numbas_editor_lti/set_exam.html'
     fields = ['exam']
@@ -59,6 +58,17 @@ class SetExamView(LTIMixin, generic.UpdateView):
 
     def get_success_url(self, *args, **kwargs):
         return reverse('lti_set_exam', kwargs={'pk': self.object.pk})
+
+class SearchExamsView(LoginRequiredMixin, editoritem.SearchView):
+    def get_queryset(self):
+        items = super().get_queryset()
+        items = items.filter(published=True,exam__isnull=False)
+        return items
+
+    def get(self, request, *args, **kwargs):
+        items = self.get_queryset()[:10]
+        data = {'items': [{'name': item.name, 'id': item.exam.pk} for item in items]}
+        return http.JsonResponse(data)
 
 class AttemptView(LTIMixin, editor.views.exam.EmbedView):
     model = NewExam
@@ -102,8 +112,18 @@ class AttemptView(LTIMixin, editor.views.exam.EmbedView):
             'numbas.user_role': 'instructor' if self.lti.is_instructor else 'student',
         }
         context['lti_context'] = self.lti.context
+        context['js_data'] = {
+            'lti_context_pk': self.lti.context.pk,
+            'exam_url': context.get('exam_url'),
+            'exam_pk': self.lti.context.exam.pk,
+        }
 
         return context
+
+    def get(self,request,*args,**kwargs):
+        if not self.lti.context.exam:
+            return http.HttpResponseNotFound("This Numbas activity hasn't been set up yet.")
+        return super().get(request,*args,**kwargs)
 
 class PostResultForm(forms.ModelForm):
     score = forms.CharField(required=True)
@@ -118,7 +138,6 @@ class PostResultView(LTIMixin, generic.UpdateView):
     lti_request_type = 'session'
 
     def form_valid(self, form):
-        print("Form valid")
         score = form.cleaned_data['score']
         success = self.lti.post_grade(score)
         if success:

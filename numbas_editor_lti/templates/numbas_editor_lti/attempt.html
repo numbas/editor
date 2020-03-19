@@ -1,51 +1,47 @@
+{% extends "numbas_editor_lti/base.html" %}
 {% load sstatic %}
-<!doctype html>
-<html>
-    <head>
-        <title>{{item.name}}</title>
-        <script src="{% sstatic 'numbas_editor_lti/scorm.js' %}"></script>
-        {{scorm_cmi|json_script:"scorm-cmi"}}
-        <script>
-            var scorm_cmi = JSON.parse(document.getElementById('scorm-cmi').textContent);
-            var sc = new SCORM_API(scorm_cmi, {{lti_context.pk}});
-            window.API_1484_11 = sc.API_1484_11;
-            console.log(sc);
-            var last_score = 0, current_score = 0;
 
-            var csrf=document.cookie.split(';').map(x=>x.split('=')).find(x=>x[0]=='csrftoken')[1]
+{% block title %}{{item.name}}{% endblock %}
 
-            function send_score(score) {
-                var formData = new FormData(); 
-                formData.append('score',score);
-                fetch('post_result',{
-                    method:'POST',
-                    credentials:'same-origin',
-                    headers:{'X-CSRFToken':csrf},
-                    body:formData
-                }).then(function(r) {
-                    console.log('score saved');
-                    r.text().then(function(t) { console.log(t); });
-                });
-            }
+{% block scripts %}
+    {{block.super}}
+    <script src="{% sstatic 'js/knockout.js' %}"></script>
+    <script src="{% sstatic 'numbas_editor_lti/scorm.js' %}"></script>
+    {{scorm_cmi|json_script:"scorm-cmi"}}
+    {{js_data|json_script:"lti-data"}}
+    <script src="{% sstatic 'numbas_editor_lti/attempt.js' %}"></script>
+{% endblock scripts %}
 
-            sc.callbacks.on('SetValue',function(key,value,changed) {
-                if(key!='cmi.score.scaled') {
-                    return;
-                }
-                current_score = value;
-            });
-            sc.callbacks.on('Commit',function() {
-                console.log("COMMIT");
-                if(current_score != last_score) {
-                    console.log('score',current_score);
-                    send_score(current_score);
-                    last_score = current_score;
-                }
-            });
-        </script>
-    </head>
-    <body style="margin: 0; overflow: hidden;">
-        <iframe src="{{exam_url}}" style="width: 100vw;height:100vh; border: none;"></iframe>
-    </body>
-</html>
+{% block stylesheets %}
+    {{block.super}}
+    <link rel="stylesheet" href="{% sstatic 'numbas_editor_lti/attempt.css' %}"></link>
+{% endblock stylesheets %}
 
+{% block content %}
+    <div id="choose-attempt" class="container container-fluid" data-bind="visible: !current_attempt()">
+        <header>
+            <h1>{{lti_context.exam.editoritem.name}}</h1>
+        </header>
+        <main>
+            <p>Choose an attempt to resume, or start a new attempt.</p>
+            <table class="table">
+                <tbody data-bind="foreach: attempts">
+                    <tr>
+                        <td>Attempt begun at <span data-bind="text: start_time"></span></td>
+                        <td><span data-bind="attempt.completion_status"></span></td>
+                        <td>
+                            <button class="btn btn-default" type="button" data-bind="click: begin">
+                                <span data-bind="text: resume_label"></span>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="btn btn-primary" type="button" data-bind="click: new_attempt">Start a new attempt</button>
+        </main>
+    </div>
+    <div id="exam-container" data-bind="visible: current_attempt">
+        <div id="exams">
+        </div>
+    </div>
+{% endblock content %}

@@ -1,0 +1,26 @@
+body {
+    margin: 0;
+    overflow: hidden;
+}
+#exam-container {
+    width: 100vw;
+    height: 100vh;
+}
+iframe.exam {
+    border: none;
+}
+
+#exams {
+    width: 100%;
+    height: 100%;
+}
+
+#navbar {
+    background: #a2d1f0;
+    border-bottom: 2px solid;
+}
+
+iframe.exam {
+    width: 100%;
+    height: 100%;
+}

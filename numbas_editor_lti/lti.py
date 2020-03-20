@@ -1,6 +1,9 @@
 from pylti.common import verify_request_common, LTIBase, LTIException, LTINotInSessionException, LTI_PROPERTY_LIST
+from django.conf import settings
 
-from .models import LTIConsumer, LTIContext
+LTI_SETTINGS = settings.LTI_SETTINGS
+
+from .models import LTIContext
 from .roles import normalise_role
 
 LTI_ROLES = {
@@ -12,14 +15,9 @@ LTI_ROLES = {
 
 class ConsumerGetter(object):
     def get(self,key):
-        print("get consumer",key)
-        try:
-            c = LTIConsumer.objects.get(key=key)
-        except LTIConsumer.DoesNotExist:
-            print("consumer does not exist")
+        if key!=LTI_SETTINGS['key']:
             return None
-        print('"{}" "{}"'.format(key,c.secret))
-        return {'key': key, 'secret': c.secret}
+        return {'key': key, 'secret': LTI_SETTINGS['secret']}
 
 class LTI(LTIBase):
     def __init__(self, request, request_type='any', context=None):
@@ -51,9 +49,14 @@ class LTI(LTIBase):
             self.session = lti_session
             key = params['oauth_consumer_key']
             resource_link_id = params['resource_link_id']
+            context_id = params['context_id']
+            instance_guid = params['tool_consumer_instance_guid']
             name = params['resource_link_title']
-            consumer = LTIConsumer.objects.get(key=self.key)
-            self.lti_context, created = LTIContext.objects.get_or_create(consumer=consumer, resource_link_id=resource_link_id)
+            self.lti_context, created = LTIContext.objects.get_or_create(
+                resource_link_id=resource_link_id,
+                context_id=context_id,
+                instance_guid=instance_guid
+            )
             if self.lti_context.name != name:
                 self.lti_context.name = name
                 self.lti_context.save()
@@ -92,14 +95,10 @@ class LTI(LTIBase):
         return self.is_role('instructor')
 
     @property
-    def consumer(self):
-        return LTIConsumer.objects.get(key=self.key)
-
-    @property
     def resource_link_id(self):
         return self.session.get('resource_link_id','')
 
     @property
     def context(self):
-        context,created = LTIContext.objects.get_or_create(consumer=self.consumer, resource_link_id=self.resource_link_id)
+        context,created = LTIContext.objects.get_or_create(resource_link_id=self.resource_link_id)
         return context

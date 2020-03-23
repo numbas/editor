@@ -47,7 +47,6 @@ class LTI(LTIBase):
             verify_request_common(ConsumerGetter(), request.build_absolute_uri(), request.method, request.META, params)
             lti_session = {k: params.get(k) for k in LTI_PROPERTY_LIST}
             self.session = lti_session
-            key = params['oauth_consumer_key']
             resource_link_id = params['resource_link_id']
             context_id = params['context_id']
             instance_guid = params['tool_consumer_instance_guid']

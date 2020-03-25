@@ -4,17 +4,19 @@
 {% load editor_controls %}
 
 <form class="form-horizontal" data-bind="submit: Editor.noop">
-    {% selectproperty 'partsMode' 'Part display mode' options_text='name' options='partsModes' %}
-
     <!-- ko if: partsMode().value=='explore' -->
-        {% property 'maxMarks' 'Maximum mark' zero_means='sum of objective limits' %}
+        <p class="help-block">
+            <a class="helplink text-info" target="numbasquickhelp" href="{{HELP_URL}}question/explore.html"><span class="glyphicon glyphicon-question-sign"></span> Help with explore mode</a>
+        </p>
+
+        {% property 'maxMarks' 'Maximum mark' zero_means='sum of objective limits' help_url='question/explore.html#term-maximum-mark' %}
 
         <hr>
 
         <section class="objectives">
             <h3>Objectives</h3>
 
-            {% selectproperty 'objectiveVisibility' 'Show objectives' options_text='name' options='objective_visibility_options' %}
+            {% selectproperty 'objectiveVisibility' 'Show objectives' options_text='name' options='objective_visibility_options' help_url='question/explore.html#term-show-objectives' %}
 
             <div data-bind="fadeVisible: objectives().length">
                 <table class="table objectives">
@@ -42,7 +44,7 @@
         <section class="penalties">
             <h3>Penalties</h3>
 
-            {% selectproperty 'penaltyVisibility' 'Show penalties' options_text='name' options='objective_visibility_options' %}
+            {% selectproperty 'penaltyVisibility' 'Show penalties' options_text='name' options='objective_visibility_options' help_url='question/explore.html#term-show-penalties' %}
 
             <div data-bind="fadeVisible: penalties().length">
                 <table class="table penalties">

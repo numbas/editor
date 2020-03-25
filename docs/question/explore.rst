@@ -71,6 +71,14 @@ To add an option, click the :guilabel:`Add a next part option` button, and selec
       If you leave this blank, the next part's name is used.
       You might want to change the label so you don't reveal the destination, or to differentiate two options which lead to the same part.
 
+   Lock this part?
+      If ticked, the current part will be locked when the student chooses this next part option.
+      The student will not be able to change or resubmit their answer to this part.
+
+      If not ticked, the student can come back to this part and change their answer.
+
+      Use this if a subsequent part would reveal information which the student could use to improve their answer to this part, and you don't want them to do that.
+
    Availability
       Define when the option is available to the student.
       

@@ -455,8 +455,8 @@
                             <div class="panel-heading">
                                 <h3 class="panel-title">Parts</h3>
                             </div>
-                            <div class="panel-body">
-                                <a href="#" data-bind="click: showPartOptions"><span class="glyphicon glyphicon-cog"></span> Part options</a>
+                            <div class="panel-body" data-bind="visible: partsMode().value=='explore'">
+                                <a href="#" data-bind="click: showPartOptions"><span class="glyphicon glyphicon-cog"></span> Explore mode options</a>
                             </div>
                             <div class="list-group">
                                 <div data-bind="sortable: {

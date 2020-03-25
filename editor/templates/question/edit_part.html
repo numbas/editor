@@ -499,6 +499,7 @@
                 <div class="panel-body">
                     <form class="form-horizontal" data-bind="submit: Editor.noop">
                         {% property 'rawLabel' 'Label' help_url='question/parts/reference.html#term-label' placeholder='label' %}
+                        {% booleanproperty 'lockAfterLeaving' 'Locks this part?' help_url='question/parts/reference.html#term-locks-this-part' %}
                         {% selectproperty 'availabilityCondition' 'Availability' options_text='name' options='availability_conditions' help_url='question/parts/reference.html#term-availability' %}
                         <div data-bind="fadeVisible: availabilityCondition().id=='expression'">
                             {% property 'availabilityExpression' 'Available if' help_url='question/parts/reference.html#term-available-if' %}

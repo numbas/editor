@@ -2875,6 +2875,7 @@ $(document).ready(function() {
         this.availabilityCondition = ko.observable(this.availability_conditions[0]);
         this.penalty = ko.observable(null);
         this.penaltyAmount = ko.observable(0);
+        this.lockAfterLeaving = ko.observable(false);
 
         this.variable_references = ko.pureComputed(function() {
             var o = [];
@@ -2901,7 +2902,8 @@ $(document).ready(function() {
                 variableReplacements: this.variableReplacements().map(function(vr) { return vr.toJSON(); }),
                 availabilityCondition: ko.unwrap(this.availabilityCondition().value),
                 penalty: this.penalty() ? this.penalty().name() : '',
-                penaltyAmount: this.penaltyAmount()
+                penaltyAmount: this.penaltyAmount(),
+                lockAfterLeaving: this.lockAfterLeaving()
             };
         },
         load: function(data) {
@@ -2909,7 +2911,7 @@ $(document).ready(function() {
             if(!data) {
                 return;
             }
-            tryLoad(data,['rawLabel','penaltyAmount'],this);
+            tryLoad(data,['rawLabel','penaltyAmount','lockAfterLeaving'],this);
             tryLoad(data,'availabilityCondition',this,'availabilityExpression');
             for(var i=0;i<this.availability_conditions.length;i++) {
                 var condition = this.availability_conditions[i];

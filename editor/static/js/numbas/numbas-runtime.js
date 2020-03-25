@@ -10874,6 +10874,8 @@ var jme = Numbas.jme;
 var math = Numbas.math;
 var marking = Numbas.marking;
 
+var SAVE_STAGED_ANSWER_FREQUENCY = 5000;
+
 /** Definitions of custom part types
  * @name custom_part_types
  * @type {Object}
@@ -11023,6 +11025,8 @@ var Part = Numbas.parts.Part = function( path, question, parentPart, store)
     this.finalised_result = {valid: false, credit: 0, states: []};
     this.warnings = [];
     this.scripts = {};
+
+    this.save_staged_answer_debounce = Numbas.util.debounce(SAVE_STAGED_ANSWER_FREQUENCY);
 
     Object.defineProperty(this,"credit", {
         /** Proportion of available marks awarded to the student - i.e. `score/marks`. Penalties will affect this instead of the raw score, because of things like the steps marking algorithm.
@@ -11196,19 +11200,20 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         this.answered = pobj.answered;
         this.stepsShown = pobj.stepsShown;
         this.stepsOpen = pobj.stepsOpen;
+        this.resume_stagedAnswer = pobj.stagedAnswer;
         this.steps.forEach(function(s){ s.resume() });
         var scope = this.getScope();
         this.nextParts.forEach(function(np,i) {
             var npobj = pobj.nextParts[i];
             if(npobj.instance !== null) {
                 np.instanceVariables = part.store.loadVariables(npobj.instanceVariables,scope);
-                np.instance = part.question.addExtraPartFromXML(np.index,scope,np.instanceVariables,part,npobj.index);
+                part.makeNextPart(np,index);
                 np.instance.resume();
             }
         });
         this.display && this.display.updateNextParts();
         this.display && this.question.signals.on(['ready','HTMLAttached'], function() {
-            part.display.restoreAnswer();
+            part.display.restoreAnswer(part.resume_stagedAnswer!==undefined ? part.resume_stagedAnswer : part.studentAnswer);
         })
     },
     /** Add a step to this part
@@ -11425,6 +11430,14 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @type {Boolean}
      */
     doesMarking: true,
+    /** Has the answer to this part been revealed?
+     * @type {Boolean}
+     */
+    revealed: false,
+    /** Is this part locked? If false, the student can change and submit their answer.
+     * @type {Boolean}
+     */
+    locked: false,
     /** Properties set when the part is generated
      * @type {Object}
      * @property {Number} stepsPenalty - Number of marks to deduct when the steps are shown
@@ -11651,9 +11664,17 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @see {Numbas.parts.Part.stagedAnswer}
      */
     storeAnswer: function(answer) {
+        var p = this;
+
         this.stagedAnswer = answer;
         this.setDirty(true);
         this.removeWarnings();
+
+        if(!this.question || !this.question.exam || !this.question.exam.loading) {
+            this.store && this.save_staged_answer_debounce(function() {
+                p.store.storeStagedAnswer(p);
+            })
+        }
     },
     /** Call when the student changes their answer, or submits - update {@link Numbas.parts.Part.isDirty}
      * @param {Boolean} dirty
@@ -12330,30 +12351,39 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
     
     /** Make an instance of the selected next part
      * @param {Numbas.parts.NextPart} np
+     * @param {Number} [index]
      */
-    makeNextPart: function(np) {
+    makeNextPart: function(np,index) {
         var p = this;
         var scope = this.getScope();
 
-        var values = np.instanceVariables = {};
-        var replaceScope = new jme.Scope([scope,{variables: p.marking_values}]);
-        if(np.variableReplacements.length) {
-            np.variableReplacements.forEach(function(vr) {
-                values[vr.variable] = replaceScope.evaluate(vr.definition+'');
-            });
+        var values = np.instanceVariables;
+        if(np.instanceVariables===null) {
+            values = np.instanceVariables = {};
+            var replaceScope = new jme.Scope([scope,{variables: p.marking_values}]);
+            if(np.variableReplacements.length) {
+                np.variableReplacements.forEach(function(vr) {
+                    values[vr.variable] = replaceScope.evaluate(vr.definition+'');
+                });
+            }
         }
 
         if(np.xml) {
-            np.instance = this.question.addExtraPartFromXML(np.index,scope,values,p);
+            np.instance = this.question.addExtraPartFromXML(np.index,scope,values,p,index);
         }
         np.instance.useCustomName = true;
         np.instance.customName = np.label;
         np.instance.assignName();
-        this.store && this.store.initPart(np.instance);
+        if(np.lockAfterLeaving) {
+            this.lock();
+        }
         if(this.display) {
             this.display.updateNextParts();
         }
-        this.question.updateScore();
+        if(index===undefined) {
+            this.store && this.store.initPart(np.instance);
+            this.question.updateScore();
+        }
     },
 
     /** Remove the existing instance of the given next part
@@ -12390,6 +12420,15 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
                 this.steps[i].revealAnswer(dontStore);
             }
         }
+    },
+
+    /** Lock this part
+     */
+    lock: function() {
+        this.locked = true;
+        if(this.display) {
+            this.display.lock();
+        }
     }
 };
 
@@ -12408,6 +12447,11 @@ NextPart.prototype = {
      * @type {Array.<Object>}
      */
     variableReplacements: [],
+
+    /** Values of replaced variables for this next part, once it's been created.
+     * @type {Object.<Numbas.jme.token>}
+     */
+    instanceVariables: null,
 
     /** Reference to the instance of this next part, if it's been created.
      * @type {Numbas.parts.Part}
@@ -12449,7 +12493,7 @@ NextPart.prototype = {
      */
     loadFromXML: function(xml) {
         var tryGetAttribute = Numbas.xml.tryGetAttribute;
-        tryGetAttribute(this,xml,'.',['index','label','availabilityCondition','penalty']);
+        tryGetAttribute(this,xml,'.',['index','label','availabilityCondition','penalty','lockAfterLeaving']);
         tryGetAttribute(this,xml,'.',['penaltyAmount'],['penaltyAmountString']);
         this.penaltyAmountString += '';
         var replacementNodes = xml.selectNodes('variablereplacements/replacement');
@@ -13070,16 +13114,18 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                     part.resume();
                 }
             });
+            function submit_part(part) {
+                if(part.answered) {
+                    part.submit();
+                }
+                if(part.resume_stagedAnswer!==undefined) {
+                    part.stagedAnswer = part.resume_stagedAnswer;
+                }
+            }
             q.signals.on('ready',function() {
                 q.parts.forEach(function(part) {
-                    part.steps.forEach(function(step) {
-                        if(step.answered) {
-                            step.submit();
-                        }
-                    });
-                    if(part.answered) {
-                        part.submit();
-                    }
+                    part.steps.forEach(submit_part);
+                    submit_part(part);
                 });
             });
             q.signals.trigger('partsResumed');
@@ -18136,6 +18182,28 @@ var util = Numbas.util = /** @lends Numbas.util */ {
             s += ' '+R('alternative')+' '+m[4];
         }
         return s;
+    },
+
+    debounce: function(frequency) {
+        var last_run = 0;
+        var cb;
+        var timeout;
+        function go() {
+            var t = new Date();
+            if(t-frequency < last_run) {
+                if(timeout) {
+                    clearTimeout(timeout);
+                }
+                timeout = setTimeout(go,frequency+1-(t-last_run));
+            } else {
+                last_run = t;
+                cb();
+            }
+        }
+        return function(fn) {
+            cb = fn;
+            go();
+        }
     }
 };
 /** Different styles of writing a decimal
@@ -26511,24 +26579,21 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
      * */
     storeTick: function(answer)
     {
-        this.setDirty(true);
-        this.display && this.display.removeWarnings();
         //get choice and answer
         //in MR1_n_2 and MRm_n_2 parts, only the choiceindex matters
         var answerIndex = answer.answer;
         var choiceIndex = answer.choice;
-        switch(this.settings.displayType)
-        {
-        case 'radiogroup':                            //for radiogroup parts, only one answer can be selected.
-        case 'dropdownlist':
-            for(var i=0; i<this.numAnswers; i++)
-            {
-                this.stagedAnswer[i][choiceIndex] = i===answerIndex;
-            }
-            break;
-        default:
-            this.stagedAnswer[answerIndex][choiceIndex] = answer.ticked;
+        switch(this.settings.displayType) {
+            case 'radiogroup':                            //for radiogroup parts, only one answer can be selected.
+            case 'dropdownlist':
+                for(var i=0; i<this.numAnswers; i++) {
+                    this.stagedAnswer[i][choiceIndex] = i===answerIndex;
+                }
+                break;
+            default:
+                this.stagedAnswer[answerIndex][choiceIndex] = answer.ticked;
         }
+        this.storeAnswer(this.stagedAnswer);
     },
     /** Save a copy of the student's answer as entered on the page, for use in marking.
      */

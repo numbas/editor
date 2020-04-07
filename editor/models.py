@@ -1354,6 +1354,19 @@ class SiteBroadcast(models.Model, TimelineMixin):
     def __str__(self):
         return self.text[:50]
 
+class Tip(models.Model):
+    title = models.CharField(max_length=500)
+    text = models.TextField()
+    link = models.URLField(blank=True, null=True, verbose_name='Link to more information')
+    link_text = models.CharField(blank=True, null=True, max_length=200)
+    editoritem = models.ForeignKey(EditorItem, related_name='used_in_tips', blank=True, null=True, on_delete=models.SET_NULL, verbose_name='A question or exam demonstrating the tip')
+
+    def __str__(self):
+        return self.title
+
+    def __repr__(self):
+        return 'Tip "{}"'.format(self.title)
+
 class NewStampOfApproval(models.Model, TimelineMixin):
     object = models.ForeignKey(EditorItem, related_name='stamps', on_delete=models.CASCADE)
 

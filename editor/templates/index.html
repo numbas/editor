@@ -58,19 +58,28 @@
     <div class="col-sm-8">
         <div id="personal-timeline">
             <div class="timeline">
-                {% for broadcast in sticky_broadcasts %}
-                    {% with item=broadcast.timelineitem %}
-                        {% include item.object.timelineitem_template %}
-                    {% endwith %}
-                {% endfor %}
-                {% with include_object_link=True timeline=request.user.userprofile.all_timeline %}
-                    {% if timeline.exists %}
-                        {% timeline timeline per_page=20 %}
-                    {% else %}
+                {% with timeline=request.user.userprofile.all_timeline %}
+                    {% if not timeline.exists %}
                         {% with include_object_link=False %}
                         {% include "timeline/welcome.html" %}
                         {% endwith %}
                     {% endif %}
+
+                    {% for broadcast in sticky_broadcasts %}
+                        {% with item=broadcast.timelineitem %}
+                            {% include item.object.timelineitem_template %}
+                        {% endwith %}
+                    {% endfor %}
+
+                    {% if tip %}
+                        {% include "timeline/tip.html" %}
+                    {% endif %}
+
+                    {% with include_object_link=True %}
+                        {% if timeline.exists %}
+                            {% timeline timeline per_page=20 %}
+                        {% endif %}
+                    {% endwith %}
                 {% endwith %}
             </div>
         </div>

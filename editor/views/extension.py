@@ -201,7 +201,7 @@ class DocumentationView(CanViewMixin, generic.DetailView):
         if readme_filename is None:
             content = "The author of this extension has not written any documentation yet."
         else:
-            with open(os.path.join(extension.extracted_path,readme_filename)) as f:
+            with open(os.path.join(extension.extracted_path,readme_filename),encoding='utf-8') as f:
                 content = f.read()
 
             _,ext = os.path.splitext(readme_filename)

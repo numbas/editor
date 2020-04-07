@@ -10164,6 +10164,9 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         if(path===undefined)
             path=[];
         computeFn = computeFn || jme.variables.computeVariable;
+        if(name=='') {
+            throw(new Numbas.Error('jme.variables.empty name'));
+        }
         if(path.contains(name))
         {
             throw(new Numbas.Error('jme.variables.circular reference',{name:name,path:path}));
@@ -10649,6 +10652,8 @@ var jme = Numbas.jme;
 var math = Numbas.math;
 var marking = Numbas.marking;
 
+var SAVE_STAGED_ANSWER_FREQUENCY = 5000;
+
 /** Definitions of custom part types
  * @name custom_part_types
  * @type {Object}
@@ -10787,6 +10792,8 @@ var Part = Numbas.parts.Part = function( path, question, parentPart, store)
     this.finalised_result = {valid: false, credit: 0, states: []};
     this.warnings = [];
     this.scripts = {};
+
+    this.save_staged_answer_debounce = Numbas.util.debounce(SAVE_STAGED_ANSWER_FREQUENCY);
 
     Object.defineProperty(this,"credit", {
         /** Proportion of available marks awarded to the student - i.e. `score/marks`. Penalties will affect this instead of the raw score, because of things like the steps marking algorithm.
@@ -10932,9 +10939,10 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         this.answered = pobj.answered;
         this.stepsShown = pobj.stepsShown;
         this.stepsOpen = pobj.stepsOpen;
+        this.resume_stagedAnswer = pobj.stagedAnswer;
         this.steps.forEach(function(s){ s.resume() });
         this.display && this.question.signals.on(['ready','HTMLAttached'], function() {
-            part.display.restoreAnswer();
+            part.display.restoreAnswer(part.resume_stagedAnswer!==undefined ? part.resume_stagedAnswer : part.studentAnswer);
         })
     },
     /** Add a step to this part
@@ -11340,9 +11348,17 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      * @see {Numbas.parts.Part.stagedAnswer}
      */
     storeAnswer: function(answer) {
+        var p = this;
+
         this.stagedAnswer = answer;
         this.setDirty(true);
         this.removeWarnings();
+
+        if(!this.question || !this.question.exam || !this.question.exam.loading) {
+            this.store && this.save_staged_answer_debounce(function() {
+                p.store.storeStagedAnswer(p);
+            })
+        }
     },
     /** Call when the student changes their answer, or submits - update {@link Numbas.parts.Part.isDirty}
      * @param {Boolean} dirty
@@ -11746,7 +11762,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
             question_definitions: jme.wrapValue(this.question ? this.question.local_definitions : {}),
             studentAnswer: studentAnswer,
             settings: jme.wrapValue(this.settings),
-            marks: new jme.types.TNum(this.marks),
+            marks: new jme.types.TNum(this.availableMarks()),
             partType: new jme.types.TString(this.type),
             gaps: jme.wrapValue(this.gaps.map(function(g){return g.marking_parameters(g.rawStudentAnswerAsJME())})),
             steps: jme.wrapValue(this.steps.map(function(s){return s.marking_parameters(s.rawStudentAnswerAsJME())}))
@@ -12193,7 +12209,13 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             Object.keys(variables).map(function(name) {
                 var vd = variables[name];
                 var definition = vd.definition+'';
-                if(definition=='') {
+                if(name.trim()=='') {
+                    if(definition=='') {
+                        return;
+                    }
+                    throw(new Numbas.Error('jme.variables.empty name'));
+                }
+                if(definition.trim()=='') {
                     throw(new Numbas.Error('jme.variables.empty definition',{name:name}));
                 }
                 try {
@@ -12384,16 +12406,18 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                     part.resume();
                 }
             });
+            function submit_part(part) {
+                if(part.answered) {
+                    part.submit();
+                }
+                if(part.resume_stagedAnswer!==undefined) {
+                    part.stagedAnswer = part.resume_stagedAnswer;
+                }
+            }
             q.signals.on('ready',function() {
                 q.parts.forEach(function(part) {
-                    part.steps.forEach(function(step) {
-                        if(step.answered) {
-                            step.submit();
-                        }
-                    });
-                    if(part.answered) {
-                        part.submit();
-                    }
+                    part.steps.forEach(submit_part);
+                    submit_part(part);
                 });
             });
             q.signals.trigger('partsResumed');
@@ -13121,7 +13145,7 @@ Numbas.queueScript('marking',['util', 'jme','localisation','jme-variables','math
         part.setStudentAnswer();
         return jme.wrapValue({
             credit: part.credit,
-            marks: part.marks,
+            marks: part.availableMarks(),
             feedback: part.finalised_result.states,
             answered: part.answered
         });
@@ -13192,7 +13216,7 @@ Numbas.queueScript('marking',['util', 'jme','localisation','jme-variables','math
             }
             var result = marking.finalise_state(part_result.states.mark);
             return jme.wrapValue({
-                marks: part.marks,
+                marks: part.availableMarks(),
                 credit: result.credit,
                 feedback: result.states,
                 valid: result.valid,
@@ -17358,6 +17382,28 @@ var util = Numbas.util = /** @lends Numbas.util */ {
             s += ' '+R('gap')+' '+m[3];
         }
         return s;
+    },
+
+    debounce: function(frequency) {
+        var last_run = 0;
+        var cb;
+        var timeout;
+        function go() {
+            var t = new Date();
+            if(t-frequency < last_run) {
+                if(timeout) {
+                    clearTimeout(timeout);
+                }
+                timeout = setTimeout(go,frequency+1-(t-last_run));
+            } else {
+                last_run = t;
+                cb();
+            }
+        }
+        return function(fn) {
+            cb = fn;
+            go();
+        }
     }
 };
 /** Different styles of writing a decimal
@@ -24611,7 +24657,7 @@ GapFillPart.prototype = /** @lends Numbas.parts.GapFillPart.prototype */
     availableMarks: function() {
         var marks = 0;
         for(var i=0;i<this.gaps.length;i++) {
-            marks += this.gaps[i].availableMarks();
+            marks += this.gaps[i].marks;
         }
         if(this.adaptiveMarkingUsed) {
             marks -= this.settings.adaptiveMarkingPenalty;
@@ -25734,24 +25780,21 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
      * */
     storeTick: function(answer)
     {
-        this.setDirty(true);
-        this.display && this.display.removeWarnings();
         //get choice and answer
         //in MR1_n_2 and MRm_n_2 parts, only the choiceindex matters
         var answerIndex = answer.answer;
         var choiceIndex = answer.choice;
-        switch(this.settings.displayType)
-        {
-        case 'radiogroup':                            //for radiogroup parts, only one answer can be selected.
-        case 'dropdownlist':
-            for(var i=0; i<this.numAnswers; i++)
-            {
-                this.stagedAnswer[i][choiceIndex] = i===answerIndex;
-            }
-            break;
-        default:
-            this.stagedAnswer[answerIndex][choiceIndex] = answer.ticked;
+        switch(this.settings.displayType) {
+            case 'radiogroup':                            //for radiogroup parts, only one answer can be selected.
+            case 'dropdownlist':
+                for(var i=0; i<this.numAnswers; i++) {
+                    this.stagedAnswer[i][choiceIndex] = i===answerIndex;
+                }
+                break;
+            default:
+                this.stagedAnswer[answerIndex][choiceIndex] = answer.ticked;
         }
+        this.storeAnswer(this.stagedAnswer);
     },
     /** Save a copy of the student's answer as entered on the page, for use in marking.
      */

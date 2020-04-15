@@ -23779,6 +23779,10 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.allowResize = this.options.allowResize===undefined ? true : this.options.allowResize;
             this.numRows = this.options.numRows || 1;
             this.numColumns = this.options.numColumns || 1;
+            this.minColumns = this.options.minColumns || 0;
+            this.maxColumns = this.options.minColumns || 0;
+            this.minRows = this.options.minRows || 0;
+            this.maxRowws = this.options.maxRows || 0;
             this.parseCells = this.options.parseCells===undefined ? true : this.options.parseCells;
             var init = Knockout.unwrap(this.answerJSON);
             var value = init.value;
@@ -23858,19 +23862,48 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             }
         },
         template: '\
-            <matrix-input params="value: input, allowResize: true, disable: disable, allowResize: allowResize, rows: numRows, columns: numColumns, events: events, title: title"></matrix-input>\
+            <matrix-input params="value: input, allowResize: true, disable: disable, allowResize: allowResize, rows: numRows, columns: numColumns, minColumns: minColumns, maxColumns: maxColumns, minRows: minRows, maxRows: maxRows, events: events, title: title"></matrix-input>\
         '
     });
     Knockout.components.register('matrix-input',{
         viewModel: function(params) {
             var vm = this;
             this.allowResize = params.allowResize ? params.allowResize : Knockout.observable(false);
+            this.minColumns = params.minColumns ? params.minColumns : Knockout.observable(0);
+            this.maxColumns = params.maxColumns ? params.maxColumns : Knockout.observable(0);
+            this.minRows = params.minRows ? params.minRows : Knockout.observable(0);
+            this.maxRows = params.maxRows ? params.maxRows : Knockout.observable(0);
+            console.log(params);
+            console.log(this.minRows());
             this.title = params.title || '';
-            this.numRows = Knockout.observable(Knockout.unwrap(params.rows) || 2);
+            var _numRows = Knockout.observable(Knockout.unwrap(params.rows) || 2);
+            this.numRows = Knockout.computed({
+                read: _numRows,
+                write: function(v) {
+                    v = parseInt(v);
+                    var minRows = Knockout.unwrap(this.minRows);
+                    var maxRows = Knockout.unwrap(this.maxRows);
+                    console.log(minRows,v,maxRows);
+                    v = minRows==0 ? v : Math.max(minRows,v);
+                    v = maxRows==0 ? v : Math.min(maxRows,v);
+                    console.log(v);
+                    return _numRows(v);
+                }
+            },this);
             if(typeof params.rows=='function') {
                 params.rows.subscribe(function(v) { vm.numRows(v); });
             }
-            this.numColumns = Knockout.observable(Knockout.unwrap(params.columns) || 2);
+            var _numColumns = Knockout.observable(Knockout.unwrap(params.rows) || 2);
+            this.numColumns = Knockout.computed({
+                read: _numColumns,
+                write: function(v) {
+                    var minColumns = Knockout.unwrap(this.minColumns);
+                    var maxColumns = Knockout.unwrap(this.maxColumns);
+                    v = minColumns==0 ? v : Math.max(minColumns,v);
+                    v = maxColumns==0 ? v : Math.min(maxColumns,v);
+                    return _numColumns(v);
+                }
+            },this);
             if(typeof params.columns=='function') {
                 params.columns.subscribe(function(v) { vm.numColumns(v); });
             }
@@ -24019,8 +24052,8 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
          '<div class="matrix-input" data-bind="attr: {title: title}">'
         +'    <!-- ko if: allowResize --><div class="matrix-size">'
         +'        <fieldset><legend aria-label="'+R('matrix input.size control legend')+'"></legend>'
-        +'        <label class="num-rows">Rows: <input type="number" min="1" data-bind="value: numRows, autosize: true, disable: disable"/></label>'
-        +'        <label class="num-columns">Columns: <input type="number" min="1" data-bind="value: numColumns, autosize: true, disable: disable"/></label>'
+        +'        <label class="num-rows">Rows: <input type="number" data-bind="value: numRows, autosize: true, disable: disable, attr: {\'min\': minRows()==0 ? 1 : minRows(), \'max\': maxRows()==0 ? \'\' : maxRows()}"/></label>'
+        +'        <label class="num-columns">Columns: <input type="number" min="1" data-bind="value: numColumns, autosize: true, disable: disable, attr: {\'min\': minColumns()==0 ? 1 : minColumns(), \'max\': maxColumns()==0 ? \'\' : maxColumns()}"/></label>'
         +'        </fieldset>'
         +'    </div><!-- /ko -->'
         +'    <div class="matrix-wrapper">'
@@ -25711,7 +25744,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
                           this.error('part.mcq.matrix cell empty',{part:this.path,row:i,column:j});
                         }
                         try {
-                          value = jme.evaluate(value,scope).value;
+                          value = jme.castToType(jme.evaluate(value,scope),'number').value;
                         } catch(e) {
                           this.error('part.mcq.matrix jme error',{part:this.path,row:i,column:j,error:e.message});
                         }
@@ -26246,7 +26279,34 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
         var settings = this.settings;
         var tryGetAttribute = Numbas.xml.tryGetAttribute;
         tryGetAttribute(settings,xml,'answer',['correctanswer'],['correctAnswerString'],{string:true});
-        tryGetAttribute(settings,xml,'answer',['correctanswerfractions','rows','columns','allowresize','tolerance','markpercell','allowfractions'],['correctAnswerFractions','numRows','numColumns','allowResize','tolerance','markPerCell','allowFractions']);
+        tryGetAttribute(settings,xml,'answer',
+            [
+                'correctanswerfractions',
+                'rows',
+                'columns',
+                'allowresize',
+                'mincolumns',
+                'maxcolumns',
+                'minrows',
+                'maxrows',
+                'tolerance',
+                'markpercell',
+                'allowfractions'
+            ],
+            [
+                'correctAnswerFractions',
+                'numRows',
+                'numColumns',
+                'allowResize',
+                'minColumns',
+                'maxColumns',
+                'minRows',
+                'maxRows',
+                'tolerance',
+                'markPerCell',
+                'allowFractions'
+            ]
+        );
         tryGetAttribute(settings,xml,'answer/precision',['type','partialcredit','strict'],['precisionType','precisionPC','strictPrecision']);
         tryGetAttribute(settings,xml,'answer/precision','precision','precisionString',{'string':true});
         var messageNode = xml.selectSingleNode('answer/precision/message');
@@ -26257,7 +26317,37 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
     loadFromJSON: function(data) {
         var settings = this.settings;
         var tryLoad = Numbas.json.tryLoad;
-        tryLoad(data,['correctAnswer', 'correctAnswerFractions', 'numRows', 'numColumns', 'allowResize', 'tolerance', 'markPerCell', 'allowFractions'], settings, ['correctAnswerString', 'correctAnswerFractions', 'numRows', 'numColumns', 'allowResize', 'tolerance', 'markPerCell', 'allowFractions']);
+        tryLoad(data,
+            [
+                'correctAnswer',
+                'correctAnswerFractions',
+                'numRows',
+                'numColumns',
+                'allowResize',
+                'minColumns',
+                'maxColumns',
+                'minRows',
+                'maxRows',
+                'tolerance',
+                'markPerCell',
+                'allowFractions'
+            ],
+            settings,
+            [
+                'correctAnswerString',
+                'correctAnswerFractions',
+                'numRows',
+                'numColumns',
+                'allowResize',
+                'minColumns',
+                'maxColumns',
+                'minRows',
+                'maxRows',
+                'tolerance',
+                'markPerCell',
+                'allowFractions'
+            ]
+        );
         tryLoad(data,['precisionType', 'precision', 'precisionPartialCredit', 'precisionMessage', 'strictPrecision'], settings, ['precisionType', 'precisionString', 'precisionPC', 'precisionMessage', 'strictPrecision']);
         settings.precisionPC /= 100;
     },
@@ -26275,12 +26365,15 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
     finaliseLoad: function() {
         var settings = this.settings;
         var scope = this.getScope();
-        var numRows = jme.subvars(settings.numRows, scope);
-        settings.numRows = scope.evaluate(numRows).value;
-        var numColumns = jme.subvars(settings.numColumns, scope);
-        settings.numColumns = scope.evaluate(numColumns).value;
-        var tolerance = jme.subvars(settings.tolerance, scope);
-        settings.tolerance = scope.evaluate(tolerance).value;
+
+        function eval_setting(setting) {
+            var expr = jme.subvars(settings[setting]+'', scope);
+            settings[setting] = scope.evaluate(expr).value;
+        }
+        ['numRows','numColumns','tolerance'].map(eval_setting);
+        if(settings.allowResize) {
+            ['minColumns','maxColumns','minRows','maxRows'].map(eval_setting);
+        }
         settings.tolerance = Math.max(settings.tolerance,0.00000000001);
         if(settings.precisionType!='none') {
             settings.allowFractions = false;
@@ -26356,6 +26449,10 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
             allowResize: this.settings.allowResize,
             numRows: this.settings.numRows,
             numColumns: this.settings.numColumns,
+            minColumns: this.settings.minColumns,
+            maxColumns: this.settings.maxColumns,
+            minRows: this.settings.minRows,
+            maxRows: this.settings.maxRows,
             parseCells: false
         };
     },

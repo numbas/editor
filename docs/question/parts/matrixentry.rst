@@ -26,6 +26,20 @@ Marking
         If this is ticked, then the student can change the number of rows or columns in their answer. 
         Use this if you don't want to give a hint about the dimensions of the answer.
 
+    Minimum number of rows
+        If the student is allowed to change the size of the matrix, then the number of rows they choose must be at least this number.
+
+    Maximum number of rows
+        If the student is allowed to change the size of the matrix, then the number of rows they choose must be at most this number.
+        A value of 0 means there is no limit.
+
+    Minimum number of columns
+        If the student is allowed to change the size of the matrix, then the number of columns they choose must be at least this number.
+
+    Maximum number of columns
+        If the student is allowed to change the size of the matrix, then the number of columns they choose must be at most this number.
+        A value of 0 means there is no limit.
+
     Margin of error allowed in each cell
         If the absolute difference between the student's value for a particular cell and the correct answer's is less than this value, then it will be marked as correct.
 

@@ -456,6 +456,10 @@ part_types.models = [
                 tolerance: ko.observable(0),
                 markPerCell: ko.observable(false),
                 allowFractions: ko.observable(false),
+                minColumns: ko.observable(1),
+                maxColumns: ko.observable(0),
+                minRows: ko.observable(1),
+                maxRows: ko.observable(0),
                 precisionTypes: [
                     {name: 'none', niceName: 'None'},
                     {name: 'dp', niceName: 'Decimal places'},
@@ -492,6 +496,10 @@ part_types.models = [
             data.tolerance = this.tolerance();
             data.markPerCell = this.markPerCell();
             data.allowFractions = this.fractionPossible() && this.allowFractions();
+            data.minColumns = this.minColumns();
+            data.maxColumns = this.maxColumns();
+            data.minRows = this.minRows();
+            data.maxRows = this.maxRows();
 
             if(this.precisionType().name!='none') {
                 data.precisionType = this.precisionType().name;
@@ -514,7 +522,25 @@ part_types.models = [
         },
 
         load: function(data) {
-            tryLoad(data,['correctAnswer','correctAnswerFractions','numRows','numColumns','allowResize','tolerance','markPerCell','allowFractions','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision'],this);
+            tryLoad(data,[
+                'correctAnswer',
+                'correctAnswerFractions',
+                'numRows',
+                'numColumns',
+                'allowResize',
+                'tolerance',
+                'markPerCell',
+                'allowFractions',
+                'precision',
+                'precisionPartialCredit',
+                'precisionMessage',
+                'precisionType',
+                'strictPrecision',
+                'minColumns',
+                'maxColumns',
+                'minRows',
+                'maxRows'
+            ],this);
             for(var i=0;i<this.precisionTypes.length;i++) {
                 if(this.precisionTypes[i].name == this.precisionType())
                     this.precisionType(this.precisionTypes[i]);

@@ -76,6 +76,8 @@ part_types.models = [
         widget: 'jme',
 
         model: function(part) {
+            var jme = Numbas.jme;
+
             var model = {
                 answer: ko.observable(''),
                 answerSimplification: ko.observable(''),
@@ -123,11 +125,12 @@ part_types.models = [
                 checkVariableNames: ko.observable(false)
             };
             model.checkingType = ko.observable(model.checkingTypes[0]);
+            model.part = part;
 
             model.answerIsEquation = ko.computed(function() {
                 try {
-                    var answer = Numbas.jme.compile(this.answer());
-                    return Numbas.jme.isOp(answer.tok,'=');
+                    var answer = jme.compile(this.answer());
+                    return jme.isOp(answer.tok,'=');
                 } catch(e) {
                     return false;
                 }
@@ -135,9 +138,13 @@ part_types.models = [
 
             model.variableNames = ko.computed(function() {
                 try {
-                    var correctAnswer = Numbas.jme.subvars(this.answer(),part.q.questionScope());
-                    var answer = Numbas.jme.compile(correctAnswer);
-                    var names = Numbas.jme.findvars(answer);
+                    var bits = Numbas.util.splitbrackets(this.answer(),'{','}','(',')');
+                    for(var i=1;i<bits.length;i+=2) {
+                        bits[i] = '1';
+                    }
+                    var correctAnswer = bits.join('');
+                    var answer = jme.compile(correctAnswer);
+                    var names = jme.findvars(answer);
                     return names.sort();
                 } catch(e) {
                     return [];
@@ -157,7 +164,7 @@ part_types.models = [
                 valueGeneratorFactory();
                 var inferredTypes;
                 try {
-                    inferredTypes = Numbas.jme.inferVariableTypes(Numbas.jme.compile(model.answer()),Numbas.jme.builtinScope)[0] || {};
+                    inferredTypes = jme.inferVariableTypes(jme.compile(model.answer()),jme.builtinScope)[0] || {};
                 } catch(e) {
                     inferredTypes = {};
                 }
@@ -169,14 +176,14 @@ part_types.models = [
             model.mustmatchpattern.capturedNames = ko.computed(function() {
                 var pattern = this.mustmatchpattern.pattern();
                 try {
-                    var expr = Numbas.jme.rules.patternParser.compile(pattern);
+                    var expr = jme.rules.patternParser.compile(pattern);
                 } catch(e) {
                     return [];
                 }
                 if(!expr) {
                     return [];
                 }
-                return Numbas.jme.rules.findCapturedNames(expr);
+                return jme.rules.findCapturedNames(expr);
             },model);
 
             model.mustmatchpattern.capturedNameOptions = ko.computed(function() {
@@ -187,7 +194,7 @@ part_types.models = [
 
             model.markingSettings = ko.computed(function() {
                 try {
-                    var correctAnswer = Numbas.jme.subvars(model.answer(),part.q.questionScope());
+                    var correctAnswer = jme.subvars(model.answer(),part.q.questionScope());
                 } catch(e) {
                     correctAnswer = '';
                 }

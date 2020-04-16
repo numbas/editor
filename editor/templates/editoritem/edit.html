@@ -415,7 +415,9 @@
                             <h3 class="panel-title">Publish</h3>
                         </div>
                         <div class="panel-body">
+                            {% block published_body %}
                             <p>This {{item_type}} has been published to the public {{item_type}} database.</p>
+                            {% endblock %}
                             <form method="POST" action="{% url 'item_unpublish' object.editoritem.pk %}">
                                 <button class="btn btn-danger" type="submit">Unpublish</button>
                                 {% csrf_token %}

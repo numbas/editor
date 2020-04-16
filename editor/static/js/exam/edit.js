@@ -19,6 +19,10 @@ $(document).ready(function() {
             return l
         },this);
 
+        this.any_unpublished_questions = ko.computed(function() {
+            return this.questions().some(function(q) { return !q.published(); });
+        },this);
+
         this.ready_to_download_checks.push(function() {
             if(!e.questions().every(function(q) {return q.current_stamp()=='ok'})) {
                 return {ready: false, reason: 'not every question is labelled "Ready to use"'};
@@ -215,7 +219,8 @@ $(document).ready(function() {
                     Editor.nonempty_task('Select a licence defining usage rights.',this.licence, '#licence-select')
                 ],
                 'questions': [
-                    {text: 'Add at least one question.', done: ko.computed(function(){ return this.numQuestions()>0 },this), focus_on: '.question-result .handle:first'}
+                    {text: 'Add at least one question.', done: ko.computed(function(){ return this.numQuestions()>0 },this), focus_on: '.question-result .handle:first'},
+                    {text: 'Publish every question.', done: ko.computed(function(){ return !this.any_unpublished_questions() },this), focus_on: '.question-result .handle:first'}
                 ]
             }
             this.init_tasks();
@@ -494,6 +499,7 @@ $(document).ready(function() {
         this.metadata = ko.observable();
         this.current_stamp = ko.observable();
         this.current_stamp_display = ko.observable();
+        this.published = ko.observable();
         this.load(data);
 
         this.previewURL = ko.computed(function() {
@@ -566,6 +572,7 @@ $(document).ready(function() {
             this.metadata(data.metadata);
             this.current_stamp(data.current_stamp);
             this.current_stamp_display(data.current_stamp_display);
+            this.published(data.published);
         },
         remove: function() {
             if(!this.question_group()) {

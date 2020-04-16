@@ -1040,6 +1040,13 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
             return False
         return self.project.has_access(user, levels) or Access.objects.filter(item=self, user=user, access__in=levels).exists()
 
+    def can_be_viewed_by(self, user):
+        if self.item_type=='exam':
+            for q in self.exam.questions.all():
+                if not q.editoritem.can_be_viewed_by(user):
+                    return False
+        return super().can_be_viewed_by(user)
+
     def publish(self):
         self.published = True
         self.published_date = timezone.now()
@@ -1137,6 +1144,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
         obj = {
             'editoritem_id': self.id, 
             'name': self.name, 
+            'published': self.published,
             'metadata': self.metadata,
             'created': str(self.created),
             'last_modified': str(self.last_modified), 

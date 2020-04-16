@@ -344,3 +344,10 @@
     <editor-pager params="editor: $root, previousTab: 'feedback', nextTab: 'access', task_group: 'settings'"></editor-pager>
     {% endif %}
 {%endblock settings %}
+
+{% block published_body %}
+{{ block.super }}
+<div class="alert alert-warning" data-bind="visible: any_unpublished_questions">
+    <p><span class="glyphicon glyphicon-warning-sign"></span> One or more of the questions in this exam have not been published. Users without access to those questions will not be able to see this exam.</p>
+</div>
+{% endblock %}

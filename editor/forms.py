@@ -645,6 +645,18 @@ class NewFolderForm(forms.ModelForm):
             raise forms.ValidationError("Folder names may not include a forward slash.")
         return name
 
+    def clean(self):
+        cleaned_data = super().clean()
+        name = self.cleaned_data.get('name')
+        project = self.cleaned_data.get('project')
+        parent = self.cleaned_data.get('parent')
+        print(project)
+        print(parent)
+        print(project.folders.filter(parent=parent))
+        if project.folders.filter(name=name,parent=parent).exists():
+            raise forms.ValidationError("A folder with that name already exists.")
+        return cleaned_data
+
     class Meta:
         model = editor.models.Folder
         fields = ['name','project','parent']
@@ -701,6 +713,12 @@ class RenameFolderForm(forms.ModelForm):
     class Meta:
         model = editor.models.Folder
         fields = ('name',)
+
+    def clean_name(self):
+        name = self.cleaned_data.get('name')
+        if self.instance.project.folders.filter(name=name,parent=self.instance.parent).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("A folder with this name already exists.")
+        return name
 
 class CreatePullRequestForm(forms.ModelForm):
     class Meta:

@@ -2,6 +2,7 @@ import urllib.parse
 
 from django.conf import settings
 from django.contrib import messages
+from django.db import transaction
 from django.db.models import Sum, When, Case, IntegerField
 from django.views import generic
 from django.urls import reverse, reverse_lazy
@@ -213,6 +214,12 @@ class BrowseView(ProjectContextMixin, MustBeMemberMixin, generic.DetailView):
                     folder = project.folders.get(name=urllib.parse.unquote(name),parent=parent)
                 except Folder.DoesNotExist:
                     raise http.Http404("Folder not found.")
+                except Folder.MultipleObjectsReturned:
+                    folders = project.folders.filter(name=urllib.parse.unquote(name),parent=parent)
+                    folder = folders[0]
+                    with transaction.atomic():
+                        for ofolder in folders[1:]:
+                            ofolder.merge_into(folder)
                 breadcrumbs.append(folder)
                 parent = folder
         self.breadcrumbs = breadcrumbs

@@ -958,6 +958,15 @@ class Folder(models.Model):
             'name': self.name,
         }
 
+    def merge_into(self,folder):
+        for item in self.items.all():
+            item.folder = folder
+            item.save()
+        for subfolder in Folder.objects.filter(parent=self):
+            subfolder.parent = folder
+            subfolder.save()
+        self.delete()
+
 @reversion.register
 class EditorItem(models.Model, NumbasObject, ControlledObject):
     """

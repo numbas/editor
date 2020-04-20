@@ -129,6 +129,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = 'static/'
 
 SITE_TITLE = 'Numbas'
+SITE_ID = 1
 
 MATHJAX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0'
 

@@ -256,6 +256,15 @@ class BaseUpdateView(generic.UpdateView):
             f = f.parent
         context['breadcrumbs'] = breadcrumbs
 
+        stamps_per_user = {}
+        for s in ei.stamps.all():
+            if not s.user in stamps_per_user:
+                stamps_per_user[s.user] = s
+        project_members = ei.project.members()
+        sorted_stamps = sorted(stamps_per_user.values(), key=lambda s:s.date, reverse=True)
+        context['individual_stamps_in_project'] = [s for s in sorted_stamps if s.user in project_members]
+        context['individual_stamps_outside_project'] = [s for s in sorted_stamps if s.user not in project_members]
+
         return context
 
 

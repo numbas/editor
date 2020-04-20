@@ -1395,11 +1395,16 @@ class NewStampOfApproval(models.Model, TimelineMixin):
     user = models.ForeignKey(User, related_name='newstamps', on_delete=models.CASCADE)
     status = models.CharField(choices=STAMP_STATUS_CHOICES, max_length=20)
 
+    date = models.DateTimeField(auto_now_add=True)
+
     def __str__(self):
         return '{} said "{}"'.format(self.user.username, self.get_status_display())
 
     def can_be_viewed_by(self, user):
         return self.object.can_be_viewed_by(user)
+
+    class Meta:
+        ordering = ('-date',)
 
 class Comment(models.Model, TimelineMixin):
     object_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)

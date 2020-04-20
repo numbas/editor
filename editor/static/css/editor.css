@@ -85,6 +85,10 @@ section.editing-history .contributors {
     margin-bottom: 3em;
 }
 
+section.editing-history .individual-feedback td {
+    padding: 0.5em;
+}
+
 .timeline-write-comment {
     margin-bottom: 2em;
 }

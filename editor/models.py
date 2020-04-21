@@ -1785,6 +1785,8 @@ class NotificationEmail(object):
         return "[{project}] {user} {verb} \"{item}\"".format(project=self.project.name, user=self.notification.actor.get_full_name(), verb=self.notification.verb, item=self.editoritem.name)
 
     def can_email(self):
+        if not getattr(settings,'EMAIL_ABOUT_NOTIFICATIONS',False):
+            return False
         recipient = self.notification.recipient
         return not recipient.userprofile.never_email
 

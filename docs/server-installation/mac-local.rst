@@ -66,9 +66,9 @@ Configuration
   ==================================== =====================
   Path of the Numbas compiler          ``../numbas_runtime``
   Which database engine are you using? ``sqlite3``
-  Where are static files stored?       ``static/``
+  Where are static files stored?       ``editor/static/``
   Where are uploaded files stored?     ``media/``
-  Where are preview exams stored?      ``static/previews/``
+  Where are preview exams stored?      ``editor/static/previews/``
   Base URL of previews                 ``/static/previews/``
   ==================================== =====================
 

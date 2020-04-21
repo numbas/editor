@@ -673,11 +673,13 @@ class MoveFolderForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         parent = cleaned_data.get('parent')
-        parents = [parent]
-        f = parent.parent
-        while f:
-            parents.append(f)
-            f = f.parent
+        parents = []
+        if parent:
+            parents.append(parent)
+            f = parent.parent
+            while f:
+                parents.append(f)
+                f = f.parent
         folders = cleaned_data.get('folders')
         items = cleaned_data.get('items')
         move_folders = []

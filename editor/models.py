@@ -20,6 +20,7 @@ except ImportError:
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.sites.models import Site
 from django.contrib.staticfiles import finders
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
@@ -831,7 +832,7 @@ class TaggedQuestion(taggit.models.GenericTaggedItemBase):
     tag = models.ForeignKey(EditorTag, related_name='tagged_items', on_delete=models.CASCADE)
 
 class Access(models.Model, TimelineMixin):
-    item = models.ForeignKey('EditorItem', on_delete=models.CASCADE)
+    item = models.ForeignKey('EditorItem', related_name='accesses', on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='item_accesses', on_delete=models.CASCADE)
     access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
 
@@ -1014,8 +1015,6 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
     topics = models.ManyToManyField(Topic)
     taxonomy_nodes = models.ManyToManyField(TaxonomyNode, related_name='editoritems')
 
-    watching_users = models.ManyToManyField(User, related_name='watched_items')
-
     class Meta:
         ordering = ('name',)
 
@@ -1024,6 +1023,10 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
 
     def __unicode__(self):
         return self.name
+
+    @property
+    def watching_users(self):
+        return (User.objects.filter(pk=self.author.pk) | User.objects.filter(item_accesses__item=self)).distinct() | self.project.watching_users
 
     @property
     def owner(self):
@@ -1285,7 +1288,7 @@ class Timeline(object):
         if not self.viewing_user.is_anonymous:
             projects = self.viewing_user.own_projects.all() | Project.objects.filter(projectaccess__in=self.viewing_user.project_memberships.all()) | Project.objects.filter(watching_non_members=self.viewing_user)
             items_for_user = (
-                Q(editoritems__in=self.viewing_user.watched_items.all()) | 
+                Q(editoritems__accesses__in=self.viewing_user.item_accesses.all()) | 
                 Q(editoritems__project__in=projects) |
                 Q(projects__in=projects) |
                 Q(extension_accesses__user=viewing_user)
@@ -1736,3 +1739,74 @@ def notify_stamp(instance, **kwargs):
 @receiver(signals.post_save, sender=Comment)
 def notify_comment(instance, **kwargs):
     notify_watching(instance.user, target=instance.object, verb='commented on', action_object=instance)
+
+@receiver(signals.pre_save, sender=Notification)
+def email_notification(instance, **kwargs):
+    if instance.emailed:
+        return
+    instance.emailed = True
+    if isinstance(instance.action_object,NewStampOfApproval):
+        cls = StampNotificationEmail
+    elif isinstance(instance.action_object,Comment):
+        cls = CommentNotificationEmail
+    else:
+        instance.emailed = False
+        return
+
+    cls(instance).send()
+
+class NotificationEmail(object):
+    plain_template = ''
+    html_template = ''
+
+    def __init__(self,notification):
+        self.notification = notification
+        self.editoritem = self.notification.target
+        self.project = self.editoritem.project
+
+    def get_context_data(self):
+        site = Site.objects.get_current()
+
+        context = {
+            'notification': self.notification,
+            'domain': 'http://{}'.format(site.domain),
+            'editoritem': self.editoritem,
+            'project': self.project,
+        }
+
+        return context
+
+    def get_subject(self):
+        return "[{project}] {user} {verb} \"{item}\"".format(project=self.project.name, user=self.notification.actor.get_full_name(), verb=self.notification.verb, item=self.editoritem.name)
+
+    def send(self):
+        subject = self.get_subject()
+        context = self.get_context_data()
+        plain_content = get_template(self.plain_template).render(context)
+        html_content = get_template(self.html_template).render(context)
+        send_mail(subject, plain_content, html_message=html_content, from_email=settings.DEFAULT_FROM_EMAIL, recipient_list=(self.notification.recipient.email,))
+
+class StampNotificationEmail(NotificationEmail):
+    plain_template = 'notifications/email/stamp.txt'
+    html_template = 'notifications/email/stamp.html'
+
+    def get_context_data(self):
+        stamp = self.notification.action_object
+        context = super().get_context_data()
+        context.update({
+            'stamp': stamp,
+        })
+        return context
+
+
+class CommentNotificationEmail(NotificationEmail):
+    plain_template = 'notifications/email/comment.txt'
+    html_template = 'notifications/email/comment.html'
+
+    def get_context_data(self):
+        comment = self.notification.action_object
+        context = super().get_context_data()
+        context.update({
+            'comment': comment,
+        })
+        return context

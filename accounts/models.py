@@ -77,7 +77,7 @@ class UserProfile(models.Model):
         nonsticky_broadcast_timelineitems = TimelineItem.objects.filter(object_content_type=ContentType.objects.get_for_model(SiteBroadcast), object_id__in=nonsticky_broadcasts)
 
         items = TimelineItem.objects.filter(
-            Q(editoritems__in=self.user.watched_items.all()) | 
+            Q(editoritems__accesses__in=self.user.item_accesses.all()) | 
             Q(editoritems__project__in=projects) |
             Q(projects__in=projects) |
             Q(extension_accesses__user=self.user)

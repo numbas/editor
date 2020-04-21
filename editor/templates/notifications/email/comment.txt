@@ -1,0 +1,7 @@
+{{comment.user.get_full_name}} {{notification.verb}} "{{editoritem.name}}":
+
+Read it at:
+
+  {{domain}}{{editoritem.get_absolute_url}}#editing-history
+
+You received this because you are a member of the project {{project.name}}.

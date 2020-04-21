@@ -1,0 +1,12 @@
+{% load sanitizer %}
+<p><a href="{{domain}}{% url 'view_profile' comment.user.pk %}">{{comment.user.get_full_name}}</a> {{notification.verb}} "<a href="{{domain}}{{editoritem.get_absolute_url}}">{{editoritem.name}}</a>":
+
+<blockquote>
+    {{comment.text|strip_html|safe}}
+</blockquote>
+
+<p>View this {{editoritem.item_type}}:</p>
+
+<p><a href="{{domain}}{{editoritem.get_absolute_url}}#editing-history">{{site.domain}}/{{editoritem.get_absolute_url}}</a></p>
+
+<p><i>You received this because you are a member of the project <a href="{{domain}}{{project.get_absolute_url}}">{{project.name}}</a>.</i></p>

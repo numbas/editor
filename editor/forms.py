@@ -650,9 +650,6 @@ class NewFolderForm(forms.ModelForm):
         name = self.cleaned_data.get('name')
         project = self.cleaned_data.get('project')
         parent = self.cleaned_data.get('parent')
-        print(project)
-        print(parent)
-        print(project.folders.filter(parent=parent))
         if project.folders.filter(name=name,parent=parent).exists():
             raise forms.ValidationError("A folder with that name already exists.")
         return cleaned_data

@@ -114,12 +114,19 @@
                         <a class="btn btn-danger btn-block" href="{% url 'project_leave' project.pk %}"><span class="glyphicon glyphicon-log-out"></span> Leave this project</a>
                     </div>
                     {% endif %}
-                {% elif not user.is_anonymous %}
+                {% endif %}
+                {% if not user.is_anonymous %}
                     <div class="panel-footer">
                         {% if watching_project %}
-                        <a class="btn btn-warning btn-block" href="{% url 'project_unwatch' project.pk %}"><span class="glyphicon glyphicon-eye-close"></span> Stop watching this project</a>
+                        <form method="POST" action="{% url 'project_unwatch' project.pk %}">
+                            {% csrf_token %}
+                            <button class="btn btn-warning btn-block"><span class="glyphicon glyphicon-eye-close"></span> Stop watching this project</button>
+                        </form>
                         {% else %}
-                        <a class="btn btn-primary btn-block" href="{% url 'project_watch' project.pk %}"><span class="glyphicon glyphicon-eye-open"></span> Watch this project</a>
+                        <form method="POST" action="{% url 'project_watch' project.pk %}">
+                            {% csrf_token %}
+                            <button class="btn btn-primary btn-block"><span class="glyphicon glyphicon-eye-open"></span> Watch this project</button>
+                        </form>
                         {% endif %}
                     </div>
                 {% endif %}

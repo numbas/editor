@@ -56,6 +56,10 @@ class UserProfile(models.Model):
     wrap_lines = models.BooleanField(default=False,verbose_name='Wrap long lines in the code editor?')
     mathjax_url = models.CharField(max_length=300,default='',blank=True,verbose_name='Preferred URL to load MathJax from')
 
+    email_about_stamps = models.BooleanField(default=True, verbose_name='Send emails about feedback on items you\'re watching?')
+    email_about_comments = models.BooleanField(default=True, verbose_name='Send emails about comments on items you\'re watching?')
+    never_email = models.BooleanField(default=False, verbose_name='Unsubscribe from all emails')
+
     def sorted_tags(self):
         qs = self.user.own_questions
         tags = EditorTag.objects.filter(question__author=self.user).distinct()

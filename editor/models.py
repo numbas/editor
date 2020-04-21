@@ -216,6 +216,7 @@ class Project(models.Model, ControlledObject):
 
     public_view = models.BooleanField(default=False)
     watching_non_members = models.ManyToManyField(User, related_name='watched_projects')
+    unwatching_members = models.ManyToManyField(User, related_name='unwatched_projects')
 
     icon = 'briefcase'
 
@@ -254,7 +255,8 @@ class Project(models.Model, ControlledObject):
 
     @property
     def watching_users(self):
-        return (User.objects.filter(pk=self.owner.pk) | User.objects.filter(project_memberships__project=self)).distinct()
+        q = (User.objects.filter(pk=self.owner.pk) | User.objects.filter(project_memberships__project=self) | self.watching_non_members.all()).distinct()
+        return q.difference(self.unwatching_members.all())
 
     def __str__(self):
         return self.name
@@ -1015,6 +1017,8 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
     topics = models.ManyToManyField(Topic)
     taxonomy_nodes = models.ManyToManyField(TaxonomyNode, related_name='editoritems')
 
+    unwatching_users = models.ManyToManyField(User, related_name='unwatched_items')
+
     class Meta:
         ordering = ('name',)
 
@@ -1026,7 +1030,8 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
 
     @property
     def watching_users(self):
-        return (User.objects.filter(pk=self.author.pk) | User.objects.filter(item_accesses__item=self)).distinct() | self.project.watching_users
+        q = (User.objects.filter(pk=self.author.pk) | User.objects.filter(item_accesses__item=self)).distinct() | self.project.watching_users
+        return q.difference(self.unwatching_users.all())
 
     @property
     def owner(self):
@@ -1779,12 +1784,17 @@ class NotificationEmail(object):
     def get_subject(self):
         return "[{project}] {user} {verb} \"{item}\"".format(project=self.project.name, user=self.notification.actor.get_full_name(), verb=self.notification.verb, item=self.editoritem.name)
 
+    def can_email(self):
+        recipient = self.notification.recipient
+        return not recipient.userprofile.never_email
+
     def send(self):
         subject = self.get_subject()
         context = self.get_context_data()
         plain_content = get_template(self.plain_template).render(context)
         html_content = get_template(self.html_template).render(context)
-        send_mail(subject, plain_content, html_message=html_content, from_email=settings.DEFAULT_FROM_EMAIL, recipient_list=(self.notification.recipient.email,))
+        if self.can_email():
+            send_mail(subject, plain_content, html_message=html_content, from_email=settings.DEFAULT_FROM_EMAIL, recipient_list=(self.notification.recipient.email,))
 
 class StampNotificationEmail(NotificationEmail):
     plain_template = 'notifications/email/stamp.txt'
@@ -1798,6 +1808,12 @@ class StampNotificationEmail(NotificationEmail):
         })
         return context
 
+    def can_email(self):
+        recipient = self.notification.recipient
+        if not recipient.userprofile.email_about_stamps:
+            return False
+        return super().can_email()
+
 
 class CommentNotificationEmail(NotificationEmail):
     plain_template = 'notifications/email/comment.txt'
@@ -1810,3 +1826,9 @@ class CommentNotificationEmail(NotificationEmail):
             'comment': comment,
         })
         return context
+
+    def can_email(self):
+        recipient = self.notification.recipient
+        if not recipient.userprofile.email_about_comments:
+            return False
+        return super().can_email()

@@ -11,6 +11,19 @@
         <a href="{% url 'project_settings_options' project.pk %}" title="Project settings" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-cog"></span></a>
     </span>
     {% endif %}
+    {% if request.user.is_authenticated %}
+    <span class="pull-right">
+        {% if watching_project %}
+        <a class="btn btn-lg btn-link" title="Click to stop watching this project">
+            <span class="glyphicon glyphicon-eye-open" title="You're watching this project."></span>
+        </a>
+        {% else %}
+        <a class="btn btn-lg btn-link" title="Click to watch this project">
+            <span class="glyphicon glyphicon-eye-closed" title="You're not watching this project"></span>
+        </a>
+        {% endif %}
+    </span>
+    {% endif %}
     <h1><span class="glyphicon glyphicon-briefcase"></span> <a href="{% url 'project_index' project.pk %}">{{project.name}}</a></h1>
 </div>
 <div class="{% block project_container %}container{% endblock project_container %}">

@@ -105,9 +105,6 @@ class ChangePasswordView(CurrentUserUpdateView):
 
     form_class = ChangePasswordForm
 
-    def get_object(self, queryset=None):
-        return self.request.user
-    
     def form_valid(self, form):
         messages.success(self.request, 'Your password has been changed.')
         return super(ChangePasswordView, self).form_valid(form)

@@ -62,7 +62,19 @@ class NumbasRegistrationForm(RegistrationForm):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        fields = ('first_name', 'last_name', 'email', 'bio', 'language', 'avatar','wrap_lines','mathjax_url')
+        fields = (
+            'first_name', 
+            'last_name', 
+            'email', 
+            'bio', 
+            'language', 
+            'avatar',
+            'wrap_lines',
+            'mathjax_url',
+            'email_about_stamps',
+            'email_about_comments',
+            'never_email'
+        )
         widgets = {
             'mathjax_url': forms.TextInput(attrs={'class':'form-control','placeholder':settings.MATHJAX_URL})
         }
@@ -96,6 +108,9 @@ class UserProfileForm(forms.ModelForm):
         self.fields['bio'].initial = self.profile.bio
         self.fields['wrap_lines'].initial = self.profile.wrap_lines
         self.fields['mathjax_url'].initial = self.profile.mathjax_url
+        self.fields['email_about_stamps'].initial = self.profile.email_about_stamps
+        self.fields['email_about_comments'].initial = self.profile.email_about_comments
+        self.fields['never_email'].initial = self.profile.never_email
     
     def get_profile(self):
         return UserProfile.objects.get(user=self.instance)
@@ -105,6 +120,9 @@ class UserProfileForm(forms.ModelForm):
         self.profile.bio = self.cleaned_data.get('bio')
         self.profile.wrap_lines = self.cleaned_data.get('wrap_lines')
         self.profile.mathjax_url = self.cleaned_data.get('mathjax_url')
+        self.profile.email_about_stamps = self.cleaned_data.get('email_about_stamps')
+        self.profile.email_about_comments = self.cleaned_data.get('email_about_comments')
+        self.profile.never_email = self.cleaned_data.get('never_email')
         if self.cleaned_data.get('avatar'):
             self.profile.avatar = self.cleaned_data.get('avatar')
         self.profile = self.profile.save()

@@ -256,7 +256,7 @@ class Project(models.Model, ControlledObject):
     @property
     def watching_users(self):
         q = (User.objects.filter(pk=self.owner.pk) | User.objects.filter(project_memberships__project=self) | self.watching_non_members.all()).distinct()
-        return q.difference(self.unwatching_members.all())
+        return q.exclude(pk__in=self.unwatching_members.all())
 
     def __str__(self):
         return self.name
@@ -853,10 +853,6 @@ class Access(models.Model, TimelineMixin):
     def icon(self):
         return 'eye-open'
 
-@receiver(signals.post_save, sender=Access)
-def add_watching_user_for_access(instance, **kwargs):
-    instance.item.watching_users.add(instance.user)
-
 NUMBAS_FILE_VERSION = 'exam_results_page_options'
 
 @deconstructible
@@ -1031,7 +1027,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
     @property
     def watching_users(self):
         q = (User.objects.filter(pk=self.author.pk) | User.objects.filter(item_accesses__item=self)).distinct() | self.project.watching_users
-        return q.difference(self.unwatching_users.all())
+        return q.exclude(pk__in=self.unwatching_users.all())
 
     @property
     def owner(self):
@@ -1183,11 +1179,6 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
 
         self.rel_obj.merge(other.rel_obj)
         self.save()
-
-@receiver(signals.post_save, sender=EditorItem)
-def author_watches_editoritem(instance, created, **kwargs):
-    if created:
-        instance.watching_users.add(instance.author)
 
 @receiver(signals.post_save, sender=EditorItem)
 def author_contributes_to_editoritem(instance, created, **kwargs):

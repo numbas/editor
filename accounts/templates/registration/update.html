@@ -72,6 +72,7 @@
             <div class="help-block">{{form.mathjax_url.help_text}}</div>
         </div>
 
+        {% if email_active %}
         <h2>Email preferences</h2>
         {% if mailing_list_active and unsubscribe_url %}
         <div class="form-group mailing-list">
@@ -91,6 +92,7 @@
                 {{form.never_email}} <label for="{{form.never_email.auto_id}}">Unsubscribe from all emails</label>
             </div>
         </div>
+        {% endif %}
 
 
         <div class="form-group">

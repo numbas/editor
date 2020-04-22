@@ -91,7 +91,7 @@ class UserUpdateView(CurrentUserUpdateView):
         context['profile_page'] = 'bio'
         context['view_user'] = self.get_object()
         context['mailing_list_active'] = apps.registry.apps.is_installed('numbasmailing')
-        context['email_active'] = settings.EMAIL_ABOUT_NOTIFICATIONS
+        context['email_active'] = getattr(settings,'EMAIL_ABOUT_NOTIFICATIONS',False)
         if context['mailing_list_active']:
             context['unsubscribe_url'] = settings.MAILCHIMP.get('UNSUBSCRIBE_URL')
         return context

@@ -472,7 +472,7 @@ class Extension(models.Model, ControlledObject):
         for d,dirs,files in os.walk(str(top)):
             rd = Path(d).relative_to(top)
             if str(rd)=='.' or not re.match(r'^\.',str(rd)):
-                for f in files:
+                for f in sorted(files,key=str):
                     if not re.match(r'^\.',f):
                         yield str(rd / f)
 
@@ -496,6 +496,15 @@ class Extension(models.Model, ControlledObject):
 
     def icon(self):
         return 'wrench'
+
+@receiver(pre_delete, sender=Extension)
+def delete_extracted_extension(sender,instance,**kwargs):
+    if not instance.editable:
+        return
+    p = Path(instance.extracted_path).parent
+    if p.exists():
+        shutil.rmtree(str(p))
+    
 
 class ExtensionAccess(models.Model, TimelineMixin):
     extension = models.ForeignKey('Extension', related_name='access', on_delete=models.CASCADE)

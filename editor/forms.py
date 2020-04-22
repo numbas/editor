@@ -381,7 +381,8 @@ class UpdateExtensionForm(forms.ModelForm):
 
     def save(self, commit=True):
         extension = super().save(commit)
-        extension.extract_zip()
+        if commit:
+            extension.extract_zip()
         return extension
 
 class CreateExtensionForm(forms.ModelForm):
@@ -438,6 +439,7 @@ class UploadExtensionForm(UpdateExtensionForm):
         extension.author = self._user
         if commit:
             extension.save()
+            extension.extract_zip()
             self.save_m2m()
         return extension
 

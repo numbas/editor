@@ -43,7 +43,7 @@ class UploadView(generic.CreateView):
         return kwargs
 
     def get_success_url(self):
-        return reverse('profile_extensions', args=(self.request.user.pk,))
+        return reverse('extension_edit_source', args=(self.object.pk,))
 
 class UpdateView(AuthorRequiredMixin, generic.UpdateView):
     """ Edit an extension's metadata """

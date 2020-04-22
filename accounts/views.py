@@ -6,15 +6,12 @@ try:
 except ImportError:
     from io import StringIO
 
-from accounts.forms import NumbasRegistrationForm, DeactivateUserForm, ReassignContentForm
-from accounts.forms import UserProfileForm, ChangePasswordForm
-from accounts.models import RegistrationProfile
-from accounts.util import find_users, user_json
 from django import apps
 from django.conf import settings
 from django.views.generic import UpdateView, DetailView, ListView, TemplateView
 from django.contrib.auth.models import User
-from django.shortcuts import redirect
+from django.core import signing
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.contrib import messages
 from django.http import Http404, HttpResponse
@@ -26,6 +23,12 @@ import editor.models
 from editor.views import editoritem
 from registration import signals
 import registration.views
+
+from .forms import NumbasRegistrationForm, DeactivateUserForm, ReassignContentForm
+from .forms import UserProfileForm, ChangePasswordForm
+from .models import RegistrationProfile
+from .util import find_users, user_json
+from .email import unsubscribe_unsign
 
 class RegistrationView(registration.views.RegistrationView):
     form_class = NumbasRegistrationForm
@@ -255,3 +258,24 @@ class ReassignContentView(CurrentUserUpdateView):
 
     def get_success_url(self):
         return reverse('editor_index')
+
+def unsubscribe_emails(request):
+    token = request.GET.get('token',None)
+    if token is None:
+        return Http404()
+
+    try:
+        username = unsubscribe_unsign(token)
+    except signing.BadSignature:
+        return Http404()
+
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return Http404()
+
+    up = user.userprofile
+    up.never_email = True
+    up.save()
+    
+    return render(request, 'unsubscribed-emails.html',{})

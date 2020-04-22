@@ -111,6 +111,9 @@ class UserProfileForm(forms.ModelForm):
         self.fields['email_about_stamps'].initial = self.profile.email_about_stamps
         self.fields['email_about_comments'].initial = self.profile.email_about_comments
         self.fields['never_email'].initial = self.profile.never_email
+        if self.profile.never_email:
+            self.fields['email_about_stamps'].initial = False
+            self.fields['email_about_comments'].initial = False
     
     def get_profile(self):
         return UserProfile.objects.get(user=self.instance)

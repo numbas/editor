@@ -1,0 +1,8 @@
+{% block content %}{% endblock %}
+
+-----
+
+Manage your email preferences:
+    {{domain}}{% url 'edit_profile' %}
+or unsubscribe from all emails:
+    {{domain}}{% url 'unsubscribe_emails' %}?token={{unsubscribe_token}}

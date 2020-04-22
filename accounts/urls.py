@@ -59,6 +59,10 @@ urlpatterns = [
     url(r'profile/backup/all-questions$',
         login_required(AllQuestionsView.as_view()),
         name='all_questions_download'),
+    url(r'unsubscribe-emails$',
+        accounts.views.unsubscribe_emails,
+        name='unsubscribe_emails'
+    )
 ]
 
 if settings.CAN_CHANGE_PASSWORD:

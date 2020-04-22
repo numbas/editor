@@ -598,6 +598,10 @@ class CustomPartType(models.Model, ControlledObject):
     def __str__(self):
         return self.name
 
+    @property
+    def filename(self):
+        return slugify(self.name)
+
     def __repr__(self):
         return '<CustomPartType: {}>'.format(self.short_name)
 
@@ -664,6 +668,15 @@ class CustomPartType(models.Model, ControlledObject):
             'published': self.published,
             'extensions': [e.location for e in self.extensions.all()],
         }
+
+    def as_source(self):
+        obj = self.as_json()
+        obj['source'] = {
+            'author': {
+                'name': self.author.get_full_name(),
+            }
+        }
+        return obj
 
 class Resource(models.Model):
     owner = models.ForeignKey(User, related_name='resources', on_delete=models.CASCADE)

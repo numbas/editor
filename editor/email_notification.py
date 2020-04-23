@@ -19,6 +19,7 @@ class NotificationEmail(object):
 
         context = {
             'notification': self.notification,
+            'site': site,
             'domain': 'http://{}'.format(site.domain),
             'editoritem': self.editoritem,
             'project': self.project,

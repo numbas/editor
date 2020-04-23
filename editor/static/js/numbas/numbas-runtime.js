@@ -11675,7 +11675,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
                     part.giveWarning(state.message);
                     break;
                 case FeedbackOps.FEEDBACK:
-                    part.markingComment(state.message);
+                    part.markingComment(state.message,state.reason);
                     break;
                 case FeedbackOps.END:
                     if(lifts.length) {
@@ -11722,7 +11722,6 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
             }
             var ot = t;
             t += change;
-            t = Math.max(0,t);
             change = t-ot;
             if(action.message===undefined) {
                 action.message = '';
@@ -11860,11 +11859,12 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
     /** Add a comment to the marking feedback
      * @param {String} message
      */
-    markingComment: function(message)
+    markingComment: function(message,reason)
     {
         this.markingFeedback.push({
             op: 'feedback',
-            message: message
+            message: message,
+            reason: reason
         });
     },
     /** Show the steps, as a result of the student asking to show them.
@@ -12886,6 +12886,13 @@ SignalBox.prototype = { /** @lends Numbas.schedule.SignalBox.prototype */
         callback.resolve();
     }
 }
+
+/** Signals produced by the Numbas runtime.
+ * @type {Numbas.schedule.SignalBox}
+ * @memberof Numbas
+ */
+Numbas.signals = new Numbas.schedule.SignalBox();
+
 });
 
 Numbas.queueScript('marking',['util', 'jme','localisation','jme-variables','math'],function() {
@@ -12989,7 +12996,7 @@ Numbas.queueScript('marking',['util', 'jme','localisation','jme-variables','math
      * @see Numbas.marking.StatefulScope
      * @returns {Numbas.jme.funcObj}
      */
-    function state_fn(name, args, outtype, fn) {
+    var state_fn = marking.state_fn = function(name, args, outtype, fn) {
         return new jme.funcObj(name,args,outtype,null,{
             evaluate: function(args, scope) {
                 if(jme.lazyOps.contains(name)) {
@@ -26134,10 +26141,10 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
             return new jme.types.TString(value);
         },
         'code': function(def, value, scope) {
-            if(!value.trim()) {
-                throw(new Numbas.Error('part.custom.empty setting'));
-            }
             if(def.evaluate) {
+                if(!value.trim()) {
+                    throw(new Numbas.Error('part.custom.empty setting'));
+                }
                 return scope.evaluate(value);
             } else {
                 return new jme.types.TString(value);

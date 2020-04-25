@@ -1,5 +1,6 @@
-Installing the Numbas editor on Ubuntu
-======================================
+
+Installing the Numbas editor on Ubuntu Server
+=============================================
 
 These are outline instructions on setting up the Numbas editor with a
 backend MySQL database.
@@ -19,56 +20,45 @@ Essential package installation
 Packages that would be installed as part of a standard Ubuntu install
 are not listed.
 
-#.  Install Apache, Git, Apache WSGI module, MySQL and Python 3 using the ``apt`` packaging system::
+#.  Install Apache, Git, Apache WSGI module, MySQL, Python 3 and Pip using the ``apt`` packaging system::
 
-        apt-get install apache2 apache2-dev git-core mysql-server \
+        
+        sudo apt udpate
+        (optionaly do: sudo apt upgrade)
+        sudo apt-get install apache2 apache2-dev git-core mysql-server \
         mysql-common python3 acl libmysqlclient-dev python-dev \
-        libapache2-mod-wsgi-py3 python-tk tcl-dev tk-dev
+        libapache2-mod-wsgi-py3 python-tk tcl-dev tk-dev python3-pip
 
 #.  Enable ``mod_wsgi``, if it's not already:: 
     
-        a2enmod wsgi
+        sudo a2enmod wsgi
 
-Virtualenv
-----------
+
+Cretae user and groups
+----------------------
 
 Rather than rely on the system-wide Python executable and libraries, a more flexible
 approach is to use `virtualenv <http://www.virtualenv.org/>`_, which is a tool to create an isolated Python environment.
 
 #.  Create a user group which will have access to the virtualenv, and
     add yourself to it::
-    
-        groupadd numbas
-        usermod your_username -a -G numbas,www-data
+
+        sudo adduser --disabled-password numbas_editor        
+        sudo groupadd numbas
+        sudo usermod numbas_editor -a -G numbas,www-data
         
-    You might need to start a new terminal, or log out and back in, for the group change to take effect.
-
-#.  Install Pip:: 
-    
-        apt-get install python3-pip
-
-#.  Install virtualenv:: 
-    
-        pip3 install virtualenv
-
-#.  Create the virtualenv in a suitable location::
-  
-        mkdir /opt/python
-        setfacl -dR -m g:numbas:rwx /opt/python
-        virtualenv /opt/python/numbas-editor
-
-#.  Activate the virtualenv::
-
-        source /opt/python/numbas-editor/bin/activate
-        
-    (This ensures that subsequent python packages are installed in this isolated environment, and not in the system environment.)
-
 Database
 --------
 
+#.  Secure the MySQL database::
+
+        sudo mysql_secure_installation
+
+
+
 #.  Open the MySQL client::
 
-        mysql
+        sudo mysql
 
 #.  Create a MySQL database called ``numbas_editor``::
 
@@ -79,29 +69,64 @@ Database
 
         grant all privileges on numbas_editor.* to 'numbas_editor'@'localhost' identified by 'password';
 
+
 Create directories and set permissions
 --------------------------------------
 
 #.  Create the following directories outside the web root, so they're
     not accessible to the public::
   
-        mkdir /srv/numbas
-        mkdir /srv/numbas/compiler
-        mkdir /srv/numbas/media
-        mkdir /srv/numbas/previews
-        mkdir /srv/numbas/static
+        sudo mkdir /srv/www
+        sudo mkdir /srv/numbas
+        sudo mkdir /srv/numbas/compiler
+        sudo mkdir /srv/numbas/media
+        sudo mkdir /srv/numbas/previews
+        sudo mkdir /srv/numbas/static
 
 #.  Set the correct ownership and permissions::
     
-        cd /srv/numbas
-        chmod 2770 media previews
-        chmod 2750 compiler static
-        chgrp www-data compiler media previews static
-        setfacl -dR -m g::rwX media previews
-        setfacl -dR -m g::rX compiler static
+        sudo chmod 2770 /srv/www
+        sudo chgrp www-data /srv/www
 
-Clone the editor and compiler repositories
-------------------------------------------
+        cd /srv/numbas
+        sudo chmod 2770 media previews
+        sudo chmod 2750 compiler static
+        sudo chgrp www-data compiler media previews static
+        sudo chmod g+rwX media previews compiler static
+
+
+
+Install Virtualenv
+------------------
+
+#.  Install virtualenv:: 
+    
+        sudo pip3 install virtualenv
+
+#.  Create the virtualenv in a suitable location::
+  
+        sudo mkdir /opt/python
+        sudo chown root.numbas /opt/python 
+        sudo chmod grwx /opt/python 
+
+       
+
+Perform as numbas_editor
+------------------------
+
+#.  Become numbas_editor::
+
+        sudo su numbas_editor
+
+#.  Create the virtualenv::
+
+        virtualenv /opt/python/numbas-editor
+
+#.  Activate the virtualenv::
+
+        source /opt/python/numbas-editor/bin/activate
+        
+    (This ensures that subsequent python packages are installed in this isolated environment, and not in the system environment.)
 
 #.  Clone the Numbas repository::
 
@@ -117,11 +142,9 @@ Clone the editor and compiler repositories
         pip install -r /srv/numbas/compiler/requirements.txt
         pip install mysqlclient mod_wsgi
 
-Configuration
--------------
-
 #.  Run the "first setup" script::
-    
+
+        cd /srv/www/numbas_editor
         python first_setup.py
 
     This will configure the editor based on your answers to a few
@@ -133,18 +156,26 @@ Configuration
     If you make any mistakes, you can run the script again, or edit
     ``numbas/settings.py`` directly.
 
-#.  Create the apache config file and enable the site.
 
-    -  Edit ``/etc/apache2/sites-available/numbas_editor.conf`` with
-       contents similar to that in :download:`this prepared config file <apache2_ubuntu.conf>`.
-       If following these instructions exactly, then you only need to change the lines containing ``ServerName`` and ``ServerAdmin``.
+#.    Edit ``numbas/settings.py`` to set the host correctly::
 
-    -  Enable the configuration::
+
+      set ALLOWED_HOSTS = ['www.example.com']
+       
+    
+Setup Apache
+------------
+
+#.  Download https://./apache2_ubuntu.conf to ``/etc/apache2/sites-available/numbas_editor.conf``. Then edit the file and change the lines containing ``ServerName`` and ``ServerAdmin`` 
+
+
+#. Enable the configuration::
       
-            a2ensite numbas_editor.conf
-            service apache2 reload
+            sudo a2ensite numbas_editor.conf
+            sudo service apache2 reload
 
 #.  Point a web browser at the server hosting the editor.
+
 
 Ongoing maintenance
 -------------------

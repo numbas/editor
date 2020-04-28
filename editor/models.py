@@ -34,7 +34,6 @@ from django.db.models import Q
 from django.forms import model_to_dict
 from django.utils import timezone
 from django.utils.deconstruct import deconstructible
-from django.db.models.signals import pre_delete
 from django.template.loader import get_template
 from django.core.mail import send_mail
 from uuslug import slugify
@@ -43,7 +42,6 @@ import reversion
 import reversion.models
 
 from notifications.signals import notify
-from notifications.models import Notification
 
 import taggit.models
 from taggit.managers import TaggableManager
@@ -51,7 +49,6 @@ from taggit.managers import TaggableManager
 import numbasobject
 
 from .notify_watching import notify_watching
-from .email_notification import StampNotificationEmail, CommentNotificationEmail
 from .jsonfield import JSONField
 
 PUBLIC_ACCESS_CHOICES = (('hidden', 'Hidden'), ('view', 'Public can view'), ('edit', 'Public can edit'))
@@ -497,7 +494,7 @@ class Extension(models.Model, ControlledObject):
     def icon(self):
         return 'wrench'
 
-@receiver(pre_delete, sender=Extension)
+@receiver(signals.pre_delete, sender=Extension)
 def delete_extracted_extension(sender,instance,**kwargs):
     if not instance.editable:
         return
@@ -549,7 +546,7 @@ class Theme(models.Model):
         z = ZipFile(self.zipfile.file, 'r')
         z.extractall(self.extracted_path)
 
-@receiver(pre_delete, sender=Theme)
+@receiver(signals.pre_delete, sender=Theme)
 def reset_theme_on_delete(sender, instance, **kwargs):
     default_theme = settings.GLOBAL_SETTINGS['NUMBAS_THEMES'][0][1]
     for exam in instance.used_in_newexams.all():
@@ -1757,19 +1754,3 @@ def notify_stamp(instance, **kwargs):
 @receiver(signals.post_save, sender=Comment)
 def notify_comment(instance, **kwargs):
     notify_watching(instance.user, target=instance.object, verb='commented on', action_object=instance)
-
-@receiver(signals.pre_save, sender=Notification)
-def email_notification(instance, **kwargs):
-    if instance.emailed:
-        return
-    instance.emailed = True
-    if isinstance(instance.action_object,NewStampOfApproval):
-        cls = StampNotificationEmail
-    elif isinstance(instance.action_object,Comment):
-        cls = CommentNotificationEmail
-    else:
-        instance.emailed = False
-        return
-
-    cls(instance).send()
-

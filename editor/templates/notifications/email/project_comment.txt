@@ -1,0 +1,9 @@
+{% extends "notifications/email/base.txt" %}
+
+{% block content %}
+{{comment.user.get_full_name}} {{notification.verb}} the project "{{project.name}}":
+
+Read it at:
+
+  {{domain}}{{project.get_absolute_url}}
+{% endblock content %}

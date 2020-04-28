@@ -11,8 +11,6 @@ class NotificationEmail(object):
 
     def __init__(self,notification):
         self.notification = notification
-        self.editoritem = self.notification.target
-        self.project = self.editoritem.project
 
     def get_context_data(self):
         site = Site.objects.get_current()
@@ -21,15 +19,10 @@ class NotificationEmail(object):
             'notification': self.notification,
             'site': site,
             'domain': 'http://{}'.format(site.domain),
-            'editoritem': self.editoritem,
-            'project': self.project,
             'unsubscribe_token': unsubscribe_token(self.notification.recipient)
         }
 
         return context
-
-    def get_subject(self):
-        return "[{project}] {user} {verb} \"{item}\"".format(project=self.project.name, user=self.notification.actor.get_full_name(), verb=self.notification.verb, item=self.editoritem.name)
 
     def can_email(self):
         if not getattr(settings,'EMAIL_ABOUT_NOTIFICATIONS',False):
@@ -45,7 +38,26 @@ class NotificationEmail(object):
         if self.can_email():
             send_mail(subject, plain_content, html_message=html_content, from_email=settings.DEFAULT_FROM_EMAIL, recipient_list=(self.notification.recipient.email,))
 
-class StampNotificationEmail(NotificationEmail):
+class EditorItemNotificationEmail(NotificationEmail):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args,**kwargs)
+        self.editoritem = self.notification.target
+        self.project = self.editoritem.project
+
+    def get_subject(self):
+        return "[{project}] {user} {verb} \"{item}\"".format(project=self.project.name, user=self.notification.actor.get_full_name(), verb=self.notification.verb, item=self.editoritem.name)
+
+    def get_context_data(self):
+        context = super().get_context_data()
+
+        context.update({
+            'editoritem': self.editoritem,
+            'project': self.project,
+        })
+
+        return context
+
+class StampNotificationEmail(EditorItemNotificationEmail):
     plain_template = 'notifications/email/stamp.txt'
     html_template = 'notifications/email/stamp.html'
 
@@ -63,11 +75,7 @@ class StampNotificationEmail(NotificationEmail):
             return False
         return super().can_email()
 
-
-class CommentNotificationEmail(NotificationEmail):
-    plain_template = 'notifications/email/comment.txt'
-    html_template = 'notifications/email/comment.html'
-
+class CommentNotificationEmailMixin:
     def get_context_data(self):
         comment = self.notification.action_object
         context = super().get_context_data()
@@ -82,3 +90,28 @@ class CommentNotificationEmail(NotificationEmail):
             return False
         return super().can_email()
 
+
+class EditorItemCommentNotificationEmail(CommentNotificationEmailMixin,EditorItemNotificationEmail):
+    plain_template = 'notifications/email/editoritem_comment.txt'
+    html_template = 'notifications/email/editoritem_comment.html'
+
+class ProjectCommentNotificationEmail(CommentNotificationEmailMixin,NotificationEmail):
+    plain_template = 'notifications/email/project_comment.txt'
+    html_template = 'notifications/email/project_comment.html'
+
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+        self.project = self.notification.target
+
+
+    def get_subject(self):
+        return "[{project}] Comment by {user}".format(project=self.project.name, user=self.notification.actor.get_full_name())
+
+    def get_context_data(self):
+        context = super().get_context_data()
+
+        context.update({
+            'project': self.project,
+        })
+
+        return context

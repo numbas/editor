@@ -1743,7 +1743,7 @@ def item_created_timeline_event(instance, created, **kwargs):
 @receiver(signals.post_save, sender=NewStampOfApproval)
 @receiver(signals.post_delete, sender=NewStampOfApproval)
 def set_current_stamp(instance, **kwargs):
-    instance.object.current_stamp = NewStampOfApproval.objects.filter(object=instance.object).last()
+    instance.object.current_stamp = NewStampOfApproval.objects.filter(object=instance.object).order_by('-date').first()
     instance.object.save()
 
 

@@ -4766,6 +4766,22 @@ newBuiltin('parsedecimal_or_fraction', [TString], TDecimal, function(s,style) {r
 newBuiltin('parsedecimal_or_fraction', [TString,TString], TDecimal, function(s,style) {return util.parseDecimal(s,true,style,true);});
 newBuiltin('parsedecimal_or_fraction', [TString,sig.listof(sig.type('string'))], TDecimal, function(s,styles) {return util.parseDecimal(s,true,styles,true);}, {unwrapValues: true});
 
+newBuiltin('scientificnumberlatex', [TDecimal], TString, null, {
+    evaluate: function(args,scope) {
+        var n = args[0].value;
+        var bits = math.parseScientific(n.re.toExponential());
+        var s = new TString(math.niceDecimal(bits.significand)+' \\times 10^{'+bits.exponent+'}');
+        s.latex = true;
+        return s;
+    }
+});
+newBuiltin('scientificnumberhtml', [TDecimal], THTML, function(n) {
+    var bits = math.parseScientific(n.re.toExponential());
+    var s = document.createElement('span');
+    s.innerHTML = math.niceDecimal(bits.significand)+' × 10<sup>'+bits.exponent+'</sup>';
+    return s;
+});
+
 newBuiltin('togivenprecision', [TString,TString,TNum,TBool], TBool, math.toGivenPrecision);
 newBuiltin('withintolerance',[TNum,TNum,TNum],TBool, math.withinTolerance);
 newBuiltin('countdp',[TString],TNum, function(s) { return math.countDP(util.cleanNumber(s)); });
@@ -4836,13 +4852,7 @@ newBuiltin('string',[TRational], TString, function(a) { return a.toString(); });
 
 //Decimal arithmetic
 newBuiltin('string',[TDecimal], TString, function(a) { return a.toString(); });
-newBuiltin('decimal',[TNum],TDecimal,function(x){
-    if(x.complex) {
-        return new math.ComplexDecimal(new Decimal(x.re), new Decimal(x.im));
-    } else {
-        return new Decimal(x);
-    }
-});
+newBuiltin('decimal',[TNum],TDecimal,math.numberToDecimal);
 newBuiltin('decimal',[TString],TDecimal,function(x){return new Decimal(x)});
 newBuiltin('+u', [TDecimal], TDecimal, function(a){return a;});
 newBuiltin('-u', [TDecimal], TDecimal, function(a){ return a.negated(); });
@@ -13786,14 +13796,14 @@ var math = Numbas.math = /** @lends Numbas.math */ {
      * @param {Number} b
      * @returns {Number}
      */
-    pow: function(a,b)
-    {
-        if(a.complex && Numbas.util.isInt(b) && Math.abs(b)<100)
-        {
-            if(b<0)
+    pow: function(a,b) {
+        if(a.complex && Numbas.util.isInt(b) && Math.abs(b)<100) {
+            if(b<0) {
                 return math.div(1,math.pow(a,-b));
-            if(b==0)
+            }
+            if(b==0) {
                 return 1;
+            }
             var coeffs = math.binomialCoefficients(b);
             var re = 0;
             var im = 0;
@@ -13803,12 +13813,12 @@ var math = Numbas.math = /** @lends Numbas.math */ {
                 im += coeffs[i+1]*Math.pow(a.re,b-i-1)*Math.pow(a.im,i+1)*sign;
                 sign = -sign;
             }
-            if(b%2==0)
+            if(b%2==0) {
                 re += Math.pow(a.im,b)*sign;
+            }
             return math.complex(re,im);
         }
-        if(a.complex || b.complex || (a<0 && math.fract(b)!=0))
-        {
+        if(a.complex || b.complex || (a<0 && math.fract(b)!=0)) {
             if(!a.complex)
                 a = {re: a, im: 0, complex: true};
             if(!b.complex)
@@ -13818,9 +13828,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
             var mag = Math.pow(ss,b.re/2) * Math.exp(-b.im*arg1);
             var arg = b.re*arg1 + (b.im * Math.log(ss))/2;
             return math.complex(mag*Math.cos(arg), mag*Math.sin(arg));
-        }
-        else
-        {
+        } else if(a==Math.E) {
+            return Math.exp(b);
+        } else {
             return Math.pow(a,b);
         }
     },
@@ -14369,6 +14379,25 @@ var math = Numbas.math = /** @lends Numbas.math */ {
             return out;
         }
     },
+
+    /** Convert a JS Number to a Decimal
+     * @param {Number} n
+     * @returns {Decimal}
+     */
+    numberToDecimal: function(x) {
+        if(x.complex) {
+            return new math.ComplexDecimal(math.numberToDecimal(x.re), math.numberToDecimal(x.im));
+        } else {
+            if(x==Math.PI) {
+                return Decimal.acos(-1);
+            } else if(x==Math.E) {
+                return Decimal(1).exp();
+            } else {
+                return new Decimal(x);
+            }
+        }
+    },
+
     /** Get a random number in range `[0..n-1]`
      * @param {Number} n
      * @returns {Number}
@@ -25230,6 +25259,7 @@ var MultipleResponsePart = Numbas.parts.MultipleResponsePart = function(path, qu
 MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.prototype */
 {
     loadFromXML: function(xml) {
+        var p = this;
         var settings = this.settings;
         var tryGetAttribute = Numbas.xml.tryGetAttribute;
         var scope = this.getScope();

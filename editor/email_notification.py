@@ -35,8 +35,11 @@ class NotificationEmail(object):
         context = self.get_context_data()
         plain_content = get_template(self.plain_template).render(context)
         html_content = get_template(self.html_template).render(context)
+        from_email = '{title} <{email}>'.format(title=settings.SITE_TITLE, email=settings.DEFAULT_FROM_EMAIL)
+        recipient = self.notification.recipient
+        recipient_email = '{name} <{email}>'.format(name=recipient.get_full_name(), email=recipient.email)
         if self.can_email():
-            send_mail(subject, plain_content, html_message=html_content, from_email=settings.DEFAULT_FROM_EMAIL, recipient_list=(self.notification.recipient.email,))
+            send_mail(subject, plain_content, html_message=html_content, from_email=from_email, recipient_list=(recipient_email,))
 
 class EditorItemNotificationEmail(NotificationEmail):
     def __init__(self, *args, **kwargs):

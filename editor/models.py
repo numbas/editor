@@ -1638,6 +1638,8 @@ class NewExam(models.Model):
         data['extensions'] = [e.location for e in self.extensions]
         data['custom_part_types'] = [p.as_json() for p in self.custom_part_types]
         data['name'] = self.editoritem.name
+        if 'question_groups' not in data:
+            data['question_groups'] = self.question_groups_dict()
         for i, g in enumerate(data['question_groups']):
             if i < len(question_groups):
                 questions = question_groups[i]
@@ -1661,11 +1663,13 @@ class NewExam(models.Model):
         exam_dict['locale'] = self.locale
         exam_dict['custom_theme'] = self.custom_theme_id
         exam_dict['theme'] = self.theme
-        groups = groupby(self.newexamquestion_set.order_by('group', 'qn_order'), key=lambda q: q.group)
-        exam_dict['question_groups'] = [{'group':group, 'questions':[q.question.summary() for q in qs]} for group, qs in groups]
+        exam_dict['question_groups'] = self.question_groups_dict()
 
         return exam_dict
 
+    def question_groups_dict(self):
+        groups = groupby(self.newexamquestion_set.order_by('group', 'qn_order'), key=lambda q: q.group)
+        return [{'group':group, 'questions':[q.question.summary() for q in qs]} for group, qs in groups]
     
     @property
     def question_groups(self):

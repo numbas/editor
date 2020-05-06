@@ -6,13 +6,37 @@ a {
     color: black;
 }
 
-#top-nav {
+#top-nav, #top-nav .nav {
     display: flex;
     flex-wrap: wrap;
     padding: 0 1em;
+    justify-content: flex-end;
 }
+
+#top-nav .dropdown-menu {
+  max-width: 90vw;
+  right: 0.5rem;
+}
+#top-nav .dropdown-menu > li > a {
+    white-space: initial;
+}
+
+@media screen and (max-width: 768px) {
+    #top-nav .nav {
+        flex-direction: column;
+    }
+}
+#top-nav .nav > li {
+    position: initial;
+}
+
 #top-nav > * ~ * {
     margin-left: 0.5em;
+}
+
+#notifications .dropdown-menu {
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 body > footer {

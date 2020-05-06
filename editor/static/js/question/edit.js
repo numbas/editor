@@ -1562,10 +1562,9 @@ $(document).ready(function() {
                         return treeToJME(tree);
                     case 'string':
                     case 'long string':
-                        var s = treeToJME({tok: wrapValue(val.value())});
-                        if(val.isTemplate()) {
-                            s = 'safe('+s+')';
-                        }
+                        var tok = wrapValue(val.value());
+                        tok.safe = val.isTemplate();
+                        var s = treeToJME({tok: tok});
                         return s;
                     case 'list of numbers':
                         var values = val.values().filter(function(n){return n!=''});
@@ -1574,7 +1573,12 @@ $(document).ready(function() {
                         }
                         return treeToJME(Numbas.jme.compile('['+values.join(',')+']'));
                     case 'list of strings':
-                        return treeToJME({tok: wrapValue(val.values())});
+                        var strings = val.values().map(function(s){ 
+                            var tok = wrapValue(s);
+                            tok.safe = false;
+                            return tok;
+                        });
+                        return treeToJME({tok: new Numbas.jme.types.TList(strings)});
                     case 'json':
                         JSON.parse(val.value() || '');
                         var json = treeToJME({tok: wrapValue(val.value())});

@@ -75,6 +75,26 @@ Variables
         The first variable name which is not used in the correct answer will trigger a warning. 
         You can use this option to prevent students incorrectly entering answers such as ``xy``, which is interpreted as a single variable, when they mean ``x*y``, the product of two variables.
 
+    Force single letter variable names?
+        If this is ticked, long variable names will be interpreted as implicit multiplication of variables with single-letter names. 
+        For example, ``xyz`` will be interpreted as ``x * y * z``.
+        Digits, primes and single-letter underscores are still valid in variable names: ``a'x12y_z`` will be interpreted as ``a' * x12 * y_z`.
+
+        This option is recommended when the expected answer for the part only uses single-letter variable names, so that students who don't always use the multiplication symbol aren't caught out.
+
+    Allow unknown function names?
+        If this is not ticked, the application of a function that is not defined in JME will be reinterpreted.
+        If the function name can be split into several shorter names, each of which is defined in JME, it will be: for example, ``lnabs(x)`` will be interpreted as ``ln(abs(x))``.
+        Function names are recognised from right to left. 
+        Any remaining characters are interpreted as implicit multiplication by a variable.
+        For example, ``xsin(x)`` will be interpreted as ``x * sin(x)``.
+
+        Use this option if you want to allow students to use implicit multiplication with function names, without any spaces.
+
+    Use implicit function composition?
+        If this is ticked, the multiplication symbol (or implicit multiplication) will be interpreted as function composition when the right-hand side is a function application with one argument, and the left-hand side is the name of a function defined in JME.
+        For example, ``ln * abs(x)`` and ``ln abs(x)`` will be interpreted as ``ln(abs(x))``.
+
 String restrictions
 -------------------
 

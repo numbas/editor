@@ -105,6 +105,9 @@
     <h4>Variables</h4>
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         {% booleanproperty 'checkVariableNames' 'Warn if student uses an unexpected variable name?' help_url='question/parts/mathematical-expression.html#term-warn-if-student-uses-an-unexpected-variable-name' %}
+        {% booleanproperty 'singleLetterVariables' 'Force single letter variable names?' help_url='question/parts/mathematical-expression.html#term-force-single-letter-variable-names' %}
+        {% booleanproperty 'allowUnknownFunctions' 'Allow unknown function names?' help_url='question/parts/mathematical-expression.html#term-allow-unknown-function-names' %}
+        {% booleanproperty 'implicitFunctionComposition' 'Use implicit function composition?' help_url='question/parts/mathematical-expression.html#term-use-implicit-function-composition' %}
     </form>
     </div>
 

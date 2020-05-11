@@ -122,7 +122,10 @@ part_types.models = [
                     message: ko.observable(''),
                     nameToCompare: ko.observable('')
                 },
-                checkVariableNames: ko.observable(false)
+                checkVariableNames: ko.observable(false),
+                singleLetterVariables: ko.observable(false),
+                allowUnknownFunctions: ko.observable(true),
+                implicitFunctionComposition: ko.observable(false)
             };
             model.checkingType = ko.observable(model.checkingTypes[0]);
             model.part = part;
@@ -245,6 +248,9 @@ part_types.models = [
             data.vsetRangePoints = this.vset.points();
             data.vsetRange = [this.vset.start(),this.vset.end()];
             data.checkVariableNames = this.checkVariableNames();
+            data.singleLetterVariables = this.singleLetterVariables();
+            data.allowUnknownFunctions = this.allowUnknownFunctions();
+            data.implicitFunctionComposition = this.implicitFunctionComposition();
             if(this.maxlength.length())
             {
                 data.maxlength = {
@@ -305,7 +311,7 @@ part_types.models = [
         },
 
         load: function(data) {
-            tryLoad(data,['answer','answerSimplification','checkVariableNames','showPreview'],this);
+            tryLoad(data,['answer','answerSimplification','checkVariableNames','singleLetterVariables','allowUnknownFunctions','implicitFunctionComposition','showPreview'],this);
             var checkingType = tryGetAttribute(data,'checkingType');
             for(var i=0;i<this.checkingTypes.length;i++) {
                 if(this.checkingTypes[i].name == checkingType)

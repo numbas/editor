@@ -158,7 +158,7 @@ class BaseUpdateView(generic.UpdateView):
             return forbidden(request)
         else:
             if not self.user.is_anonymous:
-                self.user.notifications.filter(target_object_id=self.object.pk).mark_all_as_read()
+                self.user.notifications.filter(target_object_id=self.object.editoritem.pk).mark_all_as_read()
                 item = self.object.editoritem
                 v, created = EditorItemViewed.objects.get_or_create(userprofile=self.user.userprofile,item=item)
                 if not created:

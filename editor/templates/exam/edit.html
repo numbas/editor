@@ -262,6 +262,15 @@
                 </div>
             </div>
 
+            <h4>Review mode</h4>
+            <p class="help-block">
+                The following settings only apply in review mode, once the exam is finished.
+            </p>
+
+            {% booleanproperty 'reviewshowscore' 'Show score in review mode?' help_url='exam/reference.html#term-show-score-in-review-mode' %}
+            {% booleanproperty 'reviewshowfeedback' 'Show part feedback messages in review mode?' help_url='exam/reference.html#term-show-part-feedback-messages-in-review-mode' %}
+            {% booleanproperty 'reviewshowexpectedanswer' 'Show expected answers in review mode?' help_url='exam/reference.html#term-show-part-expected-answers-in-review-mode' %}
+
             <h4>
                 Feedback messages
                 {% helplink 'exam/reference.html#term-feedback-messages' subject='feedback messages' %}

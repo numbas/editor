@@ -101,6 +101,10 @@ $(document).ready(function() {
         this.advicethreshold = ko.observable(0);
         this.showstudentname = ko.observable(true);
 
+        this.reviewshowscore = ko.observable(true);
+        this.reviewshowfeedback = ko.observable(true);
+        this.reviewshowexpectedanswer = ko.observable(true);
+
         this.intro = ko.observable('');
         this.feedbackMessages = ko.observableArray([]);
 
@@ -276,13 +280,16 @@ $(document).ready(function() {
                     timedwarning: this.timedwarning.toJSON()
                 },
                 feedback: {
-                  showactualmark: this.showactualmark(),
-                  showtotalmark: this.showtotalmark(),
-                  showanswerstate: this.showanswerstate(),
-                  allowrevealanswer: this.allowrevealanswer(),
-                  advicethreshold: this.advicethreshold(),
-                  intro: this.intro(),
-                  feedbackmessages: this.feedbackMessages().map(function(f){return f.toJSON()})
+                    showactualmark: this.showactualmark(),
+                    showtotalmark: this.showtotalmark(),
+                    showanswerstate: this.showanswerstate(),
+                    allowrevealanswer: this.allowrevealanswer(),
+                    advicethreshold: this.advicethreshold(),
+                    intro: this.intro(),
+                    reviewshowscore: this.reviewshowscore(),
+                    reviewshowfeedback: this.reviewshowfeedback(),
+                    reviewshowexpectedanswer: this.reviewshowexpectedanswer(),
+                    feedbackmessages: this.feedbackMessages().map(function(f){return f.toJSON()})
                 }
             };
         },
@@ -321,7 +328,7 @@ $(document).ready(function() {
 
             if('feedback' in content)
             {
-                tryLoad(content.feedback,['showactualmark','showtotalmark','showanswerstate','allowrevealanswer','advicethreshold','intro'],this);
+                tryLoad(content.feedback,['showactualmark','showtotalmark','showanswerstate','allowrevealanswer','advicethreshold','intro','reviewshowscore','reviewshowfeedback','reviewshowexpectedanswer'],this);
                 if('feedbackmessages' in content.feedback) {
                     this.feedbackMessages(content.feedback.feedbackmessages.map(function(d){var f = new FeedbackMessage(); f.load(d); return f}));
                 }

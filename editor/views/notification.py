@@ -7,4 +7,4 @@ class OpenNotification(generic.RedirectView):
         notification = get_object_or_404(Notification, pk=kwargs.get('pk'))
         notification.mark_as_read()
 
-        return notification.target.get_absolute_url()
+        return notification.target.get_absolute_url()+'#editing-history'

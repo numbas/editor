@@ -104,6 +104,7 @@ $(document).ready(function() {
         this.reviewshowscore = ko.observable(true);
         this.reviewshowfeedback = ko.observable(true);
         this.reviewshowexpectedanswer = ko.observable(true);
+        this.reviewshowadvice = ko.observable(true);
 
         this.intro = ko.observable('');
         this.feedbackMessages = ko.observableArray([]);
@@ -289,6 +290,7 @@ $(document).ready(function() {
                     reviewshowscore: this.reviewshowscore(),
                     reviewshowfeedback: this.reviewshowfeedback(),
                     reviewshowexpectedanswer: this.reviewshowexpectedanswer(),
+                    reviewshowadvice: this.reviewshowadvice(),
                     feedbackmessages: this.feedbackMessages().map(function(f){return f.toJSON()})
                 }
             };
@@ -328,7 +330,7 @@ $(document).ready(function() {
 
             if('feedback' in content)
             {
-                tryLoad(content.feedback,['showactualmark','showtotalmark','showanswerstate','allowrevealanswer','advicethreshold','intro','reviewshowscore','reviewshowfeedback','reviewshowexpectedanswer'],this);
+                tryLoad(content.feedback,['showactualmark','showtotalmark','showanswerstate','allowrevealanswer','advicethreshold','intro','reviewshowscore','reviewshowfeedback','reviewshowexpectedanswer','reviewshowadvice'],this);
                 if('feedbackmessages' in content.feedback) {
                     this.feedbackMessages(content.feedback.feedbackmessages.map(function(d){var f = new FeedbackMessage(); f.load(d); return f}));
                 }

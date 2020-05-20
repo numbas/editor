@@ -3,6 +3,7 @@ import re
 import os
 import traceback
 import urllib.parse
+import importlib
 
 def print_notice(s):
     print('\033[92m'+s+'\033[0m\n')
@@ -25,6 +26,12 @@ class Question(object):
         self.default = default
         self.validation = validation
 
+    def get_default(self, values):
+        if callable(self.default):
+            return self.default(values)
+        else:
+            return self.default
+
     def validate(self, value):
         return self.validation is None or self.validation(value)
 
@@ -33,7 +40,7 @@ class Command(object):
     questions = [
         Question('DEBUG', 'Is this installation for development?', False),
         Question('NUMBAS_PATH', 'Path of the Numbas compiler:','/srv/numbas/compiler/', validation=path_exists),
-        Question('DB_ENGINE', 'Which database engine are you using?', 'mysql'),
+        Question('DB_ENGINE', 'Which database engine are you using? (Common options: postgres, mysql, sqlite3)', lambda v: 'sqlite3' if v['DEBUG'] else 'mysql'),
         Question('STATIC_ROOT', 'Where are static files stored?','/srv/numbas/static/', validation=path_exists),
         Question('MEDIA_ROOT', 'Where are uploaded files stored?','/srv/numbas/media/', validation=path_exists),
         Question('PREVIEW_PATH', 'Where are preview exams stored?','/srv/numbas/previews/', validation=path_exists),
@@ -76,6 +83,9 @@ class Command(object):
         self.get_values()
 
         self.write_files()
+
+        import numbas.settings
+        importlib.reload(numbas.settings)
 
         os.environ.setdefault("DJANGO_SETTINGS_MODULE", "numbas.settings")
 
@@ -124,7 +134,13 @@ class Command(object):
 
         s, created = Site.objects.get_or_create(domain=self.domain)
         s.name = self.values['SITE_TITLE']
+        self.rvalues['SITE_ID'] = str(s.id)
         s.save()
+
+        self.sub_settings(confirm_overwrite=False)
+
+        import numbas.settings
+        importlib.reload(numbas.settings)
 
     def get_values(self):
         self.values = {}
@@ -147,10 +163,11 @@ class Command(object):
                 rep = rep[1:-1]
             return rep
 
+        self.values['SITE_ID'] = self.get_default_value(Question('SITE_ID','','1'))
         self.rvalues = {key: enrep(value) for key, value in self.values.items()}
 
-    def get_value(self, question):
-        default = question.default
+    def get_default_value(self, question):
+        default = question.get_default(self.values)
         if os.path.exists('numbas/settings.py'):
             import numbas.settings
             try:
@@ -167,30 +184,14 @@ class Command(object):
                         default = default[0] if len(default)==1 else ''
             except (AttributeError,KeyError):
                 pass
-        self.values[question.key] = self.get_input(question.question, default, question.validation)
+        return default
 
+    def get_value(self, question):
+        self.values[question.key] = self.get_input(question.question, self.get_default_value(question), question.validation)
 
     def write_files(self):
 
-        def set_database(m, rvalues):
-            template = self.sqlite_template if 'sqlite' in rvalues['DB_ENGINE'] else self.other_db_template
-            return template.format(**rvalues)
-
-        settings_subs = [
-            (r"^DEBUG = (True)", 'DEBUG'),
-            (r"'NUMBAS_PATH': '(.*?)',", 'NUMBAS_PATH'),
-            (r"^STATIC_ROOT = '(static/)'", 'STATIC_ROOT'),
-            (r"^MEDIA_ROOT = '(media/)'", 'MEDIA_ROOT'),
-            (r"'PREVIEW_PATH': '(.*?)'", 'PREVIEW_PATH'),
-            (r"'PREVIEW_URL': '(.*?)',", 'PREVIEW_URL'),
-            (r"'PYTHON_EXEC': '(.*?)',", 'PYTHON_EXEC'),
-            (r"^SITE_TITLE = '(Numbas)'", 'SITE_TITLE'),
-            (r"^DATABASES = {.*?^}", set_database),
-            (r"^SECRET_KEY = '()'", 'SECRET_KEY'),
-            (r"^ALLOW_REGISTRATION = (True)", 'ALLOW_REGISTRATION'),
-            (r"^DEFAULT_FROM_EMAIL = '(admin@numbas)'", 'DEFAULT_FROM_EMAIL'),
-        ]
-        self.sub_file('numbas/settings.py', settings_subs)
+        self.sub_settings()
 
         if not self.values['DEBUG']:
             self.sub_file('web/django.wsgi',[ (r"sys.path.append\('(.*?)'\)", 'PWD') ])
@@ -210,9 +211,31 @@ class Command(object):
                 print_notice(' * '+f)
             print('')
 
-    def sub_file(self, fname, subs):
-        if os.path.exists(fname):
-            overwrite = self.get_input("{} already exists. Overwrite it?".format(fname),False)
+    def sub_settings(self, confirm_overwrite=True):
+        def set_database(m, rvalues):
+            template = self.sqlite_template if 'sqlite' in rvalues['DB_ENGINE'] else self.other_db_template
+            return template.format(**rvalues)
+
+        settings_subs = [
+            (r"^DEBUG = (True)", 'DEBUG'),
+            (r"'NUMBAS_PATH': '(.*?)',", 'NUMBAS_PATH'),
+            (r"^STATIC_ROOT = '(static/)'", 'STATIC_ROOT'),
+            (r"^MEDIA_ROOT = '(media/)'", 'MEDIA_ROOT'),
+            (r"'PREVIEW_PATH': '(.*?)'", 'PREVIEW_PATH'),
+            (r"'PREVIEW_URL': '(.*?)',", 'PREVIEW_URL'),
+            (r"'PYTHON_EXEC': '(.*?)',", 'PYTHON_EXEC'),
+            (r"^SITE_TITLE = '(.*?)'", 'SITE_TITLE'),
+            (r"^DATABASES = {.*?^}", set_database),
+            (r"^SECRET_KEY = '(.*?)'", 'SECRET_KEY'),
+            (r"^ALLOW_REGISTRATION = (True|False)", 'ALLOW_REGISTRATION'),
+            (r"^DEFAULT_FROM_EMAIL = '(.*?)'", 'DEFAULT_FROM_EMAIL'),
+            (r"^SITE_ID = (\d+)", 'SITE_ID'),
+        ]
+        self.sub_file('numbas/settings.py', settings_subs, confirm_overwrite)
+
+    def sub_file(self, fname, subs, confirm_overwrite=True):
+        if os.path.exists(fname) and confirm_overwrite:
+            overwrite = self.get_input("{} already exists. Overwrite it?".format(fname),True)
             if not overwrite:
                 return
 
@@ -231,6 +254,7 @@ class Command(object):
 
         with open(fname,'w') as f:
             f.write(text)
+        print("Wrote",fname)
 
     def sub_fn(self, source, pattern, fn):
         m = pattern.search(source)

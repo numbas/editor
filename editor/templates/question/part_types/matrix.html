@@ -24,6 +24,15 @@
     {% property 'numRows' 'Number of rows' min=1 help_url='question/parts/matrixentry.html#term-number-of-rows' %}
     {% property 'numColumns' 'Number of columns' min=1 help_url='question/parts/matrixentry.html#term-number-of-columns' %}
     {% booleanproperty 'allowResize' 'Allow student to change size of matrix?' help_url='question/parts/matrixentry.html#term-allow-student-to-change-size-of-matrix' %}
+    <div data-bind="fadeVisible: allowResize">
+        {% property 'minRows' 'Minimum number of rows' help_url='question/parts/matrixentry.html#term-minimum-number-of-rows' zero_means='No limit' %}
+        {% property 'maxRows' 'Maximum number of rows' help_url='question/parts/matrixentry.html#term-maximum-number-of-rows' zero_means='No limit' %}
+        {% property 'minColumns' 'Minimum number of columns' help_url='question/parts/matrixentry.html#term-minimum-number-of-columns' zero_means='No limit' %}
+        {% property 'maxColumns' 'Maximum number of columns' help_url='question/parts/matrixentry.html#term-maximum-number-of-columns' zero_means='No limit' %}
+    </div>
+
+    <hr>
+
     {% property 'tolerance' 'Margin of error allowed in each cell' min=0 help_url='question/parts/matrixentry.html#term-margin-of-error-allowed-in-each-cell' %}
     {% booleanproperty 'markPerCell' 'Gain marks for each correct cell?' help_url='question/parts/matrixentry.html#term-gain-marks-for-each-cell' %}
 

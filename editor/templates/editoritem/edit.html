@@ -8,6 +8,8 @@
 {% load sstatic %}
 {% load json_filter %}
 {% load raw_include %}
+{% load stamp %}
+{% load humanize %}
 
 {% block title %}{{object.editoritem.name}} - {{block.super}}{% endblock title %}
 
@@ -329,7 +331,49 @@
                         </ul>
                     </div>
 
-                    <h3>History and Feedback</h3>
+                    {% if individual_stamps_in_project or individual_stamps_outside_project %}
+                    <h3>Feedback</h3>
+
+                    {% if individual_stamps_in_project %}
+                    <p>From users who are members of {% project_link object.editoritem.project %}:</p>
+                    <table class="individual-feedback">
+                        <tbody>
+                            {% for stamp in individual_stamps_in_project %}
+                            <tr>
+                                <td>
+                                    {% user_thumbnail stamp.user %}
+                                    {% user_link stamp.user %}
+                                </td>
+                                <td>said</td>
+                                <td>{% stamp stamp.status %}</td>
+                                <td>{{stamp.date|naturaltime}}</td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                    </table>
+                    {% endif %}
+
+                    {% if individual_stamps_outside_project %}
+                    <p>From users who are not members of this {% project_link object.editoritem.project %}:</p>
+                    <table class="individual-feedback">
+                        <tbody>
+                            {% for stamp in individual_stamps_outside_project %}
+                            <tr>
+                                <td>
+                                    {% user_thumbnail stamp.user %}
+                                    {% user_link stamp.user %}
+                                </td>
+                                <td>said</td>
+                                <td>{% stamp stamp.status %}</td>
+                                <td>{{stamp.date|naturaltime}}</td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                    </table>
+                    {% endif %}
+                    {% endif %}
+
+                    <h3>History</h3>
 
                     <div data-bind="visible: !commentwriter.writingComment() && !restorepointwriter.writingComment()">
                         <button class="btn btn-primary" data-bind="click: commentwriter.writingComment" type="button"><span class="glyphicon glyphicon-comment"></span> Write a comment</button>
@@ -415,7 +459,9 @@
                             <h3 class="panel-title">Publish</h3>
                         </div>
                         <div class="panel-body">
+                            {% block published_body %}
                             <p>This {{item_type}} has been published to the public {{item_type}} database.</p>
+                            {% endblock %}
                             <form method="POST" action="{% url 'item_unpublish' object.editoritem.pk %}">
                                 <button class="btn btn-danger" type="submit">Unpublish</button>
                                 {% csrf_token %}

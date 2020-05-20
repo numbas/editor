@@ -235,6 +235,29 @@ Feedback
 
         You could use these messages to suggest topics for the student to revise, direct them to support resources, or detail the consequences of failing the test.
 
+Review mode
+-----------
+
+The following settings apply to review mode: when a student has finished the exam, and goes back to review their attempt.
+
+.. glossary::
+    Show score in review mode?
+        If ticked, then in review mode (after the exam has finished) the student will be shown their score for each part, each question and the whole exam.
+        If not ticked, the student will not be shown their score, or icons related to the score, in review mode.
+        Ticking this does not override the :term:`Show score feedback icon?` setting for individual parts.
+
+    Show part feedback messages in review mode?
+        If ticked, then in review mode the student will be shown feedback messages for each part.
+
+    Show expected answers in review mode?
+        If ticked, then in review mode the expected answer for each part will be shown next to the student's answer input.
+        Ticking this does not override the :term:`Show correct answer on reveal?` setting for individual parts.
+
+    Show question advice in review mode?
+        If ticked, then the advice section will be displayed under each question in review mode.
+        If not ticked, the advice will never be shown.
+
+
 Events
 ======
 

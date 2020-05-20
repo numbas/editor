@@ -181,3 +181,16 @@ class CopyView(generic.FormView, generic.edit.ModelFormMixin):
         new_obj = obj.copy(author=self.request.user, name=form.cleaned_data.get('name'))
 
         return redirect(new_obj.get_absolute_url())
+
+class SourceView(generic.DetailView):
+    model = CustomPartType
+
+    def get(self, request, *args, **kwargs):
+        cpt = self.get_object()
+        if not cpt.can_be_viewed_by(request.user):
+            return http.HttpResponseForbidden
+        source = cpt.as_source()
+        response = http.HttpResponse(json.dumps(source,indent=4), 'text/plain')
+        response['Content-Disposition'] = 'attachment; filename={}.npt'.format(cpt.filename)
+        response['Cache-Control'] = 'max-age=0,no-cache,no-store'
+        return response

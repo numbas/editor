@@ -95,6 +95,9 @@ STATUS_CHOICES = [
     ('test again', 'a'),
 ]
 
+def make_url(url):
+    return urlunparse(('http',Site.objects.first().domain,url,'','',''))
+
 class Command(BaseCommand):
     help = 'Test a question headlessly'
 
@@ -107,23 +110,24 @@ class Command(BaseCommand):
         self.start_time = datetime.now()
 
     def add_arguments(self, parser):
-        parser.add_argument('--question',dest='question_id',nargs='+', type=int)
-        parser.add_argument('--project')
-        parser.add_argument('--all', action='store_true')
-        parser.add_argument('--exam',dest='exam_ids',nargs='+', type=int)
+        parser.add_argument('--question',dest='question_id',nargs='+', type=int, help="The IDs of one or more questions to test")
+        parser.add_argument('--project', help="The ID of a project to test")
+        parser.add_argument('--all', action='store_true', help="Test all items in the database")
+        parser.add_argument('--exam',dest='exam_ids',nargs='+', type=int, help="The IDs of one or more exams to test")
 
-        parser.add_argument('--repeat',type=int,default=1)
+        parser.add_argument('--repeat',type=int,default=1, help="The number of times to test each question")
 
-        parser.add_argument('--stamp',action='store_true')
+        parser.add_argument('--stamp',action='store_true', help="Set a feedback stamp on questions with errors")
         group = parser.add_argument_group('stamp_status')
-        group.add_argument('--broken',dest='stamp_status',action='store_const',const='broken')
-        group.add_argument('--dontuse',dest='stamp_status',action='store_const',const='dontuse')
-        group.add_argument('--problem',dest='stamp_status',action='store_const',const='problem')
-        group.add_argument('--pleasetest',dest='stamp_status',action='store_const',const='pleasetest')
+        group.add_argument('--broken',dest='stamp_status',action='store_const',const='broken', help="Mark errors as \"doesn't work\"")
+        group.add_argument('--dontuse',dest='stamp_status',action='store_const',const='dontuse', help="Mark errors as \"should not be used\"")
+        group.add_argument('--problem',dest='stamp_status',action='store_const',const='problem', help="Mark errors as \"has some problems\"")
+        group.add_argument('--pleasetest',dest='stamp_status',action='store_const',const='pleasetest', help="Mark errors as \"needs to be tested\"")
 
-        parser.add_argument('--only-ready', action='store_true')
-        parser.add_argument('--show-successes', action='store_true', dest='show_successes')
-        parser.add_argument('--try-bad-extensions', dest='ignore_bad_extensions', action='store_false')
+        parser.add_argument('--only-ready', action='store_true', help="Only test questions labelled \"ready to use\"")
+        parser.add_argument('--show-successes', action='store_true', dest='show_successes', help="Print IDs of questions that run without errors")
+        parser.add_argument('--try-bad-extensions', dest='ignore_bad_extensions', action='store_false', help="Run questions using extensions which are marked not to run headlessly")
+        parser.add_argument('--list-ignored', dest='list_ignored', action='store_true', help="List questions ignored because of extensions")
 
     def handle(self, *args, **options):
         self.options = options
@@ -173,6 +177,7 @@ class Command(BaseCommand):
         if self.options['only_ready']:
             questions = questions.filter(editoritem__current_stamp__status='ok')
         if self.options['ignore_bad_extensions']:
+            ignored_questions = questions.filter(extensions__runs_headless=False)
             questions = questions.exclude(extensions__runs_headless=False)
         print("Testing {} question{}".format(questions.count(),'s' if questions.count()!=1 else ''))
         for q in questions:
@@ -180,6 +185,11 @@ class Command(BaseCommand):
             if self.questions_tested % 50 == 0:
                 sys.stdout.write(' {} '.format(self.questions_tested))
             result = self.test_question(q)
+
+        if ignored_questions.exists() and self.options['list_ignored']:
+            print("Questions ignored because of extensions:")
+            for q in ignored_questions:
+                print(make_url(q.get_absolute_url()))
 
     def test_question(self,q):
         #print("Testing question {}: \"{}\"".format(q.pk,q.editoritem.name))
@@ -200,7 +210,7 @@ class Command(BaseCommand):
                 sys.stdout.write('\n\n')
                 sys.stdout.flush()
             self.last_success = False
-            url = urlunparse(('http',Site.objects.first().domain,q.get_absolute_url(),'','',''))
+            url = make_url(q.get_absolute_url())
             error_template = """\x1b[31m✖ Question {pk} "{name}" failed: {message}
   Error codes: {originalMessages}\n
   Edit this question at {url}\x1b[0m

@@ -1,0 +1,26 @@
+{% extends "timeline/item.html" %}
+{% load sanitizer %}
+
+{% block timelineitem_class %}alert alert-info tip{% endblock %}
+
+{% block thumbnail %}
+    <span class="glyphicon glyphicon-hand-right" style="font-size: 36px"></span>
+{% endblock thumbnail %}
+
+{% block heading %}<strong>Tip:</strong> {{tip.title|strip_html|safe}}{% endblock %}
+
+{% block content %}
+{{tip.text|strip_html|safe}}
+
+<div class="links">
+    {% if tip.link %}
+    <a class="btn btn-primary" href="{{tip.link}}"><span class="glyphicon glyphicon-book"></span> {{tip.link_text}}</a>
+    {% endif %}
+
+    {% if tip.editoritem %}
+    <a class="btn btn-primary" href="{{tip.editoritem.get_absolute_url}}"><span class="glyphicon glyphicon-check"></span> See an example {{tip.editoritem.item_type}}</a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block hide_item %}{% endblock %}

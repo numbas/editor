@@ -454,9 +454,10 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
      * @param {Numbas.jme.tree} tree
      * @param {Numbas.jme.Scope} scope
      * @param {Boolean} [allowUnbound=false] - allow unbound variables to remain in the returned tree
+     * @param {Boolean} [unwrapExpressions=false] - unwrap TExpression tokens?
      * @returns {Numbas.jme.tree}
      */
-    substituteTree: function(tree,scope,allowUnbound)
+    substituteTree: function(tree,scope,allowUnbound,unwrapExpressions)
     {
         if(!tree)
             return null;
@@ -479,6 +480,8 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
                 {
                     if(v.tok) {
                         return v;
+                    } else if(unwrapExpressions && v.type=='expression') {
+                        return v.tree;
                     } else {
                         return {tok: v};
                     }
@@ -490,7 +493,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
         } else if((tree.tok.type=='function' || tree.tok.type=='op') && tree.tok.name in substituteTreeOps) {
             tree = {tok: tree.tok,
                     args: tree.args.slice()};
-            substituteTreeOps[tree.tok.name](tree,scope,allowUnbound);
+            substituteTreeOps[tree.tok.name](tree,scope,allowUnbound,unwrapExpressions);
             return tree;
         } else {
             tree = {
@@ -498,7 +501,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
                 args: tree.args.slice()
             };
             for(var i=0;i<tree.args.length;i++) {
-                tree.args[i] = jme.substituteTree(tree.args[i],scope,allowUnbound);
+                tree.args[i] = jme.substituteTree(tree.args[i],scope,allowUnbound,unwrapExpressions);
             }
             return tree;
         }
@@ -1636,6 +1639,9 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
             if(this.output.length>l) {
                 n++;
             }
+            if(this.output.length==n-1) {
+                n -= 1;
+            }
             switch(this.listmode.pop()) {
             case 'new':
                 this.addoutput(new TList(n))
@@ -2338,6 +2344,166 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
         default:
             return tok;
         }
+    },
+
+    /** Options for {@link Numbas.jme.Scope.expandJuxtapositions}
+     * @typedef {Object} Numbas.jme.expand_juxtapositions_options
+     * @property {Boolean} singleLetterVariables - Enforce single-letter variables names: a name token like `xy` is rewritten to `x*y`.
+     * @property {Boolean} noUnknownFunctions - Rewrite applications of functions not defined in this scope to products, e.g. `x(y)` is rewritten to `x*y`.
+     * @property {Boolean} implicitFunctionComposition - If function names are juxtaposed, either as a single token or as (implicit) multiplication, rewrite as composition: e.g. `lnabs(x)` and `ln abs(x)` are both rewritten to `ln(abs(x))`.
+     */
+    /** Expand juxtapositions in variable and function names for implicit multiplication or composition
+     * @param {Numbas.jme.tree} tree
+     * @param {Numbas.jme.expand_juxtapositions_options} options
+     * @returns Numbas.jme.tree
+     */
+    expandJuxtapositions: function(tree, options) {
+        var scope = this;
+        var default_options = {
+            singleLetterVariables: true,    // `xy = x*y`
+            noUnknownFunctions: true,    // `x(y) = x*y` when `x` is not the name of a function defined in this scope
+            implicitFunctionComposition: true  // `lnabs(x) = ln(abs(x))`, only applied when `noUnknownFunctions` is true, and `ln abs(x) = ln(abs(x))`
+        }
+        options = options || default_options;
+
+        if(!(options.singleLetterVariables || options.noUnknownFunctions || options.implicitFunctionComposition)) {
+            return tree;
+        }
+
+        function tfunc(name) {
+            return new TFunc(scope.parser.funcSynonym(name));
+        }
+
+        function get_function_names() {
+            // grab names of defined functions from the right
+            var defined_names = {};
+            var s = scope;
+            while(s) {
+                for(var name in s.functions) {
+                    defined_names[name] = true;
+                }
+                for(var name in jme.funcSynonyms) {
+                    defined_names[name] = true;
+                }
+                if(s.parser.funcSynonyms) {
+                    for(var name in s.parser.funcSynonyms) {
+                        defined_names[name] = true;
+                    }
+                }
+                s = s.parent
+            }
+            return defined_names;
+        }
+
+        var tok = tree.tok;
+
+        if(options.implicitFunctionComposition && jme.isOp(tok,'*') && tree.args[1].tok.type=='function') {
+            var search = true;
+            var defined_names = get_function_names();
+            while(search) {
+                if(!jme.isOp(tree.tok,'*')) {
+                    break;
+                }
+                search = false;
+                var c = tree.args[0];
+                while(jme.isOp(c.tok,'*')) {
+                    c = c.args[1];
+                }
+                if(c.tok.type=='name' && defined_names[c.tok.name]) {
+                    search = true;
+                    var composed_fn = {tok: tfunc(c.tok.name), args: [tree.args[1]]};
+                    composed_fn.tok.vars = 1;
+                    if(c==tree.args[0]) {
+                        tree = composed_fn;
+                    } else {
+                        function remove_multiplicand(t) {
+                            if(t.args[1]==c) {
+                                return t.args[0];
+                            } else {
+                                return {tok: t.tok, args: [t.args[0], remove_multiplicand(t.args[1])]};
+                            }
+                        }
+                        tree = {tok: tree.tok, args: [remove_multiplicand(tree.args[0]),composed_fn]};
+                    }
+                }
+            }
+
+        }
+
+        if(tree.args) {
+            tree.args = tree.args.map(function(arg){ return scope.expandJuxtapositions(arg,options); });
+        }
+
+        switch(tok.type) {
+            case 'name':
+                if(options.singleLetterVariables && tok.name.length>1) {
+                    var bits = [];
+                    var name = tok.name;
+                    var re_name = /^[a-zA-Z][0-9]*(_([a-zA-Z]|[0-9]+|$))?'*/;
+                    var m;
+                    while(name.length && (m = re_name.exec(name))) {
+                        bits.push(m[0]);
+                        name = name.slice(m[0].length);
+                    }
+                    var tree = {tok: new TName(bits[0])};
+                    for(var i=1;i<bits.length;i++) {
+                        tree = {tok: this.parser.op('*'), args: [tree,{tok: new TName(bits[i])}]};
+                    }
+                    return tree;
+                }
+                break;
+            case 'function':
+                if(options.noUnknownFunctions) {
+                    var defined_names = get_function_names();
+                    var name = tok.name;
+                    var breaks = [name.length];
+                    for(var i=name.length-1;i>=0;i--) {
+                        for(var j=0;j<breaks.length;j++) {
+                            var sub = name.slice(i,breaks[j]);
+                            if(defined_names[sub]) {
+                                breaks = breaks.slice(0,j+1);
+                                breaks.push(i);
+                            }
+                        }
+                    }
+                    var bits = [];
+                    var remainder;
+                    if(options.implicitFunctionComposition) {
+                        breaks.reverse();
+                        for(var i=0;i<breaks.length-1;i++) {
+                            bits.push(name.slice(breaks[i],breaks[i+1]));
+                        }
+                        remainder = name.slice(0,breaks[0]);
+                    } else {
+                        if(breaks.length>1) {
+                            bits.push(name.slice(breaks[1],breaks[0]));
+                        }
+                        remainder = name.slice(0,breaks[1]);
+                    }
+                    if(!bits.length) {
+                        if(tree.args.length!=1) {
+                            return tree;
+                        } else {
+                            return {tok: this.parser.op('*'), args: [this.expandJuxtapositions({tok: new TName(name)},options), tree.args[0]]};
+                        }
+                    }
+                    var args = tree.args;
+                    for(var i=bits.length-1;i>=0;i--) {
+                        tree = {tok: tfunc(bits[i]), args: args};
+                        tree.tok.vars = 1;
+                        args = [tree];
+                    }
+
+                    // then interpret anything remaining on the left as multiplication by variables
+                    if(remainder.length) {
+                        var left = this.expandJuxtapositions({tok: new TName(remainder)},options);
+                        tree = {tok: this.parser.op('*'), args: [left,tree]};
+                    }
+                    return tree;
+                }
+                break;
+        }
+        return tree;
     }
 };
 /** @typedef {Object} Numbas.jme.token
@@ -3267,7 +3433,7 @@ var findvars = jme.findvars = function(tree,boundvars,scope)
             {
                 var plain = bits[i];
                 var sbits = util.splitbrackets(plain,'{','}','(',')');
-                for(var k=1;k<sbits.length-1;k+=2)
+                for(var k=1;k<=sbits.length-1;k+=2)
                 {
                     var tree2 = jme.compile(sbits[k],scope,true);
                     out = out.merge(findvars(tree2,boundvars));
@@ -4776,6 +4942,22 @@ newBuiltin('parsedecimal_or_fraction', [TString], TDecimal, function(s,style) {r
 newBuiltin('parsedecimal_or_fraction', [TString,TString], TDecimal, function(s,style) {return util.parseDecimal(s,true,style,true);});
 newBuiltin('parsedecimal_or_fraction', [TString,sig.listof(sig.type('string'))], TDecimal, function(s,styles) {return util.parseDecimal(s,true,styles,true);}, {unwrapValues: true});
 
+newBuiltin('scientificnumberlatex', [TDecimal], TString, null, {
+    evaluate: function(args,scope) {
+        var n = args[0].value;
+        var bits = math.parseScientific(n.re.toExponential());
+        var s = new TString(math.niceDecimal(bits.significand)+' \\times 10^{'+bits.exponent+'}');
+        s.latex = true;
+        return s;
+    }
+});
+newBuiltin('scientificnumberhtml', [TDecimal], THTML, function(n) {
+    var bits = math.parseScientific(n.re.toExponential());
+    var s = document.createElement('span');
+    s.innerHTML = math.niceDecimal(bits.significand)+' × 10<sup>'+bits.exponent+'</sup>';
+    return s;
+});
+
 newBuiltin('togivenprecision', [TString,TString,TNum,TBool], TBool, math.toGivenPrecision);
 newBuiltin('withintolerance',[TNum,TNum,TNum],TBool, math.withinTolerance);
 newBuiltin('countdp',[TString],TNum, function(s) { return math.countDP(util.cleanNumber(s)); });
@@ -4846,13 +5028,7 @@ newBuiltin('string',[TRational], TString, function(a) { return a.toString(); });
 
 //Decimal arithmetic
 newBuiltin('string',[TDecimal], TString, function(a) { return a.toString(); });
-newBuiltin('decimal',[TNum],TDecimal,function(x){
-    if(x.complex) {
-        return new math.ComplexDecimal(new Decimal(x.re), new Decimal(x.im));
-    } else {
-        return new Decimal(x);
-    }
-});
+newBuiltin('decimal',[TNum],TDecimal,math.numberToDecimal);
 newBuiltin('decimal',[TString],TDecimal,function(x){return new Decimal(x)});
 newBuiltin('+u', [TDecimal], TDecimal, function(a){return a;});
 newBuiltin('-u', [TDecimal], TDecimal, function(a){ return a.negated(); });
@@ -5856,6 +6032,13 @@ newBuiltin('max_height',[TNum,THTML],THTML,function(w,h) {
 newBuiltin('parse',[TString],TExpression,function(str) {
     return jme.compile(str);
 });
+newBuiltin('expand_juxtapositions',[TExpression,sig.optional(sig.type('dict'))],TExpression,null, {
+    evaluate: function(args,scope) {
+        var tree = args[0].tree;
+        var options = args[1] ? jme.unwrapValue(args[1]) : undefined;
+        return new TExpression(scope.expandJuxtapositions(tree,options));
+    }
+});
 newBuiltin('expression',[TString],TExpression,function(str) {
     return jme.compile(str);
 });
@@ -6164,7 +6347,7 @@ newBuiltin('substitute',[TDict,TExpression],TExpression,null,{
         }
         var expr = args[1].tree;
         scope = new Scope({variables: substitutions});
-        var nexpr = jme.substituteTree(expr,scope,true);
+        var nexpr = jme.substituteTree(expr,scope,true,true);
         return new TExpression(nexpr);
     }
 });
@@ -6486,6 +6669,9 @@ var texOps = jme.display.texOps = {
                     use_symbol = false;
                 // multiplication of two names, at least one of which has more than one letter
                 } else if(right.tok.type=='name' && left.tok.type=='name' && Math.max(left.tok.name.length,right.tok.name.length)>1) {
+                    use_symbol = true;
+                // multiplication of a name by something in brackets
+                } else if(jme.isType(left.tok,'name') && texifyWouldBracketOpArg(thing,i)) {
                     use_symbol = true;
                 // anything times number, or (-anything), or an op with lower precedence than times, with leftmost arg a number
                 } else if ( jme.isType(right.tok,'number')
@@ -7325,6 +7511,16 @@ var texify = Numbas.jme.display.texify = function(thing,settings)
     }
     if(thing.args)
     {
+        thing = {
+            tok: thing.tok,
+            args: thing.args.map(function(arg) {
+                if(arg.tok.type=='expression') {
+                    return arg.tree;
+                } else {
+                    return arg;
+                }
+            })
+        }
         var texArgs = [];
         for(var i=0; i<thing.args.length; i++ )
         {
@@ -7706,7 +7902,7 @@ var typeToJME = Numbas.jme.display.typeToJME = {
                 if(op in opBrackets) {
                     bracketArg = opBrackets[op][i][arg_op]==true || (tok.prefix && opBrackets[op][i][arg_op]===undefined);
                 } else {
-                    bracketArg = tok.prefix==true;
+                    bracketArg = tok.prefix==true || tok.postfix==true;
                 }
             }
             if(bracketArg) {
@@ -7854,8 +8050,7 @@ var opBrackets = Numbas.jme.display.opBrackets = {
     'not': [{'and':true,'or':true,'xor':true}],
     'or': [{'xor':true},{'xor':true}],
     'xor':[{},{}],
-    '=': [{},{}],
-    'fact': [{'+': true, '-': true}]
+    '=': [{},{}]
 };
 
 /** Align a series of blocks of text under a header line, connected to the header by ASCII line characters.
@@ -10202,6 +10397,9 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         if(path===undefined)
             path=[];
         computeFn = computeFn || jme.variables.computeVariable;
+        if(name=='') {
+            throw(new Numbas.Error('jme.variables.empty name'));
+        }
         if(path.contains(name))
         {
             throw(new Numbas.Error('jme.variables.circular reference',{name:name,path:path}));
@@ -10477,6 +10675,8 @@ jme.variables = /** @lends Numbas.jme.variables */ {
 var DOMcontentsubber = Numbas.jme.variables.DOMcontentsubber = function(scope) {
     this.scope = scope;
     this.re_end = undefined;
+
+    this.IGNORE_TAGS = ['iframe','script','style'];
 }
 DOMcontentsubber.prototype = {
     /** Substitute JME values into the given element and any children
@@ -10494,14 +10694,16 @@ DOMcontentsubber.prototype = {
                 return;
         }
     },
+
     sub_element: function(element) {
         var subber = this;
         var scope = this.scope;
-        if($.nodeName(element,'iframe')) {
+        var tagName = element.tagName.toLowerCase();
+        if(this.IGNORE_TAGS.indexOf(tagName)>=0) {
             return element;
         } else if(element.hasAttribute('nosubvars')) {
             return element;
-        } else if($.nodeName(element,'img')) {
+        } else if(tagName=='img') {
             if(element.getAttribute('src').match(/.svg$/i)) {
                 element.parentElement
                 var object = element.ownerDocument.createElement('object');
@@ -10517,7 +10719,7 @@ DOMcontentsubber.prototype = {
                 subber.sub_element(object);
                 return;
             }
-        } else if($.nodeName(element,'object')) {
+        } else if(tagName=='object') {
             /** Substitute content into the object's root element
              */
             function go() {
@@ -10534,7 +10736,9 @@ DOMcontentsubber.prototype = {
             var condition = element.getAttribute('data-jme-visible');
             var result = scope.evaluate(condition);
             if(!(result.type=='boolean' && result.value==true)) {
-                $(element).remove();
+                if(element.parentElement) {
+                    element.parentElement.removeChild(element);
+                }
                 return;
             }
         }
@@ -10598,13 +10802,14 @@ DOMcontentsubber.prototype = {
     findvars_element: function(element) {
         var subber = this;
         var scope = this.scope;
-        if($.nodeName(element,'iframe')) {
+        var tagName = element.tagName.toLowerCase();
+        if(this.IGNORE_TAGS.indexOf(tagName)>=0) {
             return [];
         } else if(element.hasAttribute('nosubvars')) {
             return [];
-        } else if($.nodeName(element,'img')) {
+        } else if(tagName=='img') {
             return [];
-        } else if($.nodeName(element,'object')) {
+        } else if(tagName=='object') {
             if(element.contentDocument && element.contentDocument.rootElement) {
                 return this.findvars_element(element.contentDocument.rootElement);
             }
@@ -12087,7 +12292,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
                     part.giveWarning(state.message);
                     break;
                 case FeedbackOps.FEEDBACK:
-                    part.markingComment(state.message);
+                    part.markingComment(state.message,state.reason);
                     break;
                 case FeedbackOps.END:
                     if(lifts.length) {
@@ -12137,7 +12342,6 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
             }
             var ot = t;
             t += change;
-            t = Math.max(0,t);
             change = t-ot;
             if(action.message===undefined) {
                 action.message = '';
@@ -12177,7 +12381,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
             question_definitions: jme.wrapValue(this.question ? this.question.local_definitions : {}),
             studentAnswer: studentAnswer,
             settings: jme.wrapValue(this.settings),
-            marks: new jme.types.TNum(this.marks),
+            marks: new jme.types.TNum(this.availableMarks()),
             partType: new jme.types.TString(this.type),
             gaps: jme.wrapValue(this.gaps.map(function(g){return g.marking_parameters(g.rawStudentAnswerAsJME())})),
             steps: jme.wrapValue(this.steps.map(function(s){return s.marking_parameters(s.rawStudentAnswerAsJME())}))
@@ -12275,11 +12479,12 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
     /** Add a comment to the marking feedback
      * @param {String} message
      */
-    markingComment: function(message)
+    markingComment: function(message,reason)
     {
         this.markingFeedback.push({
             op: 'feedback',
-            message: message
+            message: message,
+            reason: reason
         });
     },
     /** Show the steps, as a result of the student asking to show them.
@@ -12734,6 +12939,11 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             q.name = q.customName.trim();
         }
 
+        var statementNode = q.xml.selectSingleNode('statement/content/span');
+        q.statement = statementNode.innerHTML;
+        var adviceNode = q.xml.selectSingleNode('advice/content/span');
+        q.advice = adviceNode.innerHTML;
+
         var preambleNodes = q.xml.selectNodes('preambles/preamble');
         for(var i = 0; i<preambleNodes.length; i++) {
             var lang = preambleNodes[i].getAttribute('language');
@@ -12876,7 +13086,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
         var q = this;
         var tryLoad = Numbas.json.tryLoad;
         var tryGet = Numbas.json.tryGet;
-        tryLoad(data,'name',q);
+        tryLoad(data,['name','statement','advice'],q);
         var preambles = tryGet(data,'preamble');
         if(preambles) {
             Object.keys(preambles).forEach(function(key) {
@@ -12910,7 +13120,13 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             Object.keys(variables).map(function(name) {
                 var vd = variables[name];
                 var definition = vd.definition+'';
-                if(definition=='') {
+                if(name.trim()=='') {
+                    if(definition=='') {
+                        return;
+                    }
+                    throw(new Numbas.Error('jme.variables.empty name'));
+                }
+                if(definition.trim()=='') {
                     throw(new Numbas.Error('jme.variables.empty definition',{name:name}));
                 }
                 try {
@@ -13157,10 +13373,18 @@ Question.prototype = /** @lends Numbas.Question.prototype */
      * @type {Number}
      */
     number: -1,
-    /** Name - shouldn't be shown to students
+    /** The question's name
      * @type {String}
      */
     name: '',
+    /** The question's statement text
+     * @type {String}
+     */
+    statement: '',
+    /** The question's advice text
+     * @type {String}
+     */
+    advice: '',
     /** The JME scope for this question. Contains variables, functions and rulesets defined in this question
      * @type {Numbas.jme.Scope}
      */
@@ -13269,6 +13493,9 @@ Question.prototype = /** @lends Numbas.Question.prototype */
      */
     getAdvice: function(dontStore)
     {
+        if(!Numbas.is_instructor && this.exam && !this.exam.settings.reviewShowAdvice) {
+            return;
+        }
         this.adviceDisplayed = true;
         this.display && this.display.showAdvice(true);
         if(this.store && !dontStore) {
@@ -13680,6 +13907,13 @@ SignalBox.prototype = { /** @lends Numbas.schedule.SignalBox.prototype */
         callback.resolve();
     }
 }
+
+/** Signals produced by the Numbas runtime.
+ * @type {Numbas.schedule.SignalBox}
+ * @memberof Numbas
+ */
+Numbas.signals = new Numbas.schedule.SignalBox();
+
 });
 
 Numbas.queueScript('marking',['util', 'jme','localisation','jme-variables','math'],function() {
@@ -13783,7 +14017,7 @@ Numbas.queueScript('marking',['util', 'jme','localisation','jme-variables','math
      * @see Numbas.marking.StatefulScope
      * @returns {Numbas.jme.funcObj}
      */
-    function state_fn(name, args, outtype, fn) {
+    var state_fn = marking.state_fn = function(name, args, outtype, fn) {
         return new jme.funcObj(name,args,outtype,null,{
             evaluate: function(args, scope) {
                 if(jme.lazyOps.contains(name)) {
@@ -13939,7 +14173,7 @@ Numbas.queueScript('marking',['util', 'jme','localisation','jme-variables','math
         part.setStudentAnswer();
         return jme.wrapValue({
             credit: part.credit,
-            marks: part.marks,
+            marks: part.availableMarks(),
             feedback: part.finalised_result.states,
             answered: part.answered
         });
@@ -14010,7 +14244,7 @@ Numbas.queueScript('marking',['util', 'jme','localisation','jme-variables','math
             }
             var result = marking.finalise_state(part_result.states.mark);
             return jme.wrapValue({
-                marks: part.marks,
+                marks: part.availableMarks(),
                 credit: result.credit,
                 feedback: result.states,
                 valid: result.valid,
@@ -14550,14 +14784,14 @@ var math = Numbas.math = /** @lends Numbas.math */ {
      * @param {Number} b
      * @returns {Number}
      */
-    pow: function(a,b)
-    {
-        if(a.complex && Numbas.util.isInt(b) && Math.abs(b)<100)
-        {
-            if(b<0)
+    pow: function(a,b) {
+        if(a.complex && Numbas.util.isInt(b) && Math.abs(b)<100) {
+            if(b<0) {
                 return math.div(1,math.pow(a,-b));
-            if(b==0)
+            }
+            if(b==0) {
                 return 1;
+            }
             var coeffs = math.binomialCoefficients(b);
             var re = 0;
             var im = 0;
@@ -14567,12 +14801,12 @@ var math = Numbas.math = /** @lends Numbas.math */ {
                 im += coeffs[i+1]*Math.pow(a.re,b-i-1)*Math.pow(a.im,i+1)*sign;
                 sign = -sign;
             }
-            if(b%2==0)
+            if(b%2==0) {
                 re += Math.pow(a.im,b)*sign;
+            }
             return math.complex(re,im);
         }
-        if(a.complex || b.complex || (a<0 && math.fract(b)!=0))
-        {
+        if(a.complex || b.complex || (a<0 && math.fract(b)!=0)) {
             if(!a.complex)
                 a = {re: a, im: 0, complex: true};
             if(!b.complex)
@@ -14582,9 +14816,9 @@ var math = Numbas.math = /** @lends Numbas.math */ {
             var mag = Math.pow(ss,b.re/2) * Math.exp(-b.im*arg1);
             var arg = b.re*arg1 + (b.im * Math.log(ss))/2;
             return math.complex(mag*Math.cos(arg), mag*Math.sin(arg));
-        }
-        else
-        {
+        } else if(a==Math.E) {
+            return Math.exp(b);
+        } else {
             return Math.pow(a,b);
         }
     },
@@ -15133,6 +15367,25 @@ var math = Numbas.math = /** @lends Numbas.math */ {
             return out;
         }
     },
+
+    /** Convert a JS Number to a Decimal
+     * @param {Number} n
+     * @returns {Decimal}
+     */
+    numberToDecimal: function(x) {
+        if(x.complex) {
+            return new math.ComplexDecimal(math.numberToDecimal(x.re), math.numberToDecimal(x.im));
+        } else {
+            if(x==Math.PI) {
+                return Decimal.acos(-1);
+            } else if(x==Math.E) {
+                return Decimal(1).exp();
+            } else {
+                return new Decimal(x);
+            }
+        }
+    },
+
     /** Get a random number in range `[0..n-1]`
      * @param {Number} n
      * @returns {Number}
@@ -24375,7 +24628,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             }
         },
         template: '\
-            <input type="text" data-bind="textInput: input, autosize: true, disable: Knockout.unwrap(disable) || Knockout.unwrap(part.revealed), event: events, attr: {title: title}">\
+            <input type="text" autocapitalize="off" inputmode="text" spellcheck="false" data-bind="textInput: input, autosize: true, disable: Knockout.unwrap(disable) || Knockout.unwrap(part.revealed), event: events, attr: {title: title}">\
         '
     });
     Knockout.components.register('answer-widget-number', {
@@ -24441,7 +24694,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             }
         },
         template: '\
-            <input type="text" data-bind="textInput: input, autosize: true, disable: Knockout.unwrap(disable) || Knockout.unwrap(part.revealed), event: events, attr: {title: title}">\
+            <input type="text" autocapitalize="off" inputmode="text" spellcheck="false" data-bind="textInput: input, autosize: true, disable: Knockout.unwrap(disable) || Knockout.unwrap(part.revealed), event: events, attr: {title: title}">\
         '
     });
     Knockout.components.register('answer-widget-jme', {
@@ -24533,7 +24786,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             }
         },
         template: '\
-            <input type="text" data-bind="event: events, textInput: input, autosize: true, disable: Knockout.unwrap(disable) || Knockout.unwrap(part.revealed), attr: {title: title}">\
+            <input type="text" autocapitalize="off" inputmode="text" spellcheck="false" data-bind="event: events, textInput: input, autosize: true, disable: Knockout.unwrap(disable) || Knockout.unwrap(part.revealed), attr: {title: title}">\
             <span class="jme-preview" aria-live="polite" data-bind="visible: showPreview && latex(), maths: \'\\\\displaystyle{{\'+latex()+\'}}\'"></span>\
         '
     });
@@ -24579,6 +24832,10 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.allowResize = this.options.allowResize===undefined ? true : this.options.allowResize;
             this.numRows = this.options.numRows || 1;
             this.numColumns = this.options.numColumns || 1;
+            this.minColumns = this.options.minColumns || 0;
+            this.maxColumns = this.options.minColumns || 0;
+            this.minRows = this.options.minRows || 0;
+            this.maxRowws = this.options.maxRows || 0;
             this.parseCells = this.options.parseCells===undefined ? true : this.options.parseCells;
             var init = Knockout.unwrap(this.answerJSON);
             var value = init.value;
@@ -24658,19 +24915,48 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             }
         },
         template: '\
-            <matrix-input params="value: input, allowResize: true, disable: disable, allowResize: allowResize, rows: numRows, columns: numColumns, events: events, title: title"></matrix-input>\
+            <matrix-input params="value: input, allowResize: true, disable: disable, allowResize: allowResize, rows: numRows, columns: numColumns, minColumns: minColumns, maxColumns: maxColumns, minRows: minRows, maxRows: maxRows, events: events, title: title"></matrix-input>\
         '
     });
     Knockout.components.register('matrix-input',{
         viewModel: function(params) {
             var vm = this;
             this.allowResize = params.allowResize ? params.allowResize : Knockout.observable(false);
+            this.minColumns = params.minColumns ? params.minColumns : Knockout.observable(0);
+            this.maxColumns = params.maxColumns ? params.maxColumns : Knockout.observable(0);
+            this.minRows = params.minRows ? params.minRows : Knockout.observable(0);
+            this.maxRows = params.maxRows ? params.maxRows : Knockout.observable(0);
+            console.log(params);
+            console.log(this.minRows());
             this.title = params.title || '';
-            this.numRows = Knockout.observable(Knockout.unwrap(params.rows) || 2);
+            var _numRows = Knockout.observable(Knockout.unwrap(params.rows) || 2);
+            this.numRows = Knockout.computed({
+                read: _numRows,
+                write: function(v) {
+                    v = parseInt(v);
+                    var minRows = Knockout.unwrap(this.minRows);
+                    var maxRows = Knockout.unwrap(this.maxRows);
+                    console.log(minRows,v,maxRows);
+                    v = minRows==0 ? v : Math.max(minRows,v);
+                    v = maxRows==0 ? v : Math.min(maxRows,v);
+                    console.log(v);
+                    return _numRows(v);
+                }
+            },this);
             if(typeof params.rows=='function') {
                 params.rows.subscribe(function(v) { vm.numRows(v); });
             }
-            this.numColumns = Knockout.observable(Knockout.unwrap(params.columns) || 2);
+            var _numColumns = Knockout.observable(Knockout.unwrap(params.rows) || 2);
+            this.numColumns = Knockout.computed({
+                read: _numColumns,
+                write: function(v) {
+                    var minColumns = Knockout.unwrap(this.minColumns);
+                    var maxColumns = Knockout.unwrap(this.maxColumns);
+                    v = minColumns==0 ? v : Math.max(minColumns,v);
+                    v = maxColumns==0 ? v : Math.min(maxColumns,v);
+                    return _numColumns(v);
+                }
+            },this);
             if(typeof params.columns=='function') {
                 params.columns.subscribe(function(v) { vm.numColumns(v); });
             }
@@ -24819,8 +25105,8 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
          '<div class="matrix-input" data-bind="attr: {title: title}">'
         +'    <!-- ko if: allowResize --><div class="matrix-size">'
         +'        <fieldset><legend aria-label="'+R('matrix input.size control legend')+'"></legend>'
-        +'        <label class="num-rows">Rows: <input type="number" min="1" data-bind="value: numRows, autosize: true, disable: disable"/></label>'
-        +'        <label class="num-columns">Columns: <input type="number" min="1" data-bind="value: numColumns, autosize: true, disable: disable"/></label>'
+        +'        <label class="num-rows">Rows: <input type="number" data-bind="value: numRows, autosize: true, disable: disable, attr: {\'min\': minRows()==0 ? 1 : minRows(), \'max\': maxRows()==0 ? \'\' : maxRows()}"/></label>'
+        +'        <label class="num-columns">Columns: <input type="number" min="1" data-bind="value: numColumns, autosize: true, disable: disable, attr: {\'min\': minColumns()==0 ? 1 : minColumns(), \'max\': maxColumns()==0 ? \'\' : maxColumns()}"/></label>'
         +'        </fieldset>'
         +'    </div><!-- /ko -->'
         +'    <div class="matrix-wrapper">'
@@ -24829,7 +25115,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
         +'        <table class="matrix">'
         +'            <tbody data-bind="foreach: value">'
         +'                <tr data-bind="foreach: $data">'
-        +'                    <td class="cell"><input type="text" data-bind="textInput: cell, autosize: true, disable: $parents[1].disable, event: $parents[1].events"></td>'
+        +'                    <td class="cell"><input type="text" autocapitalize="off" inputmode="text" spellcheck="false" data-bind="textInput: cell, autosize: true, disable: $parents[1].disable, event: $parents[1].events"></td>'
         +'                </tr>'
         +'            </tbody>'
         +'        </table>'
@@ -25456,7 +25742,7 @@ GapFillPart.prototype = /** @lends Numbas.parts.GapFillPart.prototype */
     availableMarks: function() {
         var marks = 0;
         for(var i=0;i<this.gaps.length;i++) {
-            marks += this.gaps[i].availableMarks();
+            marks += this.gaps[i].marks;
         }
         if(this.adaptiveMarkingUsed) {
             marks -= this.settings.adaptiveMarkingPenalty;
@@ -25741,7 +26027,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
             }
         }
 
-        tryGetAttribute(settings,xml,parametersPath,['checkVariableNames','showPreview']);
+        tryGetAttribute(settings,xml,parametersPath,['checkVariableNames','singleLetterVariables','allowUnknownFunctions','implicitFunctionComposition','showPreview']);
     },
     loadFromJSON: function(data) {
         var p = this;
@@ -25762,7 +26048,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         tryLoad(data.notallowed, ['strings', 'showStrings', 'partialCredit', 'message'], settings, ['notAllowed', 'notAllowedShowStrings', 'notAllowedPC', 'notAllowedMessage']);
         tryLoad(data.mustmatchpattern, ['pattern', 'partialCredit', 'message', 'nameToCompare'], settings, ['mustMatchPattern', 'mustMatchPC', 'mustMatchMessage', 'nameToCompare']);
         settings.mustMatchPC /= 100;
-        tryLoad(data, ['checkVariableNames', 'expectedVariableNames', 'showPreview'], settings);
+        tryLoad(data, ['checkVariableNames', 'singleLetterVariables', 'allowUnknownFunctions', 'implicitFunctionComposition', 'showPreview'], settings);
         var valuegenerators = tryGet(data,'valuegenerators');
         if(valuegenerators) {
             valuegenerators.forEach(function(g) {
@@ -25823,6 +26109,10 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
      * @property {Number} mustMatchPC - partial credit to award if the student's answer does not match the pattern
      * @property {String} mustMatchMessage - message to add to the marking feedback if the student's answer does not match the pattern
      * @property {String} nameToCompare - the name of a captured subexpression from the pattern match to compare with the corresponding captured part from the correct answer. If empty, the whole expressions are compared.
+     * @property {Boolean} checkVariableNames - Check that the student has used the same variable names as the correct answer?
+     * @property {Boolean} singleLetterVariables - Force single letter variable names in the answer? Multi-letter variable names will be considered as implicit multiplication.
+     * @property {Boolean} allowUnknownFunctions - Allow the use of unknown functions in the answer? If false, application of unknown functions will be considered as multiplication instead.
+     * @property {Boolean} implicitFunctionComposition - Consider juxtaposition of function names as composition?
      */
     settings:
     {
@@ -25853,7 +26143,11 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         mustMatchPattern: '',
         mustMatchPC: 0,
         mustMatchMessage: R('part.jme.must-match.failed'),
-        nameToCompare: ''
+        nameToCompare: '',
+        checkVariableNames: false,
+        singleLetterVariables: false,
+        allowUnknownFunctions: true,
+        implicitFunctionComposition: false
     },
     /** The name of the input widget this part uses, if any.
      * @returns {String}
@@ -25966,6 +26260,7 @@ var MultipleResponsePart = Numbas.parts.MultipleResponsePart = function(path, qu
 MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.prototype */
 {
     loadFromXML: function(xml) {
+        var p = this;
         var settings = this.settings;
         var tryGetAttribute = Numbas.xml.tryGetAttribute;
         var scope = this.getScope();
@@ -26510,7 +26805,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
                           this.error('part.mcq.matrix cell empty',{part:this.path,row:i,column:j});
                         }
                         try {
-                          value = jme.evaluate(value,scope).value;
+                          value = jme.castToType(jme.evaluate(value,scope),'number').value;
                         } catch(e) {
                           this.error('part.mcq.matrix jme error',{part:this.path,row:i,column:j,error:e.message});
                         }
@@ -26900,10 +27195,10 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
             return new jme.types.TString(value);
         },
         'code': function(def, value, scope) {
-            if(!value.trim()) {
-                throw(new Numbas.Error('part.custom.empty setting'));
-            }
             if(def.evaluate) {
+                if(!value.trim()) {
+                    throw(new Numbas.Error('part.custom.empty setting'));
+                }
                 return scope.evaluate(value);
             } else {
                 return new jme.types.TString(value);
@@ -27044,7 +27339,34 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
         var settings = this.settings;
         var tryGetAttribute = Numbas.xml.tryGetAttribute;
         tryGetAttribute(settings,xml,'answer',['correctanswer'],['correctAnswerString'],{string:true});
-        tryGetAttribute(settings,xml,'answer',['correctanswerfractions','rows','columns','allowresize','tolerance','markpercell','allowfractions'],['correctAnswerFractions','numRows','numColumns','allowResize','tolerance','markPerCell','allowFractions']);
+        tryGetAttribute(settings,xml,'answer',
+            [
+                'correctanswerfractions',
+                'rows',
+                'columns',
+                'allowresize',
+                'mincolumns',
+                'maxcolumns',
+                'minrows',
+                'maxrows',
+                'tolerance',
+                'markpercell',
+                'allowfractions'
+            ],
+            [
+                'correctAnswerFractions',
+                'numRows',
+                'numColumns',
+                'allowResize',
+                'minColumns',
+                'maxColumns',
+                'minRows',
+                'maxRows',
+                'tolerance',
+                'markPerCell',
+                'allowFractions'
+            ]
+        );
         tryGetAttribute(settings,xml,'answer/precision',['type','partialcredit','strict'],['precisionType','precisionPC','strictPrecision']);
         tryGetAttribute(settings,xml,'answer/precision','precision','precisionString',{'string':true});
         var messageNode = xml.selectSingleNode('answer/precision/message');
@@ -27055,7 +27377,37 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
     loadFromJSON: function(data) {
         var settings = this.settings;
         var tryLoad = Numbas.json.tryLoad;
-        tryLoad(data,['correctAnswer', 'correctAnswerFractions', 'numRows', 'numColumns', 'allowResize', 'tolerance', 'markPerCell', 'allowFractions'], settings, ['correctAnswerString', 'correctAnswerFractions', 'numRows', 'numColumns', 'allowResize', 'tolerance', 'markPerCell', 'allowFractions']);
+        tryLoad(data,
+            [
+                'correctAnswer',
+                'correctAnswerFractions',
+                'numRows',
+                'numColumns',
+                'allowResize',
+                'minColumns',
+                'maxColumns',
+                'minRows',
+                'maxRows',
+                'tolerance',
+                'markPerCell',
+                'allowFractions'
+            ],
+            settings,
+            [
+                'correctAnswerString',
+                'correctAnswerFractions',
+                'numRows',
+                'numColumns',
+                'allowResize',
+                'minColumns',
+                'maxColumns',
+                'minRows',
+                'maxRows',
+                'tolerance',
+                'markPerCell',
+                'allowFractions'
+            ]
+        );
         tryLoad(data,['precisionType', 'precision', 'precisionPartialCredit', 'precisionMessage', 'strictPrecision'], settings, ['precisionType', 'precisionString', 'precisionPC', 'precisionMessage', 'strictPrecision']);
         settings.precisionPC /= 100;
     },
@@ -27073,12 +27425,15 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
     finaliseLoad: function() {
         var settings = this.settings;
         var scope = this.getScope();
-        var numRows = jme.subvars(settings.numRows, scope);
-        settings.numRows = scope.evaluate(numRows).value;
-        var numColumns = jme.subvars(settings.numColumns, scope);
-        settings.numColumns = scope.evaluate(numColumns).value;
-        var tolerance = jme.subvars(settings.tolerance, scope);
-        settings.tolerance = scope.evaluate(tolerance).value;
+
+        function eval_setting(setting) {
+            var expr = jme.subvars(settings[setting]+'', scope);
+            settings[setting] = scope.evaluate(expr).value;
+        }
+        ['numRows','numColumns','tolerance'].map(eval_setting);
+        if(settings.allowResize) {
+            ['minColumns','maxColumns','minRows','maxRows'].map(eval_setting);
+        }
         settings.tolerance = Math.max(settings.tolerance,0.00000000001);
         if(settings.precisionType!='none') {
             settings.allowFractions = false;
@@ -27154,6 +27509,10 @@ MatrixEntryPart.prototype = /** @lends Numbas.parts.MatrixEntryPart.prototype */
             allowResize: this.settings.allowResize,
             numRows: this.settings.numRows,
             numColumns: this.settings.numColumns,
+            minColumns: this.settings.minColumns,
+            maxColumns: this.settings.maxColumns,
+            minRows: this.settings.minRows,
+            maxRows: this.settings.maxRows,
             parseCells: false
         };
     },

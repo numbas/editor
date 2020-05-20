@@ -78,6 +78,8 @@ part_types.models = [
         widget: 'jme',
 
         model: function(part) {
+            var jme = Numbas.jme;
+
             var model = {
                 answer: ko.observable(''),
                 answerSimplification: ko.observable(''),
@@ -122,14 +124,18 @@ part_types.models = [
                     message: ko.observable(''),
                     nameToCompare: ko.observable('')
                 },
-                checkVariableNames: ko.observable(false)
+                checkVariableNames: ko.observable(false),
+                singleLetterVariables: ko.observable(false),
+                allowUnknownFunctions: ko.observable(true),
+                implicitFunctionComposition: ko.observable(false)
             };
             model.checkingType = ko.observable(model.checkingTypes[0]);
+            model.part = part;
 
             model.answerIsEquation = ko.computed(function() {
                 try {
-                    var answer = Numbas.jme.compile(this.answer());
-                    return Numbas.jme.isOp(answer.tok,'=');
+                    var answer = jme.compile(this.answer());
+                    return jme.isOp(answer.tok,'=');
                 } catch(e) {
                     return false;
                 }
@@ -137,9 +143,13 @@ part_types.models = [
 
             model.variableNames = ko.computed(function() {
                 try {
-                    var correctAnswer = Numbas.jme.subvars(this.answer(),part.q.questionScope());
-                    var answer = Numbas.jme.compile(correctAnswer);
-                    var names = Numbas.jme.findvars(answer);
+                    var bits = Numbas.util.splitbrackets(this.answer(),'{','}','(',')');
+                    for(var i=1;i<bits.length;i+=2) {
+                        bits[i] = '1';
+                    }
+                    var correctAnswer = bits.join('');
+                    var answer = jme.compile(correctAnswer);
+                    var names = jme.findvars(answer);
                     return names.sort();
                 } catch(e) {
                     return [];
@@ -159,7 +169,7 @@ part_types.models = [
                 valueGeneratorFactory();
                 var inferredTypes;
                 try {
-                    inferredTypes = Numbas.jme.inferVariableTypes(Numbas.jme.compile(model.answer()),Numbas.jme.builtinScope)[0] || {};
+                    inferredTypes = jme.inferVariableTypes(jme.compile(model.answer()),jme.builtinScope)[0] || {};
                 } catch(e) {
                     inferredTypes = {};
                 }
@@ -171,14 +181,14 @@ part_types.models = [
             model.mustmatchpattern.capturedNames = ko.computed(function() {
                 var pattern = this.mustmatchpattern.pattern();
                 try {
-                    var expr = Numbas.jme.rules.patternParser.compile(pattern);
+                    var expr = jme.rules.patternParser.compile(pattern);
                 } catch(e) {
                     return [];
                 }
                 if(!expr) {
                     return [];
                 }
-                return Numbas.jme.rules.findCapturedNames(expr);
+                return jme.rules.findCapturedNames(expr);
             },model);
 
             model.mustmatchpattern.capturedNameOptions = ko.computed(function() {
@@ -189,7 +199,7 @@ part_types.models = [
 
             model.markingSettings = ko.computed(function() {
                 try {
-                    var correctAnswer = Numbas.jme.subvars(model.answer(),part.q.questionScope());
+                    var correctAnswer = jme.subvars(model.answer(),part.q.questionScope());
                 } catch(e) {
                     correctAnswer = '';
                 }
@@ -240,6 +250,9 @@ part_types.models = [
             data.vsetRangePoints = this.vset.points();
             data.vsetRange = [this.vset.start(),this.vset.end()];
             data.checkVariableNames = this.checkVariableNames();
+            data.singleLetterVariables = this.singleLetterVariables();
+            data.allowUnknownFunctions = this.allowUnknownFunctions();
+            data.implicitFunctionComposition = this.implicitFunctionComposition();
             if(this.maxlength.length())
             {
                 data.maxlength = {
@@ -300,7 +313,7 @@ part_types.models = [
         },
 
         load: function(data) {
-            tryLoad(data,['answer','answerSimplification','checkVariableNames','showPreview'],this);
+            tryLoad(data,['answer','answerSimplification','checkVariableNames','singleLetterVariables','allowUnknownFunctions','implicitFunctionComposition','showPreview'],this);
             var checkingType = tryGetAttribute(data,'checkingType');
             for(var i=0;i<this.checkingTypes.length;i++) {
                 if(this.checkingTypes[i].name == checkingType)
@@ -462,6 +475,10 @@ part_types.models = [
                 tolerance: ko.observable(0),
                 markPerCell: ko.observable(false),
                 allowFractions: ko.observable(false),
+                minColumns: ko.observable(1),
+                maxColumns: ko.observable(0),
+                minRows: ko.observable(1),
+                maxRows: ko.observable(0),
                 precisionTypes: [
                     {name: 'none', niceName: 'None'},
                     {name: 'dp', niceName: 'Decimal places'},
@@ -498,6 +515,10 @@ part_types.models = [
             data.tolerance = this.tolerance();
             data.markPerCell = this.markPerCell();
             data.allowFractions = this.fractionPossible() && this.allowFractions();
+            data.minColumns = this.minColumns();
+            data.maxColumns = this.maxColumns();
+            data.minRows = this.minRows();
+            data.maxRows = this.maxRows();
 
             if(this.precisionType().name!='none') {
                 data.precisionType = this.precisionType().name;
@@ -520,7 +541,25 @@ part_types.models = [
         },
 
         load: function(data) {
-            tryLoad(data,['correctAnswer','correctAnswerFractions','numRows','numColumns','allowResize','tolerance','markPerCell','allowFractions','precision','precisionPartialCredit','precisionMessage','precisionType','strictPrecision'],this);
+            tryLoad(data,[
+                'correctAnswer',
+                'correctAnswerFractions',
+                'numRows',
+                'numColumns',
+                'allowResize',
+                'tolerance',
+                'markPerCell',
+                'allowFractions',
+                'precision',
+                'precisionPartialCredit',
+                'precisionMessage',
+                'precisionType',
+                'strictPrecision',
+                'minColumns',
+                'maxColumns',
+                'minRows',
+                'maxRows'
+            ],this);
             for(var i=0;i<this.precisionTypes.length;i++) {
                 if(this.precisionTypes[i].name == this.precisionType())
                     this.precisionType(this.precisionTypes[i]);

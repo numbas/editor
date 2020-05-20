@@ -212,6 +212,7 @@ urlpatterns = [
     url(r'^part_type/(?P<pk>\d+)/delete$', login_required(custom_part_type.DeleteView.as_view()), name='custom_part_type_delete'),
     url(r'^part_type/(?P<pk>\d+)/publish$', login_required(custom_part_type.PublishView.as_view()), name='custom_part_type_publish'),
     url(r'^part_type/(?P<pk>\d+)/unpublish$', login_required(custom_part_type.UnPublishView.as_view()), name='custom_part_type_unpublish'),
+    url(r'^part_type/(?P<pk>\d+)/source$', custom_part_type.SourceView.as_view(), name='custom_part_type_source'),
 
     # Notifications
 

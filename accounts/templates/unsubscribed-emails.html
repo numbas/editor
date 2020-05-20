@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="alert alert-info">
+    <h1>You have unsubscribed from all emails</h1>
+    <p>You will not receive any more emails for this account.</p>
+    <p>If you'd like to configure which emails you receive, <a href="{% url 'edit_profile' %}">edit your email preferences</a>.</p>
+</div>
+
+{% endblock content %}

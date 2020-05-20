@@ -1,0 +1,12 @@
+{% extends "notifications/email/base.html" %}
+{% load sanitizer %}
+
+{% block content %}
+<p><a href="{{domain}}{% url 'view_profile' comment.user.pk %}">{{comment.user.get_full_name}}</a> {{notification.verb}} "<a href="{{domain}}{{editoritem.get_absolute_url}}">{{editoritem.name}}</a>":
+
+<blockquote>
+    {{comment.text|strip_html|safe}}
+</blockquote>
+
+<p><a href="{{domain}}{{editoritem.get_absolute_url}}#editing-history">View this {{editoritem.item_type}}</a>.</p>
+{% endblock content %}

@@ -2,6 +2,8 @@ import urllib.parse
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.db.models import Sum, When, Case, IntegerField
 from django.views import generic
 from django.urls import reverse, reverse_lazy
@@ -58,6 +60,7 @@ class ProjectContextMixin(object):
         context['in_project'] = project is not None
         context['project_editable'] = project.can_be_edited_by(self.request.user)
         context['member_of_project'] = self.request.user == project.owner or ((not self.request.user.is_anonymous) and ProjectAccess.objects.filter(project=project, user=self.request.user).exists())
+        context['watching_project'] = project.watching_users.all().filter(pk=self.request.user.pk).exists()
         return context
 
 class SettingsPageMixin(MustBeMemberMixin):
@@ -97,8 +100,6 @@ class IndexView(ProjectContextMixin, MustBeMemberMixin, generic.DetailView):
         status_counts = {status:len(list(items)) for status,items in groupby(sorted([x[0] if x[0] is not None else 'draft' for x in project.items.values_list('current_stamp__status')]))}
         status_choices = list(STAMP_STATUS_CHOICES)+[('draft','Draft')]
         context['status_counts'] = [(status,label,status_counts.get(status,0)) for status,label in status_choices]
-
-        context['watching_project'] = project.watching_non_members.filter(pk=self.request.user.pk).exists()
         return context
 
 class OptionsView(ProjectContextMixin, SettingsPageMixin, generic.UpdateView):
@@ -213,6 +214,12 @@ class BrowseView(ProjectContextMixin, MustBeMemberMixin, generic.DetailView):
                     folder = project.folders.get(name=urllib.parse.unquote(name),parent=parent)
                 except Folder.DoesNotExist:
                     raise http.Http404("Folder not found.")
+                except Folder.MultipleObjectsReturned:
+                    folders = project.folders.filter(name=urllib.parse.unquote(name),parent=parent)
+                    folder = folders[0]
+                    with transaction.atomic():
+                        for ofolder in folders[1:]:
+                            ofolder.merge_into(folder)
                 breadcrumbs.append(folder)
                 parent = folder
         self.breadcrumbs = breadcrumbs
@@ -305,35 +312,41 @@ class NewFolderView(ProjectContextMixin, MustBeEditorMixin, generic.CreateView):
         else:
             return reverse('project_browse',args=(self.object.project.pk, ''))
 
-class WatchProjectView(generic.detail.SingleObjectMixin, generic.View):
+class BaseProjectWatchView(LoginRequiredMixin, generic.detail.SingleObjectMixin, generic.View):
+    http_method_names = ['post']
     model = Project
 
-    def get(self, request, *args, **kwargs):
-        project = self.get_object()
-        user = self.request.user
-        if not project.public_view:
-            return http.response.HttpResponseForbidden("This project is not publicly accessible.")
+    def post(self, request, *args, **kwargs):
+        self.project = self.get_object()
+        if not self.project.can_be_viewed_by(request.user):
+            raise PermissionDenied("You can not see this project.")
 
-        project.watching_non_members.add(user)
+    def valid(self):
+        return redirect(self.project.get_absolute_url())
 
-        messages.info(self.request, 'You\'re now watching {}. Any activity on this project will show up on your timeline.'.format(project.name))
-
-        return redirect(project.get_absolute_url())
-
-class UnwatchProjectView(generic.detail.SingleObjectMixin, generic.View):
+class WatchProjectView(BaseProjectWatchView):
+    http_method_names = ['post']
     model = Project
 
-    def get(self, request, *args, **kwargs):
-        project = self.get_object()
-        user = self.request.user
-        if not project.public_view:
-            return http.response.HttpResponseForbidden("This project is not publicly accessible.")
+    def post(self, request, *args, **kwargs):
+        super().post(request,*args,**kwargs)
 
-        project.watching_non_members.remove(user)
+        self.project.unwatching_members.remove(request.user)
+        self.project.watching_non_members.add(request.user)
 
-        messages.info(self.request, 'You\'re not watching {} any more.'.format(project.name))
+        return self.valid()
 
-        return redirect(project.get_absolute_url())
+class UnwatchProjectView(BaseProjectWatchView):
+    http_method_names = ['post']
+    model = Project
+
+    def post(self, request, *args, **kwargs):
+        super().post(request,*args,**kwargs)
+        
+        self.project.unwatching_members.add(request.user)
+        self.project.watching_non_members.add(request.user)
+
+        return self.valid()
 
 class LeaveProjectView(ProjectContextMixin, MustBeMemberMixin, generic.DeleteView):
     model = ProjectAccess

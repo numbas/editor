@@ -22,6 +22,7 @@ import editor.models
 from editor.models import Theme, Extension, Contributor
 import editor.views.editoritem
 import editor.views.generic
+from editor.views.errors import forbidden
 
 from numbasobject import NumbasObject
 
@@ -197,6 +198,13 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
     model = NewExam
     form_class = ExamForm
     template_name = 'exam/edit.html'
+
+    def get(self, request, *args, **kwargs):
+        if super(EditorItem,self.object.editoritem).can_be_viewed_by(request.user):
+            for q in self.object.questions.all():
+                if not q.editoritem.can_be_viewed_by(request.user):
+                    return forbidden(request,message="Sorry, you're not allowed to see this. This exam contains one or more questions that you don't have access to.")
+        return super().get(request,*args,**kwargs)
 
     def post(self, request, *args, **kwargs):
         super(UpdateView, self).post(request, *args, **kwargs)

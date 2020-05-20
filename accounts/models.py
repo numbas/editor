@@ -56,6 +56,10 @@ class UserProfile(models.Model):
     wrap_lines = models.BooleanField(default=False,verbose_name='Wrap long lines in the code editor?')
     mathjax_url = models.CharField(max_length=300,default='',blank=True,verbose_name='Preferred URL to load MathJax from')
 
+    email_about_stamps = models.BooleanField(default=True, verbose_name='Send emails about feedback on items you\'re watching?')
+    email_about_comments = models.BooleanField(default=True, verbose_name='Send emails about comments on items you\'re watching?')
+    never_email = models.BooleanField(default=False, verbose_name='Unsubscribe from all emails')
+
     def sorted_tags(self):
         qs = self.user.own_questions
         tags = EditorTag.objects.filter(question__author=self.user).distinct()
@@ -77,7 +81,7 @@ class UserProfile(models.Model):
         nonsticky_broadcast_timelineitems = TimelineItem.objects.filter(object_content_type=ContentType.objects.get_for_model(SiteBroadcast), object_id__in=nonsticky_broadcasts)
 
         items = TimelineItem.objects.filter(
-            Q(editoritems__in=self.user.watched_items.all()) | 
+            Q(editoritems__accesses__in=self.user.item_accesses.all()) | 
             Q(editoritems__project__in=projects) |
             Q(projects__in=projects) |
             Q(extension_accesses__user=self.user)

@@ -1,0 +1,5 @@
+{% block content %}{% endblock %}
+
+<p>
+<small>Manage your <a href="{{domain}}{% url 'edit_profile' %}">email preferences</a> or <a href="{{domain}}{% url 'unsubscribe_emails' %}?token={{unsubscribe_token}}">unsubscribe</a>.</small>
+</p>

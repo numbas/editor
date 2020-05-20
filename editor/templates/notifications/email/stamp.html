@@ -1,0 +1,6 @@
+{% extends "notifications/email/base.html" %}
+{% block content %}
+<p><a href="{{domain}}{% url 'view_profile' stamp.user.pk %}">{{stamp.user.get_full_name}}</a> {{notification.verb}} "<a href="{{domain}}{{editoritem.get_absolute_url}}">{{editoritem.name}}</a>": <b>{{stamp.get_status_display}}</b>.
+
+<p><a href="{{domain}}{{editoritem.get_absolute_url}}#editing-history">View this {{editoritem.item_type}}</a>.</p>
+{% endblock content %}

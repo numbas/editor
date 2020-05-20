@@ -7,8 +7,26 @@
 
 <form method="POST" action="">
     {% csrf_token %}
+
+    {% for error in form.non_field_errors %}
+        <div class="alert alert-danger">
+            <strong>{{ error|escape }}</strong>
+        </div>
+    {% endfor %}
+
     <p class="help-block">Enter a new name for this folder.</p>
-    {{form.name}}
+    {% for field in form.visible_fields %}
+        <div class="form-group {% if field.errors %}has-error{% endif %}">
+            {{field.as_widget}}
+            {% if field.errors %}
+            <ul class="errorlist list-unstyled">
+                {% for error in field.errors %}
+                <li>{{error}}</li>
+                {% endfor %}
+            {% endif %}
+        </div>
+    {% endfor %}
+
 
     <button class="btn btn-primary">Rename</button>
     <a class="btn btn-link" href="{{folder.get_absolute_url}}">Cancel</a>

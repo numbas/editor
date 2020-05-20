@@ -384,7 +384,8 @@ class UpdateExtensionForm(forms.ModelForm):
 
     def save(self, commit=True):
         extension = super().save(commit)
-        extension.extract_zip()
+        if commit:
+            extension.extract_zip()
         return extension
 
 class CreateExtensionForm(forms.ModelForm):
@@ -441,6 +442,7 @@ class UploadExtensionForm(UpdateExtensionForm):
         extension.author = self._user
         if commit:
             extension.save()
+            extension.extract_zip()
             self.save_m2m()
         return extension
 
@@ -648,6 +650,15 @@ class NewFolderForm(forms.ModelForm):
             raise forms.ValidationError("Folder names may not include a forward slash.")
         return name
 
+    def clean(self):
+        cleaned_data = super().clean()
+        name = self.cleaned_data.get('name')
+        project = self.cleaned_data.get('project')
+        parent = self.cleaned_data.get('parent')
+        if project.folders.filter(name=name,parent=parent).exists():
+            raise forms.ValidationError("A folder with that name already exists.")
+        return cleaned_data
+
     class Meta:
         model = editor.models.Folder
         fields = ['name','project','parent']
@@ -664,11 +675,13 @@ class MoveFolderForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         parent = cleaned_data.get('parent')
-        parents = [parent]
-        f = parent.parent
-        while f:
-            parents.append(f)
-            f = f.parent
+        parents = []
+        if parent:
+            parents.append(parent)
+            f = parent.parent
+            while f:
+                parents.append(f)
+                f = f.parent
         folders = cleaned_data.get('folders')
         items = cleaned_data.get('items')
         move_folders = []
@@ -704,6 +717,12 @@ class RenameFolderForm(forms.ModelForm):
     class Meta:
         model = editor.models.Folder
         fields = ('name',)
+
+    def clean_name(self):
+        name = self.cleaned_data.get('name')
+        if self.instance.project.folders.filter(name=name,parent=self.instance.parent).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("A folder with this name already exists.")
+        return name
 
 class CreatePullRequestForm(forms.ModelForm):
     class Meta:

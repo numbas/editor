@@ -7,7 +7,7 @@
     <h1>Upload an extension</h1>
 </div>
 
-<form class="form-horizontal" action="{% url 'extension_new' %}" method="post" enctype="multipart/form-data">
+<form class="form-horizontal" action="{% url 'extension_upload' %}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {% for field in form %}
         <div class="form-group {% if field.errors %}has-error{% endif %}">

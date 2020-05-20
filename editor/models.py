@@ -34,7 +34,6 @@ from django.db.models import Q
 from django.forms import model_to_dict
 from django.utils import timezone
 from django.utils.deconstruct import deconstructible
-from django.db.models.signals import pre_delete
 from django.template.loader import get_template
 from django.core.mail import send_mail
 from uuslug import slugify
@@ -43,7 +42,6 @@ import reversion
 import reversion.models
 
 from notifications.signals import notify
-from notifications.models import Notification
 
 import taggit.models
 from taggit.managers import TaggableManager
@@ -79,6 +77,8 @@ class ControlledObject(object):
         return (user.is_superuser) or (self.owner == user) or (self.has_access(user, accept_levels))
 
     def can_be_copied_by(self, user):
+        if not self.can_be_viewed_by(user):
+            return False
         if user.is_superuser or self.owner == user or self.has_access(user, ('edit',)):
             return True
         elif not self.licence:
@@ -213,6 +213,7 @@ class Project(models.Model, ControlledObject):
 
     public_view = models.BooleanField(default=False)
     watching_non_members = models.ManyToManyField(User, related_name='watched_projects')
+    unwatching_members = models.ManyToManyField(User, related_name='unwatched_projects')
 
     icon = 'briefcase'
 
@@ -251,7 +252,8 @@ class Project(models.Model, ControlledObject):
 
     @property
     def watching_users(self):
-        return (User.objects.filter(pk=self.owner.pk) | User.objects.filter(project_memberships__project=self)).distinct()
+        q = (User.objects.filter(pk=self.owner.pk) | User.objects.filter(project_memberships__project=self) | self.watching_non_members.all()).distinct()
+        return q.exclude(pk__in=self.unwatching_members.all())
 
     def __str__(self):
         return self.name
@@ -467,7 +469,7 @@ class Extension(models.Model, ControlledObject):
         for d,dirs,files in os.walk(str(top)):
             rd = Path(d).relative_to(top)
             if str(rd)=='.' or not re.match(r'^\.',str(rd)):
-                for f in files:
+                for f in sorted(files,key=str):
                     if not re.match(r'^\.',f):
                         yield str(rd / f)
 
@@ -491,6 +493,15 @@ class Extension(models.Model, ControlledObject):
 
     def icon(self):
         return 'wrench'
+
+@receiver(signals.pre_delete, sender=Extension)
+def delete_extracted_extension(sender,instance,**kwargs):
+    if not instance.editable:
+        return
+    p = Path(instance.extracted_path).parent
+    if p.exists():
+        shutil.rmtree(str(p))
+    
 
 class ExtensionAccess(models.Model, TimelineMixin):
     extension = models.ForeignKey('Extension', related_name='access', on_delete=models.CASCADE)
@@ -535,7 +546,7 @@ class Theme(models.Model):
         z = ZipFile(self.zipfile.file, 'r')
         z.extractall(self.extracted_path)
 
-@receiver(pre_delete, sender=Theme)
+@receiver(signals.pre_delete, sender=Theme)
 def reset_theme_on_delete(sender, instance, **kwargs):
     default_theme = settings.GLOBAL_SETTINGS['NUMBAS_THEMES'][0][1]
     for exam in instance.used_in_newexams.all():
@@ -592,6 +603,10 @@ class CustomPartType(models.Model, ControlledObject):
 
     def __str__(self):
         return self.name
+
+    @property
+    def filename(self):
+        return slugify(self.name)
 
     def __repr__(self):
         return '<CustomPartType: {}>'.format(self.short_name)
@@ -659,6 +674,15 @@ class CustomPartType(models.Model, ControlledObject):
             'published': self.published,
             'extensions': [e.location for e in self.extensions.all()],
         }
+
+    def as_source(self):
+        obj = self.as_json()
+        obj['source'] = {
+            'author': {
+                'name': self.author.get_full_name(),
+            }
+        }
+        return obj
 
 class Resource(models.Model):
     owner = models.ForeignKey(User, related_name='resources', on_delete=models.CASCADE)
@@ -829,7 +853,7 @@ class TaggedQuestion(taggit.models.GenericTaggedItemBase):
     tag = models.ForeignKey(EditorTag, related_name='tagged_items', on_delete=models.CASCADE)
 
 class Access(models.Model, TimelineMixin):
-    item = models.ForeignKey('EditorItem', on_delete=models.CASCADE)
+    item = models.ForeignKey('EditorItem', related_name='accesses', on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='item_accesses', on_delete=models.CASCADE)
     access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
 
@@ -847,10 +871,6 @@ class Access(models.Model, TimelineMixin):
 
     def icon(self):
         return 'eye-open'
-
-@receiver(signals.post_save, sender=Access)
-def add_watching_user_for_access(instance, **kwargs):
-    instance.item.watching_users.add(instance.user)
 
 NUMBAS_FILE_VERSION = 'exam_results_page_options'
 
@@ -958,6 +978,15 @@ class Folder(models.Model):
             'name': self.name,
         }
 
+    def merge_into(self,folder):
+        for item in self.items.all():
+            item.folder = folder
+            item.save()
+        for subfolder in Folder.objects.filter(parent=self):
+            subfolder.parent = folder
+            subfolder.save()
+        self.delete()
+
 @reversion.register
 class EditorItem(models.Model, NumbasObject, ControlledObject):
     """
@@ -1003,7 +1032,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
     topics = models.ManyToManyField(Topic)
     taxonomy_nodes = models.ManyToManyField(TaxonomyNode, related_name='editoritems')
 
-    watching_users = models.ManyToManyField(User, related_name='watched_items')
+    unwatching_users = models.ManyToManyField(User, related_name='unwatched_items')
 
     class Meta:
         ordering = ('name',)
@@ -1013,6 +1042,11 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
 
     def __unicode__(self):
         return self.name
+
+    @property
+    def watching_users(self):
+        q = (User.objects.filter(pk=self.author.pk) | User.objects.filter(item_accesses__item=self)).distinct() | self.project.watching_users
+        return q.exclude(pk__in=self.unwatching_users.all())
 
     @property
     def owner(self):
@@ -1028,6 +1062,13 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
         if user.is_anonymous:
             return False
         return self.project.has_access(user, levels) or Access.objects.filter(item=self, user=user, access__in=levels).exists()
+
+    def can_be_viewed_by(self, user):
+        if self.item_type=='exam':
+            for q in self.exam.questions.all():
+                if not q.editoritem.can_be_viewed_by(user):
+                    return False
+        return super().can_be_viewed_by(user)
 
     def publish(self):
         self.published = True
@@ -1126,6 +1167,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
         obj = {
             'editoritem_id': self.id, 
             'name': self.name, 
+            'published': self.published,
             'metadata': self.metadata,
             'created': str(self.created),
             'last_modified': str(self.last_modified), 
@@ -1156,11 +1198,6 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
 
         self.rel_obj.merge(other.rel_obj)
         self.save()
-
-@receiver(signals.post_save, sender=EditorItem)
-def author_watches_editoritem(instance, created, **kwargs):
-    if created:
-        instance.watching_users.add(instance.author)
 
 @receiver(signals.post_save, sender=EditorItem)
 def author_contributes_to_editoritem(instance, created, **kwargs):
@@ -1266,7 +1303,7 @@ class Timeline(object):
         if not self.viewing_user.is_anonymous:
             projects = self.viewing_user.own_projects.all() | Project.objects.filter(projectaccess__in=self.viewing_user.project_memberships.all()) | Project.objects.filter(watching_non_members=self.viewing_user)
             items_for_user = (
-                Q(editoritems__in=self.viewing_user.watched_items.all()) | 
+                Q(editoritems__accesses__in=self.viewing_user.item_accesses.all()) | 
                 Q(editoritems__project__in=projects) |
                 Q(projects__in=projects) |
                 Q(extension_accesses__user=viewing_user)
@@ -1354,6 +1391,19 @@ class SiteBroadcast(models.Model, TimelineMixin):
     def __str__(self):
         return self.text[:50]
 
+class Tip(models.Model):
+    title = models.CharField(max_length=500)
+    text = models.TextField()
+    link = models.URLField(blank=True, null=True, verbose_name='Link to more information')
+    link_text = models.CharField(blank=True, null=True, max_length=200)
+    editoritem = models.ForeignKey(EditorItem, related_name='used_in_tips', blank=True, null=True, on_delete=models.SET_NULL, verbose_name='A question or exam demonstrating the tip')
+
+    def __str__(self):
+        return self.title
+
+    def __repr__(self):
+        return 'Tip "{}"'.format(self.title)
+
 class NewStampOfApproval(models.Model, TimelineMixin):
     object = models.ForeignKey(EditorItem, related_name='stamps', on_delete=models.CASCADE)
 
@@ -1363,11 +1413,16 @@ class NewStampOfApproval(models.Model, TimelineMixin):
     user = models.ForeignKey(User, related_name='newstamps', on_delete=models.CASCADE)
     status = models.CharField(choices=STAMP_STATUS_CHOICES, max_length=20)
 
+    date = models.DateTimeField(auto_now_add=True)
+
     def __str__(self):
         return '{} said "{}"'.format(self.user.username, self.get_status_display())
 
     def can_be_viewed_by(self, user):
         return self.object.can_be_viewed_by(user)
+
+    class Meta:
+        ordering = ('-date',)
 
 class Comment(models.Model, TimelineMixin):
     object_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
@@ -1583,6 +1638,8 @@ class NewExam(models.Model):
         data['extensions'] = [e.location for e in self.extensions]
         data['custom_part_types'] = [p.as_json() for p in self.custom_part_types]
         data['name'] = self.editoritem.name
+        if 'question_groups' not in data:
+            data['question_groups'] = self.question_groups_dict()
         for i, g in enumerate(data['question_groups']):
             if i < len(question_groups):
                 questions = question_groups[i]
@@ -1606,11 +1663,13 @@ class NewExam(models.Model):
         exam_dict['locale'] = self.locale
         exam_dict['custom_theme'] = self.custom_theme_id
         exam_dict['theme'] = self.theme
-        groups = groupby(self.newexamquestion_set.order_by('group', 'qn_order'), key=lambda q: q.group)
-        exam_dict['question_groups'] = [{'group':group, 'questions':[q.question.summary() for q in qs]} for group, qs in groups]
+        exam_dict['question_groups'] = self.question_groups_dict()
 
         return exam_dict
 
+    def question_groups_dict(self):
+        groups = groupby(self.newexamquestion_set.order_by('group', 'qn_order'), key=lambda q: q.group)
+        return [{'group':group, 'questions':[q.question.summary() for q in qs]} for group, qs in groups]
     
     @property
     def question_groups(self):
@@ -1688,7 +1747,7 @@ def item_created_timeline_event(instance, created, **kwargs):
 @receiver(signals.post_save, sender=NewStampOfApproval)
 @receiver(signals.post_delete, sender=NewStampOfApproval)
 def set_current_stamp(instance, **kwargs):
-    instance.object.current_stamp = NewStampOfApproval.objects.filter(object=instance.object).last()
+    instance.object.current_stamp = NewStampOfApproval.objects.filter(object=instance.object).order_by('-date').first()
     instance.object.save()
 
 

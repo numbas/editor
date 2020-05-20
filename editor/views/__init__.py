@@ -4,11 +4,11 @@ from django.db.models import Q, Sum, When, Case, IntegerField
 from editor.models import SiteBroadcast
 from django.utils.timezone import now
 from datetime import timedelta
-from editor.models import EditorItem, NewQuestion, NewExam, Project, Extension, Theme, CustomPartType, TimelineItem
+from editor.models import EditorItem, NewQuestion, NewExam, Project, Extension, Theme, CustomPartType, TimelineItem, Tip
 from django.contrib.auth.models import User
 from collections import defaultdict
 import re
-from random import shuffle
+from random import shuffle, randint
 
 class HomeView(TemplateView):
     template_name = 'index.html'
@@ -17,6 +17,12 @@ class HomeView(TemplateView):
         context = super(HomeView, self).get_context_data(**kwargs)
         context['navtab'] = 'home'
         context['sticky_broadcasts'] = SiteBroadcast.objects.visible_now().filter(sticky=True)
+
+        num_tips = Tip.objects.count()
+        if num_tips>0:
+            n = randint(0,num_tips-1)
+            context['tip'] = Tip.objects.all()[n]
+
         return context
 
 class TermsOfUseView(TemplateView):

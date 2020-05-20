@@ -126,7 +126,7 @@ If you put ``49`` in the entry box and press :guilabel:`Submit part`, the answer
 
 
 Variables
-^^^^^^^^^
+---------
 
 The question works.
 So what next?
@@ -185,7 +185,7 @@ You can click the :guilabel:`Try another question like this one` button to
 start the question afresh, with a new value of the random variable.
 
 Advice
-^^^^^^
+------
 
 A question should provide a full solution to help students who get stuck
 or find the wrong answer.

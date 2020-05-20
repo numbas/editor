@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import json
 
+from django.conf import settings
 from django import forms
 from django.forms.models import inlineformset_factory
 from django.forms.widgets import SelectMultiple
@@ -600,6 +601,9 @@ class AddMemberForm(UserSearchMixin, forms.ModelForm):
         user = cleaned_data.get('user_search')
         if user == cleaned_data.get('project').owner:
             raise forms.ValidationError("Can't give separate access to the project owner")
+        if not user.pk:
+            if not settings.ALLOW_REGISTRATION:
+                raise forms.ValidationError("Self-registration is disabled, so you can't invite a user by email address.")
         return cleaned_data
 
     def save(self, force_insert=False, force_update=False, commit=True):

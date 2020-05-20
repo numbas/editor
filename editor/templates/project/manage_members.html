@@ -68,7 +68,9 @@
 
             {% csrf_token %}
             <button class="btn btn-primary" type="submit">Add</button>
+            {% if ALLOW_REGISTRATION %}
             <div class="help-block">You can invite someone who doesn't yet have an account by typing their email address in the box above.</div>
+            {% endif %}
         </form>
     </div>
 </div>

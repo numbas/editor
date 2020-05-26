@@ -3111,6 +3111,14 @@ $(document).ready(function() {
             }
             return q.getPart(mt.part.path());
         }, this);
+
+        this.correctAnswer = ko.pureComputed(function() {
+            if(!this.runtime_part()) {
+                return;
+            }
+            var p = this.runtime_part();
+            return {valid: true, value: p.getCorrectAnswer(p.getScope())};
+        },this);
         
         // When something changes, run the marking script and store the result in `this.result`
         this.mark = function() {

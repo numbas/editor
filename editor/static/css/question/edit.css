@@ -247,6 +247,10 @@ table.variable-list .value-cell .value {
     margin-right: 0.5em;
 }
 
+.marking-test input[disabled] {
+    cursor: not-allowed;
+}
+
 .marking-test .variables .variable .name {
     cursor: pointer;
 }

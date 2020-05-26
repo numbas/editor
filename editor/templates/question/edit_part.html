@@ -116,6 +116,16 @@
                         <div class="form-group">
                             <label class="label-block">
                                 <div class="col-sm-12 col-md-3">
+                                    Expected answer
+                                </div>
+                                <div class="col-sm-12 col-md-9">
+                                    <div data-bind="component: {name: 'answer-widget', params: {answer: correctAnswer, part: runtime_part, disable: true}}"></div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="label-block">
+                                <div class="col-sm-12 col-md-3">
                                     Student's answer
                                 </div>
                                 <div class="col-sm-12 col-md-9">
@@ -131,12 +141,16 @@
                         <thead>
                             <tr>
                                 <th>Gap</th>
+                                <th>Expected answer</th>
                                 <th>Student's answer</th>
                             </tr>
                         </thead>
                         <tbody data-bind="foreach: $parent.gaps">
                             <tr>
                                 <td data-bind="text: name"></td>
+                                <td data-bind="with: marking_test">
+                                    <div data-bind="component: {name: 'answer-widget', params: {answer: correctAnswer, part: runtime_part, disable: true}}"></div>
+                                </td>
                                 <td data-bind="with: marking_test">
                                     <div data-bind="component: {name: 'answer-widget', params: {answer: answer, part: runtime_part}}"></div>
                                 </td>

@@ -55,7 +55,7 @@
     </section>
 
     <!-- Questions -->
-    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='questions'}">
+    <section class="tab-pane questions-tab" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='questions'}">
         <div class="questions row">
             <div class="col-sm-6">
                 <div class="panel panel-primary">
@@ -135,7 +135,7 @@
                                                     </span>
                                                 <!-- /ko -->
                                                 <!-- ko if: $root.navigatemode().name=='menu' -->
-                                                    <input class="form-control" data-bind="textInput: customName, attr: {placeholder: name}">
+                                                    <input class="form-control name" data-bind="textInput: customName, attr: {placeholder: name}">
                                                     <a data-bind="attr:{href: url}" target="_blank" title="Edit this question"><span class="glyphicon glyphicon-pencil"></span></a>
                                                 <!-- /ko -->
                                                 <span class="label label-default stamp" data-bind="visible: current_stamp, text: current_stamp_display, attr: {'data-stamp':current_stamp()}"></span>

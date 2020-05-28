@@ -1288,8 +1288,15 @@ $(document).ready(function() {
                     this.loadPart(pd);
                 },this);
             }
-            if(this.parts().length) {
-                this.currentPart(this.parts()[0]);
+            switch(this.partsMode().value) {
+                case 'all':
+                    if(this.parts().length) {
+                        this.currentPart(this.parts()[0]);
+                    }
+                    break;
+                case 'explore':
+                    this.partsTabMode('options');
+                    break;
             }
             this.allParts().forEach(function(p) {
                 p.nextParts().forEach(function(np) {

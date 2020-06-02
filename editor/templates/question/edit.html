@@ -489,7 +489,7 @@
                                                     <strong data-bind="text: name"></strong>
                                                 </a>
                                             </div>
-                                            <span class="list-group-item add alternative" data-bind="visible: canAddAlternative() && $data==$root.currentPart() || ($root.currentPart().isAlternative() && $data==$root.currentPart().parent())">
+                                            <span class="list-group-item add alternative" data-bind="visible: canAddAlternative() && $data==$root.currentPart() || ($root.currentPart() && $root.currentPart().isAlternative() && $data==$root.currentPart().parent())">
                                                 <button type="button" data-bind="click: addAlternative" class="btn btn-xs btn-warning"><span class="glyphicon glyphicon-plus"></span> Add an alternative answer</button>
                                             </span>
                                             <h4 class="children-header" data-bind="visible: canAddGap">Gaps</h4>

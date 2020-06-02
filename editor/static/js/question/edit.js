@@ -3061,6 +3061,8 @@ $(document).ready(function() {
         // The result of running the marking script
         this.last_run = ko.observable(null);
 
+        this.alternative_used = ko.observable(null);
+
         this.question = ko.observable(null);
         this.current_question_instance = null;
         this.last_question_json = null;
@@ -3159,8 +3161,10 @@ $(document).ready(function() {
                 part.storeAnswer(answer.value);
                 part.setStudentAnswer();
                 part.submit();
-                var res = part.mark_answer(part.rawStudentAnswerAsJME(),part.getScope());
-                var out = {script: part.markingScript, result: res, marking_result: part.marking_result, marks: part.marks};
+                var alternatives_result = part.markAlternatives(part.getScope());
+                var res = alternatives_result.result.script_result;
+                var alternative_used = alternatives_result.best_alternative ? alternatives_result.best_alternative.path : null;
+                var out = {script: part.markingScript, result: res, marking_result: part.marking_result, marks: part.marks, alternative_used: alternative_used};
                 if(!res.state_valid.mark) {
                     out.error = 'This answer is not valid.';
                     var feedback = compile_feedback(Numbas.marking.finalise_state(res.states.mark), part.marks);
@@ -3209,6 +3213,8 @@ $(document).ready(function() {
 
             var states = [];
             var existing_notes = {};
+
+            this.alternative_used(last_run.alternative_used ? part.q.getPart(last_run.alternative_used) : null);
 
             // Look at notes we already know about, and if they're present in this result
             var notes = this.notes().slice();

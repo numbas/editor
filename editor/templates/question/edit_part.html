@@ -205,6 +205,12 @@
                             <!-- /ko -->
                         </div>
                     </div>
+                    <div data-bind="if: last_run() && alternative_used()">
+                        <p>
+                            <strong>Alternative used: </strong>
+                            <button type="button" class="btn btn-link" data-bind="click: function() { $root.currentPart(alternative_used()); }, text: alternative_used().name"></button>
+                        </p>
+                    </div>
                     <div data-bind="visible: last_run() && sortedNotes().length>0">
                         <table class="notes table">
                             <colgroup>

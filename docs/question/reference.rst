@@ -11,9 +11,6 @@ Every Numbas question consists of three sections: :ref:`Statement <statement>`, 
   A question can have one or more parts, each of which is one of several types, depending on what kind of input you want from the student. 
 * Finally, the optional :ref:`Advice` section can be used to give a full solution to the question, which the student can request to see if they're stuck, or once they've finished the exam.
 
-.. todo::
-   Make this more accurate w.r.t. explore mode.
-
 The content in each section is generated each time the question is run, based on the question's :ref:`variables <variables>`.
 
 .. contents:: Contents of this page
@@ -60,9 +57,6 @@ Admin controls
 
 .. image:: images/admin_controls.png
     :alt: Admin controls on the question editor.
-
-.. todo::
-   Retake this screenshot with "add to basket" included
 
 .. glossary::
 
@@ -174,10 +168,6 @@ Parts
 
    A *part* is an opportunity for the student to give an answer in response to a prompt.
    A question might contain more than one part if the student needs to perform a sequence of steps, and you want to assess each of them independently.
-
-.. todo::
-   Talk about how parts should be linked - if they can be separate, should be separate questions.
-   (Highly opinionated)
 
 Each question has one or more *parts*.
 
@@ -562,13 +552,10 @@ You can see an example of the Javascript preamble in use at https://numbas.mathc
 
 You can see what functions are available in JavaScript at `the Numbas code documentation <http://numbas.github.io/Numbas>`_.
 
-.. todo:
-   Update these examples to use the signalbox
-
 If you want to do something with the display of the question on the page, you have to wait until its HTML has been generated, using the ``onHTMLAttached`` method. 
 Here's an example which hides an element in the statement with a given id::
     
-    question.onHTMLAttached(function() {
+    question.signals.on('HTMLAttached',function() {
         question.display.html.find('.statement #secret').hide();
     });
 
@@ -576,7 +563,7 @@ The preamble also runs before the question's variables are generated; if you'd l
 The question's variables are stored in ``question.scope.variables`` as JME data types, or in ``question.unwrappedVariables`` as simple JavaScript data. 
 Here's an example use::
 
-    question.onVariablesGenerated(function() {
+    question.signals.on('variablesGenerated',function() {
         alert("a = "+question.unwrappedVariables.a);
     });
 
@@ -619,8 +606,12 @@ Settings
 
         After typing a tag in the box, press the Enter key to add it to the list. 
 
-.. todo::
-   Metadata: topics and ability levels
+    Ability levels
+        Select the ability level that the question is designed for.
+
+    Taxonomy
+        The mathcentre taxonomy provides a framework for specifying the topics that a question relates to.
+        Select all topics relevant to the question; the taxonomy is hierarchical, so more specific subtopics appear once you've selected a broader topic.
 
 .. access:
 

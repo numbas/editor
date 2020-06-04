@@ -5,16 +5,43 @@ Explore mode
 
 The "explore" parts mode allows the creation of adaptive questions.
 
-.. todo::
-   More writing to motivate explore mode
-   
-   Distinction between part definition and part instance
+Rather than showing the student a fixed list of parts that they must answer in sequence, explore mode presents the student with a single part at a time.
+The student is shown a list of options for "next parts" to navigate to.
+The available parts can vary depending on the student's interaction with the current part - you could offer a hint before the student submits their answer, or only offer a certain path if the student answers the part correctly.
+
+When the student moves to another part, you can update the question's variables using data from the student's answer to the current part.
+With this, you can create powerful, adaptive exploration activities.
+
+Use cases
+=========
+
+Here are some of the use cases that explore mode was designed for:
+
+* Offer a selection of hints at varying degrees of helpfulness.
+* Walk the student through an iteractive algorithm, giving feedback on each step.
+* Allow the student to choose the method they want to use to solve a problem.
+* Take free input from the student, such as measurements or an example of an object, then ask them questions about it.
+* Ask the student to define the criteria for a test, then assess their decisions based on those criteria.
+
+Parts in explore mode
+=====================
+
+In the editor, you define one or more question parts.
+The first part in the list is the one that students are shown when they start the question.
+
+These are *definitions* of parts; when a the student moves to a particular part, an *instance* of it is created, using the current values of the question variables.
+There can be more than one instance of a part: when the student takes a "next part" option that they haven't taken before, an entirely new instance of that part is created, and any existing instances are unaffected.
+
+In explore mode, the question statement is always visible above the current part.
+The statement is not updated to reflect variable replacements when you move to another part.
 
 Scoring
 =======
 
 The student's scores for each part they visit are collected into pre-defined :guilabel:`Objectives`.
 The student's total score for the question is the sum of their objectives minus any penalties accrued for visiting parts, or the question's :guilabel:`Maximum mark`, whichever is lower.
+
+Click on :guilabel:`Explore mode options` at the top of the parts list to set up the question's objectives and penalties.
 
 .. glossary::
 
@@ -31,6 +58,10 @@ The student's total score for the question is the sum of their objectives minus 
       If :guilabel:`Always` is chosen, all penalties are shown in the score breakdown table.
 
       If :guilabel:`When active` is chosen, only penalties which have been applied are shown.
+
+.. image:: images/explore_options.png
+    :alt: The "explore mode options" tab
+
 
 Objectives
 ----------
@@ -61,8 +92,13 @@ Each part has a :guilabel:`Next parts` tab, where you define which parts the stu
 
 To add an option, click the :guilabel:`Add a next part option` button, and select a part.
 
-.. todo::
-   More explanation of what next parts can do
+For each "next part" option, you can define a condition for its availability, a list of variable replacements to make when chosen, and an optional penalty to apply when the student chooses this option.
+
+The student can navigate back to previous parts at any time, using the navigation tree at the top of the question.
+If the student changes their answer to a previous part, this could invalidate any next parts they have chosen, so all instances of next parts which use the student's answer in variable replacements are removed when the student changes their answer.
+
+.. image:: images/next_part.png
+    :alt: Defining a next part option.
 
 .. glossary::
 
@@ -113,9 +149,13 @@ Variable replacements
 ---------------------
 
 When the student selects a next part option, you can replace the values of question variables before the part instance is created.
+These changes only affect the next part, not the current one.
 
-.. todo::
-   Motivate replacing variables
+Here are some examples of what you can do with variable replacements:
+
+* Track the number of times a student has visited a certain part. For example: replace ``n`` with ``n+1``.
+* Replace a question variable with the student's answer. For example: ask them to give a number which you'll later ask them to factorise; ask them to enter measurements from an experiment.
+* Update the state of a simulation. For example: when factorising the number ``n``, the student enters a factor and you replace ``n`` with ``n/interpreted_answer``.
 
 Click :guilabel:`Add a variable replacement` to define a new variable replacement.
 

@@ -331,7 +331,7 @@ part_types.models = [
             tryLoad(tryGetAttribute(data,'minLength'),['length','partialCredit','message'],this.minlength);
             tryLoad(tryGetAttribute(data,'mustHave'),['strings','showStrings','partialCredit','message'],this.musthave);
             tryLoad(tryGetAttribute(data,'notAllowed'),['strings','showStrings','partialCredt','message'],this.notallowed);
-            tryLoad(tryGetAttribute(data,'mustMatchPattern'),['pattern','partialCredt','message','nameToCompare'],this.mustmatchpattern);
+            tryLoad(tryGetAttribute(data,'mustMatchPattern'),['pattern','partialCredit','message','nameToCompare'],this.mustmatchpattern);
             
             var valueGenerators = tryGetAttribute(data,'valueGenerators');
             if(valueGenerators) {

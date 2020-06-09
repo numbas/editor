@@ -13548,10 +13548,10 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             q.name = q.customName.trim();
         }
 
-        var statementNode = q.xml.selectSingleNode('statement/content/span');
-        q.statement = statementNode.innerHTML;
-        var adviceNode = q.xml.selectSingleNode('advice/content/span');
-        q.advice = adviceNode.innerHTML;
+        var statementNode = q.xml.selectSingleNode('statement');
+        q.statement = Numbas.xml.serializeMessage(statementNode);
+        var adviceNode = q.xml.selectSingleNode('advice');
+        q.advice = Numbas.xml.serializeMessage(adviceNode);
 
         var preambleNodes = q.xml.selectNodes('preambles/preamble');
         for(var i = 0; i<preambleNodes.length; i++) {
@@ -16305,7 +16305,7 @@ var math = Numbas.math = /** @lends Numbas.math */ {
      */
     parseScientific: function(str) {
         var m = /(-?\d[ \d]*(?:\.\d[ \d]*)?)e([\-+]?\d[ \d]*)/i.exec(str);
-        return {significand: parseFloat(m[1].replace(' ','')), exponent: parseInt(m[2].replace(' ',''))};
+        return {significand: parseFloat(m[1].replace(/ /g,'')), exponent: parseInt(m[2].replace(/ /g,''))};
     },
 
     /** If the given string is scientific notation representing a number, return a string of the form `\d+\.\d+`.
@@ -16320,10 +16320,10 @@ var math = Numbas.math = /** @lends Numbas.math */ {
             return str;
         }
         var minus = m[1] || '';
-        var significand_integer = m[2].replace(' ','');
-        var significand_decimal = (m[3] || '').replace(' ','');
+        var significand_integer = m[2].replace(/ /g,'');
+        var significand_decimal = (m[3] || '').replace(/ /g,'');
         var digits = significand_integer+significand_decimal;
-        var pow = parseInt(m[4].replace(' ',''));
+        var pow = parseInt(m[4].replace(/ /g,''));
         pow += significand_integer.length
         var zm = digits.match(/^(0+)[^0]/);
         if(zm) {

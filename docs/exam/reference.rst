@@ -235,6 +235,8 @@ Feedback
 
         You could use these messages to suggest topics for the student to revise, direct them to support resources, or detail the consequences of failing the test.
 
+.. _review-mode-options:
+
 Review mode
 -----------
 

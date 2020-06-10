@@ -115,7 +115,7 @@ RequireScript.prototype = {
     fdeps: [],
     callback: null,
 
-    
+
     /** Try to run this script. It will run if all of its dependencies have run.
      * Once it has run, every script which depends on it will try to run.
      */
@@ -595,7 +595,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
         settings = util.extend_object({},default_settings,settings);
         var checkingFunction = checkingFunctions[settings.checkingType.toLowerCase()];    //work out which checking type is being used
         try {
-            if(tree1 == null || tree2 == null) {    
+            if(tree1 == null || tree2 == null) {
                 //one or both expressions are invalid, can't compare
                 return false;
             }
@@ -610,7 +610,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
                 if( !varnamesAgree(vars1,vars2) ) {    //whoops, differing variables
                     return false;
                 }
-            } else { 
+            } else {
                 vars2.forEach(function(n) {
                     if(vars1.indexOf(n)==-1) {
                         vars1.push(n);
@@ -627,8 +627,8 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
                 var nscope = new jme.Scope([scope,{variables:rs[i]}]);
                 var r1 = nscope.evaluate(tree1);
                 var r2 = nscope.evaluate(tree2);
-                if( !resultsEqual(r1,r2,checkingFunction,settings.checkingAccuracy) ) { 
-                    errors++; 
+                if( !resultsEqual(r1,r2,checkingFunction,settings.checkingAccuracy) ) {
+                    errors++;
                 }
             }
             return errors < failureRate;
@@ -1133,7 +1133,7 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
 /** A parser for {@link JME} expressions
  * @memberof Numbas.jme
  * @constructor
- * 
+ *
  * @param {Numbas.jme.parser_options} options
  */
 var Parser = jme.Parser = function(options) {
@@ -1245,7 +1245,7 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
      */
     ops: ['not','and','or','xor','implies','isa','except','in','divides','as','..','#','<=','>=','<>','&&','||','|','*','+','-','/','^','<','>','=','!','&','÷','×','∈','∧','∨','¬','⟹','≠','≥','≤'],
 
-    /** Regular expressions to match tokens 
+    /** Regular expressions to match tokens
      * @type {Object.<RegExp>}
      */
     re: {
@@ -1581,7 +1581,7 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
             if(!tok.prefix) {
                 var o1 = this.getPrecedence(tok.name);
                 //while ops on stack have lower precedence, pop them onto output because they need to be calculated before this one. left-associative operators also pop off operations with equal precedence
-                
+
                 /** Should the next token on the stack be popped off?
                  * @returns {Boolean}
                  */
@@ -2092,13 +2092,13 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
             if(fn.typecheck(args)) {
                 var match = fn.intype(args);
                 var k = 0;
-                var exact_match = match.every(function(m,i) { 
+                var exact_match = match.every(function(m,i) {
                     if(m.missing) {
                         return;
                     }
                     var ok = args[k].type==m.type;
                     k += 1;
-                    return ok; 
+                    return ok;
                 });
                 if(exact_match) {
                     return {fn: fn, signature: match};
@@ -2318,7 +2318,7 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
                         }
                         var arg = eargs[j];
                         if(signature[i]) {
-                            castargs.push(jme.castToType(arg,signature[i])); 
+                            castargs.push(jme.castToType(arg,signature[i]));
                         } else {
                             castargs.push(arg);
                         }
@@ -2556,7 +2556,7 @@ var TNum = types.TNum = function(num) {
 }
 jme.registerType(
     TNum,
-    'number', 
+    'number',
     {
         'decimal': function(n) {
             var dp = 14;
@@ -3154,7 +3154,7 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
     this.id = funcObjAcc++;
     options = options || {};
 
-    /** Parse a signature definition. 
+    /** Parse a signature definition.
      * @param {String|Function} sig - either a string consisting of a variable name optionally followed by '*' and/or '?', a {@link Numbas.jme.token} constructor, or a {@link Numbas.jme.signature} function.
      * @returns {Numbas.jme.signature}
      */
@@ -3356,7 +3356,7 @@ var checkingFunctions = jme.checkingFunctions =
         tolerance = Math.floor(Math.abs(tolerance));
         return math.eq( math.precround(r1,tolerance), math.precround(r2,tolerance) );
     },
-    /** Round both values to `tolerance` significant figures, and fail if unequal. 
+    /** Round both values to `tolerance` significant figures, and fail if unequal.
      * @param {Number} r1
      * @param {Number} r2
      * @param {Number} tolerance
@@ -3542,7 +3542,7 @@ var resultsEqual = jme.resultsEqual = function(r1,r2,checkingFunction,checkingAc
 /** List names of variables used in `tree`, obtained by depth-first search.
  *
  * Differs from {@link Numbas.jme.findvars} by including duplicates, and ignoring {@link Numbas.jme.findvarsOps}.
- * 
+ *
  * @memberof Numbas.jme
  * @method
  * @param {Numbas.jme.tree} tree
@@ -7631,7 +7631,7 @@ var jmeRealNumber = jme.display.jmeRealNumber = function(n,settings)
         im += im.match(/\d$/) ? 'i' : '*i';
         if(Math.abs(n.im)<1e-15) {
             return re;
-        } 
+        }
         else if(n.re==0)
         {
             if(n.im==1)
@@ -7715,7 +7715,7 @@ var jmeDecimal = jme.display.jmeDecimal = function(n,settings)
         var re = jmeDecimal(n.re);
         if(n.isReal()) {
             return re;
-        } 
+        }
         var im = jmeDecimal(n.im)+'*i';
         if(n.re.isZero()) {
             if(n.im.eq(1))
@@ -8060,7 +8060,7 @@ var align_text_blocks = jme.display.align_text_blocks = function(header,items) {
         }
         return line;
     }
-    
+
     var item_lines = items.map(function(item){return item.split('\n')});
     var item_widths = item_lines.map(function(lines) {return lines.reduce(function(m,l){return Math.max(l.length,m)},0)});
     var num_lines = item_lines.reduce(function(t,ls){return Math.max(ls.length,t)},0);
@@ -8395,7 +8395,7 @@ var Term = Numbas.jme.rules.Term = function(tree) {
 }
 
 /** Replacements to make when identifying terms in a sequence of applications of a given op.
- * When looking for terms joined by `op`, `nonStrictReplacements[op]` is a list of objects with keys `op` and `replacement`. 
+ * When looking for terms joined by `op`, `nonStrictReplacements[op]` is a list of objects with keys `op` and `replacement`.
  * A tree `A op B` should be replaced with `replacement(tree)`.
  * For example, `x-y` should be rewritten to `x+(-y)`.
  */
@@ -8405,7 +8405,7 @@ var nonStrictReplacements = {
             return {tok: new jme.types.TOp('+',false,false,2,true,true), args: [tree.args[0],insertUnaryMinus(tree.args[1])]};
         }
     },
-    '*': { 
+    '*': {
         '/': function(tree) {
             tree = {tok: new jme.types.TOp('*',false,false,2,true,true), args: [tree.args[0],{tok:new jme.types.TOp('/u',false,true,1,false,false),args:[tree.args[1]]}]};
             return tree;
@@ -8474,12 +8474,12 @@ var getTerms = Numbas.jme.rules.getTerms = function(tree,op,options,calculate_mi
     function add_existing_names(items,existing_names,existing_equal_names) {
         return existing_names.length==0 && existing_equal_names.length==0 ? items : items.map(function(item) {
             return {
-                term: item.term, 
+                term: item.term,
                 names: existing_names.concat(item.names),
                 inside_equalnames: item.inside_equalnames,
                 outside_equalnames: existing_equal_names.concat(item.outside_equalnames),
-                quantifier: item.quantifier, 
-                min: item.min, 
+                quantifier: item.quantifier,
+                min: item.min,
                 max: item.max,
                 defaultValue: item.defaultValue,
             };
@@ -8856,7 +8856,7 @@ function matchFunction(ruleTree,exprTree,options) {
     }
     if(ruleTok.nameWithoutAnnotation in specialMatchFunctions) {
         return specialMatchFunctions[ruleTok.nameWithoutAnnotation](ruleTree,exprTree,options);
-    } else { 
+    } else {
         return matchOrdinaryFunction(ruleTree,exprTree,options);
     }
 }
@@ -9270,7 +9270,7 @@ function matchTermSequence(ruleTerms, exprTerms, commuting, allowOtherTerms, opt
      * The indices of the input and rule terms are given so the result of the match can be cached
      * @param {Numbas.jme.rules.term} exprTerm - the input term
      * @param {Numbas.jme.rules.term} ruleTerm - the term in the pattern which must be matched
-     * @param {Number} ic - the index of the input term 
+     * @param {Number} ic - the index of the input term
      * @param {Number} pc - the index of the rule term
      * @returns {Boolean}
      */
@@ -9299,7 +9299,7 @@ function matchTermSequence(ruleTerms, exprTerms, commuting, allowOtherTerms, opt
                 outside_equalnames: outside_equalnames
             }
         }
-        return matches[ic][pc].match!==false; 
+        return matches[ic][pc].match!==false;
     }
 
     /** Does the given assignment satisfy the constraints of the matching algorithm?
@@ -9370,7 +9370,7 @@ function matchTermSequence(ruleTerms, exprTerms, commuting, allowOtherTerms, opt
      * @param {Numbas.jme.rules.term} ruleTerm
      * @param {Numbas.jme.tree} exprTree
      */
-    function matchTerm(ruleTerm,exprTree){ 
+    function matchTerm(ruleTerm,exprTree){
         ruleTerm.names.forEach(function(name) {
             var o = resolveName(name,exprTree);
             nameTerm(o.name,o.value,ruleTerm);
@@ -9472,8 +9472,8 @@ var findSequenceMatch = jme.rules.findSequenceMatch = function(pattern,input,opt
             capture.push(-1);
             increment_start();
             return;
-        } 
-        
+        }
+
         ic -= 1;
         while(ic>=start && (ic>=capture.length || capture[ic]>=pattern.length)) {
             ic -= 1;
@@ -9701,7 +9701,7 @@ function matchType(wantedType,exprTree) {
     }
 }
 
-/** Match all of the given patterns against the given expression. 
+/** Match all of the given patterns against the given expression.
  * Return `false` if any of the patterns don't match.
  * @param {Array.<Numbas.jme.tree>} patterns
  * @param {Numbas.jme.tree} exprTree
@@ -9822,7 +9822,7 @@ var transform = jme.rules.transform = function(ruleTree,resultTree,exprTree,opti
 var transformAll = jme.rules.transformAll = function(ruleTree,resultTree,exprTree,options) {
     var changed = false;
     if(exprTree.args) {
-        var args = exprTree.args.map(function(arg){ 
+        var args = exprTree.args.map(function(arg){
             var o = transformAll(ruleTree,resultTree,arg,options);
             changed = changed || o.changed;
             return  o.expression;
@@ -9853,7 +9853,7 @@ patternParser.addPostfixOperator('`?','`?',{precedence: 0.5});  // optional
 patternParser.addPostfixOperator('`*','`*',{precedence: 0.5}); // any number of times
 patternParser.addPostfixOperator('`+','`+',{precedence: 0.5}); // at least one time
 
-patternParser.addPrefixOperator('`!','`!',{precedence: 0.5});  // not 
+patternParser.addPrefixOperator('`!','`!',{precedence: 0.5});  // not
 patternParser.addPrefixOperator('`+-','`+-',{precedence: 0.5});  // unary plus or minus
 patternParser.addPrefixOperator('`*/','`*/',{precedence: 0.5});  // unary multiply or divide
 
@@ -9935,7 +9935,7 @@ Ruleset.prototype = /** @lends Numbas.jme.rules.Ruleset.prototype */ {
             return false;
     },
 
-    /** Apply this set's rules to the given expression until they don't change any more 
+    /** Apply this set's rules to the given expression until they don't change any more
      * @param {Numbas.jme.tree} exprTree
      * @param {Numbas.jme.Scope} scope
      * @see Numbas.jme.rules.transform
@@ -12300,7 +12300,7 @@ var Question = Numbas.Question = function( number, exam, group, gscope, store)
 Question.prototype = /** @lends Numbas.Question.prototype */
 {
     /** Signals produced while loading this question.
-     * @type {Numbas.schedule.SignalBox} 
+     * @type {Numbas.schedule.SignalBox}
      * */
     signals: undefined,
 
@@ -12737,7 +12737,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
     leave: function() {
     this.display && this.display.leave();
     },
-    /** Execute the question's JavaScript preamble - should happen as soon as the configuration has been loaded from XML, before variables are generated. 
+    /** Execute the question's JavaScript preamble - should happen as soon as the configuration has been loaded from XML, before variables are generated.
      * @fires Numbas.Question#preambleRun
      */
     runPreamble: function() {
@@ -13480,10 +13480,10 @@ Numbas.queueScript('marking',['util', 'jme','localisation','jme-variables','math
 
 
     /** A JME scope with marking state attached.
-     *  The "current" state is a list of feedback items. 
+     *  The "current" state is a list of feedback items.
      *  The scope can also refer to previously computed states by name.
      *  The state can be modified by functions as they are called.
-     *  This should be the base 
+     *  This should be the base
      *
      *  @memberof Numbas.marking
      *  @augments Numbas.jme.Scope
@@ -13504,7 +13504,7 @@ Numbas.queueScript('marking',['util', 'jme','localisation','jme-variables','math
             scope.addFunction(fn);
         });
     }
-    StatefulScope.prototype = /** @lends Numbas.marking.StatefulScope.prototype */ { 
+    StatefulScope.prototype = /** @lends Numbas.marking.StatefulScope.prototype */ {
         evaluate: function(expr, variables) {
             var is_top = this.state===undefined || this.nesting_depth==0;
             this.nesting_depth += 1;
@@ -13544,7 +13544,7 @@ Numbas.queueScript('marking',['util', 'jme','localisation','jme-variables','math
      *  @property {Numbas.marking.note_definition} expr - The JME expression to evaluate to compute this note.
      *  @property {Numbas.jme.tree} tree - The compiled form of the expression
      *  @property {String[]} vars - The names of the variables this note depends on
-     *  
+     *
      *  @param {JME} source
      */
     var MarkingNote = marking.MarkingNote = function(source) {
@@ -13587,13 +13587,13 @@ Numbas.queueScript('marking',['util', 'jme','localisation','jme-variables','math
      *  A list of notes, which can refer to each other. The dependencies must form a directed acyclic graph, like for JME variables.
      *
      *  Two notes are required:
-     *  
+     *
      *  * The `mark` note is the final note, used to provide feedback on the part.
      *  * The value of the `interpreted_answer` note is used to represent the student's answer, as the script interpreted it.
-     *  
+     *
      *  @memberof Numbas.marking
      *  @constructor
-     *  
+     *
      *  @param {String} source - The definitions of the script's notes.
      *  @param {Numbas.marking.MarkingScript} [base] - a base script to extend.
      *
@@ -13822,8 +13822,8 @@ Copyright 2011-14 Newcastle University
  * Provides {@link Numbas.math}, {@link Numbas.vectormath} and {@link Numbas.matrixmath}
  */
 Numbas.queueScript('math',['base','decimal'],function() {
-    
-    Decimal.set({ 
+
+    Decimal.set({
         precision: 40,
         modulo: Decimal.EUCLID,
         toExpPos: 1000,
@@ -13846,7 +13846,7 @@ Numbas.queueScript('math',['base','decimal'],function() {
  * @see Numbas.math.defineRange
  */
 var math = Numbas.math = /** @lends Numbas.math */ {
-    /** Regex to match numbers in scientific notation 
+    /** Regex to match numbers in scientific notation
      * @type {RegExp}
      * @memberof Numbas.math
      */
@@ -16196,7 +16196,7 @@ var vectormath = Numbas.vectormath = {
  * @namespace Numbas.matrixmath
  */
 var matrixmath = Numbas.matrixmath = {
-    /** Negate a matrix - negate each of its elements 
+    /** Negate a matrix - negate each of its elements
      * @param {matrix} m
      * @returns {matrix}
      */
@@ -16962,7 +16962,7 @@ var util = Numbas.util = /** @lends Numbas.util */ {
         b = b.toString().toLowerCase();
         return( b=='true' || b=='yes' );
     },
-    /** Regular expression recognising a fraction 
+    /** Regular expression recognising a fraction
      * @type RegExp
      */
     re_fraction: /^\s*(-?)\s*(\d+)\s*\/\s*(\d+)\s*/,
@@ -19074,7 +19074,7 @@ if (!Object.entries) {
         resArray = new Array(i); // preallocate the Array
     while (i--)
       resArray[i] = [ownProps[i], obj[ownProps[i]]];
-    
+
     return resArray;
   };
 }
@@ -23785,11 +23785,11 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.answerJSON = params.answer;
             this.part = params.part;
             this.disable = params.disable;
-            this.widget = params.widget || Knockout.computed(function() { 
+            this.widget = params.widget || Knockout.computed(function() {
                 var part = Knockout.unwrap(this.part);
                 return part && part.input_widget();
             },this);
-            this.widget_options = params.widget_options || Knockout.computed(function() { 
+            this.widget_options = params.widget_options || Knockout.computed(function() {
                 var part = Knockout.unwrap(this.part);
                 return part && part.input_options()
             },this);
@@ -24098,15 +24098,15 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             var lastValue = this.result();
             this.setAnswerJSON = Knockout.computed(function() {
                 var result = this.result();
-                var valuesSame = 
-                    (!result.valid && !lastValue.valid) || 
+                var valuesSame =
+                    (!result.valid && !lastValue.valid) ||
                     (
-                        (result.value!==undefined && lastValue.value!==undefined) && 
-                        result.value.length == lastValue.value.length && 
-                        result.value.every(function(row,i) { 
-                            return row.length==lastValue.value[i].length && row.every(function(cell,j){ 
-                                return cell == lastValue.value[i][j]; 
-                            }) 
+                        (result.value!==undefined && lastValue.value!==undefined) &&
+                        result.value.length == lastValue.value.length &&
+                        result.value.every(function(row,i) {
+                            return row.length==lastValue.value[i].length && row.every(function(cell,j){
+                                return cell == lastValue.value[i][j];
+                            })
                         })
                     );
                 if(!valuesSame || result.valid!=lastValue.valid) {
@@ -25161,7 +25161,7 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         var parametersPath = 'answer';
         tryGetAttribute(settings,xml,parametersPath+'/checking',['type','accuracy','failurerate'],['checkingType','checkingAccuracy','failureRate']);
         tryGetAttribute(settings,xml,parametersPath+'/checking/range',['start','end','points'],['vsetRangeStart','vsetRangeEnd','vsetRangePoints']);
-        
+
         var valueGeneratorsNode = xml.selectSingleNode('answer/checking/valuegenerators');
         if(valueGeneratorsNode) {
             var valueGenerators = valueGeneratorsNode.selectNodes('generator');
@@ -25493,6 +25493,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         }
         //get minimum marks setting
         tryGetAttribute(settings,xml,'marking/minmarks','enabled','minMarksEnabled');
+        //console.log('here');
         if(this.type=='1_n_2') {
             settings.minMarksEnabled = false;
         }
@@ -25504,7 +25505,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         if(!choicesNode) {
             this.error('part.mcq.choices missing');
         }
-        tryGetAttribute(settings,null,choicesNode,['minimumexpected','maximumexpected','shuffle','displayType','displayColumns'],['minAnswersString','maxAnswersString','shuffleChoices']);
+        tryGetAttribute(settings,null,choicesNode,['minimumexpected','maximumexpected','shuffle','allornothingmarking','displayType','displayColumns'],['minAnswersString','maxAnswersString','shuffleChoices', 'allOrNothing']);
         var choiceNodes = choicesNode.selectNodes('choice');
         var answersNode, answerNodes;
         if(this.type == '1_n_2' || this.type == 'm_n_2') {
@@ -26076,7 +26077,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         settings.matrix = matrix;
         return settings.maxMatrix;
     },
-    /** Store the student's choices 
+    /** Store the student's choices
      * @param {Object} answer - object with properties `answer` and `choice`, giving the index of the chosen item
      * */
     storeTick: function(answer)
@@ -26919,4 +26920,3 @@ PatternMatchPart.prototype = /** @lends Numbas.PatternMatchPart.prototype */ {
 });
 Numbas.partConstructors['patternmatch'] = util.extend(Part,PatternMatchPart);
 });
-

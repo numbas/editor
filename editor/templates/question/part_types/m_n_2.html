@@ -17,6 +17,7 @@
         {% property 'minAnswers' 'Minimum answers' max='maxAnswers' help_url='question/parts/multiple-choice.html#term-minimum-answers' min=0 %}
         {% property 'maxAnswers' 'Maximum answers' min=minAnswers help_url='question/parts/multiple-choice.html#term-maximum-answers' zero_means='no maximum' %}
         {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='question/parts/multiple-choice.html#term-shuffle-order-of-choices' %}
+        {% booleanproperty 'allOrNothing' 'Only award marks if all correct choices selected?' help_url='#' %}
         <div class="form-group" data-bind="fadeVisible: minAnswers()!=0 || maxAnswers()!=0">
             <label class="{{form_label_class}} control-label">
                 What to do if wrong number of answers selected: {% helplink 'question/parts/multiple-choice.html#term-what-to-do-if-wrong-number-of-answers-selected' %}
@@ -32,8 +33,8 @@
 
         <hr>
         {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='question/parts/reference.html#term-show-correct-answer-on-reveal' %}
-        {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/parts/reference.html#term-show-score-feedback-icon' %}    
-        {% booleanproperty 'showCellAnswerState' 'Show choice feedback state?' help_url='question/parts/multiple-choice.html#term-show-choice-feedback-state' %}    
+        {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/parts/reference.html#term-show-score-feedback-icon' %}
+        {% booleanproperty 'showCellAnswerState' 'Show choice feedback state?' help_url='question/parts/multiple-choice.html#term-show-choice-feedback-state' %}
     </form>
 </section>
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='choices'}">

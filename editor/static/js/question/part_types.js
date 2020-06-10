@@ -4,18 +4,18 @@ var tryGetAttribute = Editor.tryGetAttribute;
 
 part_types.models = [
     {
-        name: 'information', 
+        name: 'information',
         niceName: 'Information only',
         can_be_gap: false
     },
     {
-        name: 'extension', 
+        name: 'extension',
         niceName: 'Extension',
         has_marks: true
     },
     {
-        name: 'gapfill', 
-        niceName: 'Gap-fill', 
+        name: 'gapfill',
+        niceName: 'Gap-fill',
         has_marks: true,
         has_marking_settings: true,
         can_be_gap: false,
@@ -57,9 +57,9 @@ part_types.models = [
         }
     },
     {
-        name:'jme', 
-        niceName: 'Mathematical expression', 
-        has_marks: true, 
+        name:'jme',
+        niceName: 'Mathematical expression',
+        has_marks: true,
         has_marking_settings: true,
         tabs: function(part,model) {
             var restrictions_tab_in_use = ko.computed(function() {
@@ -330,7 +330,7 @@ part_types.models = [
             tryLoad(tryGetAttribute(data,'mustHave'),['strings','showStrings','partialCredit','message'],this.musthave);
             tryLoad(tryGetAttribute(data,'notAllowed'),['strings','showStrings','partialCredt','message'],this.notallowed);
             tryLoad(tryGetAttribute(data,'mustMatchPattern'),['pattern','partialCredt','message','nameToCompare'],this.mustmatchpattern);
-            
+
             var valueGenerators = tryGetAttribute(data,'valueGenerators');
             if(valueGenerators) {
                 var d = {};
@@ -344,8 +344,8 @@ part_types.models = [
         }
     },
     {
-        name:'numberentry', 
-        niceName: 'Number entry', 
+        name:'numberentry',
+        niceName: 'Number entry',
         has_marks: true,
         has_marking_settings: true,
         widget: 'number',
@@ -561,8 +561,8 @@ part_types.models = [
         }
     },
     {
-        name:'patternmatch', 
-        niceName: 'Match text pattern', 
+        name:'patternmatch',
+        niceName: 'Match text pattern',
         has_marks: true,
         has_marking_settings: true,
         widget: 'string',
@@ -610,7 +610,7 @@ part_types.models = [
         }
     },
     {
-        name:'1_n_2', 
+        name:'1_n_2',
         has_marks: true,
         niceName: 'Choose one from a list',
         tabs: function(parts,model) {
@@ -747,7 +747,7 @@ part_types.models = [
         }
     },
     {
-        name:'m_n_2', 
+        name:'m_n_2',
         has_marks: true,
         niceName: 'Choose several from a list',
         tabs: function(part,model) {
@@ -765,6 +765,7 @@ part_types.models = [
                 minAnswers: ko.observable(0),
                 maxAnswers: ko.observable(0),
                 shuffleChoices: ko.observable(false),
+                allOrNothing: ko.observable(false),
                 displayColumns: ko.observable(0),
                 customMatrix: ko.observable(''),
                 warningType: ko.observable(''),
@@ -817,6 +818,7 @@ part_types.models = [
             data.minMarks = this.minMarks();
             data.maxMarks = this.maxMarks();
             data.shuffleChoices = this.shuffleChoices();
+            data.allOrNothing = this.allOrNothing();
             data.displayType = 'checkbox';
             data.displayColumns = this.displayColumns();
             data.minAnswers = this.minAnswers();
@@ -865,7 +867,7 @@ part_types.models = [
         },
 
         load: function(data) {
-            tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','displayColumns','showCellAnswerState'],this);
+            tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','allOrNothing','displayColumns','showCellAnswerState'],this);
             if(typeof data.matrix == 'string') {
                 this.customMarking(true);
                 this.customMatrix(data.matrix);
@@ -898,7 +900,7 @@ part_types.models = [
         }
     },
     {
-        name:'m_n_x', 
+        name:'m_n_x',
         has_marks: true,
         niceName: 'Match choices with answers',
         tabs: function(part,model) {
@@ -957,7 +959,7 @@ part_types.models = [
             model.matrix = Editor.editableGrid(
                 ko.computed(function() {
                     return model.choices().length;
-                }), 
+                }),
                 ko.computed(function() {
                     return model.answers().length;
                 }),
@@ -1254,4 +1256,3 @@ item_json.custom_part_types.forEach(function(data) {
 });
 
 });
-

@@ -1301,6 +1301,13 @@ $(document).ready(function() {
             this.allParts().forEach(function(p) {
                 p.nextParts().forEach(function(np) {
                     np.otherPart(np.part.parentList()[np.otherPartIndex]);
+                    np.variableReplacements().forEach(function(vr) {
+                        vr.value_options().forEach(function(vo,i) {
+                            if(vr.custom_definition()==vo.definition) {
+                                vr.value_option(vo);
+                            }
+                        });
+                    });
                 });
             });
 

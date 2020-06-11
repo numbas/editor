@@ -1302,9 +1302,10 @@ $(document).ready(function() {
                 p.nextParts().forEach(function(np) {
                     np.otherPart(np.part.parentList()[np.otherPartIndex]);
                     np.variableReplacements().forEach(function(vr) {
-                        vr.value_options().forEach(function(vo,i) {
-                            if(vr.custom_definition()==vo.definition) {
+                        vr.value_options().find(function(vo,i) {
+                            if(vr.custom_definition()==ko.unwrap(vo.definition)) {
                                 vr.value_option(vo);
+                                return true;
                             }
                         });
                     });
@@ -2502,7 +2503,7 @@ $(document).ready(function() {
                 var next_parts_tab_in_use = ko.pureComputed(function() {
                     return this.nextParts().length>0;
                 },this);
-                tabs.push(new Editor.Tab('nextparts','Next parts','arrow-right'));
+                tabs.push(new Editor.Tab('nextparts','Next parts','arrow-right',{in_use: next_parts_tab_in_use}));
             }
 
             tabs = tabs.sort(function(a,b) {
@@ -2931,13 +2932,12 @@ $(document).ready(function() {
             }
             tryLoad(data,['rawLabel','penaltyAmount','lockAfterLeaving'],this);
             tryLoad(data,'availabilityCondition',this,'availabilityExpression');
-            for(var i=0;i<this.availability_conditions.length;i++) {
-                var condition = this.availability_conditions[i];
-                if(ko.unwrap(condition.value)==this.availabilityExpression()) {
-                    this.availabilityCondition(condition);
-                    break;
+            this.availability_conditions().find(function(condition) {
+                if(ko.unwrap(condition.value)==np.availabilityExpression()) {
+                    np.availabilityCondition(condition);
+                    return true;
                 }
-            }
+            });
             this.otherPartIndex = data.otherPart;
             this.penalty(this.part.q.penalties().find(function(p) { return p.name()==data.penalty; }));
             if(data.variableReplacements) {
@@ -2961,7 +2961,7 @@ $(document).ready(function() {
         this.custom_definition = ko.observable('interpreted_answer');
         this.value_options = ko.pureComputed(function() {
             var options = [
-                {definition: 'interpreted_answer', name: "Student's answer"}
+                {definition: 'interpreted_answer', name: "Student's answer to this part"}
             ];
             options = options.concat(np.part.gaps().map(function(g,i) {
                 return {definition: 'interpreted_answer['+i+']', name: "Student's answer to \""+g.name()+"\""};

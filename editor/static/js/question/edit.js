@@ -2883,15 +2883,21 @@ $(document).ready(function() {
             np.variableReplacements.remove(vr);
         }
         this.availabilityExpression = ko.observable('');
-        this.availability_conditions = [
-            {name: 'Always', id: 'always', value: ''},
-            {name: 'When answer submitted', id: 'when-submitted', value: 'answered'},
-            {name: 'When unanswered or incorrect', id: 'when-unanswered-or-incorrect', value: 'not (answered and credit=1)'},
-            {name: 'When incorrect', id: 'when-incorrect', value: 'answered and credit<1'},
-            {name: 'When correct', id: 'when-correct', value: 'answered and credit=1'},
-            {name: 'Depending on expression', id: 'expression', value: this.availabilityExpression}
-        ];
-        this.availabilityCondition = ko.observable(this.availability_conditions[0]);
+        this.availability_conditions = ko.pureComputed(function() {
+            var conditions = [
+                {name: 'Always', id: 'always', value: ''},
+                {name: 'When answer submitted', id: 'when-submitted', value: 'answered'},
+                {name: 'When unanswered or incorrect', id: 'when-unanswered-or-incorrect', value: 'not (answered and credit=1)'},
+                {name: 'When incorrect', id: 'when-incorrect', value: 'answered and credit<1'},
+                {name: 'When correct', id: 'when-correct', value: 'answered and credit=1'},
+                {name: 'Depending on expression', id: 'expression', value: np.availabilityExpression}
+            ];
+            conditions = conditions.concat(np.part.alternatives().map(function(a,i) {
+                return {name: "When alternative \""+a.name()+"\" used", id: 'used-alternative-'+i, value: 'answered and used_alternative='+i};
+            }));
+            return conditions;
+        });
+        this.availabilityCondition = ko.observable(this.availability_conditions()[0]);
         this.penalty = ko.observable(null);
         this.penaltyAmount = ko.observable(0);
         this.lockAfterLeaving = ko.observable(false);

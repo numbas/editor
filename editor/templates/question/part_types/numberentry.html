@@ -37,12 +37,16 @@
         {% booleanproperty 'allowFractions' 'Allow the student to enter a fraction?' help_url='question/parts/numberentry.html#term-Allow-the-student-to-enter-a-fraction' %}
     </div>
     <div data-bind="fadeVisible: allowFractions">
-        {% booleanproperty 'mustBeReduced' 'Must the fraction be reduced?' help_url='question/parts/numberentry.html#term-Must-the-fraction-be-reduced' %}
-        {% booleanproperty 'showFractionHint' 'Show fraction input hint?' help_url='question/parts/numberentry.html#term-Show-fraction-input-hint' %}
+        <div data-bind="fadeVisible: fractionPossible">
+            {% booleanproperty 'mustBeReduced' 'Must the fraction be reduced?' help_url='question/parts/numberentry.html#term-must-the-fraction-be-reduced' %}
+            {% booleanproperty 'showFractionHint' 'Show fraction input hint?' help_url='question/parts/numberentry.html#term-Show-fraction-input-hint' %}
+        </div>
         <div data-bind="fadeVisible: mustBeReduced">
             {% percentproperty 'mustBeReducedPC' 'Partial credit for unreduced fraction' %}
         </div>
-        {% booleanproperty 'correctAnswerFraction' 'Display the correct answer as a fraction?' help_url='question/parts/numberentry.html#term-Display-the-correct-answer-as-a-fraction' %}
+        <div data-bind="fadeVisible: fractionPossible">
+            {% booleanproperty 'correctAnswerFraction' 'Display the correct answer as a fraction?' help_url='question/parts/numberentry.html#term-Display-the-correct-answer-as-a-fraction' %}
+        </div>
     </div>
     <div class="form-group" data-bind="fadeVisible: precisionType().name!='none'">
         {% property 'precision' 'precisionWord' dynamic_label=True %}

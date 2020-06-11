@@ -96,6 +96,9 @@ section.editing-history .contributors {
     margin-bottom: 3em;
 }
 
+section.editing-history .individual-feedback {
+    margin: 1em 0;
+}
 section.editing-history .individual-feedback td {
     padding: 0.5em;
 }

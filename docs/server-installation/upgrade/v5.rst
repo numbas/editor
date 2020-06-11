@@ -1,0 +1,28 @@
+Upgrading from Numbas 4.0 to 5.0
+================================
+
+Follow the instructions below, using a terminal in your ``numbas_editor``
+directory.
+
+-   Get the latest code:: 
+
+        git pull
+
+-   Upgrade Python libraries::
+
+        pip install --upgrade -r requirements.txt
+
+-   Run the setup script. 
+    It will use your existing settings and perform the rest of the upgrade jobs.
+    ::
+
+        python first_setup.py
+
+-   Finally, get the latest code in your Numbas ``compiler`` directory::
+
+      cd ../compiler
+      git pull
+
+That's it!
+
+If you have any problems, email numbas@ncl.ac.uk.

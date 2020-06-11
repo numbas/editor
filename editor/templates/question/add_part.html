@@ -1,0 +1,17 @@
+{% load links %}
+{% load sanitizer %}
+{% load helplink %}
+
+<!-- ko with: addingPart -->
+<h3>
+    <span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parentList().length ? 'Add another '+kind : 'Add a '+kind"></span>
+    <span data-bind="if: $data.parent">to <span data-bind="text: $data.parent.levelName()+' '+$data.parent.indexLabel()"></span>
+</h3>
+<ul class="list-inline add-part">
+    <!-- ko foreach: availableTypes -->
+    <li><button type="button" class="btn btn-default" data-bind="text: niceName, click: $parents[1].addPart"></button></li>
+    <!-- /ko -->
+    <li><button type="button" class="btn btn-link" data-bind="click: $parent.addPartTypeModal.open">… More part types</button></li>
+</ul>
+<button class="btn btn-link" type="button" data-bind="visible: $data.parent, click: function() {$parent.currentPart($data.parent)}">Cancel</button>
+<!-- /ko -->

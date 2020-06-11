@@ -65,6 +65,8 @@ Pattern restriction
     Partial credit for not matching pattern
         If the student's answer does not match the given pattern, their score is multiplied by this percentage.
 
+.. _mathematical-expression-variable-options:
+
 Variables
 ---------
 

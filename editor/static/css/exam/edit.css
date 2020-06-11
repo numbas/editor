@@ -20,3 +20,45 @@
 .question-group .panel-heading .handle-grp {
     margin-left: -15px;
 }
+
+.questions-tab .question {
+  display: grid;
+  grid-gap: 0.5em;
+  grid-template-columns: min-content 1fr max-content;
+}
+.questions-tab .question input.name::placeholder {
+    color: black;
+}
+.questions-tab .question .description {
+  grid-column: 2 / 4;
+}
+.questions-tab .question .controls {
+  grid-column: 3;
+}
+.questions-tab .question .title, .question .details {
+  grid-column: 2;
+  grid-row: 1;
+}
+.questions-tab .question .handle {
+  grid-row: 1/3;
+}
+.questions-tab .question > .title {
+  display: grid;
+  align-items: center;
+  grid-template-columns: 1fr;
+  grid-auto-columns: min-content;
+  grid-auto-flow: column;
+  grid-gap: 0.5em;
+}
+
+@media screen and (max-width: 1490px) {
+    .questions-tab .question {
+        grid-template-columns: min-content 1fr;
+    }
+    .questions-tab .question .controls {
+        grid-column: 2;
+    }
+    .questions-tab .question .description {
+        grid-column: 2;
+    }
+}

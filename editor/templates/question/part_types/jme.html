@@ -5,18 +5,19 @@
 <form class="form-horizontal" data-bind="submit: Editor.noop">
     <div class="main-settings">
         {% property '$parent.marks' 'Marks' min=0 help_url='question/parts/reference.html#term-marks' %}
-        <div data-bind="visible: $parent.steps().length">{% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='question/parts/reference.html#term-penalty-for-revealing-steps' %}</div>
+
         {% jmeproperty 'answer' 'Correct answer' help_url='question/parts/mathematical-expression.html#term-correct-answer' %}
         <div data-bind="fadeVisible: answerIsEquation" class="alert alert-warning">
             <p>{% helplink 'question/parts/mathematical-expression.html#marking-an-equation' subject='marking equations' %} The correct answer is an equation. Use the <a href="#" data-bind="click: $parent.setTab('checking-accuracy')">accuracy tab</a> to generate variable values satisfying this equation so it can be marked accurately.</p>
         </div>
     </div>
 
+    <hr>
+    {% include "question/generic_part_marking_settings.html" %}
+
     <h4>Advanced settings</h4>
     <hr>
     {% property 'answerSimplification' 'Answer simplification rules' monospace=True help_url='question/parts/mathematical-expression.html#term-answer-simplification-rules' %}
-    {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='question/parts/reference.html#term-show-correct-answer-on-reveal' %}
-    {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/parts/reference.html#term-show-score-feedback-icon' %}    
     {% booleanproperty 'showPreview' 'Show preview of student\'s answer?' help_url='question/parts/mathematical-expression.html#term-show-preview-of-student-s-answer' %}
 </form>
 </section>

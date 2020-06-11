@@ -88,7 +88,7 @@ $(document).ready(function() {
             this.show = params.data.show;
             this.part_types = params.data.part_types;
             this.search = ko.observable('');
-            this.filtered_part_types = ko.computed(function() {
+            this.filtered_part_types = ko.pureComputed(function() {
                 var search = this.search();
                 var words = search.toLowerCase().split(/\s+/g).map(function(w){ return w.trim() });
                 return this.part_types.filter(function(pt) {
@@ -163,10 +163,48 @@ $(document).ready(function() {
             running: ko.observable(false),
             time_remaining: ko.observable(0)
         };
+
+        this.partsModes = [
+            {name: 'Show all parts', value: 'all'},
+            {name: 'Explore', value: 'explore'}
+        ];
+        this.partsMode = ko.observable(this.partsModes[0]);
+
+
         this.parts = ko.observableArray([]);
+        ko.computed(function() {
+            if(this.partsMode().value=='all') {
+                this.parts().forEach(function(p) {
+                    p.reachable(true);
+                });
+                return;
+            }
+            if(!this.parts().length) {
+                return;
+            }
+            var p = this.parts()[0];
+            var seen = [p];
+            var queue = [p];
+            while(queue.length>0) {
+                p = queue.pop();
+                p.reachable(true);
+                p.nextParts().forEach(function(np) {
+                    var p2 = np.otherPart();
+                    if(p2) {
+                        if(seen.indexOf(p2)==-1) {
+                            queue.push(p2);
+                            seen.push(p2);
+                        }
+                    }
+                });
+            }
+            this.parts().forEach(function(p) {
+                p.reachable(seen.indexOf(p)>=0);
+            });
+        },this);
 
         // all parts in this question, including child parts such as gaps and steps
-        this.allParts = ko.computed(function() {
+        this.allParts = ko.pureComputed(function() {
             var o = [];
             this.parts().map(function(p) {
                 o.push(p);
@@ -174,6 +212,7 @@ $(document).ready(function() {
                     o = o.concat(p.gaps());
                 }
                 o = o.concat(p.steps());
+                o = o.concat(p.alternatives());
             });
             return o;
         },this);
@@ -181,7 +220,26 @@ $(document).ready(function() {
         this.currentPart = ko.observable(null);
         this.addingPart = ko.observable(null);
 
-        this.partTypes = ko.computed(function() {
+        this.partsTabMode = ko.observable('edit part');
+        this.showPartOptions = function() {
+            this.partsTabMode('options');
+        };
+        this.partsTabMode.subscribe(function(mode) {
+            switch(mode) {
+                case 'edit part':
+                    q.addingPart(null);
+                    break;
+                case 'options':
+                    q.currentPart(null);
+                    q.addingPart(null);
+                    break;
+                case 'add part':
+                    q.currentPart(null);
+                    break;
+            }
+        });
+
+        this.partTypes = ko.pureComputed(function() {
             return Editor.part_types.models.filter(function(pt) {
                 if(pt.is_custom_part_type) {
                     return q.allParts().some(function(p){ return p.type().name==pt.name });
@@ -190,14 +248,40 @@ $(document).ready(function() {
                 }
             });
         }, this);
-        this.gapTypes = ko.computed(function(){ return q.partTypes().filter(function(t){ return t.can_be_gap!==false }); });
-        this.stepTypes = ko.computed(function(){ return q.partTypes().filter(function(t){ return t.can_be_step!==false }); });
+        this.gapTypes = ko.pureComputed(function(){ return q.partTypes().filter(function(t){ return t.can_be_gap!==false }); });
+        this.stepTypes = ko.pureComputed(function(){ return q.partTypes().filter(function(t){ return t.can_be_step!==false }); });
 
-        this.usedPartTypes = ko.computed(function() {
+        this.usedPartTypes = ko.pureComputed(function() {
             return Editor.part_types.models.filter(function(pt) {
                 return q.allParts().some(function(p){ return p.type().name==pt.name });
             })
         }, this);
+
+        this.maxMarks = ko.observable(0);
+        this.penalties = ko.observableArray([]);
+        this.objectives = ko.observableArray([]);
+
+        this.objective_visibility_options = [
+            {name: 'Always', id: 'always'},
+            {name: 'When active', id: 'when-active'}
+        ];
+
+        this.penaltyVisibility = ko.observable(this.objective_visibility_options[0]);
+        this.objectiveVisibility = ko.observable(this.objective_visibility_options[0]);
+
+        this.addObjective = function() {
+            q.objectives.push(new ScoreBin(q));
+        }
+        this.removeObjective = function(objective) {
+            q.objectives.remove(objective);
+        }
+
+        this.addPenalty = function() {
+            q.penalties.push(new ScoreBin(q));
+        }
+        this.removePenalty = function(penalty) {
+            q.penalties.remove(penalty);
+        }
 
         //for image attribute modal
         this.imageModal = {
@@ -216,7 +300,7 @@ $(document).ready(function() {
             Editor.add_question_to_basket(item_json.itemJSON.id);
         }
 
-        this.saveResources = ko.computed(function() {
+        this.saveResources = ko.pureComputed(function() {
             var resources = this.resources();
             var out = [];
             for(var i=0;i<resources.length;i++) {
@@ -236,10 +320,10 @@ $(document).ready(function() {
                 ext[k] = data[k];
             });
             this.used = ko.observable(false);
-            this.required = ko.computed(function() {
+            this.required = ko.pureComputed(function() {
                 return q.usedPartTypes().some(function(p){ return p.required_extensions && p.required_extensions.indexOf(ext.location) != -1 });
             }, this);
-            this.used_or_required = ko.computed({
+            this.used_or_required = ko.pureComputed({
                 read: function() {
                     return this.used() || this.required();
                 },
@@ -259,11 +343,11 @@ $(document).ready(function() {
         for(var i=0;i<item_json.numbasExtensions.length;i++) {
             this.extensions.push(new Extension(this,item_json.numbasExtensions[i]));
         }
-        this.usedExtensions = ko.computed(function() {
+        this.usedExtensions = ko.pureComputed(function() {
             return this.extensions().filter(function(e){return e.used_or_required()});
         },this);
 
-        this.allsets = ko.computed(function() {
+        this.allsets = ko.pureComputed(function() {
             return builtinRulesets.concat(this.rulesets().map(function(r){return r.name()})).sort();
         },this);
 
@@ -272,18 +356,18 @@ $(document).ready(function() {
             js: ko.observable('')
         };
 
-        var extensions_tab_in_use = ko.computed(function() {
+        var extensions_tab_in_use = ko.pureComputed(function() {
             return this.usedExtensions().length>0 || this.functions().length>0 || this.preamble.css()!='' || this.preamble.js()!='';
         },this);
 
         this.mainTabs([
-            new Editor.Tab('statement','Statement','blackboard',{in_use: ko.computed(function(){ return this.statement()!=''; },this)}),
-            new Editor.Tab('parts','Parts','check',{in_use: ko.computed(function() { return this.parts().length>0; },this)}),
-            new Editor.Tab('variables','Variables','list',{in_use: ko.computed(function() { return this.variables().length>0; },this)}),
-            new Editor.Tab('variabletesting','Variable testing','dashboard',{in_use: ko.computed(function() { return this.variablesTest.condition()!=''; },this)}),
-            new Editor.Tab('advice','Advice','blackboard',{in_use: ko.computed(function() { return this.advice()!=''; },this)}),
+            new Editor.Tab('statement','Statement','blackboard',{in_use: ko.pureComputed(function(){ return this.statement()!=''; },this)}),
+            new Editor.Tab('parts','Parts','check',{in_use: ko.pureComputed(function() { return this.parts().length>0; },this)}),
+            new Editor.Tab('variables','Variables','list',{in_use: ko.pureComputed(function() { return this.variables().length>0; },this)}),
+            new Editor.Tab('variabletesting','Variable testing','dashboard',{in_use: ko.pureComputed(function() { return this.variablesTest.condition()!=''; },this)}),
+            new Editor.Tab('advice','Advice','blackboard',{in_use: ko.pureComputed(function() { return this.advice()!=''; },this)}),
             new Editor.Tab('extensions','Extensions & scripts','wrench',{in_use: extensions_tab_in_use}),
-            new Editor.Tab('resources','Resources','picture',{in_use: ko.computed(function() { return this.resources().length>0; },this)}),
+            new Editor.Tab('resources','Resources','picture',{in_use: ko.pureComputed(function() { return this.resources().length>0; },this)}),
             new Editor.Tab('settings','Settings','cog'),
             new Editor.Tab('exams','Exams using this question','book',{in_use:item_json.used_in_exams}),
             new Editor.Tab('network','Other versions','link',{in_use:item_json.other_versions_exist}),
@@ -301,7 +385,7 @@ $(document).ready(function() {
 
         this.addPart = function(type) {
             var adding = q.addingPart();
-            var p = new Part(q,adding.parent,adding.parentList);
+            var p = new Part(adding.kind,q,adding.parent,adding.parentList);
             p.setType(type.name);
             adding.parentList.push(p);
             q.currentPart(p);
@@ -310,12 +394,12 @@ $(document).ready(function() {
         }
         this.currentPart.subscribe(function(p) {
             if(p) {
-                q.addingPart(null);
+                q.partsTabMode('edit part');
             }
         });
         this.addingPart.subscribe(function(adding) {
             if(adding) {
-                q.currentPart(null);
+                q.partsTabMode('add part');
             }
         });
         ko.computed(function() {
@@ -337,13 +421,13 @@ $(document).ready(function() {
 
         this.baseVariableGroup = new VariableGroup(this,{name:'Ungrouped variables'});
         this.baseVariableGroup.fixed = true;
-        this.allVariableGroups = ko.computed(function() {
+        this.allVariableGroups = ko.pureComputed(function() {
             var l = this.variableGroups();
             return l.concat(this.baseVariableGroup);
         },this);
 
         // this changes whenever there's a change to a variable name or definition, or a variables is added or removed (or similar to the functions)
-        this.lastVariableChange = ko.computed(function() {
+        this.lastVariableChange = ko.pureComputed(function() {
             this.variables().map(function(v) {
                 v.definition();
                 v.name();
@@ -358,7 +442,7 @@ $(document).ready(function() {
             return new Date();
         },this);
 
-        this.variablesTest.time_remaining_display = ko.computed(function() {
+        this.variablesTest.time_remaining_display = ko.pureComputed(function() {
             return this.time_remaining()+' '+Numbas.util.pluralise(this.time_remaining(),'second','seconds');
         },this.variablesTest);
 
@@ -369,7 +453,7 @@ $(document).ready(function() {
             this.variablesTest.advice('');
         },this);
 
-        this.variableErrors = ko.computed(function() {
+        this.variableErrors = ko.pureComputed(function() {
             var variables = this.variables();
             for(var i=0;i<variables.length;i++) {
                 if(variables[i].name().trim()=='' || variables[i].definition().trim()=='' || variables[i].nameError() || variables[i].error()) {
@@ -379,7 +463,7 @@ $(document).ready(function() {
             return false;
         },this);
 
-        this.variablesReady = ko.computed(function() {
+        this.variablesReady = ko.pureComputed(function() {
             if(this.variableErrors()) {
                 return false;
             }
@@ -427,7 +511,7 @@ $(document).ready(function() {
             q.generateVariablePreview();
         }
 
-        this.variable_references = ko.computed(function() {
+        this.variable_references = ko.pureComputed(function() {
             var o = [];
             o.push(new VariableReference({kind:'tab',tab:'statement',value:q.statement,type:'html',description:'Statement'}));
             o.push(new VariableReference({kind:'tab',tab:'advice',value:q.advice,type:'html',description:'Advice'}));
@@ -492,7 +576,7 @@ $(document).ready(function() {
 
             this.init_output();
 
-            this.save = ko.computed(function() {
+            this.save = ko.pureComputed(function() {
                 var used_nodes = [];
                 function node_used(n) {
                     if(n.used()) {
@@ -527,10 +611,10 @@ $(document).ready(function() {
                     Editor.nonempty_task('Write a question statement.',this.statement,'#statement-input .wmTextArea')
                 ],
                 'variables': [
-                    {text: 'Add one or more variables to randomise the question', done: ko.computed(function() { return this.variables().length>0 && !this.variableErrors(); },this), focus_on: '#add-variable-button'}
+                    {text: 'Add one or more variables to randomise the question', done: ko.pureComputed(function() { return this.variables().length>0 && !this.variableErrors(); },this), focus_on: '#add-variable-button'}
                 ],
                 'parts': [
-                    {text: 'Create at least one part.', done: ko.computed(function(){ return this.parts().length>0 },this), focus_on: '#add-part-button'}
+                    {text: 'Create at least one part.', done: ko.pureComputed(function(){ return this.parts().length>0 },this), focus_on: '#add-part-button'}
                 ],
                 'advice': [
                     Editor.nonempty_task('Write a worked solution to the question.',this.advice, '#advice-input .wmTextArea')
@@ -553,7 +637,7 @@ $(document).ready(function() {
                     }
                 }
             }
-            Editor.computedReplaceState('currentVariable',ko.computed(function(){
+            Editor.computedReplaceState('currentVariable',ko.pureComputed(function(){
                 var v = this.currentVariable();
                 if(v) {
                     return v.name().toLowerCase();
@@ -573,19 +657,23 @@ $(document).ready(function() {
             if('currentPart' in state) {
                 this.currentPart(this.getPart(state.currentPart));
             }
-            Editor.computedReplaceState('currentPart',ko.computed(function() {
+            Editor.computedReplaceState('currentPart',ko.pureComputed(function() {
                 var p = this.currentPart();
                 if(p) {
                     return p.path();
                 }
             },this));
-            Editor.computedReplaceState('currentPartTabs',ko.computed(function() {
+            Editor.computedReplaceState('currentPartTabs',ko.pureComputed(function() {
                 var d = {};
                 q.allParts().forEach(function(p) {
                     d[p.path()] = p.currentTab().id;
                 });
                 return d;
             },this));
+            if('partsTabMode' in state) {
+                this.partsTabMode(state.partsTabMode);
+            }
+            Editor.computedReplaceState('partsTabMode',this.partsTabMode);
         }
 
     }
@@ -648,13 +736,13 @@ $(document).ready(function() {
         },
 
         loadPart: function(data) {
-            var p = new Part(this,null,this.parts,data);
+            var p = new Part('part',this,null,this.parts,data);
             this.parts.push(p);
             return p;
         },
 
         getPart: function(path) {
-            var re_path = /^p(\d+)(?:g(\d+)|s(\d+))?$/;
+            var re_path = /^p(\d+)(?:([gsa])(\d+))?$/;
             var m = re_path.exec(path);
             if(!m) {
                 return;
@@ -665,11 +753,14 @@ $(document).ready(function() {
                 return;
             }
             if(m[2]) {
-                var g = parseInt(m[2]);
-                return p.gaps()[g];
-            } else if(m[3]) {
-                var s = parseInt(m[3]);
-                return p.steps()[s];
+                var l = m[2];
+                var lists = {
+                    'g': p.gaps,
+                    's': p.steps,
+                    'a': p.alternatives
+                }
+                var j = parseInt(m[3]);
+                return lists[l]()[j];
             } else {
                 return p;
             }
@@ -1063,8 +1154,14 @@ $(document).ready(function() {
                     js: this.preamble.js(),
                     css: this.preamble.css()
                 },
-                parts: this.parts().map(function(p){return p.toJSON();})
+                parts: this.parts().map(function(p){return p.toJSON();}),
+                partsMode: this.partsMode().value,
 
+                maxMarks: this.maxMarks(),
+                objectives: this.objectives().map(function(o){return o.toJSON();}),
+                penalties: this.penalties().map(function(p){return p.toJSON();}),
+                objectiveVisibility: this.objectiveVisibility().id,
+                penaltyVisibility: this.penaltyVisibility().id
             }
         },
 
@@ -1103,7 +1200,7 @@ $(document).ready(function() {
 
             contentData = data.JSONContent;
 
-            tryLoad(contentData,['name','statement','advice'],this);
+            tryLoad(contentData,['name','statement','advice','maxMarks'],this);
 
             if('variables' in contentData)
             {
@@ -1163,15 +1260,57 @@ $(document).ready(function() {
                 }
             }
 
+            var partsMode = Editor.tryGetAttribute(contentData,'partsMode');
+            for(var i=0;i<this.partsModes.length;i++) {
+                var mode = this.partsModes[i];
+                if(mode.value==partsMode) {
+                    this.partsMode(mode);
+                    break;
+                }
+            }
+
+            if('objectives' in contentData) {
+                contentData.objectives.forEach(function(odata) {
+                    q.objectives.push(new ScoreBin(q,odata));
+                });
+            }
+            if('penalties' in contentData) {
+                contentData.penalties.forEach(function(pdata) {
+                    q.penalties.push(new ScoreBin(q,pdata));
+                });
+            }
+            Editor.tryLoadMatchingId(contentData, 'objectiveVisibility', 'id', this.objective_visibility_options, this);
+            Editor.tryLoadMatchingId(contentData, 'penaltyVisibility', 'id', this.objective_visibility_options, this);
+
             if('parts' in contentData)
             {
                 contentData.parts.map(function(pd) {
                     this.loadPart(pd);
                 },this);
             }
-            if(this.parts().length) {
-                this.currentPart(this.parts()[0]);
+            switch(this.partsMode().value) {
+                case 'all':
+                    if(this.parts().length) {
+                        this.currentPart(this.parts()[0]);
+                    }
+                    break;
+                case 'explore':
+                    this.partsTabMode('options');
+                    break;
             }
+            this.allParts().forEach(function(p) {
+                p.nextParts().forEach(function(np) {
+                    np.otherPart(np.part.parentList()[np.otherPartIndex]);
+                    np.variableReplacements().forEach(function(vr) {
+                        vr.value_options().find(function(vo,i) {
+                            if(vr.custom_definition()==ko.unwrap(vo.definition)) {
+                                vr.value_option(vo);
+                                return true;
+                            }
+                        });
+                    });
+                });
+            });
 
             try{
                 this.tags(data.tags);
@@ -1287,7 +1426,7 @@ $(document).ready(function() {
         var vg = this;
         this.fixed = false;
         this.name = ko.observable('Unnamed group');
-        this.isEditing = ko.computed({
+        this.isEditing = ko.pureComputed({
             write: function(v) {
                 if(v) {
                     q.editVariableGroup(vg);
@@ -1302,7 +1441,7 @@ $(document).ready(function() {
         this.endEdit = function() {
             vg.isEditing(false);
         }
-        this.displayName = ko.computed(function() {
+        this.displayName = ko.pureComputed(function() {
             return this.name() ? this.name() : 'Unnamed group'
         },this);
 
@@ -1351,7 +1490,7 @@ $(document).ready(function() {
     function Variable(q,data) {
         this.question = q;
         this._name = ko.observable('');
-        this.name = ko.computed({
+        this.name = ko.pureComputed({
             read: function() {
                 return this._name().trim();
             },
@@ -1361,7 +1500,7 @@ $(document).ready(function() {
         },this);
         this.group = ko.observable(null);
         this.random = ko.observable(null);
-        this.nameError = ko.computed(function() {
+        this.nameError = ko.pureComputed(function() {
             var name = this.name();
             if(name=='')
                 return '';
@@ -1396,7 +1535,7 @@ $(document).ready(function() {
             return '';
         },this);
 
-        this.usedInTestCondition = ko.computed(function() {
+        this.usedInTestCondition = ko.pureComputed(function() {
             var name = this.name();
             try {
                 var condition = Numbas.jme.compile(this.question.variablesTest.condition());
@@ -1498,7 +1637,7 @@ $(document).ready(function() {
                 }
             }
         };
-        this.templateTypeValues['list of numbers'].floatValues = ko.computed(function() {
+        this.templateTypeValues['list of numbers'].floatValues = ko.pureComputed(function() {
             return this.values().map(function(n){return parseFloat(n)});
         },this.templateTypeValues['list of numbers']);
         this.editDefinition = this.templateTypeValues['anything'].definition;
@@ -1592,13 +1731,13 @@ $(document).ready(function() {
         },this);
 
         this.dependencies = ko.observableArray([]);
-        this.isDependency = ko.computed(function() {
+        this.isDependency = ko.pureComputed(function() {
             var currentVariable = q.currentVariable();
             if(!currentVariable)
                 return false;
             return currentVariable.dependencies().contains(this.name().toLowerCase());
         },this);
-        this.dependenciesObjects = ko.computed(function() {
+        this.dependenciesObjects = ko.pureComputed(function() {
             var deps = this.dependencies();
             return this.dependencies().map(function(name) {
                 var obj = q.getVariable(name);
@@ -1623,19 +1762,19 @@ $(document).ready(function() {
                 return out;
             });
         },this);
-        this.usedIn = ko.computed(function() {
+        this.usedIn = ko.pureComputed(function() {
             var v = this;
             return q.variables().filter(function(v2) {
                 return v2.dependencies().contains(v.name().toLowerCase());
             });
         },this);
         this.references = ko.observableArray([]);
-        this.unused = ko.computed(function() {
+        this.unused = ko.pureComputed(function() {
             return this.usedIn().length==0 && this.references().length==0;
         },this);
         this.value = ko.observable(null);
         this.error = ko.observable('');
-        this.anyError = ko.computed(function() {
+        this.anyError = ko.pureComputed(function() {
             if(this.error()) {
                 return this.error();
             } else if(this.nameError()) {
@@ -1648,7 +1787,7 @@ $(document).ready(function() {
             return false;
         },this);
 
-        this.type = ko.computed(function() {
+        this.type = ko.pureComputed(function() {
             var v = this.value();
             if(!v || this.error()) {
                 return '';
@@ -1659,7 +1798,7 @@ $(document).ready(function() {
         this.thisLocked = ko.observable(false);
         var lockedSeen = {};
         var lockedDepth = 0;
-        this.locked = ko.computed(function() {
+        this.locked = ko.pureComputed(function() {
             if(lockedDepth==0) {
                 lockedSeen = {};
             }
@@ -1682,7 +1821,7 @@ $(document).ready(function() {
             return lockedUsed;
         },this);
 
-        this.display = ko.computed(function() {
+        this.display = ko.pureComputed(function() {
             var v;
             if(this.anyError()) {
                 return this.anyError();
@@ -1814,15 +1953,17 @@ $(document).ready(function() {
         this.description = Knockout.computed(function() {
             var desc = ko.unwrap(this.def.description);
             if(this.def.kind=='part') {
+                var names = [];
                 var p = this.def.part;
                 while(p) {
-                    desc = p.name()+' '+desc;
+                    names.splice(0,0,'"'+p.name()+'"');
                     p = p.parent();
                 }
+                desc = names.join(' → ') + ' - ' + desc;
             }
             return desc;
         },this);
-        var raw_vars = ko.computed(function() {
+        var raw_vars = ko.pureComputed(function() {
             try {
                 var v = ko.unwrap(this.def.value);
                 switch(this.def.type) {
@@ -1852,7 +1993,7 @@ $(document).ready(function() {
                 return [];
             }
         },this);
-        this.vars = ko.computed(function() {
+        this.vars = ko.pureComputed(function() {
             var v = raw_vars();
             if(!v) {
                 return [];
@@ -1944,19 +2085,56 @@ $(document).ready(function() {
         this.script = ko.observable('');
         this.helpURL = helpURL;
 
-        this.active = ko.computed(function() {
+        this.active = ko.pureComputed(function() {
             return this.script().trim().length>0;
         },this);
     }
 
-    var Part = Editor.question.Part = function(q,parent,parentList,data) {
+    function ScoreBin(q,data) {
+        this.q = q;
+        this.name = ko.observable('');
+        this.limit = ko.observable(0);
+        this.modes = [
+            {name: 'Sum', value: 'sum'},
+            {name: 'Scale', value: 'scale'}
+        ];
+        this.mode = ko.observable(this.modes[0]); // sum or scale
+
+        if(data) {
+            this.load(data);
+        }
+    }
+    ScoreBin.prototype = {
+        toJSON: function() {
+            return {
+                name: this.name(),
+                limit: this.limit(),
+                mode: this.mode().value
+            };
+        },
+
+        load: function(data) {
+            tryLoad(data,['name','limit'],this);
+            for(var i=0;i<this.modes.length;i++) {
+                if(this.modes[i].value==data.mode) {
+                    this.mode(this.modes[i]);
+                    break;
+                }
+            }
+        }
+    };
+
+    var Part = Editor.question.Part = function(levelName,q,parent,parentList,data) {
         var p = this;
+        this.levelName = ko.observable(levelName);
         this.q = q;
         this.prompt = Editor.contentObservable('');
+        this.alternativeFeedbackMessage = Editor.contentObservable('');
+        this.useAlternativeFeedback = ko.observable(false);
         this.parent = ko.observable(parent);
         this.parentList = parentList;
         this.customName = ko.observable('');
-        this.useCustomName = ko.computed(function() {
+        this.useCustomName = ko.pureComputed(function() {
             return this.customName().trim()!='';
         },this);
 
@@ -1976,8 +2154,31 @@ $(document).ready(function() {
             }
             return false;
         },this);
+        this.steps = ko.observableArray([]);
+        this.stepsPenalty = ko.observable(0);
+
+        this.gaps = ko.observableArray([]);
+
+        this.alternatives = ko.observableArray([]);
+
+        this.addAlternative = function() {
+            if(this.isAlternative()) {
+                return this.parent().addAlternative();
+            }
+            var alt = new Part('alternative',q,p,p.alternatives,this.toJSON());
+            alt.setType(p.type().name);
+            alt.marks(0);
+            alt.customName('');
+            p.alternatives.push(alt);
+            q.currentPart(alt);
+        }
+
         this.childrenDescription = ko.pureComputed(function() {
             var out = [];
+            if(this.alternatives().length>0) {
+                var numAlternatives = this.alternatives().length;
+                out.push(numAlternatives+' alternative'+(numAlternatives==1 ? '' : 's'));
+            }
             if(this.type().name=='gapfill') {
                 var numGaps = this.gaps().length;
                 out.push(numGaps+' gap'+(numGaps==1 ? '' : 's'));
@@ -1989,26 +2190,17 @@ $(document).ready(function() {
             return out.join(', ');
         },this);
 
-        this.steps = ko.observableArray([]);
-        this.stepsPenalty = ko.observable(0);
-
-        this.gaps = ko.observableArray([]);
-
         this.types = Editor.part_types.models.map(function(data){return new PartType(p,data);});
 
-        this.isRootPart = ko.computed(function() {
+        this.isRootPart = ko.pureComputed(function() {
             return !this.parent();
         },this);
 
-        this.isGap = ko.computed(function(){
-            return this.parent() && this.parent().type().name=='gapfill' && !this.parent().steps().contains(this);
-        },this);
+        this.isGap = ko.pureComputed(function(){ return this.levelName()=='gap'; },this);
+        this.isStep = ko.pureComputed(function(){ return this.levelName()=='step'; },this);
+        this.isAlternative = ko.pureComputed(function(){ return this.levelName()=='alternative'; },this);
 
-        this.isStep = ko.computed(function() {
-            return this.parent() && this.parent().steps().contains(this);
-        },this);
-
-        this.availableTypes = ko.computed(function() {
+        this.availableTypes = ko.pureComputed(function() {
             if(this.isGap()) {
                 return this.types.filter(function(t){return t.can_be_gap!==false});
             } else if(this.isStep()) {
@@ -2019,11 +2211,15 @@ $(document).ready(function() {
         },this);
         this.type = ko.observable(this.availableTypes()[0]);
 
-        this.canBeReplacedWithGap = ko.computed(function() {
-            return !(this.type().name=='gapfill' || this.isGap() || this.isStep() || this.type().can_be_gap===false);
+        this.canBeReplacedWithGap = ko.pureComputed(function() {
+            return !(this.type().name=='gapfill' || this.isGap() || this.isStep() || this.isAlternative() || this.type().can_be_gap===false);
         },this);
 
-        this.indexLabel = ko.computed(function() {
+        this.isFirstPart = ko.pureComputed(function() {
+            return this==q.parts()[0];
+        },this);
+
+        this.indexLabel = ko.pureComputed(function() {
             var index = this.parentList.indexOf(this);
             var i = 0;
             for(var j=0;j<index;j++) {
@@ -2036,37 +2232,34 @@ $(document).ready(function() {
                 return '';
             } else if(this.type().name=='information') {
                 return '';
-            } else if(this.isGap() || this.isStep()) {
+            } else if(this.isGap() || this.isStep() || this.isAlternative()) {
                 i = i+'';
             } else {
                 i = Numbas.util.letterOrdinal(i);
             }
             return i+'';
         },this);
-        this.levelName = ko.computed(function() {
-            return this.isGap() ? 'gap' : this.isStep() ? 'step' : 'part';
-        },this);
-        this.standardName = ko.computed(function() {
-            if(this.indexLabel()) {
+        this.standardName = ko.pureComputed(function() {
+            if((this.q.partsMode().value=='explore' && this.levelName()=='part') || !this.indexLabel()) {
+                return 'Unnamed '+this.levelName();
+            } else if(this.indexLabel()) {
                 var name = Numbas.util.capitalise(this.levelName() + " " + this.indexLabel());
-                if(this.isGap() || this.isStep()) {
+                if(this.isGap() || this.isStep() || this.isAlternative()) {
                     name += '.';
                 } else {
                     name += ')';
                 }
                 return name;
-            } else {
-                return 'Unnamed '+this.levelName();
             }
         },this);
-        this.name = ko.computed(function() {
+        this.name = ko.pureComputed(function() {
             if(this.useCustomName()) {
                 return this.customName() || "unnamed "+this.levelName()+" "+this.indexLabel();
             } else {
                 return this.standardName();
             }
         },this);
-        this.header = ko.computed(function() {
+        this.header = ko.pureComputed(function() {
             var label = this.indexLabel();
             if(this.useCustomName()) {
                 return this.customName();
@@ -2077,19 +2270,21 @@ $(document).ready(function() {
             }
         },this);
 
-        this.path = ko.computed(function() {
+        this.path = ko.pureComputed(function() {
             var i = Math.max(this.parentList.indexOf(this),0);
             if(this.isGap()) {
                 return this.parent().path()+'g'+i;
             } else if(this.isStep()) {
                 return this.parent().path()+'s'+i;
+            } else if(this.isAlternative()) {
+                return this.parent().path()+'a'+i;
             } else {
                 return 'p'+i;
             }
         },this);
 
         this.marks = ko.observable(1);
-        this.realMarks = ko.computed(function() {
+        this.realMarks = ko.pureComputed(function() {
             switch(this.type().name) {
             case 'information':
             case 'gapfill':
@@ -2100,6 +2295,34 @@ $(document).ready(function() {
             default:
                 return this.marks();
             }
+        },this);
+
+        this.exploreObjective = ko.observable(null);
+
+        this.addObjective = function() {
+            var o = new ScoreBin(q);
+            var name;
+            if(!p.useCustomName() && p.parent()) {
+                name = p.parent().name();
+            } else {
+                name = p.name();
+            }
+            o.name(name);
+            o.limit(p.realMarks());
+            q.objectives.push(o);
+            p.exploreObjective(o);
+        }
+
+        this.canAddGap = ko.computed(function() {
+            return this.type().name=='gapfill';
+        },this);
+
+        this.canAddStep = ko.computed(function() {
+            return this.q.partsMode().value=='all' && this.isRootPart() && this.type().has_marks;
+        },this);
+
+        this.canAddAlternative = ko.computed(function() {
+            return this.type().has_marks && !this.isAlternative();
         },this);
 
         this.startAddingGap = function() {
@@ -2119,7 +2342,7 @@ $(document).ready(function() {
         this.deleteVariableReplacement = function(vr) {
             p.variableReplacements.remove(vr);
         }
-        this.canMakeVariableReplacement = ko.computed(function() {
+        this.canMakeVariableReplacement = ko.pureComputed(function() {
             return q.variables().length>0 && q.allParts().length>1;
         },this);
         this.adaptiveMarkingPenalty = ko.observable(0);
@@ -2130,11 +2353,33 @@ $(document).ready(function() {
         ];
         this.variableReplacementStrategy = ko.observable(this.variableReplacementStrategies[0])
 
-        this.replacementRandomDependencies = ko.computed(function() {
+        this.replacementRandomDependencies = ko.pureComputed(function() {
             var names = this.variableReplacements().map(function(vr) {return vr.variable()});
             var randomDependencies = this.q.randomDependencies(names);
             return randomDependencies;
         },this);
+
+        this.nextParts = ko.observableArray([]);
+        this.addNextPart = function(otherPart) {
+            var np = new NextPart(p);
+            np.otherPart(otherPart);
+            p.nextParts.push(np);
+        };
+        this.deleteNextPart = function(np) {
+            p.nextParts.remove(np);
+        }
+        this.availableNextParts = ko.pureComputed(function() {
+            return p.parentList();
+        },this);
+        this.suggestGoingBack = ko.observable(false);
+        this.nextPartReferences = ko.pureComputed(function() {
+            return this.q.allParts().filter(function(p2) {
+                return p2.nextParts().some(function(np) {
+                    return np.otherPart()==p;
+                });
+            });
+        },this);
+        this.reachable = ko.observable(true);
 
         this.scripts = [
             new Script('constructor','When the part is created','after','question/reference.html#term-when-the-part-is-created'),
@@ -2145,7 +2390,7 @@ $(document).ready(function() {
         this.use_custom_algorithm = ko.observable(false);
         this.customMarkingAlgorithm = ko.observable('');
         this.extendBaseMarkingAlgorithm = ko.observable(true);
-        this.baseMarkingAlgorithm = ko.computed(function() {
+        this.baseMarkingAlgorithm = ko.pureComputed(function() {
             var type = this.type();
             if(type.is_custom_part_type) {
                 return Numbas.custom_part_types[type.name].marking_script;
@@ -2199,7 +2444,7 @@ $(document).ready(function() {
 
         this.types.map(function(t){p[t.name] = t.model});
 
-        this.variable_references = ko.computed(function() {
+        this.variable_references = ko.pureComputed(function() {
             var o = [];
             o.push(new VariableReference({kind:'part',part:this,tab:'prompt',value:this.prompt,type:'html',description:'prompt'}));
             if(this.use_custom_algorithm() && this.markingScript()) {
@@ -2208,6 +2453,9 @@ $(document).ready(function() {
                     o.push(new VariableReference({kind:'part',part:this,tab:'marking-algorithm',value:s.notes[x].vars,type:'list',description:'marking algorithm note '+x}));
                 }
             }
+            this.nextParts().forEach(function(np) {
+                o = o.concat(np.variable_references());
+            });
             this.type().variable_references().forEach(function(def) {
                 def.kind = 'part';
                 def.part = p;
@@ -2216,16 +2464,19 @@ $(document).ready(function() {
             return o;
         },this);
 
-        this.tabs = ko.computed(function() {
+        this.tabs = ko.pureComputed(function() {
             var tabs = [];
-            if(!this.isGap()) {
-                tabs.push(new Editor.Tab('prompt','Prompt','blackboard',{visible:true,more_important:true,in_use: ko.computed(function() { return this.prompt()!=''},this)}));
+            if(!this.isGap() && !this.isAlternative()) {
+                tabs.push(new Editor.Tab('prompt','Prompt','blackboard',{visible:true,more_important:true,in_use: ko.pureComputed(function() { return this.prompt()!=''},this)}));
+            }
+            if(this.isAlternative()) {
+                tabs.push(new Editor.Tab('alternative-feedback-message','Feedback message','blackboard',{visible:true,more_important:true,in_use: ko.pureComputed(function() { return this.alternativeFeedbackMessage()!=''},this)}));
             }
 
             if(this.type().has_marking_settings) {
                 tabs.push(new Editor.Tab('marking-settings','Marking settings','pencil',{visible:true,more_important:true,in_use:true}));
             }
-            var marking_algorithm_tab_in_use = ko.computed(function() {
+            var marking_algorithm_tab_in_use = ko.pureComputed(function() {
                 return this.use_custom_algorithm();
             },this);
             if(this.type().has_marks) {
@@ -2234,17 +2485,26 @@ $(document).ready(function() {
 
             tabs = tabs.concat(this.type().tabs);
 
-            var scripts_tab_in_use = ko.computed(function() {
+            var scripts_tab_in_use = ko.pureComputed(function() {
                 return this.scripts.some(function(s) { return s.active(); });
             },this);
 
             tabs.push(new Editor.Tab('scripts','Scripts','wrench',{in_use: scripts_tab_in_use}));
 
-            var adaptive_marking_tab_in_use = ko.computed(function() {
-                return this.variableReplacements().length>0;
-            },this);
+            if(!this.isAlternative() && q.partsMode().value=='all') {
+                var adaptive_marking_tab_in_use = ko.pureComputed(function() {
+                    return this.variableReplacements().length>0;
+                },this);
 
-            tabs.push(new Editor.Tab('adaptivemarking','Adaptive marking','transfer',{in_use: adaptive_marking_tab_in_use}));
+                tabs.push(new Editor.Tab('adaptivemarking','Adaptive marking','transfer',{in_use: adaptive_marking_tab_in_use}));
+            }
+
+            if(!this.parent() && q.partsMode().value=='explore') {
+                var next_parts_tab_in_use = ko.pureComputed(function() {
+                    return this.nextParts().length>0;
+                },this);
+                tabs.push(new Editor.Tab('nextparts','Next parts','arrow-right',{in_use: next_parts_tab_in_use}));
+            }
 
             tabs = tabs.sort(function(a,b) {
                 var ia = ko.unwrap(a.more_important);
@@ -2288,13 +2548,17 @@ $(document).ready(function() {
 
         copy: function() {
             var data = this.toJSON();
-            var p = new Part(this.q,this.parent(),this.parentList,data);
+            var p = new Part(this.levelName(),this.q,this.parent(),this.parentList,data);
             this.parentList.push(p);
             this.q.currentPart(p);
         },
 
         replaceWithGapfill: function() {
-            var gapFill = new Part(this.q,this.parent(),this.parentList);
+            var p = this;
+            var gapFill = new Part('part',this.q,this.parent(),this.parentList);
+            this.levelName('gap');
+            gapFill.customName(this.customName());
+            this.customName('');
             gapFill.setType('gapfill');
 
             this.parentList.splice(this.parentList.indexOf(this),1,gapFill);
@@ -2312,6 +2576,17 @@ $(document).ready(function() {
             gapFill.gaps.push(this);
             this.parentList = gapFill.gaps;
             this.parent(gapFill);
+
+            gapFill.nextParts(this.nextParts());
+            this.nextParts([]);
+
+            viewModel.allParts().forEach(function(p2) {
+                p2.nextParts().forEach(function(np) {
+                    if(np.otherPart()==p) {
+                        np.otherPart(gapFill);
+                    }
+                });
+            });
         },
 
         canMove: function(direction) {
@@ -2325,12 +2600,20 @@ $(document).ready(function() {
         },
 
         remove: function() {
+            var p = this;
             if(confirm("Remove "+this.name()+"?"))
             {
                 this.parentList.remove(this);
                 if(this.q.currentPart()==this) {
                     this.q.currentPart(this.parent() || null);
                 }
+                viewModel.allParts().forEach(function(p2) {
+                    p2.nextParts().forEach(function(np) {
+                        if(np.otherPart()==p) {
+                            p2.nextParts.remove(np);
+                        }
+                    });
+                });
             }
         },
 
@@ -2367,23 +2650,38 @@ $(document).ready(function() {
                 useCustomName: this.useCustomName(),
                 customName: this.useCustomName() ? this.customName() : '',
                 marks: this.realMarks(),
-                showCorrectAnswer: this.showCorrectAnswer(),
-                showFeedbackIcon: this.showFeedbackIcon(),
                 scripts: {},
-                variableReplacements: this.variableReplacements().map(function(vr){return vr.toJSON()}),
-                variableReplacementStrategy: this.variableReplacementStrategy().name,
-                adaptiveMarkingPenalty: this.adaptiveMarkingPenalty(),
                 customMarkingAlgorithm: this.use_custom_algorithm() ? this.customMarkingAlgorithm() : '',
                 extendBaseMarkingAlgorithm: this.use_custom_algorithm() ? this.extendBaseMarkingAlgorithm() : true,
-                unitTests: this.unit_tests().map(function(t){ return t.toJSON() })
+                unitTests: this.unit_tests().map(function(t){ return t.toJSON() }),
             };
 
-            if(this.prompt())
-                o.prompt = this.prompt();
-            if(this.steps().length)
-            {
-                o.stepsPenalty = this.stepsPenalty(),
-                o.steps = this.steps().map(function(s){return s.toJSON();});
+            if(!this.isAlternative()) {
+                Object.assign(o,{
+                    showCorrectAnswer: this.showCorrectAnswer(),
+                    showFeedbackIcon: this.showFeedbackIcon(),
+                    variableReplacements: this.variableReplacements().map(function(vr){return vr.toJSON()}),
+                    variableReplacementStrategy: this.variableReplacementStrategy().name,
+                    nextParts: this.nextParts().map(function(np){ return np.toJSON(); }),
+                    suggestGoingBack: !this.isFirstPart() && this.suggestGoingBack(),
+                    adaptiveMarkingPenalty: this.adaptiveMarkingPenalty(),
+                    exploreObjective: this.exploreObjective() ? this.exploreObjective().name() : null,
+                });
+                if(this.prompt()) {
+                    o.prompt = this.prompt();
+                }
+                if(this.steps().length) {
+                    o.stepsPenalty = this.stepsPenalty(),
+                    o.steps = this.steps().map(function(s){return s.toJSON();});
+                }
+
+                if(this.alternatives().length) {
+                    o.alternatives = this.alternatives().map(function(a){return a.toJSON();});
+                }
+
+            } else {
+                o.alternativeFeedbackMessage = this.alternativeFeedbackMessage();
+                o.useAlternativeFeedback = this.useAlternativeFeedback();
             }
 
             this.scripts.map(function(s) {
@@ -2407,20 +2705,63 @@ $(document).ready(function() {
 
         load: function(data) {
             var p = this;
-            for(var i=0;i<this.types.length;i++)
-            {
+            for(var i=0;i<this.types.length;i++) {
                 if(this.types[i].name == data.type.toLowerCase())
                     this.type(this.types[i]);
             }
-            tryLoad(data,['marks','customName','prompt','stepsPenalty','showCorrectAnswer','showFeedbackIcon','customMarkingAlgorithm','extendBaseMarkingAlgorithm','adaptiveMarkingPenalty'],this);
+            tryLoad(data,[
+                'marks',
+                'customName',
+                'customMarkingAlgorithm',
+                'extendBaseMarkingAlgorithm',
+            ],this);
             this.use_custom_algorithm(this.customMarkingAlgorithm()!='');
 
-            if(data.steps)
-            {
-                var parentPart = this.isGap() ? this.parent() : this;
-                data.steps.map(function(s) {
-                    this.steps.push(new Part(this.q,this,this.steps,s));
-                },parentPart);
+            if(!this.isAlternative()) {
+                tryLoad(data,[
+                    'prompt',
+                    'stepsPenalty',
+                    'showCorrectAnswer',
+                    'showFeedbackIcon',
+                    'adaptiveMarkingPenalty',
+                    'suggestGoingBack'
+                ],this);
+                this.exploreObjective(this.q.objectives().find(function(o) { return o.name()==data.exploreObjective; }));
+                if(data.steps) {
+                    var parentPart = this.isGap() ? this.parent() : this;
+                    data.steps.map(function(s) {
+                        this.steps.push(new Part('step',this.q,this,this.steps,s));
+                    },parentPart);
+                }
+
+                if(data.alternatives) {
+                    data.alternatives.map(function(a) {
+                        p.alternatives.push(new Part('alternative',p.q,p,p.alternatives,a));
+                    });
+                }
+
+                p.variableReplacementStrategies.map(function(s) {
+                    if(s.name==data.variableReplacementStrategy) {
+                        p.variableReplacementStrategy(s);
+                    }
+                });
+
+                if(data.variableReplacements) {
+                    data.variableReplacements.map(function(d) {
+                        var vr = new VariableReplacement(p,d);
+                        p.variableReplacements.push(vr);
+                    });
+                }
+                
+                if(data.nextParts) {
+                    data.nextParts.map(function(d) {
+                        var np = new NextPart(p,d);
+                        p.nextParts.push(np);
+                    });
+                }
+
+            } else {
+                tryLoad(data,['alternativeFeedbackMessage','useAlternativeFeedback'],this);
             }
 
             if(data.scripts) {
@@ -2432,19 +2773,6 @@ $(document).ready(function() {
                         }
                     }
                 }
-            }
-
-            p.variableReplacementStrategies.map(function(s) {
-                if(s.name==data.variableReplacementStrategy) {
-                    p.variableReplacementStrategy(s);
-                }
-            });
-
-            if(data.variableReplacements) {
-                data.variableReplacements.map(function(d) {
-                    var vr = new VariableReplacement(p,d);
-                    p.variableReplacements.push(vr);
-                });
             }
 
             if(data.unitTests) {
@@ -2501,17 +2829,17 @@ $(document).ready(function() {
     function VariableReplacement(part,data) {
         this.part = part;
         this.variable = ko.observable('');
-        this.variableDisplay = ko.computed(function(){
+        this.variableDisplay = ko.pureComputed(function(){
             return this.part.q.variables().map(function(v){
                 return v.name();
             });
         },this);
         this.replacement = ko.observable(null);
         this.must_go_first = ko.observable(false);
-        this.availableParts = ko.computed(function() {
+        this.availableParts = ko.pureComputed(function() {
             var p = this.part
             return p.q.allParts().filter(function(p2){
-                return p!=p2 && p2.type().has_marks && p2.parent()!=p;
+                return p!=p2 && p2.type().has_marks && p2.parent()!=p && !p2.isAlternative();
             });
         },this);
         if(data) {
@@ -2532,6 +2860,148 @@ $(document).ready(function() {
             this.replacement(data.part);
         }
     }
+
+    function NextPart(part,data) {
+        var np = this;
+        this.part = part;
+        this.otherPart = ko.observable();
+        this.rawLabel = ko.observable('');
+        this.label = ko.computed({
+            read: function() {
+                return this.rawLabel() || (this.otherPart() ? this.otherPart().header() : '');
+            },
+            write: function(label) {
+                return this.rawLabel(label);
+            }
+        },this);
+        this.variableReplacements = ko.observableArray([]);
+        this.addVariableReplacement = function() {
+            var vr = new NextPartVariableReplacement(np);
+            np.variableReplacements.push(vr);
+        }
+        this.removeVariableReplacement = function(vr) {
+            np.variableReplacements.remove(vr);
+        }
+        this.availabilityExpression = ko.observable('');
+        this.availability_conditions = ko.pureComputed(function() {
+            var conditions = [
+                {name: 'Always', id: 'always', value: ''},
+                {name: 'When answer submitted', id: 'when-submitted', value: 'answered'},
+                {name: 'When unanswered or incorrect', id: 'when-unanswered-or-incorrect', value: 'not (answered and credit=1)'},
+                {name: 'When incorrect', id: 'when-incorrect', value: 'answered and credit<1'},
+                {name: 'When correct', id: 'when-correct', value: 'answered and credit=1'},
+                {name: 'Depending on expression', id: 'expression', value: np.availabilityExpression}
+            ];
+            conditions = conditions.concat(np.part.alternatives().map(function(a,i) {
+                return {name: "When alternative \""+a.name()+"\" used", id: 'used-alternative-'+i, value: 'answered and used_alternative='+i};
+            }));
+            return conditions;
+        });
+        this.availabilityCondition = ko.observable(this.availability_conditions()[0]);
+        this.penalty = ko.observable(null);
+        this.penaltyAmount = ko.observable(0);
+        this.lockAfterLeaving = ko.observable(false);
+
+        this.variable_references = ko.pureComputed(function() {
+            var o = [];
+            if(this.availabilityCondition().id=='expression') {
+                o.push(new VariableReference({kind:'part',part:this.part,tab:'nextparts',value:this.availabilityExpression,type:'jme',description:'next part availability condition'}));
+            }
+            this.variableReplacements().forEach(function(vr) {
+                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.definition,type:'jme',description:'variable replacement'}));
+                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.variable,type:'jme',description:'variable replacement'}));
+            });
+            return o;
+        },this);
+
+        if(data) {
+            this.load(data);
+        }
+    }
+    NextPart.prototype = {
+        toJSON: function() {
+            return {
+                label: this.label(),
+                rawLabel: this.rawLabel(),
+                otherPart: this.otherPart() ? this.part.parentList().indexOf(this.otherPart()) : '',
+                variableReplacements: this.variableReplacements().map(function(vr) { return vr.toJSON(); }),
+                availabilityCondition: ko.unwrap(this.availabilityCondition().value),
+                penalty: this.penalty() ? this.penalty().name() : '',
+                penaltyAmount: this.penaltyAmount(),
+                lockAfterLeaving: this.lockAfterLeaving()
+            };
+        },
+        load: function(data) {
+            var np = this;
+            if(!data) {
+                return;
+            }
+            tryLoad(data,['rawLabel','penaltyAmount','lockAfterLeaving'],this);
+            tryLoad(data,'availabilityCondition',this,'availabilityExpression');
+            this.availability_conditions().find(function(condition) {
+                if(ko.unwrap(condition.value)==np.availabilityExpression()) {
+                    np.availabilityCondition(condition);
+                    return true;
+                }
+            });
+            this.otherPartIndex = data.otherPart;
+            this.penalty(this.part.q.penalties().find(function(p) { return p.name()==data.penalty; }));
+            if(data.variableReplacements) {
+                this.variableReplacements(data.variableReplacements.map(function(vrd) {
+                    return new NextPartVariableReplacement(np,vrd);
+                }));
+            }
+        }
+    }
+
+    function NextPartVariableReplacement(np,data) {
+        this.np = np;
+        this.variables = ko.pureComputed(function(){
+            return this.np.part.q.variables().map(function(v){
+                return v.name();
+            }).sort();
+        },this);
+
+        this.variable = ko.observable('');
+
+        this.custom_definition = ko.observable('interpreted_answer');
+        this.value_options = ko.pureComputed(function() {
+            var options = [
+                {definition: 'interpreted_answer', name: "Student's answer to this part"}
+            ];
+            options = options.concat(np.part.gaps().map(function(g,i) {
+                return {definition: 'interpreted_answer['+i+']', name: "Student's answer to \""+g.name()+"\""};
+            }));
+            options = options.concat([
+                {definition: 'credit', name: 'Credit awarded'},
+                {definition: this.custom_definition, name: 'JME expression', custom: true}
+            ])
+            return options;
+        },this);
+        this.value_option = ko.observable(this.value_options()[0]);
+        this.definition = ko.pureComputed(function() {
+            return ko.unwrap(this.value_option().definition);
+        },this);
+
+        if(data) {
+            this.load(data);
+        }
+    }
+    NextPartVariableReplacement.prototype = {
+        toJSON: function() {
+            return {
+                variable: this.variable(),
+                definition: this.definition()
+            }
+        },
+        load: function(data) {
+            if(!data) {
+                return;
+            }
+            this.variable(data.variable || '');
+            this.custom_definition(data.definition || '');
+        }
+    };
 
     Numbas.marking.ignore_note_errors = true;
 
@@ -2604,6 +3074,8 @@ $(document).ready(function() {
         // The result of running the marking script
         this.last_run = ko.observable(null);
 
+        this.alternative_used = ko.observable(null);
+
         this.question = ko.observable(null);
         this.current_question_instance = null;
         this.last_question_json = null;
@@ -2616,8 +3088,20 @@ $(document).ready(function() {
             try {
                 var json = mt.part.q.toJSON();
                 var variables = mt.variables().map(function(v){ return {name: v.name, value: v.value} });
-                if(Numbas.util.objects_equal(json,mt.last_question_json) && Numbas.util.objects_equal(variables, mt.last_variables)) {
-                    return mt.question();
+                try {
+                    var same_question = Numbas.util.objects_equal(json,mt.last_question_json);
+                    var same_variables = mt.last_variables && variables.length==mt.last_variables.length && variables.every(function(v,i) {
+                        var lv = mt.last_variables[i];
+                        return lv.name==v.name && Numbas.util.eq(v.value,lv.value);
+                    });
+                    if(same_question && same_variables) {
+                        return mt.question();
+                    }
+                } catch(e) {
+                    window.poop = variables;
+                    console.log(same_question,same_variables);
+                    console.error(e);
+                    throw(e);
                 }
                 mt.question(null);
                 mt.last_question_json = json;
@@ -2642,13 +3126,21 @@ $(document).ready(function() {
                 mt.question_error(e);
             }
         }
-        this.runtime_part = ko.computed(function() {
+        this.runtime_part = ko.pureComputed(function() {
             var q = this.question();
             if(!q) {
                 return;
             }
             return q.getPart(mt.part.path());
         }, this);
+
+        this.correctAnswer = ko.pureComputed(function() {
+            if(!this.runtime_part()) {
+                return;
+            }
+            var p = this.runtime_part();
+            return {valid: true, value: p.getCorrectAnswer(p.getScope())};
+        },this);
         
         // When something changes, run the marking script and store the result in `this.result`
         this.mark = function() {
@@ -2682,8 +3174,10 @@ $(document).ready(function() {
                 part.storeAnswer(answer.value);
                 part.setStudentAnswer();
                 part.submit();
-                var res = part.mark_answer(part.rawStudentAnswerAsJME(),part.getScope());
-                var out = {script: part.markingScript, result: res, marking_result: part.marking_result, marks: part.marks};
+                var alternatives_result = part.markAlternatives(part.getScope());
+                var res = alternatives_result.result.script_result;
+                var alternative_used = alternatives_result.best_alternative ? alternatives_result.best_alternative.path : null;
+                var out = {script: part.markingScript, result: res, marking_result: part.marking_result, marks: part.marks, alternative_used: alternative_used};
                 if(!res.state_valid.mark) {
                     out.error = 'This answer is not valid.';
                     var feedback = compile_feedback(Numbas.marking.finalise_state(res.states.mark), part.marks);
@@ -2703,7 +3197,7 @@ $(document).ready(function() {
             }
         }
 
-        this.last_run_error = ko.computed(function() {
+        this.last_run_error = ko.pureComputed(function() {
             if(this.last_run()) {
                 return this.last_run().error;
             }
@@ -2732,6 +3226,8 @@ $(document).ready(function() {
 
             var states = [];
             var existing_notes = {};
+
+            this.alternative_used(last_run.alternative_used ? part.q.getPart(last_run.alternative_used) : null);
 
             // Look at notes we already know about, and if they're present in this result
             var notes = this.notes().slice();
@@ -2786,7 +3282,7 @@ $(document).ready(function() {
         },this).extend({throttle:100});
 
         // The marking notes, in alphabetical order by name
-        this.sortedNotes = ko.computed(function() {
+        this.sortedNotes = ko.pureComputed(function() {
             var notes = this.notes().slice();
             notes.sort(function(a,b) {
                 a = a.name;
@@ -2797,29 +3293,29 @@ $(document).ready(function() {
         },this);
 
         // Non-hidden notes. Only these notes count towards the test passing or not.
-        this.shownNotes = ko.computed(function() {
+        this.shownNotes = ko.pureComputed(function() {
             return this.notes().filter(function(n){ return n.show(); });
         },this);
 
         // Can this be saved as a unit test?
         // Only if there's at least one shown note.
-        this.canCreateUnitTest = ko.computed(function() {
+        this.canCreateUnitTest = ko.pureComputed(function() {
             return this.shownNotes().length>0;
         },this);
 
         // Notes whose results don't match the expected values
-        this.failingNotes = ko.computed(function() {
+        this.failingNotes = ko.pureComputed(function() {
             return this.shownNotes().filter(function(n){return n.missing() || !n.matchesExpected()});
         },this);
 
         // Notes which have gone missing since the test was set up
         // These might have been removed from the marking script
-        this.missingNotes = ko.computed(function() {
+        this.missingNotes = ko.pureComputed(function() {
             return this.shownNotes().filter(function(n){return n.missing()});
         },this);
 
         // Is this test passing? No if any notes are failing.
-        this.passes = ko.computed(function() {
+        this.passes = ko.pureComputed(function() {
             return this.failingNotes().length==0;
         },this);
 
@@ -2843,7 +3339,7 @@ $(document).ready(function() {
 
         this.setTab('notes')();
 
-        this.header = ko.computed(function() {
+        this.header = ko.pureComputed(function() {
             // Prefix for the the header of this test in the list of tests
             var i = this.part.unit_tests().indexOf(this)+1;
             return i+'. ';
@@ -2904,7 +3400,7 @@ $(document).ready(function() {
         this.show = ko.observable(in_unit_test && default_show_names.contains(this.name)).toggleable();
 
         this.note = ko.observable(null);
-        this.description = ko.computed(function() {
+        this.description = ko.pureComputed(function() {
             var note = this.note();
             return note ? note.description : '';
         },this);
@@ -2918,7 +3414,7 @@ $(document).ready(function() {
         this.valid = ko.observable(true);
         this.credit = ko.observable(0);
 
-        this.valueType = ko.computed(function() {
+        this.valueType = ko.pureComputed(function() {
             var v = this.value();
             return v ? v.type : 'none';
         },this);
@@ -2931,7 +3427,7 @@ $(document).ready(function() {
             valid: ko.observable(true),
             credit: ko.observable(0)
         };
-        this.expected.computedValue = ko.computed(function() {
+        this.expected.computedValue = ko.pureComputed(function() {
             try {
                 return Numbas.jme.builtinScope.evaluate(this.expected.value());
             } catch(e) {
@@ -2947,7 +3443,7 @@ $(document).ready(function() {
             mn.expected.valid(mn.valid());
             mn.expected.credit(mn.credit());
         }
-        this.noMatchReason = ko.computed(function() {
+        this.noMatchReason = ko.pureComputed(function() {
             if(this.missing()) {
                 return 'missing';
             }
@@ -2990,7 +3486,7 @@ $(document).ready(function() {
                 return null;
             }
         },this);
-        this.noMatchDescription = ko.computed(function() {
+        this.noMatchDescription = ko.pureComputed(function() {
             var reason = this.noMatchReason();
             var d = {
                 'missing': 'This note is no longer defined.',
@@ -3007,7 +3503,7 @@ $(document).ready(function() {
             return d[reason];
         },this);
 
-        this.matchesExpected = ko.computed(function() {
+        this.matchesExpected = ko.pureComputed(function() {
             return !this.noMatchReason();
         },this);
     }
@@ -3114,6 +3610,8 @@ $(document).ready(function() {
         this.help_url = data.help_url;
         this.niceName = data.niceName;
         this.has_marks = data.has_marks || false;
+        this.has_correct_answer = data.has_correct_answer || false;
+        this.has_feedback_icon = data.has_feedback_icon || false;
         this.has_marking_settings = data.has_marking_settings || false;
         this.model = data.model ? data.model(part) : {};
         this.tabs = data.tabs ? data.tabs(part,this.model) : [];
@@ -3121,7 +3619,7 @@ $(document).ready(function() {
         this.is_custom_part_type = data.is_custom_part_type;
         this.toJSONFn = data.toJSON || function() {};
         this.loadFn = data.load || function() {};
-        this.variable_references = ko.computed(function() {
+        this.variable_references = ko.pureComputed(function() {
             if(!data.variable_references) {
                 return [];
             }

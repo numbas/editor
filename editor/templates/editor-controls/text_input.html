@@ -3,6 +3,7 @@
     attr: {
         {% if min or min == 0 %}min: {{min}},{% endif %}
         {% if max or max == 0 %}max: {{max}},{% endif %}
+        {% if placeholder %}placeholder: {{placeholder}},{% endif %}
     },
     autosize: {max: 500, min: 30, padding: 10, value: {{property}} }
 "/>

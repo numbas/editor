@@ -1,0 +1,7 @@
+{% load editor_controls %}
+{% load helplink %}
+<section class="tab-pane" data-bind="css: {active: ko.unwrap($parent.currentTab().id)=='marking-settings'}">
+<form class="form-horizontal" data-bind="submit: Editor.noop">
+    {% include "question/generic_part_marking_settings.html" %}
+</form>
+</section>

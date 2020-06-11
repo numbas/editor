@@ -7,7 +7,7 @@
             {% if help_url %}{% helplink help_url %}{% endif %}
         </div>
         <div class="{{form_control_class}}">
-            {% select_input property options=options options_text=options_text disable=disable %}
+            {% select_input property options=options options_text=options_text disable=disable allow_blank=allow_blank %}
         </div>
     </label>
 </div>

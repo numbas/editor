@@ -4,20 +4,20 @@ var tryGetAttribute = Editor.tryGetAttribute;
 
 part_types.models = [
     {
-        name: 'information',
+        name: 'information', 
         niceName: 'Information only',
         can_be_gap: false
     },
     {
-        name: 'extension',
+        name: 'extension', 
         niceName: 'Extension',
         has_marks: true
     },
     {
-        name: 'gapfill',
-        niceName: 'Gap-fill',
+        name: 'gapfill', 
+        niceName: 'Gap-fill', 
         has_marks: true,
-        has_marking_settings: true,
+        has_feedback_icon: true,
         can_be_gap: false,
         can_be_step: false,
         widget: '',
@@ -50,16 +50,18 @@ part_types.models = [
             if(data.gaps)
             {
                 data.gaps.map(function(g) {
-                    part.gaps.push(new Editor.question.Part(part.q,part,part.gaps,g));
+                    part.gaps.push(new Editor.question.Part('gap',part.q,part,part.gaps,g));
                 });
             }
             tryLoad(data,['sortAnswers'],this);
         }
     },
     {
-        name:'jme',
-        niceName: 'Mathematical expression',
-        has_marks: true,
+        name:'jme', 
+        niceName: 'Mathematical expression', 
+        has_marks: true, 
+        has_feedback_icon: true,
+        has_correct_answer: true,
         has_marking_settings: true,
         tabs: function(part,model) {
             var restrictions_tab_in_use = ko.computed(function() {
@@ -329,8 +331,8 @@ part_types.models = [
             tryLoad(tryGetAttribute(data,'minLength'),['length','partialCredit','message'],this.minlength);
             tryLoad(tryGetAttribute(data,'mustHave'),['strings','showStrings','partialCredit','message'],this.musthave);
             tryLoad(tryGetAttribute(data,'notAllowed'),['strings','showStrings','partialCredt','message'],this.notallowed);
-            tryLoad(tryGetAttribute(data,'mustMatchPattern'),['pattern','partialCredt','message','nameToCompare'],this.mustmatchpattern);
-
+            tryLoad(tryGetAttribute(data,'mustMatchPattern'),['pattern','partialCredit','message','nameToCompare'],this.mustmatchpattern);
+            
             var valueGenerators = tryGetAttribute(data,'valueGenerators');
             if(valueGenerators) {
                 var d = {};
@@ -344,9 +346,11 @@ part_types.models = [
         }
     },
     {
-        name:'numberentry',
-        niceName: 'Number entry',
+        name:'numberentry', 
+        niceName: 'Number entry', 
         has_marks: true,
+        has_feedback_icon: true,
+        has_correct_answer: true,
         has_marking_settings: true,
         widget: 'number',
 
@@ -456,6 +460,8 @@ part_types.models = [
         name: 'matrix',
         niceName: 'Matrix entry',
         has_marks: true,
+        has_feedback_icon: true,
+        has_correct_answer: true,
         has_marking_settings: true,
         widget: 'matrix',
 
@@ -561,9 +567,11 @@ part_types.models = [
         }
     },
     {
-        name:'patternmatch',
-        niceName: 'Match text pattern',
+        name:'patternmatch', 
+        niceName: 'Match text pattern', 
         has_marks: true,
+        has_feedback_icon: true,
+        has_correct_answer: true,
         has_marking_settings: true,
         widget: 'string',
 
@@ -610,8 +618,10 @@ part_types.models = [
         }
     },
     {
-        name:'1_n_2',
+        name:'1_n_2', 
         has_marks: true,
+        has_feedback_icon: true,
+        has_correct_answer: true,
         niceName: 'Choose one from a list',
         tabs: function(parts,model) {
             return [
@@ -747,8 +757,10 @@ part_types.models = [
         }
     },
     {
-        name:'m_n_2',
+        name:'m_n_2', 
         has_marks: true,
+        has_feedback_icon: true,
+        has_correct_answer: true,
         niceName: 'Choose several from a list',
         tabs: function(part,model) {
             return [
@@ -765,7 +777,6 @@ part_types.models = [
                 minAnswers: ko.observable(0),
                 maxAnswers: ko.observable(0),
                 shuffleChoices: ko.observable(false),
-                allOrNothing: ko.observable(false),
                 displayColumns: ko.observable(0),
                 customMatrix: ko.observable(''),
                 warningType: ko.observable(''),
@@ -818,7 +829,6 @@ part_types.models = [
             data.minMarks = this.minMarks();
             data.maxMarks = this.maxMarks();
             data.shuffleChoices = this.shuffleChoices();
-            data.allOrNothing = this.allOrNothing();
             data.displayType = 'checkbox';
             data.displayColumns = this.displayColumns();
             data.minAnswers = this.minAnswers();
@@ -867,7 +877,7 @@ part_types.models = [
         },
 
         load: function(data) {
-            tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','allOrNothing','displayColumns','showCellAnswerState'],this);
+            tryLoad(data,['minMarks','maxMarks','minAnswers','maxAnswers','shuffleChoices','displayColumns','showCellAnswerState'],this);
             if(typeof data.matrix == 'string') {
                 this.customMarking(true);
                 this.customMatrix(data.matrix);
@@ -900,8 +910,10 @@ part_types.models = [
         }
     },
     {
-        name:'m_n_x',
+        name:'m_n_x', 
         has_marks: true,
+        has_feedback_icon: true,
+        has_correct_answer: true,
         niceName: 'Match choices with answers',
         tabs: function(part,model) {
             return [
@@ -959,7 +971,7 @@ part_types.models = [
             model.matrix = Editor.editableGrid(
                 ko.computed(function() {
                     return model.choices().length;
-                }),
+                }), 
                 ko.computed(function() {
                     return model.answers().length;
                 }),
@@ -1148,9 +1160,11 @@ function CustomPartType(data) {
     this.description = data.description;
     this.widget = data.input_widget;
     this.has_marks = true;
+    this.has_correct_answer = true;
+    this.has_marking_settings = true,
+    this.has_feedback_icon = true;
     this.can_be_gap = data.can_be_gap;
     this.can_be_step = data.can_be_step;
-    this.has_marking_settings = true;
     this.settings_def = data.settings;
     this.marking_script = data.marking_script;
     this.source = data.source;
@@ -1256,3 +1270,4 @@ item_json.custom_part_types.forEach(function(data) {
 });
 
 });
+

@@ -1,0 +1,612 @@
+{% load links %}
+{% load sanitizer %}
+{% load helplink %}
+{% load editor_controls %}
+
+<!-- ko if: partsTabMode()=='edit part' && !currentPart() && !addingPart() -->
+    <!-- ko if: parts().length==0 -->
+        <p class="nothing-here">No parts have been defined in this question.</p>
+    <!-- /ko -->
+    <!-- ko if: parts().length>0 -->
+        <p class="nothing-here">Select a part to edit.</p>
+    <!-- /ko -->
+<!-- /ko -->
+
+<!-- ko with: currentPart -->
+<h3>
+    <input type="text" class="custom-name" data-bind="textInput: customName, autosize: name, attr: {placeholder: standardName}">
+    <span data-bind="text: type().niceName"></span>
+</h3>
+{% if editable %}
+<div class="part-controls">
+    <button type="button" class="btn btn-sm btn-default" data-bind="click: copy"><span class="glyphicon glyphicon-duplicate"></span> Copy this <span data-bind="text: levelName"></span></button>
+    <button type="button" class="btn btn-sm btn-default" data-bind="click: replaceWithGapfill, visible: canBeReplacedWithGap"><span class="glyphicon glyphicon-tasks"></span> Replace this part with a gapfill</button>
+    <button type="button" class="btn btn-sm btn-danger" data-bind="click: remove">
+        <span class="glyphicon glyphicon-remove"></span> Delete this <span data-bind="text: levelName"></span>
+    </button>
+</div>
+{% endif %}
+<ul class="col-sm-1 col-md-3 col-lg-2 nav nav-pills nav-stacked part-tabs" data-bind="foreach: tabs">
+    <li data-bind="css: {active: ko.unwrap($parent.currentTab().id) == $data.id, 'more-important': $data.more_important, 'in-use': $data.in_use}">
+        <a href="#" data-bind="click: $parent.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> <span class="hidden-sm" data-bind="text: title"></span></a>
+    </li>
+</ul>
+<div class="col-sm-11 col-md-9 col-lg-10 tab-content">
+    <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='prompt'">
+        <p class="help-block">
+            {% helplink 'question/parts/reference.html#term-prompt' subject='the part prompt' %}
+            Ask the student a question, and give any hints about how they should answer this part.
+        </p>
+
+        <div {% if not editable %}disabled{% endif %} data-bind="writemaths: prompt, preambleCSS: $root.preamble.css, tinymce_plugins: ['gapfill','jmevisible','preview'], showButtons: {gapfill: function(){return $data.type().name=='gapfill'}}, gaps: gaps"></div>
+    </section>
+
+    <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='alternative-feedback-message'">
+        <form class="form-horizontal" data-bind="submit: Editor.noop">
+            {% booleanproperty 'useAlternativeFeedback' 'Show all feedback?' help_url='question/parts/reference.html#term-show-all-feedback' %}
+
+            <div class="form-group">
+                <label class="label-block">
+                    <div class="{{form_label_class}} control-label">
+                        Message if this alternative is used
+                        {% helplink 'question/parts/reference.html#term-alternative-feedback-message' subject='the alternative feedback message' %}
+                    </div>
+                    <div class="{{form_control_class}}">
+                        <div {% if not editable %}disabled{% endif %} data-bind="writemaths: alternativeFeedbackMessage, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','preview']"></div>
+                    </div>
+                </label>
+            </div>
+        </form>
+
+    </section>
+
+    {% with form_label_class="col-sm-6 col-md-4" form_control_class="col-sm-6 col-md-8" %}
+        {% for name,template in partNames %}
+        <!-- ko if: type().name=='{{name}}' -->
+            <!-- ko with: type().model -->
+            {% include template %}
+            <!-- /ko -->
+        <!-- /ko -->
+        {% endfor %}
+        <!-- ko if: type().is_custom_part_type -->
+        <!-- ko with: type().model -->
+        {% include "question/part_types/custom_part_type.html" %}
+        <!-- /ko -->
+        <!-- /ko -->
+    {% endwith %}
+
+    <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='marking-algorithm'">
+        <form class="form-horizontal" data-bind="submit: Editor.noop">
+            {% booleanproperty 'use_custom_algorithm' 'Use custom marking algorithm?' help_url='question/parts/reference.html#term-use-custom-marking-algorithm' %}
+
+            <div data-bind="fadeVisible: use_custom_algorithm">
+                {% booleanproperty 'extendBaseMarkingAlgorithm' 'Extend base marking algorithm?' help_url='question/parts/reference.html#term-extend-base-marking-algorithm' %}
+                <div class="base-marking-algorithm" data-bind="fadeVisible: extendBaseMarkingAlgorithm">
+                    <h5>Base marking algorithm</h5>
+                    <pre data-bind="text: baseMarkingAlgorithm"></pre>
+                </div>
+                <h5>Custom marking algorithm</h5>
+                <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: customMarkingAlgorithm, codemirrorMode: 'jme'"></textarea>
+                <p class="alert alert-danger" data-bind="html: markingScriptError, visible: markingScriptError" aria-live="polite"></p>
+            </div>
+        </form>
+
+        <hr>
+        <h4>Test that the marking algorithm works</h4>
+
+        <div class="help-block">
+            <p>Check that the marking algorithm works with different sets of variables and student answers using the interface below.</p>
+            <p>Create unit tests to save expected results and to document how the algorithm should work.</p>
+        </div>
+
+        <div class="marking-test" data-bind="with: marking_test">
+            <!-- ko if: question_error -->
+            <div class="alert alert-danger" aria-live="polite">
+                <p>There's an error which means the marking algorithm can't run:</p>   
+                <p data-bind="html: question_error"></p>
+                <pre data-bind="visible: ko.unwrap(question_error).stack, text: ko.unwrap(question_error).stack"></pre>
+            </div>
+            <!-- /ko -->
+
+            <!-- ko if: question -->
+
+                <!-- ko if: ko.unwrap($data.runtime_part)!==undefined -->
+                <!-- ko if: ko.unwrap($parent.type().widget) -->
+                    <form class="form-horizontal" data-bind="submit: Editor.noop">
+                        <div class="form-group">
+                            <label class="label-block">
+                                <div class="col-sm-12 col-md-3">
+                                    Expected answer
+                                </div>
+                                <div class="col-sm-12 col-md-9">
+                                    <div data-bind="component: {name: 'answer-widget', params: {answer: correctAnswer, part: runtime_part, disable: true}}"></div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="label-block">
+                                <div class="col-sm-12 col-md-3">
+                                    Student's answer
+                                </div>
+                                <div class="col-sm-12 col-md-9">
+                                    <div data-bind="component: {name: 'answer-widget', params: {answer: answer, part: runtime_part}}"></div>
+                                </div>
+                            </label>
+                        </div>
+                    </form>
+                <!-- /ko -->
+                <!-- ko if: $parent.type().name=='gapfill' -->
+                <form class="form-horizontal" data-bind="submit: Editor.noop">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Gap</th>
+                                <th>Expected answer</th>
+                                <th>Student's answer</th>
+                            </tr>
+                        </thead>
+                        <tbody data-bind="foreach: $parent.gaps">
+                            <tr>
+                                <td data-bind="text: name"></td>
+                                <td data-bind="with: marking_test">
+                                    <div data-bind="component: {name: 'answer-widget', params: {answer: correctAnswer, part: runtime_part, disable: true}}"></div>
+                                </td>
+                                <td data-bind="with: marking_test">
+                                    <div data-bind="component: {name: 'answer-widget', params: {answer: answer, part: runtime_part}}"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </form>
+                <!-- /ko -->
+                <!-- /ko -->
+
+            <ul class="nav nav-tabs" data-bind="foreach: tabs">
+                <li role="presentation" data-bind="css: {active: ko.unwrap($parent.currentTab().id) == $data.id}"><a href="#" data-bind="click: $parent.currentTab, text: title"></a></li>
+            </ul>
+
+            <div class="tab-content">
+                <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='variables'">
+
+                    <table class="variables table table-striped">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Name</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody data-bind="foreach: variables">
+                            <tr class="variable">
+                                <td class="lock-cell">
+                                    {% if editable %}
+                                    <button type="button" class="btn btn-xs btn-link lock" data-bind="click: toggleLocked, css: {locked: locked}" title="Lock the value of this variable (editor only)">
+                                        <span class="glyphicon glyphicon-lock"></span>
+                                    </button>
+                                    {% endif %}
+                                </td>
+                                <td class="name monospace" data-bind="click: function(){$root.goToVariable(name)}, text: name ? name : 'Unnamed'"></td>
+                                <td class="value jme-value" data-bind="jmevalue: value"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="btn btn-info btn-lg" type="button" data-bind="click: $root.regenerateVariables"><span class="glyphicon glyphicon-refresh"></span> Regenerate values</button>
+                </section>
+
+                <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='notes'">
+                    <!-- ko if: ko.unwrap($data.runtime_part)!==undefined -->
+                    <div data-bind="if: last_run_error">
+                        <div class="alert alert-danger" aria-live="polite">
+                            <p data-bind="html: last_run_error"></p>
+                            <!-- ko if: last_run().warnings -->
+                            <ul data-bind="foreach: last_run().warnings">
+                                <li data-bind="html: $data"></li>
+                            </ul>
+                            <!-- /ko -->
+                        </div>
+                    </div>
+                    <div data-bind="if: last_run() && alternative_used()">
+                        <p>
+                            <strong>Alternative used: </strong>
+                            <button type="button" class="btn btn-link" data-bind="click: function() { $root.currentPart(alternative_used()); }, text: alternative_used().name"></button>
+                        </p>
+                    </div>
+                    <div data-bind="visible: last_run() && sortedNotes().length>0">
+                        <table class="notes table">
+                            <colgroup>
+                                <col class="name"></col>
+                                <col class="value"></col>
+                                <col class="feedback"></col>
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>
+                                        Note
+                                        <br>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-link" data-bind="click: showAllNotes"><span class="glyphicon glyphicon-eye-open"></span> Show all</button> 
+                                            <button type="button" class="btn btn-sm btn-link" data-bind="click: hideAllNotes"><span class="glyphicon glyphicon-eye-close"></span> Hide all</button>
+                                        </div>
+                                    </th>
+                                    <th>Value</th>
+                                    <th>Feedback</th>
+                                </tr>
+                            </thead>
+                            <tbody data-bind="foreach: sortedNotes">
+                                <tr class="note" data-bind="css: {'show-note': show(), 'invalid': !valid()}">
+                                    <td role="button" data-bind="click: show.toggle">
+                                        <span class="name monospace" data-bind="text: name, attr: {title: description}"></span> 
+                                    </td>
+                                    <td class="only-when-shown">
+                                        <div class="value jme-value" data-bind="jmevalue: value, error: error"></div>
+                                    </td>
+                                    <td class="only-when-shown">
+                                        <ul class="list-unstyled" data-bind="foreach: messages">
+                                            <li data-bind="html: $data"></li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="help-block">
+                            <p>
+                                Click on a note's name to show or hide it. Only shown notes will be included when you create a unit test. 
+                            </p>
+                        </div>
+
+                        <button class="btn btn-primary" type="button" data-bind="click: $parent.addUnitTest, disable: !canCreateUnitTest()">Create a unit test</button>
+                    </div>
+                    <!-- /ko -->
+                </section>
+            </div>
+            <!-- /ko -->
+        </div>
+
+        <hr>
+        <h4>Unit tests</h4>
+        <div class="nothing-here" data-bind="fadeVisible: unit_tests().length==0">
+            <p>No unit tests have been defined. Enter an answer above, select one or more notes, and click the "Create a unit test" button.</p>
+        </div>
+        <div data-bind="fadeVisible: unit_tests().length>0">
+            <p>The following tests check that the question is behaving as desired.</p>
+            <button class="btn btn-default" data-bind="click: run_all_tests"><span class="glyphicon glyphicon-play"></span> Run all unit tests</button>
+        </div>
+        <div class="panel-group unit-tests">
+            <!-- ko foreach: unit_tests -->
+            <div class="panel unit-test" data-bind="css: {open: open(), 'panel-success': last_run() && passes(), 'panel-danger': last_run() && !passes(), 'panel-default': !last_run()}">
+                <div class="panel-heading" data-bind="restrictedClick: open.toggle" clickable>
+                    {% if editable %}
+                    <div class="pull-right">
+                        <button type="button" class="btn btn-link" title="Remove this unit test" data-bind="click: remove"><span class="glyphicon glyphicon-trash text-danger"></span></button>
+                    </div>
+                    {% endif %}
+
+                    <h3 class="panel-title form-inline" clickable>
+                        <span class="lead passing-status" clickable>
+                            <span data-bind="visible: !last_run()"><span class="glyphicon glyphicon-question-sign" title="This test has not been run yet" clickable></span> <span class="sr-only">This test has not been run yet</span></span>
+                            <span class="text-success" data-bind="visible: last_run() && passes"><span class="glyphicon glyphicon-ok" title="This test produces the expected output" clickable></span> <span class="sr-only">This test produces the expected output</span></span>
+                            <span class="text-danger" data-bind="visible: last_run() && !passes()"><span class="glyphicon glyphicon-remove" title="This test does not produce the expected output" clickable></span> <span class="sr-only">This test does not produce the expected output</span></span>
+                        </span>
+                        <span clickable role="button" class="glyphicon" data-bind="css: {'glyphicon-triangle-right': !open(), 'glyphicon-triangle-bottom': open}"></span>
+                        <strong data-bind="text: header" clickable></strong>
+                        <span data-bind="visible: !item_json.editable || !open(), text: displayName" clickable></span>
+                        <input type="text" class="form-control" data-bind="visible: item_json.editable && open(), textInput: name" placeholder="Describe this test">
+                    </h3>
+                </div>
+
+                <div data-bind="fadeVisible: open">
+                    <div class="panel-body">
+                        <div data-bind="if: last_run">
+                            <div class="alert alert-danger" data-bind="visible: !passes() && missingNotes().length==0">
+                                <p>This test is not currently producing the expected result. Fix the marking algorithm to produce the expected results detailed below or, if this test is out of date, update the test to accept the current values.</p>
+                                <p><button type="button" class="btn btn-danger" data-bind="click: setExpected"><span class="glyphicon glyphicon-refresh"></span> Accept the current values</button></p>
+                            </div>
+                            <div class="alert alert-danger" data-bind="visible: !passes() && missingNotes().length>0">
+                                <p>One or more notes in this test are no longer defined. If these notes are no longer needed, you should delete this test.</p>
+                            </div>
+                            <ul class="nav nav-tabs" data-bind="foreach: tabs">
+                                <li role="presentation" data-bind="css: {active: ko.unwrap($parent.currentTab().id) == $data.id}"><a href="#" data-bind="click: $parent.currentTab, text: title"></a></li>
+                            </ul>
+
+                            <div class="tab-content">
+                                <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='variables'">
+                                    <table class="variables table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Value</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody data-bind="foreach: variables">
+                                            <tr class="variable">
+                                                <td class="name monospace" data-bind="click: function(){$root.goToVariable(name)}, text: name ? name : 'Unnamed'"></td>
+                                                <td class="value jme-value" data-bind="jmevalue: value"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </section>
+
+                                <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='notes'">
+                                    <!-- ko if: ko.unwrap($data.runtime_part)!==undefined -->
+                                    <form class="form-horizontal" data-bind="submit: Editor.noop">
+                                        <div class="form-group">
+                                            <label class="label-block">
+                                                <div class="col-sm-12 col-md-3">
+                                                    Student's answer
+                                                </div>
+                                                <div class="col-sm-12 col-md-9" data-bind="with: runtime_part">
+                                                    <div data-bind="if: input_widget()">
+                                                        <div data-bind="component: {name: 'answer-widget', params: {answer: $parent.answer, part: $data, disable: true}}"></div>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </form>
+
+                                    <div data-bind="visible: last_run_error" aria-live="polite">
+                                        <div class="alert alert-danger">
+                                            <p data-bind="html: last_run_error"></p>
+                                        </div>
+                                    </div>
+                                    <div data-bind="visible: !last_run_error()">
+                                        <table class="notes table">
+                                            <colgroup>
+                                                <col class="name"></col>
+                                            </colgroup>
+                                            <thead>
+                                                <tr>
+                                                    <th></th>
+                                                    <th>Note</th>
+                                                    <th></th>
+                                                    <th>Value</th>
+                                                    <th>Feedback</th>
+                                                    <td></td>
+                                                </tr>
+                                            </thead>
+                                            <!-- ko foreach: sortedNotes -->
+                                                <tbody data-bind="visible: show">
+                                                    <tr class="note">
+                                                        <td rowspan="2" class="lead">
+                                                            <span class="text-success" data-bind="visible: matchesExpected"><span class="glyphicon glyphicon-ok" title="This note produces the expected output"></span> <span class="sr-only">This note produces the expected output</span></span>
+                                                            <span class="text-danger" data-bind="visible: !matchesExpected()"><span class="glyphicon glyphicon-remove" data-bind="attr: {title: noMatchDescription}"></span> <span class="sr-only" data-bind="text: noMatchDescription"></span></span>
+                                                        </td>
+                                                        <td rowspan="2">
+                                                            <span class="name monospace" data-bind="text: name, attr: {title: description}"></span> 
+                                                        </td>
+                                                        <th>Current:</th>
+                                                        <td>
+                                                            <span class="value jme-value" data-bind="jmevalue: value, error: error"></span>
+                                                        </td>
+                                                        <td>
+                                                            <ul class="list-unstyled" data-bind="foreach: messages">
+                                                                <li data-bind="html: $data"></li>
+                                                            </ul>
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="note" data-bind="css: {danger: missing() || !valid()}">
+                                                        <th>Expected:</th>
+                                                        <td>
+                                                            <span class="value jme-value" data-bind="jmevalue: expected.computedValue"></span>
+                                                        </td>
+                                                        <td>
+                                                            <ul class="list-unstyled" data-bind="foreach: expected.messages">
+                                                                <li data-bind="html: $data"></li>
+                                                            </ul>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            <!-- /ko -->
+                                        </table>
+                                    </div>
+                                    <!-- /ko -->
+                                </section>
+                            </div>
+                        </div>
+                        <div data-bind="if: !last_run()">
+                            <div class="alert alert-warning">
+                                <p>This test has not yet been run.</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" type="button" data-bind="click: run"><span class="glyphicon glyphicon-play"></span><span data-bind="text: last_run() ? 'Run this test again' : 'Run this test'"></span></button>
+                    </div>
+                </div>
+            </div>
+            <!-- /ko -->
+        </div>
+    </section>
+
+    <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='scripts'">
+        <p class="help-block">
+            {% helplink 'question/parts/reference.html#scripts' subject='part scripts' %}
+            When you need to change the way this part works beyond the available options, you can write JavaScript code to be executed at the times described below.
+        </p>
+        <form class="form-inline" data-bind="foreach: scripts, submit: Editor.noop">
+            <div class="script control-group">
+                <label class="control-label">
+                    <p>
+                        <span data-bind="text: displayName"></span>
+                        <span data-bind="if: active"> (active)</span>
+                        <span data-bind="if: !active()"> (inactive)</span>
+                    </p>
+                </label>
+                <div class="controls">
+                    <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: script, codemirrorMode: 'javascript'"></textarea>
+                    <p class="order" data-bind="visible: name!='constructor'">Run this script <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: orderOptions, value: orderItem, optionsText: 'niceName'"></select> the built-in script.</p>
+                    <p class="order" data-bind="visible: name=='constructor'">This script runs after the built-in script.</p>
+                </div>
+            </div>
+        </form>
+    </section>
+    <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='adaptivemarking'">
+        <p class="help-block">
+            {% helplink 'question/parts/reference.html#adaptive-marking' subject='adaptive marking' %}
+            To account for errors made by the student in earlier calculations, replace question variables with answers to earlier parts.
+        </p>
+        <p class="nothing-here" data-bind="visible: !canMakeVariableReplacement()">
+            In order to create a variable replacement, you must define at least one variable and one other part.
+        </p>
+        <div class="variable-replacements" data-bind="visible: canMakeVariableReplacement">
+            <table class="table" data-bind="fadeVisible: variableReplacements().length">
+                <thead>
+                    <tr>
+                        <th>Variable</th>
+                        <th>Answer to use</th>
+                        <th>Must be answered?</th>
+                    </th>
+                </thead>
+                <tbody data-bind="foreach: variableReplacements">
+                    <tr>
+                        <td><select {% if not editable %}disabled{% endif %} class="form-control name-to-replace" data-bind="options: variableDisplay, value: variable"/></td>
+                        <td>
+                            <select {% if not editable %}disabled{% endif %} class="form-control replace-with" data-bind="options: availableParts, optionsText: 'name', optionsValue: 'path', value: replacement"/>
+                        </td>
+                        <td>
+                            <input {% if not editable %}disabled{% endif %} type="checkbox" data-bind="checked: must_go_first"/>
+                        </td>
+                        <td>
+                            {% if editable %}<button type="button" class="delete btn btn-link" data-bind="click: part.deleteVariableReplacement" title="Delete this replacement"><span class="glyphicon glyphicon-remove text-danger"></span></button>{% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div data-bind="fadeVisible: replacementRandomDependencies().length" class="alert alert-danger">
+                <p>The variable replacements you've chosen will cause the following variables to be regenerated each time the student submits an answer to this part:</p>
+                <p><ul class="list-inline" data-bind="foreach: replacementRandomDependencies">
+                    <li><span class="btn btn-sm btn-danger monospace" data-bind="text: $data,click: $root.goToVariable" title="Edit this variable"></span></li>
+                </ul></p>
+                <p>These variables have some random elements, which means they're not guaranteed to have the same value each time the student submits an answer. You should define new variables to store the random elements, so that they remain the same each time this part is marked.</p>
+                <p><a href="{{HELP_URL}}question/parts/reference.html#adaptive-marking">More information about this problem</a></p>
+            </div>
+
+            <p class="text-right">
+                {% if editable %}<button class="btn btn-sm btn-primary add-variable-replacement" data-bind="click: addVariableReplacement"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: variableReplacements().length? 'Add another replacement' : 'Add a variable replacement'">Add a variable replacement</span></button>{% endif %}
+            </p>
+
+            <form class="form-horizontal" data-bind="submit: Editor.noop, visible: variableReplacements().length">
+                {% selectproperty 'variableReplacementStrategy' 'Variable replacement strategy' options_text='niceName' options='variableReplacementStrategies' help_url='question/parts/reference.html#term-variable-replacement-strategy' %}
+                {% property 'adaptiveMarkingPenalty' 'Penalty when adaptive marking is used' min=0 help_url='question/parts/reference.html#term-penalty-when-adaptive-marking-is-used' %}
+            </form>
+        </div>
+    </section>
+    <section class="tab-pane" data-bind="activeIf: ko.unwrap(currentTab().id)=='nextparts'">
+        <div class="alert alert-warning" data-bind="fadeVisible: !reachable()">
+            <p>This part can't be reached by the student.</p>
+            <p data-bind="visible: nextPartReferences().length==0">
+                Add a "next part" reference to this part from another part.
+            </p>
+            <p data-bind="visible: nextPartReferences().length>0">
+                None of the parts which can lead to this part are reachable either.
+            </p>
+        </div>
+        <form class="form-horizontal" data-bind="submit: Editor.noop, visible: !isFirstPart()">
+            {% booleanproperty 'suggestGoingBack' 'Suggest going back to the previous part?' help_url='question/parts/reference.html#term-suggest-going-back-to-the-previous-part' %}
+        </form>
+        <h3>Next part options</h3>
+        <p class="help-block">
+            {% helplink 'question/parts/reference.html#next-parts' subject='next parts' %}
+            Define the list of parts that the student can visit after this one.
+        </p>
+        <ul data-bind="foreach: nextParts" class="list-unstyled next-parts">
+            <li class="next-part panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <!-- ko if: otherPart --><a href="#" data-bind="click: function() {$parents[1].currentPart(otherPart())}, text: otherPart().header"></a><!-- /ko -->
+                        <button type="button" class="delete btn btn-link" data-bind="click: $parent.deleteNextPart" title="Delete this next part option"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                    </h4>
+                </div>
+                <div class="panel-body">
+                    <form class="form-horizontal" data-bind="submit: Editor.noop">
+                        {% property 'rawLabel' 'Label' help_url='question/parts/reference.html#term-label' placeholder='label' %}
+                        {% booleanproperty 'lockAfterLeaving' 'Locks this part?' help_url='question/parts/reference.html#term-locks-this-part' %}
+                        {% selectproperty 'availabilityCondition' 'Availability' options_text='name' options='availability_conditions' help_url='question/parts/reference.html#term-availability' %}
+                        <div data-bind="fadeVisible: availabilityCondition().id=='expression'">
+                            {% property 'availabilityExpression' 'Available if' help_url='question/parts/reference.html#term-available-if' %}
+                        </div>
+
+                        {% selectproperty 'penalty' 'Penalty to apply when visited' options_text='name' options='$parent.q.penalties' allow_blank=True help_url='question/parts/reference.html#term-penalty-to-apply-when-visited' %}
+                        <div data-bind="fadeVisible: penalty">
+                            {% property 'penaltyAmount' 'Amount of penalty' help_url='question/parts/reference.html#term-amount-of-penalty' %}
+                        </div>
+                    </form>
+                    <div class="variable-replacements">
+                        <h4>Variable replacements</h4>
+                        <div data-bind="fadeVisible: variableReplacements().length==0" class="nothing-here">
+                            No variable replacements have been defined for this next part option.
+                        </div>
+                        <table class="table" data-bind="fadeVisible: variableReplacements().length">
+                            <colgroup>
+                                <col class="name"/>
+                                <col class="value"/>
+                                <col class="controls"/>
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>Variable</th>
+                                    <th>Value</th>
+                                    <th></th>
+                                </th>
+                            </thead>
+                            <tbody data-bind="foreach: variableReplacements">
+                                <tr>
+                                    <td><select {% if not editable %}disabled{% endif %} class="form-control name-to-replace" data-bind="options: variables, value: variable"></select></td>
+                                    <td>
+                                        <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: value_options, optionsText: 'name', value: value_option"></select>
+                                        <div data-bind="fadeVisible: value_option().custom">
+                                            <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: custom_definition, codemirrorMode: 'jme'"></textarea>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if editable %}<button type="button" class="delete btn btn-link" data-bind="click: $parent.removeVariableReplacement" title="Delete this replacement"><span class="glyphicon glyphicon-remove text-danger"></span></button>{% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!--
+                        <div data-bind="fadeVisible: replacementRandomDependencies().length" class="alert alert-danger">
+                            <p>The variable replacements you've chosen will cause the following variables to be regenerated each time the student submits an answer to this part:</p>
+                            <p><ul class="list-inline" data-bind="foreach: replacementRandomDependencies">
+                                <li><span class="btn btn-sm btn-danger monospace" data-bind="text: $data,click: $root.goToVariable" title="Edit this variable"></span></li>
+                            </ul></p>
+                            <p>These variables have some random elements, which means they're not guaranteed to have the same value each time the student submits an answer. You should define new variables to store the random elements, so that they remain the same each time this part is marked.</p>
+                            <p><a href="{{HELP_URL}}question/parts/reference.html#adaptive-marking">More information about this problem</a></p>
+                        </div>
+                        -->
+
+
+                        <div class="text-right">
+                            {% if editable %}<button class="btn btn-sm btn-primary add-variable-replacement" data-bind="click: addVariableReplacement"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: variableReplacements().length? 'Add another replacement' : 'Add a variable replacement'">Add a variable replacement</span></button>{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </li>
+        </ul>
+
+        <div class="btn-group" data-bind="fadeVisible: availableNextParts().length">
+            <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Add a next part option
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" data-bind="foreach: availableNextParts">
+                <li><a href="#" data-bind="click: $parent.addNextPart, text: name"></a></li>
+            </ul>
+        </div>
+
+        <h3>Previous parts</h3>
+        <!-- ko if: nextPartReferences().length -->
+            <p>This part can follow on from:</p>
+            <ul data-bind="foreach: nextPartReferences">
+                <li>
+                    <button type="button" class="btn btn-sm btn-default" data-bind="click: $root.currentPart"><span class="glyphicon glyphicon-check"></span> <span data-bind="text: header"></span></button>
+                </li>
+            </ul>
+        <!-- /ko -->
+        <!-- ko if: nextPartReferences().length==0 -->
+        <p class="nothing-here">This part doesn't follow on from any others.</p>
+        <!-- /ko -->
+    </section>
+</div>
+<!-- /ko -->
+

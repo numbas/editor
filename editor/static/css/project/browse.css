@@ -37,6 +37,10 @@ th.orderable:not(.desc) .glyphicon-sort-by-attributes-alt {
     opacity: 0.3;
 }
 
+.item .btn-sm {
+    padding: 0;
+}
+
 .folder-list .folder:not(.expanded) > .name > .glyphicon-folder-open {
     display: none;
 }

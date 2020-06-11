@@ -204,6 +204,9 @@ class QuestionForm(EditorItemForm):
         fields = ('resources', 'extensions')
 
 class NewQuestionForm(forms.ModelForm):
+
+    parts_mode = forms.ChoiceField(choices=(('all','Show all parts'),('explore','Explore')))
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['folder'].required = False

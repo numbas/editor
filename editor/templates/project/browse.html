@@ -134,7 +134,7 @@
                         {% stamp item.current_stamp.status %}
                     </td>
                     <td>
-                        <a class="test-run" target="_blank" href="{% url item.item_type|add:'_preview' item.rel_obj.pk item.slug %}"><span class="glyphicon glyphicon-play" title="Test run" aria-hidden="true"></span></a>
+                        <a class="btn btn-link btn-sm test-run" target="_blank" href="{% url item.item_type|add:'_preview' item.rel_obj.pk item.slug %}"><span class="glyphicon glyphicon-play" title="Test run" aria-hidden="true"></span></a>
                     </td>
                     <td>
                         {% if item.item_type == 'question' %}

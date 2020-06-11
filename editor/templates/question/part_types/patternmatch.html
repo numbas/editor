@@ -4,9 +4,6 @@
 <form class="form-horizontal" data-bind="submit: Editor.noop">
     <div class="main-settings">
         {% property '$parent.marks' 'Marks' min=0 help_url='question/parts/reference.html#term-marks' %}
-        <div data-bind="visible: $parent.steps().length">
-            {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='question/parts/reference.html#term-penalty-for-revealing-steps' %}
-        </div>
         <div class="form-group">
             <label class="{{form_label_class}} control-label">
                 Match test {% helplink 'question/parts/match-text-pattern.html#term-match-test' %}
@@ -21,6 +18,9 @@
         </div>
     </div>
 
+    <hr>
+    {% include "question/generic_part_marking_settings.html" %}
+
     <h4>Advanced settings</h4>
     <hr>
 
@@ -28,7 +28,5 @@
     <div data-bind="fadeVisible:caseSensitive">
         {% percentproperty 'partialCredit' 'Partial credit for answer not matching case' %}
     </div>
-    {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='question/parts/reference.html#term-show-correct-answer-on-reveal' %}
-    {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/parts/reference.html#term-show-score-feedback-icon' %}	
 </form>
 </section>

@@ -1430,13 +1430,17 @@ Strings
 
     Mark string ``x`` as containing raw LaTeX, so when it's included in a mathmode environment it doesn't get wrapped in a ``\textrm`` environment.
 
+    If ``x`` is a :data:`expression` value, it's rendered to LaTeX.
+
     Note that backslashes must be double up, because the backslash is an escape character in JME strings.
 
     **Definitions**:
         * :data:`string` → :data:`string`
+        * :data:`expression` → :data:`string`
 
     **Example**:
         * ``latex('\\frac{1}{2}')``.
+        * ``latex(expression("x^2 + 3/4"))`` → ``"x^{2} + \\frac{3}{4}"``
 
 .. jme:function:: safe(x)
 
@@ -1754,9 +1758,11 @@ Logic
         * ``vector(1,2)=vector(1,2,0)``
         * ``4.0=4``
 
-.. jme:function:: isclose(x,y,rel_tol,abs_tol)
+.. jme:function:: isclose(x,y,[rel_tol],[abs_tol])
 
     Returns ``true`` if ``x`` is close to ``y``.
+
+    The arguments `rel_tol` and `abs_tol` are optional, with default values of :math:`10^{-15}`.
 
     Equivalent to the following expression::
 
@@ -2790,6 +2796,21 @@ Sub-expressions
         * ``numerical_compare(expression("x^2"), expression("x*x"))`` → ``true``
         * ``numerical_compare(expression("x^2"), expression("2x"))`` → ``false``
         * ``numerical_compare(expression("x^2"), expression("y^2"))`` → ``false``
+
+Calculus
+--------
+
+.. jme:function:: diff(expression,variable)
+
+    Differentiate the given expression with respect to the given variable name
+
+    **Definitions**:
+        * :data:`expression`, :data:`string` → :data:`expression`
+
+    **Example**:
+        * ``diff(expression("x^2 + 2x + 4"), "x")`` → ``expression("2x + 2")``
+        * ``diff(expression("x * y + 3x + 2y"), "x")`` → ``expression("y + 3")``
+        * ``diff(expression("cos(x^2)"), "x")`` → ``expression("-2 * sin(x^2) * x")``
 
 .. _jme-fns-pattern-matching:
 

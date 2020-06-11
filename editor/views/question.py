@@ -45,6 +45,9 @@ class CreateView(editor.views.editoritem.CreateView):
     def form_valid(self, form):
         with transaction.atomic(), reversion.create_revision():
             ei = form.save()
+            content = ei.get_parsed_content()
+            content.data['partsMode'] = form.cleaned_data.get('parts_mode')
+            ei.content = str(content)
             ei.set_licence(ei.project.default_licence)
             ei.save()
             self.question = NewQuestion()
@@ -154,7 +157,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         context['partNames'] = [
             (name, '{}/{}.html'.format(part_type_path, name)) 
             for name in 
-            ('jme', 'gapfill', 'numberentry', 'patternmatch', '1_n_2', 'm_n_2', 'm_n_x', 'matrix', 'extension')
+            ('information', 'jme', 'gapfill', 'numberentry', 'patternmatch', '1_n_2', 'm_n_2', 'm_n_x', 'matrix', 'extension')
         ]
 
         return context

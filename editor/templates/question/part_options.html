@@ -1,0 +1,70 @@
+{% load links %}
+{% load sanitizer %}
+{% load helplink %}
+{% load editor_controls %}
+
+<form class="form-horizontal" data-bind="submit: Editor.noop">
+    <!-- ko if: partsMode().value=='explore' -->
+        <p class="help-block">
+            <a class="helplink text-info" target="numbasquickhelp" href="{{HELP_URL}}question/explore.html"><span class="glyphicon glyphicon-question-sign"></span> Help with explore mode</a>
+        </p>
+
+        {% property 'maxMarks' 'Maximum mark' zero_means='sum of objective limits' help_url='question/explore.html#term-maximum-mark' %}
+
+        <hr>
+
+        <section class="objectives">
+            <h3>Objectives</h3>
+
+            {% selectproperty 'objectiveVisibility' 'Show objectives' options_text='name' options='objective_visibility_options' help_url='question/explore.html#term-show-objectives' %}
+
+            <div data-bind="fadeVisible: objectives().length">
+                <table class="table objectives">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Limit</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody data-bind="foreach: objectives">
+                        <tr class="objective">
+                            <td><input type="text" data-bind="textInput: name"></td>
+                            <td><input type="text" data-bind="textInput: limit"></td>
+                            <td><button class="btn btn-link btn-sm" data-bind="click: $parent.removeObjective" title="Delete this objective"><span class="glyphicon glyphicon-remove text-danger"></span></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn btn-primary" type="button" data-bind="click: addObjective"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: objectives().length ? 'Add another objective' : 'Add an objective'"></span></button>
+        </section>
+
+        <hr>
+        
+        <section class="penalties">
+            <h3>Penalties</h3>
+
+            {% selectproperty 'penaltyVisibility' 'Show penalties' options_text='name' options='objective_visibility_options' help_url='question/explore.html#term-show-penalties' %}
+
+            <div data-bind="fadeVisible: penalties().length">
+                <table class="table penalties">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Limit</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody data-bind="foreach: penalties">
+                        <tr class="penalty">
+                            <td><input type="text" data-bind="textInput: name"></td>
+                            <td><input type="text" data-bind="textInput: limit"></td>
+                            <td><button class="btn btn-link btn-sm" data-bind="click: $parent.removePenalty" title="Delete this penalty"><span class="glyphicon glyphicon-remove text-danger"></span></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn btn-primary" type="button" data-bind="click: addPenalty"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: penalties().length ? 'Add another penalty' : 'Add a penalty'"></span></button>
+        </section>
+    <!-- /ko -->
+</form>

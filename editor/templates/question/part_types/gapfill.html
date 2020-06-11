@@ -1,12 +1,9 @@
 {% load editor_controls %}
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking-settings'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
-        <div data-bind="fadeVisible: $parent.steps().length">
-            {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='question/parts/reference.html#term-penalty-for-revealing-steps' %}
-        </div>
+        {% include "question/generic_part_marking_settings.html" %}
         <div data-bind="fadeVisible: all_gaps_same_type">
-            {% booleanproperty 'sortAnswers' 'Sort student\'s answers before marking?' help_url='question/parts/numberentry.html#term-sort-students-answers-before-marking' %}
+            {% booleanproperty 'sortAnswers' 'Sort student\'s answers before marking?' help_url='question/parts/gapfill.html#term-sort-student-s-answers-before-marking' %}
         </div>
-        {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/parts/reference.html#term-show-score-feedback-icon' %}    
     </form>
 </section>

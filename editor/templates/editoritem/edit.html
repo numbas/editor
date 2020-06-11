@@ -190,7 +190,7 @@
 
                                 <div class="form-group description">
                                     <label>Description</label>
-                                    <div id="description-input" {% if not editable %}disabled{% endif %} data-bind="light_wysiwyg: description"></div>
+                                    <div id="description-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
                                     <div class="help-block">
                                         <p>
                                             {% helplink 'question/reference.html#term-description' subject='the description field' %}
@@ -354,7 +354,7 @@
                     {% endif %}
 
                     {% if individual_stamps_outside_project %}
-                    <p>From users who are not members of this {% project_link object.editoritem.project %}:</p>
+                    <p>From users who are not members of {% project_link object.editoritem.project %}:</p>
                     <table class="individual-feedback">
                         <tbody>
                             {% for stamp in individual_stamps_outside_project %}

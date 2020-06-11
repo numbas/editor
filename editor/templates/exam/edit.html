@@ -55,7 +55,7 @@
     </section>
 
     <!-- Questions -->
-    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='questions'}">
+    <section class="tab-pane questions-tab" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='questions'}">
         <div class="questions row">
             <div class="col-sm-6">
                 <div class="panel panel-primary">
@@ -119,20 +119,28 @@
                                         options: {handle: '.handle', group: 'questions'}
                                         }
                                         ">
-                                        <li class="question list-group-item clearfix">
-                                        <span class="handle btn btn-link btn-lg pull-left" data-bind="visible: item_json.editable"><span class="glyphicon glyphicon-move"></span></span>
-                                        <div class="controls pull-right">
-                                            <a class="preview btn btn-link" data-bind="attr: {href: previewURL()}" target="_blank" title="Preview this question"><span class="glyphicon glyphicon-play text-success"></span></a>
-                                            <button type="button" class="copy btn btn-link" data-bind="click:replaceWithCopy, visible: item_json.editable" title="Replace this question with a copy"><span class="glyphicon glyphicon-duplicate text-warning"></span></button>
-                                            <button class="btn btn-link btn-sm basket add-to-basket" title="Add this to your basket" data-bind="attr: {'data-question-id': id}"><span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span></button>
-                                            <button type="button" class="delete btn btn-link" data-bind="click:remove, visible: item_json.editable" title="Remove this question from the exam"><span class="glyphicon glyphicon-remove text-danger"></span></button>
-                                        </div>
-                                        <div class="title">
-                                            <strong class="number" data-bind="text: number()===undefined ? '' : number()+'.'"></strong>
-                                            <a data-bind="attr:{href: url}, text: name, mathjax: name" target="_blank"></a>
-                                            <span class="label label-default stamp" data-bind="visible: current_stamp, text: current_stamp_display, attr: {'data-stamp':current_stamp()}"></span>
-                                        </div>
-                                        <div class="description" data-bind="visible: description().length>0, html: description, mathjax: true"></div>
+                                        <li class="question list-group-item">
+                                            <span class="handle btn btn-link btn-lg" data-bind="visible: item_json.editable"><span class="glyphicon glyphicon-move"></span></span>
+                                            <div class="controls">
+                                                <a class="preview btn btn-link" data-bind="attr: {href: previewURL()}" target="_blank" title="Preview this question"><span class="glyphicon glyphicon-play text-success"></span></a>
+                                                <button type="button" class="copy btn btn-link" data-bind="click:replaceWithCopy, visible: item_json.editable" title="Replace this question with a copy"><span class="glyphicon glyphicon-duplicate text-warning"></span></button>
+                                                <button class="btn btn-link btn-sm basket add-to-basket" title="Add this to your basket" data-bind="attr: {'data-question-id': id}"><span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span></button>
+                                                <button type="button" class="delete btn btn-link" data-bind="click:remove, visible: item_json.editable" title="Remove this question from the exam"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                                            </div>
+                                            <div class="title">
+                                                <!-- ko if: $root.navigatemode().name=='sequence' -->
+                                                    <span>
+                                                        <strong class="number" data-bind="text: number()===undefined ? '' : number()+'.'"></strong>
+                                                        <a data-bind="attr:{href: url}, text: name, mathjax: name" target="_blank"></a>
+                                                    </span>
+                                                <!-- /ko -->
+                                                <!-- ko if: $root.navigatemode().name=='menu' -->
+                                                    <input class="form-control name" data-bind="textInput: customName, attr: {placeholder: name}">
+                                                    <a data-bind="attr:{href: url}" target="_blank" title="Edit this question"><span class="glyphicon glyphicon-pencil"></span></a>
+                                                <!-- /ko -->
+                                                <span class="label label-default stamp" data-bind="visible: current_stamp, text: current_stamp_display, attr: {'data-stamp':current_stamp()}"></span>
+                                            </div>
+                                            <div class="description" data-bind="visible: description().length>0, html: description, mathjax: true"></div>
                                         </li>
                                     </ul>
                                     <p class="nothing-here" data-bind="visible: questions().length==0">There are no questions in this group.</p>
@@ -208,13 +216,20 @@
             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
             {% property 'startpassword' 'Password to begin the exam' help_url='exam/reference.html#term-password-to-begin-exam' %}
             {% booleanproperty 'allowregen' 'Allow user to regenerate questions?' help_url='exam/reference.html#term-allow-user-to-regenerate-questions' %}
-            {% booleanproperty 'reverse' 'Allow move to previous question?' help_url='exam/reference.html#term-allow-move-to-previous-question' %}
-            {% booleanproperty 'browse' 'Allow to jump to any question?' help_url='exam/reference.html#term-allow-jump-to-any-question' %}
+            {% selectproperty 'navigatemode' 'Question navigation mode' options='navigateModeOptions' options_text='niceName' help_url='exam/reference.html#term-question-navigation-mode' %}
+            <div data-bind="fadeVisible: navigatemode().name=='sequence'">
+                {% booleanproperty 'reverse' 'Allow move to previous question?' help_url='exam/reference.html#term-allow-move-to-previous-question' %}
+                {% booleanproperty 'browse' 'Allow to jump to any question?' help_url='exam/reference.html#term-allow-jump-to-any-question' %}
+            </div>
             {% booleanproperty 'allowsteps' 'Enable steps?' help_url='exam/reference.html#term-enable-steps' %}
             {% booleanproperty 'showfrontpage' 'Show front page?' help_url='exam/reference.html#term-show-front-page' %}
-            {% selectproperty 'showresultspage' 'Show results page' options='showResultsPageOptions' options_text='niceName' help_url='exam/reference.html#term-show-results-page' %}
+            <div data-bind="fadeVisible: navigatemode().name=='sequence'">
+                {% selectproperty 'showresultspage' 'Show results page' options='showResultsPageOptions' options_text='niceName' help_url='exam/reference.html#term-show-results-page' %}
+            </div>
             {% booleanproperty 'preventleave' 'Confirm before leaving the exam while it\'s running?' help_url='exam/reference.html#term-confirm-before-leaving-the-exam-while-it-s-running' %}
-            {% exam_event 'onleave' 'On leaving a question' help_url='exam/reference.html#term-on-leaving-a-question' %}
+            <div data-bind="fadeVisible: navigatemode().name=='sequence'">
+                {% exam_event 'onleave' 'On leaving a question' help_url='exam/reference.html#term-on-leaving-a-question' %}
+            </div>
             {% endwith %}
         </form>
 
@@ -325,8 +340,8 @@
 
     <script type="text/html" id="questionResult">
         <li class="question question-result list-group-item">
-            <span class="handle btn btn-link pull-left" data-bind="click: add, visible: item_json.editable"><span data-bind="css: {'text-success': usedInExam()}" class="glyphicon glyphicon-plus"></span></span>
-            <div class="controls pull-right">
+            <span class="handle btn btn-link" data-bind="click: add, visible: item_json.editable"><span data-bind="css: {'text-success': usedInExam()}" class="glyphicon glyphicon-plus"></span></span>
+            <div class="controls">
                 <a class="preview btn btn-link" data-bind="attr: {href: previewURL()}" target="_blank" title="Preview this question"><span class="glyphicon glyphicon-play text-success"></span></a>
             </div>
             <div class="details">

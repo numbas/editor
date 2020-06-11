@@ -83,6 +83,11 @@ $(document).ready(function() {
         this.showresultspage = ko.observable(this.showResultsPageOptions[0]);
 
         this.allowregen = ko.observable(true);
+        this.navigateModeOptions = [
+            {name: 'sequence', niceName: 'Sequential'},
+            {name: 'menu', niceName: 'Choose from menu'}
+        ];
+        this.navigatemode = ko.observable(this.navigateModeOptions[0]);
         this.reverse = ko.observable(true);
         this.browse = ko.observable(true);
         this.allowsteps = ko.observable(true);
@@ -271,6 +276,7 @@ $(document).ready(function() {
                     allowsteps: this.allowsteps(),
                     showfrontpage: this.showfrontpage(),
                     showresultspage: this.showresultspage().name,
+                    navigatemode: this.navigatemode().name,
                     onleave: this.onleave.toJSON(),
                     preventleave: this.preventleave(),
                     startpassword: this.startpassword()
@@ -317,6 +323,10 @@ $(document).ready(function() {
                 var showresultspage = Editor.tryGetAttribute(content.navigation, 'showresultspage');
                 if(showresultspage) {
                     this.showresultspage(this.showResultsPageOptions.find(function(o){return o.name==showresultspage}));
+                }
+                var navigatemode = Editor.tryGetAttribute(content.navigation, 'navigatemode');
+                if(navigatemode) {
+                    this.navigatemode(this.navigateModeOptions.find(function(o){return o.name==navigatemode}));
                 }
                 this.onleave.load(content.navigation.onleave);
             }
@@ -490,7 +500,10 @@ $(document).ready(function() {
             return {
                 name: this.name(),
                 pickingStrategy: this.pickingStrategy().name,
-                pickQuestions: this.pickQuestions()
+                pickQuestions: this.pickQuestions(),
+                questionNames: this.questions().map(function(q) {
+                    return q.customName();
+                })
             }
         }
     }
@@ -508,6 +521,16 @@ $(document).ready(function() {
         this.metadata = ko.observable();
         this.current_stamp = ko.observable();
         this.current_stamp_display = ko.observable();
+        this.customName = ko.observable('');
+        this.displayName = ko.computed({
+            write: function(v) {
+                return this.customName(v);
+            },
+            read: function() {
+                var custom = this.customName().trim();
+                return custom || this.name()
+            }
+        },this);
         this.published = ko.observable();
         this.load(data);
 

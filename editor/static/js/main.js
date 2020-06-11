@@ -174,11 +174,13 @@ $(document).ready(function() {
                 value = ko.utils.unwrapObservable(settings.value);
                 str = settings.useValue ? value : '';
             }
+            var placeholder = element.getAttribute('placeholder') || '';
 
-            var w = $.textMetrics(element,str).width + settings.padding;
+            var w = Math.max($.textMetrics(element,str).width, $.textMetrics(element,placeholder).width) + settings.padding;
             w = Math.max(w,settings.min||0);
-            if(settings.max!=null)
+            if(settings.max!=null) {
                 w = Math.min(w,settings.max);
+            }
             $(element).width(w+'px');
         }
     }

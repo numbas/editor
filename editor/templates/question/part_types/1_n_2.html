@@ -3,11 +3,12 @@
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking-settings'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div class="main-settings">
-            <div data-bind="visible: $parent.steps().length">
-                {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='question/parts/reference.html#term-penalty-for-revealing-steps' %}
-            </div>
+            {% booleanproperty 'showCellAnswerState' 'Show choice feedback state?' help_url='question/parts/reference.html#term-show-choice-feedback-state' %}    
             {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='question/parts/multiple-choice.html#term-shuffle-order-of-choices' %}
         </div>
+
+        <hr>
+        {% include "question/generic_part_marking_settings.html" %}
 
         <h4>Advanced settings</h4>
         <hr>
@@ -34,7 +35,6 @@
         
         {% booleanproperty '$parent.showCorrectAnswer' 'Show correct answer on reveal?' help_url='question/parts/reference.html#term-show-correct-answer-on-reveal' %}    
         {% booleanproperty '$parent.showFeedbackIcon' 'Show score feedback icon?' help_url='question/parts/reference.html#term-show-score-feedback-icon' %}    
-        {% booleanproperty 'showCellAnswerState' 'Show choice feedback state?' help_url='question/parts/multiple-choice.html#term-show-choice-feedback-state' %}    
     </form>
 </section>
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='choices'}">

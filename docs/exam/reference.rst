@@ -136,7 +136,7 @@ Display
 Navigation
 ==========
 
-The navigation settings control how the student can move through the exam, and whether to give them warnings if they 
+The navigation settings control how the student can move through the exam.
 
 .. glossary::
     Password to begin the exam
@@ -144,6 +144,16 @@ The navigation settings control how the student can move through the exam, and w
 
     Allow user to regenerate questions?
         If ticked, then the :guilabel:`Try another question like this one` button is displayed at the bottom of each question, allowing the student to re-randomise the question and have another attempt at it.
+
+    Question navigation mode
+         If "Sequential" is chosen, then the student is shown the questions in a numbered list.
+         When the exam begins, the student is immediately shown the first question.
+
+         If "Choose from a menu", the student is shown a menu listing all the available questions.
+         They can click on a question to view it, and can go back to the menu at any time.
+         Use this mode to provide a bank of questions for students to pick and choose from.
+         There are no :guilabel:`End exam` or :guilabel:`Pause` buttons - this mode is intended for purely formative use.
+         When the exam begins, the student is shown the menu.
 
     Allow move to previous question?
         If ticked, then the user is allowed to move back to a question after leaving it.
@@ -224,6 +234,8 @@ Feedback
         The message with the largest threshold less than or equal to the student's score is displayed.
 
         You could use these messages to suggest topics for the student to revise, direct them to support resources, or detail the consequences of failing the test.
+
+.. _review-mode-options:
 
 Review mode
 -----------

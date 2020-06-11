@@ -3,8 +3,6 @@
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking-settings'}">
 <form class="form-horizontal" data-bind="submit: Editor.noop">
     {% property '$parent.marks' 'Marks' min=0 help_url='question/parts/reference.html#term-marks' %}
-    <div data-bind="visible: $parent.steps().length">
-        {% property '$parent.stepsPenalty' 'Penalty for revealing steps' min=0 help_url='question/parts/reference.html#term-penalty-for-revealing-steps' %}
-    </div>
+    {% include "question/generic_part_marking_settings.html" %}
 </form>
 </section>

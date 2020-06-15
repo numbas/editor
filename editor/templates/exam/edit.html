@@ -62,17 +62,16 @@
                     <div class="panel-heading">
                         <h4 class="panel-title">Questions in this exam</h4>
                     </div>
-                    <div class="panel-body">
+                    class="panel-body">
                         <form class="form-horizontal" data-bind="submit: Editor.noop">
                             {% with form_label_class='col-sm-4' form_control_class='col-sm-8' %}
                                 {% booleanproperty 'showQuestionGroupNames' 'Show group names to student?' help_url='exam/reference.html#term-show-group-names-to-student' %}
                             {% endwith %}
-							<span class="" data-bind="visible: question_groups().length>1">
-							<label>  Randomize group order?</label> <input  type = "checkbox" data-bind = "checked :shuffleQuestionGroups" />
-                              <!--  {% booleanproperty 'shuffleQuestionGroups' 'Randomize group order?' help_url='exam/reference.html'%}-->
-                            </span>
-                        </form>
-                    </div>
+							<div class="" data-bind="visible: question_groups().length>1">
+							{% with form_label_class='col-sm-4' form_control_class='col-sm-8' %}
+                                {% booleanproperty 'shuffleQuestionGroups' 'Randomize group order?' help_url='exam/reference.html#term-randomize-group-order'%}    
+                            {% endwith %}
+							</div>
 					<div class="panel-body">
                         <form class="form-horizontal" data-bind="submit: Editor.noop">
                             {% with form_label_class='col-sm-4' form_control_class='col-sm-8' %}

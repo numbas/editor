@@ -14,7 +14,7 @@ from django.db import transaction
 from django.db.models import Q, Count
 from django.contrib.auth.models import User
 
-from editor.models import NewExam, NewQuestion, EditorItem, Access, Theme, Extension, PullRequest, CustomPartType
+from editor.models import NewExam, NewQuestion, EditorItem, Access, Theme, Extension, PullRequest, CustomPartType, Project, Folder
 import editor.models
 from accounts.forms import UserField
 from accounts.util import find_users
@@ -196,7 +196,7 @@ class EditorItemMoveProjectForm(forms.ModelForm):
         if commit:
             obj.save()
         return obj
-        
+    
 class QuestionForm(EditorItemForm):
     
     class Meta:
@@ -716,6 +716,43 @@ class MoveFolderForm(forms.ModelForm):
     class Meta:
         model = editor.models.EditorItem
         fields = ('parent',)
+
+class BrowseMoveProjectForm(forms.Form):
+    project = forms.ModelChoiceField(queryset=Project.objects.all(), required=True)
+    items = forms.ModelMultipleChoiceField(queryset=EditorItem.objects.all(), required=False, widget=forms.MultipleHiddenInput())
+    folders = forms.ModelMultipleChoiceField(queryset=Folder.objects.all(), required=False, widget=forms.MultipleHiddenInput())
+
+    class Meta:
+        widgets = {
+            'items': forms.HiddenInput(),
+            'folders': forms.HiddenInput(),
+        }
+
+    def save(self):
+        project = self.cleaned_data.get('project')
+
+        folders = []
+        items = []
+
+        with transaction.atomic():
+            top_items = self.cleaned_data.get('items')
+            for i in top_items:
+                i.folder = None
+            items += top_items
+
+            for f in self.cleaned_data.get('folders'):
+                f.parent = None
+                subfolders,subitems = f.all_contents()
+                folders += subfolders
+                items += subitems
+
+            for i in items:
+                i.project = project
+                i.save()
+            for f in folders:
+                f.project = project
+                f.save()
+
 
 class RenameFolderForm(forms.ModelForm):
     class Meta:

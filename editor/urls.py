@@ -52,6 +52,7 @@ urlpatterns = [
 
 
     path('folder/move', folder.MoveFolderView.as_view(), name='folder_move'),
+    path('folder/move_project', folder.MoveProjectView.as_view(), name='folder_move_project'),
     path('folder/<int:pk>/rename', folder.RenameFolderView.as_view(), name='folder_rename'),
     path('folder/<int:pk>/delete', folder.DeleteFolderView.as_view(), name='folder_delete'),
 

@@ -223,3 +223,10 @@ class ShareLinkView(generic.RedirectView):
             ea.save()
 
         return q.get_absolute_url()
+
+class ProjectQuerysetMixin(object):
+    """ Set the queryset for the form's project field to the projects available to the user """
+    def get_form(self):
+        form = super(ProjectQuerysetMixin, self).get_form()
+        form.fields['project'].queryset = self.request.user.userprofile.projects().order_by('name')
+        return form

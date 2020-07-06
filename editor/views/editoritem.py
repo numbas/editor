@@ -39,6 +39,7 @@ from editor.tables import EditorItemTable, RecentlyPublishedTable
 from editor.models import EditorItem, Project, Access, Licence, PullRequest, Taxonomy, Contributor, Folder
 import editor.models
 import editor.views.generic
+from editor.views.generic import ProjectQuerysetMixin
 from editor.views.errors import forbidden
 from editor.views.user import find_users
 import editor.forms
@@ -49,14 +50,6 @@ class MustBeAuthorMixin(object):
         if request.user != self.get_object().author:
             raise PermissionDenied
         return super(MustBeAuthorMixin, self).dispatch(request, *args, **kwargs)
-
-
-class ProjectQuerysetMixin(object):
-    """ Set the queryset for the form's project field to the projects available to the user """
-    def get_form(self):
-        form = super(ProjectQuerysetMixin, self).get_form()
-        form.fields['project'].queryset = self.request.user.userprofile.projects().order_by('name')
-        return form
 
 class CreateView(ProjectQuerysetMixin, generic.CreateView):
     model = EditorItem

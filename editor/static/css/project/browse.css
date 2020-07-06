@@ -57,6 +57,7 @@ th.orderable:not(.desc) .glyphicon-sort-by-attributes-alt {
 }
 .folder-list.top-level {
     padding-left: 0;
+    margin-bottom: 2em;
 }
 
 .folder-list .folder > .name > a {

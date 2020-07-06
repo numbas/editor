@@ -269,7 +269,7 @@ class Project(models.Model, ControlledObject):
         tree = []
         folder_dict = {f.pk: {'folder': f, 'subfolders': []} for f in folders}
         for f in folders:
-            if f.parent:
+            if f.parent and f.parent.pk in folder_dict:
                 folder_dict[f.parent.pk]['subfolders'].append(folder_dict[f.pk])
             else:
                 tree.append(folder_dict[f.pk])
@@ -987,6 +987,17 @@ class Folder(models.Model):
             subfolder.save()
         self.delete()
 
+    def all_contents(self):
+        queue = [self]
+        folders = []
+        items = []
+        while queue:
+            f = queue.pop()
+            folders.append(f)
+            items += f.items.all()
+            queue += f.folders.all()
+        return folders, items
+    
 @reversion.register
 class EditorItem(models.Model, NumbasObject, ControlledObject):
     """

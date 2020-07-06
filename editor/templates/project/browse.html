@@ -36,6 +36,7 @@
                   </div>
               </li>
           </ul>
+          <button type="button" class="btn btn-warning move-project"><span class="glyphicon glyphicon-circle-arrow-right"></span> Move to another project</button>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -43,6 +44,31 @@
       </div>
     </div>
   </div>
+</div>
+
+<div class="modal fade" id="move-project-modal" tabindex="-1" role="dialog">
+  <form action="{% url 'folder_move_project' %}" method="post">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-body">
+          <p>Select a project to move the selected items to.</p>
+        {% csrf_token %}
+        <input type="hidden" name="from_project" value="{{project.pk}}">
+        {% for field in move_project_form.hidden_fields %}{{field}}{% endfor %}
+
+        {% for field in move_project_form.visible_fields %}
+        <div class="form-group {% if field.errors %}has-error{% endif %}">
+            {{field.as_widget}}
+        </div>
+        {% endfor %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default cancel" data-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary move">Move</button>
+      </div>
+    </div>
+  </div>
+  </form>
 </div>
 
 <nav>

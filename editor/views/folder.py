@@ -1,12 +1,15 @@
 from django import http
+from django.contrib import messages
 from django.views import generic
 from django.urls import reverse
+from django.utils.translation import ngettext
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
 
 import editor.forms
 from editor.models import Folder, Project
 import editor.views
+from editor.views.generic import ProjectQuerysetMixin
 
 class MustBeEditorMixin(editor.views.project.MustBeEditorMixin):
     def get_project(self):
@@ -69,6 +72,35 @@ class MoveFolderView(editor.views.project.MustBeEditorMixin, generic.FormView):
             project = self.get_project()
             return reverse('project_browse',args=(project.pk,''))
 
+class MoveProjectView(editor.views.project.MustBeEditorMixin, ProjectQuerysetMixin, generic.FormView):
+    form_class = editor.forms.BrowseMoveProjectForm
+
+    def get_project(self):
+        project_pk = self.request.POST.get('from_project')
+        return Project.objects.get(pk=project_pk)
+
+    def form_valid(self, form):
+        self.form = form
+        form.save()
+        num_folders = form.cleaned_data.get('folders').count()
+        num_items = form.cleaned_data.get('items').count()
+        messages.success(self.request, "Moved {} {} and {} {} from {}.".format(
+            num_folders,
+            ngettext('folder','folders',num_folders),
+            num_items,
+            ngettext('item','items',num_items),
+            self.get_project().name
+            )
+        )
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        print(form.errors)
+        print(self.get_form_kwargs())
+        return redirect(reverse('project_browse',args=(self.get_project().pk,'')))
+
+    def get_success_url(self):
+        return reverse('project_browse',args=(self.form.cleaned_data.get('project').pk,''))
 
 class RenameFolderView(MustBeEditorMixin, generic.UpdateView):
     model = Folder

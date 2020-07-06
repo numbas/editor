@@ -17,6 +17,7 @@ part_types.models = [
         name: 'gapfill', 
         niceName: 'Gap-fill', 
         has_marks: true,
+        has_marking_settings: true,
         has_feedback_icon: true,
         can_be_gap: false,
         can_be_step: false,

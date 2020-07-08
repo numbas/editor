@@ -2277,6 +2277,16 @@ Lists
     **Example**:
         * ``permutations([1,2,3],2)`` → ``[ [1,2], [1,3], [2,1], [2,3], [3,1], [3,2] ]``
 
+.. jme:function:: enumerate(collection)
+
+    Enumerate the elements of ``collection``: this function returns a list containing, for each element ``v`` of ``collection``, a new list of the form ``[i,v]``, where ``i`` is the index of the element in ``collection``.
+
+    **Definitions**:
+        * :data:`list` → :data:`list`
+
+    **Example**:
+        * ``enumerate(["A","B","C"])`` → ``[ [0,"A"], [1,"B"], [2,"C"] ]``
+
 .. _jme-fns-dictionaries:
 
 Dictionaries

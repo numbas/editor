@@ -112,7 +112,7 @@ class ControlledObject(object):
         elif user.is_anonymous:
             return Q(published=True, public_access__in=view_perms)
         else:
-            return (Q(access__user=user, access__access__in=view_perms) 
+            return (Q(accesses__user=user, accesses__access__in=view_perms) 
                     | Q(published=True, public_access__in=view_perms) 
                     | Q(author=user)
                     | Q(project__projectaccess__user=user)

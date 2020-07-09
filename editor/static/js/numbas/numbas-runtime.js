@@ -218,7 +218,7 @@ Numbas.runImmediately = function(deps,fn) {
         }
     });
     if(missing_dependencies.length) {
-        console.log(deps.filter(function(r){return scriptreqs[r].executed}));
+        console.log(deps.filter(function(r){return scriptreqs[r] ? scriptreqs[r].executed : true}));
         throw(new Error("Can't run because the following dependencies have not run: "+missing_dependencies.join(', ')));
     }
     fn();
@@ -5725,6 +5725,11 @@ jme.substituteTreeOps.take = function(tree,scope,allowUnbound) {
     return {tok:tree.tok, args: args};
 }
 
+newBuiltin('enumerate',[TList],TList,function(list) {
+    return list.map(function(v,i) {
+        return new TList([new TInt(i),v]);
+    });
+});
 
 
 /** Is the given token the value `true`?
@@ -11892,7 +11897,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         };
         if(name=='mark') {
             // hack on a finalised_state for old marking scripts
-            script = 'var res = (function(scope) {'+script+'\n}).apply(this,arguments); this.answered = true; return res || {states: this.markingFeedback.slice(), valid: true, credit: this.credit};';
+            script = 'var res = (function(scope) {'+script+'\n}).apply(this,arguments); this.answered = true; return res || {states: this.markingFeedback.slice(), valid: true, credit: this.credit, values: {}, script_result: {states: {}, state_valid: {mark: true, interpreted_answer: true}, values: {}, state_errors: {}}};';
         }
         with(withEnv) {
             script = eval('(function(){try{'+script+'\n}catch(e){e = new Numbas.Error(\'part.script.error\',{path:this.name,script:name,message:e.message}); Numbas.showError(e); throw(e);}})');
@@ -12461,6 +12466,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
                 this.setWarnings(result.warnings);
                 this.markingFeedback = result.markingFeedback.slice();
                 this.finalised_result = result.finalised_result;
+                this.adaptiveMarkingUsed = result.adaptiveMarkingUsed;
                 this.marking_values = result.values;
                 this.credit = result.credit;
                 this.answered = result.answered;
@@ -13476,6 +13482,10 @@ var Question = Numbas.Question = function( number, exam, group, gscope, store)
  *
  * @event Numbas.Question#variablesGenerated
  */
+/** The question advice has been shown to the student.
+ *
+ * @event Numbas.Question#adviceDisplayed
+ */
 /** The question is fully loaded and ready to use.
  *
  * @event Numbas.Question#ready
@@ -14224,6 +14234,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
         if(!Numbas.is_instructor && this.exam && !this.exam.settings.reviewShowAdvice) {
             return;
         }
+        this.signals.trigger('adviceDisplayed');
         this.adviceDisplayed = true;
         this.display && this.display.showAdvice(true);
         if(this.store && !dontStore) {
@@ -14335,16 +14346,6 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                     p.applied = false;
                 });
                 this.allParts().forEach(function(part) {
-                    if(part.type=='gapfill') {
-                        return;
-                    }
-                    var objective = q.getObjective(part.settings.exploreObjective);
-                    if(!objective) {
-                        return;
-                    }
-                    objective.score += part.score;
-                    objective.answered = objective.answered || part.answered;
-
                     part.nextParts.forEach(function(np) {
                         if(np.instance) {
                             var penalty = q.getPenalty(np.penalty);
@@ -14354,6 +14355,14 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                             }
                         }
                     });
+
+                    var objective = q.getObjective(part.settings.exploreObjective);
+                    if(!objective) {
+                        return;
+                    }
+                    objective.score += part.score;
+                    objective.answered = objective.answered || part.answered;
+
                 });
                 this.objectives.forEach(function(o) {
                     o.score = Math.min(o.limit,o.score);

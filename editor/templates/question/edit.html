@@ -612,13 +612,16 @@
                         </div>
                         <div class="panel-body">
                             <ul class="extensions" data-bind="foreach: extensions">
-                                <li class="extension">
+                                <li class="extension" data-bind="css: {error: error, 'text-warning': error}">
                                     <label>
-                                        <span class="checkbox"><input type="checkbox" data-bind="checked: used_or_required, disable: !item_json.editable || required(), attr: { title: required() ? 'This extension is required by one or more question parts' : '' }"></span>
+                                        <span class="checkbox"><input type="checkbox" data-bind="checked: used_or_required, disable: !item_json.editable || required() || error(), attr: { title: required() ? 'This extension is required by one or more question parts' : '' }"></span>
                                         <span data-bind="text:name"></span> 
                                         <a data-bind="if: url, attr: {href:url, title: 'Documentation on the '+name+' extension'}" target="_blank"><small class="glyphicon glyphicon-book"></small></a>
                                         {% if not user.is_anonymous %}<a data-bind="if: author=={{user.pk}}, attr: {href: edit_url, title: 'Edit the '+name+' extension'}" target="_blank"><small class="glyphicon glyphicon-pencil"></small></a>{% endif %}
                                     </label>
+                                    <div class="text-warning" data-bind="fadeVisible: error">
+                                        There was an error loading this extension.
+                                    </div>
                                 </li>
                             </ul>
                         </div>

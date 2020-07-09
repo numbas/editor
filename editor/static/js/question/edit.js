@@ -314,32 +314,6 @@ $(document).ready(function() {
             return out;
         },this);
 
-        function Extension(q,data) {
-            var ext = this;
-            ["location","name","edit_url","hasScript","url","scriptURL","author","pk"].forEach(function(k) {
-                ext[k] = data[k];
-            });
-            this.used = ko.observable(false);
-            this.required = ko.pureComputed(function() {
-                return q.usedPartTypes().some(function(p){ return p.required_extensions && p.required_extensions.indexOf(ext.location) != -1 });
-            }, this);
-            this.used_or_required = ko.pureComputed({
-                read: function() {
-                    return this.used() || this.required();
-                },
-                write: function(v) {
-                    return this.used(v);
-                }
-            }, ext);
-
-            ko.computed(function() {
-                if(this.used_or_required()) {
-                    Numbas.activateExtension(this.location);
-                    find_jme_types();
-                }
-            },this);
-        }
-
         for(var i=0;i<item_json.numbasExtensions.length;i++) {
             this.extensions.push(new Extension(this,item_json.numbasExtensions[i]));
         }
@@ -1400,6 +1374,49 @@ $(document).ready(function() {
         }
     };
     Question.prototype.__proto__ = Editor.EditorItem.prototype;
+
+    function Extension(q,data) {
+        var ext = this;
+        ["location","name","edit_url","hasScript","url","scriptURL","author","pk"].forEach(function(k) {
+            ext[k] = data[k];
+        });
+        this.used = ko.observable(false);
+        this.required = ko.pureComputed(function() {
+            return q.usedPartTypes().some(function(p){ return p.required_extensions && p.required_extensions.indexOf(ext.location) != -1 });
+        }, this);
+        this.loaded = ko.observable(false);
+        this.error = ko.observable(false);
+        this.used_or_required = ko.computed({
+            read: function() {
+                return (this.used() || this.required()) && !this.error();
+            },
+            write: function(v) {
+                return this.used(v);
+            }
+        }, ext);
+
+        ko.computed(function() {
+            try {
+            if(this.used_or_required()) {
+                if(!this.loaded()) {
+                    try {
+                        Numbas.activateExtension(ext.location);
+                        ext.loaded(true);
+                    } catch(e) {
+                        console.error(e);
+                        setTimeout(function() {
+                            ext.error(true);
+                        },1);
+                    }
+                }
+                find_jme_types();
+            }
+            }catch(e) {
+                console.error(e);
+            }
+        },this);
+    }
+
 
     function Ruleset(exam,data)
     {
@@ -3635,15 +3652,19 @@ $(document).ready(function() {
         }
     };
 
+    function loading_error(message) {
+        $('.page-loading').hide();
+        $('.page-error')
+            .show()
+            .find('.trace')
+                .html(message)
+        ;
+    }
+
 
     Numbas.queueScript('knockout',[], function() {});
+
     var deps = ['jme-display','jme-variables','jme','editor-extras','marking','json', 'answer-widgets'];
-    for(var i=0;i<item_json.numbasExtensions.length;i++) {
-        var extension = item_json.numbasExtensions[i];
-        if(extension.hasScript) {
-            deps.push('extensions/'+extension.location+'/'+extension.location+'.js');
-        }
-    }
     Numbas.queueScript('start-editor',deps,function() {
         try {
             viewModel = new Question(item_json.itemJSON);
@@ -3658,15 +3679,14 @@ $(document).ready(function() {
             $('.timeline').mathjax();
         }
         catch(e) {
-            $('.page-loading').hide();
-            $('.page-error')
-                .show()
-                .find('.trace')
-                    .html(e.message)
-            ;
+            loading_error(e.message);
             throw(e);
         }
     });
+    var missing = Numbas.checkAllScriptsLoaded();
+    if(missing.length>0) {
+        loading_error('The following scripts did not load: \n\n'+missing.map(function(r) { return '* '+r.file; }).join('\n'));
+    }
 
     Mousetrap.bind(['ctrl+b','command+b'],function() {
         window.open(item_json.previewURL,item_json.previewWindow);

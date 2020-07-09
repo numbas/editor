@@ -139,6 +139,10 @@ table.variable-list .value-cell .value {
     list-style: none;
 }
 
+.extension.error label {
+    text-decoration: line-through;
+}
+
 .function .parameters li {
     margin-bottom: 0.5em;
 }

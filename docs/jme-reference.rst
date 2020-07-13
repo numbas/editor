@@ -1335,7 +1335,7 @@ Vector and matrix arithmetic
         * :data:`vector`, :data:`vector` → :data:`number`
 
     **Example**:
-        * ``angle(vector(1,0),vector(0,1))`` → ``0.5 pi``
+        * ``angle(vector(1,0),vector(0,1))`` → ``1.5707963268``
 
 .. jme:function:: is_zero(x)
 

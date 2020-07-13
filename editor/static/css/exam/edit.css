@@ -26,9 +26,6 @@
   grid-gap: 0.5em;
   grid-template-columns: min-content 1fr max-content;
 }
-.questions-tab .question input.name::placeholder {
-    color: black;
-}
 .questions-tab .question .description {
   grid-column: 2 / 4;
 }

@@ -456,6 +456,11 @@ $(document).ready(function() {
             this.questions(data.questions.map(function(q) {
                 return new Question(q,qg.exam);
             }));
+            if(data.questionNames) {
+                this.questions().forEach(function(q,i) {
+                    q.customName(data.questionNames[i] || '');
+                });
+            }
         }
 
         this.pickingStrategies = [

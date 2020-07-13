@@ -18,6 +18,7 @@ EXTENSIONS=$(foreach f,$(shell find $(EXTENSIONS_DIR) -maxdepth 1 -mindepth 1 -t
 extensions: $(foreach f,$(EXTENSIONS),editor/static/js/numbas/extensions/$(f))
 
 editor/static/js/numbas/extensions/%: $(EXTENSIONS_DIR)/%/*
+	@mkdir -p $@
 	@cp -r $(EXTENSIONS_DIR)/$*/* $@
 	@touch $@
 	@echo "Copied extension $*"

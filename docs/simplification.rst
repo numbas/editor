@@ -124,6 +124,11 @@ The following display options are available:
         The multiplication symbol is always included between multiplicands.
 
         **Example:** ``\simplify[alwaysTimes]{ 2x }`` produces :math:`2 \times x`.
+
+    bareMatrices
+        Matrices are rendered without parentheses.
+
+        **Example:** ``\var[bareMatrices]{ id(3) }`` produces :math:`\begin{matrix} 1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 1 \end{matrix}`.
         
 
 Simplification rules

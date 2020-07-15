@@ -80,7 +80,7 @@ Variables
     Force single letter variable names?
         If this is ticked, long variable names will be interpreted as implicit multiplication of variables with single-letter names. 
         For example, ``xyz`` will be interpreted as ``x * y * z``.
-        Digits, primes and single-letter underscores are still valid in variable names: ``a'x12y_z`` will be interpreted as ``a' * x12 * y_z`.
+        Digits, primes and single-letter underscores are still valid in variable names: ``a'x12y_z`` will be interpreted as ``a' * x12 * y_z``.
 
         This option is recommended when the expected answer for the part only uses single-letter variable names, so that students who don't always use the multiplication symbol aren't caught out.
 

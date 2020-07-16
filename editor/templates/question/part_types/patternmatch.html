@@ -13,7 +13,7 @@
             </div>
         </div>
         {% property 'answer' 'Answer pattern' monospace=True help_url='question/parts/match-text-pattern.html#term-answer-pattern' %}
-        <div data-bind="fadeVisible: $parent.showCorrectAnswer">
+        <div data-bind="fadeVisible: $parent.showCorrectAnswer() && matchMode().name=='regex'">
             {% property 'displayAnswer' 'Display answer' help_url='question/parts/match-text-pattern.html#term-display-answer' %}
         </div>
     </div>

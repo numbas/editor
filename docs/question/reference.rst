@@ -552,14 +552,14 @@ You can see an example of the Javascript preamble in use at https://numbas.mathc
 
 You can see what functions are available in JavaScript at `the Numbas code documentation <http://numbas.github.io/Numbas>`_.
 
-If you want to do something with the display of the question on the page, you have to wait until its HTML has been generated, using the ``onHTMLAttached`` method. 
+If you want to do something with the display of the question on the page, you have to wait until its HTML has been generated, using the ``HTMLAttached`` signal. 
 Here's an example which hides an element in the statement with a given id::
     
     question.signals.on('HTMLAttached',function() {
-        question.display.html.find('.statement #secret').hide();
+        $(question.display.html).find('.statement #secret').hide();
     });
 
-The preamble also runs before the question's variables are generated; if you'd like to do something that uses the question's variables, you can either wait for ``onHTMLAttached``, or use ``question.onVariablesGenerated`` if you need to do something before the HTML is generated. 
+The preamble also runs before the question's variables are generated; if you'd like to do something that uses the question's variables, you can either wait for ``HTMLAttached``, or use ``variablesGenerated`` if you need to do something before the HTML is generated.
 The question's variables are stored in ``question.scope.variables`` as JME data types, or in ``question.unwrappedVariables`` as simple JavaScript data. 
 Here's an example use::
 

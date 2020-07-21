@@ -57,6 +57,8 @@ USER_ACCESS_CHOICES = (('view', 'Can view'), ('edit', 'Can edit'))
 @deconstructible
 class ControlledObject(object):
 
+    superuser_sees_everything = True
+
     @property
     def owner(self):
         raise NotImplementedError
@@ -74,7 +76,7 @@ class ControlledObject(object):
                 return True
         except AttributeError:
             pass
-        return (user.is_superuser) or (self.owner == user) or (self.has_access(user, accept_levels))
+        return (self.superuser_sees_everything and user.is_superuser) or (self.owner == user) or (self.has_access(user, accept_levels))
 
     def can_be_copied_by(self, user):
         if not self.can_be_viewed_by(user):
@@ -107,7 +109,7 @@ class ControlledObject(object):
             return Q()
         
         view_perms = ('edit', 'view')
-        if user.is_superuser:
+        if user.is_superuser and self.superuser_sees_everything:
             return Q()
         elif user.is_anonymous:
             return Q(published=True, public_access__in=view_perms)
@@ -361,6 +363,8 @@ class Extension(models.Model, ControlledObject):
     editable = models.BooleanField(default=True, help_text='Is this extension stored within the editor\'s media folder?')
     runs_headless = models.BooleanField(default=True, help_text='Can this extension run outside a browser?')
 
+    superuser_sees_everything = False
+
     class Meta:
         ordering = ['name']
     def __str__(self):
@@ -393,7 +397,7 @@ class Extension(models.Model, ControlledObject):
             return Q()
         
         view_perms = ('edit', 'view')
-        if user.is_superuser:
+        if self.superuser_sees_everything and user.is_superuser:
             return Q()
         elif user.is_anonymous:
             return Q(public=True)

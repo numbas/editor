@@ -11610,6 +11610,9 @@ var createPart = Numbas.createPart = function(type, path, question, parentPart, 
 var Part = Numbas.parts.Part = function( path, question, parentPart, store)
 {
     var p = this;
+    p.signals = new Numbas.schedule.SignalBox(function(e) {
+        part.error(e.message,[],e);
+    });
     this.store = store;
     //remember parent question object
     this.question = question;
@@ -11662,6 +11665,11 @@ var Part = Numbas.parts.Part = function( path, question, parentPart, store)
     });
 }
 Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
+    /** Signals produced while loading this part.
+     *
+     * @type {Numbas.schedule.SignalBox} 
+     * */
+    signals: undefined,
     /** Storage engine.
      *
      * @type {Numbas.storage.BlankStorage}

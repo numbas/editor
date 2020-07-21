@@ -397,7 +397,7 @@ class Extension(models.Model, ControlledObject):
             return Q()
         
         view_perms = ('edit', 'view')
-        if self.superuser_sees_everything and user.is_superuser:
+        if cls.superuser_sees_everything and user.is_superuser:
             return Q()
         elif user.is_anonymous:
             return Q(public=True)

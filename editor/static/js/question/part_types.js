@@ -198,45 +198,6 @@ part_types.models = [
                 return l;
             },model);
 
-            model.markingSettings = ko.computed(function() {
-                try {
-                    var correctAnswer = jme.subvars(model.answer(),part.q.questionScope());
-                } catch(e) {
-                    correctAnswer = '';
-                }
-                return {
-                    minLength: model.minlength.length(),
-                    minLengthPC: model.minlength.partialCredit(),
-                    minLengthMessage: model.minlength.message(),
-                    maxLength: model.maxlength.length(),
-                    maxLengthPC: model.maxlength.partialCredit(),
-                    maxLengthMessage: model.maxlength.message(),
-                    notAllowed: model.notallowed.strings(),
-                    notAllowedPC: model.notallowed.partialCredit(),
-                    notAllowedMessage: model.notallowed.message(),
-                    mustHave: model.musthave.strings(),
-                    mustHavePC: model.musthave.partialCredit(),
-                    correctAnswer: correctAnswer,
-                    correctAnswerString: model.answer(),
-                    answerSimplificationString: model.answerSimplification(),
-                    vsetRangeStart: model.vset.start(),
-                    vsetRangeEnd: model.vset.end(),
-                    vsetRangePoints: model.vset.points(),
-                    checkingType: model.checkingType().name,
-                    checkingAccuracy: model.checkingType().accuracy(),
-                    failureRate: model.failureRate(),
-                    checkVariableNames: model.checkVariableNames(),
-                    showPreview: model.showPreview(),
-                    mustmatchpattern: model.mustmatchpattern.pattern(),
-                    mustMatchPC: model.mustmatchpattern.partialCredit(),
-                    mustMatchMessage: model.mustmatchpattern.message(),
-                    matchNameToCompare: model.mustmatchpattern.nameToCompare(),
-                    valueGenerators: model.valueGenerators().map(function(d) {
-                        return {name: d.name, value: d.value()}
-                    })
-                };
-            });
-
             return model;
         },
 

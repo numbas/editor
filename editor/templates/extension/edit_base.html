@@ -27,7 +27,7 @@
         {% if extension.editable %}
         <div class="panel-heading">Files</div>
         <ul class="list-group">
-            {% for fname in extension.filenames %}
+            {% for fname in filenames %}
             <a class="list-group-item monospace {% if fname == filename %}active{% endif %}" href="{% url 'extension_edit_source' extension.pk %}?filename={{fname}}">{{fname}}</a>
             {% endfor %}
             <li class="list-group-item">

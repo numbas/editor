@@ -112,6 +112,12 @@ class EditView(CanViewMixin, generic.UpdateView):
         _,ext = os.path.splitext(filename)
         context['fileext'] = ext
 
+        filenames = list(extension.filenames())
+        if not context['exists']:
+            filenames.append(filename)
+        filenames.sort()
+        context['filenames'] = filenames
+
         return context
 
     def form_valid(self,form):

@@ -560,7 +560,7 @@ Here's an example which hides an element in the statement with a given id::
     });
 
 The preamble also runs before the question's variables are generated; if you'd like to do something that uses the question's variables, you can either wait for ``HTMLAttached``, or use ``variablesGenerated`` if you need to do something before the HTML is generated.
-The question's variables are stored in ``question.scope.variables`` as JME data types, or in ``question.unwrappedVariables`` as simple JavaScript data. 
+You can get question variables as JME data types using ``question.scope.getVariable(name)``, or as simple JavaScript data in the object ``question.unwrappedVariables``.
 Here's an example use::
 
     question.signals.on('variablesGenerated',function() {

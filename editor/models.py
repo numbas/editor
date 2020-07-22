@@ -109,7 +109,7 @@ class ControlledObject(object):
             return Q()
         
         view_perms = ('edit', 'view')
-        if user.is_superuser and self.superuser_sees_everything:
+        if user.is_superuser and cls.superuser_sees_everything:
             return Q()
         elif user.is_anonymous:
             return Q(published=True, public_access__in=view_perms)

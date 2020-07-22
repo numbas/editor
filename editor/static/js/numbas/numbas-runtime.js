@@ -12659,8 +12659,10 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         }
 
         var res = mark_alternative(this);
-        res.values['used_alternative'] = new Numbas.jme.types.TNothing()
-        res.values['used_alternative_name'] = new Numbas.jme.types.TNothing();
+        if(res.valid) {
+            res.values['used_alternative'] = new Numbas.jme.types.TNothing()
+            res.values['used_alternative_name'] = new Numbas.jme.types.TNothing();
+        }
 
         if(this.alternatives.length) {
             var best_alternative = null;
@@ -12721,10 +12723,12 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
             }
         }
 
-        res.script_result.states['used_alternative'] = [];
-        res.script_result.states['used_alternative_name'] = [];
-        res.script_result.state_valid['used_alternative'] = true;
-        res.script_result.state_valid['used_alternative_name'] = true;
+        if(res.valid) {
+            res.script_result.states['used_alternative'] = [];
+            res.script_result.states['used_alternative_name'] = [];
+            res.script_result.state_valid['used_alternative'] = true;
+            res.script_result.state_valid['used_alternative_name'] = true;
+        }
 
         return {
             result: res,
@@ -12741,6 +12745,11 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
     markAgainstScope: function(scope,feedback) {
         var altres = this.markAlternatives(scope,feedback);
         var res = altres.result;
+        if(res.script_result.state_errors.mark) {
+            var message = R('part.marking.error in marking script',{message: res.script_result.state_errors.mark.message});
+            this.markingComment(message);
+            this.giveWarning(message);
+        }
 
         return {
             warnings: this.warnings.slice(),
@@ -12828,9 +12837,11 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
             return;
         }
         var result = this.mark_answer(studentAnswer,scope);
-        var finalised_result = marking.finalise_state(result.states.mark);
-        this.apply_feedback(finalised_result);
-        this.interpretedStudentAnswer = result.values['interpreted_answer'];
+        if(!result.state_errors.mark) {
+            var finalised_result = marking.finalise_state(result.states.mark);
+            this.apply_feedback(finalised_result);
+            this.interpretedStudentAnswer = result.values['interpreted_answer'];
+        }
         return {finalised_result: finalised_result, values: result.values, script_result: result};
     },
 
@@ -12994,9 +13005,6 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
             );
         } catch(e) {
             throw(new Numbas.Error("part.marking.error in marking script",{message:e.message}));
-        }
-        if(result.state_errors.mark) {
-            throw(result.state_errors.mark);
         }
         return result;
     },
@@ -25676,7 +25684,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             var lastValue = this.input();
             this.subscriptions = [
                 this.answerJSON.subscribe(function(v) {
-                    if(v.value!=this.input()) {
+                    if(v && v.value!=this.input()) {
                         this.input(v.value);
                     }
                 },this),
@@ -25742,7 +25750,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             },this);
             this.subscriptions = [
                 this.answerJSON.subscribe(function(v) {
-                    if(v.value==this.result().value) {
+                    if(!v || v.value==this.result().value) {
                         return;
                     }
                     var s = cleanNumber(v.value);
@@ -25830,7 +25838,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             },this);
             this.subscriptions = [
                 this.answerJSON.subscribe(function(v) {
-                    if(v.value==this.result().value) {
+                    if(!v || v.value==this.result().value) {
                         return;
                     }
                     var s = cleanExpression(v.value);
@@ -25949,7 +25957,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             },this);
             this.subscriptions = [
                 this.answerJSON.subscribe(function(v) {
-                    if(util.objects_equal(v.value,this.result().value)) {
+                    if(!v || util.objects_equal(v.value,this.result().value)) {
                         return;
                     }
                     if(v.valid) {
@@ -26227,7 +26235,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             },this);
             this.subscriptions = [
                 this.answerJSON.subscribe(function(v) {
-                    if(!v.valid) {
+                    if(!v || !v.valid) {
                         this.choice(null);
                         return;
                     }
@@ -26291,7 +26299,7 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             }
             this.subscriptions = [
                 this.answerJSON.subscribe(function(v) {
-                    if(!v.valid) {
+                    if(!v || !v.valid) {
                         this.choice(null);
                         return;
                     }
@@ -26348,6 +26356,9 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             this.subscriptions = [
                 this.answerJSON.subscribe(function(v) {
                     var current = this.choices().map(function(c){ return c.ticked(); });
+                    if(!v) {
+                        return;
+                    }
                     var value = v.value;
                     if(this.answerAsArray) {
                         value = value.map(function(row){ return row[0]; });

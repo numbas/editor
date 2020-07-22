@@ -3193,12 +3193,18 @@ $(document).ready(function() {
                 part.submit();
                 var alternatives_result = part.markAlternatives(part.getScope());
                 var res = alternatives_result.result.script_result;
-                var alternative_used = alternatives_result.best_alternative ? alternatives_result.best_alternative.path : null;
-                var out = {script: part.markingScript, result: res, marking_result: part.marking_result, marks: part.marks, alternative_used: alternative_used};
-                if(!res.state_valid.mark) {
-                    out.error = 'This answer is not valid.';
-                    var feedback = compile_feedback(Numbas.marking.finalise_state(res.states.mark), part.marks);
-                    out.warnings = feedback.warnings;
+                if(!res) {
+                    var out = {script: part.markingScript, error: 'The marking algorithm did not return a result.'};
+                } else {
+                    var alternative_used = alternatives_result.best_alternative ? alternatives_result.best_alternative.path : null;
+                    var out = {script: part.markingScript, result: res, marking_result: part.marking_result, marks: part.marks, alternative_used: alternative_used};
+                    if(res.state_errors.mark) {
+                        out.error = 'Error when computing the <code>mark</code> note: '+res.state_errors.mark.message;
+                    } else if(!res.state_valid.mark) {
+                        out.error = 'This answer is not valid.';
+                        var feedback = compile_feedback(Numbas.marking.finalise_state(res.states.mark), part.marks);
+                        out.warnings = feedback.warnings;
+                    }
                 }
                 mt.last_run(out);
             } catch(e) {

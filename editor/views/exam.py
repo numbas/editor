@@ -117,9 +117,9 @@ class UploadView(editor.views.editoritem.CreateView):
         exam_object = NumbasObject(source=content)
 
         groups = []
-        for group in exam_object.data['question_groups']:
+        for group in exam_object.data.get('question_groups',[]):
             qs = []
-            for q in group['questions']:
+            for q in group.get('questions',[]):
                 question_object = NumbasObject(data=q, version=exam_object.version)
 
                 qei = EditorItem(
@@ -130,11 +130,13 @@ class UploadView(editor.views.editoritem.CreateView):
                 qei.project = ei.project
                 qei.save()
 
+                qei.tags.set(*[t.strip() for t in q.get('tags',[])])
+
                 qo = NewQuestion()
                 qo.editoritem = qei
                 qo.save()
 
-                extensions = Extension.objects.filter(location__in=exam_object.data['extensions'])
+                extensions = Extension.objects.filter(location__in=exam_object.data.get('extensions',[]))
                 qo.extensions.add(*extensions)
                 qs.append(qo.pk)
 

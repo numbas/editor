@@ -45,7 +45,20 @@ class UploadView(generic.CreateView):
     def get_success_url(self):
         return reverse('extension_edit_source', args=(self.object.pk,))
 
-class UpdateView(AuthorRequiredMixin, generic.UpdateView):
+class ShowExtensionFilesMixin:
+
+    def get_extension_filenames(self):
+        extension = self.get_object()
+        filenames = list(extension.filenames())
+        filenames.sort()
+        return filenames
+
+    def get_context_data(self,**kwargs):
+        context = super().get_context_data(**kwargs)
+        context['filenames'] = self.get_extension_filenames()
+        return context
+
+class UpdateView(ShowExtensionFilesMixin,AuthorRequiredMixin, generic.UpdateView):
     """ Edit an extension's metadata """
 
     model = Extension
@@ -60,7 +73,7 @@ class UpdateView(AuthorRequiredMixin, generic.UpdateView):
     def get_success_url(self):
         return reverse('profile_extensions', args=(self.request.user.pk,))
 
-class EditView(CanViewMixin, generic.UpdateView):
+class EditView(ShowExtensionFilesMixin, CanViewMixin, generic.UpdateView):
     """ Edit an extension's source code """
     model = Extension
     form_class = forms.EditExtensionForm
@@ -112,7 +125,7 @@ class EditView(CanViewMixin, generic.UpdateView):
         _,ext = os.path.splitext(filename)
         context['fileext'] = ext
 
-        filenames = list(extension.filenames())
+        filenames = context['filenames']
         if not context['exists']:
             filenames.append(filename)
         filenames.sort()
@@ -157,7 +170,7 @@ class DeleteFileView(CanEditMixin, generic.UpdateView):
     def get_success_url(self):
         return reverse('extension_edit_source', args=(self.get_object().pk,))
 
-class AccessView(AuthorRequiredMixin, generic.UpdateView):
+class AccessView(ShowExtensionFilesMixin, AuthorRequiredMixin, generic.UpdateView):
     model = Extension
     template_name = 'extension/access.html'
     form_class = forms.ExtensionAccessFormset

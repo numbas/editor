@@ -5119,7 +5119,18 @@ newBuiltin('factorise',[TNum],TList,function(n) {
         return math.factorise(n).map(function(n){return new TNum(n)});
     }
 );
-newBuiltin('random', [TRange], TNum, math.random, {random:true} );
+newBuiltin('random', [TRange], TNum, null, {
+    evaluate: function(args,scope) {
+        var range = args[0];
+        var n = math.random(range.value);
+        if(util.isInt(range.start) && util.isInt(range.step) && range.step!=0) {
+            return new TInt(n);
+        } else {
+            return new TNum(n);
+        }
+    },
+    random:true
+});
 newBuiltin('random',[TList],'?',null, {
     random:true,
     evaluate: function(args,scope)
@@ -6740,7 +6751,7 @@ function texifyWouldBracketOpArg(thing,i, settings) {
         var p1 = precedence[op1];    //precedence of child op
         var p2 = precedence[op2];    //precedence of parent op
         //if leaving out brackets would cause child op to be evaluated after parent op, or precedences the same and parent op not commutative, or child op is negation and parent is exponentiation
-        return ( p1 > p2 || (p1==p2 && i>0 && !jme.commutative[op2]) || (op1=='-u' && precedence[op2]<=precedence['*']) )
+        return ( p1 > p2 || (p1==p2 && i>0 && !jme.commutative[op2]) || (i>0 && op1=='-u' && precedence[op2]<=precedence['*']) )
     }
     //complex numbers might need brackets round them when multiplied with something else or unary minusing
     else if(tok.type=='number' && tok.value.complex && thing.tok.type=='op' && (thing.tok.name=='*' || thing.tok.name=='-u' || i==0 && thing.tok.name=='^') ) {
@@ -13454,6 +13465,7 @@ var Question = Numbas.Question = function( number, exam, group, gscope, store)
         q.setErrorCarriedForwardBackReferences();
     })
     q.exam = exam;
+    q.tags = [];
     q.group = group;
     q.adviceThreshold = q.exam ? q.exam.adviceGlobalThreshold : 0;
     q.number = number;
@@ -13630,6 +13642,11 @@ Question.prototype = /** @lends Numbas.Question.prototype */
         q.functionsTodo = Numbas.xml.loadFunctions(q.xml,q.scope);
         q.signals.trigger('functionsLoaded');
 
+        var tagNodes = q.xml.selectNodes('tags/tag');
+        for(var i = 0; i<tagNodes.length; i++) {
+            this.tags.push(tagNodes[i].textContent);
+        }
+
         //make rulesets
         var rulesetNodes = q.xml.selectNodes('rulesets/set');
         for(var i=0; i<rulesetNodes.length; i++) {
@@ -13781,6 +13798,13 @@ Question.prototype = /** @lends Numbas.Question.prototype */
         var tryLoad = Numbas.json.tryLoad;
         var tryGet = Numbas.json.tryGet;
         tryLoad(data,['name','customName','partsMode','maxMarks','objectiveVisibility','penaltyVisibility','statement','advice'],q);
+
+
+        var tags = tryGet(data,'tags');
+        if(tags) {
+            q.tags = tags.slice();
+        }
+
         var preambles = tryGet(data,'preamble');
         if(preambles) {
             Object.keys(preambles).forEach(function(key) {

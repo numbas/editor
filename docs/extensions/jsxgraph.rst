@@ -29,4 +29,4 @@ The simplest use is to define a custom function in Javascript which returns an H
 
 The question `Using student input in a JSXGraph diagram <https://numbas.mathcentre.ac.uk/question/2223/using-student-input-in-a-jsxgraph-diagram/>`_ is a more complete example of creating a JSXGraph diagram based on question variables and student input.
 
-For help on using JSXGraph, see `the official documentation <http://jsxgraph.uni-bayreuth.de/wp/docs.html>`_.
+For help on using JSXGraph, see `the official documentation <http://jsxgraph.uni-bayreuth.de/wp/docs/index.html>`_.

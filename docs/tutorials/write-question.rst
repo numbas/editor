@@ -1,3 +1,5 @@
+.. _write-your-first-question:
+
 Write your first question
 ===========================
 

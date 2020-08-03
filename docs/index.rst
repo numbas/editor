@@ -34,6 +34,7 @@ If you have any questions, please `email us <mailto:numbas@ncl.ac.uk>`_ or join 
     tutorials/deliver-to-students
     tutorials/collaboration
     tutorials/what-next
+    tutorials/training-recordings
 
 .. toctree::
     :caption: Writing Numbas questions

@@ -698,20 +698,22 @@ part_types.models = [
                     this.displayType(this.displayTypes[i]);
                 }
             }
-            if(typeof data.choices == 'string') {
-                this.customChoices(true);
-                this.customChoicesExpression(data.choices);
-            } else {
-                for(var i=0;i<data.choices.length;i++)
-                {
-                    var c = this.addChoice(data.choices[i]);
-                    c.content(data.choices[i] || '');
-                    if(!this.customMarking()) {
-                        c.marks(data.matrix[i] || 0);
-                    }
-                    if('distractors' in data)
+            if(data.choices!==undefined) {
+                if(typeof data.choices == 'string') {
+                    this.customChoices(true);
+                    this.customChoicesExpression(data.choices);
+                } else {
+                    for(var i=0;i<data.choices.length;i++)
                     {
-                        c.distractor(data.distractors[i] || '');
+                        var c = this.addChoice(data.choices[i]);
+                        c.content(data.choices[i] || '');
+                        if(!this.customMarking()) {
+                            c.marks(data.matrix[i] || 0);
+                        }
+                        if('distractors' in data)
+                        {
+                            c.distractor(data.distractors[i] || '');
+                        }
                     }
                 }
             }
@@ -852,20 +854,22 @@ part_types.models = [
                 }
             }
 
-            if(typeof data.choices == 'string') {
-                this.customChoices(true);
-                this.customChoicesExpression(data.choices);
-            } else {
-                for(var i=0;i<data.choices.length;i++)
-                {
-                    var c = this.addChoice(data.choices[i]);
-                    c.content(data.choices[i] || '');
-                    if(!this.customMarking()) {
-                        c.marks(data.matrix[i] || 0);
-                    }
-                    if('distractors' in data)
+            if(data.choices!==undefined) {
+                if(typeof data.choices == 'string') {
+                    this.customChoices(true);
+                    this.customChoicesExpression(data.choices);
+                } else {
+                    for(var i=0;i<data.choices.length;i++)
                     {
-                        c.distractor(data.distractors[i] || '');
+                        var c = this.addChoice(data.choices[i]);
+                        c.content(data.choices[i] || '');
+                        if(!this.customMarking()) {
+                            c.marks(data.matrix[i] || 0);
+                        }
+                        if('distractors' in data)
+                        {
+                            c.distractor(data.distractors[i] || '');
+                        }
                     }
                 }
             }

@@ -151,7 +151,14 @@ All the built-in :ref:`JME functions <jme-functions>` are available in marking n
     Reject the student's answer as invalid, set the credit to 0 and give the feedback message ``message``.
     The message should explain why the student's answer was rejected.
 
+    The marking ends here.
+
     Since the student might not see the feedback message until the exam is over, you should also use :jme:func:`warn` to add a warning message next to the input field describing why the student's answer was rejected.
+
+.. function:: warn(message)
+
+    Show a warning next to the answer input.
+    This does not affect credit or stop the running of the marking algorithm.
 
 .. function:: feedback(message)
 

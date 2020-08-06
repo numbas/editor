@@ -206,23 +206,10 @@ class BrowseView(ProjectContextMixin, MustBeMemberMixin, generic.DetailView):
 
         project = self.get_project()
         path = self.kwargs.get('path','')[:-1]
-        breadcrumbs = []
-        if len(path):
-            parent = None
-            for name in path.split('/'):
-                try:
-                    folder = project.folders.get(name=urllib.parse.unquote(name),parent=parent)
-                except Folder.DoesNotExist:
-                    raise http.Http404("Folder not found.")
-                except Folder.MultipleObjectsReturned:
-                    folders = project.folders.filter(name=urllib.parse.unquote(name),parent=parent)
-                    folder = folders[0]
-                    with transaction.atomic():
-                        for ofolder in folders[1:]:
-                            ofolder.merge_into(folder)
-                breadcrumbs.append(folder)
-                parent = folder
-        self.breadcrumbs = breadcrumbs
+        try:
+            breadcrumbs = self.breadcrumbs = project.get_folder_breadcrumbs(path)
+        except Folder.DoesNotExist:
+            raise http.Http404("Folder not found.")
         return breadcrumbs
 
     def get_folder(self):
@@ -304,8 +291,8 @@ class NewFolderView(ProjectContextMixin, MustBeEditorMixin, generic.CreateView):
     def get_initial(self):
         initial = super().get_initial()
         path = self.request.GET.get('path')
-        parent = Folder.objects.get(name=urllib.parse.unquote(path.split('/')[-1])) if path is not None and path!='' else None
-        initial['project'] = self.get_project()
+        project = initial['project'] = self.get_project()
+        parent = project.get_folder(path)
         initial['parent'] = parent
         return initial
 

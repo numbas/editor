@@ -277,6 +277,30 @@ class Project(models.Model, ControlledObject):
                 tree.append(folder_dict[f.pk])
         return tree
 
+    def get_folder_breadcrumbs(self,path):
+        breadcrumbs = []
+        if len(path):
+            parent = None
+            for name in path.split('/'):
+                try:
+                    folder = self.folders.get(name=urllib.parse.unquote(name),parent=parent)
+                except Folder.MultipleObjectsReturned:
+                    folders = self.folders.filter(name=urllib.parse.unquote(name),parent=parent)
+                    folder = folders[0]
+                    with transaction.atomic():
+                        for ofolder in folders[1:]:
+                            ofolder.merge_into(folder)
+                breadcrumbs.append(folder)
+                parent = folder
+        return breadcrumbs
+
+    def get_folder(self,path):
+        breadcrumbs = self.get_folder_breadcrumbs(path)
+        if len(breadcrumbs):
+            return breadcrumbs[-1]
+        else:
+            return None
+
 class ProjectAccess(models.Model, TimelineMixin):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='project_memberships', on_delete=models.CASCADE)

@@ -4310,6 +4310,9 @@ var SignatureEnumerator = jme.SignatureEnumerator = function(sig) {
             this.child = new SignatureEnumerator(sig.signature);
             this.include = false;
             break;
+        case 'label':
+            this.child = new SignatureEnumerator(sig.signature);
+            break;
         case 'sequence':
             this.children = sig.signatures.map(function(s){ return new SignatureEnumerator(s)});
             break;
@@ -4346,6 +4349,8 @@ SignatureEnumerator.prototype = {
      */
     length: function() {
         switch(this.sig.kind) {
+            case 'label':
+                return this.child.length();
             case 'optional':
                 return this.include ? this.child.length() : 0;
             case 'sequence':
@@ -4369,6 +4374,8 @@ SignatureEnumerator.prototype = {
      */
     signature: function() {
         switch(this.sig.kind) {
+            case 'label':
+                return this.child.signature();
             case 'optional':
                 return this.include ? this.child.signature() : [];
             case 'sequence':
@@ -4395,6 +4402,7 @@ SignatureEnumerator.prototype = {
     next: function() {
         switch(this.sig.kind) {
             case 'optional':
+            case 'label':
                 return false;
             case 'or':
                 if(!this.children[this.pos].next()) {
@@ -4427,6 +4435,7 @@ SignatureEnumerator.prototype = {
     backtrack: function() {
         switch(this.sig.kind) {
             case 'optional':
+            case 'label':
                 this.child.backtrack();
                 break;
             case 'or':
@@ -4543,6 +4552,21 @@ function sig_remove_missing(items) {
  * @enum {Function}
  */
 jme.signature = {
+    label: function(name,sig) {
+        var f = function(args) {
+            var result = sig(args);
+            if(!result) {
+                return false;
+            }
+            result.forEach(function(r) {
+                r.name = name;
+            });
+            return result;
+        };
+        f.kind = 'label';
+        f.signature = sig;
+        return f;
+    },
     anything: function() {
         var f = function(args) {
             return args.length>0 ? [{type: args[0].type, nonspecific: true}] : false;
@@ -11071,18 +11095,20 @@ jme.variables = /** @lends Numbas.jme.variables */ {
          * @returns {Element|string}
          */
         function doToken(token) {
-            switch(token.type){
-            case 'html':
+            if(jme.isType(token,'html')) {
+                token = jme.castToType(token,'html');
                 return token.value;
-            case 'string':
+            } else if(jme.isType(token,'string')) {
+                token = jme.castToType(token,'string');
                 var html = token.value.replace(/\\([{}])/g,'$1');
                 if(token.latex) {
                     html = '\\('+html+'\\)';
                 }
                 return html;
-            case 'list':
+            } else if(jme.isType(token,'list')) {
+                token = jme.castToType(token,'list');
                 return '[ '+token.value.map(function(item){return doToken(item)}).join(', ')+' ]';
-            default:
+            } else {
                 return jme.tokenToDisplayString(token);
             }
         }
@@ -12913,11 +12939,18 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
      */
     mark: function(scope) {
         var studentAnswer = this.rawStudentAnswerAsJME();
-        if(studentAnswer==undefined) {
+        var result;
+        if(studentAnswer===undefined) {
             this.setCredit(0,R('part.marking.nothing entered'));
-            return;
+            result = {
+                states: {mark: [marking.feedback.set_credit(0,R('part.marking.nothing entererd'))]},
+                values: {},
+                state_valid: {mark: false, interpreted_answer: false},
+                state_errors: {}
+            }
+        } else {
+            result = this.mark_answer(studentAnswer,scope);
         }
-        var result = this.mark_answer(studentAnswer,scope);
         if(!result.state_errors.mark) {
             var finalised_result = marking.finalise_state(result.states.mark);
             this.apply_feedback(finalised_result);
@@ -28538,16 +28571,10 @@ ExtensionPart.prototype = /** @lends Numbas.parts.ExtensionPart.prototype */ {
     initDisplay: function() {
         this.display = new Numbas.display.ExtensionPartDisplay(this);
     },
-    validate: function() {
-        return false;
-    },
     hasStagedAnswer: function() {
         return true;
     },
     doesMarking: true,
-    mark: function() {
-        this.markingComment(R('part.extension.not implemented',{name:'mark'}));
-    },
     /** Return suspend data for this part so it can be restored when resuming the exam - must be implemented by an extension or the question.
      *
      * @returns {object}
@@ -28567,7 +28594,15 @@ ExtensionPart.prototype = /** @lends Numbas.parts.ExtensionPart.prototype */ {
         if(pobj) {
             return pobj.extension_data;
         }
-    }
+    },
+    /** Get the student's answer as it was entered as a JME data type, to be used in the custom marking algorithm.
+     *
+     * @abstract
+     * @returns {Numbas.jme.token}
+     */
+    rawStudentAnswerAsJME: function() {
+        return new Numbas.jme.types.TNothing();
+    },
 };
 ['finaliseLoad','loadFromXML','loadFromJSON'].forEach(function(method) {
     ExtensionPart.prototype[method] = util.extend(Part.prototype[method],ExtensionPart.prototype[method]);

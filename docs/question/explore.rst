@@ -175,3 +175,10 @@ For each replacement, you must select the name of the variable you want to repla
 
       * all question variables;
       * the values of any marking notes produced by this part's :ref:`marking algorithm <marking-algorithm>`.
+
+Identifying the current part in JME
+===================================
+
+Every question part has a unique *path*, which can be used to identify it.
+
+In explore mode, a part instance's path can't be known until it's created, so each part instance defines a variable ``part_path``, which can be used while substituting values into content areas or in marking algorithms.

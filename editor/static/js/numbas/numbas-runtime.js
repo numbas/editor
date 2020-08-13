@@ -2783,6 +2783,7 @@ jme.registerType(
  * @augments Numbas.jme.token
  * @property {string} value
  * @property {boolean} latex - Is this string LaTeX code? If so, it's displayed as-is in math mode.
+ * @property {boolean} display_latex - Should this string be rendered as LaTeX when substituted into plain text?
  * @property {boolean} safe - If true, don't run {@link Numbas.jme.subvars} on this token when it's evaluated.
  * @property {string} type "string"
  * @class
@@ -4654,7 +4655,7 @@ jme.signature = {
             }
             var arg = jme.castToType(args[0],'list');
             var items = seq(arg.value);
-            if(items===false || items.length!=arg.value.length) {
+            if(items===false || items.length<arg.value.length) {
                 return false;
             }
             return [{type: 'list', items: items}];
@@ -4980,6 +4981,7 @@ newBuiltin('latex',[TString],TString,null,{
     evaluate: function(args,scope) {
         var s = new TString(args[0].value);
         s.latex = true;
+        s.display_latex = true;
         return s;
     }
 });
@@ -6497,6 +6499,7 @@ newBuiltin('latex',[TExpression],TString,null, {
         var tex = jme.display.texify(expr.tree);
         var s = new TString(tex);
         s.latex = true;
+        s.display_latex = true;
         return s;
     }
 });
@@ -11101,7 +11104,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
             } else if(jme.isType(token,'string')) {
                 token = jme.castToType(token,'string');
                 var html = token.value.replace(/\\([{}])/g,'$1');
-                if(token.latex) {
+                if(token.latex && token.display_latex) {
                     html = '\\('+html+'\\)';
                 }
                 return html;

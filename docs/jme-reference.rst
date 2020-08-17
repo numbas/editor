@@ -414,6 +414,14 @@ Arithmetic
         * ``3^2`` → ``9``
         * ``e^(pi * i)`` → ``-1``
 
+
+.. jme:function:: exp(x)
+
+    :math:`e^x` - a synonym for ``e^x``.
+
+    **Definitions**:
+        * :data:`number` → :data:`number`
+
 .. _jme-fns-number-operations:
 
 Number operations
@@ -774,6 +782,32 @@ Number operations
 
     **Example**:
         * ``formatnumber(1234.567,"eu")`` → ``"1.234,567"``
+
+.. jme:function:: scientificnumberlatex(n)
+
+    Return a LaTeX string representing the given number in scientific notation, :math:`a \times 10^b`.
+
+    This function exists because scientific notation may use superscripts, which aren't easily typeset in plain text.
+
+    **Definitions**:
+        * :data:`number` → :data:`string`
+        * :data:`decimal` → :data:`string`
+
+    **Example**:
+        * ``scientificnumberlatex(123)`` → ``"1.23 \\times 10^{2}"``
+
+.. jme:function:: scientificnumberhtml(n)
+
+    Return an HTML element representing the given number in scientific notation, :math:`a \times 10^b`.
+
+    This function exists because scientific notation may use superscripts, which aren't easily typeset in plain text.
+
+    **Definitions**:
+        * :data:`number` → :data:`html`
+        * :data:`decimal` → :data:`html`
+
+    **Example**:
+        * ``scientificnumberhtml(123)`` → ``html("<span>1.23 × 10<sup>2</sup></span>")``
 
 .. jme:function:: cleannumber(str, styles)
 
@@ -2222,7 +2256,7 @@ Lists
         * ``prod([2,3,4])`` → ``24``
       
 
-.. jme:function:: product(list1,list2,...,listN) or product(list, n)
+.. jme:function:: product(list1,list2,...,listN)
 
     Cartesian product of lists.
     In other words, every possible combination of choices of one value from each given list.
@@ -2372,7 +2406,7 @@ Dictionaries
 Sets
 ----
 
-.. jme:function:: set(a,b,c,...) or set([elements])
+.. jme:function:: set(elements)
 
     Create a set with the given elements.
     Either pass the elements as individual arguments, or as a list.
@@ -2455,7 +2489,7 @@ Randomisation
         * ``reorder([0,1,2,3],[3,2,0,1])`` → ``[3,2,0,1]``
         * ``reorder(["a","b","c","d"],[3,2,0,1])`` → ``["d","c","a","b"]``
 
-.. jme:function:: shuffle(x) or shuffle(a..b)
+.. jme:function:: shuffle(x)
 
     Random shuffling of list or range.
 
@@ -2593,6 +2627,30 @@ HTML
         * ``image(chosenimage)``
         * `Question using randomly chosen images <https://numbas.mathcentre.ac.uk/question/1132/using-a-randomly-chosen-image/>`_.
 
+.. jme:function:: max_width(width,element)
+
+    Apply a CSS `max-width` attribute to the given element.
+    You can use this to ensure that an image is not displayed too wide.
+    The given `width` is in pixels.
+
+    **Definitions**:
+        * :data:`number`, :data:`html` → :data:`html`
+
+    **Example**:
+        ``max_width(400,html("<p>Text</p>"))`` → ``html("<p style=\"max-width: 400em;\">a</p>")``
+
+.. jme:function:: max_height(width,element)
+
+    Apply a CSS `max-height` attribute to the given element. 
+    You can use this to ensure that an image is not displayed too long.
+    The given `height` is in pixels.
+
+    **Definitions**:
+        * :data:`number`, :data:`html` → :data:`html`
+
+    **Example**:
+        ``max_height(400,html("<p>Text</p>"))`` → ``html("<p style=\"max-height: 400em;\">a</p>")``
+
 .. _jme-fns-json:
 
 JSON
@@ -2639,6 +2697,7 @@ Sub-expressions
 ---------------
 
 .. jme:function:: expression(string)
+.. jme:function:: parse(string)
 
     Parse a string as a JME expression.
     The expression can be substituted into other expressions, such as the answer to a mathematical expression part, or the ``\simplify`` LaTeX command.
@@ -2781,6 +2840,40 @@ Sub-expressions
     **Examples**:
         * ``simplify(expression("1*x+cos(pi)"),"unitfactor")`` → ``expression("x+cos(pi)")``
         * ``simplify(expression("1*x+cos(pi)"),["basic","unitfactor","trig"])`` → ``expression("x-1")``
+
+.. jme:function:: expand_juxtapositions(expression, options)
+
+    Expand juxtapositions in variable and function names for implicit multiplication of terms or composition of functions.
+    This is to do with strings of letters with no spaces or operator symbols between them.
+
+    ``options`` is an optional dictionary of settings for the process.
+    It can contain the following keys. 
+
+    * ``singleLetterVariables`` - Insist that all variable names consist of a single letter, interpreting longer strings of characters as implicit multiplication.
+        Greek letters are considered to be one letter long.
+    * ``noUnknownFunctions`` - When a name appears before a bracket, but it's not the name of a defined function, interpret it as a multiplication instead. This does not apply function applications with more than one argument.
+    * ``implicitFunctionComposition`` - When several function names are juxtaposed together to form a string that is not the name of a defined function, or several function names are joined with the multiplication symbol ``*``, interpret it as implicity composition of functions.
+
+    If ``options`` is not given, all of these are turned on.
+
+    Variable name annotations, subscripts and primes do not count towards the number of letters in a name.
+
+    **Definition**:
+        * :data:`expression` → :data:`expression`
+        * :data:`expression`, :data:`dict` → :data:`expression`
+
+    **Examples**:
+        * ``expand_juxtapositions(expression("xy"))`` → ``expression("x*y")``
+        * ``expand_juxtapositions(expression("x'y"))`` → ``expression("x\'*y")``
+        * ``expand_juxtapositions(expression("pizza"))`` → ``expression("pi*z*z*a")``
+        * ``expand_juxtapositions(expression("hat:abc"))`` → ``expression("hat:a*b*c")``
+        * ``expand_juxtapositions(expression("xcos(x)"))`` → ``expression("x*cos(x)")``
+        * ``expand_juxtapositions(expression("lnabs(x)"))`` → ``expression("ln(abs(x))")``
+        * ``expand_juxtapositions(expression("ln*abs(x)"))`` → ``expression("ln(abs(x))")``
+        * ``expand_juxtapositions(expression("xy"),["singleLetterVariables": false])`` → ``expression("xy")``
+        * ``expand_juxtapositions(expression("x(x+1)"))`` → ``expression("x*(x+1)")``
+        * ``expand_juxtapositions(expression("x(x+1)"),["noUnknownFunctions": false])`` → ``expression("x(x+1)")``
+        * ``expand_juxtapositions(expression("ln*abs(x)"),["implicitFunctionComposition": false, "singleLetterVariables": true, "noUnknownFunctions": true])`` → ``expression("l*n*abs(x)")``
 
 .. jme:function:: canonical_compare(expr1,expr2)
 

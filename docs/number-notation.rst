@@ -44,8 +44,9 @@ The entry in the "Code" column is the string you should use to identify the styl
 |                 |                 | digits are grouped in pairs.                    |                   |
 |                 |                 | A dot is used for the decimal mark.             |                   |
 +-----------------+-----------------+-------------------------------------------------+-------------------+
-| Scientific      | ``scientific``  | A mantissa between 1 and 10, then the letter    | 1.234567e+6       |
-|                 |                 | 'e', followed by an integer exponent            |                   |
+| Scientific      | ``scientific``  | A mantissa between 1 and 10, formatted using    | 1.234567e+6       |
+|                 |                 | the 'plain' style, then the letter 'e',         |                   |
+|                 |                 | followed by a signed integer exponent.          |                   |
 +-----------------+-----------------+-------------------------------------------------+-------------------+
 
 .. warning::

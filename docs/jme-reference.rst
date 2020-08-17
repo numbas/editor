@@ -2443,6 +2443,18 @@ Randomisation
     **Example**:
         * ``deal(3)`` :no-test:`→` ``[2,0,1]``
 
+.. jme:function:: reorder(list,order)
+
+    Reorder a list given a permutation.
+    The ``i``th element of the output is the ``order[i]``th element of ``list``.
+
+    **Definitions**:
+        * :data:`list`, :data:`list` → :data:`list`
+
+    **Examples**:
+        * ``reorder([0,1,2,3],[3,2,0,1])`` → ``[3,2,0,1]``
+        * ``reorder(["a","b","c","d"],[3,2,0,1])`` → ``["d","c","a","b"]``
+
 .. jme:function:: shuffle(x) or shuffle(a..b)
 
     Random shuffling of list or range.
@@ -2453,6 +2465,17 @@ Randomisation
     **Examples**:
         * ``shuffle(["a","b","c"])`` :no-test:`→` ``["c","b","a"]``
         * ``shuffle(0..4)`` :no-test:`→` ``[2,3,0,4,1]``
+
+.. jme:function:: shuffle_together(lists)
+
+    Shuffle several lists together - each list has the same permutation of its elements applied.
+    The lists must all be the same length, otherwise an error is thrown.
+
+    **Definitions**:
+        * :data:`list` → :data:`list`
+
+    **Example**:
+        * ``shuffle_together([ ["a","b","c","d"], [0,1,2,3] ])`` :no-test:`→` ``[ ["d","a","c","b"], [3,0,2,1] ]``
 
 .. _jme-fns-control-flow:
 

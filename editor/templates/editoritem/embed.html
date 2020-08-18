@@ -1,7 +1,10 @@
+{% load sstatic %}
 <!doctype html>
 <html>
     <head>
         <title>{{item.name}}</title>
+
+        <link rel="icon" href="{% sstatic 'icon.png' %}"/>
     </head>
     <body style="margin: 0; overflow: hidden;">
         <iframe src="{{exam_url}}" style="width: 100vw;height:100vh; border: none;"></iframe>

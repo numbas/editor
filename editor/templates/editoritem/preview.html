@@ -7,6 +7,8 @@
     <head>
         <title>{{item.name}} - preview - {{SITE_TITLE}}</title>
 
+        <link rel="icon" href="{% sstatic 'icon.png' %}"/>
+
         {% if item.published %}
             {% include 'editoritem/oembed.html' %}
         {% endif %}

@@ -5,7 +5,7 @@ import json
 
 from django.conf import settings
 from django import forms
-from django.forms.models import inlineformset_factory
+from django.forms.models import inlineformset_factory, modelformset_factory
 from django.forms.widgets import SelectMultiple
 from django.utils.html import format_html, html_safe
 from django.utils.safestring import mark_safe
@@ -14,7 +14,7 @@ from django.db import transaction
 from django.db.models import Q, Count
 from django.contrib.auth.models import User
 
-from editor.models import NewExam, NewQuestion, EditorItem, Access, Theme, Extension, PullRequest, CustomPartType, Project, Folder
+from editor.models import NewExam, NewQuestion, EditorItem, Access, Theme, Extension, PullRequest, CustomPartType, Project, Folder, Resource
 import editor.models
 from accounts.forms import UserField
 from accounts.util import find_users
@@ -228,6 +228,8 @@ class NewQuestionForm(forms.ModelForm):
             'folder': forms.HiddenInput(),
             'project': BootstrapSelect,
         }
+
+ResourcesAltTextForm = modelformset_factory(Resource, fields=('alt_text',))
 
 class ExamForm(EditorItemForm):
     class Meta:

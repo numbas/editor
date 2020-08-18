@@ -1982,6 +1982,7 @@ $(document).ready(function() {
         this.url = ko.observable('');
         this.name = ko.observable('');
         this.pk = ko.observable(0);
+        this.alt_text = ko.observable('');
 
         if(data) {
             this.load(data);
@@ -1993,6 +1994,7 @@ $(document).ready(function() {
             this.url(data.url);
             this.name(data.name);
             this.pk(data.pk);
+            this.alt_text(data.alt_text);
             this.deleteURL = data.delete_url;
         },
         filePatterns: {

@@ -12,7 +12,7 @@ from django.views import generic
 
 import reversion
 
-from editor.forms import NewQuestionForm, QuestionForm
+from editor.forms import NewQuestionForm, QuestionForm, ResourcesAltTextForm
 from editor.models import NewQuestion, Extension, Resource, CustomPartType
 import editor.views.generic
 import editor.views.editoritem
@@ -105,6 +105,10 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
     model = NewQuestion
     form_class = QuestionForm
     template_name = 'question/edit.html'
+
+    def form_valid(self, *args, **kwargs):
+        self.resources_form.save()
+        return super().form_valid(*args, **kwargs)
     
     def post(self, request, *args, **kwargs):
         super(UpdateView, self).post(request, *args, **kwargs)
@@ -112,8 +116,16 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         self.resources = self.data['resources']
         del self.data['resources']
         question_form = QuestionForm(self.data, instance=self.object)
+        data = {
+            'form-TOTAL_FORMS': len(self.resources),
+            'form-INITIAL_FORMS': len(self.resources),
+        }
+        for i,rd in enumerate(self.resources):
+            data[f'form-{i}-id'] = rd['pk']
+            data[f'form-{i}-alt_text'] = rd['alt_text']
+        self.resources_form = ResourcesAltTextForm(data=data)
 
-        if question_form.is_valid():
+        if question_form.is_valid() and self.resources_form.is_valid():
             return self.form_valid(question_form)
         else:
             return self.form_invalid(question_form)
@@ -125,7 +137,6 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
 
         resource_pks = [res['pk'] for res in self.resources]
         self.object.resources.set(Resource.objects.filter(pk__in=resource_pks))
-
     
     def get_context_data(self, **kwargs):
         context = super(UpdateView, self).get_context_data(**kwargs)

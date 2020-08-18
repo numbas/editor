@@ -307,7 +307,8 @@ $(document).ready(function() {
                 var res = resources[i];
                 if(res.progress()==1) {
                     out.push({
-                        pk: res.pk()
+                        pk: res.pk(),
+                        alt_text: res.alt_text()
                     });
                 }
             }
@@ -1332,7 +1333,11 @@ $(document).ready(function() {
                 html = '<div><iframe src="'+image.url()+'"></div>';
                 break;
             default:
-                html = '<img src="'+image.url()+'">';
+                var alt = '';
+                if(image.alt_text()) {
+                    alt = ' alt="'+image.alt_text()+'"';
+                }
+                html = '<img src="'+image.url()+'"'+alt+'>';
             }
             ed.execCommand('mceInsertContent',false,html);
         },

@@ -716,6 +716,7 @@ class Resource(models.Model):
     owner = models.ForeignKey(User, related_name='resources', on_delete=models.CASCADE)
     date_created = models.DateTimeField(auto_now_add=True)
     file = models.FileField(upload_to='question-resources/', max_length=255) 
+    alt_text = models.TextField(blank=True)
 
     def __str__(self):
         return self.file.name
@@ -744,6 +745,7 @@ class Resource(models.Model):
             'url': self.resource_url,
             'name': self.file.name,
             'pk': self.pk,
+            'alt_text': self.alt_text,
         }
 
 class Licence(models.Model):

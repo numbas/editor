@@ -63,7 +63,7 @@
 
                     <ul class="list-unstyled resources-list" data-bind="foreach: resources">
                         <li class="resource clearfix" data-bind="visible: can_embed, click: $root.insertImage">
-                            <img class="thumbnail" data-bind="visible: filetype()=='img', attr: {src: url, title: name}"/>
+                            <img class="thumbnail" data-bind="visible: filetype()=='img', attr: {src: url, title: name, alt: alt_text}"/>
                             <span data-bind="text: name"></span><span data-bind="visible: filetype()=='html'"> (will be embedded as an iframe)</span>
                         </li>
                     </ul>
@@ -772,15 +772,23 @@
                         <div class="bar" data-bind="style: {width: progress()+'%'}"></div>
                     </div>
                     <div data-bind="visible: progress()==1">
-                        <a data-bind="attr: {href: url}" target="_blank"><img class="thumbnail" data-bind="visible: filetype()=='img', attr: {src: url, title: name}"/></a>
+                        <a data-bind="attr: {href: url}" target="_blank"><img class="thumbnail" data-bind="if: filetype()=='img', attr: {src: url, title: name, alt: alt_text}"/></a>
                     </div>
                 </div>
                 <div class="media-body">
-                    <label>URL:</label>
-                    <code class="path monospace" data-bind="visible: progress()==1, text: 'resources/'+name()"></code>
+                    <form class="form" data-bind="submit: Editor.noop">
+                        {% with form_label_class="" form_control_class="" %}
+                            {% property "'resources/'+name()" "URL" disable=True %}
+                            <!-- ko if: filetype()=='img' -->
+                            {% property 'alt_text' 'Text alternative' placeholder="'Describe this image for someone who can\'t see it'" %}
+                            <!-- /ko -->
+                        {% endwith %}
+                    </form>
                 </div>
             </li>
         </ul>
+
+        {{resource_form}}
     </section>
 
     <!-- Exams using this question -->

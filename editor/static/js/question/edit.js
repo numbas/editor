@@ -1637,6 +1637,10 @@ $(document).ready(function() {
                 value: ko.observable(''),
                 isTemplate: ko.observable(false)
             },
+            'long plain string': {
+                value: ko.observable(''),
+                isTemplate: ko.observable(true)
+            },
             'long string': {
                 value: ko.observable(''),
                 isTemplate: ko.observable(false)
@@ -1722,6 +1726,7 @@ $(document).ready(function() {
                         tree.args[0].args[1] = {tok: wrapValue(parseFloat(val.step()))};
                         return treeToJME(tree);
                     case 'string':
+                    case 'long plain string':
                     case 'long string':
                         var tok = wrapValue(val.value());
                         tok.safe = val.isTemplate();
@@ -1870,7 +1875,8 @@ $(document).ready(function() {
             {id: 'range', name: 'Range of numbers'},
             {id: 'randrange', name: 'Random number from a range'},
             {id: 'string', name: 'Short text string'},
-            {id: 'long string', name: 'Long text string'},
+            {id: 'long plain string', name: 'Long plain text string'},
+            {id: 'long string', name: 'Formatted text'},
             {id: 'list of numbers', name: 'List of numbers'},
             {id: 'list of strings', name: 'List of short text strings'},
             {id: 'json', name: 'JSON data'}
@@ -1931,6 +1937,7 @@ $(document).ready(function() {
                     templateTypeValues.step(Numbas.jme.evaluate(m.c,Numbas.jme.builtinScope).value);
                     break;
                 case 'string':
+                case 'long plain string':
                 case 'long string':
                     while(Numbas.jme.isFunction(tree.tok,'safe')) {
                         templateTypeValues.isTemplate(true);

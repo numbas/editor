@@ -243,6 +243,9 @@
                                 <p class="help-block">(text string)</p>
                                 <p><label><input type="checkbox" data-bind="checked: templateTypeValues.string.isTemplate" {% if not editable %}disabled{% endif %}> Is this a template?</p>
                             </div>
+                            <div data-bind="visible: templateType().id=='long plain string'">
+                                <div {% if not editable %}disabled{% endif %} data-bind="codemirror: templateTypeValues['long plain string'].value"></div>
+                            </div>
                             <div data-bind="visible: templateType().id=='long string'">
                                 <div {% if not editable %}disabled{% endif %} data-bind="writemaths: templateTypeValues['long string'].value"></div>
                                 <p><label><input type="checkbox" data-bind="checked: templateTypeValues['long string'].isTemplate" {% if not editable %}disabled{% endif %}> Is this a template?</p>

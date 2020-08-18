@@ -1241,6 +1241,52 @@ $(document).ready(function() {
         }
     };
 
+    function name_for_gap(n,gaps) {
+        if(gaps && gaps[n] && gaps[n].name()) {
+            return gaps[n].name();
+        } else {
+            return 'Gap '+n;
+        }
+    }
+
+    function display_gaps(element,gaps) {
+        function node_display_gaps(t) {
+            var m = t.textContent.split(/\[\[(\d+)\]\]/);
+            var nodes = [];
+            for(var i=0;i<m.length;i++) {
+                if(i%2) {
+                    var gap = document.createElement('gapfill');
+                    var n = parseInt(m[i]);
+                    gap.setAttribute('data-number',n);
+                    gap.textContent = name_for_gap(n,gaps);
+                    nodes.push(gap);
+                } else {
+                    nodes.push(document.createTextNode(m[i]))
+                }
+            }
+            nodes.forEach(function(n) {
+                t.parentNode.insertBefore(n,t);
+            })
+            return nodes;
+        }
+
+        var treeWalker = document.createTreeWalker(
+            element,
+            NodeFilter.SHOW_TEXT
+        );
+
+        var node = treeWalker.nextNode();
+        var replaced = [];
+        while(node) {
+            var onode = node;
+            node = treeWalker.nextNode();
+            if(onode.textContent.match(/\[\[\d+\]\]/)) {
+                node_display_gaps(onode);
+                onode.parentNode.removeChild(onode);
+            }
+        }
+    }
+
     ko.bindingHandlers.writemaths = {
         init: function(element,valueAccessor,allBindingsAccessor) {
             valueAccessor = valueAccessor();
@@ -1428,8 +1474,9 @@ $(document).ready(function() {
                 make_tinymce();
             }
         },
-        update: function(element, valueAccessor) {
-            var value = ko.utils.unwrapObservable(valueAccessor()) || '';
+        update: function(element, valueAccessor, allBindingsAccessor) {
+            var value = ko.unwrap(valueAccessor()) || '';
+            allBindingsAccessor = allBindingsAccessor();
 
             var well = element.querySelector('.well.not-editing > .content-area');
             if(well) {
@@ -1437,6 +1484,18 @@ $(document).ready(function() {
                 $(well).find('[data-bind]').each(function() {
                     this.removeAttribute('data-bind');
                 });
+                if(allBindingsAccessor.gaps) {
+                    display_gaps(well);
+                    ko.computed(function() {
+                        var gaps = ko.unwrap(allBindingsAccessor.gaps);
+                        var displayed_gaps = well.querySelectorAll('gapfill');
+                        for(var i=0;i<displayed_gaps.length;i++) {
+                            var dg = displayed_gaps[i];
+                            var n = parseInt(dg.getAttribute('data-number'));
+                            dg.textContent = name_for_gap(n,gaps);
+                        }
+                    }).extend({throttle: 50});
+                }
             }
 
             if(element.classList.contains('has-tinymce')) {

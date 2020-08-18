@@ -397,7 +397,7 @@ Arithmetic
         * :data:`number`, :data:`decimal` → :data:`decimal`
 
     **Example**:
-        * ``3/4`` → ``0.75``.
+        * ``1.2/3`` → ``0.4``.
 
 .. jme:function:: x^y
 

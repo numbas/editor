@@ -382,7 +382,7 @@
                     <div class="timeline-write-comment" data-bind="with: commentwriter">
                         <form action="{% url 'comment_on_'|add:item_type object.pk object.editoritem.slug %}" data-bind="fadeVisible: writingComment, submit: submitComment">
                             <h4>Comment</h4>
-                            <div data-bind="writemaths: commentText"></div>
+                            <div data-bind="writemaths: commentText, editImmediately: true"></div>
                             <div class="buttons">
                                 <button type="Submit" class="btn btn-primary" data-bind="attr: {disabled: commentIsEmpty}">Submit</button>
                                 <button type="button" class="btn btn-default" data-bind="click: cancelComment">Cancel</button>
@@ -392,7 +392,7 @@
                     <div class="timeline-write-comment" data-bind="with: restorepointwriter">
                         <form action="{% url 'set_restore_point_on_'|add:item_type object.pk object.editoritem.slug %}" data-bind="fadeVisible: writingComment, submit: submitComment">
                             <h4>Checkpoint description</h4>
-                            <div data-bind="writemaths: commentText"></div>
+                            <div data-bind="writemaths: commentText, editImmediately: true"></div>
                             <p class="help-block">Describe what's changed since the last checkpoint.</p>
                             <div class="buttons">
                                 <button type="Submit" class="btn btn-primary" data-bind="attr: {disabled: commentIsEmpty}">Submit</button>

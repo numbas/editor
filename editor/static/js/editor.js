@@ -1246,24 +1246,14 @@ $(document).ready(function() {
             valueAccessor = valueAccessor();
             allBindingsAccessor = allBindingsAccessor();
 
-            var well = document.createElement('div');
-            well.classList.add('well','not-editing');
+            var editImmediately = allBindingsAccessor.hasOwnProperty('editImmediately') ? ko.unwrap(allBindingsAccessor.editImmediately) : false;
 
-            var content_area = document.createElement('div');
-            content_area.classList.add('content-area');
-            well.appendChild(content_area);
-
-            var click_to_edit = document.createElement('p');
-            click_to_edit.classList.add('click-to-edit');
-            click_to_edit.textContent = 'Click to edit';
-            well.appendChild(click_to_edit);
-
-            well.setAttribute('tabindex',0);
-            well.setAttribute('role','button');
-            element.appendChild(well);
+            var well;
 
             function make_tinymce() {
-                element.removeChild(well);
+                if(well) {
+                    element.removeChild(well);
+                }
                 element.classList.add('has-tinymce');
                 var height = allBindingsAccessor.hasOwnProperty('wmHeight') ? allBindingsAccessor.wmHeight : 200;
                 var width = allBindingsAccessor.hasOwnProperty('wmWidth') ? allBindingsAccessor.wmWidth : '';
@@ -1411,20 +1401,43 @@ $(document).ready(function() {
                 ;
             }
 
-            well.addEventListener('click',function() {
-                if(!element.hasAttribute('disabled')) {
-                    make_tinymce();
-                }
-            });
+
+            if(!editImmediately) {
+                well = document.createElement('div');
+                well.classList.add('well','not-editing');
+
+                var content_area = document.createElement('div');
+                content_area.classList.add('content-area');
+                well.appendChild(content_area);
+
+                var click_to_edit = document.createElement('p');
+                click_to_edit.classList.add('click-to-edit');
+                click_to_edit.textContent = 'Click to edit';
+                well.appendChild(click_to_edit);
+
+                well.setAttribute('tabindex',0);
+                well.setAttribute('role','button');
+                element.appendChild(well);
+
+                well.addEventListener('click',function() {
+                    if(!element.hasAttribute('disabled')) {
+                        make_tinymce();
+                    }
+                });
+            } else {
+                make_tinymce();
+            }
         },
         update: function(element, valueAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor()) || '';
 
             var well = element.querySelector('.well.not-editing > .content-area');
-            $(well).html(value).mathjax();
-            $(well).find('[data-bind]').each(function() {
-                this.removeAttribute('data-bind');
-            });
+            if(well) {
+                $(well).html(value).mathjax();
+                $(well).find('[data-bind]').each(function() {
+                    this.removeAttribute('data-bind');
+                });
+            }
 
             if(element.classList.contains('has-tinymce')) {
                 var tinymce = $(element).find('iframe');

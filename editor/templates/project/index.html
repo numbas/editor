@@ -38,7 +38,7 @@
                     <button class="btn btn-primary" data-bind="visible: !writingComment(), click: writingComment" type="button"><span class="glyphicon glyphicon-comment"></span> Write a comment</button>
                     <form action="{% url 'comment_on_project' project.pk %}" data-bind="fadeVisible: writingComment, submit: submitComment">
                         <h4>Comment</h4>
-                        <div data-bind="writemaths: commentText"></div>
+                        <div data-bind="writemaths: commentText, editImmediately: true"></div>
                         <div class="buttons">
                             <button type="Submit" class="btn btn-primary" data-bind="attr: {disabled: commentIsEmpty}">Submit</button>
                             <button type="button" class="btn btn-default" data-bind="click: cancelComment">Cancel</button>

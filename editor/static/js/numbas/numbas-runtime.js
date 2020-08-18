@@ -3054,7 +3054,7 @@ var getNameInfo = jme.getNameInfo = function(name) {
     if(m) {
         nameInfo.root = m[1];
         nameInfo.letterLength = m[1].length;
-        if(greek.contains(m[1].toLowerCase())) {
+        if(greek.contains(m[1])) {
             nameInfo.isGreek = true;
             nameInfo.letterLength = 1;
         }
@@ -8217,7 +8217,7 @@ var typeToJME = Numbas.jme.display.typeToJME = {
         return settings.jmeNumber(tok.value,settings);
     },
     'rational': function(tree,tok,bits,settings) {
-        return settings.jmeNumber(tok.value.toFloat(),settings);
+        return settings.jmeNumber(tok.value.numerator,settings) + '/' + settings.jmeNumber(tok.value.denominator,settings);
     },
     'decimal': function(tree,tok,bits,settings) {
         return jmeDecimal(tok.value,settings);

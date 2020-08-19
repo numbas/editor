@@ -510,7 +510,11 @@ $(document).ready(function() {
                         icons = [q.getTab(def.tab).icon];
                         break;
                     case 'part':
-                        icons = [q.getTab('parts').icon, def.part.getTab(def.tab).icon];
+                        icons = [q.getTab('parts').icon];
+                        var tab = def.part.getTab(def.tab);
+                        if(tab) {
+                            icons.push(tab.icon);
+                        }
                         break;
                 }
                 function go() {

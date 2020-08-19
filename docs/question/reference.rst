@@ -257,6 +257,10 @@ Definition
         The name of the variable. 
         See the :ref:`section on variable names <variable-names>`.
 
+        You can assign more than one variable at once by writing several names separated by commas.
+        The value must evaluate to a :data:`list`, or a type which can be converted to a :data:`list`.
+        For example, ``x,y`` in the :guilabel:`name` field and ``[1,2]`` would assign a variable ``x`` with the value ``1`` and ``y`` with the value ``2``.
+
     Data type
         Specify what type of data the variable should hold. 
         The :guilabel:`JME code` option allows you to define the variable using :doc:`/jme-reference` syntax, while the other options provide simplified forms.

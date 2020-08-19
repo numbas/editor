@@ -504,37 +504,38 @@ $(document).ready(function() {
             this.variable_references().forEach(function(r) {
                 var def = r.def;
                 var description = r.description();
+                var icons;
+                switch(def.kind) {
+                    case 'tab':
+                        icons = [q.getTab(def.tab).icon];
+                        break;
+                    case 'part':
+                        icons = [q.getTab('parts').icon, def.part.getTab(def.tab).icon];
+                        break;
+                }
+                function go() {
+                    switch(def.kind) {
+                        case 'tab':
+                            q.setTab(def.tab)();
+                            icon = q.getTab(def.tab).icon;
+                            break;
+                        case 'part':
+                            q.setTab('parts')();
+                            q.currentPart(def.part);
+                            def.part.setTab(def.tab)();
+                            icon = def.part.getTab(def.tab).icon;
+                            break;
+                    }
+                }
+                var ref = {
+                    description: description, 
+                    icons: icons, 
+                    go: go
+                };
                 r.vars().forEach(function(name) {
-                    var icons;
                     var v = q.getVariable(name);
                     if(v) {
-                        switch(def.kind) {
-                            case 'tab':
-                                icons = [q.getTab(def.tab).icon];
-                                break;
-                            case 'part':
-                                icons = [q.getTab('parts').icon, def.part.getTab(def.tab).icon];
-                                break;
-                        }
-                        function go() {
-                            switch(def.kind) {
-                                case 'tab':
-                                    q.setTab(def.tab)();
-                                    icon = q.getTab(def.tab).icon;
-                                    break;
-                                case 'part':
-                                    q.setTab('parts')();
-                                    q.currentPart(def.part);
-                                    def.part.setTab(def.tab)();
-                                    icon = def.part.getTab(def.tab).icon;
-                                    break;
-                            }
-                        }
-                        v.references.push({
-                            description: description, 
-                            icons: icons, 
-                            go: go
-                        });
+                        v.references.push(ref);
                     }
                 });
             });
@@ -692,7 +693,7 @@ $(document).ready(function() {
             name = name.toLowerCase();
             var variables = this.variables();
             for(var i = 0; i<variables.length;i++) {
-                if(variables[i].name().toLowerCase() == name) {
+                if(variables[i].names().find(function(x) { return x.name.toLowerCase()==name; })) {
                     return variables[i];
                 }
             }
@@ -788,7 +789,7 @@ $(document).ready(function() {
             var runs = 0;
             var maxRuns = this.variablesTest.maxRuns();
             while(runs<maxRuns && !conditionSatisfied) {
-                var results = this.computeVariables(prep);
+                results = this.computeVariables(prep);
                 conditionSatisfied = results.conditionSatisfied;
                 runs += 1;
             }
@@ -944,22 +945,26 @@ $(document).ready(function() {
         },
 
         computeVariables: function(prep) {
-            var result = {variables: {}};
+            var result = {variables: {}, conditionSatisfied: true};
             var jme = Numbas.jme;
             var scope = result.scope = new jme.Scope([prep.scope]);
             var todo = prep.todo;
 
-            function computeVariable(name) {
+            function computeVariable(name,todo,scope,path,computeFn) {
                 try {
-                    var value = jme.variables.computeVariable(name,todo,scope);
-                    result.variables[name] = {value: value};
+                    var value = jme.variables.computeVariable.apply(jme.variables, arguments);
+                    return value;
                 }
                 catch(e) {
-                    result.variables[name] = {error: e.message};
+                    name = todo[name].originalName || name;
+                    if(!result.variables[name]) {
+                        result.variables[name] = {error: e.message};
+                    }
                     result.error = true;
                 }
             }
 
+            /*
             if(prep.condition) {
                 var condition_vars = jme.findvars(prep.condition);
                 condition_vars.map(function(name) {
@@ -982,6 +987,19 @@ $(document).ready(function() {
                 {
                     computeVariable(x);
                 }
+            }
+            */
+
+            try {
+                var vresult = Numbas.jme.variables.makeVariables(todo,scope,prep.condition,computeVariable)
+                result.conditionSatisfied = vresult.conditionSatisfied;
+                Object.keys(vresult.variables).forEach(function(name) {
+                    result.variables[name] = result.variables[name] || {value: vresult.variables[name]};
+                });
+            } catch(e) {
+                console.error(e);
+                this.variablesTest.conditionError(e.message);
+                result.conditionSatisfied = false;
             }
 
             return result;
@@ -1510,6 +1528,7 @@ $(document).ready(function() {
     }
 
     function Variable(q,data) {
+        var v = this;
         this.question = q;
         this._name = ko.observable('');
         this.name = ko.pureComputed({
@@ -1520,41 +1539,77 @@ $(document).ready(function() {
                 return this._name(v);
             }
         },this);
+        this.names = ko.pureComputed(function() {
+            var jme = Numbas.jme;
+            var names = this.name().split(/\s*,\s*/);
+            var variables = q.variables();
+            var val = v.value();
+            if(names.length>1) {
+                if(val && jme.isType(val,'list')) {
+                    var values_list = jme.castToType(val,'list');
+                } 
+            }
+            return names.map(function(name,i) {
+                var d = {
+                    name: name,
+                    type: '',
+                    value: null
+                }
+
+                d.nameError = (function() {
+                    for(var i=0;i<variables.length;i++) {
+                        var v2 = variables[i];
+                        if(v2!=v && v2.name().toLowerCase()==name.toLowerCase()) {
+                            nameError = 'There\'s already a variable with the name '+name+'.';
+                        }
+                    }
+
+                    if(!re_name.test(name)) {
+                        return 'The variable name <code>'+name+'</code> is invalid.';
+                    }
+
+                    if(name.toLowerCase() in Numbas.jme.constants) {
+                        return 'The variable name <code>'+name+'</code> is reserved.';
+                    }
+
+                    var tokens = Numbas.jme.tokenise(name);
+                    if(tokens.length != 1) {
+                        return 'The variable name <code>'+name+'</code> is invalid.';
+                    }
+                    if(tokens[0].type != 'name') {
+                        return 'The variable name <code>'+name+'</code> is reserved.';
+                    }
+
+                    if(typeof Numbas.jme.builtinScope.getVariable(name) !== 'undefined'){
+                        return 'The variable name <code>'+name+'</code> is reserved.';
+                    }
+                })();
+
+                var item;
+                if(names.length==1) {
+                    var item = val;
+                } else if(values_list) {
+                    item = values_list.value[i]; 
+                }
+                if(item) {
+                    d.value = item;
+                    d.type = item.type;
+                }
+
+                return d;
+            });
+        },this);
         this.group = ko.observable(null);
         this.random = ko.observable(null);
         this.nameError = ko.pureComputed(function() {
-            var name = this.name();
-            if(name=='')
-                return '';
-
-            var variables = q.variables();
-            for(var i=0;i<variables.length;i++) {
-                var v = variables[i];
-                if(v!=this && v.name().toLowerCase()==name.toLowerCase())
-                    return 'There\'s already a variable with this name.';
-            }
-
-            if(!re_name.test(name)) {
-                return 'This variable name is invalid.';
-            }
-
-            if(name.toLowerCase() in Numbas.jme.constants) {
-                return 'This variable name is reserved.';
-            }
-
-            var tokens = Numbas.jme.tokenise(name);
-            if(tokens.length != 1) {
-                return 'This variable name is invalid.';
-            }
-            if(tokens[0].type != 'name') {
-                return 'This variable name is reserved.';
-            }
-
-            if(typeof Numbas.jme.builtinScope.getVariable(name) !== 'undefined'){
-                return 'This variable name is reserved.';
-            }
-
-            return '';
+            var name_errors = this.names().map(function(nd) {
+                var name = nd.name;
+                if(name=='') {
+                    return '';
+                }
+                return nd.nameError || '';
+            });
+            return name_errors.find(function(x) { return x; }) || '';
         },this);
 
         this.usedInTestCondition = ko.pureComputed(function() {
@@ -1654,9 +1709,9 @@ $(document).ready(function() {
             'json': {
                 value: ko.observable(''),
                 prettyPrint: function() {
-                    var v = this.templateTypeValues.json.value();
+                    var val = this.templateTypeValues.json.value();
                     try {
-                        var data = JSON.parse(v);
+                        var data = JSON.parse(val);
                         this.templateTypeValues.json.value(JSON.stringify(data,null,4));
                     } catch(e) {
                     }
@@ -1769,7 +1824,7 @@ $(document).ready(function() {
             return this.dependencies().map(function(name) {
                 var obj = q.getVariable(name);
                 if(obj) {
-                    name = obj.name();
+                    name = obj.names().find(function(n) { return n.name.toLowerCase()==name.toLowerCase() }).name;
                 }
                 var out = {
                     name: name,
@@ -1780,9 +1835,9 @@ $(document).ready(function() {
                         if(obj) {
                             q.currentVariable(obj);
                         } else {
-                            var v = q.addVariable();
-                            v.name(name);
-                            q.baseVariableGroup.variables.push(v);
+                            var nv = q.addVariable();
+                            nv.name(name);
+                            q.baseVariableGroup.variables.push(nv);
                         }
                     }
                 };
@@ -1790,12 +1845,22 @@ $(document).ready(function() {
             });
         },this);
         this.usedIn = ko.pureComputed(function() {
-            var v = this;
             return q.variables().filter(function(v2) {
-                return v2.dependencies().contains(v.name().toLowerCase());
+                return v.names().some(function(n) {
+                    return v2.dependencies().contains(n.name.toLowerCase());
+                });
             });
         },this);
         this.references = ko.observableArray([]);
+        this.unique_references = ko.pureComputed(function() {
+            var references = [];
+            this.references().forEach(function(ref) {
+                if(references.indexOf(ref)==-1) {
+                    references.push(ref);
+                }
+            });
+            return references;
+        },this);
         this.unused = ko.pureComputed(function() {
             return this.usedIn().length==0 && this.references().length==0;
         },this);
@@ -1815,11 +1880,11 @@ $(document).ready(function() {
         },this);
 
         this.type = ko.pureComputed(function() {
-            var v = this.value();
-            if(!v || this.error()) {
+            var val = this.value();
+            if(!val || this.error()) {
                 return '';
             }
-            return v.type;
+            return val.type;
         },this);
 
         this.thisLocked = ko.observable(false);
@@ -1849,22 +1914,25 @@ $(document).ready(function() {
         },this);
 
         this.display = ko.pureComputed(function() {
-            var v;
+            var val;
             if(this.anyError()) {
                 return this.anyError();
-            } else if(v = this.value()) {
-                return Editor.displayJMEValue(v);
+            } else if(val = this.value()) {
+                return Editor.displayJMEValue(val);
             } else {
                 return '';
             }
         },this);
         this.remove = function() {
-            q.variables.remove(this);
-            this.group().variables.remove(this);
-            if(this==q.currentVariable()) {
+            q.variables.remove(v);
+            v.group().variables.remove(v);
+            if(v==q.currentVariable()) {
                 q.selectFirstVariable();
             }
         };
+        this.makeCurrentVariable = function() {
+            q.currentVariable(v);
+        }
         if(data)
             this.load(data);
     }
@@ -3127,8 +3195,6 @@ $(document).ready(function() {
                         return mt.question();
                     }
                 } catch(e) {
-                    window.poop = variables;
-                    console.log(same_question,same_variables);
                     console.error(e);
                     throw(e);
                 }

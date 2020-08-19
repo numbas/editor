@@ -121,8 +121,8 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
             'form-INITIAL_FORMS': len(self.resources),
         }
         for i,rd in enumerate(self.resources):
-            data[f'form-{i}-id'] = rd['pk']
-            data[f'form-{i}-alt_text'] = rd['alt_text']
+            data['form-{}-id'.format(i)] = rd['pk']
+            data['form-{}-alt_text'.format(i)] = rd['alt_text']
         self.resources_form = ResourcesAltTextForm(data=data)
 
         if question_form.is_valid() and self.resources_form.is_valid():

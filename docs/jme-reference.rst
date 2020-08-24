@@ -975,6 +975,21 @@ Trigonometric functions all work in radians, and have as their domain the comple
         * :data:`number` → :data:`number`
         * :data:`decimal` → :data:`decimal`
 
+.. jme:function:: atan2(y,x)
+
+    The angle in radians between the positive :math:`x`-axis and the line through the origin and :math:`(x,y)`.
+    This is often equivalent to ``arctan(y/x)``, except when :math:`x \lt 0`, when :math:`pi` is either added or subtracted from the result.
+
+    **Definitions**:
+        * :data:`number`, :data:`number` → :data:`number`
+        * :data:`decimal`, :data:`decimal` → :data:`decimal`
+
+    **Examples**:
+        * ``atan2(0,1)`` → ``0``
+        * ``atan2(sin(1),cos(1))`` → ``1``
+        * ``atan2(sin(pi/4), cos(pi/4)) / pi`` → ``0.25``
+        * ``atan2(sin(pi/4), -cos(pi/4)) / pi`` → ``0.75``
+
 .. jme:function:: sinh(x)
 
     Hyperbolic sine: :math:`\sinh(x) = \frac{1}{2} \left( \mathrm{e}^x - \mathrm{e}^{-x} \right)`
@@ -1569,9 +1584,31 @@ Strings
     **Example**:
         * ``split("a,b,c,d",",")`` → ``["a","b","c","d"]``
 
+.. jme:function:: match_regex(pattern,str,flags)
+
+    If ``str`` matches the regular expression ``pattern``, returns a list of matched groups, otherwise returns an empty list.
+
+    This function uses `JavaScript regular expression syntax <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp>`_.
+
+    ``flags`` is an optional string listing the options flags to use.
+    If it's not given, the default value of ``"u"`` is used.
+
+    **Definitions**:
+        * :data:`string`, :data:`string` → :data:`list`
+        * :data:`string`, :data:`string`, :data:`string` → :data:`list`
+
+    **Examples**:
+        * ``match_regex("\\d+","01234")`` → ``["01234"]``
+        * ``match_regex("a(b+)","abbbb")`` → ``["abbbb","bbbb"]``
+        * ``match_regex("a(b+)","ABBBB")`` → ``[]``
+        * ``match_regex("a(b+)","ABBBB","i")`` → ``["ABBBB","BBBB"]``
+
 .. jme:function:: split_regex(string,pattern,flags)
 
     Split a string at every occurrence of a substring matching the given regular expression pattern, returning a list of the the remaining pieces.
+
+    ``flags`` is an optional string listing the options flags to use.
+    If it's not given, the default value of ``"u"`` is used.
 
     **Definitions**:
         * :data:`string`, :data:`string` → :data:`list`
@@ -1580,6 +1617,31 @@ Strings
     **Example**:
         * ``split_regex("a, b,c, d ",", *")`` → ``["a","b","c","d"]``
         * ``split_regex("this and that AND THIS"," and ","i")`` → ``["this","that","THIS"]``
+
+.. jme:function:: replace_regex(pattern,replacement,string,flags)
+
+    Replace a substring of ``string`` matching the given regular expression ``pattern`` with the string ``replacement``.
+
+    ``flags`` is an optional string listing the options flags to use.
+    If it's not given, the default value of ``"u"`` is used.
+
+    Remember that backslashes must be doubled up inside JME strings, and curly braces are normally used to substitute in variables.
+    You can use the :func:`safe` function to avoid this behaviour.
+
+    To replace all occurrences of the pattern, add the flag``"g"``.
+
+    **Definitions**:
+        * :data:`string`, :data:`string`, :data:`string` → :data:`string`
+        * :data:`string`, :data:`string`, :data:`string`, :data:`string`→ :data:`string`
+
+    **Example**:
+        * ``replace_regex("day","DAY","Monday Tuesday Wednesday")`` → ``"MonDAY Tuesday Wednesday"``
+        * ``replace_regex("day","DAY","Monday Tuesday Wednesday","g")`` → ``"MonDAY TuesDAY WednesDAY"``
+        * ``replace_regex("a","o","Aardvark")`` → ``"Aordvark"``
+        * ``replace_regex("a","o","Aardvark","i")`` → ``"oardvark"``
+        * ``replace_regex("a","o","Aardvark","ig")`` → ``"oordvork"``
+        * ``replace_regex(safe("(\\d+)x(\\d+)"),"$1 by $2","32x24")`` → ``"32 by 24"``
+        * ``replace_regex(safe("a{2}"),"c","a aa aaa")`` → ``"a c aaa"``
 
 .. jme:function:: trim(str)
 
@@ -1667,24 +1729,6 @@ Strings
         * ``letterordinal(0)`` → ``"a"``
         * ``letterordinal(1)`` → ``"b"``
         * ``letterordinal(26)`` → ``"aa"``
-
-.. jme:function:: match_regex(pattern,str,flags)
-
-    If ``str`` matches the regular expression ``pattern``, returns a list of matched groups, otherwise returns an empty list.
-
-    This function uses `JavaScript regular expression syntax <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp>`_.
-
-    ``flags`` is an optional string listing the options flags to use.
-
-    **Definitions**:
-        * :data:`string`, :data:`string` → :data:`list`
-        * :data:`string`, :data:`string`, :data:`string` → :data:`list`
-
-    **Examples**:
-        * ``match_regex("\\d+","01234")`` → ``["01234"]``
-        * ``match_regex("a(b+)","abbbb")`` → ``["abbbb","bbbb"]``
-        * ``match_regex("a(b+)","ABBBB")`` → ``[]``
-        * ``match_regex("a(b+)","ABBBB","i")`` → ``["ABBBB","BBBB"]``
 
 .. jme:function:: translate(str, arguments)
 

@@ -1628,7 +1628,7 @@ Strings
     Remember that backslashes must be doubled up inside JME strings, and curly braces are normally used to substitute in variables.
     You can use the :func:`safe` function to avoid this behaviour.
 
-    To replace all occurrences of the pattern, add the flag``"g"``.
+    To replace all occurrences of the pattern, add the flag ``"g"``.
 
     **Definitions**:
         * :data:`string`, :data:`string`, :data:`string` → :data:`string`

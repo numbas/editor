@@ -58,7 +58,7 @@ class JSONField(models.TextField):
 
         super(JSONField, self).__init__(*args, **kwargs)
 
-    def from_db_value(self, value, expression, connection, context):
+    def from_db_value(self, value, expression, connection):
         return load_json(value, self.load_kwargs)
 
     def to_python(self, value):

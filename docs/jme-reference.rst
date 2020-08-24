@@ -2704,11 +2704,17 @@ Sub-expressions
 
     ``parse(string)`` is a synonym for ``expression(string)``.
 
+    .. warning::
+
+        Note that the argument to ``expression`` is evaluated using the same rules as any other JME expression, so for example ``expression("2" + "x")`` is equivalent to ``expression("2x")``, not ``expression("2 + x")``.
+        A good way to construct a randomised sub-expression is using :func:`substitute`.
+
     **Definitions**:
         * :data:`string` → :data:`expression`
 
     **Example**:
         * `A question using randomly chosen variable names <https://numbas.mathcentre.ac.uk/question/20358/randomise-variable-names-expression-version/>`_.
+
 
 .. jme:function:: eval(expression, values)
 

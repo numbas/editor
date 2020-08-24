@@ -1351,8 +1351,7 @@ $(document).ready(function() {
                     'paste',
                     'searchreplace',
                     'table',
-                    'textcolor',
-                    'textpattern'
+                    'textcolor'
                 ]
                 .concat(tinymce_plugins);
 

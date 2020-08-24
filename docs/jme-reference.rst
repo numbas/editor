@@ -2828,7 +2828,7 @@ Sub-expressions
 
     ``rules`` is a list of names of rules to apply, given either as a string containing a comma-separated list of names, or a list of strings.
 
-    Unlike the `\\simplify`` command in content areas, the ``basic`` rule is not turned on by default.
+    Unlike the ``\\simplify`` command in content areas, the ``basic`` rule is not turned on by default.
 
     See :ref:`simplification-rules` for a list of rules available.
 

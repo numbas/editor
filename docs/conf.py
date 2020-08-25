@@ -19,8 +19,8 @@ master_doc = 'index'
 project = 'Numbas'
 copyright = '2012-2019, Newcastle University'
 
-version = '4.0'
-release = '4.0'
+version = '5.0'
+release = '5.0'
 
 import sphinx_rtd_theme
 html_theme = 'sphinx_rtd_theme'

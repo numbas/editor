@@ -19,6 +19,9 @@ You will be prompted to give your question a name, and to assign it to a project
 Call the question "Given a quantity per day, how many per week?"
 As this is your first question you should use the default project, which is your own workspace.
 
+There are two :ref:`modes <parts-mode>` for Numbas questions, determining how parts are presented to the student: :term:`Show all parts` and :ref:`Explore <explore-mode>`.
+For this question, use 'Show all parts'.
+
 .. figure:: screenshots/write-question/name-question.png
     :alt: Screenshot of the "create a new question" form. The name field contains "Given a quantity per day, how many per week?"
 
@@ -43,7 +46,7 @@ In the centre is the main editing interface.
 
 Every Numbas question consists of three sections: :ref:`Statement <statement>`, :ref:`Parts <parts>`, and :ref:`Advice <advice>`.
 In the Statement, the context for the question is given to the student.
-Parts are where the student enters their answers.
+Parts are where the student enters their answers: the student is shown some prompt text, and then a field to enter their response to the prompt.
 A question can have one or more parts, each of which is one of several types, depending on what kind of input you want from the student.
 Finally, the optional Advice section can be used to give a full solution to the question, which the student can request to see if they're stuck. 
 
@@ -77,26 +80,43 @@ Type:
 
 in the :guilabel:`Question statement` box.
 
+.. note::
+
+    Rich text editors such as the question statement box initially display a rendering of their contents.
+    Click on the box to start editing it.
+
 .. figure:: screenshots/write-question/statement.png
    :alt: Screenshot of the question statement editor. It contains the text "Chris eats 7 apples per day."
 
    Writing a question statement.
 
 Notice that you can click :guilabel:`Test run` to preview your question at any time.
+A new browser tab opens, showing the question as a student would see it.
+Switch back to the editor tab when you're ready to make more changes.
 
-If you run the question now, you'll see there is a statement, but nowhere to enter an answer.
-We need to create a number entry part.
+.. note::
+
+    There's no 'Save' button: the editor saves your changes automatically.
+    You'll see a little box saying *Saved* at the top of the screen each time your changes are saved.
+
+Parts
+-----
+
+If you run the question now, you'll see there is a statement, but no prompt to do anything and nowhere to enter an answer.
+
+Let's ask the student to work out how many apples Chris eats in a week.
 
 Go back to the editing window and click on :guilabel:`Parts` in the sidebar, or follow the navigation buttons at the bottom of the page, skipping past :guilabel:`Variables`, which we will consider later.
 
-Once on the Parts page, click on the :guilabel:`Add a part` button, and select :ref:`Number entry <number-entry>`.
+You're shown a list of part types.
+We want the student to give a number, so select :ref:`Number entry <number-entry>`.
 
 .. figure:: screenshots/write-question/add-part.png
    :alt: Screenshot of the interface to select a part type
 
    Selecting a part type.
 
-Every part has a :term:`Prompt`, which you can use to ask the student for the particular answer the part assesses.
+Every part has a :term:`Prompt` which you can use to tell the student how to answer the part.
 Type:
 
     How many apples does Chris eat per week?
@@ -144,6 +164,10 @@ Name it ``num_apples`` and select the data type
 :guilabel:`Random number from a range`.
 Choose numbers between 2 and 9 with step size 1.
 
+.. note::
+
+    Why not include 1 in this range? Because then we'd have to think about whether to write 'apple' or 'apples' in the prompt.
+
 The :guilabel:`description` field gives you more space to describe what the variable represents.
 This will be useful when you come back to the question.
 Write:
@@ -161,7 +185,7 @@ of the values that you can expect to be generated.
 Now it’s time to replace the number 7 in the question with the new variable.
 Variables can be substituted in using curly braces: ``{}``.
 
-Change the statement to use the new variable:
+Click on :guilabel:`Statement` in the sidebar, then change the statement to use the new variable:
 
     Chris eats {num_apples} apples per day.
 
@@ -171,7 +195,7 @@ Change the statement to use the new variable:
    Using the variable in the part's prompt.
 
 We also need to change the expected answer, which is currently hard-coded to 49.
-Go back to the :guilabel:`Marking settings` tab and change both minimum and maximum accepted value to ``7 * num_apples``.
+Click on :guilabel:`Parts` in the sidebar, then go back to the :guilabel:`Marking settings` tab and change both minimum and maximum accepted value to ``7 * num_apples``.
 
 .. figure:: screenshots/write-question/part-answer-randomised.png
    :alt: Screenshot of the "marking settings" tab. The minimum and maximum accepted value fields both contain "7 * num_apples".

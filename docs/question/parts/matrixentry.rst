@@ -141,3 +141,9 @@ This part type provides the following properties to the :data:`settings` object:
 
     :term:`Require trailing zeros?`
 
+Example
+#######
+
+A question in the Numbas demo demonstrates a variety of ways of using matrix entry parts.
+
+`Numbas demo: matrix entry part type <https://numbas.mathcentre.ac.uk/question/66182/numbas-demo-matrix-entry-part-type/>`_

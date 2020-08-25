@@ -5,6 +5,9 @@ Calculus students are typically given a table of 'standard integrals', which the
 
 `This leaflet from mathcentre <https://www.mathcentre.ac.uk/resources/Engineering%20maths%20first%20aid%20kit/latexsource%20and%20diagrams/8_7.pdf>`_ contains a typical table of standard integrals.
 
+Planning
+########
+
 What does this question assess?
 ===============================
 
@@ -23,7 +26,7 @@ Some ideas:
 
 We'll go with the last option, since it gives the student the most scope to come up with the answer on their own.
 
-They'll be shown the definition of a function `f(x)`.
+They'll be shown the definition of a function :math:`f(x)`.
 They must write the integral :math:`F(x) = \int f(x) \, \mathrm{d}x` with a constant of integration :math:`C`.
 
 How might the student get the answer wrong?
@@ -34,8 +37,10 @@ They might:
 * differentiate instead of integrating;
 * forget the constant of integration;
 * use a different letter for the constant of integration;
-* apply the wrong integral from a table of standard integrals;
-* 
+* apply the wrong integral from a table of standard integrals.
+
+We could detect these mistakes and give appropriate feedback.
+Other errors such as typos will be handled by Numbas' standard feedback routines.
 
 Sketch the structure of the question
 ====================================
@@ -58,35 +63,37 @@ We will add :ref:`alternative answers <alternative-answers>` corresponding to th
 The advice section could show the table of standard integrals, or just mention that this function is in the table the student has already been given, and then identify the given function along with its integral.
 
 Implementation
-==============
+##############
 
-Create a new question called *Recognise and apply a standard integral*.
+Create a new question called *Recognise and apply a standard integral*, in :guilabel:`Show all parts` mode.
 
 We will build the question up in stages, adding complexity as we go.
 
 The simplest version of this question
-#####################################
+=====================================
 
-To begin with, let's make a non-randomised version of the question. In the :ref:`statement <statement>`, write:
+To begin with, let's make a non-randomised version of the question. In the :ref:`statement <statement>`, write::
 
     Let $f(x) = x^3$.
 
-Then create a :ref:`mathematical expression <mathematical-expression>` part, with the following prompt:
+Then create a :ref:`mathematical expression <mathematical-expression>` part, with the following prompt::
 
     What is $\int f(x) \, \mathrm{d}x$?
 
     Use $C$ for the constant of integration.
 
-On the :guilabel:`Marking settings` tab, set the :term:`Correct answer` to ``x^4/4 + C``.
+On the :guilabel:`Marking settings` tab, set the :term:`correct answer <Correct answer>` to ``x^4/4 + C``.
 
 Next, we'll make alternative answers for each of the mistakes we expect to see.
-Click :guilabel:`Add an alternative answer`.
-In :guilabel:`Message if this alternative is used`, write:
+Click the :guilabel:`Add an alternative answer` button under this part on the right-hand side of the screen.
+
+In :guilabel:`Marking settings`, under :term:`correct answer <Correct answer>`, write ``x^4/4``.
+This alternative will be used if the student forgets to include the constant of integration but otherwise applies the correct standard integral.
+You might want to give some partial credit if the student makes this mistake - enter ``0.5`` in :guilabel:`Marks` to award half a mark.
+
+In :guilabel:`Feedback message`, under :guilabel:`Message if this alternative is used`, write::
 
     Did you forget to include a constant of integration?
-
-In :guilabel:`Marking settings`, under :term:`Correct answer`, write ``x^4/4``.
-This alternative will be used if the student forgets to include the constant of integration but otherwise applies the correct standard integral.
 
 Add another alternative, with correct answer ``3x^2`` for the case when the student differentiates instead of integrating.
 A student with a mechanical understanding of the rules might add on a constant of integration to this, so add a third alternative with correct answer ``3x^2 + C``.
@@ -95,7 +102,7 @@ It's a good idea to name alternatives so you can see from the parts list what ea
 Name the first alternative "Forgot constant of integration" and the other two "Differentiated - no constant" and "Differentiated - with constant".
 These names aren't shown to the student.
 
-Finally, in the question's :term:`Advice` tab, write a short explanation of the answer:
+Finally, in the question's :term:`Advice` tab, write a short explanation of the answer::
 
     $f(x) = x^3$.
 
@@ -115,7 +122,7 @@ This question works, but it only ever asks about one function, so isn't a good a
 We could randomly choose from 
 
 Introduce randomisation
-#######################
+=======================
 
 An easy way to add randomisation into this question is to randomise the power of :math:`x`.
 We'll define a :ref:`variable <variables>` ``k`` to represent the exponent, so the student has to integrate :math:`x^k`.
@@ -134,13 +141,13 @@ Fill out the :guilabel:`Value` field so it reads "A random number between ``2`` 
 
 Now we need to use this variable throughout the question.
 
-Change the statement to:
+Change the statement to::
 
     Let $f(x) = \simplify{ x^{k} }$.
 
 Change the term:`correct answer` for the mathematical expression part to ``1/{k+1} * x^{k+1} + C``, and make corresponding changes to the alternative answers.
 
-Finally, change the advice to:
+Finally, change the advice to::
 
     $f(x) = \simplify{ x^{k} }$.
 
@@ -157,14 +164,19 @@ Finally, change the advice to:
 Try this question out by clicking :guilabel:`Test run`.
 Confirm that everything works as you'd expect for different values of :math:`k`.
 
+.. note::
+
+    We've had to substitute randomised values in LaTeX maths notation.
+    It's not as straightforward as you might expect; see the page on :ref:`simplification-rules` for more detail.
+
 We have introduced some randomisation but we're still only asking about one entry in the table of standard integrals.
 
 Choose the function to integrate from a list
-############################################
+============================================
 
 Let's make the question randomly choose one of :math:`e^{kx}`, :math:`x^k`, :math:`\cos(kx)` or :math:`sin(kx)` as the function to integrate.
 
-There are two ways of doing this, each with different benefits of drawbacks.
+There are two ways of doing this, each with their own benefits and drawbacks.
 
 The first way is to work throughout the question with a long expression of the form :math:`c_1 e^{kx} + c_2x^k + c_3\cos(kx) + c_4\sin(kx)`, and define the :math:`c_i` coefficients so that only one of them has the value ``1``, and the rest ``0``.
 The simplifier will remove the terms with zero coefficient, leaving just one term to integrate.
@@ -188,7 +200,7 @@ Define a variable named ``c`` with the following JME code::
 
 This will produce a :data:`list` with one one and three zeros, in random order.
 
-Change the question statement to:
+Change the question statement to::
 
     Let $f(x) = \simplify{ {c[0]} * e^({k}x) + {c[1]} * x^{k} + {c[2]} * cos({k}x) + {c[3]}*sin({k}x) }$.
 
@@ -199,6 +211,8 @@ Change the :term:`correct answer` for the mathematical expression part to::
 Make corresponding changes to the alternative answers and the advice.
 
 To add another option for the function, we would have to add another zero to the list used in ``c``, and add another term to each occurrence of the long expression.
+
+You can see `a completed example of this method at numbas.mathcentre.ac.uk <https://numbas.mathcentre.ac.uk/question/68978/recognise-and-apply-a-standard-integral-random-coefficients-version/>`_.
 
 Method 2: Sub-expressions
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -236,11 +250,11 @@ Check that the variable preview shows an expression such as ``e^(2x)`` for the v
 
 Add two more variables, ``integral`` and ``derivative``, with definitions similar to that of ``function`` but using ``scenario[1]`` and ``scenario[2]`` respectively.
 
-Change the question statement:
+Change the question statement::
 
     Let $f(x) = \var{function}$.
 
-Set the correct answer for the mathematical expression part to:
+Set the correct answer for the mathematical expression part to::
 
     {integral} + C
 
@@ -255,7 +269,7 @@ and another variable ``generic_integral``::
 
     expression(scenario[1])
 
-Finally, rewrite the advice:
+Finally, rewrite the advice::
 
     $f(x) = \var{ {function} }$.
 
@@ -266,3 +280,21 @@ Finally, rewrite the advice:
     Here, $k = \var{k}$, so
 
     \[ \int f(x) \, \mathrm{d}x = \var{ {integral} } + C \] 
+
+You can see `a completed example of this method at numbas.mathcentre.ac.uk <https://numbas.mathcentre.ac.uk/question/68977/recognise-and-apply-a-standard-integral-subexpressions-version/>`_.
+
+Evaluation
+##########
+
+This question shows the student a randomly-chosen function to integrate, and gives appropriate feedback in response to some common mistakes.
+
+This question uses:
+
+* A :ref:`mathematical expression part <mathematical-expression>` to mark an expression entered by the student.
+* The ``\var`` and ``\simplify`` commands to `substitute randomised values into LaTeX code <simpification-rules>`.
+* :ref:`Alternative answers <alternative-answers>` to recognise answers corresponding to common mistakes and give appropriate feedback.
+* :ref:`JME Sub-expressions <jme-fns-subexpressions>` to randomly choose from a list of available functions, and substitute in a randomised value.
+
+For students who have trouble answering this question, you could add an :ref:`information only <information-only>` part as a :term:`step <Steps>` containing either a link to the table of standard integrals, or the table itself.
+
+A good question to follow this one might give the student an expression involving multiple terms to integrate, or use variables other than :math:`x` to check the depth of the student's understanding of symbolic integration.

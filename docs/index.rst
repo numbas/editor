@@ -42,6 +42,7 @@ If you have any questions, please `email us <mailto:numbas@ncl.ac.uk>`_ or join 
 
     authoring/planning-a-question
     authoring/how-do-i
+    authoring/example-gallery/index
 
 .. toctree::
     :caption: Reference

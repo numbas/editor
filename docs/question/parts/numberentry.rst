@@ -137,3 +137,11 @@ This part type provides the following properties to the :data:`settings` object:
 .. data:: precisionMessage
 
     A message to display in the marking feedback if the student's answer was not given to the required precision.
+
+Example
+#######
+
+A question in the Numbas demo demonstrates a variety of ways of using number entry parts.
+
+`Numbas demo: number entry part type <https://numbas.mathcentre.ac.uk/question/66165/numbas-demo-number-entry-part-type/>`_
+

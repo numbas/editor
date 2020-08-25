@@ -2740,6 +2740,13 @@ For an example of how you can use JSON data in a Numbas question, see the exam `
 Sub-expressions
 ---------------
 
+The :data:`expression` data type represents a JME expression.
+You can use it to store and manipulate expressions symbolically, substituting in other variables before evaluating or displaying to the student.
+
+There are functions to construct sub-expressions from strings of code, or by joining other sub-expressions together as the arguments to operators or functions.
+
+Once you've got a sub-expression, you can evaluate it to a normal JME data type, test if it matches a :ref:`pattern <pattern-matching>`, substitute values or other sub-expressions for free variables, rearrange using :ref:`simplification rules <simplification-rules>`, or test if it is equivalent to another sub-expression.
+
 .. jme:function:: expression(string)
 .. jme:function:: parse(string)
 

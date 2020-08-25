@@ -66,6 +66,10 @@ This part type provides the following properties to the :data:`settings` object:
 Examples
 ########
 
+A question in the Numbas demo demonstrates a variety of ways of using 'match text pattern' parts.
+
+`Numbas demo: match text pattern part type <https://numbas.mathcentre.ac.uk/question/66183/numbas-demo-match-text-pattern-part-type/>`_
+
 In the following examples, the variable ``name`` has the value ``Epictetus``
 
 Regular expressions

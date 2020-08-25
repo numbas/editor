@@ -198,3 +198,11 @@ This part type provides the following properties to the :data:`settings` object:
 
     :data:`string` form of a JME expression to produce a 2d array or matrix describing the layout when :data`layoutType` is ``"expression"``.
 
+Examples
+########
+
+The following questions in the Numbas demo demonstrate a variety of ways of using multiple choice parts.
+
+* `Numbas demo: choose one from a list part type <https://numbas.mathcentre.ac.uk/question/66185/numbas-demo-choose-one-from-a-list-part-type/>`_
+* `Numbas demo: choose several from a list part type <https://numbas.mathcentre.ac.uk/question/66212/numbas-demo-choose-several-from-a-list-part-type/>`_
+* `Numbas demo: match choices with answers part type <https://numbas.mathcentre.ac.uk/question/66215/numbas-demo-match-choices-with-answers-part-type/>`_

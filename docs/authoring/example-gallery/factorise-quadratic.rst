@@ -39,11 +39,9 @@ Now the *Prompt* for the part might go something like this:
 
 But that can produce unnatural expressions, like these:
 
-.. image:: screenshots/question/12.png
-    :alt: The expression "x^2 + -3x + -4".
+    :math:`x^2 + -3x + -4`
 
-.. image:: screenshots/question/13.png
-    :alt: The expression "x^2 + 0x + -8".
+    :math:`x^2 + 0x + -8`
 
 In the first, only a subtraction sign should be shown; in the second the x term should be omitted.
 

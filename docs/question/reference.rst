@@ -183,6 +183,8 @@ You can filter the list by typing keywords in the search box at the top.
 
 See :ref:`parts` for more on part settings.
 
+.. _parts-mode:
+
 Part display mode
 -----------------
 

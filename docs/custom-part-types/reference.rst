@@ -401,3 +401,10 @@ To publish a part type, click the :guilabel:`Publish` button in the :guilabel:`A
 
 You can unpublish a part type by clicking the :guilabel:`Unpublish` button. 
 It will no longer be available to other users when creating new parts, but any instances of the part in existing questions will remain in place.
+
+Examples
+========
+
+A question in the Numbas demo demonstrates a few custom part types.
+
+`Numbas demo: custom part types <https://numbas.mathcentre.ac.uk/question/66287/numbas-demo-custom-part-types/>`_

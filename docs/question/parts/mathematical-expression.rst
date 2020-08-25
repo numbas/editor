@@ -328,3 +328,10 @@ This part type provides the following properties to the :data:`settings` object:
 .. data:: notAllowedShowStrings
 
     Tell the students which strings must not be included in the marking feedback, if they've used a not-allowed string?
+
+Example
+#######
+
+A question in the Numbas demo demonstrates a variety of ways of using mathematical expression parts.
+
+`Numbas demo: mathematical expression part type <https://numbas.mathcentre.ac.uk/question/66159/numbas-demo-mathematical-expression-part-type/>`_

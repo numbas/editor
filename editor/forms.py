@@ -205,7 +205,7 @@ class QuestionForm(EditorItemForm):
 
 class NewQuestionForm(forms.ModelForm):
 
-    parts_mode = forms.ChoiceField(choices=(('all','Show all parts'),('explore','Explore')))
+    parts_mode = forms.ChoiceField(choices=(('all','Show all parts'),('explore','Explore')),widget=BootstrapSelect)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

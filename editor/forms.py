@@ -285,71 +285,48 @@ class ValidateZipField:
             raise forms.ValidationError('Uploaded file is not a zip file')
         return value
 
-class UpdateThemeForm(forms.ModelForm, ValidateZipField):
-    
-    """Form to edit a theme."""
-    
-    class Meta:
-        model = Theme
-        fields = ['name', 'zipfile']
-        widgets = {
-            'name': forms.TextInput(attrs={'class':'form-control'}),
-            'zipfile': forms.FileInput()
-        }
-        
-class NewThemeForm(UpdateThemeForm):
-    
-    """Form for a new theme."""
-    
-    def __init__(self, *args, **kwargs):
-        self._user = kwargs.pop('author')
-        super(NewThemeForm, self).__init__(*args, **kwargs)
 
-    def save(self, commit=True):
-        theme = super(NewThemeForm, self).save(commit=False)
-        theme.public = False
-        theme.author = self._user
-        if commit:
-            theme.save()
-            self.save_m2m()
-        return theme
-
-class EditExtensionForm(forms.ModelForm):
+class EditPackageForm(forms.ModelForm):
     
-    """Form to edit an extension."""
+    """Form to edit a file in a package."""
 
     source = forms.CharField(widget=forms.Textarea,required=False)
     filename = forms.CharField(widget=forms.HiddenInput)
     
     class Meta:
-        model = Extension
         fields = []
 
     def save(self, commit=True):
-        extension = super().save(commit=False)
+        package = super().save(commit=False)
         filename = self.cleaned_data.get('filename')
         if commit:
-            path = os.path.join(extension.extracted_path,filename)
+            path = os.path.join(package.extracted_path,filename)
             Path(path).parent.mkdir(parents=True,exist_ok=True)
             with open(path,'w',encoding='utf-8') as f:
                 f.write(self.cleaned_data.get('source'))
-        return extension
+        return package
 
-class ExtensionDeleteFileForm(forms.ModelForm):
+class EditExtensionForm(EditPackageForm):
+    class Meta(EditPackageForm.Meta):
+        model = Extension
+
+class PackageDeleteFileForm(forms.ModelForm):
     filename = forms.CharField(widget=forms.HiddenInput)
 
     class Meta:
-        model = Extension
         fields = []
 
     def save(self, commit=True):
-        extension = super().save(commit=False)
+        package = super().save(commit=False)
         filename = self.cleaned_data.get('filename')
         if commit:
-            print("DELETE FILE",filename)
-            path = os.path.join(extension.extracted_path,filename)
+            path = os.path.join(package.extracted_path,filename)
             os.remove(path)
-        return extension
+        return package
+
+class ExtensionDeleteFileForm(PackageDeleteFileForm):
+    class Meta(PackageDeleteFileForm.Meta):
+        model = Extension
 
 class UpdateExtensionForm(forms.ModelForm):
     
@@ -474,13 +451,106 @@ class AddExtensionAccessForm(UserSearchMixin, forms.ModelForm):
         m = super().save(commit=False)
         if commit:
             if m.user.pk:
-                # check if there's an existing ProjectAccess for this user & project
+                # check if there's an existing ExtensionAccess for this user & project
                 ea = editor.models.ExtensionAccess.objects.filter(extension=m.extension, user=m.user).first()
                 if ea is not None:
                     ea.access = m.access
                     m = ea
                 m.save()
         return m
+
+class EditThemeForm(EditPackageForm):
+    class Meta(EditPackageForm.Meta):
+        model = Theme
+
+class ThemeDeleteFileForm(PackageDeleteFileForm):
+    class Meta(PackageDeleteFileForm.Meta):
+        model = Theme
+
+ThemeAccessFormset = inlineformset_factory(editor.models.Theme, editor.models.ThemeAccess, fields=('access',), extra=0, can_delete=True)
+
+class AddThemeAccessForm(UserSearchMixin, forms.ModelForm):
+    invitation = None
+    adding_user = forms.ModelChoiceField(queryset=User.objects.all(), widget=forms.HiddenInput())
+
+    class Meta:
+        model = editor.models.ThemeAccess
+        fields = ('theme', 'access')
+        widgets = {
+            'theme': forms.HiddenInput(),
+            'access': forms.Select(attrs={'class':'form-control'})
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        user = cleaned_data.get('user_search')
+        if user == cleaned_data.get('theme').author:
+            raise forms.ValidationError("Can't give separate access to the theme's author")
+        return cleaned_data
+
+    def save(self, force_insert=False, force_update=False, commit=True):
+        m = super().save(commit=False)
+        if commit:
+            if m.user.pk:
+                # check if there's an existing ThemeAccess for this user & project
+                ea = editor.models.ThemeAccess.objects.filter(theme=m.theme, user=m.user).first()
+                if ea is not None:
+                    ea.access = m.access
+                    m = ea
+                m.save()
+        return m
+
+class UpdateThemeForm(forms.ModelForm, ValidateZipField):
+    
+    """Form to edit a theme."""
+    
+    class Meta:
+        model = Theme
+        fields = ['name', 'zipfile']
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control'}),
+            'zipfile': forms.FileInput()
+        }
+        
+class CreateThemeForm(UpdateThemeForm):
+    
+    """Form for a new theme."""
+    
+    def __init__(self, *args, **kwargs):
+        self._user = kwargs.pop('author')
+        super().__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        theme = super().save(commit=False)
+        theme.public = False
+        theme.author = self._user
+        if commit:
+            theme.save()
+            self.save_m2m()
+            theme.ensure_extracted_path_exists()
+            theme.write_file('README.md',\
+"""# {name}
+
+The author of this theme should write some documentation about how it works.""".format(name=theme.name))
+        return theme
+
+class UploadThemeForm(UpdateThemeForm):
+    
+    """Form to upload a theme."""
+    
+    def __init__(self, *args, **kwargs):
+        self._user = kwargs.pop('author')
+        super().__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        theme = super().save(commit=False)
+        theme.public = False
+        theme.author = self._user
+        if commit:
+            theme.save()
+            theme.extract_zip()
+            self.save_m2m()
+        return theme
 
 class UpdateCustomPartTypeForm(forms.ModelForm):
     

@@ -318,6 +318,8 @@ class ProjectAccess(models.Model, TimelineMixin):
     def timeline_object(self):
         return self.project
 
+    timeline_noun = 'project'
+
     def icon(self):
         return 'eye-open'
 
@@ -374,7 +376,40 @@ def validate_content(content):
     except Exception as err:
         raise ValidationError(err)
 
-class Extension(models.Model, ControlledObject):
+class EditablePackageMixin(object):
+    """
+    A package whose contents can be edited by users with the right access privileges.
+    Extensions and themes are editable packages.
+    """
+
+    package_noun = None
+
+    def filenames(self):
+        top = Path(self.extracted_path)
+        for d,dirs,files in os.walk(str(top)):
+            rd = Path(d).relative_to(top)
+            if str(rd)=='.' or not re.match(r'^\.',str(rd)):
+                for f in sorted(files,key=str):
+                    if not re.match(r'^\.',f):
+                        yield str(rd / f)
+
+    def write_file(self,filename,content):
+        root = os.path.abspath(self.extracted_path)
+        path = os.path.abspath(os.path.join(root,filename))
+        if not path.startswith(root+os.sep):
+            raise Exception("You may not write a file outside the {package_noun}'s directory".format(package_noun=self.package_noun))
+        with open(path,'w',encoding='utf-8') as f:
+            f.write(content)
+
+    @property
+    def readme_filename(self):
+        names = ['README.md','README.html','README']
+        for name in names:
+            if os.path.exists(os.path.join(self.extracted_path,name)):
+                return name
+
+
+class Extension(models.Model, ControlledObject, EditablePackageMixin):
     name = models.CharField(max_length=200, help_text='A human-readable name for the extension')
     location = models.CharField(default='', max_length=200, help_text='A unique identifier for this extension', verbose_name='Short name', blank=True, unique=True)
     url = models.CharField(max_length=300, blank=True, verbose_name='Documentation URL', help_text='Address of a page about the extension. Leave blank to use the README file.')
@@ -388,6 +423,10 @@ class Extension(models.Model, ControlledObject):
     runs_headless = models.BooleanField(default=True, help_text='Can this extension run outside a browser?')
 
     superuser_sees_everything = False
+
+    package_noun = 'extension'
+    timeline_noun = 'extension'
+
 
     class Meta:
         ordering = ['name']
@@ -447,13 +486,13 @@ class Extension(models.Model, ControlledObject):
         return d
 
     @property
-    def script_filename(self):
+    def main_filename(self):
         return self.location+'.js'
 
     @property
     def script_path(self):
         if self.editable:
-            filename = self.script_filename
+            filename = self.main_filename
             local_path = os.path.join(self.extracted_path, filename)
             if os.path.exists(local_path):
                 return settings.MEDIA_URL+self.zipfile_folder+'/extracted/'+str(self.pk)+'/'+self.location+'/'+filename
@@ -492,30 +531,6 @@ class Extension(models.Model, ControlledObject):
                 file.write(self.zipfile.file.read())
                 file.close()
 
-    def filenames(self):
-        top = Path(self.extracted_path)
-        for d,dirs,files in os.walk(str(top)):
-            rd = Path(d).relative_to(top)
-            if str(rd)=='.' or not re.match(r'^\.',str(rd)):
-                for f in sorted(files,key=str):
-                    if not re.match(r'^\.',f):
-                        yield str(rd / f)
-
-    def write_file(self,filename,content):
-        root = os.path.abspath(self.extracted_path)
-        path = os.path.abspath(os.path.join(root,filename))
-        if not path.startswith(root+os.sep):
-            raise Exception("You may not write a file outside the extension's directory")
-        with open(path,'w',encoding='utf-8') as f:
-            f.write(content)
-
-    @property
-    def readme_filename(self):
-        names = ['README.md','README.html','README']
-        for name in names:
-            if os.path.exists(os.path.join(self.extracted_path,name)):
-                return name
-
     def get_absolute_url(self):
         return reverse('extension_documentation',args=(self.pk,))
 
@@ -548,7 +563,7 @@ class ExtensionAccess(models.Model, TimelineMixin):
     def timeline_object(self):
         return self.extension
 
-class Theme(models.Model):
+class Theme(models.Model, ControlledObject, EditablePackageMixin):
     name = models.CharField(max_length=200)
     public = models.BooleanField(default=False, help_text='Can this theme be seen by everyone?')
     slug = models.SlugField(max_length=200, editable=False, unique=False)
@@ -557,14 +572,54 @@ class Theme(models.Model):
     zipfile_folder = 'user-themes'
     zipfile = models.FileField(upload_to=zipfile_folder+'/zips', max_length=255, verbose_name='Theme package', help_text='A .zip package containing the theme\'s files')
 
+    package_noun = 'theme'
+    timeline_noun = 'theme'
+
+    editable = True
+
     def __str__(self):
         return self.name
+
+    def can_be_viewed_by(self, user):
+        return self.public or super().can_be_viewed_by(user)
+
+    def has_access(self, user, levels):
+        if user.is_anonymous:
+            return False
+        if user==self.author:
+            return True
+        return ThemeAccess.objects.filter(theme=self, user=user, access__in=levels).exists()
+
+    @property
+    def owner(self):
+        return self.author
+
+    @classmethod
+    def filter_can_be_viewed_by(cls, user):
+        if getattr(settings, 'EVERYTHING_VISIBLE', False):
+            return Q()
+        
+        view_perms = ('edit', 'view')
+        if cls.superuser_sees_everything and user.is_superuser:
+            return Q()
+        elif user.is_anonymous:
+            return Q(public=True)
+        else:
+            return (Q(access__user=user, access__access__in=view_perms) 
+                    | Q(public=True)
+                    | Q(author=user)
+                   )
 
     @property
     def extracted_path(self):
         return os.path.join(os.getcwd(), settings.MEDIA_ROOT, self.zipfile_folder, 'extracted', str(self.pk))
 
+    @property
+    def main_filename(self):
+        return self.readme_filename
+
     def save(self, *args, **kwargs):
+        # TODO extract_zip etc.
         self.slug = slugify(self.name)
         super(Theme, self).save(*args, **kwargs)
 
@@ -573,6 +628,29 @@ class Theme(models.Model):
         os.makedirs(self.extracted_path)
         z = ZipFile(self.zipfile.file, 'r')
         z.extractall(self.extracted_path)
+
+    def get_absolute_url(self):
+        return reverse('theme_edit',args=(self.pk,))
+
+    def icon(self):
+        return 'sunglasses'
+
+class ThemeAccess(models.Model, TimelineMixin):
+    theme = models.ForeignKey('Theme', related_name='access', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='theme_accesses', on_delete=models.CASCADE)
+    access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
+
+    timelineitems = GenericRelation('TimelineItem', related_query_name='theme_accesses', content_type_field='object_content_type', object_id_field='object_id')
+    timelineitem_template = 'timeline/access.html'
+
+    def can_be_viewed_by(self, user):
+        return self.theme.can_be_viewed_by(user)
+
+    def can_be_deleted_by(self, user):
+        return self.theme.can_be_deleted_by(user)
+
+    def timeline_object(self):
+        return self.theme
 
 @receiver(signals.pre_delete, sender=Theme)
 def reset_theme_on_delete(sender, instance, **kwargs):
@@ -1347,7 +1425,8 @@ class Timeline(object):
                 Q(editoritems__accesses__in=self.viewing_user.item_accesses.all()) | 
                 Q(editoritems__project__in=projects) |
                 Q(projects__in=projects) |
-                Q(extension_accesses__user=viewing_user)
+                Q(extension_accesses__user=viewing_user) |
+                Q(theme_accesses__user=viewing_user)
             )
 
             view_filter = view_filter | items_for_user

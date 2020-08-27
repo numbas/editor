@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% load sanitizer %}
+{% load editable_package %}
+
+{% block title %}Documentation for {{object.package_noun}} "{{object.name}}" - {{block.super}}{% endblock title %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Documentation for {{object.package_noun}} <em>"{{object.name}}"</em></h1>
+    <p><a href="{% package_url 'edit_source' object.pk %}">See the source code</a></p>
+</div>
+
+<div class="content">
+    {{content|safe}}
+</div>
+{% endblock content %}

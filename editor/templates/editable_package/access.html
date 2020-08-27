@@ -1,5 +1,6 @@
-{% extends "extension/edit_base.html" %}
+{% extends "editable_package/edit_base.html" %}
 {% load user_link %}
+{% load editable_package %}
 
 {% block javascripts %}
 {{block.super}}
@@ -10,10 +11,10 @@
 </script>
 {% endblock %}
 
-{% block extension_edit_content %}
+{% block package_edit_content %}
     {% csrf_token %}
     <div class="panel panel-default">
-        <div class="panel-heading"><h3 class="panel-title">Who has access to this extension</h3></div>
+        <div class="panel-heading"><h3 class="panel-title">Who has access to this {{object.package_noun}}</h3></div>
         <form method="post" class="form-inline">
             <table class="table">
                 <thead>
@@ -25,7 +26,7 @@
                 </thead>
                 <tbody>
                     <tr class="member owner">
-                        <td>{% user_thumbnail extension.author 20 15 link=True %}{% user_link extension.author %}</td>
+                        <td>{% user_thumbnail object.author 20 15 link=True %}{% user_link object.author %}</td>
                         <td>Author</td>
                     </tr>
                     {% for uform in form %}
@@ -51,7 +52,7 @@
         </form>
         <div class="panel-heading"><h3 class="panel-title"><span class="glyphicon glyphicon-plus"></span> Give access to</h3></div>
         <div class="panel-body">
-            <form class="form-inline" action="{% url 'extension_add_access' extension.pk %}" method="post">
+            <form class="form-inline" action="{% package_url 'add_access' object.pk %}" method="post">
                 {% for field in add_access_form.hidden_fields %}{{field}}{% endfor %}
                 <div class="form-group">
                     <input type="text" class="form-control" id="{{add_access_form.user_search.auto_id}}" name="user_search" placeholder="Username or full name">
@@ -69,6 +70,6 @@
             </form>
         </div>
     </div>
-{% endblock extension_edit_content %}
+{% endblock package_edit_content %}
 
 

@@ -1,5 +1,14 @@
 {% extends "layout.html" %}
 
+{% block javascripts %}
+{{block.super}}
+<script type="text/javascript">
+    $(document).ready(function() {
+        Editor.tinymce({selector:'#id_description'});
+    });
+</script>
+{% endblock javascripts %}
+
 {% block title %}Edit theme "{{form.instance.name}}" - {{block.super}}{% endblock title %}
 
 {% block content %}

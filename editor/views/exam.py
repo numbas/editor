@@ -251,7 +251,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
             exam_dict['recentQuestions'] = []
             exam_dict['basketQuestions'] = []
 
-        custom_themes = Theme.objects.filter(public=True) | Theme.objects.filter(author=self.object.editoritem.author)
+        custom_themes = Theme.objects.filter(Theme.filter_can_be_viewed_by(self.request.user))
         if self.object.custom_theme:
             custom_themes |= Theme.objects.filter(pk=self.object.custom_theme.pk)
         context['themes'] = ([{'name': x[0], 'path': x[1], 'custom': False} for x in settings.GLOBAL_SETTINGS['NUMBAS_THEMES']] + 

@@ -1,7 +1,8 @@
-{% extends "extension/edit_base.html" %}
+{% extends "editable_package/edit_base.html" %}
+{% load editable_package %}
 
-{% block extension_edit_content %}
-<form action="{% url 'extension_edit' form.instance.pk %}" method="post" enctype="multipart/form-data">
+{% block package_edit_content %}
+<form action="{% package_url 'edit' form.instance.pk %}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {% for field in form %}
         <div class="form-group {% if field.errors %}has-error{% endif %}">
@@ -28,6 +29,6 @@
 {#{{ formset.management_form }}#}
 {{ formset.errors }}
 {#{{ formset.non_form_errors }}#}
-{% endblock extension_edit_content %}
+{% endblock package_edit_content %}
 
 

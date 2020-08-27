@@ -189,8 +189,15 @@ urlpatterns = [
     # Themes
 
     url(r'^theme/new/$', login_required(theme.CreateView.as_view()), name='theme_new'),
+    url(r'^theme/upload/$', login_required(theme.UploadView.as_view()), name='theme_upload'),
+    url(r'^themes/(?P<pk>\d+)/download$', login_required(theme.DownloadView.as_view()), name='theme_download'),
     url(r'^themes/(?P<pk>\d+)/edit$', login_required(theme.UpdateView.as_view()), name='theme_edit'),
+    url(r'^themes/(?P<pk>\d+)/edit_source$', login_required(theme.EditView.as_view()), name='theme_edit_source'),
+    url(r'^themes/(?P<pk>\d+)/documentation$', theme.DocumentationView.as_view(), name='theme_documentation'),
+    url(r'^themes/(?P<pk>\d+)/access$', login_required(theme.AccessView.as_view()), name='theme_access'),
+    url(r'^themes/(?P<theme_pk>\d+)/access/add$', login_required(theme.AddAccessView.as_view()), name='theme_add_access'),
     url(r'^themes/(?P<pk>\d+)/delete$', login_required(theme.DeleteView.as_view()), name='theme_delete'),
+    url(r'^themes/(?P<pk>\d+)/delete_file$', login_required(theme.DeleteFileView.as_view()), name='theme_delete_file'),
 
     # Extensions
 

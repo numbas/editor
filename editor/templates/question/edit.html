@@ -635,7 +635,7 @@
                         </div>
                         {% if editable and not user.is_anonymous %}
                         <div class="panel-footer">
-                            <a class="btn btn-link btn-block" target="_blank" href="{% url 'profile_extensions' user.pk %}"><span class="glyphicon glyphicon-wrench"></span> Your extensions</a>
+                            <a class="btn btn-link btn-block" target="_blank" href="{% url 'extension_list_profile' user.pk %}"><span class="glyphicon glyphicon-wrench"></span> Your extensions</a>
                         </div>
                         {% endif %}
                     </div>

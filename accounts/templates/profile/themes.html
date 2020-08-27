@@ -26,7 +26,7 @@
         {% if is_me %}
         <td class="text-center">
             <a class="btn btn-link" href="{% url 'theme_edit' theme.pk %}" title="Edit this theme"><span class="glyphicon glyphicon-pencil text-warning"></span></a>
-            <a class="btn btn-link" href="{{theme.zipfile.url}}" title="Download this theme"><span class="glyphicon glyphicon-download text-info"></span></a>
+            <a class="btn btn-link" href="{% url 'theme_download' theme.pk %}" title="Download this theme"><span class="glyphicon glyphicon-download text-info"></span></a>
             <a class="btn btn-link" href="{% url 'theme_delete' theme.pk %}" title="Delete this theme"><span class="glyphicon glyphicon-remove text-danger"></span></a>
         </td>
         {% endif %}

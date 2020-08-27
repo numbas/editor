@@ -1,8 +1,9 @@
-{% extends "extension/edit_base.html" %}
+{% extends "editable_package/edit_base.html" %}
 {% load helplink %}
+{% load editable_package %}
 
-{% block extension_edit_content %}
-    <form action="{% url 'extension_edit_source' form.instance.pk %}" method="POST">
+{% block package_edit_content %}
+    <form action="{% package_url 'edit_source' form.instance.pk %}" method="POST">
         {% csrf_token %}
         {% if editable %}
         <div class="form-group">
@@ -11,7 +12,7 @@
                 Save
             </button>
             {% if exists %}
-            <a class="btn btn-danger pull-right" href="{% url 'extension_delete_file' extension.pk %}?filename={{filename}}">
+            <a class="btn btn-danger pull-right" href="{% package_url 'delete_file' object.pk %}?filename={{filename}}">
                 <span class="glyphicon glyphicon-remove"></span>
                 Delete
             </a>
@@ -26,12 +27,12 @@
             {% if editable %}Editing {% endif %}<code>{{filename}}</code>
             {% if not exists %} (new file){% endif %}.
             {% if exists %}Last modified {{last_modified}}{% endif %}
-            {% if filename == extension.readme_filename %}
+            {% if filename == object.readme_filename %}
                 <span class="help-block help-block-inline">
-                    This file contains the <a href="{% url 'extension_documentation' extension.pk %}">documentation for this extension</a>.
+                    This file contains the <a href="{% package_url 'documentation' object.pk %}">documentation for this extension</a>.
                 </span>
             {% endif %}
-            {% if filename == extension.script_filename %}
+            {% if filename == object.main_filename %}
                 <span class="help-block help-block-inline">
                     This is the main script file for this extension.
                 </span>
@@ -48,7 +49,7 @@
             </div>
         {% endfor %}
     </form>
-{% endblock extension_edit_content %}
+{% endblock package_edit_content %}
 
 {% block stylesheets %}
     {{block.super}}
@@ -73,6 +74,7 @@
         var modes = {
             'js': 'javascript',
             'jme': 'jme',
+            'cpt': 'jme',
             'md': 'markdown',
             'html': 'htmlmixed',
             'css': 'css'

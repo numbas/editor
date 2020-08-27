@@ -28,7 +28,7 @@
     <div class="form-group">
         <div class="col-sm-offset-3 col-sm-9">
             <button type="submit" class="btn btn-primary">Submit</button>
-            <a class="btn btn-link" href="{% url 'profile_extensions' request.user.pk %}">Cancel</a>
+            <a class="btn btn-link" href="{% url 'extension_list_profile' request.user.pk %}">Cancel</a>
         </div>
     </div>
 </form>

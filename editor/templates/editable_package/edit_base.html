@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% load editable_package %}
+
+{% block title %}Edit {{object.package_noun}} "{{form.instance.name}}" - {{block.super}}{% endblock title %}
+
+{% block content_container %}container-fluid{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <p>
+    <a href="{% package_url 'list_profile' request.user.pk %}">Back to {{object.package_noun}}s</a>
+    </p>
+    <h1>
+        Edit {{object.package_noun}} <em>"{{form.instance.name}}"</em>
+    </h1>
+</div>
+
+<div class="col-sm-12 col-md-3 col-lg-2">
+    <p class="help-block">
+        <a class="helplink text-info" target="numbasquickhelp" href="{{HELP_URL}}extensions.html"><span class="glyphicon glyphicon-question-sign"></span> Help with writing {{object.package_noun}}s</a>
+    <div class="panel panel-default">
+        <ul class="list-group">
+            <a class="list-group-item{% if options_active %} active{% endif %}" href="{% package_url 'edit' object.pk %}"><span class="glyphicon glyphicon-cog"></span> Options</a>
+            {% if request.user == object.author %}
+            <a class="list-group-item{% if access_active %} active{% endif %}" href="{% package_url 'access' object.pk %}"><span class="glyphicon glyphicon-user"></span> Access</a>
+            {% endif %}
+        </ul>
+        {% if object.editable %}
+        <div class="panel-heading">Files</div>
+        <ul class="list-group">
+            {% for fname in filenames %}
+            <a class="list-group-item monospace {% if fname == filename %}active{% endif %}" href="{% package_url 'edit_source' object.pk %}?filename={{fname}}">{{fname}}</a>
+            {% endfor %}
+            <li class="list-group-item">
+                <form method="GET" action="{% package_url 'edit_source' object.pk %}" class="form-inline">
+                    <label>
+                        <span class="glyphicon glyphicon-plus"></span>
+                        New file: 
+                        <div class="input-group">
+                            <input class="form-control" name="filename">
+                            <span class="input-group-btn">
+                                <button class="btn btn-primary" title="Add a file"><span class="glyphicon glyphicon-plus"></span></button>
+                            </span>
+                        </div>
+                    </label>
+                </form>
+            </li>
+        </ul>
+        {% else %}
+        <div class="panel-body">
+            This {{object.package_noun}}'s source code is not editable.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="col-sm-12 col-md-9 col-lg-10">
+    {% block package_edit_content %}{% endblock %}
+</div>
+{% endblock content %}

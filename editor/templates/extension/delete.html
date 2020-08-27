@@ -12,7 +12,7 @@
     {% with object.question_set.all as used_in_exams %}
     <p>It's used in {{used_in_exams|length}} question{{used_in_exams|pluralize}}.</p>
     {% endwith %}
-    <p><button type="submit" class="btn btn-danger" title="Delete this extension">Yes</button> <a class="btn btn-default" title="Don't delete this extension" href="{% url 'profile_extensions' request.user.pk %}">No</a></p>
+    <p><button type="submit" class="btn btn-danger" title="Delete this extension">Yes</button> <a class="btn btn-default" title="Don't delete this extension" href="{% url 'extension_list_profile' request.user.pk %}">No</a></p>
 </form>
 {% endblock content %}
 

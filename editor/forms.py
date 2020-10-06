@@ -396,7 +396,7 @@ class CreateExtensionForm(forms.ModelForm):
             extension.save()
             self.save_m2m()
             extension.ensure_extracted_path_exists()
-            extension.write_file(extension.script_filename,\
+            extension.write_file(extension.main_filename,\
 """Numbas.addExtension('{location}',['jme'],function(extension) {{
   var scope = extension.scope;
 

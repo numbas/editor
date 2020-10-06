@@ -4514,7 +4514,7 @@ jme.inferExpressionType = function(tree,scope) {
         var tok = tree.tok;
         switch(tok.type) {
             case 'name':
-                return (assignments[tok.name] || tok).type;
+                return (assignments[tok.name.toLowerCase()] || tok).type;
             case 'op':
             case 'function':
                 var op = tok.name.toLowerCase();
@@ -12083,7 +12083,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
             }
         });
         this.display && this.display.updateNextParts();
-        this.display && this.question && this.question.signals.on(['ready','HTMLAttached'], function() {
+        this.display && this.question && this.question.signals.on(['ready','partsHTMLAttached'], function() {
             part.display.restoreAnswer(part.resume_stagedAnswer!==undefined ? part.resume_stagedAnswer : part.studentAnswer);
         })
         this.resuming = false;
@@ -13787,6 +13787,10 @@ var Question = Numbas.Question = function( number, exam, group, gscope, store)
  * @event Numbas.Question#ready
  */
 /** The question's HTML has been generated and attached to the page.
+ *
+ * @event Numbas.Question#mainHTMLAttached
+ */
+/** The entire question, including each part's HTML, has been generated and attached to the page.
  *
  * @event Numbas.Question#HTMLAttached
  */

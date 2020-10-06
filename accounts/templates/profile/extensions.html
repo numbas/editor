@@ -55,7 +55,7 @@
 {% if is_me %}
 <p>
     <a class="btn btn-primary" href="{% url 'extension_new' %}"><span class="glyphicon glyphicon-plus"></span> Create a new extension</a>
-    <a class="btn btn-primary" href="{% url 'extension_new' %}"><span class="glyphicon glyphicon-upload"></span> Upload a new extension</a>
+    <a class="btn btn-primary" href="{% url 'extension_upload' %}"><span class="glyphicon glyphicon-upload"></span> Upload a new extension</a>
 </p>
 {% else %}
 <p class="nothing-here">{{view_user.first_name}} hasn't uploaded any extensions yet.</p>

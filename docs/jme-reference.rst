@@ -288,7 +288,7 @@ The following examples illustrate how this works.
       - The ``1`` is converted to a :data:`number`, and then added to ``3.3``.
     * - ``1+1/2``
       - :data:`rational`
-      - :data:`integer` prefers to convert to :data:`rational` over 
+      - :data:`integer` prefers to convert to :data:`rational` over :data:`number`.
     * - ``1.23+dec("1.2")``
       - :data:`decimal`
       - :data:`decimal` values are preferred to :data:`number` because they're more precise.
@@ -408,6 +408,7 @@ Arithmetic
     **Definitions**:
         * :data:`number`, :data:`number` → :data:`number`
         * :data:`integer`, :data:`integer` → :data:`number`
+        * :data:`rational`, :data:`integer` → :data:`rational`
         * :data:`decimal`, :data:`decimal` → :data:`decimal`
 
     **Examples**:
@@ -436,6 +437,16 @@ Number operations
     **Definitions**:
         * :data:`number` → :data:`decimal`
         * :data:`string` → :data:`decimal`
+
+.. jme:function:: rational(n)
+
+    Convert ``n`` to a rational nubmer, taking an approximation when necessary.
+
+    **Definition**:
+        * :data:`number` → :data:`rational`
+        
+    **Example**:
+        * ``rational(pi)`` → ``355/113``
 
 .. jme:function:: int(n)
 

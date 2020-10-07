@@ -512,9 +512,16 @@ class UpdateThemeForm(forms.ModelForm, ValidateZipField):
             'zipfile': forms.FileInput()
         }
         
-class CreateThemeForm(UpdateThemeForm):
+class CreateThemeForm(forms.ModelForm):
     
     """Form for a new theme."""
+
+    class Meta:
+        model = Theme
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control'}),
+        }
     
     def __init__(self, *args, **kwargs):
         self._user = kwargs.pop('author')
@@ -531,7 +538,7 @@ class CreateThemeForm(UpdateThemeForm):
             theme.write_file('README.md',\
 """# {name}
 
-The author of this theme should write some documentation about how it works.""".format(name=theme.name))
+The author of this theme should write some documentation about what it's for.""".format(name=theme.name))
         return theme
 
 class UploadThemeForm(UpdateThemeForm):

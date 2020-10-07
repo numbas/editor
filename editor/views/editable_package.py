@@ -102,8 +102,8 @@ class EditView(ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
 
         messages.info(self.request,
             "The file <code>{filename}</code> has been saved. "
-            "If you're editing any items using this package, you'll need to reload the editor for changes to take effect."
-            .format(filename=self.get_filename())
+            "If you're editing any items using this {package_noun}, you'll need to reload the editor for changes to take effect."
+            .format(filename=self.get_filename(), package_noun=self.object.package_noun)
         )
         return super().form_valid(form)
 
@@ -166,10 +166,11 @@ class DocumentationView(CanViewMixin, generic.DetailView):
 
         package = self.get_object()
         readme_filename = package.readme_filename
-        if readme_filename is None:
+        readme_path = os.path.join(package.extracted_path,readme_filename)
+        if readme_filename is None or not os.path.exists(readme_path):
             content = "The author of this package has not written any documentation yet."
         else:
-            with open(os.path.join(package.extracted_path,readme_filename),encoding='utf-8') as f:
+            with open(readme_path,encoding='utf-8') as f:
                 content = f.read()
 
             _,ext = os.path.splitext(readme_filename)

@@ -13,6 +13,6 @@
     <p>It's used in {{used_in_exams|length}} exam{{used_in_exams|pluralize}}.</p>
     {% endwith %}
 
-    <p><button type="submit" class="btn btn-danger" title="Delete this theme">Yes</button> <a class="btn btn-default" title="Don't delete this theme" href="{% url 'profile_themes' request.user.pk %}">No</a></p>
+    <p><button type="submit" class="btn btn-danger" title="Delete this theme">Yes</button> <a class="btn btn-default" title="Don't delete this theme" href="{% url 'theme_list_profile' request.user.pk %}">No</a></p>
 </form>
 {% endblock content %}

@@ -94,4 +94,4 @@ class DeleteView(AuthorRequiredMixin, generic.DeleteView):
     template_name = 'theme/delete.html'
 
     def get_success_url(self):
-        return reverse('profile_themes', args=(self.request.user.pk,))
+        return reverse('theme_list_profile', args=(self.request.user.pk,))

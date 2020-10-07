@@ -29,10 +29,10 @@
             {% if exists %}Last modified {{last_modified}}{% endif %}
             {% if filename == object.readme_filename %}
                 <span class="help-block help-block-inline">
-                    This file contains the <a href="{% package_url 'documentation' object.pk %}">documentation for this extension</a>.
+                    This file contains the <a href="{% package_url 'documentation' object.pk %}">documentation for this {{object.package_noun}}</a>.
                 </span>
             {% endif %}
-            {% if filename == object.main_filename %}
+            {% if filename == object.main_filename and object.package_noun == 'extension' %}
                 <span class="help-block help-block-inline">
                     This is the main script file for this extension.
                 </span>

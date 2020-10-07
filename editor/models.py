@@ -402,12 +402,24 @@ class EditablePackageMixin(object):
             f.write(content)
 
     @property
+    def extracted_path(self):
+        return os.path.join(settings.MEDIA_ROOT, self.zipfile_folder, 'extracted', str(self.pk), self.location)
+
+    def ensure_extracted_path_exists(self):
+        if os.path.exists(self.extracted_path):
+            shutil.rmtree(self.extracted_path)
+        os.makedirs(self.extracted_path)
+
+    @property
     def readme_filename(self):
         names = ['README.md','README.html','README']
         for name in names:
-            if os.path.exists(os.path.join(self.extracted_path,name)):
+            if self.has_file(name):
                 return name
+        return names[0]
 
+    def has_file(self, filename):
+        return os.path.exists(os.path.join(self.extracted_path,filename))
 
 class Extension(models.Model, ControlledObject, EditablePackageMixin):
     name = models.CharField(max_length=200, help_text='A human-readable name for the extension')
@@ -452,7 +464,6 @@ class Extension(models.Model, ControlledObject, EditablePackageMixin):
     @property
     def owner(self):
         return self.author
-
 
     @classmethod
     def filter_can_be_viewed_by(cls, user):
@@ -505,7 +516,7 @@ class Extension(models.Model, ControlledObject, EditablePackageMixin):
     @property
     def extracted_path(self):
         if self.editable:
-            return os.path.join(settings.MEDIA_ROOT, self.zipfile_folder, 'extracted', str(self.pk), self.location)
+            return super().extracted_path
         else:
             return os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'], 'extensions', self.location)
 
@@ -513,23 +524,19 @@ class Extension(models.Model, ControlledObject, EditablePackageMixin):
         self.slug = slugify(self.name)
         super(Extension, self).save(*args, **kwargs)
 
-    def ensure_extracted_path_exists(self):
-        if os.path.exists(self.extracted_path):
-            shutil.rmtree(self.extracted_path)
-        os.makedirs(self.extracted_path)
-
     def extract_zip(self):
-        if self.zipfile:
-            self.ensure_extracted_path_exists()
+        if not self.zipfile:
+            return
+        self.ensure_extracted_path_exists()
 
-            _, extension = os.path.splitext(self.zipfile.name)
-            if extension.lower() == '.zip':
-                z = ZipFile(self.zipfile.file, 'r')
-                z.extractall(self.extracted_path)
-            elif extension.lower() == '.js':
-                file = open(os.path.join(self.extracted_path, self.location+'.js'), 'wb')
-                file.write(self.zipfile.file.read())
-                file.close()
+        _, extension = os.path.splitext(self.zipfile.name)
+        if extension.lower() == '.zip':
+            z = ZipFile(self.zipfile.file, 'r')
+            z.extractall(self.extracted_path)
+        elif extension.lower() == '.js':
+            file = open(os.path.join(self.extracted_path, self.location+'.js'), 'wb')
+            file.write(self.zipfile.file.read())
+            file.close()
 
     def get_absolute_url(self):
         return reverse('extension_documentation',args=(self.pk,))
@@ -616,16 +623,21 @@ class Theme(models.Model, ControlledObject, EditablePackageMixin):
 
     @property
     def main_filename(self):
-        return self.readme_filename
+        if self.has_file('inherit.txt'):
+            return 'inherit.txt'
+        else:
+            return self.readme_filename
 
     def save(self, *args, **kwargs):
-        # TODO extract_zip etc.
         self.slug = slugify(self.name)
         super(Theme, self).save(*args, **kwargs)
 
-        if os.path.exists(self.extracted_path):
-            shutil.rmtree(self.extracted_path)
-        os.makedirs(self.extracted_path)
+    def extract_zip(self):
+        if not self.zipfile:
+            return
+
+        self.ensure_extracted_path_exists()
+
         z = ZipFile(self.zipfile.file, 'r')
         z.extractall(self.extracted_path)
 

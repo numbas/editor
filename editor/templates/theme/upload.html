@@ -1,24 +1,13 @@
 {% extends "layout.html" %}
 
-{% block javascripts %}
-{{block.super}}
-<script type="text/javascript">
-    $(document).ready(function() {
-        Editor.tinymce({selector:'#id_description'});
-    });
-</script>
-{% endblock javascripts %}
-
-{% block title %}Edit theme "{{form.instance.name}}" - {{block.super}}{% endblock title %}
+{% block title %}Upload a theme - {{block.super}}{% endblock title %}
 
 {% block content %}
 <div class="page-header">
-    <h1>Edit theme <em>"{{form.instance.name}}"</em></h1>
+    <h1>Upload a theme</h1>
 </div>
 
-{% if error %}<p><strong>{{ error }}</strong></p>{% endif %}
-
-<form class="form-horizontal" action="{% url 'theme_edit' form.instance.pk %}" method="post" enctype="multipart/form-data">
+<form class="form-horizontal" action="{% url 'theme_upload' %}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {% for field in form %}
         <div class="form-group {% if field.errors %}has-error{% endif %}">
@@ -38,8 +27,8 @@
     {% endfor %}
     <div class="form-group">
         <div class="col-sm-offset-3 col-sm-9">
-            <button type="submit" class="btn btn-primary">Update</button>
-            <a class="btn btn-link" href="{% url 'profile_themes' request.user.pk %}">Cancel</a>
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <a class="btn btn-link" href="{% url 'theme_list_profile' request.user.pk %}">Cancel</a>
         </div>
     </div>
 </form>

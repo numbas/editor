@@ -8,10 +8,20 @@ JME
 JME expressions are used by students to enter answers to algebraic questions, and by question authors to define variables.
 JME syntax is similar to what you'd type on a calculator.
 
+.. _jme-syntax:
+
+Syntax
+******
+
+Expressions are strings of text, made of *variable names*, *literal values*, *grouped terms*, *function applications*, *operators*, *collections* and *indices*.
+
+Whitespace (space characters, tabs, newlines, etc.) can be used to separate literal values, for example ``a 2`` is not interpreted the same as ``a2``. 
+For all other purposes, whitespace is ignored.
+
 .. _variable-names:
 
 Variable names
-***************
+--------------
 
 Variable names are case-insensitive, so ``y`` represents the same thing as ``Y``.
 The first character of a variable name must be an alphabet letter; after that, any combination of letters, numbers and underscores is allowed, with any number of ``'`` on the end.
@@ -36,7 +46,7 @@ This screencast describes which variable names are valid, and gives some advice 
 .. _variable-annotations:
 
 Variable name annotations
--------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Names can be given annotations to change how they are displayed.
 The following annotations are built-in:
@@ -56,6 +66,132 @@ For example, ``v:dot:x`` produces a bold *x* with a dot on top: :math:`\boldsymb
 
 Names with different annotations are considered to represent different values, for the purpose of simplification and evaluation.
 For example, in the expression ``dot:x + x``, the two terms will not be collected together.
+
+Literal values
+--------------
+
+:data:`boolean`, :data:`integer`, :data:`number` and :data:`string` data types can be constructed with literal values.
+
+**Examples**: ``true``, ``1``, ``4.3``, ``"Numbas"``
+
+There are also some built-in constants which are interpreted as number values:
+
+* ``pi`` or ``π`` - the ratio of a circle's circumference to its diameter;
+* ``e`` - the base of the natural logarithm;
+* ``i`` - the square root of -1;
+* ``infinity``, ``infty`` or ``∞`` - infinity;
+* ``nan`` - "Not a number", sometimes returned by JavaScript functions.
+
+Grouped terms
+-------------
+
+Use parentheses ``( )`` to group terms.
+For example::
+
+    (a+2)(a+1)
+
+No other symbols can be used to group terms - square brackets ``[ ]`` and curly braces ``{ }`` have other meanings in Numbas.
+
+Function application
+--------------------
+
+A name followed immediately by a bracketed group is interpreted as a function application.
+Function names can be :ref:`annotated <variable-annotations>` similarly to variables.
+
+A function takes one or more *arguments*, separated by commas.
+Each argument is a JME expression.
+
+**Examples**:
+    * ``f(x)``
+    * ``g(a,b)``
+
+Operators
+---------
+
+There are three kinds of operators:
+
+.. glossary::
+
+    Binary
+
+        A symbol written between two terms, for example ``a + b`` (":math:`a` plus :math:`b`").
+        Each binary operator has a *precedence* which determines when it is evaluated in relation to other operators.
+
+    Prefix
+    
+        A symbol written to the left of a term, for example ``!a`` ("not :math:`a`").
+
+    Postfix
+
+        A symbol written to the right of a term, for example ``a!`` (":math:`a` factorial").
+
+Relations
+^^^^^^^^^
+
+Some binary operators are marked as *relations*.
+Relations can be chained together, for example ``a<b<c`` is interpreted as ``a<b and b<c``.
+
+The relation operators are ``<``, ``<=``, ``>``, ``>=``, ``=``, ``<>`` and ``in``.
+
+Collections
+-----------
+
+There are two kinds of collection: *lists* and *dictionaries*.
+
+Both are written as a series of terms written between square brackets and separated by commas.
+
+For a dictionary, each term is a :data:`keypair`: a variable name or string followed by a colon and an expression.
+For example, ``[a: 1, "first name": "Owen"]`` is a dictionary with keys ``"a"`` and ``"first name"``.
+
+A collection made of any other kind of term is interpreted as a :data:`list`.
+
+An empty pair of brackets ``[]`` is interpreted as an empty :data:`list`.
+To construct an empty dictionary, use ``dict()``.
+
+**Examples**:
+    * ``[1,2,3]``
+    * ``[a]``
+    * ``[]``
+
+Indices
+-------
+
+Many :ref:`JME data types <jme-data-types>` support indexing.
+
+An index is a single term inside square brackets immediately following another term.
+
+The first element in a list has index ``0``.
+
+Negative indices read from the end: the index ``-1`` corresponds to the last item.
+
+**Examples**:
+    * ``[1,2,3][0]`` produces the first element in the list, ``1``.
+    * ``x[3..7]`` produces the fourth to the eighth elements of the list ``x``.
+    * ``id(4)[1]`` produces the second row of a :math:`4 \times 4` identity matrix, ``vector(0,1,0,0)``.
+    * ``info["name"]`` returns the value corresponding to the key ``"name"`` in the dictionary ``info``.
+    * ``"Numbas"[0]`` produces the first letter of the string ``"Numbas"``, ``"N"``.
+
+Implicit multiplication
+-----------------------
+
+JME supports implicit multiplication in some cases, allowing you to omit the multiplication symbol:
+
+* A bracket followed by an :data:integer`, :data:`number` or :data:`name`.
+* An :data:`integer`, :data:`number` or :data:`name` followed by a :data:`name`.
+
+**Examples**:
+    * ``(a+1)2 = (a+1)*2``
+    * ``(x+y)z = (x+y)*z``
+    * ``2x = 2*x``
+    * ``x y = x*y``
+
+.. warning::
+    Note that a name followed by a bracket is not always interpreted as implicit multiplication.
+    Instead, it's interpreted as a function application.
+
+    To interpret such expressions as products, in a mathematical expression part turn off the :term:`Allow unknown function names?` option, and when dealing with :data:`expression` values, use :jme:func:`expand_juxtapositions`.
+
+
 
 .. _jme-data-types:
 

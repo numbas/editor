@@ -758,24 +758,38 @@ Number operations
     Greatest of the given numbers.
 
     **Definitions**:
-        * :data:`number`, :data:`number` → :data:`number` - return the greatest of the two numbers.
-        * :data:`list` → :data:`number` - return the greatest number in the list.
+        * :data:`number`, :data:`number` → :data:`number`
+        * list of :data:`number` → :data:`number`
+        * :data:`integer`, :data:`integer` → :data:`integer`
+        * list of :data:`integer` → :data:`integer`
+        * :data:`rational`, :data:`rational` → :data:`rational`
+        * list of :data:`rational` → :data:`rational`
+        * :data:`decimal`, :data:`decimal` → :data:`decimal`
+        * list of :data:`decimal` → :data:`decimal`
 
     **Example**:
         * ``max(46,2)`` → ``46``
         * ``max([1,2,3])`` → ``3``
 
 .. jme:function:: min(a,b)
+        min(numbers)
 
     Least of the given numbers.
 
     **Definitions**:
-        * :data:`number`, :data:`number` → :data:`number` - return the least of the two numbers.
-        * :data:`list` → :data:`number` - return the lowest number in the list.
+        * :data:`number`, :data:`number` → :data:`number`
+        * list of :data:`number` → :data:`number`
+        * :data:`integer`, :data:`integer` → :data:`integer`
+        * list of :data:`integer` → :data:`integer`
+        * :data:`rational`, :data:`rational` → :data:`rational`
+        * list of :data:`rational` → :data:`rational`
+        * :data:`decimal`, :data:`decimal` → :data:`decimal`
+        * list of :data:`decimal` → :data:`decimal`
 
     **Example**:
         * ``min(3,2)`` → ``2``
         * ``min([1,2,3])`` → ``1``
+        * ``min(1/2, 2/3)`` → ``1/2``
 
 .. jme:function:: clamp(x,a,b)
 

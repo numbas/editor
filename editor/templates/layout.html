@@ -4,10 +4,6 @@
 {% block javascripts %}
     {{block.super}}
 
-    <script>
-        var is_logged_in = {% if request.user.is_authenticated %}true{% else %}false{% endif %};
-    </script>
-
     <script src="{% sstatic 'tiny_mce/jquery.tinymce.min.js' %}" type="text/javascript"></script>
     <script src="{% sstatic 'tiny_mce/tinymce.min.js' %}" type="text/javascript"></script>
 

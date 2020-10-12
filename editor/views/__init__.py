@@ -1,14 +1,18 @@
-from django.conf import settings
-from django.views.generic import TemplateView
-from django.db.models import Q, Sum, When, Case, IntegerField
-from editor.models import SiteBroadcast
-from django.utils.timezone import now
-from datetime import timedelta
-from editor.models import EditorItem, NewQuestion, NewExam, Project, Extension, Theme, CustomPartType, TimelineItem, Tip
-from django.contrib.auth.models import User
+from accounts.util import find_users, user_json
 from collections import defaultdict
-import re
+from datetime import timedelta
+from django.conf import settings
+from django.contrib.auth.models import User
+from django.db.models import Q, Sum, When, Case, IntegerField
+from django.http import Http404, HttpResponse
+from django.template.loader import get_template
+from django.urls import reverse
+from django.utils.timezone import now
+from django.views.generic import TemplateView, ListView
+from editor.models import SiteBroadcast, EditorItem, NewQuestion, NewExam, Project, Extension, Theme, CustomPartType, TimelineItem, Tip
+import json
 from random import shuffle, randint
+import re
 
 class HomeView(TemplateView):
     template_name = 'index.html'
@@ -106,3 +110,30 @@ class ExploreView(TemplateView):
         context['items'] = EditorItem.objects.filter(published=True).order_by('-published_date')[:3]
         context['projects'] = Project.objects.filter(public_view=True).annotate(num_items=Sum(Case(When(items__published=True,then=1),default=0,output_field=IntegerField()))).order_by('-num_items').exclude(num_items=0)[:3]
         return context
+
+class TopSearchView(ListView):
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.is_ajax():
+            return HttpResponse(json.dumps(context['object_list']),
+                                content_type='application/json',
+                                **response_kwargs)
+        raise Http404
+    
+    def get_queryset(self):
+        search_term = self.request.GET['q']
+        items = []
+
+        most_of_each = 5
+
+        users = find_users(name=search_term)[:most_of_each]
+        items += [user_json(u) for u in users]
+
+        projects = Project.objects.filter(Project.filter_can_be_viewed_by(self.request.user)).filter(name__contains=search_term)[:most_of_each]
+        for p in projects:
+            items.append({
+                'id': p.pk,
+                'profile': reverse('project_index',args=(p.pk,)),
+                'name': p.name,
+                'autocomplete_entry': get_template('autocomplete/project.html').render({'project':p}),
+            })
+        return items

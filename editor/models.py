@@ -301,8 +301,24 @@ class Project(models.Model, ControlledObject):
         else:
             return None
 
+    @classmethod
+    def filter_can_be_viewed_by(cls, user):
+        if getattr(settings, 'EVERYTHING_VISIBLE', False):
+            return Q()
+        
+        view_perms = ('edit', 'view')
+        if user.is_superuser and cls.superuser_sees_everything:
+            return Q()
+        elif user.is_anonymous:
+            return Q(public_view=True)
+        else:
+            return (Q(projectaccess__user=user, projectaccess__access__in=view_perms) 
+                    | Q(public_view=True) 
+                    | Q(owner=user)
+                   )
+
 class ProjectAccess(models.Model, TimelineMixin):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='projectaccess')
     user = models.ForeignKey(User, related_name='project_memberships', on_delete=models.CASCADE)
     access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
 

@@ -2253,7 +2253,7 @@ $(document).ready(function() {
 
 
     Editor.user_search_autocomplete = function(element,options) {
-        var url = '/accounts/search';
+        var url = '/top-search';
         source = function(req,callback) {
             element.addClass('loading');
             $.getJSON(url,{q:req.term})

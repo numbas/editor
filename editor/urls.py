@@ -3,7 +3,7 @@ from django.urls import path, re_path
 
 from django.contrib.auth.decorators import login_required
 
-from .views import project, folder, editoritem, exam, question, HomeView, GlobalStatsView, ExploreView, TermsOfUseView, PrivacyPolicyView, theme, extension, generic, notification, resource, basket, timeline, custom_part_type
+from .views import project, folder, editoritem, exam, question, HomeView, GlobalStatsView, ExploreView, TermsOfUseView, PrivacyPolicyView, TopSearchView, theme, extension, generic, notification, resource, basket, timeline, custom_part_type
 
 urlpatterns = [
 
@@ -23,6 +23,7 @@ urlpatterns = [
     # Search
 
     url(r'^search/$', editoritem.SearchView.as_view(), name='search'),
+    url(r'^top-search/$', TopSearchView.as_view(), name='top-search'),
 
     # Explore
 

@@ -840,6 +840,8 @@ class RenameFolderForm(forms.ModelForm):
 
     def clean_name(self):
         name = self.cleaned_data.get('name')
+        if '/' in name:
+            raise forms.ValidationError("Folder names may not include a forward slash.")
         if self.instance.project.folders.filter(name=name,parent=self.instance.parent).exclude(pk=self.instance.pk).exists():
             raise forms.ValidationError("A folder with this name already exists.")
         return name

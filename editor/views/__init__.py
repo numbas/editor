@@ -128,7 +128,7 @@ class TopSearchView(ListView):
         users = find_users(name=search_term)[:most_of_each]
         items += [user_json(u) for u in users]
 
-        projects = Project.objects.filter(Project.filter_can_be_viewed_by(self.request.user)).filter(name__contains=search_term)[:most_of_each]
+        projects = Project.objects.filter(Project.filter_can_be_viewed_by(self.request.user)).filter(name__icontains=search_term)[:most_of_each]
         for p in projects:
             items.append({
                 'id': p.pk,

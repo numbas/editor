@@ -447,6 +447,9 @@ class CompileObject():
         return obj
 
     def get_locale(self):
+        lang_param = self.request.GET.get('language')
+        if lang_param is not None:
+            return lang_param
         if self.editoritem.item_type == 'exam':
             return self.editoritem.exam.locale
         elif not self.request.user.is_anonymous:
@@ -463,7 +466,7 @@ class CompileObject():
         self.numbasobject.data['extensions'] = [str(p) for p in extension_paths]
 
     def output_location(self):
-        return Path(settings.GLOBAL_SETTINGS['PREVIEW_PATH']) / self.location
+        return Path(settings.GLOBAL_SETTINGS['PREVIEW_PATH']) / self.get_locale() / self.location
 
     def compile(self, switches):
         """
@@ -544,7 +547,7 @@ class PreviewView(CompileObject, generic.DetailView):
         if 'refresh' in self.request.GET:
             return redirect(self.request.path)
 
-        exam_url = settings.GLOBAL_SETTINGS['PREVIEW_URL'] + self.location + '/index.html'
+        exam_url = settings.GLOBAL_SETTINGS['PREVIEW_URL'] + self.get_locale() + '/' + self.location + '/index.html'
 
         embed_url = reverse(self.editoritem.item_type+'_embed',args=(self.object.pk,self.editoritem.slug))
         if not self.editoritem.published:

@@ -260,7 +260,7 @@ class BrowseView(ProjectContextMixin, MustBeMemberMixin, generic.DetailView):
         context['folder_hierarchy'] = fix_hierarchy(project.folder_hierarchy())
 
         move_project_form = context['move_project_form'] = editor.forms.BrowseMoveProjectForm()
-        move_project_form.fields['project'].queryset = self.request.user.userprofile.projects().order_by('name').exclude(pk=project.pk)
+        move_project_form.fields['project'].queryset = self.request.user.userprofile.projects().order_by('name').exclude(pk=project.pk) if not self.request.user.is_anonymous else None
 
         return context
 

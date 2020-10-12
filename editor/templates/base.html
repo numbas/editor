@@ -57,6 +57,10 @@
         {% endblock body %}
 
         {% block javascripts %}
+            <script>
+                var is_logged_in = {% if request.user.is_authenticated %}true{% else %}false{% endif %};
+            </script>
+
             <!-- jQuery -->
             <script src="{% sstatic 'js/jquery.js' %}"></script>
             <script src="{% sstatic 'js/jquery-ui.min.js' %}" type="text/javascript"></script>

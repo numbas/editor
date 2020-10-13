@@ -143,18 +143,21 @@ table.variable-list .value-cell .value {
     text-decoration: line-through;
 }
 
+.function .parameters {
+    list-style: disc;
+}
+
 .function .parameters li {
     margin-bottom: 0.5em;
 }
 
-.function .parameter + .parameter::before {
-    content: ',';
-    margin-right: 0.5em;
-}
-
-.function .output::before {
-    content: '⇒';
-    margin-right: 0.5em;
+.function .parameter .btn.btn-info, .function .parameter input.form-control {
+    padding-top: 0;
+    background: none;
+    color: inherit;
+    padding-bottom: 0;
+    line-height: 1em;
+    height: auto;
 }
 
 .resource img.thumbnail {

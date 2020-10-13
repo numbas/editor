@@ -691,29 +691,31 @@
                                     </div>
                                 </div>
                                 <div class="form-group form-inline">
-                                    <label>Type</label>
-                                    <ul class="list-inline parameters">
+                                    <label>Parameters</label>
+                                    <ul class="parameters">
                                         <!-- ko foreach: parameters -->
                                         <li class="parameter">
-                                            <div class="input-group">
-                                                <input {% if not editable %}disabled{% endif %} placeholder="Name" type="text" class="form-control" data-bind="textInput: name, autosize: name">
-                                                <span class="input-group-btn">
-                                                    <select {% if not editable %}disabled{% endif %} class="btn btn-info" data-bind="options: $parent.types, value: type" title"Type of this parameter"></select>
-                                                    {% if editable %}<button type="button" class="btn btn-danger" title="Remove this parameter" data-bind="click: remove"><span class="glyphicon glyphicon-remove"></span></button>{% endif %}
-                                                </span>
-                                            </div>
+                                            <input {% if not editable %}disabled{% endif %} placeholder="Name" type="text" class="form-control" data-bind="textInput: name, autosize: name">
+                                            :
+                                            <select {% if not editable %}disabled{% endif %} class="btn btn-info" data-bind="options: $parent.parameterTypes, value: type" title"Type of this parameter"></select>
+                                            <!-- ko if: show_of -->
+                                            of
+                                            <select {% if not editable %}disabled{% endif %} class="btn btn-info" data-bind="options: $parent.parameterTypes, value: of_type" title"Type of the contents"></select>
+                                            <!-- /ko -->
+                                            {% if editable %}<button type="button" class="btn btn-danger btn-xs" title="Remove this parameter" data-bind="click: remove"><span class="glyphicon glyphicon-remove"></span></button>{% endif %}
                                         </li>
                                         <!-- /ko -->
-                                        {% if editable %}
-                                        <li>
-                                            <button type="button" class="btn btn-xs btn-info" title="Add a parameter" data-bind="click: addParameter"><span class="glyphicon glyphicon-plus"></span></button>
-                                        </li>
-                                        {% endif %}
-                                        <li class="output">
-                                            <select {% if not editable %}disabled{% endif %} class="form-control btn-info" data-bind="options: types, value: type" title="Output type"></select>
-                                        </li>
                                     </ul>
+                                    {% if editable %}
+                                    <button type="button" class="btn btn-sm btn-info" title="Add a parameter" data-bind="click: addParameter"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: parameters().length ? 'Add another parameter' : 'Add a parameter'"></span></button>
+                                    {% endif %}
                                 </div>
+
+                                <div class="form-group form-inline output">
+                                    <label>Output type</label>
+                                    <p><select {% if not editable %}disabled{% endif %} class="form-control btn-info" data-bind="options: outputTypes, value: type" title="Output type"></select></p>
+                                </div>
+
                                 <div clas="form-group">
                                     <label>
                                         Definition:

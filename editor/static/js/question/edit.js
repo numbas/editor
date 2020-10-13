@@ -40,6 +40,7 @@ $(document).ready(function() {
             }
         }
         types.sort();
+        types.splice(0,0,'anything');
         jmeTypes(types);
     }
     find_jme_types();
@@ -862,7 +863,8 @@ $(document).ready(function() {
                             }
                             return {
                                 name: p.name(),
-                                type: p.type()
+                                type: p.type(),
+                                of_type: p.of_type()
                             }
                         })
                     };
@@ -2109,9 +2111,10 @@ $(document).ready(function() {
 
     function CustomFunction(q,data) {
         this.name = ko.observable('');
-        this.types = jmeTypes;
+        this.outputTypes = jmeTypes;
+        this.parameterTypes = jmeTypes;
         this.parameters = ko.observableArray([])
-        this.type = ko.observable('number');
+        this.type = ko.observable('anything');
         this.definition = ko.observable('');
         this.languages = ['jme','javascript'];
         this.language = ko.observable('jme');
@@ -2130,14 +2133,14 @@ $(document).ready(function() {
             tryLoad(data,['name','type','definition','language'],this);
             if('parameters' in data) {
                 data.parameters.map(function(p) {
-                    f.parameters.push(new FunctionParameter(f,p[0],p[1]));
+                    f.parameters.push(new FunctionParameter(f,p[0],p[1] || 'anything',p[2] || 'anything'));
                 });
             }
         },
 
         toJSON: function() {
             var parameters = this.parameters().map(function(p) {
-                return [p.name(), p.type()];
+                return [p.name(), p.type(), p.of_type()];
             });
             return {
                 parameters: parameters,
@@ -2148,13 +2151,19 @@ $(document).ready(function() {
         },
 
         addParameter: function() {
-            this.parameters.push(new FunctionParameter(this,'','number'));
+            this.parameters.push(new FunctionParameter(this,'','number','anything'));
         }
     };
 
-    function FunctionParameter(f,name,type) {
+    function FunctionParameter(f,name,type,of_type) {
         this.name = ko.observable(name);
         this.type = ko.observable(type);
+        this.of_type = ko.observable(of_type);
+
+        this.show_of = ko.computed(function() {
+            return ['list','dict'].contains(this.type());
+        },this);
+
         this.remove = function() {
             f.parameters.remove(this);
         }

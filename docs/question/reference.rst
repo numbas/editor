@@ -419,14 +419,16 @@ Custom functions can be used in any JME expression in the question, such as vari
         JavaScript functions should return their result with a ``return`` expression. 
         You don't need to write the ``function(parameters) {}`` part - just write the function body.
 
-    Output type
-        The type of the value returned by the function. 
-
     Parameters
         The parameters given to the function. 
         You can refer to them by name in the function's definition. 
         Make sure you correctly set the types of the parameters. 
         You can define several functions with the same name but different parameter types, if it makes sense to do so.
+
+        You can specify the type of contents of :data:`list` and :data:`dict` parameters using the selection box following the text :guilabel:`of`.
+
+    Output type
+        The type of the value returned by the function. 
 
 JME functions
 ^^^^^^^^^^^^^
@@ -457,10 +459,10 @@ Here's an example of a function which computes the :math:`n`\ :sup:`th` Fibonacc
         f(n-2)+f(n-1)
     )
 
-Javascript functions
+JavaScript functions
 ^^^^^^^^^^^^^^^^^^^^
 
-Writing a function in Javascript allows you to use all of that language's features, such as loops, anonymous functions and DOM manipulation. 
+Writing a function in JavaScript allows you to use all of that language's features, such as loops, anonymous functions and DOM manipulation. 
 Functions defined in Javasript don't need the ``function(parameters) { ... }`` enclosure - that's provided by Numbas - but they do need to return a value.
 
 Numbas provides a large library of functions which you can use. 
@@ -468,7 +470,12 @@ These are accessed from the objects ``Numbas.math`` and ``Numbas.util``.
 The best way to see what's available is to look at `the Numbas code documentation <http://numbas.github.io/Numbas>`_. 
 `jQuery <http://jquery.com>`_ is also available. 
 
-While the JME system has its own type system for variables, separate from Javascript's, function parameters are unwrapped to native Javascript values on evaluation so you normally don't need to worry about it.
+While the JME system has its own type system for variables, separate from JavaScript's, function parameters are unwrapped to native JavaScript values on evaluation so you normally don't need to worry about it.
+
+.. note::
+
+    You will need to take care when dealing with number-like data types, particularly for lists of numbers.
+    Use the :guilabel:`list of` option for a parameter's type to specify that numbers in a list should be converted to native JavaScript numbers.
 
 .. topic:: Examples
 
@@ -552,9 +559,9 @@ Preamble
 
    The CSS preamble allows you to style certain portions of your question, without relying on a custom exam :ref:`theme <themes>`.
 
-The code written in the :guilabel:`Javascript` preamble is executed when the question is generated, just before the question's variables are calculated. 
-The Javascript preamble can access the question's properties through the `question` variable. 
-You can see an example of the Javascript preamble in use at https://numbas.mathcentre.ac.uk/question/2705/jsxgraph-test-preamble-version/.
+The code written in the :guilabel:`JavaScript` preamble is executed when the question is generated, just before the question's variables are calculated. 
+The JavaScript preamble can access the question's properties through the `question` variable. 
+You can see an example of the JavaScript preamble in use at https://numbas.mathcentre.ac.uk/question/2705/jsxgraph-test-preamble-version/.
 
 You can see what functions are available in JavaScript at `the Numbas code documentation <http://numbas.github.io/Numbas>`_.
 

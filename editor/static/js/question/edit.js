@@ -44,6 +44,9 @@ $(document).ready(function() {
         jmeTypes(types);
     }
     find_jme_types();
+    var jmeParameterTypes = ko.computed(function() {
+        return jmeTypes().concat('custom');
+    },this);
 
 
     function AddPartTypeModal(question,useFn, filter) {
@@ -863,8 +866,7 @@ $(document).ready(function() {
                             }
                             return {
                                 name: p.name(),
-                                type: p.type(),
-                                of_type: p.of_type()
+                                type: p.signature(),
                             }
                         })
                     };
@@ -2112,7 +2114,7 @@ $(document).ready(function() {
     function CustomFunction(q,data) {
         this.name = ko.observable('');
         this.outputTypes = jmeTypes;
-        this.parameterTypes = jmeTypes;
+        this.parameterTypes = jmeParameterTypes;
         this.parameters = ko.observableArray([])
         this.type = ko.observable('anything');
         this.definition = ko.observable('');
@@ -2133,14 +2135,14 @@ $(document).ready(function() {
             tryLoad(data,['name','type','definition','language'],this);
             if('parameters' in data) {
                 data.parameters.map(function(p) {
-                    f.parameters.push(new FunctionParameter(f,p[0],p[1] || 'anything',p[2] || 'anything'));
+                    f.parameters.push(new FunctionParameter(f,p[0],p[1]));
                 });
             }
         },
 
         toJSON: function() {
             var parameters = this.parameters().map(function(p) {
-                return [p.name(), p.type(), p.of_type()];
+                return [p.name(), p.signature()];
             });
             return {
                 parameters: parameters,
@@ -2155,13 +2157,60 @@ $(document).ready(function() {
         }
     };
 
-    function FunctionParameter(f,name,type,of_type) {
+    function FunctionParameter(f,name,type) {
         this.name = ko.observable(name);
-        this.type = ko.observable(type);
-        this.of_type = ko.observable(of_type);
+        this.type = ko.observable('custom');
+        this.of_type = ko.observable('anything');
+        this.custom_type = ko.observable(type);
+        var sig = Numbas.jme.parse_signature(type);
+        switch(sig.kind) {
+            case 'type':
+                this.type(sig.type);
+                break;
+            case 'list':
+                this.type('list');
+                if(sig.signatures.length==1 && sig.signatures[0].kind=='multiple' && sig.signatures[0].signature.kind=='type') {
+                    this.of_type(sig.signatures[0].signature.type);
+                }
+                break;
+            case 'dict':
+                this.type('dict');
+                if(sig.signature.kind=='type') {
+                    this.of_type(sig.signature.type);
+                }
+                break;
+            case 'anything':
+                this.type('anything');
+                break;
+        }
 
         this.show_of = ko.computed(function() {
             return ['list','dict'].contains(this.type());
+        },this);
+        this.show_custom_type = ko.computed(function() {
+            return this.type()=='custom';
+        },this);
+
+        this.signature = ko.computed(function() {
+            var type = this.type();
+            var of_type = this.of_type();
+            switch(type) {
+                case 'list':
+                    if(of_type!='anything') {
+                        return 'list of '+of_type;
+                    }
+                    break;
+                case 'dict':
+                    if(of_type!='anything') {
+                        return 'dict of '+of_type;
+                    }
+                    break;
+                case 'anything':
+                    return '?';
+                case 'custom':
+                    return this.custom_type();
+            }
+            return this.type();
         },this);
 
         this.remove = function() {

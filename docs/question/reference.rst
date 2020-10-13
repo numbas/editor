@@ -427,8 +427,55 @@ Custom functions can be used in any JME expression in the question, such as vari
 
         You can specify the type of contents of :data:`list` and :data:`dict` parameters using the selection box following the text :guilabel:`of`.
 
+        For more complicated parameters, such as nested structures or optional arguments, select :guilabel:`custom` and write a :ref:`custom signature expression <jme-function-signature-expressions>`.
+
     Output type
         The type of the value returned by the function. 
+
+.. _jme-function-signature-expressions:
+
+Custom signature expressions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The parameter type drop-down allows you to specify a single type that a parameter must match.
+You can define more complicated types using custom signature expressions.
+These are most useful for functions written in JavaScript; in JME you can rely on the system to convert data types as necessary.
+
+Using these expressions, you can specify the type of nested data structures, allow optional arguments or any number of arguments.
+
+Note that this is not JME syntax.
+
+Expressions can be built from the following components:
+
++---------------------------+----------------------------+-----------------------------------------------+
+| Syntax                    | Such as                    | Meaning                                       |
++===========================+============================+===============================================+
+| ``type``                  | ``number``, ``string``,    | A value of the given type, or a type that can |
+|                           | ``list``                   | be converted to that type.                    |
++---------------------------+----------------------------+-----------------------------------------------+
+| ``?``                     | ``?``                      | A single value of any type.                   |
++---------------------------+----------------------------+-----------------------------------------------+
+| ``*expression``           | ``*number``,               | Multiple parameters matching ``expression``.  |
+|                           | ``*(list of string)``      |                                               |
++---------------------------+----------------------------+-----------------------------------------------+
+| ``[expression]``          | ``[number]``               | An optional parameter matching                |
+|                           |                            | ``expression``.                               |
++---------------------------+----------------------------+-----------------------------------------------+
+| ``list of (expression)``  | ``list of number``,        | A list whose elements each match              |
+|                           | ``list of list of string`` | ``expression``.                               |
++---------------------------+----------------------------+-----------------------------------------------+
+| ``dict of (expression)``  | ``dict of string``         | A dictionary whose values match               |
+|                           |                            | ``expression``                                |
++---------------------------+----------------------------+-----------------------------------------------+
+| ``expr1 or expr2``        | ``matrix or vector``       | Either match ``expr1`` or ``expr2``           |
++---------------------------+----------------------------+-----------------------------------------------+
+
+**Examples**:
+
+    * ``list of list of number`` - a two-dimensional list of numbers. 
+    * ``*string`` - any number of strings.
+    * ``[vector]`` - an optional :data:`vector` parameter.
+    * ``integer or rational`` - a :data:`integer` or :data:`rational` value, but not any of the other number data types.
 
 JME functions
 ^^^^^^^^^^^^^
@@ -464,6 +511,18 @@ JavaScript functions
 
 Writing a function in JavaScript allows you to use all of that language's features, such as loops, anonymous functions and DOM manipulation. 
 Functions defined in Javasript don't need the ``function(parameters) { ... }`` enclosure - that's provided by Numbas - but they do need to return a value.
+
+.. note::
+
+    JavaScript functions are passed the containing JME scope object as an additional parameter.
+    You can use this to evaluate JME expressions or to obtain the values of variables not explicitly passed to the function.
+    Keep this in mind if you write a function which takes a variable number of parameters.
+
+.. note::
+
+    There are several data types for representing numbers.
+    If you want them to be converted to standard JavaScript numbers when they are passed to your function, make sure that you specify the :data:`number` type for the corresponding parameter(s).
+    Values inside lists also need to be converted; if you have nested data structures such as two-dimensional lists, you will need to use a :ref:`custom signature expression <jme-function-signature-expressions>`.
 
 Numbas provides a large library of functions which you can use. 
 These are accessed from the objects ``Numbas.math`` and ``Numbas.util``. 

@@ -702,6 +702,9 @@
                                             of
                                             <select {% if not editable %}disabled{% endif %} class="btn btn-info" data-bind="options: $parent.parameterTypes, value: of_type" title"Type of the contents"></select>
                                             <!-- /ko -->
+                                            <!-- ko if: show_custom_type -->
+                                            <input {% if not editable %}disabled{% endif %} placeholder="Name" type="text" class="form-control monospace" data-bind="textInput: custom_type, autosize: custom_type">
+                                            <!-- /ko -->
                                             {% if editable %}<button type="button" class="btn btn-danger btn-xs" title="Remove this parameter" data-bind="click: remove"><span class="glyphicon glyphicon-remove"></span></button>{% endif %}
                                         </li>
                                         <!-- /ko -->

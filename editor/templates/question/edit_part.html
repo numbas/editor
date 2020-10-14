@@ -501,11 +501,11 @@
             </p>
         </div>
         <form class="form-horizontal" data-bind="submit: Editor.noop, visible: !isFirstPart()">
-            {% booleanproperty 'suggestGoingBack' 'Suggest going back to the previous part?' help_url='question/parts/reference.html#term-suggest-going-back-to-the-previous-part' %}
+            {% booleanproperty 'suggestGoingBack' 'Suggest going back to the previous part?' help_url='question/explore.html#term-suggest-going-back-to-the-previous-part' %}
         </form>
         <h3>Next part options</h3>
         <p class="help-block">
-            {% helplink 'question/parts/reference.html#next-parts' subject='next parts' %}
+            {% helplink 'question/explore.html#next-parts' subject='next parts' %}
             Define the list of parts that the student can visit after this one.
         </p>
         <ul data-bind="foreach: nextParts" class="list-unstyled next-parts">
@@ -518,16 +518,16 @@
                 </div>
                 <div class="panel-body">
                     <form class="form-horizontal" data-bind="submit: Editor.noop">
-                        {% property 'rawLabel' 'Label' help_url='question/parts/reference.html#term-label' placeholder='label' %}
-                        {% booleanproperty 'lockAfterLeaving' 'Locks this part?' help_url='question/parts/reference.html#term-locks-this-part' %}
-                        {% selectproperty 'availabilityCondition' 'Availability' options_text='name' options='availability_conditions' help_url='question/parts/reference.html#term-availability' %}
+                        {% property 'rawLabel' 'Label' help_url='question/explore.html#term-label' placeholder='label' %}
+                        {% booleanproperty 'lockAfterLeaving' 'Lock this part?' help_url='question/explore.html#term-lock-this-part' %}
+                        {% selectproperty 'availabilityCondition' 'Availability' options_text='name' options='availability_conditions' help_url='question/explore.html#term-availability' %}
                         <div data-bind="fadeVisible: availabilityCondition().id=='expression'">
-                            {% property 'availabilityExpression' 'Available if' help_url='question/parts/reference.html#term-available-if' %}
+                            {% property 'availabilityExpression' 'Available if' help_url='question/explore.html#term-available-if' %}
                         </div>
 
-                        {% selectproperty 'penalty' 'Penalty to apply when visited' options_text='name' options='$parent.q.penalties' allow_blank=True help_url='question/parts/reference.html#term-penalty-to-apply-when-visited' %}
+                        {% selectproperty 'penalty' 'Penalty to apply when visited' options_text='name' options='$parent.q.penalties' allow_blank=True help_url='question/explore.html#term-penalty-to-apply-when-visited' %}
                         <div data-bind="fadeVisible: penalty">
-                            {% property 'penaltyAmount' 'Amount of penalty' help_url='question/parts/reference.html#term-amount-of-penalty' %}
+                            {% property 'penaltyAmount' 'Amount of penalty' help_url='question/explore.html#term-amount-of-penalty' %}
                         </div>
                     </form>
                     <div class="variable-replacements">
@@ -563,18 +563,6 @@
                                 </tr>
                             </tbody>
                         </table>
-
-                        <!--
-                        <div data-bind="fadeVisible: replacementRandomDependencies().length" class="alert alert-danger">
-                            <p>The variable replacements you've chosen will cause the following variables to be regenerated each time the student submits an answer to this part:</p>
-                            <p><ul class="list-inline" data-bind="foreach: replacementRandomDependencies">
-                                <li><span class="btn btn-sm btn-danger monospace" data-bind="text: $data,click: $root.goToVariable" title="Edit this variable"></span></li>
-                            </ul></p>
-                            <p>These variables have some random elements, which means they're not guaranteed to have the same value each time the student submits an answer. You should define new variables to store the random elements, so that they remain the same each time this part is marked.</p>
-                            <p><a href="{{HELP_URL}}question/parts/reference.html#adaptive-marking">More information about this problem</a></p>
-                        </div>
-                        -->
-
 
                         <div class="text-right">
                             {% if editable %}<button class="btn btn-sm btn-primary add-variable-replacement" data-bind="click: addVariableReplacement"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: variableReplacements().length? 'Add another replacement' : 'Add a variable replacement'">Add a variable replacement</span></button>{% endif %}

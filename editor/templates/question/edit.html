@@ -270,13 +270,34 @@
                                 <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: templateTypeValues.json.value, codemirrorMode: 'json'"></textarea>
                                 <button type="button" class="btn btn-default" data-bind="click: templateTypeValues.json.prettyPrint"><span class="glyphicon glyphicon-object-align-left"></span> Clean up formatting</button>
                             </div>
+                        </div>
+                        <div class="help-block">
+                            <div class="value-error alert alert-danger" data-bind="visible: error() && error().length>0" aria-live="polite">
+                                <h4>Error</h4>
+                                <div data-bind="html: error"></div>
                             </div>
-                            <div class="help-block">
-                                <div class="value-error alert alert-danger" data-bind="visible: error() && error().length>0, html: error" aria-live="polite">
-                                <div class="html-type-warning value-error alert alert-danger" data-bind="visible: value() && value().type=='html'">
-                                    <p>This variable is an HTML node. HTML nodes can not be relied upon to work correctly when resuming a session - for example, attached event callbacks will be lost, and mathematical notation will likely also break.</p>
-                                    <p>If this causes problems, try to create HTML nodes where you use them in content areas, instead of storing them in variables.</p>
-                                </div>
+                            <div class="value-warning alert alert-warning" data-bind="visible: warnings().length" aria-live="polite">
+                                <h4>Warning</h4>
+                                <ul data-bind="foreach: warnings">
+                                    <li>
+                                        When applying the function<code data-bind="text: fn.name"></code>, <span data-bind="html: message"></span>
+                                        <!-- if: suggestions.length -->
+                                        <h5>Suggestions</h5>
+                                        <ul data-bind="foreach: suggestions">
+                                            <li>
+                                            <!-- ko if: kind=='change signature' -->
+                                            <p>Change the signature of parameter <code data-bind="text: parameter.name"></code> from <code data-bind="text: from"></code> to <code data-bind="text: to"></code>.</p>
+                                            <button class="btn btn-sm btn-primary" type="button" data-bind="click: apply">Do it</button>
+                                            <!-- /ko -->
+                                            </li>
+                                        </ul>
+                                        <!-- /ko -->
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="html-type-warning value-error alert alert-danger" data-bind="visible: value() && value().type=='html'">
+                                <p>This variable is an HTML node. HTML nodes can not be relied upon to work correctly when resuming a session - for example, attached event callbacks will be lost, and mathematical notation will likely also break.</p>
+                                <p>If this causes problems, try to create HTML nodes where you use them in content areas, instead of storing them in variables.</p>
                             </div>
                         </div>
                         <div class="form-group">

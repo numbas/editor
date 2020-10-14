@@ -766,6 +766,7 @@ $(document).ready(function() {
             this.variables().map(function(v) {
                 if(!v.locked.peek()) {
                     v.error('');
+                    v.warnings([]);
                     v.value(null);
                 }
             });
@@ -822,6 +823,9 @@ $(document).ready(function() {
                 if('error' in result) {
                     v.error(result.error);
                 }
+                if('warnings' in result) {
+                    v.warnings(result.warnings);
+                }
             });
 
             var rulesetTodo = {};
@@ -872,6 +876,88 @@ $(document).ready(function() {
                     };
 
                     var cfn = jme.variables.makeFunction(fn,scope);
+                    var oevaluate = cfn.evaluate;
+                    cfn.evaluate = function(args,scope) {
+                        function warning(message) {
+                            var wscope = scope;
+                            while(wscope.editor_evaluation_warnings === undefined) {
+                                wscope = wscope.parent;
+                                if(!wscope) {
+                                    return;
+                                }
+                            }
+
+                            var suggestions = [];
+                            function parameter_signature_suggestion(tok) {
+                                if(jme.isType(tok,'number')) {
+                                    return 'number';
+                                }
+                                if(tok.type=='list') {
+                                    if(tok.value.every(function(v) { return jme.isType(v,'number'); }) && tok.value.some(function(v) { return v.type!='number'; })) {
+                                        return 'list of number';
+                                    }
+                                    if(tok.value.length>0) {
+                                        var item_sigs = tok.value.map(parameter_signature_suggestion);
+                                        if(item_sigs.every(function(s) { return s==item_sigs[0]; })) {
+                                            return 'list of '+item_sigs[0];
+                                        }
+                                    }
+                                    return 'list';
+                                }
+                                if(tok.type=='dict') {
+                                    var item_sigs = [];
+                                    for(var name in tok.value) {
+                                        var sig = parameter_signature_suggestion(tok.value[name]);
+                                    }
+                                    if(item_sigs.length>0 && item_sigs.every(function(s) { return s==item_sigs[0]; })) {
+                                        return 'dict of '+item_sigs[0];
+                                    }
+                                }
+                                return tok.type;
+                            }
+                            var parameter_signature_suggestions = args.map(parameter_signature_suggestion);
+                            f.parameters().forEach(function(p,i) {
+                                var current_sig = p.signature().replace('?','anything');
+                                var suggested_sig = parameter_signature_suggestions[i];
+                                if(current_sig != suggested_sig) {
+                                    suggestions.push({
+                                        kind:'change signature', 
+                                        parameter: p, 
+                                        from:current_sig, 
+                                        to: suggested_sig, 
+                                        apply: function() {
+                                            p.set_signature(suggested_sig);
+                                        }
+                                    });
+                                }
+                            });
+
+                            wscope.editor_evaluation_warnings.push({fn: f, message: message, suggestions: suggestions, args: args.slice()});
+                        }
+                        function check_value(tok) {
+                            switch(tok.type) {
+                                case 'number':
+                                    if(isNaN(tok.value)) {
+                                        warning("a value of <code>NaN</code> was returned.",['explicit number parameters']);
+                                    }
+                                    break;
+                                case 'list':
+                                    tok.value.forEach(check_value);
+                                    break;
+                                case 'dict':
+                                    for(var name in tok.value) {
+                                        check_value(tok.value[name]);
+                                    }
+                                    break;
+                            }
+                        }
+                        var result = oevaluate.apply(this,arguments);
+                        if(cfn.outtype!='?' && !jme.isType(result,cfn.outtype)) {
+                            warning("this function is supposed to return a <code>"+cfn.outtype+"</code> but instead returned a <code>"+result.type+"</code>.",['explicit number parameters']);
+                        }
+                        check_value(result);
+                        return result;
+                    }
                     scope.addFunction(cfn);
                 }
                 catch(e) {
@@ -959,9 +1045,10 @@ $(document).ready(function() {
             var todo = prep.todo;
 
             function computeVariable(name,todo,scope,path,computeFn) {
+                scope.editor_evaluation_warnings = [];
+                var value;
                 try {
-                    var value = jme.variables.computeVariable.apply(jme.variables, arguments);
-                    return value;
+                    value = jme.variables.computeVariable.apply(jme.variables, arguments);
                 }
                 catch(e) {
                     name = todo[name].originalName || name;
@@ -970,39 +1057,23 @@ $(document).ready(function() {
                     }
                     result.error = true;
                 }
-            }
-
-            /*
-            if(prep.condition) {
-                var condition_vars = jme.findvars(prep.condition);
-                condition_vars.map(function(name) {
-                    computeVariable(name);
-                });
-                try {
-                    result.conditionSatisfied = Numbas.jme.evaluate(prep.condition,scope).value;
-                } catch(e) {
-                    this.variablesTest.conditionError(e.message);
-                    result.conditionSatisfied = false;
-                    return result;
+                if(scope.editor_evaluation_warnings.length) {
+                    if(!result.variables[name]) {
+                        result.variables[name] = {};
+                    }
+                    result.variables[name].warnings = scope.editor_evaluation_warnings;
                 }
-            } else {
-                result.conditionSatisfied = true;
+                return value;
             }
-
-            if(result.conditionSatisfied) {
-                //evaluate variables
-                for(var x in todo)
-                {
-                    computeVariable(x);
-                }
-            }
-            */
 
             try {
                 var vresult = Numbas.jme.variables.makeVariables(todo,scope,prep.condition,computeVariable)
                 result.conditionSatisfied = vresult.conditionSatisfied;
                 Object.keys(vresult.variables).forEach(function(name) {
-                    result.variables[name] = result.variables[name] || {value: vresult.variables[name]};
+                    result.variables[name] = result.variables[name] || {};
+                    if(vresult.variables[name]) {
+                        result.variables[name].value = vresult.variables[name];
+                    }
                 });
             } catch(e) {
                 console.error(e);
@@ -1886,6 +1957,7 @@ $(document).ready(function() {
             }
             return false;
         },this);
+        this.warnings = ko.observableArray([]);
 
         this.type = ko.pureComputed(function() {
             var val = this.value();
@@ -2162,27 +2234,7 @@ $(document).ready(function() {
         this.type = ko.observable('custom');
         this.of_type = ko.observable('anything');
         this.custom_type = ko.observable(type);
-        var sig = Numbas.jme.parse_signature(type);
-        switch(sig.kind) {
-            case 'type':
-                this.type(sig.type);
-                break;
-            case 'list':
-                this.type('list');
-                if(sig.signatures.length==1 && sig.signatures[0].kind=='multiple' && sig.signatures[0].signature.kind=='type') {
-                    this.of_type(sig.signatures[0].signature.type);
-                }
-                break;
-            case 'dict':
-                this.type('dict');
-                if(sig.signature.kind=='type') {
-                    this.of_type(sig.signature.type);
-                }
-                break;
-            case 'anything':
-                this.type('anything');
-                break;
-        }
+        this.set_signature(type);
 
         this.show_of = ko.computed(function() {
             return ['list','dict'].contains(this.type());
@@ -2217,6 +2269,34 @@ $(document).ready(function() {
             f.parameters.remove(this);
         }
     };
+    FunctionParameter.prototype = {
+        set_signature: function(type) {
+            this.type('custom');
+            this.of_type('anything');
+            this.custom_type(type);
+            var sig = Numbas.jme.parse_signature(type);
+            switch(sig.kind) {
+                case 'type':
+                    this.type(sig.type);
+                    break;
+                case 'list':
+                    if(sig.signatures.length==1 && sig.signatures[0].kind=='multiple' && sig.signatures[0].signature.kind=='type') {
+                        this.type('list');
+                        this.of_type(sig.signatures[0].signature.type);
+                    }
+                    break;
+                case 'dict':
+                    this.type('dict');
+                    if(sig.signature.kind=='type') {
+                        this.of_type(sig.signature.type);
+                    }
+                    break;
+                case 'anything':
+                    this.type('anything');
+                    break;
+            }
+        }
+    }
 
     function Script(name,displayName,defaultOrder,helpURL) {
         this.name = name;

@@ -893,9 +893,6 @@ $(document).ready(function() {
                                     return 'number';
                                 }
                                 if(tok.type=='list') {
-                                    if(tok.value.every(function(v) { return jme.isType(v,'number'); }) && tok.value.some(function(v) { return v.type!='number'; })) {
-                                        return 'list of number';
-                                    }
                                     if(tok.value.length>0) {
                                         var item_sigs = tok.value.map(parameter_signature_suggestion);
                                         if(item_sigs.every(function(s) { return s==item_sigs[0]; })) {

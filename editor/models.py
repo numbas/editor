@@ -225,6 +225,9 @@ class Project(models.Model, ControlledObject):
 
     custom_part_types = models.ManyToManyField('CustomPartType', related_name='projects')
 
+    class Meta:
+        ordering = ['name']
+
     def can_be_edited_by(self, user):
         return (user.is_superuser) or (self.owner == user) or self.has_access(user, ('edit',))
 

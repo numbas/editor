@@ -121,7 +121,7 @@
                 </div>
             </div>
             <ul class="projects list-group">
-                {% for project in request.user.userprofile.projects.all %}
+                {% for project in request.user.userprofile.projects.distinct %}
                 <li class="list-group-item" data-name="{{project.name|escape}}"><a href="{% url 'project_index' project.pk %}">{{project.name}}</a></li>
                 {% endfor %}
             </ul>

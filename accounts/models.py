@@ -73,7 +73,7 @@ class UserProfile(models.Model):
         return NewQuestion.objects.filter(editoritem__author=self.user).order_by('-editoritem__last_modified')[:10]
 
     def projects(self):
-        return (Project.objects.filter(owner=self.user) | Project.objects.filter(projectaccess__user=self.user)).distinct().order_by(Lower('name'))
+        return (Project.objects.filter(owner=self.user) | Project.objects.filter(projectaccess__user=self.user))
 
     def all_timeline(self):
         projects = self.user.own_projects.all() | Project.objects.filter(projectaccess__in=self.user.project_memberships.all()) | Project.objects.filter(watching_non_members=self.user)

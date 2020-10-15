@@ -362,7 +362,7 @@ def send_project_invitation(instance, created, **kwargs):
 @receiver(signals.post_save, sender=User)
 def apply_project_invitations(instance, created, **kwargs):
     if created:
-        invitations = ProjectInvitation.objects.filter(email=instance.email)
+        invitations = ProjectInvitation.objects.filter(email__iexact=instance.email)
         for invitation in invitations:
             project = invitation.project
             if not project.has_access(instance,(invitation.access,)):

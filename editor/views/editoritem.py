@@ -9,6 +9,7 @@ from datetime import datetime
 import os
 import subprocess
 from pathlib import Path
+from urllib.parse import urlparse, parse_qs, urlencode
 
 from wsgiref.util import FileWrapper
 from django.core.exceptions import ValidationError, PermissionDenied
@@ -589,14 +590,35 @@ class EmbedView(PreviewView):
     template_name = 'editoritem/embed.html'
         
 class ZipView(CompileObject, generic.DetailView):
+    def is_scorm(self):
+        return 'scorm' in self.request.GET
+
+    def get_source_url(self):
+        obj = self.get_object()
+
+        source_url = reverse('{}_download'.format(obj.editoritem.item_type),args=(obj.pk,obj.editoritem.slug))
+
+        query = {}
+
+        if not obj.editoritem.published:
+            query['token'] = obj.editoritem.share_uuid_view
+
+        if self.is_scorm():
+            query['scorm'] = ''
+
+        source_url += '?' + urlencode(query)
+
+        source_url = self.request.build_absolute_uri(source_url)
+
+        return source_url
+
     def access_valid(self):
         scorm = 'scorm' in self.request.GET
-
-        switches = ['-cz']
+        switches = ['-cz','--source-url',self.get_source_url()]
 
         if settings.GLOBAL_SETTINGS.get('MINIFIER_PATH'):
             switches += ['--minify', settings.GLOBAL_SETTINGS['MINIFIER_PATH']]
-        if scorm:
+        if self.is_scorm():
             switches.append('-s')
 
         self.location = self.editoritem.filename + '.zip'

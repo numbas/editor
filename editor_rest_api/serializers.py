@@ -1,5 +1,5 @@
 from django.conf import settings
-from editor.models import Project, NewExam, NewQuestion, EditorItem, Resource
+from editor.models import Project, NewExam, NewQuestion, EditorItem, Resource, EditorItem
 import editor.models
 from django.contrib.auth.models import User
 from rest_framework import serializers
@@ -69,38 +69,46 @@ class EditorItemSerializer(serializers.ModelSerializer):
         model = EditorItem
         fields = ('name',)
 
-class ExamSerializer(serializers.HyperlinkedModelSerializer):
+class StampStatusField(serializers.RelatedField):
+    def to_representation(self, value):
+        if value is None:
+            return None
+        else:
+            return value.status
+
+class EditorItemMixin(serializers.ModelSerializer):
+    name = serializers.CharField(source='editoritem.name')
+    metadata = serializers.JSONField(source='editoritem.metadata')
+    status = StampStatusField(source='editoritem.current_stamp', read_only=True)
+    project = serializers.HyperlinkedRelatedField(source='editoritem.project',view_name='project-detail',read_only=True)
+    published = serializers.JSONField(source='editoritem.published')
+    author = UserSerializer(source='editoritem.author')
+
+    class Meta:
+        fields = ('name','published','project','author','metadata','status')
+
+class ExamSerializer(EditorItemMixin, serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='exam-detail')
     edit = EditorItemHyperlinkedIdentityField(view_name='exam_edit')
     download = EditorItemHyperlinkedIdentityField(view_name='exam_download')
     preview = EditorItemHyperlinkedIdentityField(view_name='exam_preview')
     source = EditorItemHyperlinkedIdentityField(view_name='exam_source')
-    name = serializers.CharField(source='editoritem.name')
-    metadata = serializers.JSONField(source='editoritem.metadata')
-    status = serializers.ChoiceField(choices=editor.models.STAMP_STATUS_CHOICES,source='editoritem.current_stamp.status')
-    project = serializers.HyperlinkedRelatedField(source='editoritem.project',view_name='project-detail',read_only=True)
-    author = UserSerializer(source='editoritem.author')
     resources = serializers.HyperlinkedRelatedField(many=True,read_only=True,view_name='resource-detail')
     questions = serializers.HyperlinkedRelatedField(many=True,read_only=True,view_name='question-detail')
     class Meta:
         model = NewExam
-        fields = ('url','name','project','author','edit','preview','download','source','metadata','status','resources','questions')
+        fields = ('url','name','published','project','author','edit','preview','download','source','metadata','status','resources','questions')
 
-class QuestionSerializer(serializers.HyperlinkedModelSerializer):
+class QuestionSerializer(EditorItemMixin, serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='question-detail')
     edit = EditorItemHyperlinkedIdentityField(view_name='question_edit')
     download = EditorItemHyperlinkedIdentityField(view_name='question_download')
     preview = EditorItemHyperlinkedIdentityField(view_name='question_preview')
     source = EditorItemHyperlinkedIdentityField(view_name='question_source')
-    name = serializers.CharField(source='editoritem.name')
-    metadata = serializers.JSONField(source='editoritem.metadata')
-    status = serializers.ChoiceField(choices=editor.models.STAMP_STATUS_CHOICES,source='editoritem.current_stamp.status')
-    project = serializers.HyperlinkedRelatedField(source='editoritem.project',view_name='project-detail',read_only=True)
-    author = UserSerializer(source='editoritem.author')
     resources = serializers.HyperlinkedRelatedField(many=True,read_only=True,view_name='resource-detail')
     class Meta:
         model = NewQuestion
-        fields = ('url','name','project','author','edit','preview','download','source','metadata','status','resources')
+        fields = ('url','name','published','project','author','edit','preview','download','source','metadata','status','resources')
 
 class MediaField(serializers.URLField):
     def to_representation(self,url):

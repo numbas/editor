@@ -3,7 +3,7 @@
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking-settings'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div class="main-settings">
-            {% booleanproperty 'showCellAnswerState' 'Show choice feedback state?' help_url='question/parts/reference.html#term-show-choice-feedback-state' %}    
+            {% booleanproperty 'showCellAnswerState' 'Show choice feedback state?' help_url='question/parts/multiple-choice.html#term-show-choice-feedback-state' %}    
             {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='question/parts/multiple-choice.html#term-shuffle-order-of-choices' %}
         </div>
 

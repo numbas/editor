@@ -728,10 +728,10 @@ class CompareView(generic.TemplateView):
 
     template_name = "editoritem/compare.html"
 
-    def get_context_data(self, pk1, pk2, **kwargs):
+    def get_context_data(self, *args, **kwargs):
         context = super(CompareView, self).get_context_data(**kwargs)
-        pk1 = int(pk1)
-        pk2 = int(pk2)
+        pk1 = int(self.kwargs['pk1'])
+        pk2 = int(self.kwargs['pk2'])
         ei1 = context['ei1'] = EditorItem.objects.get(pk=pk1)
         ei2 = context['ei2'] = EditorItem.objects.get(pk=pk2)
         context['pr1_exists'] = PullRequest.objects.open().filter(source=ei1, destination=ei2).exists()

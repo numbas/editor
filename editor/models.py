@@ -350,6 +350,7 @@ class ProjectInvitation(models.Model):
     invited_by = models.ForeignKey(User, on_delete=models.CASCADE)
     access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
     project = models.ForeignKey(Project, related_name='invitations', on_delete=models.CASCADE)
+    applied = models.BooleanField(default=False)
 
     def __str__(self):
         return "Invitation for {} to join {}".format(self.email, self.project)
@@ -375,6 +376,9 @@ def apply_project_invitations(instance, created, **kwargs):
                     access.save()
                 except ProjectAccess.DoesNotExist:
                     ProjectAccess.objects.create(project=invitation.project, user=instance, access=invitation.access)
+            invitation.applied = True
+            invitation.save()
+
 
 class EditorTag(taggit.models.TagBase):
     official = models.BooleanField(default=False)

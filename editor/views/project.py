@@ -13,7 +13,7 @@ from django.core.exceptions import PermissionDenied
 from itertools import groupby
 from django_tables2.config import RequestConfig
 
-from editor.models import Project, ProjectAccess, STAMP_STATUS_CHOICES, Folder
+from editor.models import Project, ProjectAccess, ProjectInvitation, STAMP_STATUS_CHOICES, Folder
 import editor.forms
 import editor.views.editoritem
 from editor.tables import ProjectTable, EditorItemTable, BrowseProjectTable
@@ -115,14 +115,29 @@ class ManageMembersView(ProjectContextMixin, SettingsPageMixin, generic.UpdateVi
     settings_page = 'members'
     form_class = editor.forms.ProjectAccessFormset
 
+    def get_invitations_form(self):
+        kwargs = {
+            'queryset': ProjectInvitation.objects.exclude(applied=True),
+            'prefix': 'invitations',
+            'instance': self.get_object(),
+        }
+        cls = editor.forms.ProjectInvitationFormset
+        if self.request.method == 'POST':
+            return cls(self.request.POST, self.request.FILES, **kwargs)
+        else:
+            return cls(**kwargs)
+
     def get_context_data(self, **kwargs):
         context = super(ManageMembersView, self).get_context_data(**kwargs)
         context['add_member_form'] = editor.forms.AddMemberForm({'project':self.object.pk, 'adding_user':self.request.user})
+        context['invitations_form'] = self.get_invitations_form()
         return context
 
     def post(self, request, *args, **kwargs):
+        invitations_form = self.get_invitations_form()
+        if invitations_form.is_valid():
+            invitations_form.save()
         return super(ManageMembersView, self).post(request, *args, **kwargs)
-
 
     def form_invalid(self, form):
         return super(ManageMembersView, self).form_invalid(form)

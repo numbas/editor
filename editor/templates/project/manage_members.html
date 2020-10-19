@@ -43,9 +43,23 @@
                     <td>{{uform.DELETE}}</td>
                 </tr>
                 {% endfor %}
+                {% for iform in invitations_form %}
+                <tr class="invitation">
+                    <td><strong>Invitation:</strong> {{iform.instance.email}}{{iform.id}}</td>
+                    <td>
+                        <select id="{{iform.access.auto_id}}" name="{{iform.access.html_name}}" class="form-control">
+                            {% for value,name in iform.access.field.choices %}
+                            <option {% if value == iform.access.value %}selected{% endif %} value="{{value}}">{{name}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>{{iform.DELETE}}</td>
+                </tr>
+                {% endfor %}
             </tbody>
         </table>
         {{form.management_form}}
+        {{invitations_form.management_form}}
         <div class="panel-body">
         {% csrf_token %}
         <button class="btn btn-primary pull-right" type="submit">Save changes</button>

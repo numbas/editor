@@ -722,7 +722,8 @@ class EditorItemTransferOwnershipForm(UserSearchMixin, forms.ModelForm):
         model = editor.models.EditorItem
         fields = []
 
-ProjectAccessFormset = inlineformset_factory(editor.models.Project, editor.models.ProjectAccess, fields=('access',), extra=0, can_delete=True)
+ProjectAccessFormset = inlineformset_factory(editor.models.Project, editor.models.ProjectAccess, fields=('access',), extra=0)
+ProjectInvitationFormset = inlineformset_factory(editor.models.Project, editor.models.ProjectInvitation, fields=('access',), extra=0)
 
 class NewFolderForm(forms.ModelForm):
     parent = forms.ModelChoiceField(queryset=editor.models.Folder.objects.all(), required=False, widget=forms.HiddenInput())

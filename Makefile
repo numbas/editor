@@ -81,3 +81,6 @@ locales: $(EDITOR_LOCALES)
 # use `make docs_html` to make the HTML version of the docs
 docs_%:
 	$(MAKE) -f docs.mk $*
+
+check_help_links:
+	@python check_help_links.py

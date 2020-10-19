@@ -28,7 +28,7 @@
                 <label class="label-block">
                     <div class="col-sm-3 control-label">
                         Interface theme 
-                        {% helplink 'exam/reference.html#term-theme' %}
+                        {% helplink 'exam/reference.html#term-interface-theme' %}
                     </div>
                     <div class="col-sm-6">
                         <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.themes, value: theme, optionsText: 'name'"></select>
@@ -214,7 +214,7 @@
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='navigation'}">
         <form class="form-horizontal" data-bind="submit: Editor.noop">
             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
-            {% property 'startpassword' 'Password to begin the exam' help_url='exam/reference.html#term-password-to-begin-exam' %}
+            {% property 'startpassword' 'Password to begin the exam' help_url='exam/reference.html#term-password-to-begin-the-exam' %}
             {% booleanproperty 'allowregen' 'Allow user to regenerate questions?' help_url='exam/reference.html#term-allow-user-to-regenerate-questions' %}
             {% selectproperty 'navigatemode' 'Question navigation mode' options='navigateModeOptions' options_text='niceName' help_url='exam/reference.html#term-question-navigation-mode' %}
             <div data-bind="fadeVisible: navigatemode().name=='sequence'">
@@ -245,7 +245,7 @@
             {% property 'duration' 'Exam duration (minutes)' min=0 help_url='exam/reference.html#term-exam-duration' %}
             {% booleanproperty 'allowPause' 'Allow pausing?' help_url='exam/reference.html#term-allow-pausing' %}
             {% exam_event 'timeout' 'On timeout' help_url='exam/reference.html#term-on-timeout-event' %}
-            {% exam_event 'timedwarning' '5 minutes before timeout' help_url='exam/reference.html#term-minutes-before-timeout-event' %}
+            {% exam_event 'timedwarning' '5 minutes before timeout' help_url='exam/reference.html#term-5-minutes-before-timeout-event' %}
             {% endwith %}
         </form>
 
@@ -262,7 +262,7 @@
             {% booleanproperty 'showtotalmark' 'Show maximum score?' help_url='exam/reference.html#term-show-maximum-score' %}
             {% booleanproperty 'showanswerstate' 'Show answer state?' help_url='exam/reference.html#term-show-answer-state' %}
             {% booleanproperty 'allowrevealanswer' 'Allow reveal answer?' help_url='exam/reference.html#term-allow-reveal-answer' %}
-            {% booleanproperty 'showstudentname' 'Show student\'s name?' help_url='exam/reference.html#term-show-students-name' %}
+            {% booleanproperty 'showstudentname' 'Show student\'s name?' help_url='exam/reference.html#term-show-student-s-name' %}
 
             <div class="form-group">
                 <label class="{{form_label_class}} control-label">
@@ -284,8 +284,8 @@
 
             {% booleanproperty 'reviewshowscore' 'Show score in review mode?' help_url='exam/reference.html#term-show-score-in-review-mode' %}
             {% booleanproperty 'reviewshowfeedback' 'Show part feedback messages in review mode?' help_url='exam/reference.html#term-show-part-feedback-messages-in-review-mode' %}
-            {% booleanproperty 'reviewshowexpectedanswer' 'Show expected answers in review mode?' help_url='exam/reference.html#term-show-part-expected-answers-in-review-mode' %}
-            {% booleanproperty 'reviewshowadvice' 'Show question advice in review mode?' help_url='exam/reference.html#term-show-part-question-advice-in-review-mode' %}
+            {% booleanproperty 'reviewshowexpectedanswer' 'Show expected answers in review mode?' help_url='exam/reference.html#term-show-expected-answers-in-review-mode' %}
+            {% booleanproperty 'reviewshowadvice' 'Show question advice in review mode?' help_url='exam/reference.html#term-show-question-advice-in-review-mode' %}
 
             <h4>
                 Feedback messages

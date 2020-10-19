@@ -52,6 +52,9 @@ The following properties are available on every type of part.
         This option also controls whether feedback messages are shown for this part.
         You might want to turn this off if you've set up a question with a custom marking script which assigns a score based on the answers to two or more parts (or gapfills), meaning the individual parts have no independent "correct" or "incorrect" state.
 
+    Score counts towards objective
+        In :ref:`explore mode <explore-mode>`, marks awarded for this part will count towards the chosen :ref:`objective <objectives>`.
+
 
 .. _part-types:
 

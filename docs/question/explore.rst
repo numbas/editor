@@ -62,6 +62,7 @@ Click on :guilabel:`Explore mode options` at the top of the parts list to set up
 .. image:: images/explore_options.png
     :alt: The "explore mode options" tab
 
+.. _objectives:
 
 Objectives
 ----------
@@ -77,7 +78,7 @@ Penalties
 ---------
 
 Each penalty has a :guilabel:`Name`, which is shown to the student, and a :guilabel:`Limit`.
-Each time the student chooses a :ref:`next part` option which applies a penalty, the defined number of marks is added to the corresponding penalty, up to the limit.
+Each time the student chooses a :ref:`next part <next-parts>` option which applies a penalty, the defined number of marks is added to the corresponding penalty, up to the limit.
 
 The penalty is not re-applied each time the student revisits an instance of a part.
 
@@ -102,48 +103,53 @@ If the student changes their answer to a previous part, this could invalidate an
 
 .. glossary::
 
-   Label
-      The label on the button shown to the student.
-      If you leave this blank, the next part's name is used.
-      You might want to change the label so you don't reveal the destination, or to differentiate two options which lead to the same part.
+    Suggest going back to the previous part?
+        This option applies to the current part.
+        A button labelled :guilabel:`Go back to the previous part` will be shown at the end of the part, at the top of the list of next part options.
+        Use this if the current part is a dead end, such as a standalone hint, and the student should proceed by going back to the previous part and choosing another option.
 
-   Lock this part?
-      If ticked, the current part will be locked when the student chooses this next part option.
-      The student will not be able to change or resubmit their answer to this part.
+    Label
+        The label on the button shown to the student.
+        If you leave this blank, the next part's name is used.
+        You might want to change the label so you don't reveal the destination, or to differentiate two options which lead to the same part.
 
-      If not ticked, the student can come back to this part and change their answer.
+    Lock this part?
+        If ticked, the current part will be locked when the student chooses this next part option.
+        The student will not be able to change or resubmit their answer to this part.
 
-      Use this if a subsequent part would reveal information which the student could use to improve their answer to this part, and you don't want them to do that.
+        If not ticked, the student can come back to this part and change their answer.
 
-   Availability
-      Define when the option is available to the student.
-      
-      * :guilabel:`Always` - always available.
-      * :guilabel:`When answer submitted` - available once the student has submitted a valid answer to this part, whether it's correct or not
-      * :guilabel:`When unanswered or incorrect` - available if the student hasn't submitted an answer, or if they've submitted an incorrect answer. Unavailable once they submit a correct answer.
-      * :guilabel:`When incorrect` - available after the student submits an incorrect answer.
-      * :guilabel:`When correct` - available once the student submits a correct answer.
-      * :guilabel:`Depending on expression` - available if the :term:`Available if` expression evaluates to ``true``.
+        Use this if a subsequent part would reveal information which the student could use to improve their answer to this part, and you don't want them to do that.
 
-   Available if
-      This field is only shown when :term:`Availability` is set to :guilabel:`Depending on expression`.
+    Availability
+        Define when the option is available to the student.
+        
+        * :guilabel:`Always` - always available.
+        * :guilabel:`When answer submitted` - available once the student has submitted a valid answer to this part, whether it's correct or not
+        * :guilabel:`When unanswered or incorrect` - available if the student hasn't submitted an answer, or if they've submitted an incorrect answer. Unavailable once they submit a correct answer.
+        * :guilabel:`When incorrect` - available after the student submits an incorrect answer.
+        * :guilabel:`When correct` - available once the student submits a correct answer.
+        * :guilabel:`Depending on expression` - available if the :term:`Available if` expression evaluates to ``true``.
 
-      Write a JME expression which evaluates to ``true`` when the option should be available to the student, and ``false`` otherwise.
+    Available if
+        This field is only shown when :term:`Availability` is set to :guilabel:`Depending on expression`.
 
-      The following variables are defined during the evaluation of this expression:
-      
-      * all question variables;
-      * the values of any marking notes produced by this part's :ref:`marking algorithm <marking-algorithm>`;
-      * ``credit``, a :data:`number` between 0 and 1 corresponding to the amount of credit awarded for this part;
-      * ``answered``, a :data:`boolean` representing whether the student has submitted a valid answer.
+        Write a JME expression which evaluates to ``true`` when the option should be available to the student, and ``false`` otherwise.
 
-   Penalty to apply when visited
-      If you want to apply a penalty when the student chooses this option, select the name of a :ref:`penalty <explore-penalties>` here.
+        The following variables are defined during the evaluation of this expression:
+        
+        * all question variables;
+        * the values of any marking notes produced by this part's :ref:`marking algorithm <marking-algorithm>`;
+        * ``credit``, a :data:`number` between 0 and 1 corresponding to the amount of credit awarded for this part;
+        * ``answered``, a :data:`boolean` representing whether the student has submitted a valid answer.
 
-   Amount of penalty
-      The number of marks to add to the chosen penalty.
+    Penalty to apply when visited
+        If you want to apply a penalty when the student chooses this option, select the name of a :ref:`penalty <explore-penalties>` here.
 
-      Only shown if :term:`Penalty to apply when visited` is not "None".
+    Amount of penalty
+        The number of marks to add to the chosen penalty.
+
+        Only shown if :term:`Penalty to apply when visited` is not "None".
 
 Variable replacements
 ---------------------

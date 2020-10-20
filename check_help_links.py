@@ -30,7 +30,7 @@ for r,ds,fs in os.walk('editor/templates'):
         help_urls = re_url.findall(text)+re_url2.findall(text)+re_url3.findall(text)
         bads = [m for m in help_urls if not has_anchor(*m)]
         if bads:
-            found_bad.append((page,bads))
+            found_bad.append((path,bads))
             
 if found_bad:
     print("The following page{s} refer{nots} to parts of the documentation that don't exist:\n".format(s='s' if len(found_bad)!=1 else '', nots='s' if len(found_bad)==1 else ''))

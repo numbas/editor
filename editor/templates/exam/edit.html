@@ -226,7 +226,7 @@
             {% booleanproperty 'allowsteps' 'Enable steps?' help_url='exam/reference.html#term-enable-steps' %}
             {% booleanproperty 'showfrontpage' 'Show front page?' help_url='exam/reference.html#term-show-front-page' %}
             <div data-bind="fadeVisible: navigatemode().name=='sequence'">
-                {% selectproperty 'showresultspage' 'Show results page' options='showResultsPageOptions' options_text='niceName' help_url='exam/reference.html#term-show-results-page' %}
+                {% selectproperty 'showresultspage' 'Reveal answers to all questions' options='showResultsPageOptions' options_text='niceName' help_url='exam/reference.html#term-reveal-answers-to-all-questions' %}
             </div>
             {% booleanproperty 'preventleave' 'Confirm before leaving the exam while it\'s running?' help_url='exam/reference.html#term-confirm-before-leaving-the-exam-while-it-s-running' %}
             <div data-bind="fadeVisible: navigatemode().name=='sequence'">

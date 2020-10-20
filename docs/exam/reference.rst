@@ -172,7 +172,7 @@ The navigation settings control how the student can move through the exam.
     Show front page?
         If ticked, then an intro screen is shown to the student before the exam starts, 
 
-    Show results page
+    Reveal answers to all questions
         Control when the student may see the results page, after ending the exam.
         
         If :guilabel:`On completion` is chosen, the results page will be shown immediately after the student ends the exam, and when they re-enter in review mode.

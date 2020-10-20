@@ -56,6 +56,8 @@ $(document).ready(function() {
         this.theme = ko.observable(null);
         this.locale = ko.observable(item_json.preferred_locale);
 
+        this.allowPrinting = ko.observable(true);
+
         this.mainTabs([
             new Editor.Tab('questions','Questions','file',{in_use: ko.computed(function() { return this.questions().length>0; },this)}),
             new Editor.Tab('display','Display','picture',{in_use: ko.computed(function() { return this.theme() && this.theme().path!='default'; },this)}),
@@ -269,6 +271,7 @@ $(document).ready(function() {
                 showQuestionGroupNames: this.showQuestionGroupNames(),
                 showstudentname: this.showstudentname(),
                 question_groups: this.question_groups().map(function(qg) { return qg.toJSON() }),
+                allowPrinting: this.allowPrinting(),
                 navigation: {
                     allowregen: this.allowregen(),
                     reverse: this.reverse(),
@@ -314,7 +317,7 @@ $(document).ready(function() {
 
             this.project_id = data.project_id;
 
-            tryLoad(content,['name','percentPass','shuffleQuestions','allQuestions','pickQuestions','showQuestionGroupNames','showstudentname'],this);
+            tryLoad(content,['name','percentPass','shuffleQuestions','allQuestions','pickQuestions','showQuestionGroupNames','showstudentname','allowPrinting'],this);
             this.duration((content.duration||0)/60);
 
             if('navigation' in content)

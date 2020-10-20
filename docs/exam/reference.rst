@@ -133,6 +133,11 @@ Display
     Interface language
         Specify which translation to use for the text in the user interface, i.e. button labels, error messages, etc.
 
+    Allow students to print question content?
+        If this is turned off, all questions will be hidden when the exam is printed.
+        If a student tries to print during an exam, they will see nothing.
+        If they try to print a completed exam, they will only see the results summary screen.
+
 Navigation
 ==========
 

@@ -75,11 +75,6 @@ class UserSearchMixin(forms.ModelForm):
         super(UserSearchMixin, self).__init__(*args, **kwargs)
         self.fields['user_search'] = UserField()
 
-    def clean_user_search(self):
-        user = self.cleaned_data.get('user_search')
-
-        return user
-
     def clean(self):
         cleaned_data = super(UserSearchMixin, self).clean()
         selected_user = cleaned_data.get('selected_user')

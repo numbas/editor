@@ -2252,8 +2252,9 @@ $(document).ready(function() {
     });
 
 
-    Editor.user_search_autocomplete = function(element,options) {
-        var url = '/top-search';
+    Editor.user_search_autocomplete = function(element,options,jquery_options) {
+        options = $.extend({url: '/accounts/search'}, options || {});
+        var url = options.url;
         source = function(req,callback) {
             element.addClass('loading');
             $.getJSON(url,{q:req.term})
@@ -2273,10 +2274,10 @@ $(document).ready(function() {
             var id = ui.item.id;
             element.parents('form').find('[name="selected_user"]').val(id);
         }
-        element.autocomplete($.extend({source: source, select: set_user, html: true},options));
+        element.autocomplete($.extend({source: source, select: set_user, html: true},jquery_options));
     }
 
-    Editor.user_search_autocomplete($('#top-search-bar'),{select: function(e,ui) {
+    Editor.user_search_autocomplete($('#top-search-bar'),{url:'/top-search'},{select: function(e,ui) {
         window.location.href = ui.item.profile;
     }});
 

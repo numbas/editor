@@ -2792,7 +2792,6 @@ $(document).ready(function() {
         replaceWithGapfill: function() {
             var p = this;
             var gapFill = new Part('part',this.q,this.parent(),this.parentList);
-            this.levelName('gap');
             gapFill.customName(this.customName());
             this.customName('');
             gapFill.setType('gapfill');
@@ -2815,6 +2814,8 @@ $(document).ready(function() {
 
             gapFill.nextParts(this.nextParts());
             this.nextParts([]);
+
+            this.levelName('gap');
 
             viewModel.allParts().forEach(function(p2) {
                 p2.nextParts().forEach(function(np) {

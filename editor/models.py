@@ -426,6 +426,8 @@ class EditablePackageMixin(object):
 
     @property
     def extracted_path(self):
+        if self.pk is None:
+            raise Exception("This object doesn't have an ID yet.")
         return os.path.join(settings.MEDIA_ROOT, self.zipfile_folder, 'extracted', str(self.pk), self.location)
 
     def ensure_extracted_path_exists(self):
@@ -566,6 +568,27 @@ class Extension(models.Model, ControlledObject, EditablePackageMixin):
 
     def icon(self):
         return 'wrench'
+
+@receiver(signals.pre_save)
+def extract_editable_package_zip_pre(sender,instance,**kwargs):
+    if not isinstance(instance,EditablePackageMixin):
+        return
+    changed_zipfile = False
+    if instance.zipfile:
+        try:
+            old_extension = instance.__class__.objects.get(pk=instance.pk)
+            changed_zipfile = old_extension.zipfile != instance.zipfile
+        except Extension.DoesNotExist:
+            changed_zipfile = True
+
+    instance.__changed_zipfile = changed_zipfile
+
+@receiver(signals.post_save)
+def extract_editable_package_zip_post(sender,instance,**kwargs):
+    if not isinstance(instance,EditablePackageMixin):
+        return
+    if getattr(instance,'__changed_zipfile',False):
+        instance.extract_zip()
 
 @receiver(signals.pre_delete, sender=Extension)
 def delete_extracted_extension(sender,instance,**kwargs):

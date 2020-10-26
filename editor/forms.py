@@ -357,12 +357,6 @@ class UpdateExtensionForm(forms.ModelForm):
 
         return location
 
-    def save(self, commit=True):
-        extension = super().save(commit)
-        if commit:
-            extension.extract_zip()
-        return extension
-
 class CreateExtensionForm(forms.ModelForm):
     
     """Form for a new extension."""
@@ -417,7 +411,6 @@ class UploadExtensionForm(UpdateExtensionForm):
         extension.author = self._user
         if commit:
             extension.save()
-            extension.extract_zip()
             self.save_m2m()
         return extension
 
@@ -550,7 +543,6 @@ class UploadThemeForm(UpdateThemeForm):
         theme.author = self._user
         if commit:
             theme.save()
-            theme.extract_zip()
             self.save_m2m()
         return theme
 

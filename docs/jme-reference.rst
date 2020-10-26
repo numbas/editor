@@ -3092,6 +3092,8 @@ Once you've got a sub-expression, you can evaluate it to a normal JME data type,
         * ``expand_juxtapositions(expression("x(x+1)"))`` → ``expression("x*(x+1)")``
         * ``expand_juxtapositions(expression("x(x+1)"),["noUnknownFunctions": false])`` → ``expression("x(x+1)")``
         * ``expand_juxtapositions(expression("ln*abs(x)"),["implicitFunctionComposition": false, "singleLetterVariables": true, "noUnknownFunctions": true])`` → ``expression("l*n*abs(x)")``
+        * ``expand_juxtapositions(expression("xy^z"))`` → ``expression("x*y^z")``
+        * ``expand_juxtapositions(expression("xy!"))`` → ``expression("x*y!")``
 
 .. jme:function:: canonical_compare(expr1,expr2)
 

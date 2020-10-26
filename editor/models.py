@@ -578,7 +578,7 @@ def extract_editable_package_zip_pre(sender,instance,**kwargs):
         try:
             old_extension = instance.__class__.objects.get(pk=instance.pk)
             changed_zipfile = old_extension.zipfile != instance.zipfile
-        except Extension.DoesNotExist:
+        except instance.__class__.DoesNotExist:
             changed_zipfile = True
 
     instance.__changed_zipfile = changed_zipfile

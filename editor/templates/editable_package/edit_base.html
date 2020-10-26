@@ -36,7 +36,7 @@
                 <form method="GET" action="{% package_url 'edit_source' object.pk %}" class="form-inline">
                     <label>
                         <span class="glyphicon glyphicon-plus"></span>
-                        New file: 
+                        Write a new file: 
                         <div class="input-group">
                             <input class="form-control" name="filename">
                             <span class="input-group-btn">
@@ -44,6 +44,18 @@
                             </span>
                         </div>
                     </label>
+                </form>
+            </li>
+            <li class="list-group-item">
+                <form action="{% package_url 'replace_file' form.instance.pk %}" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        {{upload_file_form.content}}
+                    </div>
+                    <button class="btn btn-primary btn-block" type="submit">
+                        <span class="glyphicon glyphicon-upload"></span>
+                        Upload a file
+                    </button>
                 </form>
             </li>
         </ul>

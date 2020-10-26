@@ -11,6 +11,9 @@ from editor import forms
 from editor.views.generic import AuthorRequiredMixin, CanViewMixin
 from editor.views import editable_package
 
+class ExtensionViewMixin:
+    upload_file_form_class = forms.ReplaceExtensionFileForm
+
 class CreateView(generic.CreateView):
     """ Create an extension """
 
@@ -41,30 +44,36 @@ class UploadView(generic.CreateView):
     def get_success_url(self):
         return reverse('extension_edit_source', args=(self.object.pk,))
 
-class UpdateView(editable_package.UpdateView):
+class UpdateView(ExtensionViewMixin,editable_package.UpdateView):
     model = Extension
     form_class = forms.UpdateExtensionForm
 
     def get_success_url(self):
         return reverse('extension_list_profile', args=(self.request.user.pk,))
 
-class EditView(editable_package.EditView):
+class EditView(ExtensionViewMixin,editable_package.EditView):
     model = Extension
     form_class = forms.EditExtensionForm
+    replace_form_class = forms.ReplaceExtensionFileForm
     success_view = 'extension_edit_source'
 
-class DeleteFileView(editable_package.DeleteFileView):
+class ReplaceFileView(ExtensionViewMixin,editable_package.ReplaceFileView):
+    model = Extension
+    form_class = forms.ReplaceExtensionFileForm
+    success_view = 'extension_edit_source'
+
+class DeleteFileView(ExtensionViewMixin,editable_package.DeleteFileView):
     model = Extension
     form_class = forms.ExtensionDeleteFileForm
     success_view = 'extension_edit_source'
 
-class AccessView(editable_package.AccessView):
+class AccessView(ExtensionViewMixin,editable_package.AccessView):
     model = Extension
     form_class = forms.ExtensionAccessFormset
     single_form_class = forms.AddExtensionAccessForm
     success_view = 'extension_access'
 
-class AddAccessView(editable_package.AddAccessView):
+class AddAccessView(ExtensionViewMixin,editable_package.AddAccessView):
     model = ExtensionAccess
     form_class = forms.AddExtensionAccessForm
 
@@ -74,7 +83,7 @@ class AddAccessView(editable_package.AddAccessView):
     def get_success_url(self):
         return reverse('extension_access', args=(self.object.extension.pk,))
 
-class DocumentationView(editable_package.DocumentationView):
+class DocumentationView(ExtensionViewMixin,editable_package.DocumentationView):
     model = Extension
 
 class DownloadView(CanViewMixin, generic.DetailView):

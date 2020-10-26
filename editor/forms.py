@@ -301,8 +301,35 @@ class EditPackageForm(forms.ModelForm):
                 f.write(self.cleaned_data.get('source'))
         return package
 
+class EditPackageReplaceFileForm(forms.ModelForm):
+    
+    """Form to replace a file in a package."""
+
+    content = forms.FileField()
+    filename = forms.CharField(widget=forms.HiddenInput,required=False)
+    
+    class Meta:
+        fields = []
+
+    def save(self, commit=True):
+        package = super().save(commit=False)
+        filename = self.cleaned_data.get('filename')
+        if commit:
+            nf = self.cleaned_data.get('content')
+            if not filename:
+                filename = nf.name
+            path = os.path.join(package.extracted_path,filename)
+            Path(path).parent.mkdir(parents=True,exist_ok=True)
+            with open(path,'wb') as f:
+                f.write(nf.read())
+        return package
+
 class EditExtensionForm(EditPackageForm):
     class Meta(EditPackageForm.Meta):
+        model = Extension
+
+class ReplaceExtensionFileForm(EditPackageReplaceFileForm):
+    class Meta(EditPackageReplaceFileForm.Meta):
         model = Extension
 
 class PackageDeleteFileForm(forms.ModelForm):
@@ -449,6 +476,10 @@ class AddExtensionAccessForm(UserSearchMixin, forms.ModelForm):
 
 class EditThemeForm(EditPackageForm):
     class Meta(EditPackageForm.Meta):
+        model = Theme
+
+class ReplaceThemeFileForm(EditPackageReplaceFileForm):
+    class Meta(EditPackageReplaceFileForm.Meta):
         model = Theme
 
 class ThemeDeleteFileForm(PackageDeleteFileForm):

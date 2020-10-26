@@ -3,6 +3,7 @@ import mistune
 from datetime import datetime
 from io import BytesIO
 from zipfile import ZipFile
+import mimetypes
 
 from django import http
 from django.contrib import messages
@@ -26,6 +27,7 @@ class ShowPackageFilesMixin:
     def get_context_data(self,**kwargs):
         context = super().get_context_data(**kwargs)
         context['filenames'] = self.get_package_filenames()
+        context['upload_file_form'] = self.upload_file_form_class(instance=self.get_object())
         return context
 
 class UpdateView(ShowPackageFilesMixin,AuthorRequiredMixin, generic.UpdateView):
@@ -42,6 +44,11 @@ class EditView(ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
     """ Edit an package's source code """
     template_name = 'editable_package/edit_source.html'
 
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+        self.is_binary = False
+        self.is_image = False
+
     def dispatch(self,request,*args,**kwargs):
         package = self.get_object()
         if not package.editable:
@@ -57,11 +64,16 @@ class EditView(ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
 
         try:
             path = os.path.join(package.extracted_path,filename)
+            self.mime_type, _ = mimetypes.guess_type(path)
             with open(path,encoding='utf-8') as f:
                 source = f.read()
+                self.is_binary = False
         except FileNotFoundError as e:
             source = ''
-
+        except UnicodeDecodeError as e:
+            with open(path,'rb') as f:
+                source = f.read()
+                self.is_binary = True
         initial['source'] = source
 
         return initial
@@ -69,7 +81,9 @@ class EditView(ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
     def get_filename(self):
         package = self.get_object()
         d = self.request.GET if self.request.method.lower()=='get' else self.request.POST
-        filename = d.get('filename',package.main_filename)
+        filename = d.get('filename')
+        if not filename:
+            filename = package.main_filename
         return filename
 
     def get_context_data(self, **kwargs):
@@ -94,6 +108,13 @@ class EditView(ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
         filenames.sort()
         context['filenames'] = filenames
 
+        context['is_binary'] = self.is_binary
+        context['is_image'] = self.mime_type is not None and self.mime_type.split('/')[0]=='image'
+        context['mime_type'] = self.mime_type
+        context['file_url'] = package.url_for(filename)
+        _, context['filename_without_directories'] = os.path.split(filename)
+        context['replace_form'] = self.replace_form_class(initial={'filename': filename}, instance=package)
+
         return context
 
     def form_valid(self,form):
@@ -109,6 +130,15 @@ class EditView(ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
 
     def get_success_url(self):
         return reverse(self.success_view, args=(self.get_object().pk,))+'?filename='+self.get_filename()
+
+class ReplaceFileView(CanEditMixin, generic.UpdateView):
+    template_name = 'editable_package/replace_file.html'
+    def get_success_url(self):
+        return reverse(self.success_view, args=(self.get_object().pk,))+'?filename='+self.filename
+
+    def form_valid(self,form):
+        self.filename = form.cleaned_data.get('filename')
+        return super().form_valid(form)
 
 class DeleteFileView(CanEditMixin, generic.UpdateView):
     template_name = 'editable_package/delete_file.html'

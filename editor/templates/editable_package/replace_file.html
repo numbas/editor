@@ -1,0 +1,14 @@
+{% extends "editable_package/edit_base.html" %}
+{% load editable_package %}
+
+{% block package_edit_content %}
+    <form action="{% package_url 'delete_file' object.pk %}" method="POST">
+        {% csrf_token %}
+        {{form}}
+        <div>
+            <button type="submit" class="btn btn-primary"> Save</button>
+            <a href="{% package_url 'edit_source' object.pk %}?filename={{filename}}">Cancel</a>
+        </div>
+    </form>
+{% endblock %}
+

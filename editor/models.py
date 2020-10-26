@@ -424,11 +424,16 @@ class EditablePackageMixin(object):
         with open(path,'w',encoding='utf-8') as f:
             f.write(content)
 
+    @property 
+    def relative_extracted_path(self):
+        raise NotImplementedError
+
     @property
     def extracted_path(self):
-        if self.pk is None:
-            raise Exception("This object doesn't have an ID yet.")
-        return os.path.join(settings.MEDIA_ROOT, self.zipfile_folder, 'extracted', str(self.pk), self.location)
+        return os.path.join(os.getcwd(), settings.MEDIA_ROOT, self.relative_extracted_path)
+
+    def url_for(self, filename):
+        return settings.MEDIA_URL+self.relative_extracted_path+'/'+filename
 
     def ensure_extracted_path_exists(self):
         if os.path.exists(self.extracted_path):
@@ -537,6 +542,12 @@ class Extension(models.Model, ControlledObject, EditablePackageMixin):
             if finders.find(path):
                 return settings.STATIC_URL+path
         return None
+
+    @property 
+    def relative_extracted_path(self):
+        if self.pk is None:
+            raise Exception("This object doesn't have an ID yet.")
+        return os.path.join(self.zipfile_folder, 'extracted', str(self.pk), self.location)
 
     @property
     def extracted_path(self):
@@ -664,8 +675,8 @@ class Theme(models.Model, ControlledObject, EditablePackageMixin):
                    )
 
     @property
-    def extracted_path(self):
-        return os.path.join(os.getcwd(), settings.MEDIA_ROOT, self.zipfile_folder, 'extracted', str(self.pk))
+    def relative_extracted_path(self):
+        return os.path.join(self.zipfile_folder, 'extracted', str(self.pk))
 
     @property
     def main_filename(self):

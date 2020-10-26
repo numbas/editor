@@ -11,6 +11,9 @@ from editor import forms
 from editor.views.generic import AuthorRequiredMixin, CanViewMixin
 from editor.views import editable_package
 
+class ThemeViewMixin:
+    upload_file_form_class = forms.ReplaceThemeFileForm
+
 class CreateView(generic.CreateView):
     """ Create a theme """
 
@@ -41,30 +44,36 @@ class UploadView(generic.CreateView):
     def get_success_url(self):
         return reverse('theme_edit_source', args=(self.object.pk,))
 
-class UpdateView(editable_package.UpdateView):
+class UpdateView(ThemeViewMixin,editable_package.UpdateView):
     model = Theme
     form_class = forms.UpdateThemeForm
 
     def get_success_url(self):
         return reverse('theme_list_profile', args=(self.request.user.pk,))
 
-class EditView(editable_package.EditView):
+class EditView(ThemeViewMixin,editable_package.EditView):
     model = Theme
     form_class = forms.EditThemeForm
+    replace_form_class = forms.ReplaceThemeFileForm
     success_view = 'theme_edit_source'
 
-class DeleteFileView(editable_package.DeleteFileView):
+class ReplaceFileView(ThemeViewMixin,editable_package.ReplaceFileView):
+    model = Theme
+    form_class = forms.ReplaceThemeFileForm
+    success_view = 'theme_edit_source'
+
+class DeleteFileView(ThemeViewMixin,editable_package.DeleteFileView):
     model = Theme
     form_class = forms.ThemeDeleteFileForm
     success_view = 'theme_edit_source'
 
-class AccessView(editable_package.AccessView):
+class AccessView(ThemeViewMixin,editable_package.AccessView):
     model = Theme
     form_class = forms.ThemeAccessFormset
     single_form_class = forms.AddThemeAccessForm
     success_view = 'theme_access'
 
-class AddAccessView(editable_package.AddAccessView):
+class AddAccessView(ThemeViewMixin,editable_package.AddAccessView):
     model = ThemeAccess
     form_class = forms.AddThemeAccessForm
 
@@ -74,7 +83,7 @@ class AddAccessView(editable_package.AddAccessView):
     def get_success_url(self):
         return reverse('theme_access', args=(self.object.theme.pk,))
 
-class DocumentationView(editable_package.DocumentationView):
+class DocumentationView(ThemeViewMixin,editable_package.DocumentationView):
     model = Theme
 
 class DownloadView(CanViewMixin, generic.DetailView):

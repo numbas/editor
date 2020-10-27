@@ -337,6 +337,8 @@ class Command(BaseCommand):
         fn = getattr(self,'survey_'+name)
 
         n = things.count()
+        print("Surveying {} {}s".format(n,name))
+
         oi = 0
         for i,o in enumerate(things):
             fn(o)

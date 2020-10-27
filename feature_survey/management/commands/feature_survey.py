@@ -326,9 +326,8 @@ class Command(BaseCommand):
             'project',
         ]
 
-        with transaction.atomic():
-            for kind in kinds:
-                self.survey_object(kind)
+        for kind in kinds:
+            self.survey_object(kind)
 
         self.summarise_features()
 
@@ -340,11 +339,13 @@ class Command(BaseCommand):
         print("Surveying {} {}s".format(n,name))
 
         oi = 0
-        for i,o in enumerate(things):
-            fn(o)
-            if floor(i/100)>floor(oi/100):
-                oi = i
-                print('{}% of {}s'.format(floor(100*i/n),name))
+        for h in range(0,n,100):
+            with transaction.atomic():
+                for i,o in enumerate(things[h:h+100],h):
+                    fn(o)
+                    if floor(i/100)>floor(oi/100):
+                        oi = i
+                        print('{}% of {}s'.format(floor(100*i/n),name))
 
     def record_feature(self, obj, feature):
         feature = feature.replace('_',' ')

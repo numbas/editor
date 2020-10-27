@@ -1,3 +1,4 @@
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import render
 from django.views import generic
@@ -8,7 +9,11 @@ from .models import Feature
 
 # Create your views here.
 
-class FeaturesView(generic.ListView):
+class MustBeSuperuserMixin(UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.is_superuser
+
+class FeaturesView(MustBeSuperuserMixin,generic.ListView):
     model = Feature
     template_name = 'feature_survey/list.html'
 
@@ -23,7 +28,7 @@ class FeaturesView(generic.ListView):
 
         return context
 
-class FeatureView(generic.ListView):
+class FeatureView(MustBeSuperuserMixin,generic.ListView):
     model = Feature
     template_name = 'feature_survey/feature.html'
 

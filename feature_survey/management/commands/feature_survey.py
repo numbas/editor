@@ -337,17 +337,15 @@ class Command(BaseCommand):
         fn = getattr(self,'survey_'+name)
 
         n = things.count()
-        op = 0
+        oi = 0
         for i,o in enumerate(things):
             fn(o)
-            p = i/float(n)
-            if floor(10*p)>floor(10*op):
-                op = p
-                print('{}% of {}s'.format(floor(100*p),name))
+            if floor(i/100)>floor(oi/100):
+                oi = i
+                print('{}% of {}s'.format(floor(100*i/n),name))
 
     def record_feature(self, obj, feature):
         feature = feature.replace('_',' ')
-        #print("{}:\n  {} ({})".format(feature, obj,obj.pk))
         ct = ContentType.objects.get_for_model(obj)
         f,created = Feature.objects.get_or_create(object_content_type=ct, object_id=obj.pk, feature=feature)
         if not created:

@@ -22,7 +22,7 @@ class FeaturesView(MustBeSuperuserMixin,generic.ListView):
 
         counts = Feature.objects.all().values('object_content_type','feature').annotate(freq=Count('feature'))
         raw_groups = groupby(counts,key=lambda x: x['object_content_type'])
-        context['groups'] = [(ContentType.objects.get(pk=ctid).name,list(features)) for ctid,features in raw_groups]
+        context['groups'] = [(ContentType.objects.get(pk=ctid).name,list(sorted(features,key=lambda x: x['feature']))) for ctid,features in raw_groups]
 
         context['features'] = sorted([d['feature'] for d in Feature.objects.all().values('feature').distinct()])
 

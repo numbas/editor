@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% load humanize %}
+{% load user_link %}
+{% load sanitizer %}
+{% load sstatic %}
+
+{% block title %}Explore public content - {{block.super}}{% endblock %}
+
+{% block stylesheets %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% sstatic 'css/explore.css' %}"/>
+{% endblock stylesheets %}
+
+{% block content %}
+<h1>Objects with the feature <em>{{feature}}</em></h1>
+<ul>
+    {% for f in object_list %}
+    <li>
+        <a href="{{f.object.get_absolute_url}}">{{f.object}}</a>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock content %}
+

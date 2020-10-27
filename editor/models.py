@@ -29,7 +29,6 @@ from django.db.models import signals, Max, Min
 from django.db.models.functions import Lower
 from django.dispatch import receiver
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
-from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.forms import model_to_dict
 from django.utils import timezone
@@ -1696,6 +1695,7 @@ class NewQuestion(models.Model):
     icon = 'file'
 
     class Meta:
+        verbose_name = 'question'
         ordering = ['editoritem__name']
         permissions = (
               ('highlight', 'Can pick questions to feature on the front page.'),
@@ -1794,6 +1794,9 @@ class NewExam(models.Model):
     locale = models.CharField(max_length=200, default='en-GB')
 
     icon = 'book'
+
+    class Meta:
+        verbose_name = 'exam'
 
     def __str__(self):
         return self.editoritem.name

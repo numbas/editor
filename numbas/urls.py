@@ -26,6 +26,15 @@ if 'editor_rest_api' in settings.INSTALLED_APPS:
     except ImportError:
         pass
 
+if 'feature_survey' in settings.INSTALLED_APPS:
+    try:
+        from feature_survey.urls import urlpatterns as feature_survey_urls
+        urlpatterns += [
+            url('^feature-survey/', include(feature_survey_urls)),
+        ]
+    except ImportError:
+        pass
+
 urlpatterns += [
     url(r'', include('editor.urls')),
     url(r'^migrate/', include('migration.urls')),

@@ -431,7 +431,7 @@ class Command(BaseCommand):
         else:
             q = Q()
             if options['project_ids']:
-                q |= Q(project__in=project_pks)
+                q |= Q(project__in=options['project_ids'])
 
             editoritems = EditorItem.objects.filter(q).distinct()
 

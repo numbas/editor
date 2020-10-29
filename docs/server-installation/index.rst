@@ -36,3 +36,4 @@ Upgrading
     from version 1.x to 2.0 <upgrade/v2>
     from version 2.0 to 3.0 <upgrade/v3>
     from version 3.0 to 4.0 <upgrade/v4>
+    from version 4.0 to 5.0 <upgrade/v5>

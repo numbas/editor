@@ -119,7 +119,7 @@ class JMEObject(ObjectDescription):
         raise NotImplementedError('must be implemented in subclasses')
 
     def add_target_and_index(self, name_cls, sig, signode):
-        fullname = name_cls[0]
+        fullname = self.get_fullname(name_cls)
         # note target
         if fullname not in self.state.document.ids:
             signode['names'].append(fullname)
@@ -151,6 +151,9 @@ class JMEFunction(JMEObject):
     def get_index_text(self, name_cls):
         return name_cls[0]
 
+    def get_fullname(self, name_cls):
+        return 'jme-fn-'+name_cls[0]
+
 class JMEData(JMEObject):
     """
     Description of a JME data element (type, variable or constant)
@@ -175,6 +178,15 @@ class JMEData(JMEObject):
         signode += addnodes.desc_name(name, name)
         return name, ''
 
+    def get_fullname(self, name_cls):
+        return 'jme-data-'+name_cls[0]
+
+class JMEVariable(JMEData):
+
+    def get_fullname(self, name_cls):
+        return 'jme-variable-'+name_cls[0]
+
+
 class JMEXRefRole(XRefRole):
     def process_link(self, env, refnode, has_explicit_title, title, target):
         return title, target
@@ -193,7 +205,7 @@ class JMEDomain(Domain):
     directives = {
         'function': JMEFunction,
         'data': JMEData,
-        'variable': JMEData,
+        'variable': JMEVariable,
     }
     roles = {
         'func':  JMEXRefRole(fix_parens=True),

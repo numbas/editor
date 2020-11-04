@@ -66,8 +66,15 @@ def test_question(q):
         return result
     except HeadlessError as e:
         if e.stdout.strip():
-            result = json.loads(e.stdout.strip())
-            return result
+            try:
+                result = json.loads(e.stdout.strip())
+                return result
+            except json.JSONDecodeError as e2:
+                return {
+                    'success': False,
+                    'message': e.stdout,
+                    'originalMessages': []
+                }
         else:
             return {
                 'success': False,
@@ -111,7 +118,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--question',dest='question_id',nargs='+', type=int, help="The IDs of one or more questions to test")
-        parser.add_argument('--project', help="The ID of a project to test")
+        parser.add_argument('--project', nargs='+', help="The ID of a project to test")
         parser.add_argument('--all', action='store_true', help="Test all items in the database")
         parser.add_argument('--exam',dest='exam_ids',nargs='+', type=int, help="The IDs of one or more exams to test")
 
@@ -134,7 +141,8 @@ class Command(BaseCommand):
         if options['all']:
             self.test_all()
         elif options['project']:
-            self.test_project(options['project'])
+            for p in options['project']:
+                self.test_project(p)
         else:
             qns = []
             if options['question_id']:

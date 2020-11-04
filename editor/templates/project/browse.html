@@ -22,6 +22,7 @@
 {% endblock javascripts %}
 
 {% block project_content %}
+{% if can_edit %}
 <div class="modal fade" id="move-modal" tabindex="-1" role="dialog">
   <div class="modal-dialog modal-sm" role="document">
     <div class="modal-content">
@@ -69,6 +70,7 @@
     </div>
   </div>
   </form>
+{% endif %}
 </div>
 
 <nav>
@@ -87,6 +89,7 @@
     </ol>
 </nav>
 
+{% if can_edit %}
 <div id="controls">
     <span class="glyphicon glyphicon-plus"></span>
     New:
@@ -100,10 +103,12 @@
     <a class="btn btn-danger" href="{% url 'folder_delete' folder.pk %}"><span class="glyphicon glyphicon-remove"></span> Delete this folder</a>
     {% endif %}
 </div>
+{% endif %}
 
 <div id="contents-container" class="{% if num_items == 0 %}empty{% endif %}">
     <div id="contents">
         <p><span id="num-items">{{num_items}} item{{num_items|pluralize}}</span> in this folder.</p>
+        {% if can_edit %}
         <div>
             <button type="button" id="select-all" class="btn btn-sm btn-link">Select all</button>
             <button type="button" id="select-none" class="btn btn-sm btn-link">Select none</button>
@@ -115,11 +120,15 @@
                 </button>
             </div>
         </div>
+        {% endif %}
 
         <table class="table contents">
             <thead>
                 <tr>
+                    {% if can_edit %}
                     <th></th>
+                    {% endif %}
+
                     {% for column in items.columns %}
                     {% if column.column.is_blank %}
                     <th></th>
@@ -137,7 +146,9 @@
             <tbody>
                 {% for folder in subfolders %}
                 <tr class="folder drag-target drag-handle" data-folder="{{folder.pk}}">
+                    {% if can_edit %}
                     <td><input class="include-checkbox" type="checkbox" name="folders[]" value="{{folder.pk}}"></td>
+                    {% endif %}
                     <td></td>
                     <td></td>
                     <td></td>
@@ -155,7 +166,9 @@
                 {% for row in items.page.object_list|default:items.rows %}
                 {% with item=row.record %}
                 <tr class="item drag-handle" draggable="true" data-item="{{item.pk}}">
+                    {% if can_edit %}
                     <td><input class="include-checkbox" type="checkbox" name="items[]" value="{{folder.pk}}"></td>
+                    {% endif %}
                     <td>
                         {% stamp item.current_stamp.status %}
                     </td>

@@ -254,7 +254,7 @@ class BrowseView(ProjectContextMixin, MustBeMemberMixin, generic.DetailView):
         project =  self.get_project()
         folder = context['folder'] = self.get_folder()
         context['breadcrumbs'] = self.get_folders()[:-1]
-        
+
         if folder:
             subfolders = folder.folders.all()
             context['path'] = folder.path()
@@ -274,8 +274,11 @@ class BrowseView(ProjectContextMixin, MustBeMemberMixin, generic.DetailView):
 
         context['folder_hierarchy'] = fix_hierarchy(project.folder_hierarchy())
 
-        move_project_form = context['move_project_form'] = editor.forms.BrowseMoveProjectForm()
-        move_project_form.fields['project'].queryset = self.request.user.userprofile.projects().order_by('name').exclude(pk=project.pk).distinct() if not self.request.user.is_anonymous else None
+        can_edit = context['can_edit'] = project.can_be_edited_by(self.request.user)
+        
+        if can_edit:
+            move_project_form = context['move_project_form'] = editor.forms.BrowseMoveProjectForm()
+            move_project_form.fields['project'].queryset = self.request.user.userprofile.projects().order_by('name').exclude(pk=project.pk).distinct()
 
         return context
 

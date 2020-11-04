@@ -333,6 +333,9 @@ class Command(BaseCommand):
 
     def survey_object(self, name):
         things = getattr(self,'gather_'+name+'s')()
+        if things.exists():
+            ct = ContentType.objects.get_for_model(things.first())
+            things = things.exclude(pk__in=Feature.objects.filter(object_content_type=ct.id).values_list('object_id').distinct())
         fn = getattr(self,'survey_'+name)
 
         n = things.count()
@@ -438,7 +441,7 @@ class Command(BaseCommand):
 
             editoritems = EditorItem.objects.filter(q).distinct()
 
-        editoritems = editoritems.prefetch_related('comments','access_rights','licence','current_stamp','ability_levels','subjects','topics','taxonomy_nodes')
+        editoritems = editoritems.prefetch_related('comments','access_rights','licence','current_stamp','ability_levels','subjects','topics','taxonomy_nodes','restore_points')
 
         return editoritems
 

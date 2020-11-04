@@ -20,11 +20,9 @@ class FeaturesView(MustBeSuperuserMixin,generic.ListView):
     def get_context_data(self,*args,**kwargs):
         context = super().get_context_data(*args,**kwargs)
 
-        counts = Feature.objects.all().values('object_content_type','feature').annotate(freq=Count('feature'))
+        counts = Feature.objects.all().order_by('object_content_type','feature').values('object_content_type','feature').annotate(freq=Count('feature'))
         raw_groups = groupby(counts,key=lambda x: x['object_content_type'])
         context['groups'] = [(ContentType.objects.get(pk=ctid).name,list(sorted(features,key=lambda x: x['feature']))) for ctid,features in raw_groups]
-
-        context['features'] = sorted([d['feature'] for d in Feature.objects.all().values('feature').distinct()])
 
         return context
 

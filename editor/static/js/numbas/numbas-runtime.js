@@ -781,6 +781,10 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
         'number': function(v) {
             return ''+Numbas.math.niceNumber(v.value)+'';
         },
+        'rational': function(v) {
+            var f = v.value.reduced();
+            return f.toString();
+        },
         'decimal': function(v) {
             var d = v.value;
             var re = d.re.toString();
@@ -18240,6 +18244,16 @@ Fraction.prototype = {
         var g = math.gcd(this.numerator,this.denominator);
         this.numerator /= g;
         this.denominator /= g;
+    },
+
+    /** Returns a copy of this fraction reduced to lowest terms.
+     *
+     * @returns {Numbas.math.Fraction}
+     */
+    reduced: function() {
+        var f = new Fraction(this.numerator,this.denominator);
+        f.reduce();
+        return f;
     },
     add: function(b) {
         if(typeof(b)==='number') {

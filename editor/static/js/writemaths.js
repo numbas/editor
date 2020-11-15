@@ -249,6 +249,8 @@ jQuery(function() {
                 if(math!=$(this).data('writemaths-lastMath')) {
                     var script = document.createElement('script');
                     script.setAttribute('type','math/tex');
+                    if (q.startDelimiter.slice(1).match(/\$\$/) || q.startDelimiter.match(/\\\[/))
+                       script.setAttribute('mode', 'display')
                     script.textContent = options.cleanMaths(math);
                     previewElement.html(script);
                     $(this).data('writemaths-lastMath',math);

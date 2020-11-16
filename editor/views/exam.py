@@ -54,7 +54,9 @@ class CreateView(editor.views.editoritem.CreateView):
         ei.locale = ei.project.default_locale
         ei.save()
         self.exam = NewExam()
+
         self.exam.editoritem = ei
+        self.exam.locale = self.request.user.userprofile.language
         return self.exam
 
     def form_valid(self, form):

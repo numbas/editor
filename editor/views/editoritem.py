@@ -52,6 +52,27 @@ class MustBeAuthorMixin(object):
             raise PermissionDenied
         return super(MustBeAuthorMixin, self).dispatch(request, *args, **kwargs)
 
+class MustHaveAccessMixin():
+    """
+        The editoritem corresponding to the object for this view must be visible to the user, or the editoritem's access token must be present in the query parameters.
+    """
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        allowed = False
+        if self.object.editoritem.can_be_viewed_by(self.request.user):
+            allowed = True
+        else:
+            token = self.request.GET.get('token','')
+            if token==str(self.object.editoritem.share_uuid_view):
+                allowed = True
+
+        if allowed:
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return forbidden(self.request)
+
+
 class CreateView(ProjectQuerysetMixin, generic.CreateView):
     model = EditorItem
 
@@ -426,20 +447,9 @@ class CompileError(Exception):
 class ExtensionNotFoundCompileError(CompileError):
     pass
 
-class CompileObject():
+class CompileObject(MustHaveAccessMixin):
     
     """Compile an exam or question."""
-
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        if self.editoritem.can_be_viewed_by(self.request.user):
-            return self.access_valid()
-        else:
-            token = self.request.GET.get('token','')
-            if token==str(self.editoritem.share_uuid_view):
-                return self.access_valid()
-            else:
-                return forbidden(self.request)
 
     def get_object(self):
         obj = super(CompileObject,self).get_object()
@@ -635,7 +645,7 @@ class ZipView(CompileObject, generic.DetailView):
             response['Cache-Control'] = 'max-age=0,no-cache,no-store'
             return response
 
-class SourceView(generic.DetailView):
+class SourceView(MustHaveAccessMixin,generic.DetailView):
 
     def get_editoritem(self):
         obj = self.get_object()

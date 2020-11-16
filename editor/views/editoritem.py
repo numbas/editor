@@ -56,7 +56,7 @@ class MustHaveAccessMixin():
     """
         The editoritem corresponding to the object for this view must be visible to the user, or the editoritem's access token must be present in the query parameters.
     """
-    def dispatch(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         self.object = self.get_object()
 
         allowed = False
@@ -68,7 +68,7 @@ class MustHaveAccessMixin():
                 allowed = True
 
         if allowed:
-            return super().dispatch(request, *args, **kwargs)
+            return self.access_valid()
         else:
             return forbidden(self.request)
 
@@ -652,7 +652,7 @@ class SourceView(MustHaveAccessMixin,generic.DetailView):
         self.editoritem = obj.editoritem
         return self.editoritem
 
-    def get(self, request, *args, **kwargs):
+    def access_valid(self):
         try:
             ei = self.get_editoritem()
         except (ObjectDoesNotExist, TypeError) as err:

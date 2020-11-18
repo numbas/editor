@@ -5095,7 +5095,7 @@ var parse_signature = jme.parse_signature = function(sig) {
         if(!expr2) {
             return;
         }
-        return [jme.signature.or(expr1,expr2),expr2[1]];
+        return [jme.signature.or(expr1[0],expr2[0]),expr2[1]];
     }
 
     /** Parse an "anything" argument: exactly the string "?".
@@ -8180,6 +8180,9 @@ var texNameAnnotations = jme.display.texNameAnnotations = {
     },
     matrix: function(name) {
         return '\\mathrm{'+name+'}';
+    },
+    diff: function(name) {
+        return '{\\mathrm{d}'+name+'}';
     },
     complex: propertyAnnotation('complex'),
     real: propertyAnnotation('real'),
@@ -29324,7 +29327,7 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
             case 'string': 
                 return 'string';
             case 'number': 
-                return 'decimal or number';
+                return 'string';
             case 'jme': 
                 return 'expression';
             case 'matrix': 

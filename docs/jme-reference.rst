@@ -52,11 +52,12 @@ Names can be given annotations to change how they are displayed.
 The following annotations are built-in:
 
 * ``verb`` – does nothing, but names like ``i``, ``pi`` and ``e`` are not interpreted as the famous mathematical constants.
-* ``op`` – denote the name as the name of an operator — wraps the name in the LaTeX \operatorname command when displayed
+* ``op`` – denote the name as the name of an operator — wraps the name in the LaTeX ``\operatorname`` command when displayed
 * ``v`` or ``vector`` – denote the name as representing a vector — the name is displayed in boldface
 * ``unit`` – denote the name as representing a unit vector — places a hat above the name when displayed
 * ``dot`` – places a dot above the name when displayed, for example when representing a derivative
 * ``m`` or ``matrix`` – denote the name as representing a matrix — displayed using a non-italic font
+* ``diff`` - denote the name as a differential - the name is prefixed with ``\mathrm{d}`` when displayed, e.g. :math:`\mathrm{d}x`
 
 Any other annotation is taken to be a LaTeX command.
 For example, a name ``vec:x`` is rendered in LaTeX as ``\vec{x}``, which places an arrow above the name.

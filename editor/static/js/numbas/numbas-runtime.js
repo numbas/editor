@@ -7623,7 +7623,7 @@ var texOps = jme.display.texOps = {
                     use_symbol = true;
                 }
             }
-            s += use_symbol ? ' \\times ' : ' ';
+            s += use_symbol ? ' '+texTimesSymbol(settings)+' ' : ' ';
             s += texifyOpArg(thing,texArgs,i);
         }
         return s;
@@ -7895,6 +7895,19 @@ function unaryPatternTex(code) {
     }
 }
 
+/** Return the TeX for the multiplication symbol.
+ *
+ * @param {Numbas.jme.display.texify_settings} settings
+ * @returns {TeX}
+ */
+function texTimesSymbol(settings) {
+    if(settings.timesdot) {
+        return '\\cdot';
+    } else {
+        return '\\times';
+    }
+}
+
 /** Convert a special number to TeX, or return undefined if not a special number.
  *
  * @memberof Numbas.jme.display
@@ -7965,7 +7978,7 @@ var texRationalNumber = jme.display.texRationalNumber = function(n, settings)
         var out = math.niceNumber(n);
         if(out.length>20) {
             var bits = math.parseScientific(n.toExponential());
-            return bits.significand+' \\times 10^{'+bits.exponent+'}';
+            return bits.significand+' '+texTimesSymbol(settings)+' 10^{'+bits.exponent+'}';
         }
         var f = math.rationalApproximation(Math.abs(n));
         if(f[1]==1) {
@@ -8061,7 +8074,7 @@ function texRealNumber(n, settings)
         var out = math.niceNumber(n);
         if(out.length>20) {
             var bits = math.parseScientific(n.toExponential());
-            return bits.significand+' \\times 10^{'+bits.exponent+'}';
+            return bits.significand+' '+texTimesSymbol(settings)+' 10^{'+bits.exponent+'}';
         }
         switch(piD)
         {
@@ -8445,6 +8458,7 @@ function flatten(tree,op) {
  * @property {boolean} barematrices - Render matrices without wrapping them in parentheses.
  * @property {boolean} nicenumber - Run numbers through {@link Numbas.math.niceNumber}?
  * @property {number} accuracy - Accuracy to use when finding rational approximations to numbers. See {@link Numbas.math.rationalApproximation}.
+ * @property {boolean} timesdot - Use a dot for the multiplication symbol instead of a cross?
  */
 
 /** Turn a syntax tree into a TeX string. Data types can be converted to TeX straightforwardly, but operations and functions need a bit more care.
@@ -10977,7 +10991,8 @@ var displayFlags = jme.rules.displayFlags = {
     alwaystimes: undefined,
     mixedfractions: undefined,
     flatfractions: undefined,
-    barematrices: undefined
+    barematrices: undefined,
+    timesdot: undefined
 };
 /** Flags used in JME simplification rulesets
  *
@@ -10989,6 +11004,7 @@ var displayFlags = jme.rules.displayFlags = {
  * @property {boolean} mixedfractions - Show top-heavy fractions as mixed fractions, e.g. 3 3/4?
  * @property {boolean} flatfractions - Display fractions horizontally?
  * @property {boolean} barematrices - Render matrices without wrapping them in parentheses.
+ * @property {boolean} timesdot - Use a dot for the multiplication symbol instead of a cross?
  * @see Numbas.jme.rules.Ruleset
  */
 /** Set of simplification rules.

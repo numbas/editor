@@ -549,6 +549,10 @@ $(document).ready(function() {
             });
         },this);
 
+        this.toJSON = ko.pureComputed(function() {
+            return this.remake_json();
+        },this);
+
         if(data) {
             this.load(data);
         }
@@ -1201,7 +1205,7 @@ $(document).ready(function() {
             test();
         },
 
-        toJSON: function() {
+        remake_json: function() {
             var rulesets = {};
             this.rulesets().map(function(r){
                 rulesets[r.name()] = r.sets();

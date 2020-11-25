@@ -553,6 +553,32 @@ $(document).ready(function() {
             this.load(data);
         }
 
+        /** Create an instance of this question as a Numbas.Question object.
+         */
+        this.should_remake_instance = true;
+        ko.computed(function() {
+            this.toJSON();
+            this.baseScope();
+            this.should_remake_instance = true;
+        },this);
+        this.instance = function() {
+            if(this.should_remake_instance) {
+                var q = Numbas.createQuestionFromJSON(this.toJSON(),1,null,null,this.baseScope());
+                var vm = this;
+                q.signals.on('ready',function() {
+                    if(q.partsMode=='explore') {
+                        vm.parts().slice(1).forEach(function(p,i) {
+                            var p = q.addExtraPart(i+1);
+                        });
+                    }
+                });
+                this._instance = q;
+                this.should_remake_instance = false;
+            }
+            return this._instance;
+        };
+
+
         if(item_json.editable) {
             this.deleteResource =  function(res) {
                 q.resources.remove(res);
@@ -1388,14 +1414,6 @@ $(document).ready(function() {
                 this.tags([]);
             }
 
-        },
-
-        /** Create an instance of this question as a Numbas.Question object.
-         * Returns a promise which resolves once the question is ready to use
-         */
-        instance: function() {
-            var q = Numbas.createQuestionFromJSON(this.toJSON(),1,null,null,this.baseScope());
-            return q;
         },
 
         selectFirstVariable: function() {
@@ -3288,7 +3306,7 @@ $(document).ready(function() {
             if(this.editing()) {
                 if(this.part.type().name=='gapfill') {
                     this.answer({
-                        valid: this.part.gaps().every(function(g){return g.marking_test().answer().valid}), 
+                        valid: this.part.gaps().some(function(g){return g.marking_test().answer().valid}), 
                         value: this.part.gaps().map(function(g) {
                             return g.marking_test().answer().value;
                         })
@@ -3379,7 +3397,7 @@ $(document).ready(function() {
         
         // When something changes, run the marking script and store the result in `this.result`
         this.mark = function() {
-            mt.answer();
+            var answer = mt.answer();
             var q = mt.question();
             if(mt.question_error()) {
                 mt.last_run({error: 'Error creating question: '+mt.question_error().message});
@@ -3394,7 +3412,6 @@ $(document).ready(function() {
                 if(!part) {
                     throw(new Error("Part not found"));
                 }
-                var answer = mt.answer();
                 if(!answer) {
                     throw(new Numbas.Error("Student's answer not set. There may be an error in the input widget."));
                 }
@@ -3460,7 +3477,9 @@ $(document).ready(function() {
                     n.error('');
                     n.valid(false);
                 });
-                return;
+                if(!last_run) {
+                    return;
+                }
             }
             var result = last_run.result;
             var script = last_run.script;
@@ -3473,7 +3492,7 @@ $(document).ready(function() {
             // Look at notes we already know about, and if they're present in this result
             var notes = this.notes().slice();
             notes.forEach(function(note) {
-                var missing = !(note.name in result.states);
+                var missing = !(result && (note.name in result.states));
                 if(missing) {
                     if(mt.editing()) {
                         mt.notes.remove(note);
@@ -3484,35 +3503,45 @@ $(document).ready(function() {
                 existing_notes[note.name] = note;
             });
 
-            // Save the results for each note
-            for(var x in result.states) {
-                var name = x.toLowerCase();
-                var note = existing_notes[name];
-                // If this note is new, add it to the list
-                if(!note) {
-                    note = new MarkingNote(name);
-                    existing_notes[name] = note;
-                    this.notes.push(note);
+            if(result) {
+                // Save the results for each note
+                for(var x in result.states) {
+                    var name = x.toLowerCase();
+                    var note = existing_notes[name];
+                    // If this note is new, add it to the list
+                    if(!note) {
+                        note = new MarkingNote(name);
+                        existing_notes[name] = note;
+                        this.notes.push(note);
+                    }
+
+                    // Compile feedback messages
+                    var feedback = compile_feedback(Numbas.marking.finalise_state(result.states[x]), last_run.marks);
+
+                    // Save the results for this note
+                    note.note(script.notes[x]);
+                    note.value(result.values[x]);
+                    note.messages(feedback.messages);
+                    note.warnings(feedback.warnings);
+                    note.credit(feedback.credit);
+                    note.error(result.state_errors[x] ? result.state_errors[x].message : '');
+                    note.valid(result.state_valid[x]);
+                    note.missing(false);
                 }
-
-                // Compile feedback messages
-                var feedback = compile_feedback(Numbas.marking.finalise_state(result.states[x]), last_run.marks);
-
-                // Save the results for this note
-                note.note(script.notes[x]);
-                note.value(result.values[x]);
-                note.messages(feedback.messages);
-                note.warnings(feedback.warnings);
-                note.credit(feedback.credit);
-                note.error(result.state_errors[x] ? result.state_errors[x].message : '');
-                note.valid(result.state_valid[x]);
-                note.missing(false);
             }
             var mark_note = existing_notes.mark;
             var marking_result = last_run.marking_result;
-            mark_note.credit(marking_result.credit);
-            mark_note.messages(marking_result.markingFeedback.map(function(m){ return m.message }));
-            mark_note.warnings(marking_result.warnings);
+            if(mark_note) {
+                if(marking_result) {
+                    mark_note.credit(marking_result.credit);
+                    mark_note.messages(marking_result.markingFeedback.map(function(m){ return m.message }));
+                    mark_note.warnings(marking_result.warnings);
+                } else {
+                    mark_note.credit(0);
+                    mark_note.messages([]);
+                    mark_note.warnings([]);
+                }
+            }
         },this);
 
         // If this test is being edited, keep the "expected" values up to date

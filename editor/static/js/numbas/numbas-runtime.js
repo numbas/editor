@@ -12920,7 +12920,7 @@ if(res) { \
         showFeedbackIcon: true,
         hasVariableReplacements: false,
         variableReplacementStrategy: 'originalfirst',
-        exploreObjective: '',
+        exploreObjective: null,
         suggestGoingBack: false,
         adaptiveMarkingPenalty: 0,
         useAlternativeFeedback: false
@@ -27748,6 +27748,9 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
      * @returns {string}
      */
     cleanAnswer: function(answer) {
+        if(answer===undefined) {
+            answer = '';
+        }
         answer = answer.toString().trim();
         return answer;
     },

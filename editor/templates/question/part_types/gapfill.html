@@ -1,5 +1,5 @@
 {% load editor_controls %}
-<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking-settings'}">
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='marking-settings'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         {% include "question/generic_part_marking_settings.html" %}
         <div data-bind="fadeVisible: all_gaps_same_type">

@@ -227,6 +227,36 @@ $(document).ready(function() {
         this.in_use = options.in_use === undefined ? false : options.in_use;
     }
 
+    Editor.Tabber = function(tabs) {
+        this.tabs = tabs;
+        this.realCurrentTab = ko.observable(ko.unwrap(this.tabs)[0]);
+        this.currentTab = ko.computed({
+            read: function() {
+                var tabs = ko.unwrap(this.tabs);
+                if(tabs.indexOf(this.realCurrentTab())==-1) {
+                    this.realCurrentTab(tabs[0]);
+                    return tabs[0];
+                } else {
+                    return this.realCurrentTab();
+                }
+            },
+            write: this.realCurrentTab
+        },this);
+    }
+    Editor.Tabber.prototype = {
+        getTab: function(id) {
+            return ko.unwrap(this.tabs).find(function(t){return t.id==id});
+        },
+        setTab: function(id) {
+            var tabber = this;
+            return function() {
+                var tab = tabber.getTab(id);
+                tabber.currentTab(tab);
+            }
+        }
+    };
+
+
     Editor.contentObservable = function(val) {
         var obs = ko.observable(val);
         return ko.computed({
@@ -572,16 +602,7 @@ $(document).ready(function() {
         this.description = ko.observable('');
         this.ignored_publishing_criteria = ko.observable(false);
 
-        this.mainTabs = ko.observableArray([]);
-
-        this.currentTab = ko.observable();
-
-        this.setTab = function(id) {
-            return function() {
-                var tab = ei.getTab(id);
-                ei.currentTab(tab);
-            }
-        }
+        this.mainTabber = new Editor.Tabber(ko.observableArray([]));
 
         this.ready_to_download_checks = ko.observableArray([
             function() {
@@ -761,7 +782,7 @@ $(document).ready(function() {
         this.restorepointwriter = new Editor.CommentWriter();
 
         this.edit_name = function() {
-            ei.setTab('settings')();
+            ei.mainTabber.setTab('settings')();
             ko.tasks.runEarly();
             $('#name-input').focus();
         }
@@ -837,17 +858,10 @@ $(document).ready(function() {
             if(window.history !== undefined) {
                 var state = window.history.state || {};
                 if('currentTab' in state) {
-                    var tabs = this.mainTabs();
-                    for(var i=0;i<tabs.length;i++) {
-                        var tab = tabs[i];
-                        if(tab.id==state.currentTab) {
-                            this.currentTab(tab);
-                            break;
-                        }
-                    }
+                    this.mainTabber.setTab(state.currentTab);
                 }
                 Editor.computedReplaceState('currentTab',ko.pureComputed(function() {
-                    var tab = this.currentTab();
+                    var tab = this.mainTabber.currentTab();
                     return tab ? tab.id : '';
                 },this));
             }
@@ -898,10 +912,10 @@ $(document).ready(function() {
         set_tab_from_hash: function() {
             switch(window.location.hash.slice(1)) {
                 case 'editing-history':
-                    this.currentTab(this.getTab('history'));
+                    this.mainTabber.setTab('history');
                     break;
                 case 'network':
-                    this.currentTab(this.getTab('network'));
+                    this.mainTabber.setTab('network');
                     break;
             } 
         },
@@ -909,10 +923,6 @@ $(document).ready(function() {
         applyDiff: function(version) {
             viewModel.currentChange(version);
             viewModel.load(version.data);
-        },
-
-        getTab: function(id) {
-            return this.mainTabs().find(function(t){return t.id==id});
         },
 
         get_ability_level: function(pk) {
@@ -1713,8 +1723,8 @@ $(document).ready(function() {
             var p = this;
 
             var editor = this.editor = params.editor;
-            this.previousTab = params.previousTab ? editor.getTab(params.previousTab) : null;
-            this.nextTab = params.nextTab ? editor.getTab(params.nextTab) : null;
+            this.previousTab = params.previousTab ? editor.mainTabber.getTab(params.previousTab) : null;
+            this.nextTab = params.nextTab ? editor.mainTabber.getTab(params.nextTab) : null;
             this.task_group = params.task_group;
             this.has_task = editor.section_tasks[this.task_group] !== undefined;
             this.completed = this.has_task ? editor.task_list.section_completed[this.task_group] : true;
@@ -1749,12 +1759,12 @@ $(document).ready(function() {
             <nav data-bind="visible: visible">\
                 <ul class="pager">\
                     <li class="previous" data-bind="if: previousTab">\
-                        <a title="Back to the previous section" href="#" data-bind="click: editor.setTab(previousTab.id)">← <span data-bind="text: previousTab.title"></span></a>\
+                        <a title="Back to the previous section" href="#" data-bind="click: editor.mainTabber.setTab(previousTab.id)">← <span data-bind="text: previousTab.title"></span></a>\
                     </li>\
                     <span class="still-to-do text-warning" data-bind="if: has_task, visible: !ko.unwrap(completed), click: focus">Before moving on, you should <span data-bind="html: still_to_do"></span></span>\
                     <span data-bind="if: nextTab, visible: ko.unwrap(completed)" class="text-success">Move on when you\'re ready!</span>\
                     <li class="next" data-bind="if: nextTab, css: {ready: completed}">\
-                        <a title="Proceed to the next section" href="#" data-bind="click: editor.setTab(nextTab.id)"><span data-bind="text: nextTab.title"></span> →</a>\
+                        <a title="Proceed to the next section" href="#" data-bind="click: editor.mainTabber.setTab(nextTab.id)"><span data-bind="text: nextTab.title"></span> →</a>\
                     </li>\
                 </ul>\
             </nav>\

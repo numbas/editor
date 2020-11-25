@@ -1,14 +1,14 @@
 {% load editor_controls %}
 {% load helplink %}
 
-<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking-settings'}">
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='marking-settings'}">
 <form class="form-horizontal" data-bind="submit: Editor.noop">
     <div class="main-settings">
         {% property '$parent.marks' 'Marks' min=0 help_url='question/parts/reference.html#term-marks' %}
 
         {% jmeproperty 'answer' 'Correct answer' help_url='question/parts/mathematical-expression.html#term-correct-answer' %}
         <div data-bind="fadeVisible: answerIsEquation" class="alert alert-warning">
-            <p>{% helplink 'question/parts/mathematical-expression.html#marking-an-equation' subject='marking equations' %} The correct answer is an equation. Use the <a href="#" data-bind="click: $parent.setTab('checking-accuracy')">accuracy tab</a> to generate variable values satisfying this equation so it can be marked accurately.</p>
+            <p>{% helplink 'question/parts/mathematical-expression.html#marking-an-equation' subject='marking equations' %} The correct answer is an equation. Use the <a href="#" data-bind="click: $parent.tabber.setTab('checking-accuracy')">accuracy tab</a> to generate variable values satisfying this equation so it can be marked accurately.</p>
         </div>
     </div>
 
@@ -21,7 +21,7 @@
     {% booleanproperty 'showPreview' 'Show preview of student\'s answer?' help_url='question/parts/mathematical-expression.html#term-show-preview-of-student-s-answer' %}
 </form>
 </section>
-<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='checking-accuracy'}">
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='checking-accuracy'}">
 <form class="form-horizontal" data-bind="submit: Editor.noop">
     <h4>Checking accuracy</h4>
     <p class="help-block">
@@ -64,7 +64,7 @@
     </div>
 </form>
 </section>
-<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='restrictions'}">
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='restrictions'}">
     <div class="main-settings">
     <h4>Pattern restriction</h4>
     <form class="form-horizontal" data-bind="submit: Editor.noop">

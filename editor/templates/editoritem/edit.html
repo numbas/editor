@@ -79,7 +79,7 @@
                     {% endfor %}
                         <li role="separator" class="divider"></li>
                         <li>
-                        <a tabindex="-1" href="#" {% if editable %}data-bind="click: setTab('access')"{% endif %}>
+                        <a tabindex="-1" href="#" {% if editable %}data-bind="click: mainTabber.setTab('access')"{% endif %}>
                                 {% if object.editoritem.published %}
                                 <span class="text-success"><span class="glyphicon glyphicon-ok"></span> Published</span>
                                 {% else %}
@@ -160,9 +160,9 @@
                     </button>
                 </div>
                 <div class="collapse navbar-collapse" id="editor-controls-collapse">
-                    <ul class="nav nav-pills nav-stacked" data-bind="foreach: mainTabs">
-                        <li data-bind="visible: visible, css: {active: $root.currentTab() == $data, 'in-use': $data.in_use}">
-                            <a href="#" data-bind="click: $root.currentTab">
+                    <ul class="nav nav-pills nav-stacked" data-bind="foreach: mainTabber.tabs">
+                        <li data-bind="visible: visible, css: {active: $root.mainTabber.currentTab() == $data, 'in-use': $data.in_use}">
+                            <a href="#" data-bind="click: $root.mainTabber.currentTab">
                                 <span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> 
                                 <span class="hidden-sm" data-bind="text: title"></span>
                                 <span class="sr-only" data-bind="visible: in_use">(in use)</span>
@@ -177,7 +177,7 @@
             <div class="tab-content">
             {% block main_tab_content %}
                 <!-- Settings tab -->
-                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='settings'}">
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='settings'}">
                     <div class="container-fluid">
                         {% block settings %}
                         <div class="row">
@@ -313,7 +313,7 @@
                 </section>
 
                 <!-- Editing history -->
-                <section class="editing-history tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='history'}">
+                <section class="editing-history tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='history'}">
 
                     <div class="contributors">
                         <h3>Contributors</h3>
@@ -412,7 +412,7 @@
 
                 {% if editable %}
                 <!-- Access -->
-                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='access'}">
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='access'}">
                     <div class="panel panel-warning" data-bind="visible: !published() && !task_list.all_sections_completed()">
                         <div class="panel-heading">
                             <h3 class="panel-title">Publish</h3>
@@ -420,9 +420,9 @@
                         <div class="panel-body">
                             <p>At the moment, access to this {{item_type}} is restricted to members of the project this {{item_type}} belongs to and any other users you've explicitly granted access to.</p>
                             <p>Complete each of the following tasks before you publish this {{item_type}}:</p>
-                            <ul class="list-unstyled" data-bind="foreach: mainTabs">
+                            <ul class="list-unstyled" data-bind="foreach: mainTabber.tabs">
                                 <li data-bind="visible: $root.task_list.section_completed[id]!==undefined">
-                                <h4><a href="#" data-bind="text: title, click: $root.setTab(id), css: {'text-success': $root.task_list.section_completed[id], 'text-danger': !ko.unwrap($root.task_list.section_completed[id])}"></a></h4>
+                                <h4><a href="#" data-bind="text: title, click: $root.mainTabber.setTab(id), css: {'text-success': $root.task_list.section_completed[id], 'text-danger': !ko.unwrap($root.task_list.section_completed[id])}"></a></h4>
                                     <ul data-bind="foreach: $root.task_list.section_tasks[id]">
                                         <li data-bind="css: {'text-success': done, 'text-danger': !done()}">
                                             <span class="glyphicon" data-bind="css:{'glyphicon-ok':done, 'glyphicon-alert':!done()}"></span>
@@ -553,7 +553,7 @@
                 {% endif %}
 
                 <!-- Other versions -->
-                <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='network'}">
+                <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.mainTabber.currentTab().id)=='network'}">
                     {% if object.editoritem.network|length == 1 %}
                         <p>There is only one version of this {{item_type}}.<p>
                     {% else %}

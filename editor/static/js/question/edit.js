@@ -336,10 +336,10 @@ $(document).ready(function() {
         };
 
         var extensions_tab_in_use = ko.pureComputed(function() {
-            return this.usedExtensions().length>0 || this.functions().length>0 || this.preamble.css()!='' || this.preamble.js()!='';
+            return this.usedExtensions().length>0 || this.rulesets().length>0 || this.functions().length>0 || this.preamble.css()!='' || this.preamble.js()!='';
         },this);
 
-        this.mainTabs([
+        this.mainTabber.tabs([
             new Editor.Tab('statement','Statement','blackboard',{in_use: ko.pureComputed(function(){ return this.statement()!=''; },this)}),
             new Editor.Tab('parts','Parts','check',{in_use: ko.pureComputed(function() { return this.parts().length>0; },this)}),
             new Editor.Tab('variables','Variables','list',{in_use: ko.pureComputed(function() { return this.variables().length>0; },this)}),
@@ -354,9 +354,16 @@ $(document).ready(function() {
         ]);
         if(item_json.editable) {
             var adviceTab = new Editor.Tab('access','Access','lock');
-            this.mainTabs.splice(8,0,adviceTab);
+            this.mainTabber.tabs.splice(8,0,adviceTab);
         }
-        this.currentTab(this.mainTabs()[0]);
+        this.mainTabber.currentTab(this.mainTabber.tabs()[0]);
+
+        this.extensionTabs = new Editor.Tabber([
+            new Editor.Tab('extensions','Extensions','wrench',{in_use: ko.pureComputed(function() { return this.usedExtensions().length>0 },this)}),
+            new Editor.Tab('rulesets','Rulesets','list-alt',{in_use: ko.pureComputed(function() { return this.rulesets().length > 0 },this)}),
+            new Editor.Tab('functions','Functions','education',{in_use: ko.pureComputed(function() { return this.functions().length>0 },this)}),
+            new Editor.Tab('preamble','Preamble','console',{in_use: ko.pureComputed(function() { return this.preamble.css()!='' || this.preamble.js()!='' },this)})
+        ]);
 
         this.startAddingPart = function() {
             q.addingPart({kind:'part', parent:null, parentList: q.parts, availableTypes: q.partTypes});
@@ -395,7 +402,7 @@ $(document).ready(function() {
                 return;
             }
             q.currentPart(p);
-            q.currentTab(q.getTab('parts'));
+            q.mainTabber.setTab('parts');
         }
 
         this.baseVariableGroup = new VariableGroup(this,{name:'Ungrouped variables'});
@@ -467,7 +474,7 @@ $(document).ready(function() {
                 return;
             }
             q.currentVariable(v);
-            q.currentTab(q.getTab('variables'));
+            q.setTab('variables');
         }
 
         ko.computed(function() {
@@ -511,11 +518,11 @@ $(document).ready(function() {
                 var icons;
                 switch(def.kind) {
                     case 'tab':
-                        icons = [q.getTab(def.tab).icon];
+                        icons = [q.mainTabber.getTab(def.tab).icon];
                         break;
                     case 'part':
-                        icons = [q.getTab('parts').icon];
-                        var tab = def.part.getTab(def.tab);
+                        icons = [q.mainTabber.getTab('parts').icon];
+                        var tab = def.part.tabber.getTab(def.tab);
                         if(tab) {
                             icons.push(tab.icon);
                         }
@@ -524,14 +531,12 @@ $(document).ready(function() {
                 function go() {
                     switch(def.kind) {
                         case 'tab':
-                            q.setTab(def.tab)();
-                            icon = q.getTab(def.tab).icon;
+                            q.mainTabber.setTab(def.tab)();
                             break;
                         case 'part':
-                            q.setTab('parts')();
+                            q.mainTabber.setTab('parts')();
                             q.currentPart(def.part);
-                            def.part.setTab(def.tab)();
-                            icon = def.part.getTab(def.tab).icon;
+                            def.part.tabber.setTab(def.tab)();
                             break;
                     }
                 }
@@ -664,7 +669,7 @@ $(document).ready(function() {
                     var tab = state.currentPartTabs[path];
                     var part = q.getPart(path);
                     if(part) {
-                        part.setTab(tab)();
+                        part.tabber.setTab(tab)();
                     }
                 });
             }
@@ -680,7 +685,7 @@ $(document).ready(function() {
             Editor.computedReplaceState('currentPartTabs',ko.pureComputed(function() {
                 var d = {};
                 q.allParts().forEach(function(p) {
-                    d[p.path()] = p.currentTab().id;
+                    d[p.path()] = p.tabber.currentTab().id;
                 });
                 return d;
             },this));
@@ -2722,7 +2727,7 @@ $(document).ready(function() {
             return o;
         },this);
 
-        this.tabs = ko.pureComputed(function() {
+        var tabs = ko.pureComputed(function() {
             var tabs = [];
             if(!this.isGap() && !this.isAlternative()) {
                 tabs.push(new Editor.Tab('prompt','Prompt','blackboard',{visible:true,more_important:true,in_use: ko.pureComputed(function() { return this.prompt()!=''},this)}));
@@ -2772,32 +2777,7 @@ $(document).ready(function() {
 
             return tabs;
         },this);
-        this.realCurrentTab = ko.observable(this.tabs()[0]);
-        this.currentTab = ko.computed({
-            read: function() {
-                if(this.tabs().indexOf(this.realCurrentTab())==-1) {
-                    this.realCurrentTab(this.tabs()[0]);
-                    return this.tabs()[0];
-                }
-                else {
-                    return this.realCurrentTab();
-                }
-            },
-            write: this.realCurrentTab
-        },this);
-
-        this.getTab = function(id) {
-            return p.tabs().find(function(t){return t.id==id});
-        }
-
-        this.setTab = function(id) {
-            return function() {
-                var tab = p.getTab(id);
-                p.currentTab(tab);
-            }
-        }
-
-
+        this.tabber = new Editor.Tabber(tabs);
 
         if(data)
             this.load(data);
@@ -3594,24 +3574,13 @@ $(document).ready(function() {
         },this);
 
 
-        this.tabs = [
+        var tabs = [
             new Editor.Tab('variables','Variable values','text-background'),
             new Editor.Tab('notes','Feedback notes','text-background')
         ];
+        this.tabber = new Editor.Tabber(tabs);
 
-        this.getTab = function(id) {
-            return mt.tabs.find(function(t){return t.id==id});
-        }
-
-        this.setTab = function(id) {
-            return function() {
-                var tab = mt.getTab(id);
-                mt.currentTab(tab);
-            }
-        }
-        this.currentTab = ko.observable(null);
-
-        this.setTab('notes')();
+        this.tabber.setTab('notes')();
 
         this.header = ko.pureComputed(function() {
             // Prefix for the the header of this test in the list of tests

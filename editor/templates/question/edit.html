@@ -177,7 +177,7 @@
 {% block main_tab_content %}
 {{ block.super }}
     <!-- Question statement -->
-    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='statement'}, variableReferenceLandmark: {kind: 'tab', tab: 'statement'}">
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='statement'}, variableReferenceLandmark: {kind: 'tab', tab: 'statement'}">
         <div class="form-group">
             <label>Question statement</label>
             <div id="statement-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: statement, tinymce_plugins: ['jmevisible','preview'], variableReferrer: {value: statement, description: 'Statement', kind: 'html'}"></div>
@@ -193,7 +193,7 @@
     </section>
 
     <!-- Variables -->
-    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='variables'}">
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='variables'}">
         <div class="container-fluid">
             <div class="row">
                 <div class="col-sm-12 col-md-6 col-lg-7" data-bind="visible: variables().length==0">
@@ -372,7 +372,7 @@
                                         {% endif %}
                                     </td>
                                     <td class="testing-cell">
-                                        <button type="button" class="btn btn-xs btn-link" title="This variable is used in the testing condition" data-bind="click: $root.setTab('variabletesting')">
+                                        <button type="button" class="btn btn-xs btn-link" title="This variable is used in the testing condition" data-bind="click: $root.mainTabber.setTab('variabletesting')">
                                             <span class="glyphicon glyphicon-flag" data-bind="visible: $parent.usedInTestCondition"></span>
                                         </button>
                                     </td>
@@ -417,7 +417,7 @@
                     </div>
                     <div class="alert alert-danger" data-bind="visible: variablesTest.conditionError" aria-live="polite">
                         <h4><strong>Error in variable testing condition</strong></h4>
-                        <p>There's an error in the condition you specified in the <a data-bind="click: setTab('variabletesting')" href="#">Variable testing tab</a>. Variable values can't be generated until it's fixed.</p>
+                        <p>There's an error in the condition you specified in the <a data-bind="click: mainTabber.setTab('variabletesting')" href="#">Variable testing tab</a>. Variable values can't be generated until it's fixed.</p>
                     </div>
                     <div class="fadeVisible: variables().length>0">
                         <button class="btn btn-info btn-lg btn-block" type="button" data-bind="click: generateVariablePreview"><span class="glyphicon glyphicon-refresh"></span> Regenerate values</button>
@@ -435,7 +435,7 @@
     </section>
 
     <!-- Variable testing -->
-    <section class="tab-pane" data-bind="css: {active: ko.unwrap(currentTab().id)=='variabletesting'}, variableReferenceLandmark: {kind: 'tab', tab: 'variabletesting'}">
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap(mainTabber.currentTab().id)=='variabletesting'}, variableReferenceLandmark: {kind: 'tab', tab: 'variabletesting'}">
         <form class="form-horizontal" data-bind="submit: Editor.noop">
             <div class="form-group">
                 <label class="col-sm-3 control-label">
@@ -461,7 +461,7 @@
     </section>
 
     <!-- Parts -->
-    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='parts'}">
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='parts'}">
         <div class="panel-group parts" role="tablist" aria-multiselectable="true">
             <div class="container-fluid">
                 <div class="row">
@@ -615,7 +615,7 @@
 
 
     <!-- Advice -->
-    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='advice'}">
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='advice'}">
         <div class="form-group">
             <label>Advice</label>
             <div id="advice-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: advice, tinymce_plugins: ['jmevisible','preview']"></div>
@@ -631,39 +631,44 @@
     </section>
 
     <!-- Extensions and scripts -->
-    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='extensions'}">
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='extensions'}">
         <div class="container-fluid">
             <div class="row">
-                <div class="col-sm-4">
-                    <div class="panel panel-info">
-                        <div class="panel-heading">
-                            <h4 class="panel-title">Extensions {% helplink 'question/reference.html#extensions' %}</h4>
-                        </div>
-                        <div class="panel-body">
-                            <ul class="extensions" data-bind="foreach: extensions">
-                                <li class="extension" data-bind="css: {error: error, 'text-warning': error}">
-                                    <label>
-                                        <span class="checkbox"><input type="checkbox" data-bind="checked: used_or_required, disable: !item_json.editable || required() || error(), attr: { title: required() ? 'This extension is required by one or more question parts' : '' }"></span>
-                                        <span data-bind="text:name"></span> 
-                                        <a data-bind="if: url, attr: {href:url, title: 'Documentation on the '+name+' extension'}" target="_blank"><small class="glyphicon glyphicon-book"></small></a>
-                                        {% if not user.is_anonymous %}<a data-bind="if: author=={{user.pk}}, attr: {href: edit_url, title: 'Edit the '+name+' extension'}" target="_blank"><small class="glyphicon glyphicon-pencil"></small></a>{% endif %}
-                                    </label>
-                                    <div class="text-warning" data-bind="fadeVisible: error">
-                                        There was an error loading this extension.
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
+                <ul class="col-sm-1 col-md-3 col-lg-2 nav nav-pills nav-stacked part-tabs" data-bind="foreach: extensionTabs.tabs">
+                    <li data-bind="css: {active: ko.unwrap($parent.extensionTabs.currentTab().id) == $data.id, 'more-important': $data.more_important, 'in-use': $data.in_use}">
+                        <a href="#" data-bind="click: $parent.extensionTabs.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> <span class="hidden-sm" data-bind="text: title"></span></a>
+                    </li>
+                </ul>
+                <div class="col-sm-11 col-md-9 col-lg-10 tab-content">
+                    <section class="tab-pane" data-bind="activeIf: ko.unwrap(extensionTabs.currentTab().id)=='extensions'">
+                        <p class="help-block">
+                            {% helplink 'question/reference.html#extensions' subject='extensions' %}
+                            Select extensions to use in this question.
+                        </p>
+                        <ul class="extensions" data-bind="foreach: extensions">
+                            <li class="extension" data-bind="css: {error: error, 'text-warning': error}">
+                                <label>
+                                    <span class="checkbox"><input type="checkbox" data-bind="checked: used_or_required, disable: !item_json.editable || required() || error(), attr: { title: required() ? 'This extension is required by one or more question parts' : '' }"></span>
+                                    <span data-bind="text:name"></span> 
+                                    <a data-bind="if: url, attr: {href:url, title: 'Documentation on the '+name+' extension'}" target="_blank"><small class="glyphicon glyphicon-book"></small></a>
+                                    {% if not user.is_anonymous %}<a data-bind="if: author=={{user.pk}}, attr: {href: edit_url, title: 'Edit the '+name+' extension'}" target="_blank"><small class="glyphicon glyphicon-pencil"></small></a>{% endif %}
+                                </label>
+                                <div class="text-warning" data-bind="fadeVisible: error">
+                                    There was an error loading this extension.
+                                </div>
+                            </li>
+                        </ul>
                         {% if editable and not user.is_anonymous %}
-                        <div class="panel-footer">
-                            <a class="btn btn-link btn-block" target="_blank" href="{% url 'extension_list_profile' user.pk %}"><span class="glyphicon glyphicon-wrench"></span> Your extensions</a>
-                        </div>
+                        <p>
+                            <a target="_blank" href="{% url 'extension_list_profile' user.pk %}"><span class="glyphicon glyphicon-wrench"></span> Your extensions</a>
+                        </p>
                         {% endif %}
-                    </div>
-                    <div class="panel panel-info">
-                        <div class="panel-heading">
-                            <h4 class="panel-title">Rulesets {% helplink 'question/reference.html#rulesets' subject='rulesets' %}</h4>
-                        </div>
+                    </section>
+                    <section class="tab-pane" data-bind="activeIf: ko.unwrap(extensionTabs.currentTab().id)=='rulesets'">
+                        <p class="help-block">
+                            {% helplink 'question/reference.html#rulesets' subject='rulesets' %}
+                            Define rulesets for simplification and display of mathematical expressions.
+                        </p>
                         <ul class="list-group">
                             <!-- ko foreach: {data: rulesets, afterAdd: Editor.afterAdd} -->
                             <li class="list-group-item ruleset">
@@ -680,17 +685,16 @@
                             <!-- /ko -->
                         </ul>
                         {% if editable %}
-                        <div class="panel-footer">
+                        <p>
                             <button type="button" class="btn btn-primary" data-bind="click:addRuleset"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: rulesets().length ? 'Add another ruleset' : 'Add a ruleset'"></span></button>
-                        </div>
+                        </p>
                         {% endif %}
-                    </div>
-                </div>
-                <div class="col-sm-8">
-                    <div id="functions" class="panel panel-default">
-                        <div class="panel-heading">
-                            <h3 class="panel-title">Functions {% helplink 'question/reference.html#functions' subject='functions' %}</h3>
-                        </div>
+                    </section>
+                    <section class="tab-pane" data-bind="activeIf: ko.unwrap(extensionTabs.currentTab().id)=='functions'">
+                        <p class="help-block">
+                            {% helplink 'question/reference.html#functions' subject='functions' %}
+                            Define functions to use in JME expressions.
+                        </p>
                         <ul class="list-group">
                             <!-- ko foreach: {data: functions, afterAdd: Editor.afterAdd} -->
                             <li class="function list-group-item">
@@ -753,44 +757,40 @@
                             <!-- /ko -->
                         </ul>
                         {% if editable %}
-                        <div class="panel-footer">
+                        <p>
                             <button type="button" class="btn btn-primary" data-bind="click:addFunction"><span class="glyphicon glyphicon-plus"></span> <span data-bind="text: functions().length ? 'Add another function' : 'Add a function'"></span></button>
-                        </div>
+                        </p>
                         {% endif %}
-                    </div>
-                    <div id="preamble" class="panel panel-default">
-                        <div class="panel-heading">
-                            <h3 class="panel-title">
-                                Preamble
-                                {% helplink 'question/reference.html#preamble' %}
-                            </h3>
-                        </div>
-                        <div class="panel-body">
-                            <form data-bind="submit: Editor.noop">
-                                <div class="form-group">
-                                    <label>Javascript</label>
-                                    <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: preamble.js, codemirrorMode: 'javascript'"></textarea>
-                                    <div class="help-block">
-                                        This script will run after the question's variable have been generated but before the HTML is attached.
-                                    </div>
+                    </section>
+                    <section class="tab-pane" data-bind="activeIf: ko.unwrap(extensionTabs.currentTab().id)=='preamble'">
+                        <p class="help-block">
+                            {% helplink 'question/reference.html#preamble' subject='the preamble' %}
+                            Add styling to the question's display and write a script to run when the question is created.
+                        </p>
+                        <form data-bind="submit: Editor.noop">
+                            <div class="form-group">
+                                <label>Javascript</label>
+                                <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: preamble.js, codemirrorMode: 'javascript'"></textarea>
+                                <div class="help-block">
+                                    This script will run after the question's variable have been generated but before the HTML is attached.
                                 </div>
-                                <div class="form-group">
-                                    <label>CSS</label>
-                                    <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: preamble.css, codemirrorMode: 'css'"></textarea>
-                                    <div class="help-block">
-                                        Apply styling rules to the question's content.
-                                    </div>
+                            </div>
+                            <div class="form-group">
+                                <label>CSS</label>
+                                <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: preamble.css, codemirrorMode: 'css'"></textarea>
+                                <div class="help-block">
+                                    Apply styling rules to the question's content.
                                 </div>
-                            </form>
-                        </div>
-                    </div>
+                            </div>
+                        </form>
+                    </section>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Resources -->
-    <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.currentTab().id)=='resources'}">
+    <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($root.mainTabber.currentTab().id)=='resources'}">
         {% if editable %}
         <form class="alert alert-info" data-bind="fileupload: resources" data-url="{% url 'upload_resource' %}">
             {% csrf_token %}
@@ -826,7 +826,7 @@
     </section>
 
     <!-- Exams using this question -->
-    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='exams'}">
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='exams'}">
         {% if object.exams_using_this.count %}
         <p>This question is used in the following exam{{object.exams_using_this.count|pluralize}}:</p>
             <ul class="exams-list">

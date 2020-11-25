@@ -1,6 +1,6 @@
 {% load editor_controls %}
 {% load helplink %}
-<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='marking-settings'}">
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='marking-settings'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div class="main-settings">
             {% property 'minMarks' 'Minimum marks' help_url='question/parts/multiple-choice.html#term-minimum-marks' %}
@@ -36,7 +36,7 @@
         {% booleanproperty 'showCellAnswerState' 'Show choice feedback state?' help_url='question/parts/multiple-choice.html#term-show-choice-feedback-state' %}    
     </form>
 </section>
-<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.currentTab().id)=='choices'}">
+<section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='choices'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         {% booleanproperty 'customChoices' 'Variable list of choices?' help_url='question/parts/multiple-choice.html#term-variable-list-of-choices' %}
         <div data-bind="fadeVisible: customChoices">

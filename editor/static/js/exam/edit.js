@@ -58,7 +58,7 @@ $(document).ready(function() {
 
         this.allowPrinting = ko.observable(true);
 
-        this.mainTabs([
+        this.mainTabber.tabs([
             new Editor.Tab('questions','Questions','file',{in_use: ko.computed(function() { return this.questions().length>0; },this)}),
             new Editor.Tab('display','Display','picture',{in_use: ko.computed(function() { return this.theme() && this.theme().path!='default'; },this)}),
             new Editor.Tab('navigation','Navigation','tasks'),
@@ -69,9 +69,9 @@ $(document).ready(function() {
             new Editor.Tab('history','Editing history','time',{in_use:item_json.editing_history_used})
         ]);
         if(item_json.editable) {
-            this.mainTabs.splice(6,0,new Editor.Tab('access','Access','lock'));
+            this.mainTabber.tabs.splice(6,0,new Editor.Tab('access','Access','lock'));
         }
-        this.currentTab(this.mainTabs()[0]);
+        this.mainTabber.currentTab(this.mainTabber.tabs()[0]);
 
         this.duration = ko.observable(0);
         this.allowPause = ko.observable(true);
@@ -241,10 +241,6 @@ $(document).ready(function() {
         this.load_state();
     }
     Exam.prototype = {
-
-        getTab: function(id) {
-            return this.mainTabs().find(function(t){return t.id==id});
-        },
 
         deleteItem: function(q,e) {
             if(window.confirm('Really delete this exam?')) {

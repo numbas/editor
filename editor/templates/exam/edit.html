@@ -22,7 +22,7 @@
 {% block main_tab_content %}
 {{ block.super }}
     <!-- Display -->
-    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='display'}">
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='display'}">
         <form class="form-horizontal" data-bind="submit: Editor.noop">
             <div class="form-group">
                 <label class="label-block">
@@ -57,7 +57,7 @@
     </section>
 
     <!-- Questions -->
-    <section class="tab-pane questions-tab" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='questions'}">
+    <section class="tab-pane questions-tab" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='questions'}">
         <div class="questions row">
             <div class="col-sm-6">
                 <div class="panel panel-primary">
@@ -213,7 +213,7 @@
     </section>
 
     <!-- Navigation -->
-    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='navigation'}">
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='navigation'}">
         <form class="form-horizontal" data-bind="submit: Editor.noop">
             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
             {% property 'startpassword' 'Password to begin the exam' help_url='exam/reference.html#term-password-to-begin-the-exam' %}
@@ -241,7 +241,7 @@
     </section>
 
     <!-- Timing -->
-    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='timing'}">
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='timing'}">
         <form class="form-horizontal" data-bind="submit: Editor.noop">
             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
             {% property 'duration' 'Exam duration (minutes)' min=0 help_url='exam/reference.html#term-exam-duration' %}
@@ -257,7 +257,7 @@
     </section>
 
     <!-- Feedback -->
-    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='feedback'}">
+    <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='feedback'}">
         <form class="form-horizontal" data-bind="submit: Editor.noop">
             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' form_offset_class='col-sm-offset-3' %}
             {% booleanproperty 'showactualmark' 'Show current score?' help_url='exam/reference.html#term-show-current-score' %}

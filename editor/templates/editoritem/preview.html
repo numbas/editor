@@ -8,6 +8,7 @@
         <title>{{item.name}} - preview - {{SITE_TITLE}}</title>
 
         <link rel="icon" href="{% sstatic 'icon.png' %}"/>
+        <meta name="viewport" content="width=device-width;initial-scale=1.0">
 
         {% if item.published %}
             {% include 'editoritem/oembed.html' %}

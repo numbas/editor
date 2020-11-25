@@ -125,6 +125,11 @@ The following display options are available:
 
         **Example:** ``\simplify[alwaysTimes]{ 2x }`` produces :math:`2 \times x`.
 
+    timesDot
+        Use a dot for the multiplication symbol instead of a cross.
+
+        **Example:** ``\simplify[timesDot]{ 2*3 }`` produces :math:`2 \cdot 3`.
+
     bareMatrices
         Matrices are rendered without parentheses.
 

@@ -136,7 +136,7 @@ class UserProjectsView(UserProfileView):
 
     def get_context_data(self, *args, **kwargs):
         context = super(UserProjectsView, self).get_context_data(*args, **kwargs)
-        context['projects'] = [p for p in self.object.userprofile.projects() if p.can_be_viewed_by(self.request.user)]
+        context['projects'] = [p for p in self.object.userprofile.projects().distinct() if p.can_be_viewed_by(self.request.user)]
 
         return context
 

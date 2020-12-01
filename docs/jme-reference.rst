@@ -1625,6 +1625,8 @@ Strings
 
     Convert ``x`` to a string.
 
+    When converting a :data:`expression` value to a string, you can give a list of :ref:`display options <jme-display-options>` as a second argument, either as a comma-separated string or a list of strings.
+
     **Definitions**:
         * :data:`number` → :data:`string` - rendered using the ``plain-en`` :ref:`notation style <number-notation>`.
         * :data:`integer` → :data:`string`
@@ -1632,10 +1634,14 @@ Strings
         * :data:`decimal` → :data:`string`
         * :data:`name` → :data:`string`
         * :data:`expression` → :data:`string`
+        * :data:`expression`, :data:`string` or :data:`list of string` → :data:`string`
 
     **Example**:
         * ``string(123)`` → ``"123"``
         * ``string(x)`` → ``"x"``
+        * ``string(expression("0.5"))`` → ``"0.5"``
+        * ``string(expression("0.5"),"fractionNumbers")`` → ``"1/2"``
+
 
 .. jme:function:: latex(x)
 

@@ -92,6 +92,8 @@ When a rule's name is read, that rule is switched on, or if it has an exclamatio
 
 Sets of rules can be given names in the question's :ref:`rulesets` section, so they can be turned on or off in one go.
 
+.. _jme-display-options:
+
 Display options
 ***************
 

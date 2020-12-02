@@ -2,8 +2,44 @@ a {
     color: hsl(204, 50.2%, 39.9%);
 }
 
+.nav-pills > li.active > a, .nav-pills > li.active > a:focus, .nav-pills > li.active > a:hover {
+    background-color: hsl(204, 50.2%, 39.9%);
+}
+
+.badge {
+    background-color: #333;
+}
+
+.text-muted {
+    color: #555;
+}
+
+.btn-link {
+    color: #2e658a;
+}
+
+.btn-info {
+    background-color: hsl(193.7, 66.5%, 36.4%);
+    border-color: hsl(193.8, 66.7%, 31.5%);
+}
+
+.btn-primary {
+    background-color: hsl(204, 50.2%, 30.9%);
+    border-color: hsl(204, 50.2%, 40.9%);
+}
+
 .btn-warning, .btn-success {
     color: black;
+}
+
+.panel-primary {
+    border-color: hsl(204, 50.2%, 34.9%);
+}
+
+.panel-primary > .panel-heading {
+    color: #fff;
+    background-color: hsl(204, 50.2%, 34.9%);
+    border-color: hsl(204, 50.2%, 34.9%);
 }
 
 #top-nav, #top-nav .nav {
@@ -76,6 +112,18 @@ body > footer {
     width: 100%;
 }
 
+
+#top-nav .navbar-nav > li > a {
+    color: #333;
+}
+#top-nav .navbar-nav > li > a .text-info {
+    color: #34444f;
+}
+#top-nav .navbar-nav > li > a:focus,
+#top-nav .navbar-nav > li > a:hover {
+    background-color: hsl(203.9, 100%, 73.7%);
+}
+
 .navbar-brand img {
     max-height: 100%;
 }
@@ -97,6 +145,10 @@ body:not(.loaded) .loaded-content {
 
 .label-block {
     display: block;
+    margin-bottom: 0;
+}
+.label-block > .label-text {
+    margin-bottom: 5px;
 }
 
 .timeline-header {
@@ -109,7 +161,7 @@ body:not(.loaded) .loaded-content {
 }
 .timeline-item.less-important .media-heading {
     font-size: 1em;
-    color: #888;
+    color: #555;
 }
 
 .btn.timeline-more {

@@ -1761,7 +1761,7 @@ $(document).ready(function() {
                     <li class="previous" data-bind="if: previousTab">\
                         <a title="Back to the previous section" href="#" data-bind="click: editor.mainTabber.setTab(previousTab.id)">← <span data-bind="text: previousTab.title"></span></a>\
                     </li>\
-                    <span class="still-to-do text-warning" data-bind="if: has_task, visible: !ko.unwrap(completed), click: focus">Before moving on, you should <span data-bind="html: still_to_do"></span></span>\
+                    <span role="button" tabindex="0" class="still-to-do text-warning" data-bind="if: has_task, visible: !ko.unwrap(completed), click: focus">Before moving on, you should <span data-bind="html: still_to_do"></span></span>\
                     <span data-bind="if: nextTab, visible: ko.unwrap(completed)" class="text-success">Move on when you\'re ready!</span>\
                     <li class="next" data-bind="if: nextTab, css: {ready: completed}">\
                         <a title="Proceed to the next section" href="#" data-bind="click: editor.mainTabber.setTab(nextTab.id)"><span data-bind="text: nextTab.title"></span> →</a>\

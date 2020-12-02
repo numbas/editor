@@ -67,7 +67,7 @@
         </h2>
         <h1 class="name-header">
             <span class="glyphicon glyphicon-{{object.icon}}"></span> 
-            <span class="name" data-bind="mathjaxHTML: name, click: edit_name">{{object.name}}</span>
+            <span class="name" data-bind="mathjaxHTML: name">{{object.name}}</span>
             {% if user.is_authenticated %}
                 <div class="btn-group">
                     <button type="button" class="stamp btn btn-lg btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-bind="attr: {'data-stamp':current_stamp().status}">

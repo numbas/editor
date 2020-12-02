@@ -40,7 +40,7 @@
     <ul id="session" class="nav navbar-nav navbar-right">
         {% if user.is_authenticated %}
             <li id="create-new-dropdown">
-                <a role="button" class="dropdown-toggle" data-toggle="dropdown">
+                <a tabindex="0" role="button" class="dropdown-toggle" data-toggle="dropdown">
                 <span class="glyphicon glyphicon-plus"></span> New <span class="caret"></span>
                 </a>
                 <ul class="dropdown-menu">
@@ -53,7 +53,7 @@
                 </ul>
             </li>
             <li id="notifications" class="{% if unread_notifications %}unread{% endif %}">
-                <a role="button" class="dropdown-toggle {% if not unread_notifications %}disabled{% endif %}" data-toggle="dropdown" title="{{unread_notifications}} unread notification{{unread_notifications|pluralize}}">
+                <a tabindex="0" role="button" class="dropdown-toggle {% if not unread_notifications %}disabled{% endif %}" data-toggle="dropdown" title="{{unread_notifications}} unread notification{{unread_notifications|pluralize}}">
                     <span class="glyphicon glyphicon-bell"></span>
                     <span class="badge noselect">{% if unread_notifications %}{{unread_notifications}}{% endif %}</span>
                     <span class="visible-xs-inline">Notifications</span>
@@ -65,7 +65,7 @@
             </li>
             {% with basket_size=user.userprofile.question_basket.count %}
             <li id="question_basket" class="counter-icon {% if basket_size %}nonempty{% endif %}">
-                    <a role="button" class="dropdown-toggle {% if not basket_size %}disabled{% endif %}" data-toggle="dropdown" title="{{basket_size}} question{{basket_size|pluralize}} in your basket">
+                    <a tabindex="0" role="button" class="dropdown-toggle {% if not basket_size %}disabled{% endif %}" data-toggle="dropdown" title="{{basket_size}} question{{basket_size|pluralize}} in your basket">
                         <span class="glyphicon glyphicon-shopping-cart"></span>
                         <span class="badge noselect">{% if basket_size %}{{basket_size}}{% endif %}</span>
                         <span class="visible-xs-inline">Question Basket</span>

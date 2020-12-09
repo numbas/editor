@@ -60,7 +60,7 @@
                     <span class="sr-only sr-description" aria-live="polite">{{unread_notifications}} unread notification{{unread_notifications|pluralize}}</span>
                 </a>
                 <ul class="dropdown-menu">
-                    {% include "notifications/list.html" %}
+                    {% include "notifications/list_dropdown.html" %}
                 </ul>
             </li>
             {% with basket_size=user.userprofile.question_basket.count %}

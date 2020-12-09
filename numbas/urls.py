@@ -38,7 +38,7 @@ if 'feature_survey' in settings.INSTALLED_APPS:
 urlpatterns += [
     url(r'', include('editor.urls')),
     url(r'^migrate/', include('migration.urls')),
-	url(r'^notifications/', include(notifications.urls, namespace='notifications')),
+    url(r'^notifications/', include(notifications.urls, namespace='notifications')),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

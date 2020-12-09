@@ -2139,13 +2139,13 @@ $(document).ready(function() {
         }
     }
 
-    function update_notifications() {
-        var num_notifications = $('#notifications .dropdown-menu .notification').length;
-        var description = num_notifications+' unread '+(num_notifications==1 ? 'notification' : 'notifications')
+    function update_notifications(response) {
+        $('#notifications .dropdown-menu').html(response.html);
+        var description = response.num_unread+' unread '+(response.num_unread==1 ? 'notification' : 'notifications')
         $('#notifications .dropdown-toggle').attr('title',description);
-        $('#notifications .badge').text(num_notifications>0 ? num_notifications : '');
+        $('#notifications .badge').text(response.num_unread>0 ? response.num_unread : '');
         $('#notifications .sr-description').text(description);
-        if(num_notifications) {
+        if(response.num_unread) {
             $('#notifications').addClass('active');
             $('#notifications .dropdown-toggle').removeClass('disabled');
         } else {
@@ -2155,33 +2155,38 @@ $(document).ready(function() {
     }
 
     $('#notifications').on('click','.mark-all-as-read',function(e) {
-        $('#notifications .dropdown-menu').html('');
-        update_notifications();
+        update_notifications({html:'', num_unread: 0});
+
+        e.stopPropagation();
+        e.preventDefault();
 
         var url = $(this).attr('href');
-        $.post(url,{csrfmiddlewaretoken: getCookie('csrftoken')});
-        e.stopPropagation();
+        $.post(url,{csrfmiddlewaretoken: getCookie('csrftoken')}).success(function(response) {
+            update_notifications(response);
+        });
         return false;
     });
 
-    var old_notifications = $('#notifications .dropdown-menu').html()
-    setInterval(function() {
+    var last_notification = null;
+
+    function fetch_notifications() {
         if(!document.hasFocus()) {
             return;
         }
         if(!is_logged_in) {
             return;
         }
-        $.get('/notifications/unread/').success(function(response) {
-            if(response!=old_notifications) {
-                old_notifications = response;
-                $('#notifications .dropdown-menu').html(response);
-                update_notifications();
+        $.get('/notifications/unread_json/').success(function(response) {
+            if(response.last_notification != last_notification) {
+                last_notification = response.last_notification;
+                update_notifications(response);
             }
         });
-    },5000);
+    }
 
-    update_notifications();
+    setInterval(fetch_notifications,15000);
+
+    fetch_notifications();
 
     var questions_in_basket = Editor.questions_in_basket = function() {
         return $('#question_basket .dropdown-menu .question').map(function(){return parseInt($(this).attr('data-id'))}).toArray();

@@ -1,20 +1,58 @@
+{% extends "base.html" %}
+
 {% load humanize %}
 {% load notifications_tags %}
 {% notifications_unread as unread_notifications %}
 
-{% for notification in user.notifications.unread %}
-    <li class="notification">
-        <a tabindex="-1" href="{% url 'open_notification' notification.pk %}">
-            <div class="description">{{notification.actor.get_full_name}} {{notification.verb}} <span class="target">{{notification.target}}</span></div>
-            <div class="time">{{notification.timestamp|naturaltime}}</div>
-        </a>
-    </li>
-{% endfor %}
-{% if unread_notifications %}
-    <li role="separator" class="divider"></li>
-    <li>
-        <a tabindex="-1" class="mark-all-as-read action" href="{% url 'notifications:mark_all_as_read' %}">Mark all as read</a>
-    </li>
-{% else %}
-    <li>No unread notifications</li>
-{% endif %}
+{% block title %}Notifications - {{block.super}}{% endblock title %}
+
+{% block content %}
+    <header><h1>Your notifications</h1></header>
+
+    <section>
+        {% if user.notifications.unread.exists %}
+        <p>
+            <a class="btn btn-primary" href="{% url 'notifications:mark_all_as_read' %}?next={% url 'notifications:all' %}">
+                <span class="glyphicon glyphicon-eye-open"></span>
+                Mark all notifications as read
+            </a>
+        </p>
+        {% endif %}
+        <nav aria-label="Pages">
+            <ul class="pager">
+                {% if page_obj.has_previous %}
+                <li class="previous"><a href="?page={{page_obj.previous_page_number}}">Newer</a></li>
+                {% endif %}
+                <li>
+                    {% with num_unread=user.notifications.unread.count %}
+                    You have {{num_unread}} unread notification{% if num_unread != 1 %}s{% endif %}
+                    {% endwith %}
+                </li>
+                {% if page_obj.has_next %}
+                <li class="next"><a href="?page={{page_obj.next_page_number}}">Older</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        <table class="table">
+            <tbody>
+            {% for notification in page_obj %}
+            <tr class="notification {% if notification.unread %}info{% endif %}">
+                <td>
+                    <a tabindex="-1" href="{% url 'open_notification' notification.pk %}">
+                        <div class="description">
+                            <span class="glyphicon glyphicon-{{notification.target.icon}}"></span>
+                            {{notification.actor.get_full_name}} {{notification.verb}} <span class="target">{{notification.target}}</span>
+                        </div>
+                    </a>
+                </td>
+                <td>
+                    <div class="time">{{notification.timestamp|naturaltime}}</div>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+    </section>
+
+{% endblock content %}

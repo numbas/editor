@@ -1,5 +1,5 @@
 from django.conf.urls import url
-from django.urls import path, re_path
+from django.urls import path, re_path, include
 
 from django.contrib.auth.decorators import login_required
 
@@ -228,6 +228,7 @@ urlpatterns = [
     # Notifications
 
     url(r'^notification/(?P<pk>\d+)/open', notification.OpenNotification.as_view(permanent=False), name='open_notification'),
+    path('notifications/unread_json/', notification.UnreadNotificationsList.as_view(), name='unread'),
 
     # Question basket
 

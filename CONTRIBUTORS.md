@@ -14,5 +14,6 @@
 * [Mohit Jayanti Gurumukhani](https://github.com/mjguru)
 * [Adarsh Shetty](https://github.com/akshett)
 * [Darcy Coleman](https://github.com/docoleman)
+* [Nabeel Sait](https://github.com/NabeelSait)
 
 *Add your name here - [contribute to the Numbas project](http://www.numbas.org.uk/contributing-to-numbas/)!*

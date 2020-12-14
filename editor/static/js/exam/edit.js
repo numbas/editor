@@ -318,7 +318,7 @@ $(document).ready(function() {
 
             if('navigation' in content)
             {
-                tryLoad(content.navigation,['allowregen','reverse','browse','showfrontpage','preventleave','startpassword'],this);
+                tryLoad(content.navigation,['allowregen','reverse','browse','showfrontpage','preventleave','startpassword','allowsteps'],this);
                 var showresultspage = Editor.tryGetAttribute(content.navigation, 'showresultspage');
                 if(showresultspage) {
                     this.showresultspage(this.showResultsPageOptions.find(function(o){return o.name==showresultspage}));

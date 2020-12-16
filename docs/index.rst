@@ -67,7 +67,7 @@ If you have any questions, please `email us <mailto:numbas@ncl.ac.uk>`_ or join 
     pattern-matching/index
     javascript-api
     extensions/index
-    themes
+    themes/index
     custom-part-types/reference
 
 .. toctree::

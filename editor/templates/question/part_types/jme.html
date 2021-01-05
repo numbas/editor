@@ -6,7 +6,7 @@
     <div class="main-settings">
         {% property '$parent.marks' 'Marks' min=0 help_url='question/parts/reference.html#term-marks' %}
 
-        {% jmeproperty 'answer' 'Correct answer' help_url='question/parts/mathematical-expression.html#term-correct-answer' %}
+        {% jmeproperty 'answer' 'Correct answer' display_property='displayAnswer' help_url='question/parts/mathematical-expression.html#term-correct-answer' %}
         <div data-bind="fadeVisible: answerIsEquation" class="alert alert-warning">
             <p>{% helplink 'question/parts/mathematical-expression.html#marking-an-equation' subject='marking equations' %} The correct answer is an equation. Use the <a href="#" data-bind="click: $parent.tabber.setTab('checking-accuracy')">accuracy tab</a> to generate variable values satisfying this equation so it can be marked accurately.</p>
         </div>

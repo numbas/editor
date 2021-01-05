@@ -133,6 +133,16 @@ part_types.models = [
             model.checkingType = ko.observable(model.checkingTypes[0]);
             model.part = part;
 
+            model.displayAnswer = ko.computed(function() {
+                var tree = jme.compile(this.answer());
+                tree = jme.builtinScope.expandJuxtapositions(tree, {
+                    singleLetterVariables: this.singleLetterVariables(),
+                    noUnknownFunctions: !this.allowUnknownFunctions(),
+                    implicitFunctionComposition: this.implicitFunctionComposition()
+                });
+                return jme.display.treeToJME(tree);
+            },model);
+
             model.answerIsEquation = ko.computed(function() {
                 try {
                     var answer = jme.compile(this.answer());

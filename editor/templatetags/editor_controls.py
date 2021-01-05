@@ -43,6 +43,7 @@ def jme_input(context, property_name, *args, **kwargs):
         'property': property_name,
         'parser': kwargs.get('parser'),
         'disable': kwargs.get('disable', False),
+        'display_property': kwargs.get('display_property', property_name),
     })
     return context
 
@@ -55,6 +56,7 @@ def jmeproperty(context, property_name, label, *args, **kwargs):
         'help_url': kwargs.get('help_url'),
         'disable': kwargs.get('disable', False),
         'parser': kwargs.get('parser'),
+        'display_property': kwargs.get('display_property',property_name),
         'form_label_class': context.get('form_label_class', 'col-sm-3'),
         'form_control_class': context.get('form_control_class', 'col-sm-9'),
     })

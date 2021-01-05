@@ -28582,12 +28582,18 @@ JMEPart.prototype = /** @lends Numbas.JMEPart.prototype */
         var settings = this.settings;
         var answerSimplification = Numbas.jme.collectRuleset(settings.answerSimplificationString,scope.allRulesets());
         var expr = jme.subvars(settings.correctAnswerString,scope);
-        settings.correctVariables = jme.findvars(jme.compile(expr));
-        settings.correctAnswer = jme.display.simplifyExpression(
-            expr,
+        var tree = jme.compile(expr);
+        tree = scope.expandJuxtapositions(tree, {
+            singleLetterVariables: settings.singleLetterVariables,
+            noUnknownFunctions: !settings.allowUnknownFunctions,
+            implicitFunctionComposition: settings.implicitFunctionComposition
+        });
+        settings.correctVariables = jme.findvars(tree);
+        settings.correctAnswer = jme.display.treeToJME(jme.display.simplifyTree(
+            tree,
             answerSimplification,
             scope
-        );
+        ));
         if(settings.correctAnswer == '' && this.marks>0) {
             this.error('part.jme.answer missing');
         }

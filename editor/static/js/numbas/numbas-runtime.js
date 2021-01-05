@@ -6034,9 +6034,18 @@ newBuiltin('shuffle_together',[sig.listof(sig.type('list'))],TList,function(list
 });
 //if needs to be a bit different because it can return any type
 newBuiltin('if', [TBool,'?','?'], '?',null, {
-    evaluate: function(args,scope)
-    {
-        var test = jme.evaluate(args[0],scope).value;
+    evaluate: function(args,scope) {
+        if(args.length!==3) {
+            throw(new Numbas.Error("jme.typecheck.no right type definition",{op:'if'}));
+        }
+        var test = jme.evaluate(args[0],scope);
+        if(jme.isType(test,'boolean')) {
+            test = jme.castToType(test,'boolean').value;
+        } else {
+            // If the test can't be cast to a boolean, use JS's truthiness test on the value attribute.
+            // Ideally this should throw an error, but I don't know if anything depends on this undocumented behaviour.
+            test = test.value;  
+        }
         if(test)
             return jme.evaluate(args[1],scope);
         else
@@ -11504,24 +11513,24 @@ jme.variables = /** @lends Numbas.jme.variables */ {
     },
     /** Make a custom function.
      *
-     * @param {object} tmpfn - Contains `definition`, `name`, `language`, `parameters`.
+     * @param {Numbas.jme.variables.func_data} tmpfn - Contains `definition`, `name`, `language`, `parameters`.
      * @param {Numbas.jme.Scope} scope
      * @param {object} withEnv - Dictionary of local variables for javascript functions.
      * @returns {Numbas.jme.funcObj}
      */
-    makeFunction: function(tmpfn,scope,withEnv) {
+    makeFunction: function(def,scope,withEnv) {
         var intype = [],
             paramNames = [];
-        tmpfn.parameters.map(function(p) {
+        def.parameters.map(function(p) {
             intype.push(p.type);
             paramNames.push(p.name);
         });
-        var outcons = jme.types[tmpfn.outtype];
-        var fn = new jme.funcObj(tmpfn.name,intype,outcons,null,true);
+        var outcons = jme.types[def.outtype];
+        var fn = new jme.funcObj(def.name,intype,outcons,null,true);
         fn.paramNames = paramNames;
-        fn.definition = tmpfn.definition;
-        fn.name = tmpfn.name.toLowerCase();
-        fn.language = tmpfn.language;
+        fn.definition = def.definition;
+        fn.name = def.name.toLowerCase();
+        fn.language = def.language;
         try {
             switch(fn.language)
             {
@@ -27794,7 +27803,8 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
         }
         this.input_signature = jme.parse_signature(this.get_input_type());
         try {
-            this.getCorrectAnswer(this.getScope());
+            var answer = this.getCorrectAnswer(this.getScope());
+            p.resolved_input_options['correctAnswer'] = answer;
         } catch(e) {
             this.error(e.message,{},e);
         }

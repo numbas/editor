@@ -134,13 +134,17 @@ part_types.models = [
             model.part = part;
 
             model.displayAnswer = ko.computed(function() {
-                var tree = jme.compile(this.answer());
-                tree = jme.builtinScope.expandJuxtapositions(tree, {
-                    singleLetterVariables: this.singleLetterVariables(),
-                    noUnknownFunctions: !this.allowUnknownFunctions(),
-                    implicitFunctionComposition: this.implicitFunctionComposition()
-                });
-                return jme.display.treeToJME(tree);
+                try {
+                    var tree = jme.compile(this.answer());
+                    tree = jme.builtinScope.expandJuxtapositions(tree, {
+                        singleLetterVariables: this.singleLetterVariables(),
+                        noUnknownFunctions: !this.allowUnknownFunctions(),
+                        implicitFunctionComposition: this.implicitFunctionComposition()
+                    });
+                    return jme.display.treeToJME(tree);
+                } catch(e) {
+                    return this.answer();
+                }
             },model);
 
             model.answerIsEquation = ko.computed(function() {

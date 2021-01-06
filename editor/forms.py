@@ -20,7 +20,7 @@ from accounts.forms import UserField
 from accounts.util import find_users
 from editor import jsonfield
 
-from uuslug import slugify
+from .slugify import slugify
 
 class FixedSelectMultiple(SelectMultiple):
     def value_from_datadict(self, data, files, name):

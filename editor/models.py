@@ -35,7 +35,7 @@ from django.utils import timezone
 from django.utils.deconstruct import deconstructible
 from django.template.loader import get_template
 from django.core.mail import send_mail
-from uuslug import slugify
+from .slugify import slugify
 
 import reversion
 import reversion.models

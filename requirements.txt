@@ -15,3 +15,4 @@ git+git://github.com/numbas/django-thumbs
 python-slugify==4.0.1
 six==1.15.0
 mistune==0.8.4
+emoji==0.6.0

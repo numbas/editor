@@ -15,7 +15,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.contrib import messages
 from django.http import Http404, HttpResponse
-from django.template.defaultfilters import slugify
+from editor.slugify import slugify
 from django.template.loader import get_template
 from django.contrib.sites.shortcuts import get_current_site
 from editor.models import NewQuestion, NewExam

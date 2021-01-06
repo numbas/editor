@@ -204,7 +204,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
     template_name = 'exam/edit.html'
 
     def get(self, request, *args, **kwargs):
-        if super(EditorItem,self.object.editoritem).can_be_viewed_by(request.user):
+        if super(EditorItem,self.object.editoritem).can_be_viewed_by(request.user) and getattr(settings,'EXAM_ACCESS_REQUIRES_QUESTION_ACCESS',False):
             for q in self.object.questions.all():
                 if not q.editoritem.can_be_viewed_by(request.user):
                     return forbidden(request,message="Sorry, you're not allowed to see this. This exam contains one or more questions that you don't have access to.")

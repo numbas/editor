@@ -1251,7 +1251,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
         return self.project.has_access(user, levels) or Access.objects.filter(item=self, user=user, access__in=levels).exists()
 
     def can_be_viewed_by(self, user):
-        if self.item_type=='exam':
+        if self.item_type=='exam' and getattr(settings,'EXAM_ACCESS_REQUIRES_QUESTION_ACCESS',False):
             for q in self.exam.questions.all():
                 if not q.editoritem.can_be_viewed_by(user):
                     return False

@@ -184,3 +184,6 @@ SANITIZER_ALLOWED_TAGS = ['a', 'p', 'img','br','strong','em','div','code','i','b
 SANITIZER_ALLOWED_ATTRIBUTES = ['href','title']
 
 DEFAULT_FROM_EMAIL = 'admin@numbas'
+
+# Must users be able to view all the questions in an exam in order to view the exam?
+EXAM_ACCESS_REQUIRES_QUESTION_ACCESS = False

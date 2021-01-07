@@ -1620,8 +1620,13 @@ $(document).ready(function() {
                 display = error;
                 type = 'error';
             } else if(value) {
-                display = displayJMEValue(value);
-                type = value.type;
+                try {
+                    display = displayJMEValue(value);
+                    type = value.type;
+                } catch(e) {
+                    display = e.message;
+                    type = 'error';
+                }
             } else {
                 display = '';
             }

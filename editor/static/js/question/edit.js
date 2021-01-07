@@ -402,7 +402,7 @@ $(document).ready(function() {
                 return;
             }
             q.currentPart(p);
-            q.mainTabber.setTab('parts');
+            q.mainTabber.setTab('parts')();
         }
 
         this.baseVariableGroup = new VariableGroup(this,{name:'Ungrouped variables'});
@@ -474,7 +474,7 @@ $(document).ready(function() {
                 return;
             }
             q.currentVariable(v);
-            q.setTab('variables');
+            q.mainTabber.setTab('variables')();
         }
 
         ko.computed(function() {

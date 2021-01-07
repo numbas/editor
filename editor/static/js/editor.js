@@ -858,7 +858,7 @@ $(document).ready(function() {
             if(window.history !== undefined) {
                 var state = window.history.state || {};
                 if('currentTab' in state) {
-                    this.mainTabber.setTab(state.currentTab);
+                    this.mainTabber.setTab(state.currentTab)();
                 }
                 Editor.computedReplaceState('currentTab',ko.pureComputed(function() {
                     var tab = this.mainTabber.currentTab();
@@ -912,10 +912,10 @@ $(document).ready(function() {
         set_tab_from_hash: function() {
             switch(window.location.hash.slice(1)) {
                 case 'editing-history':
-                    this.mainTabber.setTab('history');
+                    this.mainTabber.setTab('history')();
                     break;
                 case 'network':
-                    this.mainTabber.setTab('network');
+                    this.mainTabber.setTab('network')();
                     break;
             } 
         },

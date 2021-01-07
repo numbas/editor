@@ -1924,7 +1924,7 @@ $(document).ready(function() {
         },this);
         this.dependenciesObjects = ko.pureComputed(function() {
             var deps = this.dependencies();
-            return this.dependencies().map(function(name) {
+            return this.dependencies().sort().map(function(name) {
                 var obj = q.getVariable(name);
                 if(obj) {
                     name = obj.names().find(function(n) { return n.name.toLowerCase()==name.toLowerCase() }).name;
@@ -1952,6 +1952,10 @@ $(document).ready(function() {
                 return v.names().some(function(n) {
                     return v2.dependencies().contains(n.name.toLowerCase());
                 });
+            }).sort(function(a,b) {
+                a = a.name();
+                b = b.name();
+                return a<b ? -1 : a>b ? 1 : 0;
             });
         },this);
         this.references = ko.observableArray([]);

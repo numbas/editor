@@ -690,7 +690,7 @@ part_types.models = [
         variable_references: function(part,model) {
             var o = [
                 {tab: 'marking-settings', value: model.answer, type: 'string', description: 'Answer pattern'},
-                {tab: 'marking-settings', value: model.customMarking, type: 'jme', description: 'Custom matrix expression'},
+                {tab: 'marking-settings', value: model.customMatrix, type: 'jme', description: 'Custom matrix expression'},
                 {tab: 'choices', value: model.customChoicesExpression, type: 'jme', description: 'List of choices'},
             ];
             model.choices().forEach(function(c) {
@@ -843,7 +843,7 @@ part_types.models = [
                 {tab: 'marking-settings', value: model.maxMarks, type: 'jme', description: 'Maximum marks'},
                 {tab: 'marking-settings', value: model.minAnswers, type: 'jme', description: 'Minimum answers'},
                 {tab: 'marking-settings', value: model.maxAnswers, type: 'jme', description: 'Maximum answers'},
-                {tab: 'marking-settings', value: model.customMarking, type: 'jme', description: 'Custom matrix expression'},
+                {tab: 'marking-settings', value: model.customMatrix, type: 'jme', description: 'Custom matrix expression'},
                 {tab: 'choices', value: model.customChoicesExpression, type: 'jme', description: 'List of choices'},
             ];
             model.choices().forEach(function(c) {
@@ -1057,7 +1057,7 @@ part_types.models = [
                 {tab: 'marking-settings', value: model.maxMarks, type: 'jme', description: 'Maximum marks'},
                 {tab: 'marking-settings', value: model.minAnswers, type: 'jme', description: 'Minimum answers'},
                 {tab: 'marking-settings', value: model.maxAnswers, type: 'jme', description: 'Maximum answers'},
-                {tab: 'marking-settings', value: model.customMarking, type: 'jme', description: 'Custom matrix expression'},
+                {tab: 'marking-settings', value: model.customMatrix, type: 'jme', description: 'Custom matrix expression'},
                 {tab: 'marking-settings', value: model.layoutExpression, type: 'jme', description: 'Custom layout expression'},
                 {tab: 'choices', value: model.customChoicesExpression, type: 'jme', description: 'List of choices'},
             ];

@@ -190,8 +190,8 @@ The following simplification rules are available:
         * ``x*(-y)`` → ``-(x*y)``
         * ``x+(y+z)`` → ``(x+y)+z`` (make sure sums calculated left-to-right)
         * ``x-(y+z)`` → ``(x-y)-z``
-        * ``x+(y-z) ``(x+y)-z'``
-        * ``x-(y-z)`` > ``(x-y)+z``
+        * ``x+(y-z)`` → ``(x+y)-z``
+        * ``x-(y-z)`` → ``(x-y)+z``
         * ``(x*y)*z`` → ``x*(y*z)`` (make sure multiplications go right-to-left)
         * ``n*i`` → ``eval(n*i)`` (always collect multiplication by :math:`i`)
         * ``i*n`` → ``eval(n*i)``
@@ -249,11 +249,11 @@ The following simplification rules are available:
         * ``(x+n)+m`` → ``x+eval(n+m)`` (collect number sums)
         * ``(x-n)+m`` → ``x+eval(m-n)``
         * ``(x+n)-m`` → ``x+eval(n-m)``
-        * ``(x-n)-m)`` → ``x-eval(n+m)``
+        * ``(x-n)-m`` → ``x-eval(n+m)``
         * ``(x+n)+y`` → ``(x+y)+n`` (numbers go to the end of expressions)
         * ``(x+n)-y`` → ``(x-y)+n``
         * ``(x-n)+y`` → ``(x+y)-n``
-        * ``(x-n)-y`` → ``(x-y)-n)``
+        * ``(x-n)-y`` → ``(x-y)-n``
         * ``n*m`` → ``eval(n*m)`` (multiply numbers)
         * ``x*n`` → ``n*x`` (numbers go to left hand side of multiplication, unless :math:`n=i`)
         * ``m*(n*x)`` → ``eval(n*m)*x``

@@ -3270,14 +3270,15 @@ $(document).ready(function() {
             if(this.editing()) {
                 var vs = [];
                 this.part.q.allVariableGroups().forEach(function(g) {
-                    g.variables().forEach(function(v) {
-                        var value = v.value();
-                        vs.push({
-                            name: v.name(),
-                            value: value,
-                            valueString: value ? Numbas.jme.display.treeToJME({tok:value},{bareExpression:false}) : '',
-                            toggleLocked: function() { v.toggleLocked(); },
-                            locked: v.locked
+                    g.variables().forEach(function(mv) {
+                        mv.names().forEach(function(v) {
+                            vs.push({
+                                name: v.name,
+                                value: v.value,
+                                valueString: v.value ? Numbas.jme.display.treeToJME({tok:v.value},{bareExpression:false}) : '',
+                                toggleLocked: function() { mv.toggleLocked(); },
+                                locked: mv.locked
+                            });
                         });
                     });
                 });

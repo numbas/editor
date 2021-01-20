@@ -1912,7 +1912,8 @@ $(document).ready(function() {
             var value = ko.utils.unwrapObservable(valueAccessor());
             var allBindings = allBindingsAccessor();
             var parser = allBindings.parser || Numbas.jme.standardParser;
-            var res = texJMEBit(value,null,parser);
+            var rules = ko.unwrap(allBindings.rules);
+            var res = texJMEBit(value,rules,parser);
             $(element).toggleClass('jme-error',res.error);
             if(res.error) {
                 $(element).html(res.message);

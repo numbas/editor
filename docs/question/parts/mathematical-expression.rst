@@ -24,8 +24,8 @@ Marking
         If the answer is an equation, see the note on :ref:`marking-an-equation`.
 
     Show preview of student's answer?
-        If ticked, a rendering of the student's answer in mathematical notation is displayed beeside the input box. 
-        You should leave this on unless you expect the answer to be veery simple and need the space - the feedback about how their answer is interpreted is very useful to students.
+        If ticked, a rendering of the student's answer in mathematical notation is displayed beside the input box. 
+        You should leave this on unless you expect the answer to be very simple and need the space - the feedback about how their answer is interpreted is very useful to students.
 
     Answer simplification rules
         :ref:`Simplification rules <simplification-rules>` to apply to the correct answer, if it is displayed to the student (for example, after clicking the :guilabel:`Reveal answers` button). 

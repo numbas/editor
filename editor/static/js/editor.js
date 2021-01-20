@@ -2139,6 +2139,11 @@ $(document).ready(function() {
 
                 progress: function(e,data) {
                     data.res.progress(data.loaded/data.total);
+                },
+
+                fail: function(e, data) {
+                    fileArray.remove(data.res);
+                    noty({text:'There was an error uploading the resource: '+data.errorThrown, type:'error',timeout: 5000, layout: 'topCenter'})
                 }
 
             });

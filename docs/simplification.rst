@@ -320,6 +320,12 @@ The following simplification rules are available:
         * ``1/x + 3/x`` → ``4/x``
 
     cancelFactors
+        Collect together powers of common factors.
+
+        * ``x * x`` → ``x^2``
+        * ``(x+1)^6 / (x+1)^2`` → ``(x+1)^4``
+
+    cancelFactors
         Collect together and cancel factors inside a term.
 
         * ``x*x`` → ``x^2``

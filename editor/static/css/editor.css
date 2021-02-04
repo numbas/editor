@@ -17,6 +17,7 @@
 
 .well.not-editing {
     background: none;
+    font-weight: normal;
 }
 
 .well.not-editing .click-to-edit {

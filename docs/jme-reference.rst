@@ -58,6 +58,7 @@ The following annotations are built-in:
 * ``dot`` – places a dot above the name when displayed, for example when representing a derivative
 * ``m`` or ``matrix`` – denote the name as representing a matrix — displayed using a non-italic font
 * ``diff`` - denote the name as a differential - the name is prefixed with ``\mathrm{d}`` when displayed, e.g. :math:`\mathrm{d}x`
+* ``degrees`` - denote the name as representing an angle in degrees - the name has a suffix of ``^{\circ}`` when displayed, e.g. :math:`x^{\circ}`
 
 Any other annotation is taken to be a LaTeX command.
 For example, a name ``vec:x`` is rendered in LaTeX as ``\vec{x}``, which places an arrow above the name.

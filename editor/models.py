@@ -41,6 +41,7 @@ import reversion
 import reversion.models
 
 from notifications.signals import notify
+from notifications.models import Notification
 
 import taggit.models
 from taggit.managers import TaggableManager
@@ -1950,3 +1951,7 @@ def notify_stamp(instance, **kwargs):
 @receiver(signals.post_save, sender=Comment)
 def notify_comment(instance, **kwargs):
     notify_watching(instance.user, target=instance.object, verb='commented on', action_object=instance)
+
+@receiver(signals.post_delete, sender=EditorItem)
+def delete_notifications_for_item(instance, **kwargs):
+    Notification.objects.filter(target_object_id=instance.pk, target_content_type=ContentType.objects.get_for_model(EditorItem)).delete()

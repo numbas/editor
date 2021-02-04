@@ -181,7 +181,7 @@
         <div class="form-group">
             <label class="label-block">
                 <span class="label-text">Question statement</span>
-                <div id="statement-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: statement, tinymce_plugins: ['jmevisible','preview'], variableReferrer: {value: statement, description: 'Statement', kind: 'html'}"></div>
+                <div id="statement-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: statement, preambleCSS: $root.preamble.css,, tinymce_plugins: ['jmevisible','preview'], variableReferrer: {value: statement, description: 'Statement', kind: 'html'}"></div>
             </label>
             <p class="help-block">
                 {% helplink 'question/reference.html#statement' subject='the question statement' %}
@@ -254,7 +254,7 @@
                                     <div {% if not editable %}disabled{% endif %} data-bind="codemirror: templateTypeValues['long plain string'].value"></div>
                                 </div>
                                 <div data-bind="visible: templateType().id=='long string'">
-                                    <div {% if not editable %}disabled{% endif %} data-bind="writemaths: templateTypeValues['long string'].value"></div>
+                                    <div {% if not editable %}disabled{% endif %} data-bind="writemaths: templateTypeValues['long string'].value, preambleCSS: $root.preamble.css,"></div>
                                     <p><label><input type="checkbox" data-bind="checked: templateTypeValues['long string'].isTemplate" {% if not editable %}disabled{% endif %}> Is this a template?</p>
                                 </div>
                                 <div data-bind="visible: templateType().id=='list of numbers', with: templateTypeValues['list of numbers']">
@@ -629,7 +629,7 @@
         <div class="form-group">
             <label class="label-block">
                 <span class="label-text">Advice</span>
-                <div id="advice-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: advice, tinymce_plugins: ['jmevisible','preview']"></div>
+                <div id="advice-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: advice, preambleCSS: $root.preamble.css,, tinymce_plugins: ['jmevisible','preview']"></div>
             </label>
             <p class="help-block">
                 {% helplink 'question/reference.html#advice' subject='the advice section' %}

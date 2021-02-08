@@ -5502,6 +5502,7 @@ newBuiltin('latex',[TString],TString,null,{
         var s = new TString(args[0].value);
         s.latex = true;
         s.display_latex = true;
+        s.safe = args[0].safe;
         return s;
     }
 });
@@ -5511,7 +5512,15 @@ newBuiltin('safe',[TString],TString,null, {
         while(jme.isFunction(s.tok,'safe')) {
             s = s.args[0];
         }
-        var t = new TString(s.tok.value);
+        var t;
+        if(s.args) {
+            var r = scope.evaluate(s);
+            t = new TString(r.value);
+            t.latex = r.latex;
+            t.display_latex = r.display_latex;
+        } else {
+            t = new TString(s.tok.value);
+        }
         t.safe = true;
         return t;
     }
@@ -8289,6 +8298,9 @@ var texNameAnnotations = jme.display.texNameAnnotations = {
     diff: function(name) {
         return '{\\mathrm{d}'+name+'}';
     },
+    degrees: function(name) {
+        return name+'^{\\circ}';
+    },
     complex: propertyAnnotation('complex'),
     real: propertyAnnotation('real'),
     positive: propertyAnnotation('positive'),
@@ -8428,10 +8440,15 @@ var typeToTeX = jme.display.typeToTeX = {
         return settings.texNumber(tok.value, settings);
     },
     'string': function(thing,tok,texArgs,settings) {
-        if(tok.latex)
-            return tok.value.replace(/\\([\{\}])/g,'$1');
-        else
+        if(tok.latex) {
+            if(tok.safe) {
+                return tok.value;
+            } else {
+                return tok.value.replace(/\\([\{\}])/g,'$1');
+            }
+        } else {
             return '\\textrm{'+tok.value+'}';
+        }
     },
     'boolean': function(thing,tok,texArgs,settings) {
         return tok.value ? 'true' : 'false';

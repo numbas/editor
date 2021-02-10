@@ -2297,6 +2297,13 @@ Lists
     **Example**:
         * ``take(3,gcd(x,6)=1,x,10..30)`` → ``[11,13,17]``
 
+.. jme:function:: flatten(lists)
+
+    "Flatten" a list of lists, returning a single list containing the concatenation of all the entries in ``lists``.
+
+    **Example**:
+        * ``flatten([ [1,2], [3,4] ])`` → ``[1,2,3,4]``
+
 
 .. jme:function:: let(name,definition,...,expression)
               let(definitions, expression)

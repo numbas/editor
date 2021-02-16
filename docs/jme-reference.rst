@@ -2259,7 +2259,7 @@ Lists
         Do not use ``i`` or ``e`` as the variable name to map over - they're already defined as mathematical constants!
 
     **Definitions**:
-        * anything, :data:`name`, anything → :data:`list`
+        * anything, :data:`name` or :data:`list of name`, anything → :data:`list`
 
     **Examples**:
         * ``map(x+1,x,1..3)`` → ``[2,3,4]``
@@ -2281,6 +2281,35 @@ Lists
     **Example**:
         * ``filter(x>5,x,[1,3,5,7,9])`` → ``[7,9]``
 
+.. jme:function:: iterate(expression,name,initial,times)
+
+    Iterate an expression on the given initial value the given number of times, returning a list containing the values produced at each step.
+
+    You can also give a list of names.
+    The Nth element of the value will be mapped to the Nth name.
+
+    **Definitions**:
+        * anything, :data:`name` or :data:`list of name`, anything, :data:`number` → :data:`list`
+
+    **Example**:
+        * ``iterate(x+1, x, 0, 3)`` → ``[0,1,2,3]``
+        * ``iterate([b,a+b], [a,b], [1,1], 3)`` → ``[ [1,1], [1,2], [2,3], [3,5] ]``
+        * ``iterate(l[1..len(l)]+[l[0]], l, ["a","b","c"], 3)`` → ``[ ["a","b","c"], ["b","c","a"], ["c","a","b"], ["a","b","c"] ]``
+
+.. jme:function:: iterate_until(expression,name,initial,condition)
+
+    Iterate an expression on the given initial value until the condition is satisfied, returning a list containing the values produced at each step.
+
+    You can also give a list of names.
+    The Nth element of the value will be mapped to the Nth name.
+
+    **Definitions**:
+        * anything, :data:`name` or :data:`list of name`, anything, :data:`boolean` → :data:`list`
+
+    **Example**:
+        * ``iterate_until(if(mod(x,2)=0,x/2,3x+1), x, 5, x=1)`` → ``[ 5, 16, 8, 4, 2, 1 ]``
+        * ``iterate_until([b,mod(a,b)], [a,b], [37,32], b=0)`` → ``[ [ 37, 32 ], [ 32, 5 ], [ 5, 2 ], [ 2, 1 ], [ 1, 0 ] ]``
+
 .. jme:function:: take(n,expression,name,d)
 
     Take the first ``n`` elements from list or range ``d``, replacing variable ``name`` with the element from ``d`` each time, returning only the elements for which ``expression`` evaluates to ``true``.
@@ -2300,6 +2329,9 @@ Lists
 .. jme:function:: flatten(lists)
 
     "Flatten" a list of lists, returning a single list containing the concatenation of all the entries in ``lists``.
+
+    **Definitions**:
+        * :data:`list of list` → :data:`list`
 
     **Example**:
         * ``flatten([ [1,2], [3,4] ])`` → ``[1,2,3,4]``

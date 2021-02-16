@@ -3330,6 +3330,9 @@ $(document).ready(function() {
         this.last_variables = null;
         this.question_error = ko.observable(null);
         this.make_question = function() {
+            if(mt.part.q.currentPart()!=mt.part) {
+                return;
+            }
             if(!mt.part.q.variablesReady()) {
                 return;
             }

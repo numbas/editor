@@ -2296,15 +2296,19 @@ Lists
         * ``iterate([b,a+b], [a,b], [1,1], 3)`` → ``[ [1,1], [1,2], [2,3], [3,5] ]``
         * ``iterate(l[1..len(l)]+[l[0]], l, ["a","b","c"], 3)`` → ``[ ["a","b","c"], ["b","c","a"], ["c","a","b"], ["a","b","c"] ]``
 
-.. jme:function:: iterate_until(expression,name,initial,condition)
+.. jme:function:: iterate_until(expression,name,initial,condition,max_iterations)
 
     Iterate an expression on the given initial value until the condition is satisfied, returning a list containing the values produced at each step.
 
     You can also give a list of names.
     The Nth element of the value will be mapped to the Nth name.
 
+    ``max_iterations`` is an optional parameter specifying the maximum number of iterations that may be performed.
+    If not given, the default value of 100 is used.
+    This parameter prevents the function from running indefinitely, when the condition is never met.
+
     **Definitions**:
-        * anything, :data:`name` or :data:`list of name`, anything, :data:`boolean` → :data:`list`
+        * anything, :data:`name` or :data:`list of name`, anything, :data:`boolean`, :data:`number` → :data:`list`
 
     **Example**:
         * ``iterate_until(if(mod(x,2)=0,x/2,3x+1), x, 5, x=1)`` → ``[ 5, 16, 8, 4, 2, 1 ]``

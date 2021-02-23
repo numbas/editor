@@ -1,0 +1,12 @@
+/* Use this file to add CSS rules affecting the appearance of your theme. */
+
+/* If you're extending the default theme, these CSS properties control many of the colours.
+ */
+:root {
+    --main-colour: #a2d1f0; /* This colour is used as the background of the sidebar, among other places. */
+    --main-darker: #85c3eb; /* A darker shade of the main colour, used for borders. */
+
+    /* The student can change the following colours. */
+    --background-colour: white; /* The colour of the page background. */
+    --text-colour: black; /* The colour of most text. */
+}

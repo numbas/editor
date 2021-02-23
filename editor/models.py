@@ -421,6 +421,8 @@ class EditablePackageMixin(object):
         path = os.path.abspath(os.path.join(root,filename))
         if not path.startswith(root+os.sep):
             raise Exception("You may not write a file outside the {package_noun}'s directory".format(package_noun=self.package_noun))
+        dpath = Path(path).parent
+        dpath.mkdir(parents=True,exist_ok=True)
         with open(path,'w',encoding='utf-8') as f:
             f.write(content)
 

@@ -21,7 +21,6 @@ class ShowPackageFilesMixin:
     def get_package_filenames(self):
         package = self.get_object()
         filenames = list(package.filenames())
-        filenames.sort()
         return filenames
 
     def get_context_data(self,**kwargs):
@@ -55,15 +54,8 @@ class EditView(ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
             return forbidden_response(self.request,"This package is not editable.")
         return super().dispatch(request,*args,**kwargs)
 
-    def get_initial(self):
-        initial = super().get_initial()
-
-        package = self.get_object()
-
-        filename = initial['filename'] = self.get_filename()
-
+    def load_source(self,path):
         try:
-            path = os.path.join(package.extracted_path,filename)
             self.mime_type, _ = mimetypes.guess_type(path)
             with open(path,encoding='utf-8') as f:
                 source = f.read()
@@ -74,7 +66,17 @@ class EditView(ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
             with open(path,'rb') as f:
                 source = f.read()
                 self.is_binary = True
-        initial['source'] = source
+        return source
+
+    def get_initial(self):
+        initial = super().get_initial()
+
+        package = self.get_object()
+
+        filename = initial['filename'] = self.get_filename()
+
+        path = os.path.join(package.extracted_path,filename)
+        initial['source'] = self.load_source(path)
 
         return initial
 
@@ -94,7 +96,7 @@ class EditView(ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
         context['editable'] = package.can_be_edited_by(self.request.user)
 
         filename = context['filename'] = self.get_filename()
-        path = os.path.join(package.extracted_path,filename)
+        path = context['path'] = os.path.join(package.extracted_path,filename)
         context['exists'] = os.path.exists(path)
         if context['exists']:
             stat = os.stat(path)

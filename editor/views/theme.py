@@ -1,7 +1,9 @@
 import os
 from zipfile import ZipFile
+from pathlib import Path
 
 from django import http
+from django.conf import settings
 from django.views import generic
 from django.urls import reverse
 from django.shortcuts import redirect
@@ -11,8 +13,39 @@ from editor import forms
 from editor.views.generic import AuthorRequiredMixin, CanViewMixin
 from editor.views import editable_package
 
+DEFAULT_THEME_ROOT = Path(settings.GLOBAL_SETTINGS['NUMBAS_PATH']) / 'themes' / 'default'
+
 class ThemeViewMixin:
     upload_file_form_class = forms.ReplaceThemeFileForm
+
+    def get_filename(self):
+        filename = super().get_filename()
+        return self.place_filename(filename)
+
+    def place_filename(self, filename):
+        extension_dirs = {
+            '.md': '',
+            '.txt': '',
+            '.js': 'files/scripts',
+            '.html': 'templates',
+            '.xslt': 'templates',
+        }
+        dirname = extension_dirs.get(Path(filename).suffix,'files/resources')
+        if not filename.startswith(dirname):
+            filename = Path(dirname) / filename
+        return str(filename)
+
+    def get_default_filenames(self):
+        filenames = []
+        for root,dirs,files in os.walk(DEFAULT_THEME_ROOT):
+            for f in files:
+                filenames.append(str(Path(root).relative_to(DEFAULT_THEME_ROOT) / f))
+        return sorted(filenames)
+
+    def get_context_data(self,**kwargs):
+        context = super().get_context_data(**kwargs)
+        context['default_files'] = self.get_default_filenames()
+        return context
 
 class CreateView(generic.CreateView):
     """ Create a theme """
@@ -57,10 +90,31 @@ class EditView(ThemeViewMixin,editable_package.EditView):
     replace_form_class = forms.ReplaceThemeFileForm
     success_view = 'theme_edit_source'
 
+    def get_initial(self):
+        initial = super().get_initial()
+
+        if self.request.GET.get('load_from_default'):
+            filename = initial['filename']
+
+            path = str(DEFAULT_THEME_ROOT / filename)
+            initial['source'] = self.load_source(path)
+
+        return initial
+
 class ReplaceFileView(ThemeViewMixin,editable_package.ReplaceFileView):
     model = Theme
     form_class = forms.ReplaceThemeFileForm
     success_view = 'theme_edit_source'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if 'files' in kwargs:
+            for k,f in kwargs['files'].items():
+                kwargs['data'] = kwargs['data'].copy()
+                kwargs['data'].update({
+                    'filename': self.place_filename(f.name)
+                })
+        return kwargs
 
 class DeleteFileView(ThemeViewMixin,editable_package.DeleteFileView):
     model = Theme

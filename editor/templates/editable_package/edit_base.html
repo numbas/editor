@@ -46,15 +46,41 @@
                     </label>
                 </form>
             </li>
+            {% if object.package_noun == 'theme' %}
+            <li class="list-group-item">
+                <form method="GET" action="{% package_url 'edit_source' object.pk %}" class="form-inline">
+                    <label>
+                        <span class="glyphicon glyphicon-pencil"></span>
+                        Change a file from the default theme:
+                        <div class="input-group">
+                            <select name="filename" class="form-control">
+                                <option></option>
+                                {% for file in default_files %}
+                                <option value="{{file}}">{{file}}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="hidden" name="load_from_default" value="true">
+                            <span class="input-group-btn">
+                                <button class="btn btn-primary" title="Change this file"><span class="glyphicon glyphicon-pencil"></span></button>
+                            </span>
+                        </div>
+                    </label>
+                </form>
+            </li>
+            {% endif %}
             <li class="list-group-item">
                 <form action="{% package_url 'replace_file' form.instance.pk %}" method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="form-group">
+                        <label>
+                            <span class="glyphicon glyphicon-upload"></span>
+                            Upload a file
+                        </label>
                         {{upload_file_form.content}}
                     </div>
                     <button class="btn btn-primary btn-block" type="submit">
                         <span class="glyphicon glyphicon-upload"></span>
-                        Upload a file
+                        Upload
                     </button>
                 </form>
             </li>

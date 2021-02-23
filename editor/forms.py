@@ -13,6 +13,7 @@ from django.utils.encoding import force_text
 from django.db import transaction
 from django.db.models import Q, Count
 from django.contrib.auth.models import User
+from django.template.loader import render_to_string
 
 from editor.models import NewExam, NewQuestion, EditorItem, Access, Theme, Extension, PullRequest, CustomPartType, Project, Folder, Resource
 import editor.models
@@ -530,7 +531,13 @@ class UpdateThemeForm(forms.ModelForm, ValidateZipField):
             'name': forms.TextInput(attrs={'class':'form-control'}),
             'zipfile': forms.FileInput()
         }
-        
+ 
+THEME_INIT_FILES = {
+    'README.md': 'README.md',
+    'files/resources/styles.css': 'style.css',
+    'inherit.txt': 'inherit.txt',
+}
+
 class CreateThemeForm(forms.ModelForm):
     
     """Form for a new theme."""
@@ -554,10 +561,9 @@ class CreateThemeForm(forms.ModelForm):
             theme.save()
             self.save_m2m()
             theme.ensure_extracted_path_exists()
-            theme.write_file('README.md',\
-"""# {name}
-
-The author of this theme should write some documentation about what it's for.""".format(name=theme.name))
+            for fname,tname in THEME_INIT_FILES.items():
+                content = render_to_string('theme/init-files/'+tname, {'name': theme.name})
+                theme.write_file(fname,content)
         return theme
 
 class UploadThemeForm(UpdateThemeForm):

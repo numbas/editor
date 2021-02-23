@@ -47,7 +47,10 @@
 </table>
 {% else %}
 {% if is_me %}
-<p><a class="btn btn-primary" href="{% url 'theme_new' %}"><span class="glyphicon glyphicon-upload"></span> Upload a new theme</a></p>
+<p>
+    <a class="btn btn-primary" href="{% url 'theme_new' %}"><span class="glyphicon glyphicon-plus"></span> Create a new theme from scratch</a>
+    <a class="btn btn-primary" href="{% url 'theme_new' %}"><span class="glyphicon glyphicon-upload"></span> Upload a new theme</a>
+</p>
 {% else %}
 <p class="nothing-here">{{view_user.first_name}} hasn't uploaded any themes yet.</p>
 {% endif %}

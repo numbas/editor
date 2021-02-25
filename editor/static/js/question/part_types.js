@@ -759,6 +759,12 @@ part_types.models = [
                 customMatrix: ko.observable(''),
                 warningType: ko.observable(''),
                 showCellAnswerState: ko.observable(true),
+                markingMethod: ko.observable('positive'),
+                markingMethods: [
+                    {name: 'sum ticked cells', niceName: 'Sum ticked cells'},
+                    {name: 'score per matched cell', niceName: 'Score per matched cell', needsMaxMarks: true},
+                    {name: 'all-or-nothing', niceName: 'All-or-nothing', needsMaxMarks: true}
+                ],
 
                 warningTypes: [
                     {name: 'none', niceName: 'Do nothing'},
@@ -813,6 +819,7 @@ part_types.models = [
             data.maxAnswers = this.maxAnswers();
             data.warningType = this.warningType().name;
             data.showCellAnswerState = this.showCellAnswerState();
+            data.markingMethod = this.markingMethod().name;
 
             if(this.customChoices()) {
                 data.choices = this.customChoicesExpression();
@@ -868,6 +875,14 @@ part_types.models = [
                 }
             }
 
+            if(data.markingMethod) {
+                for(var i=0;i<this.markingMethods.length;i++)
+                {
+                    if(this.markingMethods[i].name==data.markingMethod) {
+                        this.markingMethod(this.markingMethods[i]);
+                    }
+                }
+            }
             if(data.choices!==undefined) {
                 if(typeof data.choices == 'string') {
                     this.customChoices(true);
@@ -917,6 +932,12 @@ part_types.models = [
                 customMatrix: ko.observable(''),
                 warningType: ko.observable(''),
                 showCellAnswerState: ko.observable(true),
+                markingMethod: ko.observable('positive'),
+                markingMethods: [
+                    {name: 'sum ticked cells', niceName: 'Sum ticked cells'},
+                    {name: 'score per matched cell', niceName: 'Score per matched cell', needsMaxMarks: true},
+                    {name: 'all-or-nothing', niceName: 'All-or-nothing', needsMaxMarks: true}
+                ],
 
                 warningTypes: [
                     {name: 'none', niceName: 'Do nothing'},
@@ -1027,6 +1048,7 @@ part_types.models = [
             data.displayType = this.displayType().name;
             data.warningType = this.warningType().name;
             data.showCellAnswerState = this.showCellAnswerState();
+            data.markingMethod = this.markingMethod().name;
 
             if(this.customChoices()) {
                 data.choices = this.customChoicesExpression();
@@ -1085,6 +1107,14 @@ part_types.models = [
             {
                 if(this.displayTypes[i].name==displayType) {
                     this.displayType(this.displayTypes[i]);
+                }
+            }
+            if(data.markingMethod) {
+                for(var i=0;i<this.markingMethods.length;i++)
+                {
+                    if(this.markingMethods[i].name==data.markingMethod) {
+                        this.markingMethod(this.markingMethods[i]);
+                    }
                 }
             }
             if(data.layout) {

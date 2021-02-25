@@ -4,7 +4,6 @@
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div class="main-settings">
             {% booleanproperty 'showCellAnswerState' 'Show choice feedback state?' help_url='question/parts/multiple-choice.html#term-show-choice-feedback-state' %}    
-            {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='question/parts/multiple-choice.html#term-shuffle-order-of-choices' %}
         </div>
 
         <hr>
@@ -43,6 +42,7 @@
         <div data-bind="fadeVisible: customChoices">
             {% property 'customChoicesExpression' 'List of choices' monospace=True help_url='question/parts/multiple-choice.html#term-list-of-choices' %}
         </div>
+        {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='question/parts/multiple-choice.html#term-shuffle-order-of-choices' %}
     </form>
     <ul class="choices list-unstyled list-group" data-bind="fadeVisible: !customChoices()">
         <!-- ko foreach: {data: choices, afterAdd: Editor.afterAdd} -->

@@ -16,7 +16,6 @@
         {% property 'displayColumns' 'Number of display columns' help_url='question/parts/multiple-choice.html#term-number-of-display-columns' zero_means='not displayed in columns' %}
         {% property 'minAnswers' 'Minimum answers' max='maxAnswers' help_url='question/parts/multiple-choice.html#term-minimum-answers' min=0 %}
         {% property 'maxAnswers' 'Maximum answers' min=minAnswers help_url='question/parts/multiple-choice.html#term-maximum-answers' zero_means='no maximum' %}
-        {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='question/parts/multiple-choice.html#term-shuffle-order-of-choices' %}
         <div class="form-group" data-bind="fadeVisible: minAnswers()!=0 || maxAnswers()!=0">
             <label class="{{form_label_class}} control-label">
                 What to do if wrong number of answers selected: {% helplink 'question/parts/multiple-choice.html#term-what-to-do-if-wrong-number-of-answers-selected' %}
@@ -38,11 +37,32 @@
 </section>
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='choices'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
+        <div class="form-group">
+            <label class="{{form_label_class}} control-label">
+                Marking method {% helplink 'question/parts/multiple-choice.html#term-marking-method' %}
+            </label>
+            <div class="{{form_control_class}}">
+                <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: markingMethods, value: markingMethod, optionsText: 'niceName'"></select>
+                <div class="help-block" data-bind="fadeVisible: markingMethod().name=='sum ticked cells'">
+                    <p>For each choice, specify the number of marks to add or subtract when the student picks it.</p>
+                </div>
+                <div class="help-block" data-bind="fadeVisible: markingMethod().name=='score per matched cell' || markingMethod().name=='all-or-nothing'">
+                    <p>For each choice, write 1 if the student should tick it, or 0 if they should leave it unticked.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-warning" data-bind="fadeVisible: markingMethod().needsMaxMarks && !parseInt(maxMarks())">
+            <p>You must set a <a href="#" data-bind="click: $parent.tabber.setTab('marking-settings')">maximum number of marks</a> in order to use this marking method.</p>
+        </div>
+
         {% booleanproperty 'customChoices' 'Variable list of choices?' help_url='question/parts/multiple-choice.html#term-variable-list-of-choices' %}
         <div data-bind="fadeVisible: customChoices">
             {% property 'customChoicesExpression' 'List of choices' monospace=True help_url='question/parts/multiple-choice.html#term-list-of-choices' %}
         </div>
+        {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='question/parts/multiple-choice.html#term-shuffle-order-of-choices' %}
     </form>
+
     <ul class="choices list-unstyled list-group" data-bind="fadeVisible: !customChoices()">
         <!-- ko foreach: {data: choices, afterAdd: Editor.afterAdd} -->
         <li class="choice form-inline list-group-item clearfix">

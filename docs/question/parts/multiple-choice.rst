@@ -55,6 +55,23 @@ Marking
         
         If this is ticked, the answers are displayed in random order.
 
+    Marking method
+        (:term:`Choose several from a list` and :term:`Match choices with answers`, when :term:`Selection type` is "Checkboxes", only)
+
+        This determines how the student's score is determined, based on their selections and the :ref:`marking matrix <marking-matrix>`.
+
+        "Sum ticked cells" means that for each checkbox the student ticks, the corresponding entry in the marking matrix is added to their score.
+        Unticked cells are ignored.
+        This marking method is suitable for situations where the student should only select choices they're sure about. 
+        You could apply negative marks for incorrect choices.
+
+        "Score per matched cell" means that for each checkbox, the student is awarded an equal proportion of the :term:`Maximum marks`, if their selection for that cell matches the marking matrix.
+        A positive value in the marking matrix signifies that the student should tick that checkbox, while a value of zero signifies that the student should not tick that box.
+        This marking method is suitable for situations where the student must separate the available choices into two sets.
+
+        "All-or-nothing" means that the student is awarded the :term:`Maximum marks` available if their selection exactly matches the marking matrix, and zero marks otherwise.
+        This marking method is suitable for situations where the student must exactly match a certain pattern, and there is no meaningful "partially correct" answer.
+
     Number of display columns
         For :term:`choose one from a list` and :term:`choose several from a list` parts, this dictates how many columns the choices are displayed in. 
         If 0, the choices are displayed on a single line, wrapped at the edges of the screen.

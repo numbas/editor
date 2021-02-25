@@ -6,8 +6,6 @@
             {% property 'minMarks' 'Minimum marks' help_url='question/parts/multiple-choice.html#term-minimum-marks' %}
             {% property 'maxMarks' 'Maximum marks' min='minMarks' help_url='question/parts/multiple-choice.html#term-maximum-marks' zero_means='no maximum' %}
 
-            {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='question/parts/multiple-choice.html#term-shuffle-order-of-choices' %}
-            {% booleanproperty 'shuffleAnswers' 'Shuffle order of answers?' help_url='question/parts/multiple-choice.html#term-shuffle-order-of-answers' %}
         </div>
 
         <hr>
@@ -63,6 +61,7 @@
         <div data-bind="fadeVisible: customChoices">
             {% property 'customChoicesExpression' 'List of choices' monospace=True help_url='question/parts/multiple-choice.html#term-list-of-choices' %}
         </div>
+        {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='question/parts/multiple-choice.html#term-shuffle-order-of-choices' %}
     </form>
     <ul class="choices list-unstyled list-group" data-bind="fadeVisible: !customChoices()">
         <!-- ko foreach: {data: choices, afterAdd: Editor.afterAdd} -->
@@ -85,6 +84,7 @@
         <div data-bind="fadeVisible: customAnswers">
             {% property 'customAnswersExpression' 'List of answers' monospace=True help_url='question/parts/multiple-choice.html#term-list-of-answers' %}
         </div>
+        {% booleanproperty 'shuffleAnswers' 'Shuffle order of answers?' help_url='question/parts/multiple-choice.html#term-shuffle-order-of-answers' %}
     </form>
     <ul class="answers list-unstyled list-group" data-bind="fadeVisible: !customAnswers()">
         <!-- ko foreach: {data: answers, afterAdd: Editor.afterAdd} -->
@@ -103,11 +103,31 @@
 
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='matrix'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
+        <div class="form-group" data-bind="fadeVisible: displayType().name=='checkbox'">
+            <label class="{{form_label_class}} control-label">
+                Marking method {% helplink 'question/parts/multiple-choice.html#term-marking-method' %}
+            </label>
+            <div class="{{form_control_class}}">
+                <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: markingMethods, value: markingMethod, optionsText: 'niceName'"></select>
+            </div>
+        </div>
+
+        <div class="alert alert-warning" data-bind="fadeVisible: displayType().name=='checkbox' && markingMethod().needsMaxMarks && !parseInt(maxMarks())">
+            <p>You must set a <a href="#" data-bind="click: $parent.tabber.setTab('marking-settings')">maximum number of marks</a> in order to use this marking method.</p>
+        </div>
+
         {% booleanproperty 'customMarking' 'Custom marking matrix?' help_url='question/parts/multiple-choice.html#term-custom-marking-matrix' disable='customChoices() || customAnswers()' %}
         <div data-bind="fadeVisible: customMarking">
             {% property 'customMatrix' 'Custom matrix expression' monospace=True help_url='question/parts/multiple-choice.html#term-custom-matrix-expression' %}
         </div>
     </form>
+
+    <div class="help-block" data-bind="fadeVisible: displayType().name=='radiogroup' || markingMethod().name=='sum ticked cells'">
+        <p>For each combination of answer and choice, specify the number of marks to add or subtract when the student picks it.</p>
+    </div>
+    <div class="help-block" data-bind="fadeVisible: displayType().name=='checkbox' && (markingMethod().name=='score per matched cell' || markingMethod().name=='all-or-nothing')">
+        <p>For each combination of answer and choice, write 1 if the student should tick it, or 0 if they should leave it unticked.</p>
+    </div>
 
     <div class="matrix" data-bind="fadeVisible: showMarkingMatrix">
         <table class="marking-matrix table form-inline">

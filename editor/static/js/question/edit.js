@@ -2021,6 +2021,13 @@ $(document).ready(function() {
             return lockedUsed;
         },this);
 
+        this.toggleLocked = function(_,e) {
+            v.thisLocked(!v.thisLocked());
+            if(e) {
+                e.preventDefault();
+            }
+        };
+
         this.display = ko.pureComputed(function() {
             var val;
             if(this.anyError()) {
@@ -2142,13 +2149,6 @@ $(document).ready(function() {
             }
             catch(e) {
                 console.log(e);
-            }
-        },
-
-        toggleLocked: function(v,e) {
-            this.thisLocked(!this.thisLocked());
-            if(e) {
-                e.preventDefault();
             }
         }
     }

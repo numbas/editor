@@ -353,7 +353,7 @@ part_types.models = [
 
             model.notationStyles = Editor.numberNotationStyles;
 
-            model.allowedNotationStyles = ko.observableArray(model.notationStyles.filter(function(s){return ['plain','en','si-en'].contains(s.code)}));
+            model.allowedNotationStyles = ko.observableArray(model.notationStyles.filter(function(s){return Numbas.locale.default_number_notation.contains(s.code)}));
 
             model.correctAnswerStyle = ko.observable(model.allowedNotationStyles()[0] || model.notationStyles[0]);
 

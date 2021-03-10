@@ -87,7 +87,8 @@ $(document).ready(function() {
         this.allowregen = ko.observable(true);
         this.navigateModeOptions = [
             {name: 'sequence', niceName: 'Sequential'},
-            {name: 'menu', niceName: 'Choose from menu'}
+            {name: 'menu', niceName: 'Choose from menu'},
+            {name: 'adaptive', niceName: 'Adaptive'}
         ];
         this.navigatemode = ko.observable(this.navigateModeOptions[0]);
         this.reverse = ko.observable(true);
@@ -186,6 +187,42 @@ $(document).ready(function() {
                 {name:'warn', niceName:'Warn'}
             ]
         );
+
+
+        this.adaptive = {
+            knowledge_graph: ko.observable(null),
+            pass_topic_condition: Editor.optionObservable([
+                {name: 'ncorrect', niceName: 'Correctly answer N questions'},
+                {name: 'percentcorrect', niceName: 'Correctly answer a proportion of the available questions'},
+            ]),
+            pass_topic_number: ko.observable(1),
+
+            fail_topic_condition: Editor.optionObservable([
+                {name: 'nincorrect', niceName: 'Incorrectly answer N questions'},
+                {name: 'percentincorrect', niceName: 'Incorrectly answer a proportion of the available questions'},
+            ]),
+            fail_topic_number: ko.observable(1),
+
+            on_incorrect_answer: Editor.optionObservable([
+                {name: 'move-on', niceName: 'Don\'t repeat'},
+                {name: 'repeat-immediately', niceName: 'Repeat immediately'},
+                {name: 'repeat-at-end', niceName: 'Repeat at the end of the topic'}
+            ]),
+
+            partially_correct_try_again: ko.observable(true),
+            partially_correct_threshold: ko.observable(0.5),
+
+            initial_retries: ko.observable(0),
+            max_retries: ko.observable(0),
+            win_retry_after: Editor.optionObservable([
+                {name: 'never', niceName: 'Never'},
+                {name: 'correct-answer', niceName: 'After answering a question correctly'},
+                {name: 'pass-topic', niceName: 'After passing a topic'},
+            ]),
+            win_retry_number: ko.observable(0),
+
+            allow_delay_question: ko.observable(false),
+        }
 
         this.init_output();
 

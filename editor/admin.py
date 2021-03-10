@@ -11,8 +11,6 @@ admin.site.register(editor.models.NewExam)
 admin.site.register(editor.models.NewQuestion)
 admin.site.register(editor.models.Theme)
 
-admin.site.register(editor.models.Subject)
-admin.site.register(editor.models.Topic)
 admin.site.register(editor.models.AbilityFramework)
 admin.site.register(editor.models.AbilityLevel)
 

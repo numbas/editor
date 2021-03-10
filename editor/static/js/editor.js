@@ -393,6 +393,18 @@ $(document).ready(function() {
         return obs;
     }
 
+    Editor.optionObservable = function(options) {
+        var _obs = ko.observable(options[0]);
+        var obs = ko.computed({
+            read: _obs,
+            write: function(v) {
+                v = typeof(v)=='string' ? options.find(function(o) {return o.name==v}) : v;
+                return _obs(v);
+            }
+        })
+        return obs;
+    }
+
     Editor.beforeRemove = function(elem) {
         if(elem.nodeType==elem.ELEMENT_NODE) {
             $(elem).stop().slideUp(150,function(){$(this).remove()});

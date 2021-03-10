@@ -953,27 +953,6 @@ class AbilityLevel(models.Model):
     def __str__(self):
         return self.name
 
-class Subject(models.Model):
-    name = models.CharField(max_length=200, blank=False, unique=True)
-    description = models.TextField(blank=False)
-
-    class Meta:
-        ordering = ('name',)
-
-    def __str__(self):
-        return self.name
-
-class Topic(models.Model):
-    name = models.CharField(max_length=200, blank=False, unique=True)
-    description = models.TextField(blank=False)
-    subjects = models.ManyToManyField(Subject)
-
-    class Meta:
-        ordering = ('name',)
-
-    def __str__(self):
-        return self.name
-
 class Taxonomy(models.Model):
     name = models.CharField(max_length=200, blank=False, unique=True)
     description = models.TextField(blank=False)
@@ -1218,8 +1197,6 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
     ability_level_end = AbilityLevelField(null=True)
     ability_levels = models.ManyToManyField(AbilityLevel)
 
-    subjects = models.ManyToManyField(Subject)
-    topics = models.ManyToManyField(Topic)
     taxonomy_nodes = models.ManyToManyField(TaxonomyNode, related_name='editoritems')
 
     unwatching_users = models.ManyToManyField(User, related_name='unwatched_items')
@@ -1411,6 +1388,10 @@ def set_ability_level_limits(instance, **kwargs):
     ends = instance.ability_levels.aggregate(Min('start'), Max('end'))
     instance.ability_level_start = ends.get('start__min', None)
     instance.ability_level_end = ends.get('end__max', None)
+
+@receiver(signals.post_delete, sender=EditorItem)
+def delete_notifications_for_item(instance, **kwargs):
+    Notification.objects.filter(target_object_id=instance.pk, target_content_type=ContentType.objects.get_for_model(EditorItem)).delete()
 
 class PullRequestManager(models.Manager):
     def open(self):
@@ -1615,6 +1596,17 @@ class NewStampOfApproval(models.Model, TimelineMixin):
     class Meta:
         ordering = ('-date',)
 
+@receiver(signals.post_save, sender=NewStampOfApproval)
+@receiver(signals.post_delete, sender=NewStampOfApproval)
+def set_current_stamp(instance, **kwargs):
+    instance.object.current_stamp = NewStampOfApproval.objects.filter(object=instance.object).order_by('-date').first()
+    instance.object.save()
+
+
+@receiver(signals.post_save, sender=NewStampOfApproval)
+def notify_stamp(instance, **kwargs):
+    notify_watching(instance.user, target=instance.object, verb='gave feedback on', action_object=instance)
+
 class Comment(models.Model, TimelineMixin):
     object_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
@@ -1631,6 +1623,10 @@ class Comment(models.Model, TimelineMixin):
 
     def can_be_viewed_by(self, user):
         return self.object.can_be_viewed_by(user)
+
+@receiver(signals.post_save, sender=Comment)
+def notify_comment(instance, **kwargs):
+    notify_watching(instance.user, target=instance.object, verb='commented on', action_object=instance)
 
 class RestorePoint(models.Model, TimelineMixin):
     object = models.ForeignKey(EditorItem, related_name='restore_points', on_delete=models.CASCADE)
@@ -1694,6 +1690,8 @@ class NewQuestion(models.Model):
     custom_part_types = models.ManyToManyField(CustomPartType, blank=True, related_name='questions')
 
     theme_path = os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'], 'themes', 'question')
+
+    topics = models.ManyToManyField('Topic', related_name='questions')
 
     icon = 'file'
 
@@ -1939,21 +1937,39 @@ def item_created_timeline_event(instance, created, **kwargs):
     if created:
         ItemChangedTimelineItem.objects.create(user=instance.editoritem.author, object=instance.editoritem, verb='created')
 
-@receiver(signals.post_save, sender=NewStampOfApproval)
-@receiver(signals.post_delete, sender=NewStampOfApproval)
-def set_current_stamp(instance, **kwargs):
-    instance.object.current_stamp = NewStampOfApproval.objects.filter(object=instance.object).order_by('-date').first()
-    instance.object.save()
+class KnowledgeGraph(models.Model, ControlledObject):
+    name = models.CharField(max_length=200)
+    public = models.BooleanField(default=False, help_text='Can this knowledge graph be seen by everyone?')
+    slug = models.SlugField(max_length=200, editable=False, unique=False)
+    author = models.ForeignKey(User, related_name='own_knowledge_graphs', on_delete=models.CASCADE)
+    last_modified = models.DateTimeField(auto_now=True)
 
+    @property
+    def owner(self):
+        return self.author
 
-@receiver(signals.post_save, sender=NewStampOfApproval)
-def notify_stamp(instance, **kwargs):
-    notify_watching(instance.user, target=instance.object, verb='gave feedback on', action_object=instance)
+    def has_access(self, user, accept_levels):
+        return user == self.author
 
-@receiver(signals.post_save, sender=Comment)
-def notify_comment(instance, **kwargs):
-    notify_watching(instance.user, target=instance.object, verb='commented on', action_object=instance)
+    @classmethod
+    def filter_can_be_viewed_by(cls, user):
+        if getattr(settings, 'EVERYTHING_VISIBLE', False):
+            return Q()
+        
+        view_perms = ('edit', 'view')
+        if user.is_superuser and cls.superuser_sees_everything:
+            return Q()
+        elif user.is_anonymous:
+            return Q(public=True)
+        else:
+            return Q(public=True) | Q(author=user)
 
-@receiver(signals.post_delete, sender=EditorItem)
-def delete_notifications_for_item(instance, **kwargs):
-    Notification.objects.filter(target_object_id=instance.pk, target_content_type=ContentType.objects.get_for_model(EditorItem)).delete()
+class LearningObjective(models.Model):
+    name = models.CharField(max_length=200)
+    knowledge_graph = models.ForeignKey(KnowledgeGraph, related_name='learning_objectives', on_delete=models.CASCADE)
+    topics = models.ManyToManyField('Topic', related_name='learning_objectives')
+
+class Topic(models.Model):
+    name = models.CharField(max_length=200)
+    knowledge_graph = models.ForeignKey(KnowledgeGraph, related_name='topics', on_delete=models.CASCADE)
+    depends_on = models.ManyToManyField('Topic', related_name='used_by')

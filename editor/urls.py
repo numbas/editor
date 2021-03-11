@@ -3,7 +3,10 @@ from django.urls import path, re_path, include
 
 from django.contrib.auth.decorators import login_required
 
-from .views import project, folder, editoritem, exam, question, HomeView, GlobalStatsView, ExploreView, TermsOfUseView, PrivacyPolicyView, TopSearchView, theme, extension, generic, notification, resource, basket, timeline, custom_part_type
+from .views import project, folder, editoritem, exam, question, HomeView, \
+    GlobalStatsView, ExploreView, TermsOfUseView, PrivacyPolicyView, TopSearchView, \
+    theme, extension, generic, notification, resource, basket, timeline, \
+    custom_part_type, knowledge_graph
 
 urlpatterns = [
 
@@ -256,4 +259,7 @@ urlpatterns = [
     url(r'^pullrequest/(?P<pk>\d+)/close$',
         editoritem.ClosePullRequestView.as_view(), name='pullrequest_close'),
 
+    # Knowledge graphs
+    path('knowledge-graphs/create', knowledge_graph.CreateView.as_view(), name='knowlede_graph_create'),
+    path('knowledge-graph/<int:pk>/edit', knowledge_graph.UpdateView.as_view(), name='knowledge_graph_edit'),
 ]

@@ -116,6 +116,7 @@ $(document).ready(function() {
             if('autocompleteCallback' in allBindings) {
                 autocompleteCallback = allBindings.autocompleteCallback;
             }
+            var delay = allBindings.delay || 0;
 
             var source = ko.utils.unwrapObservable(valueAccessor());
 
@@ -146,6 +147,7 @@ $(document).ready(function() {
             $(element)
                 .autocomplete({
                     source: source,
+                    delay: delay,
                     select: function(e,ui) {
                         if('value' in allBindings)
                             allBindings.value(ui.item.value);

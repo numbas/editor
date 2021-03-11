@@ -1944,6 +1944,9 @@ class KnowledgeGraph(models.Model, ControlledObject):
     author = models.ForeignKey(User, related_name='own_knowledge_graphs', on_delete=models.CASCADE)
     last_modified = models.DateTimeField(auto_now=True)
 
+    def get_absolute_url(self):
+        return reverse('knowledge_graph_edit', args=(self.pk,))
+
     @property
     def owner(self):
         return self.author

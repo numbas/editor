@@ -1,0 +1,157 @@
+{% extends "layout.html" %}
+{% load can_edit %}
+{% load links %}
+{% load sanitizer %}
+{% load helplink %}
+{% load editor_controls %}
+{% load sstatic %}
+{% load json_filter %}
+
+{% block title %}{{object.name}} - Knowledge graph - {{block.super}}{% endblock %}
+
+{% block stylesheets %}
+    {{block.super}}
+    <link href="{% sstatic 'css/knowledge_graph/edit.css' %}" type="text/css" rel="stylesheet" />
+{% endblock %}
+
+{% block javascripts %}
+    {{block.super}}
+
+    <script src="https://ialab.it.monash.edu/webcola/cola.min.js"></script>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+
+    <script src="{% sstatic 'js/knowledge_graph/graph_visualisation.js' %}"></script>
+    <script src="{% sstatic 'js/knowledge_graph/edit.js' %}"></script>
+{% endblock %}
+
+{% block content_container %}container-fluid{% endblock %}
+
+{% block content %}
+<div class="page-loading" data-bind="visible: false">
+    <h1>Loading...</h1>
+</div>
+
+<div class="page-error">
+    <div class="page-header text-danger">
+        <h2>Error</h2>
+    </div>
+    <p class="text-lg">There was an error loading the page.</p>
+
+    <pre class="trace"></pre>
+</div>
+
+<div class="loaded-content">
+    <header>
+        <h1>{{object.name}}</h1>
+    </header>
+
+    <div class="row">
+        <div class="col-sm-1 col-md-2 tabs">
+            <div class="navbar navbar-blank">
+                <ul class="nav nav-pills nav-stacked" data-bind="foreach: tabber.tabs">
+                    <li data-bind="css: {active: $root.tabber.currentTab() == $data}">
+                        <a href="#" data-bind="click: $root.tabber.currentTab">
+                            <span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> 
+                            <span class="hidden-sm" data-bind="text: title"></span>
+                        </a>
+                    </li>
+                    <!-- /ko -->
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-sm-11 col-md-10 editing">
+            <div class="tab-content">
+                <section data-bind="visible: tabber.currentTab().id=='topics'">
+                    <div class="row">
+                        <div class="col-sm-12 col-md-6 col-lg-7" data-bind="visible: graph.topics().length==0">
+                            <p class="nothing-here">No topics have been defined.</p>
+                        </div>
+                        <div class="col-sm-12 col-md-6 col-lg-7 topic" data-bind="with: graph.current_topic">
+                            <form class="form-horizontal" data-bind="submit: Editor.noop">
+                                <label><span class="control-label">Name:</span> <input type="text" class="form-control" data-bind="textInput: name"></label>
+
+                                <div>
+                                    <label><span class="control-label">Depends on:</span> <input type="text" class="form-control" data-bind="autocomplete: dependency_autocomplete, autocompleteSelect: add_dependency, delay: 0"></label>
+                                    <ul class="list-inline" data-bind="foreach: depends_on">
+                                        <li><span data-bind="text: label, click: $root.show_topic"></span> <button type="button" class="btn btn-sm remove" data-bind="click: $parent.remove_dependency"><span class="glyphicon glyphicon-remove"></span></button></li>
+                                    </ul>
+                                </div>
+
+                                <div>
+                                    <label><span class="control-label">Leads to:</span> <input type="text" class="form-control" data-bind="autocomplete: leads_to_autocomplete, autocompleteSelect: add_leads_to, delay: 0"></label>
+                                    <ul class="list-inline" data-bind="foreach: leads_to">
+                                        <li><span data-bind="text: label, click: $root.show_topic"></span></li>
+                                    </ul>
+                                </div>
+
+                                <div>
+                                    <label><span class="control-label">Learning objectives:</span> <input type="text" class="form-control" data-bind="autocomplete: learning_objective_autocomplete, autocompleteSelect: add_learning_objective, delay: 0"></label>
+                                    <ul class="list-inline" data-bind="foreach: learning_objectives">
+                                        <li><span data-bind="text: name, click: $root.show_learning_objective"></span> <button type="button" class="btn btn-sm remove" data-bind="click: $parent.remove_learning_objective"><span class="glyphicon glyphicon-remove"></span></button></li>
+                                    </ul>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="col-sm-12 col-md-6 col-lg-5">
+                            <div class="panel panel-info">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">Topics</h3>
+                                </div>
+                                <div class="list-group">
+                                    <div data-bind="sortable: {
+                                        foreach: graph.topics,
+                                        options: {
+                                            group: 'topics',
+                                            handle: '.root'
+                                        }
+                                    }">
+                                        <div class="topic">
+                                            <a role="button" class="list-group-item topic root" data-bind="
+                                                click: $parent.graph.current_topic,
+                                                css: {
+                                                    active: $data==$parent.graph.current_topic()
+                                                }
+                                                ">
+                                                <span data-bind="text: label">
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="panel-footer">
+                                    {% if editable %}
+                                    <button id="add-topic-button" type="button" class="btn btn-default add-topic" data-bind="click: graph.add_topic, attr: {title: graph.topics().length ? 'Add another topic' : 'Add a topic'}">
+                                        <span class="glyphicon glyphicon-plus"></span>
+                                        Add a topic
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </section>
+
+                <section data-bind="visible: tabber.currentTab().id=='learning-objectives'">
+                    <h2>Learning objectives</h2>
+
+                    <ul data-bind="foreach: graph.learning_objectives">
+                        <li>
+                            <form class="form-horizontal" data-bind="submit: Editor.noop">
+                                <label><span class="control-label">Name:</span> <input type="text" class="form-control" data-bind="textInput: name"></label>
+                            </form>
+                        </li>
+                    </ul>
+
+                    <button data-bind="click: graph.add_learning_objective">Add a learning objective</button>
+                </section>
+
+                <section data-bind="visible: tabber.currentTab().id=='settings'">
+                </section>
+            </div>
+        </div>
+    </div>
+                    <div id="graphviz"></div>
+</div>
+{% endblock content %}

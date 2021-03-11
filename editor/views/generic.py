@@ -30,9 +30,10 @@ class AuthorRequiredMixin(object):
         return result
 
 class CanEditMixin(object):
+    edit_required_methods = ['GET','POST','UPDATE']
     def dispatch(self, request, *args, **kwargs):
         obj = self.get_object()
-        if not obj.can_be_edited_by(request.user):
+        if request.method in self.edit_required_methods and not obj.can_be_edited_by(request.user):
             template = get_template("403.html")
             return http.HttpResponseForbidden(template.render(RequestContext(self.request).flatten()))
         return super().dispatch(request, *args, **kwargs)

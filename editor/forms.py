@@ -15,7 +15,8 @@ from django.db.models import Q, Count
 from django.contrib.auth.models import User
 from django.template.loader import render_to_string
 
-from editor.models import NewExam, NewQuestion, EditorItem, Access, Theme, Extension, PullRequest, CustomPartType, Project, Folder, Resource
+from editor.models import NewExam, NewQuestion, EditorItem, Access, Theme, Extension, \
+    PullRequest, CustomPartType, Project, Folder, Resource, KnowledgeGraph
 import editor.models
 from accounts.forms import UserField
 from accounts.util import find_users
@@ -611,7 +612,7 @@ class UpdateCustomPartTypeForm(forms.ModelForm):
 
 class NewCustomPartTypeForm(forms.ModelForm):
     
-    """Form for a new extension."""
+    """Form for a new custom part type."""
 
     class Meta:
         model = CustomPartType
@@ -885,4 +886,43 @@ class CreateExamFromBasketForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class':'form-control', 'placeholder':'e.g. "Week 4 homework"'}),
             'author': forms.HiddenInput(),
             'project': BootstrapSelect,
+        }
+
+class NewKnowledgeGraphForm(forms.ModelForm):
+    
+    """Form for a new knowledge graph."""
+
+    class Meta:
+        model = KnowledgeGraph
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self._user = kwargs.pop('author')
+        super().__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        knowledge_graph = super().save(commit=False)
+
+        knowledge_graph.slug = slugify(knowledge_graph.name)
+        
+        knowledge_graph.author = self._user
+
+        if commit:
+            knowledge_graph.save()
+            self.save_m2m()
+        return knowledge_graph
+
+
+class UpdateKnowledgeGraphForm(forms.ModelForm):
+    
+    """Form to edit a custom part type."""
+    
+    class Meta:
+        model = KnowledgeGraph
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control'}),
         }

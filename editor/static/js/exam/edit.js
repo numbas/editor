@@ -6,9 +6,24 @@ $(document).ready(function() {
 
         Editor.EditorItem.apply(this);
 
+        this.question_view = ko.observable('groups');
+        this.edit_question_group = function() {
+            e.question_view('groups');
+        }
+
         this.question_groups = ko.observableArray([]);
+        this.current_question_group = ko.observable(null);
+        this.current_question_group.subscribe(function(qg) {
+            if(qg) {
+                e.question_view('groups');
+            }
+        });
+
         this.addQuestionGroup = function() {
-            e.question_groups.push(new QuestionGroup(null,e));
+            var qg = new QuestionGroup(null,e);
+            e.question_groups.push(qg);
+            e.current_question_group(qg);
+            return qg;
         }
 
         this.questions = ko.computed(function() {
@@ -58,8 +73,34 @@ $(document).ready(function() {
 
         this.allowPrinting = ko.observable(true);
 
+        this.navigateModeOptions = [
+            {
+                name: 'sequence', 
+                niceName: 'Sequential', 
+                edit_question_names: false, 
+                change_question_groups: true, 
+                number_questions: true
+            },
+            {
+                name: 'menu', 
+                niceName: 'Choose from menu', 
+                edit_question_names: true, 
+                change_question_groups: true, 
+                number_questions: false
+            },
+            {
+                name: 'adaptive', 
+                niceName: 'Adaptive', 
+                edit_question_names: false, 
+                change_question_groups: false, 
+                number_questions: false
+            }
+        ];
+        this.navigatemode = ko.observable(this.navigateModeOptions[0]);
+
         this.mainTabber.tabs([
             new Editor.Tab('questions','Questions','file',{in_use: ko.computed(function() { return this.questions().length>0; },this)}),
+            new Editor.Tab('knowledge_graph', 'Knowledge graph', 'object-align-horizontal', {visible: ko.computed(function() { return this.navigatemode().name=='adaptive'; },this)}),
             new Editor.Tab('display','Display','picture',{in_use: ko.computed(function() { return this.theme() && this.theme().path!='default'; },this)}),
             new Editor.Tab('navigation','Navigation','tasks'),
             new Editor.Tab('timing','Timing','time'),
@@ -85,12 +126,6 @@ $(document).ready(function() {
         this.showresultspage = ko.observable(this.showResultsPageOptions[0]);
 
         this.allowregen = ko.observable(true);
-        this.navigateModeOptions = [
-            {name: 'sequence', niceName: 'Sequential'},
-            {name: 'menu', niceName: 'Choose from menu'},
-            {name: 'adaptive', niceName: 'Adaptive'}
-        ];
-        this.navigatemode = ko.observable(this.navigateModeOptions[0]);
         this.reverse = ko.observable(true);
         this.browse = ko.observable(true);
         this.allowsteps = ko.observable(true);
@@ -120,6 +155,8 @@ $(document).ready(function() {
         this.addFeedbackMessage = function() {
             e.feedbackMessages.push(new FeedbackMessage());
         }
+
+        this.knowledge_graph = new KnowledgeGraph(this);
 
         this.questionTabs = ko.observableArray([
             new Editor.Tab('basket','Basket','shopping-cart'),
@@ -224,12 +261,20 @@ $(document).ready(function() {
             allow_delay_question: ko.observable(false),
         }
 
+        this.edit_topic = function(topic) {
+            var graph = e.knowledge_graph;
+            graph.current_topic(topic);
+            graph.tabber.setTab('topics')();
+            e.mainTabber.setTab('knowledge_graph')();
+        }
+
         this.init_output();
 
         if(data)
         {
             this.load(data);
         }
+
 
         if(item_json.editable) {
             this.save = ko.computed(function() {
@@ -286,12 +331,12 @@ $(document).ready(function() {
         },
 
         addQuestion: function(q) {
-            var groups = this.question_groups();
-            if(!groups.length) {
-                this.addQuestionGroup();
+            var group = this.current_question_group();
+            if(!group) {
+                return;
             }
-            var group = groups[groups.length-1];
             group.questions.push(q);
+            this.question_view('groups');
         },
 
         //returns a JSON-y object representing the exam
@@ -304,6 +349,7 @@ $(document).ready(function() {
                 showQuestionGroupNames: this.showQuestionGroupNames(),
                 showstudentname: this.showstudentname(),
                 question_groups: this.question_groups().map(function(qg) { return qg.toJSON() }),
+                knowledge_graph: this.knowledge_graph.toJSON(),
                 allowPrinting: this.allowPrinting(),
                 navigation: {
                     allowregen: this.allowregen(),
@@ -418,6 +464,19 @@ $(document).ready(function() {
             this.question_groups(content.question_groups.map(function(qg) {
                 return new QuestionGroup(qg,e);
             }));
+
+            this.current_question_group(this.question_groups()[0]);
+
+            if('knowledge_graph' in content){ 
+                this.knowledge_graph.load(content.knowledge_graph);
+                this.knowledge_graph.topics().forEach(function(t) {
+                    var qg = e.question_groups().find(function(qg) { return t.name()==qg.name(); });
+                    if(qg) {
+                        qg.topic = t;
+                        t.question_group = qg;
+                    }
+                });
+            }
         },
 
         remove_deleted_questions: function(questions) {
@@ -479,6 +538,18 @@ $(document).ready(function() {
 
         this.questions = ko.observableArray([]);
 
+        this.num_questions_text = ko.pureComputed(function() {
+            var n = this.questions().length;
+            switch(n) {
+                case 0:
+                    return 'Empty';
+                case 1:
+                    return '1 question';
+                default:
+                    return n+' questions';
+            }
+        },this);
+
         this.receivedQuestions = ko.observableArray([]);
         ko.computed(function() {
             var received = this.receivedQuestions();
@@ -510,6 +581,9 @@ $(document).ready(function() {
         this.remove = function() {
             if(!qg.questions().length || window.confirm('Are you sure you want to remove this group? All of its questions will also be removed from the exam.')) {
                 qg.parent.remove(qg);
+                if(qg.exam.current_question_group()==qg) {
+                    qg.exam.current_question_group(null);
+                }
             }
         }
 
@@ -535,6 +609,17 @@ $(document).ready(function() {
             });
             return total;
         },this);
+
+        this.add_questions = function() {
+            qg.exam.question_view('add_question');
+        }
+
+        this.edit_topic = function() {
+            if(!qg.topic) {
+                return;
+            }
+            qg.exam.edit_topic(qg.topic);
+        }
     }
     QuestionGroup.prototype = {
         toJSON: function() {
@@ -697,6 +782,189 @@ $(document).ready(function() {
             viewModel.feedbackMessages.remove(this);
         }
     }
+
+    function KnowledgeGraph(exam,data) {
+        var kg = this;
+        this.exam = exam;
+        this.topics = ko.observableArray([]);
+        this.learning_objectives = ko.observableArray([]);
+        this.current_topic = ko.observable(null);
+        this.current_learning_objective = ko.observable(null);
+
+        this.tabber = new Editor.Tabber([
+            {id: 'topics', title: 'Topics', icon: 'book'},
+            {id: 'learning-objectives', title: 'Learning objectives', icon: 'ok'},
+            {id: 'settings', title: 'Settings', icon: 'cog'}
+        ]);
+        this.show_topic = function(t) {
+            kg.current_topic(t);
+            kg.tabber.setTab('topics')();
+        };
+        this.show_learning_objective = function(lo) {
+            kg.current_learning_objective(lo);
+            kg.tabber.setTab('learning-objectives')();
+        };
+
+        this.add_topic = function() {
+            var t = new Topic(kg);
+            kg.topics.push(t);
+            kg.current_topic(t);
+            var qg = kg.exam.question_groups.addQuestionGroup();
+            qg.topic = t;
+            this.question_group = qg;
+            return t;
+        }
+
+        this.remove_topic = function(t) {
+            kg.topics.remove(t);
+            this.question_group.remove();
+        }
+
+        this.add_learning_objective = function() {
+            var lo = new LearningObjective(kg);
+            kg.learning_objectives.push(lo);
+            kg.current_learning_objective(lo);
+            return lo;
+        }
+
+        this.remove_learning_objective = function(lo) {
+            kg.learning_objectives.remove(lo);
+        }
+
+        ko.computed(function() {
+            this.topics().forEach(function(t) {
+                t.leads_to([]);
+            });
+
+            this.topics().forEach(function(t) {
+                t.depends_on().forEach(function(t2) {
+                    t2.leads_to.push(t);
+                });
+            });
+        },this);
+
+        if(data) {
+            this.load(data);
+        }
+    }
+    KnowledgeGraph.prototype = {
+        load: function(data) {
+            var kg = this;
+
+            var topics = [];
+            data.topics.forEach(function(td) {
+                topics.push(new Topic(kg,td));
+            });
+            var learning_objectives = [];
+            data.learning_objectives.forEach(function(lod) {
+                learning_objectives.push(new LearningObjective(kg,lod));
+            })
+
+            data.topics.forEach(function(td,i) {
+                topics[i].depends_on(td.depends_on.map(function(name) { return topics.find(function(t2) { return t2.name() == name; }) }));
+                topics[i].learning_objectives(td.learning_objectives.map(function(name) { return learning_objectives.find(function(lo) { return lo.name() == name; }) }));
+            })
+
+            kg.topics(topics);
+            kg.learning_objectives(learning_objectives);
+        },
+
+        toJSON: function() {
+            var o = {
+                topics: this.topics().map(function(t) { return t.toJSON(); }),
+                learning_objectives: this.learning_objectives().map(function(lo) { return lo.toJSON(); })
+            }
+            return o;
+        }
+    }
+
+    function Topic(graph,data) {
+        var t = this;
+        this.graph = graph;
+        this.name = ko.observable('');
+        this.label = ko.computed(function() {
+            return this.name().trim() || 'Unnamed topic';
+        },this);
+        this.depends_on = ko.observableArray([]);
+        this.leads_to = ko.observableArray([]);
+        this.learning_objectives = ko.observableArray([]);
+
+        this.description = ko.observable('');
+
+        this.dependency_autocomplete = Editor.autocomplete_source(this, graph.topics, this.depends_on);
+
+        this.leads_to_autocomplete = Editor.autocomplete_source(this, graph.topics, this.leads_to);
+
+        this.add_dependency = function(t2) {
+            t.depends_on.push(t2);
+        }
+        this.remove_dependency = function(t2) {
+            t.depends_on.remove(t2);
+        }
+
+        this.add_leads_to = function(t2) {
+            t2.depends_on.push(t);
+        }
+        this.remove_leads_to = function(t2) {
+            t2.depends_on.remove(t);
+        }
+
+        this.learning_objective_autocomplete = Editor.autocomplete_source(this, graph.learning_objectives, this.learning_objectives);
+        this.add_learning_objective = function(lo) {
+            t.learning_objectives.push(lo);
+        }
+        this.remove_learning_objective = function(lo) {
+            t.learning_objectives.remove(lo);
+        }
+
+        if(data) {
+            this.load(data);
+        }
+    }
+    Topic.prototype = {
+        load: function(data) {
+            this.name(data.name);
+            this.description(data.description);
+        },
+
+        toJSON: function() {
+            var o = {
+                name: this.name(),
+                description: this.description(),
+                depends_on: this.depends_on().map(function(t) { return t.name(); }),
+                learning_objectives: this.learning_objectives().map(function(lo) { return lo.name(); })
+            }
+            return o;
+        }
+    }
+
+    function LearningObjective(graph,data) {
+        this.graph = graph;
+        this.name = ko.observable('');
+        this.label = ko.computed(function() {
+            return this.name().trim() || 'Unnamed topic';
+        },this);
+        this.description = ko.observable('');
+
+        if(data) {
+            this.load(data);
+        }
+    }
+    LearningObjective.prototype = {
+        load: function(data) {
+            this.name(data.name);
+            this.description(data.description);
+        },
+
+        toJSON: function() {
+            var o = {
+                name: this.name(),
+                description: this.description()
+            }
+            return o;
+        }
+    }
+
 
     Numbas.queueScript('start-editor',['jme-display','jme-variables','jme','editor-extras'],function() {
         try {

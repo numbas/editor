@@ -1723,6 +1723,7 @@ class NewQuestion(models.Model):
         data = OrderedDict([
             ('name', self.editoritem.name),
             ('extensions', [e.location for e in self.extensions.all()]),
+            ('topics', [t.name for t in self.topics.all()]),
             ('custom_part_types', [p.as_json() for p in self.custom_part_types.all()]),
             ('resources', self.resource_paths),
             ('navigation', {'allowregen': True, 'showfrontpage': False, 'preventleave': False}),
@@ -1736,6 +1737,7 @@ class NewQuestion(models.Model):
         d = self.editoritem.edit_dict()
         d['extensions'] = [e.location for e in self.extensions.all()]
         d['resources'] = [res.as_json() for res in self.resources.all()]
+        d['topics'] = [t.pk for t in self.topics.all()]
         return d
 
     def summary(self, user=None):
@@ -1939,6 +1941,7 @@ def item_created_timeline_event(instance, created, **kwargs):
 
 class KnowledgeGraph(models.Model, ControlledObject):
     name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
     public = models.BooleanField(default=False, help_text='Can this knowledge graph be seen by everyone?')
     slug = models.SlugField(max_length=200, editable=False, unique=False)
     author = models.ForeignKey(User, related_name='own_knowledge_graphs', on_delete=models.CASCADE)
@@ -1946,6 +1949,9 @@ class KnowledgeGraph(models.Model, ControlledObject):
 
     def get_absolute_url(self):
         return reverse('knowledge_graph_edit', args=(self.pk,))
+
+    def __str__(self):
+        return self.name
 
     @property
     def owner(self):
@@ -1967,12 +1973,46 @@ class KnowledgeGraph(models.Model, ControlledObject):
         else:
             return Q(public=True) | Q(author=user)
 
+    def as_json(self):
+        return {
+            'pk': self.pk,
+            'name': self.name,
+            'description': self.description,
+            'topics': [t.as_json() for t in self.topics.all()],
+            'learning_objectives': [lo.as_json() for lo in self.learning_objectives.all()],
+        }
+
 class LearningObjective(models.Model):
     name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
     knowledge_graph = models.ForeignKey(KnowledgeGraph, related_name='learning_objectives', on_delete=models.CASCADE)
     topics = models.ManyToManyField('Topic', related_name='learning_objectives')
 
+    def __str__(self):
+        return self.name
+
+    def as_json(self):
+        return {
+            'pk': self.pk,
+            'name': self.name,
+            'description': self.description,
+            'topics': [t.pk for t in self.topics.all()],
+        }
+
 class Topic(models.Model):
     name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
     knowledge_graph = models.ForeignKey(KnowledgeGraph, related_name='topics', on_delete=models.CASCADE)
     depends_on = models.ManyToManyField('Topic', related_name='used_by')
+
+    def __str__(self):
+        return self.name
+
+    def as_json(self):
+        return {
+            'pk': self.pk,
+            'name': self.name,
+            'description': self.description,
+            'depends_on': [t.pk for t in self.depends_on.all()],
+            'learning_objectives': [lo.pk for lo in self.learning_objectives.all()],
+        }

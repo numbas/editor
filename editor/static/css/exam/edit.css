@@ -12,13 +12,16 @@
   border: none;
 }
 
-.question-group .panel-heading {
-  border-radius: 0;
-  margin-bottom: 1em;
+.question-group .questions {
+    min-height: 1em;
 }
 
-.question-group .panel-heading .handle-grp {
-    margin-left: -15px;
+.question-groups .question-group .question.sortable-ghost .handle,
+.question-groups .question-group .question.sortable-ghost .controls,
+.question-groups .question-group .question.sortable-ghost .label,
+.question-groups .question-group .question.sortable-ghost .title .number
+{
+  display: none;
 }
 
 .questions-tab .question {
@@ -46,6 +49,10 @@
   grid-auto-columns: min-content;
   grid-auto-flow: column;
   grid-gap: 0.5em;
+}
+
+.add-questions > .nav {
+    margin-bottom: 1em;
 }
 
 @media screen and (max-width: 1490px) {

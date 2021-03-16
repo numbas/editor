@@ -16,13 +16,14 @@ from django.contrib.auth.models import User
 from django.template.loader import render_to_string
 
 from editor.models import NewExam, NewQuestion, EditorItem, Access, Theme, Extension, \
-    PullRequest, CustomPartType, Project, Folder, Resource, KnowledgeGraph
+    PullRequest, CustomPartType, Project, Folder, Resource, KnowledgeGraph, Topic, LearningObjective
 import editor.models
 from accounts.forms import UserField
 from accounts.util import find_users
 from editor import jsonfield
 
 from .slugify import slugify
+import json
 
 class FixedSelectMultiple(SelectMultiple):
     def value_from_datadict(self, data, files, name):
@@ -198,7 +199,7 @@ class QuestionForm(EditorItemForm):
     
     class Meta:
         model = NewQuestion
-        fields = ('resources', 'extensions')
+        fields = ('resources', 'extensions', 'topics')
 
 class NewQuestionForm(forms.ModelForm):
 
@@ -918,11 +919,77 @@ class NewKnowledgeGraphForm(forms.ModelForm):
 
 class UpdateKnowledgeGraphForm(forms.ModelForm):
     
-    """Form to edit a custom part type."""
+    """Form to edit a knowledge graph."""
+
+    data = forms.CharField(initial='',required=True)
     
     class Meta:
         model = KnowledgeGraph
-        fields = ['name']
-        widgets = {
-            'name': forms.TextInput(attrs={'class':'form-control'}),
-        }
+        fields = ['name','description']
+
+    def clean_data(self):
+        value = self.cleaned_data['data']
+        try:
+            data = json.loads(value)
+        except json.JSONDecodeError as e:
+            raise forms.ValidationError("Invalid JSON data")
+        return data
+
+    def save(self, commit=True):
+        knowledge_graph = self.object = super().save(commit=commit)
+
+        if commit:
+            with transaction.atomic():
+                self.save_graph()
+
+        return knowledge_graph
+
+    def save_graph(self):
+        data = self.cleaned_data['data']
+        knowledge_graph = self.object
+
+        topic_pks = [t.get('pk') for t in data.get('topics',[])]
+        topics = list(Topic.objects.filter(pk__in=topic_pks))
+        learning_objective_pks = [lo.get('pk') for lo in data.get('learning_objectives',[])]
+        learning_objectives = list(LearningObjective.objects.filter(pk__in=learning_objective_pks))
+
+        deleted_topics = Topic.objects.filter(knowledge_graph=knowledge_graph).exclude(pk__in=topic_pks)
+        deleted_topics.delete()
+        deleted_learning_objectives = LearningObjective.objects.filter(knowledge_graph=knowledge_graph).exclude(pk__in=learning_objective_pks)
+        deleted_learning_objectives.delete()
+
+        for t in data.get('topics',[]):
+            if t.get('pk') is None:
+                t = Topic.objects.create(knowledge_graph=knowledge_graph, name=t['name'], description=t['description'])
+                topics.append(t)
+
+        for lo in data.get('learning_objectives',[]):
+            if lo.get('pk') is None:
+                lo = LearningObjective.objects.create(knowledge_graph=knowledge_graph, name=lo['name'], description=lo['description'])
+                learning_objectives.append(lo)
+
+        topic_pks = {t.pk : t for t in topics if t.pk is not None}
+        topic_names = {t.name : t for t in topics}
+        learning_objective_pks = {lo.pk : lo for lo in learning_objectives if lo.pk is not None}
+        learning_objective_names = {lo.name : lo for lo in learning_objectives}
+        def get_topic(info):
+            return topic_pks.get(info.get('pk'), topic_names.get(info['name']))
+        def get_learning_objective(info):
+            return learning_objective_pks.get(info.get('pk'), learning_objective_names.get(info['name']))
+
+        for td in data.get('topics',[]):
+            t = get_topic(td)
+            t.name = td['name']
+            t.description = td['description']
+            t.depends_on.set([get_topic(info) for info in td['depends_on']])
+            t.learning_objectives.set([get_learning_objective(info) for info in td['learning_objectives']])
+            t.save()
+
+        for lod in data.get('learning_objectives',[]):
+            lo = get_learning_objective(lod)
+            lo.name = lod['name']
+            lo.description = lod['description']
+            lo.save()
+
+        self.topics = topics
+        self.learning_objectives = learning_objectives

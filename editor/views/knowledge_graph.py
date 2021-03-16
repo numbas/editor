@@ -1,3 +1,4 @@
+from django import http
 from django.views import generic
 from django.urls import reverse
 from django.shortcuts import redirect
@@ -5,6 +6,8 @@ from django.shortcuts import redirect
 from editor.models import KnowledgeGraph
 from editor.forms import NewKnowledgeGraphForm, UpdateKnowledgeGraphForm
 from editor.views.generic import AuthorRequiredMixin, CanEditMixin
+
+import json
 
 class CreateView(generic.CreateView):
     model = KnowledgeGraph
@@ -37,15 +40,15 @@ class UpdateView(generic.UpdateView, CanEditMixin):
         return kwargs
 
     def form_valid(self, form):
-        with transaction.atomic(), reversion.create_revision():
-            self.object = form.save(commit=False)
-            self.object.save()
-            reversion.set_user(self.request.user)
-
+        form.save()
         return http.HttpResponse(json.dumps(self.form_valid_response_dict(form)), content_type='application/json')
     
     def form_valid_response_dict(self, form):
-        return {'result': 'success'}
+        return {
+            'result': 'success',
+            'topics': [{'pk': t.pk, 'name': t.name} for t in form.topics],
+            'learning_objectives': [{'pk': lo.pk, 'name': lo.name} for lo in form.learning_objectives],
+        }
 
     def form_invalid(self, form):
         status = {
@@ -64,5 +67,6 @@ class UpdateView(generic.UpdateView, CanEditMixin):
         context = super().get_context_data(**kwargs)
 
         context['editable'] = self.object.can_be_edited_by(self.request.user)
+        context['json'] = self.object.as_json()
 
         return context

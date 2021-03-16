@@ -2289,6 +2289,17 @@ $(document).ready(function() {
         }
     });
 
+    Editor.autocomplete_source = function(obj,from,to) {
+        return function(s,callback) {
+            var result = ko.unwrap(from).filter(function(o2) {
+                if(o2 == obj || ko.unwrap(to).contains(o2)) {
+                    return false;
+                }
+                return ko.unwrap(o2.name).toLowerCase().indexOf(s.term.toLowerCase())>=0;
+            }).map(function(o2) { return { label: ko.unwrap(o2.name), value: o2 } })
+            callback(result);
+        }
+    }
 
     Editor.user_search_autocomplete = function(element,options,jquery_options) {
         options = $.extend({url: '/accounts/search'}, options || {});

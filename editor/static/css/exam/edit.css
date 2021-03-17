@@ -55,6 +55,13 @@
     margin-bottom: 1em;
 }
 
+.base-diagnostic-algorithm pre {
+  max-height: 20em;
+  overflow-y: auto;
+  margin-bottom: 1em;
+}
+
+
 @media screen and (max-width: 1490px) {
     .questions-tab .question {
         grid-template-columns: min-content 1fr;

@@ -1,4 +1,4 @@
-// Compiled using  runtime/scripts/numbas.js  runtime/scripts/jme.js  runtime/scripts/jme-builtins.js  runtime/scripts/jme-display.js  runtime/scripts/jme-rules.js  runtime/scripts/jme-variables.js  runtime/scripts/jme-calculus.js  runtime/scripts/localisation.js  runtime/scripts/part.js  runtime/scripts/question.js  runtime/scripts/schedule.js  runtime/scripts/marking.js  runtime/scripts/math.js  runtime/scripts/util.js  runtime/scripts/i18next/i18next.js  runtime/scripts/json.js  runtime/scripts/es5-shim.js  runtime/scripts/es6-shim.js  runtime/scripts/es6-promise/es6-promise.js  runtime/scripts/decimal/decimal.js  themes/default/files/scripts/answer-widgets.js  runtime/scripts/parts/custom_part_type.js  runtime/scripts/parts/extension.js  runtime/scripts/parts/gapfill.js  runtime/scripts/parts/information.js  runtime/scripts/parts/jme.js  runtime/scripts/parts/matrixentry.js  runtime/scripts/parts/multipleresponse.js  runtime/scripts/parts/numberentry.js  runtime/scripts/parts/patternmatch.js
+// Compiled using  runtime/scripts/numbas.js  runtime/scripts/jme.js  runtime/scripts/jme-builtins.js  runtime/scripts/jme-display.js  runtime/scripts/jme-rules.js  runtime/scripts/jme-variables.js  runtime/scripts/jme-calculus.js  runtime/scripts/localisation.js  runtime/scripts/part.js  runtime/scripts/question.js  runtime/scripts/schedule.js  runtime/scripts/diagnostic.js  runtime/scripts/marking.js  runtime/scripts/math.js  runtime/scripts/util.js  runtime/scripts/i18next/i18next.js  runtime/scripts/json.js  runtime/scripts/es5-shim.js  runtime/scripts/es6-shim.js  runtime/scripts/es6-promise/es6-promise.js  runtime/scripts/decimal/decimal.js  themes/default/files/scripts/answer-widgets.js  runtime/scripts/parts/custom_part_type.js  runtime/scripts/parts/extension.js  runtime/scripts/parts/gapfill.js  runtime/scripts/parts/information.js  runtime/scripts/parts/jme.js  runtime/scripts/parts/matrixentry.js  runtime/scripts/parts/multipleresponse.js  runtime/scripts/parts/numberentry.js  runtime/scripts/parts/patternmatch.js
 // From the Numbas compiler directory
 /*
 Copyright 2011-14 Newcastle University
@@ -85,6 +85,7 @@ Numbas.Error = function(message, args, originalError)
     this.originalMessage = message;
     this.message = R.apply(this,[message,args]);
     this.originalMessages = [message];
+    this.args = args;
     if(originalError!==undefined) {
         this.originalError = originalError;
         if(originalError.originalMessages) {
@@ -2572,7 +2573,7 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
                             throw(new Numbas.Error('jme.typecheck.no right type unbound name',{name:eargs[i].name}));
                         }
                     }
-                    throw(new Numbas.Error('jme.typecheck.no right type definition',{op:op}));
+                    throw(new Numbas.Error('jme.typecheck.no right type definition',{op:op, eargs: eargs}));
                 }
             }
         default:
@@ -11789,10 +11790,13 @@ jme.variables = /** @lends Numbas.jme.variables */ {
     computeVariable: function(name,todo,scope,path,computeFn)
     {
         var originalName = (todo[name] && todo[name].originalName) || name;
-        if(scope.getVariable(name)!==undefined)
-            return scope.variables[name];
-        if(path===undefined)
+        var existing_value = scope.getVariable(name);
+        if(existing_value!==undefined) {
+            return existing_value;
+        }
+        if(path===undefined) {
             path=[];
+        }
         computeFn = computeFn || jme.variables.computeVariable;
         if(name=='') {
             throw(new Numbas.Error('jme.variables.empty name'));
@@ -11846,7 +11850,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
      * @param {Function} computeFn - A function to compute a variable. Default is Numbas.jme.variables.computeVariable.
      * @returns {object} - `variables`: a dictionary of evaluated variables, and `conditionSatisfied`: was the condition satisfied?
      */
-    makeVariables: function(todo,scope,condition,computeFn)
+    makeVariables: function(todo,scope,condition,computeFn,targets)
     {
         var multis = {};
         var multi_acc = 0;
@@ -11886,10 +11890,12 @@ jme.variables = /** @lends Numbas.jme.variables */ {
             conditionSatisfied = jme.evaluate(condition,scope).value;
         }
         if(conditionSatisfied) {
-            for(var x in todo)
-            {
-                computeFn(x,todo,scope,undefined,computeFn);
+            if(!targets) {
+                targets = Object.keys(todo);
             }
+            targets.forEach(function(x) {
+                computeFn(x,todo,scope,undefined,computeFn);
+            });
         }
         var variables = scope.variables;
         Object.keys(multis).forEach(function(mname) {
@@ -11905,9 +11911,10 @@ jme.variables = /** @lends Numbas.jme.variables */ {
      * @param {Numbas.jme.variables.variable_data_dict} todo - Dictionary of variables mapped to their definitions.
      * @param {object.<Numbas.jme.token>} changed_variables - Dictionary of changed variables.
      * @param {Numbas.jme.Scope} scope
+     * @param {Function} [computeFn] - A function to compute a variable. Default is Numbas.jme.variables.computeVariable.
      * @returns {Numbas.jme.Scope}
      */
-    remakeVariables: function(todo,changed_variables,scope) {
+    remakeVariables: function(todo,changed_variables,scope,computeFn,targets) {
         var scope = new Numbas.jme.Scope([scope, {variables: changed_variables}]);
         var replaced = Object.keys(changed_variables);
         // find dependent variables which need to be recomputed
@@ -11919,8 +11926,16 @@ jme.variables = /** @lends Numbas.jme.variables */ {
                 scope.deleteVariable(name);
             }
         }
+        for(var name in todo) {
+            if(name in dependents_todo) {
+                continue;
+            }
+            if(scope.getVariable(name)===undefined) {
+                dependents_todo[name] = todo[name];
+            }
+        }
         // compute those variables
-        var nv = jme.variables.makeVariables(dependents_todo,scope);
+        var nv = jme.variables.makeVariables(dependents_todo,scope,null,computeFn,targets);
         scope = new Numbas.jme.Scope([scope,{variables:nv.variables}]);
         return scope;
     },
@@ -12169,6 +12184,11 @@ var ScriptNote = jme.variables.ScriptNote = function(source) {
 }
 
 jme.variables.note_script_constructor = function(construct_scope, process_result, compute_note) {
+    construct_scope = construct_scope || function(scope,variables) {
+        return new jme.Scope([scope,{variables:variables}]);
+    };
+
+    process_result = process_result || function(r) { return r; }
     function Script(source, base) {
         this.source = source;
         try {
@@ -12204,6 +12224,17 @@ jme.variables.note_script_constructor = function(construct_scope, process_result
          */
         source: '',
 
+
+        construct_scope: function(scope,variables) {
+            scope = construct_scope(scope,variables);
+
+            // if any names used by notes are already defined as variables in this scope, delete them
+            Object.keys(this.notes).forEach(function(name) {
+                scope.deleteVariable(name);
+            });
+            return scope;
+        },
+
         /** Evaluate all of this script's notes in the given scope.
          *
          * @param {Numbas.jme.Scope} scope
@@ -12212,21 +12243,20 @@ jme.variables.note_script_constructor = function(construct_scope, process_result
          * @returns {Object}
          */
         evaluate: function(scope, variables) {
-            scope = new jme.Scope([scope]);
-
-            // if any names used by notes are already defined as variables in this scope, delete them
-            Object.keys(this.notes).forEach(function(name) {
-                scope.deleteVariable(name);
-            });
-
-            scope = construct_scope(scope, variables);
+            scope = this.construct_scope(scope,variables);
 
             var result = jme.variables.makeVariables(this.notes,scope,null,compute_note);
             return process_result(result,scope);
         },
 
-        evaluate_note: function(name, scope) {
-            return scope.evaluate(this.notes[name].tree);
+        evaluate_note: function(name, scope, changed_variables) {
+            changed_variables = changed_variables || {};
+            var nscope = construct_scope(scope);
+            var result = jme.variables.remakeVariables(this.notes,changed_variables,nscope,compute_note,[name]);
+            for(var name in result.variables) {
+                scope.setVariable(name,result.variables[name]);
+            }
+            return result.variables[name];
         }
     }
 
@@ -15673,6 +15703,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
         var q = this;
         var score = 0;
         var marks = 0;
+        var credit = 0;
 
         switch(this.partsMode) {
             case 'all':
@@ -15680,7 +15711,9 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                     var part = this.parts[i];
                     score += part.score;
                     marks += part.marks;
+                    credit += this.marks>0 ? part.credit*part.marks/this.marks : part.credit;
                 }
+                credit = this.marks>0 ? credit : credit/this.parts.length;
                 break;
             case 'explore':
                 marks = this.maxMarks;
@@ -15720,6 +15753,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                     score -= p.score;
                 });
                 score = Math.min(this.maxMarks, Math.max(0,score));
+                credit = marks>0 ? score/marks : 0;
                 break;
         }
         this.score = score;
@@ -16056,6 +16090,115 @@ SignalBox.prototype = { /** @lends Numbas.schedule.SignalBox.prototype */
 Numbas.signals = new Numbas.schedule.SignalBox();
 
 });
+
+Numbas.queueScript('diagnostic',['util','jme','localisation','jme-variables'], function() {
+    var jme = Numbas.jme;
+
+    var diagnostic = Numbas.diagnostic = {
+        scripts: {},
+        load_scripts: function() {
+            for(var x in Numbas.raw_diagnostic_scripts) {
+                diagnostic.scripts[x] = new diagnostic.DiagnosticScript(Numbas.raw_diagnostic_scripts[x]);
+            }
+        }
+    };
+
+    var DiagnosticScript = diagnostic.DiagnosticScript = Numbas.jme.variables.note_script_constructor();
+
+    var KnowledgeGraph = diagnostic.KnowledgeGraph = function(data) {
+        this.data = data;
+        var topicdict = this.topicdict = {};
+        this.topics = data.topics.map(function(t) {
+            var topic = {
+                name: t.name,
+                learning_objectives: t.learning_objectives.slice(),
+                depends_on: t.depends_on.slice(),
+                leads_to: []
+            };
+            topicdict[topic.name] = topic;
+            return t;
+        });
+
+        this.topics.forEach(function(t) {
+            t.depends_on.forEach(function(name) {
+                topicdict[name].leads_to.push(t);
+            });
+        });
+
+        this.learning_objectives = data.learning_objectives.slice();
+    }
+
+    var DiagnosticController = diagnostic.DiagnosticController = function(knowledge_graph,exam,script) {
+        this.knowledge_graph = knowledge_graph;
+        this.exam = exam;
+        this.script = script;
+        this.scope = new jme.Scope([exam.scope,{variables: this.make_init_variables()}]);
+        this.state = script.evaluate_note('state',this.scope);
+    }
+    DiagnosticController.prototype = {
+        /** Produce summary data about a question for a diagnostic script to use.
+         */
+        question_data: function(question) {
+            if(!question) {
+                return new jme.types.TNothing();
+            }
+            return jme.wrapValue({
+                name: question.name,
+                number: question.number,
+                credit: question.marks>0 ? question.score/question.marks : 0
+            });
+        },
+
+        /** Make the initial variables for the diagnostic script.
+         */
+        make_init_variables: function() {
+            var dc = this;
+
+            return {
+                topics: jme.wrapValue(this.knowledge_graph.topicdict),
+                learning_objectives: jme.wrapValue(this.knowledge_graph.learning_objectives)
+            }
+        },
+
+        /** Evaluate a note in the diagnostic script, adding in the `state` and `current_question` variables.
+         */
+        evaluate_note: function(note) {
+            var parameters = {
+                state: this.state, 
+                current_topic: jme.wrapValue(this.exam.currentQuestion ? this.exam.currentQuestion.group.settings.name : null),
+                current_question: this.question_data(this.exam.currentQuestion)
+            }
+            return this.script.evaluate_note(note, this.scope, parameters);
+        },
+
+        /** Get the new state after answering a question.
+         */
+        after_answering: function() {
+            var res = jme.castToType(this.evaluate_note('after_answering'),'dict');
+            this.state = res.value.state;
+            var action = res.value.action;
+            return action;
+        },
+
+        /** Get the next topic to pick a question on.
+         */
+        next_topic: function() {
+            var res = this.evaluate_note('next_topic');
+            if(jme.isType(res,'nothing')) {
+                return null;
+            } else {
+                return jme.unwrapValue(jme.castToType(res,'string'));
+            }
+        },
+
+        /** Produce a summary of the student's progress through the test.
+         */
+        progress: function() {
+            var res = this.evaluate_note('progress');
+            return jme.unwrapValue(res);
+        }
+    }
+})
 
 Numbas.queueScript('marking',['util', 'jme','localisation','jme-variables','math'],function() {
     /** @namespace Numbas.marking */

@@ -1,7 +1,6 @@
 $(document).ready(function() {
     var Ruleset = Editor.Ruleset;
-    function Exam(data)
-    {
+    function Exam(data) {
         var e = this;
 
         Editor.EditorItem.apply(this);
@@ -89,8 +88,8 @@ $(document).ready(function() {
                 number_questions: false
             },
             {
-                name: 'adaptive', 
-                niceName: 'Adaptive', 
+                name: 'diagnostic', 
+                niceName: 'Diagnostic', 
                 edit_question_names: false, 
                 change_question_groups: false, 
                 number_questions: false
@@ -100,7 +99,7 @@ $(document).ready(function() {
 
         this.mainTabber.tabs([
             new Editor.Tab('questions','Questions','file',{in_use: ko.computed(function() { return this.questions().length>0; },this)}),
-            new Editor.Tab('knowledge_graph', 'Knowledge graph', 'object-align-horizontal', {visible: ko.computed(function() { return this.navigatemode().name=='adaptive'; },this)}),
+            new Editor.Tab('knowledge_graph', 'Knowledge graph', 'object-align-horizontal', {visible: ko.computed(function() { return this.navigatemode().name=='diagnostic'; },this)}),
             new Editor.Tab('display','Display','picture',{in_use: ko.computed(function() { return this.theme() && this.theme().path!='default'; },this)}),
             new Editor.Tab('navigation','Navigation','tasks'),
             new Editor.Tab('timing','Timing','time'),
@@ -155,8 +154,6 @@ $(document).ready(function() {
         this.addFeedbackMessage = function() {
             e.feedbackMessages.push(new FeedbackMessage());
         }
-
-        this.knowledge_graph = new KnowledgeGraph(this);
 
         this.questionTabs = ko.observableArray([
             new Editor.Tab('basket','Basket','shopping-cart'),
@@ -226,8 +223,15 @@ $(document).ready(function() {
         );
 
 
-        this.adaptive = {
-            knowledge_graph: ko.observable(null),
+        this.diagnostic = {
+            tabber: new Editor.Tabber([
+                {id: 'topics', title: 'Topics', icon: 'book'},
+                {id: 'learning-objectives', title: 'Learning objectives', icon: 'ok'},
+                {id: 'algorithm', title: 'Diagnostic algorithm', icon: 'road'}
+            ]),
+
+            knowledge_graph: new KnowledgeGraph(this),
+
             pass_topic_condition: Editor.optionObservable([
                 {name: 'ncorrect', niceName: 'Correctly answer N questions'},
                 {name: 'percentcorrect', niceName: 'Correctly answer a proportion of the available questions'},
@@ -260,18 +264,56 @@ $(document).ready(function() {
 
             allow_delay_question: ko.observable(false),
         }
-
-        this.edit_topic = function(topic) {
-            var graph = e.knowledge_graph;
-            graph.current_topic(topic);
-            graph.tabber.setTab('topics')();
+        this.diagnostic.show_topic = function(t) {
+            var kg = e.diagnostic.knowledge_graph;
+            kg.current_topic(t);
             e.mainTabber.setTab('knowledge_graph')();
-        }
+            e.diagnostic.tabber.setTab('topics')();
+        };
+        this.diagnostic.show_learning_objective = function(lo) {
+            var kg = e.diagnostic.knowledge_graph;
+            kg.current_learning_objective(lo);
+            e.mainTabber.setTab('knowledge_graph')();
+            e.diagnostic.tabber.setTab('learning-objectives')();
+        };
+        this.diagnostic.scriptOptions = [
+            {niceName: 'Diagnosys', name: 'diagnosys'},
+            {niceName: 'Custom', name: 'custom'}
+        ];
+        this.diagnostic.script = ko.observable(this.diagnostic.scriptOptions[0]);
+        var _extendScript = ko.observable(false);
+        this.diagnostic.extendScript = ko.computed({
+            read: function() {
+                return this.diagnostic.script().name=='custom' || _extendScript()
+            },
+            write: _extendScript
+        },this);
+        this.diagnostic.customScript = ko.observable('');
+        this.diagnostic.baseScript = ko.pureComputed(function() {
+            var name = e.diagnostic.script().name;
+            if(name=='custom') {
+                return '';
+            } else {
+                return Numbas.raw_diagnostic_scripts[name] || '';
+            }
+        });
+        this.diagnostic.scriptError = ko.observable('');
+        ko.computed(function() {
+            e.diagnostic.scriptError('');
+            try {
+                if(e.diagnostic.extendScript()) {
+                    var base = Numbas.diagnostic.scripts[e.diagnostic.script().name];
+                    var script = new Numbas.diagnostic.DiagnosticScript(e.diagnostic.customScript(),base);
+                }
+            } catch(err) {
+                e.diagnostic.scriptError(err.message);
+            }
+        },this).extend({throttle: 1000});
+
 
         this.init_output();
 
-        if(data)
-        {
+        if(data) {
             this.load(data);
         }
 
@@ -320,7 +362,38 @@ $(document).ready(function() {
             this.init_tasks();
         }
 
-        this.load_state();
+        if(window.history !== undefined) {
+            this.load_state();
+            var state = window.history.state || {};
+            var graph = this.diagnostic.knowledge_graph;
+            if('currentTopic' in state) {
+                var topic = graph.topics().find(function(t) { return t.name()==state.currentTopic; });
+                if(topic) {
+                    graph.current_topic(topic);
+                }
+            }
+            Editor.computedReplaceState('currentTopic',ko.pureComputed(function(){
+                var t = graph.current_topic();
+                return t && t.name();
+            },this));
+            if('currentLearningObjective' in state) {
+                var learning_objective = graph.learning_objectives().find(function(t) { return t.name()==state.currentLearningObjective; });
+                if(learning_objective) {
+                    graph.current_learning_objective(learning_objective);
+                }
+            }
+            Editor.computedReplaceState('currentLearningObjective',ko.pureComputed(function(){
+                var lo = graph.current_learning_objective();
+                return lo && lo.name();
+            },this));
+            if('currentDiagnosticTab' in state) {
+                this.diagnostic.tabber.setTab(state.currentDiagnosticTab)();
+            }
+            Editor.computedReplaceState('currentDiagnosticTab',ko.pureComputed(function() {
+                var tab = this.diagnostic.tabber.currentTab();
+                return tab ? tab.id : '';
+            },this));
+        }
     }
     Exam.prototype = {
 
@@ -349,7 +422,6 @@ $(document).ready(function() {
                 showQuestionGroupNames: this.showQuestionGroupNames(),
                 showstudentname: this.showstudentname(),
                 question_groups: this.question_groups().map(function(qg) { return qg.toJSON() }),
-                knowledge_graph: this.knowledge_graph.toJSON(),
                 allowPrinting: this.allowPrinting(),
                 navigation: {
                     allowregen: this.allowregen(),
@@ -380,6 +452,11 @@ $(document).ready(function() {
                     reviewshowexpectedanswer: this.reviewshowexpectedanswer(),
                     reviewshowadvice: this.reviewshowadvice(),
                     feedbackmessages: this.feedbackMessages().map(function(f){return f.toJSON()})
+                },
+                diagnostic: {
+                    knowledge_graph: this.diagnostic.knowledge_graph.toJSON(),
+                    script: this.diagnostic.script().name,
+                    customScript: this.diagnostic.extendScript() ? this.diagnostic.customScript() : ''
                 }
             };
         },
@@ -399,12 +476,14 @@ $(document).ready(function() {
             tryLoad(content,['name','percentPass','shuffleQuestions','allQuestions','pickQuestions','showQuestionGroupNames','showstudentname','allowPrinting'],this);
             this.duration((content.duration||0)/60);
 
-            if('navigation' in content)
-            {
+            if('navigation' in content) {
                 tryLoad(content.navigation,['allowregen','reverse','browse','showfrontpage','preventleave','startpassword','allowsteps'],this);
                 var showresultspage = Editor.tryGetAttribute(content.navigation, 'showresultspage');
                 if(showresultspage) {
                     this.showresultspage(this.showResultsPageOptions.find(function(o){return o.name==showresultspage}));
+                }
+                if(content.navigation.navigatemode=='adaptive') {
+                    content.navigation.navigatemode = 'diagnostic';
                 }
                 var navigatemode = Editor.tryGetAttribute(content.navigation, 'navigatemode');
                 if(navigatemode) {
@@ -413,15 +492,13 @@ $(document).ready(function() {
                 this.onleave.load(content.navigation.onleave);
             }
 
-            if('timing' in content)
-            {
+            if('timing' in content) {
                 tryLoad(content.timing,['allowPause'],this);
                 this.timeout.load(content.timing.timeout);
                 this.timedwarning.load(content.timing.timedwarning);
             }
 
-            if('feedback' in content)
-            {
+            if('feedback' in content) {
                 tryLoad(content.feedback,['showactualmark','showtotalmark','showanswerstate','allowrevealanswer','advicethreshold','intro','reviewshowscore','reviewshowfeedback','reviewshowexpectedanswer','reviewshowadvice'],this);
                 if('feedbackmessages' in content.feedback) {
                     this.feedbackMessages(content.feedback.feedbackmessages.map(function(d){var f = new FeedbackMessage(); f.load(d); return f}));
@@ -467,9 +544,18 @@ $(document).ready(function() {
 
             this.current_question_group(this.question_groups()[0]);
 
-            if('knowledge_graph' in content){ 
-                this.knowledge_graph.load(content.knowledge_graph);
-                this.knowledge_graph.topics().forEach(function(t) {
+            if('diagnostic' in content){ 
+                var diagnostic = content.diagnostic;
+                var graph = this.diagnostic.knowledge_graph;
+                graph.load(diagnostic.knowledge_graph);
+
+                tryLoad(diagnostic, ['customScript'], this.diagnostic);
+                if(this.diagnostic.customScript) {
+                    this.diagnostic.extendScript(true);
+                }
+                this.diagnostic.script(this.diagnostic.scriptOptions.find(function(o){return o.name==diagnostic.script}));
+
+                graph.topics().forEach(function(t) {
                     var qg = e.question_groups().find(function(qg) { return t.name()==qg.name(); });
                     if(qg) {
                         qg.topic = t;
@@ -493,8 +579,7 @@ $(document).ready(function() {
     };
     Exam.prototype.__proto__ = Editor.EditorItem.prototype;
 
-    function Event(name,niceName,helpURL,actions)
-    {
+    function Event(name,niceName,helpURL,actions) {
         this.name = name;
         this.niceName = niceName;
         this.helpURL = helpURL;
@@ -517,8 +602,7 @@ $(document).ready(function() {
         load: function(data) {
             if(!data)
                 return;
-            for(var i=0;i<this.actions.length;i++)
-            {
+            for(var i=0;i<this.actions.length;i++) {
                 if(this.actions[i].name==data.action)
                     this.action(this.actions[i]);
             }
@@ -618,7 +702,7 @@ $(document).ready(function() {
             if(!qg.topic) {
                 return;
             }
-            qg.exam.edit_topic(qg.topic);
+            qg.exam.show_topic(qg.topic);
         }
     }
     QuestionGroup.prototype = {
@@ -791,20 +875,6 @@ $(document).ready(function() {
         this.current_topic = ko.observable(null);
         this.current_learning_objective = ko.observable(null);
 
-        this.tabber = new Editor.Tabber([
-            {id: 'topics', title: 'Topics', icon: 'book'},
-            {id: 'learning-objectives', title: 'Learning objectives', icon: 'ok'},
-            {id: 'settings', title: 'Settings', icon: 'cog'}
-        ]);
-        this.show_topic = function(t) {
-            kg.current_topic(t);
-            kg.tabber.setTab('topics')();
-        };
-        this.show_learning_objective = function(lo) {
-            kg.current_learning_objective(lo);
-            kg.tabber.setTab('learning-objectives')();
-        };
-
         this.add_topic = function() {
             var t = new Topic(kg);
             kg.topics.push(t);
@@ -966,7 +1036,7 @@ $(document).ready(function() {
     }
 
 
-    Numbas.queueScript('start-editor',['jme-display','jme-variables','jme','editor-extras'],function() {
+    Numbas.queueScript('start-editor',['jme-display','jme-variables','jme','editor-extras','diagnostic_scripts','diagnostic'],function() {
         try {
             viewModel = new Exam(item_json.itemJSON);
             ko.options.deferUpdates = true;

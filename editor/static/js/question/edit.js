@@ -2735,7 +2735,7 @@ $(document).ready(function() {
                     this.markingScriptError(e.message);
                 }
             }
-        },this);
+        },this).extend({throttle: 1000});
 
         this.unit_tests = ko.observableArray([]);
         this.marking_test = ko.observable(new MarkingTest(this,this.q.questionScope()));

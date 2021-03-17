@@ -113,7 +113,7 @@
                         </form>
                         <!-- /ko -->
                         <!-- ko if: !$root.navigatemode().change_question_groups -->
-                        <h4><span data-bind="latex: name"></span><span data-bind="if: $root.navigatemode().name=='adaptive'"><button class="btn btn-link" data-bind="click: edit_topic" alt="Edit this topic"><span class="glyphicon glyphicon-pencil text-success"></span></button></h4>
+                        <h4><span data-bind="latex: name"></span><span data-bind="if: $root.navigatemode().name=='diagnostic'"><button class="btn btn-link" data-bind="click: edit_topic" alt="Edit this topic"><span class="glyphicon glyphicon-pencil text-success"></span></button></h4>
                         <!-- /ko -->
                     </div>
                     <div class="panel-body">
@@ -230,12 +230,12 @@
 
     <!-- Knowledge graph -->
     <section class="tab-pane knowledge-graph-tab" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='knowledge_graph'}">
-        <div class="row" data-bind="with: knowledge_graph">
-            <div class="col-sm-1 col-md-2 tabs">
+        <div class="row">
+            <div class="col-sm-1 col-md-2 tabs" data-bind="with: diagnostic.tabber">
                 <div class="navbar navbar-blank">
-                    <ul class="nav nav-pills nav-stacked" data-bind="foreach: tabber.tabs">
-                        <li data-bind="css: {active: $parent.tabber.currentTab() == $data}">
-                            <a href="#" data-bind="click: $parent.tabber.currentTab">
+                    <ul class="nav nav-pills nav-stacked" data-bind="foreach: tabs">
+                        <li data-bind="css: {active: $parent.currentTab() == $data}">
+                            <a href="#" data-bind="click: $parent.currentTab">
                                 <span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> 
                                 <span class="hidden-sm" data-bind="text: title"></span>
                             </a>
@@ -247,7 +247,7 @@
 
             <div class="col-sm-11 col-md-10 editing">
                 <div class="tab-content">
-                    <section data-bind="visible: tabber.currentTab().id=='topics'">
+                    <section data-bind="visible: diagnostic.tabber.currentTab().id=='topics', with: diagnostic.knowledge_graph">
                         <div class="row">
                             <div class="col-sm-12 col-md-6 col-lg-7" data-bind="visible: topics().length==0">
                                 <p class="nothing-here">No topics have been defined.</p>
@@ -272,7 +272,7 @@
                                     <ul class="list-inline" data-bind="foreach: depends_on">
                                         <li>
                                             <div class="btn-group" role="group">
-                                                <button class="btn btn-info" type="button" data-bind="text: label, click: $parents[1].show_topic"></button> 
+                                                <button class="btn btn-info" type="button" data-bind="text: label, click: $parents[1].diagnostic.show_topic"></button> 
                                                 <button type="button" class="btn btn-danger" data-bind="click: $parent.remove_dependency"><span class="glyphicon glyphicon-remove"></span></button>
                                             </div>
                                         </li>
@@ -286,7 +286,7 @@
                                     <ul class="list-inline" data-bind="foreach: leads_to">
                                         <li>
                                             <div class="btn-group" role="group">
-                                                <button type="button" class="btn btn-info" data-bind="text: label, click: $parents[1].show_topic"></button>
+                                                <button type="button" class="btn btn-info" data-bind="text: label, click: $parents[1].diagnostic.show_topic"></button>
                                                 <button type="button" class="btn btn-danger" data-bind="click: $parent.remove_leads_to"><span class="glyphicon glyphicon-remove"></span></button>
                                             </div>
                                         </li>
@@ -300,7 +300,7 @@
                                     <ul class="list-inline" data-bind="foreach: learning_objectives">
                                         <li>
                                             <div class="btn-group" role="group">
-                                                <button type="button" class="btn btn-info" data-bind="text: name, click: $parents[1].show_learning_objective"></button>
+                                                <button type="button" class="btn btn-info" data-bind="text: name, click: $parents[1].diagnostic.show_learning_objective"></button>
                                                 <button type="button" class="btn btn-danger" data-bind="click: $parent.remove_learning_objective"><span class="glyphicon glyphicon-remove"></span></button>
                                             </div>
                                         </li>
@@ -347,7 +347,7 @@
 
                     </section>
 
-                    <section data-bind="visible: tabber.currentTab().id=='learning-objectives'">
+                    <section data-bind="visible: diagnostic.tabber.currentTab().id=='learning-objectives', with: diagnostic.knowledge_graph">
                         <div class="row">
                             <div class="col-sm-12 col-md-6 col-lg-7" data-bind="visible: learning_objectives().length==0">
                                 <p class="nothing-here">No learning objectives have been defined.</p>
@@ -403,8 +403,20 @@
                             </div>
                     </section>
 
-                    <section data-bind="visible: tabber.currentTab().id=='settings'">
+                    <section data-bind="visible: diagnostic.tabber.currentTab().id=='algorithm'">
                         <form class="form-horizontal" data-bind="submit: Editor.noop">
+                            {% selectproperty 'diagnostic.script' 'Diagnostic algorithm' options_text='niceName' options='diagnostic.scriptOptions' help_url='exam/reference.html#term-diagnostic-algorithm' %}
+                            {% booleanproperty 'diagnostic.extendScript' 'Extend built-in algorithm?' help_url='exam/reference.html#term-extend-built-in-algorithm' %}
+                            <div data-bind="fadeVisible: diagnostic.extendScript()">
+                                <div class="base-diagnostic-algorithm" data-bind="fadeVisible: diagnostic.extendScript() && diagnostic.baseScript()">
+                                    <h5>Base diagnostic algorithm</h5>
+                                    <pre data-bind="text: diagnostic.baseScript"></pre>
+                                </div>
+
+                                <h5>Custom marking algorithm</h5>
+                                <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: diagnostic.customScript, codemirrorMode: 'jme'"></textarea>
+                                <p class="alert alert-danger" data-bind="html: diagnostic.scriptError, visible: diagnostic.scriptError" aria-live="polite"></p>
+                            </div>
                         </form>
                     </section>
                 </div>

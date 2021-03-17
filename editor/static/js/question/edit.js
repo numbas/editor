@@ -169,47 +169,6 @@ $(document).ready(function() {
         };
 
 
-        var knowledge_graphs = item_json.knowledge_graphs.map(function(gd) {
-            return new KnowledgeGraph(gd);
-        });
-
-        this.knowledge_graphs = knowledge_graphs;
-        this.knowledge_graph_options = [{name:'All knowledge graphs', topics:[]}].concat(this.knowledge_graphs);
-        this.current_knowledge_graph = ko.observable(this.knowledge_graph_options[0]);
-
-        this.all_topics = ko.pureComputed(function() {
-            var o = [];
-            this.knowledge_graphs.forEach(function(kg) {
-                o = o.concat(kg.topics);
-            });
-            return o;
-        },this);
-
-        this.used_topics = ko.pureComputed(function() {
-            var o = [];
-            this.knowledge_graphs.forEach(function(kg) {
-                o = o.concat(kg.used_topics());
-            });
-            return o;
-        },this);
-
-        this.searchable_topics = ko.pureComputed(function() {
-            if(this.current_knowledge_graph().pk) {
-                return this.current_knowledge_graph().topics;
-            } else {
-                var o = [];
-                this.knowledge_graphs.forEach(function(kg) {
-                    o = o.concat(kg.topics);
-                });
-                return o;
-            }
-        },this);
-        this.topic_autocomplete = Editor.autocomplete_source(this, this.searchable_topics, this.used_topics);
-
-        this.add_topic = function(t) {
-            t.used(true);
-        }
-
         this.partsModes = [
             {name: 'Show all parts', value: 'all'},
             {name: 'Explore', value: 'explore'}
@@ -651,7 +610,6 @@ $(document).ready(function() {
                 return {
                     content: this.output(),
                     extensions: this.usedExtensions().map(function(e){return e.pk}),
-                    topics: this.used_topics().map(function(t) { return t.pk; }),
                     tags: this.tags(),
                     taxonomy_nodes: used_nodes,
                     ability_levels: this.used_ability_levels().map(function(al){return al.pk}),
@@ -1287,7 +1245,6 @@ $(document).ready(function() {
                 metadata: this.metadata(),
                 statement: this.statement(),
                 advice: this.advice(),
-                topics: this.used_topics().map(function(t) { return t.pk; }),
                 rulesets: rulesets,
                 extensions: this.extensions().filter(function(e){return e.used()}).map(function(e){return e.location}),
                 variables: variables,
@@ -1337,16 +1294,6 @@ $(document).ready(function() {
                 this.extensions().map(function(e) {
                     if(data.extensions.indexOf(e.location)>=0)
                         e.used(true);
-                });
-            }
-
-            console.log(data);
-            if('topics' in data) {
-                console.log(data.topics);
-                this.all_topics().map(function(t) {
-                    if(data.topics.indexOf(t.pk)>=0) {
-                        t.used(true);
-                    }
                 });
             }
 
@@ -3957,28 +3904,6 @@ $(document).ready(function() {
         }
     };
 
-
-    function KnowledgeGraph(data) {
-        this.pk = data.pk;
-        this.name = data.name;
-        this.description = data.description;
-        this.topics = data.topics.map(function(td) {
-            return {
-                pk: td.pk,
-                name: td.name,
-                description: td.description,
-                used: ko.observable(false)
-            }
-        });
-
-        this.used_topics = ko.pureComputed(function() {
-            return this.topics.filter(function(t) { return t.used(); });
-        },this);
-
-        this.remove_topic = function(t) {
-            t.used(false);
-        }
-    }
 
     function loading_error(message) {
         $('.page-loading').hide();

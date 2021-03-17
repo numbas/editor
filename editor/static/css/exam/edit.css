@@ -55,6 +55,10 @@
     margin-bottom: 1em;
 }
 
+.topic-link {
+    margin-bottom: 0.5em;
+}
+
 .base-diagnostic-algorithm pre {
   max-height: 20em;
   overflow-y: auto;

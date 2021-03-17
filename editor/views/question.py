@@ -136,8 +136,6 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         self.object.extensions.clear()
         self.object.extensions.add(*form.cleaned_data['extensions'])
 
-        self.object.topics.set(form.cleaned_data['topics'])
-
         resource_pks = [res['pk'] for res in self.resources]
         self.object.resources.set(Resource.objects.filter(pk__in=resource_pks))
     
@@ -173,9 +171,6 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
             for name in 
             ('information', 'jme', 'gapfill', 'numberentry', 'patternmatch', '1_n_2', 'm_n_2', 'm_n_x', 'matrix', 'extension')
         ]
-
-        knowledge_graphs = (KnowledgeGraph.objects.filter(KnowledgeGraph.filter_can_be_viewed_by(self.request.user)) | KnowledgeGraph.objects.filter(topics__questions=self.object)).distinct()
-        self.item_json['knowledge_graphs'] = [g.as_json() for g in knowledge_graphs]
 
         return context
     

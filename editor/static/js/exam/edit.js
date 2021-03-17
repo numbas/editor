@@ -99,7 +99,7 @@ $(document).ready(function() {
 
         this.mainTabber.tabs([
             new Editor.Tab('questions','Questions','file',{in_use: ko.computed(function() { return this.questions().length>0; },this)}),
-            new Editor.Tab('knowledge_graph', 'Knowledge graph', 'object-align-horizontal', {visible: ko.computed(function() { return this.navigatemode().name=='diagnostic'; },this)}),
+            new Editor.Tab('diagnostic', 'Diagnostic', 'object-align-horizontal', {visible: ko.computed(function() { return this.navigatemode().name=='diagnostic'; },this)}),
             new Editor.Tab('display','Display','picture',{in_use: ko.computed(function() { return this.theme() && this.theme().path!='default'; },this)}),
             new Editor.Tab('navigation','Navigation','tasks'),
             new Editor.Tab('timing','Timing','time'),
@@ -267,17 +267,18 @@ $(document).ready(function() {
         this.diagnostic.show_topic = function(t) {
             var kg = e.diagnostic.knowledge_graph;
             kg.current_topic(t);
-            e.mainTabber.setTab('knowledge_graph')();
+            e.mainTabber.setTab('diagnostic')();
             e.diagnostic.tabber.setTab('topics')();
         };
         this.diagnostic.show_learning_objective = function(lo) {
             var kg = e.diagnostic.knowledge_graph;
             kg.current_learning_objective(lo);
-            e.mainTabber.setTab('knowledge_graph')();
+            e.mainTabber.setTab('diagnostic')();
             e.diagnostic.tabber.setTab('learning-objectives')();
         };
         this.diagnostic.scriptOptions = [
             {niceName: 'Diagnosys', name: 'diagnosys'},
+            {niceName: 'Mastery', name: 'mastery'},
             {niceName: 'Custom', name: 'custom'}
         ];
         this.diagnostic.script = ko.observable(this.diagnostic.scriptOptions[0]);
@@ -558,7 +559,7 @@ $(document).ready(function() {
                 graph.topics().forEach(function(t) {
                     var qg = e.question_groups().find(function(qg) { return t.name()==qg.name(); });
                     if(qg) {
-                        qg.topic = t;
+                        qg.topic(t);
                         t.question_group = qg;
                     }
                 });
@@ -619,6 +620,13 @@ $(document).ready(function() {
         data = data || {};
 
         this.name = ko.observable(data.name || 'Group');
+        this.topic = ko.observable(null);
+        ko.computed(function() {
+            var t = this.topic();
+            if(t) {
+                this.name(t.name());
+            }
+        },this);
 
         this.questions = ko.observableArray([]);
 
@@ -699,10 +707,10 @@ $(document).ready(function() {
         }
 
         this.edit_topic = function() {
-            if(!qg.topic) {
+            if(!qg.topic()) {
                 return;
             }
-            qg.exam.show_topic(qg.topic);
+            qg.exam.diagnostic.show_topic(qg.topic());
         }
     }
     QuestionGroup.prototype = {
@@ -879,8 +887,8 @@ $(document).ready(function() {
             var t = new Topic(kg);
             kg.topics.push(t);
             kg.current_topic(t);
-            var qg = kg.exam.question_groups.addQuestionGroup();
-            qg.topic = t;
+            var qg = kg.exam.addQuestionGroup();
+            qg.topic(t);
             this.question_group = qg;
             return t;
         }
@@ -987,6 +995,16 @@ $(document).ready(function() {
             t.learning_objectives.remove(lo);
         }
 
+        this.remove = function() {
+            t.leads_to().forEach(function(t2) {
+                t2.depends_on.remove(t);
+            })
+            t.graph.topics.remove(t);
+            if(t.graph.current_topic()==t) {
+                t.graph.current_topic(null);
+            }
+        }
+
         if(data) {
             this.load(data);
         }
@@ -1009,12 +1027,35 @@ $(document).ready(function() {
     }
 
     function LearningObjective(graph,data) {
+        var lo = this;
         this.graph = graph;
         this.name = ko.observable('');
         this.label = ko.computed(function() {
             return this.name().trim() || 'Unnamed topic';
         },this);
         this.description = ko.observable('');
+
+        this.topics = ko.computed(function() {
+            return lo.graph.topics().filter(function(t) { return t.learning_objectives().indexOf(lo)>=0; });
+        },this);
+
+        this.topic_autocomplete = Editor.autocomplete_source(this, graph.topics, this.topics);
+        this.add_topic = function(t) {
+            t.learning_objectives.push(lo);
+        }
+        this.remove_topic = function(t) {
+            t.learning_objectives.remove(lo);
+        }
+
+        this.remove = function() {
+            lo.topics().forEach(function(t) {
+                t.learning_objectives.remove(lo);
+            });
+            lo.graph.learning_objectives.remove(lo);
+            if(lo.graph.current_learning_objective()==lo) {
+                lo.graph.current_learning_objective(null);
+            }
+        }
 
         if(data) {
             this.load(data);

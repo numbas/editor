@@ -199,7 +199,7 @@ class QuestionForm(EditorItemForm):
     
     class Meta:
         model = NewQuestion
-        fields = ('resources', 'extensions', 'topics')
+        fields = ('resources', 'extensions')
 
 class NewQuestionForm(forms.ModelForm):
 

@@ -229,7 +229,7 @@
     </section>
 
     <!-- Knowledge graph -->
-    <section class="tab-pane knowledge-graph-tab" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='knowledge_graph'}">
+    <section class="tab-pane diagnostic-tab" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='diagnostic'}">
         <div class="row">
             <div class="col-sm-1 col-md-2 tabs" data-bind="with: diagnostic.tabber">
                 <div class="navbar navbar-blank">
@@ -254,6 +254,7 @@
                             </div>
                             <div class="col-sm-12 col-md-6 col-lg-7 topic" data-bind="with: current_topic">
                                 <form class="form-horizontal" data-bind="submit: Editor.noop">
+                                    {% if editable %}<button type="button" type="button" class="delete btn btn-sm btn-danger" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this topic</button>{% endif %}
                                     <div class="form-group">
                                         <label for="topic-name" class="control-label">Name</label>
                                         <input id="topic-name" type="text" class="form-control" data-bind="textInput: name">
@@ -270,9 +271,9 @@
                                     </div>
 
                                     <ul class="list-inline" data-bind="foreach: depends_on">
-                                        <li>
+                                        <li class="topic-link">
                                             <div class="btn-group" role="group">
-                                                <button class="btn btn-info" type="button" data-bind="text: label, click: $parents[1].diagnostic.show_topic"></button> 
+                                                <button class="btn btn-info" type="button" data-bind="text: label, click: $parents[2].diagnostic.show_topic"></button> 
                                                 <button type="button" class="btn btn-danger" data-bind="click: $parent.remove_dependency"><span class="glyphicon glyphicon-remove"></span></button>
                                             </div>
                                         </li>
@@ -284,9 +285,9 @@
                                     </div>
 
                                     <ul class="list-inline" data-bind="foreach: leads_to">
-                                        <li>
+                                        <li class="topic-link">
                                             <div class="btn-group" role="group">
-                                                <button type="button" class="btn btn-info" data-bind="text: label, click: $parents[1].diagnostic.show_topic"></button>
+                                                <button type="button" class="btn btn-info" data-bind="text: label, click: $parents[2].diagnostic.show_topic"></button>
                                                 <button type="button" class="btn btn-danger" data-bind="click: $parent.remove_leads_to"><span class="glyphicon glyphicon-remove"></span></button>
                                             </div>
                                         </li>
@@ -300,7 +301,7 @@
                                     <ul class="list-inline" data-bind="foreach: learning_objectives">
                                         <li>
                                             <div class="btn-group" role="group">
-                                                <button type="button" class="btn btn-info" data-bind="text: name, click: $parents[1].diagnostic.show_learning_objective"></button>
+                                                <button type="button" class="btn btn-info" data-bind="text: name, click: $parents[2].diagnostic.show_learning_objective"></button>
                                                 <button type="button" class="btn btn-danger" data-bind="click: $parent.remove_learning_objective"><span class="glyphicon glyphicon-remove"></span></button>
                                             </div>
                                         </li>
@@ -363,6 +364,21 @@
                                         <label for="topic-description" class="control-label">Description</label>
                                         <div id="topic-description" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
                                     </div>
+
+                                    <div class="form-group">
+                                        <label for="learning-objective-topics" class="control-label">Topics</label>
+                                        <input id="learning-objective-topics" type="text" class="form-control" placeholder="Search for a topic" data-bind="autocomplete: topic_autocomplete, autocompleteSelect: add_topic, delay: 0">
+                                    </div>
+
+                                    <ul class="list-inline" data-bind="foreach: topics">
+                                        <li class="topic-link">
+                                            <div class="btn-group" role="group">
+                                                <button class="btn btn-info" type="button" data-bind="text: label, click: $parents[2].diagnostic.show_topic"></button> 
+                                                <button type="button" class="btn btn-danger" data-bind="click: $parent.remove_topic"><span class="glyphicon glyphicon-remove"></span></button>
+                                            </div>
+                                        </li>
+                                    </ul>
+
                                 </form>
                             </div>
                             

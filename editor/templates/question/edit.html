@@ -167,39 +167,6 @@
 {% block settings_main %}
 {{ block.super }}
 
-<!-- ko if: knowledge_graphs.length > 0 -->
-<hr>
-
-<h3>Knowledge graphs</h3>
-
-<form data-bind="submit: Editor.noop" class="form-inline">
-    <div class="form-group">
-        <label class="control-label" for="topic-search">Search for a topic</label>
-        <input id="topic-search" type="text" class="form-control" placeholder="Search for a topic" data-bind="autocomplete: topic_autocomplete, autocompleteSelect: add_topic, delay: 0">
-    </div>
-    <div class="form-group">
-        <label class="control-label" for="knowledge-graph-selection">within</label>
-        <select id="knowledge-graph-selection" class="form-control" data-bind="options: knowledge_graph_options, value: current_knowledge_graph, optionsText: 'name'"></select>
-    </div>
-</form>
-
-<p data-bind="fadeVisible: used_topics().length>0" class="help-block">This question relates to the following topics</p>
-
-<ul data-bind="foreach: knowledge_graphs">
-    <!-- ko if: used_topics().length -->
-    <li>
-        <h4 data-bind="text: name"></h4>
-        <ul data-bind="foreach: used_topics">
-            <li>
-                <span data-bind="text: name"></span> 
-                <button type="button" class="btn btn-xs btn-link" data-bind="click: $parent.remove_topic" title="Remove this topic"><span class="glyphicon glyphicon-remove text-danger"></span></button>
-            </li>
-        </ul>
-    </li>
-    <!-- /ko -->
-</ul>
-<!-- /ko -->
-
 {% endblock %}
 
 {% block admin_controls %}

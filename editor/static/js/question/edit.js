@@ -969,7 +969,7 @@ $(document).ready(function() {
                         function check_value(tok) {
                             switch(tok.type) {
                                 case 'number':
-                                    if(isNaN(tok.value)) {
+                                    if(!(Numbas.util.isNumber(tok.value) || tok.value.complex)) {
                                         warning("a value of <code>NaN</code> was returned.",['explicit number parameters']);
                                     }
                                     break;

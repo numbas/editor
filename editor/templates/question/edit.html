@@ -289,7 +289,7 @@
                                 <ul data-bind="foreach: warnings">
                                     <li>
                                         When applying the function<code data-bind="text: fn.name"></code>, <span data-bind="html: message"></span>
-                                        <!-- if: suggestions.length -->
+                                        <!-- ko if: suggestions.length>0 -->
                                         <h5>Suggestions</h5>
                                         <ul data-bind="foreach: suggestions">
                                             <li>

@@ -14,7 +14,7 @@ from django.views import generic
 import reversion
 
 from editor.forms import NewQuestionForm, QuestionForm, ResourcesAltTextForm
-from editor.models import NewQuestion, Extension, Resource, CustomPartType, KnowledgeGraph
+from editor.models import NewQuestion, Extension, Resource, CustomPartType
 import editor.views.generic
 import editor.views.editoritem
 

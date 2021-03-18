@@ -1691,8 +1691,6 @@ class NewQuestion(models.Model):
 
     theme_path = os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'], 'themes', 'question')
 
-    topics = models.ManyToManyField('Topic', related_name='questions')
-
     icon = 'file'
 
     class Meta:
@@ -1938,81 +1936,3 @@ class NewExamQuestion(models.Model):
 def item_created_timeline_event(instance, created, **kwargs):
     if created:
         ItemChangedTimelineItem.objects.create(user=instance.editoritem.author, object=instance.editoritem, verb='created')
-
-class KnowledgeGraph(models.Model, ControlledObject):
-    name = models.CharField(max_length=200)
-    description = models.TextField(blank=True)
-    public = models.BooleanField(default=False, help_text='Can this knowledge graph be seen by everyone?')
-    slug = models.SlugField(max_length=200, editable=False, unique=False)
-    author = models.ForeignKey(User, related_name='own_knowledge_graphs', on_delete=models.CASCADE)
-    last_modified = models.DateTimeField(auto_now=True)
-
-    def get_absolute_url(self):
-        return reverse('knowledge_graph_edit', args=(self.pk,))
-
-    def __str__(self):
-        return self.name
-
-    @property
-    def owner(self):
-        return self.author
-
-    def has_access(self, user, accept_levels):
-        return user == self.author
-
-    @classmethod
-    def filter_can_be_viewed_by(cls, user):
-        if getattr(settings, 'EVERYTHING_VISIBLE', False):
-            return Q()
-        
-        view_perms = ('edit', 'view')
-        if user.is_superuser and cls.superuser_sees_everything:
-            return Q()
-        elif user.is_anonymous:
-            return Q(public=True)
-        else:
-            return Q(public=True) | Q(author=user)
-
-    def as_json(self):
-        return {
-            'pk': self.pk,
-            'name': self.name,
-            'description': self.description,
-            'topics': [t.as_json() for t in self.topics.all()],
-            'learning_objectives': [lo.as_json() for lo in self.learning_objectives.all()],
-        }
-
-class LearningObjective(models.Model):
-    name = models.CharField(max_length=200)
-    description = models.TextField(blank=True)
-    knowledge_graph = models.ForeignKey(KnowledgeGraph, related_name='learning_objectives', on_delete=models.CASCADE)
-    topics = models.ManyToManyField('Topic', related_name='learning_objectives')
-
-    def __str__(self):
-        return self.name
-
-    def as_json(self):
-        return {
-            'pk': self.pk,
-            'name': self.name,
-            'description': self.description,
-            'topics': [t.pk for t in self.topics.all()],
-        }
-
-class Topic(models.Model):
-    name = models.CharField(max_length=200)
-    description = models.TextField(blank=True)
-    knowledge_graph = models.ForeignKey(KnowledgeGraph, related_name='topics', on_delete=models.CASCADE)
-    depends_on = models.ManyToManyField('Topic', related_name='used_by')
-
-    def __str__(self):
-        return self.name
-
-    def as_json(self):
-        return {
-            'pk': self.pk,
-            'name': self.name,
-            'description': self.description,
-            'depends_on': [t.pk for t in self.depends_on.all()],
-            'learning_objectives': [lo.pk for lo in self.learning_objectives.all()],
-        }

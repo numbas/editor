@@ -1569,43 +1569,38 @@ $(document).ready(function() {
     }
 
     var displayJMEValue = Editor.displayJMEValue = function(v) {
+        var code = Numbas.jme.display.treeToJME({tok:v});
+        var description;
         switch(v.type) {
             case 'nothing':
                 return 'Nothing';
             case 'string':
-                return Numbas.util.escapeHTML(v.value);
+                code = Numbas.util.escapeHTML(v.value);
+                description = Numbas.util.escapeHTML(v.value.slice(0,30));
+                break;
             case 'set':
-                var s = Numbas.jme.display.treeToJME({tok:v});
-                if(s.length<30) {
-                    return s;
-                } else {
-                    return 'Set of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
-                }
+                description = 'Set of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
+                break;
             case 'list':
-                var s = Numbas.jme.display.treeToJME({tok:v});
-                if(s.length<30) {
-                    return s;
-                } else {
-                    return 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
-                }
+                description = 'List of '+v.value.length+' '+Numbas.util.pluralise(v.value.length,'item','items');
+                break;
             case 'dict':
-                var s = Numbas.jme.display.treeToJME({tok:v});
-                if(s.length<30) {
-                    return s;
-                } else {
-                    return 'Dictionary with '+Object.keys(v.value).length+" entries";
-                }
+                description = 'Dictionary with '+Object.keys(v.value).length+" entries";
+                break;
             case 'html':
                 if(v.value.length==1 && v.value[0].tagName=='IMG') {
                     var src = v.value[0].getAttribute('src');
                     return '<img src="'+src+'" title="'+src+'">';
                 }
-                return 'HTML node';
+                code = v.value;
+                description = 'HTML node';
+                break;
             default:
-                if(Numbas.jme.typeToDisplayString[v.type]) {
-                    return Numbas.jme.tokenToDisplayString(v);
-                }
-                return Numbas.jme.display.treeToJME({tok:v});
+        }
+        if(code.length<30) {
+            return code;
+        } else {
+            return description || code.slice(0,27)+'…';
         }
     }
 

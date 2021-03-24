@@ -451,28 +451,37 @@ $(document).ready(function() {
 
     //obs is an observable on the data to be saved
     //savefn is a function which does the save, and returns a deferred object which resolves when the save is done
-    Editor.saver = function(obs,savefn) {
-        var firstSave = true;
-        var firstData = null;
+    Editor.Saver = function(obs,savefn) {
+        var saver = this;
+        this.firstSave = true;
+        this.firstData = null;
+        this.obs = obs;
+        this.savefn = savefn;
 
-        return ko.computed(function() {
-            var data = obs();
+        ko.computed(function() {
+            var data = saver.obs();
             if(data===undefined) {
                 return;
             }
-            if(firstSave) {
+            if(saver.firstSave) {
                 var json = JSON.stringify(data);
-                if(firstData===null || firstData==json) {
-                    firstData = json;
+                if(saver.firstData===null || saver.firstData==json) {
+                    saver.firstData = json;
                     return;
                 } else {
-                    firstSave = false;
+                    saver.firstSave = false;
                 }
             }
+            saver.save();
+        }).extend({throttle:1000, deferred: true});
+    }
+    Editor.Saver.prototype = {
+        save: function() {
+            var data = this.obs();
             Editor.startSave();
             data.csrfmiddlewaretoken = getCookie('csrftoken');
             try {
-                var def = savefn(data);
+                var def = this.savefn(data);
                 def
                     .always(Editor.endSave)
                     .done(function() {
@@ -482,7 +491,7 @@ $(document).ready(function() {
             } catch(e) {
                 Editor.abortSave(e.message);
             }
-        }).extend({throttle:1000, deferred: true});
+        }
     }
 
     var Taxonomy = Editor.Taxonomy = function(data) {
@@ -736,7 +745,7 @@ $(document).ready(function() {
                     access_levels: ei.access_rights().map(function(u){return u.access_level()})
                 }
             });
-            this.saveAccess = Editor.saver(this.access_data,function(data) {
+            this.saveAccess = new Editor.Saver(this.access_data,function(data) {
                 return $.post('/item/'+ei.editoritem_id+'/set-access',data);
             });
             this.userAccessSearch=ko.observable('');
@@ -808,7 +817,7 @@ $(document).ready(function() {
 
         init_save: function(callback) {
             var ei = this;
-            this.autoSave = Editor.saver(
+            this.autoSave = new Editor.Saver(
                 function() {
                     var data = ei.save();
 
@@ -851,7 +860,12 @@ $(document).ready(function() {
                     return promise;
                 }
             );
-
+            if(item_json.is_new) {
+                this.autoSave.save();
+                if(history.replaceState) {
+                    history.replaceState(history.state,window.title,window.location.href.replace(/\?.*$/,''));
+                }
+            }
         },
 
         load_state: function() {

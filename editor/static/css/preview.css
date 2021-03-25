@@ -7,7 +7,7 @@ body {
     font-family: sans-serif;
 }
 header {
-    /*! padding: 0.1em 1em; */
+    padding: 0 1em;
     background: hsl(0, 70%, 30%);
     /*! border-bottom: 0.2rem solid hsl(0, 70%, 10%); */
     display: grid;
@@ -86,5 +86,11 @@ main > iframe {
     }
     #share {
         justify-self: right;
+    }
+}
+
+@media print {
+    header {
+        display: none;
     }
 }

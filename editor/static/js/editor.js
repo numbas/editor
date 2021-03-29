@@ -1402,6 +1402,9 @@ $(document).ready(function() {
                         verify_html: false,
                         autoresize_bottom_margin: 0,
                         autoresize_min_height: 30,
+                        table_responsive_width: true,
+                        table_default_attributes: {},
+                        table_default_styles: {},
                         convert_urls: false,
                         verify_html: false,
 

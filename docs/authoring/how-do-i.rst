@@ -30,6 +30,16 @@ Delay showing students scores until a certain date
     When a student completes the exam, they won't see any feedback.
     Once the chosen time has passed, the student will be able to re-enter the exam in review mode and see their scores and full feedback.
 
+Print a hard copy of an exam
+----------------------------
+
+    You can use the :guilabel:`Printable worksheet` :ref:`theme <themes>` to create a version of a Numbas exam that you can print immediately, or to a PDF file.
+
+    .. raw:: html
+
+        <iframe src="https://player.vimeo.com/video/528786881" width="640" height="360" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+
+
 ********************************
 Images, diagrams and other media
 ********************************

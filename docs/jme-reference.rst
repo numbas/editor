@@ -358,7 +358,7 @@ Some extensions add new data types.
 
     When combining matrices of different dimensions, the smaller matrix is padded with zeros to make up the difference.
 
-    To retrieve the ``n``th row of a matrix ``m``, write ``m[n]``. The row is returned as a :data:`vector` value.
+    To retrieve the ``n`` th row of a matrix ``m``, write ``m[n]``. The row is returned as a :data:`vector` value.
     To retrieve the cell in row ``a`` and column ``b``, write ``m[a][b]``.
     Rows and columns are both numbered starting from zero.
 

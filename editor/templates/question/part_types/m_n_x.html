@@ -65,7 +65,7 @@
         <!-- ko foreach: {data: choices, afterAdd: Editor.afterAdd} -->
         <li class="choice form-inline list-group-item clearfix">
             <div class="col-sm-9">
-                <div {% if not editable %}disabled{% endif %} id="description" data-bind="writemaths: content, wmPara: false, wmHeight: 100, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','preview']"></div>
+                <div {% if not editable %}disabled{% endif %} id="description" data-bind="writemaths: content, wmPara: false, wmHeight: 100, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','jmepreview']"></div>
             </div>
             <div class="col-sm-3">
                 {% if editable %}<button type="button" type="button" class="delete btn btn-sm btn-danger btn-block" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this choice</button>{% endif %}
@@ -88,7 +88,7 @@
         <!-- ko foreach: {data: answers, afterAdd: Editor.afterAdd} -->
         <li class="answer form-inline list-group-item clearfix">
             <div class="col-sm-9">
-                <div {% if not editable %}disabled{% endif %} id="description" data-bind="writemaths: content, wmPara: false, wmHeight: 100, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','preview']"></div>
+                <div {% if not editable %}disabled{% endif %} id="description" data-bind="writemaths: content, wmPara: false, wmHeight: 100, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','jmepreview']"></div>
             </div>
             <div class="col-sm-3">
                 {% if editable %}<button type="button" type="button" class="delete btn btn-sm btn-danger btn-block" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this answer</button>{% endif %}

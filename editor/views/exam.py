@@ -69,7 +69,7 @@ class CreateView(editor.views.editoritem.CreateView):
 
     def get_success_url(self):
         return reverse('exam_edit', args=(self.exam.pk,
-                                          self.exam.editoritem.slug,))
+                                          self.exam.editoritem.slug,))+'?new=true'
     
 class UploadView(editor.views.editoritem.CreateView):
     
@@ -244,6 +244,8 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
 
     def get_context_data(self, **kwargs):
         context = super(UpdateView, self).get_context_data(**kwargs)
+
+        self.item_json['is_new'] = self.request.GET.get('new',False)
 
         exam_dict = self.item_json['itemJSON']
         if self.request.user.is_authenticated:

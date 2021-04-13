@@ -61,6 +61,15 @@ Any more recent versions should be assumed to work.
 How to adapt Numbas to your needs
 ---------------------------------
 
+Change the colours of text and the page background
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Click the :guilabel:`Display options` button to change the colour of text and the page's background.
+
+Your browser's colour picker is used. 
+In most browsers, you can pick a colour by clicking on a colour wheel, or by typing a colour value in hexadecimal or RGB format.
+
+
 Changing the size of text
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -38,7 +38,7 @@
             Ask the student a question, and give any hints about how they should answer this part.
         </p>
 
-        <div {% if not editable %}disabled{% endif %} data-bind="writemaths: prompt, preambleCSS: $root.preamble.css, tinymce_plugins: ['gapfill','jmevisible','preview'], showButtons: {gapfill: function(){return $data.type().name=='gapfill'}}, gaps: gaps"></div>
+        <div {% if not editable %}disabled{% endif %} data-bind="writemaths: prompt, preambleCSS: $root.preamble.css, tinymce_plugins: ['gapfill','jmevisible','jmepreview'], showButtons: {gapfill: function(){return $data.type().name=='gapfill'}}, gaps: gaps"></div>
     </section>
 
     <section class="tab-pane" data-bind="activeIf: ko.unwrap(tabber.currentTab().id)=='alternative-feedback-message'">
@@ -52,7 +52,7 @@
                         {% helplink 'question/parts/reference.html#term-message-if-this-alternative-is-used' subject='the alternative feedback message' %}
                     </div>
                     <div class="{{form_control_class}}">
-                        <div {% if not editable %}disabled{% endif %} data-bind="writemaths: alternativeFeedbackMessage, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','preview']"></div>
+                        <div {% if not editable %}disabled{% endif %} data-bind="writemaths: alternativeFeedbackMessage, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','jmepreview']"></div>
                     </div>
                 </label>
             </div>

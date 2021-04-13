@@ -186,7 +186,7 @@
         <div class="form-group">
             <label class="label-block">
                 <span class="label-text">Question statement</span>
-                <div id="statement-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: statement, preambleCSS: $root.preamble.css,, tinymce_plugins: ['jmevisible','preview'], variableReferrer: {value: statement, description: 'Statement', kind: 'html'}"></div>
+                <div id="statement-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: statement, preambleCSS: $root.preamble.css,, tinymce_plugins: ['jmevisible','jmepreview'], variableReferrer: {value: statement, description: 'Statement', kind: 'html'}"></div>
             </label>
             <p class="help-block">
                 {% helplink 'question/reference.html#statement' subject='the question statement' %}
@@ -294,7 +294,7 @@
                                 <ul data-bind="foreach: warnings">
                                     <li>
                                         When applying the function<code data-bind="text: fn.name"></code>, <span data-bind="html: message"></span>
-                                        <!-- if: suggestions.length -->
+                                        <!-- ko if: suggestions.length>0 -->
                                         <h5>Suggestions</h5>
                                         <ul data-bind="foreach: suggestions">
                                             <li>
@@ -634,7 +634,7 @@
         <div class="form-group">
             <label class="label-block">
                 <span class="label-text">Advice</span>
-                <div id="advice-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: advice, preambleCSS: $root.preamble.css,, tinymce_plugins: ['jmevisible','preview']"></div>
+                <div id="advice-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: advice, preambleCSS: $root.preamble.css,, tinymce_plugins: ['jmevisible','jmepreview']"></div>
             </label>
             <p class="help-block">
                 {% helplink 'question/reference.html#advice' subject='the advice section' %}

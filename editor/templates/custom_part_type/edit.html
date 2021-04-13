@@ -123,14 +123,13 @@
 
                 <hr>
 
-                <ul class="nav nav-pills nav-stacked" data-bind="foreach: tabs">
-                    <li data-bind="visible: visible, css: {active: $root.currentTab() == $data}">
-                        <a href="#" data-bind="click: $root.currentTab">
+                <ul class="nav nav-pills nav-stacked" data-bind="foreach: mainTabber.tabs">
+                    <li data-bind="visible: visible, css: {active: $root.mainTabber.currentTab() == $data}">
+                        <a href="#" data-bind="click: $root.mainTabber.currentTab">
                             <span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> 
                             <span class="hidden-sm" data-bind="text: title"></span>
                         </a>
                     </li>
-                    <!-- /ko -->
                 </ul>
             </div>
         </div>
@@ -139,7 +138,7 @@
             <div class="tab-content">
             {% block main_tab_content %}
                 <!-- Description -->
-                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='description'}">
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='description'}">
                     <div class="form-group name">
                         <label>Name</label>
                         <input id="name-input" {% if not editable %}disabled{% endif %} class="form-control input-lg" data-bind="textInput: name">
@@ -177,7 +176,7 @@
                 </section>
 
                 <!-- Required extensions -->
-                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='extensions'}">
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='extensions'}">
                     <div class="form-group">
                         <p class="help-block">
                             Select any extensions that are required for this part to work.
@@ -196,7 +195,7 @@
                 </section>
 
                 <!-- Part settings -->
-                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='settings'}">
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='settings'}">
                     <p><a target="numbasquickhelp" href="{{HELP_URL}}custom-part-types/reference.html#part-settings"><span class="glyphicon glyphicon-question-sign"></span> Help with part settings</a></p>
                     <ul class="list-unstyled" data-bind="foreach: settings">
                         <li>
@@ -379,7 +378,7 @@
                 </section>
 
                 <!-- Answer input -->
-                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='input'}">
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='input'}">
                     <p><a target="numbasquickhelp" href="{{HELP_URL}}custom-part-types/reference.html#answer-input"><span class="glyphicon glyphicon-question-sign"></span> Help with answer input methods</a></p>
                     <form class="form-horizontal" data-bind="submit: Editor.noop">
                         {% selectproperty 'input_widget' 'Answer input method' options_text='niceName' options='input_widgets' help_url='custom-part-types/reference.html#answer-input-methods' %}
@@ -589,7 +588,7 @@
                 </section>
 
                 <!-- Marking algorithm -->
-                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='marking'}">
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='marking'}">
                     <p><a target="numbasquickhelp" href="{{HELP_URL}}custom-part-types/reference.html#marking"><span class="glyphicon glyphicon-question-sign"></span> Help with marking</a></p>
                     <div class="container-fluid">
                         <div class="row">
@@ -667,7 +666,7 @@
                 </section>
 
                 <!-- Access -->
-                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.currentTab().id)=='access'}">
+                <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='access'}">
                     {% if editable %}
                     <div class="panel panel-warning" data-bind="visible: !published() && !ready_to_use()">
                         <div class="panel-heading">
@@ -676,9 +675,9 @@
                         <div class="panel-body">
                             <p>At the moment, access to this {{item_type}} is restricted to members of the project this {{item_type}} belongs to and any other users you've explicitly granted access to.</p>
                             <p>Complete each of the following tasks before you publish this {{item_type}}:</p>
-                            <ul class="list-unstyled" data-bind="foreach: tabs">
+                            <ul class="list-unstyled" data-bind="foreach: mainTabber.tabs">
                                 <li data-bind="visible: $root.task_list.section_completed[id]!==undefined">
-                                <h4><a href="#" data-bind="text: title, click: $root.setTab(id), css: {'text-success': $root.task_list.section_completed[id], 'text-danger': !ko.unwrap($root.task_list.section_completed[id])}"></a></h4>
+                                <h4><a href="#" data-bind="text: title, click: $root.mainTabber.setTab(id), css: {'text-success': $root.task_list.section_completed[id], 'text-danger': !ko.unwrap($root.task_list.section_completed[id])}"></a></h4>
                                     <ul data-bind="foreach: $root.task_list.section_tasks[id]">
                                         <li data-bind="css: {'text-success': done, 'text-danger': !done()}">
                                             <span class="glyphicon" data-bind="css:{'glyphicon-ok':done, 'glyphicon-alert':!done()}"></span>

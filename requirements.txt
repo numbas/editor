@@ -1,5 +1,5 @@
-Django==3.1
-Pillow==7.2.0
+Django==3.1.8
+Pillow==8.1.1
 Unidecode==1.0.23
 bleach==3.3.0
 django-analytical==2.6.0

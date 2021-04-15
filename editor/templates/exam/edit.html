@@ -59,10 +59,10 @@
     <!-- Questions -->
     <section class="tab-pane questions-tab" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='questions'}">
         <div class="questions row">
-            <div class="col-sm-12 col-md-6 col-lg-7" data-bind="visible: question_groups().length==0">
+            <div class="col-sm-12 col-md-8 col-lg-8" data-bind="visible: question_groups().length==0">
                 <p class="nothing-here">No question groups have been defined.</p>
             </div>
-            <div class="col-sm-12 col-md-6 col-lg-7 question-group">
+            <div class="col-sm-12 col-md-8 col-lg-8 question-group">
                 <!-- ko if: question_view()=='add_question' -->
                 <div class="add-questions">
                     <h3>Add questions to <strong data-bind="latex: name"></strong></h3>
@@ -120,7 +120,7 @@
                         <form class="form-inline" data-bind="submit: Editor.noop">
                             <div data-bind="visible: questions().length>1">
                                 {% with form_label_class='' form_control_class='' %}
-                                <div class="form-group">
+                                <div class="form-group" data-bind="fadeVisible: $root.navigatemode().name!='diagnostic'">
                                     <label class="">
                                         <div class="control-label">Questions to use {% helplink 'exam/reference.html#term-questions-to-use' %}</div>
                                         <select class="form-control" data-bind="options: pickingStrategies, optionsText: 'niceName', value: pickingStrategy" {% if not editable %}disabled{% endif %}></select>
@@ -162,6 +162,22 @@
                                     <span class="label label-default stamp" data-bind="visible: current_stamp, text: current_stamp_display, attr: {'data-stamp':current_stamp()}"></span>
                                 </div>
                                 <div class="description" data-bind="visible: description().length>0, latex: description"></div>
+                                <!-- ko if: variable_overrides().length>0 -->
+                                <table class="variable-overrides table">
+                                    <thead>
+                                        <th>Variable</th>
+                                        <th>Value</th>
+                                        <th>Description</th>
+                                    </thead>
+                                    <tbody data-bind="foreach: variable_overrides">
+                                        <tr>
+                                            <td><span data-bind="text: name" class="monospace"></span></td>
+                                            <td><input class="form-control monospace" data-bind="textInput: definition, attr: {placeholder: original_definition}"></td>
+                                            <td data-bind="latex: description"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <!-- /ko -->
                             </li>
                         </ul>
                         <p class="nothing-here" data-bind="visible: questions().length==0">There are no questions in this group.</p>
@@ -183,14 +199,14 @@
                 <!-- /ko -->
             </div>
 
-            <div class="col-sm-12 col-md-6 col-lg-5 question-groups">
+            <div class="col-sm-12 col-md-4 col-lg-4 question-groups">
                 <div class="panel panel-primary">
                     <div class="panel-heading">
                         <h4 class="panel-title">Question groups</h4>
                     </div>
                     <div class="panel-body">
                         <form class="form-horizontal" data-bind="submit: Editor.noop">
-                            {% with form_label_class='col-sm-4' form_control_class='col-sm-8' %}
+                            {% with form_label_class='col-sm-8' form_control_class='col-sm-4' %}
                                 {% booleanproperty 'showQuestionGroupNames' 'Show group names to student?' help_url='exam/reference.html#term-show-group-names-to-student' %}
                             {% endwith %}
                         </form>
@@ -215,7 +231,7 @@
                     </div>
 
                     {% if editable %}
-                    <div class="panel-footer">
+                    <div class="panel-footer" data-bind="fadeVisible: navigatemode().name!='diagnostic'">
                         <button class="btn btn-primary btn-block" data-bind="click: addQuestionGroup"><span class="glyphicon glyphicon-plus"></span> Add another question group</button>
                     </div>
                     {% endif %}
@@ -240,7 +256,6 @@
                                 <span class="hidden-sm" data-bind="text: title"></span>
                             </a>
                         </li>
-                        <!-- /ko -->
                     </ul>
                 </div>
             </div>
@@ -458,7 +473,7 @@
                 {% selectproperty 'showresultspage' 'Reveal answers to all questions' options='showResultsPageOptions' options_text='niceName' help_url='exam/reference.html#term-reveal-answers-to-all-questions' %}
             </div>
             {% booleanproperty 'preventleave' 'Confirm before leaving the exam while it\'s running?' help_url='exam/reference.html#term-confirm-before-leaving-the-exam-while-it-s-running' %}
-            <div data-bind="fadeVisible: navigatemode().name=='sequence'">
+            <div data-bind="fadeVisible: navigatemode().name=='sequence' || navigatemode().name=='diagnostic'">
                 {% exam_event 'onleave' 'On leaving a question' help_url='exam/reference.html#term-on-leaving-a-question' %}
             </div>
             {% endwith %}

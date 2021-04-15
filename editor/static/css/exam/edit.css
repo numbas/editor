@@ -51,6 +51,10 @@
   grid-gap: 0.5em;
 }
 
+.questions-tab .question .variable-overrides {
+    grid-column: 2 / 4;
+}
+
 .add-questions > .nav {
     margin-bottom: 1em;
 }

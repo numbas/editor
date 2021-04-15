@@ -1342,6 +1342,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
             'current_stamp': current_stamp.status,
             'current_stamp_display': current_stamp.get_status_display()
         }
+        variables = []
         if self.item_type == 'exam':
             obj['id'] = self.exam.id
         elif self.item_type == 'question':
@@ -1721,7 +1722,6 @@ class NewQuestion(models.Model):
         data = OrderedDict([
             ('name', self.editoritem.name),
             ('extensions', [e.location for e in self.extensions.all()]),
-            ('topics', [t.name for t in self.topics.all()]),
             ('custom_part_types', [p.as_json() for p in self.custom_part_types.all()]),
             ('resources', self.resource_paths),
             ('navigation', {'allowregen': True, 'showfrontpage': False, 'preventleave': False}),
@@ -1735,13 +1735,18 @@ class NewQuestion(models.Model):
         d = self.editoritem.edit_dict()
         d['extensions'] = [e.location for e in self.extensions.all()]
         d['resources'] = [res.as_json() for res in self.resources.all()]
-        d['topics'] = [t.pk for t in self.topics.all()]
         return d
 
     def summary(self, user=None):
         obj = self.editoritem.summary(user)
         obj['url'] = reverse('question_edit', args=(self.pk, self.editoritem.slug,))
         obj['deleteURL'] = reverse('question_delete', args=(self.pk, self.editoritem.slug))
+
+        content = self.editoritem.get_parsed_content()
+        variables = content.data.get('variables',{})
+        tvariables = {k:v for k,v in variables.items() if v.get('can_override')}
+        obj['variables'] = tvariables
+
         return obj
 
     @property

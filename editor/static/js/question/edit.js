@@ -1972,6 +1972,15 @@ $(document).ready(function() {
         this.unused = ko.pureComputed(function() {
             return this.usedIn().length==0 && this.references().length==0;
         },this);
+
+        var _can_override = ko.observable(false);
+        this.can_override = ko.computed({
+            read: function() {
+                return this.dependencies().length==0 && _can_override();
+            },
+            write: _can_override
+        },this);
+
         this.value = ko.observable(null);
         this.error = ko.observable('');
         this.anyError = ko.pureComputed(function() {
@@ -2067,7 +2076,7 @@ $(document).ready(function() {
         ],
 
         load: function(data) {
-            tryLoad(data,['name','description'],this);
+            tryLoad(data,['name','description','can_override'],this);
             if('templateType' in data) {
                 for(var i=0;i<this.templateTypes.length;i++) {
                     if(this.templateTypes[i].id==data.templateType) {
@@ -2089,6 +2098,7 @@ $(document).ready(function() {
                 definition: this.definition(),
                 description: this.description(),
                 templateType: this.templateType().id,
+                can_override: this.can_override()
             }
             return obj;
         },

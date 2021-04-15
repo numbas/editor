@@ -279,6 +279,7 @@ $(document).ready(function() {
         this.diagnostic.scriptOptions = [
             {niceName: 'Diagnosys', name: 'diagnosys'},
             {niceName: 'Mastery', name: 'mastery'},
+            {niceName: 'Duolingo', name: 'duolingo'},
             {niceName: 'Custom', name: 'custom'}
         ];
         this.diagnostic.script = ko.observable(this.diagnostic.scriptOptions[0]);
@@ -660,6 +661,16 @@ $(document).ready(function() {
                     q.customName(data.questionNames[i] || '');
                 });
             }
+            if(data.variable_overrides) {
+                this.questions().forEach(function(q,i) {
+                    data.variable_overrides[i].forEach(function(vod) {
+                        var v = q.variable_overrides().find(function(vo) { return vo.name==vod.name; });
+                        if(v) {
+                            v.definition(vod.definition);
+                        }
+                    });
+                });
+            }
         }
 
         this.pickingStrategies = [
@@ -721,6 +732,9 @@ $(document).ready(function() {
                 pickQuestions: this.pickQuestions(),
                 questionNames: this.questions().map(function(q) {
                     return q.customName();
+                }),
+                variable_overrides: this.questions().map(function(q) {
+                    return q.variable_overrides().filter(function(vo) { return vo.definition().trim()!=''; }).map(function(vo) { return vo.toJSON(); });
                 })
             }
         }
@@ -751,6 +765,10 @@ $(document).ready(function() {
         },this);
         this.published = ko.observable();
         this.load(data);
+
+        this.variable_overrides = ko.observableArray(Object.values(data.variables || {}).map(function(vd) {
+            return new VariableOverride(q,vd);
+        }));
 
         this.previewURL = ko.computed(function() {
             return q.url()+'preview/';
@@ -840,7 +858,8 @@ $(document).ready(function() {
                 deleteURL: this.deleteURL(),
                 last_modified: this.last_modified(),
                 metadata: this.metadata(),
-                url: this.url()
+                url: this.url(),
+                variable_overrides: this.variable_overrides().map(function(vo) { return vo.toJSON(); })
             };
         },
 
@@ -853,6 +872,24 @@ $(document).ready(function() {
             viewModel.addQuestion(newQ);
         }
     }
+
+    function VariableOverride(question,data) {
+        this.question = question;
+        this.name = data.name;
+        this.description = data.description;
+        this.definition = ko.observable('');
+        this.original_definition = data.definition;
+    }
+    VariableOverride.prototype = {
+        load: function(data) {
+        },
+        toJSON: function() {
+            return {
+                name: this.name,
+                definition: this.definition()
+            }
+        }
+    };
 
     function FeedbackMessage() {
         this.message = ko.observable('');

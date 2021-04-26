@@ -182,6 +182,7 @@ $(document).ready(function() {
                 w = Math.min(w,settings.max);
             }
             $(element).width(w+'px');
+            element.style['max-width'] = '100%';
         }
     }
 

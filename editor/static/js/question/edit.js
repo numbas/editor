@@ -3085,6 +3085,32 @@ $(document).ready(function() {
                 return p!=p2 && p2.type().has_marks && p2.parent()!=p && !p2.isAlternative();
             });
         },this);
+        this.variableWarning = ko.computed(function() {
+            console.log('AAAAA');
+            var name = this.variable();
+            if(!name) {
+                return;
+            }
+            var variable = this.part.q.getVariable(name);
+            if(!variable) {
+                return;
+            }
+            var v = variable.value();
+            if(!v) {
+                return;
+            }
+            var rep_path = this.replacement();
+            if(!rep_path) {
+                return;
+            }
+            var rep = this.part.q.getPart(rep_path);
+            if(!rep) {
+                return;
+            }
+            if(rep.type().name=='gapfill' && !Numbas.jme.isTypeCompatible(v.type,'list')) {
+                return 'This replacement refers to a gap-fill part, but the replaced variable is not a list. Did you mean to use one of the gaps?';
+            }
+        },this);
         if(data) {
             this.load(data);
         }

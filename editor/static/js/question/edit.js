@@ -2669,12 +2669,12 @@ $(document).ready(function() {
 
         this.markingScriptError = ko.observable('');
         this.markingScript = ko.computed(function() {
-            var base = new Numbas.marking.MarkingScript(this.baseMarkingAlgorithm());
+            var base = new Numbas.marking.MarkingScript(this.baseMarkingAlgorithm(),undefined,this.scope());
             if(!this.use_custom_algorithm()) {
                 return base;
             } else {
                 try {
-                    var script = new Numbas.marking.MarkingScript(this.customMarkingAlgorithm(), this.extendBaseMarkingAlgorithm() ? base : undefined);
+                    var script = new Numbas.marking.MarkingScript(this.customMarkingAlgorithm(), this.extendBaseMarkingAlgorithm() ? base : undefined, this.scope());
                     this.markingScriptError('');
                     return script;
                 } catch(e) {
@@ -2787,6 +2787,10 @@ $(document).ready(function() {
             this.load(data);
     }
     Part.prototype = {
+
+        scope: function() {
+            return this.q.baseScope();
+        },
 
         copy: function() {
             var data = this.toJSON();

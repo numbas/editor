@@ -23,7 +23,6 @@ For all other purposes, whitespace is ignored.
 Variable names
 --------------
 
-Variable names are case-insensitive, so ``y`` represents the same thing as ``Y``.
 The first character of a variable name must be an alphabet letter; after that, any combination of letters, numbers and underscores is allowed, with any number of ``'`` on the end.
 
 **Examples**:
@@ -42,6 +41,7 @@ This screencast describes which variable names are valid, and gives some advice 
 .. raw:: html
 
     <iframe src="https://player.vimeo.com/video/167085662" width="640" height="360" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+
 
 .. _variable-annotations:
 
@@ -193,6 +193,14 @@ JME supports implicit multiplication in some cases, allowing you to omit the mul
 
     To interpret such expressions as products, in a mathematical expression part turn off the :term:`Allow unknown function names?` option, and when dealing with :data:`expression` values, use :jme:func:`expand_juxtapositions`.
 
+.. _jme-case-sensitivity:
+
+Case-sensitivity
+----------------
+
+The default behaviour of variable and function names in JME expressions is that they are considered case-insensitively: two names are considered equivalent if they are exactly equal when converted to lower-case.
+
+You can force the JME system to be case-sensitive using the :jme:func:`scope_case_sensitive` function.
 
 
 .. _jme-data-types:
@@ -3333,6 +3341,19 @@ Identifying data types
         * ``infer_type(expression("x+2"))`` → ``"number"``
         * ``infer_type(expression("id(n)"))`` → ``"matrix"``
         * ``infer_type(expression("random(2,true)"))`` → ``"?"``
+
+.. jme:function:: scope_case_sensitive(expression, case_sensitive)
+
+    Set the evaluation scope to be case-sensitive or not, depending on the value of `case_sensitive`.
+
+    Case-sensitivity affects variable and function names.
+    The names ``x`` and ``X`` are considered equivalent when not in case-sensitive mode, but are considered to be different when in case-sensitive mode.
+
+    **Definitions**:
+        * :data:`expression`, :data:`boolean` → unspecified
+
+    **Example**:
+        * ``scope_case_sensitive(findvars(expression("x+X")))`` → ``["X","x"]``
 
 .. _jme-fns-inspecting-the-scope:
 

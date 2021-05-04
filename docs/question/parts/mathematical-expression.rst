@@ -33,6 +33,13 @@ Marking
         
         If this field is empty,  the following rules are applied: ``basic``, ``unitFactor``, ``unitPower``, ``unitDenominator``, ``zeroFactor``, ``zeroTerm``, ``zeroPower``, ``collectNumbers``, ``zeroBase``, ``constantsFirst``, ``sqrtProduct``, ``sqrtDivision``, ``sqrtSquare``, ``otherNumbers``.
 
+    Expression is case-sensitive?
+        If ticked, then the student's answer and the correct answer will be considered case-sensitively.
+
+        If not ticked, then names which are exactly the same when converted to lower-case will be considered as representing the same variable or function.
+
+        See :ref:`jme-case-sensitivity <case-sensitivity>` in the JME reference.
+
 
 .. _mathematical-expression-restrictions:
 

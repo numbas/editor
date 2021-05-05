@@ -1394,10 +1394,11 @@ $(document).ready(function() {
                             tools: {title: 'Tools', items: 'code'}
                         },
                         
-                        toolbar: "undo redo | styleselect | bullist numlist | bold italic removeformat | alignleft aligncenter alignright | bullist numlist outdent indent | link image gapfill jmevisible | fullscreen preview code",
+                        toolbar: "undo redo | styleselect | bullist numlist | bold italic removeformat | alignleft aligncenter alignright | bullist numlist outdent indent | link image media gapfill jmevisible | fullscreen preview code",
 
                         statusbar: false,
                         media_strict: false,
+                        media_dimensions: false,
                         width: width,
                         verify_html: false,
                         autoresize_bottom_margin: 0,

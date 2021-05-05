@@ -6924,6 +6924,23 @@ newBuiltin('permutations',[TList,TNum],TList,function(list,r) {
     var prod = util.permutations(list,r);
     return prod.map(function(l){ return new TList(l); });
 });
+newBuiltin('frequencies',[TList],[TList],null, {
+    evaluate: function(args,scope) {
+        var o = [];
+        var l = args[0].value;
+        l.forEach(function(x) {
+            var p = o.find(function(item) {
+                return util.eq(item[0],x);
+            });
+            if(p) {
+                p[1] += 1;
+            } else {
+                o.push([x,1]);
+            }
+        });
+        return new TList(o.map(function(p){ return new TList([p[0],new TNum(p[1])]); }));
+    }
+});
 newBuiltin('vector',[sig.multiple(sig.type('number'))],TVector, null, {
     evaluate: function(args,scope)
     {
@@ -13597,6 +13614,10 @@ if(res) { \
         return scope;
     },
 
+    /** Mark this part, using adaptive marking when appropriate.
+     *
+     * @returns {Numbas.parts.marking_results}
+     */
     markAdaptive: function() {
         if(!this.doesMarking) {
             return;
@@ -13639,6 +13660,27 @@ if(res) { \
                         this.error(e.message,{},e);
                     } catch(pe) {
                         console.error(pe.message);
+                        var errorFeedback = [
+                            Numbas.marking.feedback.feedback(R('part.marking.error in adaptive marking',{message: e.message}))
+                        ];
+                        if(!result) {
+                            result = {
+                                warnings: [],
+                                markingFeedback: errorFeedback,
+                                finalised_result: {
+                                    valid: false,
+                                    credit: 0,
+                                    states: errorFeedback
+                                },
+                                values: {},
+                                credit: 0,
+                                script_result: {
+                                    state_errors: {
+                                        mark: pe
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -28052,6 +28094,9 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
         this.definition.settings.forEach(function(s) {
             var name = s.name;
             var value = raw_settings[name];
+            if(value===undefined) {
+                value = s.default_value;
+            }
             if(!p.setting_evaluators[s.input_type]) {
                 p.error('part.custom.unrecognised input type',{input_type:s.input_type});
             }

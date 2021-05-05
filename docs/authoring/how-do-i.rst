@@ -4,9 +4,9 @@
 How do I...
 ###########
 
-This section largely draws from `the "How-tos" project <https://numbas.mathcentre.ac.uk/project/697/>`_ on the numbas.mathcentre.ac.uk editor, where we gather example questions created to demonstrate authoring techniques.
+This section largely draws from `the "How-tos" project <https://numbas.mathcentre.ac.uk/project/697/>`__ on the numbas.mathcentre.ac.uk editor, where we gather example questions created to demonstrate authoring techniques.
 
-If you've got a question that isn't answered here, try asking on `the Numbas users mailing list <https://groups.google.com/forum/#!forum/numbas-users>`_.
+If you've got a question that isn't answered here, try asking on `the Numbas users mailing list <https://groups.google.com/forum/#!forum/numbas-users>`__.
 
 .. contents:: :local:
 
@@ -19,11 +19,11 @@ Delivering an exam
 Delay showing students scores until a certain date
 --------------------------------------------------
 
-    This is only possible when delivering the exam through the `Numbas LTI provider <https://numbas-lti-provider.readthedocs.io/>`_.
+    This is only possible when delivering the exam through the `Numbas LTI provider <https://numbas-lti-provider.readthedocs.io/>`__.
 
     First, turn off the feedback options :term:`Show current score?` and :term:`Show answer state?`, so students don't get any feedback while completing the exam.
 
-    Then, set :term:`Show results page` to :guilabel:`When entering in review mode`.
+    Then, set :term:`Reveal answers to all questions` to :guilabel:`When entering in review mode`.
 
     Finally, after uploading the exam to the Numbas LTI provider, set the :guilabel:`Allow students to review attempt from` setting to the date and time after which you'd like to allow students to see their scores and feedback.
 
@@ -68,7 +68,8 @@ Embed a video
 
     Upload your video to somewhere like YouTube or Vimeo. 
     Including videos in downloaded exam packages is a terrible idea, so we discourage that. 
-    Click the :guilabel:`Embed image/video` button (it's a blue cloud), and paste in the URL of your video.
+
+    Click the :guilabel:`Embed image/video` button, and paste in the URL of your video.
 
     .. raw:: html
 
@@ -80,20 +81,23 @@ Embed a video
 Include an interactive diagram
 -----------------------------------
 
-    There are a couple of ways of including an interactive diagram in a Numbas question. 
-    You can either embed a `GeoGebra <http://www.geogebra.org/>`_ applet, or use `JSXGraph <http://jsxgraph.uni-bayreuth.de/>`_.
+    There are a few ways of including an interactive diagram in a Numbas question. 
 
-    For JSXGraph diagrams, there is :ref:`an extension <jsxgraph-extension>` which takes care of most of the setup.
-    You will need to write a fair amount of JavaScript code to create a diagram using JSXGraph.
+    `JSXGraph <http://jsxgraph.uni-bayreuth.de/>`__ is a JavaScript library for creating interactive diagramss. There is :ref:`an extension <jsxgraph-extension>` which allows you to create JSXGraph diagrams using JME or JavaScript code.
 
-    GeoGebra applets are much easier to create and use, but are loaded from `geogebra.org <http://www.geogebra.org>`_ so the student must have internet access in order to use any questions containing GeoGebra applets.
+    `GeoGebra <http://www.geogebra.org>`__ applets are much easier to create and use, but are loaded from `geogebra.org <http://www.geogebra.org>`__ so the student must have internet access in order to use any questions containing GeoGebra applets.
+    For more information, see the page on the :ref:`GeoGebra extension <geogebra-extension>`.
 
-    The screencast below explains how to use a GeoGebra applet in a question. 
-    For more information, see the page on the :ref:`geogebra extension <geogebra-extension>`.
+    `Eukleides <https://numbas.github.io/numbas-extension-eukleides/docs/>`__ is a Numbas extension designed to easily produce accessible, dynamic diagrams.
+    Interactivity is limited to dragging points, which can be used to construct the rest of the diagram.
 
-    .. raw:: html
+    .. todo::
 
-        <iframe src="https://player.vimeo.com/video/174512376" width="640" height="360" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+        Redo this video
+
+        .. raw:: html
+
+            <iframe src="https://player.vimeo.com/video/174512376" width="640" height="360" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
 Substitute random variables into an image
 -----------------------------------------
@@ -102,13 +106,13 @@ Substitute random variables into an image
 
     Pay attention to the text alignment options when designing your image: randomly generated values are usually not the same width as the expressions they replace.
 
-    See the question `Volume of a swimming pool <https://numbas.mathcentre.ac.uk/question/18295/volume-of-a-swimming-pool/>`_ for an example of an SVG image with variables substituted into text.
+    See the question `Volume of a swimming pool <https://numbas.mathcentre.ac.uk/question/18295/volume-of-a-swimming-pool/>`__ for an example of an SVG image with variables substituted into text.
 
 
-Show one of several images based on a random variables
------------------------------------------------------------
+Show one of several images based on a random variable
+-----------------------------------------------------
 
-See the question `Using a randomly chosen image <https://numbas.mathcentre.ac.uk/question/1132/using-a-randomly-chosen-image/>`_ for an example of one method.
+See the question `Using a randomly chosen image <https://numbas.mathcentre.ac.uk/question/1132/using-a-randomly-chosen-image/>`__ for an example of one method.
 
 
 Display a random line in a GeoGebra applet
@@ -125,7 +129,7 @@ See `this example question <https://numbas.mathcentre.ac.uk/question/22835/a-ran
 Use student input in a JSXGraph diagram
 ---------------------------------------
 
-`This question <https://numbas.mathcentre.ac.uk/question/2223/use-student-input-in-a-jsxgraph-diagram/>`_ shows how to construct a line corresponding to an equation given by the student.
+`This question <https://numbas.mathcentre.ac.uk/question/2223/use-student-input-in-a-jsxgraph-diagram/>`__ shows how to construct a line corresponding to an equation given by the student.
 
 
 
@@ -147,21 +151,9 @@ In the Numbas editor, you can add CSS rules to a question in the :ref:`preamble`
 
 The following questions demonstrate how to use CSS to change the look of a Numbas question:
 
-* `Style a table of sales figures <https://numbas.mathcentre.ac.uk/question/2717/style-a-table-of-sales-figures/>`_ - 
-* `Use CSS to style parallel translation <https://numbas.mathcentre.ac.uk/question/5599/use-css-to-style-parallel-translation/>`_ - CSS classes "english" and "cymraeg" apply different background colours to English and Welsh portions of text.
-* `CSS Lemma environment <https://numbas.mathcentre.ac.uk/question/2704/css-lemma-environment/>`_ - defines a CSS class in the preamble which styles the "Lemma" environment, used in the statement.
-* `More space between multiple choice answers <https://numbas.mathcentre.ac.uk/question/5307/more-space-between-multiple-choice-answers/>`_
-
-
-Reveal the answer to a single part after submitting an answer
--------------------------------------------------------------
-
-Someone wanted to know how to reveal the answer to one part of a question as soon as the student submits an answer, because the following part depends on having the correct answer to the first part.
-
-`This example question <https://numbas.mathcentre.ac.uk/question/19919/reveal-answer-to-a-single-part-after-submitting/>`__ shows a few different ways of doing this.
-
-**Think very carefully before using this:** by revealing the answer, you are removing the opportunity for the student to later on realise they've got that step wrong, as a consequence of some further work. 
-It's often possible to use :ref:`adaptive marking <adaptive-marking>` to use the student's answer in place of the correct answer in later parts.
+* `Style a table of sales figures <https://numbas.mathcentre.ac.uk/question/2717/style-a-table-of-sales-figures/>`__ - CSS rules apply a fixed-width font for figures, and put a line before the final row.
+* `Use CSS to style parallel translation <https://numbas.mathcentre.ac.uk/question/5599/use-css-to-style-parallel-translation/>`__ - CSS classes "english" and "cymraeg" apply different background colours to English and Welsh portions of text.
+* `More space between multiple choice answers <https://numbas.mathcentre.ac.uk/question/5307/more-space-between-multiple-choice-answers/>`__ - a single CSS rule adds a bit more empty space underneath each choice.
 
 
 Set an attribute on an HTML element based on the value of a question variable
@@ -201,13 +193,14 @@ Enter ``a=1`` for the first block, ``a=2`` for the second, and ``a=3`` for the t
 
 When you run the question, only the block of text corresponding to the value of ``a`` is shown.
 
-You can see an example of this technique in the question `Conditional visibility <https://numbas.mathcentre.ac.uk/question/7711/conditional-visibility/>`_.
+You can see an example of this technique in the question `Conditional visibility <https://numbas.mathcentre.ac.uk/question/7711/conditional-visibility/>`__.
 
 
 Display a dollar sign
 --------------------------
 
 Because the dollar symbol is used to delimit portions of LaTeX maths, you need to escape dollar signs intended for display by placing a backslash before them -- that is, write ``\$``. 
+
 See `this example question <https://numbas.mathcentre.ac.uk/question/4528/displaying-a-dollar-sign/>`__.
 
 
@@ -219,7 +212,7 @@ It doesn't really matter what people are called in word problems, but it can hav
 
 We've written a "random person" extension which makes it easy to randomly pick a name for a person, and use the correct pronouns.
 
-There's `documentation on the extension's GitHub repository <https://github.com/numbas/numbas-extension-random-person>`_, and `an example question <https://numbas.mathcentre.ac.uk/question/23094/the-random-person-extension/>`__ showing how to use it most effectively.
+There's `documentation on the extension's GitHub repository <https://github.com/numbas/numbas-extension-random-person>`__, and `an example question <https://numbas.mathcentre.ac.uk/question/23094/the-random-person-extension/>`__ showing how to use it most effectively.
 
 
 Randomise the names of variables in an expression
@@ -239,7 +232,7 @@ By default, numbers substituted into question text do not have any separators be
 When working with real-world data, separating blocks of figures can improve readability.
 Use the :jme:func:`formatnumber` function to render numbers following one of the supported :ref:`number-notation` styles.
 
-`This example question <https://numbas.mathcentre.ac.uk/question/26873/use-formatnumber-to-separate-powers-of-1000-with-commas/>`__ shows how the :jme:func:`formatnumber` function in use.
+`This example question <https://numbas.mathcentre.ac.uk/question/26873/use-formatnumber-to-separate-powers-of-1000-with-commas/>`__ shows the :jme:func:`formatnumber` function in use.
 
 
 Show amounts of money with trailing zeros
@@ -250,6 +243,15 @@ Use the :jme:func:`currency` function to ensure that amounts of money are displa
 See `this example question <https://numbas.mathcentre.ac.uk/question/26875/show-amounts-of-currency-with-trailing-zeros/>`__.
 
 
+Pad a number with leading zeros
+-------------------------------
+
+Convert the number to a string, then use the :jme:func:`lpad` function to add zeros to the start until it's the desired length.
+
+For example, to pad a number :math:`n` so that it's four digits long, use ``lpad(string(n), 4, '0')``.
+
+See `this example question <https://numbas.mathcentre.ac.uk/question/31466/pad-with-leading-zeros/>`__.
+
 
 *****
 LaTeX
@@ -258,19 +260,17 @@ LaTeX
 Include a randomised LaTeX command
 ---------------------------------------
 
-If you want to include a LaTeX command in a string variable, remember that backslashes and curly braces in strings must be escaped. 
+If you want to include a LaTeX command in a string variable, remember that backslashes and curly braces in strings must be escaped, unless the string is marked as :jme:func:`safe`.
 That means you should type two backslashes where you'd normally type one, and add a backslash before each left or right curly brace, for example ``\\frac\{1\}\{2\}`` produces the LaTeX ``\frac{1}{2}``.
 You need to do this because the backslash is used as an escape character in strings so you can include quote marks, which would normally end the string. 
 (For example, ``"he said \"hello\" to me"``)
+
+If the string is wrapped in :jme:func:`safe`, then you don't need to escape curly braces, but you do still need to double each backslash. For example, ``safe("\\frac{1}{2}")``.
 
 If you substitute a string variable into a mathematical expression using ``\var``, it's normally assumed to represent plain text and displayed using the plain text font. 
 If your string is really a partial LaTeX expression, you must mark it as such by wrapping it in ``latex()``, e.g. ``\var{latex(mystring)}``.
 
 See `this example question <https://numbas.mathcentre.ac.uk/question/10342/displaying-a-randomised-latex-command/>`__.
-
-
-Substituted randomised raw LaTeX into question text
----------------------------------------------------
 
 The majority of the time, substituting raw LaTeX into a question is not the neatest way of achieving what you want.
 It's often possible to achieve the desired effect by good use of the :ref:`simplify <simplification-rules>` command.
@@ -279,27 +279,69 @@ However, if you do need to substitute raw LaTeX code into question text for some
 
 See `this example question <https://numbas.mathcentre.ac.uk/question/22489/how-to-substitute-randomised-raw-latex-into-question-text/>`__, which shows how different methods of substituting a string into question text end up being displayed.
 
+Display a set of tuples
+-----------------------
 
+:jme:data:`list` values are normally displayed in LaTeX using square brackets.
+To display them as tuples, enclosed with parentheses, you can use ``latex('(' + join(tuple,',') + ')')``.
 
-**********************
-Custom marking scripts
-**********************
+See `this example question <https://numbas.mathcentre.ac.uk/question/88926/display-tuples-in-latex/>`__.
 
-Use LaTeX in a comment created during a custom marking script
+Show the components of a vector as multiples of basis vectors
 -------------------------------------------------------------
 
-Remember that backslashes must be escaped in JavaScript strings, i.e. ``this.markingComment("$\\sqrt{x}$")`` instead of ``this.markingComment("$\sqrt{x}$")``.
+Given a vector ``a``, you can render it in LaTeX as a sum of multiples of basis vectors :math:`\boldsymbol{i}`, :math:`\boldsymbol{j}` and :math:`\boldsymbol{k}` as follows::
 
-See `this example question <https://numbas.mathcentre.ac.uk/question/22551/latex-in-a-custom-marking-comment/>`__.
+    \simplify{ {a[0]}*v:i + {a[1]}*v:j + {a[2]}*v:k }
 
+See `this example question <https://numbas.mathcentre.ac.uk/question/92566/show-a-vector-in-terms-of-the-standard-unit-vectors/>`__.
 
-Access the student's answer to another part
--------------------------------------------
+Display a surd
+--------------
 
-Use `part.question.getPart(path) <http://numbas.github.io/Numbas/Numbas.Question.html#getPart>`_.
+Suppose you have a number :math:`n` which you wish to display as a surd, for example :math:`\sqrt{3}`.
 
-See `this example question <https://numbas.mathcentre.ac.uk/question/22514/access-the-student-s-answer-to-another-part-in-a-marking-script/>`__.
+If :math:`n` can be written as a surd, then :math:`n^2` is an integer, so ``\simplify{ sqrt({n^2}) }`` will produce the desired rendering.
 
+When :math:`n` itself is an integer, the :term:`sqrtSquare` simplification rule will rewrite the above expression to just :math:`n`.
+
+`This example question <https://numbas.mathcentre.ac.uk/question/45958/displaying-surd-fractions/>`__ shows how to display surd fractions.
+
+Customise the LaTeX rendering of a particular variable name
+-----------------------------------------------------------
+
+In the :ref:`JavaScript API <javascript-apis>`, there's a dictionary of special cases for rendering variable names at ``Numbas.jme.display.specialNames``.
+
+For example, to render the name ``hbar`` as :math:`\hbar`, in the question preamble set::
+
+    Numbas.jme.display.specialNames['hbar'] = ['\\hbar'];
+
+See `this example question <https://numbas.mathcentre.ac.uk/question/72909/custom-latex-rendering-for-a-variable-name/>`__.
+
+Render plain text inside LaTeX
+------------------------------
+
+To render a string of plain text, use the ``\text`` LaTeX macro. For example::
+
+    \frac{\text{amount of stuff}}{15 \times(\text{stuff quotient})} = x
+
+produces :math:`\frac{\text{amount of stuff}}{15 \times(\text{stuff quotient})} = x`.
+
+See `this example question <https://numbas.mathcentre.ac.uk/question/8396/use-text-in-latex-to-get-the-plain-text-font/>`__.
+
+*******
+Marking
+*******
+
+Mark an equation
+----------------
+
+See the section in the mathematical expression part's documentation on :ref:`marking an equation <marking-an-equation>`.
+
+Mark a percentage
+-----------------
+
+`This question <https://numbas.mathcentre.ac.uk/question/92170/mark-a-percentage/>`__ shows how to use the *quantity with units* custom part type to makr a percentage given by the student.
 
 Check that the student has simplified a polynomial fraction
 -----------------------------------------------------------
@@ -311,23 +353,34 @@ In combination with the normal mathematical expression marking algorithm, this c
 Check that the student has factorised a quadratic expression
 ------------------------------------------------------------
 
-`This question <https://numbas.mathcentre.ac.uk/question/3737/pattern-matching-factorise-an-equation/>`__ uses :ref:`pattern-matching` to check that the student's answer is the product of two factors.
+`This question <https://numbas.mathcentre.ac.uk/question/3737/pattern-matching-factorise-an-equation/>`__ uses :ref:`pattern-matching <pattern-matching>` to check that the student's answer is the product of two factors.
 In combination with the normal mathematical expression marking algorithm, this confirms that the student has factorised the expression.
 
+Limit the number of times a student can submit an answer
+--------------------------------------------------------
 
-Use data from a CSV file that the student has uploaded
-------------------------------------------------------
+It's a principle of the design of Numbas that students can submit answers to each question part as many times as they like.
+The student might accidentally submit, or change their mind.
 
-`This question <https://numbas.mathcentre.ac.uk/question/4068/use-data-uploaded-by-the-student/>`__ uses some custom JavaScript to process a file that the student uploads, and use it to set the correct answers for the question's parts.
+In summative assessments, there is the possibility that students could gain an unfair advantage by changing their answer after seeing that it is incorrect.
+To avoid this, use the :ref:`exam feedback settings <exam-feedback>` so that the student doesn't receive any feedback until the exam is over.
 
+In an :ref:`explore mode <explore-mode>` question, you can use an information-only part to give the student feedback about a part that they have just answered, and give them the opportunity to try again, up to a predefined limit.
+See `this example question <https://numbas.mathcentre.ac.uk/question/87356/allow-more-attempts-at-a-part-if-the-student-gets-it-wrong-up-to-a-limit/>`__.
 
+Allow "this is impossible" as a response to a prompt
+----------------------------------------------------
+
+You can use a :ref:`gap-fill <gap-fill>` part with a :ref:`custom marking algorithm <part-marking-algorithm>` to show both an answer input box, and a tick box that the student can use to say that the given task is impossible.
+
+See `this example question <https://numbas.mathcentre.ac.uk/question/87350/tick-box-for-this-is-impossible/>`__.
 
 *******************
 Variable generation
 *******************
 
-Make sure my generated variables satisfy a condition
----------------------------------------------------------
+Make sure generated variables satisfy a condition
+-------------------------------------------------
 
 Use the :ref:`variable testing <variable-testing>` tools.
 
@@ -358,12 +411,12 @@ See `this example question <https://numbas.mathcentre.ac.uk/question/26868/use-a
 Load JSON data
 --------------
 
-`JSON <http://www.json.org/>`_ is a commonly-used format to store data in a way that is easy for both people and computers to read. 
+`JSON <http://www.json.org/>`__ is a commonly-used format to store data in a way that is easy for both people and computers to read. 
 
 The following questions show how to use large JSON data sets in Numbas questions:
 
-* `Items from the Cooper-Hewitt collection <https://numbas.mathcentre.ac.uk/question/18690/loading-json-data-cooper-hewitt-collection/>`_, with associated images.
-* `Data about members of the Scottish Parliament <https://numbas.mathcentre.ac.uk/question/18691/loading-json-data-scottish-msps/>`_.
+* `Items from the Cooper-Hewitt collection <https://numbas.mathcentre.ac.uk/question/18690/loading-json-data-cooper-hewitt-collection/>`__, with associated images.
+* `Data about members of the Scottish Parliament <https://numbas.mathcentre.ac.uk/question/18691/loading-json-data-scottish-msps/>`__.
 
 
 *****
@@ -410,3 +463,26 @@ For example::
 Computes :math:`\log_3(x)`.
 
 `This example question <https://numbas.mathcentre.ac.uk/question/14700/log-to-an-arbitrary-base/>`__ shows how to ask the student to enter a mathematical expression containing a logarithm to a randomly-chosen base, or with an unbound variable as the base.
+
+
+**********
+JavaScript
+**********
+
+Define a recursive function
+---------------------------
+
+While custom functions can't easily refer to other custom functions defined in the question, they can contain nested functoin definitions.
+You can use this to define a recursive function, and then call it immediately.
+
+See `this example question <https://numbas.mathcentre.ac.uk/question/87373/recursive-js-function/>`__, which computes factorials recursively.
+
+Do something at a certain stage in the question's progress
+----------------------------------------------------------
+
+The ``question`` object has a ``signals`` attribute, which you can use in the :ref:`question preamble <preamble>` to wait for certain events.
+
+Here are some examples:
+
+* `HTMLAttached <https://numbas.mathcentre.ac.uk/question/59188/on-html-attached/>`__ - When the question's HTML has been displayed in the page.
+* `adviceDisplayed <https://numbas.mathcentre.ac.uk/question/65285/do-something-in-javascript-when-the-advice-is-displayed/>`__ - When the question advice is displayed.

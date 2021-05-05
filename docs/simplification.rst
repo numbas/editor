@@ -166,7 +166,9 @@ For example, the following code::
 turns on every rule, but then turns off the ``collectNumbers`` rule, so every rule *except* ``collectNumbers`` can be applied.
 Additionally, the display option ``fractionNumbers`` is turned on, so the ``0.5`` is displayed as :math:`\frac{1}{2}`.
 
-Altogether, this produces the following rendering: :math:`\frac{1}{2} x + x^2 - 2 - 3`
+Altogether, this produces the following rendering: :math:`\frac{1}{2} x + x^2 - 2 - 3`.
+
+`This example question <https://numbas.mathcentre.ac.uk/question/78727/control-how-expressions-are-simplified-simplify/>`__ shows how to control the simplification process by specifying which rules to use.
 
 The following simplification rules are available:
 

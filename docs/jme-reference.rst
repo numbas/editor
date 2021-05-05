@@ -2589,6 +2589,18 @@ Lists
     **Example**:
         * ``enumerate(["A","B","C"])`` → ``[ [0,"A"], [1,"B"], [2,"C"] ]``
 
+.. jme:function:: frequencies(collection)
+
+    Count the number of times each distinct element of ``collection`` appears.
+
+    Returns a list of pairs ``[x,n]``, where ``x`` is an element of ``collection`` and ``n`` is the number of times it appeared.
+
+    **Definitions**:
+        * :data:`list` → :data:`list`
+
+    **Example**:
+        * ``frequencies(["a","a","c","b","c","a"])`` → ``[ ["a",3], ["c",2], ["b",1] ]``
+
 .. _jme-fns-dictionaries:
 
 Dictionaries

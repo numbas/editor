@@ -214,6 +214,7 @@ It's extremely unlikely that randomly-chosen values for the variables will satis
 For example, in a part with correct answer :math:`x^2+y^2=1`, the expression ``random(sqrt(1-x^2), random(vRange))`` for the variable :math:`y` will produce a solution of the equation roughly half of the time.
 By setting the :term:`points to check` to a big enough number, say 10, we can be reasonably confident that the student's answer is equivalent to the expected answer.
 
+See `this example question <https://numbas.mathcentre.ac.uk/question/88275/answer-is-a-differential-equation/>`_ where the correct answer is a differential equation.
 
 Marking settings
 ################

@@ -149,6 +149,15 @@ $(document).ready(function() {
         var rulesets = this.rulesets = ko.observableArray([]);
         this.functions = ko.observableArray([]);
         this.variables = ko.observableArray([]);
+        this.builtin_constants = [
+            {name: 'e', description: 'Base of the natural logarithm'},
+            {name: 'pi,π', description: 'Ratio of a circle\'s perimeter to its diameter'},
+            {name: 'i', description: '$\\sqrt{-1}$'}
+        ];
+        this.builtin_constants.forEach(function(c) {
+            c.enabled = ko.observable(true);
+        });
+        this.constants = ko.observableArray([]);
         this.questionScope = ko.observable();
         this.variableGroups = ko.observableArray([]);
         this.editVariableGroup = ko.observable(null);
@@ -335,8 +344,16 @@ $(document).ready(function() {
             js: ko.observable('')
         };
 
+        this.extensionTabs = new Editor.Tabber([
+            new Editor.Tab('extensions','Extensions','wrench',{in_use: ko.pureComputed(function() { return this.usedExtensions().length>0 },this)}),
+            new Editor.Tab('constants','Constants','pencil',{in_use: ko.pureComputed(function() { return this.constants().length>0 || this.builtin_constants.some(function(c) { return !c.enabled(); }) },this)}),
+            new Editor.Tab('rulesets','Rulesets','list-alt',{in_use: ko.pureComputed(function() { return this.rulesets().length > 0 },this)}),
+            new Editor.Tab('functions','Functions','education',{in_use: ko.pureComputed(function() { return this.functions().length>0 },this)}),
+            new Editor.Tab('preamble','Preamble','console',{in_use: ko.pureComputed(function() { return this.preamble.css()!='' || this.preamble.js()!='' },this)})
+        ]);
+
         var extensions_tab_in_use = ko.pureComputed(function() {
-            return this.usedExtensions().length>0 || this.rulesets().length>0 || this.functions().length>0 || this.preamble.css()!='' || this.preamble.js()!='';
+            return this.extensionTabs.tabs.some(function(tab) { return tab.in_use(); });
         },this);
 
         this.mainTabber.tabs([
@@ -357,13 +374,6 @@ $(document).ready(function() {
             this.mainTabber.tabs.splice(8,0,adviceTab);
         }
         this.mainTabber.currentTab(this.mainTabber.tabs()[0]);
-
-        this.extensionTabs = new Editor.Tabber([
-            new Editor.Tab('extensions','Extensions','wrench',{in_use: ko.pureComputed(function() { return this.usedExtensions().length>0 },this)}),
-            new Editor.Tab('rulesets','Rulesets','list-alt',{in_use: ko.pureComputed(function() { return this.rulesets().length > 0 },this)}),
-            new Editor.Tab('functions','Functions','education',{in_use: ko.pureComputed(function() { return this.functions().length>0 },this)}),
-            new Editor.Tab('preamble','Preamble','console',{in_use: ko.pureComputed(function() { return this.preamble.css()!='' || this.preamble.js()!='' },this)})
-        ]);
 
         this.startAddingPart = function() {
             q.addingPart({kind:'part', parent:null, parentList: q.parts, availableTypes: q.partTypes});
@@ -676,6 +686,9 @@ $(document).ready(function() {
             if('currentPart' in state) {
                 this.currentPart(this.getPart(state.currentPart));
             }
+            if('currentExtensionTab' in state) {
+                this.extensionTabs.setTab(state.currentExtensionTab)();
+            }
             Editor.computedReplaceState('currentPart',ko.pureComputed(function() {
                 var p = this.currentPart();
                 if(p) {
@@ -689,6 +702,9 @@ $(document).ready(function() {
                 });
                 return d;
             },this));
+            Editor.computedReplaceState('currentExtensionTab',ko.pureComputed(function() {
+                return q.extensionTabs.currentTab().id;
+            }));
             if('partsTabMode' in state) {
                 this.partsTabMode(state.partsTabMode);
             }
@@ -752,6 +768,11 @@ $(document).ready(function() {
             var vg = new VariableGroup(this,{name:name});
             this.variableGroups.push(vg);
             return vg;
+        },
+
+        addConstant: function() {
+            var c = new Constant(this);
+            this.constants.push(c);
         },
 
         loadPart: function(data) {
@@ -872,7 +893,7 @@ $(document).ready(function() {
             this.questionScope(results.scope);
         },
 
-        baseScope: function() {
+        baseScopeWithoutConstants : function() {
             var jme = Numbas.jme;
             var scope = new jme.Scope(jme.builtinScope);
             var extensions = this.extensions().filter(function(e){return e.used_or_required()});
@@ -882,6 +903,36 @@ $(document).ready(function() {
                     scope = new jme.Scope([scope,Numbas.extensions[extension].scope]);
                 }
             }
+
+            return scope
+        },
+        baseScope: function() {
+            var jme = Numbas.jme;
+            var scope = this.baseScopeWithoutConstants();
+
+            var constants = this.constants().filter(function(c) { return !c.error(); }).map(function(c) {
+                return {
+                    name: c.name(),
+                    value: c.value(),
+                    tex: c.tex()
+                }
+            });
+            var defined_constants = Numbas.jme.variables.makeConstants(constants,scope);
+
+            this.builtin_constants.forEach(function(c) {
+                if(!c.enabled()) {
+                    c.name.split(',').forEach(function(name) {
+                        if(defined_constants.indexOf(jme.normaliseName(name,scope))==-1) {
+                            scope.deleteConstant(name);
+                        }
+                    });
+                }
+            });
+
+            document.body.classList.add('jme-scope');
+            $(document.body).data('jme-scope',scope);
+            $(document.body).data('jme-show-substitutions',true);
+
             return scope;
         },
 
@@ -1212,12 +1263,21 @@ $(document).ready(function() {
 
         remake_json: function() {
             var rulesets = {};
-            this.rulesets().map(function(r){
+            this.rulesets().forEach(function(r){
                 rulesets[r.name()] = r.sets();
             });
 
+            var builtin_constants = {};
+            this.builtin_constants.forEach(function(c) {
+                builtin_constants[c.name] = c.enabled();
+            });
+
+            var constants = this.constants().map(function(c) {
+                return c.toJSON();
+            });
+
             var variables = {};
-            this.variables().map(function(v) {
+            this.variables().forEach(function(v) {
                 variables[v.name()] = v.toJSON();
             });
 
@@ -1226,7 +1286,7 @@ $(document).ready(function() {
             });
 
             var groups = [];
-            this.variableGroups().map(function(g) {
+            this.variableGroups().forEach(function(g) {
                 groups.push({
                     name: g.name(),
                     variables: g.variables().map(function(v){return v.name()})
@@ -1234,7 +1294,7 @@ $(document).ready(function() {
             });
 
             var functions = {};
-            this.functions().map(function(f) {
+            this.functions().forEach(function(f) {
                 functions[f.name()] = f.toJSON();
             });
 
@@ -1246,6 +1306,8 @@ $(document).ready(function() {
                 advice: this.advice(),
                 rulesets: rulesets,
                 extensions: this.extensions().filter(function(e){return e.used()}).map(function(e){return e.location}),
+                builtin_constants: builtin_constants,
+                constants: constants,
                 variables: variables,
                 variablesTest: {
                     condition: this.variablesTest.condition(),
@@ -1306,10 +1368,21 @@ $(document).ready(function() {
 
             tryLoad(contentData,['name','statement','advice','maxMarks'],this);
 
-            if('variables' in contentData)
-            {
-                for(var x in contentData.variables)
-                {
+            if('builtin_constants' in contentData) {
+                this.builtin_constants.forEach(function(c) {
+                    c.enabled(contentData.builtin_constants[c.name] || false);
+                });
+            }
+
+            if('constants' in contentData) {
+                contentData.constants.forEach(function(def) {
+                    var c = new Constant(q,def);
+                    q.constants.push(c);
+                });
+            }
+
+            if('variables' in contentData) {
+                for(var x in contentData.variables) {
                     var v = new Variable(this,contentData.variables[x]);
                     this.variables.push(v);
                 }
@@ -1630,23 +1703,13 @@ $(document).ready(function() {
         }
     }
 
-    function Variable(q,data) {
-        var v = this;
-        this.question = q;
-        this._name = ko.observable('');
-        this.name = ko.pureComputed({
-            read: function() {
-                return this._name().trim();
-            },
-            write: function(v) {
-                return this._name(v);
-            }
-        },this);
-        this.names = ko.pureComputed(function() {
+    function parse_names(v, variablesAccessor,kind) {
+        kind = kind || 'variable';
+        var names = ko.pureComputed(function() {
             var jme = Numbas.jme;
-            var names = this.name().split(/\s*,\s*/);
-            var variables = q.variables();
-            var val = v.value();
+            var variables = ko.unwrap(variablesAccessor);
+            var names = v.name().split(/\s*,\s*/);
+            var val = v.value && v.value();
             if(names.length>1) {
                 if(val && jme.isType(val,'list')) {
                     var values_list = jme.castToType(val,'list');
@@ -1663,28 +1726,24 @@ $(document).ready(function() {
                     for(var i=0;i<variables.length;i++) {
                         var v2 = variables[i];
                         if(v2!=v && v2.name().toLowerCase()==name.toLowerCase()) {
-                            nameError = 'There\'s already a variable with the name '+name+'.';
+                            nameError = 'There\'s already a '+kind+' with the name '+name+'.';
                         }
                     }
 
                     if(!re_name.test(name)) {
-                        return 'The variable name <code>'+name+'</code> is invalid.';
-                    }
-
-                    if(name.toLowerCase() in Numbas.jme.constants) {
-                        return 'The variable name <code>'+name+'</code> is reserved.';
+                        return 'The '+kind+' name <code>'+name+'</code> is invalid.';
                     }
 
                     var tokens = Numbas.jme.tokenise(name);
                     if(tokens.length != 1) {
-                        return 'The variable name <code>'+name+'</code> is invalid.';
+                        return 'The '+kind+' name <code>'+name+'</code> is invalid.';
                     }
                     if(tokens[0].type != 'name') {
-                        return 'The variable name <code>'+name+'</code> is reserved.';
+                        return 'The '+kind+' name <code>'+name+'</code> is reserved.';
                     }
 
                     if(typeof Numbas.jme.builtinScope.getVariable(name) !== 'undefined'){
-                        return 'The variable name <code>'+name+'</code> is reserved.';
+                        return 'The '+kind+' name <code>'+name+'</code> is reserved.';
                     }
                 })();
 
@@ -1701,11 +1760,10 @@ $(document).ready(function() {
 
                 return d;
             });
-        },this);
-        this.group = ko.observable(null);
-        this.random = ko.observable(null);
-        this.nameError = ko.pureComputed(function() {
-            var name_errors = this.names().map(function(nd) {
+        },v);
+
+        var nameError = ko.pureComputed(function() {
+            var name_errors = names().map(function(nd) {
                 var name = nd.name;
                 if(name=='') {
                     return '';
@@ -1713,7 +1771,28 @@ $(document).ready(function() {
                 return nd.nameError || '';
             });
             return name_errors.find(function(x) { return x; }) || '';
+        },v);
+
+        return {names: names, nameError: nameError};
+    }
+
+    function Variable(q,data) {
+        var v = this;
+        this.question = q;
+        this._name = ko.observable('');
+        this.name = ko.pureComputed({
+            read: function() {
+                return this._name().trim();
+            },
+            write: function(v) {
+                return this._name(v);
+            }
         },this);
+        this.group = ko.observable(null);
+        this.random = ko.observable(null);
+        var names = parse_names(this,q.variables,'variable');
+        this.names = names.names;
+        this.nameError = names.nameError;
 
         this.usedInTestCondition = ko.pureComputed(function() {
             var name = this.name();
@@ -2210,6 +2289,50 @@ $(document).ready(function() {
             return v;
         },this);
     }
+
+    function Constant(q,data) {
+        var c = this;
+        this.name = ko.observable('');
+        this.value = ko.observable('');
+        this.tex = ko.observable('');
+
+        var names = parse_names(this,q.variables,'constant');
+        this.names = names.names;
+        this.nameError = names.nameError;
+
+        this.valueError = ko.pureComputed(function() {
+            try {
+                q.baseScopeWithoutConstants().evaluate(this.value());
+            } catch(e) {
+                return e;
+            }
+        },this);
+
+        this.error = ko.pureComputed(function() {
+            return this.nameError() || this.valueError();
+        },this);
+
+        this.remove = function() {
+            q.constants.remove(c);
+        };
+
+        if(data) {
+            this.load(data);
+        }
+    }
+    Constant.prototype = {
+        toJSON: function() {
+            return {
+                name: this.name(),
+                value: this.value(),
+                tex: this.tex()
+            }
+        },
+
+        load: function(data) {
+            tryLoad(data,['name','value','tex'],this);
+        }
+    };
 
     function CustomFunction(q,data) {
         this.name = ko.observable('');

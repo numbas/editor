@@ -13,9 +13,10 @@ $(document).ready(function() {
         return out;
     }
 
-    function texJMEBit(expr,rules,parser) {
+    function texJMEBit(expr,rules,parser,scope) {
         rules = rules || 'basic';
-        var scope = new Numbas.jme.Scope(Numbas.jme.builtinScope);
+        parser = parser || scope.parser || Numbas.jme.standardParser;
+        scope = new Numbas.jme.Scope(scope || Numbas.jme.builtinScope);
         try{
             if(viewModel && viewModel.rulesets) {
                 viewModel.rulesets().map(function(r) {
@@ -32,17 +33,35 @@ $(document).ready(function() {
     }
 
     var currentScope = null;
+    var showSubstitutions = true;
 
     MathJax.Hub.Register.MessageHook("End Math Input",function() {
         currentScope = null;
+        showSubstitutions = true;
     });
+
+    function find_jme_scope(element) {
+        var p = $(element).parents('.jme-scope').first();
+        if(!p) {
+            return {
+                scope: Numbas.jme.builtinScope,
+                showSubstitutions: false
+            }
+        }
+        return {
+            scope: p.data('jme-scope'),
+            showSubstitutions: p.data('jme-show-substitutions') || false
+        };
+    }
 
     MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
 
         var TEX = MathJax.InputJax.TeX;
 
         TEX.prefilterHooks.Add(function(data) {
-            currentScope = $(data.script).parents('.jme-scope').first().data('jme-scope');
+            var d = find_jme_scope(data.script);
+            currentScope = d.scope;
+            showSubstitutions = d.showSubstitutions;
         });
 
         TEX.Definitions.Add({macros: {
@@ -82,7 +101,7 @@ $(document).ready(function() {
             var expr = this.GetArgument(name);
 
             var scope = currentScope;
-            expr = Numbas.jme.subvars(expr,scope);
+            expr = Numbas.jme.subvars(expr,scope,false);
 
             var tex = Numbas.jme.display.exprToLaTeX(expr,rules,scope);
             var mml = TEX.Parse(tex,this.stack.env).mml();
@@ -92,14 +111,14 @@ $(document).ready(function() {
 
         TEX.Parse.Augment({
             JMEvar: function(name) {
-                if(currentScope) {
+                if(currentScope && !showSubstitutions) {
                     JMEvarsub.apply(this,[name]);
                     return;
                 }
                 var rules = this.GetBrackets(name);
                 var expr = this.GetArgument(name);
 
-                var res = texJMEBit(expr,rules);
+                var res = texJMEBit(expr,rules,null,currentScope);
                 expr = res.tex || res.message;
                 var tex = '\\class{jme-var}{\\left\\{'+expr+'\\right\\}}';
                 var mml = TEX.Parse(tex,this.stack.env).mml();
@@ -107,13 +126,13 @@ $(document).ready(function() {
             },
 
             JMEsimplify: function(name) {
-                if(currentScope) {
+                if(currentScope && !showSubstitutions) {
                     JMEsimplifysub.apply(this,[name]);
                     return;
                 }
                 var rules = this.GetBrackets(name);
                 var expr = this.GetArgument(name);
-                var res = texJMEBit(expr,rules);
+                var res = texJMEBit(expr,rules,null,currentScope);
                 expr = res.tex || res.message;
                 var tex = ' \\class{jme-simplify}{\\left\\{'+expr+'\\right\\}}'
                 var mml = TEX.Parse(tex,this.stack.env).mml();
@@ -1922,8 +1941,9 @@ $(document).ready(function() {
             var value = ko.utils.unwrapObservable(valueAccessor());
             var allBindings = allBindingsAccessor();
             var parser = allBindings.parser || Numbas.jme.standardParser;
+            var scope = find_jme_scope(element).scope || Numbas.jme.builtinScope;
             var rules = ko.unwrap(allBindings.rules);
-            var res = texJMEBit(value,rules,parser);
+            var res = texJMEBit(value,rules,parser,scope);
             $(element).toggleClass('jme-error',res.error);
             if(res.error) {
                 $(element).html(res.message);
@@ -1940,6 +1960,17 @@ $(document).ready(function() {
     ko.bindingHandlers.latex = {
         update: function(element,valueAccessor) {
             ko.bindingHandlers.html.update.apply(this,arguments);
+            $(element).mathjax();
+        }
+    }
+
+    ko.bindingHandlers.inline_latex = {
+        update: function(element,valueAccessor) {
+            element.innerHTML = '';
+            var script = document.createElement('script');
+            script.setAttribute('type','math/tex');
+            script.textContent = ko.unwrap(valueAccessor());
+            element.appendChild(script);
             $(element).mathjax();
         }
     }

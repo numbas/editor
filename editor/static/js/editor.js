@@ -4,7 +4,7 @@ if(!window.Editor)
 
 $(document).ready(function() {
 
-    function wrap_subvar(expr) {
+    var wrap_subvar = Editor.wrap_subvar = function(expr) {
         var sbits = Numbas.util.splitbrackets(expr,'{','}');
         var out = '';
         for(var j=0;j<sbits.length;j+=1) {

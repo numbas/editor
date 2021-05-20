@@ -141,7 +141,7 @@ part_types.models = [
             model.displayAnswer = ko.computed(function() {
                 try {
                     var scope = this.scope();
-                    var tree = jme.compile(this.answer());
+                    var tree = jme.compile(Editor.wrap_subvar(this.answer()));
                     tree = scope.expandJuxtapositions(tree, {
                         singleLetterVariables: this.singleLetterVariables(),
                         noUnknownFunctions: !this.allowUnknownFunctions(),

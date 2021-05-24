@@ -4,7 +4,7 @@ from django.db import migrations
 from django.core.management import call_command
 
 def load_fixtures(apps, schema_editor):
-    for fixture in ('abilitylevels', 'subjects-topics', 'taxonomies'):
+    for fixture in ('abilitylevels', 'taxonomies'):
         call_command('loaddata', fixture, app_label='editor') 
 
 def unload_fixtures(apps, schema_editor):

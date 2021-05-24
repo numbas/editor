@@ -1973,13 +1973,7 @@ $(document).ready(function() {
             return this.usedIn().length==0 && this.references().length==0;
         },this);
 
-        var _can_override = ko.observable(false);
-        this.can_override = ko.computed({
-            read: function() {
-                return this.dependencies().length==0 && _can_override();
-            },
-            write: _can_override
-        },this);
+        this.can_override = ko.observable(false);
 
         this.value = ko.observable(null);
         this.error = ko.observable('');

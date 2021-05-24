@@ -65,7 +65,10 @@
             <div class="col-sm-12 col-md-8 col-lg-8 question-group">
                 <!-- ko if: question_view()=='add_question' -->
                 <div class="add-questions">
-                    <h3>Add questions to <strong data-bind="latex: name"></strong></h3>
+                    <h3>
+                        Add a question to <strong data-bind="latex: name"></strong>
+                        <button class="btn btn-sm btn-link" type="button" data-bind="click: cancel_add_questions">Cancel</button>
+                    </h3>
                     <ul class="nav nav-tabs" data-bind="foreach: questionTabs">
                         <li data-bind="css: {active: $root.currentQuestionTab() == $data}">
                             <a href="#" data-bind="click: $root.currentQuestionTab, text: title"></a>
@@ -281,7 +284,7 @@
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="topic-depends-on" class="control-label">Depends on</label>
+                                        <label for="topic-depends-on" class="control-label">← Depends on</label>
                                         <input id="topic-depends-on" type="text" class="form-control" placeholder="Search for a topic" data-bind="autocomplete: dependency_autocomplete, autocompleteSelect: add_dependency, delay: 0">
                                     </div>
 
@@ -295,7 +298,7 @@
                                     </ul>
 
                                     <div class="form-group">
-                                        <label for="topic-leads-to" class="control-label">Leads to</label>
+                                        <label for="topic-leads-to" class="control-label">→ Leads to</label>
                                         <input id="topic-leads-to" type="text" class="form-control" placeholder="Search for a topic" data-bind="autocomplete: leads_to_autocomplete, autocompleteSelect: add_leads_to, delay: 0">
                                     </div>
 
@@ -321,6 +324,8 @@
                                             </div>
                                         </li>
                                     </ul>
+
+                                    <button type="button" class="btn btn-primary">Questions in this topic</button>
                                 </form>
                             </div>
                             

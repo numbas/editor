@@ -9,6 +9,10 @@ $(document).ready(function() {
         this.edit_question_group = function() {
             e.question_view('groups');
         }
+        this.cancel_add_questions = function() {
+            e.question_view('groups');
+        }
+
 
         this.question_groups = ko.observableArray([]);
         this.current_question_group = ko.observable(null);
@@ -716,7 +720,6 @@ $(document).ready(function() {
         this.add_questions = function() {
             qg.exam.question_view('add_question');
         }
-
         this.edit_topic = function() {
             if(!qg.topic()) {
                 return;
@@ -926,13 +929,8 @@ $(document).ready(function() {
             kg.current_topic(t);
             var qg = kg.exam.addQuestionGroup();
             qg.topic(t);
-            this.question_group = qg;
+            t.question_group = qg;
             return t;
-        }
-
-        this.remove_topic = function(t) {
-            kg.topics.remove(t);
-            this.question_group.remove();
         }
 
         this.add_learning_objective = function() {
@@ -1040,6 +1038,7 @@ $(document).ready(function() {
             if(t.graph.current_topic()==t) {
                 t.graph.current_topic(null);
             }
+            t.question_group.remove();
         }
 
         if(data) {

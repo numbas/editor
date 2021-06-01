@@ -518,11 +518,7 @@
             {% booleanproperty 'showanswerstate' 'Show answer state?' help_url='exam/reference.html#term-show-answer-state' %}
             {% booleanproperty 'allowrevealanswer' 'Allow reveal answer?' help_url='exam/reference.html#term-allow-reveal-answer' %}
             {% booleanproperty 'showstudentname' 'Show student\'s name?' help_url='exam/reference.html#term-show-student-s-name' %}
-            <div class="form-group">
-                <label>Pass threshold {% helplink 'exam/reference.html#term-pass-threshold' %}</label>
-                <input {% if not editable %}disabled{% endif %} type="range" min="0" max="100" data-bind="value: percentPass, valueUpdate: 'input'">
-                <span class="percentproperty value" data-bind="text: ko.unwrap(percentPass)+'%'">0%</span>
-            </div>
+            {% percentproperty 'percentPass' 'Pass threshold' help_url='exam/reference.html#term-pass-threshold' %}
 
             <div class="form-group">
                 <label class="{{form_label_class}} control-label">

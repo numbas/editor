@@ -152,12 +152,14 @@
                                     <button type="button" class="delete btn btn-link" data-bind="click:remove, visible: item_json.editable" title="Remove this question from the exam"><span class="glyphicon glyphicon-remove text-danger"></span></button>
                                 </div>
                                 <div class="title">
-                                    <!-- ko if: $root.navigatemode().number_questions -->
-                                    <strong class="number" data-bind="text: number()===undefined ? '' : number()+'.'"></strong>
-                                    <!-- /ko -->
-                                    <!-- ko if: !$root.navigatemode().edit_question_names -->
-                                        <a data-bind="attr:{href: url}, latex: name" target="_blank"></a>
-                                    <!-- /ko -->
+                                    <span>
+                                        <!-- ko if: $root.navigatemode().number_questions -->
+                                            <strong class="number" data-bind="text: number()===undefined ? '' : number()+'.'"></strong>
+                                        <!-- /ko -->
+                                        <!-- ko if: !$root.navigatemode().edit_question_names -->
+                                            <a data-bind="attr:{href: url}, latex: name" target="_blank"></a>
+                                        <!-- /ko -->
+                                    </span>
                                     <!-- ko if: $root.navigatemode().edit_question_names -->
                                         <input class="form-control name" data-bind="textInput: displayName">
                                         <a data-bind="attr:{href: url}" target="_blank" title="Edit this question"><span class="glyphicon glyphicon-pencil"></span></a>

@@ -3,6 +3,12 @@
 Diagnostic mode
 ***************
 
+.. note::
+
+    The diagnostic mode is still in active development.
+    As of June 2021, it has not been used on real students yet.
+    The feature has been made available so that interested users can guide the development of this mode.
+
 The diagnostic mode for exams selects the questions to show to the student based on their respones to previous questions.
 
 Use diagnostic mode for:

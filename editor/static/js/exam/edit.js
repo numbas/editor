@@ -283,7 +283,6 @@ $(document).ready(function() {
         this.diagnostic.scriptOptions = [
             {niceName: 'Diagnosys', name: 'diagnosys'},
             {niceName: 'Mastery', name: 'mastery'},
-            {niceName: 'Duolingo', name: 'duolingo'},
             {niceName: 'Custom', name: 'custom'}
         ];
         this.diagnostic.script = ko.observable(this.diagnostic.scriptOptions[0]);
@@ -559,7 +558,10 @@ $(document).ready(function() {
                 if(this.diagnostic.customScript) {
                     this.diagnostic.extendScript(true);
                 }
-                this.diagnostic.script(this.diagnostic.scriptOptions.find(function(o){return o.name==diagnostic.script}));
+                var script = this.diagnostic.scriptOptions.find(function(o){return o.name==diagnostic.script});
+                if(script) {
+                    this.diagnostic.script(script);
+                }
 
                 graph.topics().forEach(function(t) {
                     var qg = e.question_groups().find(function(qg) { return t.name()==qg.name(); });

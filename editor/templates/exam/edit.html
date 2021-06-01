@@ -441,6 +441,7 @@
 
                     <section data-bind="visible: diagnostic.tabber.currentTab().id=='algorithm'">
                         <form class="form-horizontal" data-bind="submit: Editor.noop">
+                            {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
                             {% selectproperty 'diagnostic.script' 'Diagnostic algorithm' options_text='niceName' options='diagnostic.scriptOptions' help_url='exam/reference.html#term-diagnostic-algorithm' %}
                             {% booleanproperty 'diagnostic.extendScript' 'Extend built-in algorithm?' help_url='exam/reference.html#term-extend-built-in-algorithm' %}
                             <div data-bind="fadeVisible: diagnostic.extendScript()">
@@ -453,6 +454,7 @@
                                 <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: diagnostic.customScript, codemirrorMode: 'jme'"></textarea>
                                 <p class="alert alert-danger" data-bind="html: diagnostic.scriptError, visible: diagnostic.scriptError" aria-live="polite"></p>
                             </div>
+                            {% endwith %}
                         </form>
                     </section>
                 </div>

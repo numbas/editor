@@ -2285,6 +2285,23 @@ Lists
     **Example**:
         * ``filter(x>5,x,[1,3,5,7,9])`` → ``[7,9]``
 
+.. jme:function:: foldl(expression,accumulator_name, item_name, first_value, d)
+
+    Accumulate a value by iterating over a collection.
+    This can be used as an abstraction of routines such as "sum of a list of numbers", or "maximum value in a list".
+
+    Evaluate ``expression`` for each item in the list, range, vector or matrix ``d``, accumulating a single value which is returned.
+
+    At each iteration, the variable ``item_name`` is replaced with the corresponding value from ``d``.
+    The variable ``accumulator_name`` is replaced with ``first_value`` for the first iteration, and the result of ``expression`` from the previous iteration subsequently.
+
+    **Definitions**:
+        * anything, :data:`name`, :data:`name`, anything, anything → unspecified
+
+    **Examples**:
+        * ``foldl(total + x, total, x, 0, [1,2,3])`` → ``6``
+        * ``foldl(if(len(x)>len(longest),x,longest), longest, x, "", ["banana","pineapple","plum"])`` → ``"pineapple"``
+
 .. jme:function:: iterate(expression,name,initial,times)
 
     Iterate an expression on the given initial value the given number of times, returning a list containing the values produced at each step.
@@ -2570,6 +2587,18 @@ Lists
 
     **Example**:
         * ``permutations([1,2,3],2)`` → ``[ [1,2], [1,3], [2,1], [2,3], [3,1], [3,2] ]``
+
+.. jme:function:: frequencies(collection)
+
+    Count the number of times each distinct element of ``collection`` appears.
+
+    Returns a list of pairs ``[value, frequency]``, where ``value`` is a value from the list, and ``frequency`` is the number of times it appeared.
+
+    **Definitions**:
+        * :data:`list` → :data:`list`
+
+    **Example**:
+        * ``frequencies([1,2,3,2,2,1])`` → ``[ [1,2], [2,3], [3,1] ]``
 
 .. jme:function:: enumerate(collection)
 
@@ -3197,6 +3226,18 @@ Once you've got a sub-expression, you can evaluate it to a normal JME data type,
         * ``numerical_compare(expression("x^2"), expression("x*x"))`` → ``true``
         * ``numerical_compare(expression("x^2"), expression("2x"))`` → ``false``
         * ``numerical_compare(expression("x^2"), expression("y^2"))`` → ``false``
+
+.. jme:function:: scope_case_sensitive(expression, case_sensitive)
+
+    Set the case-sensitivity of the scope and then evaluate ``expression``.
+
+    If ``case_sensitive`` is not given, it defaults to ``true``.
+
+    **Definitions**:
+        * :data:`expression`, :data:`bool` → unspecified
+
+    **Example**:
+        * ``scope_case_sensitive(let(x,1,X,2,x+X), true)`` → ``3``
 
 Calculus
 --------

@@ -58,6 +58,61 @@ Any more recent versions should be assumed to work.
 -  iOS (iPhone/iPad) 8.0 with Safari.
 -  Android 5.0 (Lollipop) with Chrome.
 
+Accessibility guide
+-------------------
+
+Page navigation
+~~~~~~~~~~~~~~~
+
+The first link on the page skips to the main content that is currently displayed. 
+During an exam this link goes to the start of the current question's content.
+
+The navigation sidebar contains buttons to move between questions, as well as a score summary, a button to change the display options, and a button to pause the exam, if enabled.
+The final button in the navigation area is labelled :guilabel:`End exam` and will end the exam after a confirmation dialog.
+
+On narrow screens, the navigation sidebar is hidden and instead a smaller navigation bar is shown at the top of the page.
+This contains buttons to move to the previous or next question, an :guilabel:`End exam` button, and a button to show the sidebar, with an icon of three horizontal lines.
+To hide the sidebar again, click anywhere outside the sidebar.
+
+Interacting with a question
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Each question is separated into three areas: introductory "question statement" text, one or more parts, and "Advice", which is only shown when the answers to the parts have been revealed.
+
+The statement text is at the top of the question, followed by a separator.
+There is typically no interactive content in the question statement.
+
+Each question part begins with a level 4 header, then some prompt text, typically followed by an input control to enter your answer.
+Answer inputs can be text boxes, radio buttons, select boxes, or sometimes more complicated interfaces such as interactive diagrams.
+The input control for a part is labelled with the part it corresponds to, for example :guilabel:`Answer to part a`.
+
+When the answer is a mathematical expression, a rendering of your expression in conventional mathematical notation is displayed after the input box.
+This rendering updates immediately whenever your answer changes.
+
+If the answer you have entered is invalid, a box with an explanation of the error is shown next to the input box, as long as the input is focused.
+Screenreaders will read this explanation as soon as it appears.
+
+After the answers to a question have been revealed, there is often a box showing the expected answer after each input.
+
+After the prompt text and input controls is a button labelled :guilabel:`Submit part`.
+Clicking this button causes your answer to be marked.
+You may be shown some immediate feedback after the :guilabel:`Submit part` button, and your score for the part.
+
+You may submit answers as many times as you like.
+
+Some parts are *gap-fills*, with one or more input controls interspersed with the text.
+You can submit the part after filling on only one input, but normally you must enter an answer in every input in order to complete the part.
+
+At the end of the question is a navigation area, containing buttons to submit all the parts in the question, your total score for the question, a button labelled :guilabel:`Try another question like this one`, and a button labelled :guilabel:`Reveal answers`.
+Some of these elements may not be shown, depending on the exam's settings.
+
+The :guilabel:`Try another question like this one` first shows a confirmation dialog, then removes the current question and displays a similar one, starting from scratch.
+
+The :guilabel:`Reveal answers` button also shows a confirmation dialog, then reveals all the expected answers to the parts, and the :guilabel:`Advice` section.
+You may not change your answers to any of the parts after revealing answers.
+
+The Advice section usually contains a worked solution to the whole question.
+
 How to adapt Numbas to your needs
 ---------------------------------
 
@@ -81,7 +136,7 @@ Enlarging images
 ~~~~~~~~~~~~~~~~
 
 You can click on an image to enlarge it to nearly fill the screen.
-Click outside the image or press the Escape key to return to the main interface.
+Click outside the image or press the :kbd:`Escape` key to return to the main interface.
 
 Navigating with a keyboard
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

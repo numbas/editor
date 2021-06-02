@@ -793,6 +793,53 @@
                         </p>
                         {% endif %}
                     </section>
+                    <section class="tab-pane" data-bind="activeIf: ko.unwrap(extensionTabs.currentTab().id)=='constants'">
+                        <h2>Built-in constants</h2>
+                        <div class="help-block">
+                            Tick the built-in constants you wish to include in this question.
+                        </div>
+                        <ul data-bind="foreach: builtin_constants">
+                            <li>
+                                <label>
+                                    <input type="checkbox" data-bind="checked: enabled">
+                                    <code data-bind="text: name"></code> - <span class="help-text" data-bind="latex: description"></span>
+                                </label>
+                            </li>
+                        </ul>
+                        <h2>Custom constants</h2>
+                        <div class="help-block">
+                            You can define constants in terms of the built-in constants, even if they're disabled.
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Names</th>
+                                    <th>Value</th>
+                                    <th>LaTeX</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody data-bind="foreach: constants">
+                                <tr>
+                                    <td>
+                                        {% text_input 'name' monospace=True %}
+                                        <span class="name-error text-danger" data-bind="html: nameError, visible: nameError" aria-live="polite"></span>
+                                    </td>
+                                    <td>
+                                        {% jme_input 'value' %}
+                                    </td>
+                                    <td>
+                                        {% text_input 'tex' monospace=True %}
+                                        <span class="jme-preview" data-bind="inline_latex: tex"></span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-danger" data-bind="click: remove"><span class="glyphicon glyphicon-remove"></span> Delete this constant</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn btn-primary" data-bind="click: addConstant"><span class="glyphicon glyphicon-plus"></span><span data-bind="text: constants().length ? 'Add another constant' : 'Add a constant' "></span></button>
+                    </section>
                     <section class="tab-pane" data-bind="activeIf: ko.unwrap(extensionTabs.currentTab().id)=='preamble'">
                         <p class="help-block">
                             {% helplink 'question/reference.html#preamble' subject='the preamble' %}

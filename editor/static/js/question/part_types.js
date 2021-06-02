@@ -128,15 +128,21 @@ part_types.models = [
                 checkVariableNames: ko.observable(false),
                 singleLetterVariables: ko.observable(false),
                 allowUnknownFunctions: ko.observable(true),
-                implicitFunctionComposition: ko.observable(false)
+                implicitFunctionComposition: ko.observable(false),
+                caseSensitive: ko.observable(false)
             };
             model.checkingType = ko.observable(model.checkingTypes[0]);
             model.part = part;
 
+            model.scope = ko.computed(function() {
+                return new Numbas.jme.Scope([part.scope(),{caseSensitive: this.caseSensitive()}]);
+            },model);
+
             model.displayAnswer = ko.computed(function() {
                 try {
-                    var tree = jme.compile(this.answer());
-                    tree = jme.builtinScope.expandJuxtapositions(tree, {
+                    var scope = this.scope();
+                    var tree = jme.compile(Editor.wrap_subvar(this.answer()));
+                    tree = scope.expandJuxtapositions(tree, {
                         singleLetterVariables: this.singleLetterVariables(),
                         noUnknownFunctions: !this.allowUnknownFunctions(),
                         implicitFunctionComposition: this.implicitFunctionComposition()
@@ -158,13 +164,14 @@ part_types.models = [
 
             model.variableNames = ko.computed(function() {
                 try {
+                    var scope = this.scope();
                     var bits = Numbas.util.splitbrackets(this.answer(),'{','}','(',')');
                     for(var i=1;i<bits.length;i+=2) {
                         bits[i] = '1';
                     }
                     var correctAnswer = bits.join('');
                     var answer = jme.compile(correctAnswer);
-                    var names = jme.findvars(answer);
+                    var names = jme.findvars(answer,[],scope);
                     return names.sort();
                 } catch(e) {
                     return [];
@@ -229,6 +236,7 @@ part_types.models = [
             data.singleLetterVariables = this.singleLetterVariables();
             data.allowUnknownFunctions = this.allowUnknownFunctions();
             data.implicitFunctionComposition = this.implicitFunctionComposition();
+            data.caseSensitive = this.caseSensitive();
             if(this.maxlength.length())
             {
                 data.maxlength = {
@@ -289,7 +297,7 @@ part_types.models = [
         },
 
         load: function(data) {
-            tryLoad(data,['answer','answerSimplification','checkVariableNames','singleLetterVariables','allowUnknownFunctions','implicitFunctionComposition','showPreview'],this);
+            tryLoad(data,['answer','answerSimplification','checkVariableNames','singleLetterVariables','allowUnknownFunctions','implicitFunctionComposition','caseSensitive','showPreview'],this);
             var checkingType = tryGetAttribute(data,'checkingType');
             for(var i=0;i<this.checkingTypes.length;i++) {
                 if(this.checkingTypes[i].name == checkingType)

@@ -496,7 +496,8 @@
                     <tr>
                         <td><select {% if not editable %}disabled{% endif %} class="form-control name-to-replace" data-bind="options: variableDisplay, value: variable"/></td>
                         <td>
-                            <select {% if not editable %}disabled{% endif %} class="form-control replace-with" data-bind="options: availableParts, optionsText: 'name', optionsValue: 'path', value: replacement"/>
+                            <select {% if not editable %}disabled{% endif %} class="form-control replace-with" data-bind="options: availableParts, optionsText: 'name', optionsValue: 'path', value: replacement"></select>
+                            <div class="alert alert-warning" data-bind="fadeVisible: variableWarning, text: variableWarning"></div>
                         </td>
                         <td>
                             <input {% if not editable %}disabled{% endif %} type="checkbox" data-bind="checked: must_go_first"/>

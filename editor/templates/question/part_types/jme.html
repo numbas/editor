@@ -19,6 +19,7 @@
     <hr>
     {% property 'answerSimplification' 'Answer simplification rules' monospace=True help_url='question/parts/mathematical-expression.html#term-answer-simplification-rules' %}
     {% booleanproperty 'showPreview' 'Show preview of student\'s answer?' help_url='question/parts/mathematical-expression.html#term-show-preview-of-student-s-answer' %}
+    {% booleanproperty 'caseSensitive' 'Expression is case-sensitive?' help_url='question/parts/mathematical-expression.html#term-expression-is-case-sensitive' %}
 </form>
 </section>
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='checking-accuracy'}">

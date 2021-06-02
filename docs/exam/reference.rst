@@ -208,6 +208,8 @@ Timing
     5 minutes before timeout (event)
         If set to :guilabel:`Warn`, the given message is displayed five minutes before the student runs out of time.
 
+.. _exam-feedback:
+
 Feedback
 ========
 

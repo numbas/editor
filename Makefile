@@ -47,10 +47,6 @@ endef
 define MARKING_END
 
     };
-	Numbas.marking_scripts = {};
-    for(var x in Numbas.raw_marking_scripts) {
-        Numbas.marking_scripts[x] = new Numbas.marking.MarkingScript(Numbas.raw_marking_scripts[x]);
-    }
 });
 endef
 export MARKING_INTRO

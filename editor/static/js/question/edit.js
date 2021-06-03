@@ -3218,7 +3218,6 @@ $(document).ready(function() {
             });
         },this);
         this.variableWarning = ko.computed(function() {
-            console.log('AAAAA');
             var name = this.variable();
             if(!name) {
                 return;

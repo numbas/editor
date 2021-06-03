@@ -85,7 +85,7 @@ $(document).ready(function() {
             try {
                 var v = Numbas.jme.evaluate(Numbas.jme.compile(expr,scope),scope);
 
-                var tex = Numbas.jme.display.texify({tok: v},settings);
+                var tex = Numbas.jme.display.texify({tok: v},settings,scope);
             }catch(e) {
                 throw(new Numbas.Error('mathjax.math processing error',{message:e.message,expression:expr}));
             }

@@ -373,7 +373,7 @@ The advice area is normally used to present a worked solution to the question.
 Extensions & scripts
 ====================
 
-This tab contains tools to change the behaviour of your question, using pre-built extensions or by adding custom JME functions and JavaScript.
+This tab contains tools to change the behaviour of your question, using pre-built extensions, redefining constants, or by adding custom JME functions and JavaScript.
 
 Extensions
 -----------
@@ -390,6 +390,48 @@ Extensions
 To use an extension in your question, tick its checkbox here. 
 All functionality provided by the extension will become available immediately.
 See the section on :ref:`extensions <extensions>`.
+
+.. _question-constants:
+
+Constants
+---------
+
+.. image:: images/constants.png
+   :alt: The constants editor. A list of built-in constants, and then some custom constants.
+
+.. admonition:: Motivation
+
+    The meaning of some symbols differs depending on the context you're working.
+    Numbas has some built-in constants, such as :math:`\pi` and :math:`i` for the circle constant and the imaginary unit, respectively.
+    You can disable the built-in constants, override them with different values, or define new constant symbols.
+
+    Common alternate notations for constants include :math:`j` for the imaginary unit and :math:`\tau = 2\pi` for the circle constant.
+
+Constants in JME expressions are replaced with their values when evaluating, and rendered using their particular symbols in LaTeX.
+
+Constants defined in this tab are available throughout the whole question, including variable definitions and student answers to :ref:`mathematical expression <mathematical-expression>` parts.
+
+There are some built-in constants.
+Untick any that you don't want to use - the corresponding symbols will be treated as free variables unless you define a new constant with the same symbol.
+
+Under :guilabel:`Custom constants`, click the :guilabel:`Add a constant` button to define a new constant.
+
+The :guilabel:`Names` field should contain a comma-separated list of :ref:`JME variable names <variable-names>` that can be used to refer to the constant.
+
+The :guilabel:`Value` field should contain a :ref:`JME <jme>` expression giving the value of the constant.
+You can refer to the built-in constants in this expression, even if you have disabled them.
+
+The :guilabel:`LaTeX` field should contain some LaTeX code that is used to represent the constant.
+
+When a JME expression is rendered as LaTeX, any values equal to a defined constant are rendered using that constant's LaTeX code.
+
+There are some 'common constants': the circle constant, the imaginary unit, the base of the natural logarithm, and infinity.
+
+Any constant equal to :math:`k\pi` or :math:`\frac{1}{k}\pi`, where :math:`k \in \mathbb{N}`, will be used as the circle constant.
+
+The imaginary unit, :math:`\sqrt{-1}`, is used when rendering complex numbers.
+
+The base of the natural logarithm, :math:`e = 2.71828 \ldots`, is used when rendering exponentials.
 
 Functions
 ---------

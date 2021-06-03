@@ -33,9 +33,6 @@ The first character of a variable name must be an alphabet letter; after that, a
     * ``row1val2``
     * ``y''``
 
-``e``, ``i`` and ``pi`` are reserved names representing mathematical constants.
-They are rewritten by the interpreter to their respective numerical values before evaluation.
-
 This screencast describes which variable names are valid, and gives some advice on how you should pick names:
 
 .. raw:: html
@@ -83,6 +80,8 @@ There are also some built-in constants which are interpreted as number values:
 * ``i`` - the square root of -1;
 * ``infinity``, ``infty`` or ``∞`` - infinity;
 * ``nan`` - "Not a number", sometimes returned by JavaScript functions.
+
+You can disable, override or define new constants in the question editor's :ref:`question-constants` tab.
 
 Grouped terms
 -------------
@@ -2267,9 +2266,6 @@ Lists
     You can also give a list of names if each element of ``d`` is a list of values.
     The Nth element of the list will be mapped to the Nth name.
 
-    .. note::
-        Do not use ``i`` or ``e`` as the variable name to map over - they're already defined as mathematical constants!
-
     **Definitions**:
         * anything, :data:`name` or :data:`list of name`, anything → :data:`list`
 
@@ -2283,9 +2279,6 @@ Lists
 .. jme:function:: filter(expression,name,d)
 
     Filter each item in list or range ``d``, replacing variable ``name`` with the element from ``d`` each time, returning only the elements for which ``expression`` evaluates to ``true``.
-
-    .. note::
-        Do not use ``i`` or ``e`` as the variable name to map over - they're already defined as mathematical constants!
 
     **Definitions**:
         * anything, :data:`name`, anything → :data:`list`
@@ -2349,9 +2342,6 @@ Lists
 
     This operation is lazy - once ``n`` elements satisfying the expression have been found, execution stops.
     You can use this to filter a few elements from a large list, where the condition might take a long time to calculate.
-
-    .. note::
-        Do not use ``i`` or ``e`` as the variable name to map over - they're already defined as mathematical constants!
 
     **Definitions**:
         * :data:`number`, anything, :data:`name`, anything → :data:`list`

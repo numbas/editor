@@ -170,6 +170,14 @@ For example, this tag will have its ``class`` attribute set to the value of the 
 See `this example question <https://numbas.mathcentre.ac.uk/question/18650/set-an-html-element-s-attributes-based-on-a-question-variable/>`__.
 
 
+********
+Notation
+********
+
+Use :math:`j` as the imaginary unit
+-----------------------------------
+
+In the :ref:`question-constants` tab of the question editor, turn off ``i``, and define a new constant with :guilabel:`Name` ``j``, :guilabel:`Value` ``sqrt(-1)`` and :guilabel:`LaTeX` ``j``.
 
 *************
 Question text

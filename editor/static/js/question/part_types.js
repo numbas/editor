@@ -11,7 +11,8 @@ part_types.models = [
     {
         name: 'extension', 
         niceName: 'Extension',
-        has_marks: true
+        has_marks: true,
+        has_marking_settings: true
     },
     {
         name: 'gapfill', 

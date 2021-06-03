@@ -93,12 +93,7 @@ You can use every question selected, or pick a random subset each time the exam 
     Number of questions to choose
         If using the "Pick a random subset" strategy, this many questions from this group will be shown to the student.
 
-    Pass threshold
-        Define a pass/fail threshold for the student's total score, as a percentage of the available marks.
-        The pass/fail message will be displayed when the student ends the exam. 
-        If this is set to zero, then no message is displayed.
-
-The tabs on the right hand side offer different ways of finding questions to add to the exam.
+Click :guilabel:`Add a question to this group` to add a question to the current group.
 
 * The :guilabel:`Basket` tab shows questions you've added to your basket: you can browse the question editor to find questions, add them to your basket, and then go back to the exam editing page and add them in.
 * The :guilabel:`Recent questions` tab shows questions you have recently edited.
@@ -114,6 +109,9 @@ You can drag and drop questions in the list on the left to reorder them, or move
 
 The :guilabel:`Replace this question with a copy` lets you quickly swap in a duplicate of a question you've included in your exam. 
 If you're using a question created by someone else, this is a convenient way of getting a version of the question you can make changes to.
+
+If the question has any :term:`variables whose values can be overridden <Can an exam override the value of this variable?>`, then you can give values for those variables here.
+The :guilabel:`Value` field should contain a :ref:`JME` expression for the desired value of the variable.
 
 .. note:: 
 
@@ -230,6 +228,11 @@ Feedback
     Show student's name?
         If ticked, the student's name is shown on the results page after the exam has finished.
         The student's name is only available when running the exam through a VLE - exams run standalone do not know the student's name.
+
+    Pass threshold
+        Define a pass/fail threshold for the student's total score, as a percentage of the available marks.
+        The pass/fail message will be displayed when the student ends the exam. 
+        If this is set to zero, then no message is displayed.
 
     Introduction
         This text is shown to the student on the front page, before the exam starts. 

@@ -285,6 +285,9 @@ Definition
             Don't underestimate the value of the description field!
             Variables whose meaning seems clear when you write them have a habit of becoming indecipherable months later.
 
+    Can an exam override the value of this variable?
+        If this is ticked, then when an exam uses this question the author can override the value of this variable with their own choice.
+
     Depends on
         A list of all variables used in this variable's definition. 
         You can click on a variable name to go to its definition.

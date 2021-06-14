@@ -48,6 +48,7 @@ $(document).ready(function() {
         });
 
         this.showQuestionGroupNames = ko.observable(false);
+        this.shuffleQuestionGroups = ko.observable(false);
 
         this.shuffleQuestions = ko.observable(false);
         var tickAllQuestions = ko.observable(true);
@@ -425,6 +426,7 @@ $(document).ready(function() {
                 duration: this.duration()*60,
                 percentPass: this.percentPass(),
                 showQuestionGroupNames: this.showQuestionGroupNames(),
+                shuffleQuestionGroups: this.shuffleQuestionGroups(),
                 showstudentname: this.showstudentname(),
                 question_groups: this.question_groups().map(function(qg) { return qg.toJSON() }),
                 allowPrinting: this.allowPrinting(),
@@ -478,7 +480,7 @@ $(document).ready(function() {
 
             this.project_id = data.project_id;
 
-            tryLoad(content,['name','percentPass','shuffleQuestions','allQuestions','pickQuestions','showQuestionGroupNames','showstudentname','allowPrinting'],this);
+            tryLoad(content,['name','percentPass','shuffleQuestions','allQuestions','pickQuestions','showQuestionGroupNames','shuffleQuestionGroups','showstudentname','allowPrinting'],this);
             this.duration((content.duration||0)/60);
 
             if('navigation' in content) {

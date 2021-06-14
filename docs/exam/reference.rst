@@ -82,6 +82,9 @@ You can use every question selected, or pick a random subset each time the exam 
     Show group names to student?
         If this is ticked, the names you give to each group of questions will be shown to the student in the navigation menu when they run the exam, and in the score breakdown at the end of the exam.
 
+    Shuffle question groups?
+        If this is ticked, the question groups will be shown to the student in a random order.
+
     Questions to use
         The strategy for picking questions to show to the student.
 

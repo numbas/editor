@@ -213,6 +213,9 @@
                         <form class="form-horizontal" data-bind="submit: Editor.noop">
                             {% with form_label_class='col-sm-8' form_control_class='col-sm-4' %}
                                 {% booleanproperty 'showQuestionGroupNames' 'Show group names to student?' help_url='exam/reference.html#term-show-group-names-to-student' %}
+                                <div data-bind="visible: question_groups().length>1">
+                                    {% booleanproperty 'shuffleQuestionGroups' 'Shuffle question groups?' help_url='exam/reference.html#term-shuffle-question-groups' %}
+                                </div>
                             {% endwith %}
                         </form>
                     </div>

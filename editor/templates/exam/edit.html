@@ -447,8 +447,8 @@
                     <section data-bind="visible: diagnostic.tabber.currentTab().id=='algorithm'">
                         <form class="form-horizontal" data-bind="submit: Editor.noop">
                             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
-                            {% selectproperty 'diagnostic.script' 'Diagnostic algorithm' options_text='niceName' options='diagnostic.scriptOptions' help_url='exam/reference.html#term-diagnostic-algorithm' %}
-                            {% booleanproperty 'diagnostic.extendScript' 'Extend built-in algorithm?' help_url='exam/reference.html#term-extend-built-in-algorithm' %}
+                            {% selectproperty 'diagnostic.script' 'Diagnostic algorithm' options_text='niceName' options='diagnostic.scriptOptions' help_url='exam/diagnostic.html#diagnostic-algorithms' %}
+                            {% booleanproperty 'diagnostic.extendScript' 'Extend built-in algorithm?' help_url='exam/diagnostic.html#diagnostic-algorithms' %}
                             <div data-bind="fadeVisible: diagnostic.extendScript()">
                                 <div class="base-diagnostic-algorithm" data-bind="fadeVisible: diagnostic.extendScript() && diagnostic.baseScript()">
                                     <h5>Base diagnostic algorithm</h5>

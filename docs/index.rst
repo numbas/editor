@@ -21,6 +21,7 @@ If you have any questions, please `email us <mailto:numbas@ncl.ac.uk>`_ or join 
 
     what-do-i-need
     accessibility/index
+    licensing
 
 .. toctree::
     :caption: Getting Started

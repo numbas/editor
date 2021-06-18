@@ -26,8 +26,10 @@
         {% booleanproperty 'allowFractions' 'Allow the student to enter a fraction?' help_url='question/parts/numberentry.html#term-allow-the-student-to-enter-a-fraction' %}
     </div>
     <div data-bind="fadeVisible: allowFractions">
+        <div data-bind="fadeVisible: fractionPossible">
         {% booleanproperty 'mustBeReduced' 'Must the fraction be reduced?' help_url='question/parts/numberentry.html#term-must-the-fraction-be-reduced' %}
         {% booleanproperty 'showFractionHint' 'Show fraction input hint?' help_url='question/parts/numberentry.html#term-show-fraction-input-hint' %}
+        </div>
         <div data-bind="fadeVisible: mustBeReduced">
             {% percentproperty 'mustBeReducedPC' 'Partial credit for unreduced fraction' %}
         </div>

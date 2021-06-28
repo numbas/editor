@@ -901,8 +901,17 @@ $(document).ready(function() {
                 return 'This name is invalid.';
             }
 
-            if(name in Numbas.jme.constants || marking_reserved_names.contains(name)) {
-                return 'This name is reserved.';
+
+            var tokens = Numbas.jme.tokenise(name);
+            if(tokens.length != 1) {
+                return 'The name <code>'+name+'</code> is invalid.';
+            }
+            if(tokens[0].type != 'name') {
+                return 'The name <code>'+name+'</code> is reserved.';
+            }
+
+            if(typeof Numbas.jme.builtinScope.getVariable(name) !== 'undefined'){
+                return 'The name <code>'+name+'</code> is reserved.';
             }
 
             return '';

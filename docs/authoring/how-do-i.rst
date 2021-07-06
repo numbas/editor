@@ -409,7 +409,7 @@ See `this example question <https://numbas.mathcentre.ac.uk/question/20932/rando
 Generate a random number excluding some number
 ----------------------------------------------
 
-Suppose you want to generate a random number from a range, excluding some number in the range. Use the 'random' function with the 'except' operator. In this example, we generate a random positive or negative number in the range -5 to 5::
+Suppose you want to generate a random number from a range, excluding some number in the range. Use the :jme:func:`random` function with the :jme:func:`except` operator. In this example, we generate a random positive or negative number in the range -5 to 5 by excluding 0 from a range::
 
     random(-5..5 except 0)
 

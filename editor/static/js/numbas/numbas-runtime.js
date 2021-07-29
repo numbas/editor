@@ -8226,7 +8226,7 @@ var texOps = jme.display.texOps = {
     }),
     'set': function(tree,texArgs) {
         if(tree.args.length==1 && tree.args[0].tok.type=='list') {
-            return '\\left\\{ '+this.render(tree.args[0])+' \\right\\}';
+            return '\\left\\{ '+this.render({tok: tree.args[0]})+' \\right\\}';
         } else {
             return '\\left\\{ '+texArgs.join(', ')+' \\right\\}';
         }
@@ -8460,7 +8460,7 @@ var typeToTeX = jme.display.typeToTeX = {
     set: function(tree,tok,texArgs) {
         texArgs = [];
         for(var i=0;i<tok.value.length;i++) {
-            texArgs.push(this.render(tok.value[i]));
+            texArgs.push(this.render({tok: tok.value[i]}));
         }
         return '\\left\\{ '+texArgs.join(', ')+' \\right\\}';
     },
@@ -11965,6 +11965,16 @@ jme.variables = /** @lends Numbas.jme.variables */ {
      */
     makeJMEFunction: function(fn,scope) {
         fn.tree = jme.compile(fn.definition,scope,true);
+        var external_vars = jme.findvars(fn.tree,[],scope);
+        if(external_vars.length>0) {
+            jme.findvarsOps[fn.name] = function(tree,boundvars,scope) {
+                var vars = external_vars.slice();
+                for(var i=0;i<tree.args.length;i++) {
+                    vars = vars.merge(jme.findvars(tree.args[i],boundvars,scope));
+                }
+                return vars;
+            }
+        }
         return function(args,scope) {
             var oscope = scope;
             scope = new jme.Scope(scope);

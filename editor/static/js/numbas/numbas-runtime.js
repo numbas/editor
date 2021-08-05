@@ -2111,10 +2111,14 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
     /** Set the given constant name.
      *
      * @param {string} name
-     * @param {Numbas.jme.constant_data} data
+     * @param {Numbas.jme.constant_definition} data
      */
     setConstant: function(name, data) {
-        data.name = name;
+        data = {
+            name: name,
+            value: data.value,
+            tex: data.tex
+        };
         name = jme.normaliseName(name, this);
         this.constants[name] = data;
         this.deleted.constants[name] = false;
@@ -5902,6 +5906,14 @@ newBuiltin('random',[TList],'?',null, {
 newBuiltin( 'random',['*?'],'?', null, {
     random:true,
     evaluate: function(args,scope) { return math.choose(args);}
+});
+newBuiltin('weighted_random',[sig.listof(sig.list(sig.anything(),sig.type('number')))],'?',null, {
+    evaluate: function(args,scope) {
+        var items = args[0].value.map(function(item) {
+            return [item.value[0], Numbas.jme.unwrapValue(item.value[1])];
+        });
+        return math.weighted_random(items);
+    }
 });
 newBuiltin('mod', [TNum,TNum], TNum, math.mod );
 newBuiltin('max', [TNum,TNum], TNum, math.max );
@@ -15534,13 +15546,13 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             builtin: [],
             custom: []
         };
-        var builtin_constants = tryGet(data,'builtin_constants');
+        var builtin_constants = tryGet(data,'builtin_constants') || [];
         if(builtin_constants) {
             q.constantsTodo.builtin = Object.entries(builtin_constants).map(function(d){ 
                 return {name: d[0], enable: d[1]};
             });
         }
-        q.constantsTodo.custom = tryGet(data,'constants');
+        q.constantsTodo.custom = tryGet(data,'constants') || [];
         q.signals.trigger('constantsLoaded');
 
         var functions = tryGet(data,'functions');
@@ -18984,6 +18996,31 @@ var math = Numbas.math = /** @lends Numbas.math */ {
             throw(new Numbas.Error('math.choose.empty selection'));
         var n = Math.floor(math.randomrange(0,selection.length));
         return selection[n];
+    },
+    /** Choose at random from a weighted list of items.
+     * 
+     * @param {Array} list - A list of pairs of the form `[item, probability]`, where `probability` is a number.
+     * @returns {*}
+     * @throws {Numbas.Error} "math.choose.empty selection" if `selection` has length 0.
+    */
+    weighted_random: function(list) {
+        var total = 0;
+        for (var i = 0; i < list.length; i++) {
+            var p = list[i][1];
+            total += p > 0 ? p : 0;
+        }
+        if(total==0) {
+            throw(new Numbas.Error('math.choose.empty selection'));
+        }
+        var target = Math.random() * total;
+        var acc = 0;
+        for (var i = 0; i < list.length; i++) {
+            var p = list[i][1];
+            acc += p > 0 ? p : 0;
+            if(acc >= target) {
+                return list[i][0];
+            }
+        }
     },
     /* Product of the numbers in the range `[a..b]`, i.e. $frac{a!}{b!}$.
      *

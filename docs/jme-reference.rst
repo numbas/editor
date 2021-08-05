@@ -2766,6 +2766,19 @@ Randomisation
         * ``random([1,2,4])``
         * ``random(1,2,3)``
 
+.. jme:function:: weighted_random(x)
+
+    Pick random from a weighted list of items.
+    Each element in the input list is a pair of the form ``[item, probability]``, where ``probability`` is a :data:`number` value.
+
+    Items with negative weight are ignored.
+
+    **Definitions**:
+        * :data:`list` of [anything, :data:`number`] → unspecified
+
+    **Examples**:
+        * ``weighted_random([ ["a", 1], ["b", 2], ["c", 0.5] ])``
+
 .. jme:function:: deal(n)
 
     Get a random shuffling of the integers :math:`[0 \dots n-1]`

@@ -579,6 +579,7 @@ Number operations
 
 .. jme:function:: decimal(n)
                   decimal(x)
+                  dec(x)
 
     Construct a :data:`decimal` value.
     Any string accepted by `Decimal.js <https://github.com/MikeMcl/decimal.js/>`_ is accepted.

@@ -552,7 +552,7 @@ Arithmetic
 
     Exponentiation.
 
-    ``exp(x)`` is a synoynm for ``e^x``.
+    ``exp(x)`` is a synonym for ``e^x``.
 
     **Definitions**:
         * :data:`number`, :data:`number` → :data:`number`
@@ -1243,7 +1243,7 @@ Number theory
     Factorial.
     When ``x`` is not an integer, :math:`\Gamma(x+1)` is used instead.
 
-    ``fact(x)`` is a synoynm for ``x!``.
+    ``fact(x)`` is a synonym for ``x!``.
 
     **Definitions**:
         * :data:`number` → :data:`number`

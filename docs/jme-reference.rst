@@ -589,7 +589,7 @@ Number operations
 
 .. jme:function:: rational(n)
 
-    Convert ``n`` to a rational nubmer, taking an approximation when necessary.
+    Convert ``n`` to a rational number, taking an approximation when necessary.
 
     **Definition**:
         * :data:`number` → :data:`rational`

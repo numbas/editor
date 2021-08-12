@@ -552,7 +552,7 @@ Arithmetic
 
     Exponentiation.
 
-    ``exp(x)`` is a synoynm for ``e^x``.
+    ``exp(x)`` is a synonym for ``e^x``.
 
     **Definitions**:
         * :data:`number`, :data:`number` → :data:`number`
@@ -590,7 +590,7 @@ Number operations
 
 .. jme:function:: rational(n)
 
-    Convert ``n`` to a rational nubmer, taking an approximation when necessary.
+    Convert ``n`` to a rational number, taking an approximation when necessary.
 
     **Definition**:
         * :data:`number` → :data:`rational`
@@ -1244,7 +1244,7 @@ Number theory
     Factorial.
     When ``x`` is not an integer, :math:`\Gamma(x+1)` is used instead.
 
-    ``fact(x)`` is a synoynm for ``x!``.
+    ``fact(x)`` is a synonym for ``x!``.
 
     **Definitions**:
         * :data:`number` → :data:`number`

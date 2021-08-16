@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+
+{% load humanize %}
+{% load user_link %}
+{% load sanitizer %}
+{% load sstatic %}
+{% load human_list %}
+
+{% block title %}Objects with the features "{{features|human_list}}" - {{block.super}}{% endblock %}
+
+{% block stylesheets %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% sstatic 'css/explore.css' %}"/>
+{% endblock stylesheets %}
+
+{% block content %}
+<h1>Objects with the features <em>{{features|human_list}}</em></h1>
+<ul>
+    {% for obj in objects %}
+    <li>
+        <a href="{{obj.get_absolute_url}}">{{obj}}</a>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock content %}
+

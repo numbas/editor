@@ -1,8 +1,9 @@
 from django.urls import path
 
-from .views import FeaturesView, FeatureView
+from .import views
 
 urlpatterns = [
-    path('', FeaturesView.as_view(), name='all_features'),
-    path('view', FeatureView.as_view(), name='view_feature'),
+    path('', views.FeaturesView.as_view(), name='all_features'),
+    path('view', views.FeatureView.as_view(), name='view_feature'),
+    path('view_intersection', views.IntersectFeaturesView.as_view(), name='intersect_features'),
 ]

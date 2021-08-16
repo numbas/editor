@@ -41,3 +41,32 @@ class FeatureView(MustBeSuperuserMixin,generic.ListView):
 
         return context
 
+class IntersectFeaturesView(MustBeSuperuserMixin,generic.TemplateView):
+    template_name = 'feature_survey/intersection.html'
+
+    def get_objects(self):
+        features = self.features
+        content_types = Feature.objects.filter(feature__in=features).values_list('object_content_type',flat=True).distinct()
+        found = []
+        for ct_pk in content_types:
+            ct = ContentType.objects.get(pk=ct_pk)
+            model = ct.model_class()
+            objects = model.objects.all()
+
+            for f in features:
+                objects = objects.filter(pk__in=Feature.objects.filter(feature=f,object_content_type=ct).values('object_id'))
+
+            found += objects
+            
+        self.objects = found
+        return found
+
+    def get_context_data(self,*args,**kwargs):
+        context = super().get_context_data(*args,**kwargs)
+
+        self.features = context['features'] = self.request.GET.getlist('features')
+
+        context['objects'] = self.get_objects()
+
+        return context
+

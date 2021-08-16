@@ -1,0 +1,12 @@
+#feature-form {
+  display: grid;
+  grid-template-columns: 10em auto;
+  height: 70vh;
+}
+
+#submit {
+  align-self: start;
+}
+#features {
+  overflow-y: auto;
+}

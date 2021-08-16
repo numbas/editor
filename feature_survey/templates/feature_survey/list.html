@@ -9,20 +9,23 @@
 
 {% block stylesheets %}
     {{ block.super }}
-    <link rel="stylesheet" type="text/css" href="{% sstatic 'css/explore.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% sstatic 'feature_survey/css/list.css' %}"/>
 {% endblock stylesheets %}
 
 {% block content %}
-<ul>
-    {% for kind, features in groups %}
-        <h2>{{kind|capfirst}}</h2>
-        <ul>
-            {% for f in features %}
-                <li>
-                    <a href="{% url 'view_feature' %}?feature={{f.feature|urlencode}}">{{f.feature}}</a> ({{f.freq}})
-                </li>
-            {% endfor %}
-        </ul>
-    {% endfor %}
-</ul>
+<form id="feature-form" method="GET" action="{% url 'intersect_features' %}">
+    <button id="submit" type="submit">Show objects with these features</button>
+    <ul id="features">
+        {% for kind, features in groups %}
+            <h2>{{kind|capfirst}}</h2>
+            <ul>
+                {% for f in features %}
+                    <li>
+                        <label><input type="checkbox" name="features" value="{{f.feature}}"> {{f.feature}} ({{f.freq}})</label>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endfor %}
+    </ul>
+</form>
 {% endblock content %}

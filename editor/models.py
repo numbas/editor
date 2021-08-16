@@ -763,7 +763,7 @@ class CustomPartType(models.Model, ControlledObject):
     public_availability = models.CharField(max_length=10, choices=CUSTOM_PART_TYPE_PUBLIC_CHOICES, verbose_name='Public availability', default='restricted')
     ready_to_use = models.BooleanField(default=False, verbose_name='Ready to use?')
     copy_of = models.ForeignKey('self', null=True, related_name='copies', on_delete=models.SET_NULL)
-    extensions = models.ManyToManyField(Extension, blank=True)
+    extensions = models.ManyToManyField(Extension, blank=True, related_name='custom_part_types')
 
     def copy(self, author, name):
         new_type = CustomPartType.objects.get(pk=self.pk)
@@ -1686,8 +1686,8 @@ def create_timelineitem(sender, instance, created, **kwargs):
 class NewQuestion(models.Model):
     editoritem = models.OneToOneField(EditorItem, on_delete=models.CASCADE, related_name='question')
 
-    resources = models.ManyToManyField(Resource, blank=True)
-    extensions = models.ManyToManyField(Extension, blank=True)
+    resources = models.ManyToManyField(Resource, blank=True, related_name='questions')
+    extensions = models.ManyToManyField(Extension, blank=True, related_name='questions')
     custom_part_types = models.ManyToManyField(CustomPartType, blank=True, related_name='questions')
 
     theme_path = os.path.join(settings.GLOBAL_SETTINGS['NUMBAS_PATH'], 'themes', 'question')

@@ -251,14 +251,6 @@ def has_ability_levels(e):
     return e.ability_levels.exists()
 
 @editoritem_question
-def has_subjects(e):
-    return e.subjects.exists()
-
-@editoritem_question
-def has_topics(e):
-    return e.topics.exists()
-
-@editoritem_question
 def has_taxonomy_nodes(e):
     return e.taxonomy_nodes.exists()
 
@@ -441,7 +433,7 @@ class Command(BaseCommand):
 
             editoritems = EditorItem.objects.filter(q).distinct()
 
-        editoritems = editoritems.prefetch_related('comments','access_rights','licence','current_stamp','ability_levels','subjects','topics','taxonomy_nodes','restore_points')
+        editoritems = editoritems.prefetch_related('comments','access_rights','licence','current_stamp','ability_levels','taxonomy_nodes','restore_points')
 
         return editoritems
 

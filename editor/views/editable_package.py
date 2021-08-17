@@ -29,7 +29,7 @@ class ShowPackageFilesMixin:
         context['upload_file_form'] = self.upload_file_form_class(instance=self.get_object())
         return context
 
-class UpdateView(ShowPackageFilesMixin,AuthorRequiredMixin, generic.UpdateView):
+class UpdateView(ShowPackageFilesMixin, CanEditMixin, generic.UpdateView):
     """ Edit an editable_package's metadata """
 
     template_name = 'editable_package/edit.html'

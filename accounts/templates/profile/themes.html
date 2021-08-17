@@ -56,6 +56,26 @@
 {% endif %}
 {% endif %}
 
+{% if is_me and given_access_themes.exists %}
+<h2>Themes you've been given access to</h2>
+<table class="themes table">
+    <thead>
+        <th>Name</th>
+        <th>Last modified</th>
+    </thead>
+    <tbody>
+    {% for theme in given_access_themes %}
+    <tr>
+        <td>
+            <a href="{% url 'theme_edit_source' theme.pk %}" >{{theme.name}}</a>
+        </td>
+        <td>{{theme.last_modified}}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
 <p><a target="numbasquickhelp" href="{{HELP_URL}}themes.html"><span class="glyphicon glyphicon-question-sign"></span> Help with themes</a></p>
 
 {% endblock profile_content %}

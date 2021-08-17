@@ -62,6 +62,26 @@
 {% endif %}
 {% endif %}
 
+{% if is_me and given_access_extensions.exists %}
+<h2>Extensions you've been given access to</h2>
+<table class="themes table">
+    <thead>
+        <th>Name</th>
+        <th>Last modified</th>
+    </thead>
+    <tbody>
+    {% for extension in given_access_extensions %}
+    <tr>
+        <td>
+            <a href="{% url 'extension_edit_source' extension.pk %}" >{{extension.name}}</a>
+        </td>
+        <td>{{extension.last_modified}}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
 <p><a target="numbasquickhelp" href="{{HELP_URL}}extensions/"><span class="glyphicon glyphicon-question-sign"></span> Help with extensions</a></p>
 
 {% endblock profile_content %}

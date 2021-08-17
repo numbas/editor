@@ -19,13 +19,14 @@ from editor.views.generic import AuthorRequiredMixin, CanEditMixin, CanViewMixin
 class ShowPackageFilesMixin:
 
     def get_package_filenames(self):
-        package = self.get_object()
+        package = self.package = self.get_object()
         filenames = list(package.filenames())
         return filenames
 
     def get_context_data(self,**kwargs):
         context = super().get_context_data(**kwargs)
         context['filenames'] = self.get_package_filenames()
+        context['editable'] = self.package.can_be_edited_by(self.request.user)
         context['upload_file_form'] = self.upload_file_form_class(instance=self.get_object())
         return context
 

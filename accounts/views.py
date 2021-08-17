@@ -18,7 +18,7 @@ from django.http import Http404, HttpResponse
 from editor.slugify import slugify
 from django.template.loader import get_template
 from django.contrib.sites.shortcuts import get_current_site
-from editor.models import NewQuestion, NewExam
+from editor.models import NewQuestion, NewExam, Theme, Extension
 import editor.models
 from editor.views import editoritem
 from registration import signals
@@ -144,9 +144,21 @@ class UserThemesView(UserProfileView):
     template_name = 'profile/themes.html'
     profile_page = 'themes'
 
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context['given_access_themes'] = Theme.objects.filter(access__user=self.object).exclude(pk__in=self.object.own_themes.all())
+
+        return context
+
 class UserExtensionsView(UserProfileView):
     template_name = 'profile/extensions.html'
     profile_page = 'extensions'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context['given_access_extensions'] = Extension.objects.filter(access__user=self.object).exclude(pk__in=self.object.own_extensions.all())
+
+        return context
 
 class UserCustomPartTypesView(UserProfileView):
     template_name = 'profile/custom_part_types.html'

@@ -21,7 +21,9 @@
     </p>
     <div class="panel panel-default">
         <ul class="list-group">
+            {% if editable %}
             <a class="list-group-item{% if options_active %} active{% endif %}" href="{% package_url 'edit' object.pk %}"><span class="glyphicon glyphicon-cog"></span> Options</a>
+            {% endif %}
             {% if request.user == object.author %}
             <a class="list-group-item{% if access_active %} active{% endif %}" href="{% package_url 'access' object.pk %}"><span class="glyphicon glyphicon-user"></span> Access</a>
             {% endif %}

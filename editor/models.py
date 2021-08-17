@@ -1815,7 +1815,7 @@ class NewExam(models.Model):
 
     @property
     def resources(self):
-        return Resource.objects.filter(newquestion__in=self.questions.all()).distinct()
+        return Resource.objects.filter(questions__in=self.questions.all()).distinct()
 
     @property
     def resource_paths(self):
@@ -1880,7 +1880,7 @@ class NewExam(models.Model):
 
     @property
     def extensions(self):
-        return Extension.objects.filter(newquestion__in=self.questions.all()).distinct()
+        return Extension.objects.filter(questions__in=self.questions.all()).distinct()
 
     @property
     def custom_part_types(self):

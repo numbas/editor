@@ -8,6 +8,8 @@ from feature_survey.models import Feature
 from functools import wraps
 from itertools import groupby
 from math import floor
+from datetime import datetime
+import sys
 
 from collections import defaultdict
 
@@ -331,16 +333,30 @@ class Command(BaseCommand):
         fn = getattr(self,'survey_'+name)
 
         n = things.count()
+
+        if n==0:
+            print("No {}s to survey.".format(name))
+            return
+
         print("Surveying {} {}s".format(n,name))
 
+        start_time = datetime.now()
+
         oi = 0
-        for h in range(0,n,100):
+        STEP_SIZE = 10
+        for h in range(0,n,STEP_SIZE):
             with transaction.atomic():
-                for i,o in enumerate(things[h:h+100],h):
+                for i,o in enumerate(things[h:h+STEP_SIZE],h):
                     fn(o)
-                    if floor(i/100)>floor(oi/100):
+                    if floor(i/STEP_SIZE)>floor(oi/STEP_SIZE):
                         oi = i
-                        print('{}% of {}s'.format(floor(100*i/n),name))
+                        dt = datetime.now() - start_time
+                        time_per_object = dt / i
+                        objects_remaining = n - i
+                        time_remaining = time_per_object * objects_remaining
+                        print('{}% of {}s ({}/{}) ETA {}'.format(floor(100*i/n),name, i,n, time_remaining),end='\r')
+
+        sys.stdout.write("\033[K")
 
     def record_feature(self, obj, feature):
         feature = feature.replace('_',' ')
@@ -362,7 +378,7 @@ class Command(BaseCommand):
     def should_resurvey(self, obj, last_modified):
         features = Feature.objects.filter(object_content_type=ContentType.objects.get_for_model(obj),object_id=obj.pk)
         last_surveyed = features.aggregate(last_surveyed=Max('date_observed'))['last_surveyed']
-        resurvey = self.options['resurvey'] or last_surveyed is None or last_modified > last_surveyed or self.options['resurvey']
+        resurvey = self.options['resurvey'] or last_surveyed is None or last_modified > last_surveyed
         if resurvey:
             features.delete()
         return resurvey

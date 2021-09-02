@@ -16787,6 +16787,10 @@ Numbas.queueScript('marking',['util', 'jme','localisation','jme-variables','math
      * @property {number} [credit] - Parameter to change the credit awarded. The exact meaning depends on `op`.
      * @property {string} [reason] - An extra note about why the op is being applied. For 'correct' and 'incorrect' feedback, this helps distinguish cases when the credit awarded doesn't change. 'invalid' means the answer could not be marked.
      * @property {string} [message] - A message to display to the student.
+     * @property {number} [factor] - For `MULTIPLY_CREDIT` items, the factor to multiply the current credit by.
+     * @property {number} [scale] - For `CONCAT` items, the amount to scale the credit awarded by the concatenated messages by.
+     * @property {Numbas.marking.feedback_item[]} [messages] - For `CONCAT` items, the items to add to the state.
+     * @property {boolean} [invalid] - For ``END`` items, does this item represent a decision that the answer is invalid?
      */
 
     /** Kinds of feedback item.
@@ -30239,8 +30243,10 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         {
             var cell = {message: ""};
             tryGetAttribute(cell,null, distractorNodes[i], ['answerIndex', 'choiceIndex']);
-            cell.message = Numbas.xml.transform(Numbas.xml.templates.question,distractorNodes[i]);
-            cell.message = jme.contentsubvars(cell.message,scope);
+            var elem = document.createElement('div');
+            elem.innerHTML = Numbas.xml.transform(Numbas.xml.templates.question,distractorNodes[i]);
+            Numbas.jme.variables.DOMcontentsubvars(elem,scope);
+            cell.message = elem.innerHTML;
             if(this.type == '1_n_2' || this.type == 'm_n_2') {
                 // possible answers are recorded as choices in the multiple choice types.
                 // switch the indices round, so we don't have to worry about this again

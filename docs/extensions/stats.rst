@@ -3,10 +3,10 @@
 
 The statistical functions extension provides many new functions for generating samples from random distributions, and calculating statistics.
 
-It is built on the `jStat <http://www.jstat.org/>`_ library and follows its API quite closely. 
+It is built on the `jStat <http://github.com/jstat/jstat/>`_ library and follows its API quite closely. 
 
 Here's a list of the supported functions, as of January 2013. 
-For information on usage, please see `the jStat documentation <http://jstat.github.com/>`_.
+For information on usage, please see `the jStat documentation <http://jstat.github.io/>`_.
 
 * ``sum``
 * ``sumsqrd``

@@ -17,10 +17,10 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 project = 'Numbas'
-copyright = '2012-2019, Newcastle University'
+copyright = '2012-2021, Newcastle University'
 
-version = '5.0'
-release = '5.0'
+version = '6.0'
+release = '6.0'
 
 import sphinx_rtd_theme
 html_theme = 'sphinx_rtd_theme'
@@ -29,6 +29,13 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 html_logo = '_static/images/numbas-logo-large.png'
 
 html_static_path = ['_static']
+
+html_context = {
+  'display_github': True,
+  'github_user': 'numbas',
+  'github_repo': 'editor',
+  'github_version': 'master/docs/',
+}
 
 htmlhelp_basename = 'Numbaseditordoc'
 
@@ -56,6 +63,6 @@ texinfo_documents = [
 epub_title = 'Numbas editor'
 epub_author = 'Newcastle University'
 epub_publisher = 'Newcastle University'
-epub_copyright = '2012-2018, Newcastle University'
+epub_copyright = '2012-2021, Newcastle University'
 
 todo_emit_warnings = True

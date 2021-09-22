@@ -302,7 +302,7 @@ Try to make sure not to ignore the settings tab, even if you just want to get a 
         After typing a tag in the box, press the :kbd:`Enter` key to add it to the list.
 
 Metadata
-^^^^^^^^
+--------
 
 .. glossary::
 

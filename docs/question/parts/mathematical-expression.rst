@@ -38,7 +38,7 @@ Marking
 
         If not ticked, then names which are exactly the same when converted to lower-case will be considered as representing the same variable or function.
 
-        See :ref:`jme-case-sensitivity <case-sensitivity>` in the JME reference.
+        See :ref:`case-sensitivity <jme-case-sensitivity>` in the JME reference.
 
 
 .. _mathematical-expression-restrictions:

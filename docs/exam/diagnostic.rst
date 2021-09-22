@@ -26,7 +26,7 @@ A topic can belong to one learning objective, more than one, or none at all.
 
 The behaviour of a diagnostic test is controlled by the exam's :ref:`diagnostic algorithm <diagnostic-algorithm>`.
 
-The algorithm has access to the exam's knowledge graph as well as a :term:`state <diagnostic state>` object, which it is able to modify.
+The algorithm has access to the exam's knowledge graph as well as a :dfn:`state` object, which it is able to modify.
 
 When a diagnostic test starts, the algorithm selects the first question to show the student.
 
@@ -34,7 +34,7 @@ While the student is answering a question, they can submit answers to each part 
 
 At any time, the student can click the :guilabel:`Move to the next question` button.
 
-The diagnostic algorithm produces a list of options for the next question, based on the student's answers to the current question and the :term:`state <diagnostic state>`.
+The diagnostic algorithm produces a list of options for the next question, based on the student's answers to the current question and the state.
 
 If there are no options, the exam ends.
 
@@ -179,6 +179,7 @@ They are evaluated at different times during the exam.
     Evaluated when the exam begins, and whenever the student submits an answer or moves to another question.
 
 .. data:: feedback
+   :noindex:
 
     Get a block of feedback text to show to the student, both during the exam and after it has ended.
 

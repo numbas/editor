@@ -203,7 +203,7 @@ There are two modes that dictate how question parts are presented to students.
       Each part defines a list of "next part" options, which the student can choose to follow.
 
       The student's scores from each part are collected into pre-defined :ref:`objectives`.
-      The student might accumulate :ref:`penalties` by visiting certain parts.
+      The student might accumulate :ref:`penalties <explore-penalties>` by visiting certain parts.
       The student's total score for the question is the sum of their objective scores minus the sum of their penalties.
 
       See the page on :ref:`explore-mode`.

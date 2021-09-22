@@ -102,7 +102,7 @@ It's a good idea to name alternatives so you can see from the parts list what ea
 Name the first alternative "Forgot constant of integration" and the other two "Differentiated - no constant" and "Differentiated - with constant".
 These names aren't shown to the student.
 
-Finally, in the question's :term:`Advice` tab, write a short explanation of the answer::
+Finally, in the question's :ref:`Advice <advice>` tab, write a short explanation of the answer::
 
     $f(x) = x^3$.
 
@@ -212,7 +212,7 @@ Make corresponding changes to the alternative answers and the advice.
 
 To add another option for the function, we would have to add another zero to the list used in ``c``, and add another term to each occurrence of the long expression.
 
-You can see `a completed example of this method at numbas.mathcentre.ac.uk <https://numbas.mathcentre.ac.uk/question/68978/recognise-and-apply-a-standard-integral-random-coefficients-version/>`_.
+You can see `a completed example of this method at numbas.mathcentre.ac.uk <https://numbas.mathcentre.ac.uk/question/68978/recognise-and-apply-a-standard-integral-random-coefficients-version/>`__.
 
 Method 2: Sub-expressions
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -281,7 +281,7 @@ Finally, rewrite the advice::
 
     \[ \int f(x) \, \mathrm{d}x = \var{ {integral} } + C \] 
 
-You can see `a completed example of this method at numbas.mathcentre.ac.uk <https://numbas.mathcentre.ac.uk/question/68977/recognise-and-apply-a-standard-integral-subexpressions-version/>`_.
+You can see `a completed example of this method at numbas.mathcentre.ac.uk <https://numbas.mathcentre.ac.uk/question/68977/recognise-and-apply-a-standard-integral-subexpressions-version/>`__.
 
 Evaluation
 ##########

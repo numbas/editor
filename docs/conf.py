@@ -8,7 +8,7 @@ extensions = ['sphinx.ext.intersphinx', 'sphinx.ext.todo', 'sphinx.ext.coverage'
 def setup(app):
     from JMEDomain import JMEDomain
     app.add_domain(JMEDomain)
-    app.add_stylesheet('numbas-style.css')
+    app.add_css_file('numbas-style.css')
 
 templates_path = ['_templates']
 

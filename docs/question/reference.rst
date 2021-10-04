@@ -743,20 +743,6 @@ You can control who is allowed to see, and to edit, your questions.
 When you create a new question, access is limited to you and any other members of the project the question belongs to.
 You can grant extra access to indvidual users or *publish* your question to the public database, where it can be viewed by any other user.
 
-.. topic:: Public visibility
-
-    .. glossary::
-
-        Hidden
-            Only you and users named in the :guilabel:`Individual access rights` section can see this question.
-
-        Anyone can see this
-            Anyone, even users who are not logged in, can see this question. 
-            Only you and users named in the :guilabel:`Individual access rights` section can edit this question.
-
-        Anyone can edit this
-            Anyone, even users who are not logged in, can see and edit this question.
-
 .. topic:: Give access to a user
 
     Type a name into the search box to find a user. 

@@ -46,6 +46,8 @@ Special names
     * ``positive`` - real and strictly greater than 0.
     * ``nonnegative`` - real and greater than or equal to 0.
     * ``negative`` - real and less than 0.
+    * ``nonone`` - any number other than 1.
+    * ``nonzero`` - any number other than 0.
     * ``integer`` - an integer.
     * ``decimal`` - written with at least one digit after the decimal place, or any real number with a fractional part.
     * ``rational`` - an integer, or the division of one integer by another. 

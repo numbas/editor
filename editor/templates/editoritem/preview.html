@@ -60,6 +60,13 @@ share_button.addEventListener('click',function() {
     embed_display.classList.toggle('shown');
     embed_display.focus();
 });
+            var get_numbas_interval = setInterval(function() {
+                var w = window.frames[0];
+                if(w && w.Numbas) {
+                    window.Numbas = w.Numbas;
+                    clearInterval(get_numbas_interval);
+                }
+            },100);
         </script>
     </body>
 </html>

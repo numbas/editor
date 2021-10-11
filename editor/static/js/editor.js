@@ -1561,7 +1561,9 @@ $(document).ready(function() {
                 if (!tinymce.is(':focus')) {
                     var ed = $(element).children('.wmTextArea').tinymce();
                     if(ed && ed.initialized) {
-                        ed.setContent(value);
+                        if(ed.getContent()!=value) {
+                            ed.setContent(value);
+                        }
                     }
                 }
             }

@@ -15197,13 +15197,11 @@ var Question = Numbas.Question = function( number, exam, group, gscope, store)
 {
     var q = this;
     q.store = store;
-    q.signals = new Numbas.schedule.SignalBox(function(e) {
-        e.message = R('question.error',{'number':q.number+1,message:e.message});
-        throw(e);
-    });
+    q.signals = new Numbas.schedule.SignalBox();
     q.signals.on('partsGenerated',function() {
         q.setErrorCarriedForwardBackReferences();
     })
+    q.events = new Numbas.schedule.EventBox();
     q.exam = exam;
     q.tags = [];
     q.group = group;
@@ -15747,6 +15745,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             this.display.addPart(part);
         }
         this.updateScore();
+        this.events.trigger('add part',part);
     },
 
     /** Remove a part from the question.
@@ -16667,8 +16666,9 @@ EventBox.prototype = {
     },
     trigger: function(name) {
         var ev = this.getEvent(name);
+        var args = Array.from(arguments).slice(1);
         ev.listeners.forEach(function(callback) {
-            callback();
+            callback.apply(this,args);
         });
     }
 }

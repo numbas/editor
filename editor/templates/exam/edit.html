@@ -380,6 +380,7 @@
                             </div>
                             <div class="col-sm-12 col-md-6 col-lg-7 learning-objective" data-bind="with: current_learning_objective">
                                 <form class="form-horizontal" data-bind="submit: Editor.noop">
+                                    {% if editable %}<button type="button" type="button" class="delete btn btn-sm btn-danger" data-bind="click:remove"><span class="glyphicon glyphicon-remove"></span> Delete this learning objective</button>{% endif %}
                                     <div class="form-group">
                                         <label for="learning-objective-name" class="control-label">Name</label>
                                         <input id="learning-objective-name" type="text" class="form-control" data-bind="textInput: name">

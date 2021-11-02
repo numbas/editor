@@ -1071,7 +1071,7 @@ $(document).ready(function() {
         this.graph = graph;
         this.name = ko.observable('');
         this.label = ko.computed(function() {
-            return this.name().trim() || 'Unnamed topic';
+            return this.name().trim() || 'Unnamed learning objective';
         },this);
         this.description = ko.observable('');
 

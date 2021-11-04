@@ -85,7 +85,8 @@ class UserProfile(models.Model):
             Q(editoritems__project__in=projects) |
             Q(projects__in=projects) |
             Q(extension_accesses__user=self.user) |
-            Q(theme_accesses__user=self.user)
+            Q(theme_accesses__user=self.user) |
+            Q(custom_part_type_accesses__user=self.user)
         )
 
         items = (items | nonsticky_broadcast_timelineitems).order_by('-date')

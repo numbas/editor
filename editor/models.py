@@ -212,6 +212,7 @@ class Project(models.Model, ControlledObject):
     permissions = models.ManyToManyField(User, through='ProjectAccess')
 
     timeline = GenericRelation('TimelineItem', related_query_name='projects', content_type_field='timeline_content_type', object_id_field='timeline_id')
+    timeline_noun = 'project'
 
     public_view = models.BooleanField(default=False)
     watching_non_members = models.ManyToManyField(User, related_name='watched_projects')
@@ -336,8 +337,6 @@ class ProjectAccess(models.Model, TimelineMixin):
 
     def timeline_object(self):
         return self.project
-
-    timeline_noun = 'project'
 
     def icon(self):
         return 'eye-open'
@@ -764,6 +763,9 @@ class CustomPartType(models.Model, ControlledObject):
     ready_to_use = models.BooleanField(default=False, verbose_name='Ready to use?')
     copy_of = models.ForeignKey('self', null=True, related_name='copies', on_delete=models.SET_NULL)
     extensions = models.ManyToManyField(Extension, blank=True, related_name='custom_part_types')
+
+    timeline_noun = 'part type'
+    icon = 'ok'
 
     def copy(self, author, name):
         new_type = CustomPartType.objects.get(pk=self.pk)
@@ -1497,7 +1499,8 @@ class Timeline(object):
                 Q(editoritems__project__in=projects) |
                 Q(projects__in=projects) |
                 Q(extension_accesses__user=viewing_user) |
-                Q(theme_accesses__user=viewing_user)
+                Q(theme_accesses__user=viewing_user) | 
+                Q(custom_part_type_accesses__user=self.viewing_user)
             )
 
             view_filter = view_filter | items_for_user

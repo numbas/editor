@@ -6,9 +6,10 @@ from django.views import generic
 from django.urls import reverse
 from django.shortcuts import redirect
 
-from editor.models import CustomPartType, CUSTOM_PART_TYPE_PUBLIC_CHOICES, CUSTOM_PART_TYPE_INPUT_WIDGETS, Extension
-from editor.forms import NewCustomPartTypeForm, UpdateCustomPartTypeForm, CopyCustomPartTypeForm, UploadCustomPartTypeForm
-from editor.views.generic import AuthorRequiredMixin
+from accounts.util import user_json
+from editor.models import CustomPartType, CUSTOM_PART_TYPE_PUBLIC_CHOICES, CUSTOM_PART_TYPE_INPUT_WIDGETS, Extension, CustomPartTypeAccess
+from editor.forms import NewCustomPartTypeForm, UpdateCustomPartTypeForm, CopyCustomPartTypeForm, UploadCustomPartTypeForm, CustomPartTypeSetAccessForm
+from editor.views.generic import AuthorRequiredMixin, CanViewMixin
 
 import json
 import reversion
@@ -40,7 +41,7 @@ class UploadView(generic.CreateView):
     def get_success_url(self):
         return self.object.get_absolute_url()
 
-class UpdateView(generic.UpdateView):
+class UpdateView(CanViewMixin, generic.UpdateView):
     model = CustomPartType
     form_class = UpdateCustomPartTypeForm
     template_name = 'custom_part_type/edit.html'
@@ -97,9 +98,12 @@ class UpdateView(generic.UpdateView):
 
         context['editable'] = self.object.can_be_edited_by(self.request.user)
         context['item_json'] = {
+            'editable': context['editable'],
             'data': self.object.as_json(), 
             'save_url': self.object.get_absolute_url(), 
-            'numbasExtensions': context['extensions']
+            'set_access_url': reverse('custom_part_type_set_access',args=(self.object.pk,)),
+            'access_rights': [{'user': user_json(a.user), 'access_level': a.access} for a in CustomPartTypeAccess.objects.filter(custom_part_type=self.object)],
+            'numbasExtensions': context['extensions'],
         }
 
         return context
@@ -194,3 +198,30 @@ class SourceView(generic.DetailView):
         response['Content-Disposition'] = 'attachment; filename={}.npt'.format(cpt.filename)
         response['Cache-Control'] = 'max-age=0,no-cache,no-store'
         return response
+
+class SetAccessView(generic.UpdateView):
+    model = CustomPartType
+    form_class = CustomPartTypeSetAccessForm
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['data'] = self.request.POST.copy()
+        kwargs['data'].update({'given_by':self.request.user.pk})
+        return kwargs
+
+    def form_valid(self, form):
+        item = self.get_object()
+
+        if not item.can_be_edited_by(self.request.user):
+            return http.HttpResponseForbidden("You don't have permission to edit this item.")
+
+        self.object = form.save()
+
+        return http.HttpResponse('ok!')
+
+    def form_invalid(self, form):
+        return http.HttpResponse(form.errors.as_text())
+
+    def get(self, request, *args, **kwargs):
+        return http.HttpResponseNotAllowed(['POST'], 'GET requests are not allowed at this URL.')
+

@@ -16,7 +16,7 @@ from django.contrib.auth.models import User
 from django.template.loader import render_to_string
 
 from editor.models import NewExam, NewQuestion, EditorItem, Access, Theme, Extension, \
-    PullRequest, CustomPartType, Project, Folder, Resource
+    PullRequest, CustomPartType, Project, Folder, Resource, CustomPartTypeAccess
 import editor.models
 from accounts.forms import UserField
 from accounts.util import find_users
@@ -691,6 +691,54 @@ class CopyCustomPartTypeForm(forms.ModelForm):
         if name == self.instance.name:
             raise forms.ValidationError("Please pick a new name.")
         return name
+
+class CustomPartTypeAccessForm(forms.ModelForm):
+    given_by = forms.ModelChoiceField(queryset=User.objects.all())
+
+    class Meta:
+        model = CustomPartTypeAccess
+        exclude = []
+
+    def save(self, commit=True):
+        self.instance.given_by = self.cleaned_data.get('given_by')
+        super().save(commit)
+
+class CustomPartTypeSetAccessForm(forms.ModelForm):
+    given_by = forms.ModelChoiceField(queryset=User.objects.all())
+
+    class Meta:
+        model = CustomPartType
+        fields = []
+
+    def is_valid(self):
+        v = super().is_valid()
+        for f in self.user_access_forms:
+            if not f.is_valid():
+                return False
+        return v
+    
+    def clean(self):
+        cleaned_data = super().clean()
+
+        self.user_ids = self.data.getlist('user_ids[]')
+        self.access_levels = self.data.getlist('access_levels[]')
+        self.user_access_forms = []
+
+        for i, (user, access_level) in enumerate(zip(self.user_ids, self.access_levels)):
+            f = CustomPartTypeAccessForm({'user':user, 'access':access_level, 'custom_part_type':self.instance.pk, 'given_by':self.cleaned_data.get('given_by').pk}, instance=CustomPartTypeAccess.objects.filter(custom_part_type=self.instance, user=user).first())
+            f.full_clean()
+            self.user_access_forms.append(f)
+            for key, warnings in f.errors.items():
+                self._errors[('user %i: ' % i)+key] = warnings
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        access_to_remove = CustomPartTypeAccess.objects.filter(custom_part_type=self.instance).exclude(user__in=self.user_ids)
+        access_to_remove.delete()
+        for f in self.user_access_forms:
+            f.save()
+        return super().save()
 
 class AddMemberForm(UserSearchMixin, forms.ModelForm):
     invitation = None

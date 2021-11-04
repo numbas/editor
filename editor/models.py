@@ -814,13 +814,14 @@ class CustomPartType(models.Model, ControlledObject):
         if user.is_anonymous:
             return False
 
-        if user==self.owner:
+        if user==self.owner or user.is_superuser:
             return True
 
+        return CustomPartTypeAccess.objects.filter(user=user,custom_part_type=self,access__in=levels).exists()
         return False
 
     def can_be_copied_by(self, user):
-        return user.is_superuser or self.owner == user or self.published
+        return self.has_access(user, ('edit',))
 
     @property
     def published(self):
@@ -860,6 +861,23 @@ class CustomPartType(models.Model, ControlledObject):
             }
         }
         return obj
+
+class CustomPartTypeAccess(models.Model, TimelineMixin):
+    custom_part_type = models.ForeignKey('CustomPartType', related_name='access', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='custom_part_type_accesses', on_delete=models.CASCADE)
+    access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
+
+    timelineitems = GenericRelation('TimelineItem', related_query_name='custom_part_type_accesses', content_type_field='object_content_type', object_id_field='object_id')
+    timelineitem_template = 'timeline/access.html'
+
+    def can_be_viewed_by(self, user):
+        return self.custom_part_type.can_be_viewed_by(user)
+
+    def can_be_deleted_by(self, user):
+        return self.custom_part_type.can_be_deleted_by(user)
+
+    def timeline_object(self):
+        return self.custom_part_type
 
 class Resource(models.Model):
     owner = models.ForeignKey(User, related_name='resources', on_delete=models.CASCADE)

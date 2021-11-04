@@ -976,7 +976,7 @@ $(document).ready(function() {
 
     }
 
-    var UserAccess = Editor.UserAccess = function(question,data) {
+    var UserAccess = Editor.UserAccess = function(object,data) {
         var ua = this;
         this.id = data.id;
         this.link = data.link;
@@ -984,7 +984,7 @@ $(document).ready(function() {
         this.access_level = ko.observable(data.access_level || 'view');
         this.profile = data.profile;
         this.remove = function() {
-            question.access_rights.remove(ua);
+            object.access_rights.remove(ua);
         }
     }
     UserAccess.prototype = {

@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% load user_link %}
 {% load can_edit %}
 {% load links %}
 {% load sanitizer %}
@@ -711,6 +712,54 @@
                                 <button class="btn btn-danger" type="submit">Unpublish</button>
                                 {% csrf_token %}
                             </form>
+                        </div>
+                    </div>
+
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Who has access to this content?</h3>
+                        </div>
+                        <table class="table">
+                            <thead>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{% user_thumbnail object.author 20 15 %} {% user_link object.author new_window=True%} (Owner)</td>
+                                    <td>
+                                        Can edit this.
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <!-- ko foreach: {data: access_rights, afterAdd: Editor.afterAdd} -->
+                                <tr>
+                                    <td data-bind="html: link"></td>
+                                    <td>
+                                        <select class="form-control" data-bind="hasfocus: true, value: access_level, options: access_options, optionsText:'text',optionsValue:'value'"></select>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-link" data-bind="click: remove" title="Remove this user's access"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                                    </td>
+                                </tr>
+                                <!-- /ko -->
+                                <tr>
+                                    <td><span class="glyphicon glyphicon-globe"></span> Anybody else</td>
+                                    <td>
+                                        <span data-bind="visible: ko.unwrap(published)">Can view this.</span>
+                                        <span data-bind="visible: !ko.unwrap(published)">Can not view this.</span>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="panel-body">
+                            <label>Give access to</label>
+                            <input class="form-control" id="search_author" type="text" placeholder="Full name or username" size="30" data-bind="
+                                value: userAccessSearch,
+                                autocomplete: '{% url 'user_search' %}', 
+                                autocompleteCallback: function(user) { return {label: user.name, value: user.name} },
+                                autocompleteSelect: addUserAccess
+                                "
+                            />
                         </div>
                     </div>
                     

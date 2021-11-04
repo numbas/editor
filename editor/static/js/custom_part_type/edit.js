@@ -318,11 +318,13 @@ $(document).ready(function() {
     };
 
 
-    var CustomPartType = Editor.custom_part_type.CustomPartType = function(data, save_url) {
+    var CustomPartType = Editor.custom_part_type.CustomPartType = function(data, save_url, set_access_url) {
         var pt = this;
 
         this.save_url = save_url;
+        this.set_access_url = set_access_url;
 
+        this.pk = data.source.pk;
         this.name = ko.observable('');
         this.short_name = ko.observable('');
         this.description = ko.observable('');
@@ -454,6 +456,48 @@ $(document).ready(function() {
         this.canPublish = ko.computed(function() {
             return !this.published() && this.ready_to_use();
         }, this);
+
+        if(item_json.editable) {
+            //access control stuff
+            this.access_rights = ko.observableArray(item_json.access_rights.map(function(d){
+                var access = new Editor.UserAccess(pt,d.user)
+                access.access_level(d.access_level);
+                return access;
+            }));
+
+            this.access_data = ko.pureComputed(function() {
+                return {
+                    user_ids: pt.access_rights().map(function(u){return u.id}),
+                    access_levels: pt.access_rights().map(function(u){return u.access_level()})
+                }
+            });
+            this.saveAccess = new Editor.Saver(this.access_data,function(data) {
+                return $.post(pt.set_access_url,data);
+            });
+            this.userAccessSearch = ko.observable('');
+
+            this.addUserAccess = function(data) {
+                var access_rights = pt.access_rights();
+                for(var i=0; i<access_rights.length; i++) {
+                    if(access_rights[i].id == data.id) {
+                        noty({
+                            text: "That user is already in the access list.",
+                            layout: "center",
+                            speed: 100,
+                            type: 'error',
+                            timeout: 2000,
+                            closable: true,
+                            animateOpen: {"height":"toggle"},
+                            animateClose: {"height":"toggle"},
+                            closeOnSelfClick: true
+                        });
+                        return;
+                    }
+                }
+                var access = new Editor.UserAccess(pt,data);
+                pt.access_rights.push(access);
+            };
+        }
 
 
         this.init_save();
@@ -994,7 +1038,8 @@ $(document).ready(function() {
 
     Numbas.queueScript('start-editor',['jme-display','jme'],function() {
         try {
-            viewModel = new CustomPartType(window.item_json.data, window.item_json.save_url);
+            var item_json = window.item_json;
+            viewModel = new CustomPartType(item_json.data, item_json.save_url, item_json.set_access_url);
             ko.options.deferUpdates = true;
             ko.applyBindings(viewModel);
             try {

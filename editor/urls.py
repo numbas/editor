@@ -227,6 +227,9 @@ urlpatterns = [
     url(r'^part_type/(?P<pk>\d+)/publish$', login_required(custom_part_type.PublishView.as_view()), name='custom_part_type_publish'),
     url(r'^part_type/(?P<pk>\d+)/unpublish$', login_required(custom_part_type.UnPublishView.as_view()), name='custom_part_type_unpublish'),
     url(r'^part_type/(?P<pk>\d+)/source$', custom_part_type.SourceView.as_view(), name='custom_part_type_source'),
+    url(r'^part_type/(?P<pk>\d+)/set-access$',
+        custom_part_type.SetAccessView.as_view(), name='custom_part_type_set_access'),
+
 
     # Notifications
 

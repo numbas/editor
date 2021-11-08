@@ -1059,6 +1059,92 @@ Number operations
     **Example**:
         * ``parsedecimal_or_fraction("1/2")`` → ``0.5``
 
+.. jme:function:: tobinary(n)
+
+    Write the given number in binary: base 2.
+
+    **Definitions**:
+        * :data:`integer` → :data:`string`
+
+    **Example**:
+        * ``tobinary(13)`` → ``"1101"``
+
+.. jme:function:: tooctal(n)
+
+    Write the given number in octal: base 8.
+
+    **Definitions**:
+        * :data:`integer` → :data:`string`
+
+    **Example**:
+        * ``tooctal(13)`` → ``"15"``
+
+.. jme:function:: tohexadecimal(n)
+
+    Write the given number in hexadecimal: base 16.
+
+    **Definitions**:
+        * :data:`integer` → :data:`string`
+
+    **Example**:
+        * ``tohexadecimal(44)`` → ``"2c"``
+
+.. jme:function:: tobase(n,base)
+
+    Write the given number in the given base.
+    ``base`` can be any integer between 2 and 36.
+
+    **Definitions**:
+        * :data:`integer`, :data:`integer` → :data:`string`
+
+    **Example**:
+        * ``tobase(13,4)`` → ``"31"``
+        * ``tobase(13,5)`` → ``"23"``
+        * ``tobase(50,20)`` → ``"2a"``
+
+.. jme:function:: frombinary(s)
+
+   Convert a string representing a number written in binary (base 2) to a :data:`integer` value.
+
+    **Definitions**:
+        * :data:`string` → :data:`integer`
+
+    **Example**:
+        * ``frombinary("1010")`` → ``10``
+
+.. jme:function:: fromoctal(s)
+
+   Convert a string representing a number written in octal (base 8) to a :data:`integer` value.
+
+    **Definitions**:
+        * :data:`string` → :data:`integer`
+
+    **Example**:
+        * ``fromoctal("54")`` → ``44``
+
+.. jme:function:: fromhexadecimal(s)
+
+   Convert a string representing a number written in hexadecimal (base 16) to a :data:`integer` value.
+
+    **Definitions**:
+        * :data:`string` → :data:`integer`
+
+    **Example**:
+        * ``fromhexadecimal("b4")`` → ``180``
+
+.. jme:function:: frombase(s,base)
+
+   Convert a string representing a number written in the given base to a :data:`integer` value.
+   ``base`` can be any integer between 2 and 36.
+
+    **Definitions**:
+        * :data:`string`, :data:`integer` → :data:`integer`
+
+    **Example**:
+        * ``frombase("b4",20)`` → ``224``
+        * ``frombase("321",5)`` → ``86``
+        * ``frombase("621",5)`` → ``NaN``
+
 .. jme:function:: isnan(n)
 
     Is ``n`` the "not a number" value, ``NaN``?

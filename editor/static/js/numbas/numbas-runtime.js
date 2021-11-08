@@ -2173,6 +2173,17 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
         }
         this.deleted.functions[name] = false;
     },
+
+    /** Create a function and add it to the scope.
+     * Wraps `Numbas.jme.funcObj` and then `Numbas.jme.Scope.addFunction`.
+     */
+    createFunction: function(name, intype, outtype, fn, options) {
+        var outcons = Numbas.jme.types[outtype];
+        var fo = new funcObj(name,intype,outcons,fn,options);
+        this.addFunction(fo);
+        return fo;
+    },
+
     /** Add a ruleset to the scope.
      *
      * @param {string} name
@@ -3802,19 +3813,21 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
     {
         var nargs = [];
         for(var i=0; i<args.length; i++) {
-            if(options.unwrapValues)
+            if(options.unwrapValues) {
                 nargs.push(jme.unwrapValue(args[i]));
-            else
+            } else {
                 nargs.push(args[i].value);
+            }
         }
         var result = this.fn.apply(null,nargs);
         if(options.unwrapValues) {
             result = jme.wrapValue(result);
-            if(!result.type)
+            if(!result.type) {
                 result = new this.outcons(result);
-        }
-        else
+            }
+        } else {
             result = new this.outcons(result);
+        }
         if(options.latex) {
             result.latex = true;
         }
@@ -5963,6 +5976,31 @@ newBuiltin('parsedecimal', [TString,sig.listof(sig.type('string'))], TDecimal, f
 newBuiltin('parsedecimal_or_fraction', [TString], TDecimal, function(s,style) {return util.parseDecimal(s,true,"plain-en",true);});
 newBuiltin('parsedecimal_or_fraction', [TString,TString], TDecimal, function(s,style) {return util.parseDecimal(s,true,style,true);});
 newBuiltin('parsedecimal_or_fraction', [TString,sig.listof(sig.type('string'))], TDecimal, function(s,styles) {return util.parseDecimal(s,true,styles,true);}, {unwrapValues: true});
+
+newBuiltin('tobinary', [TInt], TString, function(n) {
+    return n.toString(2);
+});
+newBuiltin('tooctal', [TInt], TString, function(n) {
+    return n.toString(8);
+});
+newBuiltin('tohexadecimal', [TInt], TString, function(n) {
+    return n.toString(16);
+});
+newBuiltin('tobase', [TInt,TInt], TString, function(n,b) {
+    return n.toString(b);
+});
+newBuiltin('frombinary', [TString], TInt, function(s) {
+    return util.parseInt(s,2);
+});
+newBuiltin('fromoctal', [TString], TInt, function(s) {
+    return util.parseInt(s,8);
+});
+newBuiltin('fromhexadecimal', [TString], TInt, function(s) {
+    return util.parseInt(s,16);
+});
+newBuiltin('frombase', [TString, TInt], TInt, function(s,b) {
+    return util.parseInt(s,b);
+});
 
 newBuiltin('scientificnumberlatex', [TNum], TString, null, {
     evaluate: function(args,scope) {
@@ -21166,6 +21204,26 @@ var util = Numbas.util = /** @lends Numbas.util */ {
             return NaN;
         }
     },
+
+    /** Parse an integer in the given base.
+     *  Unlike javascript's built-in `parseInt`, this returns `NaN` if an invalid character is present in the string.
+     *  The digits are the numerals 0 to 9, then the letters of the English alphabet.
+     *
+     * @param {string} s - a representation of a number.
+     * @param {number} base - the base of the number's representation.
+     * @returns {number}
+     */
+    parseInt: function(s,base) {
+        s = s.toLowerCase();
+        var alphabet = 'abcdefghijklmnopqrstuvwxyz';
+        var digits = '0123456789';
+        var acceptable_digits = (digits+alphabet).slice(0,base);
+        if(!s.match(new RegExp('^['+acceptable_digits+']*$'))) {
+            return NaN;
+        }
+        return parseInt(s,base);
+    },
+
     /** A fraction.
      *
      * @typedef {object} fraction

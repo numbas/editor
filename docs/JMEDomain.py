@@ -184,6 +184,7 @@ class JMEFunction(JMEObject):
     """
     option_spec = {
         'op': str,
+        'keywords': str,
     }
 
     def needs_arglist(self):

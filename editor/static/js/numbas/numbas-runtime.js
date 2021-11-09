@@ -2173,17 +2173,6 @@ Scope.prototype = /** @lends Numbas.jme.Scope.prototype */ {
         }
         this.deleted.functions[name] = false;
     },
-
-    /** Create a function and add it to the scope.
-     * Wraps `Numbas.jme.funcObj` and then `Numbas.jme.Scope.addFunction`.
-     */
-    createFunction: function(name, intype, outtype, fn, options) {
-        var outcons = Numbas.jme.types[outtype];
-        var fo = new funcObj(name,intype,outcons,fn,options);
-        this.addFunction(fo);
-        return fo;
-    },
-
     /** Add a ruleset to the scope.
      *
      * @param {string} name
@@ -3609,7 +3598,6 @@ var funcSynonyms = jme.funcSynonyms = {
     'sgn':'sign',
     'len': 'abs',
     'length': 'abs',
-    'verb': 'verbatim',
     'dec': 'decimal'
 };
 /** Operations which evaluate lazily - they don't need to evaluate all of their arguments.
@@ -3813,21 +3801,19 @@ var funcObj = jme.funcObj = function(name,intype,outcons,fn,options)
     {
         var nargs = [];
         for(var i=0; i<args.length; i++) {
-            if(options.unwrapValues) {
+            if(options.unwrapValues)
                 nargs.push(jme.unwrapValue(args[i]));
-            } else {
+            else
                 nargs.push(args[i].value);
-            }
         }
         var result = this.fn.apply(null,nargs);
         if(options.unwrapValues) {
             result = jme.wrapValue(result);
-            if(!result.type) {
+            if(!result.type)
                 result = new this.outcons(result);
-            }
-        } else {
-            result = new this.outcons(result);
         }
+        else
+            result = new this.outcons(result);
         if(options.latex) {
             result.latex = true;
         }
@@ -8289,9 +8275,6 @@ var texOps = jme.display.texOps = {
     }),
     'listval': (function(tree,texArgs) {
         return texArgs[0]+' \\left['+texArgs[1]+'\\right]';
-    }),
-    'verbatim': (function(tree,texArgs) {
-        return tree.args[0].tok.value;
     }),
     'set': function(tree,texArgs) {
         if(tree.args.length==1 && tree.args[0].tok.type=='list') {

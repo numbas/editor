@@ -1401,6 +1401,7 @@ Number theory
 -------------
 
 .. jme:function:: x!
+                  fact(x)
     :keywords: factorial
     :op: !
 
@@ -3217,7 +3218,8 @@ HTML
         * ``isnonemptyhtml("<p>Yes</p>")`` → ``true``
         * ``isnonemptyhtml("<p></p>")`` → ``false``
 
-.. jme:function:: table(data), table(data,headers)
+.. jme:function:: table(data)
+                  table(data,headers)
     :keywords: grid, data, html
 
     Create an HTML with cell contents defined by ``data``, which should be a list of lists of data, and column headers defined by the list of strings ``headers``.

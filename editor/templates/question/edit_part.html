@@ -86,7 +86,7 @@
                     <pre data-bind="text: baseMarkingAlgorithm"></pre>
                 </div>
                 <h5>Custom marking algorithm</h5>
-                <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: customMarkingAlgorithm, codemirrorMode: 'jme'"></textarea>
+                <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: customMarkingAlgorithm, codemirrorMode: 'jme', jmeScope: $root.markingScope"></textarea>
                 <p class="alert alert-danger" data-bind="html: markingScriptError, visible: markingScriptError" aria-live="polite"></p>
             </div>
         </form>

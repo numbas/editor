@@ -75,10 +75,14 @@ Arithmetic Operators
 ####################
 
 .. jme:function:: `+- X
+    :keywords: either, or, plus, minus
+    :op: `+-
 
     Match either ``X`` or ``-X``
 
 .. jme:function:: `*/ X
+    :keywords: either, or, times, divide, multiply
+    :op: `*/
 
     Match either ``X`` or ``1/X``
 
@@ -89,6 +93,8 @@ Combining patterns
 ##################
 
 .. jme:function:: A `| B
+    :keywords: either, or
+    :op: `|
 
     Match either ``A`` or ``B``.
 
@@ -96,6 +102,8 @@ Combining patterns
         * ``x*x `| x^2`` matches two different ways of writing "x squared".
 
 .. jme:function:: A `& B
+    :keywords: and, both
+    :op: `&
 
     The expression must match both ``A`` and ``B``.
 
@@ -103,6 +111,8 @@ Combining patterns
         * ``? = ? `& m_uses(x)`` matches an equation which contains the variable ``x`` somewhere.
 
 .. jme:function:: `! X
+    :keywords: not, except, negate
+    :op: `!
 
     Match anything *except* ``X``.
 
@@ -110,6 +120,8 @@ Combining patterns
         * ```! m_uses(x)`` matches any expression which does not use the variable ``x``.
 
 .. jme:function:: X `where C
+    :keywords: condition, where, match
+    :op: `where
 
     The expression must match ``X``, and then the condition ``C`` is evaluated, with any names corresponding to groups captured in ``X`` substituted in.
     If the condition ``C`` evaluates to ``true``, the expression matches this pattern.
@@ -118,6 +130,8 @@ Combining patterns
         * ``$n;x + $n;y `where x+y=5`` matches the sum of two numbers which add up to a total of 5.
 
 .. jme:function:: macros `@ X
+    :keywords: substitute
+    :op: `@
 
     ``macros`` is a dictionary of patterns.
     The macros are substituted into ``X`` to produce a new pattern, which the expression must match.
@@ -131,6 +145,8 @@ Capturing named groups
 The *capturing operator* ``;`` attaches to a part of a pattern, and captures the part of the input expression matching that pattern under the given name.
 
 .. jme:function:: X;g
+    :keywords: capture, name, group
+    :op: ;
 
     Capture the input expression in the group named ``g`` if it matches the pattern ``X``.
 
@@ -142,6 +158,8 @@ The *capturing operator* ``;`` attaches to a part of a pattern, and captures the
         * ``(x-$?;root);term`` when matched against the expression ``x-2`` captures ``root = 2`` and ``term = x-2``.
 
 .. jme:function:: X;g:v
+    :keywords: capture, name, group, default
+    :op: :
 
     Match ``X``, and capture the value ``v`` in the group named ``g``.
 
@@ -152,6 +170,8 @@ The *capturing operator* ``;`` attaches to a part of a pattern, and captures the
           When the expression is ``-x``, ``a = -1``.
 
 .. jme:function:: X;=g
+    :keywords: capture, name, group, same, identical, equal, equivalent
+    :op: ;=
 
     Match ``X`` only if it's identical to every other occurrence captured under the name ``g``.
 
@@ -166,6 +186,8 @@ Quantifiers
 Quantifiers are used to capture terms that may appear a variable number of times in a sequence.
 
 .. jme:function:: X `?
+    :keywords: one, none, quantifier, optional
+    :op: `?
 
     Either one occurrence of ``X`` or none.
 
@@ -173,6 +195,8 @@ Quantifiers are used to capture terms that may appear a variable number of times
         * ``$n`? * x`` matches ``x`` and ``5x``.
 
 .. jme:function:: X `: Y
+    :keywords: quantifier, default, optional
+    :op: `:
 
     If the expression matches ``X``, match that, otherwise match as the default value ``Y``.
 
@@ -183,6 +207,8 @@ Quantifiers are used to capture terms that may appear a variable number of times
         * ``x^(? `: 1);p`` captures any power of ``x`` as ``p``, setting ``p=1`` when the power is omitted.
 
 .. jme:function:: X `*
+    :keywords: optional, some, any, all, quantifier, several
+    :op: `*
 
     Any number of occurrences of ``X``, or none.
 
@@ -191,6 +217,8 @@ Quantifiers are used to capture terms that may appear a variable number of times
         * ``[$n `*]`` matches a list containing any number of numbers, such as ``[]``, ``[1]`` or ``[6,2]``.
 
 .. jme:function:: X `+
+    :keywords: some, all, many, several, quantifier
+    :op: `+
 
     At least one occurrence of ``X``.
 
@@ -238,34 +266,42 @@ The following functions change the way the matcher works.
         If this mode is enabled, then the behaviour described above is not used.
 
 .. jme:function:: m_exactly(X)
+    :keywords: others, terms, only
 
     Turn off :term:`allow other terms` mode when matching ``X``.
 
 .. jme:function:: m_commutative(X)
+    :keywords: order
 
     Turn on :term:`use commutativity` mode when matching ``X``.
 
 .. jme:function:: m_noncommutative(X)
+    :keywords: commutative, order
 
     Turn off :term:`use commutativity` mode when matching ``X``.
 
 .. jme:function:: m_associative(X)
+    :keywords: order, bracket, parentheses
 
     Turn on :term:`use associativity` mode when matching ``X``.
 
 .. jme:function:: m_nonassociative(X)
+    :keywords: order, bracket, associativity, parentheses
 
     Turn off :term:`use associativity` mode when matching ``X``.
 
 .. jme:function:: m_strictinverse(X)
+    :keywords: inverse, unary, plus, minus
 
     Turn on :term:`strict inverse` mode when matching ``X``.
 
 .. jme:function:: m_gather(X)
+    :keywords: list
 
     Turn on :term:`gather as a list` mode when matching ``X``.
 
 .. jme:function:: m_nogather(X)
+    :keywords: list
 
     Turn off :term:`gather as a list` mode when matching ``X``.
 
@@ -273,6 +309,7 @@ Special conditions
 ##################
 
 .. jme:function:: m_type(type)
+    :keywords: condition, type
 
     Match any item with the given :ref:`data type <jme-data-types>`.
 
@@ -280,6 +317,7 @@ Special conditions
         * ``m_type("string")`` matches ``"hi"``, ``"5,000"`` and ``"x"`` but not ``1``, ``true`` or ``x``.
 
 .. jme:function:: m_func(name,arguments)
+    :keywords: condition, function
 
     Match a function whose name, as a string, matches the given pattern, and whose arguments, considered as a :data:`list`, match the given pattern.
 
@@ -287,12 +325,14 @@ Special conditions
         * ``m_func(?, [?,?])`` matches any function of two variables.
 
 .. jme:function:: m_op(name,operands)
+    :keywords: condition, operator
 
     Match a binary or unary operator whose name, as a string, matches the given pattern, and whose operands, considered as a :data:`list`, match the given pattern.
 
     Note that any properties of matched operators, such as commutativity or associativity, aren't exploited with this matching method.
 
 .. jme:function:: m_uses(name)
+    :keywords: condition, variable, has, uses
 
     Match if the expression uses the variable with the given name as a free variable.
 
@@ -300,6 +340,7 @@ Special conditions
         * ``m_uses(x)`` matches ``x``, ``1+x`` and ``sin(x/2)`` but not ``y``, ``4-2``, or ``map(2x,x,[1,2,3])``.
 
 .. jme:function:: m_anywhere(X)
+    :keywords: condition, anywhere, recursive, deep
 
     Match if a sub-expression matching the pattern ``X`` can be found anywhere inside the input expression.
 

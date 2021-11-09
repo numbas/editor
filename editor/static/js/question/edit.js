@@ -158,7 +158,24 @@ $(document).ready(function() {
             c.enabled = ko.observable(true);
         });
         this.constants = ko.observableArray([]);
+        this.allConstants = ko.computed(function() {
+            var out = [];
+            this.constants().forEach(function(c) {
+                out = out.concat(c.name().split(','));
+            });
+            this.builtin_constants.forEach(function(c) {
+                out = out.concat(c.name.split(','));
+            });
+            return out.map(function(c) { return c.trim(); });
+        },this);
         this.questionScope = ko.observable();
+        this.markingScope = ko.computed(function() {
+            var s = this.questionScope();
+            if(!s) {
+                return;
+            }
+            return new Numbas.marking.StatefulScope([s]);
+        },this);
         this.variableGroups = ko.observableArray([]);
         this.editVariableGroup = ko.observable(null);
         this.autoCalculateVariables = ko.observable(true);
@@ -750,10 +767,10 @@ $(document).ready(function() {
         },
 
         getVariable: function(name) {
-            name = name.toLowerCase();
+            name = Numbas.jme.normaliseName(name);
             var variables = this.variables();
             for(var i = 0; i<variables.length;i++) {
-                if(variables[i].names().find(function(x) { return x.name.toLowerCase()==name; })) {
+                if(variables[i].names().find(function(x) { return Numbas.jme.normaliseName(x.name)==name; })) {
                     return variables[i];
                 }
             }
@@ -769,6 +786,51 @@ $(document).ready(function() {
             var vg = new VariableGroup(this,{name:name});
             this.variableGroups.push(vg);
             return vg;
+        },
+
+        getFunction: function(name) {
+            name = Numbas.jme.normaliseName(name);
+            var functions = this.functions();
+            for(var i=0;i<functions.length;i++) {
+                if(Numbas.jme.normaliseName(functions[i].name())==name) {
+                    return functions[i];
+                }
+            }
+        },
+
+        getObjectHint: function(kind, name) {
+            var q = this;
+            switch(kind) {
+                case 'variable':
+                    var v = this.getVariable(name);
+                    if(v) {
+                        return {
+                            go: function() {
+                                q.goToVariable(name);
+                            },
+                            description: v.description()
+                        }
+                    }
+                case 'function':
+                case 'operator':
+                    if(this.getFunction(name)) {
+                        return {
+                            go: function() {
+                                q.mainTabber.setTab('extensions')();
+                                q.extensionTabs.setTab('functions')();
+                            }
+                        }
+                    }
+                case 'constant':
+                    if(this.allConstants().contains(name)) {
+                        return {
+                            go: function() {
+                                q.mainTabber.setTab('extensions')();
+                                q.extensionTabs.setTab('constants')();
+                            }
+                        }
+                    }
+            }
         },
 
         addConstant: function() {

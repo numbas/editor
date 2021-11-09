@@ -1163,8 +1163,134 @@ $(document).ready(function() {
         }
     };
 
+    Editor.jme_autocompleters = [
+        function(cm,options) {
+            var scope = options.jmeScope();
+            var hintGetter = options.getHintGetter();
+            var hints = [];
+
+            function make_hint(kind, name, definitions) {
+                var doc_hints = window.jme_function_hints;
+                var doc_hint;
+                if(doc_hints) {
+                    doc_hint = doc_hints.find(function(h) { return h.name==name; });
+                }
+                return {
+                    text: name,
+                    keywords: doc_hint ? doc_hint.keywords : [],
+                    displayText: name,
+                    className: 'with-link '+kind,
+                    render: function(elt, data, cur) {
+                        var ownerDocument = cm.getInputField().ownerDocument;
+
+                        var name_span = ownerDocument.createElement('span');
+                        name_span.setAttribute('class','name');
+                        name_span.textContent = name;
+                        elt.appendChild(name_span);
+
+                        if(definitions) {
+                            var signatures = ownerDocument.createElement('ul');
+                            signatures.className = 'signatures';
+                            var lines;
+                            if(doc_hint && doc_hint.calling_patterns) {
+                                lines = doc_hint.calling_patterns;
+                            } else {
+                                lines = definitions.map(function(fn) { return name+'('+Numbas.jme.describe_signature(fn.intype)+')'; });
+                            }
+                            lines.forEach(function(line) {
+                                var li = ownerDocument.createElement('li');
+                                li.textContent = line;
+                                signatures.appendChild(li);
+                            });
+                            elt.appendChild(signatures);
+                        }
+
+                        var kind_span = ownerDocument.createElement('span');
+                        kind_span.className = 'kind';
+                        kind_span.textContent = kind;
+                        elt.appendChild(kind_span);
+
+                        var a = ownerDocument.createElement('a');
+                        a.className = 'help';
+                        a.innerHTML = '<span class="glyphicon glyphicon-question-sign"></span><span class="sr-only">documentation</span>';
+
+                        var desc = ownerDocument.createElement('div');
+                        desc.className = 'description';
+
+                        var help = hintGetter(kind,name);
+                        if(help) {
+                            a.addEventListener('click',function(e) {
+                                e.preventDefault();
+                                help.go();
+                            });
+                            elt.appendChild(a);
+                            if(help.description) {
+                                desc.innerHTML = help.description;
+                                elt.appendChild(desc);
+                            }
+                        } else if(kind=='operator' || kind=='function') {
+                            if(doc_hint) {
+                                a.setAttribute('target','jme-docs');
+                                a.setAttribute('href',HELP_URL+doc_hint.doc+'.html#jme-fn-'+name);
+                                elt.appendChild(a);
+                                desc.innerHTML = doc_hint.description;
+                                elt.appendChild(desc);
+                            }
+                        }
+                    }
+                };
+            }
+
+            Object.keys(scope.allFunctions()).forEach(function(name) {
+                var defs = scope.getFunction(name);
+                var isop = scope.parser.re.re_op.exec(name);
+                hints.push(make_hint(isop ? 'operator' : 'function', name, defs));
+            });
+            Object.keys(scope.allVariables()).filter(function(name) { return !name.match(/,/); }).forEach(function(name) {
+                hints.push(make_hint('variable', name));
+            });
+            Object.keys(scope.allConstants()).forEach(function(name) {
+                hints.push(make_hint('constant',name));
+            });
+            return hints;
+        },
+    ];
+    CodeMirror.registerHelper('hint','jme', function(cm,options) {
+        var cur = cm.getCursor();
+        var token = cm.getTokenAt(cur);
+        var term = token.string;
+        var from = CodeMirror.Pos(cur.line, token.start);
+        var to = CodeMirror.Pos(cur.line, token.end);
+        if (!(token.start < cur.ch && /\w/.test(token.string.charAt(cur.ch - token.start - 1)) && token.string.length)) {
+            return;
+        }
+        var hints = {list: [], from: from, to: to};
+        Editor.jme_autocompleters.forEach(function(fn) {
+            var words = fn(cm,options);
+            words = words.filter(function(w) {
+                if(w.text.slice(0,term.length).toLowerCase()==term.toLowerCase()) {
+                    w.goodness = 1;
+                } else if(term.length>=2 && w.keywords && w.keywords.find(function(keyword) { return keyword.slice(0,term.length).toLowerCase()==term.toLowerCase(); })) {
+                    w.goodness = 2;
+                } else if(term.length>=3 && w.text.toLowerCase().indexOf(term.toLowerCase())>=0) {
+                    w.goodness = 3;
+                }
+                return w.goodness && w.goodness>0;
+            });
+            hints.list = hints.list.concat(words)
+        });
+        hints.list.sort(Numbas.util.sortBy(['goodness','text']));
+
+        CodeMirror.on(hints,'shown',function(completion) {
+            var completion = cm.state.completionActive;
+            MathJax.Hub.Queue(['Typeset',MathJax.Hub,completion.widget.hints]);
+        });
+
+        return hints;
+    });
+
     ko.bindingHandlers.codemirror = {
-        init: function(element,valueAccessor,allBindingsAccessor) {
+        init: function(element,valueAccessor,allBindingsAccessor, viewModel, bindingContext) {
             var value = valueAccessor();
             var allBindings = allBindingsAccessor();
 
@@ -1189,19 +1315,72 @@ $(document).ready(function() {
               }
             }
 
-            var mc = CodeMirror.fromTextArea(element,{
+            function getScope() {
+                var scope = Numbas.jme.builtinScope;
+                if(allBindings.jmeScope) {
+                    var oscope = ko.unwrap(allBindings.jmeScope);
+                    if(oscope) {
+                        return oscope;
+                    }
+                }
+                var vms = [bindingContext.$data].concat(bindingContext.$parents);
+                for(var i=0;i<vms.length;i++) {
+                    if(vms[i].questionScope) {
+                        scope = vms[i].questionScope() || scope;
+                        break;
+                    }
+                }
+                return scope;
+            }
+            function getHintGetter() {
+                if(allBindings.hintGetter) {
+                    var getter = ko.unwrap(allBindings.hintGetter);
+                    if(getter) {
+                        return getter;
+                    }
+                }
+                var vms = [bindingContext.$data].concat(bindingContext.$parents);
+                for(var i=0;i<vms.length;i++) {
+                    if(vms[i].getObjectHint) {
+                        var vm = vms[i];
+                        return function() {
+                            return vm.getObjectHint.apply(vm,arguments);
+                        }
+                    }
+                }
+                return scope;
+            }
+
+            var mc = CodeMirror.fromTextArea(element, {
                 lineNumbers: true,
                 styleActiveLine: true,
                 matchBrackets: true,
                 mode: mode,
                 indentWithTabs: false,
                 indentUnit: 2,
-                extraKeys: { Tab: betterTab },
+                extraKeys: { 
+                    'Tab': false,
+                    'Shift-Tab': false,
+                    'Ctrl-Space': "autocomplete"
+                },
                 readOnly: readOnly,
-                lineWrapping: Editor.wrapLines
+                lineWrapping: Editor.wrapLines,
+                hintOptions: {
+                    jmeScope: getScope,
+                    getHintGetter: getHintGetter,
+                    completeSingle: false
+                }
             });
             mc.on('change',onChange);
             ko.utils.domData.set(element,'codemirror',mc);
+
+            if(mode=='jme') {
+                mc.on("keyup", function (mc, event) {
+                    if (!mc.state.completionActive && event.key && event.key.length==1) {
+                        mc.showHint();
+                    }
+                });
+            }
 
             setInterval(function() {
                 var visible = $(element).parents('.tab-pane:not(.active)').length==0;

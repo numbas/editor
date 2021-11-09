@@ -3,6 +3,9 @@
 
 {% block javascripts %}
     {{block.super}}
+    <script>
+        var HELP_URL = '{{HELP_URL}}';
+    </script>
 
     <script src="{% sstatic 'tiny_mce/jquery.tinymce.min.js' %}" type="text/javascript"></script>
     <script src="{% sstatic 'tiny_mce/tinymce.min.js' %}" type="text/javascript"></script>

@@ -3,8 +3,13 @@ NUMBAS_RUNTIME_PATH ?= ../compiler
 
 NUMBAS_SCRIPT_DIR=editor/static/js/numbas
 
+update_scripts: update_from_runtime update_from_docs
+
 # Update the Numbas runtime, scripts and localisation files
 update_from_runtime: runtime marking_scripts diagnostic_scripts locales extensions
+
+# Update the JME function hints from the documentation
+update_from_docs: jme_function_hints
 
 SCRIPTS_DIR=runtime/scripts
 RUNTIME_SOURCES=numbas.js jme.js jme-builtins.js jme-display.js jme-rules.js jme-variables.js jme-calculus.js localisation.js part.js question.js schedule.js diagnostic.js marking.js math.js util.js i18next/i18next.js json.js es5-shim.js es6-shim.js es6-promise/es6-promise.js decimal/decimal.js
@@ -110,3 +115,11 @@ docs_%:
 
 check_help_links:
 	@python check_help_links.py
+
+editor/static/js/numbas/jme_function_hints.js: $(wildcard docs/**/*.rst)
+	@echo "var jme_function_hints = " > $@
+	@python make_jme_reference_data.py >> $@
+	@echo ";" >> $@
+	$(created)
+
+jme_function_hints: editor/static/js/numbas/jme_function_hints.js

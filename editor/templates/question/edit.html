@@ -227,7 +227,7 @@
                                 <div data-bind="visible: templateType().id=='anything'">
                                     <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: templateTypeValues.anything.definition, codemirrorMode: 'jme'"></textarea>
                                     <p class="help-block text-right">
-                                        <a class="helplink text-info" href="{{HELP_URL}}jme-reference.html" target="_blank">JME function reference <span class="glyphicon glyphicon-question-sign"></span></a>
+                                        Press <kbd>Ctrl-Space</kbd> to get suggestions. <a class="helplink text-info" href="{{HELP_URL}}jme-reference.html" target="_blank">JME function reference <span class="glyphicon glyphicon-question-sign"></span></a>
                                     </p>
                                 </div>
                                 <div data-bind="visible: templateType().id=='number'">

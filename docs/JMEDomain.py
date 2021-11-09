@@ -1,5 +1,6 @@
 import re
 
+from docutils import nodes
 from sphinx import addnodes
 from sphinx.roles import XRefRole
 from sphinx.locale import _
@@ -15,6 +16,36 @@ jme_sig_re = re.compile(
           )? $                          # and nothing more
           ''', re.VERBOSE)
 
+space_re = re.compile(r'\s+')
+bracket_re = re.compile(r'[\[\]()]')
+name_re = re.compile(r'''((?:\$?[a-zA-Z_][a-zA-Z0-9_]*'*)|\?|[π∞])|\W[^\s\[\]()\w]*''')
+
+class opname(nodes.Part, nodes.Inline, nodes.FixedTextElement):
+    pass
+
+def op_parse_arglist(signode, sig, fullname):
+    while len(sig)>0:
+        ms = space_re.match(sig)
+        if ms:
+            signode += nodes.Text('\u00A0'*len(ms.group(0)))
+            sig = sig[ms.end():]
+            continue
+        mb = bracket_re.match(sig)
+        if mb:
+            signode += nodes.Text(mb.group(0))
+            sig = sig[mb.end():]
+            continue
+        mn = name_re.match(sig)
+        if mn:
+            name = mn.group(0)
+            if name == fullname:
+                signode += addnodes.desc_name(name,name)
+            else:
+                signode += nodes.emphasis(name,name)
+            sig = sig[mn.end():]
+            continue
+        signode += nodes.Text(sig[0])
+        sig = sig[1:]
 
 def _pseudo_parse_arglist(signode, arglist):
     """"Parse" a list of arguments separated by commas.
@@ -64,8 +95,7 @@ def _pseudo_parse_arglist(signode, arglist):
 
 
 class JMEObject(ObjectDescription):
-    option_spec = {
-    }
+    options_spec = {}
 
     doc_field_types = [
         TypedField('parameter', label=_('Parameters'),
@@ -88,13 +118,21 @@ class JMEObject(ObjectDescription):
         """May return true if an empty argument list is to be generated even if
         the document contains none.
         """
-        return True
+        True
 
     def handle_signature(self, sig, signode):
         """Transform a JME signature into RST nodes.
 
         Return (fully qualified name of the thing, classname if any).
         """
+        if self.options.get('op'):
+            fullname = self.options['op']
+            name = sig
+            arglist = []
+            signode['fullname'] = fullname
+            op_parse_arglist(signode, sig, fullname)
+            return fullname, ''
+
         m = jme_sig_re.match(sig)
         if m is None:
             raise ValueError
@@ -144,9 +182,12 @@ class JMEFunction(JMEObject):
     """
     Description of a JME function
     """
+    option_spec = {
+        'op': str,
+    }
 
     def needs_arglist(self):
-        return True
+        return self.options.get('op') is None
 
     def get_index_text(self, name_cls):
         return name_cls[0]

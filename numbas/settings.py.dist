@@ -151,7 +151,7 @@ GLOBAL_SETTINGS = {
         ('Español (92% complete)', 'es-ES'),
         ('Français (71% complete)', 'fr-FR'),
         ('Italiano (60% complete)', 'it-IT'),
-        ('Nederlands (70% complete)', 'nl-NL'),
+        ('Nederlands', 'nl-NL'),
         ('Norsk bokmål (64% complete)', 'nb-NO'),
         ('Polski (21% complete)', 'pl-PL'),
         ('Português brasileiro (74% complete)', 'pt-BR'),

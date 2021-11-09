@@ -161,11 +161,15 @@
                 </div>
                 <div class="collapse navbar-collapse" id="editor-controls-collapse">
                     <ul class="nav nav-pills nav-stacked" data-bind="foreach: mainTabber.tabs">
-                        <li data-bind="visible: visible, css: {active: $root.mainTabber.currentTab() == $data, 'in-use': $data.in_use}">
+                        <li data-bind="visible: visible, css: {active: $root.mainTabber.currentTab() == $data, 'in-use': $data.in_use, 'warning': $data.warning}">
                             <a href="#" data-bind="click: $root.mainTabber.currentTab">
                                 <span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> 
                                 <span class="hidden-sm" data-bind="text: title"></span>
                                 <span class="sr-only" data-bind="visible: in_use">(in use)</span>
+                                <!-- ko if: warning -->
+                                <span class="sr-only">has errors</span>
+                                <span class="badge">!</span>
+                                <!-- /ko -->
                             </a>
                         </li>
                     </ul>

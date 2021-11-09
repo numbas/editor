@@ -244,6 +244,7 @@ $(document).ready(function() {
         this.visible = options.visible === undefined ? true : options.visible;
         this.more_important = options.more_important;
         this.in_use = options.in_use === undefined ? false : options.in_use;
+        this.warning = options.warning === undefined ? false : options.warning;
     }
 
     Editor.Tabber = function(tabs) {

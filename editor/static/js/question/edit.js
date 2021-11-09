@@ -377,7 +377,7 @@ $(document).ready(function() {
         this.mainTabber.tabs([
             new Editor.Tab('statement','Statement','blackboard',{in_use: ko.pureComputed(function(){ return this.statement()!=''; },this)}),
             new Editor.Tab('parts','Parts','check',{in_use: ko.pureComputed(function() { return this.parts().length>0; },this)}),
-            new Editor.Tab('variables','Variables','list',{in_use: ko.pureComputed(function() { return this.variables().length>0; },this)}),
+            new Editor.Tab('variables','Variables','list',{in_use: ko.pureComputed(function() { return this.variables().length>0; },this), warning: ko.pureComputed(function() { return this.variableErrors(); },this)}),
             new Editor.Tab('variabletesting','Variable testing','dashboard',{in_use: ko.pureComputed(function() { return this.variablesTest.condition()!=''; },this)}),
             new Editor.Tab('advice','Advice','blackboard',{in_use: ko.pureComputed(function() { return this.advice()!=''; },this)}),
             new Editor.Tab('extensions','Extensions & scripts','wrench',{in_use: extensions_tab_in_use}),
@@ -536,9 +536,25 @@ $(document).ready(function() {
             return o;
         },this);
 
+        this.toJSON = ko.pureComputed(function() {
+            return this.remake_json();
+        },this);
+
+        if(data) {
+            this.load(data);
+        }
+
         ko.computed(function() {
+            var undefined_variables = [];
+            var all_references = new Set();
             this.variables().forEach(function(v) {
                 v.references([]);
+                v.dependencies().forEach(function(name) {
+                    all_references.add(name);
+                    if(!q.getVariable(name)) {
+                        undefined_variables.push(name);
+                    }
+                });
             });
             this.variable_references().forEach(function(r) {
                 var def = r.def;
@@ -575,20 +591,26 @@ $(document).ready(function() {
                 };
                 r.vars().forEach(function(name) {
                     var v = q.getVariable(name);
+                    all_references.add(name);
                     if(v) {
                         v.references.push(ref);
+                    } else {
+                        undefined_variables.push(name);
                     }
                 });
             });
+            undefined_variables = new Set(undefined_variables);
+            undefined_variables.forEach(function(name) {
+                var v = q.baseVariableGroup.justAddVariable(true);
+                v.name(name);
+                v.added_because_missing = true;
+            });
+            q.variables().forEach(function(v) {
+                if(v.added_because_missing && !all_references.has(v.name())) {
+                    v.remove();
+                }
+            });
         },this);
-
-        this.toJSON = ko.pureComputed(function() {
-            return this.remake_json();
-        },this);
-
-        if(data) {
-            this.load(data);
-        }
 
         /** Create an instance of this question as a Numbas.Question object.
          */
@@ -750,12 +772,18 @@ $(document).ready(function() {
             return f;
         },
 
-        addVariable: function(q,e,n) {
+        justAddVariable: function(q,e,n) {
             var v = new Variable(this);
-            if(n!=undefined)
+            if(n!=undefined) {
                 this.variables.splice(n,0,v);
-            else
+            } else {
                 this.variables.push(v);
+            }
+            return v;
+        },
+
+        addVariable: function(q,e,n) {
+            var v = this.justAddVariable(q,e,n);
             this.currentVariable(v);
             return v;
         },
@@ -1739,6 +1767,14 @@ $(document).ready(function() {
                 this.receivedVariables([]);
             }
         },this);
+
+        /** Add a variable to this group but don't set it as the current variable
+         */
+        this.justAddVariable = function() {
+            var v = q.justAddVariable();
+            this.variables.push(v);
+            return v;
+        }
 
         this.addVariable = function() {
             var v = q.addVariable();

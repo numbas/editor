@@ -153,9 +153,6 @@ class TimelineMixin(object):
 
 LOCALE_CHOICES = [(y, x) for x, y in settings.GLOBAL_SETTINGS['NUMBAS_LOCALES']]
 
-def combine_access(*args):
-    order = ['view','edit']
-    return sorted(args,key=order.index)[-1]
 
 def reassign_content(from_user,to_user):
     with transaction.atomic():
@@ -164,46 +161,48 @@ def reassign_content(from_user,to_user):
             p.save()
 
         for pa in from_user.project_memberships.all():
-            try:
-                pa2 = ProjectAccess.objects.get(user=to_user,project=pa.project)
-                access = combine_access(pa.access,pa2.access)
-                if access!=pa2.access:
-                    pa2.access = access
-                    pa2.save()
-            except ProjectAccess.DoesNotExist:
-                pa.user = to_user
-                pa.save()
+            pa.combine_access(to_user)
+
+        for pi in from_user.project_invitations.all():
+            if not pi.project.has_access(to_user,(pi.access,)):
+                pi.user = to_user
+                pi.save()
 
         for e in from_user.own_extensions.all():
             e.author = to_user
             e.save()
 
+        for ea in from_user.extension_accesses.all():
+            ea.combine_access(to_user)
+
         for t in from_user.own_themes.all():
             t.author = to_user
             t.save()
 
+        for ta in from_user.theme_accesses.all():
+            ta.combine_access(to_user)
+
         for cpt in from_user.own_custom_part_types.all():
             cpt.author = to_user
             cpt.save()
+
+        for ca in from_user.custom_part_type_accesses.all():
+            ca.combine_access(to_user)
 
         for r in from_user.resources.all():
             r.owner = to_user
             r.save()
 
         for a in from_user.item_accesses.all():
-            try:
-                a2 = Access.objects.get(user=to_user,item=a.item)
-                access = combine_access(a.access,a2.access)
-                if access!=a2.access:
-                    a2.access = access
-                    a2.save()
-            except Access.DoesNotExist:
-                a.user = to_user
-                a.save()
+            a.combine_access(to_user)
 
         for ei in from_user.own_items.all():
             ei.author = to_user
             ei.save()
+
+        for sb in from_user.site_broadcasts.all():
+            sb.author = to_user
+            sb.save()
 
 class Project(models.Model, ControlledObject):
     name = models.CharField(max_length=200)
@@ -321,7 +320,22 @@ class Project(models.Model, ControlledObject):
                     | Q(owner=user)
                    )
 
-class ProjectAccess(models.Model, TimelineMixin):
+class AccessMixin:
+    def combine_access(self, to_user):
+        order = ['view','edit']
+        try:
+            a2 = self.__class__.objects.get(user=to_user, **{self.object_field_name: getattr(self,self.object_field_name)})
+            level = sorted([self.access,a2.access],key=order.index)[-1]
+            if level != a2.access:
+                a2.access = level
+                a2.save()
+        except self.__class__.DoesNotExist:
+            self.user = to_user
+            self.save()
+
+
+class ProjectAccess(models.Model, TimelineMixin, AccessMixin):
+    object_field_name = 'project'
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='projectaccess')
     user = models.ForeignKey(User, related_name='project_memberships', on_delete=models.CASCADE)
     access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
@@ -346,7 +360,7 @@ class ProjectAccess(models.Model, TimelineMixin):
 
 class ProjectInvitation(models.Model):
     email = models.EmailField()
-    invited_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    invited_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='project_invitations')
     access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
     project = models.ForeignKey(Project, related_name='invitations', on_delete=models.CASCADE)
     applied = models.BooleanField(default=False)
@@ -611,7 +625,8 @@ def delete_extracted_extension(sender,instance,**kwargs):
         shutil.rmtree(str(p))
     
 
-class ExtensionAccess(models.Model, TimelineMixin):
+class ExtensionAccess(models.Model, TimelineMixin, AccessMixin):
+    object_field_name = 'extension'
     extension = models.ForeignKey('Extension', related_name='access', on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='extension_accesses', on_delete=models.CASCADE)
     access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
@@ -705,7 +720,8 @@ class Theme(models.Model, ControlledObject, EditablePackageMixin):
     def icon(self):
         return 'sunglasses'
 
-class ThemeAccess(models.Model, TimelineMixin):
+class ThemeAccess(models.Model, TimelineMixin, AccessMixin):
+    object_field_name = 'theme'
     theme = models.ForeignKey('Theme', related_name='access', on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='theme_accesses', on_delete=models.CASCADE)
     access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
@@ -864,7 +880,8 @@ class CustomPartType(models.Model, ControlledObject):
         }
         return obj
 
-class CustomPartTypeAccess(models.Model, TimelineMixin):
+class CustomPartTypeAccess(models.Model, TimelineMixin, AccessMixin):
+    object_field_name = 'custom_part_type'
     custom_part_type = models.ForeignKey('CustomPartType', related_name='access', on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='custom_part_type_accesses', on_delete=models.CASCADE)
     access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
@@ -1030,7 +1047,8 @@ class TaggedItem(taggit.models.GenericTaggedItemBase):
 class TaggedQuestion(taggit.models.GenericTaggedItemBase):
     tag = models.ForeignKey(EditorTag, related_name='tagged_items', on_delete=models.CASCADE)
 
-class Access(models.Model, TimelineMixin):
+class Access(models.Model, TimelineMixin, AccessMixin):
+    object_field_name = 'item'
     item = models.ForeignKey('EditorItem', related_name='accesses', on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='item_accesses', on_delete=models.CASCADE)
     access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
@@ -1671,7 +1689,7 @@ ITEM_CHANGED_VERBS = [('created', 'created')]
 class ItemChangedTimelineItem(models.Model, TimelineMixin):
     object = models.ForeignKey(EditorItem, on_delete=models.CASCADE)
     verb = models.CharField(choices=ITEM_CHANGED_VERBS, editable=False, max_length=10)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='item_changed_timelineitems')
 
     timelineitems = GenericRelation(TimelineItem, related_query_name='item_changes', content_type_field='object_content_type', object_id_field='object_id')
     timelineitem_template = 'timeline/change.html'

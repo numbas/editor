@@ -19,7 +19,7 @@ Delivering an exam
 Delay showing students scores until a certain date
 --------------------------------------------------
 
-    This is only possible when delivering the exam through the `Numbas LTI provider <https://numbas-lti-provider.readthedocs.io/>`__.
+    This is only possible when delivering the exam through the `Numbas LTI provider <https://docs.numbas.org.uk/lti/>`__.
 
     First, turn off the feedback options :term:`Show current score?` and :term:`Show answer state?`, so students don't get any feedback while completing the exam.
 

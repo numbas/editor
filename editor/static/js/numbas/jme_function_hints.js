@@ -1275,7 +1275,8 @@ var jme_function_hints =
             "factorial"
         ],
         "calling_patterns": [
-            "x!"
+            "x!",
+            "fact(x)"
         ],
         "doc": "jme-reference"
     },
@@ -2980,7 +2981,8 @@ var jme_function_hints =
             "html"
         ],
         "calling_patterns": [
-            "table(data), table(data,headers)"
+            "table(data)",
+            "table(data,headers)"
         ],
         "doc": "jme-reference"
     },

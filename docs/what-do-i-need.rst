@@ -47,8 +47,8 @@ Several VLEs have built-in SCORM players: the ones we know of are Blackboard Lea
     Many users have reported Blackboard failing to record attempt data for 5-10% of student attempts, apparently at random.
     We don't recommend using Blackboard's built-in SCORM player for summative assessment.
 
-Our recommended method of integrating with a VLE is the `Numbas LTI provider <https://numbas-lti-provider.readthedocs.io/>`_.
-The LTI provider is software which you must run on a server you control; see the  `guide on what you need to run the LTI provider <https://numbas-lti-provider.readthedocs.io/en/latest/getting-started.html#what-do-i-need-in-order-to-use-this>`_.
+Our recommended method of integrating with a VLE is the `Numbas LTI provider <https://docs.numbas.org.uk/lti/>`_.
+The LTI provider is software which you must run on a server you control; see the  `guide on what you need to run the LTI provider <https://docs.numbas.org.uk/lti/en/latest/getting-started.html#what-do-i-need-in-order-to-use-this>`_.
 
 The LTI provider works with any Basic LTI 1.1 tool consumer, which includes most VLEs.
 The major ones we know of are: `Blackboard Learn 9.1+ <https://help.blackboard.com/Learn/Administrator/SaaS/Integrations/Learning_Tools_Interoperability>`_, `Moodle 2.2+ <https://docs.moodle.org/36/en/LTI_and_Moodle>`_, `Canvas <https://community.canvaslms.com/docs/DOC-10724-67952720325>`_, `desire2learn Brightspace <https://community.brightspace.com/s/article/Setting-up-default-LTI-Tool-Consumer-information-in-Brightspace>`_.

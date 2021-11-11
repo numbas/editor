@@ -36,7 +36,7 @@ Once you've uploaded the exam files, you're done! The exam will be available at 
 Uploading an exam to a virtual learning environment
 ===================================================
 
-Numbas produces SCORM objects which can be uploaded to any SCORM 2004-compatible VLE (virtual learning environment), or the `Numbas LTI provider <https://numbas-lti-provider.readthedocs.io/>`_.
+Numbas produces SCORM objects which can be uploaded to any SCORM 2004-compatible VLE (virtual learning environment), or the `Numbas LTI provider <https://docs.numbas.org.uk/lti/>`_.
 
 The Numbas LTI provider offers many features over a standard SCORM player, but needs to be installed locally.
 
@@ -59,7 +59,7 @@ A .zip file containing everything needed to run the exam will be downloaded to y
 Uploading to the Numbas LTI provider
 ####################################
 
-See the `Numbas LTI provider documentation <https://numbas-lti-provider.readthedocs.io/en/latest/instructor/resources.html#creating-a-new-resource>`_.
+See the `Numbas LTI provider documentation <https://docs.numbas.org.uk/lti/en/latest/instructor/resources.html#creating-a-new-resource>`_.
 
 Uploading to Blackboard
 #######################

@@ -2941,10 +2941,14 @@ $(document).ready(function() {
         this.variable_references = ko.pureComputed(function() {
             var o = [];
             o.push(new VariableReference({kind:'part',part:this,tab:'prompt',value:this.prompt,type:'html',description:'prompt'}));
-            if(this.use_custom_algorithm() && this.markingScript()) {
+            if(this.use_custom_algorithm() && this.markingScript() && this.marking_test() && this.marking_test().last_run()) {
                 var s = this.markingScript();
+                var note_names = Object.keys(s.notes).map(function(name) { return Numbas.jme.normaliseName(name); });
+                var parameters = this.marking_test().marking_parameters().map(function(p) { return Numbas.jme.normaliseName(p.name); });
+                var defined_names = note_names.concat(parameters);
                 for(var x in s.notes) {
-                    o.push(new VariableReference({kind:'part',part:this,tab:'marking-algorithm',value:s.notes[x].vars,type:'list',description:'marking algorithm note '+x}));
+                    var vars = s.notes[x].vars.filter(function(y) { return !defined_names.contains(Numbas.jme.normaliseName(y)); });
+                    o.push(new VariableReference({kind:'part',part:this,tab:'marking-algorithm',value:vars,type:'list',description:'marking algorithm note '+x}));
                 }
             }
             this.nextParts().forEach(function(np) {

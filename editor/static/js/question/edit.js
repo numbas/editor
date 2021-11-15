@@ -606,7 +606,7 @@ $(document).ready(function() {
                 v.added_because_missing = true;
             });
             q.variables().forEach(function(v) {
-                if(v.added_because_missing && !all_references.has(v.name())) {
+                if(v.added_because_missing && !all_references.has(v.name()) && v.definition().trim()=='') {
                     v.remove();
                 }
             });

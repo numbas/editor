@@ -285,6 +285,9 @@
                             </label>
                         </div>
                         <div class="help-block">
+                            <div class="alert alert-info" data-bind="visible: $data.added_because_missing && $data.definition()==''" aria-live="polite">
+                                <p>This variable was automatically created because there's a reference to it somewhere in this question.</p>
+                            </div>
                             <div class="value-error alert alert-danger" data-bind="visible: error() && error().length>0" aria-live="polite">
                                 <h4>Error</h4>
                                 <div data-bind="html: error"></div>

@@ -1251,8 +1251,9 @@ CustomPartType.prototype = {
                     }
                     break;
                 case 'code':
-                    var type = def.evaluate ? 'jme' : 'jme-sub';
-                    o.push({tab:'marking-settings', value: s.value, type: type, description: s.label});
+                    if(def.evaluate) {
+                        o.push({tab:'marking-settings', value: s.value, type: 'jme', description: s.label});
+                    }
                     break;
                 case 'html':
                     o.push({tab:'marking-settings', value: s.value, type: 'html', description: s.label});

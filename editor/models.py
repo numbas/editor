@@ -841,6 +841,24 @@ class CustomPartType(models.Model, ControlledObject):
     def can_be_copied_by(self, user):
         return self.has_access(user, ('edit',))
 
+    @classmethod
+    def filter_can_be_viewed_by(cls, user):
+        if getattr(settings, 'EVERYTHING_VISIBLE', False):
+            return Q()
+        
+        q_public = Q(public_availability__in=('always','select'))
+
+        view_perms = ('edit', 'view')
+        if cls.superuser_sees_everything and user.is_superuser:
+            return Q()
+        elif user.is_anonymous:
+            return q_public
+        else:
+            return (Q(access__user=user, access__access__in=view_perms) 
+                    | q_public
+                    | Q(author=user)
+                   )
+
     @property
     def published(self):
         return self.public_availability != 'restricted'

@@ -155,7 +155,7 @@ class UpdateView(editor.views.editoritem.BaseUpdateView):
         if not self.request.user.is_anonymous:
             # add in the user's own part types
             users = [self.request.user]+self.object.editoritem.project.members()
-            custom_part_types |= CustomPartType.objects.filter(author__in=users)
+            custom_part_types |= CustomPartType.objects.filter(CustomPartType.filter_can_be_viewed_by(self.request.user))
         # only show part types ready to use
         custom_part_types = custom_part_types.filter(ready_to_use=True)
         # also include part types already in use in this question

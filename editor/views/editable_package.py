@@ -7,14 +7,15 @@ import mimetypes
 
 from django import http
 from django.contrib import messages
+from django.contrib.contenttypes.models import ContentType
 from django.views import generic
 from django.urls import reverse
 from django.utils.timezone import make_aware
 from django.shortcuts import redirect
 
 from editor import forms
+from editor.models import IndividualAccess
 from editor.views.generic import AuthorRequiredMixin, CanEditMixin, CanViewMixin, forbidden_response
-
 
 class ShowPackageFilesMixin:
 
@@ -166,17 +167,25 @@ class DeleteFileView(CanEditMixin, generic.UpdateView):
 
 class AccessView(ShowPackageFilesMixin, AuthorRequiredMixin, generic.UpdateView):
     template_name = 'editable_package/access.html'
+    
+    def get_form_kwargs(self, *args, **kwargs):
+        kwargs = super().get_form_kwargs(*args,**kwargs)
+        print(kwargs)
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['access_active'] = True
-        context['add_access_form'] = self.single_form_class({self.model.package_noun:self.object.pk, 'adding_user':self.request.user})
+        ct = ContentType.objects.get_for_model(self.object)
+        context['add_access_form'] = self.single_form_class({'object_content_type': ct.pk, 'object_id':self.object.pk, 'adding_user':self.request.user})
         return context
 
     def get_success_url(self):
         return reverse(self.success_view, args=(self.get_object().pk,))
 
 class AddAccessView(generic.CreateView):
+    model = IndividualAccess
+
     def dispatch(self, request, *args, **kwargs):
         package = self.get_package()
         if request.user != package.author:

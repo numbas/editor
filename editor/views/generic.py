@@ -8,7 +8,7 @@ from django.template import RequestContext
 from django.template.response import TemplateResponse
 import reversion
 
-from editor.models import NewStampOfApproval, Comment, RestorePoint, EditorItem, Access
+from editor.models import NewStampOfApproval, Comment, RestorePoint, EditorItem, IndividualAccess
 
 from accounts.util import user_json
 
@@ -76,6 +76,9 @@ class StampView(generic.UpdateView, TimelineItemViewMixin):
         return http.HttpResponseNotAllowed(['POST'], 'GET requests are not allowed at this URL.')
 
 class CommentView(generic.UpdateView, TimelineItemViewMixin):
+    def get_comment_object(self):
+        return self.get_object()
+
     def post(self, request, *args, **kwargs):
         obj = self.get_comment_object()
 
@@ -217,11 +220,11 @@ class ShareLinkView(generic.RedirectView):
             
         if not has_access:
             try:
-                ea = Access.objects.get(item=q.editoritem, user=user)
-            except Access.DoesNotExist:
-                ea = Access(item=q.editoritem, user=user, access=access)
-            ea.access = access
-            ea.save()
+                ea = q.editoritem.access.get(user=user)
+                ea.access = access
+                ea.save()
+            except IndividualAccess.DoesNotExist:
+                ea = IndividualAccess.objects.create(item=q.editoritem, user=user, access=access)
 
         return q.get_absolute_url()
 

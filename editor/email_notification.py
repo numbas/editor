@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.mail import send_mail
-from django.template.loader import get_template
+from django.template.loader import get_template, select_template
 
 from accounts.email import unsubscribe_token
 
@@ -17,6 +17,10 @@ class NotificationEmail(object):
 
         context = {
             'notification': self.notification,
+            'actor': self.notification.actor,
+            'action_object': self.notification.action_object,
+            'target': self.notification.target,
+            'verb': self.notification.verb,
             'site': site,
             'domain': 'http://{}'.format(site.domain),
             'unsubscribe_token': unsubscribe_token(self.notification.recipient)
@@ -25,22 +29,40 @@ class NotificationEmail(object):
         return context
 
     def can_email(self):
+        print("can email?")
         if not getattr(settings,'EMAIL_ABOUT_NOTIFICATIONS',False):
+            print("global no")
             return False
         recipient = self.notification.recipient
+        print(recipient.userprofile.never_email)
         return not recipient.userprofile.never_email
 
     def send(self):
         if not self.can_email():
             return
-        subject = self.get_subject()
+
         context = self.get_context_data()
-        plain_content = get_template(self.plain_template).render(context)
-        html_content = get_template(self.html_template).render(context)
+
+        action_object_model = self.notification.action_object._meta.model_name
+        target_model = self.notification.target._meta.model_name
+
+        subject_template = select_template(
+            [f'notifications/email/{target_model}__{action_object_model}-subject.txt',
+             f'notifications/email/{target_model}-subject.txt',
+            ])
+        plain_template = get_template(f'notifications/email/{target_model}__{action_object_model}.txt')
+        html_template = get_template(f'notifications/email/{target_model}__{action_object_model}.html')
+
+        subject = subject_template.render(context).replace('\n','')
+        plain_content = plain_template.render(context)
+        html_content = html_template.render(context)
         from_email = '{title} <{email}>'.format(title=settings.SITE_TITLE, email=settings.DEFAULT_FROM_EMAIL)
         recipient = self.notification.recipient
         recipient_email = '{name} <{email}>'.format(name=recipient.get_full_name(), email=recipient.email)
         send_mail(subject, plain_content, html_message=html_content, from_email=from_email, recipient_list=(recipient_email,))
+
+        self.notification.emailed = True
+        self.notification.save()
 
 class EditorItemNotificationEmail(NotificationEmail):
     def __init__(self, *args, **kwargs):

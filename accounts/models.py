@@ -16,7 +16,7 @@ from registration import models as regmodels
 
 from sanitizer.models import SanitizedTextField
 
-from editor.models import NewQuestion, EditorTag, Project, TimelineItem, SiteBroadcast, EditorItem
+from editor.models import NewQuestion, EditorTag, Project, TimelineItem, SiteBroadcast, EditorItem, ItemQueue
 
 class RegistrationManager(regmodels.RegistrationManager):
     @transaction.atomic
@@ -73,20 +73,18 @@ class UserProfile(models.Model):
         return NewQuestion.objects.filter(editoritem__author=self.user).order_by('-editoritem__last_modified')[:10]
 
     def projects(self):
-        return (Project.objects.filter(owner=self.user) | Project.objects.filter(projectaccess__user=self.user))
+        return (Project.objects.filter(owner=self.user) | Project.objects.filter(access__user=self.user))
 
     def all_timeline(self):
-        projects = self.user.own_projects.all() | Project.objects.filter(projectaccess__in=self.user.project_memberships.all()) | Project.objects.filter(watching_non_members=self.user)
+        ct_ei = ContentType.objects.get_for_model(EditorItem)
+        projects = self.user.own_projects.all() | Project.objects.filter(access__in=self.user.individual_accesses.all()) | Project.objects.filter(watching_non_members=self.user)
         nonsticky_broadcasts = SiteBroadcast.objects.visible_now().exclude(sticky=True)
         nonsticky_broadcast_timelineitems = TimelineItem.objects.filter(object_content_type=ContentType.objects.get_for_model(SiteBroadcast), object_id__in=nonsticky_broadcasts)
 
         items = TimelineItem.objects.filter(
-            Q(editoritems__accesses__in=self.user.item_accesses.all()) | 
+            Q(editoritems__in=EditorItem.objects.filter(Q(access__user=self.user) | Q(author=self.user))) | 
             Q(editoritems__project__in=projects) |
-            Q(projects__in=projects) |
-            Q(extension_accesses__user=self.user) |
-            Q(theme_accesses__user=self.user) |
-            Q(custom_part_type_accesses__user=self.user)
+            Q(projects__in=projects)
         )
 
         items = (items | nonsticky_broadcast_timelineitems).order_by('-date')
@@ -98,6 +96,9 @@ class UserProfile(models.Model):
 
     def get_absolute_url(self):
         return reverse('view_profile', args=(self.user.pk,))
+
+    def available_queues(self):
+        return ItemQueue.objects.visible_to(self.user)
 
 class EditorItemViewed(models.Model):
     userprofile = models.ForeignKey(UserProfile, related_name='last_viewed_items', on_delete=models.CASCADE)

@@ -1,0 +1,12 @@
+{% extends "notifications/email/base.html" %}
+{% load sanitizer %}
+
+{% block content %}
+<p><a href="{{domain}}{% url 'view_profile' actor.pk %}">{{actor.get_full_name}}</a> {{notification.verb}} "<a href="{{domain}}{{target.get_absolute_url}}">{{target.name}}</a>":
+
+<blockquote>
+    {{action_object.text|strip_html|safe}}
+</blockquote>
+
+<p><a href="{{domain}}{{target.get_absolute_url}}#editing-history">View this {{target.item_type}}</a>.</p>
+{% endblock content %}

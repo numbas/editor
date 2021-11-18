@@ -6,7 +6,7 @@ from django.views import generic
 from django.urls import reverse
 from django.shortcuts import redirect
 
-from editor.models import Extension, ExtensionAccess
+from editor.models import Extension
 from editor import forms
 from editor.views.generic import AuthorRequiredMixin, CanViewMixin
 from editor.views import editable_package
@@ -69,19 +69,18 @@ class DeleteFileView(ExtensionViewMixin,editable_package.DeleteFileView):
 
 class AccessView(ExtensionViewMixin,editable_package.AccessView):
     model = Extension
-    form_class = forms.ExtensionAccessFormset
-    single_form_class = forms.AddExtensionAccessForm
+    form_class = forms.IndividualAccessFormset
+    single_form_class = forms.AddEditablePackageAccessForm
     success_view = 'extension_access'
 
 class AddAccessView(ExtensionViewMixin,editable_package.AddAccessView):
-    model = ExtensionAccess
-    form_class = forms.AddExtensionAccessForm
+    form_class = forms.AddEditablePackageAccessForm
 
     def get_package(self):
         return Extension.objects.get(pk=self.kwargs['extension_pk'])
 
     def get_success_url(self):
-        return reverse('extension_access', args=(self.object.extension.pk,))
+        return reverse('extension_access', args=(self.object.object.pk,))
 
 class DocumentationView(ExtensionViewMixin,editable_package.DocumentationView):
     model = Extension

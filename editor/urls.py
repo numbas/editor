@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from .views import project, folder, editoritem, exam, question, HomeView, \
     GlobalStatsView, ExploreView, TermsOfUseView, PrivacyPolicyView, TopSearchView, \
     theme, extension, generic, notification, resource, basket, timeline, \
-    custom_part_type
+    custom_part_type, queue
 
 urlpatterns = [
 
@@ -230,6 +230,12 @@ urlpatterns = [
     url(r'^part_type/(?P<pk>\d+)/set-access$',
         custom_part_type.SetAccessView.as_view(), name='custom_part_type_set_access'),
 
+    # Queues
+    path('queue/new/', queue.CreateView.as_view(), name='queue_new'),
+    path('queue/<pk>/', queue.DetailView.as_view(), name='queue_view'),
+    path('queue/<pk>/add/', queue.AddEntryView.as_view(), name='queue_add'),
+    path('queue-item/<pk>/review/', queue.ReviewEntryView.as_view(), name='queue_entry_review'),
+    path('queue-item/<pk>/comment/', queue.CommentView.as_view(), name='queue_entry_comment'),
 
     # Notifications
 

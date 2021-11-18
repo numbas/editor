@@ -8,7 +8,7 @@ from django.views import generic
 from django.urls import reverse
 from django.shortcuts import redirect
 
-from editor.models import Theme, ThemeAccess
+from editor.models import Theme
 from editor import forms
 from editor.views.generic import AuthorRequiredMixin, CanViewMixin
 from editor.views import editable_package
@@ -123,19 +123,18 @@ class DeleteFileView(ThemeViewMixin,editable_package.DeleteFileView):
 
 class AccessView(ThemeViewMixin,editable_package.AccessView):
     model = Theme
-    form_class = forms.ThemeAccessFormset
-    single_form_class = forms.AddThemeAccessForm
+    form_class = forms.IndividualAccessFormset
+    single_form_class = forms.AddEditablePackageAccessForm
     success_view = 'theme_access'
 
 class AddAccessView(ThemeViewMixin,editable_package.AddAccessView):
-    model = ThemeAccess
-    form_class = forms.AddThemeAccessForm
+    form_class = forms.AddEditablePackageAccessForm
 
     def get_package(self):
         return Theme.objects.get(pk=self.kwargs['theme_pk'])
 
     def get_success_url(self):
-        return reverse('theme_access', args=(self.object.theme.pk,))
+        return reverse('theme_access', args=(self.object.object.pk,))
 
 class DocumentationView(ThemeViewMixin,editable_package.DocumentationView):
     model = Theme

@@ -25,7 +25,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.urls import reverse
 from django.db import models, transaction
-from django.db.models import signals, Max, Min
+from django.db.models import signals, Max, Min, Exists, OuterRef
 from django.db.models.functions import Lower
 from django.dispatch import receiver
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
@@ -64,7 +64,9 @@ class ControlledObject(object):
         raise NotImplementedError
 
     def has_access(self, user, accept_levels):
-        raise NotImplementedError
+        if user.is_anonymous:
+            return False
+        return self.access.filter(user=user, access__in=accept_levels).exists()
 
     def can_be_viewed_by(self, user):
         if getattr(settings, 'EVERYTHING_VISIBLE', False):
@@ -117,7 +119,7 @@ class ControlledObject(object):
             return (Q(accesses__user=user, accesses__access__in=view_perms) 
                     | Q(published=True, public_access__in=view_perms) 
                     | Q(author=user)
-                    | Q(project__projectaccess__user=user)
+                    | Q(project__access__user=user)
                     | Q(project__owner=user)
                    )
 
@@ -160,9 +162,6 @@ def reassign_content(from_user,to_user):
             p.owner = to_user
             p.save()
 
-        for pa in from_user.project_memberships.all():
-            pa.combine_access(to_user)
-
         for pi in from_user.project_invitations.all():
             if not pi.project.has_access(to_user,(pi.access,)):
                 pi.user = to_user
@@ -172,29 +171,20 @@ def reassign_content(from_user,to_user):
             e.author = to_user
             e.save()
 
-        for ea in from_user.extension_accesses.all():
-            ea.combine_access(to_user)
-
         for t in from_user.own_themes.all():
             t.author = to_user
             t.save()
 
-        for ta in from_user.theme_accesses.all():
-            ta.combine_access(to_user)
+        for a in from_user.individual_accesses.all():
+            a.combine_access(to_user)
 
         for cpt in from_user.own_custom_part_types.all():
             cpt.author = to_user
             cpt.save()
 
-        for ca in from_user.custom_part_type_accesses.all():
-            ca.combine_access(to_user)
-
         for r in from_user.resources.all():
             r.owner = to_user
             r.save()
-
-        for a in from_user.item_accesses.all():
-            a.combine_access(to_user)
 
         for ei in from_user.own_items.all():
             ei.author = to_user
@@ -208,7 +198,7 @@ class Project(models.Model, ControlledObject):
     name = models.CharField(max_length=200)
     owner = models.ForeignKey(User, related_name='own_projects', on_delete=models.CASCADE)
 
-    permissions = models.ManyToManyField(User, through='ProjectAccess')
+    access = GenericRelation('IndividualAccess', related_query_name='project', content_type_field='object_content_type', object_id_field='object_id')
 
     timeline = GenericRelation('TimelineItem', related_query_name='projects', content_type_field='timeline_content_type', object_id_field='timeline_id')
     timeline_noun = 'project'
@@ -238,17 +228,15 @@ class Project(models.Model, ControlledObject):
         return reverse('project_index', args=(self.pk,))
 
     def has_access(self, user, levels):
-        if user.is_anonymous:
-            return False
         if user==self.owner:
             return True
-        return ProjectAccess.objects.filter(project=self, user=user, access__in=levels).exists()
+        return super().has_access(user,levels)
 
     def members(self):
         return [self.owner]+self.non_owner_members()
 
     def non_owner_members(self):
-        return list(User.objects.filter(project_memberships__project=self).exclude(pk=self.owner.pk))
+        return list(User.objects.filter(individual_accesses__in=self.access.all()).exclude(pk=self.owner.pk))
 
     def all_timeline(self):
         items = self.timeline.all() | TimelineItem.objects.filter(editoritems__project=self)
@@ -257,7 +245,7 @@ class Project(models.Model, ControlledObject):
 
     @property
     def watching_users(self):
-        q = (User.objects.filter(pk=self.owner.pk) | User.objects.filter(project_memberships__project=self) | self.watching_non_members.all()).distinct()
+        q = (User.objects.filter(pk=self.owner.pk) | User.objects.filter(individual_accesses__in=self.access.all()) | self.watching_non_members.all()).distinct()
         return q.exclude(pk__in=self.unwatching_members.all())
 
     def __str__(self):
@@ -315,12 +303,25 @@ class Project(models.Model, ControlledObject):
         elif user.is_anonymous:
             return Q(public_view=True)
         else:
-            return (Q(projectaccess__user=user, projectaccess__access__in=view_perms) 
+            return (Q(access__user=user, access__access__in=view_perms) 
                     | Q(public_view=True) 
                     | Q(owner=user)
                    )
 
-class AccessMixin:
+class IndividualAccess(models.Model, TimelineMixin):
+    object_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    object = GenericForeignKey('object_content_type', 'object_id')
+
+    user = models.ForeignKey(User, related_name='individual_accesses', on_delete=models.CASCADE)
+    access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
+
+    timelineitems = GenericRelation('TimelineItem', related_query_name='individual_accesses', content_type_field='object_content_type', object_id_field='object_id')
+    timelineitem_template = 'timeline/access.html'
+
+    def __str__(self):
+        return f'{self.access} access granted to {self.user} on {self.object}'
+
     def combine_access(self, to_user):
         order = ['view','edit']
         try:
@@ -333,30 +334,14 @@ class AccessMixin:
             self.user = to_user
             self.save()
 
-
-class ProjectAccess(models.Model, TimelineMixin, AccessMixin):
-    object_field_name = 'project'
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='projectaccess')
-    user = models.ForeignKey(User, related_name='project_memberships', on_delete=models.CASCADE)
-    access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
-
-    timelineitems = GenericRelation('TimelineItem', related_query_name='project_accesses', content_type_field='object_content_type', object_id_field='object_id')
-    timelineitem_template = 'timeline/access.html'
-
     def can_be_deleted_by(self, user):
-        return self.project.can_be_edited_by(user)
+        return self.object.can_be_edited_by(user)
 
     def can_be_viewed_by(self, user):
-        return self.project.can_be_viewed_by(user)
+        return self.object.can_be_viewed_by(user)
 
     def timeline_object(self):
-        return self.project
-
-    def icon(self):
-        return 'eye-open'
-
-    class Meta:
-        unique_together = (("project", "user"),)
+        return self.object
 
 class ProjectInvitation(models.Model):
     email = models.EmailField()
@@ -384,11 +369,11 @@ def apply_project_invitations(instance, created, **kwargs):
             project = invitation.project
             if not project.has_access(instance,(invitation.access,)):
                 try:
-                    access = ProjectAccess.objects.get(project=project,user=instance)
+                    access = IndividualAccess.objects.get(object=project,user=instance)
                     access.access = invitation.access
                     access.save()
-                except ProjectAccess.DoesNotExist:
-                    ProjectAccess.objects.create(project=invitation.project, user=instance, access=invitation.access)
+                except IndividualAccess.DoesNotExist:
+                    IndividualAccess.objects.create(object=project, user=instance, access=invitation.access)
             invitation.applied = True
             invitation.save()
 
@@ -479,6 +464,8 @@ class Extension(models.Model, ControlledObject, EditablePackageMixin):
     editable = models.BooleanField(default=True, help_text='Is this extension stored within the editor\'s media folder?')
     runs_headless = models.BooleanField(default=True, help_text='Can this extension run outside a browser?')
 
+    access = GenericRelation('IndividualAccess', related_query_name='extension', content_type_field='object_content_type', object_id_field='object_id')
+
     superuser_sees_everything = False
 
     package_noun = 'extension'
@@ -500,11 +487,9 @@ class Extension(models.Model, ControlledObject, EditablePackageMixin):
         return user == self.author
 
     def has_access(self, user, levels):
-        if user.is_anonymous:
-            return False
         if user==self.author:
             return True
-        return ExtensionAccess.objects.filter(extension=self, user=user, access__in=levels).exists()
+        return super().has_access(user,levels)
 
     @property
     def owner(self):
@@ -625,24 +610,6 @@ def delete_extracted_extension(sender,instance,**kwargs):
         shutil.rmtree(str(p))
     
 
-class ExtensionAccess(models.Model, TimelineMixin, AccessMixin):
-    object_field_name = 'extension'
-    extension = models.ForeignKey('Extension', related_name='access', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, related_name='extension_accesses', on_delete=models.CASCADE)
-    access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
-
-    timelineitems = GenericRelation('TimelineItem', related_query_name='extension_accesses', content_type_field='object_content_type', object_id_field='object_id')
-    timelineitem_template = 'timeline/access.html'
-
-    def can_be_viewed_by(self, user):
-        return self.extension.can_be_viewed_by(user)
-
-    def can_be_deleted_by(self, user):
-        return self.extension.can_be_deleted_by(user)
-
-    def timeline_object(self):
-        return self.extension
-
 class Theme(models.Model, ControlledObject, EditablePackageMixin):
     name = models.CharField(max_length=200)
     public = models.BooleanField(default=False, help_text='Can this theme be seen by everyone?')
@@ -651,6 +618,8 @@ class Theme(models.Model, ControlledObject, EditablePackageMixin):
     last_modified = models.DateTimeField(auto_now=True)
     zipfile_folder = 'user-themes'
     zipfile = models.FileField(upload_to=zipfile_folder+'/zips', max_length=255, verbose_name='Theme package', help_text='A .zip package containing the theme\'s files')
+
+    access = GenericRelation('IndividualAccess', related_query_name='theme', content_type_field='object_content_type', object_id_field='object_id')
 
     package_noun = 'theme'
     timeline_noun = 'theme'
@@ -664,11 +633,9 @@ class Theme(models.Model, ControlledObject, EditablePackageMixin):
         return self.public or super().can_be_viewed_by(user)
 
     def has_access(self, user, levels):
-        if user.is_anonymous:
-            return False
         if user==self.author:
             return True
-        return ThemeAccess.objects.filter(theme=self, user=user, access__in=levels).exists()
+        return super().has_access(user,levels)
 
     @property
     def owner(self):
@@ -720,24 +687,6 @@ class Theme(models.Model, ControlledObject, EditablePackageMixin):
     def icon(self):
         return 'sunglasses'
 
-class ThemeAccess(models.Model, TimelineMixin, AccessMixin):
-    object_field_name = 'theme'
-    theme = models.ForeignKey('Theme', related_name='access', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, related_name='theme_accesses', on_delete=models.CASCADE)
-    access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
-
-    timelineitems = GenericRelation('TimelineItem', related_query_name='theme_accesses', content_type_field='object_content_type', object_id_field='object_id')
-    timelineitem_template = 'timeline/access.html'
-
-    def can_be_viewed_by(self, user):
-        return self.theme.can_be_viewed_by(user)
-
-    def can_be_deleted_by(self, user):
-        return self.theme.can_be_deleted_by(user)
-
-    def timeline_object(self):
-        return self.theme
-
 @receiver(signals.pre_delete, sender=Theme)
 def reset_theme_on_delete(sender, instance, **kwargs):
     default_theme = settings.GLOBAL_SETTINGS['NUMBAS_THEMES'][0][1]
@@ -779,6 +728,8 @@ class CustomPartType(models.Model, ControlledObject):
     ready_to_use = models.BooleanField(default=False, verbose_name='Ready to use?')
     copy_of = models.ForeignKey('self', null=True, related_name='copies', on_delete=models.SET_NULL)
     extensions = models.ManyToManyField(Extension, blank=True, related_name='custom_part_types')
+
+    access = GenericRelation('IndividualAccess', related_query_name='custom_part_type', content_type_field='object_content_type', object_id_field='object_id')
 
     timeline_noun = 'part type'
     icon = 'ok'
@@ -829,14 +780,10 @@ class CustomPartType(models.Model, ControlledObject):
             if self.published:
                 return True
 
-        if user.is_anonymous:
-            return False
-
         if user==self.owner or user.is_superuser:
             return True
 
-        return CustomPartTypeAccess.objects.filter(user=user,custom_part_type=self,access__in=levels).exists()
-        return False
+        return super().has_access(user,levels)
 
     def can_be_copied_by(self, user):
         return self.has_access(user, ('edit',))
@@ -897,24 +844,6 @@ class CustomPartType(models.Model, ControlledObject):
             }
         }
         return obj
-
-class CustomPartTypeAccess(models.Model, TimelineMixin, AccessMixin):
-    object_field_name = 'custom_part_type'
-    custom_part_type = models.ForeignKey('CustomPartType', related_name='access', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, related_name='custom_part_type_accesses', on_delete=models.CASCADE)
-    access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
-
-    timelineitems = GenericRelation('TimelineItem', related_query_name='custom_part_type_accesses', content_type_field='object_content_type', object_id_field='object_id')
-    timelineitem_template = 'timeline/access.html'
-
-    def can_be_viewed_by(self, user):
-        return self.custom_part_type.can_be_viewed_by(user)
-
-    def can_be_deleted_by(self, user):
-        return self.custom_part_type.can_be_deleted_by(user)
-
-    def timeline_object(self):
-        return self.custom_part_type
 
 class Resource(models.Model):
     owner = models.ForeignKey(User, related_name='resources', on_delete=models.CASCADE)
@@ -1065,27 +994,6 @@ class TaggedItem(taggit.models.GenericTaggedItemBase):
 class TaggedQuestion(taggit.models.GenericTaggedItemBase):
     tag = models.ForeignKey(EditorTag, related_name='tagged_items', on_delete=models.CASCADE)
 
-class Access(models.Model, TimelineMixin, AccessMixin):
-    object_field_name = 'item'
-    item = models.ForeignKey('EditorItem', related_name='accesses', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, related_name='item_accesses', on_delete=models.CASCADE)
-    access = models.CharField(default='view', editable=True, choices=USER_ACCESS_CHOICES, max_length=6)
-
-    timelineitems = GenericRelation('TimelineItem', related_query_name='item_accesses', content_type_field='object_content_type', object_id_field='object_id')
-    timelineitem_template = 'timeline/access.html'
-
-    def can_be_viewed_by(self, user):
-        return self.item.can_be_viewed_by(user)
-
-    def can_be_deleted_by(self, user):
-        return self.item.can_be_deleted_by(user)
-
-    def timeline_object(self):
-        return self.item
-
-    def icon(self):
-        return 'eye-open'
-
 NUMBAS_FILE_VERSION = 'exam_results_page_options'
 
 @deconstructible
@@ -1226,10 +1134,11 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
 
     author = models.ForeignKey(User, related_name='own_items', on_delete=models.CASCADE)
     public_access = models.CharField(default='view', editable=True, choices=PUBLIC_ACCESS_CHOICES, max_length=6)
-    access_rights = models.ManyToManyField(User, through='Access', blank=True, editable=False, related_name='accessed_items')
     licence = models.ForeignKey(Licence, null=True, blank=True, on_delete=models.SET_NULL)
     project = models.ForeignKey(Project, null=True, related_name='items', on_delete=models.CASCADE)
     folder = models.ForeignKey(Folder, null=True, related_name='items', on_delete=models.SET_NULL)
+
+    access = GenericRelation('IndividualAccess', related_query_name='editoritem', content_type_field='object_content_type', object_id_field='object_id')
 
     content = models.TextField(blank=True, validators=[validate_content])
     metadata = JSONField(blank=True)
@@ -1268,7 +1177,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
 
     @property
     def watching_users(self):
-        q = (User.objects.filter(pk=self.author.pk) | User.objects.filter(item_accesses__item=self)).distinct() | self.project.watching_users
+        q = (User.objects.filter(pk=self.author.pk) | User.objects.filter(individual_accesses__in=self.access.all())).distinct() | self.project.watching_users
         return q.exclude(pk__in=self.unwatching_users.all())
 
     @property
@@ -1282,9 +1191,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
             return NewStampOfApproval(object=self,status='draft')
 
     def has_access(self, user, levels):
-        if user.is_anonymous:
-            return False
-        return self.project.has_access(user, levels) or Access.objects.filter(item=self, user=user, access__in=levels).exists()
+        return self.project.has_access(user, levels) or super().has_access(user,levels)
 
     def can_be_viewed_by(self, user):
         if self.item_type=='exam' and getattr(settings,'EXAM_ACCESS_REQUIRES_QUESTION_ACCESS',False):
@@ -1529,14 +1436,15 @@ class Timeline(object):
         view_filter = Q(editoritems__published=True) | Q(object_content_type=ContentType.objects.get_for_model(SiteBroadcast), object_id__in=nonsticky_broadcasts)
 
         if not self.viewing_user.is_anonymous:
-            projects = self.viewing_user.own_projects.all() | Project.objects.filter(projectaccess__in=self.viewing_user.project_memberships.all()) | Project.objects.filter(watching_non_members=self.viewing_user)
+            projects = self.viewing_user.own_projects.all() | Project.objects.filter(access__in=self.viewing_user.individual_accesses.all()) | Project.objects.filter(watching_non_members=self.viewing_user)
             items_for_user = (
-                Q(editoritems__accesses__in=self.viewing_user.item_accesses.all()) | 
                 Q(editoritems__project__in=projects) |
                 Q(projects__in=projects) |
-                Q(extension_accesses__user=viewing_user) |
-                Q(theme_accesses__user=viewing_user) | 
-                Q(custom_part_type_accesses__user=self.viewing_user)
+                Q(individual_accesses__user=viewing_user)
+#                Q(editoritems__accesses__in=self.viewing_user.item_accesses.all()) | 
+ #               Q(extension_accesses__user=viewing_user) |
+ #               Q(theme_accesses__user=viewing_user) | 
+ #               Q(custom_part_type_accesses__user=self.viewing_user) |
             )
 
             view_filter = view_filter | items_for_user
@@ -1998,3 +1906,49 @@ class NewExamQuestion(models.Model):
 def item_created_timeline_event(instance, created, **kwargs):
     if created:
         ItemChangedTimelineItem.objects.create(user=instance.editoritem.author, object=instance.editoritem, verb='created')
+
+class ItemQueueManager(models.Manager):
+    def visible_to(self,user):
+        return self.all()
+
+class ItemQueue(models.Model):
+    objects = ItemQueueManager()
+    owner = models.ForeignKey(User, null=True, on_delete=models.SET_NULL, related_name='own_queues')
+    name = models.CharField(max_length=200)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='queues')
+    description = models.TextField(blank=True)
+    instructions = models.TextField(blank=True)
+
+class ItemQueueChecklistItem(models.Model):
+    queue = models.ForeignKey(ItemQueue, on_delete=models.CASCADE, related_name='checklist')
+    label = models.CharField(max_length=500)
+
+class ItemQueueEntryManager(models.Manager):
+    def incomplete(self):
+        return self.filter(complete=False)
+
+class ItemQueueEntry(models.Model):
+    objects = ItemQueueEntryManager()
+
+    queue = models.ForeignKey(ItemQueue, on_delete=models.CASCADE, related_name='entries')
+    item = models.ForeignKey(EditorItem, on_delete=models.CASCADE, related_name='queue_entries')
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='queue_entries')
+    note = models.TextField(blank=True)
+    complete = models.BooleanField(default=False)
+
+    comments = GenericRelation('Comment', content_type_field='object_content_type', object_id_field='object_id', related_query_name='item_queue_entry')
+    timeline = GenericRelation('TimelineItem', related_query_name='item_queue_entry', content_type_field='timeline_content_type', object_id_field='timeline_id')
+
+    def checklist_items(self):
+        return self.queue.checklist.all().annotate(ticked=Exists(ItemQueueChecklistTick.objects.filter(item=OuterRef('pk'), entry=self)))
+
+    @property
+    def watching_users(self):
+        query = Q(pk=self.created_by.pk) | Q(comments__item_queue_entry=self)
+        return User.objects.filter(query).distinct()
+
+class ItemQueueChecklistTick(models.Model):
+    entry = models.ForeignKey(ItemQueueEntry, on_delete=models.CASCADE, related_name='ticks')
+    item = models.ForeignKey(ItemQueueChecklistItem, on_delete=models.CASCADE, related_name='ticks')
+    date = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL, related_name='queue_entry_ticks')

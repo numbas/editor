@@ -31,8 +31,19 @@
                 {% endif %}
             </div>
 
+            <div id="queues-summary">
+                <h2><span class="glyphicon glyphicon-list"></span> Queues</h2>
+
+                <ul class="list-inline">
+                    {% for queue in project.queues.all %}
+                    <li class="queue"><a href="{% url 'queue_view' queue.pk %}">{{queue.name}}</a> ({% with num_entries=queue.entries.incomplete.count %}{{num_entries}} entr{{num_entries|pluralize:"y,ies"}}{% endwith %})</li>
+                    {% endfor %}
+                    <li><a href="{% url 'queue_new' %}?project={{project.pk}}" class="btn btn-link"><span class="glyphicon glyphicon-plus"></span> Create a new queue</a></li>
+                </ul>
+            </div>
+
             <div id="project-timeline">
-                <h2>Project activity</h2>
+                <h2><span class="glyphicon glyphicon-time"></span> Project activity</h2>
                 {% if member_of_project %}
                 <div class="timeline-write-comment" data-bind="with: commentwriter">
                     <button class="btn btn-primary" data-bind="visible: !writingComment(), click: writingComment" type="button"><span class="glyphicon glyphicon-comment"></span> Write a comment</button>

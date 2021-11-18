@@ -56,6 +56,38 @@
         {% include "footer.html" %}
         {% endblock body %}
 
+        {% block modals %}
+        {% if user.is_authenticated %}
+        <div class="modal fade" tabindex="-1" role="dialog" id="add-to-queue-modal">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Add <em class="item-name"></em> to a queue</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>Choose a queue to add this item to.</p>
+                        <table class="queues table">
+                            {% for queue in user.userprofile.available_queues %}
+                            <tr>
+                                <td class="queue-info">
+                                    <p><a target="_blank" href="{% url 'queue_view' queue.pk %}"><span class="glyphicon glyphicon-list"></span> {{queue.name}}</a></p>
+                                    <p class="text-muted"><a class="text-muted" target="_blank" href="{{queue.project.get_absolute_url}}"><span class="glyphicon glyphicon-briefcase"></span> {{queue.project.name}}</a></p>
+                                </td>
+                                <td>
+                                    <a class="pick btn btn-primary" href="{% url 'queue_add' queue.pk %}"><span class="glyphicon glyphicon-plus"></span> Add to this queue</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endblock modals %}
+
+
         {% block javascripts %}
             <script>
                 var is_logged_in = {% if request.user.is_authenticated %}true{% else %}false{% endif %};

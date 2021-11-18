@@ -15,6 +15,8 @@ from wsgiref.util import FileWrapper
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.syndication.views import Feed
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -37,7 +39,7 @@ from django_tables2.config import RequestConfig
 from accounts.models import UserProfile, EditorItemViewed
 
 from editor.tables import EditorItemTable, RecentlyPublishedTable
-from editor.models import EditorItem, Project, Access, Licence, PullRequest, Taxonomy, Contributor, Folder
+from editor.models import EditorItem, Project, IndividualAccess, Licence, PullRequest, Taxonomy, Contributor, Folder
 import editor.models
 import editor.views.generic
 from editor.views.generic import ProjectQuerysetMixin
@@ -131,7 +133,6 @@ class CopyView(ProjectQuerysetMixin, generic.FormView, generic.edit.ModelFormMix
         if obj2.editoritem.project == obj.editoritem.project:
             obj2.editoritem.folder = obj.editoritem.folder
         obj2.editoritem.save()
-        obj2.editoritem.access_rights.clear()
         for c in obj.editoritem.contributors.all():
             try:
                 Contributor.objects.create(item=obj2.editoritem,user=c.user,name=c.name,profile_url=c.profile_url)
@@ -232,7 +233,7 @@ class BaseUpdateView(generic.UpdateView):
 
         context['project'] = self.object.editoritem.project
 
-        context['access_rights'] = [{'user': user_json(a.user), 'access_level': a.access} for a in Access.objects.filter(item=self.object.editoritem)]
+        context['access_rights'] = [{'user': user_json(a.user), 'access_level': a.access} for a in self.object.editoritem.access.all()]
 
         licences = [licence.as_json() for licence in Licence.objects.all()]
 
@@ -709,26 +710,34 @@ class UnPublishView(PublishView):
 
 class SetAccessView(generic.UpdateView):
     model = EditorItem
-    form_class = editor.forms.SetAccessForm
 
-    def get_form_kwargs(self):
-        kwargs = super(SetAccessView, self).get_form_kwargs()
-        kwargs['data'] = self.request.POST.copy()
-        kwargs['data'].update({'given_by':self.request.user.pk})
-        return kwargs
-
-    def form_valid(self, form):
+    def post(self, request, *args, **kwargs):
         item = self.get_object()
 
         if not item.can_be_edited_by(self.request.user):
             return http.HttpResponseForbidden("You don't have permission to edit this item.")
 
-        self.object = form.save()
+        existing_accesses = item.access.all()
+
+        user_ids = [int(x) for x in self.request.POST.getlist('user_ids[]')]
+        access_levels = self.request.POST.getlist('access_levels[]')
+
+        access_dict = {u:a for u,a in zip(user_ids, access_levels)}
+
+        for a in existing_accesses:
+            if a.user.pk not in user_ids:
+                a.delete()
+            new_access = access_dict[a.user.pk]
+            if a.access != new_access:
+                a.access = new_access
+                a.save()
+
+            del access_dict[a.user.pk]
+
+        for user_id, access in access_dict.items():
+            IndividualAccess.objects.create(user=User.objects.get(pk=user_id), access=access, object=item)
 
         return http.HttpResponse('ok!')
-
-    def form_invalid(self, form):
-        return http.HttpResponse(form.errors.as_text())
 
     def get(self, request, *args, **kwargs):
         return http.HttpResponseNotAllowed(['POST'], 'GET requests are not allowed at this URL.')

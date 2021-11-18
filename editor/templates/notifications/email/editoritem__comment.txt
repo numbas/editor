@@ -1,0 +1,8 @@
+{% extends "notifications/email/base.txt" %}
+{% block content %}
+{{actor.get_full_name}} {{notification.verb}} "{{target.name}}":
+
+Read it at:
+
+  {{domain}}{{target.get_absolute_url}}#editing-history
+{% endblock content %}

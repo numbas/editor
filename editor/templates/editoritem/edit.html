@@ -57,14 +57,14 @@
 <div class="loaded-content">
     <div class="page-header">
         {% block page_header %}
-        <h2 class="project-header">
+        <div class="project-header">
             <ol class="list-inline">
                 <li class="project"><span class="glyphicon glyphicon-briefcase"></span> <a href="{% url 'project_index' object.editoritem.project.pk %}">{{object.editoritem.project.name}}</a>
                 {% for folder in breadcrumbs %}
                 <li><a href="{{folder.get_absolute_url}}">{{folder.name}}</a></li>
                 {% endfor %}
             </ol>
-        </h2>
+        </div>
         <h1 class="name-header">
             <span class="glyphicon glyphicon-{{object.icon}}"></span> 
             <span class="name" data-bind="mathjaxHTML: name">{{object.name}}</span>
@@ -145,6 +145,13 @@
                         <li><a href="{% editoritem_url 'source' object %}">source</a></li>
                     </ul>
                 </li>
+
+                <li>
+                    <a href="#" class="add-to-queue" title="Add this to a queue" data-item-id="{{object.editoritem.pk}}">
+                        <span class="glyphicon glyphicon-list" aria-hidden="true"></span> Add to a queue
+                    </a>
+                </li>
+
                 {% endblock admin_controls %}
             </ul>
 

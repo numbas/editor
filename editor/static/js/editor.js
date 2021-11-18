@@ -2512,6 +2512,22 @@ $(document).ready(function() {
         }
     });
 
+    $('body').on('click','.add-to-queue',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var id = parseInt($(this).attr('data-item-id'));
+        var name = $(this).attr('data-item-name');
+        $('#add-to-queue-modal .item-name').text(name);
+        $('#add-to-queue-modal .queues a.pick').each(function() {
+            if(!this.getAttribute('data-original-href')) {
+                this.setAttribute('data-original-href', this.getAttribute('href'));
+            }
+            this.setAttribute('href',this.getAttribute('data-original-href')+'?item='+id);
+        });
+        $('#add-to-queue-modal').modal('show');
+    });
+
     Editor.autocomplete_source = function(obj,from,to) {
         return function(s,callback) {
             var result = ko.unwrap(from).filter(function(o2) {

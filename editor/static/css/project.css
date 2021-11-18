@@ -7,3 +7,6 @@
     text-align: right;
 }
 
+#queues-summary .queue {
+    padding: 1em;
+}

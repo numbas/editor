@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+{% load sstatic %}
+
+{% block title %}Create a new item queue - {{block.super}}{% endblock title %}
+
+{% block content %}
+<div class="page-header">
+    <h1><span class="glyphicon glyphicon-plus"></span> Create a new item queue</h1>
+</div>
+
+<form action="" method="post" class="form-horizontal">
+    {% csrf_token %}
+    {% for field in form.hidden_fields %}{{field}}{% endfor %}
+
+    {% for field in form.visible_fields %}
+    <div class="form-group {% if field.errors %}has-error{% endif %}">
+        <label class="col-sm-2 control-label">{{field.label}}</label>
+        <div class="col-sm-10">
+            {{field.as_widget}}
+            {% if field.errors %}
+            <ul class="errorlist list-unstyled">
+                {% for error in field.errors %}
+                <li>{{error}}</li>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Checklist</label>
+        <div class="col-sm-10">
+            <ul class="list-unstyled" id="checklist" data-bind="foreach: checklist_items">
+                <li>
+                    <input name="checklist" class="form-control" data-bind="textInput: label"> 
+                    <button type="button" data-bind="click: remove" class="btn btn-xs btn-link" title="Remove this item"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                </li>
+            </ul>
+            <button type="btn btn-default" data-bind="click: add_checklist_item"><span class="glyphicon glyphicon-plus"></span> Add another item</button>
+        </div>
+    </div>
+
+    <div class="col-sm-offset-2 col-sm-10">
+        <button type="submit" class="btn btn-primary">Create</button></p>
+    </div>
+</form>
+
+{% endblock content %}
+
+{% block javascripts %}
+    {{block.super}}
+
+    <script src="{% sstatic 'js/queue/new.js' %}" type="text/javascript"></script>
+{% endblock javascripts %}
+
+{% block stylesheets %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% sstatic 'css/queue/new.css' %}"/>
+{% endblock stylesheets %}

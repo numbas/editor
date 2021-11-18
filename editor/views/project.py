@@ -3,6 +3,7 @@ import urllib.parse
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models import Sum, When, Case, IntegerField
 from django.views import generic
@@ -13,7 +14,7 @@ from django.core.exceptions import PermissionDenied
 from itertools import groupby
 from django_tables2.config import RequestConfig
 
-from editor.models import Project, ProjectAccess, ProjectInvitation, STAMP_STATUS_CHOICES, Folder
+from editor.models import Project, ProjectInvitation, STAMP_STATUS_CHOICES, Folder, IndividualAccess
 import editor.forms
 import editor.views.editoritem
 from editor.tables import ProjectTable, EditorItemTable, BrowseProjectTable
@@ -59,7 +60,7 @@ class ProjectContextMixin(object):
         context['project'] = project
         context['in_project'] = project is not None
         context['project_editable'] = project.can_be_edited_by(self.request.user)
-        context['member_of_project'] = self.request.user == project.owner or ((not self.request.user.is_anonymous) and ProjectAccess.objects.filter(project=project, user=self.request.user).exists())
+        context['member_of_project'] = self.request.user == project.owner or ((not self.request.user.is_anonymous) and project.access.filter(user=self.request.user).exists())
         context['watching_project'] = project.watching_users.all().filter(pk=self.request.user.pk).exists()
         return context
 
@@ -113,7 +114,7 @@ class OptionsView(ProjectContextMixin, SettingsPageMixin, generic.UpdateView):
 class ManageMembersView(ProjectContextMixin, SettingsPageMixin, generic.UpdateView):
     template_name = 'project/manage_members.html'
     settings_page = 'members'
-    form_class = editor.forms.ProjectAccessFormset
+    form_class = editor.forms.IndividualAccessFormset
 
     def get_invitations_form(self):
         kwargs = {
@@ -129,7 +130,8 @@ class ManageMembersView(ProjectContextMixin, SettingsPageMixin, generic.UpdateVi
 
     def get_context_data(self, **kwargs):
         context = super(ManageMembersView, self).get_context_data(**kwargs)
-        context['add_member_form'] = editor.forms.AddMemberForm({'project':self.object.pk, 'adding_user':self.request.user})
+        ct = ContentType.objects.get_for_model(self.object)
+        context['add_member_form'] = editor.forms.AddMemberForm({'object_content_type': ct.pk, 'object_id': self.object.pk, 'adding_user':self.request.user})
         context['invitations_form'] = self.get_invitations_form()
         return context
 
@@ -149,7 +151,7 @@ class ManageMembersView(ProjectContextMixin, SettingsPageMixin, generic.UpdateVi
         return reverse('project_settings_members', args=(self.get_object().pk,))
 
 class AddMemberView(ProjectContextMixin, SettingsPageMixin, generic.CreateView):
-    model = ProjectAccess
+    model = IndividualAccess
     form_class = editor.forms.AddMemberForm
     template_name = 'project/add_member.html'
     settings_page = 'members'
@@ -158,7 +160,7 @@ class AddMemberView(ProjectContextMixin, SettingsPageMixin, generic.CreateView):
         return Project.objects.get(pk=self.kwargs['project_pk'])
 
     def get_success_url(self):
-        return reverse('project_settings_members', args=(self.object.project.pk,))
+        return reverse('project_settings_members', args=(self.object.object.pk,))
 
     def form_valid(self, form):
         self.object = form.save()
@@ -182,8 +184,8 @@ class TransferOwnershipView(ProjectContextMixin, MustBeOwnerMixin, generic.Updat
         project = self.get_object()
         new_owner = form.cleaned_data['selected_user']
         if new_owner != project.owner:
-            ProjectAccess.objects.filter(project=project, user=new_owner).delete()
-            ProjectAccess.objects.create(project=project, user=project.owner, access='edit')
+            IndividualAccess.objects.filter(object=project, user=new_owner).delete()
+            IndividualAccess.objects.create(object=project, user=project.owner, access='edit')
         
         return super(TransferOwnershipView, self).form_valid(form)
 
@@ -357,9 +359,9 @@ class UnwatchProjectView(BaseProjectWatchView):
         return self.valid()
 
 class LeaveProjectView(ProjectContextMixin, MustBeMemberMixin, generic.DeleteView):
-    model = ProjectAccess
+    model = IndividualAccess
     template_name = 'project/leave.html'
-    context_object_name = 'projectaccess'
+    context_object_name = 'access'
 
     def dispatch(self, request, *args, **kwargs):
         project = self.get_project()
@@ -379,8 +381,8 @@ class LeaveProjectView(ProjectContextMixin, MustBeMemberMixin, generic.DeleteVie
         project = self.get_project()
 
         try:
-            obj = queryset.get(project=project, user=self.request.user)
-        except queryset.model.DoesNotExist:
+            obj = project.access.get(user=self.request.user)
+        except IndividualAccess.DoesNotExist:
             raise http.Http404("You don't have access to this project.")
 
         return obj

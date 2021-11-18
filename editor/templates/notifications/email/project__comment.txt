@@ -1,7 +1,7 @@
 {% extends "notifications/email/base.txt" %}
 
 {% block content %}
-{{comment.user.get_full_name}} {{notification.verb}} the project "{{project.name}}":
+{{actor.get_full_name}} {{notification.verb}} the project "{{target.name}}":
 
 Read it at:
 

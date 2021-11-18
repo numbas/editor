@@ -1,0 +1,91 @@
+{% extends "layout.html" %}
+{% load sstatic %}
+{% load user_link %}
+{% load sanitizer %}
+{% load links %}
+
+{% block title %}Review {{entry.item.name}} - {{entry.queue.name}} - {{block.super}}{% endblock title %}
+
+{% block content %}
+<div class="page-header">
+    <h1><span class="glyphicon glyphicon-list"></span> <a href="{% url 'queue_view' entry.queue.pk %}">{{entry.queue.name}}</a></h1>
+</div>
+
+<p>Please review <em>{% editoritem_link entry.item.rel_obj show_icon=True %}</em>.</p>
+
+<section id="note">
+    <h2>Submission note</h2>
+    <p class="text-muted">
+        Submitted by 
+        {% user_thumbnail entry.created_by 40 36 link=True %}
+        {% user_link entry.created_by %}
+    </p>
+    <div class="text">
+        {{entry.note|escape_html|safe}}
+    </div>
+</section>
+
+<hr/>
+
+<section id="checklist">
+    <h2>Checklist</h2>
+    <div class="text">
+        {{entry.queue.instructions|escape_html|safe}}
+    </div>
+    <form method="POST" action="" class="form-horizontal">
+        {% csrf_token %}
+
+        <ul class="list-unstyled">
+        {% for item in entry.checklist_items %}
+        <li>
+            <input id="item-{{item.pk}}" type="checkbox" {% if item.ticked %}checked{% endif %} name="ticked-items" value="{{item.pk}}">
+            <label for="item-{{item.pk}}">
+                {{item.label|escape_html|safe}}
+            </label>
+        </li>
+        {% endfor %}
+        </ul>
+
+        <p>
+            <input type="checkbox" name="remove" id="remove">
+            <label for="remove">This entry is complete - remove it from the queue</label>
+        </p>
+
+        <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-save"></span> Save</button>
+    </form>
+</section>
+
+<hr/>
+
+<section id="timeline">
+    <h2>Comments</h2>
+    <div data-bind="visible: !commentwriter.writingComment()">
+        <button class="btn btn-primary" data-bind="click: commentwriter.writingComment" type="button"><span class="glyphicon glyphicon-comment"></span> Write a comment</button>
+    </div>
+    <div class="timeline-write-comment" data-bind="with: commentwriter">
+        <form action="{% url 'queue_entry_comment' entry.pk %}" data-bind="fadeVisible: writingComment, submit: submitComment">
+            <h3>Comment</h3>
+            <div data-bind="writemaths: commentText, editImmediately: true"></div>
+            <div class="buttons">
+                <button type="Submit" class="btn btn-primary" data-bind="attr: {disabled: commentIsEmpty}">Submit</button>
+                <button type="button" class="btn btn-default" data-bind="click: cancelComment">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="timeline">
+        {% with current_timeline=entry %}
+        {% for item in entry.timeline.all %}
+            {% include item.object.timelineitem_template %}
+        {% endfor %}
+        {% endwith %}
+    </div>
+</section>
+
+{% endblock content %}
+
+{% block javascripts %}
+    {{block.super}}
+
+    <script src="{% sstatic 'js/queue/review_entry.js' %}" type="text/javascript"></script>
+{% endblock javascripts %}

@@ -40,6 +40,11 @@ th.orderable:not(.desc) .glyphicon-sort-by-attributes-alt {
 .item .btn-sm {
     padding: 0;
 }
+.item td.action {
+    text-align: center;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+}
 
 .folder-list .folder:not(.expanded) > .name > .glyphicon-folder-open {
     display: none;

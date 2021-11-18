@@ -147,9 +147,12 @@
                             </li>
                             {% if item.item_type == 'question' %}
                             <li>
-                            <a class="btn btn-link btn-sm basket add-to-basket" data-question-id="{{item.question.id}}"><span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span></a>
+                                <a class="btn btn-link btn-sm basket add-to-basket" data-question-id="{{item.question.id}}"><span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span></a>
                             </li>
                             {% endif %}
+                            <li>
+                                <a class="btn btn-link btn-sm add-to-queue" title="Add this to a queue" data-item-id="{{item.id}}"><span class="glyphicon glyphicon-list" aria-hidden="true"></span></a>
+                            </li>
                         </ul>
 
                         <span>{% stamp item.get_current_stamp.status %}</span>

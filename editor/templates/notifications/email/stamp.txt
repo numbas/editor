@@ -1,8 +1,0 @@
-{% extends "notifications/email/base.txt" %}
-{% block content %}
-{{stamp.user.get_full_name}} {{notification.verb}} "{{editoritem.name}}": "{{stamp.get_status_display}}".
-
-View this {{editoritem.item_type}}: 
-
-  {{domain}}{{editoritem.get_absolute_url}}
-{% endblock content %}

@@ -1,0 +1,9 @@
+{% extends "notifications/email/base.txt" %}
+
+{% block content %}
+{{actor.get_full_name}} {{notification.verb}} the entry "{{target.item.name}}" in the queue "{{target.queue.name}}"".
+
+Read it at:
+
+  {{domain}}{% url 'queue_entry_review' target.pk %}
+{% endblock content %}

@@ -123,7 +123,7 @@ class SetAccessForm(forms.ModelForm):
 
     class Meta:
         model = EditorItem
-        fields = ['public_access']
+        fields = []
 
     def is_valid(self):
         v = super(SetAccessForm, self).is_valid()
@@ -701,6 +701,12 @@ class ProjectTransferOwnershipForm(UserSearchMixin, forms.ModelForm):
         model = editor.models.Project 
         fields = []
 
+class ItemQueueTransferOwnershipForm(UserSearchMixin, forms.ModelForm):
+    user_attr = 'owner'
+    class Meta:
+        model = editor.models.ItemQueue
+        fields = []
+
 class EditorItemTransferOwnershipForm(UserSearchMixin, forms.ModelForm):
     user_attr = 'author'
     class Meta:
@@ -850,10 +856,26 @@ class CreateExamFromBasketForm(forms.ModelForm):
 class CreateItemQueueForm(forms.ModelForm):
     class Meta:
         model = ItemQueue
-        fields = ('name', 'owner', 'project', 'description', 'instructions',)
+        fields = ('name', 'owner', 'project', 'description', 'instructions_submitter', 'instructions_reviewer',)
         widgets = {
             'name': forms.TextInput(attrs={'class':'form-control', 'placeholder':'e.g. "Things to test"'}),
             'owner': forms.HiddenInput(),
+        }
+
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args,**kwargs)
+        self.fields['project'].queryset = Project.objects.filter(Project.filter_can_be_edited_by(user))
+
+QueueChecklistFormset = inlineformset_factory(ItemQueue, ItemQueueChecklistItem, fields=('label',), extra=0)
+
+class UpdateItemQueueForm(forms.ModelForm):
+    checklist_items = QueueChecklistFormset
+
+    class Meta:
+        model = ItemQueue
+        fields = ('name', 'description', 'instructions_submitter', 'instructions_reviewer', )
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control', 'placeholder':'e.g. "Things to test"'}),
         }
 
 class CreateItemQueueEntryForm(forms.ModelForm):
@@ -865,5 +887,3 @@ class CreateItemQueueEntryForm(forms.ModelForm):
             'queue': forms.HiddenInput(),
             'item': forms.HiddenInput(),
         }
-
-QueueChecklistFormset = inlineformset_factory(ItemQueue, ItemQueueChecklistItem, fields=('label',))

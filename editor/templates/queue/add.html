@@ -1,17 +1,27 @@
 {% extends "layout.html" %}
 {% load sanitizer %}
+{% load extra_sanitize %}
 {% load links %}
 
 {% block title %}Add an item to {{queue.name}} - {{block.super}}{% endblock title %}
 
+{% block javascripts %}
+{{block.super}}   
+<script type="text/javascript">
+    $(document).ready(function() {
+        Editor.tinymce({selector:'#id_note'});
+    });
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
-    <h1><span class="glyphicon glyphicon-list"></span> Add an item to <em>{{queue.name}}</em></h1>
+    <h1><span class="glyphicon glyphicon-list"></span> Add an item to <a href="{% url 'queue_view' queue.pk %}">{{queue.name}}</a></h1>
 </div>
 
-<div class="instructions">
-    {{queue.instructions|escape_html|safe}}
-</div>
+<section class="instructions">
+    {{queue.instructions_submitter|strip_html_shift_headings:2|safe}}
+</section>
 
 <form action="" method="post" class="form-horizontal">
     {% csrf_token %}
@@ -31,7 +41,7 @@
             <strong>Recently-viewed items</strong>
             <ul>
                 {% for item in json.recent_items %}
-                <li><input type="radio" name="item" value="{{item.pk}}"> <span class="glyphicon glyphicon-{{item.icon}}"></span> {{item.editoritem.name}}</li>
+                <li><input type="radio" name="item" value="{{item.editoritem.pk}}"> {% editoritem_link item show_icon=True %}</li>
                 {% endfor %}
             </ul>
         </div>
@@ -39,7 +49,7 @@
             <strong>Items in your basket</strong>
             <ul>
                 {% for item in json.basket %}
-                <li><input type="radio" name="item" value="{{item.pk}}"> {% editoritem_link item %}</li>
+                <li><input type="radio" name="item" value="{{item.editoritem.pk}}"> {% editoritem_link item show_icon=True %}</li>
                 {% endfor %}
             </ul>
         </div>
@@ -62,12 +72,8 @@
     {% endfor %}
 
     <div class="col-sm-offset-2 col-sm-10">
-        <button type="submit" class="btn btn-primary">Create</button></p>
+        <button type="submit" class="btn btn-primary">Submit</button></p>
     </div>
 </form>
 
 {% endblock content %}
-
-{% block javascripts %}
-    
-{% endblock %}

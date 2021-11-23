@@ -82,5 +82,5 @@ class Migration(migrations.Migration):
         migrations.DeleteModel(
             name='ThemeAccess',
         ),
-        migrations.RunPython(delete_timeline_items),
+        migrations.RunPython(delete_timeline_items, migrations.RunPython.noop),
     ]

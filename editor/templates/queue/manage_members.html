@@ -1,0 +1,78 @@
+{% extends "queue/settings_base.html" %}
+{% load user_link %}
+
+{% block title %}Members - {{block.super}}{% endblock title %}
+
+{% block javascripts %}
+{{block.super}}
+<script type="text/javascript">
+    $(document).ready(function() {
+        Editor.user_search_autocomplete($('#{{add_member_form.user_search.auto_id}}'));
+    });
+</script>
+{% endblock %}
+
+{% block settings_content %}
+
+<div class="panel panel-default">
+    <div class="panel-heading"><h3 class="panel-title">Queue members</h3></div>
+    <form method="post" class="form-inline">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th><span class="glyphicon glyphicon-eye-open"></span> Access</th>
+                    <th><span class="glyphicon glyphicon-trash"></span> Remove</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="glyphicon glyphicon-briefcase"></span> Members of <a href="{% url 'project_index' queue.project.pk %}">{{queue.project.name}}</a></td>
+                    <td>
+                        Access granted by project owner.
+                    </td>
+                    <td></td>
+                </tr>
+                {% for uform in form %}
+                <tr class="member">
+                    <td>{% user_thumbnail uform.instance.user 20 15 link=True %}{% user_link uform.instance.user %}{{uform.id}}</td>
+                    <td>
+                        <select id="{{uform.access.auto_id}}" name="{{uform.access.html_name}}" class="form-control">
+                            {% for value,name in uform.access.field.choices %}
+                            <option {% if value == uform.access.value %}selected{% endif %} value="{{value}}">{{name}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>{{uform.DELETE}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {{form.management_form}}
+        <div class="panel-body">
+        {% csrf_token %}
+        <button class="btn btn-primary pull-right" type="submit">Save changes</button>
+    </div>
+    </form>
+    <div class="panel-heading"><h3 class="panel-title"><span class="glyphicon glyphicon-plus"></span> Add a member</h3></div>
+    <div class="panel-body">
+        <form class="form-inline" action="{% url 'queue_settings_add_member' queue.pk %}" method="post">
+            {% for field in add_member_form.hidden_fields %}{{field}}{% endfor %}
+            <div class="form-group">
+                <input type="text" class="form-control" id="{{add_member_form.user_search.auto_id}}" name="user_search" placeholder="Username or full name">
+            </div>
+            <div class="form-group">
+                <select id="{{add_member_form.access.auto_id}}" name="access" class="form-control">
+                    {% for value,name in add_member_form.access.field.choices %}
+                    <option value="{{value}}">{{name}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% csrf_token %}
+            <button class="btn btn-primary" type="submit">Add</button>
+        </form>
+    </div>
+</div>
+
+{% endblock settings_content %}

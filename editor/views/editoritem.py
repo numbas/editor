@@ -255,7 +255,6 @@ class BaseUpdateView(generic.UpdateView):
         }
 
         if self.editable:
-            self.item_json['public_access'] = self.object.editoritem.public_access
             self.item_json['access_rights'] = context['access_rights']
             context['versions'] = [] # reversion.get_for_object(self.object)
 

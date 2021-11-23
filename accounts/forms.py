@@ -38,7 +38,7 @@ class UserField(BootstrapFieldMixin, forms.Field):
             try:
                 validate_email(value)
                 return User(email=value)
-            except ValidationError:
+            except forms.ValidationError:
                 raise forms.ValidationError("No user matching query '{}'".format(value))
         return user
 

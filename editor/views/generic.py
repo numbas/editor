@@ -1,6 +1,8 @@
 import json
 
-from django.shortcuts import redirect
+from django.contrib import messages
+from django.core.exceptions import PermissionDenied
+from django.shortcuts import redirect, render
 from django import http
 from django.views import generic
 from django.template.loader import get_template
@@ -20,31 +22,61 @@ def forbidden_response(request,message=None):
         status=403
     )
 
-# from http://stackoverflow.com/questions/18172102/object-ownership-validation-in-django-updateview
-class AuthorRequiredMixin(object):
+class RestrictAccessMixin(object):
+    def get_access_object(self):
+        return self.get_object()
+    
     def dispatch(self, request, *args, **kwargs):
-        if self.get_object().author != self.request.user:
-            template = get_template("403.html")
-            return http.HttpResponseForbidden(template.render(RequestContext(self.request).flatten()))
-        result = super(AuthorRequiredMixin, self).dispatch(request, *args, **kwargs)
-        return result
+        if not self.can_access(request):
+            return self.get_no_access_response()
+        return super().dispatch(request, *args, **kwargs)
 
-class CanEditMixin(object):
+    def get_no_access_response(self):
+        try:
+            templatename = self.get_no_access_template_name()
+            return render(self.request, templatename, self.get_context_data())
+        except NotImplementedError:
+            raise PermissionDenied()
+
+    def can_access(self, request):
+        raise NotImplementedError
+
+    def get_no_access_template_name(self):
+        try:
+            return self.no_access_template_name
+        except AttributeError:
+            raise NotImplementedError
+
+class AuthorRequiredMixin(RestrictAccessMixin):
+    def can_access(self, request):
+        return self.get_access_object().author == request.user
+
+class CanEditMixin(RestrictAccessMixin):
     edit_required_methods = ['GET','POST','UPDATE']
-    def dispatch(self, request, *args, **kwargs):
-        obj = self.get_object()
-        if request.method in self.edit_required_methods and not obj.can_be_edited_by(request.user):
-            template = get_template("403.html")
-            return http.HttpResponseForbidden(template.render(RequestContext(self.request).flatten()))
-        return super().dispatch(request, *args, **kwargs)
+    def can_access(self, request):
+        obj = self.get_access_object()
+        return request.method not in self.edit_required_methods or obj.can_be_edited_by(request.user)
 
-class CanViewMixin(object):
-    def dispatch(self, request, *args, **kwargs):
-        obj = self.get_object()
-        if not obj.can_be_viewed_by(request.user):
-            template = get_template("403.html")
-            return http.HttpResponseForbidden(template.render(RequestContext(self.request).flatten()))
-        return super().dispatch(request, *args, **kwargs)
+class CanViewMixin(RestrictAccessMixin):
+    def can_access(self, request):
+        obj = self.get_access_object()
+        return obj.can_be_viewed_by(request.user)
+
+class CanDeleteMixin(RestrictAccessMixin):
+    def can_access(self, request):
+        obj = self.get_access_object()
+        return obj.can_be_deleted_by(request.user)
+
+class SettingsPageMixin(CanEditMixin):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['settings_page'] = self.settings_page
+        return context
+
+    def form_valid(self, form):
+        result = super().form_valid(form)
+        messages.add_message(self.request, messages.SUCCESS, 'Your changes have been saved.')
+        return result
 
 class TimelineItemViewMixin(object):
     def response(self):

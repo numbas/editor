@@ -56,11 +56,24 @@ USER_ACCESS_CHOICES = (('view', 'Can view'), ('edit', 'Can edit'))
 
 @deconstructible
 class ControlledObject(object):
+    """
+        An object with controls on who can view, edit, copy and delete it.
+
+        Classes inheriting this must implement:
+
+        * owner : User
+        * is_published : () -> bool
+        * superuser_sees_everything : bool
+        * access : GenericRelation to IndividualAccess
+    """
 
     superuser_sees_everything = True
 
     @property
     def owner(self):
+        raise NotImplementedError
+
+    def is_published(self):
         raise NotImplementedError
 
     def has_access(self, user, accept_levels):
@@ -72,39 +85,32 @@ class ControlledObject(object):
         if getattr(settings, 'EVERYTHING_VISIBLE', False):
             return True
         
-        accept_levels = ('view', 'edit')
-        try:
-            if self.published and self.public_access in accept_levels:
-                return True
-        except AttributeError:
-            pass
-        return (self.superuser_sees_everything and user.is_superuser) or (self.owner == user) or (self.has_access(user, accept_levels))
+        return (self.superuser_sees_everything and user.is_superuser) or (self.owner == user) or self.is_published() or (self.has_access(user, ('view', 'edit')))
+
+    def can_be_edited_by(self, user):
+        return (user.is_superuser) or (self.owner == user) or self.has_access(user, ('edit',))
 
     def can_be_copied_by(self, user):
-        if not self.can_be_viewed_by(user):
-            return False
-        if user.is_superuser or self.owner == user or self.has_access(user, ('edit',)):
-            return True
-        elif not self.licence:
-            return False
-        else:
-            return self.licence.can_reuse and self.licence.can_modify
+        return self.can_be_viewed_by(user)
 
     def can_be_deleted_by(self, user):
         return user == self.owner
 
-    def can_be_edited_by(self, user):
-        try:
-            if self.public_access == 'edit':
-                return True
-        except AttributeError:
-            pass
-
-        return (user.is_superuser) or (self.owner == user) or self.has_access(user, ('edit',))
-
     def __eq__(self, other):
         return True
 
+    @classmethod
+    def filter_can_be_edited_by(cls, user):
+        if user.is_superuser and cls.superuser_sees_everything:
+            return Q()
+        elif user.is_anonymous:
+            return Q(pk=None)
+        else:
+            return (Q(access__user=user, access__access='edit')
+                    | Q(author=user)
+                    | Q(project__access__user=user, project__access__access='edit')
+                    | Q(project__owner=user)
+                   )
     @classmethod
     def filter_can_be_viewed_by(cls, user):
         if getattr(settings, 'EVERYTHING_VISIBLE', False):
@@ -114,10 +120,10 @@ class ControlledObject(object):
         if user.is_superuser and cls.superuser_sees_everything:
             return Q()
         elif user.is_anonymous:
-            return Q(published=True, public_access__in=view_perms)
+            return Q(published=True)
         else:
-            return (Q(accesses__user=user, accesses__access__in=view_perms) 
-                    | Q(published=True, public_access__in=view_perms) 
+            return (Q(access__user=user, access__access__in=view_perms) 
+                    | Q(published=True)
                     | Q(author=user)
                     | Q(project__access__user=user)
                     | Q(project__owner=user)
@@ -218,11 +224,8 @@ class Project(models.Model, ControlledObject):
     class Meta:
         ordering = ['name']
 
-    def can_be_edited_by(self, user):
-        return (user.is_superuser) or (self.owner == user) or self.has_access(user, ('edit',))
-
-    def can_be_viewed_by(self, user):
-        return self.public_view or super(Project, self).can_be_viewed_by(user)
+    def is_published(self):
+        return self.public_view
 
     def get_absolute_url(self):
         return reverse('project_index', args=(self.pk,))
@@ -293,6 +296,16 @@ class Project(models.Model, ControlledObject):
             return None
 
     @classmethod
+    def filter_can_be_edited_by(cls, user):
+        if user.is_superuser and cls.superuser_sees_everything:
+            return Q()
+        elif user.is_anonymous:
+            return Q(pk=None)
+        else:
+            return (Q(access__user=user, access__access='edit')
+                    | Q(owner=user)
+                   )
+    @classmethod
     def filter_can_be_viewed_by(cls, user):
         if getattr(settings, 'EVERYTHING_VISIBLE', False):
             return Q()
@@ -333,9 +346,6 @@ class IndividualAccess(models.Model, TimelineMixin):
         except self.__class__.DoesNotExist:
             self.user = to_user
             self.save()
-
-    def can_be_deleted_by(self, user):
-        return self.object.can_be_edited_by(user)
 
     def can_be_viewed_by(self, user):
         return self.object.can_be_viewed_by(user)
@@ -477,15 +487,6 @@ class Extension(models.Model, ControlledObject, EditablePackageMixin):
     def __str__(self):
         return self.name
 
-    def can_be_edited_by(self, user):
-        return (user.is_superuser) or (self.author == user) or self.has_access(user, ('edit',))
-
-    def can_be_viewed_by(self, user):
-        return self.public or super().can_be_viewed_by(user)
-
-    def can_be_deleted_by(self, user):
-        return user == self.author
-
     def has_access(self, user, levels):
         if user==self.author:
             return True
@@ -494,6 +495,9 @@ class Extension(models.Model, ControlledObject, EditablePackageMixin):
     @property
     def owner(self):
         return self.author
+
+    def is_published(self):
+        return self.public
 
     @classmethod
     def filter_can_be_viewed_by(cls, user):
@@ -629,9 +633,6 @@ class Theme(models.Model, ControlledObject, EditablePackageMixin):
     def __str__(self):
         return self.name
 
-    def can_be_viewed_by(self, user):
-        return self.public or super().can_be_viewed_by(user)
-
     def has_access(self, user, levels):
         if user==self.author:
             return True
@@ -640,6 +641,9 @@ class Theme(models.Model, ControlledObject, EditablePackageMixin):
     @property
     def owner(self):
         return self.author
+
+    def is_published(self):
+        return self.public
 
     @classmethod
     def filter_can_be_viewed_by(cls, user):
@@ -764,6 +768,9 @@ class CustomPartType(models.Model, ControlledObject):
     def owner(self):
         return self.author
 
+    def is_published(self):
+        return self.public_availability in ('always', 'select')
+
     def set_short_name(self, slug):
         built_in_part_types = ['jme','numberentry','patternmatch','matrix','gapfill','information','extension','1_n_2','m_n_2','m_n_x']
         if slug in built_in_part_types:
@@ -784,9 +791,6 @@ class CustomPartType(models.Model, ControlledObject):
             return True
 
         return super().has_access(user,levels)
-
-    def can_be_copied_by(self, user):
-        return self.has_access(user, ('edit',))
 
     @classmethod
     def filter_can_be_viewed_by(cls, user):
@@ -1133,7 +1137,6 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
     comments = GenericRelation('Comment', content_type_field='object_content_type', object_id_field='object_id')
 
     author = models.ForeignKey(User, related_name='own_items', on_delete=models.CASCADE)
-    public_access = models.CharField(default='view', editable=True, choices=PUBLIC_ACCESS_CHOICES, max_length=6)
     licence = models.ForeignKey(Licence, null=True, blank=True, on_delete=models.SET_NULL)
     project = models.ForeignKey(Project, null=True, related_name='items', on_delete=models.CASCADE)
     folder = models.ForeignKey(Folder, null=True, related_name='items', on_delete=models.SET_NULL)
@@ -1156,6 +1159,7 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
     share_uuid_edit = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     published = models.BooleanField(default=False)
+
     published_date = models.DateTimeField(null=True)
 
     ability_level_start = AbilityLevelField(null=True)
@@ -1184,6 +1188,9 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
     def owner(self):
         return self.author
 
+    def is_published(self):
+        return self.published
+
     def get_current_stamp(self):
         if self.current_stamp is not None:
             return self.current_stamp
@@ -1199,6 +1206,14 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
                 if not q.editoritem.can_be_viewed_by(user):
                     return False
         return super().can_be_viewed_by(user)
+
+    def can_be_copied_by(self, user):
+        if not super().can_be_copied_by(user):
+            return False
+        if self.licence:
+            return self.licence.can_reuse and self.licence.can_modify
+        else:
+            return True
 
     def publish(self):
         self.published = True
@@ -1220,7 +1235,6 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
         e2.share_uuid_view = uuid.uuid4()
         e2.share_uuid_edit = uuid.uuid4()
         e2.current_stamp = None
-        e2.public_access = 'view'
         e2.published = False
         e2.published_date = None
         e2.copy_of = self
@@ -1398,7 +1412,7 @@ class PullRequest(models.Model, ControlledObject, TimelineMixin):
         return self.destination.can_be_edited_by(user)
 
     def can_be_deleted_by(self, user):
-        return user == self.owner or self.destination.can_be_edited_by(user)
+        return super().can_be_deleted_by(user) or self.destination.can_be_edited_by(user)
 
     def can_be_viewed_by(self, user):
         return self.source.can_be_viewed_by(user) and self.destination.can_be_viewed_by(user)
@@ -1911,24 +1925,52 @@ class ItemQueueManager(models.Manager):
     def visible_to(self,user):
         return self.all()
 
-class ItemQueue(models.Model):
+class ItemQueue(models.Model, ControlledObject):
     objects = ItemQueueManager()
     owner = models.ForeignKey(User, null=True, on_delete=models.SET_NULL, related_name='own_queues')
     name = models.CharField(max_length=200)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='queues')
     description = models.TextField(blank=True)
-    instructions = models.TextField(blank=True)
+    instructions_submitter = models.TextField(blank=True, verbose_name='Instructions for submitters')
+    instructions_reviewer = models.TextField(blank=True, verbose_name='Instructions for reviewers')
+    public = models.BooleanField(default=False, verbose_name='Visible to everyone?')
+
+    access = GenericRelation('IndividualAccess', related_query_name='item_queue', content_type_field='object_content_type', object_id_field='object_id')
+
+    def is_published(self):
+        return self.public
+
+    def can_be_viewed_by(self, user):
+        return super().can_be_viewed_by(user) or self.project.can_be_viewed_by(user)
 
 class ItemQueueChecklistItem(models.Model):
     queue = models.ForeignKey(ItemQueue, on_delete=models.CASCADE, related_name='checklist')
     label = models.CharField(max_length=500)
 
+    def as_json(self):
+        return {
+            'pk': self.pk,
+            'queue': self.queue.pk,
+            'label': self.label,
+        }
+
 class ItemQueueEntryManager(models.Manager):
     def incomplete(self):
         return self.filter(complete=False)
 
-class ItemQueueEntry(models.Model):
+class ItemQueueEntry(models.Model, ControlledObject):
     objects = ItemQueueEntryManager()
+
+    icon = 'list'
+
+    class Meta:
+        ordering = ['-pk']
+
+    def __str__(self):
+        return f'"{self.item.name}" in the queue "{self.queue.name}"'
+
+    def get_absolute_url(self):
+        return reverse('queue_entry_review', args=(self.pk,))
 
     queue = models.ForeignKey(ItemQueue, on_delete=models.CASCADE, related_name='entries')
     item = models.ForeignKey(EditorItem, on_delete=models.CASCADE, related_name='queue_entries')
@@ -1941,6 +1983,24 @@ class ItemQueueEntry(models.Model):
 
     def checklist_items(self):
         return self.queue.checklist.all().annotate(ticked=Exists(ItemQueueChecklistTick.objects.filter(item=OuterRef('pk'), entry=self)))
+
+    def is_published(self):
+        return self.public
+
+    @property
+    def owner(self):
+        return self.created_by
+
+    def can_be_edited_by(self, user):
+        return user==self.created_by or self.queue.can_be_edited_by(user)
+
+    def can_be_viewed_by(self, user):
+        return self.queue.can_be_viewed_by(user) or self.project.can_be_viewed_by(user)
+
+    def progress(self):
+        total_items = self.queue.checklist.count()
+        ticked_items = self.queue.checklist.filter(ticks__entry=self).distinct().count()
+        return ticked_items/total_items
 
     @property
     def watching_users(self):

@@ -1,17 +1,24 @@
-{% extends "layout.html" %}
+{% extends "queue/queue_base.html" %}
 {% load sstatic %}
 {% load user_link %}
 {% load sanitizer %}
 {% load links %}
+{% load can_edit %}
+{% load extra_sanitize %}
 
 {% block title %}Review {{entry.item.name}} - {{entry.queue.name}} - {{block.super}}{% endblock title %}
 
-{% block content %}
-<div class="page-header">
-    <h1><span class="glyphicon glyphicon-list"></span> <a href="{% url 'queue_view' entry.queue.pk %}">{{entry.queue.name}}</a></h1>
-</div>
-
-<p>Please review <em>{% editoritem_link entry.item.rel_obj show_icon=True %}</em>.</p>
+{% block queue_content %}
+{% with can_edit=entry|can_be_edited_by:user %}
+<section id="item">
+    <p class="lead text-center">
+    {% if can_edit %}
+    Please review <em>{% editoritem_link entry.item.rel_obj show_icon=True %}</em>
+    {% else %}
+    <em>{% editoritem_link entry.item.rel_obj show_icon=True %}</em> has been submitted for review
+    {% endif %}
+    </p>
+</section>
 
 <section id="note">
     <h2>Submission note</h2>
@@ -21,38 +28,61 @@
         {% user_link entry.created_by %}
     </p>
     <div class="text">
-        {{entry.note|escape_html|safe}}
+        {{entry.note|strip_html|safe}}
     </div>
+    {% if can_edit %}
+    <p>
+        <a href="{% url 'queue_entry_edit' entry.pk %}" class="btn btn-default"><span class="glyphicon glyphicon-pencil"></span> Edit this note</a>
+    </p>
+    {% endif %}
 </section>
 
 <hr/>
 
 <section id="checklist">
     <h2>Checklist</h2>
-    <div class="text">
-        {{entry.queue.instructions|escape_html|safe}}
-    </div>
-    <form method="POST" action="" class="form-horizontal">
-        {% csrf_token %}
+    {% if can_edit %}
+    <div class="row">
+        <div class="text col-md-6">
+            {{entry.queue.instructions_reviewer|strip_html_shift_headings|safe}}
+        </div>
+        <form method="POST" action="" class="form-horizontal col-md-6">
+            {% csrf_token %}
 
-        <ul class="list-unstyled">
+            <ul class="list-unstyled checklist">
+            {% for item in entry.checklist_items %}
+            <li>
+                <input id="item-{{item.pk}}" type="checkbox" {% if item.ticked %}checked{% endif %} name="ticked-items" value="{{item.pk}}">
+                <label for="item-{{item.pk}}">
+                    {{item.label|strip_html|safe}}
+                </label>
+            </li>
+            {% endfor %}
+            </ul>
+
+            <hr>
+
+            <p>
+                <input type="checkbox" name="remove" id="remove">
+                <label for="remove">This entry is complete - remove it from the queue</label>
+            </p>
+
+            <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-save"></span> Save</button>
+        </form>
+    </div>
+    {% else %}
+    <ul class="list-unstyled checklist">
         {% for item in entry.checklist_items %}
         <li>
-            <input id="item-{{item.pk}}" type="checkbox" {% if item.ticked %}checked{% endif %} name="ticked-items" value="{{item.pk}}">
+            <input disabled id="item-{{item.pk}}" type="checkbox" {% if item.ticked %}checked{% endif %} name="ticked-items" value="{{item.pk}}">
             <label for="item-{{item.pk}}">
-                {{item.label|escape_html|safe}}
+                {{item.label|strip_html|safe}}
             </label>
         </li>
         {% endfor %}
-        </ul>
+    </ul>
+    {% endif %}
 
-        <p>
-            <input type="checkbox" name="remove" id="remove">
-            <label for="remove">This entry is complete - remove it from the queue</label>
-        </p>
-
-        <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-save"></span> Save</button>
-    </form>
 </section>
 
 <hr/>
@@ -82,7 +112,8 @@
     </div>
 </section>
 
-{% endblock content %}
+{% endwith %}
+{% endblock queue_content %}
 
 {% block javascripts %}
     {{block.super}}

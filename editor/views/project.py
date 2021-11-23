@@ -17,37 +17,22 @@ from django_tables2.config import RequestConfig
 from editor.models import Project, ProjectInvitation, STAMP_STATUS_CHOICES, Folder, IndividualAccess
 import editor.forms
 import editor.views.editoritem
+from editor.views.generic import CanViewMixin, CanEditMixin, RestrictAccessMixin, SettingsPageMixin
 from editor.tables import ProjectTable, EditorItemTable, BrowseProjectTable
 
-class MustBeMemberMixin(object):
-    def dispatch(self, request, *args, **kwargs):
-        self.project = self.get_project()
-        if not self.project.can_be_viewed_by(request.user):
-            self.object = self.project
-            return render(request, 'project/must_be_member.html', self.get_context_data())
-        return super(MustBeMemberMixin, self).dispatch(request, *args, **kwargs)
+class MustBeMemberMixin(RestrictAccessMixin):
+    def can_access(self, request):
+        return self.get_object().access.filter(user=request.user).exists()
 
-    def get_project(self):
-        return self.get_object()
+class MustBeOwnerMixin(RestrictAccessMixin):
+    no_access_template_name = 'project/must_be_owner.html'
+    def can_access(self, request):
+        return request.user == self.get_project().owner
 
-class MustBeEditorMixin(object):
-    def dispatch(self, request, *args, **kwargs):
-        self.project = self.get_project()
-        if not self.project.can_be_edited_by(request.user):
-            self.object = self.project
-            return render(request, 'project/must_be_member.html', self.get_context_data())
-        return super().dispatch(request, *args, **kwargs)
+class ProjectAccessMixin(object):
+    no_access_template_name = 'project/must_be_member.html'
 
-    def get_project(self):
-        return self.get_object()
-
-class MustBeOwnerMixin(object):
-    def dispatch(self, request, *args, **kwargs):
-        if request.user != self.get_project().owner:
-            raise PermissionDenied
-        return super(MustBeOwnerMixin, self).dispatch(request, *args, **kwargs)
-
-class ProjectContextMixin(object):
+class ProjectContextMixin(ProjectAccessMixin):
     model = Project
     context_object_name = 'project'
 
@@ -64,17 +49,6 @@ class ProjectContextMixin(object):
         context['watching_project'] = project.watching_users.all().filter(pk=self.request.user.pk).exists()
         return context
 
-class SettingsPageMixin(MustBeMemberMixin):
-    def get_context_data(self, **kwargs):
-        context = super(SettingsPageMixin, self).get_context_data(**kwargs)
-        context['settings_page'] = self.settings_page
-        return context
-
-    def form_valid(self, form):
-        result = super(SettingsPageMixin,self).form_valid(form)
-        messages.add_message(self.request, messages.SUCCESS, 'Your changes have been saved.')
-        return result
-
 class CreateView(generic.CreateView):
     model = Project
     template_name = 'project/create.html'
@@ -89,7 +63,7 @@ class DeleteView(ProjectContextMixin, MustBeOwnerMixin, generic.DeleteView):
     success_url = reverse_lazy('editor_index')
 
 
-class IndexView(ProjectContextMixin, MustBeMemberMixin, generic.DetailView):
+class IndexView(ProjectContextMixin, CanViewMixin, generic.DetailView):
     model = Project
     template_name = 'project/index.html'
 
@@ -141,12 +115,6 @@ class ManageMembersView(ProjectContextMixin, SettingsPageMixin, generic.UpdateVi
             invitations_form.save()
         return super(ManageMembersView, self).post(request, *args, **kwargs)
 
-    def form_invalid(self, form):
-        return super(ManageMembersView, self).form_invalid(form)
-
-    def form_valid(self, form):
-        return super(ManageMembersView, self).form_valid(form)
-
     def get_success_url(self):
         return reverse('project_settings_members', args=(self.get_object().pk,))
 
@@ -158,6 +126,9 @@ class AddMemberView(ProjectContextMixin, SettingsPageMixin, generic.CreateView):
 
     def get_project(self):
         return Project.objects.get(pk=self.kwargs['project_pk'])
+
+    def get_access_object(self):
+        return self.get_project()
 
     def get_success_url(self):
         return reverse('project_settings_members', args=(self.object.object.pk,))
@@ -189,7 +160,7 @@ class TransferOwnershipView(ProjectContextMixin, MustBeOwnerMixin, generic.Updat
         
         return super(TransferOwnershipView, self).form_valid(form)
 
-class SearchView(MustBeMemberMixin, editor.views.editoritem.SearchView):
+class SearchView(ProjectAccessMixin, CanViewMixin, editor.views.editoritem.SearchView):
     template_name = 'project/search.html'
 
     def get_object(self):
@@ -208,7 +179,7 @@ class SearchView(MustBeMemberMixin, editor.views.editoritem.SearchView):
         context['project'] = self.project
         return context
 
-class BrowseView(ProjectContextMixin, MustBeMemberMixin, generic.DetailView):
+class BrowseView(ProjectContextMixin, CanViewMixin, generic.DetailView):
     model = Project
     template_name = 'project/browse.html'
 
@@ -284,16 +255,19 @@ class BrowseView(ProjectContextMixin, MustBeMemberMixin, generic.DetailView):
 
         return context
 
-class CommentView(MustBeMemberMixin, editor.views.generic.CommentView):
+class CommentView(ProjectAccessMixin, CanViewMixin, editor.views.generic.CommentView):
     model = Project
 
     def get_comment_object(self):
         return self.get_object()
 
-class NewFolderView(ProjectContextMixin, MustBeEditorMixin, generic.CreateView):
+class NewFolderView(ProjectContextMixin, CanEditMixin, generic.CreateView):
     model = Folder
     form_class = editor.forms.NewFolderForm
     template_name = 'project/new_folder.html'
+
+    def get_access_object(self):
+        return self.get_project()
 
     def get_project(self):
         pk = self.kwargs.get('project_pk')

@@ -1,31 +1,17 @@
-{% extends "layout.html" %}
+{% extends "queue/queue_base.html" %}
+{% load user_link %}
 {% load sanitizer %}
 {% load links %}
+{% load percentage %}
 
 {% block title %}{{queue.name}} - {{block.super}}{% endblock title %}
 
-{% block content %}
-<div class="page-header">
-    <h1><span class="glyphicon glyphicon-list"></span> {{queue.name}}</h1>
-</div>
-
+{% block queue_content %}
 <div id="queue-description">
-    {{queue.description|escape_html|safe}}
+    {{queue.description|strip_html|safe}}
 </div>
 
-<div id="queue-instructions">
-    {{queue.instructions|escape_html|safe}}
-</div>
-
-<ul>
-{% for item in queue.checklist.all %}
-<li>{{item.label|escape_html|safe}}</li>
-{% endfor %}
-</ul>
-
-<h2>Items</h2>
-
-<a href="{% url 'queue_add' queue.pk %}" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> Add an item to this queue</a>
+<h2>Items to review</h2>
 
 <ul>
     {% for entry in queue.entries.incomplete %}
@@ -33,18 +19,20 @@
         <article>
             <header>
                 <h3><a href="{% url 'queue_entry_review' entry.pk %}"><span class="glyphicon glyphicon-{{entry.item.icon}}"></span> {{entry.item.name}}</a></h3>
+                <p class="text-muted">
+                    Submitted by 
+                    {% user_thumbnail entry.created_by 20 18 link=True %}
+                    {% user_link entry.created_by %}
+                </p>
             </header>
             <main>
-                <div class="note">{{entry.note|escape_html|safe}}</div>
-                <ul class="checklist">
-                    {% for item in entry.checklist_items %}
-                    <li><label><input disabled {% if item.ticked %}checked{% endif %} type="checkbox"> {{item.label|escape_html|safe}}</label></li>
-                    {% endfor %}
-                </ul>
+                <label>Progress: <progress max="1" value="{{entry.progress}}">{{entry.progress|percentage}}</progress></label>
             </main>
         </article>
     </li>
     {% endfor %}
 </ul>
 
-{% endblock content %}
+<a href="{% url 'queue_add' queue.pk %}" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> Add an item to this queue</a>
+
+{% endblock queue_content %}

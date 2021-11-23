@@ -233,9 +233,15 @@ urlpatterns = [
     # Queues
     path('queue/new/', queue.CreateView.as_view(), name='queue_new'),
     path('queue/<pk>/', queue.DetailView.as_view(), name='queue_view'),
+    path('queue/<pk>/settings/options', queue.UpdateView.as_view(), name='queue_settings_options'),
+    path('queue/<pk>/settings/members', queue.ManageMembersView.as_view(), name='queue_settings_members'),
+    path('queue/<queue_pk>/settings/add_member', queue.AddMemberView.as_view(), name='queue_settings_add_member'),
+    path('queue/<pk>/delete', queue.DeleteView.as_view(), name='queue_delete'),
     path('queue/<pk>/add/', queue.AddEntryView.as_view(), name='queue_add'),
     path('queue-item/<pk>/review/', queue.ReviewEntryView.as_view(), name='queue_entry_review'),
     path('queue-item/<pk>/comment/', queue.CommentView.as_view(), name='queue_entry_comment'),
+    path('queue-item/<pk>/edit/', queue.UpdateEntryView.as_view(), name='queue_entry_edit'),
+    path('queue-item/<pk>/delete/', queue.DeleteEntryView.as_view(), name='queue_entry_delete'),
 
     # Notifications
 

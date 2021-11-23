@@ -1,0 +1,16 @@
+{% extends "queue/queue_base.html" %}
+{% load sstatic %}
+
+{% block queue_content %}
+<form method="post">
+    <div class="alert alert-danger">
+        <h4>Are you sure you want to delete this entry?</h4>
+        <p>If you delete this entry, the submission note, comments and any checklist ticks will be lost.</p>
+        <p><strong>This can not be undone.</strong></p>
+    </div>
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Delete this entry</button>
+    <a class="btn btn-link" href="{% url 'queue_entry_review' entry.pk %}">Cancel</a>
+</form>
+{% endblock queue_content %}
+

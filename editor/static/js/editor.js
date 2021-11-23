@@ -753,17 +753,6 @@ $(document).ready(function() {
         },this);
 
         if(item_json.editable) {
-            //access control stuff
-            this.public_access = ko.observable(item_json.public_access);
-            this.access_options = [
-                {value:'hidden',text:'Hidden'},
-                {value:'view',text:'Anyone can view this'},
-                {value:'edit',text:'Anyone can edit this'}
-            ];
-            this.public_access_text = ko.pureComputed(function() {
-                var public_access = this.public_access();
-                return this.access_options.filter(function(t){return t.value==public_access})[0].text;
-            },this);
             this.access_rights = ko.observableArray(item_json.access_rights.map(function(d){
                 var access = new UserAccess(ei,d.user)
                 access.access_level(d.access_level);
@@ -772,7 +761,6 @@ $(document).ready(function() {
 
             this.access_data = ko.pureComputed(function() {
                 return {
-                    public_access: ei.public_access(),
                     user_ids: ei.access_rights().map(function(u){return u.id}),
                     access_levels: ei.access_rights().map(function(u){return u.access_level()})
                 }
@@ -2583,6 +2571,29 @@ $(document).ready(function() {
         options = $.extend(options,extra_options);
 
         return tinymce.init(options);
+    }
+
+    Editor.light_wysiwyg = function(element, extra_options) {
+        var options = {
+            airMode: true,
+            disableDragAndDrop: true,
+            popover: {
+                air: [
+                    ['style', ['bold', 'italic', 'underline', 'clear']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['insert', ['link']]
+                ]
+            },
+        }
+        options = $.extend(options,extra_options);
+
+        $(element).summernote(options);
+        var ed = $(element).data('summernote');
+        ed.layoutInfo.editor[0].classList.add('form-control');
+        ed.layoutInfo.editor[0].addEventListener('click',function() {
+            $(element).summernote('focus');
+        });
+        return ed;
     }
 
     Editor.codemirror = function(element, extra_options) {

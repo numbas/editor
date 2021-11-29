@@ -77,24 +77,20 @@ Numbas.showError = function(e)
  */
 Numbas.Error = function(message, args, originalError)
 {
-    Error.call(this);
-    if(Error.captureStackTrace) {
-        Error.captureStackTrace(this, this.constructor);
-    }
-    this.name="Numbas Error";
-    this.originalMessage = message;
-    this.message = R.apply(this,[message,args]);
-    this.originalMessages = [message];
-    this.args = args;
+    var e = new Error();
+    e.name = "Numbas Error";
+    e.message = R.apply(e,[message,args]);
+    e.originalMessage = message;
+    e.originalMessages = [message];
     if(originalError!==undefined) {
-        this.originalError = originalError;
+        e.originalError = originalError;
         if(originalError.originalMessages) {
-            this.originalMessages = this.originalMessages.concat(originalError.originalMessages.filter(function(m){return m!=message}));
+            e.originalMessages = e.originalMessages.concat(originalError.originalMessages.filter(function(m){return m!=message}));
         }
     }
+    return e;
 }
-Numbas.Error.prototype = Error.prototype;
-Numbas.Error.prototype.constructor = Numbas.Error;
+
 var scriptreqs = {};
 /** Keep track of loading status of a script and its dependencies.
  *
@@ -1406,7 +1402,8 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
         re_punctuation: /^([\(\),\[\]])/,
         re_string: /^("""|'''|['"])((?:[^\1\\]|\\.)*?)\1/,
         re_comment: /^\/\/.*?(?:\n|$)/,
-        re_keypair: /^:/
+        re_keypair: /^:/,
+        re_superscript_digits: /^[⁰¹²³⁴⁵⁶⁷⁸⁹]+/,
     },
 
     /** Set properties for a given operator.
@@ -1638,6 +1635,13 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
                 }
                 var token = new TKeyPair(tokens.pop().value);
                 return {tokens: [token], start: pos, end: pos+result[0].length};
+            }
+        },
+        {
+            re: 're_superscript_digits',
+            parse: function(result, tokens, expr, pos) {
+                var n = result[0].replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, function(d) { return '⁰¹²³⁴⁵⁶⁷⁸⁹'.indexOf(d); });
+                return {tokens: [this.op('^'), new TInt(n)], start: pos, end: pos+result[0].length};
             }
         }
     ],
@@ -12916,7 +12920,7 @@ DOMcontentsubber.prototype = {
                 switch(command) {
                     case 'var':
                         try {
-                            var tree = scopae.parser.compile(content);
+                            var tree = scope.parser.compile(content);
                             foundvars = foundvars.merge(jme.findvars(tree,[],scope));
                             break;
                         } catch(e) {

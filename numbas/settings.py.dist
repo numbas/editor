@@ -164,8 +164,11 @@ GLOBAL_SETTINGS = {
         ('日本語 (43% complete)', 'ja-JP'),
         ('ﺎﻠﻋﺮﺒﻳﺓ (92% complete)', 'ar-SA'),
     ],
-    #Uncomment the line below and provide a path to a minification tool to minify javascript files
-    #'MINIFIER_PATH': 'uglifyjs',
+    #Uncomment the lines below and provide paths to minification tools to minify javascript and CSS files
+    #'MINIFIER_PATHS': {
+    #    'js': 'uglifyjs',
+    #    'css': 'uglifycss',
+    #}
 }
 
 EVERYTHING_VISIBLE = False  # Set this to True to allow every user to see all content, regardless of access settings

@@ -633,8 +633,11 @@ class ZipView(CompileObject, generic.DetailView):
         scorm = 'scorm' in self.request.GET
         switches = ['-cz','--source-url',self.get_source_url(),'--edit-url',self.get_edit_url()]
 
-        if settings.GLOBAL_SETTINGS.get('MINIFIER_PATH'):
-            switches += ['--minify', settings.GLOBAL_SETTINGS['MINIFIER_PATH']]
+        minifier_paths = settings.GLOBAL_SETTINGS.get('MINIFIER_PATHS',{})
+        if minifier_paths.get('js'):
+            switches += ['--minify_js', minifier_paths['js']]
+        if minifier_paths.get('css'):
+            switches += ['--minify_css', minifier_paths['css']]
         if self.is_scorm():
             switches.append('-s')
 

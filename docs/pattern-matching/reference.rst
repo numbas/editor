@@ -344,5 +344,8 @@ Special conditions
 
     Match if a sub-expression matching the pattern ``X`` can be found anywhere inside the input expression.
 
+    The :term:`Allow other terms` mode is turned on when matching ``X``. 
+    You can turn it off as needed with :jme:func:`m_exactly`.
+
     **Example**:
         * ``m_anywhere(sin(?))`` matches ``sin(x)`` and ``sin(pi/2) + cos(pi/2)`` but not ``tan(x)``.

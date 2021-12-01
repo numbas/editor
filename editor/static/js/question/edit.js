@@ -3702,6 +3702,19 @@ $(document).ready(function() {
                 } else {
                     var alternative_used = alternatives_result.best_alternative ? alternatives_result.best_alternative.path : null;
                     var out = {script: part.markingScript, result: res, marking_result: part.marking_result, marks: part.marks, alternative_used: alternative_used};
+
+                    var ViewModel = function() {
+                        this.showRow = ko.observable(true);
+                        var credit = out.marking_result.credit;
+                        if(credit === 0){
+                            this.showRow(false);
+                        }
+                        else{
+                            this.showRow(true);
+                        }
+                    };
+                    ViewModel();
+
                     if(res.state_errors.mark) {
                         out.error = 'Error when computing the <code>mark</code> note: '+res.state_errors.mark.message;
                     } else if(!res.state_valid.mark) {

@@ -279,7 +279,9 @@
                                     </td>
                                     <td class="only-when-shown">
                                         <ul class="list-unstyled" data-bind="foreach: messages">
-                                            <li data-bind="html: $data"></li>
+                                            <span data-bind="html: $data"></span>
+                                            <span class="text-success" data-bind="visible: showRow"><span class="glyphicon glyphicon-ok"></span></span>
+                                            <span class="text-danger" data-bind="hidden: showRow"><span class="glyphicon glyphicon-remove"></span></span>
                                         </ul>
                                     </td>
                                 </tr>

@@ -2352,9 +2352,10 @@ $(document).ready(function() {
             return desc;
         },this);
         var raw_vars = ko.pureComputed(function() {
+            var def = this.def;
             try {
-                var v = ko.unwrap(this.def.value);
-                switch(this.def.type) {
+                var v = ko.unwrap(def.value);
+                switch(def.type) {
                     case 'html':
                         return vars_used_in_html(v);
                     case 'string':
@@ -2368,14 +2369,18 @@ $(document).ready(function() {
                             break;
                         }
                         if(tree) {
-                            return Numbas.jme.findvars(tree);
+                            var vars = Numbas.jme.findvars(tree);
+                            if(def.defined_names) {
+                                vars = vars.filter(function(name) { return def.defined_names.indexOf(name)==-1; });
+                            }
+                            return vars;
                         } else {
                             return [];
                         }
                     case 'list':
                         return v;
                     default:
-                        throw(new Error("Undefined variable reference data type "+this.def.type));
+                        throw(new Error("Undefined variable reference data type "+def.type));
                 }
             } catch(e) {
                 return [];
@@ -2911,6 +2916,7 @@ $(document).ready(function() {
         },this).extend({throttle: 1000});
 
         this.unit_tests = ko.observableArray([]);
+
         this.marking_test = ko.observable(new MarkingTest(this,this.q.questionScope()));
         function subscribe_to_answer(mt) {
             mt.answer.subscribe(function() {
@@ -3406,13 +3412,18 @@ $(document).ready(function() {
         this.lockAfterLeaving = ko.observable(false);
 
         this.variable_references = ko.pureComputed(function() {
+            var s = part.markingScript();
+            var note_names = [];
+            if(s) {
+                note_names = Object.keys(s.notes).map(function(name) { return Numbas.jme.normaliseName(name); });
+            }
             var o = [];
             if(this.availabilityCondition().id=='expression') {
-                o.push(new VariableReference({kind:'part',part:this.part,tab:'nextparts',value:this.availabilityExpression,type:'jme',description:'next part availability condition'}));
+                o.push(new VariableReference({kind:'part',part:this.part,tab:'nextparts',value:this.availabilityExpression,type:'jme',description:'next part availability condition', defined_names: note_names.concat(['credit','answered'])}));
             }
             this.variableReplacements().forEach(function(vr) {
-                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.definition,type:'jme',description:'variable replacement'}));
-                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.variable,type:'jme',description:'variable replacement'}));
+                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.definition,type:'jme',description:'variable replacement', defined_names: note_names}));
+                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.variable,type:'jme',description:'variable replacement', defined_names: note_names}));
             });
             return o;
         },this);

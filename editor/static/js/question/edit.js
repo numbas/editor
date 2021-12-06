@@ -3422,8 +3422,8 @@ $(document).ready(function() {
                 o.push(new VariableReference({kind:'part',part:this.part,tab:'nextparts',value:this.availabilityExpression,type:'jme',description:'next part availability condition', defined_names: note_names.concat(['credit','answered'])}));
             }
             this.variableReplacements().forEach(function(vr) {
-                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.definition,type:'jme',description:'variable replacement', defined_names: note_names}));
-                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.variable,type:'jme',description:'variable replacement', defined_names: note_names}));
+                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.definition,type:'jme',description:'variable replacement', defined_names: note_names.concat(['credit'])}));
+                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.variable,type:'jme',description:'variable replacement', defined_names: note_names.concat(['credit'])}));
             });
             return o;
         },this);

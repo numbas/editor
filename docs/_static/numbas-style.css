@@ -1,24 +1,71 @@
-@import url('css/theme.css');
 @import url('fonts/source-sans-pro/source-sans-pro.css');
 
-body {
-    font-family: "Source Sans Pro","Helvetica Neue",Arial,sans-serif;
+:root {
+  /*****************************************************************************
+  * Font size
+  **/
+  --pst-font-size-base: 16px; /* base font size - applied at body / html level */
+
+  --pst-font-size-milli: 14px;
+
+  --pst-sidebar-font-size: 1em;
+  --pst-sidebar-caption-font-size: 1em;
+
+  /*****************************************************************************
+  * Font family
+  **/
+  --pst-font-family-base-system: "Source Sans Pro","Helvetica Neue",Arial,sans-serif;
+
+  --pst-font-family-monospace-system: "SFMono-Regular", Menlo, Consolas, Monaco,
+    Liberation Mono, Lucida Console, monospace;
+
+  --numbas-color: hsl(203.8, 72.2%, 78.8%);
+
+  /*****************************************************************************
+  * Color
+  *
+  * Colors are defined in rgb string way, "red, green, blue"
+  **/
+  --pst-color-primary: 19, 6, 84;
+  --pst-color-success: 40, 167, 69;
+  --pst-color-info: 0, 123, 255; /*23, 162, 184;*/
+  --pst-color-warning: 255, 193, 7;
+  --pst-color-danger: 220, 53, 69;
+  --pst-color-text-base: 51, 51, 51;
+
+  --pst-color-link: 0, 91, 129;
+  --pst-color-link-hover: 227, 46, 0;
+  --pst-color-headerlink: 198, 15, 15;
+  --pst-color-headerlink-hover: 255, 255, 255;
+  --pst-color-preformatted-text: 34, 34, 34;
+  --pst-color-preformatted-background: 250, 250, 250;
+  --pst-color-inline-code: 232, 62, 140;
+
+  --pst-color-active-navigation: 19, 6, 84;
+  --pst-color-navbar-link: 77, 77, 77;
+  --pst-color-sidebar-link: 77, 77, 77;
+  --pst-color-sidebar-expander-background-hover: 244, 244, 244;
+  --pst-color-sidebar-caption: 77, 77, 77;
+  --pst-color-toc-link: 119, 117, 122;
+
 }
-h1, h2, .rst-content .toctree-wrapper p.caption, h3, h4, h5, h6, legend {
-    font-family: "Source Sans Pro","Helvetica Neue",Arial,sans-serif;
-    font-weight: 600;
+
+.toc-h2 {
+ font-size: 1rem;
+}
+.toc-h3 {
+ font-size: 1rem;
+}
+.toc-h4 {
+ font-size: 1rem;
 }
 
 .rst-content .topic-title {
 	font-size: 1.3em;
 }
 
-.document img {
+#main-content img {
 	border: 1px solid #999;
-}
-.guilabel {
-	color: grey;
-	font-weight: bold;
 }
 
 iframe {
@@ -32,41 +79,28 @@ table.docutils td, table.docutils th {
 }
 
 
-h1 { font-size: 2.5em; border-bottom-color: hsl(203.8, 72.2%, 78.8%); }
-h2 { font-size: 2.0em; border-bottom-color: hsl(203.8, 42.2%, 78.8%); }
-h3 { font-size: 1.5em; border-bottom-color: hsl(203.8, 12.2%, 78.8%); }
 h1,h2,h3 {
 	padding: 0.2rem 0;
 	margin-left: -1rem;
-	color: #34444f;
 	border-bottom-width: 0.2em;
 	border-bottom-style: solid;
+    border-bottom-color: var(--numbas-color);
 }
 
 .section * ~ .section {
 	margin-top: 3em;
 	padding-left: 1rem;
 }
-.wy-side-nav-search {
-	background: #a2d1f0;
-}
-.wy-side-nav-search,
-.wy-side-nav-search > a,
-.wy-side-nav-search .wy-dropdown > a,
-.wy-side-nav-search > div.version {
-	color: #34444f;
-}
 
 .glossary {
 	padding: 0.5em 1em;
-	background: hsl(0,0%,99.9%);
-	border: 2px solid #eee;
+	border: 2px solid var(--numbas-color);
 }
 
 
-.rst-content div.figure {
+#main-content div.figure {
     padding: 1em 1em 0.5em 1em;
-    border: 0.4em solid hsl(203.5, 42.6%, 78.8%);
+    border: 0.4em solid var(--numbas-color);
     margin-left: 2em;
     background: hsl(0, 0%, 93%);
     text-align: center;

@@ -105,3 +105,8 @@ h1,h2,h3 {
     background: hsl(0, 0%, 93%);
     text-align: center;
 }
+
+.toctree-wrapper > .caption {
+    font-weight: bold;
+    font-size: 1.5rem;
+}

@@ -1256,39 +1256,41 @@ $(document).ready(function() {
             return hints;
         },
     ];
-    CodeMirror.registerHelper('hint','jme', function(cm,options) {
-        var cur = cm.getCursor();
-        var token = cm.getTokenAt(cur);
-        var term = token.string;
-        var from = CodeMirror.Pos(cur.line, token.start);
-        var to = CodeMirror.Pos(cur.line, token.end);
-        if (!(token.start < cur.ch && /\w/.test(token.string.charAt(cur.ch - token.start - 1)) && token.string.length)) {
-            return;
-        }
-        var hints = {list: [], from: from, to: to};
-        Editor.jme_autocompleters.forEach(function(fn) {
-            var words = fn(cm,options);
-            words = words.filter(function(w) {
-                if(w.text.slice(0,term.length).toLowerCase()==term.toLowerCase()) {
-                    w.goodness = 1;
-                } else if(term.length>=2 && w.keywords && w.keywords.find(function(keyword) { return keyword.slice(0,term.length).toLowerCase()==term.toLowerCase(); })) {
-                    w.goodness = 2;
-                } else if(term.length>=3 && w.text.toLowerCase().indexOf(term.toLowerCase())>=0) {
-                    w.goodness = 3;
-                }
-                return w.goodness && w.goodness>0;
+    if(window.CodeMirror) {
+        CodeMirror.registerHelper('hint','jme', function(cm,options) {
+            var cur = cm.getCursor();
+            var token = cm.getTokenAt(cur);
+            var term = token.string;
+            var from = CodeMirror.Pos(cur.line, token.start);
+            var to = CodeMirror.Pos(cur.line, token.end);
+            if (!(token.start < cur.ch && /\w/.test(token.string.charAt(cur.ch - token.start - 1)) && token.string.length)) {
+                return;
+            }
+            var hints = {list: [], from: from, to: to};
+            Editor.jme_autocompleters.forEach(function(fn) {
+                var words = fn(cm,options);
+                words = words.filter(function(w) {
+                    if(w.text.slice(0,term.length).toLowerCase()==term.toLowerCase()) {
+                        w.goodness = 1;
+                    } else if(term.length>=2 && w.keywords && w.keywords.find(function(keyword) { return keyword.slice(0,term.length).toLowerCase()==term.toLowerCase(); })) {
+                        w.goodness = 2;
+                    } else if(term.length>=3 && w.text.toLowerCase().indexOf(term.toLowerCase())>=0) {
+                        w.goodness = 3;
+                    }
+                    return w.goodness && w.goodness>0;
+                });
+                hints.list = hints.list.concat(words)
             });
-            hints.list = hints.list.concat(words)
-        });
-        hints.list.sort(Numbas.util.sortBy(['goodness','text']));
+            hints.list.sort(Numbas.util.sortBy(['goodness','text']));
 
-        CodeMirror.on(hints,'shown',function(completion) {
-            var completion = cm.state.completionActive;
-            MathJax.Hub.Queue(['Typeset',MathJax.Hub,completion.widget.hints]);
-        });
+            CodeMirror.on(hints,'shown',function(completion) {
+                var completion = cm.state.completionActive;
+                MathJax.Hub.Queue(['Typeset',MathJax.Hub,completion.widget.hints]);
+            });
 
-        return hints;
-    });
+            return hints;
+        });
+    }
 
     ko.bindingHandlers.codemirror = {
         init: function(element,valueAccessor,allBindingsAccessor, viewModel, bindingContext) {

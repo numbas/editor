@@ -18,15 +18,16 @@ def heading_fix_filter(lowest_level=3):
         def __iter__(self):
             token_buffer = []
 
-            start_level = 1
+            start_level = lowest_level
             for token in super().__iter__():
                 if token["type"] in ["StartTag", "EndTag"]:
                     m = re.match(r'^h(\d)$',token["name"])
                     if m:
                         n = int(m.group(1))
-                        start_level = max(n,start_level)
+                        start_level = min(n,start_level)
 
             shift = max(0,lowest_level - start_level)
+            print("Shift",shift, lowest_level, start_level)
             rewrite_tags = {}
             for i in range(0,7):
                 j = min(6,i+shift)

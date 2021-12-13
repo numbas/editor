@@ -184,7 +184,7 @@ LOGOUT_REDIRECT_URL = '/'
 
 sys.path.append(os.path.join(GLOBAL_SETTINGS['NUMBAS_PATH'],'bin'))
 
-SANITIZER_ALLOWED_TAGS = ['a', 'p', 'img','br','strong','em','div','code','i','b', 'ul', 'ol', 'li', 'table','thead','tbody','td','th','tr']
+SANITIZER_ALLOWED_TAGS = ['a', 'p', 'img','br','strong','em','div','code','i','b', 'ul', 'ol', 'li', 'table','thead','tbody','td','th','tr', 'h1','h2','h3','h4','h5','h6', 'hr']
 SANITIZER_ALLOWED_ATTRIBUTES = ['href','title']
 
 DEFAULT_FROM_EMAIL = 'admin@numbas'

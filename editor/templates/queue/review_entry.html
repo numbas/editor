@@ -43,7 +43,7 @@
     <h2>Checklist</h2>
     {% if can_edit %}
     <div class="row">
-        <div class="text col-md-6">
+        <div id="reviewer-instructions" class="col-md-6">
             {{entry.queue.instructions_reviewer|strip_html_shift_headings|safe}}
         </div>
         <form method="POST" action="" class="form-horizontal col-md-6">
@@ -120,3 +120,8 @@
 
     <script src="{% sstatic 'js/queue/review_entry.js' %}" type="text/javascript"></script>
 {% endblock javascripts %}
+
+{% block stylesheets %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% sstatic 'css/queue/review.css' %}"/>
+{% endblock stylesheets %}

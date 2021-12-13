@@ -1,9 +1,29 @@
 # -*- coding: utf-8 -*-
 #
-import sys, os
+import os
+import sys
 
+# -- Path setup --------------------------------------------------------------
+
+# If extensions (or modules to document with autodoc) are in another directory,
+# add these directories to sys.path here. If the directory is relative to the
+# documentation root, use os.path.abspath to make it absolute, like shown here.
+#
 sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
+
+
+# -- Project information -----------------------------------------------------
+
+project = 'Numbas'
+copyright = '2012-2021, Newcastle University'
+
+# -- General configuration ---------------------------------------------------
+
+# Add any Sphinx extension module names here, as strings. They can be
+# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
+# ones.
 extensions = ['sphinx.ext.intersphinx', 'sphinx.ext.todo', 'sphinx.ext.coverage', 'sphinx.ext.mathjax', 'sphinx.ext.ifconfig', 'sphinx.ext.viewcode']
+
 
 def setup(app):
     from JMEDomain import JMEDomain
@@ -12,57 +32,24 @@ def setup(app):
 
 templates_path = ['_templates']
 
-source_suffix = '.rst'
-
-master_doc = 'index'
-
-project = 'Numbas'
-copyright = '2012-2021, Newcastle University'
-
-version = '6.0'
-release = '6.0'
+version = '6.1'
+release = '6.1'
 
 import sphinx_rtd_theme
-html_theme = 'sphinx_rtd_theme'
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+html_theme = 'sphinx_book_theme'
 
 html_logo = '_static/images/numbas-logo-large.png'
 
 html_static_path = ['_static']
 
-html_context = {
-  'display_github': True,
-  'github_user': 'numbas',
-  'github_repo': 'editor',
-  'github_version': 'master/docs/',
+html_theme_options = {
+    'use_fullscreen_button': False,
+    'use_issues_button': False,
+    'repository_url': 'https://github.com/numbas/editor',
+    'repository_branch': 'master',
+    'use_repository_button': True,
+    'use_edit_page_button': True,
+    'path_to_docs': 'docs/',
 }
-
-htmlhelp_basename = 'Numbaseditordoc'
-
-latex_elements = {
-	'papersize': 'a4paper',
-	'fontpkg': """\\usepackage{cmbright}""",
-}
-
-latex_documents = [
-  ('index', 'Numbaseditor.tex', 'Numbas editor Documentation',
-   'Newcastle University', 'manual'),
-]
-
-man_pages = [
-    ('index', 'numbaseditor', 'Numbas editor Documentation',
-     ['Newcastle University'], 1)
-]
-
-texinfo_documents = [
-  ('index', 'Numbaseditor', 'Numbas editor Documentation',
-   'Newcastle University', 'Numbaseditor', 'One line description of project.',
-   'Miscellaneous'),
-]
-
-epub_title = 'Numbas editor'
-epub_author = 'Newcastle University'
-epub_publisher = 'Newcastle University'
-epub_copyright = '2012-2021, Newcastle University'
 
 todo_emit_warnings = True

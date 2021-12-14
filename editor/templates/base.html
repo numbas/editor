@@ -66,20 +66,27 @@
                         <h4 class="modal-title">Add <em class="item-name"></em> to a queue</h4>
                     </div>
                     <div class="modal-body">
-                        <p>Choose a queue to add this item to.</p>
-                        <table class="queues table">
-                            {% for queue in user.userprofile.available_queues %}
-                            <tr>
-                                <td class="queue-info">
-                                    <p><a target="_blank" href="{% url 'queue_view' queue.pk %}"><span class="glyphicon glyphicon-list"></span> {{queue.name}}</a></p>
-                                    <p class="text-muted"><a class="text-muted" target="_blank" href="{{queue.project.get_absolute_url}}"><span class="glyphicon glyphicon-briefcase"></span> {{queue.project.name}}</a></p>
-                                </td>
-                                <td>
-                                    <a class="pick btn btn-primary" href="{% url 'queue_add' queue.pk %}"><span class="glyphicon glyphicon-plus"></span> Add to this queue</a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </table>
+                        {% if user.userprofile.available_queues.exists %}
+                            <p>Choose a queue to add this item to.</p>
+                            <table class="queues table">
+                                {% for queue in user.userprofile.available_queues %}
+                                <tr>
+                                    <td class="queue-info">
+                                        <p><a target="_blank" href="{% url 'queue_view' queue.pk %}"><span class="glyphicon glyphicon-list"></span> {{queue.name}}</a></p>
+                                        <p class="text-muted"><a class="text-muted" target="_blank" href="{{queue.project.get_absolute_url}}"><span class="glyphicon glyphicon-briefcase"></span> {{queue.project.name}}</a></p>
+                                    </td>
+                                    <td>
+                                        <a class="pick btn btn-primary" href="{% url 'queue_add' queue.pk %}"><span class="glyphicon glyphicon-plus"></span> Add to this queue</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                        {% else %}
+                            <div class="nothing-here">
+                                <p>You don't have access to any queues at the moment.</p>
+                                <p>You can create one in any project you have editing access to.</p>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

@@ -170,7 +170,6 @@ class AccessView(ShowPackageFilesMixin, AuthorRequiredMixin, generic.UpdateView)
     
     def get_form_kwargs(self, *args, **kwargs):
         kwargs = super().get_form_kwargs(*args,**kwargs)
-        print(kwargs)
         return kwargs
 
     def get_context_data(self, **kwargs):

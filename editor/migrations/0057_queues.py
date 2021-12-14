@@ -35,7 +35,6 @@ def generic_access(apps, schema_editor):
             TimelineItem.objects.get(object_content_type=ct_pa,object_id=pa.pk),
             ia
         ))
-        print("pa",pa.pk, fix_timeline_items[-1])
 
     ct_ea = ContentType.objects.get_for_model(Access)
     for ea in Access.objects.all():

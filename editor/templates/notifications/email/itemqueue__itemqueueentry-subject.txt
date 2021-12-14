@@ -1,0 +1,1 @@
+[Queue "{{action_object.queue.name}}"] Submission of "{{action_object.item.name}}" by {{actor.get_full_name}}

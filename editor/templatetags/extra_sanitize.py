@@ -27,7 +27,6 @@ def heading_fix_filter(lowest_level=3):
                         start_level = min(n,start_level)
 
             shift = max(0,lowest_level - start_level)
-            print("Shift",shift, lowest_level, start_level)
             rewrite_tags = {}
             for i in range(0,7):
                 j = min(6,i+shift)

@@ -1,0 +1,9 @@
+{% extends "notifications/email/base.html" %}
+{% load sanitizer %}
+{% load links %}
+
+{% block content %}
+<p><a href="{{domain}}{% url 'view_profile' actor.pk %}">{{actor.get_full_name}}</a> has submitted the item "<a href="{{domain}}{% editoritem_url 'edit' action_object.item.rel_obj %}">{{action_object.item.name}}</a>" to the queue <a href="{{domain}}{% url 'queue_view' action_object.queue.pk %}">{{action_object.queue.name}}</a>.
+
+<p><a href="{{domain}}{% url 'queue_entry_review' action_object.pk %}">Review this entry</a></p>
+{% endblock content %}

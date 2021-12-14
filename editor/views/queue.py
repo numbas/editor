@@ -213,7 +213,7 @@ class ReviewEntryView(CanViewMixin, EntryMixin, generic.DetailView):
 
         return redirect('queue_view', pk=entry.queue.pk)
 
-class CommentView(CanEditMixin, editor.views.generic.CommentView):
+class CommentView(CanViewMixin, editor.views.generic.CommentView):
     model = ItemQueueEntry
 
 class UpdateEntryView(CanEditMixin, EntryMixin, generic.UpdateView):

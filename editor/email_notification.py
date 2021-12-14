@@ -29,13 +29,19 @@ class NotificationEmail(object):
         return context
 
     def can_email(self):
-        print("can email?")
         if not getattr(settings,'EMAIL_ABOUT_NOTIFICATIONS',False):
-            print("global no")
             return False
         recipient = self.notification.recipient
-        print(recipient.userprofile.never_email)
-        return not recipient.userprofile.never_email
+        if recipient.userprofile.never_email:
+            return False
+
+        action_object_model = self.notification.action_object._meta.model_name
+        preferences = {
+            'stamp': recipient.userprofile.email_about_stamps,
+            'comment': recipient.userprofile.email_about_comments,
+            'itemqueueentry': recipient.userprofile.email_about_item_queue_entries,
+        }
+        return preferences.get(action_object_model, True)
 
     def send(self):
         if not self.can_email():

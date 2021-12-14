@@ -12,7 +12,6 @@ class EditorAppConfig(AppConfig):
 
         @receiver(signals.pre_save, sender=Notification)
         def email_notification(instance, **kwargs):
-            print("notification",instance)
             if instance.emailed:
                 return
             NotificationEmail(instance).send()

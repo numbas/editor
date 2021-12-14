@@ -8,6 +8,17 @@
 
 {% block title %}Review {{entry.item.name}} - {{entry.queue.name}} - {{block.super}}{% endblock title %}
 
+{% block javascripts %}
+    {{block.super}}
+
+    <script src="{% sstatic 'js/queue/review_entry.js' %}" type="text/javascript"></script>
+{% endblock javascripts %}
+
+{% block stylesheets %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% sstatic 'css/queue/review.css' %}"/>
+{% endblock stylesheets %}
+
 {% block queue_content %}
 {% with can_edit=entry|can_be_edited_by:user %}
 <section id="item">
@@ -43,7 +54,7 @@
     <h2>Checklist</h2>
     {% if can_edit %}
     <div class="row">
-        <div id="reviewer-instructions" class="col-md-6">
+        <div id="reviewer-instructions" class="instructions col-md-6">
             {{entry.queue.instructions_reviewer|strip_html_shift_headings|safe}}
         </div>
         <form method="POST" action="" class="form-horizontal col-md-6">
@@ -114,14 +125,3 @@
 
 {% endwith %}
 {% endblock queue_content %}
-
-{% block javascripts %}
-    {{block.super}}
-
-    <script src="{% sstatic 'js/queue/review_entry.js' %}" type="text/javascript"></script>
-{% endblock javascripts %}
-
-{% block stylesheets %}
-    {{ block.super }}
-    <link rel="stylesheet" type="text/css" href="{% sstatic 'css/queue/review.css' %}"/>
-{% endblock stylesheets %}

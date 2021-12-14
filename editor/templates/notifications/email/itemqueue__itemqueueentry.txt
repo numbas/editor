@@ -1,0 +1,9 @@
+{% extends "notifications/email/base.txt" %}
+
+{% block content %}
+{{actor.get_full_name}} has submitted the item "{{action_object.item.name}}" to the queue "{{action_object.queue.name}}"".
+
+Review it at:
+
+  {{domain}}{% url 'queue_entry_review' action_object.pk %}
+{% endblock content %}

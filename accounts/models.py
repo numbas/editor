@@ -58,6 +58,7 @@ class UserProfile(models.Model):
 
     email_about_stamps = models.BooleanField(default=True, verbose_name='Send emails about feedback on items you\'re watching?')
     email_about_comments = models.BooleanField(default=True, verbose_name='Send emails about comments on items you\'re watching?')
+    email_about_item_queue_entries = models.BooleanField(default=True, verbose_name='Send emails about entries on item queues you\'re watching?')
     never_email = models.BooleanField(default=False, verbose_name='Unsubscribe from all emails')
 
     def sorted_tags(self):
@@ -80,11 +81,16 @@ class UserProfile(models.Model):
         projects = self.user.own_projects.all() | Project.objects.filter(access__in=self.user.individual_accesses.all()) | Project.objects.filter(watching_non_members=self.user)
         nonsticky_broadcasts = SiteBroadcast.objects.visible_now().exclude(sticky=True)
         nonsticky_broadcast_timelineitems = TimelineItem.objects.filter(object_content_type=ContentType.objects.get_for_model(SiteBroadcast), object_id__in=nonsticky_broadcasts)
+        queues = ItemQueue.objects.filter(owner=self.user) | ItemQueue.objects.filter(access__in=self.user.individual_accesses.all())
 
         items = TimelineItem.objects.filter(
             Q(editoritems__in=EditorItem.objects.filter(Q(access__user=self.user) | Q(author=self.user))) | 
             Q(editoritems__project__in=projects) |
-            Q(projects__in=projects)
+            Q(projects__in=projects) |
+            Q(item_queue_entries__queue__project__in = projects) |
+            Q(item_queue_entries__queue__in = queues) |
+            Q(item_queue_entry__queue__project__in = projects) |
+            Q(item_queue_entry__queue__in = queues)
         )
 
         items = (items | nonsticky_broadcast_timelineitems).order_by('-date')

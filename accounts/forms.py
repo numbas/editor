@@ -73,6 +73,7 @@ class UserProfileForm(forms.ModelForm):
             'mathjax_url',
             'email_about_stamps',
             'email_about_comments',
+            'email_about_item_queue_entries',
             'never_email'
         )
         widgets = {

@@ -242,7 +242,12 @@ class Project(models.Model, ControlledObject):
         return list(User.objects.filter(individual_accesses__in=self.access.all()).exclude(pk=self.owner.pk))
 
     def all_timeline(self):
-        items = self.timeline.all() | TimelineItem.objects.filter(editoritems__project=self)
+        items = self.timeline.all() | TimelineItem.objects.filter(
+            Q(editoritems__project=self) |
+            Q(item_queue_entry__queue__project = self) |
+            Q(item_queue_entries__queue__project = self)
+        )
+
         items.order_by('-date')
         return items
 
@@ -1451,9 +1456,15 @@ class Timeline(object):
 
         if not self.viewing_user.is_anonymous:
             projects = self.viewing_user.own_projects.all() | Project.objects.filter(access__in=self.viewing_user.individual_accesses.all()) | Project.objects.filter(watching_non_members=self.viewing_user)
+            queues = ItemQueue.objects.filter(owner=self.viewing_user) | ItemQueue.objects.filter(access__in=self.viewing_user.individual_accesses.all())
             items_for_user = (
+                Q(editoritems__in=EditorItem.objects.filter(Q(access__user=self.viewing_user) | Q(author=self.viewing_user))) | 
                 Q(editoritems__project__in=projects) |
                 Q(projects__in=projects) |
+                Q(item_queue_entry__queue__project__in = projects) |
+                Q(item_queue_entry__queue__in = queues) |
+                Q(item_queue_entries__queue__project__in = projects) |
+                Q(item_queue_entries__queue__in = queues) |
                 Q(individual_accesses__user=viewing_user)
 #                Q(editoritems__accesses__in=self.viewing_user.item_accesses.all()) | 
  #               Q(extension_accesses__user=viewing_user) |
@@ -1923,7 +1934,7 @@ def item_created_timeline_event(instance, created, **kwargs):
 
 class ItemQueueManager(models.Manager):
     def visible_to(self,user):
-        return self.all()
+        return self.filter(ItemQueue.filter_can_be_viewed_by(user))
 
 class ItemQueue(models.Model, ControlledObject):
     objects = ItemQueueManager()
@@ -1936,12 +1947,43 @@ class ItemQueue(models.Model, ControlledObject):
     public = models.BooleanField(default=False, verbose_name='Visible to everyone?')
 
     access = GenericRelation('IndividualAccess', related_query_name='item_queue', content_type_field='object_content_type', object_id_field='object_id')
+    timeline_noun = 'queue'
+
+    icon = 'list'
+
+    def __str__(self):
+        return self.name
 
     def is_published(self):
         return self.public
 
     def can_be_viewed_by(self, user):
         return super().can_be_viewed_by(user) or self.project.can_be_viewed_by(user)
+
+    @classmethod
+    def filter_can_be_viewed_by(cls, user):
+        if getattr(settings, 'EVERYTHING_VISIBLE', False):
+            return Q()
+        
+        view_perms = ('edit', 'view')
+        if cls.superuser_sees_everything and user.is_superuser:
+            return Q()
+        elif user.is_anonymous:
+            return Q(public=True)
+        else:
+            return (Q(access__user=user, access__access__in=view_perms) 
+                    | Q(public=True)
+                    | Q(owner=user)
+                    | Q(project__in=Project.objects.filter(Project.filter_can_be_viewed_by(user)))
+                   )
+
+    @property
+    def watching_users(self):
+        query = Q(pk=self.owner.pk) | Q(individual_accesses__item_queue=self)
+        return User.objects.filter(query).distinct()
+
+    def get_absolute_url(self):
+        return reverse('queue_view', args=(self.pk,))
 
 class ItemQueueChecklistItem(models.Model):
     queue = models.ForeignKey(ItemQueue, on_delete=models.CASCADE, related_name='checklist')
@@ -1958,7 +2000,7 @@ class ItemQueueEntryManager(models.Manager):
     def incomplete(self):
         return self.filter(complete=False)
 
-class ItemQueueEntry(models.Model, ControlledObject):
+class ItemQueueEntry(models.Model, ControlledObject, TimelineMixin):
     objects = ItemQueueEntryManager()
 
     icon = 'list'
@@ -1981,8 +2023,18 @@ class ItemQueueEntry(models.Model, ControlledObject):
     comments = GenericRelation('Comment', content_type_field='object_content_type', object_id_field='object_id', related_query_name='item_queue_entry')
     timeline = GenericRelation('TimelineItem', related_query_name='item_queue_entry', content_type_field='timeline_content_type', object_id_field='timeline_id')
 
+    timelineitems = GenericRelation(TimelineItem, related_query_name='item_queue_entries', content_type_field='object_content_type', object_id_field='object_id')
+    timelineitem_template = 'timeline/item_queue_entry.html'
+
+    def timeline_object(self):
+        return self.queue
+
     def checklist_items(self):
         return self.queue.checklist.all().annotate(ticked=Exists(ItemQueueChecklistTick.objects.filter(item=OuterRef('pk'), entry=self)))
+
+    @property
+    def name(self):
+        return "Review of \"{}\" in \"{}\"".format(self.item.name, self.queue.name)
 
     def is_published(self):
         return self.public
@@ -1992,7 +2044,7 @@ class ItemQueueEntry(models.Model, ControlledObject):
         return self.created_by
 
     def can_be_edited_by(self, user):
-        return user==self.created_by or self.queue.can_be_edited_by(user)
+        return self.queue.can_be_edited_by(user)
 
     def can_be_viewed_by(self, user):
         return self.queue.can_be_viewed_by(user) or self.project.can_be_viewed_by(user)
@@ -2006,6 +2058,11 @@ class ItemQueueEntry(models.Model, ControlledObject):
     def watching_users(self):
         query = Q(pk=self.created_by.pk) | Q(comments__item_queue_entry=self)
         return User.objects.filter(query).distinct()
+
+@receiver(signals.post_save, sender=ItemQueueEntry)
+def notify_comment(instance, created, **kwargs):
+    if created:
+        notify_watching(instance.created_by, target=instance.queue, verb='submitted an item to', action_object=instance)
 
 class ItemQueueChecklistTick(models.Model):
     entry = models.ForeignKey(ItemQueueEntry, on_delete=models.CASCADE, related_name='ticks')

@@ -2,7 +2,7 @@
 {% load sanitizer %}
 
 {% block content %}
-<p><a href="{{domain}}{% url 'view_profile' actor.pk %}">{{actor.get_full_name}}</a> {{notification.verb}} the entry "<a href="{{domain}}{% url 'queue_entry_review' target.pk %}">{{target.item.name}}</a>" in the queue <a href="{% url 'queue_view' target.queue.pk %}">{{target.queue.name}}</a>.
+<p><a href="{{domain}}{% url 'view_profile' actor.pk %}">{{actor.get_full_name}}</a> {{notification.verb}} the entry "<a href="{{domain}}{% url 'queue_entry_review' target.pk %}">{{target.item.name}}</a>" in the queue <a href="{{domain}}{% url 'queue_view' target.queue.pk %}">{{target.queue.name}}</a>.
 
 <blockquote>
     {{action_object.text|strip_html|safe}}

@@ -468,11 +468,9 @@ class AddEditablePackageAccessForm(UserSearchMixin, forms.ModelForm):
         m = super().save(commit=False)
         if commit:
             if m.user.pk:
-                print("got user")
                 # check if there's an existing IndividualAccess for this user and object
                 ea = m.object.access.filter(user=m.user).first()
                 if ea is not None:
-                    print("existing ea",ea)
                     ea.access = m.access
                     m = ea
                 m.save()

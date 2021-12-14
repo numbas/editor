@@ -99,8 +99,6 @@ class MoveProjectView(editor.views.generic.CanEditMixin, ProjectQuerysetMixin, g
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        print(form.errors)
-        print(self.get_form_kwargs())
         return redirect(reverse('project_browse',args=(self.get_project().pk,'')))
 
     def get_success_url(self):
@@ -125,7 +123,6 @@ class DeleteFolderView(MustBeEditorMixin, generic.DeleteView):
             folder.save()
         for item in self.object.items.all():
             item.folder = self.object.parent
-            print(item,item.folder)
             item.save()
 
         return super().delete(request,*args,**kwargs)

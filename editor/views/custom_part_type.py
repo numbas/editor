@@ -217,9 +217,6 @@ class SetAccessView(generic.UpdateView):
 
         access_dict = {u:a for u,a in zip(user_ids, access_levels)}
 
-        print(self.request.POST)
-        print(existing_accesses)
-
         new_accesses = []
 
         for a in existing_accesses:

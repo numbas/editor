@@ -31,42 +31,57 @@ def generic_access(apps, schema_editor):
     ct_pa = ContentType.objects.get_for_model(ProjectAccess)
     for pa in ProjectAccess.objects.all():
         ia = IndividualAccess.objects.create(user=pa.user, object_content_type=ct_p, object_id=pa.project.pk, access=pa.access)
-        fix_timeline_items.append((
-            TimelineItem.objects.get(object_content_type=ct_pa,object_id=pa.pk),
-            ia
-        ))
+        try:
+            fix_timeline_items.append((
+                TimelineItem.objects.get(object_content_type=ct_pa,object_id=pa.pk),
+                ia
+            ))
+        except TimelineItem.DoesNotExist:
+            pass
 
     ct_ea = ContentType.objects.get_for_model(Access)
     for ea in Access.objects.all():
         ia = IndividualAccess.objects.create(user=ea.user, object_content_type=ct_ei, object_id=ea.item.pk, access=ea.access)
-        fix_timeline_items.append((
-            TimelineItem.objects.get(object_content_type=ct_ea,object_id=ea.pk),
-            ia
-        ))
+        try:
+            fix_timeline_items.append((
+                TimelineItem.objects.get(object_content_type=ct_ea,object_id=ea.pk),
+                ia
+            ))
+        except TimelineItem.DoesNotExist:
+            pass
 
     ct_ta = ContentType.objects.get_for_model(ThemeAccess)
     for ta in ThemeAccess.objects.all():
         ia = IndividualAccess.objects.create(user=ta.user, object_content_type=ct_t, object_id=ta.theme.pk, access=ta.access)
-        fix_timeline_items.append((
-            TimelineItem.objects.get(object_content_type=ct_ta,object_id=ta.pk),
-            ia
-        ))
+        try:
+            fix_timeline_items.append((
+                TimelineItem.objects.get(object_content_type=ct_ta,object_id=ta.pk),
+                ia
+            ))
+        except TimelineItem.DoesNotExist:
+            pass
 
     ct_ea = ContentType.objects.get_for_model(ExtensionAccess)
     for ea in ExtensionAccess.objects.all():
         ia = IndividualAccess.objects.create(user=ea.user, object_content_type=ct_e, object_id=ea.extension.pk, access=ea.access)
-        fix_timeline_items.append((
-            TimelineItem.objects.get(object_content_type=ct_ea,object_id=ea.pk),
-            ia
-        ))
+        try:
+            fix_timeline_items.append((
+                TimelineItem.objects.get(object_content_type=ct_ea,object_id=ea.pk),
+                ia
+            ))
+        except TimelineItem.DoesNotExist:
+            pass
 
     ct_ca = ContentType.objects.get_for_model(CustomPartTypeAccess)
     for ca in CustomPartTypeAccess.objects.all():
         ia = IndividualAccess.objects.create(user=ca.user, object_content_type=ct_cpt, object_id=ca.custom_part_type.pk, access=ca.access)
-        fix_timeline_items.append((
-            TimelineItem.objects.get(object_content_type=ct_ca,object_id=ca.pk),
-            ia
-        ))
+        try:
+            fix_timeline_items.append((
+                TimelineItem.objects.get(object_content_type=ct_ca,object_id=ca.pk),
+                ia
+            ))
+        except TimelineItem.DoesNotExist:
+            pass
 
     ct_ia = ContentType.objects.get_for_model(IndividualAccess)
     TimelineItem.objects.filter(object_content_type=ct_ia).delete()

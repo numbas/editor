@@ -610,7 +610,7 @@ $(document).ready(function() {
                     v.remove();
                 }
             });
-        },this);
+        },this).extend({throttle: 2000});
 
         /** Create an instance of this question as a Numbas.Question object.
          */
@@ -2947,7 +2947,7 @@ $(document).ready(function() {
         this.variable_references = ko.pureComputed(function() {
             var o = [];
             o.push(new VariableReference({kind:'part',part:this,tab:'prompt',value:this.prompt,type:'html',description:'prompt'}));
-            if(this.use_custom_algorithm() && this.markingScript() && this.marking_test() && this.marking_test().last_run()) {
+            if(this.use_custom_algorithm() && this.markingScript() && this.marking_test() && this.marking_test().last_run() && !this.marking_test().last_run().error) {
                 var s = this.markingScript();
                 var note_names = Object.keys(s.notes).map(function(name) { return Numbas.jme.normaliseName(name); });
                 var parameters = this.marking_test().marking_parameters().map(function(p) { return Numbas.jme.normaliseName(p.name); });
@@ -3419,11 +3419,11 @@ $(document).ready(function() {
             }
             var o = [];
             if(this.availabilityCondition().id=='expression') {
-                o.push(new VariableReference({kind:'part',part:this.part,tab:'nextparts',value:this.availabilityExpression,type:'jme',description:'next part availability condition', defined_names: note_names.concat(['credit','answered'])}));
+                o.push(new VariableReference({kind:'part',part:this.part,tab:'nextparts',value:this.availabilityExpression,type:'jme',description:'next part availability condition', defined_names: note_names.concat(['credit','answered', 'used_alternative'])}));
             }
             this.variableReplacements().forEach(function(vr) {
-                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.definition,type:'jme',description:'variable replacement', defined_names: note_names.concat(['credit'])}));
-                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.variable,type:'jme',description:'variable replacement', defined_names: note_names.concat(['credit'])}));
+                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.definition,type:'jme',description:'variable replacement', defined_names: note_names.concat(['credit', 'used_alternative'])}));
+                o.push(new VariableReference({kind:'part',part:part,tab:'nextparts',value:vr.variable,type:'jme',description:'variable replacement', defined_names: note_names.concat(['credit', 'used_alternative'])}));
             });
             return o;
         },this);

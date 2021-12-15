@@ -106,9 +106,9 @@ class ControlledObject(object):
         elif user.is_anonymous:
             return Q(pk=None)
         else:
-            return (Q(access__user=user, access__access='edit')
+            return (Q(pk__in=user.individual_accesses.for_model(cls).filter(access='edit').values('object_id'))
                     | Q(author=user)
-                    | Q(project__access__user=user, project__access__access='edit')
+                    | Q(project__in=user.individual_accesses.for_model(Project).filter(access='edit').values('object_id'))
                     | Q(project__owner=user)
                    )
     @classmethod
@@ -122,10 +122,10 @@ class ControlledObject(object):
         elif user.is_anonymous:
             return Q(published=True)
         else:
-            return (Q(access__user=user, access__access__in=view_perms) 
+            return (Q(pk__in=user.individual_accesses.for_model(cls).filter(access__in=view_perms).values('object_id'))
                     | Q(published=True)
                     | Q(author=user)
-                    | Q(project__access__user=user)
+                    | Q(project__in=user.individual_accesses.for_model(Project).values('object_id'))
                     | Q(project__owner=user)
                    )
 
@@ -307,7 +307,7 @@ class Project(models.Model, ControlledObject):
         elif user.is_anonymous:
             return Q(pk=None)
         else:
-            return (Q(access__user=user, access__access='edit')
+            return (Q(pk__in=user.individual_accesses.for_model(cls).filter(access='edit').values('object_id'))
                     | Q(owner=user)
                    )
     @classmethod
@@ -321,12 +321,18 @@ class Project(models.Model, ControlledObject):
         elif user.is_anonymous:
             return Q(public_view=True)
         else:
-            return (Q(access__user=user, access__access__in=view_perms) 
+            return (Q(pk__in=user.individual_accesses.for_model(cls).filter(access__in=view_perms).values('object_id')) 
                     | Q(public_view=True) 
                     | Q(owner=user)
                    )
 
+class IndividualAccessManager(models.Manager):
+    def for_model(self,model):
+        return self.filter(object_content_type=ContentType.objects.get_for_model(model))
+
 class IndividualAccess(models.Model, TimelineMixin):
+    objects = IndividualAccessManager()
+
     object_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     object = GenericForeignKey('object_content_type', 'object_id')
@@ -515,7 +521,7 @@ class Extension(models.Model, ControlledObject, EditablePackageMixin):
         elif user.is_anonymous:
             return Q(public=True)
         else:
-            return (Q(access__user=user, access__access__in=view_perms) 
+            return (Q(pk__in=user.individual_accesses.for_model(cls).filter(access__in=view_perms).values('object_id'))
                     | Q(public=True)
                     | Q(author=user)
                    )
@@ -661,7 +667,7 @@ class Theme(models.Model, ControlledObject, EditablePackageMixin):
         elif user.is_anonymous:
             return Q(public=True)
         else:
-            return (Q(access__user=user, access__access__in=view_perms) 
+            return (Q(pk__in=user.individual_accesses.for_model(cls).filter(access__in=view_perms).values('object_id'))
                     | Q(public=True)
                     | Q(author=user)
                    )
@@ -810,7 +816,7 @@ class CustomPartType(models.Model, ControlledObject):
         elif user.is_anonymous:
             return q_public
         else:
-            return (Q(access__user=user, access__access__in=view_perms) 
+            return (Q(pk__in=user.individual_accesses.for_model(cls).filter(access__in=view_perms).values('object_id'))
                     | q_public
                     | Q(author=user)
                    )
@@ -1455,21 +1461,17 @@ class Timeline(object):
         view_filter = Q(editoritems__published=True) | Q(object_content_type=ContentType.objects.get_for_model(SiteBroadcast), object_id__in=nonsticky_broadcasts)
 
         if not self.viewing_user.is_anonymous:
-            projects = self.viewing_user.own_projects.all() | Project.objects.filter(access__in=self.viewing_user.individual_accesses.all()) | Project.objects.filter(watching_non_members=self.viewing_user)
-            queues = ItemQueue.objects.filter(owner=self.viewing_user) | ItemQueue.objects.filter(access__in=self.viewing_user.individual_accesses.all())
+            projects = Project.objects.filter(Q(owner=self.viewing_user) | Q(pk__in=self.viewing_user.individual_accesses.for_model(Project).values('object_id')) | Q(watching_non_members=self.viewing_user)).values('pk')
+            editoritems = EditorItem.objects.filter(Q(author=self.viewing_user) | Q(pk__in=self.viewing_user.individual_accesses.for_model(EditorItem).values('object_id'))).values('pk')
+            queues = ItemQueue.objects.filter(Q(owner=self.viewing_user) | Q(pk__in=self.viewing_user.individual_accesses.for_model(ItemQueue).values('object_id'))).values('pk')
             items_for_user = (
-                Q(editoritems__in=EditorItem.objects.filter(Q(access__user=self.viewing_user) | Q(author=self.viewing_user))) | 
+                Q(editoritems__in=editoritems) |
                 Q(editoritems__project__in=projects) |
                 Q(projects__in=projects) |
                 Q(item_queue_entry__queue__project__in = projects) |
                 Q(item_queue_entry__queue__in = queues) |
                 Q(item_queue_entries__queue__project__in = projects) |
-                Q(item_queue_entries__queue__in = queues) |
-                Q(individual_accesses__user=viewing_user)
-#                Q(editoritems__accesses__in=self.viewing_user.item_accesses.all()) | 
- #               Q(extension_accesses__user=viewing_user) |
- #               Q(theme_accesses__user=viewing_user) | 
- #               Q(custom_part_type_accesses__user=self.viewing_user) |
+                Q(item_queue_entries__queue__in = queues)
             )
 
             view_filter = view_filter | items_for_user
@@ -1971,7 +1973,7 @@ class ItemQueue(models.Model, ControlledObject):
         elif user.is_anonymous:
             return Q(public=True)
         else:
-            return (Q(access__user=user, access__access__in=view_perms) 
+            return (Q(pk__in=user.individual_accesses.for_model(cls).filter(access__in=view_perms).values('object_id'))
                     | Q(public=True)
                     | Q(owner=user)
                     | Q(project__in=Project.objects.filter(Project.filter_can_be_viewed_by(user)))

@@ -74,17 +74,18 @@ class UserProfile(models.Model):
         return NewQuestion.objects.filter(editoritem__author=self.user).order_by('-editoritem__last_modified')[:10]
 
     def projects(self):
-        return (Project.objects.filter(owner=self.user) | Project.objects.filter(access__user=self.user))
+        return Project.objects.filter(Q(owner=self.user) | Q(pk__in=self.user.individual_accesses.for_model(Project).values('object_id')))
 
     def all_timeline(self):
-        ct_ei = ContentType.objects.get_for_model(EditorItem)
-        projects = self.user.own_projects.all() | Project.objects.filter(access__in=self.user.individual_accesses.all()) | Project.objects.filter(watching_non_members=self.user)
         nonsticky_broadcasts = SiteBroadcast.objects.visible_now().exclude(sticky=True)
         nonsticky_broadcast_timelineitems = TimelineItem.objects.filter(object_content_type=ContentType.objects.get_for_model(SiteBroadcast), object_id__in=nonsticky_broadcasts)
-        queues = ItemQueue.objects.filter(owner=self.user) | ItemQueue.objects.filter(access__in=self.user.individual_accesses.all())
+
+        projects = Project.objects.filter(Q(owner=self.user) | Q(pk__in=self.user.individual_accesses.for_model(Project).values('object_id')) | Q(watching_non_members=self.user)).values('pk')
+        editoritems = EditorItem.objects.filter(Q(author=self.user) | Q(pk__in=self.user.individual_accesses.for_model(EditorItem).values('object_id'))).values('pk')
+        queues = ItemQueue.objects.filter(Q(owner=self.user) | Q(pk__in=self.user.individual_accesses.for_model(ItemQueue).values('object_id'))).values('pk')
 
         items = TimelineItem.objects.filter(
-            Q(editoritems__in=EditorItem.objects.filter(Q(access__user=self.user) | Q(author=self.user))) | 
+            Q(editoritems__in=editoritems) |
             Q(editoritems__project__in=projects) |
             Q(projects__in=projects) |
             Q(item_queue_entries__queue__project__in = projects) |

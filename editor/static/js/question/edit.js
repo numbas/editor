@@ -1424,7 +1424,7 @@ $(document).ready(function() {
 
         reset: function() {
             this.resources([]);
-            this.realtags([]);
+            this.tags([]);
             this.rulesets([]);
             this.functions([]);
             this.variables([]);

@@ -219,14 +219,14 @@
 
                                 <div class="form-group tags">
                                     <label>Tags</label>
-                                    <ul class="list-inline" data-bind="foreach: tags">
+                                    <ul class="list-inline" data-bind="foreach: sorted_tags">
                                         <li class="btn btn-default btn-sm">
                                             <a target="_blank" data-bind="attr: {href: '/search/?tags='+encodeURIComponent($data), title:'Items with the tag \''+$data+'\''}, text: $data"></a>
-                                            <button class="btn btn-xs btn-link" data-bind="click: $root.tags.remove" title="Remove this tag"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                                            <button class="btn btn-xs btn-link" data-bind="click: $root.remove_tag" title="Remove this tag"><span class="glyphicon glyphicon-remove text-danger"></span></button>
                                         </li>
                                     </ul>
-                                    <form data-bind="submit: function(form) {var input = $(form).find('input');$data.tags.push(input.val());input.val('').focus();}">
-                                        <input type="text" class="form-control">
+                                    <form data-bind="submit: add_tag">
+                                        <input type="text" class="form-control" data-bind="textInput: tag_input">
                                     </form>
                                 </div>
 

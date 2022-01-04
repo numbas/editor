@@ -639,7 +639,8 @@ $(document).ready(function() {
         this.current_stamp = ko.observable(item_json.current_stamp);
         this.licence = ko.observable();
         this.ability_frameworks = ko.observableArray([]);
-        this.realtags = ko.observableArray([]);
+        this.tags = ko.observableArray([]);
+        this.tag_input = ko.observable('');
         this.description = ko.observable('');
         this.ignored_publishing_criteria = ko.observable(false);
 
@@ -704,41 +705,28 @@ $(document).ready(function() {
             return name.length>0 ? name : 'Untitled Question';
         },this);
 
-        this.tags = ko.pureComputed({
-            read: function() {
-                return this.realtags().sort(function(a,b) {
-                    a = a.toLowerCase();
-                    b = b.toLowerCase();
-                    return a>b ? 1 : a<b ? -1 : 0;
-                });
-            },
-            write: function(newtags) {
-                newtags = newtags.slice();
-                for(var i=newtags.length-1;i>=0;i--)
-                {
-                    if(newtags.indexOf(newtags[i])<i)
-                        newtags.splice(i,1);
-                }
-                this.realtags(newtags);
+        this.has_tag = function(tag) {
+            return ei.tags().find(function(t) { return t.toLowerCase() == tag.toLowerCase(); })
+        }
+
+        this.add_tag = function() {
+            var tag = ei.tag_input();
+            if(!ei.has_tag(tag)) {
+                ei.tags.push(tag);
             }
+            ei.tag_input('');
+        }
+
+        this.sorted_tags = ko.computed(function() {
+            return this.tags().sort(function(a,b) {
+                a = a.toLowerCase();
+                b = b.toLowerCase();
+                return a>b ? 1 : a<b ? -1 : 0;
+            });
         },this);
 
-        this.tags.push = function(thing) {
-            thing = thing.trim();
-            if(thing.length==0)
-                return;
-            if(ei.realtags().indexOf(thing)==-1) {
-                ei.realtags.push(thing);
-            }
-        }
-        this.tags.pop = function(thing) {
-            return ei.realtags.pop();
-        }
-        this.tags.splice = function(i,n) {
-            return ei.realtags.splice(i,n);
-        }
-        this.tags.remove = function(q) {
-            return ei.realtags.remove(q);
+        this.remove_tag = function(tag) {
+            ei.tags.remove(tag);
         }
 
         this.metadata = ko.pureComputed(function() {

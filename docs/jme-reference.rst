@@ -3251,7 +3251,7 @@ HTML
 
     Apply a CSS ``max-width`` attribute to the given element.
     You can use this to ensure that an image is not displayed too wide.
-    The given ``width`` is in pixels.
+    The given ``width`` is in ``em`` units.
 
     **Definitions**:
         * :data:`number`, :data:`html` → :data:`html`
@@ -3264,7 +3264,7 @@ HTML
 
     Apply a CSS ``max-height`` attribute to the given element. 
     You can use this to ensure that an image is not displayed too long.
-    The given ``height`` is in pixels.
+    The given ``height`` is in ``em`` units.
 
     **Definitions**:
         * :data:`number`, :data:`html` → :data:`html`

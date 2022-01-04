@@ -3000,7 +3000,7 @@ var jme_function_hints =
     },
     {
         "name": "max_width",
-        "description": "Apply a CSS <code>max-width</code> attribute to the given element.\nYou can use this to ensure that an image is not displayed too wide.\nThe given <code>width</code> is in pixels.",
+        "description": "Apply a CSS <code>max-width</code> attribute to the given element.\nYou can use this to ensure that an image is not displayed too wide.\nThe given <code>width</code> is in <code>em</code> units.",
         "keywords": [
             "width",
             "maximum",
@@ -3014,7 +3014,7 @@ var jme_function_hints =
     },
     {
         "name": "max_height",
-        "description": "Apply a CSS <code>max-height</code> attribute to the given element.\nYou can use this to ensure that an image is not displayed too long.\nThe given <code>height</code> is in pixels.",
+        "description": "Apply a CSS <code>max-height</code> attribute to the given element.\nYou can use this to ensure that an image is not displayed too long.\nThe given <code>height</code> is in <code>em</code> units.",
         "keywords": [
             "height",
             "maximum",

@@ -133,6 +133,9 @@ class CopyView(ProjectQuerysetMixin, generic.FormView, generic.edit.ModelFormMix
         if obj2.editoritem.project == obj.editoritem.project:
             obj2.editoritem.folder = obj.editoritem.folder
         obj2.editoritem.save()
+        obj2.editoritem.tags.set(*obj.editoritem.tags.all())
+        obj2.editoritem.ability_levels.set(obj.editoritem.ability_levels.all())
+        obj2.editoritem.taxonomy_nodes.set(obj.editoritem.taxonomy_nodes.all())
         for c in obj.editoritem.contributors.all():
             try:
                 Contributor.objects.create(item=obj2.editoritem,user=c.user,name=c.name,profile_url=c.profile_url)

@@ -3232,14 +3232,20 @@ HTML
         * ``table([[0,1],[1,0]], ["Column A","Column B"])``
         * ``table([[0,1],[1,0]])``
 
-.. jme:function:: image(url)
+.. jme:function:: image(url,[width],[height])
     :keywords: picture, display
 
     Create an HTML ``img`` element loading the image from the given URL.
     Images uploaded through the resources tab are stored in the relative URL ``resources/images/<filename>.png``, where ``<filename>`` is the name of the original file.
 
+    The optional ``width`` and ``height`` parameters specify the size the image should be displayed at, in em units.
+    If only the width is given, the height will be automatically set to maintain the image's original proportions.
+    1 em is the width of the letter 'm'.
+
+    If neither width nor height are given, the image is displayed at its original size.
+
     **Definitions**:
-        * :data:`string` → :data:`html`
+        * :data:`string`, optional :data:`number`, optional :data:`number` → :data:`html`
 
     **Examples**:
         * ``image('resources/images/picture.png')``

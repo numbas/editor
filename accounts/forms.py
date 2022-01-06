@@ -38,7 +38,7 @@ class UserField(BootstrapFieldMixin, forms.Field):
             try:
                 validate_email(value)
                 return User(email=value)
-            except ValidationError:
+            except forms.ValidationError:
                 raise forms.ValidationError("No user matching query '{}'".format(value))
         return user
 
@@ -73,6 +73,7 @@ class UserProfileForm(forms.ModelForm):
             'mathjax_url',
             'email_about_stamps',
             'email_about_comments',
+            'email_about_item_queue_entries',
             'never_email'
         )
         widgets = {

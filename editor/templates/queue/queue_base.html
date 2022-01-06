@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% load can_edit %}
+
+{% block title %}{{queue.name}} - {{block.super}}{% endblock title %}
+
+{% block content %}
+<div class="page-header">
+    {% if queue|can_be_edited_by:user %}
+    <span class="pull-right">
+        <a href="{% url 'queue_settings_options' queue.pk %}" title="Queue settings" class="btn btn-lg btn-link"><span class="glyphicon glyphicon-cog"></span></a>
+    </span>
+    {% endif %}
+    <h1>
+        <span class="glyphicon glyphicon-list"></span> <a href="{% url 'queue_view' queue.pk %}">{{queue.name}}</a>
+        <small>in <span class="glyphicon glyphicon-briefcase"></span> <a href="{{queue.project.get_absolute_url}}">{{queue.project.name}}</a></small>
+    </h1>
+</div>
+<div class="{% block queue_container %}container{% endblock queue_container %}">
+    {% block queue_content %}{% endblock queue_content %}
+</div>
+{% endblock content %}

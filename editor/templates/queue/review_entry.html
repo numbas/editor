@@ -1,0 +1,127 @@
+{% extends "queue/queue_base.html" %}
+{% load sstatic %}
+{% load user_link %}
+{% load sanitizer %}
+{% load links %}
+{% load can_edit %}
+{% load extra_sanitize %}
+
+{% block title %}Review {{entry.item.name}} - {{entry.queue.name}} - {{block.super}}{% endblock title %}
+
+{% block javascripts %}
+    {{block.super}}
+
+    <script src="{% sstatic 'js/queue/review_entry.js' %}" type="text/javascript"></script>
+{% endblock javascripts %}
+
+{% block stylesheets %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% sstatic 'css/queue/review.css' %}"/>
+{% endblock stylesheets %}
+
+{% block queue_content %}
+{% with can_edit=entry|can_be_edited_by:user %}
+<section id="item">
+    <p class="lead text-center">
+    {% if can_edit %}
+    Please review <em>{% editoritem_link entry.item.rel_obj show_icon=True %}</em>
+    {% else %}
+    <em>{% editoritem_link entry.item.rel_obj show_icon=True %}</em> has been submitted for review
+    {% endif %}
+    </p>
+</section>
+
+<section id="note">
+    <h2>Submission note</h2>
+    <p class="text-muted">
+        Submitted by 
+        {% user_thumbnail entry.created_by 40 36 link=True %}
+        {% user_link entry.created_by %}
+    </p>
+    <div class="text">
+        {{entry.note|strip_html|safe}}
+    </div>
+    {% if can_edit %}
+    <p>
+        <a href="{% url 'queue_entry_edit' entry.pk %}" class="btn btn-default"><span class="glyphicon glyphicon-pencil"></span> Edit this note</a>
+    </p>
+    {% endif %}
+</section>
+
+<hr/>
+
+<section id="checklist">
+    <h2>Checklist</h2>
+    {% if can_edit %}
+    <div class="row">
+        <div id="reviewer-instructions" class="instructions col-md-6">
+            {{entry.queue.instructions_reviewer|strip_html_shift_headings|safe}}
+        </div>
+        <form method="POST" action="" class="form-horizontal col-md-6">
+            {% csrf_token %}
+
+            <ul class="list-unstyled checklist">
+            {% for item in entry.checklist_items %}
+            <li>
+                <input id="item-{{item.pk}}" type="checkbox" {% if item.ticked %}checked{% endif %} name="ticked-items" value="{{item.pk}}">
+                <label for="item-{{item.pk}}">
+                    {{item.label|strip_html|safe}}
+                </label>
+            </li>
+            {% endfor %}
+            </ul>
+
+            <hr>
+
+            <p>
+                <input type="checkbox" name="remove" id="remove">
+                <label for="remove">This entry is complete - remove it from the queue</label>
+            </p>
+
+            <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-save"></span> Save</button>
+        </form>
+    </div>
+    {% else %}
+    <ul class="list-unstyled checklist">
+        {% for item in entry.checklist_items %}
+        <li>
+            <input disabled id="item-{{item.pk}}" type="checkbox" {% if item.ticked %}checked{% endif %} name="ticked-items" value="{{item.pk}}">
+            <label for="item-{{item.pk}}">
+                {{item.label|strip_html|safe}}
+            </label>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+</section>
+
+<hr/>
+
+<section id="timeline">
+    <h2>Comments</h2>
+    <div data-bind="visible: !commentwriter.writingComment()">
+        <button class="btn btn-primary" data-bind="click: commentwriter.writingComment" type="button"><span class="glyphicon glyphicon-comment"></span> Write a comment</button>
+    </div>
+    <div class="timeline-write-comment" data-bind="with: commentwriter">
+        <form action="{% url 'queue_entry_comment' entry.pk %}" data-bind="fadeVisible: writingComment, submit: submitComment">
+            <h3>Comment</h3>
+            <div data-bind="writemaths: commentText, editImmediately: true"></div>
+            <div class="buttons">
+                <button type="Submit" class="btn btn-primary" data-bind="attr: {disabled: commentIsEmpty}">Submit</button>
+                <button type="button" class="btn btn-default" data-bind="click: cancelComment">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="timeline">
+        {% with current_timeline=entry %}
+        {% for item in entry.timeline.all %}
+            {% include item.object.timelineitem_template %}
+        {% endfor %}
+        {% endwith %}
+    </div>
+</section>
+
+{% endwith %}
+{% endblock queue_content %}

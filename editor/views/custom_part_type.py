@@ -1,5 +1,6 @@
 from django import http
 from django.contrib import messages
+from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models.functions import Lower
 from django.views import generic
@@ -7,8 +8,8 @@ from django.urls import reverse
 from django.shortcuts import redirect
 
 from accounts.util import user_json
-from editor.models import CustomPartType, CUSTOM_PART_TYPE_PUBLIC_CHOICES, CUSTOM_PART_TYPE_INPUT_WIDGETS, Extension, CustomPartTypeAccess
-from editor.forms import NewCustomPartTypeForm, UpdateCustomPartTypeForm, CopyCustomPartTypeForm, UploadCustomPartTypeForm, CustomPartTypeSetAccessForm
+from editor.models import CustomPartType, CUSTOM_PART_TYPE_PUBLIC_CHOICES, CUSTOM_PART_TYPE_INPUT_WIDGETS, Extension, IndividualAccess
+from editor.forms import NewCustomPartTypeForm, UpdateCustomPartTypeForm, CopyCustomPartTypeForm, UploadCustomPartTypeForm, IndividualAccessFormset
 from editor.views.generic import AuthorRequiredMixin, CanViewMixin
 
 import json
@@ -102,7 +103,7 @@ class UpdateView(CanViewMixin, generic.UpdateView):
             'data': self.object.as_json(), 
             'save_url': self.object.get_absolute_url(), 
             'set_access_url': reverse('custom_part_type_set_access',args=(self.object.pk,)),
-            'access_rights': [{'user': user_json(a.user), 'access_level': a.access} for a in CustomPartTypeAccess.objects.filter(custom_part_type=self.object)],
+            'access_rights': [{'user': user_json(a.user), 'access_level': a.access} for a in self.object.access.all()],
             'numbasExtensions': context['extensions'],
         }
 
@@ -201,26 +202,37 @@ class SourceView(generic.DetailView):
 
 class SetAccessView(generic.UpdateView):
     model = CustomPartType
-    form_class = CustomPartTypeSetAccessForm
+    form_class = IndividualAccessFormset
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['data'] = self.request.POST.copy()
-        kwargs['data'].update({'given_by':self.request.user.pk})
-        return kwargs
-
-    def form_valid(self, form):
+    def post(self, request, *args, **kwargs):
         item = self.get_object()
 
         if not item.can_be_edited_by(self.request.user):
             return http.HttpResponseForbidden("You don't have permission to edit this item.")
 
-        self.object = form.save()
+        existing_accesses = item.access.all()
+
+        user_ids = [int(x) for x in self.request.POST.getlist('user_ids[]')]
+        access_levels = self.request.POST.getlist('access_levels[]')
+
+        access_dict = {u:a for u,a in zip(user_ids, access_levels)}
+
+        new_accesses = []
+
+        for a in existing_accesses:
+            if a.user.pk not in access_dict:
+                a.delete()
+            new_access = access_dict[a.user.pk]
+            if a.access != new_access:
+                a.access = new_access
+                a.save()
+
+            del access_dict[a.user.pk]
+
+        for user_id, access in access_dict.items():
+            IndividualAccess.objects.create(user=User.objects.get(pk=user_id), access=access, object=item)
 
         return http.HttpResponse('ok!')
-
-    def form_invalid(self, form):
-        return http.HttpResponse(form.errors.as_text())
 
     def get(self, request, *args, **kwargs):
         return http.HttpResponseNotAllowed(['POST'], 'GET requests are not allowed at this URL.')

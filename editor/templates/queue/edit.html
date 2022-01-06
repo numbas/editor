@@ -1,0 +1,73 @@
+{% extends "queue/settings_base.html" %}
+{% load sstatic %}
+
+{% block javascripts %}
+    {{block.super}}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            Editor.tinymce({selector:'#id_description'});
+            Editor.tinymce({selector:'#id_instructions_submitter'});
+            Editor.tinymce({selector:'#id_instructions_reviewer'});
+        });
+    </script>
+
+    {{checklist_items|json_script:"checklist-items"}}
+    <script src="{% sstatic 'js/queue/edit.js' %}" type="text/javascript"></script>
+{% endblock javascripts %}
+
+{% block stylesheets %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% sstatic 'css/queue/edit.css' %}"/>
+{% endblock stylesheets %}
+
+{% block settings_content %}
+<form action="" method="post" class="form-horizontal">
+    {% csrf_token %}
+    {% for field in form.hidden_fields %}{{field}}{% endfor %}
+
+    {% for field in form.visible_fields %}
+    <div class="form-group {% if field.errors %}has-error{% endif %}">
+        <label class="col-sm-2 control-label">{{field.label}}</label>
+        <div class="col-sm-10">
+            {{field.as_widget}}
+            {% if field.errors %}
+            <ul class="errorlist list-unstyled">
+                {% for error in field.errors %}
+                <li>{{error}}</li>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Checklist</label>
+        <div class="col-sm-10">
+            <ul class="list-unstyled" id="checklist" data-bind="foreach: checklist_items">
+                <li class="item">
+                    <input type="hidden" name="id" data-bind="value: pk">
+                    <input name="checklist" class="form-control" data-bind="textInput: label"> 
+                    <button type="button" data-bind="click: remove, visible: $index()!=$root.checklist_items().length-1" class="btn btn-xs btn-link" title="Remove this item"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                </li>
+                <li class="add-after">
+                    <button type="button" class="btn btn-link btn-sm" data-bind="click: add_item_after" title="Add another item"><span class="glyphicon glyphicon-plus"></span></button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+
+    <div class="col-sm-offset-2 col-sm-10">
+        <p>
+        <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-save"></span> Save</button>
+            <a class="btn btn-link" href="{% url 'queue_view' queue.pk %}">Cancel</a>
+        </p>
+        <hr>
+        <p>
+            <a class="btn btn-danger" href="{% url 'queue_delete' queue.pk %}"><span class="glyphicon glyphicon-remove"></span> Delete this queue</a>
+        </p>
+    </div>
+</form>
+
+{% endblock settings_content %}
+

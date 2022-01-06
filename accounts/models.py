@@ -16,7 +16,7 @@ from registration import models as regmodels
 
 from sanitizer.models import SanitizedTextField
 
-from editor.models import NewQuestion, EditorTag, Project, TimelineItem, SiteBroadcast, EditorItem
+from editor.models import NewQuestion, EditorTag, Project, TimelineItem, SiteBroadcast, EditorItem, ItemQueue
 
 class RegistrationManager(regmodels.RegistrationManager):
     @transaction.atomic
@@ -58,6 +58,7 @@ class UserProfile(models.Model):
 
     email_about_stamps = models.BooleanField(default=True, verbose_name='Send emails about feedback on items you\'re watching?')
     email_about_comments = models.BooleanField(default=True, verbose_name='Send emails about comments on items you\'re watching?')
+    email_about_item_queue_entries = models.BooleanField(default=True, verbose_name='Send emails about entries on item queues you\'re watching?')
     never_email = models.BooleanField(default=False, verbose_name='Unsubscribe from all emails')
 
     def sorted_tags(self):
@@ -73,20 +74,24 @@ class UserProfile(models.Model):
         return NewQuestion.objects.filter(editoritem__author=self.user).order_by('-editoritem__last_modified')[:10]
 
     def projects(self):
-        return (Project.objects.filter(owner=self.user) | Project.objects.filter(projectaccess__user=self.user))
+        return Project.objects.filter(Q(owner=self.user) | Q(pk__in=self.user.individual_accesses.for_model(Project).values('object_id')))
 
     def all_timeline(self):
-        projects = self.user.own_projects.all() | Project.objects.filter(projectaccess__in=self.user.project_memberships.all()) | Project.objects.filter(watching_non_members=self.user)
         nonsticky_broadcasts = SiteBroadcast.objects.visible_now().exclude(sticky=True)
         nonsticky_broadcast_timelineitems = TimelineItem.objects.filter(object_content_type=ContentType.objects.get_for_model(SiteBroadcast), object_id__in=nonsticky_broadcasts)
 
+        projects = Project.objects.filter(Q(owner=self.user) | Q(pk__in=self.user.individual_accesses.for_model(Project).values('object_id')) | Q(watching_non_members=self.user)).values('pk')
+        editoritems = EditorItem.objects.filter(Q(author=self.user) | Q(pk__in=self.user.individual_accesses.for_model(EditorItem).values('object_id'))).values('pk')
+        queues = ItemQueue.objects.filter(Q(owner=self.user) | Q(pk__in=self.user.individual_accesses.for_model(ItemQueue).values('object_id'))).values('pk')
+
         items = TimelineItem.objects.filter(
-            Q(editoritems__accesses__in=self.user.item_accesses.all()) | 
+            Q(editoritems__in=editoritems) |
             Q(editoritems__project__in=projects) |
             Q(projects__in=projects) |
-            Q(extension_accesses__user=self.user) |
-            Q(theme_accesses__user=self.user) |
-            Q(custom_part_type_accesses__user=self.user)
+            Q(item_queue_entries__queue__project__in = projects) |
+            Q(item_queue_entries__queue__in = queues) |
+            Q(item_queue_entry__queue__project__in = projects) |
+            Q(item_queue_entry__queue__in = queues)
         )
 
         items = (items | nonsticky_broadcast_timelineitems).order_by('-date')
@@ -98,6 +103,9 @@ class UserProfile(models.Model):
 
     def get_absolute_url(self):
         return reverse('view_profile', args=(self.user.pk,))
+
+    def available_queues(self):
+        return ItemQueue.objects.visible_to(self.user)
 
 class EditorItemViewed(models.Model):
     userprofile = models.ForeignKey(UserProfile, related_name='last_viewed_items', on_delete=models.CASCADE)

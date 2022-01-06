@@ -1,0 +1,21 @@
+{% extends "timeline/item.html" %}
+{% load user_link %}
+{% load links %}
+
+{% block thumbnail %}
+{% endblock thumbnail %}
+
+{% block heading %}
+    <span class="glyphicon glyphicon-{{item.object.icon}}"></span> {% user_link item.object.created_by %}
+    added {% editoritem_link item.object.item.rel_obj %} to the queue
+    {% if include_object_link %}<a href="{{item.timeline.get_absolute_url}}">{% endif %}<span class="glyphicon glyphicon-{{item.timeline.icon}}"></span> {{item.timeline.name}}{% if include_object_link %}</a>{% endif %}
+{% endblock %}
+
+{% block on_object %}{% endblock on_object %}
+
+{% block timelineitem_class %}less-important{% endblock %}
+
+{% block delete_text %}Remove this item from the queue{% endblock %}
+
+{% block content %}
+{% endblock content %}

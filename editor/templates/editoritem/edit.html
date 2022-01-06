@@ -57,14 +57,14 @@
 <div class="loaded-content">
     <div class="page-header">
         {% block page_header %}
-        <h2 class="project-header">
+        <div class="project-header">
             <ol class="list-inline">
                 <li class="project"><span class="glyphicon glyphicon-briefcase"></span> <a href="{% url 'project_index' object.editoritem.project.pk %}">{{object.editoritem.project.name}}</a>
                 {% for folder in breadcrumbs %}
                 <li><a href="{{folder.get_absolute_url}}">{{folder.name}}</a></li>
                 {% endfor %}
             </ol>
-        </h2>
+        </div>
         <h1 class="name-header">
             <span class="glyphicon glyphicon-{{object.icon}}"></span> 
             <span class="name" data-bind="mathjaxHTML: name">{{object.name}}</span>
@@ -145,6 +145,13 @@
                         <li><a href="{% editoritem_url 'source' object %}">source</a></li>
                     </ul>
                 </li>
+
+                <li>
+                    <a href="#" class="add-to-queue" title="Add this to a queue" data-item-id="{{object.editoritem.pk}}">
+                        <span class="glyphicon glyphicon-list" aria-hidden="true"></span> Add to a queue
+                    </a>
+                </li>
+
                 {% endblock admin_controls %}
             </ul>
 
@@ -212,14 +219,14 @@
 
                                 <div class="form-group tags">
                                     <label>Tags</label>
-                                    <ul class="list-inline" data-bind="foreach: tags">
+                                    <ul class="list-inline" data-bind="foreach: sorted_tags">
                                         <li class="btn btn-default btn-sm">
                                             <a target="_blank" data-bind="attr: {href: '/search/?tags='+encodeURIComponent($data), title:'Items with the tag \''+$data+'\''}, text: $data"></a>
-                                            <button class="btn btn-xs btn-link" data-bind="click: $root.tags.remove" title="Remove this tag"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                                            <button class="btn btn-xs btn-link" data-bind="click: $root.remove_tag" title="Remove this tag"><span class="glyphicon glyphicon-remove text-danger"></span></button>
                                         </li>
                                     </ul>
-                                    <form data-bind="submit: function(form) {var input = $(form).find('input');$data.tags.push(input.val());input.val('').focus();}">
-                                        <input type="text" class="form-control">
+                                    <form data-bind="submit: add_tag">
+                                        <input type="text" class="form-control" data-bind="textInput: tag_input">
                                     </form>
                                 </div>
 

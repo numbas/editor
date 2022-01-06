@@ -33,7 +33,7 @@ You need to give some information about your new project:
 The project home page
 =====================
 
-A project's home page shows a *timeline* of activity on the project, the list of members, and links to create new content or browse the project's existing content.
+A project's home page shows a *timeline* of activity on the project, the list of members, review queues belonging to the project, and links to create new content or browse the project's existing content.
 
 .. image:: images/project_homepage.png
     :alt: A project's homepage.
@@ -119,3 +119,79 @@ You can't delete your personal workspace.
 To delete a project, go to the project's :guilabel:`Options` page and click on the :guilabel:`Delete this project` button.
 
 Questions and exams belonging to the project will be reassigned to their authors' personal workspaces, but any comments on the project's activity timeline will be deleted.
+
+.. _item_queues:
+
+Queues
+======
+
+.. admonition:: Warning
+
+   Queues are an experimental feature.
+
+   The functionality and interface may change significantly in the next few months.
+
+Queues offer a means of organising the editing process for content in a project.
+
+You might use queues to:
+
+* Manage the testing process for newly-written questions.
+* Moderate submissions to a public library of content. (The Numbas Open Resource Library is one example of this)
+* Assign particular tasks to different members of a team.
+
+Users can submit questions or exams from anywhere in the editor into a queue, where it should be reviewed by members of the project.
+
+Each queue has a "checklist" of criteria that reviewers should check for each submitted item, and a comments thread for discussing the submission.
+
+Nothing automatic happens when an item is submitted to a queue, or when the submission is marked "complete" - it's just a tool to help you keep track of administrative processes.
+
+Anyone with editing access to a project can create a queue, or edit an existing queue.
+Anyone with viewing access to a project can see all of its queues, and any submissions to them.
+
+You can also grant individual users who are not members of the project editing or viewing access to particular queues.
+
+Creating a queue
+----------------
+
+On the project's homepage, click :guilabel:`Create a new queue`.
+
+You need to give some information about the queue:
+
+* **A name.**
+
+* **A description.** 
+  This will be shown on the queue's index page. 
+  You could describe the purpose of the queue, and link to related documentation.
+
+* **Instructions for submitters.**
+  These will be shown to users when they submit an item to the queue.
+  You should describe the criteria for inclusion in the queue.
+  Submitters will not see the queue's checklist during submission.
+
+* **Instructions for reviewers.**
+  These will be shown to anyone with editing access to the queue when looking at a submission.
+  You could give more detail on the criteria in the checklist, and describe any actions a reviewer should take during the review process.
+
+* **A checklist.**
+  A list of single-line items that reviewers should check for each submitted item.
+  Each item in the list is initially unticked, and can be ticked by anyone with editing access to the queue.
+
+Submitting an item to a queue
+-----------------------------
+
+Anyone with viewing access to a queue, or the project it belongs to, can add an item to it.
+
+You can either start a submission by clicking the :guilabel:`Add an item to this queue` button on a queue's homepage, or by clicking the :guilabel:`Add to a queue` button in search results or in the exam and question editors.
+
+When adding an item to a queue, you can write a note giving any information that the reviewers may find useful.
+
+Reviewing a submission
+----------------------
+
+When reviewing a submission, you are shown a link to the item being submitted, the instructions, the checklist, and the comments thread.
+
+You can tick or untick some or all of the items on the checklist.
+To remove the item from the queue, tick :guilabel:`This entry is complete - remove it from the queue` before clicking :guilabel:`Save`.
+
+Comments made on a submission are shown to anyone with viewing access to the queue.
+The person who submitted the item and anyone else who has commented it are notified about each new comment.

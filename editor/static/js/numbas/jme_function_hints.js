@@ -2994,7 +2994,7 @@ var jme_function_hints =
             "display"
         ],
         "calling_patterns": [
-            "image(url)"
+            "image(url,[width],[height])"
         ],
         "doc": "jme-reference"
     },

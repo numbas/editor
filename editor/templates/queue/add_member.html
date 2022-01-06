@@ -1,0 +1,45 @@
+{% extends "queue/settings_base.html" %}
+
+{% block title %}Add a queue member - {{block.super}}{% endblock title %}
+
+{% block javascripts %}
+{{block.super}}
+<script type="text/javascript">
+    $(document).ready(function() {
+        Editor.user_search_autocomplete($('#id_user_search'));
+    });
+</script>
+{% endblock %}
+
+{% block settings_content %}
+
+<h3 class="col-sm-offset-3">Add a queue member</h3>
+<form class="form-horizontal" method="POST" action="">
+    {% csrf_token %}
+    {% for field in form.hidden_fields %}{{field}}{% endfor %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-warning">
+            {% for err in form.non_field_errors %}
+            <p class="form-error">{{ err }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% for field in form.visible_fields %}
+    <div class="form-group {% if field.errors %}has-error{% endif %}">
+        <label class="col-sm-3 control-label">{{field.label}}</label>
+        <div class="col-sm-9">
+            {{field}}
+            {% for error in field.errors %}
+                <div class="help-block">{{error}}</div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+    <div class="col-sm-offset-3">
+        <button class="btn btn-primary" type="submit">Add</button>
+        <a class="btn btn-link" href="{% url 'queue_settings_members' queue.pk %}">Cancel</a>
+    </div>
+</form>
+{% endblock %}

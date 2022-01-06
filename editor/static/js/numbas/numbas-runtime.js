@@ -5610,11 +5610,37 @@ newBuiltin('formatstring',[TString,TList],TString,null, {
 });
 newBuiltin('unpercent',[TString],TNum,util.unPercent);
 newBuiltin('letterordinal',[TNum],TString,util.letterOrdinal);
-newBuiltin('html',[TString],THTML,function(html) { return $(html) });
+newBuiltin('html',[TString],THTML,null, {
+    evaluate: function(args, scope) { 
+        var elements = $(args[0].value);
+        var subber = new jme.variables.DOMcontentsubber(scope);
+        elements = $(elements).map(function(i,element) {
+            return subber.subvars(element);
+        });
+        return new THTML(elements);
+    }
+});
 newBuiltin('isnonemptyhtml',[TString],TBool,function(html) {
     return util.isNonemptyHTML(html);
 });
-newBuiltin('image',[TString],THTML,function(url){ return $('<img/>').attr('src',url); });
+newBuiltin('image',[TString, '[number]', '[number]'],THTML,null, {
+    evaluate: function(args,scope) { 
+        var url = args[0].value;
+        var width = args[1];
+        var height = args[2];
+        var img = document.createElement('img');
+        img.setAttribute('src',url);
+        if(width.type != 'nothing') {
+            img.style.width = width.value+'em';
+        }
+        if(height.type != 'nothing') {
+            img.style.height = height.value+'em';
+        }
+        var subber = new jme.variables.DOMcontentsubber(scope);
+        var element = subber.subvars(img);
+        return new THTML(element);
+    }
+});
 newBuiltin('latex',[TString],TString,null,{
     evaluate: function(args,scope) {
         var s = new TString(args[0].value);
@@ -8982,6 +9008,9 @@ Texifier.prototype = {
         var constantTex;
         var scope = this.scope;
         this.constants.find(function(c) {
+            if(c.value === null || c.value === undefined) {
+                return false;
+            }
             if(util.eq(tree.tok, c.value, scope)) {
                 constantTex = c.tex;
                 return true;
@@ -9440,6 +9469,9 @@ JMEifier.prototype = {
         var constantJME;
         var scope = this.scope;
         this.constants.find(function(c) {
+            if(c.value === null) {
+                return false;
+            }
             if(util.eq(c.value, tree.tok, scope)) {
                 constantJME = c.name;
                 return true;
@@ -12466,7 +12498,7 @@ jme.variables = /** @lends Numbas.jme.variables */ {
      */
     DOMcontentsubvars: function(element, scope) {
         var subber = new DOMcontentsubber(scope);
-        subber.subvars(element);
+        return subber.subvars(element);
     },
     /** Substitute variables into the contents of a text node. Substituted values might contain HTML elements, so the return value is a collection of DOM elements, not another string.
      *
@@ -12710,10 +12742,10 @@ DOMcontentsubber.prototype = {
         try {
             switch(element.nodeType) {
                 case 1: //element
-                    this.sub_element(element);
+                    element = this.sub_element(element);
                     break;
                 case 3: //text
-                    this.sub_text(element);
+                    element = this.sub_text(element);
                     break;
                 default:
                     return;
@@ -12722,6 +12754,7 @@ DOMcontentsubber.prototype = {
             error.element = error.element || element;
             throw(error);
         }
+        return element;
     },
 
     sub_element: function(element) {
@@ -12744,9 +12777,11 @@ DOMcontentsubber.prototype = {
                 }
                 object.setAttribute('type','image/svg+xml');
                 object.setAttribute('data',element.getAttribute('src'));
-                element.parentElement.replaceChild(object,element);
+                if(element.parentElement) {
+                    element.parentElement.replaceChild(object,element);
+                }
                 subber.sub_element(object);
-                return;
+                return object;
             }
         } else if(tagName=='object') {
             /** Substitute content into the object's root element.
@@ -12759,7 +12794,7 @@ DOMcontentsubber.prototype = {
             } else {
                 element.addEventListener('load',go,false);
             }
-            return;
+            return element;
         }
         if(element.hasAttribute('data-jme-visible')) {
             var condition = element.getAttribute('data-jme-visible');
@@ -12774,7 +12809,7 @@ DOMcontentsubber.prototype = {
                         break;
                     }
                 }
-                return;
+                return element;
             }
         }
         var new_attrs = {};
@@ -12796,7 +12831,7 @@ DOMcontentsubber.prototype = {
             subber.subvars(this);
         });
         this.re_end = o_re_end; // make sure that any maths environment only applies to children of this element; otherwise, an unended maths environment could leak into later tags
-        return;
+        return element;
     },
     sub_text: function(node) {
         var selector = $(node);
@@ -12817,6 +12852,7 @@ DOMcontentsubber.prototype = {
             selector.before(n);
         }
         selector.remove();
+        return node;
     },
 
     /** Find all variables which would be used when substituting into the given element.
@@ -30392,7 +30428,7 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
             tryGetAttribute(cell,null, distractorNodes[i], ['answerIndex', 'choiceIndex']);
             var elem = document.createElement('div');
             elem.innerHTML = Numbas.xml.transform(Numbas.xml.templates.question,distractorNodes[i]);
-            Numbas.jme.variables.DOMcontentsubvars(elem,scope);
+            elem = Numbas.jme.variables.DOMcontentsubvars(elem,scope);
             cell.message = elem.innerHTML;
             if(this.type == '1_n_2' || this.type == 'm_n_2') {
                 // possible answers are recorded as choices in the multiple choice types.

@@ -1,0 +1,49 @@
+{% extends "queue/queue_base.html" %}
+{% load sstatic %}
+{% load user_link %}
+{% load sanitizer %}
+{% load links %}
+{% load can_edit %}
+{% load extra_sanitize %}
+
+{% block title %}Review {{entry.item.name}} - {{entry.queue.name}} - {{block.super}}{% endblock title %}
+
+{% block javascripts %}
+{{block.super}}   
+<script type="text/javascript">
+    $(document).ready(function() {
+        Editor.tinymce({selector:'#id_note'});
+    });
+</script>
+{% endblock %}
+
+{% block queue_content %}
+<section id="item">
+    <p class="lead">Edit submission note <em>{% editoritem_link entry.item.rel_obj show_icon=True %}</em>.</p>
+</section>
+
+<form method="POST" class="form-horizontal row">
+    {% csrf_token %}
+    {% for field in form.visible_fields %}
+    <div class="form-group {% if field.errors %}has-error{% endif %}">
+        <label class="col-sm-2 control-label">{{field.label}}</label>
+        <div class="col-sm-10">
+            {{field.as_widget}}
+            {% if field.errors %}
+            <ul class="errorlist list-unstyled">
+                {% for error in field.errors %}
+                <li>{{error}}</li>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    <div class="col-sm-offset-2 col-sm-10">
+        <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-save"></span> Save</button>
+        <a href="{% url 'queue_entry_review' entry.pk %}" class="btn btn-link">Cancel</a>
+    </div>
+</form>
+<hr/>
+<a href="{% url 'queue_entry_delete' entry.pk %}" class="btn btn-danger"><span class="glyphicon glyphicon-remove"></span> Delete this entry</a>
+
+{% endblock queue_content %}

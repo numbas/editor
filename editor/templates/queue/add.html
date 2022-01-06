@@ -1,0 +1,87 @@
+{% extends "layout.html" %}
+{% load sstatic %}
+{% load sanitizer %}
+{% load extra_sanitize %}
+{% load links %}
+
+{% block title %}Add an item to {{queue.name}} - {{block.super}}{% endblock title %}
+
+{% block javascripts %}
+{{block.super}}   
+<script type="text/javascript">
+    $(document).ready(function() {
+        Editor.tinymce({selector:'#id_note'});
+    });
+</script>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% sstatic 'css/queue/review.css' %}"/>
+{% endblock stylesheets %}
+
+{% block content %}
+<div class="page-header">
+    <h1><span class="glyphicon glyphicon-list"></span> Add an item to <a href="{% url 'queue_view' queue.pk %}">{{queue.name}}</a></h1>
+</div>
+
+<div class="row">
+<section class="instructions col-md-6">
+    {{queue.instructions_submitter|strip_html_shift_headings:2|safe}}
+</section>
+
+<form action="" method="post" class="form-horizontal col-md-6">
+    {% csrf_token %}
+    {% for field in form.hidden_fields %}{{field}}{% endfor %}
+
+    {{form.errors}}
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Item</label>
+        {% if given_item %}
+        <div class="col-sm-10">
+            {% editoritem_link given_item.rel_obj show_icon=True %}
+            {{form.item.as_hidden}}
+        </div>
+        {% else %}
+        <div class="col-sm-5">
+            <strong>Recently-viewed items</strong>
+            <ul>
+                {% for item in json.recent_items %}
+                <li><input type="radio" name="item" value="{{item.editoritem.pk}}"> {% editoritem_link item show_icon=True %}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-sm-5">
+            <strong>Items in your basket</strong>
+            <ul>
+                {% for item in json.basket %}
+                <li><input type="radio" name="item" value="{{item.editoritem.pk}}"> {% editoritem_link item show_icon=True %}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+
+    {% for field in form.visible_fields %}
+    <div class="form-group {% if field.errors %}has-error{% endif %}">
+        <label class="col-sm-2 control-label">{{field.label}}</label>
+        <div class="col-sm-10">
+            {{field.as_widget}}
+            {% if field.errors %}
+            <ul class="errorlist list-unstyled">
+                {% for error in field.errors %}
+                <li>{{error}}</li>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="col-sm-offset-2 col-sm-10">
+        <button type="submit" class="btn btn-primary">Submit</button></p>
+    </div>
+</form>
+</div>
+
+{% endblock content %}

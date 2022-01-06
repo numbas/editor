@@ -9,19 +9,23 @@ from django.template.loader import render_to_string
 import editor.forms
 from editor.models import Folder, Project
 import editor.views
+import editor.views.generic
 from editor.views.generic import ProjectQuerysetMixin
 
-class MustBeEditorMixin(editor.views.project.MustBeEditorMixin):
-    def get_project(self):
+class MustBeEditorMixin(editor.views.generic.CanEditMixin):
+    def get_access_object(self):
         folder = self.get_object()
         return folder.project
 
-class MoveFolderView(editor.views.project.MustBeEditorMixin, generic.FormView):
+class MoveFolderView(MustBeEditorMixin, generic.FormView):
     form_class = editor.forms.MoveFolderForm
 
     def get_parent(self):
         pk = self.request.POST.get('parent')
         parent = Folder.objects.get(pk=pk)
+
+    def get_access_object(self):
+        return self.get_project()
 
     def get_project(self):
         project_pk = self.request.POST.get('project')
@@ -72,10 +76,10 @@ class MoveFolderView(editor.views.project.MustBeEditorMixin, generic.FormView):
             project = self.get_project()
             return reverse('project_browse',args=(project.pk,''))
 
-class MoveProjectView(editor.views.project.MustBeEditorMixin, ProjectQuerysetMixin, generic.FormView):
+class MoveProjectView(editor.views.generic.CanEditMixin, ProjectQuerysetMixin, generic.FormView):
     form_class = editor.forms.BrowseMoveProjectForm
 
-    def get_project(self):
+    def get_access_object(self):
         project_pk = self.request.POST.get('from_project')
         return Project.objects.get(pk=project_pk)
 
@@ -95,8 +99,6 @@ class MoveProjectView(editor.views.project.MustBeEditorMixin, ProjectQuerysetMix
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        print(form.errors)
-        print(self.get_form_kwargs())
         return redirect(reverse('project_browse',args=(self.get_project().pk,'')))
 
     def get_success_url(self):
@@ -121,7 +123,6 @@ class DeleteFolderView(MustBeEditorMixin, generic.DeleteView):
             folder.save()
         for item in self.object.items.all():
             item.folder = self.object.parent
-            print(item,item.folder)
             item.save()
 
         return super().delete(request,*args,**kwargs)

@@ -22,3 +22,7 @@ def editoritem_url(link, item):
 @register.inclusion_tag('links/project.html')
 def project_link(project):
     return {'project': project}
+
+@register.inclusion_tag('links/add_to_queue_button.html')
+def add_to_queue_button(item, show_text=False):
+    return {'item': item, 'show_text': show_text}

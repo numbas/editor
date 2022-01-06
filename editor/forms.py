@@ -3,8 +3,9 @@ import os
 from pathlib import Path
 import json
 
-from django.conf import settings
 from django import forms
+from django.conf import settings
+from django.contrib.contenttypes.forms import generic_inlineformset_factory
 from django.forms.models import inlineformset_factory, modelformset_factory
 from django.forms.widgets import SelectMultiple
 from django.utils.html import format_html, html_safe
@@ -15,8 +16,9 @@ from django.db.models import Q, Count
 from django.contrib.auth.models import User
 from django.template.loader import render_to_string
 
-from editor.models import NewExam, NewQuestion, EditorItem, Access, Theme, Extension, \
-    PullRequest, CustomPartType, Project, Folder, Resource, CustomPartTypeAccess
+from editor.models import NewExam, NewQuestion, EditorItem, Theme, Extension, \
+    PullRequest, CustomPartType, Project, Folder, Resource, \
+    ItemQueue, ItemQueueChecklistItem, ItemQueueEntry
 import editor.models
 from accounts.forms import UserField
 from accounts.util import find_users
@@ -112,22 +114,16 @@ class EditorItemSearchForm(forms.Form):
     exclude_tags = TagField(initial='', required=False, widget=forms.TextInput(attrs={'placeholder': 'Tags separated by commas'}))
 
 class AccessForm(forms.ModelForm):
-    given_by = forms.ModelChoiceField(queryset=User.objects.all())
-
     class Meta:
-        model = Access
+        model = editor.models.IndividualAccess
         exclude = []
-
-    def save(self, commit=True):
-        self.instance.given_by = self.cleaned_data.get('given_by')
-        super(AccessForm, self).save(commit)
 
 class SetAccessForm(forms.ModelForm):
     given_by = forms.ModelChoiceField(queryset=User.objects.all())
 
     class Meta:
         model = EditorItem
-        fields = ['public_access']
+        fields = []
 
     def is_valid(self):
         v = super(SetAccessForm, self).is_valid()
@@ -444,33 +440,36 @@ class UploadExtensionForm(UpdateExtensionForm):
             self.save_m2m()
         return extension
 
-ExtensionAccessFormset = inlineformset_factory(editor.models.Extension, editor.models.ExtensionAccess, fields=('access',), extra=0, can_delete=True)
-
-class AddExtensionAccessForm(UserSearchMixin, forms.ModelForm):
+class AddEditablePackageAccessForm(UserSearchMixin, forms.ModelForm):
     invitation = None
     adding_user = forms.ModelChoiceField(queryset=User.objects.all(), widget=forms.HiddenInput())
 
     class Meta:
-        model = editor.models.ExtensionAccess
-        fields = ('extension', 'access')
+        model = editor.models.IndividualAccess
+        fields = ('object_content_type', 'object_id', 'access')
         widgets = {
-            'extension': forms.HiddenInput(),
+            'object_content_type': forms.HiddenInput(),
+            'object_id': forms.HiddenInput(),
             'access': forms.Select(attrs={'class':'form-control'})
         }
 
+    def check_author_access(self, cleaned_data):
+        user = cleaned_data.get('user_search')
+        extension = Extension.objects.get(pk=cleaned_data.get('object_id'))
+        if user == extension.author:
+            raise forms.ValidationError("Can't give separate access to the extension's author")
+
     def clean(self):
         cleaned_data = super().clean()
-        user = cleaned_data.get('user_search')
-        if user == cleaned_data.get('extension').author:
-            raise forms.ValidationError("Can't give separate access to the extension's author")
+        self.check_author_access(cleaned_data)
         return cleaned_data
 
     def save(self, force_insert=False, force_update=False, commit=True):
         m = super().save(commit=False)
         if commit:
             if m.user.pk:
-                # check if there's an existing ExtensionAccess for this user & project
-                ea = editor.models.ExtensionAccess.objects.filter(extension=m.extension, user=m.user).first()
+                # check if there's an existing IndividualAccess for this user and object
+                ea = m.object.access.filter(user=m.user).first()
                 if ea is not None:
                     ea.access = m.access
                     m = ea
@@ -489,38 +488,14 @@ class ThemeDeleteFileForm(PackageDeleteFileForm):
     class Meta(PackageDeleteFileForm.Meta):
         model = Theme
 
-ThemeAccessFormset = inlineformset_factory(editor.models.Theme, editor.models.ThemeAccess, fields=('access',), extra=0, can_delete=True)
-
-class AddThemeAccessForm(UserSearchMixin, forms.ModelForm):
-    invitation = None
-    adding_user = forms.ModelChoiceField(queryset=User.objects.all(), widget=forms.HiddenInput())
-
-    class Meta:
-        model = editor.models.ThemeAccess
-        fields = ('theme', 'access')
-        widgets = {
-            'theme': forms.HiddenInput(),
-            'access': forms.Select(attrs={'class':'form-control'})
-        }
-
-    def clean(self):
-        cleaned_data = super().clean()
-        user = cleaned_data.get('user_search')
-        if user == cleaned_data.get('theme').author:
-            raise forms.ValidationError("Can't give separate access to the theme's author")
-        return cleaned_data
-
-    def save(self, force_insert=False, force_update=False, commit=True):
-        m = super().save(commit=False)
-        if commit:
-            if m.user.pk:
-                # check if there's an existing ThemeAccess for this user & project
-                ea = editor.models.ThemeAccess.objects.filter(theme=m.theme, user=m.user).first()
-                if ea is not None:
-                    ea.access = m.access
-                    m = ea
-                m.save()
-        return m
+IndividualAccessFormset = generic_inlineformset_factory(
+    editor.models.IndividualAccess,
+    ct_field='object_content_type',
+    fk_field='object_id',
+    fields=('access',),
+    extra=0,
+    can_delete=True
+)
 
 class UpdateThemeForm(forms.ModelForm, ValidateZipField):
     
@@ -692,88 +667,22 @@ class CopyCustomPartTypeForm(forms.ModelForm):
             raise forms.ValidationError("Please pick a new name.")
         return name
 
-class CustomPartTypeAccessForm(forms.ModelForm):
-    given_by = forms.ModelChoiceField(queryset=User.objects.all())
+class AddMemberForm(AddEditablePackageAccessForm):
 
-    class Meta:
-        model = CustomPartTypeAccess
-        exclude = []
-
-    def save(self, commit=True):
-        self.instance.given_by = self.cleaned_data.get('given_by')
-        super().save(commit)
-
-class CustomPartTypeSetAccessForm(forms.ModelForm):
-    given_by = forms.ModelChoiceField(queryset=User.objects.all())
-
-    class Meta:
-        model = CustomPartType
-        fields = []
-
-    def is_valid(self):
-        v = super().is_valid()
-        for f in self.user_access_forms:
-            if not f.is_valid():
-                return False
-        return v
-    
-    def clean(self):
-        cleaned_data = super().clean()
-
-        self.user_ids = self.data.getlist('user_ids[]')
-        self.access_levels = self.data.getlist('access_levels[]')
-        self.user_access_forms = []
-
-        for i, (user, access_level) in enumerate(zip(self.user_ids, self.access_levels)):
-            f = CustomPartTypeAccessForm({'user':user, 'access':access_level, 'custom_part_type':self.instance.pk, 'given_by':self.cleaned_data.get('given_by').pk}, instance=CustomPartTypeAccess.objects.filter(custom_part_type=self.instance, user=user).first())
-            f.full_clean()
-            self.user_access_forms.append(f)
-            for key, warnings in f.errors.items():
-                self._errors[('user %i: ' % i)+key] = warnings
-
-        return cleaned_data
-
-    def save(self, commit=True):
-        access_to_remove = CustomPartTypeAccess.objects.filter(custom_part_type=self.instance).exclude(user__in=self.user_ids)
-        access_to_remove.delete()
-        for f in self.user_access_forms:
-            f.save()
-        return super().save()
-
-class AddMemberForm(UserSearchMixin, forms.ModelForm):
-    invitation = None
-    adding_user = forms.ModelChoiceField(queryset=User.objects.all(), widget=forms.HiddenInput())
-
-    class Meta:
-        model = editor.models.ProjectAccess
-        fields = ('project', 'access')
-        widgets = {
-            'project': forms.HiddenInput(),
-            'access': forms.Select(attrs={'class':'form-control'})
-        }
-
-    def clean(self):
-        cleaned_data = super(AddMemberForm, self).clean()
+    def check_author_access(self, cleaned_data):
         user = cleaned_data.get('user_search')
-        if user == cleaned_data.get('project').owner:
+        project = Project.objects.get(pk=cleaned_data.get('object_id'))
+        if user == project.owner:
             raise forms.ValidationError("Can't give separate access to the project owner")
         if not user.pk:
             if not settings.ALLOW_REGISTRATION:
                 raise forms.ValidationError("Self-registration is disabled, so you can't invite a user by email address.")
-        return cleaned_data
 
     def save(self, force_insert=False, force_update=False, commit=True):
-        m = super(AddMemberForm, self).save(commit=False)
-        if commit:
-            if m.user.pk:
-                # check if there's an existing ProjectAccess for this user & project
-                pa = editor.models.ProjectAccess.objects.filter(project=m.project, user=m.user).first()
-                if pa is not None:
-                    pa.access = m.access
-                    m = pa
-                m.save()
-            else:   # create email invitation if the user_search field contained an email address
-                self.invitation = editor.models.ProjectInvitation.objects.create(invited_by=self.cleaned_data.get('adding_user'), project=m.project, access=m.access, email=m.user.email)
+        m = super().save(commit=commit)
+        if commit and not m.user.pk:
+            # create email invitation if the user_search field contained an email address
+            self.invitation = editor.models.ProjectInvitation.objects.create(invited_by=self.cleaned_data.get('adding_user'), project=m.project, access=m.access, email=m.user.email)
         return m
 
 class ProjectForm(forms.ModelForm):
@@ -790,13 +699,18 @@ class ProjectTransferOwnershipForm(UserSearchMixin, forms.ModelForm):
         model = editor.models.Project 
         fields = []
 
+class ItemQueueTransferOwnershipForm(UserSearchMixin, forms.ModelForm):
+    user_attr = 'owner'
+    class Meta:
+        model = editor.models.ItemQueue
+        fields = []
+
 class EditorItemTransferOwnershipForm(UserSearchMixin, forms.ModelForm):
     user_attr = 'author'
     class Meta:
         model = editor.models.EditorItem
         fields = []
 
-ProjectAccessFormset = inlineformset_factory(editor.models.Project, editor.models.ProjectAccess, fields=('access',), extra=0)
 ProjectInvitationFormset = inlineformset_factory(editor.models.Project, editor.models.ProjectInvitation, fields=('access',), extra=0)
 
 class NewFolderForm(forms.ModelForm):
@@ -935,4 +849,39 @@ class CreateExamFromBasketForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class':'form-control', 'placeholder':'e.g. "Week 4 homework"'}),
             'author': forms.HiddenInput(),
             'project': BootstrapSelect,
+        }
+
+class CreateItemQueueForm(forms.ModelForm):
+    class Meta:
+        model = ItemQueue
+        fields = ('name', 'owner', 'project', 'description', 'instructions_submitter', 'instructions_reviewer',)
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control', 'placeholder':'e.g. "Things to test"'}),
+            'owner': forms.HiddenInput(),
+        }
+
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args,**kwargs)
+        self.fields['project'].queryset = Project.objects.filter(Project.filter_can_be_edited_by(user))
+
+QueueChecklistFormset = inlineformset_factory(ItemQueue, ItemQueueChecklistItem, fields=('label',), extra=0)
+
+class UpdateItemQueueForm(forms.ModelForm):
+    checklist_items = QueueChecklistFormset
+
+    class Meta:
+        model = ItemQueue
+        fields = ('name', 'description', 'instructions_submitter', 'instructions_reviewer', )
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control', 'placeholder':'e.g. "Things to test"'}),
+        }
+
+class CreateItemQueueEntryForm(forms.ModelForm):
+    class Meta:
+        model = ItemQueueEntry
+        fields = ('item','created_by','queue','note',)
+        widgets = {
+            'created_by': forms.HiddenInput(),
+            'queue': forms.HiddenInput(),
+            'item': forms.HiddenInput(),
         }

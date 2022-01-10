@@ -2189,6 +2189,17 @@ $(document).ready(function() {
         }
     }
 
+    ko.bindingHandlers.scrollIntoView = {
+        init: function() {
+        },
+        update: function(element, valueAccessor, allBindings, bindingContext) {
+            var value = ko.unwrap(valueAccessor());
+            if(value) {
+                element.scrollIntoView({block: 'nearest'});
+            }
+        }
+    }
+
     var AbilityFramework = Editor.AbilityFramework = function(data) {
         this.name = data.name;
         this.description = data.description;

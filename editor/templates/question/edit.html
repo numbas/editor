@@ -392,7 +392,7 @@
                         }">
                             <tbody>
                                 <!-- ko foreach: names -->
-                                <tr data-bind="css: {noname: !name, active: $parent==$root.currentVariable(), dependency: $parent.isDependency, danger: $parent.anyError().length>0}" class="variable-selector">
+                                <tr data-bind="css: {noname: !name, active: $parent==$root.currentVariable(), dependency: $parent.isDependency, danger: $parent.anyError().length>0}, scrollIntoView: $root.currentVariable().names().contains($data)" class="variable-selector">
                                     <td class="lock-cell">
                                         {% if editable %}
                                         <button type="button" class="btn btn-xs btn-link lock" data-bind="click: $parent.toggleLocked, css: {locked: $parent.locked}" title="Lock the value of this variable (editor only)">

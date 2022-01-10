@@ -1221,6 +1221,8 @@ class EditorItem(models.Model, NumbasObject, ControlledObject):
     def can_be_copied_by(self, user):
         if not super().can_be_copied_by(user):
             return False
+        if self.can_be_edited_by(user):
+            return True
         if self.licence:
             return self.licence.can_reuse and self.licence.can_modify
         else:

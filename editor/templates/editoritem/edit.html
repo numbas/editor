@@ -109,7 +109,7 @@
 
                 {% with can_copy=object.editoritem|can_be_copied_by:request.user %}
                 <li class="{% if not can_copy %}disabled{% endif %}">
-                <a class="text-warning" href="{% if can_copy %}{% editoritem_url 'copy' object %}{% endif %}" target="_blank" title="{% if can_copy %}Create your own copy of this {{item_type}}{% else %}This item's licence doesn't allow you to modify it.{% endif %}">
+                <a class="text-warning" {% if can_copy %}href="{% editoritem_url 'copy' object %}" target="_blank"{% endif %} title="{% if can_copy %}Create your own copy of this {{item_type}}{% else %}This item's licence doesn't allow you to modify it.{% endif %}">
                     <span class="glyphicon glyphicon-duplicate"></span>
                     &nbsp;
                     <span class="hidden-sm">Make a copy</span>

@@ -141,7 +141,8 @@ part_types.models = [
 
             model.displayAnswer = ko.computed(function() {
                 try {
-                    var scope = this.scope();
+                    var scope = new Numbas.jme.Scope([this.scope()]);
+                    scope.functions['subvar'] = {};
                     var tree = jme.compile(Editor.wrap_subvar(this.answer()));
                     tree = scope.expandJuxtapositions(tree, {
                         singleLetterVariables: this.singleLetterVariables(),

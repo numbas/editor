@@ -256,7 +256,7 @@ class ShareLinkView(generic.RedirectView):
                 ea.access = access
                 ea.save()
             except IndividualAccess.DoesNotExist:
-                ea = IndividualAccess.objects.create(item=q.editoritem, user=user, access=access)
+                ea = IndividualAccess.objects.create(object=q.editoritem, user=user, access=access)
 
         return q.get_absolute_url()
 

@@ -534,6 +534,7 @@ class Extension(models.Model, ControlledObject, EditablePackageMixin):
             'location': self.location,
             'author': self.author.pk if self.author is not None else None,
             'edit_url': reverse('extension_edit', args=(self.pk,)),
+            'script_url': self.script_root,
         }
         path = self.script_path
         if path is not None:
@@ -546,17 +547,17 @@ class Extension(models.Model, ControlledObject, EditablePackageMixin):
         return self.location+'.js'
 
     @property
-    def script_path(self):
+    def script_root(self):
         if self.editable:
-            filename = self.main_filename
-            local_path = os.path.join(self.extracted_path, filename)
-            if os.path.exists(local_path):
-                return settings.MEDIA_URL+self.zipfile_folder+'/extracted/'+str(self.pk)+'/'+self.location+'/'+filename
+            return settings.MEDIA_URL+self.zipfile_folder+'/extracted/'+str(self.pk)+'/'+self.location+'/'
         else:
-            path = 'js/numbas/extensions/%s/%s.js' % (self.location, self.location)
-            if finders.find(path):
-                return settings.STATIC_URL+path
+            path = 'js/numbas/extensions/%s/' % (self.location)
+            return settings.STATIC_URL+path
         return None
+
+    @property
+    def script_path(self):
+        return self.script_root + self.main_filename
 
     @property 
     def relative_extracted_path(self):
@@ -731,7 +732,7 @@ class CustomPartType(models.Model, ControlledObject):
     name = models.CharField(max_length=200, verbose_name='Name')
     short_name = models.CharField(max_length=200, unique=True, verbose_name='Unique identifier for this part type')
     description = models.TextField(default='', blank=True, verbose_name='What\'s this part type for?')
-    input_widget = models.CharField(max_length=200, choices = CUSTOM_PART_TYPE_INPUT_WIDGETS, verbose_name='Answer input method')
+    input_widget = models.CharField(max_length=200, verbose_name='Answer input method')
     input_options = JSONField(blank=True, verbose_name='Options for the answer input method')
     can_be_gap = models.BooleanField(default=True, verbose_name='Can this part be a gap?')
     can_be_step = models.BooleanField(default=True, verbose_name='Can this part be a step?')

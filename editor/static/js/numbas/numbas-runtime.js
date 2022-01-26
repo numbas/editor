@@ -1,4 +1,4 @@
-// Compiled using  runtime/scripts/numbas.js  runtime/scripts/jme.js  runtime/scripts/jme-builtins.js  runtime/scripts/jme-display.js  runtime/scripts/jme-rules.js  runtime/scripts/jme-variables.js  runtime/scripts/jme-calculus.js  runtime/scripts/localisation.js  runtime/scripts/part.js  runtime/scripts/question.js  runtime/scripts/schedule.js  runtime/scripts/diagnostic.js  runtime/scripts/marking.js  runtime/scripts/math.js  runtime/scripts/util.js  runtime/scripts/i18next/i18next.js  runtime/scripts/json.js  runtime/scripts/es5-shim.js  runtime/scripts/es6-shim.js  runtime/scripts/es6-promise/es6-promise.js  runtime/scripts/decimal/decimal.js  themes/default/files/scripts/answer-widgets.js  runtime/scripts/parts/custom_part_type.js  runtime/scripts/parts/extension.js  runtime/scripts/parts/gapfill.js  runtime/scripts/parts/information.js  runtime/scripts/parts/jme.js  runtime/scripts/parts/matrixentry.js  runtime/scripts/parts/multipleresponse.js  runtime/scripts/parts/numberentry.js  runtime/scripts/parts/patternmatch.js
+// Compiled using  runtime/scripts/numbas.js  runtime/scripts/jme.js  runtime/scripts/jme-builtins.js  runtime/scripts/jme-display.js  runtime/scripts/jme-rules.js  runtime/scripts/jme-variables.js  runtime/scripts/jme-calculus.js  runtime/scripts/localisation.js  runtime/scripts/part.js  runtime/scripts/question.js  runtime/scripts/schedule.js  runtime/scripts/diagnostic.js  runtime/scripts/marking.js  runtime/scripts/math.js  runtime/scripts/util.js  runtime/scripts/i18next/i18next.js  runtime/scripts/json.js  runtime/scripts/es5-shim.js  runtime/scripts/es6-shim.js  runtime/scripts/es6-promise/es6-promise.js  runtime/scripts/decimal/decimal.js  runtime/scripts/evaluate-settings.js  themes/default/files/scripts/answer-widgets.js  runtime/scripts/parts/custom_part_type.js  runtime/scripts/parts/extension.js  runtime/scripts/parts/gapfill.js  runtime/scripts/parts/information.js  runtime/scripts/parts/jme.js  runtime/scripts/parts/matrixentry.js  runtime/scripts/parts/multipleresponse.js  runtime/scripts/parts/numberentry.js  runtime/scripts/parts/patternmatch.js
 // From the Numbas compiler directory
 /*
 Copyright 2011-14 Newcastle University
@@ -253,6 +253,26 @@ Numbas.addExtension = function(name,deps,callback) {
             activated: false
         }
     });
+}
+
+/** Get the URL of a standalone file from an extension.
+ *  @param {string} extension - The name of the extension.
+ *  @param {string} path - The path to the script, relative to the extension's `standalone_scripts` folder.
+ *  @returns {string}
+ */
+Numbas.getStandaloneFileURL = function(extension, path) {
+    return 'extensions/'+extension+'/standalone_scripts/'+path;
+}
+
+/** Load a standalone script from an extension.
+ *  Inserts a <script> tag into the page's head.
+ *  @param {string} extension - The name of the extension.
+ *  @param {string} path - The path to the script, relative to the extension's `standalone_scripts` folder.
+ */
+Numbas.loadStandaloneScript = function(extension, path) {
+    var script = document.createElement('script');
+    script.setAttribute('src',Numbas.getStandaloneFileURL(extension, path));
+    document.head.appendChild(script);
 }
 
 /** Run the extension with the given name. The extension must have already been registered with {@link Numbas.addExtension}.
@@ -5199,7 +5219,7 @@ var parse_signature = jme.parse_signature = function(sig) {
         }
         pos = expr[1];
         var end = literal(")")(str,pos);
-        if(!pos) {
+        if(!pos || !end) {
             return;
         }
         return [expr[0],end[1]];
@@ -5217,6 +5237,9 @@ var parse_signature = jme.parse_signature = function(sig) {
         }
         pos = start[1];
         var expr = parse_expr(str,pos);
+        if(!expr) {
+            return;
+        }
         return [jme.signature.listof(expr[0]),expr[1]];
     }
 
@@ -5233,6 +5256,9 @@ var parse_signature = jme.parse_signature = function(sig) {
         }
         pos = start[1];
         var expr = parse_expr(str,pos);
+        if(!expr) {
+            return;
+        }
         return [jme.signature.dict(expr[0]),expr[1]];
     }
 
@@ -12686,7 +12712,9 @@ jme.variables.note_script_constructor = function(construct_scope, process_result
 
             // if any names used by notes are already defined as variables in this scope, delete them
             Object.keys(this.notes).forEach(function(name) {
-                scope.deleteVariable(name);
+                if(variables[name] === undefined) {
+                    scope.deleteVariable(name);
+                }
             });
             return scope;
         },
@@ -13373,6 +13401,7 @@ var Part = Numbas.parts.Part = function(index, path, question, parentPart, store
 
     this.nextParts = [];
 
+    this.pre_submit_cache = [];
     this.markingFeedback = [];
     this.finalised_result = {valid: false, credit: 0, states: []};
     this.warnings = [];
@@ -13581,6 +13610,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         this.stepsOpen = pobj.stepsOpen;
         this.resume_stagedAnswer = pobj.stagedAnswer;
         this.steps.forEach(function(s){ s.resume() });
+        this.pre_submit_cache = pobj.pre_submit_cache;
         var scope = this.getScope();
         this.display && this.display.updateNextParts();
         this.display && this.question && this.question.signals.on(['ready','HTMLAttached'], function() {
@@ -14187,6 +14217,7 @@ if(res) { \
         }
         var scope = new Numbas.jme.Scope([parentScope]);
         scope.setVariable('part_path',new Numbas.jme.types.TString(this.path));
+        scope.part = this;
         return scope;
     },
 
@@ -14212,7 +14243,10 @@ if(res) { \
         var try_replacement;
         var hasReplacements = this.getErrorCarriedForwardReplacements().length>0;
         if(settings.variableReplacementStrategy=='originalfirst' || !hasReplacements) {
-            var result_original = this.markAgainstScope(this.getScope(),existing_feedback);
+            var result_original = this.markAgainstScope(this.getScope(),existing_feedback,'');
+            if(result_original.waiting_for_pre_submit) {
+                return result_original;
+            }
             result = result_original;
             var try_replacement = settings.hasVariableReplacements && (!result.answered || result.credit<1);
         }
@@ -14222,7 +14256,10 @@ if(res) { \
         if((!this.question || this.question.partsMode!='explore') && try_replacement) {
             try {
                 var scope = this.errorCarriedForwardScope();
-                var result_replacement = this.markAgainstScope(scope,existing_feedback);
+                var result_replacement = this.markAgainstScope(scope,existing_feedback,'adaptive ');
+                if(result_replacement.waiting_for_pre_submit) {
+                    return result_replacement;
+                }
                 if(!(result_original) || (result_replacement.answered && result_replacement.credit>result_original.credit)) {
                     result = result_replacement;
                     result.finalised_result.states.splice(0,0,Numbas.marking.feedback.feedback(R('part.marking.used variable replacements')));
@@ -14262,6 +14299,24 @@ if(res) { \
             }
         }
         return result;
+    },
+
+    /** Wait for a promise to resolve before submitting.
+     * @param {Promise} promise
+     */
+    wait_for_pre_submit: function(promise) {
+        var p = this;
+        this.waiting_for_pre_submit = promise;
+        if(this.display) {
+            this.display.waiting_for_pre_submit(true);
+        }
+        promise.then(function() {
+            p.submit();
+            p.waiting_for_pre_submit = false;
+            if(p.display) {
+                p.display.waiting_for_pre_submit(false);
+            }
+        });
     },
 
     /** Submit the student's answers to this part - remove warnings. save answer, calculate marks, update scores.
@@ -14309,6 +14364,9 @@ if(res) { \
             if(!result) {
                 this.setCredit(0,R('part.marking.no result after replacement'));
                 this.answered = true;
+            } else if(result.waiting_for_pre_submit) {
+                this.wait_for_pre_submit(result.waiting_for_pre_submit);
+                return;
             } else {
                 this.setWarnings(result.warnings);
                 this.markingFeedback = result.markingFeedback.slice();
@@ -14324,10 +14382,18 @@ if(res) { \
             this.answered = false;
         }
         if(this.stepsShown) {
-            for(var i=0;i<this.steps.length;i++) {
-                if(this.steps[i].isDirty) {
-                    this.steps[i].submit();
+            var steps_waiting_for_pre_submit = [];
+            this.steps.forEach(function(step) {
+                if(step.isDirty) {
+                    step.submit();
+                    if(step.waiting_for_pre_submit) {
+                        steps_waiting_for_pre_submit.push(step.waiting_for_pre_submit);
+                    }
                 }
+            });
+            if(steps_waiting_for_pre_submit.length>0) {
+                this.wait_for_pre_submit(Promise.all(steps_waiting_for_pre_submit));
+                return;
             }
         }
         var availableMarks = this.availableMarks();
@@ -14438,23 +14504,31 @@ if(res) { \
      *
      * @param {Numbas.jme.Scope} scope - Scope in which to calculate the correct answer.
      * @param {object.<Array.<string>>} feedback - Dictionary of existing `warnings` and `markingFeedback` lists, to add to - copies of these are returned with any additional feedback appended.
+     * @param {string} exec_path - A description of the path of execution, for caching pre-submit tasks.
      * @returns {Numbas.parts.markAlternatives_result}
      */
-    markAlternatives: function(scope,feedback) {
+    markAlternatives: function(scope,feedback, exec_path) {
         var part = this;
+
+        var alternatives_waiting = [];
 
         /** Mark against the given alternative.
          *
          * @param {Numbas.parts.Part} alt
+         * @param {string} exec_path - A description of the path of execution, for caching pre-submit tasks.
          * @returns {Numbas.parts.alternative_result}
          */
-        function mark_alternative(alt) {
+        function mark_alternative(alt, exec_path) {
             alt.restore_feedback(feedback);
             var values;
             var finalised_result = {states: [], valid: false, credit: 0};
             var script_result;
             try {
-                var result = alt.mark(scope);
+                var result = alt.mark(scope, exec_path);
+                if(result.waiting_for_pre_submit) {
+                    alternatives_waiting.push(result.waiting_for_pre_submit);
+                    return result;
+                }
                 finalised_result = result.finalised_result;
                 values = result.values;
                 script_result = result.script_result
@@ -14469,7 +14543,7 @@ if(res) { \
             return {finalised_result: finalised_result, values: values, credit: alt.credit, script_result: script_result};
         }
 
-        var res = mark_alternative(this);
+        var res = mark_alternative(this, exec_path);
         if(res.valid) {
             res.values['used_alternative'] = new Numbas.jme.types.TNothing()
             res.values['used_alternative_name'] = new Numbas.jme.types.TNothing();
@@ -14481,7 +14555,10 @@ if(res) { \
                 var alt = this.alternatives[i];
                 alt.stagedAnswer = this.stagedAnswer;
                 alt.setStudentAnswer();
-                var altres = mark_alternative(alt);
+                var altres = mark_alternative(alt,exec_path+' alternative '+i+' ');
+                if(altres.waiting_for_pre_submit) {
+                    continue;
+                }
                 if(!altres.finalised_result.valid) {
                     continue;
                 }
@@ -14534,6 +14611,10 @@ if(res) { \
             }
         }
 
+        if(alternatives_waiting.length > 0) {
+            return {waiting_for_pre_submit: Promise.all(alternatives_waiting)};
+        }
+
         if(res.valid) {
             res.script_result.states['used_alternative'] = [];
             res.script_result.states['used_alternative_name'] = [];
@@ -14551,10 +14632,14 @@ if(res) { \
      *
      * @param {Numbas.jme.Scope} scope - Scope in which to calculate the correct answer.
      * @param {object.<Array.<string>>} feedback - Dictionary of existing `warnings` and `markingFeedback` lists, to add to - copies of these are returned with any additional feedback appended.
+     * @param {string} exec_path - A description of the path of execution, for caching pre-submit tasks.
      * @returns {Numbas.parts.marking_results}
      */
-    markAgainstScope: function(scope,feedback) {
-        var altres = this.markAlternatives(scope,feedback);
+    markAgainstScope: function(scope,feedback, exec_path) {
+        var altres = this.markAlternatives(scope,feedback, exec_path);
+        if(altres.waiting_for_pre_submit) {
+            return altres;
+        }
         var res = altres.result;
         if(res.script_result.state_errors.mark) {
             var message = res.script_result.state_errors.mark.message;
@@ -14648,12 +14733,16 @@ if(res) { \
      * @see Numbas.parts.Part#markingScript
      * @see Numbas.parts.Part#answered
      * @param {Numbas.jme.Scope} scope
+     * @param {string} exec_path - A description of the path of execution, for caching pre-submit tasks.
      * @returns {Numbas.parts.mark_result}
      */
-    mark: function(scope) {
+    mark: function(scope, exec_path) {
         var studentAnswer = this.rawStudentAnswerAsJME();
         var result;
-        result = this.mark_answer(studentAnswer,scope);
+        result = this.mark_answer(studentAnswer,scope, exec_path);
+        if(result.waiting_for_pre_submit) {
+            return result;
+        }
         var finalised_result = {valid: false, credit: 0, states: []};
         if(!result.state_errors.mark) {
             var finalised_result = marking.finalise_state(result.states.mark);
@@ -14794,9 +14883,15 @@ if(res) { \
         }
 
     },
-    marking_parameters: function(studentAnswer) {
+
+    /** Get JME parameters to pass to the marking script.
+     * 
+     * @param {Numbas.jme.token} studentAnswer - The student's answer to the part.
+     * @returns {Object.<Numbas.jme.token>}
+     */
+    marking_parameters: function(studentAnswer, pre_submit_parameters, exec_path) {
         studentAnswer = jme.makeSafe(studentAnswer);
-        return {
+        var obj = {
             path: jme.wrapValue(this.path),
             name: jme.wrapValue(this.name),
             question_definitions: jme.wrapValue(this.question ? this.question.local_definitions : {}),
@@ -14804,24 +14899,80 @@ if(res) { \
             settings: jme.wrapValue(this.settings),
             marks: new jme.types.TNum(this.availableMarks()),
             partType: new jme.types.TString(this.type),
-            gaps: jme.wrapValue(this.gaps.map(function(g){return g.marking_parameters(g.rawStudentAnswerAsJME())})),
-            steps: jme.wrapValue(this.steps.map(function(s){return s.marking_parameters(s.rawStudentAnswerAsJME())}))
+            exec_path: jme.wrapValue(exec_path),
+            gaps: jme.wrapValue(this.gaps.map(function(g){return g.marking_parameters(g.rawStudentAnswerAsJME(), [], exec_path)})),
+            steps: jme.wrapValue(this.steps.map(function(s){return s.marking_parameters(s.rawStudentAnswerAsJME(), [], exec_path)}))
         };
+        pre_submit_parameters = pre_submit_parameters || [];
+        if(pre_submit_parameters.length > 0) {
+            var pre_submit = {};
+            pre_submit_parameters.forEach(function(params) {
+                for(var x in params) {
+                    pre_submit[x] = params[x];
+                }
+            });
+            obj.pre_submit = new jme.types.TDict(pre_submit);
+        }
+        return obj;
     },
+
+    /** Do all of the pre-submit tasks before marking an answer.
+     *  Results are cached by `exec_path` and `studentAnswer`.
+     *  @param {Numbas.jme.token} studentAnswer
+     *  @param {Numbas.jme.Scope} scope
+     *  @param {string} exec_path
+     *  @returns {Object}
+     */
+    do_pre_submit_tasks: function(studentAnswer, scope, exec_path) {
+        if(this.markingScript.notes.pre_submit===undefined) {
+            return {parameters: []};
+        }
+        var p = this;
+        var cache = this.pre_submit_cache.find(function(c) {
+            return c.exec_path == exec_path && util.eq(studentAnswer, c.studentAnswer, scope);
+        });
+        if(cache) {
+            return {parameters: cache.results};
+        }
+        var res = this.markingScript.evaluate_note('pre_submit', scope, this.marking_parameters(studentAnswer, [], exec_path));
+        if(res.scope.state_errors.pre_submit) {
+            throw(new Numbas.Error('part.marking.error in marking script',{message: res.scope.state_errors.pre_submit}));
+        }
+        res = jme.castToType(res.value,'list');
+        var promises = res.value.filter(function(v) { return jme.isType(v,'promise'); }).map(function(v) { return jme.castToType(v,'promise').promise; });
+
+        var all_promises = Promise.all(promises);
+        all_promises.then(function(results) {
+            p.pre_submit_cache.push({
+                exec_path: exec_path,
+                studentAnswer: studentAnswer,
+                results: results
+            });
+        });
+        return {
+            waiting: all_promises
+        }
+    },
+
     /** Run the marking script against the given answer.
      * This does NOT apply the feedback and credit to the part object, it just returns it.
      *
      * @param {Numbas.jme.token} studentAnswer
      * @param {Numbas.jme.Scope} scope
+     * @param {string} exec_path - A description of the path of execution, for caching pre-submit tasks.
      * @see Numbas.parts.Part#mark
      * @returns {Numbas.marking.marking_script_result}
      */
-    mark_answer: function(studentAnswer,scope) {
+    mark_answer: function(studentAnswer,scope, exec_path) {
         try {
             this.getCorrectAnswer(scope);
+            var pre_submit_result = this.do_pre_submit_tasks(studentAnswer, scope, exec_path);
+            if(pre_submit_result.waiting) {
+                return {waiting_for_pre_submit: pre_submit_result.waiting};
+            }
             var result = this.markingScript.evaluate(
                 scope,
-                this.marking_parameters(studentAnswer)
+                this.marking_parameters(studentAnswer, pre_submit_result.parameters, exec_path)
             );
         } catch(e) {
             throw(new Numbas.Error("part.marking.error in marking script",{message:e.message},e));
@@ -17221,6 +17372,20 @@ Numbas.queueScript('marking',['util', 'jme','localisation','jme-variables','math
             var part = scope.question.getPart(args[0].value);
             var answer = jme.unwrapValue(args[1]);
             return submit_part(part,answer);
+        }
+    }));
+
+    state_functions.push(new jme.funcObj('check_pre_submit',[TString, '?', TString],'?',null,{
+        evaluate: function(args, scope) {
+            var part = scope.question.getPart(args[0].value);
+            var answer = args[1];
+            var exec_path = args[2].value
+            var res = part.do_pre_submit_tasks(answer, scope, exec_path);
+            if(res.waiting) {
+                return new jme.types.TPromise(res.waiting);
+            } else {
+                return new TNothing();
+            }
         }
     }));
 
@@ -27974,8 +28139,173 @@ Numbas.queueScript('decimal',[],function(module) {
 module.exports = {Decimal: module.exports.Decimal};
 });
 
+/*
+Copyright 2011-15 Newcastle University
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+       http://www.apache.org/licenses/LICENSE-2.0
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+/** @file The {@link Numbas.parts.CustomPart} constructor. */
+Numbas.queueScript('evaluate-settings',['base','jme','jme-variables','util'],function() {
+    var jme = Numbas.jme;
+
+    Numbas.evaluate_settings = {};
+
+    var setting_evaluators = Numbas.evaluate_settings.setting_evaluators = {
+        'string': function(def, value, scope) {
+            if(def.subvars) {
+                value = jme.subvars(value, scope, true);
+            }
+            return new jme.types.TString(value);
+        },
+        'mathematical_expression': function(def, value, scope) {
+            if(!value.trim()) {
+                throw(new Numbas.Error("part.custom.empty setting"));
+            }
+            if(def.subvars) {
+                value = jme.subvars(value, scope);
+            }
+            var result = new jme.types.TExpression(value);
+            return result;
+        },
+        'checkbox': function(def, value) {
+            return new jme.types.TBool(value);
+        },
+        'dropdown': function(def, value) {
+            return new jme.types.TString(value);
+        },
+        'code': function(def, value, scope) {
+            if(def.evaluate) {
+                if(!value.trim()) {
+                    throw(new Numbas.Error('part.custom.empty setting'));
+                }
+                return scope.evaluate(value);
+            } else {
+                return new jme.types.TString(value);
+            }
+        },
+        'percent': function(def, value) {
+            return new jme.types.TNum(value/100);
+        },
+        'html': function(def, value, scope) {
+            if(def.subvars) {
+                value = jme.contentsubvars(value, scope);
+            }
+            return new jme.types.TString(value);
+        },
+        'list_of_strings': function(def, value, scope) {
+            return new jme.types.TList(value.map(function(s){
+                if(def.subvars) {
+                    s = jme.subvars(s, scope);
+                }
+                return new jme.types.TString(s)
+            }));
+        },
+        'choose_several': function(def, value) {
+            return new jme.wrapValue(value);
+        }
+    };
+
+
+    Numbas.evaluate_settings.evaluate_settings = function(definition, raw_settings, scope) {
+        var settings = {};
+        definition.settings.forEach(function(s) {
+            var name = s.name;
+            var value = raw_settings[name];
+            if(value===undefined) {
+                value = s.default_value;
+            }
+            if(!setting_evaluators[s.input_type]) {
+                throw(new Numbas.Error('part.custom.unrecognised input type',{input_type:s.input_type}));
+            }
+            try {
+                settings[name] = setting_evaluators[s.input_type](s, value, scope);
+            } catch(e) {
+                throw(new Numbas.Error('part.custom.error evaluating setting',{setting: name, error: e.message},e));
+            }
+        });
+        return settings;
+    }
+});
+
 Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],function() {
     var util = Numbas.util;
+
+    var answer_widgets = Numbas.answer_widgets = {
+        custom_widgets: {}
+    };
+    var custom_widgets = answer_widgets.custom_widgets;
+
+    /** @typedef Numbas.answer_widgets.custom_answer_widget
+     * @method setAnswerJSON
+     * @method disable
+     * @method enable
+     */
+
+    /** @callback Numbas.answer_widgets.custom_answer_widget_constructor
+     * @param {Element} element - The parent element of the widget.
+     * @param {Numbas.parts.Part} part - The part whose answer the widget represents.
+     * @param {string} title - The `title` attribute for the widget: a text description of what the widget represents.
+     * @param {Object.<Function>} events - Callback functions for events triggered by the widget.
+     * @param {Numbas.answer_widgets.answer_changed} answer_changed - A function to call when the entered answer changes.
+     * @param {Object} options - Any options for the widget.
+     */
+
+    /** @callback Numbas.answer_widgets.answer_changed
+     * @param {Numbas.custom_part_answer} answer
+     */
+
+    /** Parameters for registering a custom answer widget.
+     *
+     * @typedef {Numbas.custom_answer_widget_params}
+     * @property {string} name - The name of the widget. Used by custom part type definitions to refer to this widget.
+     * @property {string} signature - The signature of the type of JME value that the input produces.
+     * @property {Function} answer_to_jme - Convert a raw answer to a JME token.
+     * @property {Object} options_definition - A definition of options that the widget accepts.
+     * @property {Numbas.answer_widgets.custom_answer_widget_constructor} widget - A constructor for the widget.
+
+    /** Register a custom answer widget.
+     *
+     * @param {Numbas.custom_answer_widget_params} params
+     */
+    answer_widgets.register_custom_widget = function(params) {
+        var name = params.name;
+        custom_widgets[name] = params;
+        Numbas.parts.register_custom_part_input_type(name, params.signature);
+        Numbas.parts.CustomPart.prototype.student_answer_jme_types[name] = params.answer_to_jme;
+        var input_option_types = Numbas.parts.CustomPart.prototype.input_option_types[name] = {};
+        params.options_definition.forEach(function(def) {
+            var types = {
+                'choose_several': 'list of boolean',
+                'list_of_strings': 'list of string',
+                'choice_maker': 'list of string',
+                'number_notation_styles': 'list of string',
+                'string': 'string',
+                'mathematical_expression': 'string',
+                'checkbox': 'boolean',
+                'dropdown': 'string',
+                'code': 'string',
+                'percent': 'number',
+                'html': 'string'
+            };
+            input_option_types[def.name] = types[def.input_type];
+        });
+
+        Knockout.components.register('answer-widget-'+name, {
+            viewModel: function(params) {
+                this.name = name;
+                this.params = params;
+            },
+            template: '<div data-bind="custom_answer_widget: {params: params, name: name}"></div>'
+        });
+    }
+
 
     /** Ensure `v` is an observable, and if it's not given return the default value.
      *
@@ -28881,6 +29211,65 @@ Numbas.queueScript('answer-widgets',['knockout','util','jme','jme-display'],func
             </form>\
         '
     });
+
+    Knockout.bindingHandlers.custom_answer_widget = {
+        init: function(element, valueAccessor, allBindings) {
+            var value = valueAccessor();
+            var params = value.params;
+            var widget_name = value.name;
+            if(!custom_widgets[widget_name]) {
+                throw(new Numbas.Error('display.answer widget.unknown widget type',{name: widget_name}));
+            }
+            var answerJSON = params.answerJSON;
+            var init_answerJSON = Knockout.unwrap(answerJSON);
+            var part = Knockout.unwrap(params.part);
+            var disable = params.disable;
+            var options = Knockout.unwrap(params.options);
+            var events = params.events || {};
+            var title = Knockout.unwrap(params.title) || '';
+
+            var lastValue = init_answerJSON;
+
+            /** Set the answerJSON observable with an answer from the widget.
+             *
+             * @param {custom_part_answer} answerJSON
+             */
+            function answer_changed(value) {
+                if(lastValue.value != value.value) {
+                    answerJSON(value);
+                    lastValue = value;
+                }
+            }
+
+            var widget = new custom_widgets[widget_name].widget(element, part, title, events, answer_changed, options);
+            widget.setAnswerJSON(init_answerJSON);
+
+            var subscriptions = [
+                answerJSON.subscribe(function(v) {
+                    if(v && v.value != lastValue.value) {
+                        widget.setAnswerJSON(v);
+                        lastValue = v;
+                    }
+                })
+            ];
+            if(Knockout.isObservable(disable)) {
+                subscriptions.push(
+                    disable.subscribe(function(v) {
+                        if(v) {
+                            widget.disable();
+                        } else {
+                            widget.enable();
+                        }
+                    },this)
+                );
+            }
+            Knockout.utils.domNodeDisposal.addDisposeCallback(element, function() {
+                subscriptions.forEach(function(sub) { sub.dispose(); });
+            });
+        },
+        update: function() {
+        }
+    };
 });
 
 /*
@@ -28895,13 +29284,23 @@ Copyright 2011-15 Newcastle University
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-/** @file The {@link Numbas.parts.} object */
-Numbas.queueScript('parts/custom_part_type',['base','jme','jme-variables','util','part','marking'],function() {
+/** @file The {@link Numbas.parts.CustomPart} constructor. */
+Numbas.queueScript('parts/custom_part_type',['base','jme','jme-variables','util','part','marking','evaluate-settings'],function() {
 var util = Numbas.util;
 var jme = Numbas.jme;
 var math = Numbas.math;
 var types = Numbas.jme.types;
 var Part = Numbas.parts.Part;
+
+/** Register a custom input type.
+ * @param {string} name - The name of the input type.
+ * @param {string} signature - The signature of the type of JME value that the input produces.
+ */
+Numbas.parts.register_custom_part_input_type = function(name, signature, options_definition) {
+    CustomPart.prototype.input_types[name] = function() { return signature; }
+    CustomPart.prototype.custom_input_option_definitions[name] = options_definition;
+}
+
 /** Custom part - a part type defined in {@link Numbas.custom_part_types}.
  *
  * @class
@@ -28918,6 +29317,7 @@ var CustomPart = Numbas.parts.CustomPart = function(path, question, parentPart, 
 }
 CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
     is_custom_part_type: true,
+
     getDefinition: function() {
         this.definition = Numbas.custom_part_types[this.type];
         return this.definition;
@@ -28947,8 +29347,8 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
             tryLoad(data.settings,sdef.name,raw_settings);
         });
     },
-    marking_parameters: function(studentAnswer) {
-        var o = Part.prototype.marking_parameters.apply(this,[studentAnswer]);
+    marking_parameters: function(studentAnswer, pre_submit_parameters) {
+        var o = Part.prototype.marking_parameters.apply(this,arguments);
         o.input_options = jme.wrapValue(this.input_options());
         return o;
     },
@@ -28961,24 +29361,10 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
     },
 
     evaluateSettings: function(scope) {
-        var p = this;
-        var settings = this.settings;
-        var raw_settings = this.raw_settings;
-        this.definition.settings.forEach(function(s) {
-            var name = s.name;
-            var value = raw_settings[name];
-            if(value===undefined) {
-                value = s.default_value;
-            }
-            if(!p.setting_evaluators[s.input_type]) {
-                p.error('part.custom.unrecognised input type',{input_type:s.input_type});
-            }
-            try {
-                settings[name] = p.setting_evaluators[s.input_type].call(p, s, value, scope);
-            } catch(e) {
-                p.error('part.custom.error evaluating setting',{setting: name, error: e.message},e);
-            }
-        });
+        var esettings = Numbas.evaluate_settings.evaluate_settings(this.definition, this.raw_settings, scope);
+        for(var x in esettings) {
+            this.settings[x] = esettings[x];
+        }
     },
 
     finaliseLoad: function() {
@@ -29095,6 +29481,9 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
     get_input_type: function() {
         return this.input_types[this.definition.input_widget].apply(this);
     },
+
+    custom_input_option_definitions: {},
+
     input_option_types: {
         'string': {
             'allowEmpty': 'boolean'
@@ -29149,60 +29538,6 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
         },
         'dropdown': function(answer) {
             return new types.TNum(answer);
-        }
-    },
-    setting_evaluators: {
-        'string': function(def, value, scope) {
-            if(def.subvars) {
-                value = jme.subvars(value, scope, true);
-            }
-            return new jme.types.TString(value);
-        },
-        'mathematical_expression': function(def, value, scope) {
-            if(!value.trim()) {
-                throw(new Numbas.Error("part.custom.empty setting"));
-            }
-            if(def.subvars) {
-                value = jme.subvars(value, scope);
-            }
-            var result = new jme.types.TExpression(value);
-            return result;
-        },
-        'checkbox': function(def, value) {
-            return new jme.types.TBool(value);
-        },
-        'dropdown': function(def, value) {
-            return new jme.types.TString(value);
-        },
-        'code': function(def, value, scope) {
-            if(def.evaluate) {
-                if(!value.trim()) {
-                    throw(new Numbas.Error('part.custom.empty setting'));
-                }
-                return scope.evaluate(value);
-            } else {
-                return new jme.types.TString(value);
-            }
-        },
-        'percent': function(def, value) {
-            return new jme.types.TNum(value/100);
-        },
-        'html': function(def, value, scope) {
-            if(def.subvars) {
-                value = jme.contentsubvars(value, scope);
-            }
-            return new jme.types.TString(value);
-        },
-        'list_of_strings': function(def, value, scope) {
-            return new jme.types.TList(value.map(function(s){
-                if(def.subvars) {
-                    s = jme.subvars(s, scope);
-                }
-                return new jme.types.TString(s)
-            }));
-        },
-        'choose_several': function(def, value) {
-            return new jme.wrapValue(value);
         }
     }
 };
@@ -29458,9 +29793,9 @@ GapFillPart.prototype = /** @lends Numbas.parts.GapFillPart.prototype */
         return this.gaps.map(function(g){ return g.getCorrectAnswer(scope); });
     },
 
-    marking_parameters: function(studentAnswer) {
+    marking_parameters: function(studentAnswer, pre_submit_parameters) {
         var p = this;
-        var parameters = Part.prototype.marking_parameters.apply(this,[studentAnswer]);
+        var parameters = Part.prototype.marking_parameters.apply(this,arguments);
         var adaptive_order = [];
 
         /** Detect cyclic references in adaptive marking variable replacements.
@@ -30962,8 +31297,8 @@ MultipleResponsePart.prototype = /** @lends Numbas.parts.MultipleResponsePart.pr
         }
     },
 
-    marking_parameters: function(studentAnswer) {
-        var obj = Part.prototype.marking_parameters.apply(this,[studentAnswer]);
+    marking_parameters: function(studentAnswer, pre_submit_parameters) {
+        var obj = Part.prototype.marking_parameters.apply(this,arguments);
         obj.shuffleChoices = jme.wrapValue(this.shuffleChoices);
         obj.shuffleAnswers = jme.wrapValue(this.shuffleAnswers);
         obj.layout = jme.wrapValue(this.layout);

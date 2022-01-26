@@ -622,6 +622,15 @@ $(document).ready(function() {
         },this);
     }
 
+    Numbas.getStandaloneFileURL = function(extension, path) {
+        var e = (item_json.numbasExtensions || []).find(function(e) {
+            return e.location == extension;
+        });
+        if(e) {
+            return e.script_url + path;
+        }
+    }
+
     Editor.EditorItem = function() {
         if(this.__proto__.__proto__!==Editor.EditorItem.prototype) {
             for(var x in Editor.EditorItem.prototype) {
@@ -1327,7 +1336,8 @@ $(document).ready(function() {
                         }
                     }
                 }
-                return scope;
+                return function() {
+                }
             }
 
             var mc = CodeMirror.fromTextArea(element, {

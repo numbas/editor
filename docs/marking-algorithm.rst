@@ -273,3 +273,56 @@ All the built-in :ref:`JME functions <jme-functions>` are available in marking n
                 concat_feedback(result["feedback"], result["marks"])
             )
 
+Pre-submit tasks
+----------------
+
+Some Numbas extensions provide functions to perform tasks that take a long time, such as fetching a resource from the internet, or running code submitted by the student.
+
+When you have a long-running task depending on the student's answer that must be completed before the marking algorithm can run, you can run it as a :dfn:`pre-submit task`.
+
+A marking algorithm's pre-submit tasks are defined in a note called ``pre_submit``.
+This note must produce a list of :data:`promise` values, each resolving to a dictionary of values.
+All the usual :ref:`marking algorithm variables <marking-algorithm-variables>` are available to this note.
+These values are then collected into a :data:`dict` value called ``pre_submit``, available to the rest of the marking algorithm.
+
+The marking algorithm runs once all of the tasks have finished.
+In the mean time, the part shows no feedback.
+
+Tasks should be deterministic: they are assumed to produce the same results for identical student answers.
+The results of tasks are cached, so the tasks will only be run when the student's answer changes.
+
+When an attempt at an exam is resumed, the cached results of any pre-submit tasks are used, so the tasks don't have to run again.
+
+Example
+#######
+
+This example demonstrates the mechanics of pre-submit tasks by performing the otherwise-pointless task "wait for a while".
+
+The student's answer will determine the number of seconds to wait.
+
+First, define a JavaScript function ``wait(time)`` which performs the task of waiting:
+
+.. code-block:: javascript
+
+    var promise = new Promise(function(resolve,reject) {
+      setTimeout(function() {
+        resolve({
+          seconds_waited: new Numbas.jme.types.TNum(time)
+        })
+      },time*1000);
+    });
+    return new Numbas.jme.types.TPromise(promise);
+
+Then add the ``pre_submit`` note to the marking algorithm of a number entry part::
+
+    pre_submit:
+        [ wait(studentAnswer) ]
+
+Next, add a feedback line to the ``mark`` note to show the value returned by the task::
+
+    mark:
+        feedback("I waited {pre_submit['seconds_waited']} seconds before marking your answer.");
+        apply(base_mark)
+
+When you run this question, note that the first time you submit a given number, there is a wait before the feedback is shown.
+If you submit the same answer again, the feedback is shown immediately, because the result of the task was cached.

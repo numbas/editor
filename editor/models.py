@@ -1716,7 +1716,7 @@ class NewQuestion(models.Model):
         question_data['contributors'] = contributor_data
         data = OrderedDict([
             ('name', self.editoritem.name),
-            ('extensions', [e.location for e in self.extensions.all()]),
+            ('extensions', [e.location for e in Extension.objects.filter(Q(questions=self) | Q(custom_part_types__questions=self))]),
             ('custom_part_types', [p.as_json() for p in self.custom_part_types.all()]),
             ('resources', self.resource_paths),
             ('navigation', {'allowregen': True, 'showfrontpage': False, 'preventleave': False}),

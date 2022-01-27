@@ -182,3 +182,196 @@ Here's an example extension which defines a toy "chemical" data type (excuse the
 
 (Download this extension: :download:`chemicals.zip <_static/chemicals.zip>`)
 
+Adding a new answer input method
+--------------------------------
+
+You can define a new :ref:`answer input method <custom-part-type-answer-input>` to be used by :ref:`custom part types <custom-part-types>`.
+
+An input method is the widget that the student interacts with to enter their answer.
+For many part types this is a text box; for the multiple response part types it's checkboxes or radio boxes.
+
+When none of the built-in input methods is suitable, you can define a new one in an extension.
+
+To register an input method, in your extension's code call the function ``Numbas.answer_widgets.register_custom_widget`` with an object containing the following properties:
+
+``name``
+  A unique name for the widget. 
+  Custom part types using the widget will refer to it by this name, so if you change it then any part types using it will need to be updated.
+``niceName``
+  A readable name to show in the editor.
+``widget`` 
+  A function to construct the widget (described below).
+``signature``
+  The :ref:`type of JME value <jme-data-types>` produced by the widget.
+``answer_to_jme``
+  A function which takes a value produced by the widget, and returns a JME token.
+``options_definition``
+  A list of options for the widget, which can be set by a custom part type.
+``scorm_storage``
+  Functions to save and load answers entered into this widget.
+
+The function to construct the widget takes the following arguments:
+
+``element``
+  The HTML element that the widget should be attached to.
+``part``
+  The question part object that the widget belongs to.
+``title``
+  A string to use as the ``title`` attribute for the widget, if possible.
+  This title is read out by assistive technology to describe the purpose of the widget, so it's important to use it.
+``events``
+  A dictionary of callback functions to call in response to events on the widget.
+  The default theme uses the ``blur`` and ``focus`` events to control whether warning messages are displayed.
+``answer_changed``
+  A function to call when the answer entered into the widget changes. 
+  It should be called with an object containing properties ``valid`` and ``value``: ``valid`` is a boolean representing whether the value can be marked, and ``value`` is the answer itself.
+``options``
+  A dictionary of options for the widget, corresponding to the options defined when the widget was registered.
+
+Defining options
+################
+
+A widget can have as many options as you like.
+
+One option is always defined: ``hint``, a string giving a hint to the student on how to enter the answer.
+
+The ``options_definition`` list contains objects with the following properties:
+
+``name``
+  A name for the option, which will be used in the ``options`` parameter sent to the widget code.
+``label``
+  A readable name for the option, to show in the editor.
+``input_type``
+  The type of the option.
+  This determines how the option is displayed in the editor, and the type of value it produces.
+``default_value``
+  The default value for the option.
+``hint``
+  Some text to help part type authors, describing how the option is used and kind of values it should take.
+  This is optional - if the label gives enough information, you can omit the hint.
+``data``
+  Some input types need extra information, contained in this object.
+
+The following types of option are available:
+
+``string``
+  A short text string.
+``percent``
+  A number between 0 and 100.
+``mathematical_expression``
+  Some JME code. 
+``checkbox``
+  A :data:`boolean` value, set in the editor by a checkbox.
+``dropdown``
+  Choose one from a list of string options.
+  The ``data`` object must contain a property ``choices``, a list of objects of the form ``{value, label}``.
+``code``
+  A long text string.
+  In the editor, this is presented in a code editor.
+``html``
+  A string of HTML.
+  In the editor, this is presented in a rich-text editor.
+``choose_several``
+  A list of options, each of which can be selected or not.
+  The ``data`` object must contain a property ``choices``, a list of objects of the form ``{value, label}``.
+  This type of option produces a list of the selected ``value`` strings.
+``list_of_strings``
+  A list of short text strings.
+``choice_maker``
+  A list of short text strings, presented in the editor as an editable list of choices.
+``number_notation_styles``
+  A list of number notation styles.
+  In the editor, this is displayed as a list of checkboxes associated with each number notation style.
+
+Example
+#######
+
+.. figure:: images/range-widget.png
+   :alt: A question part with prompt "Pick a number between 0 and 100" above a range widget positioned at 5.
+   
+   A part using the input method defined in this example.
+
+.. figure:: images/range-widget-editor.png
+   :alt: Options for the widget in the custom part type editor. There are fields for expected answer, input hint, minimum value, maximum value, and increment size.
+
+   Configuring the input method in the custom part type editor.
+
+Here's an example which defines an input method where the student has to pick a number from a range:
+
+.. code-block:: javascript
+
+    function RangeWidget(element, part, title, events, answer_changed, options) {
+        var w = this;
+        this.part = part;
+        var container = document.createElement('div');
+        element.appendChild(container);
+        var input = this.input = document.createElement('input');
+        container.appendChild(input);
+        var display = this.display = document.createElement('span');
+        container.appendChild(display);
+        this.answer_changed = answer_changed;
+        input.setAttribute('type','range');
+        input.setAttribute('title',title);
+        input.setAttribute('min',options.min);
+        input.setAttribute('max',options.max);
+        input.setAttribute('step',options.step);
+        for(var x in events) {
+            input.addEventListener(x,events[x]);
+        }
+        input.addEventListener('input',function(e) {
+            w.update_display();
+            answer_changed({valid: true, value: input.value});
+        });
+        this.update_display();
+    }
+    RangeWidget.prototype = {
+        setAnswerJSON: function(answerJSON) {
+            this.input.value = answerJSON.value;
+            this.update_display();
+        },
+        disable: function() {
+            this.input.setAttribute('disabled',true);
+        },
+        enable: function() {
+            this.input.removeAttribute('disabled');
+        },
+        update_display: function() {
+            this.display.textContent = this.input.value;
+        }
+    }
+    
+    Numbas.answer_widgets.register_custom_widget({
+        name: 'range',
+        niceName: 'Number range',
+        widget: RangeWidget,
+        signature: 'number',
+        answer_to_jme: function(answer) {
+            return new Numbas.jme.types.TNum(answer);
+        },
+        options_definition: [
+            {
+                name: 'min',
+                label: 'Minimum value',
+                input_type: 'string',
+                default_value: '0'
+            },
+            {
+                name: 'max',
+                label: 'Maximum value',
+                input_type: 'string',
+                default_value: '100'
+            },
+            {
+                name: 'step',
+                label: 'Increment size',
+                input_type: 'string',
+                default_value: '1'
+            }
+        ],
+        scorm_storage: {
+            interaction_type: function(part) { return 'fill-in'; },
+            correct_answer: function(part) { return part.input_options().correctAnswer; },
+            student_answer: function(part) { return part.studentAnswer; },
+            load: function(part, data) { return data.answer; }
+        }
+    });

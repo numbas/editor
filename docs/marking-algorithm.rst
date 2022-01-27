@@ -304,12 +304,12 @@ First, define a JavaScript function ``wait(time)`` which performs the task of wa
 
 .. code-block:: javascript
 
-    var promise = new Promise(function(resolve,reject) {
+    var promise = new Promise(function(resolve, reject) {
       setTimeout(function() {
         resolve({
           seconds_waited: new Numbas.jme.types.TNum(time)
         })
-      },time*1000);
+      }, time*1000);
     });
     return new Numbas.jme.types.TPromise(promise);
 

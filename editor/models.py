@@ -1714,9 +1714,13 @@ class NewQuestion(models.Model):
         contributor_data = [c.as_json(request) for c in self.editoritem.contributors.all()]
         question_data = self.editoritem.parsed_content.data
         question_data['contributors'] = contributor_data
+        extensions = self.extensions.all()
+        for cpt in self.custom_part_types.all():
+            extensions += cpt.extensions.all()
+        extensions = set(extensions)
         data = OrderedDict([
             ('name', self.editoritem.name),
-            ('extensions', [e.location for e in Extension.objects.filter(Q(questions=self) | Q(custom_part_types__questions=self))]),
+            ('extensions', [e.location for e in extensions]),
             ('custom_part_types', [p.as_json() for p in self.custom_part_types.all()]),
             ('resources', self.resource_paths),
             ('navigation', {'allowregen': True, 'showfrontpage': False, 'preventleave': False}),

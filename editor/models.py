@@ -1714,9 +1714,9 @@ class NewQuestion(models.Model):
         contributor_data = [c.as_json(request) for c in self.editoritem.contributors.all()]
         question_data = self.editoritem.parsed_content.data
         question_data['contributors'] = contributor_data
-        extensions = self.extensions.all()
+        extensions = list(self.extensions.all())
         for cpt in self.custom_part_types.all():
-            extensions += cpt.extensions.all()
+            extensions += list(cpt.extensions.all())
         extensions = set(extensions)
         data = OrderedDict([
             ('name', self.editoritem.name),

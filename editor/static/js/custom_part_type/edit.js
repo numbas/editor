@@ -148,6 +148,24 @@ $(document).ready(function() {
                     input_type: 'checkbox',
                     default_value: true
                 },
+                {
+                    name: 'showBrackets',
+                    label: 'Show brackets?',
+                    input_type: 'checkbox',
+                    default_value: true
+                },
+                {
+                    name: 'rowHeaders',
+                    label: 'Row headers',
+                    input_type: 'mathematical_expression',
+                    default_value: []
+                },
+                {
+                    name: 'columnHeaders',
+                    label: 'Column headers',
+                    input_type: 'mathematical_expression',
+                    default_value: []
+                }
             ]
         },
         {

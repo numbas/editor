@@ -326,3 +326,5 @@ Next, add a feedback line to the ``mark`` note to show the value returned by the
 
 When you run this question, note that the first time you submit a given number, there is a wait before the feedback is shown.
 If you submit the same answer again, the feedback is shown immediately, because the result of the task was cached.
+
+`See this example in the editor <https://numbas.mathcentre.ac.uk/question/114026/pre-submit-task-wait-for-a-while/>`__.

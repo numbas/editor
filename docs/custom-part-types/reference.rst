@@ -266,6 +266,9 @@ The student enters a two-dimensional array of values.
     "Parse cell values", ``parseCells``, :data:`boolean`, "If ``true``, the answer will be a :data:`matrix` of numbers. Otherwise, it is a 2-dimensional :data:`list` of lists of :data:`string` values."
     "Allowed notation styles", ``allowedNotationStyles``, :data:`list` of :data:`string`, "The allowed :ref:`styles of number notation <number-notation>`."
     "Allow fractions?", ``allowFractions``, :data:`boolean`, "Allow the student to enter numbers as fractions?"
+    "Show brackets?", ``showBrackets``, :data:`boolean`, "If ``true``, parentheses are drawn on the left and right of the matrix."
+    "Row headers", ``rowHeaders``, :data:`list`, "Text to show on the left of each row. One string for each row."
+    "Column headers", ``columnHeaders``, :data:`list`, "Text to show above each column. One string for each column."
 
 If ``parseCells`` is ``true``, the answer is a :data:`matrix` value corresponding to the student's input.
 The part will not be marked unless all of the cells in the student's matrix are valid numbers.

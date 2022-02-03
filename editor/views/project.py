@@ -155,7 +155,7 @@ class TransferOwnershipView(ProjectContextMixin, MustBeOwnerMixin, generic.Updat
         project = self.get_object()
         new_owner = form.cleaned_data['selected_user']
         if new_owner != project.owner:
-            IndividualAccess.objects.filter(object=project, user=new_owner).delete()
+            IndividualAccess.objects.filter(project=project, user=new_owner).delete()
             IndividualAccess.objects.create(object=project, user=project.owner, access='edit')
         
         return super(TransferOwnershipView, self).form_valid(form)

@@ -628,7 +628,7 @@ $(document).ready(function() {
                 return e.location == extension;
             });
             if(e) {
-                return e.script_url + path;
+                return e.script_url + 'standalone_scripts/' + path;
             }
         }
     }

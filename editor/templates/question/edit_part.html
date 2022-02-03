@@ -112,7 +112,7 @@
 
                 <!-- ko if: ko.unwrap($data.runtime_part)!==undefined -->
                 <!-- ko if: ko.unwrap($parent.type().widget) -->
-                    <form class="form-horizontal" data-bind="submit: Editor.noop">
+                    <form class="form-horizontal answer-input" data-bind="submit: run">
                         <div class="form-group">
                             <label class="label-block">
                                 <div class="col-sm-12 col-md-3">
@@ -133,10 +133,14 @@
                                 </div>
                             </label>
                         </div>
+                        <div class="col-md-offset-3">
+                            <button type="submit" class="btn btn-primary" data-bind="disabled: waiting_for_pre_submit">Submit this answer</button>
+                            <span class="text-info" data-bind="visible: waiting_for_pre_submit">Your answer is being marked.</span>
+                        </div>
                     </form>
                 <!-- /ko -->
                 <!-- ko if: $parent.type().name=='gapfill' -->
-                <form class="form-horizontal" data-bind="submit: Editor.noop">
+                <form class="form-horizontal answer-input" data-bind="submit: run">
                     <table class="table">
                         <thead>
                             <tr>
@@ -157,9 +161,10 @@
                             </tr>
                         </tbody>
                     </table>
+                    <button type="submit" class="btn btn-default" >Submit this answer</button>
                 </form>
                 <!-- /ko -->
-                <!-- /ko -->
+            <!-- /ko -->
 
             <ul class="nav nav-tabs" data-bind="foreach: tabber.tabs">
                 <li role="presentation" data-bind="css: {active: ko.unwrap($parent.tabber.currentTab().id) == $data.id}"><a href="#" data-bind="click: $parent.tabber.currentTab, text: title"></a></li>
@@ -231,6 +236,9 @@
                 </section>
 
                 <section class="tab-pane" data-bind="activeIf: ko.unwrap(tabber.currentTab().id)=='notes'">
+                    <div data-bind="visible: last_run() && answerDirty" class="alert alert-info">
+                        <p>This feedback is based on your last submitted answer. Submit your changed answer to get updated feedback.</p>
+                    </div>
                     <!-- ko if: ko.unwrap($data.runtime_part)!==undefined -->
                     <div data-bind="if: last_run_error">
                         <div class="alert alert-danger" aria-live="polite">

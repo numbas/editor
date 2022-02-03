@@ -246,6 +246,10 @@ table.variable-list .value-cell .value {
   margin-bottom: 1em;
 }
 
+.marking-test .answer-input {
+    margin: 1em 0;
+}
+
 .marking-test .nav-tabs,
 .unit-test .nav-tabs {
     margin-bottom: 1em;

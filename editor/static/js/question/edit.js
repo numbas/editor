@@ -2329,8 +2329,7 @@ $(document).ready(function() {
                     }
                     templateTypeValues.value(tree.tok.value);
                 }
-            }
-            catch(e) {
+            } catch(e) {
                 console.log(e);
             }
         }
@@ -2918,17 +2917,13 @@ $(document).ready(function() {
         this.unit_tests = ko.observableArray([]);
 
         this.marking_test = ko.observable(new MarkingTest(this,this.q.questionScope()));
-        function subscribe_to_answer(mt) {
-            mt.answer.subscribe(function() {
-                mt.run();
-            });
-        }
-        subscribe_to_answer(this.marking_test());
-        this.marking_test.subscribe(subscribe_to_answer);
         ko.computed(function() {
             var mt = this.marking_test();
             mt.make_question();
         },this).extend({throttle:1000});
+        this.submit_test = function() {
+            p.marking_test().run();
+        }
 
         this.run_all_tests = function() {
             p.unit_tests().forEach(function(mt) {
@@ -3300,13 +3295,7 @@ $(document).ready(function() {
                 });
             }
 
-            try{
-                this.type().load(data);
-            }catch(e){
-                console.log(e);
-                console.log(e.stack);
-                throw(e);
-            }
+            this.type().load(data);
         }
     };
 
@@ -3565,6 +3554,11 @@ $(document).ready(function() {
         // "Student's answer" in this test
         this.answer = ko.observable({valid: false, value: undefined});
 
+        this.answerDirty = ko.observable(false);
+        this.answer.subscribe(function() {
+            mt.answerDirty(true);
+        });
+
         // set answer for gapfill parts
         ko.computed(function() {
             if(this.editing()) {
@@ -3661,10 +3655,13 @@ $(document).ready(function() {
             var p = this.runtime_part();
             return {valid: true, value: p.getCorrectAnswer(p.getScope())};
         },this);
+
+        this.waiting_for_pre_submit = ko.observable(false);
         
         // When something changes, run the marking script and store the result in `this.result`
         this.mark = function() {
             var answer = mt.answer();
+            mt.answerDirty(false);
             var q = mt.question();
             if(mt.question_error()) {
                 mt.last_run({error: 'Error creating question: '+mt.question_error().message});
@@ -3706,22 +3703,38 @@ $(document).ready(function() {
                     }
                 }));
                 part.submit();
-                var alternatives_result = part.markAlternatives(part.getScope());
-                var res = alternatives_result.result.script_result;
-                if(!res) {
-                    var out = {script: part.markingScript, error: 'The marking algorithm did not return a result.'};
+                var promise;
+                if(part.waiting_for_pre_submit) {
+                    this.waiting_for_pre_submit(true);
+                    promise = part.waiting_for_pre_submit.then(function() {
+                        part.submit();
+                    });
                 } else {
-                    var alternative_used = alternatives_result.best_alternative ? alternatives_result.best_alternative.path : null;
-                    var out = {script: part.markingScript, result: res, marking_result: part.marking_result, marks: part.marks, alternative_used: alternative_used};
-                    if(res.state_errors.mark) {
-                        out.error = 'Error when computing the <code>mark</code> note: '+res.state_errors.mark.message;
-                    } else if(!res.state_valid.mark) {
-                        out.error = 'This answer is not valid.';
-                        var feedback = compile_feedback(Numbas.marking.finalise_state(res.states.mark), part.marks);
-                        out.warnings = feedback.warnings;
-                    }
+                    promise = Promise.resolve(true);
                 }
-                mt.last_run(out);
+                promise.then(function() {
+                    mt.waiting_for_pre_submit(false);
+                    try {
+                        var alternatives_result = part.markAlternatives(part.getScope(), undefined, '');
+                        var res = alternatives_result.result.script_result;
+                        if(!res) {
+                            var out = {script: part.markingScript, error: 'The marking algorithm did not return a result.'};
+                        } else {
+                            var alternative_used = alternatives_result.best_alternative ? alternatives_result.best_alternative.path : null;
+                            var out = {script: part.markingScript, result: res, marking_result: part.marking_result, marks: part.marks, alternative_used: alternative_used};
+                            if(res.state_errors.mark) {
+                                out.error = 'Error when computing the <code>mark</code> note: '+res.state_errors.mark.message;
+                            } else if(!res.state_valid.mark) {
+                                out.error = 'This answer is not valid.';
+                                var feedback = compile_feedback(Numbas.marking.finalise_state(res.states.mark), part.marks);
+                                out.warnings = feedback.warnings;
+                            }
+                        }
+                        mt.last_run(out);
+                    } catch(e) {
+                        mt.last_run({error: 'Error marking: '+e.message});
+                    }
+                });
             } catch(e) {
                 mt.last_run({error: 'Error marking: '+e.message});
             };

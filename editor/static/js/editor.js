@@ -622,12 +622,14 @@ $(document).ready(function() {
         },this);
     }
 
-    Numbas.getStandaloneFileURL = function(extension, path) {
-        var e = (item_json.numbasExtensions || []).find(function(e) {
-            return e.location == extension;
-        });
-        if(e) {
-            return e.script_url + path;
+    if(window.Numbas) {
+        Numbas.getStandaloneFileURL = function(extension, path) {
+            var e = (item_json.numbasExtensions || []).find(function(e) {
+                return e.location == extension;
+            });
+            if(e) {
+                return e.script_url + path;
+            }
         }
     }
 

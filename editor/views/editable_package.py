@@ -30,7 +30,7 @@ class ShowPackageFilesMixin:
 
     def get_context_data(self,**kwargs):
         context = super().get_context_data(**kwargs)
-        context['filenames'] = self.get_package_filenames()
+        context['filenames'] = [(x, (self.get_object().extracted_path / x).is_dir()) for x in self.get_package_filenames()]
         context['editable'] = self.package.can_be_edited_by(self.request.user)
         context['upload_file_form'] = self.upload_file_form_class(instance=self.get_object())
         return context
@@ -66,14 +66,14 @@ class EditView(ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
         if path.is_dir():
             return None
         try:
-            self.mime_type, _ = mimetypes.guess_type(path)
-            with open(path,encoding='utf-8') as f:
+            self.mime_type, _ = mimetypes.guess_type(str(path))
+            with open(str(path),encoding='utf-8') as f:
                 source = f.read()
                 self.is_binary = False
         except FileNotFoundError as e:
             source = ''
         except UnicodeDecodeError as e:
-            with open(path,'rb') as f:
+            with open(str(path),'rb') as f:
                 source = f.read()
                 self.is_binary = True
         return source
@@ -128,9 +128,8 @@ class EditView(ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
 
         filenames = context['filenames']
         if not context['exists']:
-            filenames.append(self.get_current_directory() / filename)
+            filenames.append((self.get_current_directory() / filename, False))
         filenames.sort()
-        context['filenames'] = [(x, (package.extracted_path / x).is_dir()) for x in filenames]
 
         context['is_binary'] = self.is_binary
         context['is_image'] = self.mime_type is not None and self.mime_type.split('/')[0]=='image'

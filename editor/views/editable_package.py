@@ -2,6 +2,7 @@ import os
 import mistune
 from datetime import datetime
 from io import BytesIO
+from pathlib import PurePath, Path
 from zipfile import ZipFile
 import mimetypes
 
@@ -21,8 +22,11 @@ class ShowPackageFilesMixin:
 
     def get_package_filenames(self):
         package = self.package = self.get_object()
-        filenames = list(package.filenames())
+        filenames = list(package.directory_contents(directory=self.get_current_directory()))
         return filenames
+
+    def get_current_directory(self):
+        return PurePath('.')
 
     def get_context_data(self,**kwargs):
         context = super().get_context_data(**kwargs)
@@ -45,10 +49,12 @@ class EditView(ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
     """ Edit an package's source code """
     template_name = 'editable_package/edit_source.html'
 
+    mime_type = None
+    is_binary = False
+    is_image = False
+
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
-        self.is_binary = False
-        self.is_image = False
 
     def dispatch(self,request,*args,**kwargs):
         package = self.get_object()
@@ -57,6 +63,8 @@ class EditView(ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
         return super().dispatch(request,*args,**kwargs)
 
     def load_source(self,path):
+        if path.is_dir():
+            return None
         try:
             self.mime_type, _ = mimetypes.guess_type(path)
             with open(path,encoding='utf-8') as f:
@@ -70,6 +78,17 @@ class EditView(ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
                 self.is_binary = True
         return source
 
+    def get_path(self):
+        package = self.get_object()
+        return Path(package.extracted_path) / self.get_filename()
+
+    def get_current_directory(self):
+        path = self.get_path()
+        if path.is_dir():
+            return path
+        else:
+            return path.parent
+
     def get_initial(self):
         initial = super().get_initial()
 
@@ -77,7 +96,7 @@ class EditView(ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
 
         filename = initial['filename'] = self.get_filename()
 
-        path = os.path.join(package.extracted_path,filename)
+        path = self.get_path()
         initial['source'] = self.load_source(path)
 
         return initial
@@ -97,26 +116,27 @@ class EditView(ShowPackageFilesMixin, CanViewMixin, generic.UpdateView):
 
         context['editable'] = package.can_be_edited_by(self.request.user)
 
-        filename = context['filename'] = self.get_filename()
-        path = context['path'] = os.path.join(package.extracted_path,filename)
-        context['exists'] = os.path.exists(path)
+        filename = self.get_filename()
+        path = context['path'] = self.get_path()
+        current_directory = context['current_directory'] = self.get_current_directory().relative_to(package.extracted_path)
+        context['filename'] = path.relative_to(package.extracted_path)
+        context['parent_directory'] = current_directory.parent
+        context['exists'] = path.exists()
         if context['exists']:
-            stat = os.stat(path)
-            context['last_modified'] = make_aware(datetime.fromtimestamp(stat.st_mtime))
-        _,ext = os.path.splitext(filename)
-        context['fileext'] = ext
+            context['last_modified'] = make_aware(datetime.fromtimestamp(path.stat().st_mtime))
+        context['fileext'] = path.suffix
 
         filenames = context['filenames']
         if not context['exists']:
-            filenames.append(filename)
+            filenames.append(self.get_current_directory() / filename)
         filenames.sort()
-        context['filenames'] = filenames
+        context['filenames'] = [(x, (package.extracted_path / x).is_dir()) for x in filenames]
 
         context['is_binary'] = self.is_binary
         context['is_image'] = self.mime_type is not None and self.mime_type.split('/')[0]=='image'
         context['mime_type'] = self.mime_type
         context['file_url'] = package.url_for(filename)
-        _, context['filename_without_directories'] = os.path.split(filename)
+        context['filename_without_directories'] = path.name
         context['replace_form'] = self.replace_form_class(initial={'filename': filename}, instance=package)
 
         return context
@@ -207,14 +227,14 @@ class DocumentationView(CanViewMixin, generic.DetailView):
 
         package = self.get_object()
         readme_filename = package.readme_filename
-        readme_path = os.path.join(package.extracted_path,readme_filename)
-        if readme_filename is None or not os.path.exists(readme_path):
+        readme_path = Path(package.extracted_path) / readme_filename
+        if readme_filename is None or not readme_path.exists():
             content = "The author of this package has not written any documentation yet."
         else:
             with open(readme_path,encoding='utf-8') as f:
                 content = f.read()
 
-            _,ext = os.path.splitext(readme_filename)
+            ext = readme_path.suffix
             if ext=='.md':
                 content = mistune.markdown(content)
 

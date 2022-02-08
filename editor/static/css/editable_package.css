@@ -1,0 +1,12 @@
+.list-group-item.parent-directories {
+  padding: 0;
+}
+.list-group-item.parent-directories ol {
+  margin: 0;
+}
+.list-group-item.dir {
+    font-weight: bold;
+}
+.list-group-item.dir::after {
+    content: '/';
+}

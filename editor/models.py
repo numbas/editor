@@ -435,6 +435,13 @@ class EditablePackageMixin(object):
                     if not re.match(r'^\.',f):
                         yield str(rd / f)
 
+    def directory_contents(self, directory):
+        top = Path(self.extracted_path) / directory
+        if not top.exists():
+            return
+        for p in top.iterdir():
+            yield p.relative_to(self.extracted_path)
+
     def write_file(self,filename,content):
         root = os.path.abspath(self.extracted_path)
         path = os.path.abspath(os.path.join(root,filename))

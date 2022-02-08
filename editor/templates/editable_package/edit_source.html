@@ -4,6 +4,7 @@
 {% load static %}
 
 {% block package_edit_content %}
+{% if not path.is_dir %}
     <p class="file-info">
         {% if editable %}Editing {% endif %}<code>{{filename}}</code>
         {% if not exists %} (new file){% endif %}.
@@ -79,6 +80,7 @@
             Save
         </button>
     </form>
+{% endif %}
 {% endblock package_edit_content %}
 
 {% block stylesheets %}
@@ -95,6 +97,8 @@
 
 {% block javascripts %}
     {{block.super}}
+
+    {% if not path.is_dir %}
     <script>
 
     var filename = "{{filename}}";
@@ -130,4 +134,5 @@
         });
     });
     </script>
+    {% endif %}
 {% endblock %}

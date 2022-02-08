@@ -1,9 +1,15 @@
 {% extends "layout.html" %}
 {% load editable_package %}
+{% load sstatic %}
 
 {% block title %}Edit {{object.package_noun}} "{{form.instance.name}}" - {{block.super}}{% endblock title %}
 
 {% block content_container %}container-fluid{% endblock %}
+
+{% block stylesheets %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% sstatic 'css/editable_package.css' %}"/>
+{% endblock stylesheets %}
 
 {% block content %}
 <div class="page-header">
@@ -31,8 +37,20 @@
         {% if object.editable %}
         <div class="panel-heading">Files</div>
         <ul class="list-group">
-            {% for fname in filenames %}
-            <a class="list-group-item monospace {% if fname == filename %}active{% endif %}" href="{% package_url 'edit_source' object.pk %}?filename={{fname}}">{{fname}}</a>
+            {% if parent_directory != current_directory %}
+            <div class="list-group-item parent-directories">
+                <nav>
+                    <ol class="breadcrumb">
+                        {% for parent in current_directory.parents reversed %}
+                        <li><a class="parent-directory monospace" href="?filename={{parent}}">{% if parent.name != '' %}{{parent.name}}{% else %}{{object.name}}{% endif %}</a></li>
+                        {% endfor %}
+                        <li><span class="monospace">{{current_directory.name}}</span></li>
+                    </ol>
+                </nav>
+            </div>
+            {% endif %}
+            {% for fname, is_dir in filenames %}
+            <a class="list-group-item monospace{% if fname == filename %} active{% endif %}{% if is_dir %} dir{% endif %}" href="{% package_url 'edit_source' object.pk %}?filename={{fname}}">{{fname.name}}</a>
             {% endfor %}
             <li class="list-group-item">
                 <form method="GET" action="{% package_url 'edit_source' object.pk %}" class="form-inline">

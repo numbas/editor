@@ -71,6 +71,25 @@ For more information on how to use the extension, see `its documentation <https:
 
 There are `a few questions demonstrating how to use the Eukleides extension <https://numbas.mathcentre.ac.uk/project/698/browse/Extensions/Eukleides/>`__ in the 'Demos' project on numbas.mathcentre.ac.uk.
 
+Coding
+******
+
+Programming
+-----------
+
+The programming extension adds the ability to run code written in Python or R.
+
+It provides a "Code" custom part type, which takes code written by the student and runs it.
+Marking is done by evaluating unit tests after the student's code.
+
+The screencast below shows some examples of the programming extension in use:
+
+.. raw:: html
+
+    <iframe src="https://player.vimeo.com/video/674909236" width="640" height="360" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+
+For more information on how to use the extension, see `its documentation <https://github.com/numbas/numbas-extension-programming/>`__.
+
 Function libraries
 ******************
 
@@ -93,6 +112,8 @@ The "random person" extension provides a collection of functions to generate ran
 It doesn't really matter what people are called in word problems, but it can have a bad effect on students' perceptions of the world if the plumber's always called Gary and the nurse is always called Julie.
 This extension makes it easy to randomly pick names, following the distribution of names and genders in the population of England and Wales.
 
+There is `an example question using this extension <https://numbas.mathcentre.ac.uk/question/65912/numbas-demo-random-person-extension/>`__ in the mathcentre editor.
+
 For more information on how to use the extension, see `its documentation <https://github.com/numbas/numbas-extension-random-person>`__.
 
 
@@ -102,6 +123,8 @@ Quantities
 This extension wraps the `js-quantities <https://github.com/gentooboontoo/js-quantities>`__ library to provide a "quantity with units" data type to Numbas.
 
 It provides a ``quantity`` data type, which represents a scalar amount and a list of units.
+
+There is `an example question using this extension <https://numbas.mathcentre.ac.uk/question/65913/numbas-demo-quantities-with-units/>`__ in the mathcentre editor.
 
 For more information on how to use the extension, see `its documentation <https://github.com/numbas/numbas-extension-quantities>`__.
 

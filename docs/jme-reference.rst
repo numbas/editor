@@ -202,6 +202,62 @@ The default behaviour of variable and function names in JME expressions is that 
 You can force the JME system to be case-sensitive using the :jme:func:`scope_case_sensitive` function.
 
 
+Synonymous keywords and characters
+----------------------------------
+
+JME interprets some keywords and characters as synonyms for others, when there are multiple conventional ways of writing the same thing, and there's no ambiguity about what they mean.
+
+Often there is a single Unicode character for a mathematical symbol which can also be written in JME as a combination of ASCII characters.
+
+.. list-table::
+    :header-rows: 1
+
+    * - Keyword
+      - Synonyms
+    * - :jme:func:`and`
+      - ``&``, ``&&``, ``∧``
+    * - :jme:func:`or`
+      - ``||``, ``∨``
+    * - :jme:func:`not`
+      - ``¬``
+    * - :jme:func:`|`
+      - ``divides``
+    * - :jme:func:`*`
+      - ``×``
+    * - :jme:func:`/`
+      - ``÷``
+    * - :jme:func:`in`
+      - ``∈``
+    * - :jme:func:`implies`
+      - ``⟹``
+    * - :jme:func:`<>`
+      - ``≠``
+    * - :jme:func:`>=`
+      - ``≥``
+    * - :jme:func:`<=`
+      - ``≤``
+    * - :jme:func:`^`
+      - ``ˆ``
+    * - :jme:func:`sqrt`
+      - ``sqr``
+    * - :jme:func:`gcd`
+      - ``gcf``
+    * - :jme:func:`sign`
+      - ``sgn``
+    * - :jme:func:`abs`
+      - ``len``, ``length``
+    * - :jme:func:`dec`
+      - ``decimal``
+
+Superscript characters are interpreted as exponents, without the ``^`` character. 
+For example::
+
+    x⁻² = x^(-2)
+
+The following superscript characters are recognised::
+
+    ⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ⁽ ⁾ ⁺ ⁻ ⁼ ⁿ ⁱ
+
 .. _jme-data-types:
 
 Data types
@@ -214,7 +270,8 @@ Some extensions add new data types.
 
     A real or complex floating-point number.
 
-    ``i``, ``e``, ``infinity`` and ``pi`` are reserved keywords for the imaginary unit, the base of the natural logarithm, ∞ and π, respectively.
+    ``i``, ``e``, ``infinity`` and ``pi`` are normally defined as the imaginary unit, the base of the natural logarithm, ∞ and π, respectively.
+    Within a question you can remove or override these using the :ref:`question-constants` tab.
 
     **Examples**: ``0.0``, ``-1.0``, ``0.234``, ``i``, ``e``, ``pi``
 
@@ -428,6 +485,7 @@ The following examples illustrate how this works.
 
 .. list-table::
     :widths: 15 15 70
+    :header-rows: 1
 
     * - Expression
       - Type of result
@@ -1614,6 +1672,7 @@ Number theory
         * ``lcm(8,12,5)`` → ``120``
 
 .. jme:function:: x|y
+                x divides y
     :keywords: divides, test
     :op: |
 
@@ -2315,6 +2374,7 @@ Logic
         * ``!true``
 
 .. jme:function:: x or y
+                x || y
     :keywords: logical, or, union
     :op: or
 
@@ -3678,7 +3738,6 @@ Identifying data types
 
     **Example**:
         * ``type(1)`` → ``"integer"``
-    :keywords: 
 
 .. jme:function:: x isa type
     :keywords: is, test, same, type

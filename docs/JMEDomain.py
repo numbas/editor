@@ -194,7 +194,7 @@ class JMEFunction(JMEObject):
         return name_cls[0]
 
     def get_fullname(self, name_cls):
-        return 'jme-fn-'+name_cls[0]
+        return name_cls[0]
 
 class JMEData(JMEObject):
     """
@@ -221,12 +221,12 @@ class JMEData(JMEObject):
         return name, ''
 
     def get_fullname(self, name_cls):
-        return 'jme-data-'+name_cls[0]
+        return name_cls[0]
 
 class JMEVariable(JMEData):
 
     def get_fullname(self, name_cls):
-        return 'jme-variable-'+name_cls[0]
+        return name_cls[0]
 
 
 class JMEXRefRole(XRefRole):
@@ -250,7 +250,7 @@ class JMEDomain(Domain):
         'variable': JMEVariable,
     }
     roles = {
-        'func':  JMEXRefRole(fix_parens=True),
+        'func':  JMEXRefRole(fix_parens=False),
         'data':  JMEXRefRole(),
         'var': JMEXRefRole(),
     }

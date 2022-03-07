@@ -349,12 +349,12 @@ class IndividualAccess(models.Model, TimelineMixin):
     def combine_access(self, to_user):
         order = ['view','edit']
         try:
-            a2 = self.__class__.objects.get(user=to_user, **{self.object_field_name: getattr(self,self.object_field_name)})
+            a2 = IndividualAccess.objects.get(user=to_user, object_content_type=self.object_content_type, object_id=self.object_id)
             level = sorted([self.access,a2.access],key=order.index)[-1]
             if level != a2.access:
                 a2.access = level
                 a2.save()
-        except self.__class__.DoesNotExist:
+        except IndividualAccess.DoesNotExist:
             self.user = to_user
             self.save()
 
@@ -390,7 +390,7 @@ def apply_project_invitations(instance, created, **kwargs):
             project = invitation.project
             if not project.has_access(instance,(invitation.access,)):
                 try:
-                    access = IndividualAccess.objects.get(object=project,user=instance)
+                    access = IndividualAccess.objects.get(project=project,user=instance)
                     access.access = invitation.access
                     access.save()
                 except IndividualAccess.DoesNotExist:

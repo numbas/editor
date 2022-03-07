@@ -682,7 +682,7 @@ class AddMemberForm(AddEditablePackageAccessForm):
         m = super().save(commit=commit)
         if commit and not m.user.pk:
             # create email invitation if the user_search field contained an email address
-            self.invitation = editor.models.ProjectInvitation.objects.create(invited_by=self.cleaned_data.get('adding_user'), project=m.project, access=m.access, email=m.user.email)
+            self.invitation = editor.models.ProjectInvitation.objects.create(invited_by=self.cleaned_data.get('adding_user'), project=m.object, access=m.access, email=m.user.email)
         return m
 
 class ProjectForm(forms.ModelForm):

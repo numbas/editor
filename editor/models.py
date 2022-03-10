@@ -547,7 +547,13 @@ class Extension(models.Model, ControlledObject, EditablePackageMixin):
         if path is not None:
             d['hasScript'] = True
             d['scriptURL'] = path
+            d['scripts'] = list(self.scripts())
         return d
+
+    def scripts(self):
+        for f in Path(self.extracted_path).iterdir():
+            if f.suffix == '.js':
+                yield f.name
 
     @property
     def main_filename(self):

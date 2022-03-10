@@ -509,6 +509,9 @@ $(document).ready(function() {
             if(!this.autoCalculateVariables())
                 return;
             //the ko dependency checker seems not to pay attention to what happens in the computeVariables method, so access the variable bits here to give it a prompt
+            if(this.extensions().some(function(ext) { return ext.loading(); })) {
+                return;
+            }
             this.functions().map(function(v) {
                 v.name();
                 v.definition();
@@ -1667,13 +1670,14 @@ $(document).ready(function() {
 
     function Extension(q,data) {
         var ext = this;
-        ["location","name","edit_url","hasScript","url","scriptURL","author","pk"].forEach(function(k) {
+        ["location","name","edit_url","hasScript","url","scriptURL","author","pk","script_url","scripts"].forEach(function(k) {
             ext[k] = data[k];
         });
         this.used = ko.observable(false);
         this.required = ko.pureComputed(function() {
             return q.usedPartTypes().some(function(p){ return p.required_extensions && p.required_extensions.indexOf(ext.location) != -1 });
         }, this);
+        this.loading = ko.observable(false);
         this.loaded = ko.observable(false);
         this.error = ko.observable(false);
         this.used_or_required = ko.computed({
@@ -1690,8 +1694,7 @@ $(document).ready(function() {
             if(this.used_or_required()) {
                 if(!this.loaded()) {
                     try {
-                        Numbas.activateExtension(ext.location);
-                        ext.loaded(true);
+                        ext.load();
                     } catch(e) {
                         console.error(e);
                         setTimeout(function() {
@@ -1705,6 +1708,42 @@ $(document).ready(function() {
                 console.error(e);
             }
         },this);
+    }
+    Extension.prototype = {
+        load: function() {
+            console.log('loading',this.name);
+            this.loading(true);
+            var ext = this;
+            if(this.loaded()) {
+                return;
+            }
+            var script_promises = [];
+            this.scripts.forEach(function(name) {
+                console.log('load script',name);
+                var script = document.createElement('script');
+                script.setAttribute('src', ext.script_url+name);
+                var promise = new Promise(function(resolve,reject) {
+                    script.addEventListener('load',function(e) {
+                        resolve(e);
+                    });
+                    script.addEventListener('error',function(e) {
+                        reject(e);
+                    });
+                });
+                script_promises.push(promise);
+                document.head.appendChild(script);
+            });
+            Promise.all(script_promises).then(function() {
+                console.log('activate',ext.name);
+                Numbas.activateExtension(ext.location);
+                ext.loaded(true);
+                viewModel.regenerateVariables();
+            }).catch(function(err) {
+                console.error(err);
+            }).finally(function() {
+                ext.loading(false);
+            });
+        }
     }
 
 

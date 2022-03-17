@@ -548,6 +548,31 @@ $(document).ready(function() {
         }
 
         ko.computed(function() {
+            var names = [];
+            this.variables().forEach(function(v) {
+                v.names().forEach(function(name) {
+                    names.push({v:v, name:name.name.toLowerCase()});
+                })
+            });
+            this.constants().forEach(function(c) {
+                c.names().forEach(function(name) {
+                    names.push({v:c, name:name.name.toLowerCase()});
+                })
+            });
+            names.sort(Numbas.util.sortBy('name'));
+            var last;
+            names.forEach(function(n) {
+                if(last && n.name==last.name) {
+                    last.v.duplicateNameError(n.name);
+                    n.v.duplicateNameError(n.name);
+                } else {
+                    n.v.duplicateNameError(null);
+                }
+                last = n;
+            });
+        },this);
+
+        ko.computed(function() {
             var undefined_variables = [];
             var all_references = new Set();
             this.variables().forEach(function(v) {
@@ -1845,7 +1870,6 @@ $(document).ready(function() {
         kind = kind || 'variable';
         var names = ko.pureComputed(function() {
             var jme = Numbas.jme;
-            var variables = ko.unwrap(variablesAccessor);
             var names = v.name().split(/\s*,\s*/);
             var val = v.value && v.value();
             if(names.length>1) {
@@ -1861,13 +1885,6 @@ $(document).ready(function() {
                 }
 
                 d.nameError = (function() {
-                    for(var i=0;i<variables.length;i++) {
-                        var v2 = variables[i];
-                        if(v2!=v && v2.name().toLowerCase()==name.toLowerCase()) {
-                            nameError = 'There\'s already a '+kind+' with the name '+name+'.';
-                        }
-                    }
-
                     if(!re_name.test(name)) {
                         return 'The '+kind+' name <code>'+name+'</code> is invalid.';
                     }
@@ -1901,8 +1918,12 @@ $(document).ready(function() {
         },v);
 
         var nameError = ko.pureComputed(function() {
+            var duplicateNameError = v.duplicateNameError();
             var name_errors = names().map(function(nd) {
                 var name = nd.name;
+                if(name.toLowerCase() == duplicateNameError) {
+                    return 'There\'s another variable or constant with the name '+name+'.';
+                }
                 if(name=='') {
                     return '';
                 }
@@ -1928,6 +1949,7 @@ $(document).ready(function() {
         },this);
         this.group = ko.observable(null);
         this.random = ko.observable(null);
+        this.duplicateNameError = ko.observable(null);
         var names = parse_names(this,q.variables,'variable');
         this.names = names.names;
         this.nameError = names.nameError;
@@ -2163,7 +2185,7 @@ $(document).ready(function() {
                 };
                 return out;
             });
-        },this);
+        },this).extend({throttle: 1000});
         this.usedIn = ko.pureComputed(function() {
             return q.variables().filter(function(v2) {
                 return v.names().some(function(n) {
@@ -2174,7 +2196,7 @@ $(document).ready(function() {
                 b = b.name();
                 return a<b ? -1 : a>b ? 1 : 0;
             });
-        },this);
+        },this).extend({throttle: 1000});
         this.references = ko.observableArray([]);
         this.unique_references = ko.pureComputed(function() {
             var references = [];
@@ -2184,10 +2206,10 @@ $(document).ready(function() {
                 }
             });
             return references;
-        },this);
+        },this).extend({throttle: 1000});
         this.unused = ko.pureComputed(function() {
             return this.usedIn().length==0 && this.references().length==0;
-        },this);
+        },this).extend({throttle: 1000});
 
         this.can_override = ko.observable(false);
 
@@ -2443,6 +2465,7 @@ $(document).ready(function() {
         this.value = ko.observable('');
         this.tex = ko.observable('');
 
+        this.duplicateNameError = ko.observable(null);
         var names = parse_names(this,q.variables,'constant');
         this.names = names.names;
         this.nameError = names.nameError;

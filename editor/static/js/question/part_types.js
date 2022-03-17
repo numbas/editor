@@ -292,8 +292,11 @@ part_types.models = [
                 {tab: 'restrictions', value: model.mustmatchpattern.pattern, type: 'jme-sub', description: "Pattern student's answer must match"},
                 {tab: 'restrictions', value: model.mustmatchpattern.message, type: 'html', description: "Warning message for pattern restriction"},
             ]
+            var ignored_variables = ko.pureComputed(function() {
+                return model.variableNames().concat(['vrange']);
+            });
             model.valueGenerators().forEach(function(vg) {
-                o.push({tab:'checking-accuracy',value: vg.value,ignore:model.variableNames,type:'jme',description:'Value generator for variable '+vg.name});
+                o.push({tab:'checking-accuracy',value: vg.value,ignore:ignored_variables,type:'jme',description:'Value generator for variable '+vg.name});
             });
             return o;
         },

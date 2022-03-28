@@ -3,18 +3,18 @@
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='marking-settings'}">
 <form class="form-horizontal" data-bind="submit: Editor.noop">
     <div class="main-settings">
-        {% property '$parent.marks' 'Marks' min=0 help_url='question/parts/reference.html#term-marks' %}
+        {% property '$parent.marks' 'Marks' min=0 help_url='question/parts/reference.html#term-Marks' %}
         <div class="form-group">
             <label class="{{form_label_class}} control-label">
-                Match test {% helplink 'question/parts/match-text-pattern.html#term-match-test' %}
+                Match test {% helplink 'question/parts/match-text-pattern.html#term-Match-test' %}
             </label>
             <div class="{{form_control_class}}">
                 <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: matchModes, value: matchMode, optionsText: 'niceName'"></select>
             </div>
         </div>
-        {% property 'answer' 'Answer pattern' monospace=True help_url='question/parts/match-text-pattern.html#term-answer-pattern' %}
+        {% property 'answer' 'Answer pattern' monospace=True help_url='question/parts/match-text-pattern.html#term-Answer-pattern' %}
         <div data-bind="fadeVisible: $parent.showCorrectAnswer() && matchMode().name=='regex'">
-            {% property 'displayAnswer' 'Display answer' help_url='question/parts/match-text-pattern.html#term-display-answer' %}
+            {% property 'displayAnswer' 'Display answer' help_url='question/parts/match-text-pattern.html#term-Display-answer' %}
         </div>
     </div>
 
@@ -24,7 +24,7 @@
     <h4>Advanced settings</h4>
     <hr>
 
-    {% booleanproperty 'caseSensitive' 'Must the answer be in the correct case?' help_url='question/parts/match-text-pattern.html#term-must-the-answer-be-in-the-correct-case' %}
+    {% booleanproperty 'caseSensitive' 'Must the answer be in the correct case?' help_url='question/parts/match-text-pattern.html#term-Must-the-answer-be-in-the-correct-case' %}
     <div data-bind="fadeVisible:caseSensitive">
         {% percentproperty 'partialCredit' 'Partial credit for answer not matching case' %}
     </div>

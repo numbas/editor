@@ -28,7 +28,7 @@
                 <label class="label-block">
                     <div class="col-sm-3 control-label">
                         Interface theme 
-                        {% helplink 'exam/reference.html#term-interface-theme' %}
+                        {% helplink 'exam/reference.html#term-Interface-theme' %}
                     </div>
                     <div class="col-sm-6">
                         <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.themes, value: theme, optionsText: 'name'"></select>
@@ -40,7 +40,7 @@
             <div class="form-group">
                 <label class="label-block">
                     <div class="col-sm-3 control-label">
-                        Interface language {% helplink 'exam/reference.html#term-interface-language' %}
+                        Interface language {% helplink 'exam/reference.html#term-Interface-language' %}
                     </div>
                     <div class="col-sm-6">
                         <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: item_json.locales, value: locale, optionsValue: 'code', optionsText: 'name'"></select>
@@ -48,7 +48,7 @@
                 </label>
             </div>
 
-            {% booleanproperty 'allowPrinting' 'Allow students to print question content?' help_url='exam/reference.html#term-allow-students-to-print-question-content' %}
+            {% booleanproperty 'allowPrinting' 'Allow students to print question content?' help_url='exam/reference.html#term-Allow-students-to-print-question-content' %}
         </form>
 
         {% if editable %}
@@ -125,12 +125,12 @@
                                 {% with form_label_class='' form_control_class='' %}
                                 <div class="form-group" data-bind="fadeVisible: $root.navigatemode().name!='diagnostic'">
                                     <label class="">
-                                        <div class="control-label">Questions to use {% helplink 'exam/reference.html#term-questions-to-use' %}</div>
+                                        <div class="control-label">Questions to use {% helplink 'exam/reference.html#term-Questions-to-use' %}</div>
                                         <select class="form-control" data-bind="options: pickingStrategies, optionsText: 'niceName', value: pickingStrategy" {% if not editable %}disabled{% endif %}></select>
                                     </label>
                                 </div>
                                 <span data-bind="visible: pickingStrategy().name=='random-subset'">
-                                    {% property 'pickQuestions' 'Number of questions to choose' type='number' min=1 max='questions().length' help_url='exam/reference.html#term-number-of-questions-to-choose' %}
+                                    {% property 'pickQuestions' 'Number of questions to choose' type='number' min=1 max='questions().length' help_url='exam/reference.html#term-Number-of-questions-to-choose' %}
                                 </span>
                                 {% endwith %}
                             </div>
@@ -212,9 +212,9 @@
                     <div class="panel-body">
                         <form class="form-horizontal" data-bind="submit: Editor.noop">
                             {% with form_label_class='col-sm-8' form_control_class='col-sm-4' %}
-                                {% booleanproperty 'showQuestionGroupNames' 'Show group names to student?' help_url='exam/reference.html#term-show-group-names-to-student' %}
+                                {% booleanproperty 'showQuestionGroupNames' 'Show group names to student?' help_url='exam/reference.html#term-Show-group-names-to-student' %}
                                 <div data-bind="visible: question_groups().length>1">
-                                    {% booleanproperty 'shuffleQuestionGroups' 'Shuffle question groups?' help_url='exam/reference.html#term-shuffle-question-groups' %}
+                                    {% booleanproperty 'shuffleQuestionGroups' 'Shuffle question groups?' help_url='exam/reference.html#term-Shuffle-question-groups' %}
                                 </div>
                             {% endwith %}
                         </form>
@@ -473,21 +473,21 @@
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='navigation'}">
         <form class="form-horizontal" data-bind="submit: Editor.noop">
             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
-            {% property 'startpassword' 'Password to begin the exam' help_url='exam/reference.html#term-password-to-begin-the-exam' %}
-            {% booleanproperty 'allowregen' 'Allow user to regenerate questions?' help_url='exam/reference.html#term-allow-user-to-regenerate-questions' %}
-            {% selectproperty 'navigatemode' 'Question navigation mode' options='navigateModeOptions' options_text='niceName' help_url='exam/reference.html#term-question-navigation-mode' %}
+            {% property 'startpassword' 'Password to begin the exam' help_url='exam/reference.html#term-Password-to-begin-the-exam' %}
+            {% booleanproperty 'allowregen' 'Allow user to regenerate questions?' help_url='exam/reference.html#term-Allow-user-to-regenerate-questions' %}
+            {% selectproperty 'navigatemode' 'Question navigation mode' options='navigateModeOptions' options_text='niceName' help_url='exam/reference.html#term-Question-navigation-mode' %}
             <div data-bind="fadeVisible: navigatemode().name=='sequence'">
-                {% booleanproperty 'reverse' 'Allow move to previous question?' help_url='exam/reference.html#term-allow-move-to-previous-question' %}
-                {% booleanproperty 'browse' 'Allow to jump to any question?' help_url='exam/reference.html#term-allow-jump-to-any-question' %}
+                {% booleanproperty 'reverse' 'Allow move to previous question?' help_url='exam/reference.html#term-Allow-move-to-previous-question' %}
+                {% booleanproperty 'browse' 'Allow to jump to any question?' help_url='exam/reference.html#term-Allow-jump-to-any-question' %}
             </div>
-            {% booleanproperty 'allowsteps' 'Enable steps?' help_url='exam/reference.html#term-enable-steps' %}
-            {% booleanproperty 'showfrontpage' 'Show front page?' help_url='exam/reference.html#term-show-front-page' %}
+            {% booleanproperty 'allowsteps' 'Enable steps?' help_url='exam/reference.html#term-Enable-steps' %}
+            {% booleanproperty 'showfrontpage' 'Show front page?' help_url='exam/reference.html#term-Show-front-page' %}
             <div data-bind="fadeVisible: navigatemode().name=='sequence'">
-                {% selectproperty 'showresultspage' 'Reveal answers to all questions' options='showResultsPageOptions' options_text='niceName' help_url='exam/reference.html#term-reveal-answers-to-all-questions' %}
+                {% selectproperty 'showresultspage' 'Reveal answers to all questions' options='showResultsPageOptions' options_text='niceName' help_url='exam/reference.html#term-Reveal-answers-to-all-questions' %}
             </div>
-            {% booleanproperty 'preventleave' 'Confirm before leaving the exam while it\'s running?' help_url='exam/reference.html#term-confirm-before-leaving-the-exam-while-it-s-running' %}
+            {% booleanproperty 'preventleave' 'Confirm before leaving the exam while it\'s running?' help_url='exam/reference.html#term-Confirm-before-leaving-the-exam-while-it-s-running' %}
             <div data-bind="fadeVisible: navigatemode().name=='sequence' || navigatemode().name=='diagnostic'">
-                {% exam_event 'onleave' 'On leaving a question' help_url='exam/reference.html#term-on-leaving-a-question' %}
+                {% exam_event 'onleave' 'On leaving a question' help_url='exam/reference.html#term-On-leaving-a-question' %}
             </div>
             {% endwith %}
         </form>
@@ -501,9 +501,9 @@
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='timing'}">
         <form class="form-horizontal" data-bind="submit: Editor.noop">
             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' %}
-            {% property 'duration' 'Exam duration (minutes)' min=0 help_url='exam/reference.html#term-exam-duration' %}
-            {% booleanproperty 'allowPause' 'Allow pausing?' help_url='exam/reference.html#term-allow-pausing' %}
-            {% exam_event 'timeout' 'On timeout' help_url='exam/reference.html#term-on-timeout-event' %}
+            {% property 'duration' 'Exam duration (minutes)' min=0 help_url='exam/reference.html#term-Exam-duration' %}
+            {% booleanproperty 'allowPause' 'Allow pausing?' help_url='exam/reference.html#term-Allow-pausing' %}
+            {% exam_event 'timeout' 'On timeout' help_url='exam/reference.html#term-On-timeout-event' %}
             {% exam_event 'timedwarning' '5 minutes before timeout' help_url='exam/reference.html#term-5-minutes-before-timeout-event' %}
             {% endwith %}
         </form>
@@ -517,17 +517,17 @@
     <section class="tab-pane" data-bind="css: {active: ko.unwrap($root.mainTabber.currentTab().id)=='feedback'}">
         <form class="form-horizontal" data-bind="submit: Editor.noop">
             {% with form_label_class='col-sm-3' form_control_class='col-sm-6' form_offset_class='col-sm-offset-3' %}
-            {% booleanproperty 'showactualmark' 'Show current score?' help_url='exam/reference.html#term-show-current-score' %}
-            {% booleanproperty 'showtotalmark' 'Show maximum score?' help_url='exam/reference.html#term-show-maximum-score' %}
-            {% booleanproperty 'showanswerstate' 'Show answer state?' help_url='exam/reference.html#term-show-answer-state' %}
-            {% booleanproperty 'allowrevealanswer' 'Allow reveal answer?' help_url='exam/reference.html#term-allow-reveal-answer' %}
-            {% booleanproperty 'showstudentname' 'Show student\'s name?' help_url='exam/reference.html#term-show-student-s-name' %}
-            {% percentproperty 'percentPass' 'Pass threshold' help_url='exam/reference.html#term-pass-threshold' %}
+            {% booleanproperty 'showactualmark' 'Show current score?' help_url='exam/reference.html#term-Show-current-score' %}
+            {% booleanproperty 'showtotalmark' 'Show maximum score?' help_url='exam/reference.html#term-Show-maximum-score' %}
+            {% booleanproperty 'showanswerstate' 'Show answer state?' help_url='exam/reference.html#term-Show-answer-state' %}
+            {% booleanproperty 'allowrevealanswer' 'Allow reveal answer?' help_url='exam/reference.html#term-Allow-reveal-answer' %}
+            {% booleanproperty 'showstudentname' 'Show student\'s name?' help_url='exam/reference.html#term-Show-student-s-name' %}
+            {% percentproperty 'percentPass' 'Pass threshold' help_url='exam/reference.html#term-Pass-threshold' %}
 
             <div class="form-group">
                 <label class="{{form_label_class}} control-label">
                     Introduction
-                    {% helplink 'exam/reference.html#term-introduction' subject='the exam introduction' %}
+                    {% helplink 'exam/reference.html#term-Introduction' subject='the exam introduction' %}
                 </label>
                 <div class="{{form_control_class}}">
                     <div {% if not editable %}disabled{% endif %} data-bind="writemaths: intro"></div>
@@ -542,14 +542,14 @@
                 The following settings only apply in review mode, once the exam is finished.
             </p>
 
-            {% booleanproperty 'reviewshowscore' 'Show score in review mode?' help_url='exam/reference.html#term-show-score-in-review-mode' %}
-            {% booleanproperty 'reviewshowfeedback' 'Show part feedback messages in review mode?' help_url='exam/reference.html#term-show-part-feedback-messages-in-review-mode' %}
-            {% booleanproperty 'reviewshowexpectedanswer' 'Show expected answers in review mode?' help_url='exam/reference.html#term-show-expected-answers-in-review-mode' %}
-            {% booleanproperty 'reviewshowadvice' 'Show question advice in review mode?' help_url='exam/reference.html#term-show-question-advice-in-review-mode' %}
+            {% booleanproperty 'reviewshowscore' 'Show score in review mode?' help_url='exam/reference.html#term-Show-score-in-review-mode' %}
+            {% booleanproperty 'reviewshowfeedback' 'Show part feedback messages in review mode?' help_url='exam/reference.html#term-Show-part-feedback-messages-in-review-mode' %}
+            {% booleanproperty 'reviewshowexpectedanswer' 'Show expected answers in review mode?' help_url='exam/reference.html#term-Show-expected-answers-in-review-mode' %}
+            {% booleanproperty 'reviewshowadvice' 'Show question advice in review mode?' help_url='exam/reference.html#term-Show-question-advice-in-review-mode' %}
 
             <h4>
                 Feedback messages
-                {% helplink 'exam/reference.html#term-feedback-messages' subject='feedback messages' %}
+                {% helplink 'exam/reference.html#term-Feedback-messages' subject='feedback messages' %}
             </h4>
             <ul class="feedback-messages list-unstyled list-group" data-bind="foreach: feedbackMessages">
                 <li class="feedback-message list-group-item clearfix">

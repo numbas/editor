@@ -3,8 +3,8 @@
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='marking-settings'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div class="main-settings">
-            {% property 'minMarks' 'Minimum marks' help_url='question/parts/multiple-choice.html#term-minimum-marks' %}
-            {% property 'maxMarks' 'Maximum marks' min='minMarks' help_url='question/parts/multiple-choice.html#term-maximum-marks' zero_means='no maximum' %}
+            {% property 'minMarks' 'Minimum marks' help_url='question/parts/multiple-choice.html#term-Minimum-marks' %}
+            {% property 'maxMarks' 'Maximum marks' min='minMarks' help_url='question/parts/multiple-choice.html#term-Maximum-marks' zero_means='no maximum' %}
 
         </div>
 
@@ -14,11 +14,11 @@
         <h4>Advanced settings</h4>
         <hr>
 
-        {% property 'minAnswers' 'Minimum answers' max='maxAnswers' help_url='question/parts/multiple-choice.html#term-minimum-answers' %}
-        {% property 'maxAnswers' 'Maximum answers' min=minAnswers help_url='question/parts/multiple-choice.html#term-maximum-answers' zero_means='no maximum' %}
+        {% property 'minAnswers' 'Minimum answers' max='maxAnswers' help_url='question/parts/multiple-choice.html#term-Minimum-answers' %}
+        {% property 'maxAnswers' 'Maximum answers' min=minAnswers help_url='question/parts/multiple-choice.html#term-Maximum-answers' zero_means='no maximum' %}
         <div class="form-group" data-bind="fadeVisible: minAnswers()!=0 || maxAnswers()!=0">
             <label class="{{form_label_class}} control-label">
-                What to do if wrong number of answers selected: {% helplink 'question/parts/multiple-choice.html#term-what-to-do-if-wrong-number-of-answers-selected' %}
+                What to do if wrong number of answers selected: {% helplink 'question/parts/multiple-choice.html#term-What-to-do-if-wrong-number-of-answers-selected' %}
             </label>
             <div class="{{form_control_class}}">
                 <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: warningTypes, value: warningType, optionsText: 'niceName'"></select>
@@ -27,7 +27,7 @@
 
         <div class="form-group">
             <label class="{{form_label_class}} control-label">
-                Selection type {% helplink 'question/parts/multiple-choice.html#term-selection-type' %}
+                Selection type {% helplink 'question/parts/multiple-choice.html#term-Selection-type' %}
             </label>
             <div class="{{form_control_class}}">
                 <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: displayTypes, value: displayType, optionsText: 'niceName'"></select>
@@ -36,7 +36,7 @@
 
         <div class="form-group">
             <label class="{{form_label_class}} control-label">
-                Layout {% helplink 'question/parts/multiple-choice.html#term-layout' %}
+                Layout {% helplink 'question/parts/multiple-choice.html#term-Layout' %}
             </label>
             <div class="{{form_control_class}}">
                 <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: layoutTypes, value: layoutType, optionsText: 'niceName'"></select>
@@ -49,17 +49,17 @@
 
         <hr>
 
-        {% booleanproperty 'showCellAnswerState' 'Show choice feedback state?' help_url='question/parts/multiple-choice.html#term-show-choice-feedback-state' %}    
+        {% booleanproperty 'showCellAnswerState' 'Show choice feedback state?' help_url='question/parts/multiple-choice.html#term-Show-choice-feedback-state' %}    
     </form>
 </section>
 
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='choices'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
-        {% booleanproperty 'customChoices' 'Variable list of choices?' help_url='question/parts/multiple-choice.html#term-variable-list-of-choices' %}
+        {% booleanproperty 'customChoices' 'Variable list of choices?' help_url='question/parts/multiple-choice.html#term-Variable-list-of-choices' %}
         <div data-bind="fadeVisible: customChoices">
-            {% property 'customChoicesExpression' 'List of choices' monospace=True help_url='question/parts/multiple-choice.html#term-list-of-choices' %}
+            {% property 'customChoicesExpression' 'List of choices' monospace=True help_url='question/parts/multiple-choice.html#term-List-of-choices' %}
         </div>
-        {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='question/parts/multiple-choice.html#term-shuffle-order-of-choices' %}
+        {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='question/parts/multiple-choice.html#term-Shuffle-order-of-choices' %}
     </form>
     <ul class="choices list-unstyled list-group" data-bind="fadeVisible: !customChoices()">
         <!-- ko foreach: {data: choices, afterAdd: Editor.afterAdd} -->
@@ -78,11 +78,11 @@
 
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='answers'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
-        {% booleanproperty 'customAnswers' 'Variable list of answers?' help_url='question/parts/multiple-choice.html#term-variable-list-of-answers' %}
+        {% booleanproperty 'customAnswers' 'Variable list of answers?' help_url='question/parts/multiple-choice.html#term-Variable-list-of-answers' %}
         <div data-bind="fadeVisible: customAnswers">
-            {% property 'customAnswersExpression' 'List of answers' monospace=True help_url='question/parts/multiple-choice.html#term-list-of-answers' %}
+            {% property 'customAnswersExpression' 'List of answers' monospace=True help_url='question/parts/multiple-choice.html#term-List-of-answers' %}
         </div>
-        {% booleanproperty 'shuffleAnswers' 'Shuffle order of answers?' help_url='question/parts/multiple-choice.html#term-shuffle-order-of-answers' %}
+        {% booleanproperty 'shuffleAnswers' 'Shuffle order of answers?' help_url='question/parts/multiple-choice.html#term-Shuffle-order-of-answers' %}
     </form>
     <ul class="answers list-unstyled list-group" data-bind="fadeVisible: !customAnswers()">
         <!-- ko foreach: {data: answers, afterAdd: Editor.afterAdd} -->
@@ -103,7 +103,7 @@
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div class="form-group" data-bind="fadeVisible: displayType().name=='checkbox'">
             <label class="{{form_label_class}} control-label">
-                Marking method {% helplink 'question/parts/multiple-choice.html#term-marking-method' %}
+                Marking method {% helplink 'question/parts/multiple-choice.html#term-Marking-method' %}
             </label>
             <div class="{{form_control_class}}">
                 <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: markingMethods, value: markingMethod, optionsText: 'niceName'"></select>
@@ -114,9 +114,9 @@
             <p>You must set a <a href="#" data-bind="click: $parent.tabber.setTab('marking-settings')">maximum number of marks</a> in order to use this marking method.</p>
         </div>
 
-        {% booleanproperty 'customMarking' 'Custom marking matrix?' help_url='question/parts/multiple-choice.html#term-custom-marking-matrix' disable='customChoices() || customAnswers()' %}
+        {% booleanproperty 'customMarking' 'Custom marking matrix?' help_url='question/parts/multiple-choice.html#term-Custom-marking-matrix' disable='customChoices() || customAnswers()' %}
         <div data-bind="fadeVisible: customMarking">
-            {% property 'customMatrix' 'Custom matrix expression' monospace=True help_url='question/parts/multiple-choice.html#term-custom-matrix-expression' %}
+            {% property 'customMatrix' 'Custom matrix expression' monospace=True help_url='question/parts/multiple-choice.html#term-Custom-matrix-expression' %}
         </div>
     </form>
 

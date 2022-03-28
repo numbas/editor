@@ -3,8 +3,8 @@
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='marking-settings'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div class="main-settings">
-            {% property 'minMarks' 'Minimum marks' help_url='question/parts/multiple-choice.html#term-minimum-marks' %}
-            {% property 'maxMarks' 'Maximum marks' min='minMarks' help_url='question/parts/multiple-choice.html#term-maximum-marks' zero_means='no maximum' %}
+            {% property 'minMarks' 'Minimum marks' help_url='question/parts/multiple-choice.html#term-Minimum-marks' %}
+            {% property 'maxMarks' 'Maximum marks' min='minMarks' help_url='question/parts/multiple-choice.html#term-Maximum-marks' zero_means='no maximum' %}
         </div>
 
         <hr>
@@ -13,31 +13,31 @@
         <h4>Advanced settings</h4>
         <hr>
 
-        {% property 'displayColumns' 'Number of display columns' help_url='question/parts/multiple-choice.html#term-number-of-display-columns' zero_means='not displayed in columns' %}
-        {% property 'minAnswers' 'Minimum answers' max='maxAnswers' help_url='question/parts/multiple-choice.html#term-minimum-answers' min=0 %}
-        {% property 'maxAnswers' 'Maximum answers' min=minAnswers help_url='question/parts/multiple-choice.html#term-maximum-answers' zero_means='no maximum' %}
+        {% property 'displayColumns' 'Number of display columns' help_url='question/parts/multiple-choice.html#term-Number-of-display-columns' zero_means='not displayed in columns' %}
+        {% property 'minAnswers' 'Minimum answers' max='maxAnswers' help_url='question/parts/multiple-choice.html#term-Minimum-answers' min=0 %}
+        {% property 'maxAnswers' 'Maximum answers' min=minAnswers help_url='question/parts/multiple-choice.html#term-Maximum-answers' zero_means='no maximum' %}
         <div class="form-group" data-bind="fadeVisible: minAnswers()!=0 || maxAnswers()!=0">
             <label class="{{form_label_class}} control-label">
-                What to do if wrong number of answers selected: {% helplink 'question/parts/multiple-choice.html#term-what-to-do-if-wrong-number-of-answers-selected' %}
+                What to do if wrong number of answers selected: {% helplink 'question/parts/multiple-choice.html#term-What-to-do-if-wrong-number-of-answers-selected' %}
             </label>
             <div class="{{form_control_class}}">
                 <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: warningTypes, value: warningType, optionsText: 'niceName'"></select>
             </div>
         </div>
-        {% booleanproperty 'customMarking' 'Custom marking matrix?' help_url='question/parts/multiple-choice.html#term-custom-marking-matrix' disable='customChoices' %}
+        {% booleanproperty 'customMarking' 'Custom marking matrix?' help_url='question/parts/multiple-choice.html#term-Custom-marking-matrix' disable='customChoices' %}
         <div data-bind="fadeVisible: customMarking">
-            {% property 'customMatrix' 'Custom matrix expression' monospace=True help_url='question/parts/multiple-choice.html#term-custom-matrix-expression' %}
+            {% property 'customMatrix' 'Custom matrix expression' monospace=True help_url='question/parts/multiple-choice.html#term-Custom-matrix-expression' %}
         </div>
 
         <hr>
-        {% booleanproperty 'showCellAnswerState' 'Show choice feedback state?' help_url='question/parts/multiple-choice.html#term-show-choice-feedback-state' %}    
+        {% booleanproperty 'showCellAnswerState' 'Show choice feedback state?' help_url='question/parts/multiple-choice.html#term-Show-choice-feedback-state' %}    
     </form>
 </section>
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='choices'}">
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div class="form-group">
             <label class="{{form_label_class}} control-label">
-                Marking method {% helplink 'question/parts/multiple-choice.html#term-marking-method' %}
+                Marking method {% helplink 'question/parts/multiple-choice.html#term-Marking-method' %}
             </label>
             <div class="{{form_control_class}}">
                 <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: markingMethods, value: markingMethod, optionsText: 'niceName'"></select>
@@ -54,11 +54,11 @@
             <p>You must set a <a href="#" data-bind="click: $parent.tabber.setTab('marking-settings')">maximum number of marks</a> in order to use this marking method.</p>
         </div>
 
-        {% booleanproperty 'customChoices' 'Variable list of choices?' help_url='question/parts/multiple-choice.html#term-variable-list-of-choices' %}
+        {% booleanproperty 'customChoices' 'Variable list of choices?' help_url='question/parts/multiple-choice.html#term-Variable-list-of-choices' %}
         <div data-bind="fadeVisible: customChoices">
-            {% property 'customChoicesExpression' 'List of choices' monospace=True help_url='question/parts/multiple-choice.html#term-list-of-choices' %}
+            {% property 'customChoicesExpression' 'List of choices' monospace=True help_url='question/parts/multiple-choice.html#term-List-of-choices' %}
         </div>
-        {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='question/parts/multiple-choice.html#term-shuffle-order-of-choices' %}
+        {% booleanproperty 'shuffleChoices' 'Shuffle order of choices?' help_url='question/parts/multiple-choice.html#term-Shuffle-order-of-choices' %}
     </form>
 
     <ul class="choices list-unstyled list-group" data-bind="fadeVisible: !customChoices()">

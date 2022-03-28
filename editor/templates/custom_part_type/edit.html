@@ -156,7 +156,7 @@
                         <div id="description-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
                         {% if editable %}
                         <p class="help-block">
-                            {% helplink 'custom-part-types/reference.html#term-description' subject='the description field' %}
+                            {% helplink 'custom-part-types/reference.html#term-Description' subject='the description field' %}
                             Describe how this part type works, and what kinds of questions it is appropriate for.
                         </p>
                         {% endif %}
@@ -167,7 +167,7 @@
                             <label>URL of documentation</label>
                             <input class="form-control" data-bind="textInput: help_url">
                             <p class="help-block">
-                                {% helplink 'custom-part-types/reference.html#term-url-of-documentation' subject='the URL of documentation field' %}
+                                {% helplink 'custom-part-types/reference.html#term-URL-of-documentation' subject='the URL of documentation field' %}
                                 Provide a link to any more documentation about your custom part type.
                             </p>
                         {% else %}
@@ -393,7 +393,7 @@
                         <div class="form-group">
                             <label class="{{form_label_class}} control-label">
                                 Expected answer
-                                {% helplink 'custom-part-types/reference.html#term-expected-answer' subject='the expected answer field' %}
+                                {% helplink 'custom-part-types/reference.html#term-Expected-answer' subject='the expected answer field' %}
                             </label>
                             <div class="{{form_control_class}}">
                                 <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: input_options.correctAnswer, codemirrorMode: 'jme'"></textarea>
@@ -409,7 +409,7 @@
                         <div class="form-group">
                             <label class="{{form_label_class}} control-label">
                                 Input hint
-                                {% helplink 'custom-part-types/reference.html#term-input-hint' subject='the input hint field' %}
+                                {% helplink 'custom-part-types/reference.html#term-Input-hint' subject='the input hint field' %}
                             </label>
                             <div class="{{form_control_class}}">
                                 <static-dynamic-setting params="option: input_options.hint, type_hint: 'string'{% if not editable %}, disable: true{% endif %}">

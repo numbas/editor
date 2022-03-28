@@ -322,7 +322,7 @@
                                 <label class="label-block">
                                     <span class="label-text">
                                         Can an exam override the value of this variable?
-                                        {% helplink 'question/reference.html#term-can-an-exam-override-the-value-of-this-variable' %}
+                                        {% helplink 'question/reference.html#term-Can-an-exam-override-the-value-of-this-variable' %}
                                     </span>
                                     <input type="checkbox" data-bind="checked: can_override">
                                 </label>
@@ -463,7 +463,7 @@
             <div class="form-group">
                 <label class="col-sm-3 control-label">
                     Condition to satisfy
-                    {% helplink 'question/reference.html#term-condition-to-satisfy' %}
+                    {% helplink 'question/reference.html#term-Condition-to-satisfy' %}
                 </label>
                 <div class="col-sm-9">
                     <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: variablesTest.condition, codemirrorMode: 'jme', variableReferrer: {value: variablesTest.condition, description: 'Variable testing condition', kind: 'jme'}"></textarea>
@@ -471,7 +471,7 @@
                 </div>
             </div>
             {% with form_label_class="col-sm-3" form_control_class="col-sm-9" %}
-            {% property 'variablesTest.maxRuns' 'Maximum number of runs' min=1 help_url='question/reference.html#term-maximum-number-of-runs' %}
+            {% property 'variablesTest.maxRuns' 'Maximum number of runs' min=1 help_url='question/reference.html#term-Maximum-number-of-runs' %}
             {% endwith %}
             <div class="form-group form-inline">
                 <div class="col-sm-offset-3">
@@ -731,13 +731,13 @@
                                 <div class="row">
                                     <div class="form-group col-sm-8">
                                         <label>
-                                            Name {% helplink 'question/reference.html#term-name' %}
+                                            Name {% helplink 'question/reference.html#term-Name' %}
                                         </label>
                                         <input {% if not editable %}disabled{% endif %} class="form-control" placeholder="Name" type="text" data-bind="textInput: name">
                                     </div>
                                     <div class="form-group col-sm-3">
                                         <label>
-                                            Language {% helplink 'question/reference.html#term-language' subject='languages' %}
+                                            Language {% helplink 'question/reference.html#term-Language' subject='languages' %}
                                         </label>
                                         <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: languages, value: language"></select>
                                     </div>

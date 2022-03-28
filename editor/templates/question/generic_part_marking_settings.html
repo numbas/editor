@@ -4,20 +4,20 @@
 <!-- ko with: $parent -->
 <!-- ko if: !isAlternative() -->
 <div data-bind="visible: steps().length">
-    {% property 'stepsPenalty' 'Penalty for revealing steps' min=0 help_url='question/parts/reference.html#term-penalty-for-revealing-steps' %}
+    {% property 'stepsPenalty' 'Penalty for revealing steps' min=0 help_url='question/parts/reference.html#term-Penalty-for-revealing-steps' %}
 </div>
 <div data-bind="visible: type().has_correct_answer">
-    {% booleanproperty 'showCorrectAnswer' 'Show correct answer on reveal?' help_url='question/parts/reference.html#term-show-correct-answer-on-reveal' %}
+    {% booleanproperty 'showCorrectAnswer' 'Show correct answer on reveal?' help_url='question/parts/reference.html#term-Show-correct-answer-on-reveal' %}
 </div>
 <div data-bind="visible: type().has_feedback_icon">
-    {% booleanproperty 'showFeedbackIcon' 'Show score feedback icon?' help_url='question/parts/reference.html#term-show-score-feedback-icon' %}    
+    {% booleanproperty 'showFeedbackIcon' 'Show score feedback icon?' help_url='question/parts/reference.html#term-Show-score-feedback-icon' %}    
 </div>
 <div data-bind="visible: type().has_marks && q.partsMode().value=='explore'">
     <div class="form-group">
         <label class="label-block">
             <div class="{{form_label_class}} control-label">
                 Score counts towards objective
-                {% helplink 'question/parts/reference.html#term-score-counts-towards-objective' %}
+                {% helplink 'question/parts/reference.html#term-Score-counts-towards-objective' %}
             </div>
             <div class="{{form_control_class}}">
                 {% select_input 'exploreObjective' options='q.objectives' options_text='name' allow_blank=True %}

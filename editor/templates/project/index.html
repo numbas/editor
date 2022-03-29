@@ -1,4 +1,5 @@
 {% extends "project/project_base.html" %}
+{% load links %}
 {% load user_link %}
 {% load sstatic %}
 {% load sanitizer %}
@@ -20,6 +21,62 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-8">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h2 class="panel-title"><span class="glyphicon glyphicon-briefcase"></span> Content</h2>
+                </div>
+                <div id="contents" class="panel-body">
+                    {% if subfolders or items %}
+                    <table class="table contents">
+                        <tbody>
+                            {% for folder in subfolders %}
+                            <tr class="folder" data-folder="{{folder.pk}}">
+                                <td class="name">
+                                    <a href="{{folder.get_absolute_url}}">
+                                        <span class="glyphicon glyphicon-folder-close"></span> 
+                                        {{folder.name}}
+                                    </a>
+                                </td>
+                                <td></td>
+                            </tr>
+                            {% endfor %}
+
+                            <tr>
+                                <td colspan="2">
+                                    {{num_items}} {{num_items|pluralize:"item,items"}}
+                                </td>
+                            </tr>
+
+                            {% for item in items %}
+                            <tr class="item drag-handle" draggable="true" data-item="{{item.pk}}">
+                                <td class="name">
+                                    {% editoritem_link item.rel_obj show_icon=True %}
+                                </td>
+                                <td>
+                                    {{item.last_modified}}
+                                </td>
+                            </tr>
+
+                            {% endfor %}
+
+                            {% if num_items > 3 %}
+                            <tr>
+                                <td colspan="2"><a href="{% url 'project_browse' project.pk %}">…</a></td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="nothing-here">
+                        <p>There's nothing in this project yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="panel-footer">
+                    <a href="{% url 'project_browse' project.pk %}" class="btn btn-block btn-link"><span class="glyphicon glyphicon-folder-close"></span> Browse this project's content</a>
+                </div>
+            </div>
+
             <div class="well well-lg description">
                 {% if project.description %}
                 {{project.description|escape_html|safe}}
@@ -29,19 +86,6 @@
                     {% if project_editable %}<p>Go to the <a href="{% url 'project_settings_options' project.pk %}">project settings page</a> to write one.</p>{% endif %}
                 </div>
                 {% endif %}
-            </div>
-
-            <div id="queues-summary">
-                <h2><span class="glyphicon glyphicon-list"></span> Queues</h2>
-
-                <ul class="list-inline">
-                    {% for queue in project.queues.all %}
-                    <li class="queue"><a href="{% url 'queue_view' queue.pk %}">{{queue.name}}</a> ({% with num_entries=queue.entries.incomplete.count %}{{num_entries}} entr{{num_entries|pluralize:"y,ies"}}{% endwith %})</li>
-                    {% endfor %}
-                    {% if project_editable %}
-                        <li><a href="{% url 'queue_new' %}?project={{project.pk}}" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span> Create a new queue</a></li>
-                    {% endif %}
-                </ul>
             </div>
 
             <div id="project-timeline">
@@ -81,12 +125,28 @@
                 </div>
             </div>
 
+            <div class="panel panel-info" id="queues-summary">
+                <div class="panel-heading">
+                    <h2 class="panel-title"><span class="glyphicon glyphicon-list"></span> Queues</h2>
+                </div>
+
+                <ul class="list-group">
+                    {% for queue in project.queues.all %}
+                    <li class="queue list-group-item"><a href="{% url 'queue_view' queue.pk %}">{{queue.name}}</a> ({% with num_entries=queue.entries.incomplete.count %}{{num_entries}} entr{{num_entries|pluralize:"y,ies"}}{% endwith %})</li>
+                    {% endfor %}
+                </ul>
+
+                <div class="panel-footer">
+                    {% if project_editable %}
+                        <a href="{% url 'queue_new' %}?project={{project.pk}}" class="btn btn-default btn-block"><span class="glyphicon glyphicon-plus"></span> Create a new queue</a>
+                    {% endif %}
+                </div>
+            </div>
+
+
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    <h2 class="panel-title"><a href="{% url 'project_search' project.pk %}"><span class="glyphicon glyphicon-search"></span> Content</a></h2>
-                </div>
-                <div class="panel-body browse">
-                    <a href="{% url 'project_browse' project.pk %}" class="btn btn-lg btn-block btn-link"><span class="glyphicon glyphicon-folder-close"></span> Browse this project's content</a>
+                    <h2 class="panel-title">Item status</a>
                 </div>
                 <table class="table table-condensed status-breakdown">
                     <tbody>

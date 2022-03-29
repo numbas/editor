@@ -239,7 +239,7 @@ class Project(models.Model, ControlledObject):
         return [self.owner]+self.non_owner_members()
 
     def non_owner_members(self):
-        return list(User.objects.filter(individual_accesses__in=self.access.all()).exclude(pk=self.owner.pk))
+        return list(User.objects.filter(individual_accesses__in=self.access.all()).exclude(pk=self.owner.pk).order_by('last_name','first_name'))
 
     def all_timeline(self):
         items = self.timeline.all() | TimelineItem.objects.filter(

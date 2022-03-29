@@ -24,9 +24,9 @@
 <section id="item">
     <p class="lead text-center">
     {% if can_edit %}
-    Please review <em>{% editoritem_link entry.item.rel_obj show_icon=True %}</em>
+    Please review <em>{% editoritem_link entry.item.rel_obj show_icon=True new_tab=True %}</em>
     {% else %}
-    <em>{% editoritem_link entry.item.rel_obj show_icon=True %}</em> has been submitted for review
+    <em>{% editoritem_link entry.item.rel_obj show_icon=True new_tab=True %}</em> has been submitted for review
     {% endif %}
     </p>
 </section>

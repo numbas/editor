@@ -12,8 +12,8 @@ def exam_link(e):
     return {'e': e}
 
 @register.inclusion_tag('links/editoritem.html')
-def editoritem_link(item,show_icon=False):
-    return {'item': item, 'show_icon': show_icon}
+def editoritem_link(item,show_icon=False,new_tab=False):
+    return {'item': item, 'show_icon': show_icon, 'new_tab': new_tab}
 
 @register.simple_tag
 def editoritem_url(link, item):

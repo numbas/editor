@@ -166,10 +166,10 @@ $(document).ready(function() {
         ]);
         this.currentQuestionTab = ko.observable(this.questionTabs()[0]);
 
-        this.recentQuestions = Editor.mappedObservableArray(function(d){ return new Question(d,e);});
+        this.recentQuestions = Editor.mappedObservableArray(function(d){ return new QuestionSummary(d,e);});
         this.recentQuestions(data.recentQuestions);
 
-        this.basketQuestions = Editor.mappedObservableArray(function(d){ return new Question(d,e);});
+        this.basketQuestions = Editor.mappedObservableArray(function(d){ return new QuestionSummary(d,e);});
         this.basketQuestions(data.basketQuestions);
 
         function getQuestions() {
@@ -184,8 +184,8 @@ $(document).ready(function() {
                         e.basketQuestions(d.basket);
 
                         var exam_question_by_pk = {};
-                        d.exam_questions.forEach(function(d) {
-                            exam_question_by_pk[d.id] = d;
+                        d.exam_questions.forEach(function(qd) {
+                            exam_question_by_pk[qd.id] = qd;
                         });
                         e.questions().forEach(function(q) {
                             q.load(exam_question_by_pk[q.id()]);
@@ -870,6 +870,40 @@ $(document).ready(function() {
             };
         },
 
+        clone: function() {
+            return new Question(this.data,this.exam);
+        },
+
+        add: function() {
+            var newQ = this.clone();
+            viewModel.addQuestion(newQ);
+        }
+    }
+
+
+    function QuestionSummary(data,exam) {
+        var q = this;
+        this.data = data;
+        this.exam = exam;
+        this.load(data);
+    }
+    QuestionSummary.prototype = {
+        load: function(data) {
+            this.id = data.id;
+            this.name = data.name;
+            this.created = data.created;
+            this.author = data.author;
+            this.url = data.url;
+            this.deleteURL = data.deleteURL;
+            this.last_modified = data.last_modified;
+            this.metadata = data.metadata;
+            this.current_stamp = data.current_stamp;
+            this.current_stamp_display = data.current_stamp_display;
+            this.previewURL = this.url+'preview/';
+            var descriptionDiv = document.createElement('div');
+            descriptionDiv.innerHTML = this.metadata.description || '';
+            this.description = $(descriptionDiv).text();
+        },
         clone: function() {
             return new Question(this.data,this.exam);
         },

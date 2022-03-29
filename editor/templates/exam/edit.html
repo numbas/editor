@@ -600,9 +600,9 @@
 
     <script type="text/html" id="questionResult">
         <li class="question question-result">
-            <span class="handle btn btn-link" data-bind="click: add, visible: item_json.editable"><span data-bind="css: {'text-success': usedInExam()}" class="glyphicon glyphicon-plus"></span></span>
+            <span class="handle btn btn-link" data-bind="click: add, visible: item_json.editable"><span class="glyphicon glyphicon-plus"></span></span>
             <div class="controls">
-                <a class="preview btn btn-link" data-bind="attr: {href: previewURL()}" target="_blank" title="Preview this question"><span class="glyphicon glyphicon-play text-success"></span></a>
+                <a class="preview btn btn-link" data-bind="attr: {href: previewURL}" target="_blank" title="Preview this question"><span class="glyphicon glyphicon-play text-success"></span></a>
             </div>
             <div class="details">
                 <div class="title">
@@ -613,7 +613,7 @@
                     (<span data-bind="text: author"></span>)
                 </div>
             </div>
-            <div class="description" data-bind="visible: description().length>0, latex: description"></div>
+            <div class="description" data-bind="visible: description.length>0, latex: description"></div>
         </li>
     </script>
     {% endverbatim %}

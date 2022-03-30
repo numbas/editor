@@ -28,6 +28,7 @@ class RestrictAccessMixin(object):
     
     def dispatch(self, request, *args, **kwargs):
         if not self.can_access(request):
+            self.object = self.get_object()
             return self.get_no_access_response()
         return super().dispatch(request, *args, **kwargs)
 

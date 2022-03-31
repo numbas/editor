@@ -1081,7 +1081,7 @@ Number operations
         * :data:`decimal` → :data:`html`
 
     **Example**:
-        * ``scientificnumberhtml(123)`` → ``html("<span>1.23 × 10<sup>2</sup></span>")``
+        * ``scientificnumberhtml(123)`` → ``html(safe("<span>1.23 × 10<sup>2</sup></span>"))``
 
 .. jme:function:: cleannumber(str, styles)
     :keywords: strip, trim, validate, number

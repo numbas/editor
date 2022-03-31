@@ -3606,7 +3606,7 @@ $(document).ready(function() {
                 });
                 this.variables(vs);
             }
-        },this);
+        },this).extend({throttle:500});
 
         this.remove = function() {
             // Remove this test from the parent part

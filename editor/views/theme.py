@@ -96,7 +96,7 @@ class EditView(ThemeViewMixin,editable_package.EditView):
         if self.request.GET.get('load_from_default'):
             filename = initial['filename']
 
-            path = str(DEFAULT_THEME_ROOT / filename)
+            path = Path(DEFAULT_THEME_ROOT / filename)
             initial['source'] = self.load_source(path)
 
         return initial

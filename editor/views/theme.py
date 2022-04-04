@@ -29,6 +29,7 @@ class ThemeViewMixin:
             '.js': 'files/scripts',
             '.html': 'templates',
             '.xslt': 'templates',
+            '': '',
         }
         dirname = extension_dirs.get(Path(filename).suffix,'files/resources')
         if not filename.startswith(dirname):

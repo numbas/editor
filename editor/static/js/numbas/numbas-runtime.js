@@ -5907,6 +5907,7 @@ newBuiltin('=', ['?','?'], TBool, null, {
     }
 });
 newBuiltin('isclose', [TNum,TNum,sig.optional(sig.type('number')),sig.optional(sig.type('number'))], TBool, math.isclose);
+newBuiltin('is_scalar_multiple', [TVector,TVector,sig.optional(sig.type('number')),sig.optional(sig.type('number'))], TBool, math.is_scalar_multiple);
 newBuiltin('and', [TBool,TBool], TBool, function(a,b){return a&&b;} );
 newBuiltin('not', [TBool], TBool, function(a){return !a;} );
 newBuiltin('or', [TBool,TBool], TBool, function(a,b){return a||b;} );
@@ -18369,6 +18370,57 @@ var math = Numbas.math = /** @lends Numbas.math */ {
         rel_tol = rel_tol===undefined ? 1e-15 : rel_tol;
         abs_tol = abs_tol===undefined ? 1e-15: abs_tol;
         return Math.abs(a-b) <= Math.max( rel_tol * Math.max(Math.abs(a), Math.abs(b)), abs_tol );
+    },
+
+    /** Is `u` a scalar multiple `v`?
+     *
+     * @param {Array} u
+     * @param {Array} v
+     * @param {number} [rel_tol=1e-15] - Relative tolerance: amount of error relative to `max(abs(a),abs(b))`.
+     * @param {number} [abs_tol=1e-15] - Absolute tolerance: maximum absolute difference between `a` and `b`.
+     * @returns {boolean}
+     */
+
+    is_scalar_multiple: function(u, v, rel_tol,abs_tol) {
+        // check edge case
+        if(!Array.isArray(u) || !u.length || !Array.isArray(v) || !v.length) {
+            return false;
+        } 
+        // vector length must be the same
+        if (u.length != v.length) {
+            return false;
+        }
+        var n = u.length;
+        var i = 0;
+        var first_ratio;
+        // corner case: denominator cannot be zero to avoid zero-division exception
+        while (i < n) {
+            if (v[i] == 0 && u[i] == 0) {
+                i++;
+            }
+            else if (v[i] == 0 || u[i] == 0) {
+                return false;
+            }
+            else {
+                first_ratio = u[i] / v[i];
+                break;
+            }
+        }
+        for (; i < n; i++) {
+            if (v[i] == 0 && u[i] == 0) {
+                continue;
+            }
+            else if (v[i] == 0 || u[i] == 0) {
+                return false;
+            }
+            else {
+                var curr = u[i] / v[i];
+                if (!math.isclose(curr, first_ratio, rel_tol, abs_tol)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     },
 
     /** Greatest of two numbers - wraps `Math.max`.

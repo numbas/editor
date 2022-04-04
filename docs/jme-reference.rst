@@ -1821,6 +1821,22 @@ Vector and matrix arithmetic
     **Example**:
         * ``is_zero(vector(0,0,0))`` → ``true``
 
+.. jme:function:: is_scalar_multiple(u,v,[rel_tol],[abs_tol])
+    :keywords: test, scalar, multiple, vector
+
+    Returns ``true`` if ``u`` is a scalar multiple of ``v``. 
+    That is, if ``u = k*v`` for some real number ``k``.
+
+    The optional arguments ``rel_tol`` and ``abs_tol`` specify the relative and absolute tolerance of the equality check for each component; see :jme:func:`isclose`.
+
+    **Definitions**:
+        * :data:`vector`, :data:`vector`, :data:`number`, :data:`number` → :data:`boolean`
+
+    **Example**:
+        * ``is_scalar_multiple(vector(1,2,3), vector(2,4,6))`` → ``true``
+        * ``is_scalar_multiple(vector(1,2,3), vector(3,4,5))`` → ``false``
+        * ``is_scalar_multiple(vector(1.01,2.01,3.01), vector(2,4,6), 0.1, 0.1)`` → ``true``
+
 .. jme:function:: det(x)
     :keywords: determinant, matrix, modulus
 

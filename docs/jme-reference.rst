@@ -314,7 +314,7 @@ Some extensions add new data types.
 
     Numbers of this type are represented using the `Decimal.js <https://github.com/MikeMcl/decimal.js/>`_ library.
     They're guaranteed to be accurate to 40 significant figures.
-    The order of magnitude is stored separately from the significant digits, so there's no less of precision for very big or very small numbers.
+    The order of magnitude is stored separately from the significant digits, so there's no loss of precision for very big or very small numbers.
 
     **Examples**: ``dec(0)``, ``dec("1.23e-5")``, ``6.0221409*10^23``
 

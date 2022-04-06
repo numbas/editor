@@ -456,7 +456,7 @@
                                     <pre data-bind="text: diagnostic.baseScript"></pre>
                                 </div>
 
-                                <h5>Custom marking algorithm</h5>
+                                <h5>Custom diagnostic algorithm</h5>
                                 <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: diagnostic.customScript, codemirrorMode: 'jme'"></textarea>
                                 <p class="alert alert-danger" data-bind="html: diagnostic.scriptError, visible: diagnostic.scriptError" aria-live="polite"></p>
                             </div>

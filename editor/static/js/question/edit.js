@@ -2654,11 +2654,6 @@ $(document).ready(function() {
         this.q = q;
         this.name = ko.observable('');
         this.limit = ko.observable(0);
-        this.modes = [
-            {name: 'Sum', value: 'sum'},
-            {name: 'Scale', value: 'scale'}
-        ];
-        this.mode = ko.observable(this.modes[0]); // sum or scale
 
         if(data) {
             this.load(data);
@@ -2668,19 +2663,12 @@ $(document).ready(function() {
         toJSON: function() {
             return {
                 name: this.name(),
-                limit: this.limit(),
-                mode: this.mode().value
+                limit: this.limit()
             };
         },
 
         load: function(data) {
             tryLoad(data,['name','limit'],this);
-            for(var i=0;i<this.modes.length;i++) {
-                if(this.modes[i].value==data.mode) {
-                    this.mode(this.modes[i]);
-                    break;
-                }
-            }
         }
     };
 

@@ -976,7 +976,7 @@ part_types.models = [
                     {name: 'lowertriangle', niceName: 'Lower triangle'},
                     {name: 'strictlowertriangle', niceName: 'Lower triangle (no diagonal)'},
                     {name: 'uppertriangle', niceName: 'Upper triangle'},
-                    {name: 'strict uppertriangle', niceName: 'Upper triangle (no diagonal)'},
+                    {name: 'strictuppertriangle', niceName: 'Upper triangle (no diagonal)'},
                     {name: 'expression', niceName: 'Custom expression'}
                 ],
                 layoutExpression: ko.observable('')

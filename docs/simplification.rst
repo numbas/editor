@@ -337,7 +337,7 @@ The following simplification rules are available:
     collectLikeFractions
         Collect together fractions over the same denominator.
 
-        * ``x/3 + 4/x`` → ``(x+4)/3``
+        * ``x/3 + 4/3`` → ``(x+4)/3``
 
     canonicalOrder
         Rearrange the expression into a "canonical" order, using :jme:func:`canonical_compare`.

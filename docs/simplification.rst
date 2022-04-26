@@ -172,6 +172,8 @@ Altogether, this produces the following rendering: :math:`\frac{1}{2} x + x^2 - 
 
 The following simplification rules are available:
 
+.. _simplification-rule-glossary:
+
 .. glossary::
 
     basic
@@ -268,6 +270,8 @@ The following simplification rules are available:
         * ``(n*x)/m`` → ``(eval(n/gcd(n,m))*x)/eval(m/gcd(n,m))`` (cancel algebraic fractions)
         * ``n/(m*x)`` → ``eval(n/gcd(n,m))/(eval(m/gcd(n,m))*x)``
         * ``(n*x)/(m*y)`` → ``(eval(n/gcd(n,m))*x)/(eval(m/gcd(n,m))*y)``
+        * ``(a/(b/c))`` → ``(a*c)/b``
+
 
     zeroBase
         Cancel any power of zero

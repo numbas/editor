@@ -2983,7 +2983,7 @@ $(document).ready(function() {
 
         this.addUnitTest = function(test) {
             test.editing(false);
-            test.variables = null;
+            test.last_variables = null;
             p.unit_tests.push(test);
             p.marking_test(new MarkingTest(p,p.q.questionScope()));
         }

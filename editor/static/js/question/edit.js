@@ -2983,6 +2983,7 @@ $(document).ready(function() {
 
         this.addUnitTest = function(test) {
             test.editing(false);
+            test.variables = null;
             p.unit_tests.push(test);
             p.marking_test(new MarkingTest(p,p.q.questionScope()));
         }
@@ -3322,6 +3323,7 @@ $(document).ready(function() {
                             value: value
                         }
                     }));
+                    test.variablesReady(true);
                     test.name(dt.name);
                     test.answer(dt.answer);
                     test.notes().forEach(function(n) {

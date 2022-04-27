@@ -95,24 +95,28 @@
         </h1>
         {% endblock page_header %}
     </div>
-    <div class="row">
-        <div class="col-sm-1 col-md-2 tabs">
-            <ul class="controls nav nav-pills nav-stacked">
+    <nav class="navbar navbar-blank">
+        <ul class="nav navbar-nav nav-tabs">
+            <li>
+            <div class="navbar-form navbar-left">
+            <div class="btn-group">
+                <a class="btn btn-success" data-bind="attr: {href: item_json.previewURL+'?refresh', target: item_json.previewWindow}" title="Run this {{item_type}} in a new window (Ctrl+B)">
+                    <span class="glyphicon glyphicon-play"></span>
+                    &nbsp;
+                    Test Run
+                </a>
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span class="caret"></span>
+                    <span class="sr-only">Toggle Dropdown</span>
+                </button>
+                <ul class="dropdown-menu">
                 {% block admin_controls %}
-                <li id="preview">
-                    <a class="text-success" data-bind="attr: {href: item_json.previewURL+'?refresh', target: item_json.previewWindow}" title="Run this {{item_type}} in a new window (Ctrl+B)">
-                        <span class="glyphicon glyphicon-play"></span>
-                        &nbsp;
-                        <span class="hidden-sm">Test Run</span>
-                    </a>
-                </li>
-
                 {% with can_copy=object.editoritem|can_be_copied_by:request.user %}
                 <li class="{% if not can_copy %}disabled{% endif %}">
                 <a class="text-warning" {% if can_copy %}href="{% editoritem_url 'copy' object %}" target="_blank"{% endif %} title="{% if can_copy %}Create your own copy of this {{item_type}}{% else %}This item's licence doesn't allow you to modify it.{% endif %}">
                     <span class="glyphicon glyphicon-duplicate"></span>
                     &nbsp;
-                    <span class="hidden-sm">Make a copy</span>
+                    Make a copy
                 </a>
                 </li>
                 {% endwith %}
@@ -122,70 +126,59 @@
                     <a href="{% editoritem_url 'delete' object %}" class="text-danger" title="Delete this {{item_type}} permanently">
                         <span class="glyphicon glyphicon-remove"></span> 
                         &nbsp;
-                        <span class="hidden-sm">Delete</span>
+                        Delete
                     </a>
                 </li>
                 {% endif %}
 
-                <li id="download" class="dropdown">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
-                        <span class="glyphicon glyphicon-cloud-download"></span>
-                        &nbsp;
-                        <span class="hidden-sm">Download</span>
-                        <span class="caret"></span>
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li class="disabled">
-                            <a data-bind="visible: ready_to_download"><span class="text-success"><span class="glyphicon glyphicon-ok"></span> This {{item_type}} is ready to download.</span></a>
-                            <a data-bind="visible: !ready_to_download()"><span class="text-danger"><span class="glyphicon glyphicon-exclamation-sign"></span> This {{item_type}} might need some attention: <span data-bind="text: ready_to_download_reason"></span></span></a>
-                        </li>
-                        <li role="separator" class="divider"></li>
-                        <li><a href="{% editoritem_url 'download' object %}?scorm">SCORM package</a></li>
-                        <li><a href="{% editoritem_url 'download' object %}">standalone .zip (no SCORM)</a></li>
-                        <li><a href="{% editoritem_url 'source' object %}">source</a></li>
-                    </ul>
+                <li role="separator" class="divider"></li>
+                <li class="dropdown-header">
+                    <span class="glyphicon glyphicon-cloud-download"></span>
+                    &nbsp;
+                    Download
                 </li>
 
+                <li class="disabled">
+                    <a data-bind="visible: ready_to_download"><span class="text-success"><span class="glyphicon glyphicon-ok"></span> This {{item_type}} is ready to download.</span></a>
+                    <a data-bind="visible: !ready_to_download()"><span class="text-danger"><span class="glyphicon glyphicon-exclamation-sign"></span> This {{item_type}} might need some attention: <span data-bind="text: ready_to_download_reason"></span></span></a>
+                </li>
+                <li class="indent"><a href="{% editoritem_url 'download' object %}?scorm">SCORM package</a></li>
+                <li class="indent"><a href="{% editoritem_url 'download' object %}">standalone .zip (no SCORM)</a></li>
+                <li class="indent"><a href="{% editoritem_url 'source' object %}">source</a></li>
+                <li role="separator" class="divider"></li>
+
+                <li class="dropdown-header">
+                    Organisation
+                </li>
                 <li>
                     <a href="#" class="add-to-queue" title="Add this to a queue" data-item-id="{{object.editoritem.pk}}">
                         <span class="glyphicon glyphicon-list" aria-hidden="true"></span> 
-                        <span class="hidden-sm">Add to a queue</span>
+                        Add to a queue
                     </a>
                 </li>
 
                 {% endblock admin_controls %}
-            </ul>
-
-            <hr>
-
-            <div class="navbar navbar-blank">
-                <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#editor-controls-collapse" aria-expanded="false">
-                        <span class="sr-only">toggle editor controls</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                </div>
-                <div class="collapse navbar-collapse" id="editor-controls-collapse">
-                    <ul class="nav nav-pills nav-stacked" data-bind="foreach: mainTabber.tabs">
-                        <li data-bind="visible: visible, css: {active: $root.mainTabber.currentTab() == $data, 'in-use': $data.in_use, 'warning': $data.warning}">
-                            <a href="#" data-bind="click: $root.mainTabber.currentTab">
-                                <span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> 
-                                <span class="hidden-sm" data-bind="text: title"></span>
-                                <span class="sr-only" data-bind="visible: in_use">(in use)</span>
-                                <!-- ko if: warning -->
-                                <span class="sr-only">has errors</span>
-                                <span class="badge">!</span>
-                                <!-- /ko -->
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+                </ul>
             </div>
-        </div>
-
-        <div class="col-sm-11 col-md-10 editing">
+            </div>
+            </li>
+            <!-- ko foreach: mainTabber.tabs -->
+            <li data-bind="visible: visible, css: {active: $root.mainTabber.currentTab() == $data, 'in-use': $data.in_use, 'warning': $data.warning}">
+                <a href="#" data-bind="click: $root.mainTabber.currentTab">
+                    <span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> 
+                    <span class="hidden-xs hidden-sm" data-bind="text: title"></span>
+                    <span class="sr-only" data-bind="visible: in_use">(in use)</span>
+                    <!-- ko if: warning -->
+                    <span class="sr-only">has errors</span>
+                    <span class="badge">!</span>
+                    <!-- /ko -->
+                </a>
+            </li>
+            <!-- /ko -->
+        </ul>
+    </nav>
+    <div class="row">
+        <div class="col-sm-12 editing">
             <div class="tab-content">
             {% block main_tab_content %}
                 <!-- Settings tab -->

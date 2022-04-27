@@ -16,22 +16,27 @@
 <h3>
     <input type="text" class="custom-name" data-bind="textInput: customName, autosize: name, attr: {placeholder: standardName}">
     <span data-bind="text: type().niceName"></span>
+    {% if editable %}
+    <div class="pull-right">
+        <button type="button" class="btn btn-sm btn-default" data-bind="click: copy"><span class="glyphicon glyphicon-duplicate"></span> Copy this <span data-bind="text: levelName"></span></button>
+        <button type="button" class="btn btn-sm btn-default" data-bind="click: replaceWithGapfill, visible: canBeReplacedWithGap"><span class="glyphicon glyphicon-tasks"></span> Replace this part with a gapfill</button>
+        <button type="button" class="btn btn-sm btn-danger" data-bind="click: remove">
+            <span class="glyphicon glyphicon-remove"></span> Delete this <span data-bind="text: levelName"></span>
+        </button>
+    </div>
+    {% endif %}
 </h3>
-{% if editable %}
-<div class="part-controls">
-    <button type="button" class="btn btn-sm btn-default" data-bind="click: copy"><span class="glyphicon glyphicon-duplicate"></span> Copy this <span data-bind="text: levelName"></span></button>
-    <button type="button" class="btn btn-sm btn-default" data-bind="click: replaceWithGapfill, visible: canBeReplacedWithGap"><span class="glyphicon glyphicon-tasks"></span> Replace this part with a gapfill</button>
-    <button type="button" class="btn btn-sm btn-danger" data-bind="click: remove">
-        <span class="glyphicon glyphicon-remove"></span> Delete this <span data-bind="text: levelName"></span>
-    </button>
-</div>
-{% endif %}
-<ul class="col-sm-1 col-md-3 col-lg-2 nav nav-pills nav-stacked part-tabs" data-bind="foreach: tabber.tabs">
-    <li data-bind="css: {active: ko.unwrap($parent.tabber.currentTab().id) == $data.id, 'more-important': $data.more_important, 'in-use': $data.in_use}">
-        <a href="#" data-bind="click: $parent.tabber.currentTab"><span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span> <span class="hidden-sm" data-bind="text: title"></span></a>
-    </li>
-</ul>
-<div class="col-sm-11 col-md-9 col-lg-10 tab-content">
+    <ul class="nav nav-tabs part-tabs">
+        <!-- ko foreach: tabber.tabs -->
+        <li data-bind="css: {active: ko.unwrap($parent.tabber.currentTab().id) == $data.id, 'more-important': $data.more_important, 'in-use': $data.in_use}">
+            <a href="#" data-bind="click: $parent.tabber.currentTab">
+                <span data-bind="attr: {'class': 'glyphicon glyphicon-'+icon, title: title}"></span>
+                <span class="hidden-sm hidden-xs" data-bind="text: title"></span>
+            </a>
+        </li>
+        <!-- /ko -->
+    </ul>
+<div class="tab-content">
     <section class="tab-pane" data-bind="activeIf: ko.unwrap(tabber.currentTab().id)=='prompt'">
         <p class="help-block">
             {% helplink 'question/parts/reference.html#term-Prompt' subject='the part prompt' %}

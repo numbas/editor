@@ -75,6 +75,10 @@ a {
   overflow-y: auto;
 }
 
+.dropdown-menu > li.indent {
+    margin-left: 1em;
+}
+
 body > footer {
     margin-top: 5em;
     padding: 1em 0;
@@ -113,14 +117,14 @@ body > footer {
 }
 
 
-#top-nav .navbar-nav > li > a {
+.navbar-default .navbar-nav > li > a {
     color: #333;
 }
-#top-nav .navbar-nav > li > a .text-info {
+..navbar-default navbar-nav > li > a .text-info {
     color: #34444f;
 }
-#top-nav .navbar-nav > li > a:focus,
-#top-nav .navbar-nav > li > a:hover {
+..navbar-default navbar-nav > li > a:focus,
+..navbar-default navbar-nav > li > a:hover {
     background-color: hsl(203.9, 100%, 73.7%);
 }
 

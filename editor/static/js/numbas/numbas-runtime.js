@@ -899,11 +899,11 @@ var jme = Numbas.jme = /** @lends Numbas.jme */ {
                     v = jme.tokenToDisplayString(v,scope);
                 } else {
                     if(jme.isType(v,'number')) {
-                        v = '('+Numbas.jme.display.treeToJME({tok:v},{niceNumber: false},scope)+')';
+                        v = '('+Numbas.jme.display.treeToJME({tok:v},{nicenumber: false, noscientificnumbers: true},scope)+')';
                     } else if(v.type=='string') {
                         v = "'"+v.value+"'";
                     } else {
-                        v = jme.display.treeToJME({tok:v},{niceNumber: false},scope);
+                        v = jme.display.treeToJME({tok:v},{nicenumber: false, noscientificnumbers: true},scope);
                     }
                 }
                 out += v;
@@ -8659,6 +8659,7 @@ function flatten(tree,op) {
  * @property {boolean} flatfractions - Display fractions horizontally?
  * @property {boolean} barematrices - Render matrices without wrapping them in parentheses.
  * @property {boolean} nicenumber - Run numbers through {@link Numbas.math.niceNumber}?
+ * @property {boolean} noscientificnumbers - If true, don't write numbers in scientific notation.
  * @property {number} accuracy - Accuracy to use when finding rational approximations to numbers. See {@link Numbas.math.rationalApproximation}.
  * @property {boolean} timesdot - Use a dot for the multiplication symbol instead of a cross?
  */
@@ -9646,12 +9647,12 @@ JMEifier.prototype = {
         if(this.common_constants.pi && (piD = math.piDegree(n)) > 0)
             n /= Math.pow(Math.PI*this.common_constants.pi.scale, piD);
         var out;
-        if(this.settings.niceNumber===false) {
+        if(this.settings.nicenumber===false) {
             out = n+'';
         } else {
             out = this.niceNumber(n);
         }
-        if(out.length>20) {
+        if(out.length>20 && !this.settings.noscientificnumbers) {
             var bits = math.parseScientific(n.toExponential());
             return bits.significand+'*10^('+bits.exponent+')';
         }
@@ -9689,7 +9690,7 @@ JMEifier.prototype = {
         if(this.common_constants.pi && (piD = math.piDegree(n,false)) > 0)
             n /= Math.pow(Math.PI*this.common_constants.pi.scale, piD);
         var out;
-        if(this.settings.niceNumber===false) {
+        if(this.settings.nicenumber===false) {
             out = n+'';
             if(out.match(/e/)) {
                 out = math.unscientific(out);
@@ -9697,10 +9698,10 @@ JMEifier.prototype = {
         } else {
             out = this.niceNumber(n,{style:'plain'});
         }
-        if(out.length>20) {
-            if(Math.abs(n)<1e-15) {
-                return '0';
-            }
+        if(Math.abs(n)<1e-15) {
+            return '0';
+        }
+        if(out.length>20 && !this.settings.noscientificnumbers) {
             var bits = math.parseScientific(n.toExponential());
             return bits.significand+'*10^('+bits.exponent+')';
         }

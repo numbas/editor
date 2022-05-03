@@ -21,7 +21,7 @@
     flex-grow: 1;
 }
 
-.result .details, .result .description {
+.result .details, .result .description, .result .explore-flag {
     margin-left: 2em;
 }
 
@@ -33,7 +33,7 @@
         flex-direction: column;
         margin-bottom: 0.5em;
     }
-    .result .details, .result .description {
+    .result .details, .result .description, .result .explore-flag {
         margin-left: 0em;
     }
 }
@@ -55,7 +55,16 @@
     margin-bottom: 0.5em;
 }
 
+.result .explore-flag{
+    max-width: 50em;
+    margin-bottom: 0.5em;
+}
+
 .result .description > :last-child {
+    margin-bottom: 0;
+}
+
+.result .explore-flag > :last-child {
     margin-bottom: 0;
 }
 

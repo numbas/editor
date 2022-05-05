@@ -647,6 +647,11 @@ class UploadCustomPartTypeForm(forms.ModelForm):
         for key in ['name','short_name','description','input_widget','input_options','can_be_gap','can_be_step','marking_script','marking_notes','settings','help_url','ready_to_use']:
             if key in data:
                 kwargs[key] = data[key]
+        n = 0
+        o_short_name = kwargs['short_name']
+        while CustomPartType.objects.filter(short_name=kwargs['short_name']).exists():
+            n += 1
+            kwargs['short_name'] = o_short_name+'-'+str(n)
         cpt = CustomPartType(author=self.cleaned_data.get('author'), **kwargs)
         if(commit):
             cpt.save()

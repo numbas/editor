@@ -60,25 +60,19 @@
     {% endif %}
     {% endfor %}
     </tbody>
-    {% if is_me %}
-    <tfoot>
-        <tr>
-            <td colspan="4">
-                <a class="btn btn-primary" href="{% url 'custom_part_type_new' %}"><span class="glyphicon glyphicon-plus"></span> Create a new part type</a>
-                <a class="btn btn-primary" href="{% url 'custom_part_type_upload' %}"><span class="glyphicon glyphicon-upload"></span> Upload a part type</a>
-            </td>
-        </tr>
-    </tfoot>
-    {% endif %}
 </table>
 {% else %}
-{% if is_me %}
-<p><a class="btn btn-primary" href="{% url 'custom_part_type_new' %}"><span class="glyphicon glyphicon-upload"></span> Create a new part type</a></p>
-{% else %}
+{% if not is_me %}
 <p class="nothing-here">{{view_user.first_name}} hasn't created any part types yet.</p>
 {% endif %}
 {% endif %}
 
+{% if is_me %}
+<p>
+    <a class="btn btn-primary" href="{% url 'custom_part_type_new' %}"><span class="glyphicon glyphicon-upload"></span> Create a new part type</a>
+    <a class="btn btn-primary" href="{% url 'custom_part_type_upload' %}"><span class="glyphicon glyphicon-upload"></span> Upload a part type</a>
+</p>
+{% endif %}
 <p><a target="numbasquickhelp" href="{{HELP_URL}}custom-part-types/reference.html"><span class="glyphicon glyphicon-question-sign"></span> Help with custom part types</a></p>
 
 {% endblock profile_content %}

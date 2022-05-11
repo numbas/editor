@@ -12,11 +12,10 @@ header {
     /*! border-bottom: 0.2rem solid hsl(0, 70%, 10%); */
     display: grid;
     color: white;
-    box-shadow: 0 0px 1px 2px hsl(0, 70%, 10%);
     z-index: 100;
-    line-height: 1.5em;
+    line-height: 0.5em;
     grid-template-columns: [row-start] 1fr repeat(4,max-content) [row-end];
-    grid-gap: 0.2em 2em;
+    grid-gap: 0.2em 0.75em;
     align-items: center;
 }
 header .description {
@@ -24,6 +23,48 @@ header .description {
     font-size: 1em;
     font-weight: normal;
 }
+
+
+.no-underline-link {
+    text-decoration:none;
+}
+
+.underline-text{
+    text-decoration: underline;
+}
+
+.pointer-effect{
+    cursor: pointer;
+}
+
+.light-maroon {
+    color: hsl(0, 31%, 79%);
+}
+
+.color-white {
+    color: hsl(0, 0%, 100%);
+}
+
+.copied-text-style{
+    background: hsl(0, 33%, 87%);
+    border-radius: 10px;
+    color:hsl(0, 70%, 30%);
+    
+}
+
+.left-right-padding{
+    padding-left: 0.15em;
+    padding-right: 0.15em;
+}
+
+.close-button{
+    background-color: hsl(0, 33%, 87%);
+    color:hsl(0, 70%, 30%);
+    border-radius: 10px;
+    font-size: 1em;
+}
+
+
 #embed-url {
     grid-column: row;
     text-align: right;
@@ -33,10 +74,10 @@ header .description {
     display: none;
 }
 #embed-url code {
-    background: hsl(0,0%,95%);
-    color: black;
     display: inline-block;
-    padding: 0em 0.5em;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    padding-bottom: 0.5em;
 }
 header button {
     padding: 0 0.5em;

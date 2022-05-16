@@ -21,34 +21,35 @@
         <header role="banner">
             <h1 class="description">
                 <a href="{{item.get_absolute_url}}">{{item.name}}</a>
-                <span class="light-maroon">in</span>
+                <span class="text-muted">in</span>
                 <a href="{{item.project.get_absolute_url}}">{{item.project.name}}</a>
             </h1>
 
-            <span class="licence">
+            <span class="licence text-muted">
             {% if item.licence %}
-            <span class="light-maroon no-underline-link"> &copy; </span>
-              <!--  <abbr title="{{item.licence.name}}"> -->
+                &copy;
+                <abbr title="{{item.licence.name}}">
                     {% if item.licence.url %}
-                        <a class="light-maroon no-underline-link" target="_blank" href="{{item.licence.url}}">{{item.licence.short_name}}</a>
+                        <a target="_blank" href="{{item.licence.url}}">{{item.licence.short_name}}</a>
                     {% else %}
-                        <span class="light-maroon no-underline-link">{{item.licence.short_name}}</span>
+                        {{item.licence.short_name}}
                     {% endif %}
-               <!--  </abbr> -->
+                </abbr>
             {% endif %}
             </span>
 
-            <a href="{{item.get_absolute_url}}">Edit</a>
+            <a class="action" href="{{item.get_absolute_url}}">Edit</a>
 
-            <a href="{% editoritem_url 'download' item.rel_obj %}?scorm">Download</a>
+            <a class="action" href="{% editoritem_url 'download' item.rel_obj %}?scorm">Download</a>
 
-            <span class="pointer-effect underline-text" id="share"> Share </span>
+            <button class="like-link action" id="share">Share</button>
 
-            <span  id="embed-url">
-                <span class="copied-text-style" id="copied-text"></span>
-                <span class="light-maroon" id="link-label">Click <span class="pointer-effect underline-text color-white" id="copy-text">here</span> to copy this link - </span>
-                <code tabindex="0"><span class="color-white">{{SITE_ROOT}}{{embed_url}}</span></code>
-                <span class="close-button pointer-effect" id="close-button">&nbsp Close &nbsp</span>
+            <span id="embed-url">
+                <code class="url text-muted" tabindex="0">{{SITE_ROOT}}{{embed_url}}</code>
+                <button id="link-label"><span class="" id="copy-text" aria-live="polite">
+                    <span class="not-copied">Copy this link</span>
+                    <span class="copied">Link copied!</span>
+                </button>
             </span>
 
         </header>
@@ -58,11 +59,9 @@
 
 
         <script>
-
             var share_button = document.getElementById('share');
             var embed_display = document.getElementById('embed-url');
             var copy_text = document.getElementById('copy-text');
-            var close_button = document.getElementById('close-button');
 
             /* To toggle the embedded URL area */
             share_button.addEventListener('click',function() {
@@ -70,27 +69,15 @@
                 embed_display.focus();
             });
 
-            /* To close the embedded URL when the close is clicked */
-            close_button.addEventListener('click',function() {
-                embed_display.classList.toggle('shown'); 
-                embed_display.focus();
-            });
-
-            /* Function to copy the URL to the clipboard */
-            copy_text.addEventListener('click',function() {
-                                
-                /* To copy the URL to clipboard */
-                navigator.clipboard.writeText(`{{SITE_ROOT}}{{embed_url}}`);
-                
-                /* Displays the message that URL is copied to clipboard */
-                document.getElementById("copied-text").innerHTML = '<span class="left-right-padding">&nbsp URL Copied &nbsp</span>';
-
-                /* To remove the URL copied message after few seconds */
-                setTimeout(function() {
-                    document.getElementById("copied-text").innerHTML = ''
-                    }, 2000);
-
-            });
+            if(!(navigator.clipboard && navigator.clipboard.writeText)) {
+                copy_text.style['display'] = 'none';
+            } else {
+                copy_text.addEventListener('click',function() {
+                    var url = document.querySelector('#embed-url .url').textContent;
+                    navigator.clipboard.writeText(url);
+                    embed_display.classList.add('copied');
+                });
+            }
 
             var get_numbas_interval = setInterval(function() {
                 var w = window.frames[0];
@@ -99,7 +86,6 @@
                     clearInterval(get_numbas_interval);
                 }
             },100);
-
         </script>
     </body>
 </html>

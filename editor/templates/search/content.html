@@ -5,6 +5,7 @@
 {% load stamp %}
 {% load user_link %}
 {% load links %}
+{% load explore_check %}
 
 <!-- new -->
 <div class="container-fluid">
@@ -191,6 +192,14 @@
                         {{item.metadata.description|strip_html|safe}}
                         {% else %}
                         <p class="nothing-here">No description given</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="explore-flag">
+                        {%if item.content|is_explore %}
+                            <p>Explore Mode : Yes</p>
+                        {% else %}
+                            <p>Explore Mode : No</p>
                         {% endif %}
                     </div>
 

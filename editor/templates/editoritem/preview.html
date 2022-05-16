@@ -20,20 +20,21 @@
     <body>
         <header role="banner">
             <h1 class="description">
-                PREVIEW of <a href="{{item.get_absolute_url}}">{{item.name}}</a>
-                in <a href="{{item.project.get_absolute_url}}">{{item.project.name}}</a>
+                <a href="{{item.get_absolute_url}}">{{item.name}}</a>
+                <span class="light-maroon">in</span>
+                <a href="{{item.project.get_absolute_url}}">{{item.project.name}}</a>
             </h1>
 
             <span class="licence">
             {% if item.licence %}
-                &copy;
-                <abbr title="{{item.licence.name}}">
+            <span class="light-maroon no-underline-link"> &copy; </span>
+              <!--  <abbr title="{{item.licence.name}}"> -->
                     {% if item.licence.url %}
-                        <a target="_blank" href="{{item.licence.url}}">{{item.licence.short_name}}</a>
+                        <a class="light-maroon no-underline-link" target="_blank" href="{{item.licence.url}}">{{item.licence.short_name}}</a>
                     {% else %}
-                        {{item.licence.short_name}}
+                        <span class="light-maroon no-underline-link">{{item.licence.short_name}}</span>
                     {% endif %}
-                </abbr>
+               <!--  </abbr> -->
             {% endif %}
             </span>
 
@@ -41,10 +42,13 @@
 
             <a href="{% editoritem_url 'download' item.rel_obj %}?scorm">Download</a>
 
-            <button class="btn" id="share" type="button">Share</button>
+            <span class="pointer-effect underline-text" id="share"> Share </span>
 
-            <span id="embed-url">
-                <code tabindex="0">{{SITE_ROOT}}{{embed_url}}</code>
+            <span  id="embed-url">
+                <span class="copied-text-style" id="copied-text"></span>
+                <span class="light-maroon" id="link-label">Click <span class="pointer-effect underline-text color-white" id="copy-text">here</span> to copy this link - </span>
+                <code tabindex="0"><span class="color-white">{{SITE_ROOT}}{{embed_url}}</span></code>
+                <span class="close-button pointer-effect" id="close-button">&nbsp Close &nbsp</span>
             </span>
 
         </header>
@@ -54,12 +58,40 @@
 
 
         <script>
-var share_button = document.getElementById('share');
-var embed_display = document.getElementById('embed-url');
-share_button.addEventListener('click',function() {
-    embed_display.classList.toggle('shown');
-    embed_display.focus();
-});
+
+            var share_button = document.getElementById('share');
+            var embed_display = document.getElementById('embed-url');
+            var copy_text = document.getElementById('copy-text');
+            var close_button = document.getElementById('close-button');
+
+            /* To toggle the embedded URL area */
+            share_button.addEventListener('click',function() {
+                embed_display.classList.toggle('shown'); 
+                embed_display.focus();
+            });
+
+            /* To close the embedded URL when the close is clicked */
+            close_button.addEventListener('click',function() {
+                embed_display.classList.toggle('shown'); 
+                embed_display.focus();
+            });
+
+            /* Function to copy the URL to the clipboard */
+            copy_text.addEventListener('click',function() {
+                                
+                /* To copy the URL to clipboard */
+                navigator.clipboard.writeText(`{{SITE_ROOT}}{{embed_url}}`);
+                
+                /* Displays the message that URL is copied to clipboard */
+                document.getElementById("copied-text").innerHTML = '<span class="left-right-padding">&nbsp URL Copied &nbsp</span>';
+
+                /* To remove the URL copied message after few seconds */
+                setTimeout(function() {
+                    document.getElementById("copied-text").innerHTML = ''
+                    }, 2000);
+
+            });
+
             var get_numbas_interval = setInterval(function() {
                 var w = window.frames[0];
                 if(w && w.Numbas) {
@@ -67,6 +99,7 @@ share_button.addEventListener('click',function() {
                     clearInterval(get_numbas_interval);
                 }
             },100);
+
         </script>
     </body>
 </html>

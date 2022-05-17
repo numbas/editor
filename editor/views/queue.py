@@ -212,7 +212,10 @@ class ReviewEntryView(CanViewMixin, EntryMixin, generic.DetailView):
         entry.complete = self.request.POST.get('remove') == 'on'
         entry.save()
 
-        return redirect('queue_view', pk=entry.queue.pk)
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse('queue_entry_review', args=(self.get_object().pk,))
 
 class CommentView(CanViewMixin, editor.views.generic.CommentView):
     model = ItemQueueEntry

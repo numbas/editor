@@ -2289,6 +2289,9 @@ $(document).ready(function() {
             this.writingComment(false);
         }
 
+        this.add_text = function(text) {
+            this.commentText(this.commentText()+'\n'+text);
+        }
     }
 
     $('body').on('click','.timeline-item .hide-item',function(e) {

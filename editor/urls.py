@@ -233,6 +233,7 @@ urlpatterns = [
     # Queues
     path('queue/new/', queue.CreateView.as_view(), name='queue_new'),
     path('queue/<pk>/', queue.DetailView.as_view(), name='queue_view'),
+    path('queue/<pk>/complete', queue.CompleteItemsView.as_view(), name='queue_view_complete'),
     path('queue/<pk>/settings/options', queue.UpdateView.as_view(), name='queue_settings_options'),
     path('queue/<pk>/settings/members', queue.ManageMembersView.as_view(), name='queue_settings_members'),
     path('queue/<queue_pk>/settings/add_member', queue.AddMemberView.as_view(), name='queue_settings_add_member'),

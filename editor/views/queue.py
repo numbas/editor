@@ -1,10 +1,12 @@
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import redirect
+from django_tables2.config import RequestConfig
 from django.urls import reverse
 from django.views import generic
 
 from editor import forms
 from editor.models import EditorItem, ItemQueue, Project, ItemQueueChecklistItem, ItemQueueEntry, ItemQueueChecklistTick, IndividualAccess
+from editor.tables import ItemQueueEntryTable
 import editor.views.generic
 from editor.views.generic import CanViewMixin, CanEditMixin, CanDeleteMixin, SettingsPageMixin, RestrictAccessMixin
 
@@ -129,6 +131,28 @@ class DetailView(CanViewMixin, generic.DetailView):
     model = ItemQueue
     template_name = 'queue/view.html'
     context_object_name = 'queue'
+
+    table_class = ItemQueueEntryTable
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['results'] = self.make_table()
+        return context
+
+    def get_table_queryset(self):
+        return self.object.entries.incomplete()
+    
+    def make_table(self):
+        config = RequestConfig(self.request, paginate={'per_page': 10})
+        results = self.table_class(self.get_table_queryset())
+        config.configure(results)
+        return results
+
+class CompleteItemsView(DetailView):
+    template_name = 'queue/view_complete.html'
+
+    def get_table_queryset(self):
+        return self.object.entries.complete()
 
 class DeleteView(CanDeleteMixin, generic.DeleteView):
     model = ItemQueue

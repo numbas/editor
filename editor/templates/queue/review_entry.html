@@ -67,6 +67,7 @@
                 <label for="item-{{item.pk}}">
                     {{item.label|strip_html|safe}}
                 </label>
+                <button data-bind="click: comment_on_checklist_item" title="Comment on this item" class="btn btn-xs btn-link" type="button"><span class="glyphicon glyphicon-comment"></span></button>
             </li>
             {% endfor %}
             </ul>
@@ -74,7 +75,7 @@
             <hr>
 
             <p>
-                <input type="checkbox" name="remove" id="remove">
+            <input type="checkbox" name="remove" id="remove" {% if entry.complete %}checked{% endif %}>
                 <label for="remove">This entry is complete - remove it from the queue</label>
             </p>
 

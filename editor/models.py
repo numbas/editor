@@ -2023,6 +2023,9 @@ class ItemQueueChecklistItem(models.Model):
         }
 
 class ItemQueueEntryManager(models.Manager):
+    def complete(self):
+        return self.filter(complete=True)
+
     def incomplete(self):
         return self.filter(complete=False)
 

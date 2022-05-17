@@ -1,5 +1,11 @@
 function ViewModel() {
-    this.commentwriter = new Editor.CommentWriter();
+    var vm = this;
+    var cw = this.commentwriter = new Editor.CommentWriter();
+    this.comment_on_checklist_item = function(data, e) {
+        var label = e.currentTarget.parentElement.querySelector('label').textContent.trim();
+        cw.writingComment(true);
+        cw.add_text('<h2>'+label+'</h2>\n<p></p>\n');
+    }
 }
 
 $(document).ready(function() {

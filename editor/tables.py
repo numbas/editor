@@ -1,7 +1,7 @@
 import django_tables2 as tables
 from django.db.models import Sum, When, Case, IntegerField, Count, Value, CharField
 from django_tables2.columns import Column
-from .models import EditorItem, Project
+from .models import EditorItem, Project, ItemQueueEntry
 
 class ObjectTable(tables.Table):
     last_modified = Column()
@@ -70,3 +70,7 @@ class ProjectTable(tables.Table):
     class Meta:
         model = Project
         sequence = ('name','num_items')
+
+class ItemQueueEntryTable(tables.Table):
+    class Meta:
+        model = ItemQueueEntry

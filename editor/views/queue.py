@@ -40,10 +40,10 @@ class CreateView(CanEditMixin, generic.CreateView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
-        for label in self.request.POST.getlist('checklist'):
+        for i,label in enumerate(self.request.POST.getlist('checklist')):
             label = label.strip()
             if label!='':
-                ItemQueueChecklistItem.objects.create(queue=self.object, label=label)
+                ItemQueueChecklistItem.objects.create(queue=self.object, label=label, position=i)
         return response
 
     def get_success_url(self):
@@ -71,17 +71,18 @@ class UpdateView(SettingsPageMixin, generic.UpdateView):
 
         self.object.checklist.exclude(pk__in=[int(x) for x in pks if x]).delete()
 
-        for label,pk in zip(labels, pks):
+        for i,label,pk in zip(range(len(labels)),labels, pks):
             if pk:
                 item = ItemQueueChecklistItem.objects.get(pk=int(pk))
                 if label:
                     item.label = label
+                    item.position = i
                     item.save()
                 else:
                     item.delete()
             else:
                 if label:
-                    ItemQueueChecklistItem.objects.create(queue=self.object, label=label)
+                    ItemQueueChecklistItem.objects.create(queue=self.object, label=label, position=i)
 
         return response
 

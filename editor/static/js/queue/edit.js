@@ -22,8 +22,8 @@ function ViewModel(data) {
     ko.computed(function() {
         var empty = vm.checklist_items().find(function(item) { return item.empty(); });
         if(!empty) {
-            var item =vm.add_checklist_item();
-            item.label();
+            var item = vm.add_checklist_item();
+            item.empty();
         }
     },this);
 }
@@ -48,6 +48,30 @@ function ChecklistItem(list) {
         var index = item.list.indexOf(item);
         vm.add_checklist_item(index+1);
     }
+    this.move_up = function() {
+        var i = item.list.indexOf(item);
+        if(i<=0) {
+            return;
+        }
+        item.list.splice(i,1);
+        item.list.splice(i-1,0,item);
+    }
+    this.move_down = function() {
+        var i = item.list.indexOf(item);
+        if(i==-1 || i>=item.list().length-1) {
+            return;
+        }
+        item.list.splice(i,1);
+        item.list.splice(i+1,0,item);
+    }
+    this.can_move_up = ko.computed(function() {
+        var i = this.list.indexOf(this);
+        return i>0 && i<this.list().length-1;
+    },this);
+    this.can_move_down = ko.computed(function() {
+        return this.list.indexOf(this)<this.list().length-2;
+    },this);
+
 }
 ChecklistItem.prototype = {
     load: function(data){ 

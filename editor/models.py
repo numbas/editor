@@ -2009,7 +2009,11 @@ class ItemQueue(models.Model, ControlledObject):
 
 class ItemQueueChecklistItem(models.Model):
     queue = models.ForeignKey(ItemQueue, on_delete=models.CASCADE, related_name='checklist')
+    position = models.PositiveIntegerField()
     label = models.CharField(max_length=500)
+
+    class Meta:
+        ordering = ('position',)
 
     def as_json(self):
         return {

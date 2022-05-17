@@ -15254,7 +15254,7 @@ if(res) { \
     /** Make an instance of the selected next part.
      *
      * @param {Numbas.parts.NextPart} np
-     * @param {number} [index]
+     * @param {number} [index] - The position of the part in the question's parts list (added to the end if not given).
      */
     makeNextPart: function(np,index) {
         var p = this;
@@ -16287,8 +16287,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                     }
                 });
                 */
-                qobj.parts.slice(1).forEach(function(pobj) {
-                    console.log('recreating',pobj.name,pobj.index,pobj.path);
+                qobj.parts.slice(1).forEach(function(pobj,qindex) {
                     var index = pobj.index;
                     var previousPart = q.getPart(pobj.previousPart);
                     var ppobj = q.store.loadPart(previousPart);
@@ -16301,7 +16300,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
                     var np = previousPart.nextParts[i];
                     var npobj = ppobj.nextParts[i];
                     np.instanceVariables = q.store.loadVariables(npobj.variableReplacements,previousPart.getScope());
-                    previousPart.makeNextPart(np,npobj.index);
+                    previousPart.makeNextPart(np,qindex+1);
                     np.instance.resume();
                 });
             }

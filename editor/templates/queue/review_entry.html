@@ -28,6 +28,12 @@
     {% else %}
     <em>{% editoritem_link entry.item.rel_obj show_icon=True new_tab=True %}</em> has been submitted for review
     {% endif %}
+    {% with status=entry.status %}
+    {% if status %}
+        <span class="label label-default">{{status}}</span>
+    {% endif %}
+    {% endwith %}
+
     </p>
 </section>
 
@@ -74,12 +80,37 @@
 
             <hr>
 
-            <p>
-            <input type="checkbox" name="remove" id="remove" {% if entry.complete %}checked{% endif %}>
-                <label for="remove">This entry is complete - remove it from the queue</label>
-            </p>
+            <div class="form-group">
+                <label for="status" class="col-sm-2">Status</label>
 
-            <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-save"></span> Save</button>
+                <div class="col-sm-10">
+                    {% with current_status=entry.status %}
+                    <select id="status" name="status" class="form-control">
+                        <option value="" {% if current_status is None %}selected{% endif %}></option>
+                        {% for tag in entry.queue.statuses.all %}
+                        <option value="{{tag.name}}" {% if current_status == tag.name %}selected{% endif %}>{{tag.name}}</option>
+                        {% endfor %}
+                    </select>
+                    {% endwith %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="col-sm-10 col-sm-offset-2">
+                    <div class="checkbox">
+                        <label for="remove">
+                            <input type="checkbox" name="remove" id="remove" {% if entry.complete %}checked{% endif %}>
+                            This entry is complete - remove it from the queue
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="col-sm-10 col-sm-offset-2">
+                    <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-save"></span> Save</button>
+                </div>
+            </div>
         </form>
     </div>
     {% else %}

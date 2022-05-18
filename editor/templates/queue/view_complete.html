@@ -2,9 +2,15 @@
 {% load user_link %}
 {% load sanitizer %}
 {% load links %}
+{% load sstatic %}
 {% load percentage %}
 
 {% block title %}{{queue.name}} - {{block.super}}{% endblock title %}
+
+{% block stylesheets %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% sstatic 'css/queue/view.css' %}"/>
+{% endblock stylesheets %}
 
 {% block queue_content %}
 <div id="queue-description">
@@ -13,13 +19,20 @@
 
 <h2>Complete items</h2>
 
-<ul>
+<ul class="list-unstyled entries">
     {% for row in results.page.object_list|default:results.rows %}
     {% with entry=row.record %}
     <li>
         <article>
             <header>
                 <h3><a href="{% url 'queue_entry_review' entry.pk %}"><span class="glyphicon glyphicon-{{entry.item.icon}}"></span> {{entry.item.name}}</a></h3>
+                {% with status=entry.status %}
+                {% if status %}
+                <p>
+                    <span class="label label-default">{{status}}</span>
+                </p>
+                {% endif %}
+                {% endwith %}
                 <p class="text-muted">
                     Submitted by 
                     {% user_thumbnail entry.created_by 20 18 link=True %}

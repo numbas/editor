@@ -1,0 +1,3 @@
+.entries > li ~ li {
+    margin-top: 3em;
+}

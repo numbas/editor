@@ -1967,6 +1967,7 @@ class ItemQueue(models.Model, ControlledObject):
     instructions_submitter = models.TextField(blank=True, verbose_name='Instructions for submitters')
     instructions_reviewer = models.TextField(blank=True, verbose_name='Instructions for reviewers')
     public = models.BooleanField(default=False, verbose_name='Visible to everyone?')
+    statuses = TaggableManager()
 
     access = GenericRelation('IndividualAccess', related_query_name='item_queue', content_type_field='object_content_type', object_id_field='object_id')
     timeline_noun = 'queue'
@@ -2031,6 +2032,7 @@ class ItemQueueEntryManager(models.Manager):
 
 class ItemQueueEntry(models.Model, ControlledObject, TimelineMixin):
     objects = ItemQueueEntryManager()
+    statuses = TaggableManager()
 
     icon = 'list'
 
@@ -2071,6 +2073,13 @@ class ItemQueueEntry(models.Model, ControlledObject, TimelineMixin):
     @property
     def owner(self):
         return self.created_by
+
+    @property
+    def status(self):
+        try:
+            return self.statuses.first().name
+        except (AttributeError,self.statuses.through.DoesNotExist):
+            return None
 
     def can_be_edited_by(self, user):
         return self.queue.can_be_edited_by(user)

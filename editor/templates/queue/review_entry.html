@@ -22,19 +22,42 @@
 {% block queue_content %}
 {% with can_edit=entry|can_be_edited_by:user %}
 <section id="item">
-    <p class="lead text-center">
+    <div class="lead text-center">
     {% if can_edit %}
-    Please review <em>{% editoritem_link entry.item.rel_obj show_icon=True new_tab=True %}</em>
+        {% if not entry.complete %}
+            {% if not entry.assigned_user %}
+                <p>Please review <em>{% editoritem_link entry.item.rel_obj show_icon=True new_tab=True %}</em></p>
+                <form method="POST" action="{% url 'queue_entry_assign_user' entry.pk %}">{% csrf_token %}<button type="submit" class="btn btn-primary">I'll review it!</button></form></p>
+            {% elif entry.assigned_user == request.user %}
+                <p>You're reviewing <em>{% editoritem_link entry.item.rel_obj show_icon=True new_tab=True %}</em></p>
+                <form method="POST" action="{% url 'queue_entry_unassign_user' entry.pk %}">{% csrf_token %}<button type="submit" class="btn btn-warning">Let someone else take over</button></form></p>
+            {% else %}
+                <p><em>{% editoritem_link entry.item.rel_obj show_icon=True new_tab=True %}</em> has been submitted for review</p>
+                <p>
+                    Under review by 
+                    {% user_thumbnail entry.assigned_user 40 36 link=True %}
+                    {% user_link entry.assigned_user %}
+                </p>
+            {% endif %}
+        {% else %}
+        <p><em>{% editoritem_link entry.item.rel_obj show_icon=True new_tab=True %}</em></p>
+        {% endif %}
     {% else %}
-    <em>{% editoritem_link entry.item.rel_obj show_icon=True new_tab=True %}</em> has been submitted for review
+        <p><em>{% editoritem_link entry.item.rel_obj show_icon=True new_tab=True %}</em> has been submitted for review</p>
+        {% if entry.assigned_user %}
+            <p>
+                Under review by 
+                {% user_thumbnail entry.assigned_user 40 36 link=True %}
+                {% user_link entry.assigned_user %}
+            </p>
+        {% endif %}
     {% endif %}
     {% with status=entry.status %}
     {% if status %}
         <span class="label label-default">{{status}}</span>
     {% endif %}
     {% endwith %}
-
-    </p>
+    </div>
 </section>
 
 <section id="note">

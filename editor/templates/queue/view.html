@@ -43,6 +43,11 @@
                     Submitted by 
                     {% user_thumbnail entry.created_by 20 18 link=True %}
                     {% user_link entry.created_by %}
+                    {% if entry.assigned_user %}
+                        · Under review by
+                        {% user_thumbnail entry.assigned_user 20 18 link=True %}
+                        {% user_link entry.assigned_user %}
+                    {% endif %}
                 </p>
             </header>
             <main>

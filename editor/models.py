@@ -2034,6 +2034,8 @@ class ItemQueueEntry(models.Model, ControlledObject, TimelineMixin):
     objects = ItemQueueEntryManager()
     statuses = TaggableManager()
 
+    assigned_user = models.ForeignKey(User,blank=True,null=True, on_delete=models.SET_NULL)
+
     icon = 'list'
 
     class Meta:

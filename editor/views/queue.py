@@ -285,6 +285,32 @@ class UpdateEntryView(CanEditMixin, EntryMixin, generic.UpdateView):
     def get_success_url(self):
         return reverse('queue_entry_review', args=(self.object.pk,))
 
+class EntryAssignUserView(CanEditMixin, EntryMixin, generic.UpdateView):
+    fields = []
+    http_method_names = ['post']
+
+    def post(self, request, *args, **kwargs):
+        entry = self.get_object()
+        entry.assigned_user = request.user
+        entry.save()
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse('queue_entry_review', args=(self.get_object().pk,))
+
+class EntryUnassignUserView(CanEditMixin, EntryMixin, generic.UpdateView):
+    fields = []
+    http_method_names = ['post']
+
+    def post(self, request, *args, **kwargs):
+        entry = self.get_object()
+        entry.assigned_user = None
+        entry.save()
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse('queue_entry_review', args=(self.get_object().pk,))
+
 class DeleteEntryView(CanEditMixin, EntryMixin, generic.DeleteView):
     template_name = 'queue/delete_entry.html'
 

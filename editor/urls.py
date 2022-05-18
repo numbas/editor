@@ -243,6 +243,8 @@ urlpatterns = [
     path('queue-item/<pk>/comment/', queue.CommentView.as_view(), name='queue_entry_comment'),
     path('queue-item/<pk>/edit/', queue.UpdateEntryView.as_view(), name='queue_entry_edit'),
     path('queue-item/<pk>/delete/', queue.DeleteEntryView.as_view(), name='queue_entry_delete'),
+    path('queue-item/<pk>/assign_user/', queue.EntryAssignUserView.as_view(), name='queue_entry_assign_user'),
+    path('queue-item/<pk>/unassign_user/', queue.EntryUnassignUserView.as_view(), name='queue_entry_unassign_user'),
 
     # Notifications
 

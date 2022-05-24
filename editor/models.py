@@ -2092,7 +2092,7 @@ class ItemQueueEntry(models.Model, ControlledObject, TimelineMixin):
     def progress(self):
         total_items = self.queue.checklist.count()
         ticked_items = self.queue.checklist.filter(ticks__entry=self).distinct().count()
-        return ticked_items/total_items
+        return ticked_items/total_items if total_items>0 else 0
 
     @property
     def watching_users(self):

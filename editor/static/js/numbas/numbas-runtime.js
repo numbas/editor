@@ -6072,6 +6072,7 @@ newBuiltin('weighted_random',[sig.listof(sig.list(sig.anything(),sig.type('numbe
         return math.weighted_random(items);
     }
 });
+newBuiltin('choose_several', [TList, TNum], TList, math.choose_several);
 newBuiltin('mod', [TNum,TNum], TNum, math.mod );
 newBuiltin('max', [TNum,TNum], TNum, math.max );
 newBuiltin('min', [TNum,TNum], TNum, math.min );
@@ -6566,6 +6567,7 @@ newBuiltin('listval',[TMatrix,TRange],TMatrix,null, {
         return new TMatrix(matrix.slice(start,end));
     }
 });
+newBuiltin('submatrix',[TMatrix,TNum,TNum,TNum,TNum],TMatrix,matrixmath.submatrix);
 newBuiltin('flatten',['list of list'],TList,null, {
     evaluate: function(args,scope) {
         var o = [];
@@ -14738,6 +14740,7 @@ if(res) { \
                     valid: true
                 };
                 this.restore_feedback(feedback);
+                this.credit = 0;
                 this.apply_feedback(res.finalised_result);
                 this.warnings = best_alternative.alternative.warnings.slice();
                 res.values['used_alternative'] = new Numbas.jme.types.TNum(best_alternative.index);
@@ -19585,6 +19588,29 @@ var math = Numbas.math = /** @lends Numbas.math */ {
         var n = Math.floor(math.randomrange(0,selection.length));
         return selection[n];
     },
+
+    /** Choose several items from an array, at random.
+     *
+     * @param {Array} selection
+     * @param {number} n - The number of items to choose.
+     * @returns {Array}
+     * @throws {Numbas.Error} "math.choose_several.not enough items" if `selection` has length less than `n`.
+     * @see Numbas.math.randomrange
+     */
+    choose_several: function(selection, n) {
+        if(selection.length<n) {
+            throw(new Numbas.Error("math.choose_several.not enough items",{n:n}));
+        }
+        selection = selection.slice();
+        for(var i=0;i<n;i++) {
+            var j = Math.floor(math.randomrange(i,selection.length));
+            var a = selection[i];
+            selection[i] = selection[j];
+            selection[j] = a;
+        }
+        return selection.slice(0,n);
+    },
+
     /** Choose at random from a weighted list of items.
      * 
      * @param {Array} list - A list of pairs of the form `[item, probability]`, where `probability` is a number.
@@ -20685,6 +20711,35 @@ var vectormath = Numbas.vectormath = {
  * @namespace Numbas.matrixmath
  */
 var matrixmath = Numbas.matrixmath = {
+    /** Submatrix - return the matrix consisting of the cells from (row1,col1) to (row2,col2)
+     *
+     * @param {matrix} m
+     * @param {number} row1=0
+     * @param {number} col1=0
+     * @param {number} row2 - If undefined, the final row.
+     * @param {number} col2 - If undefined, the final column.
+     * @returns {matrix}
+     */
+    submatrix: function(m, row1, col1, row2, col2) {
+        if(row1 === undefined) {
+            row1 = 0;
+        }
+        if(row2 === undefined) {
+            row2 = m.rows;
+        }
+        if(col1 === undefined) {
+            col1 = 0;
+        }
+        if(col2 === undefined) {
+            col2 = m.columns;
+        }
+        var o = m.slice(Math.min(row1,row2),Math.max(row1,row2)+1).map(function(row) {
+            return row.slice(Math.min(col1,col2), Math.max(col1,col2)+1);
+        });
+        o.rows = Math.abs(row2-row1);
+        o.columns = Math.abs(col2-col1);
+        return o;
+    },
     /** Negate a matrix - negate each of its elements .
      *
      * @param {matrix} m

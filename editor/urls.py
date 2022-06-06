@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from .views import project, folder, editoritem, exam, question, HomeView, \
     GlobalStatsView, ExploreView, TermsOfUseView, PrivacyPolicyView, TopSearchView, \
     theme, extension, generic, notification, resource, basket, timeline, \
-    custom_part_type, queue
+    custom_part_type, queue, site_broadcast
 
 urlpatterns = [
 
@@ -31,6 +31,9 @@ urlpatterns = [
     # Explore
 
     url(r'^explore/$', ExploreView.as_view(), name='explore'),
+
+    # Site broadcasts
+    path(r'site-broadcast/new', site_broadcast.CreateView.as_view(), name='site_broadcast_new'),
 
     # Projects
 

@@ -890,3 +890,10 @@ class CreateItemQueueEntryForm(forms.ModelForm):
             'queue': forms.HiddenInput(),
             'item': forms.HiddenInput(),
         }
+
+class SiteBroadcastForm(forms.ModelForm):
+    class Meta:
+        model = editor.models.SiteBroadcast
+        fields = ('title', 'text', 'sticky', 'show_until')
+        widgets = {
+        }

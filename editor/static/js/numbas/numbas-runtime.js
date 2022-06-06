@@ -6072,7 +6072,6 @@ newBuiltin('weighted_random',[sig.listof(sig.list(sig.anything(),sig.type('numbe
         return math.weighted_random(items);
     }
 });
-newBuiltin('choose_several', [TList, TNum], TList, math.choose_several);
 newBuiltin('mod', [TNum,TNum], TNum, math.mod );
 newBuiltin('max', [TNum,TNum], TNum, math.max );
 newBuiltin('min', [TNum,TNum], TNum, math.min );
@@ -6567,7 +6566,6 @@ newBuiltin('listval',[TMatrix,TRange],TMatrix,null, {
         return new TMatrix(matrix.slice(start,end));
     }
 });
-newBuiltin('submatrix',[TMatrix,TNum,TNum,TNum,TNum],TMatrix,matrixmath.submatrix);
 newBuiltin('flatten',['list of list'],TList,null, {
     evaluate: function(args,scope) {
         var o = [];
@@ -12008,6 +12006,9 @@ var simplificationRules = jme.rules.simplificationRules = {
     zeroPower: [
         ['?;x^0','','1']
     ],
+    powerPower: [
+        ['(?;x^$n;a)^$n;b', '', 'x^eval(a*b)']
+    ],
     noLeadingMinus: [
         ['-?;x + ?;y','s','y-x'],   // Don't start with a unary minus
         ['-0','','0']               // Cancel negative 0
@@ -12396,7 +12397,10 @@ jme.variables = /** @lends Numbas.jme.variables */ {
         var multi_acc = 0;
         var ntodo = {};
         Object.keys(todo).forEach(function(name) {
-            var names = name.split(/\s*,\s*/);
+            var names = name.split(/\s*,\s*/).filter(function(n) { return n.trim(); });
+            if(names.length==0) {
+                return;
+            }
             if(names.length>1) {
                 var mname;
                 while(true) {
@@ -15238,16 +15242,22 @@ if(res) { \
         }
     },
     /** Open the steps, either because the student asked or the answers to the question are being revealed. This doesn't affect the steps penalty.
+     *
+     * @fires Numbas.Part#event:openSteps
      */
     openSteps: function() {
         this.stepsOpen = true;
+        this.events.trigger('openSteps');
         this.display && this.display.showSteps();
     },
     /** Close the steps box. This doesn't affect the steps penalty.
+     *
+     * @fires Numbas.Part#event:hideSteps
      */
     hideSteps: function()
     {
         this.stepsOpen = false;
+        this.events.trigger('hideSteps');
         this.display && this.display.hideSteps();
         this.store && this.store.stepsHidden(this);
     },
@@ -16226,7 +16236,7 @@ Question.prototype = /** @lends Numbas.Question.prototype */
             q.scope = new jme.Scope([q.scope]);
             q.scope.flatten();
             q.local_definitions = {
-                variables: q.variableDefinitions.map(function(d) { return d.name; }),
+                variables: q.variableDefinitions.map(function(d) { return d.name; }).filter(function(n) { return n.trim(); }),
                 functions: Object.keys(q.functionsTodo),
                 rulesets: Object.keys(q.rulesets)
             };
@@ -19588,29 +19598,6 @@ var math = Numbas.math = /** @lends Numbas.math */ {
         var n = Math.floor(math.randomrange(0,selection.length));
         return selection[n];
     },
-
-    /** Choose several items from an array, at random.
-     *
-     * @param {Array} selection
-     * @param {number} n - The number of items to choose.
-     * @returns {Array}
-     * @throws {Numbas.Error} "math.choose_several.not enough items" if `selection` has length less than `n`.
-     * @see Numbas.math.randomrange
-     */
-    choose_several: function(selection, n) {
-        if(selection.length<n) {
-            throw(new Numbas.Error("math.choose_several.not enough items",{n:n}));
-        }
-        selection = selection.slice();
-        for(var i=0;i<n;i++) {
-            var j = Math.floor(math.randomrange(i,selection.length));
-            var a = selection[i];
-            selection[i] = selection[j];
-            selection[j] = a;
-        }
-        return selection.slice(0,n);
-    },
-
     /** Choose at random from a weighted list of items.
      * 
      * @param {Array} list - A list of pairs of the form `[item, probability]`, where `probability` is a number.
@@ -20711,35 +20698,6 @@ var vectormath = Numbas.vectormath = {
  * @namespace Numbas.matrixmath
  */
 var matrixmath = Numbas.matrixmath = {
-    /** Submatrix - return the matrix consisting of the cells from (row1,col1) to (row2,col2)
-     *
-     * @param {matrix} m
-     * @param {number} row1=0
-     * @param {number} col1=0
-     * @param {number} row2 - If undefined, the final row.
-     * @param {number} col2 - If undefined, the final column.
-     * @returns {matrix}
-     */
-    submatrix: function(m, row1, col1, row2, col2) {
-        if(row1 === undefined) {
-            row1 = 0;
-        }
-        if(row2 === undefined) {
-            row2 = m.rows;
-        }
-        if(col1 === undefined) {
-            col1 = 0;
-        }
-        if(col2 === undefined) {
-            col2 = m.columns;
-        }
-        var o = m.slice(Math.min(row1,row2),Math.max(row1,row2)+1).map(function(row) {
-            return row.slice(Math.min(col1,col2), Math.max(col1,col2)+1);
-        });
-        o.rows = Math.abs(row2-row1);
-        o.columns = Math.abs(col2-col1);
-        return o;
-    },
     /** Negate a matrix - negate each of its elements .
      *
      * @param {matrix} m

@@ -236,6 +236,13 @@ The following simplification rules are available:
 
         * ``x^0`` → ``1``
 
+    powerPower
+        Collect numerical powers of powers.
+
+        The rule belows is only applied if ``n`` and ``m`` are numbers.
+
+        * ``(x^n)^m`` → ``x^eval(n*m)``
+
     noLeadingMinus
         Rearrange expressions so they don't start with a unary minus
 

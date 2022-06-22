@@ -125,11 +125,11 @@ class DeleteFileView(ThemeViewMixin,editable_package.DeleteFileView):
 class AccessView(ThemeViewMixin,editable_package.AccessView):
     model = Theme
     form_class = forms.IndividualAccessFormset
-    single_form_class = forms.AddEditablePackageAccessForm
+    single_form_class = forms.AddThemeAccessForm
     success_view = 'theme_access'
 
 class AddAccessView(ThemeViewMixin,editable_package.AddAccessView):
-    form_class = forms.AddEditablePackageAccessForm
+    form_class = forms.AddThemeAccessForm
 
     def get_package(self):
         return Theme.objects.get(pk=self.kwargs['theme_pk'])

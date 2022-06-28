@@ -4,15 +4,17 @@ import os
 import traceback
 import urllib.parse
 import importlib
+import pathlib
 
 def print_notice(s):
     print('\033[92m'+s+'\033[0m\n')
 
 def path_exists(path):
-    if not os.path.exists(path):
+    path = pathlib.Path(path)
+    if not path.exists():
         answer = input("That path doesn't exist. Create it? [y/n]").strip().lower()
         if answer=='y':
-            os.makedirs(path)
+            path.mkdir(parents=True, exist_ok=True)
             return True
         else:
             return False
@@ -168,7 +170,7 @@ class Command(object):
 
     def get_default_value(self, question):
         default = question.get_default(self.values)
-        if os.path.exists('numbas/settings.py'):
+        if pathlib.Path('numbas', 'settings.py').exists():
             import numbas.settings
             try:
                 if question.key=='DB_ENGINE':
@@ -194,21 +196,21 @@ class Command(object):
         self.sub_settings()
 
         if not self.values['DEBUG']:
-            self.sub_file('web/django.wsgi',[ (r"sys.path.append\('(.*?)'\)", 'PWD') ])
+            self.sub_file(pathlib.Path('web', 'django.wsgi'),[ (r"sys.path.append\('(.*?)'\)", 'PWD') ])
 
         index_subs = [
             (r"Welcome to (the Numbas editor)", 'SITE_TITLE'),
         ]
-        self.sub_file('editor/templates/index_message.html', index_subs)
+        self.sub_file(pathlib.Path('editor', 'templates', 'index_message.html'), index_subs)
 
-        self.sub_file('editor/templates/terms_of_use_content.html', [])
+        self.sub_file(pathlib.Path('editor', 'templates', 'terms_of_use_content.html'), [])
 
-        self.sub_file('editor/templates/privacy_policy_content.html', [])
+        self.sub_file(pathlib.Path('editor', 'templates', 'privacy_policy_content.html'), [])
 
         if len(self.written_files):
             print_notice("The following files have been written. You should look at them now to see if you need to make any more changes.")
             for f in self.written_files:
-                print_notice(' * '+f)
+                print_notice(' * '+str(f))
             print('')
 
     def sub_settings(self, confirm_overwrite=True):
@@ -231,17 +233,17 @@ class Command(object):
             (r"^DEFAULT_FROM_EMAIL = '(.*?)'", 'DEFAULT_FROM_EMAIL'),
             (r"^SITE_ID = (\d+)", 'SITE_ID'),
         ]
-        self.sub_file('numbas/settings.py', settings_subs, confirm_overwrite)
+        self.sub_file(pathlib.Path('numbas', 'settings.py'), settings_subs, confirm_overwrite)
 
     def sub_file(self, fname, subs, confirm_overwrite=True):
-        if os.path.exists(fname) and confirm_overwrite:
+        if fname.exists() and confirm_overwrite:
             overwrite = self.get_input("{} already exists. Overwrite it?".format(fname),True)
             if not overwrite:
                 return
 
         self.written_files.append(fname)
 
-        with open(fname+'.dist') as f:
+        with open(str(fname)+'.dist') as f:
             text = f.read()
 
         for pattern, key in subs:

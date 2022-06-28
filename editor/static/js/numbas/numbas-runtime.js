@@ -21213,7 +21213,7 @@ var util = Numbas.util = /** @lends Numbas.util */ {
             var seen = {};
             for(var x in a.value) {
                 seen[x] = true;
-                if(!util.eq(a.value[x],b.value[x],scope)) {
+                if(b.value[x]===undefined || !util.eq(a.value[x],b.value[x],scope)) {
                     return false;
                 }
             }
@@ -29645,6 +29645,7 @@ var jme = Numbas.jme;
 var math = Numbas.math;
 var types = Numbas.jme.types;
 var Part = Numbas.parts.Part;
+var jme = Numbas.jme;
 
 /**
  * Register a custom input type.
@@ -29808,7 +29809,7 @@ CustomPart.prototype = /** @lends Numbas.parts.CustomPart.prototype */ {
                     return jme.unwrapValue(this.correctAnswer);
                 }
             default:
-                return this.correctAnswer.value;
+                return jme.unwrapValue(this.correctAnswer);
         }
     },
     setStudentAnswer: function() {
@@ -31886,13 +31887,15 @@ NumberEntryPart.prototype = /** @lends Numbas.parts.NumberEntryPart.prototype */
 
         var isNumber = ominvalue.type=='number' || omaxvalue.type=='number';
 
-        if(minvalue.type=='number') {
-            minvalue = new jme.types.TNum(minvalue.value - 1e-12);
+        if(minvalue.type=='number' && isFinite(minvalue.value)) {
+            var size = Math.floor(Math.log10(minvalue.value));
+            minvalue = new jme.types.TNum(minvalue.value - Math.pow(10,size-12));
         }
         minvalue = jme.castToType(minvalue,'decimal').value;
         settings.minvalue = minvalue;
-        if(maxvalue.type=='number') {
-            maxvalue = new jme.types.TNum(maxvalue.value + 1e-12);
+        if(maxvalue.type=='number' && isFinite(maxvalue.value)) {
+            var size = Math.floor(Math.log10(maxvalue.value));
+            maxvalue = new jme.types.TNum(maxvalue.value + Math.pow(10,size-12));
         }
         maxvalue = jme.castToType(maxvalue,'decimal').value;
         settings.maxvalue = maxvalue;

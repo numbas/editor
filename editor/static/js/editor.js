@@ -1683,10 +1683,12 @@ $(document).ready(function() {
                 content_area.classList.add('content-area');
                 well.appendChild(content_area);
 
-                var click_to_edit = document.createElement('p');
-                click_to_edit.classList.add('click-to-edit');
-                click_to_edit.textContent = 'Click to edit';
-                well.appendChild(click_to_edit);
+                if (!element.hasAttribute('disabled')){
+                    var click_to_edit = document.createElement('p');
+                    click_to_edit.classList.add('click-to-edit');
+                    click_to_edit.textContent = 'Click to edit';
+                    well.appendChild(click_to_edit);
+                }
 
                 well.setAttribute('tabindex',0);
                 well.setAttribute('role','button');

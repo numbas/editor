@@ -51,7 +51,9 @@
                 </p>
             </header>
             <main>
-                <label>Progress: <progress max="1" value="{{entry.progress}}">{{entry.progress|percentage}}</progress></label>
+                {% if entry.checklist_items.exists %}
+                    <label>Progress: <progress max="1" value="{{entry.progress}}">{{entry.progress|percentage}}</progress></label>
+                {% endif %}
             </main>
         </article>
     </li>

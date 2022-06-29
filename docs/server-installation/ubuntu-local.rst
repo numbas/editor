@@ -65,19 +65,19 @@ Configuration
   If you've followed these instructions exactly, you should use the following
   values:
 
-  ==================================== ===========================
-  Path of the Numbas compiler          ``../numbas_runtime``
-  Which database engine are you using? ``sqlite3``
-  Where are static files stored?       ``editor/static/``
-  Where are uploaded files stored?     ``media/``
-  Where are preview exams stored?      ``editor/static/previews/``
-  Base URL of previews                 ``/static/previews/``
-  Title of the Site                    ``Numbas``
-  Allow new users to register themselves? ``Y``
-  Address to send emails from:         `` ``
-  What domain will the site be accessed from? ``localhost``
-  ==================================== ===========================
-
+  ============================================  ============================
+  Path of the Numbas compiler                   ``../numbas_runtime``
+  Which database engine are you using?          ``sqlite3``
+  Where are static files stored?                ``editor/static/``
+  Where are uploaded files stored?              ``media/``
+  Where are preview exams stored?               ``editor/static/previews/``
+  Base URL of previews                          ``/static/previews/``
+  Title of the Site                             ``Numbas``
+  Allow new users to register themselves?       ``Y``
+  Address to send emails from:                  `` ``
+  What domain will the site be accessed from?   ``localhost``
+  ============================================  ============================
+  
   If you make any mistakes, you can run the script again, or edit
   ``numbas/settings.py`` directly.
 

@@ -18,7 +18,7 @@
 .well.not-editing {
     background: none;
     font-weight: normal;
-    cursor: normal;
+    cursor: default;
 }
 
 .well.not-editing .click-to-edit {

@@ -2,7 +2,7 @@
 {% load helplink %}
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='marking-settings'}">
 <form class="form-horizontal" data-bind="submit: Editor.noop">
-    {% property '$parent.marks' 'Marks' min=0 help_url='question/parts/reference.html#term-marks' %}
+    {% property '$parent.marks' 'Marks' min=0 help_url='question/parts/reference.html#term-Marks' %}
     {% include "question/generic_part_marking_settings.html" %}
 </form>
 </section>

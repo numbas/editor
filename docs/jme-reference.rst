@@ -314,7 +314,7 @@ Some extensions add new data types.
 
     Numbers of this type are represented using the `Decimal.js <https://github.com/MikeMcl/decimal.js/>`_ library.
     They're guaranteed to be accurate to 40 significant figures.
-    The order of magnitude is stored separately from the significant digits, so there's no less of precision for very big or very small numbers.
+    The order of magnitude is stored separately from the significant digits, so there's no loss of precision for very big or very small numbers.
 
     **Examples**: ``dec(0)``, ``dec("1.23e-5")``, ``6.0221409*10^23``
 
@@ -1081,7 +1081,7 @@ Number operations
         * :data:`decimal` → :data:`html`
 
     **Example**:
-        * ``scientificnumberhtml(123)`` → ``html("<span>1.23 × 10<sup>2</sup></span>")``
+        * ``scientificnumberhtml(123)`` → ``html(safe("<span>1.23 × 10<sup>2</sup></span>"))``
 
 .. jme:function:: cleannumber(str, styles)
     :keywords: strip, trim, validate, number
@@ -1489,6 +1489,31 @@ Number theory
         * ``factorise(18)`` → ``[1,2]``
         * ``factorise(70)`` → ``[1,0,1,1]``
 
+.. jme:function:: divisors(n)
+   :keywords: divisors, factors, number, factorisation
+
+    Returns the divisors of `n` as a list: positive integers :math:`d` such that :math:`d \| n`.
+
+    **Definitions**:
+        * :data:`number` → :data:`list`
+
+    **Examples**
+        * ``divisors(18)`` → ``[1,2,3,6,9,18]``
+        * ``divisors(100)`` → ``[1,2,4,5,10,20,25,50,100]``
+
+.. jme:function:: proper_divisors(n)
+   :keywords: divisors, factors, number, factorisation
+
+    Returns the proper divisors of `n` as a list: positive integers :math:`d < n` such that :math:`d \| n`.
+    That is, the divisors of `n`, excluding `n` itself.
+
+    **Definitions**:
+        * :data:`number` → :data:`list`
+
+    **Examples**
+        * ``proper_divisors(18)`` → ``[1,2,3,6,9]``
+        * ``proper_divisors(100)`` → ``[1,2,4,5,10,20,25,50]``
+
 .. jme:function:: gamma(x)
     :keywords: number
 
@@ -1820,6 +1845,22 @@ Vector and matrix arithmetic
 
     **Example**:
         * ``is_zero(vector(0,0,0))`` → ``true``
+
+.. jme:function:: is_scalar_multiple(u,v,[rel_tol],[abs_tol])
+    :keywords: test, scalar, multiple, vector
+
+    Returns ``true`` if ``u`` is a scalar multiple of ``v``. 
+    That is, if ``u = k*v`` for some real number ``k``.
+
+    The optional arguments ``rel_tol`` and ``abs_tol`` specify the relative and absolute tolerance of the equality check for each component; see :jme:func:`isclose`.
+
+    **Definitions**:
+        * :data:`vector`, :data:`vector`, :data:`number`, :data:`number` → :data:`boolean`
+
+    **Example**:
+        * ``is_scalar_multiple(vector(1,2,3), vector(2,4,6))`` → ``true``
+        * ``is_scalar_multiple(vector(1,2,3), vector(3,4,5))`` → ``false``
+        * ``is_scalar_multiple(vector(1.01,2.01,3.01), vector(2,4,6), 0.1, 0.1)`` → ``true``
 
 .. jme:function:: det(x)
     :keywords: determinant, matrix, modulus

@@ -455,9 +455,9 @@ class AddEditablePackageAccessForm(UserSearchMixin, forms.ModelForm):
 
     def check_author_access(self, cleaned_data):
         user = cleaned_data.get('user_search')
-        extension = Extension.objects.get(pk=cleaned_data.get('object_id'))
-        if user == extension.author:
-            raise forms.ValidationError("Can't give separate access to the extension's author")
+        package = self.package.objects.get(pk=cleaned_data.get('object_id'))
+        if user == package.author:
+            raise forms.ValidationError("Can't give separate access to the {}'s author".format(self.package.package_noun))
 
     def clean(self):
         cleaned_data = super().clean()
@@ -475,6 +475,12 @@ class AddEditablePackageAccessForm(UserSearchMixin, forms.ModelForm):
                     m = ea
                 m.save()
         return m
+
+class AddExtensionAccessForm(AddEditablePackageAccessForm):
+    package = Extension
+
+class AddThemeAccessForm(AddEditablePackageAccessForm):
+    package = Theme
 
 class EditThemeForm(EditPackageForm):
     class Meta(EditPackageForm.Meta):
@@ -647,6 +653,11 @@ class UploadCustomPartTypeForm(forms.ModelForm):
         for key in ['name','short_name','description','input_widget','input_options','can_be_gap','can_be_step','marking_script','marking_notes','settings','help_url','ready_to_use']:
             if key in data:
                 kwargs[key] = data[key]
+        n = 0
+        o_short_name = kwargs['short_name']
+        while CustomPartType.objects.filter(short_name=kwargs['short_name']).exists():
+            n += 1
+            kwargs['short_name'] = o_short_name+'-'+str(n)
         cpt = CustomPartType(author=self.cleaned_data.get('author'), **kwargs)
         if(commit):
             cpt.save()
@@ -884,4 +895,11 @@ class CreateItemQueueEntryForm(forms.ModelForm):
             'created_by': forms.HiddenInput(),
             'queue': forms.HiddenInput(),
             'item': forms.HiddenInput(),
+        }
+
+class SiteBroadcastForm(forms.ModelForm):
+    class Meta:
+        model = editor.models.SiteBroadcast
+        fields = ('title', 'text', 'sticky', 'show_until')
+        widgets = {
         }

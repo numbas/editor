@@ -17,13 +17,7 @@
     {{queue.description|strip_html|safe}}
 </div>
 
-<hr>
-
-<p><a href="{% url 'queue_add' queue.pk %}" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> Add an item to this queue</a></p>
-
-<p><a href="{% url 'queue_view_complete' queue.pk %}">View completed items</a></p>
-
-<h2>Items to review</h2>
+<h2>Complete items</h2>
 
 <ul class="list-unstyled entries">
     {% for row in results.page.object_list|default:results.rows %}
@@ -43,11 +37,6 @@
                     Submitted by 
                     {% user_thumbnail entry.created_by 20 18 link=True %}
                     {% user_link entry.created_by %}
-                    {% if entry.assigned_user %}
-                        · Under review by
-                        {% user_thumbnail entry.assigned_user 20 18 link=True %}
-                        {% user_link entry.assigned_user %}
-                    {% endif %}
                 </p>
             </header>
             <main>
@@ -59,5 +48,7 @@
     {% endfor %}
 </ul>
 {% include "pagination.html" %}
+
+<a href="{% url 'queue_view' queue.pk %}" class="btn btn-link">Back to incomplete items</a>
 
 {% endblock queue_content %}

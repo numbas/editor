@@ -48,13 +48,26 @@
     <div class="form-group">
         <label class="col-sm-2 control-label">Checklist</label>
         <div class="col-sm-10">
-            <ul class="list-unstyled" id="checklist" data-bind="foreach: checklist_items">
+            <ul class="list-unstyled" id="checklist" data-bind="sortable: {foreach: checklist_items, options: {group: 'checklist_items'}}">
                 <li>
+                    <button type="button" class="btn btn-xs btn-link handle" data-bind="css: {invisible: !can_move_up()}, click: move_up" title="Move this item upwards"><span class="glyphicon glyphicon-arrow-up"></span></button>
+                    <button type="button" class="btn btn-xs btn-link handle" data-bind="css: {invisible: !can_move_down()}, click: move_down" title="Move this item downwards"><span class="glyphicon glyphicon-arrow-down"></span></button>
                     <input name="checklist" class="form-control" data-bind="textInput: label"> 
                     <button type="button" data-bind="click: remove" class="btn btn-xs btn-link" title="Remove this item"><span class="glyphicon glyphicon-remove text-danger"></span></button>
                 </li>
             </ul>
-            <button type="button" class="btn btn-default" data-bind="click: add_checklist_item"><span class="glyphicon glyphicon-plus"></span> Add another item</button>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Statuses</label>
+        <div class="col-sm-10">
+            <ul class="list-unstyled" id="statuses" data-bind="foreach: status_items">
+                <li class="item">
+                    <input name="status" class="form-control" data-bind="textInput: label"> 
+                    <button type="button" data-bind="click: remove, visible: $index()!=$root.status_items().length-1" class="btn btn-xs btn-link" title="Remove this item"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                </li>
+            </ul>
         </div>
     </div>
 

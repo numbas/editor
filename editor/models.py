@@ -239,7 +239,7 @@ class Project(models.Model, ControlledObject):
         return [self.owner]+self.non_owner_members()
 
     def non_owner_members(self):
-        return list(User.objects.filter(individual_accesses__in=self.access.all()).exclude(pk=self.owner.pk))
+        return list(User.objects.filter(individual_accesses__in=self.access.all()).exclude(pk=self.owner.pk).order_by('last_name','first_name'))
 
     def all_timeline(self):
         items = self.timeline.all() | TimelineItem.objects.filter(
@@ -1967,6 +1967,7 @@ class ItemQueue(models.Model, ControlledObject):
     instructions_submitter = models.TextField(blank=True, verbose_name='Instructions for submitters')
     instructions_reviewer = models.TextField(blank=True, verbose_name='Instructions for reviewers')
     public = models.BooleanField(default=False, verbose_name='Visible to everyone?')
+    statuses = TaggableManager()
 
     access = GenericRelation('IndividualAccess', related_query_name='item_queue', content_type_field='object_content_type', object_id_field='object_id')
     timeline_noun = 'queue'
@@ -2009,7 +2010,11 @@ class ItemQueue(models.Model, ControlledObject):
 
 class ItemQueueChecklistItem(models.Model):
     queue = models.ForeignKey(ItemQueue, on_delete=models.CASCADE, related_name='checklist')
+    position = models.PositiveIntegerField()
     label = models.CharField(max_length=500)
+
+    class Meta:
+        ordering = ('position',)
 
     def as_json(self):
         return {
@@ -2019,11 +2024,17 @@ class ItemQueueChecklistItem(models.Model):
         }
 
 class ItemQueueEntryManager(models.Manager):
+    def complete(self):
+        return self.filter(complete=True)
+
     def incomplete(self):
         return self.filter(complete=False)
 
 class ItemQueueEntry(models.Model, ControlledObject, TimelineMixin):
     objects = ItemQueueEntryManager()
+    statuses = TaggableManager()
+
+    assigned_user = models.ForeignKey(User,blank=True,null=True, on_delete=models.SET_NULL)
 
     icon = 'list'
 
@@ -2065,6 +2076,13 @@ class ItemQueueEntry(models.Model, ControlledObject, TimelineMixin):
     def owner(self):
         return self.created_by
 
+    @property
+    def status(self):
+        try:
+            return self.statuses.first().name
+        except (AttributeError,self.statuses.through.DoesNotExist):
+            return None
+
     def can_be_edited_by(self, user):
         return self.queue.can_be_edited_by(user)
 
@@ -2074,7 +2092,7 @@ class ItemQueueEntry(models.Model, ControlledObject, TimelineMixin):
     def progress(self):
         total_items = self.queue.checklist.count()
         ticked_items = self.queue.checklist.filter(ticks__entry=self).distinct().count()
-        return ticked_items/total_items
+        return ticked_items/total_items if total_items>0 else 0
 
     @property
     def watching_users(self):

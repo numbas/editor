@@ -14,7 +14,7 @@ from django.core.exceptions import PermissionDenied
 from itertools import groupby
 from django_tables2.config import RequestConfig
 
-from editor.models import Project, ProjectInvitation, STAMP_STATUS_CHOICES, Folder, IndividualAccess
+from editor.models import Project, ProjectInvitation, STAMP_STATUS_CHOICES, Folder, IndividualAccess, EditorItem
 import editor.forms
 import editor.views.editoritem
 from editor.views.generic import CanViewMixin, CanEditMixin, RestrictAccessMixin, SettingsPageMixin
@@ -71,6 +71,10 @@ class IndexView(ProjectContextMixin, CanViewMixin, generic.DetailView):
         project = self.object = self.get_project()
 
         context = super(IndexView, self).get_context_data(**kwargs)
+
+        context['subfolders'] = project.folders.filter(parent=None)
+        context['items'] = project.items.order_by('-last_modified')[:3]
+        context['num_items'] = project.items.count()
 
         status_counts = {status:len(list(items)) for status,items in groupby(sorted([x[0] if x[0] is not None else 'draft' for x in project.items.values_list('current_stamp__status')]))}
         status_choices = list(STAMP_STATUS_CHOICES)+[('draft','Draft')]

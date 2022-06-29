@@ -4,9 +4,9 @@
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='marking-settings'}">
 <form class="form-horizontal" data-bind="submit: Editor.noop">
     <div class="main-settings">
-        {% property '$parent.marks' 'Marks' min=0 help_url='question/parts/reference.html#term-marks' %}
+        {% property '$parent.marks' 'Marks' min=0 help_url='question/parts/reference.html#term-Marks' %}
 
-        {% jmeproperty 'answer' 'Correct answer' display_property='displayAnswer' help_url='question/parts/mathematical-expression.html#term-correct-answer' rules='answerSimplification' %}
+        {% jmeproperty 'answer' 'Correct answer' display_property='displayAnswer' help_url='question/parts/mathematical-expression.html#term-Correct-answer' rules='answerSimplification' %}
         <div data-bind="fadeVisible: answerIsEquation" class="alert alert-warning">
             <p>{% helplink 'question/parts/mathematical-expression.html#marking-an-equation' subject='marking equations' %} The correct answer is an equation. Use the <a href="#" data-bind="click: $parent.tabber.setTab('checking-accuracy')">accuracy tab</a> to generate variable values satisfying this equation so it can be marked accurately.</p>
         </div>
@@ -17,9 +17,9 @@
 
     <h4>Advanced settings</h4>
     <hr>
-    {% property 'answerSimplification' 'Answer simplification rules' monospace=True help_url='question/parts/mathematical-expression.html#term-answer-simplification-rules' %}
-    {% booleanproperty 'showPreview' 'Show preview of student\'s answer?' help_url='question/parts/mathematical-expression.html#term-show-preview-of-student-s-answer' %}
-    {% booleanproperty 'caseSensitive' 'Expression is case-sensitive?' help_url='question/parts/mathematical-expression.html#term-expression-is-case-sensitive' %}
+    {% property 'answerSimplification' 'Answer simplification rules' monospace=True help_url='question/parts/mathematical-expression.html#term-Answer-simplification-rules' %}
+    {% booleanproperty 'showPreview' 'Show preview of student\'s answer?' help_url='question/parts/mathematical-expression.html#term-Show-preview-of-student-s-answer' %}
+    {% booleanproperty 'caseSensitive' 'Expression is case-sensitive?' help_url='question/parts/mathematical-expression.html#term-Expression-is-case-sensitive' %}
 </form>
 </section>
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='checking-accuracy'}">
@@ -31,17 +31,17 @@
     </p>
     <div class="form-group">
         <label class="{{form_label_class}} control-label">
-            Checking type {% helplink 'question/parts/mathematical-expression.html#term-checking-type' %}
+            Checking type {% helplink 'question/parts/mathematical-expression.html#term-Checking-type' %}
         </label>
         <div class="{{form_control_class}}">
             <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: checkingTypes, value: checkingType, optionsText:'niceName'"></select>
         </div>
     </div>
-    {% property 'checkingType().accuracy' 'Checking accuracy' min=0 help_url='question/parts/mathematical-expression.html#term-checking-accuracy' %}
-    {% property 'vset.points' 'Points to check' help_url='question/parts/mathematical-expression.html#term-points-to-check' %}
-    {% property 'failureRate' 'Maximum no. of failures' min=0 max='vset.points' help_url='question/parts/mathematical-expression.html#term-maximum-no-of-failures' %}
-    {% property 'vset.start' 'Checking range start' max='vset.end' help_url='question/parts/mathematical-expression.html#term-checking-range-start' %}
-    {% property 'vset.end' 'Checking range end' help_url='question/parts/mathematical-expression.html#term-checking-range-end' %}
+    {% property 'checkingType().accuracy' 'Checking accuracy' min=0 help_url='question/parts/mathematical-expression.html#term-Checking-accuracy' %}
+    {% property 'vset.points' 'Points to check' help_url='question/parts/mathematical-expression.html#term-Points-to-check' %}
+    {% property 'failureRate' 'Maximum no. of failures' min=0 max='vset.points' help_url='question/parts/mathematical-expression.html#term-Maximum-no.-of-failures' %}
+    {% property 'vset.start' 'Checking range start' max='vset.end' help_url='question/parts/mathematical-expression.html#term-Checking-range-start' %}
+    {% property 'vset.end' 'Checking range end' help_url='question/parts/mathematical-expression.html#term-Checking-range-end' %}
 
     <div data-bind="visible: valueGenerators().length">
         <h4>Variable value generators</h4>
@@ -72,7 +72,7 @@
         <div class="form-group">
             <label class="col-sm-3 control-label">
                 Pattern student's answer must match
-                {% helplink 'question/parts/mathematical-expression.html#term-pattern-student-s-answer-must-match' %}
+                {% helplink 'question/parts/mathematical-expression.html#term-Pattern-student-s-answer-must-match' %}
             </label>
             <div class="col-sm-9">
                 <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: mustmatchpattern.pattern, codemirrorMode: 'jme'"></textarea>
@@ -82,7 +82,7 @@
         <div data-bind="fadeVisible: mustmatchpattern.pattern">
             <div class="form-group" data-bind="fadeVisible: mustmatchpattern.capturedNames().length>0">
                 <label class="{{form_label_class}} control-label">
-                    Part of expression to mark {% helplink 'question/parts/mathematical-expression.html#term-part-of-expression-to-mark' %}
+                    Part of expression to mark {% helplink 'question/parts/mathematical-expression.html#term-Part-of-expression-to-mark' %}
                 </label>
                 <div class="{{form_control_class}}">
                     <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: mustmatchpattern.capturedNameOptions, value: mustmatchpattern.nameToCompare, optionsValue: 'name', optionsText:'label'"></select>
@@ -106,10 +106,10 @@
 
     <h4>Variables</h4>
     <form class="form-horizontal" data-bind="submit: Editor.noop">
-        {% booleanproperty 'checkVariableNames' 'Warn if student uses an unexpected variable name?' help_url='question/parts/mathematical-expression.html#term-warn-if-student-uses-an-unexpected-variable-name' %}
-        {% booleanproperty 'singleLetterVariables' 'Force single letter variable names?' help_url='question/parts/mathematical-expression.html#term-force-single-letter-variable-names' %}
-        {% booleanproperty 'allowUnknownFunctions' 'Allow unknown function names?' help_url='question/parts/mathematical-expression.html#term-allow-unknown-function-names' %}
-        {% booleanproperty 'implicitFunctionComposition' 'Use implicit function composition?' help_url='question/parts/mathematical-expression.html#term-use-implicit-function-composition' %}
+        {% booleanproperty 'checkVariableNames' 'Warn if student uses an unexpected variable name?' help_url='question/parts/mathematical-expression.html#term-Warn-if-student-uses-an-unexpected-variable-name' %}
+        {% booleanproperty 'singleLetterVariables' 'Force single letter variable names?' help_url='question/parts/mathematical-expression.html#term-Force-single-letter-variable-names' %}
+        {% booleanproperty 'allowUnknownFunctions' 'Allow unknown function names?' help_url='question/parts/mathematical-expression.html#term-Allow-unknown-function-names' %}
+        {% booleanproperty 'implicitFunctionComposition' 'Use implicit function composition?' help_url='question/parts/mathematical-expression.html#term-Use-implicit-function-composition' %}
     </form>
     </div>
 
@@ -117,7 +117,7 @@
 
     <h4>String restrictions</h4>
     <form class="form-horizontal" data-bind="submit: Editor.noop">
-        {% property 'minlength.length' 'Minimum length' min=0 help_url='question/parts/mathematical-expression.html#term-minimum-length-restriction' %}
+        {% property 'minlength.length' 'Minimum length' min=0 help_url='question/parts/mathematical-expression.html#term-Minimum-length-restriction' %}
         <div data-bind="fadeVisible: minlength.length()>0">
             {% percentproperty 'minlength.partialCredit' 'Partial credit for short answer' %}
             <div class="form-group">
@@ -129,7 +129,7 @@
         </div>
     </form>
     <form class="form-horizontal" data-bind="submit: Editor.noop">
-        {% property 'maxlength.length' 'Maximum length' min=0 help_url='question/parts/mathematical-expression.html#term-maximum-length-restriction' zero_means='no maximum' %}
+        {% property 'maxlength.length' 'Maximum length' min=0 help_url='question/parts/mathematical-expression.html#term-Maximum-length-restriction' zero_means='no maximum' %}
         <div data-bind="fadeVisible: maxlength.length()>0">
             {% percentproperty 'maxlength.partialCredit' 'Partial credit for long answer' %}
             <div class="form-group">
@@ -144,7 +144,7 @@
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div class="form-group">
             <label class="{{form_label_class}} control-label">
-                Required strings {% helplink 'question/parts/mathematical-expression.html#term-required-strings' %}
+                Required strings {% helplink 'question/parts/mathematical-expression.html#term-Required-strings' %}
             </label>
             <div class="{{form_control_class}}">
                 <listbox params="items: musthave.strings{% if not editable %}, disabled: true{% endif %}"></listbox>
@@ -167,7 +167,7 @@
     <form class="form-horizontal" data-bind="submit: Editor.noop">
         <div class="form-group">
             <label class="{{form_label_class}} control-label">
-                Forbidden strings: {% helplink 'question/parts/mathematical-expression.html#term-forbidden-strings' %}
+                Forbidden strings: {% helplink 'question/parts/mathematical-expression.html#term-Forbidden-strings' %}
             </label>
             <div class="{{form_control_class}}">
                 <listbox params="items: notallowed.strings{% if not editable %}, disabled: true{% endif %}"></listbox>

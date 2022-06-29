@@ -29,6 +29,7 @@ class ThemeViewMixin:
             '.js': 'files/scripts',
             '.html': 'templates',
             '.xslt': 'templates',
+            '': '',
         }
         dirname = extension_dirs.get(Path(filename).suffix,'files/resources')
         if not filename.startswith(dirname):
@@ -96,7 +97,7 @@ class EditView(ThemeViewMixin,editable_package.EditView):
         if self.request.GET.get('load_from_default'):
             filename = initial['filename']
 
-            path = str(DEFAULT_THEME_ROOT / filename)
+            path = Path(DEFAULT_THEME_ROOT / filename)
             initial['source'] = self.load_source(path)
 
         return initial
@@ -124,11 +125,11 @@ class DeleteFileView(ThemeViewMixin,editable_package.DeleteFileView):
 class AccessView(ThemeViewMixin,editable_package.AccessView):
     model = Theme
     form_class = forms.IndividualAccessFormset
-    single_form_class = forms.AddEditablePackageAccessForm
+    single_form_class = forms.AddThemeAccessForm
     success_view = 'theme_access'
 
 class AddAccessView(ThemeViewMixin,editable_package.AddAccessView):
-    form_class = forms.AddEditablePackageAccessForm
+    form_class = forms.AddThemeAccessForm
 
     def get_package(self):
         return Theme.objects.get(pk=self.kwargs['theme_pk'])

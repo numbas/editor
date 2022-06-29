@@ -548,6 +548,31 @@ $(document).ready(function() {
         }
 
         ko.computed(function() {
+            var names = [];
+            this.variables().forEach(function(v) {
+                v.names().forEach(function(name) {
+                    names.push({v:v, name:name.name.toLowerCase()});
+                })
+            });
+            this.constants().forEach(function(c) {
+                c.names().forEach(function(name) {
+                    names.push({v:c, name:name.name.toLowerCase()});
+                })
+            });
+            names.sort(Numbas.util.sortBy('name'));
+            var last;
+            names.forEach(function(n) {
+                if(last && n.name==last.name) {
+                    last.v.duplicateNameError(n.name);
+                    n.v.duplicateNameError(n.name);
+                } else {
+                    n.v.duplicateNameError(null);
+                }
+                last = n;
+            });
+        },this);
+
+        ko.computed(function() {
             var undefined_variables = [];
             var all_references = new Set();
             this.variables().forEach(function(v) {
@@ -1845,7 +1870,6 @@ $(document).ready(function() {
         kind = kind || 'variable';
         var names = ko.pureComputed(function() {
             var jme = Numbas.jme;
-            var variables = ko.unwrap(variablesAccessor);
             var names = v.name().split(/\s*,\s*/);
             var val = v.value && v.value();
             if(names.length>1) {
@@ -1861,13 +1885,6 @@ $(document).ready(function() {
                 }
 
                 d.nameError = (function() {
-                    for(var i=0;i<variables.length;i++) {
-                        var v2 = variables[i];
-                        if(v2!=v && v2.name().toLowerCase()==name.toLowerCase()) {
-                            nameError = 'There\'s already a '+kind+' with the name '+name+'.';
-                        }
-                    }
-
                     if(!re_name.test(name)) {
                         return 'The '+kind+' name <code>'+name+'</code> is invalid.';
                     }
@@ -1901,8 +1918,12 @@ $(document).ready(function() {
         },v);
 
         var nameError = ko.pureComputed(function() {
+            var duplicateNameError = v.duplicateNameError();
             var name_errors = names().map(function(nd) {
                 var name = nd.name;
+                if(name.toLowerCase() == duplicateNameError) {
+                    return 'There\'s another variable or constant with the name '+name+'.';
+                }
                 if(name=='') {
                     return '';
                 }
@@ -1928,6 +1949,7 @@ $(document).ready(function() {
         },this);
         this.group = ko.observable(null);
         this.random = ko.observable(null);
+        this.duplicateNameError = ko.observable(null);
         var names = parse_names(this,q.variables,'variable');
         this.names = names.names;
         this.nameError = names.nameError;
@@ -2163,7 +2185,7 @@ $(document).ready(function() {
                 };
                 return out;
             });
-        },this);
+        },this).extend({throttle: 1000});
         this.usedIn = ko.pureComputed(function() {
             return q.variables().filter(function(v2) {
                 return v.names().some(function(n) {
@@ -2174,7 +2196,7 @@ $(document).ready(function() {
                 b = b.name();
                 return a<b ? -1 : a>b ? 1 : 0;
             });
-        },this);
+        },this).extend({throttle: 1000});
         this.references = ko.observableArray([]);
         this.unique_references = ko.pureComputed(function() {
             var references = [];
@@ -2184,10 +2206,10 @@ $(document).ready(function() {
                 }
             });
             return references;
-        },this);
+        },this).extend({throttle: 1000});
         this.unused = ko.pureComputed(function() {
             return this.usedIn().length==0 && this.references().length==0;
-        },this);
+        },this).extend({throttle: 1000});
 
         this.can_override = ko.observable(false);
 
@@ -2443,6 +2465,7 @@ $(document).ready(function() {
         this.value = ko.observable('');
         this.tex = ko.observable('');
 
+        this.duplicateNameError = ko.observable(null);
         var names = parse_names(this,q.variables,'constant');
         this.names = names.names;
         this.nameError = names.nameError;
@@ -2631,11 +2654,6 @@ $(document).ready(function() {
         this.q = q;
         this.name = ko.observable('');
         this.limit = ko.observable(0);
-        this.modes = [
-            {name: 'Sum', value: 'sum'},
-            {name: 'Scale', value: 'scale'}
-        ];
-        this.mode = ko.observable(this.modes[0]); // sum or scale
 
         if(data) {
             this.load(data);
@@ -2645,19 +2663,12 @@ $(document).ready(function() {
         toJSON: function() {
             return {
                 name: this.name(),
-                limit: this.limit(),
-                mode: this.mode().value
+                limit: this.limit()
             };
         },
 
         load: function(data) {
             tryLoad(data,['name','limit'],this);
-            for(var i=0;i<this.modes.length;i++) {
-                if(this.modes[i].value==data.mode) {
-                    this.mode(this.modes[i]);
-                    break;
-                }
-            }
         }
     };
 
@@ -2972,6 +2983,7 @@ $(document).ready(function() {
 
         this.addUnitTest = function(test) {
             test.editing(false);
+            test.last_variables = null;
             p.unit_tests.push(test);
             p.marking_test(new MarkingTest(p,p.q.questionScope()));
         }
@@ -3311,6 +3323,7 @@ $(document).ready(function() {
                             value: value
                         }
                     }));
+                    test.variablesReady(true);
                     test.name(dt.name);
                     test.answer(dt.answer);
                     test.notes().forEach(function(n) {
@@ -3559,6 +3572,7 @@ $(document).ready(function() {
 
         // Values of variables used in this test
         this.variables = ko.observableArray([]);
+        this.variablesReady = ko.observable(false);
 
         // Marking parameters generated by this part
         this.marking_parameters = ko.observableArray([]);
@@ -3582,8 +3596,9 @@ $(document).ready(function() {
                     });
                 });
                 this.variables(vs);
+                this.variablesReady(this.part.q.variablesReady());
             }
-        },this);
+        },this).extend({throttle:500});
 
         this.remove = function() {
             // Remove this test from the parent part
@@ -3637,7 +3652,7 @@ $(document).ready(function() {
             if(mt.part.q.currentPart()!=mt.part) {
                 return;
             }
-            if(!mt.part.q.variablesReady()) {
+            if(!mt.variablesReady()) {
                 return;
             }
             try {
@@ -3647,7 +3662,7 @@ $(document).ready(function() {
                     var same_question = Numbas.util.objects_equal(json,mt.last_question_json);
                     var same_variables = mt.last_variables && variables.length==mt.last_variables.length && variables.every(function(v,i) {
                         var lv = mt.last_variables[i];
-                        return lv.name==v.name && Numbas.util.eq(v.value,lv.value);
+                        return lv.name==v.name && lv.value!==null && Numbas.util.eq(v.value,lv.value);
                     });
                     if(same_question && same_variables) {
                         return mt.question();

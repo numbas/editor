@@ -3,10 +3,10 @@
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='marking-settings'}">
 <form class="form-horizontal" data-bind="submit: Editor.noop">
     <div class="main-settings">
-        {% property '$parent.marks' 'Marks' min=0 help_url='question/parts/reference.html#term-marks' %}
+        {% property '$parent.marks' 'Marks' min=0 help_url='question/parts/reference.html#term-Marks' %}
 
-        {% property 'minValue' 'Minimum accepted value' monospace=True help_url='question/parts/numberentry.html#term-minimum-accepted-value' %}
-        {% property 'maxValue' 'Maximum accepted value' monospace=True help_url='question/parts/numberentry.html#term-maximum-accepted-value' %}
+        {% property 'minValue' 'Minimum accepted value' monospace=True help_url='question/parts/numberentry.html#term-Minimum-accepted-value' %}
+        {% property 'maxValue' 'Maximum accepted value' monospace=True help_url='question/parts/numberentry.html#term-Maximum-accepted-value' %}
     </div>
 
     <hr>
@@ -16,27 +16,27 @@
     <hr>
     <div class="form-group">
         <label class="{{form_label_class}} control-label">
-            Precision restriction {% helplink 'question/parts/numberentry.html#term-precision-restriction' %}
+            Precision restriction {% helplink 'question/parts/numberentry.html#term-Precision-restriction' %}
         </label>
         <div class="{{form_control_class}}">
             <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: precisionTypes, value: precisionType, optionsText: 'niceName'"></select>
         </div>
     </div>
     <div data-bind="fadeVisible: fractionPossible">
-        {% booleanproperty 'allowFractions' 'Allow the student to enter a fraction?' help_url='question/parts/numberentry.html#term-allow-the-student-to-enter-a-fraction' %}
+        {% booleanproperty 'allowFractions' 'Allow the student to enter a fraction?' help_url='question/parts/numberentry.html#term-Allow-the-student-to-enter-a-fraction' %}
     </div>
     <div data-bind="fadeVisible: allowFractions">
-        {% booleanproperty 'mustBeReduced' 'Must the fraction be reduced?' help_url='question/parts/numberentry.html#term-must-the-fraction-be-reduced' %}
-        {% booleanproperty 'showFractionHint' 'Show fraction input hint?' help_url='question/parts/numberentry.html#term-show-fraction-input-hint' %}
+        {% booleanproperty 'mustBeReduced' 'Must the fraction be reduced?' help_url='question/parts/numberentry.html#term-Must-the-fraction-be-reduced' %}
+        {% booleanproperty 'showFractionHint' 'Show fraction input hint?' help_url='question/parts/numberentry.html#term-Show-fraction-input-hint' %}
         <div data-bind="fadeVisible: mustBeReduced">
             {% percentproperty 'mustBeReducedPC' 'Partial credit for unreduced fraction' %}
         </div>
-        {% booleanproperty 'correctAnswerFraction' 'Display the correct answer as a fraction?' help_url='question/parts/numberentry.html#term-display-the-correct-answer-as-a-fraction' %}
+        {% booleanproperty 'correctAnswerFraction' 'Display the correct answer as a fraction?' help_url='question/parts/numberentry.html#term-Display-the-correct-answer-as-a-fraction' %}
     </div>
     <div class="form-group" data-bind="fadeVisible: precisionType().name!='none'">
         {% property 'precision' 'precisionWord' dynamic_label=True %}
-        {% booleanproperty 'strictPrecision' 'Require trailing zeros?' help_url='question/parts/numberentry.html#term-require-trailing-zeros' %}
-        {% booleanproperty 'showPrecisionHint' 'Show precision restriction hint?' help_url='question/parts/numberentry.html#term-show-precision-restriction-hint' %}
+        {% booleanproperty 'strictPrecision' 'Require trailing zeros?' help_url='question/parts/numberentry.html#term-Require-trailing-zeros' %}
+        {% booleanproperty 'showPrecisionHint' 'Show precision restriction hint?' help_url='question/parts/numberentry.html#term-Show-precision-restriction-hint' %}
         {% percentproperty 'precisionPartialCredit' 'Partial credit for wrong precision' %}
         <div class="form-group">
             <label class="{{form_label_class}} control-label">
@@ -47,11 +47,11 @@
     </div>
     <hr>
     <div class="form-group">
-        <label class="{{form_label_class}} control-label">Allowed notation {% helplink 'question/parts/numberentry.html#term-allowed-notation' %}</label>
+        <label class="{{form_label_class}} control-label">Allowed notation {% helplink 'question/parts/numberentry.html#term-Allowed-notation' %}</label>
         <div class="{{form_control_class}}">
             <multi-select-checkboxes params="options: notationStyles, selectedOptions: allowedNotationStyles, labelProperty: 'name', helpProperty: 'description'"></muli-select-checkboxes>
         </div>
     </div>
-    {% selectproperty 'correctAnswerStyle' 'Correct answer style' options_text='name' options='allowedNotationStyles' help_url='question/parts/numberentry.html#term-correct-answer-style' %}
+    {% selectproperty 'correctAnswerStyle' 'Correct answer style' options_text='name' options='allowedNotationStyles' help_url='question/parts/numberentry.html#term-Correct-answer-style' %}
 </form>
 </section>

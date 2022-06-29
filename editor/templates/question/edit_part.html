@@ -34,7 +34,7 @@
 <div class="col-sm-11 col-md-9 col-lg-10 tab-content">
     <section class="tab-pane" data-bind="activeIf: ko.unwrap(tabber.currentTab().id)=='prompt'">
         <p class="help-block">
-            {% helplink 'question/parts/reference.html#term-prompt' subject='the part prompt' %}
+            {% helplink 'question/parts/reference.html#term-Prompt' subject='the part prompt' %}
             Ask the student a question, and give any hints about how they should answer this part.
         </p>
 
@@ -43,13 +43,13 @@
 
     <section class="tab-pane" data-bind="activeIf: ko.unwrap(tabber.currentTab().id)=='alternative-feedback-message'">
         <form class="form-horizontal" data-bind="submit: Editor.noop">
-            {% booleanproperty 'useAlternativeFeedback' 'Show all feedback?' help_url='question/parts/reference.html#term-show-all-feedback' %}
+            {% booleanproperty 'useAlternativeFeedback' 'Show all feedback?' help_url='question/parts/reference.html#term-Show-all-feedback' %}
 
             <div class="form-group">
                 <label class="label-block">
                     <div class="{{form_label_class}} control-label">
                         Message if this alternative is used
-                        {% helplink 'question/parts/reference.html#term-message-if-this-alternative-is-used' subject='the alternative feedback message' %}
+                        {% helplink 'question/parts/reference.html#term-Message-if-this-alternative-is-used' subject='the alternative feedback message' %}
                     </div>
                     <div class="{{form_control_class}}">
                         <div {% if not editable %}disabled{% endif %} data-bind="writemaths: alternativeFeedbackMessage, preambleCSS: $root.preamble.css, tinymce_plugins: ['jmevisible','jmepreview']"></div>
@@ -77,10 +77,10 @@
 
     <section class="tab-pane" data-bind="activeIf: ko.unwrap(tabber.currentTab().id)=='marking-algorithm'">
         <form class="form-horizontal" data-bind="submit: Editor.noop">
-            {% booleanproperty 'use_custom_algorithm' 'Use custom marking algorithm?' help_url='question/parts/reference.html#term-use-custom-marking-algorithm' %}
+            {% booleanproperty 'use_custom_algorithm' 'Use custom marking algorithm?' help_url='question/parts/reference.html#term-Use-custom-marking-algorithm' %}
 
             <div data-bind="fadeVisible: use_custom_algorithm">
-                {% booleanproperty 'extendBaseMarkingAlgorithm' 'Extend base marking algorithm?' help_url='question/parts/reference.html#term-extend-base-marking-algorithm' %}
+                {% booleanproperty 'extendBaseMarkingAlgorithm' 'Extend base marking algorithm?' help_url='question/parts/reference.html#term-Extend-base-marking-algorithm' %}
                 <div class="base-marking-algorithm" data-bind="fadeVisible: extendBaseMarkingAlgorithm">
                     <h5>Base marking algorithm</h5>
                     <pre data-bind="text: baseMarkingAlgorithm"></pre>
@@ -531,8 +531,8 @@
             </p>
 
             <form class="form-horizontal" data-bind="submit: Editor.noop, visible: variableReplacements().length">
-                {% selectproperty 'variableReplacementStrategy' 'Variable replacement strategy' options_text='niceName' options='variableReplacementStrategies' help_url='question/parts/reference.html#term-variable-replacement-strategy' %}
-                {% property 'adaptiveMarkingPenalty' 'Penalty when adaptive marking is used' min=0 help_url='question/parts/reference.html#term-penalty-when-adaptive-marking-is-used' %}
+                {% selectproperty 'variableReplacementStrategy' 'Variable replacement strategy' options_text='niceName' options='variableReplacementStrategies' help_url='question/parts/reference.html#term-Variable-replacement-strategy' %}
+                {% property 'adaptiveMarkingPenalty' 'Penalty when adaptive marking is used' min=0 help_url='question/parts/reference.html#term-Penalty-when-adaptive-marking-is-used' %}
             </form>
         </div>
     </section>
@@ -547,7 +547,7 @@
             </p>
         </div>
         <form class="form-horizontal" data-bind="submit: Editor.noop, visible: !isFirstPart()">
-            {% booleanproperty 'suggestGoingBack' 'Suggest going back to the previous part?' help_url='question/explore.html#term-suggest-going-back-to-the-previous-part' %}
+            {% booleanproperty 'suggestGoingBack' 'Suggest going back to the previous part?' help_url='question/explore.html#term-Suggest-going-back-to-the-previous-part' %}
         </form>
         <h3>Next part options</h3>
         <p class="help-block">
@@ -564,16 +564,16 @@
                 </div>
                 <div class="panel-body">
                     <form class="form-horizontal" data-bind="submit: Editor.noop">
-                        {% property 'rawLabel' 'Label' help_url='question/explore.html#term-label' placeholder='label' %}
-                        {% booleanproperty 'lockAfterLeaving' 'Lock this part?' help_url='question/explore.html#term-lock-this-part' %}
-                        {% selectproperty 'availabilityCondition' 'Availability' options_text='name' options='availability_conditions' help_url='question/explore.html#term-availability' %}
+                        {% property 'rawLabel' 'Label' help_url='question/explore.html#term-Label' placeholder='label' %}
+                        {% booleanproperty 'lockAfterLeaving' 'Lock this part?' help_url='question/explore.html#term-Lock-this-part' %}
+                        {% selectproperty 'availabilityCondition' 'Availability' options_text='name' options='availability_conditions' help_url='question/explore.html#term-Availability' %}
                         <div data-bind="fadeVisible: availabilityCondition().id=='expression'">
-                            {% property 'availabilityExpression' 'Available if' help_url='question/explore.html#term-available-if' %}
+                            {% property 'availabilityExpression' 'Available if' help_url='question/explore.html#term-Available-if' %}
                         </div>
 
-                        {% selectproperty 'penalty' 'Penalty to apply when visited' options_text='name' options='$parent.q.penalties' allow_blank=True help_url='question/explore.html#term-penalty-to-apply-when-visited' %}
+                        {% selectproperty 'penalty' 'Penalty to apply when visited' options_text='name' options='$parent.q.penalties' allow_blank=True help_url='question/explore.html#term-Penalty-to-apply-when-visited' %}
                         <div data-bind="fadeVisible: penalty">
-                            {% property 'penaltyAmount' 'Amount of penalty' help_url='question/explore.html#term-amount-of-penalty' %}
+                            {% property 'penaltyAmount' 'Amount of penalty' help_url='question/explore.html#term-Amount-of-penalty' %}
                         </div>
                     </form>
                     <div class="variable-replacements">

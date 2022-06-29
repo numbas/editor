@@ -3,7 +3,7 @@
 <section class="tab-pane" data-bind="css: {active: ko.utils.unwrapObservable($parent.tabber.currentTab().id)=='marking-settings'}">
 <form class="form-horizontal" data-bind="submit: Editor.noop">
     <div class="main-settings">
-        {% property '$parent.marks' 'Marks' min=0 help_url='question/parts/reference.html#term-marks' %}
+        {% property '$parent.marks' 'Marks' min=0 help_url='question/parts/reference.html#term-Marks' %}
 
         <div class="form-group">
             <label class="{{form_label_class}} control-label">
@@ -21,25 +21,25 @@
     <h4>Advanced settings</h4>
     <hr>
 
-    {% property 'numRows' 'Number of rows' min=1 help_url='question/parts/matrixentry.html#term-number-of-rows' %}
-    {% property 'numColumns' 'Number of columns' min=1 help_url='question/parts/matrixentry.html#term-number-of-columns' %}
-    {% booleanproperty 'allowResize' 'Allow student to change size of matrix?' help_url='question/parts/matrixentry.html#term-allow-student-to-change-size-of-matrix' %}
+    {% property 'numRows' 'Number of rows' min=1 help_url='question/parts/matrixentry.html#term-Number-of-rows' %}
+    {% property 'numColumns' 'Number of columns' min=1 help_url='question/parts/matrixentry.html#term-Number-of-columns' %}
+    {% booleanproperty 'allowResize' 'Allow student to change size of matrix?' help_url='question/parts/matrixentry.html#term-Allow-student-to-change-size-of-matrix' %}
     <div data-bind="fadeVisible: allowResize">
-        {% property 'minRows' 'Minimum number of rows' help_url='question/parts/matrixentry.html#term-minimum-number-of-rows' zero_means='No limit' %}
-        {% property 'maxRows' 'Maximum number of rows' help_url='question/parts/matrixentry.html#term-maximum-number-of-rows' zero_means='No limit' %}
-        {% property 'minColumns' 'Minimum number of columns' help_url='question/parts/matrixentry.html#term-minimum-number-of-columns' zero_means='No limit' %}
-        {% property 'maxColumns' 'Maximum number of columns' help_url='question/parts/matrixentry.html#term-maximum-number-of-columns' zero_means='No limit' %}
+        {% property 'minRows' 'Minimum number of rows' help_url='question/parts/matrixentry.html#term-Minimum-number-of-rows' zero_means='No limit' %}
+        {% property 'maxRows' 'Maximum number of rows' help_url='question/parts/matrixentry.html#term-Maximum-number-of-rows' zero_means='No limit' %}
+        {% property 'minColumns' 'Minimum number of columns' help_url='question/parts/matrixentry.html#term-Minimum-number-of-columns' zero_means='No limit' %}
+        {% property 'maxColumns' 'Maximum number of columns' help_url='question/parts/matrixentry.html#term-Maximum-number-of-columns' zero_means='No limit' %}
     </div>
 
     <hr>
 
-    {% property 'tolerance' 'Margin of error allowed in each cell' min=0 help_url='question/parts/matrixentry.html#term-margin-of-error-allowed-in-each-cell' %}
-    {% booleanproperty 'markPerCell' 'Gain marks for each correct cell?' help_url='question/parts/matrixentry.html#term-gain-marks-for-each-correct-cell' %}
+    {% property 'tolerance' 'Margin of error allowed in each cell' min=0 help_url='question/parts/matrixentry.html#term-Margin-of-error-allowed-in-each-cell' %}
+    {% booleanproperty 'markPerCell' 'Gain marks for each correct cell?' help_url='question/parts/matrixentry.html#term-Gain-marks-for-each-correct-cell' %}
 
     <hr>
     <div class="form-group">
         <label class="{{form_label_class}} control-label">
-            Precision restriction {% helplink 'question/parts/matrixentry.html#term-precision-restriction' %}
+            Precision restriction {% helplink 'question/parts/matrixentry.html#term-Precision-restriction' %}
         </label>
         <div class="{{form_control_class}}">
             <select {% if not editable %}disabled{% endif %} class="form-control" data-bind="options: precisionTypes, value: precisionType, optionsText: 'niceName'"></select>
@@ -47,7 +47,7 @@
     </div>
     <div data-bind="fadeVisible: precisionType().name!='none'">
         {% property 'precision' 'precisionWord' dynamic_label=True %}
-        {% booleanproperty 'strictPrecision' 'Require trailing zeros?' help_url='question/parts/matrixentry.html#term-require-trailing-zeros' %}
+        {% booleanproperty 'strictPrecision' 'Require trailing zeros?' help_url='question/parts/matrixentry.html#term-Require-trailing-zeros' %}
         {% percentproperty 'precisionPartialCredit' 'Partial credit for wrong precision' %}
         <div class="form-group">
             <label class="{{form_label_class}} control-label">
@@ -58,8 +58,8 @@
     </div>
 
     <div data-bind="fadeVisible: fractionPossible">
-        {% booleanproperty 'allowFractions' 'Allow the student to enter fractions?' help_url='question/parts/matrixentry.html#term-allow-the-student-to-enter-fractions' %}
-        {% booleanproperty 'correctAnswerFractions' 'Display numbers in the correct answer as fractions?' help_url='question/parts/matrixentry.html#term-display-numbers-in-the-correct-answer-as-fractions' %}
+        {% booleanproperty 'allowFractions' 'Allow the student to enter fractions?' help_url='question/parts/matrixentry.html#term-Allow-the-student-to-enter-fractions' %}
+        {% booleanproperty 'correctAnswerFractions' 'Display numbers in the correct answer as fractions?' help_url='question/parts/matrixentry.html#term-Display-numbers-in-the-correct-answer-as-fractions' %}
     </div>
 
 </form>

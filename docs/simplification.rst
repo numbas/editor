@@ -172,6 +172,8 @@ Altogether, this produces the following rendering: :math:`\frac{1}{2} x + x^2 - 
 
 The following simplification rules are available:
 
+.. _simplification-rule-glossary:
+
 .. glossary::
 
     basic
@@ -234,6 +236,13 @@ The following simplification rules are available:
 
         * ``x^0`` → ``1``
 
+    powerPower
+        Collect numerical powers of powers.
+
+        The rule belows is only applied if ``n`` and ``m`` are numbers.
+
+        * ``(x^n)^m`` → ``x^eval(n*m)``
+
     noLeadingMinus
         Rearrange expressions so they don't start with a unary minus
 
@@ -268,6 +277,8 @@ The following simplification rules are available:
         * ``(n*x)/m`` → ``(eval(n/gcd(n,m))*x)/eval(m/gcd(n,m))`` (cancel algebraic fractions)
         * ``n/(m*x)`` → ``eval(n/gcd(n,m))/(eval(m/gcd(n,m))*x)``
         * ``(n*x)/(m*y)`` → ``(eval(n/gcd(n,m))*x)/(eval(m/gcd(n,m))*y)``
+        * ``(a/(b/c))`` → ``(a*c)/b``
+
 
     zeroBase
         Cancel any power of zero
@@ -337,7 +348,7 @@ The following simplification rules are available:
     collectLikeFractions
         Collect together fractions over the same denominator.
 
-        * ``x/3 + 4/x`` → ``(x+4)/3``
+        * ``x/3 + 4/3`` → ``(x+4)/3``
 
     canonicalOrder
         Rearrange the expression into a "canonical" order, using :jme:func:`canonical_compare`.

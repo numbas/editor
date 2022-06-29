@@ -11,7 +11,7 @@
         });
     </script>
 
-    {{checklist_items|json_script:"checklist-items"}}
+    {{data|json_script:"data"}}
     <script src="{% sstatic 'js/queue/edit.js' %}" type="text/javascript"></script>
 {% endblock javascripts %}
 
@@ -43,19 +43,29 @@
     <div class="form-group">
         <label class="col-sm-2 control-label">Checklist</label>
         <div class="col-sm-10">
-            <ul class="list-unstyled" id="checklist" data-bind="foreach: checklist_items">
+            <ul class="list-unstyled" id="checklist" data-bind="sortable: {foreach: checklist_items, options: {group: 'checklist_items'}}">
                 <li class="item">
+                    <button type="button" class="btn btn-xs btn-link handle" data-bind="css: {invisible: !can_move_up()}, click: move_up" title="Move this item upwards"><span class="glyphicon glyphicon-arrow-up"></span></button>
+                    <button type="button" class="btn btn-xs btn-link handle" data-bind="css: {invisible: !can_move_down()}, click: move_down" title="Move this item downwards"><span class="glyphicon glyphicon-arrow-down"></span></button>
                     <input type="hidden" name="id" data-bind="value: pk">
                     <input name="checklist" class="form-control" data-bind="textInput: label"> 
                     <button type="button" data-bind="click: remove, visible: $index()!=$root.checklist_items().length-1" class="btn btn-xs btn-link" title="Remove this item"><span class="glyphicon glyphicon-remove text-danger"></span></button>
-                </li>
-                <li class="add-after">
-                    <button type="button" class="btn btn-link btn-sm" data-bind="click: add_item_after" title="Add another item"><span class="glyphicon glyphicon-plus"></span></button>
                 </li>
             </ul>
         </div>
     </div>
 
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Statuses</label>
+        <div class="col-sm-10">
+            <ul class="list-unstyled" id="statuses" data-bind="foreach: status_items">
+                <li class="item">
+                    <input name="status" class="form-control" data-bind="textInput: label"> 
+                    <button type="button" data-bind="click: remove, visible: $index()!=$root.status_items().length-1" class="btn btn-xs btn-link" title="Remove this item"><span class="glyphicon glyphicon-remove text-danger"></span></button>
+                </li>
+            </ul>
+        </div>
+    </div>
 
     <div class="col-sm-offset-2 col-sm-10">
         <p>

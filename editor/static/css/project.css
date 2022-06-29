@@ -1,3 +1,16 @@
+.contents .folder {
+    font-weight: bold;
+}
+
+.contents .folder > td {
+    background: hsl(0,0%,96%);
+}
+
+.members {
+  max-height: 30em;
+  overflow-y: auto;
+}
+
 .status-breakdown a {
     color: inherit;
     display: block;

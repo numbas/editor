@@ -148,7 +148,8 @@
 
                 <li>
                     <a href="#" class="add-to-queue" title="Add this to a queue" data-item-id="{{object.editoritem.pk}}">
-                        <span class="glyphicon glyphicon-list" aria-hidden="true"></span> Add to a queue
+                        <span class="glyphicon glyphicon-list" aria-hidden="true"></span> 
+                        <span class="hidden-sm">Add to a queue</span>
                     </a>
                 </li>
 
@@ -204,7 +205,7 @@
                                     <div id="description-input" {% if not editable %}disabled{% endif %} data-bind="writemaths: description"></div>
                                     <div class="help-block">
                                         <p>
-                                            {% helplink 'question/reference.html#term-description' subject='the description field' %}
+                                            {% helplink 'question/reference.html#term-Description' subject='the description field' %}
                                             Try to answer the following questions here:
                                         </p>
                                         <ul>

@@ -1,10 +1,13 @@
+from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import redirect
+from django_tables2.config import RequestConfig
 from django.urls import reverse
 from django.views import generic
 
 from editor import forms
 from editor.models import EditorItem, ItemQueue, Project, ItemQueueChecklistItem, ItemQueueEntry, ItemQueueChecklistTick, IndividualAccess
+from editor.tables import ItemQueueEntryTable
 import editor.views.generic
 from editor.views.generic import CanViewMixin, CanEditMixin, CanDeleteMixin, SettingsPageMixin, RestrictAccessMixin
 
@@ -40,10 +43,13 @@ class CreateView(CanEditMixin, generic.CreateView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
-        for label in self.request.POST.getlist('checklist'):
+        for i,label in enumerate(self.request.POST.getlist('checklist')):
             label = label.strip()
             if label!='':
-                ItemQueueChecklistItem.objects.create(queue=self.object, label=label)
+                ItemQueueChecklistItem.objects.create(queue=self.object, label=label, position=i)
+        statuses = [label.strip() for label in self.request.POST.getlist('checklist')]
+        statuses = [label for label in statuses if label!='']
+        self.object.statuses.set(*statuses)
         return response
 
     def get_success_url(self):
@@ -59,31 +65,45 @@ class UpdateView(SettingsPageMixin, generic.UpdateView):
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
 
-        context['checklist_items'] = [c.as_json() for c in self.object.checklist.all()]
+        context['data'] = {
+            'checklist_items': [c.as_json() for c in self.object.checklist.all()],
+            'statuses': [c.name for c in self.object.statuses.all()],
+        }
 
         return context
 
     def form_valid(self, form):
         response = super().form_valid(form)
 
+        self.save_checklist()
+        self.save_statuses()
+
+        return response
+
+    def save_checklist(self):
+
         labels = self.request.POST.getlist('checklist')
         pks = self.request.POST.getlist('id')
 
         self.object.checklist.exclude(pk__in=[int(x) for x in pks if x]).delete()
 
-        for label,pk in zip(labels, pks):
+        for i,label,pk in zip(range(len(labels)),labels, pks):
             if pk:
                 item = ItemQueueChecklistItem.objects.get(pk=int(pk))
                 if label:
                     item.label = label
+                    item.position = i
                     item.save()
                 else:
                     item.delete()
             else:
                 if label:
-                    ItemQueueChecklistItem.objects.create(queue=self.object, label=label)
+                    ItemQueueChecklistItem.objects.create(queue=self.object, label=label, position=i)
 
-        return response
+    def save_statuses(self):
+        statuses = self.request.POST.getlist('status')
+        statuses = [s for s in statuses if s.strip()]
+        self.object.statuses.set(*statuses,clear=True)
 
     def get_success_url(self):
         return reverse('queue_view', args=(self.object.pk,))
@@ -128,6 +148,28 @@ class DetailView(CanViewMixin, generic.DetailView):
     model = ItemQueue
     template_name = 'queue/view.html'
     context_object_name = 'queue'
+
+    table_class = ItemQueueEntryTable
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['results'] = self.make_table()
+        return context
+
+    def get_table_queryset(self):
+        return self.object.entries.incomplete()
+    
+    def make_table(self):
+        config = RequestConfig(self.request, paginate={'per_page': 10})
+        results = self.table_class(self.get_table_queryset())
+        config.configure(results)
+        return results
+
+class CompleteItemsView(DetailView):
+    template_name = 'queue/view_complete.html'
+
+    def get_table_queryset(self):
+        return self.object.entries.complete()
 
 class DeleteView(CanDeleteMixin, generic.DeleteView):
     model = ItemQueue
@@ -208,10 +250,29 @@ class ReviewEntryView(CanViewMixin, EntryMixin, generic.DetailView):
         for item in to_add:
             ItemQueueChecklistTick.objects.create(entry=entry, item=item, user=self.request.user)
 
+        ocomplete = entry.complete
         entry.complete = self.request.POST.get('remove') == 'on'
+        if entry.complete and not ocomplete:
+            messages.info(self.request,
+                f"The entry <em>{entry.item.name}</em> is now complete. "
+            )
+
+        status = self.request.POST.get('status')
+        if status:
+            entry.statuses.set(status,clear=True)
+        else:
+            entry.statuses.clear()
+
         entry.save()
 
-        return redirect('queue_view', pk=entry.queue.pk)
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        entry = self.get_object()
+        if entry.complete:
+            return reverse('queue_view', args=(entry.queue.pk,))
+        else:
+            return reverse('queue_entry_review', args=(entry.pk,))
 
 class CommentView(CanViewMixin, editor.views.generic.CommentView):
     model = ItemQueueEntry
@@ -223,6 +284,32 @@ class UpdateEntryView(CanEditMixin, EntryMixin, generic.UpdateView):
 
     def get_success_url(self):
         return reverse('queue_entry_review', args=(self.object.pk,))
+
+class EntryAssignUserView(CanEditMixin, EntryMixin, generic.UpdateView):
+    fields = []
+    http_method_names = ['post']
+
+    def post(self, request, *args, **kwargs):
+        entry = self.get_object()
+        entry.assigned_user = request.user
+        entry.save()
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse('queue_entry_review', args=(self.get_object().pk,))
+
+class EntryUnassignUserView(CanEditMixin, EntryMixin, generic.UpdateView):
+    fields = []
+    http_method_names = ['post']
+
+    def post(self, request, *args, **kwargs):
+        entry = self.get_object()
+        entry.assigned_user = None
+        entry.save()
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse('queue_entry_review', args=(self.get_object().pk,))
 
 class DeleteEntryView(CanEditMixin, EntryMixin, generic.DeleteView):
     template_name = 'queue/delete_entry.html'

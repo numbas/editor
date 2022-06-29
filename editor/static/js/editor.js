@@ -1689,8 +1689,6 @@ $(document).ready(function() {
                     click_to_edit.textContent = 'Click to edit';
                     well.appendChild(click_to_edit);
                 }
-                else
-                    well.style.cursor="default";
 
                 well.setAttribute('tabindex',0);
                 well.setAttribute('role','button');

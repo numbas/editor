@@ -1489,6 +1489,31 @@ Number theory
         * ``factorise(18)`` → ``[1,2]``
         * ``factorise(70)`` → ``[1,0,1,1]``
 
+.. jme:function:: divisors(n)
+   :keywords: divisors, factors, number, factorisation
+
+    Returns the divisors of `n` as a list: positive integers :math:`d` such that :math:`d \| n`.
+
+    **Definitions**:
+        * :data:`number` → :data:`list`
+
+    **Examples**
+        * ``divisors(18)`` → ``[1,2,3,6,9,18]``
+        * ``divisors(100)`` → ``[1,2,4,5,10,20,25,50,100]``
+
+.. jme:function:: proper_divisors(n)
+   :keywords: divisors, factors, number, factorisation
+
+    Returns the proper divisors of `n` as a list: positive integers :math:`d < n` such that :math:`d \| n`.
+    That is, the divisors of `n`, excluding `n` itself.
+
+    **Definitions**:
+        * :data:`number` → :data:`list`
+
+    **Examples**
+        * ``proper_divisors(18)`` → ``[1,2,3,6,9]``
+        * ``proper_divisors(100)`` → ``[1,2,4,5,10,20,25,50]``
+
 .. jme:function:: gamma(x)
     :keywords: number
 

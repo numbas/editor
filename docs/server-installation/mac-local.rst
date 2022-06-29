@@ -70,6 +70,10 @@ Configuration
   Where are uploaded files stored?     ``media/``
   Where are preview exams stored?      ``editor/static/previews/``
   Base URL of previews                 ``/static/previews/``
+  Title of the Site                    ``Numbas``
+  Allow new users to register themselves? ``Y``
+  Address to send emails from:         `` ``
+  What domain will the site be accessed from? ``localhost``
   ==================================== =====================
 
   If you make any mistakes, you can run the script again, or edit

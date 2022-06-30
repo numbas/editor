@@ -74,7 +74,7 @@ Configuration
   Base URL of previews                          ``/static/previews/``
   Title of the Site                             ``Numbas``
   Allow new users to register themselves?       ``Y``
-  Address to send emails from:                  `` ``
+  Address to send emails from:                  (you can leave this blank)
   What domain will the site be accessed from?   ``localhost``
   ============================================  ============================
   

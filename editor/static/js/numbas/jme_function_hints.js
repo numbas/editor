@@ -1295,6 +1295,34 @@ var jme_function_hints =
         "doc": "jme-reference"
     },
     {
+        "name": "divisors",
+        "description": "Returns the divisors of <title_reference>n</title_reference>n as a list: positive integers $d$ such that $d \\| n$.",
+        "keywords": [
+            "divisors",
+            "factors",
+            "number",
+            "factorisation"
+        ],
+        "calling_patterns": [
+            "divisors(n)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "proper_divisors",
+        "description": "Returns the proper divisors of <title_reference>n</title_reference>n as a list: positive integers $d < n$ such that $d \\| n$.\nThat is, the divisors of <title_reference>n</title_reference>n, excluding <title_reference>n</title_reference>n itself.",
+        "keywords": [
+            "divisors",
+            "factors",
+            "number",
+            "factorisation"
+        ],
+        "calling_patterns": [
+            "proper_divisors(n)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
         "name": "gamma",
         "description": "Gamma function.",
         "keywords": [
@@ -1490,7 +1518,8 @@ var jme_function_hints =
             "test"
         ],
         "calling_patterns": [
-            "x|y"
+            "x|y",
+            "x divides y"
         ],
         "doc": "jme-reference"
     },
@@ -1618,6 +1647,20 @@ var jme_function_hints =
         ],
         "calling_patterns": [
             "is_zero(x)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "is_scalar_multiple",
+        "description": "Returns <code>true</code> if <code>u</code> is a scalar multiple of <code>v</code>.\nThat is, if <code>u = k*v</code> for some real number <code>k</code>.",
+        "keywords": [
+            "test",
+            "scalar",
+            "multiple",
+            "vector"
+        ],
+        "calling_patterns": [
+            "is_scalar_multiple(u,v,[rel_tol],[abs_tol])"
         ],
         "doc": "jme-reference"
     },
@@ -2172,7 +2215,8 @@ var jme_function_hints =
             "union"
         ],
         "calling_patterns": [
-            "x or y"
+            "x or y",
+            "x || y"
         ],
         "doc": "jme-reference"
     },

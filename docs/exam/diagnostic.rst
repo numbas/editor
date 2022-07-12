@@ -139,6 +139,8 @@ Variables available to the diagnostic algorithm
 
     The name of the topic that the current question belongs to.
 
+    This variable has the value ``nothing`` when the exam is initialised, so don't assume it is always a string.
+
 .. data:: current_question
 
     A :data:`dict` object representing the current question.

@@ -1447,7 +1447,7 @@ jme.Parser.prototype = /** @lends Numbas.jme.Parser.prototype */ {
         re_number: /^[0-9]+(?:\x2E[0-9]+)?/,
         re_name: /^{?((?:(?:[a-zA-Z]+):)*)((?:\$?[a-zA-Z_][a-zA-Z0-9_]*'*)|\?\??|[π∞])}?/i,
         re_punctuation: /^([\(\),\[\]])/,
-        re_string: /^("""|'''|['"])((?:[^\1\\]|\\.)*?)\1/,
+        re_string: util.re_jme_string,
         re_comment: /^\/\/.*?(?:\n|$)/,
         re_keypair: /^:/,
     },
@@ -5601,6 +5601,23 @@ newBuiltin('transpose',[TMatrix],TMatrix, matrixmath.transpose);
 newBuiltin('is_zero',[TVector],TBool, vectormath.is_zero);
 newBuiltin('id',[TNum],TMatrix, matrixmath.id);
 newBuiltin('sum_cells',[TMatrix],TNum,matrixmath.sum_cells);
+newBuiltin('numrows', [TMatrix], TNum,function(m) {return matrixmath.numrows(m)});
+newBuiltin('numcolumns', [TMatrix], TNum,function(m) {return matrixmath.numcolumns(m)});
+newBuiltin('combine_vertically',[TMatrix,TMatrix],TMatrix,function(m1,m2) {
+    return matrixmath.combine_vertically(m1,m2)
+});
+newBuiltin('stack',[TMatrix,TMatrix],TMatrix,function(m1,m2) {
+    return matrixmath.combine_vertically(m1,m2)
+});
+newBuiltin('combine_horizontally',[TMatrix,TMatrix],TMatrix,function(m1,m2) {
+    return matrixmath.combine_horizontally(m1,m2)
+});
+newBuiltin('augment',[TMatrix,TMatrix],TMatrix,function(m1,m2) {
+    return matrixmath.combine_horizontally(m1,m2)
+});
+newBuiltin('combine_diagonally',[TMatrix,TMatrix],TMatrix,function(m1,m2) {
+    return matrixmath.combine_diagonally(m1,m2)
+});
 newBuiltin('..', [TNum,TNum], TRange, math.defineRange);
 newBuiltin('#', [TRange,TNum], TRange, math.rangeSteps);
 newBuiltin('in',[TNum,TRange],TBool,function(x,r) {
@@ -13823,7 +13840,7 @@ Part.prototype = /** @lends Numbas.parts.Part.prototype */ {
         // check that the required notes are present
         var requiredNotes = ['mark','interpreted_answer'];
         requiredNotes.forEach(function(name) {
-            if(!(name in algo.notes)) {
+            if(!(name in algo.notes)) {interpreted_answer
                 p.error("part.marking.missing required note",{note:name});
             }
         });
@@ -20964,6 +20981,82 @@ var matrixmath = Numbas.matrixmath = {
         });
         return t;
     },
+    /** Returns number of row in a matrix.
+     * 
+     * @param {matrix} m
+     * @returns {number}
+     */
+    numrows: function(m){
+        return m.rows;
+    },
+    /** Returns number of columns in a matrix.
+     * 
+     * @param {matrix} m
+     * @returns {number}
+     */
+    numcolumns: function(m){
+        return m.columns;
+    },
+    /** Combines two matrices vertically
+     * 
+     * @param {matrix} m1
+     * @param {matrix} m2
+     * @returns {matrix}
+     */
+    combine_vertically: function(m1,m2){
+        var out = [];
+        out.rows = m1.rows + m2.rows;
+        out.columns = m1.columns > m2.columns ? m1.columns : m2.columns;
+        for(var i = 0; i < out.rows; i++){
+            var row = [];
+            out.push(row);
+            for(var j = 0; j < out.columns; j++)
+            {
+                row.push(i < m1.rows && j < m1.columns ? m1[i][j]
+                    : i >= m1.rows && j < m2.columns ? m2[i-m1.rows][j] : 0);
+            }
+        } return out;
+    },
+    /** Combines two matrices horizontally
+     * 
+     * @param {matrix} m1
+     * @param {matrix} m2
+     * @returns {matrix}
+     */
+    combine_horizontally: function(m1,m2){
+        var out = [];
+        out.columns = m1.columns + m2.columns;
+        out.rows = m1.rows > m2.rows ? m1.rows : m2.rows;
+        for(var i = 0; i < out.rows; i++){
+            var row = [];
+            out.push(row);
+            for(var j = 0; j < out.columns; j++)
+            {
+                row.push(j < m1.columns && i < m1.rows ? m1[i][j]
+                    : j >= m1.columns && i < m2.rows ? m2[i][j-m1.columns] : 0);
+            }
+        } return out;  
+    },
+    /** Combines two matrices diagonally
+     * 
+     * @param {matrix} m1
+     * @param {matrix} m2
+     * @returns {matrix}
+     */
+    combine_diagonally: function(m1,m2){
+        var out = [];
+        out.rows = m1.rows + m2.rows;
+        out.columns = m1.columns + m2.columns;
+        for(var i = 0; i < out.rows; i++){
+            var row = [];
+            out.push(row);
+            for(var j = 0; j < out.columns; j++)
+            {
+                row.push(i < m1.rows && j < m1.columns ? m1[i][j]
+                    : i >= m1.rows && j >= m1.columns ? m2[i-m1.rows][j-m1.columns] : 0);
+            }
+        } return out;
+    },
 
     /** Apply given function to each element.
      *
@@ -20998,6 +21091,7 @@ var matrixmath = Numbas.matrixmath = {
         return matrixmath.map(m,function(n){return math.siground(n,sf);});
     }
 }
+
 /** A set of objects: no item occurs more than once.
  *
  * @typedef set
@@ -21078,6 +21172,7 @@ var setmath = Numbas.setmath = {
     size: function(set) {
         return set.length;
     }
+    
 }
 
 });
@@ -21965,6 +22060,8 @@ var util = Numbas.util = /** @lends Numbas.util */ {
         nestrb = nestrb || '';
         var bits = [];
         var start = 0;
+        var depth = 0;
+        var m;
         for(var i=0;i<length;i++) {
             if(str.charAt(i)=='\\') {
                 i += 1;
@@ -21976,23 +22073,35 @@ var util = Numbas.util = /** @lends Numbas.util */ {
                 bits.push({kind:'lb'});
                 i += lb.length-1;
                 start = i+1;
+                depth += 1;
             } else if(str.slice(i,i+rb.length)==rb) {
                 bits.push({kind:'str',str:str.slice(start,i)});
                 bits.push({kind:'rb'});
                 i += rb.length-1;
                 start = i+1;
+                depth -= 1;
+            } else if(depth>0 && (m = re_jme_string.exec(str.slice(i)))) {
+                bits.push({kind:'str',str: str.slice(start,i)});
+                bits.push({kind:'jme_str', str: m[0]});
+                i += m[0].length-1;
+                start = i + 1;
             }
         }
         if(start<str.length) {
             bits.push({kind:'str',str:str.slice(start)});
         }
+
+        depth = 0;
         var out = [];
-        var depth = 0;
         var s = '';
         var s_plain = '';
         var s_unclosed = '';
+        var in_string = false;
         for(var i=0;i<bits.length;i++) {
             switch(bits[i].kind) {
+                case 'jme_str':
+                    s += bits[i].str;
+                    break;
                 case 'str':
                     s += bits[i].str;
                     s_unclosed += bits[i].str;
@@ -22352,6 +22461,14 @@ var util = Numbas.util = /** @lends Numbas.util */ {
         }
     }
 };
+
+/** 
+ * A regular expression matching JME string tokens
+ * 
+ * @type {string}
+ */
+var re_jme_string = util.re_jme_string = /^("""|'''|['"])((?:[^\1\\]|\\.)*?)\1/;
+
 /** Different styles of writing a decimal.
  *
  * Objects of the form `{re,format}`, where `re` is a regex recognising numbers in this style, and `format(integer,decimal)` renders the number in this style.

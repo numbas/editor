@@ -338,13 +338,6 @@ The following simplification rules are available:
         * ``x * x`` → ``x^2``
         * ``(x+1)^6 / (x+1)^2`` → ``(x+1)^4``
 
-    cancelFactors
-        Collect together and cancel factors inside a term.
-
-        * ``x*x`` → ``x^2``
-        * ``x^2 * x`` → ``x^3``
-        * ``(1/x^3)*x`` → ``1*x^(-2)``
-
     collectLikeFractions
         Collect together fractions over the same denominator.
 

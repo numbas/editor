@@ -1,325 +1,6 @@
 var jme_function_hints = 
 [
     {
-        "name": "correct",
-        "description": "Set the credit to 1 and give the feedback message <code>message</code>.\nIf <code>message</code> is omitted, the default \"Your answer is correct\" message for the current locale is used.",
-        "keywords": [
-            "award",
-            "credit",
-            "right"
-        ],
-        "calling_patterns": [
-            "correct(message)"
-        ],
-        "doc": "marking-algorithm"
-    },
-    {
-        "name": "incorrect",
-        "description": "Set the credit to 0 and give the feedback message <code>message</code>.\nIf <code>message</code> is omitted, the default \"Your answer is incorrect\" message for the current locale is used.",
-        "keywords": [
-            "credit",
-            "wrong"
-        ],
-        "calling_patterns": [
-            "incorrect(message)"
-        ],
-        "doc": "marking-algorithm"
-    },
-    {
-        "name": "correctif",
-        "description": "If <code>condition</code> evaluates to <code>true</code>, set the credit to 1 and give the default feedback message.\nOtherwise, set the credit to 0 and give the default feedback message.",
-        "keywords": [
-            "condition",
-            "award",
-            "credit",
-            "right",
-            "wrong"
-        ],
-        "calling_patterns": [
-            "correctif(condition)"
-        ],
-        "doc": "marking-algorithm"
-    },
-    {
-        "name": "set_credit",
-        "description": "Set the credit to <code>credit</code>, and give the feedback message <code>message</code>.\nThe message should explain why the credit was awarded.",
-        "keywords": [
-            "award",
-            "credit",
-            "score"
-        ],
-        "calling_patterns": [
-            "set_credit(credit, message)"
-        ],
-        "doc": "marking-algorithm"
-    },
-    {
-        "name": "add_credit",
-        "description": "Add <code>credit</code> to the current total, to a maximum of 1, and give the feedback message <code>message</code>.\nThe message should explain why the credit was awarded.",
-        "keywords": [
-            "award",
-            "credit",
-            "score"
-        ],
-        "calling_patterns": [
-            "add_credit(credit, message)"
-        ],
-        "doc": "marking-algorithm"
-    },
-    {
-        "name": "sub_credit",
-        "description": "Subtract <code>credit</code> from the current total and give the feedback message <code>message</code>.\nThe message should explain why the credit was taken away.",
-        "keywords": [
-            "subtract",
-            "credit",
-            "score",
-            "penalty",
-            "penalise"
-        ],
-        "calling_patterns": [
-            "sub_credit(credit, message)"
-        ],
-        "doc": "marking-algorithm"
-    },
-    {
-        "name": "multiply_credit",
-        "description": "Multiply the current credit by <code>proportion</code> and give the feedback message <code>message</code>.\nThe message should explain why the credit was modified.",
-        "keywords": [
-            "penalty",
-            "credit",
-            "score"
-        ],
-        "calling_patterns": [
-            "multiply_credit(proportion, message)"
-        ],
-        "doc": "marking-algorithm"
-    },
-    {
-        "name": "end",
-        "description": "End the marking here.\nAny feedback items produced after this one are not applied.",
-        "keywords": [
-            "stop"
-        ],
-        "calling_patterns": [
-            "end()"
-        ],
-        "doc": "marking-algorithm"
-    },
-    {
-        "name": "fail",
-        "description": "Reject the student's answer as invalid, set the credit to 0 and give the feedback message <code>message</code>.\nThe message should explain why the student's answer was rejected.",
-        "keywords": [
-            "error"
-        ],
-        "calling_patterns": [
-            "fail(message)"
-        ],
-        "doc": "marking-algorithm"
-    },
-    {
-        "name": "warn",
-        "description": "Show a warning next to the answer input.\nThis does not affect credit or stop the running of the marking algorithm.",
-        "keywords": [
-            "warning",
-            "feedback",
-            "message"
-        ],
-        "calling_patterns": [
-            "warn(message)"
-        ],
-        "doc": "marking-algorithm"
-    },
-    {
-        "name": "feedback",
-        "description": "Give the feedback message <code>message</code>, without modifying the credit awarded.",
-        "keywords": [
-            "message",
-            "comment"
-        ],
-        "calling_patterns": [
-            "feedback(message)"
-        ],
-        "doc": "marking-algorithm"
-    },
-    {
-        "name": "positive_feedback",
-        "description": "Give the feedback message <code>message</code>, without modifying the credit awarded, but with a positive annotation (a green tick in the default theme).",
-        "keywords": [
-            "message",
-            "comment",
-            "tick"
-        ],
-        "calling_patterns": [
-            "positive_feedback(message)"
-        ],
-        "doc": "marking-algorithm"
-    },
-    {
-        "name": "negative_feedback",
-        "description": "Give the feedback message <code>message</code>, without modifying the credit awarded, but with a negative annotatin (a red cross in the default theme).",
-        "keywords": [
-            "message",
-            "comment",
-            "cross"
-        ],
-        "calling_patterns": [
-            "negative_feedback(message)"
-        ],
-        "doc": "marking-algorithm"
-    },
-    {
-        "name": ";",
-        "description": "Add feedback items generated by <code>x</code> to those generated by <code>y</code>, and return <code>y</code>.",
-        "keywords": [
-            "then"
-        ],
-        "calling_patterns": [
-            "x ; y"
-        ],
-        "doc": "marking-algorithm"
-    },
-    {
-        "name": "apply",
-        "description": "If <code>feedback</code> is the name of a marking note, apply its feedback items to this note.",
-        "keywords": [
-            "concatenate",
-            "add",
-            "feedback",
-            "substitute"
-        ],
-        "calling_patterns": [
-            "apply(feedback)"
-        ],
-        "doc": "marking-algorithm"
-    },
-    {
-        "name": "apply_marking_script",
-        "description": "Apply the marking script with the given name, with the given values of the variables <code>studentanswer</code> and <code>settings</code> and with <code>marks</code> marks available.",
-        "keywords": [
-            "run",
-            "evaluate",
-            "marking"
-        ],
-        "calling_patterns": [
-            "apply_marking_script(name, studentanswer, settings, marks)"
-        ],
-        "doc": "marking-algorithm"
-    },
-    {
-        "name": "submit_part",
-        "description": "Submit the part with the given path.\nIf <code>answer</code> is given, the answer stored for that part is overwritten with the given value.\nReturns a dictionary of the following form:",
-        "keywords": [
-            "part",
-            "mark",
-            "validate"
-        ],
-        "calling_patterns": [
-            "submit_part(path,[answer])"
-        ],
-        "doc": "marking-algorithm"
-    },
-    {
-        "name": "mark_part",
-        "description": "Mark the part with the given path, using the given value for <code>studentanswer</code>.",
-        "keywords": [
-            "part",
-            "mark",
-            "validate"
-        ],
-        "calling_patterns": [
-            "mark_part(path, studentanswer)"
-        ],
-        "doc": "marking-algorithm"
-    },
-    {
-        "name": "concat_feedback",
-        "description": "Apply the given list of feedback items (generated by <code>submit_part</code> or <code>mark_part</code>) to this note, scaling the credit awarded by <code>scale</code>.",
-        "keywords": [
-            "join",
-            "add",
-            "feedback",
-            "apply"
-        ],
-        "calling_patterns": [
-            "concat_feedback(items, scale, [strip_messages])"
-        ],
-        "doc": "marking-algorithm"
-    },
-    {
-        "name": "int",
-        "description": "An indefinite integration, with respect to the given variable.",
-        "keywords": [
-            "integrate",
-            "integral",
-            "indefinite"
-        ],
-        "calling_patterns": [
-            "int(expression, variable)"
-        ],
-        "doc": "simplification"
-    },
-    {
-        "name": "defint",
-        "description": "A definite integration between the two given bounds.",
-        "keywords": [
-            "integrate",
-            "integral",
-            "definite"
-        ],
-        "calling_patterns": [
-            "defint(expression, variable,lower bound, upper bound)"
-        ],
-        "doc": "simplification"
-    },
-    {
-        "name": "diff",
-        "description": "$n$-th derivative of expression with respect to the given variable",
-        "keywords": [
-            "differentiate",
-            "derivative",
-            "calculus"
-        ],
-        "calling_patterns": [
-            "diff(expression, variable, n)"
-        ],
-        "doc": "simplification"
-    },
-    {
-        "name": "partialdiff",
-        "description": "$n$-th partial derivative of expression with respect to the given variable",
-        "keywords": [
-            "differentiate",
-            "derivative",
-            "calculus"
-        ],
-        "calling_patterns": [
-            "partialdiff(expression, variable, n)"
-        ],
-        "doc": "simplification"
-    },
-    {
-        "name": "sub",
-        "description": "Add a subscript to a variable name.\nNote that variable names with constant subscripts are already rendered properly -- see variable-names -- but this function allows you to use an arbitray index, or a more complicated expression.",
-        "keywords": [
-            "subscript"
-        ],
-        "calling_patterns": [
-            "sub(expression,index)"
-        ],
-        "doc": "simplification"
-    },
-    {
-        "name": "sup",
-        "description": "Add a superscript to a variable name.\nNote that the simplification rules to do with powers won't be applied to this function, since it represents a generic superscript notation, rather than the operation of raising to a power.",
-        "keywords": [
-            "superscript"
-        ],
-        "calling_patterns": [
-            "sup(expression,index)"
-        ],
-        "doc": "simplification"
-    },
-    {
         "name": "+",
         "description": "Addition.",
         "keywords": [
@@ -1699,6 +1380,53 @@ var jme_function_hints =
         ],
         "calling_patterns": [
             "sum_cells(m)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "augment",
+        "description": "Combine two matrices horizontally: given a $r_1 \\times c_1$ matrix <code>m1</code> and a $r_2 \\times c_2$ matrix <code>m2</code>, returns a new $\\max(r_1,r_2) \\times (c_1+c_2)$ matrix formed by putting the two matrices side, and padding with zeros where necessary.",
+        "keywords": [
+            "augmented",
+            "combine",
+            "horizontally",
+            "matrices",
+            "matrix"
+        ],
+        "calling_patterns": [
+            "augment(m1,m2)",
+            "combine_horizontally(m1,m2)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "stack",
+        "description": "Combine two matrices vertically: given a $r_1 \\times c_1$ matrix <code>m1</code> and a $r_2 \\times c_2$ matrix <code>m2</code>, returns a new $(r_1 + r_2) \\times \\max(c_1,c_2)$ matrix formed by putting <code>m1</code> above <code>m2</code>, and padding with zeros where necessary.",
+        "keywords": [
+            "stacked",
+            "combine",
+            "vertically",
+            "matrices",
+            "matrix"
+        ],
+        "calling_patterns": [
+            "stack(m1,m2)",
+            "combine_vertically(m1,m2)"
+        ],
+        "doc": "jme-reference"
+    },
+    {
+        "name": "combine_diagonally",
+        "description": "Combine two matrices diagonally: given a $r_1 \\times c_1$ matrix <code>m1</code> and a $r_2 \\times c_2$ matrix <code>m2</code>, returns a new $(r_1 + r_2) \\times (c_1 + c_2)$ matrix whose top-left quadrant is <code>m1</code> and bottom-right quadrant is <code>m2</code>.",
+        "keywords": [
+            "stacked",
+            "combine",
+            "vertically",
+            "matrices",
+            "matrix"
+        ],
+        "calling_patterns": [
+            "combine_diagonally(m1,m2)"
         ],
         "doc": "jme-reference"
     },
@@ -3437,6 +3165,325 @@ var jme_function_hints =
             "unset(names, expression)"
         ],
         "doc": "jme-reference"
+    },
+    {
+        "name": "correct",
+        "description": "Set the credit to 1 and give the feedback message <code>message</code>.\nIf <code>message</code> is omitted, the default \"Your answer is correct\" message for the current locale is used.",
+        "keywords": [
+            "award",
+            "credit",
+            "right"
+        ],
+        "calling_patterns": [
+            "correct(message)"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
+        "name": "incorrect",
+        "description": "Set the credit to 0 and give the feedback message <code>message</code>.\nIf <code>message</code> is omitted, the default \"Your answer is incorrect\" message for the current locale is used.",
+        "keywords": [
+            "credit",
+            "wrong"
+        ],
+        "calling_patterns": [
+            "incorrect(message)"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
+        "name": "correctif",
+        "description": "If <code>condition</code> evaluates to <code>true</code>, set the credit to 1 and give the default feedback message.\nOtherwise, set the credit to 0 and give the default feedback message.",
+        "keywords": [
+            "condition",
+            "award",
+            "credit",
+            "right",
+            "wrong"
+        ],
+        "calling_patterns": [
+            "correctif(condition)"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
+        "name": "set_credit",
+        "description": "Set the credit to <code>credit</code>, and give the feedback message <code>message</code>.\nThe message should explain why the credit was awarded.",
+        "keywords": [
+            "award",
+            "credit",
+            "score"
+        ],
+        "calling_patterns": [
+            "set_credit(credit, message)"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
+        "name": "add_credit",
+        "description": "Add <code>credit</code> to the current total, to a maximum of 1, and give the feedback message <code>message</code>.\nThe message should explain why the credit was awarded.",
+        "keywords": [
+            "award",
+            "credit",
+            "score"
+        ],
+        "calling_patterns": [
+            "add_credit(credit, message)"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
+        "name": "sub_credit",
+        "description": "Subtract <code>credit</code> from the current total and give the feedback message <code>message</code>.\nThe message should explain why the credit was taken away.",
+        "keywords": [
+            "subtract",
+            "credit",
+            "score",
+            "penalty",
+            "penalise"
+        ],
+        "calling_patterns": [
+            "sub_credit(credit, message)"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
+        "name": "multiply_credit",
+        "description": "Multiply the current credit by <code>proportion</code> and give the feedback message <code>message</code>.\nThe message should explain why the credit was modified.",
+        "keywords": [
+            "penalty",
+            "credit",
+            "score"
+        ],
+        "calling_patterns": [
+            "multiply_credit(proportion, message)"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
+        "name": "end",
+        "description": "End the marking here.\nAny feedback items produced after this one are not applied.",
+        "keywords": [
+            "stop"
+        ],
+        "calling_patterns": [
+            "end()"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
+        "name": "fail",
+        "description": "Reject the student's answer as invalid, set the credit to 0 and give the feedback message <code>message</code>.\nThe message should explain why the student's answer was rejected.",
+        "keywords": [
+            "error"
+        ],
+        "calling_patterns": [
+            "fail(message)"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
+        "name": "warn",
+        "description": "Show a warning next to the answer input.\nThis does not affect credit or stop the running of the marking algorithm.",
+        "keywords": [
+            "warning",
+            "feedback",
+            "message"
+        ],
+        "calling_patterns": [
+            "warn(message)"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
+        "name": "feedback",
+        "description": "Give the feedback message <code>message</code>, without modifying the credit awarded.",
+        "keywords": [
+            "message",
+            "comment"
+        ],
+        "calling_patterns": [
+            "feedback(message)"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
+        "name": "positive_feedback",
+        "description": "Give the feedback message <code>message</code>, without modifying the credit awarded, but with a positive annotation (a green tick in the default theme).",
+        "keywords": [
+            "message",
+            "comment",
+            "tick"
+        ],
+        "calling_patterns": [
+            "positive_feedback(message)"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
+        "name": "negative_feedback",
+        "description": "Give the feedback message <code>message</code>, without modifying the credit awarded, but with a negative annotatin (a red cross in the default theme).",
+        "keywords": [
+            "message",
+            "comment",
+            "cross"
+        ],
+        "calling_patterns": [
+            "negative_feedback(message)"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
+        "name": ";",
+        "description": "Add feedback items generated by <code>x</code> to those generated by <code>y</code>, and return <code>y</code>.",
+        "keywords": [
+            "then"
+        ],
+        "calling_patterns": [
+            "x ; y"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
+        "name": "apply",
+        "description": "If <code>feedback</code> is the name of a marking note, apply its feedback items to this note.",
+        "keywords": [
+            "concatenate",
+            "add",
+            "feedback",
+            "substitute"
+        ],
+        "calling_patterns": [
+            "apply(feedback)"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
+        "name": "apply_marking_script",
+        "description": "Apply the marking script with the given name, with the given values of the variables <code>studentanswer</code> and <code>settings</code> and with <code>marks</code> marks available.",
+        "keywords": [
+            "run",
+            "evaluate",
+            "marking"
+        ],
+        "calling_patterns": [
+            "apply_marking_script(name, studentanswer, settings, marks)"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
+        "name": "submit_part",
+        "description": "Submit the part with the given path.\nIf <code>answer</code> is given, the answer stored for that part is overwritten with the given value.\nReturns a dictionary of the following form:",
+        "keywords": [
+            "part",
+            "mark",
+            "validate"
+        ],
+        "calling_patterns": [
+            "submit_part(path,[answer])"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
+        "name": "mark_part",
+        "description": "Mark the part with the given path, using the given value for <code>studentanswer</code>.",
+        "keywords": [
+            "part",
+            "mark",
+            "validate"
+        ],
+        "calling_patterns": [
+            "mark_part(path, studentanswer)"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
+        "name": "concat_feedback",
+        "description": "Apply the given list of feedback items (generated by <code>submit_part</code> or <code>mark_part</code>) to this note, scaling the credit awarded by <code>scale</code>.",
+        "keywords": [
+            "join",
+            "add",
+            "feedback",
+            "apply"
+        ],
+        "calling_patterns": [
+            "concat_feedback(items, scale, [strip_messages])"
+        ],
+        "doc": "marking-algorithm"
+    },
+    {
+        "name": "int",
+        "description": "An indefinite integration, with respect to the given variable.",
+        "keywords": [
+            "integrate",
+            "integral",
+            "indefinite"
+        ],
+        "calling_patterns": [
+            "int(expression, variable)"
+        ],
+        "doc": "simplification"
+    },
+    {
+        "name": "defint",
+        "description": "A definite integration between the two given bounds.",
+        "keywords": [
+            "integrate",
+            "integral",
+            "definite"
+        ],
+        "calling_patterns": [
+            "defint(expression, variable,lower bound, upper bound)"
+        ],
+        "doc": "simplification"
+    },
+    {
+        "name": "diff",
+        "description": "$n$-th derivative of expression with respect to the given variable",
+        "keywords": [
+            "differentiate",
+            "derivative",
+            "calculus"
+        ],
+        "calling_patterns": [
+            "diff(expression, variable, n)"
+        ],
+        "doc": "simplification"
+    },
+    {
+        "name": "partialdiff",
+        "description": "$n$-th partial derivative of expression with respect to the given variable",
+        "keywords": [
+            "differentiate",
+            "derivative",
+            "calculus"
+        ],
+        "calling_patterns": [
+            "partialdiff(expression, variable, n)"
+        ],
+        "doc": "simplification"
+    },
+    {
+        "name": "sub",
+        "description": "Add a subscript to a variable name.\nNote that variable names with constant subscripts are already rendered properly -- see variable-names -- but this function allows you to use an arbitray index, or a more complicated expression.",
+        "keywords": [
+            "subscript"
+        ],
+        "calling_patterns": [
+            "sub(expression,index)"
+        ],
+        "doc": "simplification"
+    },
+    {
+        "name": "sup",
+        "description": "Add a superscript to a variable name.\nNote that the simplification rules to do with powers won't be applied to this function, since it represents a generic superscript notation, rather than the operation of raising to a power.",
+        "keywords": [
+            "superscript"
+        ],
+        "calling_patterns": [
+            "sup(expression,index)"
+        ],
+        "doc": "simplification"
     },
     {
         "name": "`+-",

@@ -14,7 +14,7 @@ Now, for the second part’s *Prompt*, enter:
     What is 3*5?
 
 And set the correct answer to ``15``.
-When you :guilabel:`Test Run` the question, you should be immediately offended by the unattractiveness of the rendering of the multiplication **3*5**.
+When you :guilabel:`Run` the question, you should be immediately offended by the unattractiveness of the rendering of the multiplication **3*5**.
 Mathematical notation is distinct from normal text and needs to be treated separately.
 For this reason, Numbas uses *LaTeX* to mark up mathematical notation.
 
@@ -27,7 +27,7 @@ Replace the *Prompt* for the second part with
     What is $3 \\times 5$?
 
 The dollar symbols delimit the LaTeX notation.
-Now when you :guilabel:`Test Run` the question again, you will see neatly typeset maths:
+Now when you :guilabel:`Run` the question again, you will see neatly typeset maths:
 
 .. image:: screenshots/question/10.png
     :alt: The prompt for the second part, with the mathematical notation rendered using LaTeX
@@ -75,7 +75,7 @@ It doesn’t do anything to cancel out redundant terms or symbols - more on that
 
 Now go to the :guilabel:`Marking` tab and change both accepted values to ``a+b``. 
 
-Click :guilabel:`Test Run` to see how your changes have affected the question.
+Click :guilabel:`Run` to see how your changes have affected the question.
 You can use the :guilabel:`Try another question like this one` button to regenerate the question without having to go back to the editor.
 
 Now your question has nicely rendered maths and uses randomised numbers.

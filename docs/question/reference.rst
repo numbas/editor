@@ -60,7 +60,7 @@ Admin controls
 
 .. glossary::
 
-    Test Run
+    Run
         Opens a preview of the question in a new window. 
         A specially simplified theme will be used, different from the one used for exams.
 
@@ -315,7 +315,7 @@ Any variables used in the definition of the locked variable (those which appear 
 You can unlock a variable by clicking on the padlock icon again.
 
 .. warning::
-    Variables are only locked inside the editor's preview area - when you test run the question, or include it in an exam, a fresh value for the variable will be generated.
+    Variables are only locked inside the editor's preview area - when you run the question, or include it in an exam, a fresh value for the variable will be generated.
 
 .. _variable-testing:
 

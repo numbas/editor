@@ -18,7 +18,7 @@ This is suitable when you want to provide material for students to practice on t
 Embed from the editor
 #####################
 
-When you Test Run the exam, click the :guilabel:`Share` button at the top of the page and copy the URL that appears.
+When you :guilabel:`Run` the exam, click the :guilabel:`Share` button at the top of the page and copy the URL that appears.
 You can share this URL with your students, or link to it from your course material.
 
 If you use `OEmbed <https://oembed.com/>`_-compatible software such as WordPress, you can paste the URL of the exam into the editor and it'll be embedded automatically.

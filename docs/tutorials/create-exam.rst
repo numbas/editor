@@ -34,11 +34,11 @@ By default it will be added to your personal project.
     :alt: The "create a new exam" form.
 
 Once created, you can  try out your exam straight away.
-Click the :guilabel:`Test Run` link in the sidebar on the left. 
+Click the :guilabel:`Run` link in the sidebar on the left. 
 The compiled exam will open in a new window and you can have a go at answering the questions.
 
 .. image:: screenshots/exam_edit_testrun.png
-    :alt: The "test run" button on the exam editor is highlighted.
+    :alt: The :guilabel:`Run` button on the exam editor is highlighted.
 
 Once you have tried out the exam, close its window and return to the exam editor.
 Consider adding some text to the description field.
@@ -64,7 +64,7 @@ You can drag and drop questions in the list on the left to reorder them.
 .. image:: screenshots/exam_edit_drag.png
     :alt: Reordering a question by dragging it down the list.
 
-The changes that you make to the exam content are active immediately. You can see how your exam looks by clicking on :guilabel:`Test Run` again.
+The changes that you make to the exam content are active immediately. You can see how your exam looks by clicking on :guilabel:`Run` again.
 
 Publish your exam
 #################

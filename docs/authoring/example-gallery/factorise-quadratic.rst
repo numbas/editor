@@ -68,7 +68,7 @@ To prevent this, you can specify a :ref:`pattern restrictions <pattern-restricti
 Go to the part’s :guilabel:`Restrictions` tab and enter ``(x + ?`?)(x + ?`?) `| (x + ?`?)^2`` in the :guilabel:`Pattern student's answer must match` field.
 This accepts either the product of two linear factors, or a single linear factor, squared.
 
-Click :guilabel:`Test Run` and check that your question is marked correctly.
+Click :guilabel:`Run` and check that your question is marked correctly.
 
 That’s it for this tutorial.
 You’ve created a very simple Numbas question asking the student to enter some numbers and a mathematical expression, with randomised parameters and neatly rendered maths.

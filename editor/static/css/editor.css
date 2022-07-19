@@ -29,6 +29,7 @@
 }
 
 .CodeMirror {
+    font-weight: normal;
     border: 1px solid #ccc;
     height: auto;
     min-height: 2.8em;

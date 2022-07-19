@@ -1694,7 +1694,8 @@ $(document).ready(function() {
                 well.setAttribute('role','button');
                 element.appendChild(well);
 
-                well.addEventListener('click',function() {
+                well.addEventListener('click',function(e) {
+                    e.stopPropagation();
                     if(!element.hasAttribute('disabled')) {
                         make_tinymce();
                     }

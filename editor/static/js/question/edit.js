@@ -2058,6 +2058,9 @@ $(document).ready(function() {
                     } catch(e) {
                     }
                 }
+            },
+            'mathematical expression': {
+                value: ko.observable(''),
             }
         };
         this.templateTypeValues['list of numbers'].floatValues = ko.pureComputed(function() {
@@ -2146,6 +2149,11 @@ $(document).ready(function() {
                         JSON.parse(val.value() || '');
                         var json = treeToJME({tok: wrapValue(val.value())});
                         return 'json_decode('+json+')';
+                    case 'mathematical expression':
+                        var tok = wrapValue(val.value());
+                        var tree = Numbas.jme.compile('expression(x)');
+                        tree.args[0] = {tok: tok};
+                        return treeToJME(tree);
                     }
                 } catch(e) {
                     this.definitionError(e);
@@ -2302,6 +2310,7 @@ $(document).ready(function() {
             {id: 'string', name: 'Short text string'},
             {id: 'long plain string', name: 'Long plain text string'},
             {id: 'long string', name: 'Formatted text'},
+            {id: 'mathematical expression', name: 'Abstract mathematical expression'},
             {id: 'list of numbers', name: 'List of numbers'},
             {id: 'list of strings', name: 'List of short text strings'},
             {id: 'json', name: 'JSON data'}
@@ -2389,6 +2398,14 @@ $(document).ready(function() {
                         tree = tree.args[0];
                     }
                     templateTypeValues.value(tree.tok.value);
+                    break;
+                case 'mathematical expression':
+                    tree = tree.args[0];
+                    while(Numbas.jme.isFunction(tree.tok,'safe')) {
+                        tree = tree.args[0];
+                    }
+                    templateTypeValues.value(tree.tok.value);
+                    break;
                 }
             } catch(e) {
                 console.log(e);

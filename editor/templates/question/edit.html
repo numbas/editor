@@ -276,6 +276,9 @@
                                     <textarea {% if not editable %}disabled{% endif %} class="def" data-bind="codemirror: templateTypeValues.json.value, codemirrorMode: 'json'"></textarea>
                                     <button type="button" class="btn btn-default" data-bind="click: templateTypeValues.json.prettyPrint"><span class="glyphicon glyphicon-object-align-left"></span> Clean up formatting</button>
                                 </div>
+                                <div data-bind="visible: templateType().id=='mathematical expression'">
+                                    {% jme_input 'templateTypeValues[\'mathematical expression\'].value' %}
+                                </div>
                             </label>
                         </div>
                         <div class="help-block">

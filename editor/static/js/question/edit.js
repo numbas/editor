@@ -548,33 +548,12 @@ $(document).ready(function() {
         }
 
         ko.computed(function() {
-            var names = [];
-            this.variables().forEach(function(v) {
-                v.names().forEach(function(name) {
-                    names.push({v:v, name:name.name.toLowerCase()});
-                })
-            });
-            this.constants().forEach(function(c) {
-                c.names().forEach(function(name) {
-                    names.push({v:c, name:name.name.toLowerCase()});
-                })
-            });
-            names.sort(Numbas.util.sortBy('name'));
-            var last;
-            names.forEach(function(n) {
-                if(last && n.name==last.name) {
-                    last.v.duplicateNameError(n.name);
-                    n.v.duplicateNameError(n.name);
-                } else {
-                    n.v.duplicateNameError(null);
-                }
-                last = n;
-            });
-        },this);
-
-        ko.computed(function() {
             var undefined_variables = [];
             var all_references = new Set();
+
+            // Find references to variable names
+
+            // First: references in variable definitions
             this.variables().forEach(function(v) {
                 v.references([]);
                 v.dependencies().forEach(function(name) {
@@ -584,6 +563,8 @@ $(document).ready(function() {
                     }
                 });
             });
+
+            // Then: references elsewhere in the question
             this.variable_references().forEach(function(r) {
                 var def = r.def;
                 var description = r.description();
@@ -627,17 +608,74 @@ $(document).ready(function() {
                     }
                 });
             });
+
+            // For each unique variable name with no corresponding definition, make a new Variable object
             undefined_variables = new Set(undefined_variables);
             undefined_variables.forEach(function(name) {
                 var v = q.baseVariableGroup.justAddVariable(true);
                 v.name(name);
                 v.added_because_missing = true;
             });
-            q.variables().forEach(function(v) {
-                if(v.added_because_missing && !all_references.has(v.name()) && v.definition().trim()=='') {
-                    v.remove();
+
+            // Remove unneeded automatically-added Variable objects.
+            // plan:
+            //  progressively mark Variable objects as 'kept', for these reasons:
+            //  * added manually
+            //  * non-empty definition
+            //  * for each name referred to, one Variable object defining that name, ideally one already kept
+            //
+            //  then remove any remaining variables, which must be added automatically, have empty definitions, and have no references to them
+            
+            var keeping = new Set();
+
+            this.variables().forEach(function(v) {
+                if(!v.added_because_missing || v.definition().trim()!='') {
+                    keeping.add(v);
                 }
             });
+
+            all_references.forEach(function(name) {
+                var variables = q.variables().filter(function(v) {
+                    return v.names().map(function(n) { return Numbas.jme.normaliseName(n.name); }).contains(name);
+                });
+                if(!variables.find(function(v) { return keeping.has(v); })) {
+                    keeping.add(variables[0]);
+                }
+            });
+
+            var not_keeping = q.variables().filter(function(v) { return !keeping.has(v); });
+            not_keeping.forEach(function(v) {
+                v.remove();
+            });
+
+            var names = [];
+            this.variables().forEach(function(v) {
+                v.names().forEach(function(name) {
+                    names.push({v:v, name:Numbas.jme.normaliseName(name.name)});
+                })
+            });
+            this.constants().forEach(function(c) {
+                c.names().forEach(function(name) {
+                    names.push({v:c, name:Numbas.jme.normaliseName(name.name)});
+                })
+            });
+
+            //  Finally, mark duplicate names
+            names.sort(Numbas.util.sortBy('name'));
+            function handle_group(group) {
+                group.forEach(function(n) {
+                    n.v.duplicateNameError(group.length > 1 ? n.name : null);
+                });
+            }
+
+            var start = 0;
+            names.forEach(function(n,i) {
+                if(n.name!=names[start].name) {
+                    handle_group(names.slice(start,i));
+                    start = i;
+                }
+            });
+            handle_group(names.slice(start));
         },this).extend({throttle: 2000});
 
         /** Create an instance of this question as a Numbas.Question object.

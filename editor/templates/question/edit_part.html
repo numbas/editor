@@ -77,14 +77,18 @@
 
     <section class="tab-pane" data-bind="activeIf: ko.unwrap(tabber.currentTab().id)=='marking-algorithm'">
         <form class="form-horizontal" data-bind="submit: Editor.noop">
+            <!-- ko if: type().name!='extension' -->
             {% booleanproperty 'use_custom_algorithm' 'Use custom marking algorithm?' help_url='question/parts/reference.html#term-Use-custom-marking-algorithm' %}
+            <!-- /ko -->
 
             <div data-bind="fadeVisible: use_custom_algorithm">
-                {% booleanproperty 'extendBaseMarkingAlgorithm' 'Extend base marking algorithm?' help_url='question/parts/reference.html#term-Extend-base-marking-algorithm' %}
+                <!-- ko if: type().name!='extension' -->
+                    {% booleanproperty 'extendBaseMarkingAlgorithm' 'Extend base marking algorithm?' help_url='question/parts/reference.html#term-Extend-base-marking-algorithm' %}
                 <div class="base-marking-algorithm" data-bind="fadeVisible: extendBaseMarkingAlgorithm">
                     <h5>Base marking algorithm</h5>
                     <pre data-bind="text: baseMarkingAlgorithm"></pre>
                 </div>
+                <!-- /ko -->
                 <h5>Custom marking algorithm</h5>
                 <textarea {% if not editable %}disabled{% endif %} data-bind="codemirror: customMarkingAlgorithm, codemirrorMode: 'jme', jmeScope: $root.markingScope"></textarea>
                 <p class="alert alert-danger" data-bind="html: markingScriptError, visible: markingScriptError" aria-live="polite"></p>

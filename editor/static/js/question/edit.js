@@ -2990,7 +2990,13 @@ $(document).ready(function() {
             new Script('validate','Validate student\'s answer','instead','question/reference.html#term-validate-student-s-answer')
         ];
 
-        this.use_custom_algorithm = ko.observable(false);
+        var _use_custom_algorithm = ko.observable(false);
+        this.use_custom_algorithm = ko.computed({
+            read: function() {
+                return this.type().name=='extension' || _use_custom_algorithm();
+            },
+            write: _use_custom_algorithm
+        },this);
         this.customMarkingAlgorithm = ko.observable('');
         this.extendBaseMarkingAlgorithm = ko.observable(true);
         this.baseMarkingAlgorithm = ko.pureComputed(function() {

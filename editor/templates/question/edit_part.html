@@ -107,8 +107,7 @@
             <!-- ko if: question_error -->
             <div class="alert alert-danger" aria-live="polite">
                 <p>There's an error which means the marking algorithm can't run:</p>   
-                <p data-bind="html: question_error"></p>
-                <pre data-bind="visible: ko.unwrap(question_error).stack, text: ko.unwrap(question_error).stack"></pre>
+                <pre data-bind="html: question_error"></pre>
             </div>
             <!-- /ko -->
 

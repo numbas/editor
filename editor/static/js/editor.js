@@ -144,7 +144,7 @@ $(document).ready(function() {
     $.noty.defaultOptions.theme = 'noty_theme_twitter';
 
     slugify = function(s) {
-        return s.trim().replace(/[^\w\s]/g,'').toLowerCase().replace(/\s/g,'-');
+        return s.trim().replace(/[^\w\s]/g,'').toLowerCase().replace(/\s/g,'-') || 'empty-slug';
     };
 
     var tryGetAttribute = Editor.tryGetAttribute = function(data,name) {

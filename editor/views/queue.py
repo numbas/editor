@@ -211,7 +211,7 @@ class AddEntryView(CanViewMixin, generic.CreateView):
         context['given_item'] = self.get_given_item()
 
         context['json'] = {
-            'recent_items': self.request.user.userprofile.recent_questions,
+            'recent_items': self.request.user.userprofile.last_viewed_items.all(),
             'basket': self.request.user.userprofile.question_basket.all(),
         }
 

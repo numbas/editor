@@ -43,12 +43,12 @@
             {% editoritem_link given_item.rel_obj show_icon=True %}
             {{form.item.as_hidden}}
         </div>
-        {% else %}
+        {% elif json.recent_items.exists or json.basket.exists %}
         <div class="col-sm-5">
             <strong>Recently-viewed items</strong>
             <ul>
                 {% for item in json.recent_items %}
-                <li><input type="radio" name="item" value="{{item.editoritem.pk}}"> {% editoritem_link item show_icon=True %}</li>
+                <li><input type="radio" name="item" value="{{item.item.pk}}"> {% editoritem_link item.item.rel_obj show_icon=True %}</li>
                 {% endfor %}
             </ul>
         </div>
@@ -60,6 +60,8 @@
                 {% endfor %}
             </ul>
         </div>
+        {% else %}
+        <div class="nothing-here">You have no recently-viewed items and nothing in your basket.</div>
         {% endif %}
     </div>
 

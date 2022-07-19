@@ -5,18 +5,6 @@ If you just want to create your own Numbas content, `the editor hosted by mathce
 
 These instructions are only needed if you want to set up your own private editing server.
 
-Installing a local instance for personal use
---------------------------------------------
-
-Follow these instructions to set up an instance of the editor that only one person will use.
-
-.. toctree::
-    :maxdepth: 1
-
-    Windows <windows-local>
-    Mac <mac-local>
-    Ubuntu <ubuntu-local>
-
 Installing on a web server
 --------------------------
 
